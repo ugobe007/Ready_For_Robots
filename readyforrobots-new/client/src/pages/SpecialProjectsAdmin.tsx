@@ -81,6 +81,11 @@ type Target = {
   approved: boolean;
   can_send: boolean;
   sent_at?: string | null;
+  followup_subject?: string | null;
+  followup_body?: string | null;
+  followup_approved?: boolean;
+  followup_sent_at?: string | null;
+  can_send_followup?: boolean;
 };
 
 const FIT_LABEL: Record<string, { text: string; cls: string }> = {
@@ -303,6 +308,72 @@ export default function SpecialProjectsAdmin() {
     }
   }, [adminFetch, selected, loadTargets]);
 
+  // Bulk-send every approved, sendable first-touch draft. Review-first: the
+  // backend only sends targets a human already approved, so this never sends a
+  // draft you haven't OK'd.
+  const sendAllApproved = useCallback(async () => {
+    if (!selected) return;
+    if (!window.confirm("Send all approved drafts now? Only drafts you've approved will go out.")) return;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/send-approved`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.detail || `Bulk send failed (${res.status})`);
+      await loadTargets(selected.id);
+      await openProject(selected.id);
+      const failed = (data?.failed || []).length;
+      setNotice(`Sent ${data?.sent ?? 0} of ${data?.eligible ?? 0} approved${failed ? ` · ${failed} failed` : ""}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Bulk send failed");
+    } finally {
+      setBusy(false);
+    }
+  }, [adminFetch, selected, loadTargets, openProject]);
+
+  const generateFollowups = useCallback(async () => {
+    if (!selected) return;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/generate-followups`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.detail || `Generate failed (${res.status})`);
+      await loadTargets(selected.id);
+      setNotice(`Drafted ${data?.generated ?? 0} follow-up${data?.generated === 1 ? "" : "s"} — review & approve before sending`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Generate follow-ups failed");
+    } finally {
+      setBusy(false);
+    }
+  }, [adminFetch, selected, loadTargets]);
+
+  const sendAllFollowups = useCallback(async () => {
+    if (!selected) return;
+    if (!window.confirm("Send all approved follow-ups now? Only approved follow-ups will go out.")) return;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/send-followups`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.detail || `Bulk send failed (${res.status})`);
+      await loadTargets(selected.id);
+      await openProject(selected.id);
+      const failed = (data?.failed || []).length;
+      setNotice(`Sent ${data?.sent ?? 0} of ${data?.eligible ?? 0} follow-ups${failed ? ` · ${failed} failed` : ""}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Bulk send failed");
+    } finally {
+      setBusy(false);
+    }
+  }, [adminFetch, selected, loadTargets, openProject]);
+
   useEffect(() => {
     if (!authLoading) void loadProjects();
   }, [authLoading, loadProjects]);
@@ -478,6 +549,15 @@ export default function SpecialProjectsAdmin() {
     const readyToSend = targets.filter((t) => !t.sent_at && t.approved && t.can_send);
     const contactedNoReply = targets.filter((t) => !!t.sent_at && stageIndex(t.stage) < repliedIdx);
     const replied = targets.filter((t) => stageIndex(t.stage) >= repliedIdx);
+    // Follow-up (T2) funnel.
+    const followupNeeded = targets.filter(
+      (t) => !!t.sent_at && !t.followup_sent_at && !(t.followup_subject && t.followup_body),
+    );
+    const followupAwaiting = targets.filter(
+      (t) => !!t.sent_at && !t.followup_sent_at && !!(t.followup_subject && t.followup_body) && !t.followup_approved,
+    );
+    const followupReady = targets.filter((t) => !!t.can_send_followup);
+    const followupSent = targets.filter((t) => !!t.followup_sent_at);
     return {
       total: targets.length,
       sent: sent.length,
@@ -487,6 +567,10 @@ export default function SpecialProjectsAdmin() {
       readyToSend: readyToSend.length,
       contactedNoReply: contactedNoReply.length,
       replied: replied.length,
+      followupNeeded: followupNeeded.length,
+      followupAwaiting: followupAwaiting.length,
+      followupReady: followupReady.length,
+      followupSent: followupSent.length,
     };
   }, [targets, stageIndex]);
 
@@ -510,6 +594,21 @@ export default function SpecialProjectsAdmin() {
     if (snapshot.readyToSend > 0)
       steps.push({
         text: `Send ${snapshot.readyToSend} approved draft${plural(snapshot.readyToSend)} that are ready to go.`,
+        tone: "action",
+      });
+    if (snapshot.followupNeeded > 0)
+      steps.push({
+        text: `Draft follow-ups for ${snapshot.followupNeeded} contacted account${plural(snapshot.followupNeeded)} (T2 second touch).`,
+        tone: "action",
+      });
+    if (snapshot.followupAwaiting > 0)
+      steps.push({
+        text: `Review & approve ${snapshot.followupAwaiting} follow-up draft${plural(snapshot.followupAwaiting)} before they send.`,
+        tone: "action",
+      });
+    if (snapshot.followupReady > 0)
+      steps.push({
+        text: `Send ${snapshot.followupReady} approved follow-up${plural(snapshot.followupReady)}.`,
         tone: "action",
       });
     if (snapshot.contactedNoReply > 0)
@@ -768,7 +867,12 @@ export default function SpecialProjectsAdmin() {
                     ))}
                   </div>
 
-                  {(snapshot.missingEmail > 0 || snapshot.awaitingApproval > 0 || snapshot.readyToSend > 0) && (
+                  {(snapshot.missingEmail > 0 ||
+                    snapshot.awaitingApproval > 0 ||
+                    snapshot.readyToSend > 0 ||
+                    snapshot.followupNeeded > 0 ||
+                    snapshot.followupAwaiting > 0 ||
+                    snapshot.followupReady > 0) && (
                     <div className="mt-4 flex flex-wrap gap-2">
                       {snapshot.missingEmail > 0 && (
                         <button
@@ -790,12 +894,42 @@ export default function SpecialProjectsAdmin() {
                         </a>
                       )}
                       {snapshot.readyToSend > 0 && (
+                        <button
+                          onClick={() => void sendAllApproved()}
+                          disabled={busy}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                          <Send className="h-3.5 w-3.5" /> Send all {snapshot.readyToSend} approved
+                        </button>
+                      )}
+                      {snapshot.followupNeeded > 0 && (
+                        <button
+                          onClick={() => void generateFollowups()}
+                          disabled={busy}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 disabled:opacity-50"
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" /> Draft {snapshot.followupNeeded} follow-up
+                          {snapshot.followupNeeded === 1 ? "" : "s"}
+                        </button>
+                      )}
+                      {snapshot.followupAwaiting > 0 && (
                         <a
                           href="#cal-queue"
-                          className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                          className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
                         >
-                          <Send className="h-3.5 w-3.5" /> Send {snapshot.readyToSend} approved
+                          <Check className="h-3.5 w-3.5" /> Review {snapshot.followupAwaiting} follow-up
+                          {snapshot.followupAwaiting === 1 ? "" : "s"}
                         </a>
+                      )}
+                      {snapshot.followupReady > 0 && (
+                        <button
+                          onClick={() => void sendAllFollowups()}
+                          disabled={busy}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
+                        >
+                          <Send className="h-3.5 w-3.5" /> Send all {snapshot.followupReady} follow-up
+                          {snapshot.followupReady === 1 ? "" : "s"}
+                        </button>
                       )}
                     </div>
                   )}
@@ -842,6 +976,14 @@ export default function SpecialProjectsAdmin() {
                         className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                       >
                         <Sparkles className="h-3.5 w-3.5" /> Regenerate drafts
+                      </button>
+                      <button
+                        onClick={() => void generateFollowups()}
+                        disabled={busy}
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                        title="Draft a T2 follow-up for every contacted account"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" /> Draft follow-ups
                       </button>
                       <button
                         onClick={() => void downloadCsv(false)}
@@ -973,7 +1115,7 @@ export default function SpecialProjectsAdmin() {
                                   <td colSpan={4} className="pb-3">
                                     <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
                                       <div className="text-[11px] font-semibold text-slate-500">
-                                        Subject · Sequence {t.sequence} · {t.persona}
+                                        First touch (T1) · Sequence {t.sequence} · {t.persona}
                                       </div>
                                       <div className="text-sm font-medium text-slate-800">{t.draft_subject}</div>
                                       <pre className="mt-2 whitespace-pre-wrap font-sans text-xs text-slate-700">
@@ -992,6 +1134,89 @@ export default function SpecialProjectsAdmin() {
                                         >
                                           Revoke approval
                                         </button>
+                                      )}
+
+                                      {/* Follow-up (T2) — only relevant once the first touch was sent */}
+                                      {t.sent_at && (
+                                        <div className="mt-3 border-t border-slate-200 pt-3">
+                                          <div className="flex items-center justify-between">
+                                            <div className="text-[11px] font-semibold text-sky-700">
+                                              Follow-up (T2){t.followup_sent_at ? " · sent" : ""}
+                                            </div>
+                                            {!t.followup_subject && !t.followup_sent_at && (
+                                              <button
+                                                onClick={() => void generateFollowups()}
+                                                disabled={busy}
+                                                className="text-[11px] font-medium text-sky-600 hover:text-sky-800 disabled:opacity-50"
+                                              >
+                                                Draft follow-up
+                                              </button>
+                                            )}
+                                          </div>
+                                          {t.followup_subject ? (
+                                            <>
+                                              <div className="mt-1 text-sm font-medium text-slate-800">
+                                                {t.followup_subject}
+                                              </div>
+                                              <pre className="mt-2 whitespace-pre-wrap font-sans text-xs text-slate-700">
+                                                {t.followup_body}
+                                              </pre>
+                                              <div className="mt-2 flex items-center gap-2">
+                                                {t.followup_sent_at ? (
+                                                  <span className="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-1 text-[11px] font-medium text-sky-700">
+                                                    <Check className="h-3 w-3" /> Follow-up sent
+                                                  </span>
+                                                ) : t.followup_approved ? (
+                                                  <>
+                                                    <button
+                                                      onClick={() =>
+                                                        void targetAction(
+                                                          `/api/admin/special-projects/${selected.id}/targets/${t.id}/send-followup`,
+                                                          { method: "POST" },
+                                                          `Follow-up sent to ${t.company}`,
+                                                        )
+                                                      }
+                                                      disabled={busy || !t.can_send_followup}
+                                                      className="inline-flex items-center gap-1 rounded-md bg-sky-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-sky-700 disabled:opacity-40"
+                                                    >
+                                                      <Send className="h-3 w-3" /> Send follow-up
+                                                    </button>
+                                                    <button
+                                                      onClick={() =>
+                                                        void targetAction(
+                                                          `/api/admin/special-projects/${selected.id}/targets/${t.id}/unapprove-followup`,
+                                                          { method: "POST" },
+                                                          "Follow-up approval revoked",
+                                                        )
+                                                      }
+                                                      className="text-[11px] font-medium text-slate-500 hover:text-red-600"
+                                                    >
+                                                      Revoke
+                                                    </button>
+                                                  </>
+                                                ) : (
+                                                  <button
+                                                    onClick={() =>
+                                                      void targetAction(
+                                                        `/api/admin/special-projects/${selected.id}/targets/${t.id}/approve-followup`,
+                                                        { method: "POST" },
+                                                        "Follow-up approved",
+                                                      )
+                                                    }
+                                                    disabled={busy}
+                                                    className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                                                  >
+                                                    <Check className="h-3 w-3" /> Approve follow-up
+                                                  </button>
+                                                )}
+                                              </div>
+                                            </>
+                                          ) : (
+                                            <p className="mt-1 text-[11px] text-slate-400">
+                                              No follow-up drafted yet.
+                                            </p>
+                                          )}
+                                        </div>
                                       )}
                                     </div>
                                   </td>

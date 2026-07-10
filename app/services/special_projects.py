@@ -144,6 +144,11 @@ def target_to_admin_dict(t: SpecialProjectTarget) -> dict[str, Any]:
         "last_activity_at": t.last_activity_at.isoformat() if t.last_activity_at else None,
         "notes": t.notes,
         "sort_order": t.sort_order,
+        "followup_subject": t.followup_subject,
+        "followup_body": t.followup_body,
+        "followup_approved": (t.followup_approved or "no").strip().lower() == "yes",
+        "followup_sent_at": t.followup_sent_at.isoformat() if t.followup_sent_at else None,
+        "can_send_followup": target_can_send_followup(t),
     }
 
 
@@ -273,6 +278,68 @@ def build_target_draft(project: SpecialProject, t: SpecialProjectTarget) -> tupl
     ``sequence`` so persona routing matches the GTM playbook.
     """
     return _nimo_draft(t)
+
+
+def _nimo_followup_draft(t: SpecialProjectTarget) -> tuple[str, str]:
+    """Return (subject, body) for a NIMO T2 follow-up — the second, gentle touch
+    for an account Cal has already emailed. Keyed off the target's sequence so it
+    matches the T1 angle (03_cal_outreach_sequences.md)."""
+    company = (t.company or "your team").strip()
+    greeting = _nimo_greeting(t.contact_name, company)
+    task = (t.best_fit_task or "your signature workflow").strip()
+    task_l = task[0].lower() + task[1:] if task else task
+    seq = (t.sequence or "A").strip().upper()
+
+    if seq == "B":
+        subject = "3 things this robot does that camera-only robots can't"
+        body = (
+            f"{greeting}\n\n"
+            "Following up with the short version of why touch matters:\n\n"
+            "1. Delicate handling — eggs, produce, soft items, without damage.\n"
+            "2. Precision portioning — by feel, no scale, consistent at volume.\n"
+            "3. Multi-step assembly — stack, press, and finish end to end.\n\n"
+            "As a pilot partner you'd help define the success metrics and get the data first — at no "
+            "cost. Worth 20 minutes?\n\n"
+            f"— {NIMO_SENDER}"
+        )
+    elif seq == "C":
+        subject = "A no-risk way to test kitchen automation"
+        body = (
+            f"{greeting}\n\n"
+            "Circling back on this. Why it's low-risk: no fee, a fixed 2–6 week pilot, and objective "
+            "metrics we agree on up front — uptime, units/hr vs. your baseline, and portion accuracy. "
+            f"You'd get a data-backed read on automating {task_l} before anyone else in your segment.\n\n"
+            "Can I grab 20 minutes?\n\n"
+            f"— {NIMO_SENDER}"
+        )
+    else:  # Sequence A (default)
+        subject = f"re: {task_l}"
+        body = (
+            f"{greeting}\n\n"
+            "Following up on my note. Quick reassurance on execution: our team has shipped robots to "
+            "market before (NASDAQ-listed), and the tactile research comes out of Stanford — so this "
+            "deploys in days, not a science project.\n\n"
+            f"For a pilot host it's genuinely low-risk: no fee, we tune the robot on your {task_l}, and "
+            "you get first-mover data on automating it. Open to a short look next week?\n\n"
+            f"— {NIMO_SENDER}"
+        )
+    return subject, body
+
+
+def build_target_followup(project: SpecialProject, t: SpecialProjectTarget) -> tuple[str, str]:
+    """Compose a review-first T2 follow-up draft for a contacted target."""
+    return _nimo_followup_draft(t)
+
+
+def target_can_send_followup(t: SpecialProjectTarget) -> bool:
+    """Review-first gate for the T2 follow-up: only after the first touch was
+    sent, the follow-up draft is human-approved, has an email, and hasn't gone."""
+    return (
+        t.sent_at is not None
+        and (t.followup_approved or "").strip().lower() == "yes"
+        and bool((t.contact_email or "").strip())
+        and t.followup_sent_at is None
+    )
 
 
 def enrich_target_email(t: SpecialProjectTarget) -> bool:

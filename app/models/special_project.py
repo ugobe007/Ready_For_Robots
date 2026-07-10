@@ -114,6 +114,12 @@ class SpecialProjectTarget(Base):
     stage = Column(String(24), nullable=False, server_default="targeted")
     approved = Column(String(8), nullable=False, server_default="no")  # "yes" once admin approves the draft
     sent_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Follow-up (T2): a second review-first touch for already-contacted accounts.
+    followup_subject = Column(Text, nullable=True)
+    followup_body = Column(Text, nullable=True)
+    followup_approved = Column(String(8), nullable=False, server_default="no")
+    followup_sent_at = Column(DateTime(timezone=True), nullable=True)
     last_activity_at = Column(DateTime(timezone=True), nullable=True)
     notes = Column(Text, nullable=True)
     sort_order = Column(Integer, nullable=False, server_default="0")

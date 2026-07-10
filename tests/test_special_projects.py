@@ -282,3 +282,100 @@ def test_bulk_sender_skips_unapproved_targets():
     # Verified scope still filters guessed contacts even when approved.
     assert _eligible(_FakeTarget(approved="yes", contact_status="guessed"), scope="verified") is False
     assert _eligible(_FakeTarget(approved="yes", contact_status="guessed"), scope="all") is True
+
+
+# ── Bulk send-approved endpoint (review-first) ──────────────────────────────────
+
+def test_send_all_approved_only_sends_approved(client, monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "app.services.cal_email_send.send_cal_email_via_resend",
+        lambda **kw: calls.append(kw) or {"id": "r"},
+    )
+    proj = _create(client)
+    # One approved+email, one with an email but NOT approved, one approved w/o email.
+    a = _add_target(client, proj["id"], company="Approved Co", contact_email="a@x.com")
+    _add_target(client, proj["id"], company="Unapproved Co", contact_email="b@x.com")
+    c = _add_target(client, proj["id"], company="NoEmail Co")
+    client.post(f"/api/admin/special-projects/{proj['id']}/targets/{a['id']}/approve")
+    client.post(f"/api/admin/special-projects/{proj['id']}/targets/{c['id']}/approve")
+
+    res = client.post(f"/api/admin/special-projects/{proj['id']}/targets/send-approved")
+    assert res.status_code == 200, res.text
+    body = res.json()
+    # Only the approved-with-email target is eligible + sent.
+    assert body["eligible"] == 1
+    assert body["sent"] == 1
+    assert len(calls) == 1
+    assert calls[0]["to_email"] == "a@x.com"
+
+    # Re-running sends nothing (already sent → not eligible again).
+    res2 = client.post(f"/api/admin/special-projects/{proj['id']}/targets/send-approved")
+    assert res2.json()["sent"] == 0
+
+
+# ── Follow-up (T2) — review-first second touch ──────────────────────────────────
+
+def _send_first(client, project_id, monkeypatch, **kw):
+    monkeypatch.setattr(
+        "app.services.cal_email_send.send_cal_email_via_resend", lambda **k: {"id": "r"}
+    )
+    t = _add_target(client, project_id, contact_email="ops@x.com", **kw)
+    client.post(f"/api/admin/special-projects/{project_id}/targets/{t['id']}/approve")
+    client.post(f"/api/admin/special-projects/{project_id}/targets/{t['id']}/send")
+    return t
+
+
+def test_generate_followups_only_for_contacted(client, monkeypatch):
+    proj = _create(client)
+    contacted = _send_first(client, proj["id"], monkeypatch, company="Contacted Co")
+    # A never-contacted target must NOT get a follow-up draft.
+    _add_target(client, proj["id"], company="Fresh Co", contact_email="f@x.com")
+
+    res = client.post(f"/api/admin/special-projects/{proj['id']}/targets/generate-followups")
+    assert res.status_code == 200, res.text
+    assert res.json()["generated"] == 1
+
+    listing = client.get(f"/api/admin/special-projects/{proj['id']}/targets").json()
+    by_company = {t["company"]: t for t in listing["targets"]}
+    assert by_company["Contacted Co"]["followup_subject"]
+    assert by_company["Contacted Co"]["followup_approved"] is False
+    assert by_company["Fresh Co"]["followup_subject"] in (None, "")
+
+
+def test_followup_send_requires_approval(client, monkeypatch):
+    proj = _create(client)
+    t = _send_first(client, proj["id"], monkeypatch, company="Contacted Co")
+    client.post(f"/api/admin/special-projects/{proj['id']}/targets/generate-followups")
+
+    # Not approved → refused.
+    res = client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/send-followup")
+    assert res.status_code == 400
+
+    # Approve then send.
+    sent = []
+    monkeypatch.setattr(
+        "app.services.cal_email_send.send_cal_email_via_resend",
+        lambda **kw: sent.append(kw) or {"id": "r"},
+    )
+    client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/approve-followup")
+    res = client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/send-followup")
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["followup_sent_at"] is not None
+    assert len(sent) == 1
+    # The follow-up carries the T2 subject, not the T1 subject.
+    assert sent[0]["subject"] != body["draft_subject"]
+
+    # Cannot double-send the follow-up.
+    res2 = client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/send-followup")
+    assert res2.status_code == 400
+
+
+def test_followup_cannot_send_before_first_touch(client):
+    # A target that was never contacted has no valid follow-up path.
+    proj = _create(client)
+    t = _add_target(client, proj["id"], contact_email="x@x.com")
+    client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/approve-followup")
+    res = client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/send-followup")
+    assert res.status_code == 400

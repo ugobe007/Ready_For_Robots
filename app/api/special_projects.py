@@ -32,11 +32,13 @@ from app.services.special_projects import (
     DEFAULT_PIPELINE_STAGES,
     UPDATE_CATEGORIES,
     build_target_draft,
+    build_target_followup,
     enrich_target_email,
     project_to_admin_dict,
     project_to_public_dict,
     recompute_project_rollup,
     target_can_send,
+    target_can_send_followup,
     target_to_admin_dict,
     unique_slug,
 )
@@ -448,6 +450,46 @@ def set_target_stage(
     return target_to_admin_dict(t)
 
 
+def _deliver_target(p: SpecialProject, t: SpecialProjectTarget, *, followup: bool) -> str:
+    """Send one target's draft (T1) or follow-up (T2) via Resend and stamp state.
+
+    Returns the sent subject. Raises on a send failure so the caller decides
+    whether to abort (single send) or continue (bulk). Assumes the review-first
+    gate (``target_can_send`` / ``target_can_send_followup``) already passed.
+    """
+    if followup:
+        subject = (t.followup_subject or "").strip()
+        body = (t.followup_body or "").strip()
+        idem = f"special-project/{p.id}/target/{t.id}/followup"
+    else:
+        subject = (t.draft_subject or "").strip()
+        body = (t.draft_body or "").strip()
+        idem = f"special-project/{p.id}/target/{t.id}"
+    if not subject or not body:
+        raise ValueError("Draft subject and body are required before sending.")
+
+    from app.services.cal_email_send import send_cal_email_via_resend
+
+    send_cal_email_via_resend(
+        to_email=t.contact_email.strip(),
+        subject=subject,
+        body_text=body,
+        reply_to=p.contact_email or None,
+        idempotency_key=idem,
+        include_demo=False,
+    )
+
+    now = datetime.now(timezone.utc)
+    t.last_activity_at = now
+    if followup:
+        t.followup_sent_at = now
+    else:
+        t.sent_at = now
+        if t.stage == "targeted":
+            t.stage = "contacted"
+    return subject
+
+
 @admin_router.post("/{project_id}/targets/{target_id}/send")
 def send_target(project_id: str, target_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
     """Send an approved draft via Resend. Review-first: refuses unapproved targets."""
@@ -458,30 +500,13 @@ def send_target(project_id: str, target_id: str, db: Session = Depends(get_db)) 
             status_code=400,
             detail="Target must be approved, have a contact email, and not already be sent.",
         )
-    subject = (t.draft_subject or "").strip()
-    body = (t.draft_body or "").strip()
-    if not subject or not body:
-        raise HTTPException(status_code=400, detail="Draft subject and body are required before sending.")
-
     try:
-        from app.services.cal_email_send import send_cal_email_via_resend
-
-        send_cal_email_via_resend(
-            to_email=t.contact_email.strip(),
-            subject=subject,
-            body_text=body,
-            reply_to=p.contact_email or None,
-            idempotency_key=f"special-project/{p.id}/target/{t.id}",
-            include_demo=False,
-        )
+        subject = _deliver_target(p, t, followup=False)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # keep the queue usable even if send fails
         raise HTTPException(status_code=502, detail=f"Send failed: {exc}") from exc
 
-    now = datetime.now(timezone.utc)
-    t.sent_at = now
-    t.last_activity_at = now
-    if t.stage == "targeted":
-        t.stage = "contacted"
     db.add(
         SpecialProjectUpdate(
             project_id=p.id,
@@ -495,6 +520,132 @@ def send_target(project_id: str, target_id: str, db: Session = Depends(get_db)) 
     db.commit()
     db.refresh(t)
     return target_to_admin_dict(t)
+
+
+@admin_router.post("/{project_id}/targets/send-approved")
+def send_all_approved(project_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Bulk-send every approved, sendable, not-yet-sent T1 draft (review-first).
+
+    Only targets a human already approved go out. Sends are best-effort per
+    target: a single failure is recorded and the batch continues.
+    """
+    p = _get_or_404(db, project_id)
+    eligible = [t for t in (p.targets or []) if target_can_send(t)]
+    sent = 0
+    failed: list[dict[str, str]] = []
+    for t in eligible:
+        try:
+            subject = _deliver_target(p, t, followup=False)
+        except Exception as exc:  # noqa: BLE001 - collect and continue
+            failed.append({"company": t.company or t.id, "error": str(exc)[:200]})
+            continue
+        db.add(
+            SpecialProjectUpdate(
+                project_id=p.id,
+                title=f"Cal contacted {t.company}",
+                body=f"Sent outreach to {t.contact_email} — subject: “{subject}”.",
+                category="outreach",
+            )
+        )
+        sent += 1
+    if sent:
+        db.flush()
+        recompute_project_rollup(p)
+    db.commit()
+    return {"status": "ok", "eligible": len(eligible), "sent": sent, "failed": failed}
+
+
+@admin_router.post("/{project_id}/targets/generate-followups")
+def generate_followups(project_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Draft a T2 follow-up for every already-contacted target that hasn't had a
+    follow-up sent yet. Review-first: new/changed drafts are set to unapproved."""
+    p = _get_or_404(db, project_id)
+    generated = 0
+    for t in p.targets or []:
+        if t.sent_at is None or t.followup_sent_at is not None:
+            continue
+        subject, body = build_target_followup(p, t)
+        changed = (t.followup_subject != subject) or (t.followup_body != body)
+        t.followup_subject, t.followup_body = subject, body
+        if changed and (t.followup_approved or "").strip().lower() == "yes":
+            t.followup_approved = "no"
+        generated += 1
+    db.commit()
+    return {"status": "ok", "generated": generated}
+
+
+@admin_router.post("/{project_id}/targets/{target_id}/approve-followup")
+def approve_followup(project_id: str, target_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    t = _get_target_or_404(db, project_id, target_id)
+    t.followup_approved = "yes"
+    db.commit()
+    db.refresh(t)
+    return target_to_admin_dict(t)
+
+
+@admin_router.post("/{project_id}/targets/{target_id}/unapprove-followup")
+def unapprove_followup(project_id: str, target_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    t = _get_target_or_404(db, project_id, target_id)
+    t.followup_approved = "no"
+    db.commit()
+    db.refresh(t)
+    return target_to_admin_dict(t)
+
+
+@admin_router.post("/{project_id}/targets/{target_id}/send-followup")
+def send_followup(project_id: str, target_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Send an approved T2 follow-up. Review-first: refuses unapproved follow-ups."""
+    p = _get_or_404(db, project_id)
+    t = _get_target_or_404(db, project_id, target_id)
+    if not target_can_send_followup(t):
+        raise HTTPException(
+            status_code=400,
+            detail="Follow-up must be approved, have a contact email, follow a first send, and not already be sent.",
+        )
+    try:
+        subject = _deliver_target(p, t, followup=True)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Follow-up send failed: {exc}") from exc
+
+    db.add(
+        SpecialProjectUpdate(
+            project_id=p.id,
+            title=f"Cal followed up with {t.company}",
+            body=f"Sent follow-up to {t.contact_email} — subject: “{subject}”.",
+            category="outreach",
+        )
+    )
+    db.commit()
+    db.refresh(t)
+    return target_to_admin_dict(t)
+
+
+@admin_router.post("/{project_id}/targets/send-followups")
+def send_all_followups(project_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Bulk-send every approved, not-yet-sent T2 follow-up (review-first)."""
+    p = _get_or_404(db, project_id)
+    eligible = [t for t in (p.targets or []) if target_can_send_followup(t)]
+    sent = 0
+    failed: list[dict[str, str]] = []
+    for t in eligible:
+        try:
+            subject = _deliver_target(p, t, followup=True)
+        except Exception as exc:  # noqa: BLE001 - collect and continue
+            failed.append({"company": t.company or t.id, "error": str(exc)[:200]})
+            continue
+        db.add(
+            SpecialProjectUpdate(
+                project_id=p.id,
+                title=f"Cal followed up with {t.company}",
+                body=f"Sent follow-up to {t.contact_email} — subject: “{subject}”.",
+                category="outreach",
+            )
+        )
+        sent += 1
+    db.commit()
+    return {"status": "ok", "eligible": len(eligible), "sent": sent, "failed": failed}
 
 
 # ── Public router (token-gated, no auth) ────────────────────────────────────────

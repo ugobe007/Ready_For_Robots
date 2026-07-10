@@ -82,6 +82,36 @@ TARGETS: list[tuple] = [
     ("University dining (large state system)", None, "Commissary / central prep", "Assembly", "Dining services director", "C", "W", "High-volume, repetitive assembly"),
     ("Casino / resort buffet central kitchen", None, "Commissary / central prep", "Prep + assembly", "F&B director", "C", "C", "High-volume prep"),
     ("Royal Caribbean (cruise commissary)", "royalcaribbean.com", "Commissary / central prep", "Portioning + assembly", "F&B innovation", "B", "C", "Massive standardized prep across ships"),
+    # ── Tier 3 — expansion batch (net-new ICP, adds pipeline depth) ──────────────
+    # Ghost / cloud kitchens
+    ("DoorDash Kitchens", "doordash.com", "Ghost / cloud kitchens", "Assembly + prep", "Head of Kitchen Ops", "A", "W", "Operates shared delivery-only kitchen facilities"),
+    ("Ghost Kitchen Brands", "ghostkitchenbrands.com", "Ghost / cloud kitchens", "Multi-brand assembly", "Ops lead", "A", "W", "Multi-brand delivery kitchens embedded in retail footprints"),
+    ("Butler Hospitality", "butlerhospitality.com", "Ghost / cloud kitchens", "Prep + assembly", "Founder / Ops", "A", "C", "Hotel-based virtual kitchens serving room service at scale"),
+    ("Everytable", "everytable.com", "Commissary / central prep", "Portioning + assembly", "Founder / Ops", "A", "H", "Central-kitchen model powering high-volume grab-and-go"),
+    # QSR innovation labs / high-volume franchisors
+    ("Taco Bell", "tacobell.com", "QSR innovation labs", "Assembly + portioning", "VP Innovation (Yum)", "B", "H", "Yum Brands innovation labs actively testing kitchen automation"),
+    ("Burger King", "bk.com", "QSR innovation labs", "Burger assembly", "RBI innovation", "B", "W", "RBI reimaging kitchens under its multi-year capital plan"),
+    ("Wingstop", "wingstop.com", "QSR innovation labs", "Fry + sauce portioning", "Ops innovation", "B", "H", "Rapid unit growth on a simple, automatable menu with a restaurant-of-the-future program"),
+    ("Panda Express", "pandaexpress.com", "QSR innovation labs", "Wok prep + portioning", "R&D / Ops", "B", "W", "Largest Asian QSR investing in kitchen innovation"),
+    ("Popeyes", "popeyes.com", "QSR innovation labs", "Prep + assembly", "RBI innovation", "B", "W", "RBI brand scaling with heavy fried-chicken prep labor"),
+    ("Del Taco", "deltaco.com", "QSR innovation labs", "Assembly", "Ops innovation", "C", "W", "Value QSR under margin and labor pressure"),
+    ("El Pollo Loco", "elpolloloco.com", "QSR innovation labs", "Prep + assembly", "Ops / R&D", "B", "W", "Publicly signaled automation interest for back-of-house"),
+    # Fast-casual assembly
+    ("Chopt", "choptsalad.com", "Fast-casual assembly", "Bowl + salad assembly", "Ops innovation", "B", "W", "High-volume salad assembly across urban units"),
+    ("Mendocino Farms", "mendocinofarms.com", "Fast-casual assembly", "Sandwich + bowl assembly", "Culinary Ops", "B", "W", "Chef-driven fast casual scaling nationally"),
+    ("Salad and Go", "saladandgo.com", "Fast-casual assembly", "Bowl assembly + portioning", "Ops", "A", "H", "Drive-thru salad concept built on a central-kitchen model"),
+    ("Honeygrow", "honeygrow.com", "Fast-casual assembly", "Stir-fry + bowl assembly", "Founder / Ops", "A", "W", "Tech-forward build-your-own concept"),
+    # Contract / institutional
+    ("Chartwells", "chartwellsk12.com", "Contract / institutional", "Prep + assembly", "Innovation (Compass)", "B", "W", "Compass division cooking at institutional volume"),
+    ("Bon Appétit Management", "bamco.com", "Contract / institutional", "Prep + assembly", "Culinary innovation", "B", "C", "Compass premium sector carrying a scratch-cooking labor load"),
+    ("SSP America", "foodtravelexperts.com", "Contract / institutional", "Assembly + prep", "Ops innovation", "C", "H", "Airport dining operator with brutal 24/7 staffing"),
+    # Commissary / meal service / grocery prepared foods
+    ("CookUnity", "cookunity.com", "Commissary / central prep", "Portioning + assembly", "Ops / automation", "A", "H", "Chef-marketplace meal service scaling central production"),
+    ("Thistle", "thistle.co", "Commissary / central prep", "Portioning + assembly", "Ops", "A", "W", "Plant-forward meal delivery from central kitchens"),
+    ("Daily Harvest", "daily-harvest.com", "Commissary / central prep", "Portioning + assembly", "Ops", "C", "W", "Frozen prepared-food production at scale"),
+    ("Home Chef", "homechef.com", "Commissary / central prep", "Portioning + assembly", "Ops (Kroger)", "C", "W", "Kroger-owned meal service with central assembly"),
+    ("Kroger (Kitchen 1883)", "kroger.com", "Commissary / central prep", "Prep + assembly", "Prepared-foods innovation", "B", "W", "Grocery prepared-foods program with an automation budget"),
+    ("Mosaic Foods", "mosaicfoods.com", "Commissary / central prep", "Portioning + assembly", "Founder / Ops", "A", "W", "Frozen plant-based meals from a central kitchen"),
 ]
 
 
