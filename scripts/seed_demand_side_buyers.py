@@ -127,6 +127,75 @@ OPERATORS: list[dict] = [
     {"name": "SBM Management", "domain": "sbmcorp.com", "industry": "Facilities Services & Manufacturing Support", "employee_estimate": 12000, "state": "CA"},
     {"name": "GDI Facilities", "domain": "gdi.com", "industry": "Facilities Services & Manufacturing Support", "employee_estimate": 30000, "state": "NY"},
     {"name": "Pritchard Industries", "domain": "pritchardindustries.com", "industry": "Facilities Services & Manufacturing Support", "employee_estimate": 8000, "state": "NY"},
+
+    # ── Batch 2: mid-market operators (better Hunter coverage, less overlap) ──
+    # Logistics / 3PL / cold storage
+    {"name": "Lineage Logistics", "domain": "lineagelogistics.com", "industry": "Logistics & Warehousing (Cold Storage)", "employee_estimate": 26000, "state": "MI"},
+    {"name": "United States Cold Storage", "domain": "uscold.com", "industry": "Logistics & Warehousing (Cold Storage)", "employee_estimate": 3500, "state": "NJ"},
+    {"name": "Burris Logistics", "domain": "burrislogistics.com", "industry": "Logistics & Warehousing (Cold Storage)", "employee_estimate": 2500, "state": "DE"},
+    {"name": "Capstone Logistics", "domain": "capstonelogistics.com", "industry": "Logistics & Warehousing (3PL)", "employee_estimate": 19000, "state": "GA"},
+    {"name": "Verst Logistics", "domain": "verstlogistics.com", "industry": "Logistics & Warehousing (3PL)", "employee_estimate": 2000, "state": "KY"},
+    {"name": "Hub Group", "domain": "hubgroup.com", "industry": "Logistics & Supply Chain", "employee_estimate": 6000, "state": "IL"},
+    {"name": "Averitt Express", "domain": "averittexpress.com", "industry": "Logistics & Freight", "employee_estimate": 8000, "state": "TN"},
+    {"name": "Echo Global Logistics", "domain": "echo.com", "industry": "Logistics & Supply Chain", "employee_estimate": 2500, "state": "IL"},
+    {"name": "RJW Logistics Group", "domain": "rjwlogistics.com", "industry": "Logistics & Warehousing (3PL)", "employee_estimate": 1500, "state": "IL"},
+    {"name": "Werner Enterprises", "domain": "werner.com", "industry": "Logistics & Supply Chain", "employee_estimate": 14000, "state": "NE"},
+
+    # Food service / catering / commissary
+    {"name": "Thompson Hospitality", "domain": "thompsonhospitality.com", "industry": "Food Service & Hospitality", "employee_estimate": 6000, "state": "VA"},
+    {"name": "Whitsons Culinary Group", "domain": "whitsons.com", "industry": "Food Service & Catering", "employee_estimate": 5000, "state": "NY"},
+    {"name": "AVI Foodsystems", "domain": "avifoodsystems.com", "industry": "Food Service & Catering", "employee_estimate": 10000, "state": "OH"},
+    {"name": "Metz Culinary Management", "domain": "metzculinary.com", "industry": "Food Service & Catering", "employee_estimate": 4000, "state": "PA"},
+    {"name": "Parkhurst Dining", "domain": "parkhurstdining.com", "industry": "Food Service & Catering", "employee_estimate": 3000, "state": "PA"},
+    {"name": "CulinArt Group", "domain": "culinartgroup.com", "industry": "Food Service & Catering", "employee_estimate": 3000, "state": "NY"},
+    {"name": "Bon Appetit Management", "domain": "bamco.com", "industry": "Food Service & Catering", "employee_estimate": 25000, "state": "CA"},
+
+    # QSR / fast casual
+    {"name": "Portillos", "domain": "portillos.com", "industry": "Food Service (Restaurants)", "employee_estimate": 9000, "state": "IL"},
+    {"name": "Shake Shack", "domain": "shakeshack.com", "industry": "Food Service (Fast Casual)", "employee_estimate": 12000, "state": "NY"},
+    {"name": "Jersey Mikes", "domain": "jerseymikes.com", "industry": "Food Service (Restaurants)", "employee_estimate": 5000, "state": "NJ"},
+    {"name": "Culvers", "domain": "culvers.com", "industry": "Food Service (Restaurants)", "employee_estimate": 3000, "state": "WI"},
+    {"name": "Bojangles", "domain": "bojangles.com", "industry": "Food Service (Restaurants)", "employee_estimate": 12000, "state": "NC"},
+    {"name": "El Pollo Loco", "domain": "elpolloloco.com", "industry": "Food Service (Restaurants)", "employee_estimate": 4000, "state": "CA"},
+    {"name": "Noodles & Company", "domain": "noodles.com", "industry": "Food Service (Fast Casual)", "employee_estimate": 9000, "state": "CO"},
+    {"name": "Firehouse Subs", "domain": "firehousesubs.com", "industry": "Food Service (Restaurants)", "employee_estimate": 3000, "state": "FL"},
+
+    # Hospitality / hotel management
+    {"name": "Concord Hospitality Enterprises", "domain": "concordhotels.com", "industry": "Hospitality (Hotel Management)", "employee_estimate": 12000, "state": "NC"},
+    {"name": "Pyramid Global Hospitality", "domain": "pyramidglobal.com", "industry": "Hospitality (Hotel Management)", "employee_estimate": 25000, "state": "MA"},
+    {"name": "HEI Hotels & Resorts", "domain": "heihotels.com", "industry": "Hospitality (Hotel Management)", "employee_estimate": 12000, "state": "CT"},
+    {"name": "White Lodging", "domain": "whitelodging.com", "industry": "Hospitality (Hotel Management)", "employee_estimate": 8000, "state": "IN"},
+    {"name": "Springboard Hospitality", "domain": "springboardhospitality.com", "industry": "Hospitality (Hotel Management)", "employee_estimate": 3000, "state": "HI"},
+
+    # Healthcare / senior living
+    {"name": "Genesis Healthcare", "domain": "genesishcc.com", "industry": "Healthcare (Skilled Nursing)", "employee_estimate": 40000, "state": "PA"},
+    {"name": "Ensign Group", "domain": "ensigngroup.net", "industry": "Healthcare (Skilled Nursing)", "employee_estimate": 30000, "state": "CA"},
+    {"name": "Trilogy Health", "domain": "trilogyhs.com", "industry": "Senior Living & Assisted Living", "employee_estimate": 15000, "state": "KY"},
+    {"name": "Life Care Centers of America", "domain": "lcca.com", "industry": "Healthcare (Skilled Nursing)", "employee_estimate": 40000, "state": "TN"},
+    {"name": "Erickson Senior Living", "domain": "ericksonseniorliving.com", "industry": "Senior Living & Assisted Living", "employee_estimate": 15000, "state": "MD"},
+    {"name": "Benchmark Senior Living", "domain": "benchmarkseniorliving.com", "industry": "Senior Living & Assisted Living", "employee_estimate": 6000, "state": "MA"},
+    {"name": "Life Care Communities", "domain": "lcsnet.com", "industry": "Senior Living & Assisted Living", "employee_estimate": 40000, "state": "IA"},
+
+    # Food manufacturing / processing / CPG
+    {"name": "Schwans Company", "domain": "schwanscompany.com", "industry": "Food Manufacturing & CPG", "employee_estimate": 12000, "state": "MN"},
+    {"name": "Flowers Foods", "domain": "flowersfoods.com", "industry": "Food Manufacturing & CPG", "employee_estimate": 9000, "state": "GA"},
+    {"name": "Utz Brands", "domain": "utzsnacks.com", "industry": "Food Manufacturing & CPG", "employee_estimate": 3500, "state": "PA"},
+    {"name": "Simmons Foods", "domain": "simmonsfoods.com", "industry": "Food Processing & Manufacturing", "employee_estimate": 8000, "state": "AR"},
+    {"name": "Michael Foods Group", "domain": "michaelfoods.com", "industry": "Food Processing & Manufacturing", "employee_estimate": 8000, "state": "MN"},
+    {"name": "Clemens Food Group", "domain": "clemensfoodgroup.com", "industry": "Food Processing & Manufacturing", "employee_estimate": 5000, "state": "PA"},
+    {"name": "Johnsonville", "domain": "johnsonville.com", "industry": "Food Manufacturing & CPG", "employee_estimate": 3000, "state": "WI"},
+
+    # Food & beverage distribution (grocery supply)
+    {"name": "SpartanNash", "domain": "spartannash.com", "industry": "Food & Beverage Distribution", "employee_estimate": 20000, "state": "MI"},
+    {"name": "KeHE Distributors", "domain": "kehe.com", "industry": "Food & Beverage Distribution", "employee_estimate": 6000, "state": "IL"},
+    {"name": "Gordon Food Group", "domain": "gfs.com", "industry": "Food & Beverage Distribution", "employee_estimate": 25000, "state": "MI"},
+    {"name": "Shamrock Foods", "domain": "shamrockfoods.com", "industry": "Food & Beverage Distribution", "employee_estimate": 5000, "state": "AZ"},
+    {"name": "United Natural Foods", "domain": "unfi.com", "industry": "Food & Beverage Distribution", "employee_estimate": 29000, "state": "RI"},
+
+    # Facilities services
+    {"name": "Marsden Holding", "domain": "marsden.com", "industry": "Facilities Services & Manufacturing Support", "employee_estimate": 10000, "state": "MN"},
+    {"name": "Diversified Maintenance Systems", "domain": "diversifiedm.com", "industry": "Facilities Services & Manufacturing Support", "employee_estimate": 10000, "state": "FL"},
+    {"name": "Harvard Maintenance", "domain": "harvardmaintenance.com", "industry": "Facilities Services & Manufacturing Support", "employee_estimate": 9000, "state": "NY"},
 ]
 
 
