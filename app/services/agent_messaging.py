@@ -152,6 +152,88 @@ def _buyer_sector(industry: str) -> str:
     return low
 
 
+# Practitioner-grade read on each vertical so Cal speaks like someone who has
+# actually watched robots deploy there — not a generalist fishing for a meeting.
+# `use` = how robots really get deployed, `edge` = what separates a working
+# deployment from a demo, `pain` = where the value actually hides, `pain_q` = the
+# same constraint framed as an honest opening question.
+_GENERIC_INSIGHT = {
+    "use": "the repetitive, hard-to-staff work — moving material and running the same task thousands of times a day",
+    "edge": "whether it holds up in your real conditions, not a vendor's demo",
+    "pain": "the one job that's actually costing you, rather than a fleet you'll never fully use",
+    "pain_q": "is there one repetitive, hard-to-staff job quietly costing you more than the rest",
+}
+
+_INDUSTRY_INSIGHT: tuple[tuple[tuple[str, ...], dict[str, str]], ...] = (
+    (
+        ("logistic", "warehous", "supply chain", "fulfil", "distribution", "3pl"),
+        {
+            "use": "goods-to-person picking, autonomous case and pallet moves, and keeping product flowing to the pack line",
+            "edge": "whether it still holds up at peak volume and mixed SKUs, not just in a clean demo aisle",
+            "pain": "the one station — induction, replen, or each-pick — where labor and errors quietly pile up",
+            "pain_q": "is one station — induction, replen, or each-pick — quietly eating your labor and error budget",
+        },
+    ),
+    (
+        ("hospitality", "hotel", "casino", "gaming", "resort"),
+        {
+            "use": "room and amenity delivery, back-of-house runs, and autonomous floor cleaning",
+            "edge": "whether it can actually work a full building with guests and elevators, not an empty showroom floor",
+            "pain": "overnight coverage and the repetitive runs — deliveries, linen, lobby cleaning — that quietly eat staff hours",
+            "pain_q": "are the repetitive runs — deliveries, linen, overnight cleaning — where your staff hours disappear",
+        },
+    ),
+    (
+        ("health", "medical", "hospital", "clinic", "elder", "senior living"),
+        {
+            "use": "autonomous transport of supplies, meds, lab samples, linen and waste",
+            "edge": "whether it integrates with your elevators, badge access and EVS workflow — the part demos skip",
+            "pain": "the hours clinical staff lose fetching and walking material instead of caring for patients",
+            "pain_q": "are your clinical staff losing hours fetching and moving supplies instead of caring for patients",
+        },
+    ),
+    (
+        ("food", "restaurant", "kitchen", "beverage", "grocery"),
+        {
+            "use": "repetitive prep and pick-and-place cells — frying, portioning, tray loading, palletizing",
+            "edge": "food-safe handling and fast changeover between products, where a lot of cells fall down",
+            "pain": "one high-turnover station that's hard to keep staffed, not a wall of machines",
+            "pain_q": "is there one high-turnover station you can never keep reliably staffed",
+        },
+    ),
+    (
+        ("manufactur", "industrial", "automotive", "assembly", "factory", "cnc", "metal"),
+        {
+            "use": "machine tending, palletizing, and moving material between cells with cobots and AMRs",
+            "edge": "whether it flexes across changeovers instead of only running one part number",
+            "pain": "the repetitive tending and transport jobs nobody wants — especially in high-mix runs",
+            "pain_q": "is repetitive machine tending and material movement where your labor keeps going",
+        },
+    ),
+    (
+        ("retail", "store", "e-commerce", "ecommerce", "apparel", "consumer goods"),
+        {
+            "use": "shelf-scanning, backroom sortation, and inventory-accuracy robots",
+            "edge": "whether the data actually changes what staff do, or just becomes another dashboard",
+            "pain": "inventory accuracy and the replenishment labor behind it",
+            "pain_q": "are inventory accuracy and replenishment labor the real drain",
+        },
+    ),
+)
+
+
+def _buyer_insight(industry: str) -> dict[str, str]:
+    """Return the practitioner read for an industry (substring match, generic fallback)."""
+    ind = (industry or "").strip()
+    if "(" in ind:
+        ind = ind.split("(", 1)[0].strip()
+    low = ind.lower()
+    for keys, insight in _INDUSTRY_INSIGHT:
+        if any(k in low for k in keys):
+            return insight
+    return _GENERIC_INSIGHT
+
+
 def pick_buyer_variant(company_id, *, allowed=None) -> str:
     """Deterministic round-robin so a company's draft and send agree on the angle."""
     pool = [v for v in (allowed or BUYER_VARIANTS) if v in BUYER_VARIANTS]
@@ -186,18 +268,19 @@ def resolve_buyer_variant(company, acct=None) -> str | None:
 
 def _variant_candid(name: str, industry: str) -> str:
     sector = _buyer_sector(industry)
+    ins = _buyer_insight(industry)
     return "\n".join([
         CAL_INTRO,
         "",
-        f"I'll be straight with you: I don't know enough about how {name} actually runs to say anything "
-        f"smart about robots yet. What I do is help operations teams work out whether automation is even "
-        f"worth it for their setup — and honestly, a lot of the time the answer is \"not yet.\"",
+        f"I won't pretend to diagnose {name} from the outside — I don't know how you run. But I do know "
+        f"{sector}: the robots that earn their place there mostly do {ins['use']}, and the ones that pay "
+        f"off get pointed at {ins['pain']}.",
         "",
-        f"If it's a question you're kicking around this year, I'd be glad to compare notes: where I've "
-        f"seen robots genuinely earn their place in {sector}, and where they just turn into expensive "
-        f"shelf decoration.",
+        f"Where it usually goes wrong is treating this as a fleet decision instead of a fit decision. The "
+        f"part that actually decides it is {ins['edge']}.",
         "",
-        "No pitch, no deck. And if it's not on your radar, tell me and I'll leave you be.",
+        "If automation's a question you're weighing this year, I'd be glad to compare notes — and if it's "
+        "not the right call yet, I'll say so. If it's not on your radar at all, tell me and I'll leave you be.",
         "",
         cal_signature(),
     ])
@@ -205,34 +288,38 @@ def _variant_candid(name: str, industry: str) -> str:
 
 def _variant_peer(name: str, industry: str) -> str:
     sector = _buyer_sector(industry)
+    ins = _buyer_insight(industry)
     return "\n".join([
         CAL_INTRO,
         "",
-        f"Most teams I talk to in {sector} have already looked at robots — and plenty got burned: a "
-        f"pilot that demoed well, then stalled the first time it hit real volume. If {name} has been "
-        f"through that, you're in good company, and I understand the skepticism.",
+        f"I'll skip the pitch and give you the honest read on {sector}: robots genuinely do good work "
+        f"there — {ins['use']} — but what separates the deployments that pay off from the ones that stall "
+        f"is almost never the hardware. It's {ins['edge']}.",
         "",
-        "What I actually do is help teams tell the difference between automation that holds up in a "
-        "working operation and the kind that only shines in a sales demo. Sometimes that means telling "
-        "someone to wait.",
+        f"I'm not assuming anything about {name} — you may already have this dialed in, or robots may be "
+        f"nowhere near your list. What I actually do is help teams tell working automation from the kind "
+        f"that only shines in a demo, and aim it at {ins['pain']}. Sometimes that means telling someone to wait.",
         "",
-        "If you've tried before, I'd genuinely like to hear what happened. If you haven't, I can tell you "
-        "what tends to work for a team like yours — and, just as honestly, when it doesn't.",
+        "If you've looked at this before, I'd genuinely like to hear what you found. If you haven't, I can "
+        "tell you what tends to work for a team like yours — and, just as honestly, when it doesn't.",
         "",
         cal_signature(),
     ])
 
 
 def _variant_question(name: str, industry: str) -> str:
+    sector = _buyer_sector(industry)
+    ins = _buyer_insight(industry)
     return "\n".join([
         CAL_INTRO,
         "",
-        f"Quick question, honestly: is automation even on the table for {name} this year — or is it one "
-        f"of those \"someday, not now\" things?",
+        f"Honest question about {name}: {ins['pain_q']}? Or is that already handled, and automation just "
+        f"isn't the priority right now?",
         "",
-        "I ask because that exact call — whether a robot would genuinely fit how you run, and whether "
-        "now is even the right time — is what I help operations teams work through. Plenty of those "
-        "conversations end in \"not yet,\" and that's completely fine.",
+        f"I ask because in {sector} the robots that actually work come down to {ins['use']}, aimed at one "
+        f"real constraint rather than the whole operation. Whether that fits how you run — and whether "
+        f"now's even the time — is what I help operations teams think through. Plenty of those talks end "
+        f"in \"not yet,\" and that's completely fine.",
         "",
         "If it's worth a short back-and-forth, just reply. If not, no hard feelings — I won't chase you.",
         "",
