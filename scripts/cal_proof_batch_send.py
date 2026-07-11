@@ -140,15 +140,18 @@ def main() -> int:
 
             dom = normalize_website_domain(c.website or a.website)
             cc = infer_cc_outreach_emails(dom, c.industry, primary=to_email)
+            from app.services.agent_messaging import resolve_buyer_variant
+
+            variant_id = resolve_buyer_variant(c, a)
             try:
                 send_cal_intro_email(
                     db, acct=a, company=c, team_id=team.id, to_email=to_email,
                     subject=subject, body_text=body_text,
                     cc=[cc[0]] if cc else None, sender_user_id=uid,
                     idempotency_key=f"cal-proof-{a.id}-{now.date().isoformat()}",
-                    send_identity="cal",
+                    send_identity="cal", variant_id=variant_id,
                 )
-                enroll_cal_followup(db, team_id=team.id, crm_account_id=a.id)
+                enroll_cal_followup(db, team_id=team.id, crm_account_id=a.id, variant_id=variant_id)
                 sent += 1
                 print(f"  SENT {a.name[:32]:32} -> {to_email}")
             except ResendEmailError as exc:

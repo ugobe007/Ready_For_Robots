@@ -104,39 +104,142 @@ def _persist_template_fingerprint(fp: str) -> None:
         pass
 
 
-def cal_buyer_outreach_body(company: Any, *, fresh: bool = False) -> str:
-    """Cal-voice outreach to buyer-side prospects (admin Cal queue + autonomy)."""
-    from app.services.agent_messaging import (
-        BUYER_CAL_PERSONALITY,
-        BUYER_OUTREACH_CTA,
-        BUYER_ROI_PROOF,
-        BUYER_SIGNAL_EXPLANATION,
-        CAL_INTRO,
-        buyer_company_hook,
-        cal_signature,
-    )
+# ── Safe auto-send guards: daily cap + angle rotation/retirement ──────────────
+
+def cal_daily_send_cap() -> int:
+    """Hard ceiling on buyer intros per calendar day across all cycles.
+
+    Deliberately conservative — we resume auto-send throttled low so the new
+    trust-first angles can prove out on small batches before any volume push.
+    """
+    try:
+        return max(0, int(os.getenv("CAL_AUTONOMY_DAILY_CAP", "10") or "10"))
+    except (TypeError, ValueError):
+        return 10
+
+
+def _daily_send_key() -> str:
+    return f"cal:auto:daily_sent:{datetime.now(timezone.utc).date().isoformat()}"
+
+
+def cal_daily_sent_count() -> int:
+    client = _redis_client()
+    if not client:
+        return 0
+    try:
+        return int(client.get(_daily_send_key()) or 0)
+    except Exception:
+        return 0
+
+
+def _incr_daily_sent(n: int = 1) -> None:
+    if n <= 0:
+        return
+    client = _redis_client()
+    if not client:
+        return
+    try:
+        key = _daily_send_key()
+        client.incrby(key, n)
+        client.expire(key, 60 * 60 * 36)
+    except Exception:
+        pass
+
+
+# Retire an angle only after enough sends to mean anything, and only if its
+# negative-reply rate is clearly bad. Never retire the last surviving angle.
+_VARIANT_MIN_SENDS_TO_JUDGE = int(os.getenv("CAL_VARIANT_MIN_SENDS", "12") or "12")
+_VARIANT_MAX_NEGATIVE_RATE = float(os.getenv("CAL_VARIANT_MAX_NEG_RATE", "0.40") or "0.40")
+
+
+def active_buyer_variants(db) -> list[str]:
+    """Angles Cal is allowed to draft right now.
+
+    Priority:
+      1. Operator override in Redis (`cal:buyer_variants:active`, comma list).
+      2. Auto-retirement: drop any angle whose negative-reply rate over the last
+         30 days exceeds the threshold once it has enough sends to judge.
+    Always returns at least one angle (never retires the last one).
+    """
+    from app.services.agent_messaging import BUYER_VARIANTS
+
+    client = _redis_client()
+    if client is not None:
+        try:
+            raw = (client.get("cal:buyer_variants:active") or "").strip()
+        except Exception:
+            raw = ""
+        if raw:
+            chosen = [v.strip() for v in raw.split(",") if v.strip() in BUYER_VARIANTS]
+            if chosen:
+                return chosen
+
+    try:
+        from app.models.outreach import OutreachMessage, OutreachReply
+
+        since = datetime.now(timezone.utc) - timedelta(days=30)
+        variant_expr = OutreachMessage.payload.op("->>")("variant_id")
+        sent_by_variant: dict[str, int] = {}
+        for vid, cnt in (
+            db.query(variant_expr, func.count(OutreachMessage.id))
+            .filter(
+                OutreachMessage.sent_at.isnot(None),
+                OutreachMessage.sent_at >= since,
+                variant_expr.isnot(None),
+            )
+            .group_by(variant_expr)
+            .all()
+        ):
+            if vid:
+                sent_by_variant[vid] = int(cnt or 0)
+
+        neg_by_variant: dict[str, int] = {}
+        rows = (
+            db.query(variant_expr, OutreachReply.sentiment, OutreachReply.detected_intent)
+            .join(OutreachReply, OutreachReply.outreach_message_id == OutreachMessage.id)
+            .filter(OutreachReply.received_at >= since, variant_expr.isnot(None))
+            .all()
+        )
+        for vid, sentiment, intent in rows:
+            if vid and (sentiment == "negative" or intent in ("not_a_fit", "unsubscribe")):
+                neg_by_variant[vid] = neg_by_variant.get(vid, 0) + 1
+
+        keep: list[str] = []
+        retired: list[str] = []
+        for vid in BUYER_VARIANTS:
+            sent = sent_by_variant.get(vid, 0)
+            neg = neg_by_variant.get(vid, 0)
+            if sent >= _VARIANT_MIN_SENDS_TO_JUDGE and (neg / sent) >= _VARIANT_MAX_NEGATIVE_RATE:
+                retired.append(vid)
+            else:
+                keep.append(vid)
+        # Never retire everything — if all look bad, keep the least-bad by neg rate.
+        if not keep:
+            keep = sorted(
+                BUYER_VARIANTS,
+                key=lambda v: (neg_by_variant.get(v, 0) / max(1, sent_by_variant.get(v, 0))),
+            )[:1]
+        if retired:
+            logger.info("Cal auto-retired losing buyer angles: %s", retired)
+        return keep
+    except Exception as exc:  # noqa: BLE001 — rotation must never break the cycle
+        logger.info("active_buyer_variants fell back to all angles: %s", exc)
+        return list(BUYER_VARIANTS)
+
+
+def cal_buyer_outreach_body(company: Any, *, fresh: bool = False, variant_id: str | None = None) -> str:
+    """Cal-voice outreach to buyer-side prospects (admin Cal queue + autonomy).
+
+    Trust-first: picks one of the humble, non-presumptuous angles. Selection is
+    deterministic by company id so the stored draft and the send agree on the
+    angle; callers may override with an explicit variant_id.
+    """
+    from app.services.agent_messaging import build_buyer_variant_body, pick_buyer_variant
 
     name = (getattr(company, "name", None) or "your team").strip()
     industry = (getattr(company, "industry", None) or "your industry").strip()
-
-    # Read like a person wrote it: who I am → what I do → why you specifically →
-    # quiet credibility → a low-pressure ask → an honest note that I'll say no.
-    lines = [
-        CAL_INTRO,
-        "",
-        BUYER_SIGNAL_EXPLANATION,
-        "",
-        buyer_company_hook(name, industry=industry),
-        "",
-        BUYER_ROI_PROOF,
-        "",
-        BUYER_OUTREACH_CTA,
-        "",
-        BUYER_CAL_PERSONALITY,
-        "",
-        cal_signature(),
-    ]
-    return "\n".join(lines)
+    vid = variant_id or pick_buyer_variant(getattr(company, "id", None))
+    return build_buyer_variant_body(name, industry, vid)
 
 
 def cal_vendor_outreach_body(company: Any, *, fresh: bool = False) -> str:
@@ -180,9 +283,16 @@ def format_cal_draft_storage(subject: str, body: str) -> str:
 
 def outreach_template_fingerprint() -> str:
     version = (os.getenv("CAL_TEMPLATE_VERSION") or "2").strip()
-    sample_company = SimpleNamespace(name="Sample Robotics Co", industry="Logistics", website=None)
+    sample_company = SimpleNamespace(name="Sample Robotics Co", industry="Logistics", website=None, id=1)
     sample_body = cal_vendor_outreach_body(sample_company, fresh=False)
-    payload = f"{version}|{sample_body[:800]}"
+    # Fold every buyer angle in so a change to any trust-first variant also trips
+    # the format-review notification, not just vendor copy.
+    from app.services.agent_messaging import BUYER_VARIANTS, build_buyer_variant_body
+
+    buyer_samples = "|".join(
+        build_buyer_variant_body("Sample Ops Co", "Logistics", vid)[:400] for vid in BUYER_VARIANTS
+    )
+    payload = f"{version}|{sample_body[:800]}|{buyer_samples}"
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:20]
 
 
@@ -272,6 +382,7 @@ def _draft_and_store(
     existing: dict[int, Any],
     regenerate: bool,
     stale_before: Optional[datetime],
+    allowed_variants: Optional[list[str]] = None,
 ) -> tuple[bool, bool]:
     """Return (drafted, refreshed)."""
     from app.api.admin_extended import _cal_draft_for_company
@@ -295,7 +406,21 @@ def _draft_and_store(
         if not needs_refresh:
             return False, False
 
-    subject, draft_body = _cal_draft_for_company(company, fresh=regenerate or is_stale)
+    # Resolve the trust-first angle once and persist it so the send loop tags the
+    # exact same variant that was drafted (survives future angle-rotation logic).
+    from app.services.agent_messaging import pick_buyer_variant
+
+    is_buyer = (company.crm_metadata or {}).get("outreach_pipeline") != "stagegate"
+    variant_id = (
+        pick_buyer_variant(company.id, allowed=allowed_variants) if is_buyer else None
+    )
+    subject, draft_body = _cal_draft_for_company(
+        company, fresh=regenerate or is_stale, variant_id=variant_id
+    )
+    if variant_id:
+        meta = dict(company.crm_metadata or {})
+        meta["cal_variant_id"] = variant_id
+        company.crm_metadata = meta
 
     if acct is None:
         from app.models.crm import CrmAccount
@@ -366,6 +491,16 @@ def _cal_buyer_eligible(company: Any, acct: Any = None) -> tuple[bool, str]:
     # StageGate pipeline, from a StageGate identity — never as an RFR buyer.
     if company_brand(company, acct) == BRAND_STAGEGATE:
         return False, "stagegate account — isolated from Ready For Robots buyer loop"
+
+    # Reply-driven suppression: a prospect who opted out or told us "not a fit"
+    # must never be re-drafted or re-sent — even if a later bounce-recovery pass
+    # clears outreach_sent_at.
+    meta = getattr(company, "crm_metadata", None) or {}
+    if meta.get("do_not_contact"):
+        return False, f"do-not-contact ({meta.get('do_not_contact_reason') or 'opt_out'})"
+    stage = (getattr(acct, "outreach_stage", None) or "").lower()
+    if stage in ("opted_out", "unsubscribed", "not_a_fit"):
+        return False, f"suppressed ({stage})"
 
     name = (getattr(company, "name", None) or "").strip()
     junk, reason = is_junk(name, "buyer")
@@ -440,6 +575,14 @@ def run_cal_autonomy_cycle(
 
     draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
     send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
+    # Angle rotation: only draft with angles that haven't been auto-retired.
+    allowed_variants = active_buyer_variants(db)
+    # Daily cap across all cycles — resume auto-send throttled low.
+    daily_cap = cal_daily_send_cap()
+    already_sent_today = cal_daily_sent_count()
+    daily_remaining = max(0, daily_cap - already_sent_today) if daily_cap else send_limit
+    if daily_cap:
+        send_limit = min(send_limit, daily_remaining)
     followup_limit = int(os.getenv("CAL_AUTONOMY_FOLLOWUP_LIMIT", "25") or "25")
     # Pool window is decoupled from the draft batch so Cal can look past the
     # bounce-era top ranks and reach freshly-unsent (or reset) buyers deeper in
@@ -482,6 +625,7 @@ def run_cal_autonomy_cycle(
             existing=existing,
             regenerate=False,
             stale_before=stale_before,
+            allowed_variants=allowed_variants,
         )
         if did_draft:
             drafted += 1
@@ -620,6 +764,9 @@ def run_cal_autonomy_cycle(
         try:
             from app.services.cal_outreach_send import enroll_cal_followup, send_cal_intro_email
 
+            from app.services.agent_messaging import resolve_buyer_variant
+
+            variant_id = resolve_buyer_variant(company, acct)
             send_cal_intro_email(
                 db,
                 acct=acct,
@@ -632,9 +779,11 @@ def run_cal_autonomy_cycle(
                 sender_user_id=uid,
                 idempotency_key=f"cal-auto-{acct.id}-{now.date().isoformat()}",
                 send_identity="cal",
+                variant_id=variant_id,
             )
             sent += 1
-            enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id)
+            _incr_daily_sent(1)
+            enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id, variant_id=variant_id)
         except ResendEmailError as exc:
             errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
 
@@ -667,6 +816,9 @@ def run_cal_autonomy_cycle(
         "format_review_notified": format_notified,
         "review_email": get_cal_review_email(),
         "admin_user_id": str(uid),
+        "active_variants": allowed_variants,
+        "daily_cap": daily_cap,
+        "daily_sent": cal_daily_sent_count(),
     }
 
 

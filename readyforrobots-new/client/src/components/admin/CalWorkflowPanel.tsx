@@ -45,14 +45,15 @@ function calRecommendation(m: CalWorkflowMetrics): { tone: "warn" | "go"; text: 
   const sent = n(m.sent);
   const replied = n(m.replied);
 
-  // A lot sent, nothing back → stop blasting, fix targeting/copy first.
+  // A lot sent, nothing back → stop blasting. Those were the old copy; the fix
+  // is to regenerate with the new trust-first angles and prove a small batch.
   if (sent >= 40 && replied === 0) {
     return {
       tone: "warn",
       text:
-        `You've sent ${sent.toLocaleString()} intros with 0 replies. Don't send more on volume — ` +
-        `fix any blocked drafts, tighten who's actually a buyer, and let the new copy prove out on a ` +
-        `small batch (20–30) before another bulk send.`,
+        `Those ${sent.toLocaleString()} intros went out on the old copy and got 0 replies. Don't send more on ` +
+        `volume — press Regenerate (Step 1) to rewrite the queue with the new trust-first angles, ` +
+        `review a handful, then send just 20–30 and let the angles prove out before another batch.`,
     };
   }
   if (pending > 0) {

@@ -207,8 +207,13 @@ def enroll_after_intro_send(
     team_id,
     crm_account_id,
     sequence: OutreachSequence | None = None,
+    variant_id: str | None = None,
 ) -> OutreachSequenceEnrollment:
-    """Enroll after Cal's intro email — schedule step 2 follow-up."""
+    """Enroll after Cal's intro email — schedule step 2 follow-up.
+
+    The intro's trust-first `variant_id` is stored on the enrollment so every
+    follow-up in the cadence is attributed to the same angle in reporting.
+    """
     sequence = sequence or ensure_default_sequence(db, team_id=team_id)
     now = datetime.now(timezone.utc)
     existing = (
@@ -234,6 +239,10 @@ def enroll_after_intro_send(
             existing.paused_reason = None
         existing.current_step = 2
         existing.next_step_at = now + timedelta(days=delay_days)
+        if variant_id:
+            meta = dict(existing.payload or {})
+            meta["variant_id"] = variant_id
+            existing.payload = meta
         db.flush()
         return existing
     enrollment = OutreachSequenceEnrollment(
@@ -244,6 +253,7 @@ def enroll_after_intro_send(
         status="active",
         enrolled_at=now,
         next_step_at=now + timedelta(days=delay_days),
+        payload={"variant_id": variant_id} if variant_id else {},
     )
     db.add(enrollment)
     db.flush()
@@ -262,6 +272,28 @@ def pause_enrollment_for_reply(db: Session, *, crm_account_id) -> int:
     for row in rows:
         row.status = "paused"
         row.paused_reason = "reply_received"
+    return len(rows)
+
+
+def block_enrollment_for_reply(db: Session, *, crm_account_id, reason: str = "opt_out") -> int:
+    """Hard-stop the cadence for opt-outs / not-a-fit.
+
+    Completes any non-terminal enrollment so no further follow-up can fire. Unlike
+    :func:`pause_enrollment_for_reply` (a soft pause that a re-enroll can reopen),
+    this terminates the enrollment and records why.
+    """
+    rows = (
+        db.query(OutreachSequenceEnrollment)
+        .filter(
+            OutreachSequenceEnrollment.crm_account_id == crm_account_id,
+            OutreachSequenceEnrollment.status.in_(("active", "paused")),
+        )
+        .all()
+    )
+    for row in rows:
+        row.status = "completed"
+        row.paused_reason = f"opt_out:{reason}"
+        row.next_step_at = None
     return len(rows)
 
 
@@ -365,7 +397,15 @@ def process_due_enrollments(db: Session, *, limit: int = 50) -> dict[str, Any]:
             send_identity="scout",
             resend_id=send_result.get("resend_id"),
             status="sent",
-            payload={"sequence_enrollment_id": str(enrollment.id), "step": enrollment.current_step},
+            payload={
+                "sequence_enrollment_id": str(enrollment.id),
+                "step": enrollment.current_step,
+                **(
+                    {"variant_id": (enrollment.payload or {}).get("variant_id")}
+                    if (enrollment.payload or {}).get("variant_id")
+                    else {}
+                ),
+            },
             sent_at=now,
         )
         db.add(msg)

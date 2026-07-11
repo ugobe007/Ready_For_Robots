@@ -50,4 +50,8 @@ class OutreachReply(Base):
     subject = Column(String(512), nullable=True)
     body_text = Column(Text, nullable=True)
     raw_payload = Column(JSONB, nullable=True)
+    # Reply understanding — populated by the inbound webhook classifier so the
+    # weekly learning report can attribute outcomes to a specific outreach angle.
+    detected_intent = Column(String(32), nullable=True, index=True)
+    sentiment = Column(String(16), nullable=True)
     received_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)

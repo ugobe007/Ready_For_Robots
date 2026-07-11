@@ -677,21 +677,72 @@ async def resend_inbound_webhook(
         )
         db.add(reply)
         msg.status = "replied"
-        if account:
-            account.outreach_stage = "replied"
-            from app.services.sequence_runner import pause_enrollment_for_reply
 
-            pause_enrollment_for_reply(db, crm_account_id=account.id)
+        # Classify the reply (LLM-first, keyword fallback) so the cadence can react
+        # to intent and the weekly learning report can attribute it to the send's
+        # trust-first angle (msg.payload.variant_id). Never let this drop a reply.
+        from app.services.reply_classifier import classify_reply
+
+        try:
+            cls = classify_reply(reply.subject, reply.body_text)
+        except Exception:  # noqa: BLE001
+            from app.services.reply_classifier import ReplyClassification
+
+            cls = ReplyClassification("other", "neutral", "keyword")
+        reply.detected_intent = cls.intent
+        reply.sentiment = cls.sentiment
+
+        if account:
+            from app.services.sequence_runner import (
+                block_enrollment_for_reply,
+                pause_enrollment_for_reply,
+            )
+
+            if cls.intent in ("unsubscribe", "not_a_fit"):
+                # Hard opt-out: stop the cadence and suppress all future auto-sends.
+                block_enrollment_for_reply(db, crm_account_id=account.id, reason=cls.intent)
+                account.outreach_stage = "opted_out" if cls.intent == "unsubscribe" else "not_a_fit"
+                if msg.company_id:
+                    from app.models.company import Company
+
+                    company_row = (
+                        db.query(Company).filter(Company.id == msg.company_id).first()
+                    )
+                    if company_row is not None:
+                        cmeta = dict(company_row.crm_metadata or {})
+                        cmeta["do_not_contact"] = True
+                        cmeta["do_not_contact_reason"] = cls.intent
+                        company_row.crm_metadata = cmeta
+            elif cls.intent == "auto_reply":
+                # Autoresponder — not a human reply; keep the cadence paused, no more.
+                account.outreach_stage = "contacted"
+                pause_enrollment_for_reply(db, crm_account_id=account.id)
+            else:
+                account.outreach_stage = "replied"
+                pause_enrollment_for_reply(db, crm_account_id=account.id)
+
+            outcome = {
+                "positive": "positive_reply",
+                "negative": "negative_reply",
+                "neutral": "nurture_reply",
+            }.get(cls.sentiment, "replied")
             record_sales_experience(
                 db,
                 event_type="email_reply_received",
-                outcome="replied",
+                outcome=outcome,
                 team_id=msg.team_id,
                 user_id=msg.sender_user_id,
                 crm_account_id=msg.crm_account_id,
                 company_id=msg.company_id,
                 channel="email",
-                payload={"outreach_message_id": str(msg.id), "outreach_reply_id": str(reply.id)},
+                payload={
+                    "outreach_message_id": str(msg.id),
+                    "outreach_reply_id": str(reply.id),
+                    "detected_intent": cls.intent,
+                    "sentiment": cls.sentiment,
+                    "classifier": cls.source,
+                    "variant_id": (msg.payload or {}).get("variant_id"),
+                },
             )
         _notify_and_forward(db, msg, reply, account)
         agent_action = handle_crm_reply_first_response(db, msg, reply, account)

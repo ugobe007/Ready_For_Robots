@@ -70,8 +70,13 @@ def send_cal_intro_email(
     idempotency_key: str,
     send_identity: str = "cal",
     include_demo: bool = True,
+    variant_id: str | None = None,
 ) -> OutreachMessage:
-    """Send intro email with reply routing and persist OutreachMessage for inbound webhook."""
+    """Send intro email with reply routing and persist OutreachMessage for inbound webhook.
+
+    `variant_id` records which trust-first angle produced this send so the weekly
+    learning report can attribute replies back to a specific angle.
+    """
     reply_token = secrets.token_urlsafe(18)
     reply_to = cal_reply_address(reply_token)
     inbound_missing = False
@@ -105,6 +110,13 @@ def send_cal_intro_email(
             raise
 
     now = datetime.now(timezone.utc)
+    payload: dict[str, Any] = {
+        "channel": "cal_buyer",
+        "inbound_routing": not inbound_missing,
+        "email_demo": include_demo,
+    }
+    if variant_id:
+        payload["variant_id"] = variant_id
     msg = OutreachMessage(
         team_id=team_id,
         crm_account_id=acct.id,
@@ -120,7 +132,7 @@ def send_cal_intro_email(
         resend_id=send_result.get("resend_id"),
         status="sent",
         sent_at=now,
-        payload={"channel": "cal_buyer", "inbound_routing": not inbound_missing, "email_demo": include_demo},
+        payload=payload,
     )
     db.add(msg)
     acct.outreach_sent_at = now
@@ -129,10 +141,12 @@ def send_cal_intro_email(
     return msg
 
 
-def enroll_cal_followup(db: Session, *, team_id, crm_account_id) -> None:
+def enroll_cal_followup(db: Session, *, team_id, crm_account_id, variant_id: str | None = None) -> None:
     try:
         from app.services.sequence_runner import enroll_after_intro_send
 
-        enroll_after_intro_send(db, team_id=team_id, crm_account_id=crm_account_id)
+        enroll_after_intro_send(
+            db, team_id=team_id, crm_account_id=crm_account_id, variant_id=variant_id
+        )
     except Exception as exc:
         logger.warning("Cal follow-up enroll failed account=%s: %s", crm_account_id, exc)

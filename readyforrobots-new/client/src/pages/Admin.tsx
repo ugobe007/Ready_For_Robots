@@ -309,14 +309,43 @@ function RobotBenchmarkPanel({ api, headers }: {
   );
 }
 
-function AdminCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="admin-card">
+function AdminCard({
+  label,
+  value,
+  sub,
+  onClick,
+  active,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  onClick?: () => void;
+  active?: boolean;
+}) {
+  const className = `admin-card${onClick ? " admin-card-clickable" : ""}${active ? " admin-card-active" : ""}`;
+  const body = (
+    <>
       <p className="admin-card-label">{label}</p>
       <p className="admin-card-value" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
       {sub && <p className="admin-card-sub">{sub}</p>}
-    </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={className} aria-pressed={active}>
+        {body}
+      </button>
+    );
+  }
+  return <div className={className}>{body}</div>;
+}
+
+// Trust-first angles, in the same deterministic order as the backend
+// BUYER_VARIANTS so the operator sees which angle a lead's draft used.
+const BUYER_ANGLE_LABELS = ["Candid opener", "Peer reality", "Question-first"];
+function buyerAngleLabel(companyId?: number): string {
+  if (typeof companyId !== "number" || !Number.isFinite(companyId)) return "trust-first angle";
+  return BUYER_ANGLE_LABELS[companyId % BUYER_ANGLE_LABELS.length];
 }
 
 function formatDate(value?: string) {
@@ -601,9 +630,9 @@ export default function Admin() {
     }
   }, [adminFetch, session?.access_token]);
 
-  const loadDraftBody = useCallback(async (crmAccountId: string, preview?: string) => {
+  const loadDraftBody = useCallback(async (crmAccountId: string, preview?: string, force = false) => {
     if (!crmAccountId) return;
-    if (draftBodies[crmAccountId]?.trim()) return;
+    if (!force && draftBodies[crmAccountId]?.trim()) return;
     setDraftBodyLoading(crmAccountId);
     setDraftLoadErrors((prev) => {
       const next = { ...prev };
@@ -988,6 +1017,37 @@ export default function Admin() {
 
   async function runCalDraftOne(companyId: number) {
     await runCalBulkDraft(false, [companyId]);
+  }
+
+  // Regenerate a single lead's draft with the current trust-first angle, then
+  // force-reload the editor so the operator sees the fresh copy (not a cached
+  // or stale template). This is how you preview the new angles before sending.
+  async function regenerateCalDraftOne(companyId: number, crmAccountId?: string | null) {
+    setMessage("");
+    setError("");
+    setActionBusy("cal-save");
+    try {
+      const res = await adminFetch("/api/admin/cal/bulk-draft", {
+        method: "POST",
+        body: JSON.stringify({ regenerate: true, company_ids: [companyId] }),
+      });
+      const data = await res.json().catch(() => ({})) as { drafted?: number; errors?: unknown[] };
+      if (!res.ok) throw new Error((data as { detail?: string }).detail || "Regenerate failed.");
+      if (crmAccountId) {
+        setDraftBodies((prev) => {
+          const next = { ...prev };
+          delete next[crmAccountId];
+          return next;
+        });
+      }
+      await refreshOperatorView();
+      if (crmAccountId) await loadDraftBody(crmAccountId, undefined, true);
+      setMessage(`Regenerated draft with the current trust-first angle (${data.drafted ?? 0} updated).`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Regenerate failed.");
+    } finally {
+      setActionBusy("");
+    }
   }
 
   async function runCalFixEmails() {
@@ -1535,18 +1595,49 @@ export default function Admin() {
           )}
 
           <div className="mb-4 grid grid-cols-3 gap-2 md:grid-cols-8">
-            <AdminCard label="Total" value={formatNumber(calMetrics.total)} sub={`${formatNumber(calMetrics.hot)} hot · ${formatNumber(calMetrics.warm)} warm`} />
+            <AdminCard
+              label="Total"
+              value={formatNumber(calMetrics.total)}
+              sub={`${formatNumber(calMetrics.hot)} hot · ${formatNumber(calMetrics.warm)} warm`}
+              active={calFilter === "all"}
+              onClick={() => { setCalFilter("all"); scrollToAdminSection("cal-queue-list"); }}
+            />
             <AdminCard label="Buyers" value={formatNumber(calBuyerCount)} sub="HOT/WARM" />
             <AdminCard label="Vendors" value={formatNumber(calVendorCount)} sub="HOT/WARM" />
-            <AdminCard label="Drafted" value={formatNumber(calMetrics.drafted)} sub={`${formatNumber(calMetrics.unsent_drafted)} unsent`} />
-            <AdminCard label="Pending" value={formatNumber(calMetrics.pending_draft)} sub="need draft" />
-            <AdminCard label="Sent" value={formatNumber(calMetrics.sent)} sub="delivered" />
+            <AdminCard
+              label="Drafted"
+              value={formatNumber(calMetrics.drafted)}
+              sub={`${formatNumber(calMetrics.unsent_drafted)} unsent`}
+              active={calFilter === "drafted"}
+              onClick={() => { setCalFilter("drafted"); scrollToAdminSection("cal-queue-list"); }}
+            />
+            <AdminCard
+              label="Pending"
+              value={formatNumber(calMetrics.pending_draft)}
+              sub="need draft"
+              active={calFilter === "pending"}
+              onClick={() => { setCalFilter("pending"); scrollToAdminSection("cal-queue-list"); }}
+            />
+            <AdminCard
+              label="Sent"
+              value={formatNumber(calMetrics.sent)}
+              sub="delivered"
+              active={calFilter === "sent"}
+              onClick={() => { setCalFilter("sent"); scrollToAdminSection("cal-queue-list"); }}
+            />
             <AdminCard label="Opened" value={formatNumber(calMetrics.opened)} sub="engagement" />
-            <AdminCard label="Replied" value={formatNumber(calMetrics.replied)} sub="to Cal" />
+            <AdminCard
+              label="Replied"
+              value={formatNumber(calMetrics.replied)}
+              sub="to Cal · open inbox"
+              onClick={() => setLocation("/inbox")}
+            />
           </div>
 
           <p className="mb-3 text-[11px] text-gray-500">
-            Template v{calAutonomy?.template_version ?? "2"} — global voice in code; select a lead on the left to edit its draft on the right.
+            Trust-first angles (auto-rotated per lead). Old drafts keep their saved copy until you
+            press <strong>Regenerate (new angle)</strong> on a lead — or <strong>Regenerate</strong> in
+            Step 1 to refresh the whole queue. Select a lead on the left to preview/edit on the right.
           </p>
 
           {/* Queue list + CRM sample panel */}
@@ -1608,6 +1699,11 @@ export default function Admin() {
                   <div>
                     <p className="text-base font-bold text-gray-900">{calSelectedProspect.company_name}</p>
                     <p className="text-xs text-gray-500">{calSelectedProspect.tier} · score {calSelectedProspect.score?.toFixed(0)} · {calSelectedProspect.account_type === "vendor" ? "vendor" : "buyer (RFR)"}</p>
+                    {calSelectedProspect.account_type !== "vendor" ? (
+                      <p className="mt-1 inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+                        Angle: {buyerAngleLabel(calSelectedProspect.company_id)}
+                      </p>
+                    ) : null}
                     {calSelectedProspect.semantic_summary ? (
                       <p className="mt-2 text-xs text-gray-600 leading-relaxed">{calSelectedProspect.semantic_summary}</p>
                     ) : null}
@@ -1674,6 +1770,25 @@ export default function Admin() {
                               busy={actionBusy === "cal-save"}
                             >
                               Save draft
+                            </SupabaseInlineLink>
+                            <span className="text-gray-400"> · </span>
+                            <SupabaseInlineLink
+                              tone="blue"
+                              onClick={() => {
+                                if (calSelectedProspect.company_id == null) return;
+                                void regenerateCalDraftOne(
+                                  calSelectedProspect.company_id,
+                                  calSelectedProspect.crm_account_id,
+                                );
+                              }}
+                              disabled={
+                                actionBusy === "cal-save"
+                                || calSelectedProspect.company_id == null
+                                || draftBodyLoading === calSelectedProspect.crm_account_id
+                              }
+                              busy={actionBusy === "cal-save"}
+                            >
+                              Regenerate (new angle)
                             </SupabaseInlineLink>
                             {!calSelectedProspect.outreach_sent_at ? (
                               <>

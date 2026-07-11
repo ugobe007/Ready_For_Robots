@@ -86,9 +86,9 @@ export default function AdminNav({ variant = "light" }: Props) {
       </div>
 
       {!collapsed && (
-        <div className="mt-3 flex min-w-max flex-col gap-3 overflow-x-auto">
+        <div className="mt-3 flex flex-wrap items-start gap-x-6 gap-y-3">
           {sections.map((section) => (
-            <div key={section.label} className="flex min-w-max flex-wrap items-center gap-2">
+            <div key={section.label} className="flex flex-wrap items-center gap-2">
               <span
                 className={`px-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
                   dark ? "text-slate-400" : "text-gray-600"

@@ -352,11 +352,20 @@ def _collateral_note(policy: str, links: str | None) -> str:
     return f"\n\n{label}: " + ", ".join(clean_links[:3])
 
 
-def _draft_subject(acct: CrmAccount) -> str:
-    """Short, curiosity-driving subject. Buyer vs vendor aware."""
+def _draft_subject(acct: CrmAccount, variant_id: str | None = None) -> str:
+    """Short, curiosity-driving subject. Buyer vs vendor aware.
+
+    When a trust-first `variant_id` is supplied for a buyer, the subject matches
+    that angle's tone (humble/question-led) instead of the legacy pitch subjects.
+    """
     name = (acct.name or "your team").strip()
     industry = (acct.industry or "").strip().lower()
     account_type = getattr(acct, "account_type", "buyer") or "buyer"
+
+    if account_type == "buyer" and variant_id:
+        from app.services.agent_messaging import buyer_variant_subject
+
+        return buyer_variant_subject(name, acct.industry or "", variant_id)
 
     if account_type == "vendor":
         # Vendor = robot company — subject is about the buyer lead we found them

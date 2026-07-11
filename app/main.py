@@ -276,6 +276,7 @@ def _run_worker_startup() -> None:
     _start_scheduled_data_quality()
     _start_scheduled_cal_autonomy()
     _start_scheduled_cal_daily_digest()
+    _start_scheduled_communication_learning()
     _start_scheduled_supply_autonomy()
     _start_scheduled_newsletter_publish()
 
@@ -912,6 +913,58 @@ def _start_scheduled_cal_daily_digest():
         os.getenv("CAL_DAILY_DIGEST_HOUR_UTC", "15"),
         int(os.getenv("CAL_DAILY_DIGEST_MINUTE_UTC", "0") or "0"),
     )
+
+
+def _scheduled_communication_learning_loop():
+    from datetime import datetime, timedelta, timezone
+
+    from app.database import SessionLocal
+    from app.services.communication_learning_report import (
+        communication_learning_enabled,
+        send_communication_learning_report,
+    )
+
+    # Weekly cadence. Interval keeps it simple (no day-of-week math); first run is
+    # offset a few minutes past the daily digest so the two don't thundering-herd.
+    interval = max(3600, int(os.getenv("CAL_COMM_LEARNING_INTERVAL_HOURS", "168") or "168") * 3600)
+    time.sleep(int(os.getenv("CAL_COMM_LEARNING_FIRST_DELAY_SEC", "900") or "900"))
+    while True:
+        if communication_learning_enabled():
+            try:
+                with SessionLocal() as db:
+                    result = send_communication_learning_report(db)
+                logger.info(
+                    "Cal communication learning report: sent=%s reason=%s",
+                    result.get("sent"),
+                    result.get("reason"),
+                )
+            except Exception as exc:
+                logger.exception("Cal communication learning report failed: %s", exc)
+        time.sleep(interval)
+
+
+def _start_scheduled_communication_learning():
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app Cal communication learning skipped on web process")
+        return
+    if os.getenv("ENABLE_SCHEDULED_CAL_COMM_LEARNING", "1").strip().lower() in ("0", "false", "no"):
+        logger.info("In-app Cal communication learning disabled")
+        return
+    if not (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_CAL_COMM_LEARNING", "").lower() in ("1", "true", "yes")
+    ):
+        return
+    t = threading.Thread(
+        target=_scheduled_communication_learning_loop,
+        daemon=True,
+        name="cal-comm-learning",
+    )
+    t.start()
+    print("[cal-comm-learning] scheduler thread started", flush=True)
+    logger.info("In-app Cal communication learning thread started (weekly)")
 
 
 def _newsletter_publish_hour_utc() -> int:

@@ -123,6 +123,145 @@ def max_signature() -> str:
     return "— Max\nReady For Robots"
 
 
+# ── Trust-first buyer variants ────────────────────────────────────────────────
+# Three genuinely different openers — different premises, not reworded twins.
+# All are humble and non-presumptuous: Cal names a real reason for writing, admits
+# he doesn't know their context, leaves room for "we already tried robots and it
+# flopped," and asks with low commitment plus explicit permission to say no.
+# Every variant must (a) mention the company name (assembly gate) and (b) end with
+# the Cal sign-off (draft-completeness gate).
+
+BUYER_VARIANTS: tuple[str, ...] = ("candid_opener", "peer_reality", "question_first")
+
+
+def _buyer_sector(industry: str) -> str:
+    """Lowercase, parenthetical-stripped sector that reads naturally after "in ...".
+
+    Falls back to a neutral phrase for missing/junk industries so we never emit
+    "in Unknown" or "in your industry teams".
+    """
+    ind = (industry or "").strip()
+    # Drop trailing qualifiers like "Food Service (Restaurants)" -> "food service".
+    if "(" in ind:
+        ind = ind.split("(", 1)[0].strip()
+    low = ind.lower()
+    if not low or low in (
+        "unknown", "general", "general robotics", "other", "n/a", "none", "your industry",
+    ):
+        return "your line of work"
+    return low
+
+
+def pick_buyer_variant(company_id, *, allowed=None) -> str:
+    """Deterministic round-robin so a company's draft and send agree on the angle."""
+    pool = [v for v in (allowed or BUYER_VARIANTS) if v in BUYER_VARIANTS]
+    if not pool:
+        pool = list(BUYER_VARIANTS)
+    try:
+        idx = int(company_id or 0) % len(pool)
+    except (TypeError, ValueError):
+        idx = 0
+    return pool[idx]
+
+
+def resolve_buyer_variant(company, acct=None) -> str | None:
+    """The angle a send should be tagged with.
+
+    Prefers the variant stashed at draft time (``crm_metadata['cal_variant_id']``)
+    so the tag matches the copy that actually shipped; otherwise falls back to the
+    deterministic round-robin. Returns ``None`` for vendors / StageGate accounts,
+    which don't use the trust-first buyer angles.
+    """
+    account_type = getattr(acct, "account_type", None)
+    if account_type and account_type != "buyer":
+        return None
+    meta = getattr(company, "crm_metadata", None) or {}
+    if meta.get("outreach_pipeline") == "stagegate":
+        return None
+    stored = meta.get("cal_variant_id")
+    if stored in BUYER_VARIANTS:
+        return stored
+    return pick_buyer_variant(getattr(company, "id", None))
+
+
+def _variant_candid(name: str, industry: str) -> str:
+    sector = _buyer_sector(industry)
+    return "\n".join([
+        CAL_INTRO,
+        "",
+        f"I'll be straight with you: I don't know enough about how {name} actually runs to say anything "
+        f"smart about robots yet. What I do is help operations teams work out whether automation is even "
+        f"worth it for their setup — and honestly, a lot of the time the answer is \"not yet.\"",
+        "",
+        f"If it's a question you're kicking around this year, I'd be glad to compare notes: where I've "
+        f"seen robots genuinely earn their place in {sector}, and where they just turn into expensive "
+        f"shelf decoration.",
+        "",
+        "No pitch, no deck. And if it's not on your radar, tell me and I'll leave you be.",
+        "",
+        cal_signature(),
+    ])
+
+
+def _variant_peer(name: str, industry: str) -> str:
+    sector = _buyer_sector(industry)
+    return "\n".join([
+        CAL_INTRO,
+        "",
+        f"Most teams I talk to in {sector} have already looked at robots — and plenty got burned: a "
+        f"pilot that demoed well, then stalled the first time it hit real volume. If {name} has been "
+        f"through that, you're in good company, and I understand the skepticism.",
+        "",
+        "What I actually do is help teams tell the difference between automation that holds up in a "
+        "working operation and the kind that only shines in a sales demo. Sometimes that means telling "
+        "someone to wait.",
+        "",
+        "If you've tried before, I'd genuinely like to hear what happened. If you haven't, I can tell you "
+        "what tends to work for a team like yours — and, just as honestly, when it doesn't.",
+        "",
+        cal_signature(),
+    ])
+
+
+def _variant_question(name: str, industry: str) -> str:
+    return "\n".join([
+        CAL_INTRO,
+        "",
+        f"Quick question, honestly: is automation even on the table for {name} this year — or is it one "
+        f"of those \"someday, not now\" things?",
+        "",
+        "I ask because that exact call — whether a robot would genuinely fit how you run, and whether "
+        "now is even the right time — is what I help operations teams work through. Plenty of those "
+        "conversations end in \"not yet,\" and that's completely fine.",
+        "",
+        "If it's worth a short back-and-forth, just reply. If not, no hard feelings — I won't chase you.",
+        "",
+        cal_signature(),
+    ])
+
+
+def build_buyer_variant_body(name: str, industry: str, variant_id: str) -> str:
+    """Assemble the full buyer email body for a given trust-first angle."""
+    n = (name or "your team").strip()
+    builders = {
+        "candid_opener": _variant_candid,
+        "peer_reality": _variant_peer,
+        "question_first": _variant_question,
+    }
+    fn = builders.get(variant_id, _variant_candid)
+    return fn(n, industry or "your industry")
+
+
+def buyer_variant_subject(name: str, industry: str, variant_id: str) -> str:
+    """Humble, curiosity-driven subject that matches the angle's tone."""
+    n = (name or "your team").strip()
+    if variant_id == "question_first":
+        return f"is automation on the table for {n} this year?"
+    if variant_id == "peer_reality":
+        return f"{n}: what actually holds up (and what doesn't)"
+    return f"an honest read on robots for {n}"
+
+
 def cal_opening(*, audience: str = "buyer") -> str:
     explanation = VENDOR_SIGNAL_EXPLANATION if audience == "vendor" else BUYER_SIGNAL_EXPLANATION
     return f"{CAL_INTRO}\n\n{explanation}"

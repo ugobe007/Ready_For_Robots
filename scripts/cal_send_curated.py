@@ -92,6 +92,9 @@ def main() -> int:
             if not args.apply:
                 rows.append((company.name, source, to_email, "WOULD-SEND"))
                 continue
+            from app.services.agent_messaging import resolve_buyer_variant
+
+            variant_id = resolve_buyer_variant(company, acct)
             try:
                 send_cal_intro_email(
                     db,
@@ -104,8 +107,9 @@ def main() -> int:
                     sender_user_id=uid,
                     idempotency_key=f"cal-curated-{acct.id}-{now.date().isoformat()}",
                     send_identity="cal",
+                    variant_id=variant_id,
                 )
-                enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id)
+                enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id, variant_id=variant_id)
                 rows.append((company.name, source, to_email, "SENT"))
             except Exception as exc:  # noqa: BLE001
                 rows.append((company.name, f"error:{type(exc).__name__}", to_email, str(exc)[:60]))

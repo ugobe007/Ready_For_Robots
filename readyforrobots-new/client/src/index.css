@@ -990,6 +990,14 @@
     @apply rounded-xl border border-gray-300 bg-white p-4 shadow-sm;
   }
 
+  .admin-card-clickable {
+    @apply w-full cursor-pointer text-left transition hover:border-emerald-400 hover:shadow-md;
+  }
+
+  .admin-card-active {
+    @apply border-emerald-500 ring-2 ring-emerald-400/40;
+  }
+
   .admin-card-label {
     @apply text-[10px] font-bold uppercase tracking-[0.16em] text-gray-700;
   }

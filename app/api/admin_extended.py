@@ -372,8 +372,14 @@ def _cal_contact_fields(company: Company, acct: Optional[Any]) -> tuple[Optional
     return effective, stored, inferred_to, inferred_cc
 
 
-def _cal_draft_for_company(company: Company, *, fresh: bool = False) -> tuple[str, str]:
-    """Generate Cal subject + body using Cal's voice (no LLM)."""
+def _cal_draft_for_company(
+    company: Company, *, fresh: bool = False, variant_id: str | None = None
+) -> tuple[str, str]:
+    """Generate Cal subject + body using Cal's voice (no LLM).
+
+    For buyers, `variant_id` selects the trust-first angle. When omitted it is
+    resolved deterministically from the company id so drafts are reproducible.
+    """
     from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
 
     if is_stagegate_company(company):
@@ -392,13 +398,17 @@ def _cal_draft_for_company(company: Company, *, fresh: bool = False) -> tuple[st
         if (company.crm_metadata or {}).get("outreach_pipeline") == "stagegate"
         else "buyer",
     )
-    subject = _draft_subject(dummy)
     if dummy.account_type == "vendor":
         from app.api.crm import _draft_body
 
+        subject = _draft_subject(dummy)
         body = _draft_body(dummy, None, [], "", "selective", None, company=company)
     else:
-        body = cal_buyer_outreach_body(company, fresh=fresh)
+        from app.services.agent_messaging import pick_buyer_variant
+
+        vid = variant_id or pick_buyer_variant(getattr(company, "id", None))
+        subject = _draft_subject(dummy, variant_id=vid)
+        body = cal_buyer_outreach_body(company, fresh=fresh, variant_id=vid)
     return subject, body
 
 
@@ -914,6 +924,15 @@ def cal_bulk_draft(
 
             from app.services.cal_autonomy import format_cal_draft_storage
 
+            # Record which trust-first angle this draft used so the send tag and the
+            # weekly learning report stay consistent with the deterministic pick.
+            if acct.account_type != "vendor" and (company.crm_metadata or {}).get("outreach_pipeline") != "stagegate":
+                from app.services.agent_messaging import pick_buyer_variant
+
+                cmeta = dict(company.crm_metadata or {})
+                cmeta["cal_variant_id"] = pick_buyer_variant(company.id)
+                company.crm_metadata = cmeta
+
             acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
             acct.outreach_stage = (
                 "draft_approved" if not cal_manual_approval_required() else "draft_ready"
@@ -1387,6 +1406,39 @@ def cal_daily_digest_send(
     return send_cal_daily_digest(db, period_hours=body.period_hours, force=body.force)
 
 
+class CommunicationLearningSendBody(BaseModel):
+    force: bool = True
+    period_hours: int = 168
+    preview_only: bool = False
+
+
+@router.post("/communication-learning-send")
+def communication_learning_send(
+    body: CommunicationLearningSendBody,
+    db: Session = Depends(get_db),
+    _user: dict = Depends(require_admin),
+):
+    """Build (and optionally email) the weekly per-angle learning report now."""
+    from app.services.communication_learning_report import (
+        build_communication_learning_report,
+        render_communication_learning_text,
+        send_communication_learning_report,
+    )
+
+    if body.preview_only:
+        report = build_communication_learning_report(db, period_hours=body.period_hours)
+        return {
+            "sent": False,
+            "preview": True,
+            "totals": report.get("totals"),
+            "variants": report.get("variants"),
+            "body_text": render_communication_learning_text(report),
+        }
+    return send_communication_learning_report(
+        db, period_hours=body.period_hours, force=body.force
+    )
+
+
 @router.get("/supply/autonomy-status")
 def supply_autonomy_status(_user: dict = Depends(require_admin)):
     from app.services.supply_autonomy import get_supply_autonomy_status
@@ -1531,6 +1583,9 @@ def cal_bulk_send(
             continue
 
         try:
+            from app.services.agent_messaging import resolve_buyer_variant
+
+            variant_id = resolve_buyer_variant(company, acct)
             send_cal_intro_email(
                 db,
                 acct=acct,
@@ -1543,9 +1598,10 @@ def cal_bulk_send(
                 sender_user_id=uid,
                 idempotency_key=f"cal-bulk-{acct.id}",
                 send_identity="cal",
+                variant_id=variant_id,
             )
             sent_count += 1
-            enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id)
+            enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id, variant_id=variant_id)
         except ResendEmailError as exc:
             errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
         except Exception as exc:
@@ -1906,6 +1962,9 @@ def cal_send_one(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     try:
+        from app.services.agent_messaging import resolve_buyer_variant
+
+        variant_id = resolve_buyer_variant(company, acct)
         send_cal_intro_email(
             db,
             acct=acct,
@@ -1918,12 +1977,13 @@ def cal_send_one(
             sender_user_id=uid,
             idempotency_key=f"cal-single-{acct.id}",
             send_identity="cal",
+            variant_id=variant_id,
         )
     except ResendEmailError as exc:
         from fastapi import HTTPException
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
-    enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id)
+    enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id, variant_id=variant_id)
     now = datetime.now(timezone.utc)
     db.commit()
     _invalidate_admin_caches()

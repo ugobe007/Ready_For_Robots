@@ -200,6 +200,31 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
         reply_lines.append(f"  • {when} — {who} — {reply.subject or 'Inbound reply'}")
 
     needs_you: list[str] = []
+
+    # Positive-intent replies are the whole point of the loop — put them at the top
+    # of "Needs you" so a warm "yes / let's talk / what's it cost" never gets buried.
+    _POSITIVE_INTENTS = ("interested", "meeting", "pricing", "referral")
+    hot_replies = (
+        db.query(OutreachReply)
+        .filter(
+            OutreachReply.received_at >= since,
+            OutreachReply.detected_intent.in_(_POSITIVE_INTENTS),
+        )
+        .order_by(desc(OutreachReply.received_at))
+        .limit(8)
+        .all()
+    )
+    _intent_label = {
+        "interested": "Interested reply",
+        "meeting": "Wants a call",
+        "pricing": "Asked about pricing",
+        "referral": "Referred you on",
+    }
+    for reply in hot_replies:
+        who = crm_names.get(str(reply.crm_account_id)) or reply.from_email or "prospect"
+        label = _intent_label.get(reply.detected_intent or "", "Reply")
+        needs_you.append(f"  • {label} — reply to {who}")
+
     pending_approval = (
         db.query(SalesAgentAction)
         .filter(

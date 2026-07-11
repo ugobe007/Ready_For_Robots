@@ -1,11 +1,28 @@
+from app.services.agent_messaging import (
+    BUYER_VARIANTS,
+    build_buyer_variant_body,
+    buyer_variant_subject,
+    pick_buyer_variant,
+)
+from app.services.cal_assembly_agent import assemble_buyer_outreach
 from app.services.cal_autonomy import cal_buyer_outreach_body
 from app.services.cal_draft_guard import draft_needs_regeneration, is_complete_cal_draft, parse_cal_draft_or_raise
 
+_THEATER = (
+    "innovation theater",
+    "carpet demo",
+    "where the money hides",
+    "annoyingly picky",
+    "quietly dies",
+    'reply "send it"',
+)
+
 
 class _FakeCompany:
-    def __init__(self, name: str, industry: str = "Logistics"):
+    def __init__(self, name: str, industry: str = "Logistics", company_id: int | None = None):
         self.name = name
         self.industry = industry
+        self.id = company_id
 
 
 def test_truncated_preview_rejected():
@@ -19,34 +36,55 @@ def test_truncated_preview_rejected():
     assert "short" in reason.lower() or "mid-sentence" in reason.lower()
 
 
-def test_complete_buyer_draft_accepted():
-    body = cal_buyer_outreach_body(_FakeCompany("UPS Supply Chain Solutions", "Logistics"), fresh=True)
-    full = f"Subject: which robots would actually fit UPS Supply Chain Solutions\n\n{body}"
-    assert is_complete_cal_draft(full)[0]
-    # Human, honest voice: names the buyer, offers a short list of vendors, signs off as Cal.
-    assert "UPS Supply Chain Solutions" in full
-    assert "vendor" in full.lower()
-    assert "— Cal" in full
-    assert "Ready For Robots" in full
-    # The old surveillance framing must not creep back in.
-    assert "we monitor" not in full.lower()
-    assert "watchlist" not in full.lower()
-    assert "generic vendor browse" not in full.lower()
+def test_every_buyer_variant_passes_guard_and_assembly():
+    # All three trust-first angles must clear the completeness guard, the assembly
+    # gate (company name in body), and never need regeneration on first draft.
+    name = "UPS Supply Chain Solutions"
+    for vid in BUYER_VARIANTS:
+        subject = buyer_variant_subject(name, "Logistics", vid)
+        body = build_buyer_variant_body(name, "Logistics", vid)
+        full = f"Subject: {subject}\n\n{body}"
+        ok, reason = is_complete_cal_draft(full)
+        assert ok, f"{vid} failed guard: {reason}"
+        assert name in body, f"{vid} missing company name"
+        assert "— Cal" in body and "Ready For Robots" in body
+        needs, _ = draft_needs_regeneration(full, account_type="buyer")
+        assert not needs, f"{vid} wrongly flagged for regeneration"
+        assert assemble_buyer_outreach(company_name=name, subject=subject, body=body).approved
+        # Old surveillance framing must never reappear.
+        low = full.lower()
+        assert "we monitor" not in low and "watchlist" not in low
 
 
-def test_buyer_voice_has_no_marketing_theater():
-    # The copy that produced 285 sends / 0 replies leaned on catchy slogans. Pin
-    # the rewrite so the performative phrasing cannot regress back in.
-    body = cal_buyer_outreach_body(_FakeCompany("UPS Supply Chain Solutions", "Logistics"), fresh=True).lower()
-    for banned in (
-        "innovation theater",
-        "carpet demo",
-        "where the money hides",
-        "annoyingly picky",
-        "quietly dies",
-        'reply "send it"',
-    ):
-        assert banned not in body, f"marketing-theater phrase regressed: {banned}"
+def test_buyer_variants_are_humble_not_presumptuous():
+    # The whole point of the rewrite: don't diagnose their business. Each angle
+    # must leave room for "not now" / "already tried" rather than asserting pain.
+    name = "Acme Distribution"
+    humility_markers = ("not yet", "no hard feelings", "i understand", "leave you be", "someday", "wait")
+    for vid in BUYER_VARIANTS:
+        body = build_buyer_variant_body(name, "Logistics", vid).lower()
+        for banned in _THEATER:
+            assert banned not in body, f"{vid} regressed marketing theater: {banned}"
+        assert any(m in body for m in humility_markers), f"{vid} reads presumptuous"
+
+
+def test_buyer_variant_selection_is_deterministic_round_robin():
+    assert pick_buyer_variant(0) == BUYER_VARIANTS[0]
+    assert pick_buyer_variant(1) == BUYER_VARIANTS[1]
+    assert pick_buyer_variant(2) == BUYER_VARIANTS[2]
+    assert pick_buyer_variant(3) == BUYER_VARIANTS[0]
+    # Same company id always resolves to the same angle (draft==send agreement).
+    assert pick_buyer_variant(42) == pick_buyer_variant(42)
+    # Rotation can be restricted to a subset (e.g. after retiring a loser).
+    only = (BUYER_VARIANTS[0], BUYER_VARIANTS[2])
+    assert pick_buyer_variant(1, allowed=only) in only
+
+
+def test_cal_buyer_outreach_body_respects_explicit_variant():
+    company = _FakeCompany("Globex Logistics", "Logistics", company_id=7)
+    for vid in BUYER_VARIANTS:
+        body = cal_buyer_outreach_body(company, variant_id=vid)
+        assert body == build_buyer_variant_body("Globex Logistics", "Logistics", vid)
 
 
 def test_wrong_vendor_pitch_on_buyer_needs_regeneration():

@@ -90,6 +90,20 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
 
   const openQueue = calActions?.onOpenQueue ?? (() => scrollToAdminSection("cal-outreach"));
 
+  // Order the "Do now" links by where they sit in the outreach lifecycle so the
+  // brief reads as a chronological timeline (discover → research → draft →
+  // review → send → replies) instead of an arbitrary link soup.
+  const stageRank = (label: string): number => {
+    const l = label.toLowerCase();
+    if (l.includes("new") || l.includes("compan") || l.includes("hot")) return 1;
+    if (l.includes("research")) return 2;
+    if (l.includes("draft") && !l.includes("signal") && !l.includes("awaiting")) return 3;
+    if (l.includes("review") || l.includes("signal") || l.includes("awaiting") || l.includes("approv")) return 4;
+    if (l.includes("send") || l.includes("email")) return 5;
+    if (l.includes("repl") || l.includes("follow") || l.includes("inbox")) return 6;
+    return 5;
+  };
+
   return (
     <div className="mb-4 rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white px-5 py-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
@@ -105,43 +119,65 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
       ) : (
         <>
           <div className="mb-4">
-            <p className="admin-kicker mb-1.5">Do now</p>
+            <p className="admin-kicker mb-1.5">Do now · in workflow order</p>
             <div className="text-sm leading-relaxed text-gray-800">
-              {(calPending ?? 0) > 0 && calActions?.onDraftAll ? (
-                <>
-                  <SupabaseInlineLink onClick={calActions.onDraftAll} busy={calActions.draftBusy}>
-                    Draft {calPending} Cal leads
-                  </SupabaseInlineLink>
-                  <span className="text-gray-400"> · </span>
-                </>
-              ) : null}
-              {(calSendable ?? 0) > 0 && calActions?.onSendAll ? (
-                <>
-                  <SupabaseInlineLink onClick={calActions.onSendAll} busy={calActions.sendBusy} tone="amber">
-                    Send {calSendable} Cal emails
-                  </SupabaseInlineLink>
-                  <span className="text-gray-400"> · </span>
-                </>
-              ) : null}
-              {calTotal > 0 ? (
-                <>
-                  <SupabaseInlineLink tone="blue" onClick={openQueue}>
-                    Open Cal queue
-                  </SupabaseInlineLink>
-                  {nonCalSteps.length > 0 ? <span className="text-gray-400"> · </span> : null}
-                </>
-              ) : null}
-              {nonCalSteps.map((step, i) => (
-                <span key={step.label}>
-                  {i > 0 ? <span className="text-gray-400"> · </span> : null}
-                  <SupabaseInlineLink href={step.href} onNavigate={goToStep(step.href)}>
-                    {step.count} {step.label}
-                  </SupabaseInlineLink>
-                </span>
-              ))}
-              {!calPending && !calSendable && calTotal === 0 && nonCalSteps.length === 0 ? (
-                <span className="text-gray-600">No pending actions.</span>
-              ) : null}
+              {(() => {
+                const items: Array<{ rank: number; key: string; node: React.ReactNode }> = [];
+                if ((calPending ?? 0) > 0 && calActions?.onDraftAll) {
+                  items.push({
+                    rank: 3,
+                    key: "cal-draft",
+                    node: (
+                      <SupabaseInlineLink onClick={calActions.onDraftAll} busy={calActions.draftBusy}>
+                        Draft {calPending} Cal leads
+                      </SupabaseInlineLink>
+                    ),
+                  });
+                }
+                if (calTotal > 0) {
+                  items.push({
+                    rank: 4,
+                    key: "cal-open",
+                    node: (
+                      <SupabaseInlineLink tone="blue" onClick={openQueue}>
+                        Open Cal queue
+                      </SupabaseInlineLink>
+                    ),
+                  });
+                }
+                if ((calSendable ?? 0) > 0 && calActions?.onSendAll) {
+                  items.push({
+                    rank: 5,
+                    key: "cal-send",
+                    node: (
+                      <SupabaseInlineLink onClick={calActions.onSendAll} busy={calActions.sendBusy} tone="amber">
+                        Send {calSendable} Cal emails
+                      </SupabaseInlineLink>
+                    ),
+                  });
+                }
+                nonCalSteps.forEach((step) => {
+                  items.push({
+                    rank: stageRank(step.label),
+                    key: `step-${step.label}`,
+                    node: (
+                      <SupabaseInlineLink href={step.href} onNavigate={goToStep(step.href)}>
+                        {step.count} {step.label}
+                      </SupabaseInlineLink>
+                    ),
+                  });
+                });
+                items.sort((a, b) => a.rank - b.rank);
+                if (items.length === 0) {
+                  return <span className="text-gray-600">No pending actions.</span>;
+                }
+                return items.map((item, i) => (
+                  <span key={item.key}>
+                    {i > 0 ? <span className="text-gray-400"> · </span> : null}
+                    {item.node}
+                  </span>
+                ));
+              })()}
             </div>
           </div>
 
