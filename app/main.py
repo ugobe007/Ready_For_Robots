@@ -264,6 +264,25 @@ def _start_cal_watchdog() -> None:
     logger.info("Cal watchdog thread started (web process)")
 
 
+def _sync_buyer_sequence_steps() -> None:
+    """Push the current Cal buyer cadence copy/delays/labels onto the live
+    sequence so redefined follow-ups (relationship ladder) reach in-flight
+    enrollments after deploy. ``ensure_default_sequence`` only seeds on first
+    create, so without this the reshaped Day 7/21/45 steps never ship."""
+    try:
+        from app.database import SessionLocal
+        from app.services.sequence_runner import sync_default_sequence_steps
+
+        db = SessionLocal()
+        try:
+            result = sync_default_sequence_steps(db)
+            logger.info("Buyer sequence steps synced at startup: %s", result)
+        finally:
+            db.close()
+    except Exception as exc:
+        logger.warning("Buyer sequence step sync failed at startup: %s", exc)
+
+
 def _run_worker_startup() -> None:
     """Worker machine: schedulers, cache refresh loops, and warm-ups."""
     from app.runtime_role import is_worker_process
@@ -279,6 +298,7 @@ def _run_worker_startup() -> None:
     _start_scheduled_communication_learning()
     _start_scheduled_supply_autonomy()
     _start_scheduled_newsletter_publish()
+    _sync_buyer_sequence_steps()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
         logger.info("Worker startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")

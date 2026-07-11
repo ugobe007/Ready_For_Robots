@@ -226,6 +226,235 @@ def _buyer_insight(industry: str) -> dict[str, str]:
     return _GENERIC_INSIGHT
 
 
+# ── Relationship ladder: teaching follow-ups ──────────────────────────────────
+# The follow-up cadence isn't "just bumping this." Each touch teaches ONE thing
+# in Cal's advisor voice: a deployment lesson (teach), a market pattern/mistake
+# (trend), then an easy, genuine question that invites the buyer's expertise
+# (question). No pitch, no AI tells. Company name is added by the wrapper's close
+# so every touch clears the assembly gate.
+LADDER_TOUCHES: tuple[str, ...] = ("teach", "trend", "question")
+
+_GENERIC_LADDER = {
+    "teach_subject": "the workflow most teams automate last",
+    "teach": (
+        "The projects with the fastest payback rarely start with the most visible task. They start with "
+        "the quiet process upstream that backs everything else up — less glamorous, and usually the "
+        "easiest place to prove a robot earns its keep.\n\n"
+        "Most teams do the opposite: automate the flashy part first, then wonder why the ROI never showed."
+    ),
+    "trend_subject": 'why "evaluating five robots" is usually the wrong question',
+    "trend": (
+        "A pattern I see constantly: a team lines up five vendors, runs a bake-off, and picks the fastest. "
+        "Six months later it's parked.\n\n"
+        "The robots that survive aren't the fastest — they're the ones matched to one specific bottleneck, "
+        "with the integration and software actually resourced. Speed is the easiest thing to demo and the "
+        "least predictive of ROI."
+    ),
+    "question_subject": "one question about your operation",
+    "question": (
+        "No agenda here — one question tells me more than a whole discovery call.\n\n"
+        "If you automated one workflow tomorrow, which would it be? Most teams name the busiest one. The "
+        "one that actually pays back is usually the process quietly creating work everywhere else."
+    ),
+}
+
+_LADDER_CONTENT: tuple[tuple[tuple[str, ...], dict[str, str]], ...] = (
+    (
+        ("logistic", "warehous", "supply chain", "fulfil", "distribution", "3pl"),
+        {
+            "teach_subject": "the workflow most warehouses automate last",
+            "teach": (
+                "The warehouses with the fastest payback rarely start at picking. They start at receiving "
+                "— a slow dock backs up replenishment, putaway, and every downstream pick, and it's the "
+                "easiest place to prove a robot earns its keep.\n\n"
+                "Most teams do the opposite: automate the flashy pick line first, then wonder why the ROI "
+                "never showed."
+            ),
+            "trend_subject": 'why "evaluating five robots" is usually the wrong question',
+            "trend": (
+                "A pattern I see constantly: a team lines up five AMRs, runs a bake-off, and picks the "
+                "fastest. Six months later it's parked in a corner.\n\n"
+                "The ones that survive aren't the fastest — they're matched to one specific bottleneck, "
+                "with integration and software actually resourced. Speed is the easiest spec to demo and "
+                "the least predictive of payback."
+            ),
+            "question_subject": "one question about your operation",
+            "question": (
+                "No agenda here — one question tells me more than a discovery call.\n\n"
+                "If you automated one workflow tomorrow, which would it be? Most teams say picking. The one "
+                "that usually pays back is the process quietly creating work everywhere else — receiving, "
+                "replenishment, or returns."
+            ),
+        },
+    ),
+    (
+        ("hospitality", "hotel", "casino", "gaming", "resort"),
+        {
+            "teach_subject": "the automation most hotels overlook",
+            "teach": (
+                "The properties that get real value from robots rarely start in the lobby. They start with "
+                "the runs nobody sees — linen, housekeeping carts, and overnight floor cleaning — because "
+                "that's where the labor hours and turnover actually pile up.\n\n"
+                "The lobby delivery robot photographs well and moves the needle least."
+            ),
+            "trend_subject": "the robot that demos well and stalls by the weekend",
+            "trend": (
+                "A pattern worth knowing: the service robot that glides across an empty showroom floor "
+                "often stalls the first busy Saturday — crowded elevators, guests, tight corridors.\n\n"
+                "The ones that last are chosen for how they handle a full building on a bad day, not how "
+                "they look in the demo."
+            ),
+            "question_subject": "one question about your property",
+            "question": (
+                "No agenda here — one question tells me more than a tour.\n\n"
+                "If you automated one task across your property tomorrow, which would it be? Most teams say "
+                "delivery. The one that usually pays back is the repetitive run quietly eating overnight "
+                "hours — linen, cleaning, or room service."
+            ),
+        },
+    ),
+    (
+        ("health", "medical", "hospital", "clinic", "elder", "senior living"),
+        {
+            "teach_subject": "where hospital automation actually pays back",
+            "teach": (
+                "In most hospitals the ROI isn't the robot that makes the news. It's the miles clinical "
+                "staff walk every shift — moving supplies, meds, samples, linen, and waste between "
+                "floors.\n\n"
+                "Automate that transport and you give nurses time back. Chase the flashy robot and you "
+                "usually get a press release, not payback."
+            ),
+            "trend_subject": "the part of a robot pilot everyone underestimates",
+            "trend": (
+                "A mistake I see often in healthcare: teams evaluate the robot and skip the integration — "
+                "elevators, badge access, EVS workflow, EHR hooks.\n\n"
+                "That's the part that decides whether a transport robot actually runs or sits charging. "
+                "The hardware is rarely the reason a pilot stalls."
+            ),
+            "question_subject": "one question about your operation",
+            "question": (
+                "No agenda here — one question tells me more than a long call.\n\n"
+                "If you automated one workflow tomorrow, which would it be? Most teams name a clinical task. "
+                "The one that usually pays back first is the internal transport quietly pulling staff away "
+                "from patients."
+            ),
+        },
+    ),
+    (
+        ("food", "restaurant", "kitchen", "beverage", "grocery"),
+        {
+            "teach_subject": "where kitchen automation usually breaks",
+            "teach": (
+                "Most kitchen automation doesn't fail on the cook — it fails on changeover. A cell that "
+                "runs one product beautifully falls apart when the menu shifts three times a day.\n\n"
+                "The deployments that last are built around prep, portioning, and fast changeovers, not the "
+                "one hero task that films well."
+            ),
+            "trend_subject": "the robot that looks great and never scales",
+            "trend": (
+                "A pattern I see in food operations: the cooking robot demos beautifully, then can't keep "
+                "up with real throughput or sanitation between products.\n\n"
+                "The ones that earn their spot handle the repetitive, food-safe work — portioning, tray "
+                "loading, packaging — and flex across products without a teardown."
+            ),
+            "question_subject": "one question about your operation",
+            "question": (
+                "No agenda here — one question tells me more than a walkthrough.\n\n"
+                "If you automated one station tomorrow, which would it be? Most teams point at the cook "
+                "line. The one that usually pays back is the high-turnover station you can never keep "
+                "staffed — prep, portioning, or dish."
+            ),
+        },
+    ),
+    (
+        ("manufactur", "industrial", "automotive", "assembly", "factory", "cnc", "metal"),
+        {
+            "teach_subject": "the automation that survives a mix change",
+            "teach": (
+                "On most lines the value isn't the six-axis arm everyone photographs. It's the unglamorous "
+                "work between cells — machine tending, material movement, and end-of-line packaging — where "
+                "labor quietly goes.\n\n"
+                "And a cell that only runs one part number looks great until your product mix changes."
+            ),
+            "trend_subject": "why the flexible robot beats the fast one",
+            "trend": (
+                "A pattern worth knowing: teams buy for peak speed on one part, then get burned when the "
+                "mix shifts and the cell can't flex.\n\n"
+                "The deployments that last are chosen for changeover and reconfiguration, not top-end cycle "
+                "time. In high-mix work, flexibility pays back longer than speed."
+            ),
+            "question_subject": "one question about your operation",
+            "question": (
+                "No agenda here — one question tells me more than a plant tour.\n\n"
+                "If you automated one job tomorrow, which would it be? Most teams name the bottleneck cell. "
+                "The one that usually pays back is the repetitive tending and material movement nobody "
+                "wants."
+            ),
+        },
+    ),
+    (
+        ("retail", "store", "e-commerce", "ecommerce", "apparel", "consumer goods"),
+        {
+            "teach_subject": "the retail robot that changes nothing",
+            "teach": (
+                "A hard truth: a shelf-scanning robot that just produces another dashboard rarely changes "
+                "what staff actually do. The value shows up when automation touches the work behind the "
+                "shelf — backroom sortation, replenishment, and inventory exceptions.\n\n"
+                "Data is easy. Changing the labor is the part that pays back."
+            ),
+            "trend_subject": "why inventory robots stall after the pilot",
+            "trend": (
+                "A pattern I see in retail: the inventory robot nails accuracy in the pilot, then nothing "
+                "changes because no workflow was rebuilt around the data.\n\n"
+                "The deployments that last close the loop — the scan triggers replenishment or a task, not "
+                "just a report. Otherwise it's a very expensive dashboard."
+            ),
+            "question_subject": "one question about your operation",
+            "question": (
+                "No agenda here — one question tells me more than a call.\n\n"
+                "If you automated one workflow tomorrow, which would it be? Most teams say shelf scanning. "
+                "The one that usually pays back is the backroom labor behind it — sortation, replenishment, "
+                "exceptions."
+            ),
+        },
+    ),
+)
+
+
+def _ladder_content(industry: str) -> dict[str, str]:
+    """Return the teaching content for an industry (substring match, generic fallback)."""
+    ind = (industry or "").strip()
+    if "(" in ind:
+        ind = ind.split("(", 1)[0].strip()
+    low = ind.lower()
+    for keys, content in _LADDER_CONTENT:
+        if any(k in low for k in keys):
+            return content
+    return _GENERIC_LADDER
+
+
+def ladder_touch_subject(touch: str, name: str, industry: str) -> str:
+    """Insight-led subject for a follow-up touch (teach / trend / question)."""
+    content = _ladder_content(industry)
+    key = f"{touch}_subject"
+    return content.get(key, _GENERIC_LADDER.get(key, "a quick note"))
+
+
+def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
+    """Assemble a teaching follow-up body. Each touch teaches one thing and ends
+    with a company-named close (assembly gate) plus Cal's sign-off."""
+    n = (name or "your team").strip()
+    content = _ladder_content(industry)
+    core = content.get(touch, _GENERIC_LADDER.get(touch, ""))
+    if touch == "teach":
+        close = f"If {n} ever maps this out, that's where I'd start."
+    elif touch == "trend":
+        close = f"If {n} is weighing vendors, I'm glad to share what separates the ones that last. No pitch."
+    else:  # question
+        close = f"Curious what you'd pick for {n} — no wrong answer, and no agenda on my end."
+    return "\n".join(["Hi,", "", core, "", close, "", cal_signature()])
+
+
 def pick_buyer_variant(company_id, *, allowed=None) -> str:
     """Deterministic round-robin so a company's draft and send agree on the angle."""
     pool = [v for v in (allowed or BUYER_VARIANTS) if v in BUYER_VARIANTS]

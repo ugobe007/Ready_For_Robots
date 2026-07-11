@@ -38,50 +38,52 @@ DEFAULT_BUYER_SEQUENCE = {
             "action_label": "Intro",
         },
         {
+            # Teach — one deployment lesson. Live copy comes from the ladder
+            # builders (per-industry); this static template is a fallback only.
             "step_number": 2,
-            "delay_days": 3,
-            "subject_template": "Following up (politely) — {company_name}",
-            "body_template": (
-                "Hi again — Cal here.\n\n"
-                "I know \"just circling back\" is the junk food of your inbox, so I'll make this "
-                "worth the click: the teams getting real ROI in {industry} aren't the ones buying "
-                "the flashiest robot — they're the ones who pick one painful, repetitive task and "
-                "let a robot own it end to end.\n\n"
-                "I can send over the 2–3 tasks that tend to pay off first for a team like "
-                "{company_name}. Want them?\n\n"
-                "— Cal\nReady For Robots"
-            ),
-            "action_label": "Value follow-up",
-        },
-        {
-            "step_number": 3,
             "delay_days": 6,
-            "subject_template": "The part everyone gets wrong about robot pilots — {company_name}",
+            "subject_template": "the workflow most teams automate last — {company_name}",
             "body_template": (
-                "Hi — Cal again.\n\n"
-                "Most robot pilots stall for the same unglamorous reason: nobody agreed up front on "
-                "what \"it worked\" means. The operators who win pick one workflow, one number to "
-                "move, and a 30-day window — then decide with data instead of vibes.\n\n"
-                "I can map that out for {company_name} in about 20 minutes. A plain \"yes\" or "
-                "\"not now\" is a perfectly good reply.\n\n"
+                "Hi,\n\n"
+                "One pattern I see everywhere: the projects with the fastest payback rarely start "
+                "with the most visible task. They start with the quiet process upstream that backs "
+                "everything else up.\n\n"
+                "Most teams automate the flashy part first, then wonder why the ROI never showed. If "
+                "{company_name} ever maps this out, that's where I'd start.\n\n"
                 "— Cal\nReady For Robots"
             ),
-            "action_label": "Proof / easy ask",
+            "action_label": "Teach",
         },
         {
-            "step_number": 4,
-            "delay_days": 9,
-            "subject_template": "I'll stop emailing (promise) — {company_name}",
+            # Trend — one market pattern / common mistake. Live copy = ladder.
+            "step_number": 3,
+            "delay_days": 14,
+            "subject_template": "why \"evaluating five robots\" is usually the wrong question — {company_name}",
             "body_template": (
-                "Hi — Cal, one last time.\n\n"
-                "I don't want to be the guy who keeps knocking after the lights are off, so I'll "
-                "leave it here. If robots-that-earn-their-keep aren't on the {company_name} roadmap "
-                "this quarter, no hard feelings.\n\n"
-                "If timing changes — a new site, a labor crunch, a task nobody wants to staff — just "
-                "reply \"Cal?\" and I'll pick up right where we left off.\n\n"
+                "Hi,\n\n"
+                "A team lines up five vendors, runs a bake-off, picks the fastest — and six months "
+                "later it's parked. The robots that survive aren't the fastest; they're matched to "
+                "one specific bottleneck, with integration and software actually resourced.\n\n"
+                "If {company_name} is weighing vendors, I'm glad to share what separates the ones "
+                "that last. No pitch.\n\n"
                 "— Cal\nReady For Robots"
             ),
-            "action_label": "Graceful breakup",
+            "action_label": "Trend",
+        },
+        {
+            # Question — one easy, genuine question. Live copy = ladder.
+            "step_number": 4,
+            "delay_days": 24,
+            "subject_template": "one question about {company_name}",
+            "body_template": (
+                "Hi,\n\n"
+                "No agenda here — one question tells me more than a whole discovery call.\n\n"
+                "If you automated one workflow tomorrow, which would it be? Most teams name the "
+                "busiest one. The one that actually pays back is usually the process quietly "
+                "creating work everywhere else. Curious what you'd pick for {company_name}.\n\n"
+                "— Cal\nReady For Robots"
+            ),
+            "action_label": "Question",
         },
     ],
 }
@@ -232,7 +234,7 @@ def enroll_after_intro_send(
         )
         .first()
     )
-    delay_days = max(1, int(step2.delay_days if step2 else 3))
+    delay_days = max(1, int(step2.delay_days if step2 else 6))
     if existing:
         if existing.status in ("paused", "completed", "blocked"):
             existing.status = "active"
@@ -316,6 +318,54 @@ def _render_template(template: str, account: CrmAccount) -> str:
     )
 
 
+# Cal's buyer cadence follow-ups (steps 2/3/4) teach in the advisor voice rather
+# than sending static "value / proof / breakup" copy. Map each step to a ladder
+# touch by action_label first, then step number as a fallback.
+_LADDER_STEP_TOUCH = {2: "teach", 3: "trend", 4: "question"}
+
+
+def _step_touch(step: OutreachSequenceStep) -> str | None:
+    label = (getattr(step, "action_label", "") or "").strip().lower()
+    if label in ("teach", "trend", "question"):
+        return label
+    return _LADDER_STEP_TOUCH.get(getattr(step, "step_number", 0))
+
+
+def _render_sequence_step(
+    step: OutreachSequenceStep,
+    account: CrmAccount,
+    *,
+    sequence_slug: str | None,
+) -> tuple[str, str]:
+    """Produce (subject, body) for a due follow-up.
+
+    For Cal's buyer cadence (``cal_buyer_v1``), steps 2/3/4 are rendered by the
+    ``agent_messaging`` ladder builders so each touch teaches one industry-specific
+    thing in the advisor voice. Any other sequence — or a step without a ladder
+    touch (e.g. the CRM manual step 1) — falls back to the static template.
+    """
+    if sequence_slug == DEFAULT_BUYER_SEQUENCE["slug"]:
+        touch = _step_touch(step)
+        if touch:
+            from app.services.agent_messaging import (
+                build_ladder_touch_body,
+                ladder_touch_subject,
+            )
+
+            name = account.name or "your team"
+            industry = account.industry or ""
+            return (
+                ladder_touch_subject(touch, name, industry),
+                build_ladder_touch_body(touch, name, industry),
+            )
+    subject = _render_template(step.subject_template or f"Follow-up — {account.name}", account)
+    body = _render_template(
+        step.body_template or account.outreach_draft or "Following up from Ready For Robots.",
+        account,
+    )
+    return subject, body
+
+
 def _reply_address(token: str) -> str:
     import os
 
@@ -339,6 +389,7 @@ def process_due_enrollments(db: Session, *, limit: int = 50) -> dict[str, Any]:
     sent = 0
     skipped = 0
     failed = 0
+    slug_cache: dict[Any, str | None] = {}
     for enrollment in due:
         account = db.query(CrmAccount).filter(CrmAccount.id == enrollment.crm_account_id).first()
         if not account or not account.contact_email:
@@ -368,8 +419,16 @@ def process_due_enrollments(db: Session, *, limit: int = 50) -> dict[str, Any]:
         if not step:
             enrollment.status = "completed"
             continue
-        subject = _render_template(step.subject_template or f"Follow-up — {account.name}", account)
-        body = _render_template(step.body_template or account.outreach_draft or "Following up from Ready For Robots.", account)
+        if enrollment.sequence_id not in slug_cache:
+            seq_row = (
+                db.query(OutreachSequence.slug)
+                .filter(OutreachSequence.id == enrollment.sequence_id)
+                .first()
+            )
+            slug_cache[enrollment.sequence_id] = seq_row[0] if seq_row else None
+        subject, body = _render_sequence_step(
+            step, account, sequence_slug=slug_cache[enrollment.sequence_id]
+        )
         reply_token = secrets.token_urlsafe(18)
         try:
             send_result = send_email_via_resend(
