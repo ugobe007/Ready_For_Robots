@@ -118,10 +118,9 @@ def cal_buyer_outreach_body(company: Any, *, fresh: bool = False) -> str:
 
     name = (getattr(company, "name", None) or "your team").strip()
     industry = (getattr(company, "industry", None) or "your industry").strip()
-    week = datetime.now(timezone.utc).isocalendar().week
-    allow_humor = fresh or (week % 2 == 0)
 
-    # Value-first order: what you get → why you specifically → proof → clear ask.
+    # Read like a person wrote it: who I am → what I do → why you specifically →
+    # quiet credibility → a low-pressure ask → an honest note that I'll say no.
     lines = [
         CAL_INTRO,
         "",
@@ -132,10 +131,11 @@ def cal_buyer_outreach_body(company: Any, *, fresh: bool = False) -> str:
         BUYER_ROI_PROOF,
         "",
         BUYER_OUTREACH_CTA,
+        "",
+        BUYER_CAL_PERSONALITY,
+        "",
+        cal_signature(),
     ]
-    if allow_humor:
-        lines += ["", BUYER_CAL_PERSONALITY]
-    lines += ["", cal_signature()]
     return "\n".join(lines)
 
 
@@ -274,8 +274,7 @@ def _draft_and_store(
     stale_before: Optional[datetime],
 ) -> tuple[bool, bool]:
     """Return (drafted, refreshed)."""
-    from app.api.admin_extended import _cal_draft_for_company, _cal_outreach_domain
-    from app.services.outreach_email_inference import infer_outreach_emails
+    from app.api.admin_extended import _cal_draft_for_company
 
     company_id = company.id
     acct = existing.get(company_id) if acct is None else acct
@@ -297,7 +296,6 @@ def _draft_and_store(
             return False, False
 
     subject, draft_body = _cal_draft_for_company(company, fresh=regenerate or is_stale)
-    domain = _cal_outreach_domain(company, acct)
 
     if acct is None:
         from app.models.crm import CrmAccount
@@ -318,10 +316,12 @@ def _draft_and_store(
     elif (company.crm_metadata or {}).get("outreach_pipeline") == "stagegate":
         acct.account_type = "vendor"
 
-    if not acct.contact_email and domain:
-        guessed = infer_outreach_emails(domain, company.industry)
-        if guessed:
-            acct.contact_email = guessed.primary
+    # Do NOT stamp a guessed role inbox onto contact_email here. A stored
+    # contact_email short-circuits resolve_outreach_email (returns "crm_contact",
+    # untrusted) BEFORE it ever reaches Hunter — so a guess written at draft time
+    # permanently blocks the verified-contact upgrade and the account can never
+    # send. Leave contact_email empty; the send loop resolves through the full
+    # waterfall (Apollo → Hunter → …) and only a verified address clears the gate.
 
     acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
     from app.api.admin_extended import cal_manual_approval_required

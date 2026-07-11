@@ -5,7 +5,7 @@ from __future__ import annotations
 # Wise, abbreviated, in-the-know. Engineer-led teams, PoC → deployment reality.
 # Honesty and trust over hype. Draws on deep robotics industry experience.
 
-CAL_INTRO = "Hi, it's Cal at Ready For Robots."
+CAL_INTRO = "Hi — I'm Cal, with Ready For Robots."
 
 CAL_VENDOR_IDENTITY = (
     "I've spent years inside robot deployments — Anybots, Omron, Panasonic, Mitsubishi, Locus Robotics — "
@@ -17,28 +17,29 @@ CAL_VENDOR_SHERPA_LINE = (
     "honest readouts, no theater."
 )
 
-# Value-first: lead with the outcome the buyer gets, not how we watch them.
+# Plain, honest, first-person. Say what I do and why I'm writing — no slogans.
 BUYER_SIGNAL_EXPLANATION = (
-    "I match ops teams with the two or three robotics vendors actually worth a pilot — "
-    "and tell you which ones to skip. No brochures, no innovation theater, no 90-day PoC that "
-    "quietly dies."
+    "I help operations teams figure out which robots would actually fit the way they run, "
+    "and which ones aren't worth the trouble. A lot of what I do is talk people out of a pilot "
+    "that was never going to work."
 )
 
-# Concrete ROI / proof so the buyer sees a reason to care, not just a pitch.
+# Quiet credibility — a plain observation about what makes robots pay off, no bravado.
 BUYER_ROI_PROOF = (
-    "The teams that get this right see payback in roughly 12–18 months — and it's almost never the "
-    "flashiest robot. It's matching the right cell to the one bottleneck that's actually costing you. "
-    "I've watched enough pilots stall to know where the money hides."
+    "The teams that get real value out of it usually aren't the ones who bought the most impressive "
+    "robot. They're the ones who matched a specific machine to the one job that was actually costing "
+    "them. When the fit is right, it tends to pay for itself inside a year or two."
 )
 
 BUYER_OUTREACH_CTA = (
-    "Want the shortlist? Reply \"send it\" and I'll send three vendors who've deployed in setups like "
-    "yours — plus the one I'd personally avoid. Five-minute read, no call required."
+    "If it's useful, I'm happy to put together a short list of vendors that have actually deployed in "
+    "operations like yours — and flag the couple I'd be careful about. No call, no pitch; just reply "
+    "and I'll send it over."
 )
 
-# Optional closing beat — confident, a little dry. Used when humor is allowed.
+# Honest closing beat — builds trust rather than performing confidence.
 BUYER_CAL_PERSONALITY = (
-    "Fair warning: I'm annoyingly picky about fit. It's cheaper than a failed deployment."
+    "And if I don't think a robot is the right answer for you yet, I'll tell you that too."
 )
 
 VENDOR_SIGNAL_EXPLANATION = (
@@ -80,34 +81,37 @@ def rep_outreach_signature() -> str:
 
 
 def buyer_company_hook(name: str, *, industry: str = "your industry") -> str:
-    """One specific, relatable line: the bottleneck teams like theirs actually hit."""
+    """One grounded, human line about the real problem teams like theirs run into."""
     n = (name or "your team").strip()
     ind = (industry or "your industry").strip().lower()
     if ind in ("logistics", "warehousing"):
         return (
-            f"Warehouses like {n} tend to hit the same wall: labor's tight, volume isn't, and the "
-            f"AMRs that crush a carpet demo fall apart in real aisles. The ones that actually hold up "
-            f"are a short list — and I keep it."
+            f"For an operation like {n}, the hard part usually isn't deciding to automate — it's knowing "
+            f"which robots still hold up once they're out of a demo and into your real aisles, at your "
+            f"real volume. That's the part I can help with."
         )
     if ind in ("hospitality", "hotels", "casinos & gaming"):
         return (
-            f"For a property like {n}, the math is usually overnight coverage and turnover — the point "
-            f"where service and cleaning automation starts paying for itself instead of sitting in a lobby "
-            f"as a gimmick."
+            f"For a property like {n}, it usually comes down to overnight coverage and turnover — where "
+            f"service or cleaning robots start earning their keep instead of sitting in the lobby. "
+            f"Knowing which ones actually work in a real building is the tricky part."
         )
     if ind in ("healthcare", "medical technology"):
         return (
-            f"Teams like {n} usually reach for robots when clinical ops scale faster than headcount — "
-            f"internal logistics and AMRs first, because that's where the hours quietly disappear."
+            f"Teams like {n} tend to look at robots when demand grows faster than they can hire — usually "
+            f"internal transport and delivery first, since that's where the hours quietly go. Working out "
+            f"which systems fit your floors is where I can help."
         )
     if ind in ("food service", "food processing & manufacturing"):
         return (
-            f"In food ops like {n}, it's throughput and back-of-house strain that make the case — a "
-            f"targeted cell on the real bottleneck, not a catalog of robots you'll never run."
+            f"In an operation like {n}, it's usually throughput and back-of-house strain that make the "
+            f"case — one robot aimed at the real bottleneck, not a shelf of machines you'll never run. "
+            f"Picking the right one is the hard part."
         )
     return (
-        f"Teams in {industry.strip()} like {n} usually get to robots the same way: one bottleneck gets "
-        f"expensive enough that a targeted pilot beats hiring against it."
+        f"Teams in {industry.strip()} like {n} usually get to robots the same way: one job gets expensive "
+        f"or hard to staff, and a focused pilot starts to look smarter than hiring against it. Knowing "
+        f"which robot actually fits is where I come in."
     )
 
 

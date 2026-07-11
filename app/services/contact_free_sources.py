@@ -193,6 +193,23 @@ def infer_person_email_from_decision_makers(
     return None, None, None
 
 
+_ASSET_EMAIL_EXTS = (
+    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico",
+    ".css", ".js", ".mp4", ".webm", ".pdf", ".woff", ".woff2", ".ttf",
+)
+
+
+def _looks_like_asset_email(email: str) -> bool:
+    """Reject retina/asset refs (e.g. web3@2x.png) that regex-match like emails."""
+    low = (email or "").strip().lower()
+    if low.endswith(_ASSET_EMAIL_EXTS):
+        return True
+    domain_part = low.rsplit("@", 1)[-1]
+    # Real domains have a letter-only TLD; "2x.png" / "2x" do not.
+    tld = domain_part.rsplit(".", 1)[-1] if "." in domain_part else ""
+    return not tld.isalpha() or len(tld) < 2
+
+
 def fetch_website_mailto_email(domain: str, *, timeout: float = 2.0) -> Optional[str]:
     """Lightweight homepage scrape for mailto: links on the company domain."""
     if not domain:
@@ -213,17 +230,28 @@ def fetch_website_mailto_email(domain: str, *, timeout: float = 2.0) -> Optional
     html = response.text[:150_000]
     candidates: list[str] = []
     seen: set[str] = set()
+    dom = domain.lower()
     for match in _MAILTO_RE.finditer(html):
         email = _normalize_email(match.group(1))
         if not _is_usable_outreach_email(email) or email in seen:
             continue
-        if not email.endswith(f"@{domain.lower()}"):
+        if not email.endswith(f"@{dom}") or _looks_like_asset_email(email):
             continue
         seen.add(email)
         candidates.append(email)
+    # Text-extracted addresses must clear the SAME bar as mailto links: usable,
+    # on the company domain, and not an asset filename. Retina image refs like
+    # "web3@2x.png" otherwise leak through as fake "emails" and get sent to.
     for email in extract_emails_from_text(html, domain=domain):
-        if email not in seen:
-            candidates.append(email)
+        norm = _normalize_email(email)
+        if norm in seen:
+            continue
+        if not _is_usable_outreach_email(norm) or not norm.endswith(f"@{dom}"):
+            continue
+        if _looks_like_asset_email(norm):
+            continue
+        seen.add(norm)
+        candidates.append(norm)
     if not candidates:
         return None
     candidates.sort(key=lambda e: _email_score(e, domain), reverse=True)

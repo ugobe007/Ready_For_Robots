@@ -2,12 +2,22 @@
 from unittest.mock import MagicMock, patch
 
 from app.services.contact_free_sources import (
+    _looks_like_asset_email,
     apollo_contact_enabled,
     extract_emails_from_text,
     infer_person_email_from_decision_makers,
     pick_signal_outreach_email,
 )
 from app.services.lead_enrichment import resolve_outreach_email
+
+
+def test_asset_filenames_are_not_treated_as_emails():
+    # Retina/asset refs (web3@2x.png) regex-match like emails and were being
+    # stamped + sent to. They must be rejected before they ever reach the queue.
+    for junk in ("web3@2x.png", "logo@2x.jpg", "hero@3x.webp", "bundle@main.js", "x@2x"):
+        assert _looks_like_asset_email(junk) is True, junk
+    for real in ("john.smith@western.com", "vp.ops@company.io", "info@acme.co"):
+        assert _looks_like_asset_email(real) is False, real
 
 
 def test_apollo_disabled_by_default_even_with_key():

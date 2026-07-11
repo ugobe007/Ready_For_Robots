@@ -21,16 +21,32 @@ def test_truncated_preview_rejected():
 
 def test_complete_buyer_draft_accepted():
     body = cal_buyer_outreach_body(_FakeCompany("UPS Supply Chain Solutions", "Logistics"), fresh=True)
-    full = f"Subject: robotics shortlist for UPS Supply Chain Solutions\n\n{body}"
+    full = f"Subject: which robots would actually fit UPS Supply Chain Solutions\n\n{body}"
     assert is_complete_cal_draft(full)[0]
+    # Human, honest voice: names the buyer, offers a short list of vendors, signs off as Cal.
+    assert "UPS Supply Chain Solutions" in full
     assert "vendor" in full.lower()
-    # Value-first copy: leads with the buyer outcome (shortlist + payback), not surveillance.
-    assert "shortlist" in full.lower()
-    assert "payback" in full.lower()
+    assert "— Cal" in full
+    assert "Ready For Robots" in full
     # The old surveillance framing must not creep back in.
     assert "we monitor" not in full.lower()
     assert "watchlist" not in full.lower()
     assert "generic vendor browse" not in full.lower()
+
+
+def test_buyer_voice_has_no_marketing_theater():
+    # The copy that produced 285 sends / 0 replies leaned on catchy slogans. Pin
+    # the rewrite so the performative phrasing cannot regress back in.
+    body = cal_buyer_outreach_body(_FakeCompany("UPS Supply Chain Solutions", "Logistics"), fresh=True).lower()
+    for banned in (
+        "innovation theater",
+        "carpet demo",
+        "where the money hides",
+        "annoyingly picky",
+        "quietly dies",
+        'reply "send it"',
+    ):
+        assert banned not in body, f"marketing-theater phrase regressed: {banned}"
 
 
 def test_wrong_vendor_pitch_on_buyer_needs_regeneration():
