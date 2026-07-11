@@ -13,12 +13,38 @@ import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlan
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 
+/**
+ * Map an email address to its webmail inbox so a user on the "check your email"
+ * screen can open their inbox in one tap instead of hunting for it (a common
+ * magic-link completion leak). Returns null for domains we don't recognize.
+ */
+function emailProviderInbox(email: string): { label: string; url: string } | null {
+  const domain = email.split("@")[1]?.toLowerCase().trim();
+  if (!domain) return null;
+  const map: Record<string, { label: string; url: string }> = {
+    "gmail.com": { label: "Open Gmail", url: "https://mail.google.com/mail/u/0/" },
+    "googlemail.com": { label: "Open Gmail", url: "https://mail.google.com/mail/u/0/" },
+    "outlook.com": { label: "Open Outlook", url: "https://outlook.live.com/mail/0/" },
+    "hotmail.com": { label: "Open Outlook", url: "https://outlook.live.com/mail/0/" },
+    "live.com": { label: "Open Outlook", url: "https://outlook.live.com/mail/0/" },
+    "msn.com": { label: "Open Outlook", url: "https://outlook.live.com/mail/0/" },
+    "yahoo.com": { label: "Open Yahoo Mail", url: "https://mail.yahoo.com/" },
+    "icloud.com": { label: "Open iCloud Mail", url: "https://www.icloud.com/mail/" },
+    "me.com": { label: "Open iCloud Mail", url: "https://www.icloud.com/mail/" },
+    "proton.me": { label: "Open Proton Mail", url: "https://mail.proton.me/u/0/" },
+    "protonmail.com": { label: "Open Proton Mail", url: "https://mail.proton.me/u/0/" },
+  };
+  return map[domain] ?? null;
+}
+
 export default function Signup() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errMsg, setErrMsg] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendNote, setResendNote] = useState("");
   const [liveProof, setLiveProof] = useState<{ hot?: number; companies?: number } | null>(null);
 
   const search = typeof window !== "undefined" ? window.location.search : "";
@@ -150,6 +176,28 @@ export default function Signup() {
     }
   }
 
+  // Tick down the resend cooldown so users aren't left guessing when they can retry.
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = window.setTimeout(() => setResendCooldown((n) => Math.max(0, n - 1)), 1000);
+    return () => window.clearTimeout(t);
+  }, [resendCooldown]);
+
+  async function sendMagicLink(): Promise<boolean> {
+    if (!email.trim() || !supabase) return false;
+    const redirectTo = supabaseOAuthRedirect(postAuthRedirectTarget("/pipeline"));
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: redirectTo },
+    });
+    if (error) {
+      setStatus("error");
+      setErrMsg(error.message);
+      return false;
+    }
+    return true;
+  }
+
   async function magicLink(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !supabase) return;
@@ -161,16 +209,23 @@ export default function Signup() {
     persistFullName();
     setStatus("sending");
     setErrMsg("");
-    const redirectTo = supabaseOAuthRedirect(postAuthRedirectTarget("/pipeline"));
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: redirectTo },
-    });
-    if (error) {
-      setStatus("error");
-      setErrMsg(error.message);
-    } else {
+    setResendNote("");
+    const ok = await sendMagicLink();
+    if (ok) {
       setStatus("sent");
+      setResendCooldown(30);
+    }
+  }
+
+  async function resendMagicLink() {
+    if (resendCooldown > 0 || !email.trim()) return;
+    setResendNote("Sending…");
+    const ok = await sendMagicLink();
+    if (ok) {
+      setResendNote("Sent again — check your inbox and spam folder.");
+      setResendCooldown(30);
+    } else {
+      setResendNote("");
     }
   }
 
@@ -254,9 +309,46 @@ export default function Signup() {
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-8 text-center">
               <h2 className="text-xl font-bold text-gray-900">Check your email</h2>
               <p className="mt-3 text-sm text-gray-600">
-                We sent a magic link to <span className="font-semibold text-emerald-700">{email}</span>.
+                We sent a one-tap sign-in link to <span className="font-semibold text-emerald-700">{email}</span>.
+                Open it and you'll land{" "}
+                {pipelineIntent && buyerCo
+                  ? `back on ${buyerCo}, ready to save and copy the draft.`
+                  : "in your pipeline, ready to save your first lead and copy the outreach draft."}
               </p>
-              <button type="button" onClick={() => setStatus("idle")} className="mt-6 text-xs text-gray-500 hover:text-gray-800">
+              {(() => {
+                const inbox = emailProviderInbox(email);
+                return inbox ? (
+                  <a
+                    href={inbox.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-6 inline-block w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700"
+                  >
+                    {inbox.label} →
+                  </a>
+                ) : null;
+              })()}
+              <div className="mt-5 flex flex-col items-center gap-2 text-xs text-gray-600">
+                <p>Didn't get it? Check spam, or resend.</p>
+                <button
+                  type="button"
+                  onClick={() => void resendMagicLink()}
+                  disabled={resendCooldown > 0}
+                  className="font-semibold text-emerald-700 hover:text-emerald-800 disabled:text-gray-400"
+                >
+                  {resendCooldown > 0 ? `Resend link in ${resendCooldown}s` : "Resend link"}
+                </button>
+                {resendNote && <p className="text-emerald-700">{resendNote}</p>}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatus("idle");
+                  setResendCooldown(0);
+                  setResendNote("");
+                }}
+                className="mt-6 text-xs text-gray-500 hover:text-gray-800"
+              >
                 Use a different email
               </button>
             </div>
