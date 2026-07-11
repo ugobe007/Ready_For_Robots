@@ -342,7 +342,7 @@ function AdminCard({
 
 // Trust-first angles, in the same deterministic order as the backend
 // BUYER_VARIANTS so the operator sees which angle a lead's draft used.
-const BUYER_ANGLE_LABELS = ["Candid opener", "Peer reality", "Question-first"];
+const BUYER_ANGLE_LABELS = ["Workflow-first", "What survives", "Bottleneck-first"];
 function buyerAngleLabel(companyId?: number): string {
   if (typeof companyId !== "number" || !Number.isFinite(companyId)) return "trust-first angle";
   return BUYER_ANGLE_LABELS[companyId % BUYER_ANGLE_LABELS.length];

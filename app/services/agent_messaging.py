@@ -131,7 +131,7 @@ def max_signature() -> str:
 # Every variant must (a) mention the company name (assembly gate) and (b) end with
 # the Cal sign-off (draft-completeness gate).
 
-BUYER_VARIANTS: tuple[str, ...] = ("candid_opener", "peer_reality", "question_first")
+BUYER_VARIANTS: tuple[str, ...] = ("workflow_first", "what_survives", "bottleneck_first")
 
 
 def _buyer_sector(industry: str) -> str:
@@ -152,78 +152,70 @@ def _buyer_sector(industry: str) -> str:
     return low
 
 
-# Practitioner-grade read on each vertical so Cal speaks like someone who has
-# actually watched robots deploy there — not a generalist fishing for a meeting.
-# `use` = how robots really get deployed, `edge` = what separates a working
-# deployment from a demo, `pain` = where the value actually hides, `pain_q` = the
-# same constraint framed as an honest opening question.
+# Cal is a vendor-neutral deployment advisor, not a salesperson. Each vertical
+# gets: `glam` = the workflow everyone automates first (and over-focuses on),
+# `hidden` = where labor hours actually disappear, and `opinion` = one strong,
+# memorable, deployment-earned point of view. The voice teaches; it doesn't pitch.
 _GENERIC_INSIGHT = {
-    "use": "the repetitive, hard-to-staff work — moving material and running the same task thousands of times a day",
-    "edge": "whether it holds up in your real conditions, not a vendor's demo",
-    "pain": "the one job that's actually costing you, rather than a fleet you'll never fully use",
-    "pain_q": "is there one repetitive, hard-to-staff job quietly costing you more than the rest",
+    "glam": "the most visible task",
+    "hidden": "the repetitive back-of-house work — moving material and handling the same exceptions over and over",
+    "opinion": "The coolest robot in the room is rarely the one that pays for itself.",
 }
 
 _INDUSTRY_INSIGHT: tuple[tuple[tuple[str, ...], dict[str, str]], ...] = (
     (
         ("logistic", "warehous", "supply chain", "fulfil", "distribution", "3pl"),
         {
-            "use": "goods-to-person picking, autonomous case and pallet moves, and keeping product flowing to the pack line",
-            "edge": "whether it still holds up at peak volume and mixed SKUs, not just in a clean demo aisle",
-            "pain": "the one station — induction, replen, or each-pick — where labor and errors quietly pile up",
-            "pain_q": "is one station — induction, replen, or each-pick — quietly eating your labor and error budget",
+            "glam": "Picking",
+            "hidden": "receiving, replenishment, pallet moves, inventory exceptions, and returns",
+            "opinion": "The fastest AMR on the floor is rarely the one that survives real peak volume.",
         },
     ),
     (
         ("hospitality", "hotel", "casino", "gaming", "resort"),
         {
-            "use": "room and amenity delivery, back-of-house runs, and autonomous floor cleaning",
-            "edge": "whether it can actually work a full building with guests and elevators, not an empty showroom floor",
-            "pain": "overnight coverage and the repetitive runs — deliveries, linen, lobby cleaning — that quietly eat staff hours",
-            "pain_q": "are the repetitive runs — deliveries, linen, overnight cleaning — where your staff hours disappear",
+            "glam": "The lobby delivery robot",
+            "hidden": "linen runs, housekeeping carts, overnight floor cleaning, and room-service logistics",
+            "opinion": "A robot that shines in an empty lobby usually stalls the first busy weekend.",
         },
     ),
     (
         ("health", "medical", "hospital", "clinic", "elder", "senior living"),
         {
-            "use": "autonomous transport of supplies, meds, lab samples, linen and waste",
-            "edge": "whether it integrates with your elevators, badge access and EVS workflow — the part demos skip",
-            "pain": "the hours clinical staff lose fetching and walking material instead of caring for patients",
-            "pain_q": "are your clinical staff losing hours fetching and moving supplies instead of caring for patients",
+            "glam": "The robot that gets posted on LinkedIn",
+            "hidden": "moving supplies, meds, lab samples, linen, and waste between floors",
+            "opinion": "In a hospital the ROI is almost never the flashy robot — it's the miles staff walk every shift.",
         },
     ),
     (
         ("food", "restaurant", "kitchen", "beverage", "grocery"),
         {
-            "use": "repetitive prep and pick-and-place cells — frying, portioning, tray loading, palletizing",
-            "edge": "food-safe handling and fast changeover between products, where a lot of cells fall down",
-            "pain": "one high-turnover station that's hard to keep staffed, not a wall of machines",
-            "pain_q": "is there one high-turnover station you can never keep reliably staffed",
+            "glam": "The cooking robot",
+            "hidden": "prep, portioning, dishwashing, packaging, and product changeovers",
+            "opinion": "Most kitchen automation dies on changeover, not on the cook.",
         },
     ),
     (
         ("manufactur", "industrial", "automotive", "assembly", "factory", "cnc", "metal"),
         {
-            "use": "machine tending, palletizing, and moving material between cells with cobots and AMRs",
-            "edge": "whether it flexes across changeovers instead of only running one part number",
-            "pain": "the repetitive tending and transport jobs nobody wants — especially in high-mix runs",
-            "pain_q": "is repetitive machine tending and material movement where your labor keeps going",
+            "glam": "The six-axis arm on the line",
+            "hidden": "machine tending, moving material between cells, and end-of-line packaging",
+            "opinion": "A cell that only runs one part number looks great until your mix changes.",
         },
     ),
     (
         ("retail", "store", "e-commerce", "ecommerce", "apparel", "consumer goods"),
         {
-            "use": "shelf-scanning, backroom sortation, and inventory-accuracy robots",
-            "edge": "whether the data actually changes what staff do, or just becomes another dashboard",
-            "pain": "inventory accuracy and the replenishment labor behind it",
-            "pain_q": "are inventory accuracy and replenishment labor the real drain",
+            "glam": "The shelf-scanning robot",
+            "hidden": "backroom sortation, replenishment, and inventory exceptions",
+            "opinion": "A robot that just produces another dashboard rarely changes what staff actually do.",
         },
     ),
 )
 
 
 def _buyer_insight(industry: str) -> dict[str, str]:
-    """Return the practitioner read for an industry (substring match, generic fallback)."""
+    """Return Cal's deployment read for an industry (substring match, generic fallback)."""
     ind = (industry or "").strip()
     if "(" in ind:
         ind = ind.split("(", 1)[0].strip()
@@ -266,87 +258,113 @@ def resolve_buyer_variant(company, acct=None) -> str | None:
     return pick_buyer_variant(getattr(company, "id", None))
 
 
-def _variant_candid(name: str, industry: str) -> str:
+def _variant_workflow_first(name: str, industry: str) -> str:
+    """Flagship teach: most projects automate the wrong workflow first."""
     sector = _buyer_sector(industry)
     ins = _buyer_insight(industry)
     return "\n".join([
-        CAL_INTRO,
+        "Hi,",
         "",
-        f"I won't pretend to diagnose {name} from the outside — I don't know how you run. But I do know "
-        f"{sector}: the robots that earn their place there mostly do {ins['use']}, and the ones that pay "
-        f"off get pointed at {ins['pain']}.",
+        "I spend my days looking at where robot deployments actually work — and where they quietly fall apart.",
         "",
-        f"Where it usually goes wrong is treating this as a fleet decision instead of a fit decision. The "
-        f"part that actually decides it is {ins['edge']}.",
+        f"One pattern keeps showing up in {sector}.",
         "",
-        "If automation's a question you're weighing this year, I'd be glad to compare notes — and if it's "
-        "not the right call yet, I'll say so. If it's not on your radar at all, tell me and I'll leave you be.",
+        "Most projects don't struggle because the robot can't do the job. They struggle because the wrong "
+        "workflow got automated first.",
+        "",
+        f"{ins['glam']} gets all the attention. Meanwhile {ins['hidden']} quietly consume thousands of "
+        f"labor hours a month. That's usually where I'd start with {name}.",
+        "",
+        "Ready For Robots isn't tied to any manufacturer. We spend our time working out where automation "
+        "creates real ROI — and, just as often, where the answer is \"not yet.\"",
+        "",
+        f"If robotics is on the roadmap at {name} this year, I'll share what we're seeing across the "
+        "market. No presentation, just a practical conversation.",
         "",
         cal_signature(),
     ])
 
 
-def _variant_peer(name: str, industry: str) -> str:
+def _variant_what_survives(name: str, industry: str) -> str:
+    """Pattern-recognition teach: which deployments are still running at 6 months."""
     sector = _buyer_sector(industry)
     ins = _buyer_insight(industry)
     return "\n".join([
-        CAL_INTRO,
+        "Hi,",
         "",
-        f"I'll skip the pitch and give you the honest read on {sector}: robots genuinely do good work "
-        f"there — {ins['use']} — but what separates the deployments that pay off from the ones that stall "
-        f"is almost never the hardware. It's {ins['edge']}.",
+        "Part of my job surprises people: I don't track which robots demo well. I track which ones are "
+        "still running six months after install.",
         "",
-        f"I'm not assuming anything about {name} — you may already have this dialed in, or robots may be "
-        f"nowhere near your list. What I actually do is help teams tell working automation from the kind "
-        f"that only shines in a demo, and aim it at {ins['pain']}. Sometimes that means telling someone to wait.",
+        f"In {sector}, that list is shorter than the sales decks suggest.",
         "",
-        "If you've looked at this before, I'd genuinely like to hear what you found. If you haven't, I can "
-        "tell you what tends to work for a team like yours — and, just as honestly, when it doesn't.",
+        ins["opinion"],
+        "",
+        "What decides it usually isn't the hardware — it's integration, the software layer, and whether the "
+        "robot was aimed at the right job in the first place. We're vendor-neutral, so I care about fit, not "
+        "about moving any particular box. Sometimes the right call is \"not yet.\"",
+        "",
+        f"If {name} is weighing robotics this year, I'll tell you what's actually holding up in the field — "
+        "and what I'd stay away from. No pitch.",
         "",
         cal_signature(),
     ])
 
 
-def _variant_question(name: str, industry: str) -> str:
+def _variant_bottleneck_first(name: str, industry: str) -> str:
+    """Opinionated + curious: start with the bottleneck, not the robot."""
     sector = _buyer_sector(industry)
     ins = _buyer_insight(industry)
     return "\n".join([
-        CAL_INTRO,
+        "Hi,",
         "",
-        f"Honest question about {name}: {ins['pain_q']}? Or is that already handled, and automation just "
-        f"isn't the priority right now?",
+        f"A question I'd ask before {name} looks at a single robot: which job is actually eating your hours "
+        "right now?",
         "",
-        f"I ask because in {sector} the robots that actually work come down to {ins['use']}, aimed at one "
-        f"real constraint rather than the whole operation. Whether that fits how you run — and whether "
-        f"now's even the time — is what I help operations teams think through. Plenty of those talks end "
-        f"in \"not yet,\" and that's completely fine.",
+        f"Most teams start with the coolest machine. I start with the bottleneck — because in {sector} the "
+        f"hours usually disappear into {ins['hidden'].lower()}, not {ins['glam'].lower()}.",
         "",
-        "If it's worth a short back-and-forth, just reply. If not, no hard feelings — I won't chase you.",
+        ins["opinion"],
+        "",
+        "I'm not tied to any manufacturer. My job is helping teams avoid buying the wrong robot — and "
+        "sometimes that means \"not yet.\"",
+        "",
+        "If it's worth a short exchange, tell me where the hours go and I'll tell you whether a robot is "
+        "even the right answer.",
         "",
         cal_signature(),
     ])
 
 
 def build_buyer_variant_body(name: str, industry: str, variant_id: str) -> str:
-    """Assemble the full buyer email body for a given trust-first angle."""
+    """Assemble the full buyer email body for a given advisor angle."""
     n = (name or "your team").strip()
     builders = {
-        "candid_opener": _variant_candid,
-        "peer_reality": _variant_peer,
-        "question_first": _variant_question,
+        "workflow_first": _variant_workflow_first,
+        "what_survives": _variant_what_survives,
+        "bottleneck_first": _variant_bottleneck_first,
     }
-    fn = builders.get(variant_id, _variant_candid)
+    fn = builders.get(variant_id, _variant_workflow_first)
     return fn(n, industry or "your industry")
 
 
 def buyer_variant_subject(name: str, industry: str, variant_id: str) -> str:
-    """Humble, curiosity-driven subject that matches the angle's tone."""
-    n = (name or "your team").strip()
-    if variant_id == "question_first":
-        return f"is automation on the table for {n} this year?"
-    if variant_id == "peer_reality":
-        return f"{n}: what actually holds up (and what doesn't)"
-    return f"an honest read on robots for {n}"
+    """Insight-led subject — a topic Cal is about to teach, not a pitch."""
+    sector = _buyer_sector(industry)
+    generic_sector = sector == "your line of work"
+    if variant_id == "what_survives":
+        return (
+            "the robots still running six months in"
+            if generic_sector
+            else f"the {sector} robots still running six months in"
+        )
+    if variant_id == "bottleneck_first":
+        return "start with the bottleneck, not the robot"
+    # workflow_first (default)
+    return (
+        "where automation projects usually go sideways"
+        if generic_sector
+        else f"where {sector} automation usually goes sideways"
+    )
 
 
 def cal_opening(*, audience: str = "buyer") -> str:
