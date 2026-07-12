@@ -120,3 +120,43 @@ def test_disabled_watchdog_noops(fake, sent, monkeypatch):
     assert res["checked"] is False
     assert res["reason"] == "disabled"
     assert sent == []
+
+
+def test_autostart_starts_stopped_worker(fake, sent, monkeypatch):
+    monkeypatch.setenv("FLY_API_TOKEN", "tok")
+    monkeypatch.setenv("FLY_APP_NAME", "ready-2-robot")
+    calls = []
+
+    def fake_api(method, path, timeout=10.0):
+        calls.append((method, path))
+        if method == "GET":
+            return 200, [
+                {"id": "web1", "state": "started",
+                 "config": {"metadata": {"fly_process_group": "web"}}},
+                {"id": "wk1", "state": "stopped",
+                 "config": {"metadata": {"fly_process_group": "worker"}}},
+            ]
+        return 200, {"ok": True}
+
+    monkeypatch.setattr(cal_watchdog, "_fly_machines_api", fake_api)
+    _write_heartbeat(fake, minutes_ago=90)  # stale → triggers self-heal + alert
+
+    res = cal_watchdog.check_and_alert()
+    assert res["action"] == "alert"
+    assert res["autostart"]["started"] == ["wk1"]
+    # only the stopped worker is started — web is left alone
+    assert ("POST", "/v1/apps/ready-2-robot/machines/wk1/start") in calls
+    assert ("POST", "/v1/apps/ready-2-robot/machines/web1/start") not in calls
+    # email reflects the auto-restart
+    assert "auto-restart" in sent[0][0].lower()
+
+
+def test_no_autostart_without_token(fake, sent, monkeypatch):
+    monkeypatch.delenv("FLY_API_TOKEN", raising=False)
+    monkeypatch.delenv("FLY_MACHINES_TOKEN", raising=False)
+    _write_heartbeat(fake, minutes_ago=90)
+    res = cal_watchdog.check_and_alert()
+    assert res["action"] == "alert"
+    assert res["autostart"] == {"attempted": False, "reason": "no_token"}
+    # falls back to the manual-recovery alert
+    assert "heartbeat stale" in sent[0][0].lower()
