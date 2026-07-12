@@ -1,6 +1,8 @@
 """Shared wording for agent-authored Ready For Robots communication."""
 from __future__ import annotations
 
+import re
+
 # ── Cal voice: veteran sherpa for robot companies ─────────────────────────────
 # Wise, abbreviated, in-the-know. Engineer-led teams, PoC → deployment reality.
 # Honesty and trust over hype. Draws on deep robotics industry experience.
@@ -583,14 +585,36 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
     ])
 
 
-def build_context_reason(name: str, signal_blob: str, *, max_chars: int = 180) -> str | None:
-    """A single verifiable, humble hook grounded in the company's own signals.
+# A concrete, external event is the only thing Cal will cite as a reason — an
+# opening, expansion, funding round, hire, RFP, deployment. Inferred prose like
+# "sits in a sector facing labor shortages" is NOT a verifiable event and reads
+# as assumptive/naive, so it is deliberately excluded.
+_EVENT_MARKER_RE = re.compile(
+    r"(?i)\b("
+    r"open(?:s|ed|ing)?\b|launch\w*|expand\w*|expansion|"
+    r"new\s+(?:facility|plant|factory|center|centre|distribution|warehouse|"
+    r"fulfil?lment|site|hub|line|store|kitchen|campus|dc)\b|"
+    r"break(?:s|ing)?\s+ground|ground[-\s]?break\w*|"
+    r"fund(?:ing|ed)|raised|raises|series\s+[a-e]\b|funding\s+round|"
+    r"invest(?:s|ed|ment|ing)?|acqui(?:re|res|red|sition)|merg(?:er|es|ed)|"
+    r"partnership|partner(?:s|ed)\s+with|joint\s+venture|"
+    r"contract|awarded|won\s+a\b|rfp|request\s+for\s+proposal|procurement|"
+    r"pilot\w*|deploy\w*|install\w*|roll(?:s|ed|ing)?[-\s]?out|rollout|"
+    r"hir(?:e|es|ing)|jobs?\b|positions?\b|open\s+roles?|"
+    r"\$\s?\d|\d+\s?(?:million|billion|m\b|bn\b)|sq\s?ft|square\s+f(?:ee|oo)t"
+    r")\b"
+)
 
-    Cal only names a reason when there's a real, company-specific fact to cite —
-    never a fabricated one. Returns ``None`` when the signal text is empty or too
-    low-quality to stand behind, so callers fall back to the clean industry
-    opener. Stays humble: it explains *why Cal reached out*, not what the company
-    should buy.
+
+def build_context_reason(name: str, signal_blob: str, *, max_chars: int = 200) -> str | None:
+    """A single verifiable, humble hook grounded in a concrete company event.
+
+    Cal only names a reason when the company's own signals contain a real,
+    external, event-like fact (an opening, expansion, funding round, hire, RFP,
+    deployment). Inferred category prose is rejected because reciting it back
+    reads as assumptive. Returns ``None`` when there's nothing concrete to stand
+    behind, so callers fall back to the clean industry opener. Stays humble: it
+    explains *why Cal reached out*, not what the company should buy.
     """
     n = (name or "").strip()
     blob = (signal_blob or "").strip()
@@ -603,7 +627,10 @@ def build_context_reason(name: str, signal_blob: str, *, max_chars: int = 180) -
         return None
 
     fact = (pick_primary_sentence(blob, max_chars=max_chars) or "").strip()
-    if not fact or is_low_quality_sales_text(fact):
+    # A truncated clause ("…") is a fragment, not a fact worth citing.
+    if not fact or fact.endswith("…") or is_low_quality_sales_text(fact):
+        return None
+    if not _EVENT_MARKER_RE.search(fact):
         return None
     if not fact.endswith((".", "!", "?")):
         fact = fact.rstrip(",;:—- ") + "."

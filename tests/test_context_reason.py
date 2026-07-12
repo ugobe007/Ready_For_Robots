@@ -27,6 +27,17 @@ def test_reason_none_for_low_quality_blob():
     assert build_context_reason("Acme", "aligns with our signals") is None
 
 
+def test_reason_rejects_inference_prose_without_event():
+    # Synthesized category prose is not a verifiable event — reciting it back
+    # reads as assumptive/naive, which is exactly what we must avoid.
+    blob = (
+        "Harvard Maintenance, a large Facilities Services operator, sits in a "
+        "sector facing acute front-line labor shortages that are pushing "
+        "operators to consider automation."
+    )
+    assert build_context_reason("Harvard Maintenance", blob) is None
+
+
 def test_reason_grounded_and_names_company():
     fact = "Acme Logistics is opening a new 500,000 sq ft distribution center in Dallas this fall."
     reason = build_context_reason("Acme Logistics", fact)
