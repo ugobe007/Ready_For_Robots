@@ -7,6 +7,7 @@ import SupabaseInlineLink from "@/components/admin/SupabaseInlineLink";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import CalWorkflowPanel, { type CalWorkflowMetrics } from "@/components/admin/CalWorkflowPanel";
+import CalLearningPanel from "@/components/admin/CalLearningPanel";
 import SiteMetricsPanel from "@/components/admin/SiteMetricsPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -1633,6 +1634,8 @@ export default function Admin() {
               onClick={() => setLocation("/inbox")}
             />
           </div>
+
+          <CalLearningPanel adminFetch={adminFetch} />
 
           <p className="mb-3 text-[11px] text-gray-500">
             Trust-first angles (auto-rotated per lead). Old drafts keep their saved copy until you

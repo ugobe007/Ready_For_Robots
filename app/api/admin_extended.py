@@ -1439,6 +1439,20 @@ def communication_learning_send(
     )
 
 
+@router.get("/communication-learning")
+def communication_learning_report(
+    period_hours: int = 168,
+    db: Session = Depends(get_db),
+    _user: dict = Depends(require_admin),
+):
+    """Live per-angle learning scoreboard for the admin UI (reply rate by angle
+    and by industry). Read-only; no email is sent."""
+    from app.services.communication_learning_report import build_communication_learning_report
+
+    ph = max(1, min(int(period_hours or 168), 24 * 90))
+    return build_communication_learning_report(db, period_hours=ph)
+
+
 @router.get("/supply/autonomy-status")
 def supply_autonomy_status(_user: dict = Depends(require_admin)):
     from app.services.supply_autonomy import get_supply_autonomy_status
