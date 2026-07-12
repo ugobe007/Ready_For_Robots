@@ -49,26 +49,36 @@ jobs:
           FLY_APP: ready-2-robot
         run: |
           set -euo pipefail
-          echo "Post-deploy machine states:"
-          flyctl machines list -a "$FLY_APP" --json \
-            | jq -r '.[] | "  \(.id)\t\(.config.metadata.fly_process_group // "?")\t\(.state)"'
+          # Poll until every machine is `started`. Right after a deploy machines
+          # pass through transient states (replacing/starting/created) that settle
+          # on their own — only a terminal `stopped` needs a manual start. Give
+          # transient states time and fail only if something is still down at the
+          # deadline.
+          deadline=$(( $(date +%s) + 150 ))
+          while :; do
+            states=$(flyctl machines list -a "$FLY_APP" --json)
+            echo "Machine states:"
+            echo "$states" | jq -r '.[] | "  \(.id)\t\(.config.metadata.fly_process_group // "?")\t\(.state)"'
 
-          stopped_ids=$(flyctl machines list -a "$FLY_APP" --json \
-            | jq -r '.[] | select(.state != "started") | .id')
-          for id in $stopped_ids; do
-            echo "Starting stopped machine $id"
-            flyctl machine start "$id" -a "$FLY_APP" || true
+            # Terminal-stopped machines won't recover on their own — start them.
+            for id in $(echo "$states" | jq -r '.[] | select(.state == "stopped") | .id'); do
+              echo "Starting stopped machine $id"
+              flyctl machine start "$id" -a "$FLY_APP" || true
+            done
+
+            if [ -z "$(echo "$states" | jq -r '.[] | select(.state != "started") | .id')" ]; then
+              echo "All machines started."
+              exit 0
+            fi
+
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "::error::Machines still not started 150s after deploy:"
+              echo "$states" | jq -r '.[] | select(.state != "started") | "\(.id) (\(.config.metadata.fly_process_group // "?")) = \(.state)"'
+              exit 1
+            fi
+            echo "waiting for machines to settle..."
+            sleep 10
           done
-
-          sleep 8
-          not_started=$(flyctl machines list -a "$FLY_APP" --json \
-            | jq -r '.[] | select(.state != "started") | "\(.id) (\(.config.metadata.fly_process_group // "?")) = \(.state)"')
-          if [ -n "$not_started" ]; then
-            echo "::error::Machines still not started after deploy:"
-            echo "$not_started"
-            exit 1
-          fi
-          echo "All machines started."
 
       - name: Verify web /health
         if: ${{ !cancelled() }}
