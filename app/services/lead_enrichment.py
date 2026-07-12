@@ -386,6 +386,39 @@ def address_previously_bounced(db: "Session", email: str) -> bool:
     return row is not None
 
 
+def recent_bounce_rate(db: "Session", hours: int = 168) -> dict:
+    """Trailing-window deliverability snapshot from outreach_messages.
+
+    Returns counts + the bounce rate (bounced / total sent in the window). Powers the
+    deliverability circuit breaker and the daily digest. ``bounced`` folds in complaints
+    and suppressions since all three are reputation-damaging non-deliveries.
+    """
+    import time as _time
+    from datetime import datetime, timezone
+    from sqlalchemy import func
+    from app.models.outreach import OutreachMessage
+
+    since = datetime.fromtimestamp(_time.time() - hours * 3600, tz=timezone.utc)
+    rows = (
+        db.query(OutreachMessage.status, func.count(OutreachMessage.id))
+        .filter(OutreachMessage.sent_at.isnot(None), OutreachMessage.sent_at >= since)
+        .group_by(OutreachMessage.status)
+        .all()
+    )
+    counts = {str(status or "unknown"): int(n) for status, n in rows}
+    sent = sum(counts.values())
+    bounced = counts.get("bounced", 0) + counts.get("complained", 0) + counts.get("suppressed", 0)
+    delivered = counts.get("delivered", 0)
+    return {
+        "hours": hours,
+        "sent": sent,
+        "bounced": bounced,
+        "delivered": delivered,
+        "rate": round(bounced / sent, 4) if sent else 0.0,
+        "by_status": counts,
+    }
+
+
 # Email sources that came from a real observation/verification, not a name-derived guess.
 # hunter_domain = Hunter domain-search hit (a real person at the company), verified by
 # Hunter — as trustworthy as a Hunter finder result. person_inferred / domain_inferred

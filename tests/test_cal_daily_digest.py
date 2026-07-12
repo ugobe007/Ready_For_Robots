@@ -140,6 +140,9 @@ def test_build_cal_daily_digest_without_db_context(monkeypatch):
         def order_by(self, *args, **kwargs):
             return self
 
+        def group_by(self, *args, **kwargs):
+            return self
+
         def limit(self, *args, **kwargs):
             return self
 

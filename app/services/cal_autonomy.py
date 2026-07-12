@@ -118,6 +118,39 @@ def cal_daily_send_cap() -> int:
         return 10
 
 
+_BOUNCE_ALERT_KEY = "cal:bounce_pause:alerted"
+
+
+def _maybe_alert_bounce_pause(stats: dict, threshold: float) -> None:
+    """One-shot (per cooldown) email when the deliverability circuit breaker trips."""
+    client = _redis_client()
+    try:
+        if client and client.get(_BOUNCE_ALERT_KEY):
+            return
+    except Exception:
+        client = None
+    subject = "⚠️ Cal paused new outreach — high bounce rate"
+    body = (
+        "Cal's deliverability circuit breaker tripped and PAUSED new intro sends this "
+        "cycle to protect sender reputation.\n\n"
+        f"Trailing {stats['hours'] // 24}d: {stats['bounced']}/{stats['sent']} sends "
+        f"bounced ({stats['rate'] * 100:.1f}%), threshold {threshold * 100:.0f}%.\n"
+        f"Delivered in window: {stats['delivered']}.\n\n"
+        "Follow-ups to already-engaged threads still run. New intros resume automatically "
+        "once the trailing bounce rate drops back below the threshold.\n\n"
+        "Likely causes: guessed addresses slipping the send gate, or a domain-reputation "
+        "problem. Check address suppression and the Hunter confidence thresholds.\n"
+    )
+    try:
+        from app.services.cal_watchdog import _send_alert_email
+
+        if _send_alert_email(subject, body) and client:
+            hours = float(os.getenv("CAL_BOUNCE_ALERT_COOLDOWN_HOURS", "12") or "12")
+            client.set(_BOUNCE_ALERT_KEY, datetime.now(timezone.utc).isoformat(), ex=int(hours * 3600))
+    except Exception as exc:  # noqa: BLE001 — alerting must never break the cycle
+        logger.warning("[cal-autonomy] bounce-pause alert failed: %s", exc)
+
+
 def _daily_send_key() -> str:
     return f"cal:auto:daily_sent:{datetime.now(timezone.utc).date().isoformat()}"
 
@@ -590,6 +623,7 @@ def run_cal_autonomy_cycle(
     from app.services.lead_enrichment import (
         address_previously_bounced,
         outreach_recipient_trusted,
+        recent_bounce_rate,
         resolve_outreach_email,
         verify_email_deliverable,
     )
@@ -682,8 +716,19 @@ def run_cal_autonomy_cycle(
     errors: list[dict[str, Any]] = []
     now = datetime.now(timezone.utc)
 
+    # Deliverability circuit breaker: if the trailing-7d bounce rate is high, pause NEW
+    # intro sends this cycle rather than burning sender reputation further. Follow-ups to
+    # already-engaged threads (below) still run. New intros resume automatically once the
+    # rate falls back under the threshold.
+    bounce_stats = recent_bounce_rate(db, hours=168)
+    pause_threshold = float(os.getenv("CAL_BOUNCE_PAUSE_THRESHOLD", "0.10") or "0.10")
+    min_sample = int(os.getenv("CAL_BOUNCE_PAUSE_MIN_SAMPLE", "20") or "20")
+    deliverability_paused = bounce_stats["sent"] >= min_sample and bounce_stats["rate"] > pause_threshold
+    if deliverability_paused and not dry_run:
+        _maybe_alert_bounce_pause(bounce_stats, pause_threshold)
+
     for company, _score, tier in companies:
-        if sent >= send_limit:
+        if deliverability_paused or sent >= send_limit:
             break
         if tier not in ("HOT", "WARM"):
             continue
@@ -856,6 +901,9 @@ def run_cal_autonomy_cycle(
         "skipped_unverified": skipped_unverified,
         "skipped_suppressed": skipped_suppressed,
         "skipped_ineligible": skipped_ineligible,
+        "deliverability_paused": deliverability_paused,
+        "bounce_rate": bounce_stats["rate"],
+        "bounce_window": bounce_stats,
         "errors": errors[:20],
         "template_fingerprint": new_fp,
         "format_review_notified": format_notified,

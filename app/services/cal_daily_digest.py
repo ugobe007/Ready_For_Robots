@@ -275,6 +275,18 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
     unsent = int(queue_summary.get("unsent_drafted") or 0)
     replied_total = int(queue_summary.get("replied") or 0)
 
+    # Deliverability (trailing 7d) — makes the bounce trend visible and signals when
+    # the circuit breaker is likely to pause new intros.
+    from app.services.lead_enrichment import recent_bounce_rate
+
+    deliverability = recent_bounce_rate(db, hours=168)
+    pause_threshold = float(os.getenv("CAL_BOUNCE_PAUSE_THRESHOLD", "0.10") or "0.10")
+    deliverability["pause_threshold"] = pause_threshold
+    deliverability["paused"] = (
+        deliverability["sent"] >= int(os.getenv("CAL_BOUNCE_PAUSE_MIN_SAMPLE", "20") or "20")
+        and deliverability["rate"] > pause_threshold
+    )
+
     body = render_cal_daily_digest_text(
         day_label=day_label,
         period_hours=period_hours,
@@ -290,6 +302,7 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
             "replied_total": replied_total,
             "sendable": sendable,
             "unsent_drafted": unsent,
+            "deliverability": deliverability,
         },
         intro_lines=intro_lines,
         reply_lines=reply_lines,
@@ -354,6 +367,23 @@ def render_cal_daily_digest_text(
         f"Autopilot: {autopilot_line}",
         "",
     ]
+
+    deliverability = activity.get("deliverability") or {}
+    if int(deliverability.get("sent") or 0) > 0:
+        rate_pct = float(deliverability.get("rate") or 0.0) * 100
+        thr_pct = float(deliverability.get("pause_threshold") or 0.10) * 100
+        status = (
+            "⚠️ PAUSING new intros" if deliverability.get("paused")
+            else "OK" if rate_pct <= thr_pct
+            else "elevated"
+        )
+        lines.extend([
+            "Deliverability (last 7d)",
+            f"  • Sends: {deliverability.get('sent', 0)}  •  Delivered: {deliverability.get('delivered', 0)}"
+            f"  •  Bounced/complaints: {deliverability.get('bounced', 0)}",
+            f"  • Bounce rate: {rate_pct:.1f}%  (circuit breaker at {thr_pct:.0f}%) — {status}",
+            "",
+        ])
 
     # When nothing new went out but the queue still shows prospects, say why —
     # otherwise "sent: 0" alongside "ready: N" reads as a broken pipeline when
