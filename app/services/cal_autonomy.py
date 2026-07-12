@@ -234,12 +234,36 @@ def cal_buyer_outreach_body(company: Any, *, fresh: bool = False, variant_id: st
     deterministic by company id so the stored draft and the send agree on the
     angle; callers may override with an explicit variant_id.
     """
-    from app.services.agent_messaging import build_buyer_variant_body, pick_buyer_variant
+    from app.services.agent_messaging import (
+        build_buyer_variant_body,
+        build_context_reason,
+        pick_buyer_variant,
+    )
 
     name = (getattr(company, "name", None) or "your team").strip()
     industry = (getattr(company, "industry", None) or "your industry").strip()
     vid = variant_id or pick_buyer_variant(getattr(company, "id", None))
-    return build_buyer_variant_body(name, industry, vid)
+    reason = build_context_reason(name, _company_signal_blob(company))
+    return build_buyer_variant_body(name, industry, vid, reason=reason)
+
+
+def _company_signal_blob(company: Any) -> str:
+    """Best-effort plain-text of a company's own signal evidence for grounding.
+
+    Returns "" (no reason cited) if signals aren't loaded/attached, so a detached
+    instance or a company with no signals simply falls back to the clean industry
+    opener — Cal never fabricates a reason.
+    """
+    try:
+        from app.services.lead_signal_display import strip_extraction_artifacts
+
+        sigs = list(getattr(company, "signals", None) or [])[:12]
+        parts = [
+            strip_extraction_artifacts(getattr(s, "signal_text", None)) for s in sigs
+        ]
+        return " ".join(p for p in parts if p).strip()
+    except Exception:  # noqa: BLE001 — grounding is optional; never break drafting
+        return ""
 
 
 def cal_vendor_outreach_body(company: Any, *, fresh: bool = False) -> str:

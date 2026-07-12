@@ -583,8 +583,52 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
     ])
 
 
-def build_buyer_variant_body(name: str, industry: str, variant_id: str) -> str:
-    """Assemble the full buyer email body for a given advisor angle."""
+def build_context_reason(name: str, signal_blob: str, *, max_chars: int = 180) -> str | None:
+    """A single verifiable, humble hook grounded in the company's own signals.
+
+    Cal only names a reason when there's a real, company-specific fact to cite —
+    never a fabricated one. Returns ``None`` when the signal text is empty or too
+    low-quality to stand behind, so callers fall back to the clean industry
+    opener. Stays humble: it explains *why Cal reached out*, not what the company
+    should buy.
+    """
+    n = (name or "").strip()
+    blob = (signal_blob or "").strip()
+    if not n or not blob:
+        return None
+    try:
+        from app.services.lead_sales_copy import is_low_quality_sales_text
+        from app.services.lead_signal_display import pick_primary_sentence
+    except Exception:
+        return None
+
+    fact = (pick_primary_sentence(blob, max_chars=max_chars) or "").strip()
+    if not fact or is_low_quality_sales_text(fact):
+        return None
+    if not fact.endswith((".", "!", "?")):
+        fact = fact.rstrip(",;:—- ") + "."
+
+    if n.lower() in fact.lower():
+        return (
+            f"{fact} That's what put you on my radar — I only reach out when there's a "
+            "specific reason, not a scraped list."
+        )
+    return (
+        f"A signal tied to {n} is what prompted this — {fact} I keep the list short and "
+        "specific, so I'm not writing on spec."
+    )
+
+
+def build_buyer_variant_body(
+    name: str, industry: str, variant_id: str, *, reason: str | None = None
+) -> str:
+    """Assemble the full buyer email body for a given advisor angle.
+
+    When ``reason`` is provided (a verifiable, company-specific hook from
+    :func:`build_context_reason`), it is woven in as the first paragraph so the
+    opener cites a concrete reason for writing while the rest of the angle stays
+    humble on whether a robot is even the answer.
+    """
     n = (name or "your team").strip()
     builders = {
         "workflow_first": _variant_workflow_first,
@@ -592,7 +636,12 @@ def build_buyer_variant_body(name: str, industry: str, variant_id: str) -> str:
         "bottleneck_first": _variant_bottleneck_first,
     }
     fn = builders.get(variant_id, _variant_workflow_first)
-    return fn(n, industry or "your industry")
+    body = fn(n, industry or "your industry")
+    if reason:
+        # Inject the grounded hook right after the greeting, ahead of Cal's
+        # vantage line, so the email leads with a real, verifiable reason.
+        body = body.replace("Hi,\n\n", f"Hi,\n\n{reason}\n\n", 1)
+    return body
 
 
 def buyer_variant_subject(name: str, industry: str, variant_id: str) -> str:
