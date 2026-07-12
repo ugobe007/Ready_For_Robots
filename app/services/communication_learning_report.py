@@ -116,7 +116,9 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
             bucket["sent"] += 1
             if status in ("delivered", "opened", "clicked", "replied"):
                 bucket["delivered"] += 1
-            if status in ("opened", "clicked"):
+            # A click or reply implies the email was opened — count them so the
+            # "seen" funnel isn't understated once later states land on a message.
+            if status in ("opened", "clicked", "replied"):
                 bucket["opened"] += 1
         per_industry[industry]["sent"] += 1
         if row.subject:
@@ -189,14 +191,19 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
 def render_communication_learning_text(report: dict[str, Any]) -> str:
     days = round((report.get("period_hours") or 168) / 24)
     t = report.get("totals") or {}
+    sent_n = t.get("sent", 0)
     lines = [
         f"Cal communication learning report — last {days}d",
         "",
         "How to read this: directional signal, not statistical proof. At our send "
-        "volume, treat these as hints about which angle earns trust — not a verdict.",
+        "volume, treat these as hints about which angle earns trust — not a verdict. "
+        "With few replies, delivered/open rates are the leading indicators — read "
+        "those first.",
         "",
         "Totals",
-        f"  • Intro sends (tagged): {t.get('sent', 0)}",
+        f"  • Intro sends (tagged): {sent_n}",
+        f"  • Delivered: {t.get('delivered', 0)}  ({_pct(t.get('delivered', 0), sent_n)}% of sends)",
+        f"  • Opened: {t.get('opened', 0)}  ({_pct(t.get('opened', 0), sent_n)}% of sends)",
         f"  • Replied: {t.get('replied', 0)}  ({t.get('reply_rate', 0)}% of sends)",
         f"  • Positive replies: {t.get('positive', 0)}  ({t.get('positive_rate', 0)}% of sends)",
         f"  • Negative / opt-out: {t.get('negative', 0)}",
@@ -211,7 +218,8 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
             if not v["sent"]:
                 continue
             lines.append(
-                f"  • {v['variant_id']}: sent {v['sent']}, replied {v['replied']} "
+                f"  • {v['variant_id']}: sent {v['sent']}, opened {v['opened']} "
+                f"({_pct(v['opened'], v['sent'])}%), replied {v['replied']} "
                 f"({v['reply_rate']}%), positive {v['positive']} ({v['positive_rate']}%)"
             )
             if v.get("subject_sample"):
@@ -219,7 +227,15 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
 
     # Lexicon read — which subject line correlates with the best positive rate.
     scored = [v for v in variants if v["sent"] >= 3]
-    if scored:
+    if not scored:
+        lines.extend([
+            "",
+            "Lexicon read",
+            "  • Not enough sends per angle yet (need ~3+ each) to call a winner. "
+            "Keep rotating.",
+        ])
+    elif any(v["positive"] for v in scored):
+        # Real positive signal exists → the positive-rate ranking is meaningful.
         best = scored[0]
         lines.extend([
             "",
@@ -228,19 +244,41 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
             f"({best['positive_rate']}% positive on {best['sent']} sends).",
         ])
         weakest = scored[-1]
-        if weakest["variant_id"] != best["variant_id"]:
+        if weakest["variant_id"] != best["variant_id"] and weakest["positive_rate"] < best["positive_rate"]:
             lines.append(
                 f"  • Weakest opener: {weakest['variant_id']} "
                 f"({weakest['positive_rate']}% positive on {weakest['sent']} sends) "
                 f"— candidate to retire if the gap holds."
             )
     else:
+        # No positive replies on ANY angle yet — the positive-rate ranking above is
+        # all zeros, so it cannot name a winner or loser. Say so plainly (never
+        # suggest retiring an angle on a 0-vs-0 "gap") and fall back to open rate as
+        # the only directional proxy we have.
+        by_open = sorted(
+            scored,
+            key=lambda r: (_pct(r["opened"], r["sent"]), r["sent"]),
+            reverse=True,
+        )
+        top = by_open[0]
         lines.extend([
             "",
             "Lexicon read",
-            "  • Not enough sends per angle yet (need ~3+ each) to call a winner. "
-            "Keep rotating.",
+            "  • No replies on any angle yet, so none has earned trust — the "
+            "positive-rate ranking above is not meaningful. Do NOT retire an angle "
+            "on this.",
         ])
+        if top["opened"]:
+            lines.append(
+                f"  • Only proxy so far is open rate: {top['variant_id']} leads at "
+                f"{_pct(top['opened'], top['sent'])}% opened on {top['sent']} sends."
+            )
+        else:
+            lines.append(
+                "  • No opens recorded on any angle either — that points to a "
+                "deliverability or open-tracking gap, not a copy problem. Verify the "
+                "Resend delivery/open webhook and SPF/DKIM/DMARC before touching copy."
+            )
 
     industries = report.get("industries") or []
     if industries:
