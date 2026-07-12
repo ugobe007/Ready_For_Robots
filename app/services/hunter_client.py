@@ -12,8 +12,12 @@ HUNTER_BASE_URL = "https://api.hunter.io/v2"
 HUNTER_DOMAIN_SEARCH_PATH = "/domain-search"
 HUNTER_EMAIL_FINDER_PATH = "/email-finder"
 
-MIN_FINDER_SCORE = 50
-MIN_DOMAIN_CONFIDENCE = 60
+# Confidence bars for accepting a Hunter address as a *primary* outreach recipient.
+# These were 50/60, which let low-confidence pattern guesses through — a big share of
+# the ~50% hard-bounce rate. Raised and made env-tunable; Hunter's own verification
+# status (below) is also enforced so addresses it flags "invalid" are rejected.
+MIN_FINDER_SCORE = int(os.getenv("HUNTER_MIN_FINDER_SCORE", "85") or "85")
+MIN_DOMAIN_CONFIDENCE = int(os.getenv("HUNTER_MIN_DOMAIN_CONFIDENCE", "80") or "80")
 
 
 class HunterConfigError(Exception):
@@ -69,6 +73,9 @@ class HunterClient:
         email = (payload.get("email") or "").strip()
         score = int(payload.get("score") or 0)
         if not email or score < MIN_FINDER_SCORE:
+            return None
+        verification = payload.get("verification") if isinstance(payload.get("verification"), dict) else {}
+        if (verification.get("status") or "").lower() == "invalid":
             return None
         return _normalize_prospect(payload, source="hunter_finder")
 
@@ -136,6 +143,9 @@ def pick_best_domain_email(
         email = (row.get("email") or "").strip()
         confidence = int(row.get("confidence") or 0)
         if not email or confidence < min_confidence:
+            continue
+        # Skip anything Hunter itself flags undeliverable, regardless of confidence.
+        if (row.get("verification_status") or "").lower() == "invalid":
             continue
         position = (row.get("position") or row.get("title") or "").lower()
         rank = confidence

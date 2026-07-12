@@ -69,9 +69,11 @@ def test_find_email_returns_normalized_prospect(monkeypatch):
 
 
 def test_pick_best_domain_email_prefers_operations(monkeypatch):
+    # Both clear MIN_DOMAIN_CONFIDENCE so this exercises ranking (operations over PR),
+    # not the confidence gate.
     emails = [
         {"email": "press@acme.com", "confidence": 90, "position": "PR Manager", "department": "communication"},
-        {"email": "ops@acme.com", "confidence": 75, "position": "Director of Operations", "department": "operations"},
+        {"email": "ops@acme.com", "confidence": 85, "position": "Director of Operations", "department": "operations"},
     ]
     best = pick_best_domain_email(emails, industry="Logistics")
     assert best["email"] == "ops@acme.com"

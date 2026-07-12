@@ -781,9 +781,21 @@ def run_cal_autonomy_cycle(
                 })
                 continue
 
+        # CC previously attached guessed role inboxes (info@/contact@…) with no
+        # checks. Those are unverified and were a dominant bounce source — and a CC
+        # bounce flags the whole message bounced, corrupting deliverability stats and
+        # burning sender reputation. Only CC an address that clears the SAME trust +
+        # deliverability gate as the primary; otherwise send to the primary alone.
         domain = normalize_website_domain(company.website or acct.website)
-        cc_list = infer_cc_outreach_emails(domain, company.industry, primary=to_email)
-        cc_email = cc_list[0] if cc_list else None
+        cc_email = None
+        for _cc in infer_cc_outreach_emails(domain, company.industry, primary=to_email):
+            cc_trusted, _ = outreach_recipient_trusted(company, acct, _cc, "cc_inferred")
+            if not cc_trusted:
+                continue
+            cc_ok, _ = verify_email_deliverable(_cc)
+            if cc_ok:
+                cc_email = _cc
+                break
 
         try:
             from app.services.cal_outreach_send import enroll_cal_followup, send_cal_intro_email
