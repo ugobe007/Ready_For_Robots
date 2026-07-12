@@ -36,7 +36,10 @@ jobs:
       # machine. Bring any stopped machine back and fail loudly if we can't, so
       # a green deploy always means "everything is actually running".
       - name: Ensure all machines are started
-        if: success()
+        # Run even if `flyctl deploy` errored/timed out — a failed deploy is the
+        # most common way a machine is left stopped, so the recovery must not be
+        # gated on deploy success. (Skip only on an explicit human cancel.)
+        if: ${{ !cancelled() }}
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           FLY_APP: ready-2-robot
@@ -64,7 +67,7 @@ jobs:
           echo "All machines started."
 
       - name: Verify web /health
-        if: success()
+        if: ${{ !cancelled() }}
         run: |
           for i in $(seq 1 12); do
             code=$(curl -s -o /dev/null -w "%{http_code}" https://ready-2-robot.fly.dev/health || echo 000)
