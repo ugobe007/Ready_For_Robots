@@ -357,6 +357,35 @@ def _domain_resolves(domain: str) -> bool:
         return False
 
 
+# Terminal delivery states — an address in any of these must never be emailed again.
+_SUPPRESSED_STATUSES = ("bounced", "complained", "suppressed")
+
+
+def address_previously_bounced(db: "Session", email: str) -> bool:
+    """True if we've ever recorded a bounce/complaint/suppression to this address.
+
+    Durable, global suppression with no extra schema: outreach_messages already
+    records terminal delivery problems, so a prior bounce is a hard signal never to
+    send there again. Global (not per-company) on purpose — guessed role inboxes like
+    info@domain recur across companies, and a dead mailbox stays dead.
+    """
+    normalized = (normalize_recipient_email(email) or "").lower()
+    if not normalized:
+        return False
+    from sqlalchemy import func
+    from app.models.outreach import OutreachMessage
+
+    row = (
+        db.query(OutreachMessage.id)
+        .filter(
+            func.lower(OutreachMessage.to_email) == normalized,
+            OutreachMessage.status.in_(_SUPPRESSED_STATUSES),
+        )
+        .first()
+    )
+    return row is not None
+
+
 # Email sources that came from a real observation/verification, not a name-derived guess.
 # hunter_domain = Hunter domain-search hit (a real person at the company), verified by
 # Hunter — as trustworthy as a Hunter finder result. person_inferred / domain_inferred

@@ -588,6 +588,7 @@ def run_cal_autonomy_cycle(
         _cal_draft_for_company,
     )
     from app.services.lead_enrichment import (
+        address_previously_bounced,
         outreach_recipient_trusted,
         resolve_outreach_email,
         verify_email_deliverable,
@@ -677,6 +678,7 @@ def run_cal_autonomy_cycle(
     skipped_no_draft = 0
     skipped_already_sent = 0
     skipped_unverified = 0
+    skipped_suppressed = 0
     errors: list[dict[str, Any]] = []
     now = datetime.now(timezone.utc)
 
@@ -708,6 +710,12 @@ def run_cal_autonomy_cycle(
         to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=True)
         if not to_email:
             errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
+            continue
+
+        # Suppression: never re-send to an address that has already bounced/complained.
+        # A dead mailbox stays dead, and re-hitting it just burns sender reputation.
+        if address_previously_bounced(db, to_email):
+            skipped_suppressed += 1
             continue
 
         # Hard-gate: never send to guessed domains. Verified provider OR the
@@ -790,7 +798,7 @@ def run_cal_autonomy_cycle(
         cc_email = None
         for _cc in infer_cc_outreach_emails(domain, company.industry, primary=to_email):
             cc_trusted, _ = outreach_recipient_trusted(company, acct, _cc, "cc_inferred")
-            if not cc_trusted:
+            if not cc_trusted or address_previously_bounced(db, _cc):
                 continue
             cc_ok, _ = verify_email_deliverable(_cc)
             if cc_ok:
@@ -846,6 +854,7 @@ def run_cal_autonomy_cycle(
         "skipped_no_draft": skipped_no_draft,
         "skipped_already_sent": skipped_already_sent,
         "skipped_unverified": skipped_unverified,
+        "skipped_suppressed": skipped_suppressed,
         "skipped_ineligible": skipped_ineligible,
         "errors": errors[:20],
         "template_fingerprint": new_fp,

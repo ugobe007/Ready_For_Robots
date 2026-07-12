@@ -143,6 +143,29 @@ def _event_time() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _extract_problem_detail(data: dict[str, Any]) -> dict[str, Any]:
+    """Pull the reason + hard/soft type from a Resend bounce/complaint/suppression.
+
+    Resend nests these under ``data['bounce']`` / ``data['complaint']`` (with keys
+    ``message``, ``type`` = Permanent|Transient|Undetermined, ``subType``) rather than
+    at the top level — which is why ``problem_reason`` was always empty ("unknown")
+    before. Falls back to top-level fields for older/flat payload shapes.
+    """
+    for key in ("bounce", "complaint", "failed"):
+        obj = data.get(key)
+        if isinstance(obj, dict):
+            return {
+                "reason": obj.get("message") or obj.get("description") or obj.get("reason"),
+                "type": obj.get("type"),
+                "subtype": obj.get("subType") or obj.get("sub_type") or obj.get("subtype"),
+            }
+    return {
+        "reason": data.get("reason") or data.get("message") or data.get("error"),
+        "type": data.get("type"),
+        "subtype": data.get("subType") or data.get("sub_type"),
+    }
+
+
 def _delivery_payload(payload: dict[str, Any] | None, event_type: str, data: dict[str, Any]) -> dict[str, Any]:
     next_payload = dict(payload or {})
     events = list(next_payload.get("delivery_events") or [])
@@ -164,8 +187,23 @@ def _delivery_payload(payload: dict[str, Any] | None, event_type: str, data: dic
     elif event_type == "email.clicked":
         next_payload["clicked_at"] = events[-1]["at"]
     elif event_type in {"email.bounced", "email.complained", "email.suppressed"}:
+        detail = _extract_problem_detail(data)
+        reason = detail.get("reason") or events[-1]["reason"] or "unknown"
+        events[-1]["reason"] = reason
+        ptype = (detail.get("type") or "").strip()
         next_payload["problem_at"] = events[-1]["at"]
-        next_payload["problem_reason"] = events[-1]["reason"]
+        next_payload["problem_reason"] = reason
+        if ptype:
+            next_payload["problem_type"] = ptype
+        if detail.get("subtype"):
+            next_payload["problem_subtype"] = detail["subtype"]
+        # Complaints are always terminal; bounces split hard (Permanent) vs soft.
+        if event_type == "email.complained":
+            next_payload["problem_class"] = "hard"
+        elif ptype:
+            next_payload["problem_class"] = "hard" if ptype.lower().startswith("perm") else "soft"
+        else:
+            next_payload["problem_class"] = "unknown"
     return next_payload
 
 
