@@ -46,6 +46,11 @@ export default function Signup() {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendNote, setResendNote] = useState("");
   const [liveProof, setLiveProof] = useState<{ hot?: number; companies?: number } | null>(null);
+  // A real named HOT buyer from the live pipeline — turns abstract counts into a
+  // concrete win the user can picture acting on (value-first proof at the decision point).
+  const [liveBuyer, setLiveBuyer] = useState<
+    { company: string; industry?: string; tier?: string; blurb?: string; robots: string[] } | null
+  >(null);
 
   const search = typeof window !== "undefined" ? window.location.search : "";
   const params = useMemo(() => new URLSearchParams(search), [search]);
@@ -152,6 +157,40 @@ export default function Signup() {
       cancelled = true;
     };
   }, []);
+
+  // Pull one real named HOT buyer from the live pipeline for cold/generic signups.
+  // Skipped when the user already carried a specific buyer (buyerCo) or HubSpot intent,
+  // so we never show a competing company than the one they came to act on.
+  useEffect(() => {
+    if (hubspotIntent || buyerCo) return;
+    let cancelled = false;
+    void fetch(`${getPublicReadApiBase()}/api/leads/pipeline`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        const leads = Array.isArray(data.leads) ? data.leads : [];
+        const pick = leads.find(
+          (l: any) =>
+            String(l?.company_name || "").trim() &&
+            String(l?.share_blurb || l?.share_summary || "").trim(),
+        );
+        if (!pick) return;
+        const robots = Array.isArray(pick.robot_types_needed)
+          ? pick.robot_types_needed.filter(Boolean)
+          : [];
+        setLiveBuyer({
+          company: String(pick.company_name).trim().slice(0, 60),
+          industry: pick.industry ? String(pick.industry) : undefined,
+          tier: pick.priority_tier ? String(pick.priority_tier).toUpperCase() : undefined,
+          blurb: String(pick.share_blurb || pick.share_summary || "").trim().slice(0, 160),
+          robots: robots.slice(0, 2).map((r: any) => String(r)),
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [hubspotIntent, buyerCo]);
 
   async function oauth(provider: "google" | "github") {
     if (!supabase) {
@@ -302,6 +341,41 @@ export default function Signup() {
                   Live pipeline leads · pitch actions · robot categories
                 </li>
               </ul>
+            )}
+            {liveBuyer && (
+              <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                  <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+                  Live {liveBuyer.tier || "HOT"} buyer in the pipeline right now
+                </div>
+                <p className="mt-2 font-display text-base font-bold text-gray-900">
+                  {liveBuyer.company}
+                  {liveBuyer.industry ? (
+                    <span className="ml-2 text-xs font-medium text-gray-500">{liveBuyer.industry}</span>
+                  ) : null}
+                </p>
+                {liveBuyer.blurb && (
+                  <p className="mt-1 text-xs leading-relaxed text-gray-600">{liveBuyer.blurb}</p>
+                )}
+                {liveBuyer.robots.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {liveBuyer.robots.map((r) => (
+                      <span
+                        key={r}
+                        className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800"
+                      >
+                        {r}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="mt-3 text-[11px] font-medium text-gray-500">
+                  Sign up free to save this buyer and copy the outreach draft SIGNAL wrote for them.
+                </p>
+              </div>
             )}
           </div>
 
