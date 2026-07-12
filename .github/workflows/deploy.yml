@@ -12,7 +12,10 @@ jobs:
     timeout-minutes: 35
     concurrency:
       group: fly-deploy
-      cancel-in-progress: true
+      # Do NOT cancel a running deploy — killing `fly deploy` mid-roll is a prime
+      # way to strand a machine in the `stopped` state. Queue instead so each
+      # deploy finishes cleanly.
+      cancel-in-progress: false
 
     steps:
       - name: Checkout
@@ -25,6 +28,52 @@ jobs:
         run: flyctl deploy --remote-only --wait-timeout 22m --release-command-timeout 15m
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # The `immediate` deploy strategy (and any mid-deploy hiccup) can leave a
+      # machine `stopped`. The web http_service has min_machines_running=1, but
+      # the `worker` process has no such guarantee — [[restart]] policy=always
+      # only restarts a crashed *process* on a running machine, not a stopped
+      # machine. Bring any stopped machine back and fail loudly if we can't, so
+      # a green deploy always means "everything is actually running".
+      - name: Ensure all machines are started
+        if: success()
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_APP: ready-2-robot
+        run: |
+          set -euo pipefail
+          echo "Post-deploy machine states:"
+          flyctl machines list -a "$FLY_APP" --json \
+            | jq -r '.[] | "  \(.id)\t\(.config.metadata.fly_process_group // "?")\t\(.state)"'
+
+          stopped_ids=$(flyctl machines list -a "$FLY_APP" --json \
+            | jq -r '.[] | select(.state != "started") | .id')
+          for id in $stopped_ids; do
+            echo "Starting stopped machine $id"
+            flyctl machine start "$id" -a "$FLY_APP" || true
+          done
+
+          sleep 8
+          not_started=$(flyctl machines list -a "$FLY_APP" --json \
+            | jq -r '.[] | select(.state != "started") | "\(.id) (\(.config.metadata.fly_process_group // "?")) = \(.state)"')
+          if [ -n "$not_started" ]; then
+            echo "::error::Machines still not started after deploy:"
+            echo "$not_started"
+            exit 1
+          fi
+          echo "All machines started."
+
+      - name: Verify web /health
+        if: success()
+        run: |
+          for i in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" https://ready-2-robot.fly.dev/health || echo 000)
+            echo "attempt $i: /health -> $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 6
+          done
+          echo "::error::web /health did not return 200 after deploy"
+          exit 1
 
       - name: Setup Python for post-deploy cache refresh
         if: success()
