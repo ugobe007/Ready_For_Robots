@@ -237,24 +237,26 @@ LADDER_TOUCHES: tuple[str, ...] = ("teach", "trend", "question")
 _GENERIC_LADDER = {
     "teach_subject": "the workflow most teams automate last",
     "teach": (
-        "The projects with the fastest payback rarely start with the most visible task. They start with "
-        "the quiet process upstream that backs everything else up — less glamorous, and usually the "
-        "easiest place to prove a robot earns its keep.\n\n"
-        "Most teams do the opposite: automate the flashy part first, then wonder why the ROI never showed."
+        "When a team asks me where to start with automation, they expect me to name a robot. I almost "
+        "never do — I start with the workflow.\n\n"
+        "The projects with the fastest payback rarely target the most visible task. They target the quiet "
+        "process upstream that backs everything else up. Automate the flashy part first — the common "
+        "instinct — and the ROI tends not to show."
     ),
     "trend_subject": 'why "evaluating five robots" is usually the wrong question',
     "trend": (
-        "A pattern I see constantly: a team lines up five vendors, runs a bake-off, and picks the fastest. "
-        "Six months later it's parked.\n\n"
-        "The robots that survive aren't the fastest — they're the ones matched to one specific bottleneck, "
-        "with the integration and software actually resourced. Speed is the easiest thing to demo and the "
-        "least predictive of ROI."
+        "I keep a running tally of the deployments still working a year after install, and the ones quietly "
+        "unplugged in a corner. The gap between those two lists is most of my week.\n\n"
+        "The survivors almost never won on speed. They won on fit — matched to one real bottleneck, with "
+        "integration and software actually resourced. The fastest robot in the bake-off is usually the "
+        "first one parked."
     ),
     "question_subject": "one question about your operation",
     "question": (
-        "No agenda here — one question tells me more than a whole discovery call.\n\n"
-        "If you automated one workflow tomorrow, which would it be? Most teams name the busiest one. The "
-        "one that actually pays back is usually the process quietly creating work everywhere else."
+        "I've asked a lot of operators the same question over the years, and the answer tells me more than "
+        "any spec sheet.\n\n"
+        "If you automated one workflow tomorrow, which would it be? Most name the busiest one. The one that "
+        "actually pays back is usually the process quietly creating work everywhere else."
     ),
 }
 
@@ -264,26 +266,27 @@ _LADDER_CONTENT: tuple[tuple[tuple[str, ...], dict[str, str]], ...] = (
         {
             "teach_subject": "the workflow most warehouses automate last",
             "teach": (
-                "The warehouses with the fastest payback rarely start at picking. They start at receiving "
-                "— a slow dock backs up replenishment, putaway, and every downstream pick, and it's the "
-                "easiest place to prove a robot earns its keep.\n\n"
-                "Most teams do the opposite: automate the flashy pick line first, then wonder why the ROI "
-                "never showed."
+                "When a logistics team asks me where to start, they expect me to name a robot. I don't — I "
+                "start with receiving.\n\n"
+                "A slow dock quietly backs up putaway, replenishment, and every downstream pick. Fix the "
+                "front of the building and the whole floor speeds up. Automate the flashy pick line first — "
+                "which is what most teams do — and you get a great demo and an ROI that never shows up."
             ),
             "trend_subject": 'why "evaluating five robots" is usually the wrong question',
             "trend": (
-                "A pattern I see constantly: a team lines up five AMRs, runs a bake-off, and picks the "
-                "fastest. Six months later it's parked in a corner.\n\n"
-                "The ones that survive aren't the fastest — they're matched to one specific bottleneck, "
-                "with integration and software actually resourced. Speed is the easiest spec to demo and "
-                "the least predictive of payback."
+                "I keep a running tally of the AMRs still working a year after install, and the ones sitting "
+                "unplugged in a corner. The gap between those two lists is most of my job.\n\n"
+                "The ones that survive almost never won on speed. They won on fit — matched to one specific "
+                "bottleneck, with integration and software actually resourced. The fastest robot in the "
+                "bake-off is usually the first one parked."
             ),
             "question_subject": "one question about your operation",
             "question": (
-                "No agenda here — one question tells me more than a discovery call.\n\n"
-                "If you automated one workflow tomorrow, which would it be? Most teams say picking. The one "
-                "that usually pays back is the process quietly creating work everywhere else — receiving, "
-                "replenishment, or returns."
+                "I've asked a lot of warehouse operators the same question, and the answer tells me more "
+                "than any spec sheet.\n\n"
+                "If you automated one workflow tomorrow, which would it be? Most people say picking. Nine "
+                "times out of ten the one that actually pays back is the quiet one creating work everywhere "
+                "else — receiving, replenishment, or returns."
             ),
         },
     ),
@@ -292,24 +295,26 @@ _LADDER_CONTENT: tuple[tuple[tuple[str, ...], dict[str, str]], ...] = (
         {
             "teach_subject": "the automation most hotels overlook",
             "teach": (
-                "The properties that get real value from robots rarely start in the lobby. They start with "
-                "the runs nobody sees — linen, housekeeping carts, and overnight floor cleaning — because "
-                "that's where the labor hours and turnover actually pile up.\n\n"
-                "The lobby delivery robot photographs well and moves the needle least."
+                "When a property asks me about robots, they're usually picturing the lobby. I steer them to "
+                "the back of the house instead.\n\n"
+                "The hours and the turnover pile up where guests never look — linen runs, housekeeping "
+                "carts, overnight floor cleaning. The lobby delivery robot photographs beautifully and "
+                "moves the needle least."
             ),
             "trend_subject": "the robot that demos well and stalls by the weekend",
             "trend": (
-                "A pattern worth knowing: the service robot that glides across an empty showroom floor "
-                "often stalls the first busy Saturday — crowded elevators, guests, tight corridors.\n\n"
-                "The ones that last are chosen for how they handle a full building on a bad day, not how "
-                "they look in the demo."
+                "I keep track of which service robots are still running after the first busy season, and "
+                "which got quietly retired. The demo-floor darlings rarely make the first list.\n\n"
+                "A robot that glides across an empty showroom often stalls the first packed Saturday — "
+                "crowded elevators, guests, tight corridors. The ones that last are chosen for a full "
+                "building on a bad day, not for the demo."
             ),
             "question_subject": "one question about your property",
             "question": (
-                "No agenda here — one question tells me more than a tour.\n\n"
-                "If you automated one task across your property tomorrow, which would it be? Most teams say "
-                "delivery. The one that usually pays back is the repetitive run quietly eating overnight "
-                "hours — linen, cleaning, or room service."
+                "I've asked a lot of operators this, and it tells me more than a walkthrough ever could.\n\n"
+                "If you automated one task across the property tomorrow, which would it be? Most say "
+                "delivery. The one that usually pays back is the repetitive overnight run nobody wants — "
+                "linen, cleaning, room service."
             ),
         },
     ),
@@ -318,25 +323,27 @@ _LADDER_CONTENT: tuple[tuple[tuple[str, ...], dict[str, str]], ...] = (
         {
             "teach_subject": "where hospital automation actually pays back",
             "teach": (
-                "In most hospitals the ROI isn't the robot that makes the news. It's the miles clinical "
-                "staff walk every shift — moving supplies, meds, samples, linen, and waste between "
-                "floors.\n\n"
-                "Automate that transport and you give nurses time back. Chase the flashy robot and you "
-                "usually get a press release, not payback."
+                "When a health system asks me where robots fit, they're often eyeing the machine that makes "
+                "the news. I point the other way.\n\n"
+                "The ROI is almost always the miles clinical staff walk every shift — supplies, meds, "
+                "samples, linen, waste moving between floors. Automate that transport and you hand nurses "
+                "time back. Chase the flashy robot and you usually get a press release."
             ),
             "trend_subject": "the part of a robot pilot everyone underestimates",
             "trend": (
-                "A mistake I see often in healthcare: teams evaluate the robot and skip the integration — "
-                "elevators, badge access, EVS workflow, EHR hooks.\n\n"
-                "That's the part that decides whether a transport robot actually runs or sits charging. "
-                "The hardware is rarely the reason a pilot stalls."
+                "I've watched enough hospital pilots to know the hardware is rarely why they stall. It's "
+                "the integration nobody scoped.\n\n"
+                "Elevators, badge access, EVS workflow, EHR hooks — that's what decides whether a transport "
+                "robot actually runs or sits charging. The robot is the easy part; the building is the hard "
+                "part."
             ),
             "question_subject": "one question about your operation",
             "question": (
-                "No agenda here — one question tells me more than a long call.\n\n"
-                "If you automated one workflow tomorrow, which would it be? Most teams name a clinical task. "
-                "The one that usually pays back first is the internal transport quietly pulling staff away "
-                "from patients."
+                "I ask clinical and ops leaders the same thing, and the answer is more useful than any "
+                "demo.\n\n"
+                "If you automated one workflow tomorrow, which would it be? Most name a clinical task. The "
+                "one that usually pays back first is the internal transport quietly pulling staff away from "
+                "patients."
             ),
         },
     ),
@@ -345,24 +352,26 @@ _LADDER_CONTENT: tuple[tuple[tuple[str, ...], dict[str, str]], ...] = (
         {
             "teach_subject": "where kitchen automation usually breaks",
             "teach": (
-                "Most kitchen automation doesn't fail on the cook — it fails on changeover. A cell that "
-                "runs one product beautifully falls apart when the menu shifts three times a day.\n\n"
-                "The deployments that last are built around prep, portioning, and fast changeovers, not the "
-                "one hero task that films well."
+                "When a food operation asks me about automation, they picture the cooking robot. I ask "
+                "about changeover.\n\n"
+                "Most kitchen automation doesn't fail on the cook — it fails when the menu shifts three "
+                "times a day and the cell can't keep up. What lasts is built around prep, portioning, and "
+                "fast changeovers, not the one hero task that films well."
             ),
             "trend_subject": "the robot that looks great and never scales",
             "trend": (
-                "A pattern I see in food operations: the cooking robot demos beautifully, then can't keep "
-                "up with real throughput or sanitation between products.\n\n"
-                "The ones that earn their spot handle the repetitive, food-safe work — portioning, tray "
-                "loading, packaging — and flex across products without a teardown."
+                "I keep a short list of the food robots still earning their spot a year in. The cooking "
+                "robot that wowed everyone in the demo usually isn't on it.\n\n"
+                "What lasts is the repetitive, food-safe work — portioning, tray loading, packaging — on "
+                "equipment that flexes across products without a teardown. Throughput and sanitation "
+                "between products quietly retire the flashy ones."
             ),
             "question_subject": "one question about your operation",
             "question": (
-                "No agenda here — one question tells me more than a walkthrough.\n\n"
-                "If you automated one station tomorrow, which would it be? Most teams point at the cook "
-                "line. The one that usually pays back is the high-turnover station you can never keep "
-                "staffed — prep, portioning, or dish."
+                "I've asked a lot of kitchen and plant managers this, and it beats any spec sheet.\n\n"
+                "If you automated one station tomorrow, which would it be? Most point at the cook line. The "
+                "one that usually pays back is the high-turnover station you can never keep staffed — prep, "
+                "portioning, or dish."
             ),
         },
     ),
@@ -371,24 +380,26 @@ _LADDER_CONTENT: tuple[tuple[tuple[str, ...], dict[str, str]], ...] = (
         {
             "teach_subject": "the automation that survives a mix change",
             "teach": (
-                "On most lines the value isn't the six-axis arm everyone photographs. It's the unglamorous "
-                "work between cells — machine tending, material movement, and end-of-line packaging — where "
-                "labor quietly goes.\n\n"
-                "And a cell that only runs one part number looks great until your product mix changes."
+                "When a plant asks me where to automate, they point at the six-axis arm everyone "
+                "photographs. I look between the cells.\n\n"
+                "That's where the labor quietly goes — machine tending, moving material, end-of-line "
+                "packaging. And a cell built to run one part number looks brilliant right up until your mix "
+                "changes."
             ),
             "trend_subject": "why the flexible robot beats the fast one",
             "trend": (
-                "A pattern worth knowing: teams buy for peak speed on one part, then get burned when the "
-                "mix shifts and the cell can't flex.\n\n"
+                "I keep track of which cells are still running after a product change, and which got "
+                "rebuilt. The ones bought purely for peak speed on one part tend to end up in the second "
+                "group.\n\n"
                 "The deployments that last are chosen for changeover and reconfiguration, not top-end cycle "
-                "time. In high-mix work, flexibility pays back longer than speed."
+                "time. In high-mix work, flexibility pays back a lot longer than speed."
             ),
             "question_subject": "one question about your operation",
             "question": (
-                "No agenda here — one question tells me more than a plant tour.\n\n"
-                "If you automated one job tomorrow, which would it be? Most teams name the bottleneck cell. "
-                "The one that usually pays back is the repetitive tending and material movement nobody "
-                "wants."
+                "I ask plant managers the same question, and the answer tells me more than a line tour.\n\n"
+                "If you automated one job tomorrow, which would it be? Most name the bottleneck cell. The "
+                "one that usually pays back is the repetitive tending and material movement nobody wants to "
+                "staff."
             ),
         },
     ),
@@ -397,23 +408,25 @@ _LADDER_CONTENT: tuple[tuple[tuple[str, ...], dict[str, str]], ...] = (
         {
             "teach_subject": "the retail robot that changes nothing",
             "teach": (
-                "A hard truth: a shelf-scanning robot that just produces another dashboard rarely changes "
-                "what staff actually do. The value shows up when automation touches the work behind the "
-                "shelf — backroom sortation, replenishment, and inventory exceptions.\n\n"
-                "Data is easy. Changing the labor is the part that pays back."
+                "When a retailer asks me about robots, it's usually the shelf-scanner. I push back "
+                "gently.\n\n"
+                "A robot that just produces another dashboard rarely changes what staff actually do. The "
+                "value shows up behind the shelf — backroom sortation, replenishment, inventory exceptions. "
+                "Collecting data is easy; changing the labor is the part that pays back."
             ),
             "trend_subject": "why inventory robots stall after the pilot",
             "trend": (
-                "A pattern I see in retail: the inventory robot nails accuracy in the pilot, then nothing "
-                "changes because no workflow was rebuilt around the data.\n\n"
-                "The deployments that last close the loop — the scan triggers replenishment or a task, not "
-                "just a report. Otherwise it's a very expensive dashboard."
+                "I keep a list of the inventory robots that changed how a store runs, and the ones that "
+                "just added a report. The second list is longer.\n\n"
+                "The pilots that stall nailed accuracy but never rebuilt a workflow around the data. The "
+                "ones that last close the loop — a scan triggers replenishment or a task, not just a "
+                "dashboard."
             ),
             "question_subject": "one question about your operation",
             "question": (
-                "No agenda here — one question tells me more than a call.\n\n"
-                "If you automated one workflow tomorrow, which would it be? Most teams say shelf scanning. "
-                "The one that usually pays back is the backroom labor behind it — sortation, replenishment, "
+                "I've asked a lot of retail ops leaders this, and it's more telling than a store visit.\n\n"
+                "If you automated one workflow tomorrow, which would it be? Most say shelf scanning. The one "
+                "that usually pays back is the backroom labor behind it — sortation, replenishment, "
                 "exceptions."
             ),
         },
@@ -447,11 +460,17 @@ def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
     content = _ladder_content(industry)
     core = content.get(touch, _GENERIC_LADDER.get(touch, ""))
     if touch == "teach":
-        close = f"If {n} ever maps this out, that's where I'd start."
+        close = f"If it's useful, I'll tell you where I'd point a first robot at {n} — and where I wouldn't."
     elif touch == "trend":
-        close = f"If {n} is weighing vendors, I'm glad to share what separates the ones that last. No pitch."
+        close = (
+            f"If {n} is weighing vendors this year, I'll tell you which ones tend to hold up in a real "
+            "operation. No pitch."
+        )
     else:  # question
-        close = f"Curious what you'd pick for {n} — no wrong answer, and no agenda on my end."
+        close = (
+            f"No right answer — but what comes to mind for {n} usually points straight at where a robot "
+            "would earn its keep. Curious what you'd say."
+        )
     return "\n".join(["Hi,", "", core, "", close, "", cal_signature()])
 
 
