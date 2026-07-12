@@ -37,6 +37,30 @@ function n(v?: number): number {
   return typeof v === "number" && Number.isFinite(v) ? v : 0;
 }
 
+const STAGE_TONE: Record<"gray" | "amber" | "emerald" | "blue", string> = {
+  gray: "bg-gray-100 text-gray-700",
+  amber: "bg-amber-100 text-amber-900",
+  emerald: "bg-emerald-100 text-emerald-800",
+  blue: "bg-blue-100 text-blue-800",
+};
+
+function FunnelStage({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: keyof typeof STAGE_TONE;
+}) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${STAGE_TONE[tone]}`}>
+      <span className="font-bold tabular-nums">{value.toLocaleString()}</span>
+      <span className="font-medium">{label}</span>
+    </span>
+  );
+}
+
 /** Single prioritized recommendation from live metrics — Cal's "what to do now". */
 function calRecommendation(m: CalWorkflowMetrics): { tone: "warn" | "go"; text: string } {
   const pending = n(m.pending_draft);
@@ -47,37 +71,37 @@ function calRecommendation(m: CalWorkflowMetrics): { tone: "warn" | "go"; text: 
 
   // A lot sent, nothing back → stop blasting. Those were the old copy; the fix
   // is to regenerate with the new trust-first angles and prove a small batch.
-  if (sent >= 40 && replied === 0) {
+  if (sent >= 40 && replied === 0 && sendable > 0) {
     return {
       tone: "warn",
       text:
-        `Those ${sent.toLocaleString()} intros went out on the old copy and got 0 replies. Don't send more on ` +
-        `volume — press Regenerate (Step 1) to rewrite the queue with the new trust-first angles, ` +
-        `review a handful, then send just 20–30 and let the angles prove out before another batch.`,
+        `${sent.toLocaleString()} intros are out with 0 replies so far. Don't blast — open Step 3, read 3–4 ` +
+        `drafts for fit, then press the amber "Send ${sendable.toLocaleString()}" button in Step 4. That ` +
+        `sends only the drafts that already have a verified contact email.`,
     };
   }
   if (pending > 0) {
     return {
       tone: "go",
       text:
-        `Start at Step 1: draft the ${pending.toLocaleString()} pending leads, then skim a few in the ` +
-        `editor before anything sends.`,
+        `Start at Step 1: press "Draft all pending" to write the ${pending.toLocaleString()} pending leads, ` +
+        `then read a few in Step 3 before anything sends.`,
     };
   }
   if (noEmail > 0) {
     return {
       tone: "warn",
       text:
-        `Step 2: ${noEmail.toLocaleString()} drafts have no contact email. Fix those first — a send with ` +
-        `no address is a wasted, un-tracked attempt.`,
+        `Step 2: ${noEmail.toLocaleString()} drafts have no contact email. Press "Fix ${noEmail.toLocaleString()} emails" ` +
+        `first — a send with no address is a wasted, un-tracked attempt.`,
     };
   }
   if (sendable > 0) {
     return {
       tone: "go",
       text:
-        `Step 3 → 4: review a handful of drafts for fit, then send the ${sendable.toLocaleString()} that ` +
-        `are ready. Small, deliberate batches beat one big blast.`,
+        `You have ${sendable.toLocaleString()} drafts ready. Read 3–4 in Step 3 for fit, then press the amber ` +
+        `"Send ${sendable.toLocaleString()}" button in Step 4 (it asks you to confirm first). Small batches beat one blast.`,
     };
   }
   if (replied > 0) {
@@ -140,6 +164,8 @@ export default function CalWorkflowPanel({
   const noEmail = n(metrics.no_email);
   const sendable = n(metrics.sendable);
   const drafted = n(metrics.drafted);
+  const unsent = n(metrics.unsent_drafted);
+  const sent = n(metrics.sent);
   const replied = n(metrics.replied);
   const rec = calRecommendation(metrics);
 
@@ -147,7 +173,7 @@ export default function CalWorkflowPanel({
     <div className="mb-5">
       {/* Cal recommends — the AI agent's read on what to do next */}
       <div
-        className={`mb-4 flex gap-3 rounded-xl border p-3 ${
+        className={`mb-3 flex gap-3 rounded-xl border p-3 ${
           rec.tone === "warn"
             ? "border-amber-300 bg-amber-50"
             : "border-emerald-300 bg-emerald-50"
@@ -168,8 +194,30 @@ export default function CalWorkflowPanel({
         </div>
       </div>
 
-      {/* Numbered, sequential workflow — each step wired to its API call */}
-      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
+      {/* Funnel legend — ties the numbers together so the stages read as one story */}
+      <div className="mb-3 rounded-xl border border-gray-200 bg-white px-3 py-2.5">
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12px] font-medium text-gray-700">
+          <FunnelStage label="Pending" value={pending} tone="gray" />
+          <span className="text-gray-300">→</span>
+          <FunnelStage label="Drafted" value={drafted} tone="gray" />
+          <span className="text-gray-300">→</span>
+          <FunnelStage label="Ready to send" value={sendable} tone="amber" />
+          <span className="text-gray-300">→</span>
+          <FunnelStage label="Sent" value={sent} tone="emerald" />
+          <span className="text-gray-300">→</span>
+          <FunnelStage label="Replied" value={replied} tone="blue" />
+        </div>
+        <p className="mt-1.5 text-[11px] leading-snug text-gray-500">
+          <strong>Pending</strong> = still needs a draft. <strong>Ready to send</strong> = a draft that
+          already has a verified contact email (this is the number the Send button uses — it can differ
+          from Pending). Sending never duplicates the {sent.toLocaleString()} already sent.
+        </p>
+      </div>
+
+      {/* Numbered, sequential workflow — each step wired to its API call.
+          One column on small screens so 1→2→3→4→5 always reads top-to-bottom;
+          a single 5-across row on large screens. */}
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-5">
         <StepCard
           index={1}
           title="Draft"
@@ -207,21 +255,25 @@ export default function CalWorkflowPanel({
         <StepCard
           index={3}
           title="Review"
-          detail={`${drafted.toLocaleString()} drafted — check fit before sending`}
+          detail="Read 3–4: right company & angle, name correct, contact looks real, no filler"
         >
           <SupabaseInlineLink tone="blue" onClick={onReview}>
-            Review drafts below
+            Open {drafted.toLocaleString()} drafts below
           </SupabaseInlineLink>
         </StepCard>
 
         <StepCard
           index={4}
           title="Send"
-          detail={`${sendable.toLocaleString()} ready to send`}
+          detail={
+            sendable > 0
+              ? `${sendable.toLocaleString()} drafts with a verified email — asks you to confirm first`
+              : "Nothing ready to send yet"
+          }
           done={sendable === 0 && drafted === 0}
         >
           <SupabaseInlineLink tone="amber" onClick={onSendAll} disabled={sendable === 0} busy={busy === "cal-send"}>
-            Send {sendable > 0 ? sendable.toLocaleString() : "all"}
+            {sendable > 0 ? `Send ${sendable.toLocaleString()}` : "Send"}
           </SupabaseInlineLink>
         </StepCard>
 
