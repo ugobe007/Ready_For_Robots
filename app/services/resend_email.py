@@ -171,6 +171,31 @@ def _email_list(value: str | list[str]) -> list[str]:
     return emails
 
 
+def fetch_resend_email_status(email_id: str) -> dict[str, Any]:
+    """Authoritative delivery status for a sent email (GET /emails/{id}).
+
+    Returns the raw Resend payload, whose ``last_event`` (e.g. "delivered", "bounced",
+    "complained", "delivery_delayed") is the source of truth used to reconcile messages
+    that never received a delivery webhook.
+    """
+    api_key = (os.getenv("RESEND_API_KEY") or "").strip()
+    if not api_key:
+        raise ResendEmailError("Missing RESEND_API_KEY")
+    if not email_id:
+        raise ResendEmailError("email_id is required")
+    try:
+        resp = requests.get(
+            f"https://api.resend.com/emails/{email_id}",
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=20,
+        )
+    except requests.RequestException as exc:
+        raise ResendEmailError(f"Resend status lookup failed: {exc}") from exc
+    if resp.status_code >= 400:
+        raise ResendEmailError(f"Resend status lookup rejected ({resp.status_code}): {resp.text}")
+    return resp.json() if resp.content else {}
+
+
 def fetch_resend_received_email(email_id: str) -> dict[str, Any]:
     api_key = (os.getenv("RESEND_API_KEY") or "").strip()
     if not api_key:

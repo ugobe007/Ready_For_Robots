@@ -71,6 +71,7 @@ def send_cal_intro_email(
     send_identity: str = "cal",
     include_demo: bool = True,
     variant_id: str | None = None,
+    canary: bool = False,
 ) -> OutreachMessage:
     """Send intro email with reply routing and persist OutreachMessage for inbound webhook.
 
@@ -117,6 +118,9 @@ def send_cal_intro_email(
     }
     if variant_id:
         payload["variant_id"] = variant_id
+    if canary:
+        # Tag deliverability-canary sends so the breaker can grade them in isolation.
+        payload["canary"] = "true"
     msg = OutreachMessage(
         team_id=team_id,
         crm_account_id=acct.id,

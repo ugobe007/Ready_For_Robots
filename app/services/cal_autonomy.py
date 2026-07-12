@@ -151,6 +151,33 @@ def _maybe_alert_bounce_pause(stats: dict, threshold: float) -> None:
         logger.warning("[cal-autonomy] bounce-pause alert failed: %s", exc)
 
 
+def _canary_stats(db, *, hours: int) -> dict:
+    """Delivery outcomes for canary-tagged intros in a trailing window.
+
+    Canary sends (payload.canary == "true") are graded in isolation so the breaker can
+    tell whether the *post-fix* gate actually delivers — independent of the legacy window.
+    """
+    from sqlalchemy import func
+    from app.models.outreach import OutreachMessage
+
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    canary_expr = OutreachMessage.payload.op("->>")("canary")
+    rows = (
+        db.query(OutreachMessage.status, func.count(OutreachMessage.id))
+        .filter(
+            OutreachMessage.sent_at.isnot(None),
+            OutreachMessage.sent_at >= since,
+            canary_expr == "true",
+        )
+        .group_by(OutreachMessage.status)
+        .all()
+    )
+    counts = {str(s or "unknown"): int(n) for s, n in rows}
+    total = sum(counts.values())
+    bounced = counts.get("bounced", 0) + counts.get("complained", 0) + counts.get("suppressed", 0)
+    return {"sent": total, "bounced": bounced, "delivered": counts.get("delivered", 0), "by_status": counts}
+
+
 def _daily_send_key() -> str:
     return f"cal:auto:daily_sent:{datetime.now(timezone.utc).date().isoformat()}"
 
@@ -720,15 +747,47 @@ def run_cal_autonomy_cycle(
     # intro sends this cycle rather than burning sender reputation further. Follow-ups to
     # already-engaged threads (below) still run. New intros resume automatically once the
     # rate falls back under the threshold.
+    # Reconcile stuck 'sent' messages from Resend first so the breaker measures reality,
+    # not a denominator polluted by never-finalized sends (missed delivery webhooks).
+    reconcile = {}
+    if not dry_run:
+        try:
+            from app.services.cal_delivery_reconcile import reconcile_pending_deliveries
+
+            reconcile = reconcile_pending_deliveries(
+                db, limit=int(os.getenv("CAL_RECONCILE_BATCH", "60") or "60")
+            )
+        except Exception as exc:  # noqa: BLE001 — reconciliation must never break the cycle
+            logger.warning("[cal-autonomy] delivery reconcile failed: %s", exc)
+
     bounce_stats = recent_bounce_rate(db, hours=168)
     pause_threshold = float(os.getenv("CAL_BOUNCE_PAUSE_THRESHOLD", "0.10") or "0.10")
     min_sample = int(os.getenv("CAL_BOUNCE_PAUSE_MIN_SAMPLE", "20") or "20")
     deliverability_paused = bounce_stats["sent"] >= min_sample and bounce_stats["rate"] > pause_threshold
+
+    # Post-fix canary: while paused, still let a tiny batch of strictly-gated intros through
+    # (same verified-source + deliverability gate as any send) so the fix can be PROVEN on
+    # live sends instead of waiting for the bad window to age out. Hard stop: if any prior
+    # canary send has bounced, send zero and stay fully paused until an operator resets.
+    canary_size = int(os.getenv("CAL_BOUNCE_CANARY_SIZE", "5") or "5")
+    canary_window_h = int(os.getenv("CAL_BOUNCE_CANARY_WINDOW_HOURS", "24") or "24")
+    canary_blocked = False
+    canary_budget = 0
+    if deliverability_paused and canary_size > 0:
+        canary_blocked = _canary_stats(db, hours=72)["bounced"] > 0
+        if not canary_blocked:
+            used = _canary_stats(db, hours=canary_window_h)["sent"]
+            canary_budget = max(0, canary_size - used)
+
     if deliverability_paused and not dry_run:
         _maybe_alert_bounce_pause(bounce_stats, pause_threshold)
 
+    canary_sent = 0
     for company, _score, tier in companies:
-        if deliverability_paused or sent >= send_limit:
+        if sent >= send_limit:
+            break
+        # Fully paused (no canary budget or a canary already bounced) → stop new intros.
+        if deliverability_paused and (canary_blocked or canary_sent >= canary_budget):
             break
         if tier not in ("HOT", "WARM"):
             continue
@@ -869,8 +928,11 @@ def run_cal_autonomy_cycle(
                 idempotency_key=f"cal-auto-{acct.id}-{now.date().isoformat()}",
                 send_identity="cal",
                 variant_id=variant_id,
+                canary=deliverability_paused,
             )
             sent += 1
+            if deliverability_paused:
+                canary_sent += 1
             _incr_daily_sent(1)
             enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id, variant_id=variant_id)
         except ResendEmailError as exc:
@@ -904,6 +966,10 @@ def run_cal_autonomy_cycle(
         "deliverability_paused": deliverability_paused,
         "bounce_rate": bounce_stats["rate"],
         "bounce_window": bounce_stats,
+        "canary_sent": canary_sent,
+        "canary_budget": canary_budget,
+        "canary_blocked": canary_blocked,
+        "reconcile": reconcile,
         "errors": errors[:20],
         "template_fingerprint": new_fp,
         "format_review_notified": format_notified,

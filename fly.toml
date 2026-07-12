@@ -46,6 +46,11 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   CAL_ASSEMBLY_REQUIRED = "1"
   CAL_ASSEMBLY_LLM_REVIEW = "1"
   CAL_TEMPLATE_VERSION = "2"
+  # Deliverability guardrails (bounce circuit breaker + post-fix canary + reconciliation)
+  ZERO_BOUNCE_CACHE_DAYS = "90"        # cache paid mailbox checks 90d — the same address is never re-billed
+  ZERO_BOUNCE_ACCEPT_CATCH_ALL = "0"   # reject accept-then-drop catch-all domains during recovery
+  CAL_BOUNCE_CANARY_SIZE = "5"         # verified-only intros allowed per window while paused
+  CAL_RECONCILE_BATCH = "60"           # stuck-'sent' messages reconciled from Resend each cycle
   # Supply-side Cal autonomy (robot vendor signup outreach — worker process)
   # DISABLED 2026-07-07: this loop / supply-pipeline send path emitted "StageGate /
   # onstage.bot" trade-show-logistics copy to robot OEMs from readyforrobots.com

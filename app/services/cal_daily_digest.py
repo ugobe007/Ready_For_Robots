@@ -286,6 +286,15 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
         deliverability["sent"] >= int(os.getenv("CAL_BOUNCE_PAUSE_MIN_SAMPLE", "20") or "20")
         and deliverability["rate"] > pause_threshold
     )
+    # When paused, show the post-fix canary's own delivery record so the operator can see
+    # whether the fix is proving out (canary delivering) or the leak persists (canary bounced).
+    if deliverability["paused"]:
+        try:
+            from app.services.cal_autonomy import _canary_stats
+
+            deliverability["canary"] = _canary_stats(db, hours=72)
+        except Exception:  # noqa: BLE001 — digest must never break on the canary lookup
+            pass
 
     body = render_cal_daily_digest_text(
         day_label=day_label,
@@ -382,8 +391,18 @@ def render_cal_daily_digest_text(
             f"  • Sends: {deliverability.get('sent', 0)}  •  Delivered: {deliverability.get('delivered', 0)}"
             f"  •  Bounced/complaints: {deliverability.get('bounced', 0)}",
             f"  • Bounce rate: {rate_pct:.1f}%  (circuit breaker at {thr_pct:.0f}%) — {status}",
-            "",
         ])
+        canary = deliverability.get("canary") or {}
+        if deliverability.get("paused") and int(canary.get("sent") or 0) > 0:
+            c_note = (
+                "delivering — fix looks good" if int(canary.get("bounced") or 0) == 0
+                else "⚠️ canary bounced — fix NOT proven, still fully paused"
+            )
+            lines.append(
+                f"  • Post-fix canary: {canary.get('sent', 0)} sent, "
+                f"{canary.get('delivered', 0)} delivered, {canary.get('bounced', 0)} bounced — {c_note}"
+            )
+        lines.append("")
 
     # When nothing new went out but the queue still shows prospects, say why —
     # otherwise "sent: 0" alongside "ready: N" reads as a broken pipeline when

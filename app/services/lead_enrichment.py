@@ -342,11 +342,60 @@ def verify_email_deliverable(email: str) -> tuple[bool, str]:
 
     zb_key = (os.getenv("ZERO_BOUNCE_API_KEY") or os.getenv("ZEROBOUNCE_API_KEY") or "").strip()
     if zb_key:
-        return _verify_zerobounce(email, zb_key)
+        # ZeroBounce bills per validation — cache every definitive result so we never pay
+        # twice for the same address. A mailbox's deliverability is stable over weeks.
+        cached = _zb_cache_get(email)
+        if cached is not None:
+            return cached
+        result = _verify_zerobounce(email, zb_key)
+        if not result[1].endswith("error_fallback"):  # don't cache transient API failures
+            _zb_cache_set(email, result)
+        return result
 
     if not _domain_resolves(domain):
         return False, "domain_no_dns"
     return True, "syntax_dns_ok"
+
+
+def _zb_redis():
+    url = (os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or "").strip()
+    if not url:
+        return None
+    try:
+        import redis
+
+        return redis.from_url(url, decode_responses=True)
+    except Exception:
+        return None
+
+
+def _zb_cache_get(email: str) -> tuple[bool, str] | None:
+    client = _zb_redis()
+    if not client:
+        return None
+    try:
+        raw = client.get(f"zb:verify:{email.lower()}")
+    except Exception:
+        return None
+    if not raw:
+        return None
+    ok, _, reason = str(raw).partition("|")
+    return (ok == "1", f"{reason or 'zerobounce'}:cached")
+
+
+def _zb_cache_set(email: str, result: tuple[bool, str]) -> None:
+    client = _zb_redis()
+    if not client:
+        return
+    try:
+        days = float(os.getenv("ZERO_BOUNCE_CACHE_DAYS", "30") or "30")
+        client.set(
+            f"zb:verify:{email.lower()}",
+            f"{'1' if result[0] else '0'}|{result[1]}",
+            ex=int(days * 86400),
+        )
+    except Exception:
+        pass
 
 
 def _domain_resolves(domain: str) -> bool:
@@ -495,8 +544,14 @@ def _verify_zerobounce(email: str, api_key: str) -> tuple[bool, str]:
         return _domain_resolves(email.split("@", 1)[1]), "zerobounce_error_fallback"
 
     status = (data.get("status") or "").lower()
-    if status in ("valid", "catch-all"):
-        return True, f"zerobounce_{status}"
+    if status == "valid":
+        return True, "zerobounce_valid"
+    # catch-all domains accept mail at SMTP time but can still silently drop it — a real
+    # bounce source. During deliverability recovery reject them by default; an operator can
+    # opt back in with ZERO_BOUNCE_ACCEPT_CATCH_ALL=1 once reputation is healthy.
+    if status == "catch-all":
+        accept = (os.getenv("ZERO_BOUNCE_ACCEPT_CATCH_ALL") or "0").strip().lower() in ("1", "true", "yes")
+        return (accept, "zerobounce_catch_all" + ("" if accept else "_rejected"))
     return False, f"zerobounce_{status or 'invalid'}"
 
 
