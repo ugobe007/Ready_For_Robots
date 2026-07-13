@@ -13,15 +13,24 @@ import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlan
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 
+type InboxLink = { label: string; url: string };
+
 /**
- * Map an email address to its webmail inbox so a user on the "check your email"
- * screen can open their inbox in one tap instead of hunting for it (a common
- * magic-link completion leak). Returns null for domains we don't recognize.
+ * Map an email address to its webmail inbox(es) so a user on the "check your
+ * email" screen can open their inbox in one tap instead of hunting for it (a
+ * common magic-link completion leak).
+ *
+ * Consumer domains map to a single provider. Our ICP (robot OEMs/integrators)
+ * signs up with a *custom work-email domain* whose provider we can't detect
+ * client-side without an MX lookup — so we surface the two hosts that cover the
+ * overwhelming majority of business mailboxes: Google Workspace and Microsoft
+ * 365. The Google link is domain-scoped so it routes straight to a Workspace
+ * inbox when one exists. Returns [] only when there is no parseable domain.
  */
-function emailProviderInbox(email: string): { label: string; url: string } | null {
+function emailInboxLinks(email: string): InboxLink[] {
   const domain = email.split("@")[1]?.toLowerCase().trim();
-  if (!domain) return null;
-  const map: Record<string, { label: string; url: string }> = {
+  if (!domain) return [];
+  const consumer: Record<string, InboxLink> = {
     "gmail.com": { label: "Open Gmail", url: "https://mail.google.com/mail/u/0/" },
     "googlemail.com": { label: "Open Gmail", url: "https://mail.google.com/mail/u/0/" },
     "outlook.com": { label: "Open Outlook", url: "https://outlook.live.com/mail/0/" },
@@ -34,7 +43,13 @@ function emailProviderInbox(email: string): { label: string; url: string } | nul
     "proton.me": { label: "Open Proton Mail", url: "https://mail.proton.me/u/0/" },
     "protonmail.com": { label: "Open Proton Mail", url: "https://mail.proton.me/u/0/" },
   };
-  return map[domain] ?? null;
+  const hit = consumer[domain];
+  if (hit) return [hit];
+  // Custom work-email domain (the ICP): offer both dominant business hosts.
+  return [
+    { label: "Open Gmail / Workspace", url: `https://mail.google.com/a/${domain}` },
+    { label: "Open Outlook / Microsoft 365", url: "https://outlook.office.com/mail/" },
+  ];
 }
 
 export default function Signup() {
@@ -390,17 +405,27 @@ export default function Signup() {
                   : "in your pipeline, ready to save your first lead and copy the outreach draft."}
               </p>
               {(() => {
-                const inbox = emailProviderInbox(email);
-                return inbox ? (
-                  <a
-                    href={inbox.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-6 inline-block w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700"
-                  >
-                    {inbox.label} →
-                  </a>
-                ) : null;
+                const inboxes = emailInboxLinks(email);
+                if (inboxes.length === 0) return null;
+                return (
+                  <div className="mt-6 flex flex-col gap-2">
+                    {inboxes.map((inbox, i) => (
+                      <a
+                        key={inbox.url}
+                        href={inbox.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={
+                          i === 0
+                            ? "inline-block w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700"
+                            : "inline-block w-full rounded-xl border border-emerald-300 bg-white px-4 py-3 text-sm font-semibold text-emerald-800 transition-all hover:bg-emerald-50"
+                        }
+                      >
+                        {inbox.label} →
+                      </a>
+                    ))}
+                  </div>
+                );
               })()}
               <div className="mt-5 flex flex-col items-center gap-2 text-xs text-gray-600">
                 <p>Didn't get it? Check spam, or resend.</p>
