@@ -146,8 +146,12 @@ def apollo_contact_email(
         email = (prospect.get("email") or "").strip()
         if not email or "email_not_unlocked" in email:
             continue
+        # Only accept emails Apollo itself marks VERIFIED. "guessed" / "unverified" /
+        # "extrapolated" are name-derived guesses — and because the Apollo source is
+        # trusted by the send gate, an unverified Apollo address would bypass the guard
+        # and bounce. Requiring verified keeps Apollo in the trusted set safely.
         status = (prospect.get("email_status") or "").lower()
-        if status and status not in ("verified", "guessed", "unverified", "extrapolated"):
+        if status != "verified":
             continue
         if not _EMAIL_RE.match(email):
             continue

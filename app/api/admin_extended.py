@@ -917,10 +917,11 @@ def cal_bulk_draft(
             elif (company.crm_metadata or {}).get("outreach_pipeline") == "stagegate":
                 acct.account_type = "vendor"
 
-            if not acct.contact_email and domain:
-                guessed = infer_outreach_emails(domain, company.industry)
-                if guessed:
-                    acct.contact_email = guessed.primary
+            # Do NOT stamp a guessed role inbox onto contact_email at draft time. A stored
+            # contact_email short-circuits resolve_outreach_email (returns the untrusted
+            # "crm_contact" source) BEFORE it reaches Hunter/Apollo — so a guess written
+            # here permanently blocks the verified-contact upgrade and becomes a bounce.
+            # Leave it empty; the send gate resolves through the full verified waterfall.
 
             from app.services.cal_autonomy import format_cal_draft_storage
 
@@ -1517,7 +1518,12 @@ def cal_bulk_send(
     seen_recipients: set[str] = set()
     now = datetime.now(timezone.utc)
 
-    from app.services.lead_enrichment import resolve_outreach_email, verify_email_deliverable
+    from app.services.lead_enrichment import (
+        address_previously_bounced,
+        outreach_recipient_trusted,
+        resolve_outreach_email,
+        verify_email_deliverable,
+    )
 
     for company, score, tier in companies:
         if sent_count >= body.limit:
@@ -1552,10 +1558,9 @@ def cal_bulk_send(
             })
             continue
 
-        to_email = (acct.contact_email or "").strip() or None
-        email_source = "crm" if to_email else None
-        if not to_email:
-            to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=True)
+        # Always resolve so we know the email SOURCE — a stored acct.contact_email may be a
+        # laundered name-guess from a prior cycle, and using it directly bypassed the guard.
+        to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=True)
         from app.services.email_address import normalize_recipient_email, recipient_email_error
 
         to_email = normalize_recipient_email(to_email)
@@ -1573,6 +1578,21 @@ def cal_bulk_send(
             continue
         seen_recipients.add(recipient_key)
 
+        # Same hard gate as autopilot: trusted source, not previously bounced, deliverable.
+        trusted, trust_reason = outreach_recipient_trusted(company, acct, to_email, email_source)
+        if not trusted:
+            skipped_unverified += 1
+            errors.append({
+                "company_id": company.id,
+                "name": company.name,
+                "error": f"Unverified recipient skipped ({trust_reason})",
+                "email_source": email_source,
+            })
+            continue
+        if address_previously_bounced(db, to_email):
+            skipped_unverified += 1
+            continue
+
         if not _cal_should_skip_verification(body.skip_verification):
             ok, verify_reason = verify_email_deliverable(to_email)
             if not ok:
@@ -1585,9 +1605,18 @@ def cal_bulk_send(
                 })
                 continue
 
+        # CC only a peer that clears the SAME trust + suppression + deliverability gate as
+        # the primary (guessed role-inbox CCs were a dominant bounce class).
         domain = normalize_website_domain(company.website or acct.website)
-        cc_list = infer_cc_outreach_emails(domain, company.industry, primary=to_email)
-        cc_email = cc_list[0] if cc_list else None
+        cc_email = None
+        for _cc in infer_cc_outreach_emails(domain, company.industry, primary=to_email):
+            cc_trusted, _ = outreach_recipient_trusted(company, acct, _cc, "cc_inferred")
+            if not cc_trusted or address_previously_bounced(db, _cc):
+                continue
+            cc_ok, _ = verify_email_deliverable(_cc)
+            if cc_ok:
+                cc_email = _cc
+                break
 
         # Build subject from draft first line or fallback
         subject, body_text = parse_cal_draft(acct.outreach_draft, company.name or "Unknown")
@@ -1949,11 +1978,23 @@ def cal_send_one(
         db.flush()
 
     company = db.query(Company).filter(Company.id == acct.company_id).first() if acct.company_id else None
-    from app.services.lead_enrichment import verify_email_deliverable
+    from app.services.lead_enrichment import (
+        address_previously_bounced,
+        outreach_recipient_trusted,
+        verify_email_deliverable,
+    )
 
     to_email, email_err = _cal_resolve_send_to_email(company, acct)
     if not to_email:
         raise HTTPException(status_code=400, detail=email_err or "No recipient email")
+
+    # Never re-send to an address that already bounced/complained — a dead mailbox stays
+    # dead and re-hitting it just burns sender reputation.
+    if address_previously_bounced(db, to_email):
+        raise HTTPException(
+            status_code=400,
+            detail=f"{to_email} previously bounced/complained and is suppressed — add a verified contact instead.",
+        )
 
     if not _cal_should_skip_verification(body.skip_verification):
         ok, reason = verify_email_deliverable(to_email)
@@ -1966,10 +2007,20 @@ def cal_send_one(
     if not ok:
         raise HTTPException(status_code=400, detail=f"Cannot send incomplete draft: {reason}")
 
+    # CC only a peer that clears the same trust + suppression + deliverability gate as the
+    # primary (guessed role-inbox CCs were a dominant bounce class and a CC bounce flags the
+    # whole message bounced).
     domain = normalize_website_domain((company.website if company else None) or acct.website)
     industry = (company.industry if company else None) or acct.industry
-    cc_list = infer_cc_outreach_emails(domain, industry, primary=to_email)
-    cc_email = cc_list[0] if cc_list else None
+    cc_email = None
+    for _cc in infer_cc_outreach_emails(domain, industry, primary=to_email):
+        cc_trusted, _ = outreach_recipient_trusted(company, acct, _cc, "cc_inferred") if company else (False, "no-company")
+        if not cc_trusted or address_previously_bounced(db, _cc):
+            continue
+        cc_ok, _ = verify_email_deliverable(_cc)
+        if cc_ok:
+            cc_email = _cc
+            break
     try:
         subject, body_text = parse_cal_draft_or_raise(acct.outreach_draft, acct.name or "Unknown")
     except ValueError as exc:

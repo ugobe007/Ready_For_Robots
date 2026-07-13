@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.models.crm import CrmAccount
 from app.models.outreach import OutreachMessage, OutreachReply
 from app.models.sequences import OutreachSequence, OutreachSequenceEnrollment, OutreachSequenceStep
+from app.services.lead_enrichment import address_previously_bounced, verify_email_deliverable
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import record_sales_experience
 
@@ -406,6 +407,22 @@ def process_due_enrollments(db: Session, *, limit: int = 50) -> dict[str, Any]:
         if replied:
             enrollment.status = "paused"
             enrollment.paused_reason = "reply_received"
+            skipped += 1
+            continue
+        # Deliverability gate — mirror the intro send gate. Follow-ups keep running while
+        # the circuit breaker has PAUSED intros, so an ungated follow-up loop was re-hitting
+        # dead/guessed mailboxes and pinning the trailing bounce rate above threshold (the
+        # breaker could never auto-recover). Never follow up to an address that already
+        # bounced/complained, and re-verify it's still deliverable before sending.
+        if address_previously_bounced(db, account.contact_email):
+            enrollment.status = "blocked"
+            enrollment.paused_reason = "suppressed_bounced"
+            skipped += 1
+            continue
+        deliverable, deliver_reason = verify_email_deliverable(account.contact_email)
+        if not deliverable:
+            enrollment.status = "blocked"
+            enrollment.paused_reason = f"undeliverable:{deliver_reason}"
             skipped += 1
             continue
         step = (
