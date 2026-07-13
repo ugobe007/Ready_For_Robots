@@ -79,9 +79,7 @@ def main() -> int:
         resolve_outreach_email,
         verify_email_deliverable,
     )
-    from app.services.outreach_email_inference import infer_cc_outreach_emails
     from app.services.resend_email import ResendEmailError
-    from app.services.company_domain import normalize_website_domain
 
     db = SessionLocal()
     try:
@@ -138,8 +136,11 @@ def main() -> int:
                 sent += 1
                 continue
 
-            dom = normalize_website_domain(c.website or a.website)
-            cc = infer_cc_outreach_emails(dom, c.industry, primary=to_email)
+            # Do NOT CC guessed role inboxes (info@/contact@…). They are unverified,
+            # were a dominant bounce source, and a CC bounce flags the whole message
+            # bounced — corrupting deliverability stats and burning reputation. This
+            # mirrors the autopilot path, which only CCs an address clearing the same
+            # trust + deliverability gate as the primary (a guessed inbox never does).
             from app.services.agent_messaging import resolve_buyer_variant
 
             variant_id = resolve_buyer_variant(c, a)
@@ -147,7 +148,7 @@ def main() -> int:
                 send_cal_intro_email(
                     db, acct=a, company=c, team_id=team.id, to_email=to_email,
                     subject=subject, body_text=body_text,
-                    cc=[cc[0]] if cc else None, sender_user_id=uid,
+                    cc=None, sender_user_id=uid,
                     idempotency_key=f"cal-proof-{a.id}-{now.date().isoformat()}",
                     send_identity="cal", variant_id=variant_id,
                 )
