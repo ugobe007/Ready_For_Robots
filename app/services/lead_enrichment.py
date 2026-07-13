@@ -236,7 +236,23 @@ def resolve_outreach_email(
         meta = dict(base) if isinstance(base, dict) else {}
         meta["outreach_email"] = addr.strip().lower()
         meta["outreach_email_source"] = src
+        meta.pop("outreach_email_status", None)      # clear any prior quarantine
+        meta.pop("outreach_quarantine_reason", None)
         company.crm_metadata = meta
+
+    # URL-first policy: resolve + verify the company website BEFORE looking up any email.
+    # No URL, or a dead (non-resolving) URL, means we must not guess an address — those
+    # guesses at dead domains were the dominant bounce class. Quarantine the email to null.
+    # A transient DNS failure is non-destructive: we skip this pass without nulling.
+    require_url = (os.getenv("CAL_REQUIRE_VERIFIED_URL", "1") or "1").strip().lower() in ("1", "true", "yes")
+    verified_domain, url_reason = verify_outreach_url(company, acct)
+    if require_url:
+        if url_reason in ("no_url", "nxdomain"):
+            quarantine_outreach_email(company, acct, url_reason)
+            return None, f"quarantined_url:{url_reason}", None
+        if url_reason == "temporary":
+            # Don't null a stored address over a momentary resolver blip — retry next cycle.
+            return None, "url_unverified_temporary", None
 
     if acct and (acct.contact_email or "").strip():
         stored = acct.contact_email.strip()
@@ -249,7 +265,9 @@ def resolve_outreach_email(
             return stored, src, None
         return stored, "crm_contact", None
 
-    domain = outreach_domain(company, acct)
+    # Use the URL we already verified above (falls back to best-effort when the policy
+    # toggle is off). Every inferred/role/person address below is built on this domain.
+    domain = verified_domain or outreach_domain(company, acct)
     industry = company.industry or (acct.industry if acct else None)
 
     if use_apollo is None:
@@ -402,12 +420,75 @@ def _zb_cache_set(email: str, result: tuple[bool, str]) -> None:
         pass
 
 
-def _domain_resolves(domain: str) -> bool:
+def _domain_dns_status(domain: str) -> str:
+    """Classify a domain's DNS resolution: 'ok' | 'nxdomain' | 'temporary'.
+
+    We distinguish a permanently dead domain (name does not exist) from a transient
+    resolver failure so the URL-quarantine policy never destructively nulls a good
+    address over a momentary DNS blip.
+    """
+    if not domain:
+        return "nxdomain"
     try:
         socket.getaddrinfo(domain, None, type=socket.SOCK_STREAM)
-        return True
-    except socket.gaierror:
-        return False
+        return "ok"
+    except socket.gaierror as exc:
+        permanent = {
+            getattr(socket, "EAI_NONAME", object()),
+            getattr(socket, "EAI_NODATA", object()),
+        }
+        if getattr(exc, "errno", None) in permanent:
+            return "nxdomain"
+        return "temporary"
+    except Exception:
+        return "temporary"
+
+
+def _domain_resolves(domain: str) -> bool:
+    return _domain_dns_status(domain) == "ok"
+
+
+def verify_outreach_url(company: Company, acct: CrmAccount | None = None) -> tuple[str | None, str]:
+    """Resolve + verify the company's website URL BEFORE any email lookup.
+
+    Returns ``(verified_domain, reason)`` where reason is one of:
+      - ``ok``        → domain resolves; safe to look up / infer an address on it
+      - ``no_url``    → no website/domain at all
+      - ``nxdomain``  → domain is registered-looking but does not resolve (dead)
+      - ``temporary`` → DNS lookup failed transiently (do NOT quarantine; retry later)
+
+    Policy: guessed addresses at dead/absent domains were the dominant bounce class, so
+    a missing or unresolvable URL must block the waterfall entirely.
+    """
+    domain = outreach_domain(company, acct)
+    if not domain:
+        return None, "no_url"
+    status = _domain_dns_status(domain)
+    if status == "ok":
+        return domain, "ok"
+    if status == "nxdomain":
+        return None, "nxdomain"
+    return None, "temporary"
+
+
+def quarantine_outreach_email(
+    company: Company | None, acct: CrmAccount | None, reason: str
+) -> None:
+    """Null any stored/guessed address and stamp the company URL-quarantined.
+
+    No send path will use a quarantined address; it stays null until a verified URL
+    and a verified contact are found (re-enrichment clears it).
+    """
+    if acct is not None:
+        acct.contact_email = None
+    if company is not None:
+        base = getattr(company, "crm_metadata", None)
+        meta = dict(base) if isinstance(base, dict) else {}
+        meta["outreach_email"] = None
+        meta["outreach_email_source"] = None
+        meta["outreach_email_status"] = "quarantined"
+        meta["outreach_quarantine_reason"] = reason
+        company.crm_metadata = meta
 
 
 # Terminal delivery states — an address in any of these must never be emailed again.

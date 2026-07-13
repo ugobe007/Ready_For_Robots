@@ -89,12 +89,14 @@ def test_resolve_outreach_email_prefers_crm_contact():
     company.name = "Acme"
     company.website = "https://acme.com"
     company.industry = "Logistics"
+    company.crm_metadata = {}
     acct = MagicMock()
     acct.contact_email = "buyer@acme.com"
     acct.website = None
     acct.industry = None
 
-    email, source = resolve_outreach_email(company, acct, use_apollo=False)[:2]
+    with patch("app.services.lead_enrichment._domain_dns_status", return_value="ok"):
+        email, source = resolve_outreach_email(company, acct, use_apollo=False)[:2]
     assert email == "buyer@acme.com"
     assert source == "crm_contact"
 
@@ -104,16 +106,83 @@ def test_resolve_outreach_email_falls_back_to_domain():
     company.name = "Acme"
     company.website = "https://www.acme.com"
     company.industry = "Logistics"
+    company.crm_metadata = {}
     acct = MagicMock()
     acct.contact_email = None
     acct.website = None
     acct.industry = None
 
-    with patch.dict("os.environ", {}, clear=True):
+    with patch.dict("os.environ", {}, clear=True), patch(
+        "app.services.lead_enrichment._domain_dns_status", return_value="ok"
+    ):
         email, source = resolve_outreach_email(company, acct, use_apollo=False)[:2]
     assert email == "plantmanager@acme.com"
     assert source == "domain_inferred"
     assert acct.contact_email == "plantmanager@acme.com"
+
+
+def test_resolve_quarantines_when_no_url():
+    # No website/domain at all → no email lookup, address quarantined to null.
+    company = MagicMock()
+    company.name = "Acme"
+    company.website = None
+    company.website_domain = None
+    company.industry = "Logistics"
+    company.crm_metadata = {}
+    acct = MagicMock()
+    acct.contact_email = "leftover@guess.com"
+    acct.website = None
+    acct.industry = None
+
+    with patch("app.services.lead_enrichment.outreach_domain", return_value=None):
+        email, source = resolve_outreach_email(company, acct, use_apollo=False)[:2]
+    assert email is None
+    assert source == "quarantined_url:no_url"
+    assert acct.contact_email is None
+    assert company.crm_metadata["outreach_email_status"] == "quarantined"
+    assert company.crm_metadata["outreach_quarantine_reason"] == "no_url"
+
+
+def test_resolve_quarantines_dead_domain():
+    # URL exists but does not resolve (NXDOMAIN) → quarantine, don't guess an address.
+    company = MagicMock()
+    company.name = "Deadco"
+    company.website = "https://deadco.example"
+    company.industry = "Logistics"
+    company.crm_metadata = {}
+    acct = MagicMock()
+    acct.contact_email = "info@deadco.example"
+    acct.website = None
+    acct.industry = None
+
+    with patch("app.services.lead_enrichment.outreach_domain", return_value="deadco.example"), patch(
+        "app.services.lead_enrichment._domain_dns_status", return_value="nxdomain"
+    ):
+        email, source = resolve_outreach_email(company, acct, use_apollo=False)[:2]
+    assert email is None
+    assert source == "quarantined_url:nxdomain"
+    assert acct.contact_email is None
+
+
+def test_resolve_transient_dns_is_non_destructive():
+    # A transient DNS failure must NOT null a stored address — skip this pass and retry.
+    company = MagicMock()
+    company.name = "Flaky"
+    company.website = "https://flaky.com"
+    company.industry = "Logistics"
+    company.crm_metadata = {}
+    acct = MagicMock()
+    acct.contact_email = "buyer@flaky.com"
+    acct.website = None
+    acct.industry = None
+
+    with patch("app.services.lead_enrichment.outreach_domain", return_value="flaky.com"), patch(
+        "app.services.lead_enrichment._domain_dns_status", return_value="temporary"
+    ):
+        email, source = resolve_outreach_email(company, acct, use_apollo=False)[:2]
+    assert email is None
+    assert source == "url_unverified_temporary"
+    assert acct.contact_email == "buyer@flaky.com"  # preserved, not quarantined
 
 
 def test_resolve_outreach_email_uses_acct_website():
