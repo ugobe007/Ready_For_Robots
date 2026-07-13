@@ -37,7 +37,7 @@ from app.services.hunter_client import (
     pick_best_domain_email,
 )
 from app.services.email_address import normalize_recipient_email
-from app.services.company_domain import normalize_website_domain, persist_company_domain, resolve_outreach_domain, is_trusted_outreach_domain
+from app.services.company_domain import normalize_website_domain, resolve_outreach_domain, is_trusted_outreach_domain
 from app.services.outreach_email_inference import (
     infer_cc_outreach_emails,
     infer_primary_outreach_email,
@@ -97,21 +97,16 @@ def enrich_company_website(company: Company, *, sleep_s: float = 0.75) -> str | 
         if sleep_s:
             sleep_between_lookups(sleep_s)
 
-    if not found:
-        domain = resolve_outreach_domain(company)
-        if domain:
-            persist_company_domain(company, domain)
-            found = company.website
-            source = "brand_slug"
-
-    if found and source != "brand_slug":
+    # No brand-slug fallback: a domain guessed from the company name is not a real website.
+    # Those fabricated domains resolve in DNS but belong to someone else, slip the
+    # dead-domain quarantine, and produce the dominant bounce class. If a real site can't
+    # be found via source lookups, leave the website unset rather than inventing one.
+    if found:
         if is_trusted_outreach_domain(normalize_website_domain(found)):
             company.website = found
+            logger.info("Website enriched (%s): %s → %s", source, name, found)
         else:
             found = None
-
-    if found:
-        logger.info("Website enriched (%s): %s → %s", source, name, found)
     return found
 
 

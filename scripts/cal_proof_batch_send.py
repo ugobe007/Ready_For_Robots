@@ -152,9 +152,15 @@ def main() -> int:
                     send_identity="cal", variant_id=variant_id,
                 )
                 enroll_cal_followup(db, team_id=team.id, crm_account_id=a.id, variant_id=variant_id)
+                # send_cal_intro_email only flushes; commit here so the OutreachMessage,
+                # outreach_sent_at, and follow-up enrollment survive the session close.
+                # Without this the email leaves via Resend but the tracking row is rolled
+                # back — no bounce attribution and a duplicate-send risk next cycle.
+                db.commit()
                 sent += 1
                 print(f"  SENT {a.name[:32]:32} -> {to_email}")
             except ResendEmailError as exc:
+                db.rollback()
                 failed += 1
                 print(f"  FAIL {a.name}: {str(exc)[:80]}")
 

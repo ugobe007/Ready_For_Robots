@@ -4,6 +4,7 @@ represent the same legal entity (same registrable domain, different company IDs)
 """
 from __future__ import annotations
 
+import os
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
@@ -175,13 +176,19 @@ def resolve_outreach_domain(
         if is_trusted_outreach_domain(dom):
             return dom
 
-    from app.services.company_name_presence import infer_brand_domain_hosts
+    # Brand-slug inference (name → firstword.com, e.g. "Shake Shack" → shake.com) fabricates
+    # domains that resolve in DNS but belong to someone else. They slip the dead-domain
+    # quarantine and were the dominant hard-bounce class. A real website must come from a
+    # source lookup (OpenAI/DuckDuckGo) or the record itself — never from the company name.
+    # Disabled by default; set CAL_ALLOW_BRAND_SLUG_DOMAIN=1 only to temporarily re-enable.
+    if (os.getenv("CAL_ALLOW_BRAND_SLUG_DOMAIN", "0") or "0").strip().lower() in ("1", "true", "yes"):
+        from app.services.company_name_presence import infer_brand_domain_hosts
 
-    hosts = infer_brand_domain_hosts(str(name))
-    for host in hosts:
-        candidate = host[4:] if host.startswith("www.") else host
-        if is_trusted_outreach_domain(candidate):
-            return candidate
+        hosts = infer_brand_domain_hosts(str(name))
+        for host in hosts:
+            candidate = host[4:] if host.startswith("www.") else host
+            if is_trusted_outreach_domain(candidate):
+                return candidate
 
     return curated
 

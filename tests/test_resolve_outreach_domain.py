@@ -20,7 +20,20 @@ def test_resolve_from_website_domain_column():
     assert resolve_outreach_domain(company) == "acme.com"
 
 
-def test_resolve_from_brand_slug_when_no_website():
+def test_brand_slug_disabled_by_default(monkeypatch):
+    # Brand-slug inference fabricates domains that resolve but belong to someone else
+    # (the dominant bounce class). It is OFF by default — a name with no real website
+    # must not produce a domain.
+    monkeypatch.delenv("CAL_ALLOW_BRAND_SLUG_DOMAIN", raising=False)
+    company = MagicMock()
+    company.website = None
+    company.website_domain = None
+    company.name = "Marriott International"
+    assert resolve_outreach_domain(company) is None
+
+
+def test_brand_slug_opt_in_when_flag_enabled(monkeypatch):
+    monkeypatch.setenv("CAL_ALLOW_BRAND_SLUG_DOMAIN", "1")
     company = MagicMock()
     company.website = None
     company.website_domain = None
