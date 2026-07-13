@@ -121,6 +121,8 @@ export default function SpecialProjectsAdmin() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [forbidden, setForbidden] = useState(false);
+  const [denyStatus, setDenyStatus] = useState<number | null>(null);
+  const [authInfo, setAuthInfo] = useState<{ email?: string; is_admin?: boolean; uid?: string } | null>(null);
 
   // Create form
   const [newName, setNewName] = useState("");
@@ -168,7 +170,16 @@ export default function SpecialProjectsAdmin() {
       const res = await adminFetch("/api/admin/special-projects");
       if (res.status === 401 || res.status === 403) {
         setForbidden(true);
+        setDenyStatus(res.status);
         setProjects([]);
+        // Pull who the server thinks we are so the denial screen can explain *why*
+        // (wrong/empty email vs. not in ADMIN_EMAILS) instead of a silent block.
+        try {
+          const dbg = await adminFetch("/api/user/auth-debug");
+          if (dbg.ok) setAuthInfo(await dbg.json());
+        } catch {
+          /* diagnostic only — ignore */
+        }
         return;
       }
       if (!res.ok) throw new Error(`Failed to load (${res.status})`);
@@ -673,6 +684,8 @@ export default function SpecialProjectsAdmin() {
   }, [snapshot]);
 
   if (forbidden) {
+    const notSignedIn = denyStatus === 401 || !session;
+    const signedInEmail = authInfo?.email || "";
     return (
       <div className="min-h-screen bg-slate-50">
         <Header />
@@ -680,9 +693,52 @@ export default function SpecialProjectsAdmin() {
           <Shield className="mx-auto mb-4 h-10 w-10 text-slate-400" />
           <h1 className="text-xl font-semibold text-slate-900">Admin access required</h1>
           <p className="mt-2 text-slate-600">Special Projects is a private, admin-only workspace.</p>
-          <Link href="/admin" className="mt-6 inline-block text-sm font-medium text-indigo-600">
-            Back to Command Center
-          </Link>
+
+          <div className="mx-auto mt-6 max-w-md rounded-lg border border-slate-200 bg-white p-4 text-left text-sm">
+            {notSignedIn ? (
+              <p className="text-slate-600">
+                You don&apos;t appear to be signed in (no valid session token reached the server).
+                Sign in again, then reload this page.
+              </p>
+            ) : signedInEmail ? (
+              <p className="text-slate-600">
+                Signed in as{" "}
+                <span className="font-mono font-medium text-slate-900">{signedInEmail}</span>, but this
+                account is not in the <code className="rounded bg-slate-100 px-1">ADMIN_EMAILS</code>{" "}
+                allow-list. Add this exact address to <code className="rounded bg-slate-100 px-1">ADMIN_EMAILS</code>{" "}
+                (comma-separated) and redeploy, or sign in with an admin address.
+              </p>
+            ) : (
+              <p className="text-slate-600">
+                Your session reached the server but carried{" "}
+                <span className="font-medium text-slate-900">no email</span> — the admin check can&apos;t
+                match an empty address. Sign out and back in (or re-connect your OAuth provider) so the
+                token includes your email.
+              </p>
+            )}
+            <p className="mt-3 text-xs text-slate-400">
+              status {denyStatus ?? "—"}
+              {authInfo?.uid ? ` · uid ${authInfo.uid.slice(0, 8)}…` : ""}
+              {typeof authInfo?.is_admin === "boolean" ? ` · is_admin=${authInfo.is_admin}` : ""}
+            </p>
+          </div>
+
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <button
+              onClick={() => {
+                setForbidden(false);
+                setDenyStatus(null);
+                setAuthInfo(null);
+                void loadProjects();
+              }}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+            <Link href="/admin" className="text-sm font-medium text-indigo-600">
+              Back to Command Center
+            </Link>
+          </div>
         </div>
       </div>
     );

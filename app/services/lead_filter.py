@@ -1072,6 +1072,12 @@ _JUNK_EXACT = frozenset({
     # Location + facility stubs (not operating companies)
     "tampa plant", "tampa facility", "german facility", "german plant",
     "french facility", "japanese facility", "chinese facility",
+    # Lab / process technique nouns scraped from market-report headlines as a single
+    # word (e.g. "Nucleic Acid Isolation Market" → "Isolation"). Never a real buyer
+    # company name on their own — reported after one reached Cal's draft sample (Jul 2026).
+    "isolation", "extraction", "purification", "separation", "filtration",
+    "amplification", "detection", "sequencing", "titration", "centrifugation",
+    "chromatography", "reagents", "assay", "assays",
 })
 
 
