@@ -75,6 +75,7 @@ def main() -> int:
     from app.services.cal_outreach_send import enroll_cal_followup, parse_cal_draft, send_cal_intro_email
     from app.services.lead_enrichment import (
         _VERIFIED_EMAIL_SOURCES,
+        address_previously_bounced,
         outreach_recipient_trusted,
         resolve_outreach_email,
         verify_email_deliverable,
@@ -122,6 +123,11 @@ def main() -> int:
             trusted, why = outreach_recipient_trusted(c, a, to_email, source)
             if not trusted:
                 skipped += 1; print(f"  SKIP {a.name}: unverified ({why})"); continue
+            # Never re-attempt an address we've already bounced/suppressed. Resend blocks
+            # the actual send anyway, but re-queuing it wastes ZeroBounce credits and, for
+            # a soft/greylisted case, risks another reputation-damaging bounce.
+            if address_previously_bounced(db, to_email):
+                skipped += 1; print(f"  SKIP {a.name}: prior bounce/suppression ({to_email})"); continue
             ok, _r = verify_email_deliverable(to_email)
             if not ok:
                 skipped += 1; print(f"  SKIP {a.name}: undeliverable"); continue
