@@ -767,6 +767,10 @@ export default function Pipeline() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [rotationPool, setRotationPool] = useState<Deal[]>([]);
   const [rotateOffset, setRotateOffset] = useState(0);
+  // Once an anonymous visitor clicks a lead to read its outreach draft, freeze the
+  // 7s auto-rotation so we never yank the value-proof view out from under them
+  // mid-read (value_first_principle: read the full draft before signup).
+  const [rotationPaused, setRotationPaused] = useState(false);
   const [summary, setSummary] = useState<LeadSummary | null>(null);
   const [marketSnippet, setMarketSnippet] = useState<MarketSnippet>(DEFAULT_MARKET_SNIPPET);
   const [activations, setActivations] = useState<ScoutActivation[]>([]);
@@ -1348,7 +1352,7 @@ export default function Pipeline() {
   }, [listDeals, hasActiveSearch, serverSearchDeals, clientSearchMatches]);
 
   useEffect(() => {
-    if (hasActiveSearch || showKanban) return;
+    if (hasActiveSearch || showKanban || rotationPaused) return;
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
@@ -1358,11 +1362,11 @@ export default function Pipeline() {
       PIPELINE_LEAD_READ_MS,
     );
     return () => window.clearInterval(timer);
-  }, [hasActiveSearch, showKanban, rotationSource, pipelineSource.length, panelPlan, previewLimit]);
+  }, [hasActiveSearch, showKanban, rotationPaused, rotationSource, pipelineSource.length, panelPlan, previewLimit]);
 
   // Keep CRM detail panel in sync with the rotating spotlight lead.
   useEffect(() => {
-    if (hasActiveSearch || showKanban || deepLinkLeadId != null) return;
+    if (hasActiveSearch || showKanban || rotationPaused || deepLinkLeadId != null) return;
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
@@ -1391,6 +1395,13 @@ export default function Pipeline() {
       : (filtered[0]?.id ?? null);
   const selected = filtered.find((d) => d.id === effectiveSelectedId) ?? null;
   const selectedActivation = activations.find((a) => a.id === selectedActivationId) ?? activations[0] ?? null;
+
+  // Manual lead click = engagement. Pin the selection and stop auto-rotation so the
+  // visitor can finish reading the outreach draft before we ask them to sign up.
+  const selectLead = (id: number) => {
+    setRotationPaused(true);
+    setSelectedId(id);
+  };
 
   const moveStage = (id: number, direction: 1 | -1) => {
     let nextStage: Stage | null = null;
@@ -1887,6 +1898,18 @@ export default function Pipeline() {
                   leadCount={deals.length}
                   limit={entitlements?.pipeline_limit ?? previewLimit}
                 />
+              )}
+              {panelPlan === "anonymous" && rotationPaused && (
+                <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[11px] text-gray-500">
+                  <span>Rotation paused — read the full draft, then save it free.</span>
+                  <button
+                    type="button"
+                    onClick={() => setRotationPaused(false)}
+                    className="shrink-0 font-semibold text-emerald-700 hover:text-emerald-800"
+                  >
+                    Resume live ↻
+                  </button>
+                </div>
               )}
               {session?.access_token && savedLeadCount === 0 && selected && (
                 <div className={panelPlan === "anonymous" ? "mt-2" : "mt-0 mb-2"}>
@@ -2390,7 +2413,7 @@ export default function Pipeline() {
                           return (
                             <button
                               key={deal.id}
-                              onClick={() => setSelectedId(deal.id)}
+                              onClick={() => selectLead(deal.id)}
                               className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${dealRowSurface(isSelected)}`}
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
@@ -2478,7 +2501,7 @@ export default function Pipeline() {
                             <button
                               key={deal.id}
                               type="button"
-                              onClick={() => setSelectedId(deal.id)}
+                              onClick={() => selectLead(deal.id)}
                               className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${dealRowSurface(isSelected)}`}
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
