@@ -266,6 +266,14 @@ def pick_cal_insight(
     pool = [i for i in _INSIGHTS if allow_humor or not i.humor]
     if audience == "buyer":
         pool = [i for i in pool if not i.vendor_only]
+    # Never inject StageGate show-logistics copy into Ready For Robots emails.
+    from app.services.brand import STAGEGATE_CONTENT_MARKERS
+
+    pool = [
+        i
+        for i in pool
+        if not any(marker in i.text.lower() for marker in STAGEGATE_CONTENT_MARKERS)
+    ]
 
     show_matches = [i for i in pool if show and i.show_key == show]
     robot_matches = [

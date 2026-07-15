@@ -307,6 +307,13 @@ def _admin_team(db: Session, uid: uuid.UUID, email: str) -> Team:
     return team
 
 
+def _skip_stagegate_for_rfr_admin(company: Company) -> bool:
+    """StageGate OEM/show-ops accounts belong on onstage.bot — never in RFR Cal admin."""
+    from app.services.brand import is_stagegate_branded
+
+    return is_stagegate_branded(company)
+
+
 def _hot_warm_companies_fast(db: Session, limit: int = 300) -> list[tuple[Company, float, str]]:
     """Score-threshold HOT/WARM list — no per-lead classify (fast for admin dashboard)."""
     rows = (
@@ -320,9 +327,13 @@ def _hot_warm_companies_fast(db: Session, limit: int = 300) -> list[tuple[Compan
     )
     out: list[tuple[Company, float, str]] = []
     for company, score in rows:
+        if _skip_stagegate_for_rfr_admin(company):
+            continue
         s = float(score.overall_intent_score or 0)
         tier = "HOT" if s >= 75 else "WARM"
         out.append((company, s, tier))
+        if len(out) >= limit:
+            break
     return out
 
 
@@ -344,6 +355,8 @@ def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, fl
     )
     out: list[tuple[Company, float, str]] = []
     for company, score in rows:
+        if _skip_stagegate_for_rfr_admin(company):
+            continue
         junk, _, pri = classify_lead(company, score, company.signals)
         if junk or pri.tier not in ("HOT", "WARM"):
             continue
@@ -380,11 +393,13 @@ def _cal_draft_for_company(
     For buyers, `variant_id` selects the trust-first angle. When omitted it is
     resolved deterministically from the company id so drafts are reproducible.
     """
-    from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
+    from app.services.brand import is_stagegate_branded
 
-    if is_stagegate_company(company):
-        draft = cal_draft_for_stagegate_company(company)
-        return draft["subject"], draft["body"]
+    if is_stagegate_branded(company):
+        raise ValueError(
+            "StageGate accounts are isolated from Ready For Robots Cal admin — "
+            "work them on onstage.bot, not readyforrobots.com/admin."
+        )
 
     from app.api.crm import _draft_subject
     from app.models.crm import CrmAccount as _Acct
@@ -547,26 +562,40 @@ def cal_draft_body(
     if not acct:
         raise HTTPException(status_code=404, detail="CRM account not found")
 
+    company = (
+        db.query(Company).filter(Company.id == acct.company_id).first()
+        if acct.company_id
+        else None
+    )
+    from app.services.brand import is_stagegate_branded
+
+    if is_stagegate_branded(company, acct):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "This is a StageGate (onstage.bot) account — not part of Ready For Robots "
+                "buyer outreach. Work StageGate OEM leads on onstage.bot."
+            ),
+        )
+
     legacy_repaired = False
     needs, _ = draft_needs_regeneration(
         acct.outreach_draft,
         account_type=getattr(acct, "account_type", None) or "buyer",
     )
-    if needs and acct.company_id:
-        company = db.query(Company).filter(Company.id == acct.company_id).first()
-        if company:
-            from app.services.agent_messaging import pick_buyer_variant, resolve_buyer_variant
-            from app.services.cal_autonomy import format_cal_draft_storage
+    if needs and company:
+        from app.services.agent_messaging import pick_buyer_variant, resolve_buyer_variant
+        from app.services.cal_autonomy import format_cal_draft_storage
 
-            variant_id = resolve_buyer_variant(company, acct)
-            if variant_id is None and (getattr(acct, "account_type", None) or "buyer") == "buyer":
-                variant_id = pick_buyer_variant(company.id)
-            subject, draft_body = _cal_draft_for_company(
-                company, fresh=True, variant_id=variant_id
-            )
-            acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
-            db.commit()
-            legacy_repaired = True
+        variant_id = resolve_buyer_variant(company, acct)
+        if variant_id is None and (getattr(acct, "account_type", None) or "buyer") == "buyer":
+            variant_id = pick_buyer_variant(company.id)
+        subject, draft_body = _cal_draft_for_company(
+            company, fresh=True, variant_id=variant_id
+        )
+        acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
+        db.commit()
+        legacy_repaired = True
 
     return {
         "crm_account_id": str(acct.id),
@@ -912,6 +941,9 @@ def cal_bulk_draft(
 
     for company, score, tier in companies:
         if body.company_ids is not None and company.id not in body.company_ids:
+            continue
+        if _skip_stagegate_for_rfr_admin(company):
+            skipped += 1
             continue
         try:
             acct = existing.get(company.id)
@@ -1554,6 +1586,10 @@ def cal_bulk_send(
         if sent_count >= body.limit:
             break
         if body.tier_filter != "all" and tier != body.tier_filter:
+            continue
+
+        if _skip_stagegate_for_rfr_admin(company):
+            skipped_no_draft += 1
             continue
 
         acct = accounts.get(company.id)

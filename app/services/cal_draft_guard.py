@@ -91,13 +91,17 @@ def is_legacy_cal_draft(draft: str | None) -> bool:
 
 def draft_needs_regeneration(draft: str | None, *, account_type: str = "buyer") -> tuple[bool, str]:
     """Detect truncated previews, template mismatches, or legacy Cal voice."""
+    from app.services.brand import BRAND_STAGEGATE, content_brand
+
     if is_legacy_cal_draft(draft):
         return True, "Legacy Cal voice — redrafting with current templates"
+    at = (account_type or "buyer").lower()
+    if at == "buyer" and content_brand(draft) == BRAND_STAGEGATE:
+        return True, "Buyer account has StageGate-branded draft — regenerating"
     ok, reason = is_complete_cal_draft(draft)
     if not ok:
         return True, reason
     low = (draft or "").lower()
-    at = (account_type or "buyer").lower()
     if at == "buyer" and any(p in low for p in _WRONG_BUYER_PHRASES):
         return True, "Buyer account has vendor-facing draft — regenerating"
     if at == "vendor" and any(p in low for p in _WRONG_VENDOR_PHRASES) and "buyer lead" not in low:

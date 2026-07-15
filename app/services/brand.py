@@ -70,6 +70,11 @@ def sender_brand(from_email: Optional[str]) -> Optional[str]:
     return None
 
 
+def is_stagegate_branded(company: Any = None, acct: Any = None) -> bool:
+    """True when this company/account belongs to the StageGate pipeline."""
+    return company_brand(company, acct) == BRAND_STAGEGATE
+
+
 def company_brand(company: Any = None, acct: Any = None) -> str:
     """Brand a company/CRM account belongs to. Defaults to Ready For Robots."""
     for obj in (acct, company):

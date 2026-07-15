@@ -124,7 +124,18 @@ def is_stagegate_company(company: Company) -> bool:
     return meta.get("outreach_pipeline") == OUTREACH_PIPELINE
 
 
-def _upsert_company(db: Session, rc: RobotCompany) -> Company:
+def _existing_company_is_rfr_buyer(company: Company) -> bool:
+    """True when a companies row is a buyer lead — must never receive StageGate metadata."""
+    meta = company.crm_metadata if isinstance(company.crm_metadata, dict) else {}
+    if meta.get("outreach_pipeline") == OUTREACH_PIPELINE:
+        return False
+    source = (company.source or "").strip().lower()
+    if source.startswith("stagegate"):
+        return False
+    return True
+
+
+def _upsert_company(db: Session, rc: RobotCompany) -> Optional[Company]:
     mi = rc.market_intelligence if isinstance(rc.market_intelligence, dict) else {}
     linked_id = mi.get("crm_company_id")
 
@@ -133,6 +144,14 @@ def _upsert_company(db: Session, rc: RobotCompany) -> Company:
         company = db.query(Company).filter(Company.id == int(linked_id)).first()
     if not company:
         company = db.query(Company).filter(Company.name.ilike(rc.company_name)).first()
+
+    if company and _existing_company_is_rfr_buyer(company):
+        logger.warning(
+            "StageGate bridge skipped: %r collides with RFR buyer company id=%s",
+            rc.company_name,
+            company.id,
+        )
+        return None
 
     frame = _semantic_frame_dict(rc)
     summary = mi.get("semantic_summary")
@@ -270,6 +289,8 @@ def sync_robot_company_to_crm(
         return {"synced": False, "reason": "below_warm_threshold", "intent": intent}
 
     company = _upsert_company(db, rc)
+    if company is None:
+        return {"synced": False, "reason": "buyer_name_collision", "intent": intent}
     score = _upsert_score(db, company, rc)
     acct = _upsert_crm_account(db, company, rc, refresh_draft=refresh_draft)
     _link_robot_company(rc, company, acct)
