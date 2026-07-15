@@ -1438,7 +1438,7 @@ export default function Admin() {
           <div>
             <h1 className="text-lg font-extrabold text-gray-900">Command center</h1>
             <p className="mt-0.5 text-[11px] text-gray-600">
-              Daily brief → Cal queue (draft · fix emails · send) → agent queue below
+              Cal · Ready For Robots · deployment advisor — buyers, OEMs, integrators
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">

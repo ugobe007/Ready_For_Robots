@@ -1,19 +1,26 @@
 """
-Brand isolation — Cal serves two separate businesses from one codebase:
+Brand isolation — Cal works for two businesses from one codebase.
 
-  * ``ready_for_robots`` — readyforrobots.com buyer-match / vendor-signup outreach
-  * ``stagegate``        — onstage.bot trade-show logistics (bonded warehousing,
-                            staging, on-site show support)
+Same person, two jobs (voice + sending identity must match):
 
-These must NEVER cross. Cal may work either brand, but a message written in one
-brand's voice must only ever be sent from that brand's sending identity, and the
-Ready For Robots buyer loop must never read/act on StageGate accounts (and vice
-versa). This module is the single source of truth for detecting brand from
-content, from a sender address, and from a company/CRM account.
+  * ``ready_for_robots`` (readyforrobots.com)
+      - Robot OEMs (vendor / buyer-match track)
+      - Companies looking for robots (buyers)
+      - Robot integrators — including StageGate the company
+      - Voice: vendor-neutral deployment advisor (Ready For Robots)
 
-Root cause this guards against: Cal, running in Ready For Robots mode, drafted
-and sent "Cal with StageGate · onstage.bot" logistics copy to robot OEMs from
-readyforrobots.com (a policy violation).
+  * ``stagegate`` (onstage.bot)
+      - Robot OEMs exhibiting at trade shows
+      - Event / tradeshow companies that use robots (e.g. Scarlett Entertainment,
+        George P Johnson, exhibit houses, show producers)
+      - Voice: show logistics — warehousing, staging, pre-floor checks, on-site demo support
+
+These pipelines must never cross *voice or sender*: show-logistics copy only from
+onstage.bot; deployment-advisor copy only from readyforrobots.com. Isolation is
+by pipeline metadata and message content — not by company name (StageGate as an
+integrator is a normal Ready For Robots prospect).
+
+This module detects brand from content, sender domain, and CRM pipeline tags.
 """
 from __future__ import annotations
 

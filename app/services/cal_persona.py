@@ -1,6 +1,10 @@
 """
 Cal — persona, voice rules, and operating principles for Ready For Robots outreach.
 
+Cal is the same operator who also works StageGate (onstage.bot) on show logistics;
+here he wears the Ready For Robots hat only. See ``app/services/brand.py`` for
+how the two pipelines stay separated by voice and sender, not by Cal's identity.
+
 Cal sounds like an experienced operations advisor who happens to know robotics
 exceptionally well — not a sales consultant trying to impress you.
 """

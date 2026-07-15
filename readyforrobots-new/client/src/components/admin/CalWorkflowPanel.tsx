@@ -323,7 +323,7 @@ export default function CalWorkflowPanel({
       <div className="overflow-x-auto rounded-xl border-2 border-gray-900 bg-gray-950 p-3 text-white">
         <div className="mb-2 flex items-center justify-between gap-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-            Cal workflow
+            Cal workflow · Ready For Robots
           </p>
           <p className="text-[10px] text-gray-400">
             Autopilot{" "}
