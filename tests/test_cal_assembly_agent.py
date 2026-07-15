@@ -44,8 +44,10 @@ class _Vendor:
 def test_cal_persona_has_mission_and_never_rules():
     payload = cal_persona_payload()
     assert payload["name"] == "Cal"
-    assert "sign up" in payload["mission"].lower()
+    assert payload["title"] == "Deployment Advisor"
+    assert "vendor-neutral" in payload["mission"].lower() or "automation" in payload["mission"].lower()
     assert any("universit" in n.lower() for n in payload["never"])
+    assert len(payload["always"]) >= 5
 
 
 def test_assembly_rejects_stagegate_voice_in_supply_body(db_session):

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import re
 
+from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_signature
+
 # ── Cal voice: veteran sherpa for robot companies ─────────────────────────────
 # Wise, abbreviated, in-the-know. Engineer-led teams, PoC → deployment reality.
 # Honesty and trust over hype. Draws on deep robotics industry experience.
@@ -115,10 +117,6 @@ def buyer_company_hook(name: str, *, industry: str = "your industry") -> str:
         f"or hard to staff, and a focused pilot starts to look smarter than hiring against it. Knowing "
         f"which robot actually fits is where I come in."
     )
-
-
-def cal_signature() -> str:
-    return "— Cal\nReady For Robots"
 
 
 def max_signature() -> str:
@@ -508,78 +506,126 @@ def resolve_buyer_variant(company, acct=None) -> str | None:
     return pick_buyer_variant(getattr(company, "id", None))
 
 
+def _exploration_question(name: str, industry: str) -> str:
+    """One low-commitment question tailored to sector — never a meeting ask."""
+    n = (name or "your team").strip()
+    low = (industry or "").lower()
+    if any(k in low for k in ("logistic", "warehous", "supply", "3pl", "distribution", "fulfil")):
+        return (
+            f"Is warehouse automation something {n} is actively exploring, "
+            "or are you still deciding where it might fit?"
+        )
+    if any(k in low for k in ("hospitality", "hotel", "casino", "resort", "gaming")):
+        return (
+            f"Is service robotics on the table at {n} right now, "
+            'or still in the "figuring out where it helps" stage?'
+        )
+    if any(k in low for k in ("health", "medical", "hospital", "clinic")):
+        return (
+            f"Is internal transport or delivery automation on {n}'s radar, "
+            "or are you still mapping where it would actually help?"
+        )
+    if any(k in low for k in ("food", "restaurant", "kitchen", "grocery")):
+        return (
+            f"Is back-of-house automation something {n} is weighing, "
+            "or still deciding which workflow would be worth testing first?"
+        )
+    if any(k in low for k in ("manufactur", "factory", "automotive", "industrial")):
+        return (
+            f"Is line-side automation something {n} is actively exploring, "
+            "or still deciding where a robot would earn its keep?"
+        )
+    return (
+        f"Is automation something {n} is actively exploring, "
+        "or still deciding where it might fit?"
+    )
+
+
 def _variant_workflow_first(name: str, industry: str) -> str:
-    """Flagship teach: most projects automate the wrong workflow first."""
+    """Which workflow vs which robot — Cal's flagship observation."""
     sector = _buyer_sector(industry)
     ins = _buyer_insight(industry)
+    sector_note = ""
+    if sector != "your line of work":
+        sector_note = (
+            f"\n\nIn {sector}, the hours often hide in {ins['hidden']} — "
+            f"not the {ins['glam'].lower()} everyone demos first."
+        )
     return "\n".join([
         "Hi,",
         "",
-        "I spend my days looking at where robot deployments actually work — and where they quietly fall apart.",
+        'One thing I\'ve learned: most teams start a robotics evaluation by asking, '
+        '"Which robot should we buy?"',
         "",
-        f"One pattern keeps showing up in {sector}.",
+        "I usually ask a different question first:",
         "",
-        "Most projects don't struggle because the robot can't do the job. They struggle because the wrong "
-        "workflow got automated first.",
+        f"Which workflow is costing {name} the most time every day?",
         "",
-        f"{ins['glam']} gets all the attention. Meanwhile {ins['hidden']} quietly consume thousands of "
-        f"labor hours a month. That's usually where I'd start with {name}.",
+        "Until that's clear, comparing vendors isn't very useful.",
         "",
-        "Ready For Robots isn't tied to any manufacturer. We spend our time working out where automation "
-        "creates real ROI — and, just as often, where the answer is \"not yet.\"",
+        "I've seen strong robots struggle because they were solving the wrong problem. "
+        "I've also seen fairly simple automation deliver a solid return when it was "
+        "applied to the right workflow.",
+        sector_note,
         "",
-        f"If robotics is on the roadmap at {name} this year, I'll share what we're seeing across the "
-        "market. No presentation, just a practical conversation.",
+        f"{CAL_ORG} is vendor-neutral. My job isn't to recommend a particular robot — "
+        "it's to help teams figure out where automation will actually make a difference.",
+        "",
+        _exploration_question(name, industry),
         "",
         cal_signature(),
     ])
 
 
 def _variant_what_survives(name: str, industry: str) -> str:
-    """Pattern-recognition teach: which deployments are still running at 6 months."""
-    sector = _buyer_sector(industry)
+    """Specific field observation: what is still running six months in."""
     ins = _buyer_insight(industry)
     return "\n".join([
         "Hi,",
         "",
-        "Part of my job surprises people: I don't track which robots demo well. I track which ones are "
-        "still running six months after install.",
-        "",
-        f"In {sector}, that list is shorter than the sales decks suggest.",
+        "Something I notice on site visits: six months after install, you can usually tell "
+        "which deployments were aimed at a real bottleneck and which were bought for the demo.",
         "",
         ins["opinion"],
         "",
-        "What decides it usually isn't the hardware — it's integration, the software layer, and whether the "
-        "robot was aimed at the right job in the first place. We're vendor-neutral, so I care about fit, not "
-        "about moving any particular box. Sometimes the right call is \"not yet.\"",
+        "The ones that last almost never won on spec-sheet speed. They won because someone "
+        "named the workflow first — integration, software, and staffing included — before "
+        "anyone picked hardware.",
         "",
-        f"If {name} is weighing robotics this year, I'll tell you what's actually holding up in the field — "
-        "and what I'd stay away from. No pitch.",
+        f"{CAL_ORG} is vendor-neutral. I don't get paid to move a particular box; I help "
+        f"teams like {name} avoid automating the wrong job.",
+        "",
+        _exploration_question(name, industry),
         "",
         cal_signature(),
     ])
 
 
 def _variant_bottleneck_first(name: str, industry: str) -> str:
-    """Opinionated + curious: start with the bottleneck, not the robot."""
-    sector = _buyer_sector(industry)
+    """Start with the bottleneck — one practical lesson, one question."""
     ins = _buyer_insight(industry)
+    sector = _buyer_sector(industry)
+    hidden = ins["hidden"]
+    glam = ins["glam"].lower()
     return "\n".join([
         "Hi,",
         "",
-        f"A question I'd ask before {name} looks at a single robot: which job is actually eating your hours "
-        "right now?",
+        f"Before {name} compares robot vendors, I ask operators one question:",
         "",
-        f"Most teams start with the coolest machine. I start with the bottleneck — because in {sector} the "
-        f"hours usually disappear into {ins['hidden'].lower()}, not {ins['glam'].lower()}.",
+        "Where do the hours actually go?",
+        "",
+        f"In {sector}, the answer is usually {hidden} — not {glam}. "
+        "Most bake-offs start with the visible task anyway.",
         "",
         ins["opinion"],
         "",
-        "I'm not tied to any manufacturer. My job is helping teams avoid buying the wrong robot — and "
-        "sometimes that means \"not yet.\"",
+        "Sometimes the right answer is a process fix, not a robot. Sometimes it is a robot — "
+        "but only once the bottleneck is named.",
         "",
-        "If it's worth a short exchange, tell me where the hours go and I'll tell you whether a robot is "
-        "even the right answer.",
+        f"I'm vendor-neutral. If {name} tells me where time disappears, I can say whether "
+        "automation is even the right tool — no pitch attached.",
+        "",
+        _exploration_question(name, industry),
         "",
         cal_signature(),
     ])

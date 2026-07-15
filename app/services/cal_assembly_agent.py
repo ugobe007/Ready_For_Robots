@@ -327,6 +327,12 @@ def assemble_buyer_outreach(
         if marker in body_low:
             issues.append(f"Wrong product voice: {marker}")
 
+    from app.services.cal_persona import CAL_BANNED_PHRASES
+
+    for phrase in CAL_BANNED_PHRASES:
+        if phrase in body_low:
+            issues.append(f"Cal voice violation: {phrase}")
+
     from app.services.robot_vendor_names import is_known_robotics_vendor_name
 
     if is_known_robotics_vendor_name(company_name):

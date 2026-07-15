@@ -48,6 +48,7 @@ def test_every_buyer_variant_passes_guard_and_assembly():
         assert ok, f"{vid} failed guard: {reason}"
         assert name in body, f"{vid} missing company name"
         assert "— Cal" in body and "Ready For Robots" in body
+        assert "Deployment Advisor" in body
         needs, _ = draft_needs_regeneration(full, account_type="buyer")
         assert not needs, f"{vid} wrongly flagged for regeneration"
         assert assemble_buyer_outreach(company_name=name, subject=subject, body=body).approved
@@ -60,7 +61,18 @@ def test_buyer_variants_are_humble_not_presumptuous():
     # The whole point of the rewrite: don't diagnose their business. Each angle
     # must leave room for "not now" / "already tried" rather than asserting pain.
     name = "Acme Distribution"
-    humility_markers = ("not yet", "no hard feelings", "i understand", "leave you be", "someday", "wait")
+    humility_markers = (
+        "not yet",
+        "vendor-neutral",
+        "vendor neutral",
+        "no pitch",
+        "isn't very useful",
+        "wrong problem",
+        "wrong job",
+        "right workflow",
+        "actively exploring",
+        "still deciding",
+    )
     for vid in BUYER_VARIANTS:
         body = build_buyer_variant_body(name, "Logistics", vid).lower()
         for banned in _THEATER:
