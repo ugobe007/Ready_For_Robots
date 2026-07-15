@@ -35,8 +35,12 @@ export type DailyBriefData = {
 
 type CalActions = {
   pendingDraft?: number;
+  unsentDrafted?: number;
   sendable?: number;
+  noEmail?: number;
   onDraftAll?: () => void;
+  onRedraft?: () => void;
+  onFixEmails?: () => void;
   onSendAll?: () => void;
   onOpenQueue?: () => void;
   draftBusy?: boolean;
@@ -86,7 +90,8 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
   const calTotal = m?.cal_queue_total ?? 0;
   const calPending = calActions?.pendingDraft ?? m?.cal_queue_pending ?? 0;
   const calSendable = calActions?.sendable ?? m?.sendable ?? 0;
-  const calUnsent = m?.unsent_drafted ?? 0;
+  const calUnsent = calActions?.unsentDrafted ?? m?.unsent_drafted ?? 0;
+  const calNoEmail = calActions?.noEmail ?? 0;
 
   const openQueue = calActions?.onOpenQueue ?? (() => scrollToAdminSection("cal-outreach"));
 
@@ -105,7 +110,7 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
   };
 
   return (
-    <div className="mb-4 rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white px-5 py-5 shadow-sm">
+    <div className="mb-4 rounded-xl border-2 border-gray-300 bg-white px-5 py-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
         <Sun size={16} className="text-amber-600" />
         <div>
@@ -123,13 +128,35 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
             <div className="text-sm leading-relaxed text-gray-800">
               {(() => {
                 const items: Array<{ rank: number; key: string; node: React.ReactNode }> = [];
+                if ((calNoEmail ?? 0) > 0 && calActions?.onFixEmails) {
+                  items.push({
+                    rank: 1,
+                    key: "cal-fix",
+                    node: (
+                      <SupabaseInlineLink tone="amber" onClick={calActions.onFixEmails}>
+                        Fix {calNoEmail} Cal contact emails
+                      </SupabaseInlineLink>
+                    ),
+                  });
+                }
                 if ((calPending ?? 0) > 0 && calActions?.onDraftAll) {
                   items.push({
-                    rank: 3,
+                    rank: 2,
                     key: "cal-draft",
                     node: (
                       <SupabaseInlineLink onClick={calActions.onDraftAll} busy={calActions.draftBusy}>
                         Draft {calPending} Cal leads
+                      </SupabaseInlineLink>
+                    ),
+                  });
+                }
+                if ((calUnsent ?? 0) > 0 && calActions?.onRedraft) {
+                  items.push({
+                    rank: 3,
+                    key: "cal-redraft",
+                    node: (
+                      <SupabaseInlineLink tone="amber" onClick={calActions.onRedraft} busy={calActions.draftBusy}>
+                        Redraft {calUnsent} unsent
                       </SupabaseInlineLink>
                     ),
                   });
@@ -140,7 +167,7 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                     key: "cal-open",
                     node: (
                       <SupabaseInlineLink tone="blue" onClick={openQueue}>
-                        Open Cal queue
+                        Review Cal queue
                       </SupabaseInlineLink>
                     ),
                   });
@@ -182,16 +209,16 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
           </div>
 
           <div className="text-sm text-gray-700">
-            <span className="font-medium text-gray-900">Cal outreach (HOT/WARM):</span>{" "}
-            {calTotal} in queue · {calPending} need drafting · {calUnsent} drafted unsent · {calSendable} ready to send
+            <span className="font-semibold text-gray-950">Cal queue:</span>{" "}
+            {calTotal} leads · {calPending} need draft · {calUnsent} unsent · {calSendable} sendable
             {(m?.scout_drafted ?? 0) > 0 ? (
-              <span className="text-gray-600"> · SIGNAL: {m?.scout_drafted} drafts (separate)</span>
+              <span className="text-gray-600"> · SIGNAL drafts separate ({m?.scout_drafted})</span>
             ) : null}
             {calTotal > 0 ? (
               <>
                 <span className="text-gray-400"> · </span>
                 <SupabaseInlineLink tone="gray" onClick={openQueue}>
-                  jump to queue
+                  jump to workflow
                 </SupabaseInlineLink>
               </>
             ) : null}

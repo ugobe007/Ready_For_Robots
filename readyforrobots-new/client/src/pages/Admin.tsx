@@ -6,7 +6,10 @@ import CalEmailPreview from "@/components/admin/CalEmailPreview";
 import SupabaseInlineLink from "@/components/admin/SupabaseInlineLink";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
-import CalWorkflowPanel, { type CalWorkflowMetrics } from "@/components/admin/CalWorkflowPanel";
+import CalWorkflowPanel, {
+  type CalWorkflowMetrics,
+  type CalWorkflowStepId,
+} from "@/components/admin/CalWorkflowPanel";
 import CalLearningPanel from "@/components/admin/CalLearningPanel";
 import SiteMetricsPanel from "@/components/admin/SiteMetricsPanel";
 import { useAuth } from "@/contexts/AuthContext";
@@ -413,7 +416,10 @@ export default function Admin() {
   const [calStatus, setCalStatus] = useState<CalDraftStatus | null>(initialApplied.calStatus as CalDraftStatus | null);
   const [calExpanded, setCalExpanded] = useState<number | null>(null);
   const [calSelectedIdx, setCalSelectedIdx] = useState<number | null>(null);
-  const [calFilter, setCalFilter] = useState<"all" | "pending" | "drafted" | "sent">("all");
+  const [calFilter, setCalFilter] = useState<
+    "all" | "pending" | "drafted" | "sendable" | "no_email" | "sent"
+  >("all");
+  const [calWorkflowStep, setCalWorkflowStep] = useState<CalWorkflowStepId | null>(null);
   const [calStatusError, setCalStatusError] = useState("");
   const [calStatusLoading, setCalStatusLoading] = useState(false);
   const [bulkSendSkipVerify, setBulkSendSkipVerify] = useState(false);
@@ -1302,6 +1308,12 @@ export default function Admin() {
     return rows.filter((p) => {
       if (calFilter === "pending") return !p.has_draft;
       if (calFilter === "drafted") return p.has_draft && !p.outreach_sent_at;
+      if (calFilter === "sendable") {
+        return p.has_draft && !p.outreach_sent_at && !!p.contact_email?.trim();
+      }
+      if (calFilter === "no_email") {
+        return p.has_draft && !p.outreach_sent_at && !p.contact_email?.trim();
+      }
       if (calFilter === "sent") return !!p.outreach_sent_at;
       return true;
     });
@@ -1315,6 +1327,20 @@ export default function Admin() {
 
   const scrollToCalQueue = useCallback(() => {
     scrollToAdminSection("cal-outreach");
+  }, []);
+
+  const focusCalWorkflowStep = useCallback((step: CalWorkflowStepId) => {
+    setCalWorkflowStep(step);
+    const filterByStep: Record<CalWorkflowStepId, typeof calFilter> = {
+      fix_contacts: "no_email",
+      draft: "pending",
+      redraft: "drafted",
+      review: "drafted",
+      send: "sendable",
+      follow_up: "sent",
+    };
+    setCalFilter(filterByStep[step]);
+    scrollToAdminSection("cal-queue-list");
   }, []);
 
   useEffect(() => {
@@ -1461,11 +1487,21 @@ export default function Admin() {
           loading={dailyBriefLoading}
           calActions={{
             pendingDraft: calMetrics.pending_draft,
+            unsentDrafted: calMetrics.unsent_drafted ?? calMetrics.drafted,
             sendable: calMetrics.sendable,
+            noEmail: calMetrics.no_email,
             onOpenQueue: scrollToCalQueue,
             onDraftAll: () => {
               scrollToCalQueue();
               void runCalBulkDraft(false);
+            },
+            onRedraft: () => {
+              scrollToCalQueue();
+              void runCalBulkDraft(true);
+            },
+            onFixEmails: () => {
+              scrollToCalQueue();
+              void runCalFixEmails();
             },
             onSendAll: () => {
               scrollToCalQueue();
@@ -1513,19 +1549,16 @@ export default function Admin() {
                 </SupabaseInlineLink>
               ) : null}
               <span className="text-xs text-gray-600">
-                Filter:{" "}
-                {(["all", "pending", "drafted", "sent"] as const).map((f, i) => (
-                  <span key={f}>
-                    {i > 0 ? <span className="text-gray-400"> · </span> : null}
-                    <SupabaseInlineLink
-                      tone={calFilter === f ? "emerald" : "gray"}
-                      onClick={() => setCalFilter(f)}
-                    >
-                      {f}
+                {calFilter !== "all" ? (
+                  <>
+                    Showing <strong className="text-gray-900">{calFilter.replace(/_/g, " ")}</strong>
+                    <span className="text-gray-400"> · </span>
+                    <SupabaseInlineLink tone="gray" onClick={() => { setCalFilter("all"); setCalWorkflowStep(null); }}>
+                      Clear filter
                     </SupabaseInlineLink>
-                  </span>
-                ))}
-                <span className="text-gray-400"> · </span>
+                    <span className="text-gray-400"> · </span>
+                  </>
+                ) : null}
                 <SupabaseInlineLink tone="gray" onClick={() => void refreshOperatorView()} busy={calStatusLoading}>
                   Refresh queue
                 </SupabaseInlineLink>
@@ -1548,16 +1581,18 @@ export default function Admin() {
           <CalWorkflowPanel
             metrics={calMetrics as CalWorkflowMetrics}
             autopilotEnabled={calAutonomy?.enabled}
+            activeStep={calWorkflowStep}
             busy={actionBusy}
             onDraftAll={() => void runCalBulkDraft(false)}
-            onRegenerate={() => void runCalBulkDraft(true)}
+            onRedraft={() => void runCalBulkDraft(true)}
             onFixEmails={() => void runCalFixEmails()}
             onReinfer={() => void runCalReinferContacts()}
-            onReview={() => scrollToAdminSection("cal-queue-list")}
+            onReview={() => focusCalWorkflowStep("review")}
             onSendAll={() => setSendConfirm("bulk")}
             onRunCal={() => void runCalAutonomy(false)}
             onOpenReplies={() => setLocation("/inbox")}
             onTestDelivery={() => void runCalDiagnostic()}
+            onStepFocus={focusCalWorkflowStep}
           />
 
           {/* ── Bulk-send confirm modal ── */}
@@ -1595,52 +1630,13 @@ export default function Admin() {
             </div>
           )}
 
-          <div className="mb-4 grid grid-cols-3 gap-2 md:grid-cols-8">
-            <AdminCard
-              label="Total"
-              value={formatNumber(calMetrics.total)}
-              sub={`${formatNumber(calMetrics.hot)} hot · ${formatNumber(calMetrics.warm)} warm`}
-              active={calFilter === "all"}
-              onClick={() => { setCalFilter("all"); scrollToAdminSection("cal-queue-list"); }}
-            />
-            <AdminCard label="Buyers" value={formatNumber(calBuyerCount)} sub="HOT/WARM" />
-            <AdminCard label="Vendors" value={formatNumber(calVendorCount)} sub="HOT/WARM" />
-            <AdminCard
-              label="Drafted"
-              value={formatNumber(calMetrics.drafted)}
-              sub={`${formatNumber(calMetrics.unsent_drafted)} unsent`}
-              active={calFilter === "drafted"}
-              onClick={() => { setCalFilter("drafted"); scrollToAdminSection("cal-queue-list"); }}
-            />
-            <AdminCard
-              label="Pending"
-              value={formatNumber(calMetrics.pending_draft)}
-              sub="need draft"
-              active={calFilter === "pending"}
-              onClick={() => { setCalFilter("pending"); scrollToAdminSection("cal-queue-list"); }}
-            />
-            <AdminCard
-              label="Sent"
-              value={formatNumber(calMetrics.sent)}
-              sub="delivered"
-              active={calFilter === "sent"}
-              onClick={() => { setCalFilter("sent"); scrollToAdminSection("cal-queue-list"); }}
-            />
-            <AdminCard label="Opened" value={formatNumber(calMetrics.opened)} sub="engagement" />
-            <AdminCard
-              label="Replied"
-              value={formatNumber(calMetrics.replied)}
-              sub="to Cal · open inbox"
-              onClick={() => setLocation("/inbox")}
-            />
-          </div>
-
           <CalLearningPanel adminFetch={adminFetch} />
 
-          <p className="mb-3 text-[11px] text-gray-500">
-            Trust-first angles (auto-rotated per lead). Old drafts keep their saved copy until you
-            press <strong>Regenerate (new angle)</strong> on a lead — or <strong>Regenerate</strong> in
-            Step 1 to refresh the whole queue. Select a lead on the left to preview/edit on the right.
+          <p className="mb-3 text-[11px] text-gray-600">
+            <strong className="text-gray-800">{formatNumber(calMetrics.total)}</strong> HOT/WARM leads
+            ({formatNumber(calBuyerCount)} buyers · {formatNumber(calVendorCount)} vendors).
+            Use the workflow above — each step shows one count and one action.
+            Select a lead below to preview or edit Cal&apos;s draft.
           </p>
 
           {/* Queue list + CRM sample panel */}
@@ -1791,7 +1787,7 @@ export default function Admin() {
                               }
                               busy={actionBusy === "cal-save"}
                             >
-                              Regenerate (new angle)
+                              Redraft (new angle)
                             </SupabaseInlineLink>
                             {!calSelectedProspect.outreach_sent_at ? (
                               <>
