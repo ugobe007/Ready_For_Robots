@@ -6,7 +6,7 @@ from app.services.agent_messaging import (
 )
 from app.services.cal_assembly_agent import assemble_buyer_outreach
 from app.services.cal_autonomy import cal_buyer_outreach_body
-from app.services.cal_draft_guard import draft_needs_regeneration, is_complete_cal_draft, parse_cal_draft_or_raise
+from app.services.cal_draft_guard import draft_needs_regeneration, is_complete_cal_draft, is_legacy_cal_draft, parse_cal_draft_or_raise
 
 _THEATER = (
     "innovation theater",
@@ -99,6 +99,28 @@ def test_cal_buyer_outreach_body_respects_explicit_variant():
         assert body == build_buyer_variant_body("Globex Logistics", "Logistics", vid)
 
 
+def test_legacy_ups_what_survives_draft():
+    legacy = """Subject: the logistics robots still running six months in
+
+Hi,
+
+Part of my job surprises people: I don't track which robots demo well. I track which ones are still running six months after install.
+
+— Cal
+Ready For Robots"""
+    assert is_legacy_cal_draft(legacy)
+    needs, reason = draft_needs_regeneration(legacy, account_type="buyer")
+    assert needs
+    assert "legacy" in reason.lower()
+
+
+def test_current_voice_not_legacy():
+    body = build_buyer_variant_body("UPS Supply Chain Solutions", "Logistics", "what_survives")
+    assert not is_legacy_cal_draft(body)
+    needs, _ = draft_needs_regeneration(body, account_type="buyer")
+    assert not needs
+
+
 def test_wrong_vendor_pitch_on_buyer_needs_regeneration():
     vendor_pitch = (
         "Hey,\n\nCal here — I run the automation research desk at Ready For Robots.\n\n"
@@ -109,7 +131,7 @@ def test_wrong_vendor_pitch_on_buyer_needs_regeneration():
     )
     needs, reason = draft_needs_regeneration(vendor_pitch, account_type="buyer")
     assert needs
-    assert "vendor-facing" in reason
+    assert "vendor-facing" in reason or "legacy" in reason.lower()
 
 
 def test_parse_cal_draft_or_raise_raises_on_truncated():

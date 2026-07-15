@@ -45,7 +45,7 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   CAL_MANUAL_APPROVAL = "0"
   CAL_ASSEMBLY_REQUIRED = "1"
   CAL_ASSEMBLY_LLM_REVIEW = "1"
-  CAL_TEMPLATE_VERSION = "2"
+  CAL_TEMPLATE_VERSION = "3"
   # Deliverability guardrails (bounce circuit breaker + post-fix canary + reconciliation)
   ZERO_BOUNCE_CACHE_DAYS = "90"        # cache paid mailbox checks 90d — the same address is never re-billed
   ZERO_BOUNCE_ACCEPT_CATCH_ALL = "0"   # reject accept-then-drop catch-all domains during recovery

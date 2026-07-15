@@ -541,13 +541,38 @@ def cal_draft_body(
     user: dict = Depends(require_admin),
 ):
     """Return full Cal draft text for one CRM account (lazy-loaded from admin table expand)."""
+    from app.services.cal_draft_guard import draft_needs_regeneration
+
     acct = db.query(CrmAccount).filter(CrmAccount.id == account_id).first()
     if not acct:
         raise HTTPException(status_code=404, detail="CRM account not found")
+
+    legacy_repaired = False
+    needs, _ = draft_needs_regeneration(
+        acct.outreach_draft,
+        account_type=getattr(acct, "account_type", None) or "buyer",
+    )
+    if needs and acct.company_id:
+        company = db.query(Company).filter(Company.id == acct.company_id).first()
+        if company:
+            from app.services.agent_messaging import pick_buyer_variant, resolve_buyer_variant
+            from app.services.cal_autonomy import format_cal_draft_storage
+
+            variant_id = resolve_buyer_variant(company, acct)
+            if variant_id is None and (getattr(acct, "account_type", None) or "buyer") == "buyer":
+                variant_id = pick_buyer_variant(company.id)
+            subject, draft_body = _cal_draft_for_company(
+                company, fresh=True, variant_id=variant_id
+            )
+            acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
+            db.commit()
+            legacy_repaired = True
+
     return {
         "crm_account_id": str(acct.id),
         "draft_full": acct.outreach_draft,
         "contact_email": acct.contact_email,
+        "legacy_repaired": legacy_repaired,
     }
 
 

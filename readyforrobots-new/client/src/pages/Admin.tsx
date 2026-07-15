@@ -649,10 +649,17 @@ export default function Admin() {
     try {
       const res = await adminFetch(`/api/admin/cal/draft/${crmAccountId}`);
       if (res.ok) {
-        const data = await res.json() as { draft_full?: string; contact_email?: string | null };
+        const data = await res.json() as {
+          draft_full?: string;
+          contact_email?: string | null;
+          legacy_repaired?: boolean;
+        };
         const full = (data.draft_full || "").trim();
         if (full) {
           setDraftBodies((prev) => ({ ...prev, [crmAccountId]: full }));
+          if (data.legacy_repaired) {
+            setMessage("Outdated Cal voice replaced with current template.");
+          }
         } else if (preview) {
           setDraftBodies((prev) => ({ ...prev, [crmAccountId]: preview }));
           setDraftLoadErrors((prev) => ({ ...prev, [crmAccountId]: "Full draft empty — showing preview. Click Retry." }));
@@ -1049,7 +1056,7 @@ export default function Admin() {
       }
       await refreshOperatorView();
       if (crmAccountId) await loadDraftBody(crmAccountId, undefined, true);
-      setMessage(`Regenerated draft with the current trust-first angle (${data.drafted ?? 0} updated).`);
+      setMessage(`Redrafted with Cal's current voice (${data.drafted ?? 0} updated).`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Regenerate failed.");
     } finally {

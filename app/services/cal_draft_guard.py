@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import re
 
+from app.services.cal_persona import CAL_BANNED_PHRASES
+
 _MIN_DRAFT_CHARS = 280
 _COMPLETE_MARKERS = (
     "worth a quick reply",
@@ -56,9 +58,41 @@ _WRONG_VENDOR_PHRASES = (
     "we've identified",
 )
 
+# Pre–voice-rewrite templates (v2) — still stored on many CRM accounts.
+_LEGACY_VOICE_MARKERS = (
+    "part of my job surprises people",
+    "i spend my days looking at where robot",
+    "one pattern keeps showing up",
+    "if robotics is on the roadmap",
+    "no presentation, just a practical conversation",
+    "if it's worth a short exchange",
+    "we're vendor-neutral, so i care about fit",
+    "i'll tell you what's actually holding up in the field",
+)
+
+
+def is_legacy_cal_draft(draft: str | None) -> bool:
+    """True when body uses pre-v3 Cal sales voice or old two-line signature."""
+    text = (draft or "").strip()
+    if not text:
+        return False
+    low = text.lower()
+
+    # New voice always signs with role line.
+    if "— cal" in low and "ready for robots" in low:
+        if "deployment advisor" not in low and "automation advisor" not in low:
+            return True
+
+    for phrase in CAL_BANNED_PHRASES:
+        if phrase in low:
+            return True
+    return any(marker in low for marker in _LEGACY_VOICE_MARKERS)
+
 
 def draft_needs_regeneration(draft: str | None, *, account_type: str = "buyer") -> tuple[bool, str]:
-    """Detect truncated previews or buyer/vendor template mismatches."""
+    """Detect truncated previews, template mismatches, or legacy Cal voice."""
+    if is_legacy_cal_draft(draft):
+        return True, "Legacy Cal voice — redrafting with current templates"
     ok, reason = is_complete_cal_draft(draft)
     if not ok:
         return True, reason
