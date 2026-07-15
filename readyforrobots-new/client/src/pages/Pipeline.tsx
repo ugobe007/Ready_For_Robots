@@ -1525,6 +1525,42 @@ export default function Pipeline() {
     }
   };
 
+  // Resume-save: a visitor who clicked "save & copy" on a specific lead is routed through
+  // signup with ?resume=save. On return (now authenticated) we auto-complete that save so
+  // the expressed intent becomes an activation (first_save) rather than a re-click new users
+  // routinely skip — the largest gap in the signup → first-save funnel.
+  const resumeSaveHandledRef = useRef(false);
+  useEffect(() => {
+    if (resumeSaveHandledRef.current || typeof window === "undefined") return;
+    const url = new URLSearchParams(window.location.search);
+    if (url.get("resume") !== "save") return;
+    if (!session?.access_token) return; // wait for auth to resolve before saving
+    const clearResumeParam = () => {
+      url.delete("resume");
+      const qs = url.toString();
+      const nextUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`;
+      window.history.replaceState(null, "", nextUrl);
+    };
+    // Already activated in this workspace — honor the intent as done; never double-save.
+    if (savedLeadCount !== 0) {
+      resumeSaveHandledRef.current = true;
+      clearResumeParam();
+      return;
+    }
+    // Only auto-save once the exact lead the user acted on is loaded into the panel.
+    const target =
+      deepLinkLeadId != null
+        ? selected && selected.id === deepLinkLeadId
+          ? selected
+          : null
+        : selected;
+    if (!target) return;
+    resumeSaveHandledRef.current = true;
+    clearResumeParam();
+    void handleSaveLead(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleSaveLead is stable enough; ref guards re-entry
+  }, [session?.access_token, savedLeadCount, selected, deepLinkLeadId]);
+
   const handleAdvanceLead = async (deal: Deal) => {
     if (!session?.access_token) {
       window.location.href = signupHrefForLead(deal.id, deal.company);
