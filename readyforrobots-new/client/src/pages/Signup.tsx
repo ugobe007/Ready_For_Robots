@@ -485,27 +485,26 @@ export default function Signup() {
                   className="mt-4 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500"
                 />
               )}
-              <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-2`}>
+              <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-1.5`}>
                 <button
                   type="button"
                   onClick={() => void oauth("google")}
                   disabled={!supabase}
                   className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-40"
                 >
-                  Continue with Google — fastest
+                  Continue with Google — one tap
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void oauth("github")}
-                  disabled={!supabase}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
-                >
-                  Sign up with GitHub
-                </button>
+                {!hubspotIntent && (
+                  <p className="text-center text-[11px] font-medium text-gray-400">
+                    No password · no credit card · about 15 seconds
+                  </p>
+                )}
               </div>
               <div className="my-5 flex items-center gap-3">
                 <span className="h-px flex-1 bg-gray-200" />
-                <span className="text-[10px] uppercase tracking-widest text-gray-400">or</span>
+                <span className="text-[10px] uppercase tracking-widest text-gray-400">
+                  {hubspotIntent ? "or" : "or use your work email"}
+                </span>
                 <span className="h-px flex-1 bg-gray-200" />
               </div>
               <form onSubmit={(e) => void magicLink(e)} className="space-y-3">
@@ -524,11 +523,28 @@ export default function Signup() {
                 <button
                   type="submit"
                   disabled={status === "sending" || !email.trim()}
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-40"
+                  className={
+                    hubspotIntent
+                      ? "w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-40"
+                      : "w-full rounded-xl border border-emerald-600 px-4 py-3 text-sm font-bold text-emerald-700 transition-all hover:bg-emerald-50 disabled:opacity-40"
+                  }
                 >
-                  {status === "sending" ? "Sending..." : hubspotIntent ? "Sign up & connect HubSpot" : "Send signup link"}
+                  {status === "sending" ? "Sending..." : hubspotIntent ? "Sign up & connect HubSpot" : "Email me a sign-in link"}
                 </button>
               </form>
+              {!hubspotIntent && (
+                <p className="mt-4 text-center text-[11px] text-gray-400">
+                  Prefer GitHub?{" "}
+                  <button
+                    type="button"
+                    onClick={() => void oauth("github")}
+                    disabled={!supabase}
+                    className="font-semibold text-gray-500 underline-offset-2 hover:text-emerald-700 hover:underline disabled:opacity-40"
+                  >
+                    Sign up with GitHub
+                  </button>
+                </p>
+              )}
               <p className="mt-5 text-center text-xs text-gray-500">
                 Already have an account?{" "}
                 <Link href={loginHref} className="font-semibold text-emerald-600 hover:text-emerald-700">
