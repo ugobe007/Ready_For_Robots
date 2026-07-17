@@ -1933,6 +1933,8 @@ export default function Pipeline() {
                 <AnonymousValueStrip
                   leadCount={deals.length}
                   limit={entitlements?.pipeline_limit ?? previewLimit}
+                  selectedCompany={selected?.company}
+                  selectedLeadId={selected?.id}
                 />
               )}
               {panelPlan === "anonymous" && rotationPaused && (
