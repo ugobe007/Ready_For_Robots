@@ -18,7 +18,7 @@
       "destination": "https://ready-2-robot.fly.dev/health"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!robots\\.txt$|sitemap\\.xml$).*)",
       "destination": "/index.html"
     }
   ]
