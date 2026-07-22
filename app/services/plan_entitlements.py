@@ -1,10 +1,10 @@
 """
 Plan entitlements for public pipeline surfaces and workspace saves.
 
-Tiers (until Stripe wiring lands):
+Tiers:
   anonymous — no auth
   free      — signed in, default
-  paid      — ADMIN_EMAILS, PAID_PLAN_EMAILS, or JWT app_metadata plan_tier in starter|pro|premium
+  paid      — ADMIN_EMAILS, PAID_PLAN_EMAILS, or billing_tier / JWT plan in pro|premium|paid
 """
 from __future__ import annotations
 
@@ -17,11 +17,11 @@ PLAN_ANONYMOUS = "anonymous"
 PLAN_FREE = "free"
 PLAN_PAID = "paid"
 
-# Pro/Premium unlock full pipeline + research; Starter slug is billing-only until Stripe maps it.
+# Pro/Premium unlock full pipeline + research. Legacy "starter" maps to free until purchased as Pro.
 PAID_PIPELINE_SLUGS = frozenset({"pro", "premium", "paid"})
 BILLING_TIER_LABELS = {
     "free": "Free workspace",
-    "starter": "Starter (billing pending)",
+    "starter": "Free workspace",
     "pro": "Pro",
     "premium": "Premium",
     "paid": "Pro",
@@ -32,11 +32,11 @@ PIPELINE_WARM_SLOTS = int(os.getenv("PIPELINE_WARM_SLOTS", "20"))
 PIPELINE_MONITOR_SLOTS = int(os.getenv("PIPELINE_MONITOR_SLOTS", "15"))
 PIPELINE_TIERED_TOTAL = PIPELINE_HOT_SLOTS + PIPELINE_WARM_SLOTS + PIPELINE_MONITOR_SLOTS
 
-# Anonymous preview shows every tier; signed-in free gets a capped mix; paid gets full 15+20+15.
-PIPELINE_LIMIT_ANONYMOUS = 12
-PIPELINE_ANON_HOT_SLOTS = 5
-PIPELINE_ANON_WARM_SLOTS = 4
-PIPELINE_ANON_MONITOR_SLOTS = 3
+# Anonymous preview: more variety at peak intent (was 5/4/3 = 12).
+PIPELINE_LIMIT_ANONYMOUS = 15
+PIPELINE_ANON_HOT_SLOTS = 6
+PIPELINE_ANON_WARM_SLOTS = 5
+PIPELINE_ANON_MONITOR_SLOTS = 4
 
 PIPELINE_LIMIT_FREE = 10
 PIPELINE_FREE_HOT_SLOTS = 4
@@ -204,12 +204,21 @@ def _lead_tier_key(row: dict[str, Any]) -> str:
 
 
 def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple[list[dict[str, Any]], dict[str, dict[str, int]]]:
-    """Preserve HOT/WARM/monitoring buckets instead of truncating a flat HOT-first list."""
+    """Preserve HOT/WARM/monitoring buckets instead of truncating a flat HOT-first list.
+
+    For anonymous preview, also diversify HOT by industry so the first viewport
+    is not five hospitality rows.
+    """
+    from app.services.robot_vendor_names import is_known_robotics_vendor_name
+
     hot_n, warm_n, cold_n = _tier_slots_for_plan(plan)
     hot: list[dict[str, Any]] = []
     warm: list[dict[str, Any]] = []
     cold: list[dict[str, Any]] = []
     for row in leads:
+        name = (row.get("company_name") or row.get("name") or "").strip()
+        if name and is_known_robotics_vendor_name(name):
+            continue  # never surface OEMs as buyer opportunities
         bucket = _lead_tier_key(row)
         if bucket == "HOT":
             hot.append(row)
@@ -217,7 +226,11 @@ def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple
             warm.append(row)
         else:
             cold.append(row)
-    trimmed_hot = hot[:hot_n]
+
+    if plan == PLAN_ANONYMOUS:
+        trimmed_hot = _diversify_by_industry(hot, hot_n)
+    else:
+        trimmed_hot = hot[:hot_n]
     trimmed_warm = warm[:warm_n]
     trimmed_cold = cold[:cold_n]
     tier_mix = {
@@ -226,6 +239,27 @@ def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple
         "monitoring": {"shown": len(trimmed_cold), "cap": cold_n},
     }
     return trimmed_hot + trimmed_warm + trimmed_cold, tier_mix
+
+
+def _diversify_by_industry(rows: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    """Round-robin distinct industries, then fill remaining slots by score order."""
+    if limit <= 0 or not rows:
+        return []
+    seen_industries: set[str] = set()
+    picked: list[dict[str, Any]] = []
+    rest: list[dict[str, Any]] = []
+    for row in rows:
+        ind = (row.get("industry") or "").strip().lower() or "_unknown"
+        if ind not in seen_industries and len(picked) < limit:
+            seen_industries.add(ind)
+            picked.append(row)
+        else:
+            rest.append(row)
+    for row in rest:
+        if len(picked) >= limit:
+            break
+        picked.append(row)
+    return picked[:limit]
 
 
 def entitlements_payload(

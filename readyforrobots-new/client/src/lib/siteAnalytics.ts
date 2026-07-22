@@ -56,8 +56,20 @@ function trackFunnelOnce(stage: FunnelStage, payload: Record<string, unknown> = 
   trackFunnelStage(stage, payload);
 }
 
-/** Signup intent — fired on each /signup view (denominator of the funnel). */
+/**
+ * Signup intent — once per browser session (sessionStorage), not every page view.
+ * Reloads / OAuth round-trips no longer inflate the funnel denominator.
+ */
 export function trackSignupStart(payload: Record<string, unknown> = {}) {
+  const key = "rfr_funnel_signup_start_session";
+  if (typeof window !== "undefined") {
+    try {
+      if (window.sessionStorage.getItem(key) === "1") return;
+      window.sessionStorage.setItem(key, "1");
+    } catch {
+      /* private mode — fall through */
+    }
+  }
   trackFunnelStage("signup_start", payload);
 }
 

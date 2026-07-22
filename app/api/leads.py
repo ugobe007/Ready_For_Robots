@@ -1665,6 +1665,7 @@ def _fetch_staged_by_tier(
         return []
 
     from app.services.lead_secondary_assessment import blend_pipeline_rank_score
+    from app.services.robot_vendor_names import is_known_robotics_vendor_name
 
     scan_cap = min(len(staged), max(limit * 8, 80))
     ids = [sid for sid, _ in staged[:scan_cap]]
@@ -1682,6 +1683,9 @@ def _fetch_staged_by_tier(
             continue
         junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
         if junk or pri.tier != tier_u:
+            continue
+        # Defense in depth: never stage known OEMs/vendors as buyer HOT/WARM.
+        if is_known_robotics_vendor_name(c.name or ""):
             continue
         candidates.append((c, junk, junk_reason, pri))
 

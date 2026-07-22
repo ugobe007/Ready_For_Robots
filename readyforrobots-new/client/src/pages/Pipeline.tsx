@@ -51,6 +51,7 @@ import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import CalLeadDrop, { dealToCalDrop } from "@/components/pipeline/CalLeadDrop";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
+import ActivationChecklist from "@/components/pipeline/ActivationChecklist";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import PipelineSalesWorkflowRail from "@/components/pipeline/PipelineSalesWorkflowRail";
 import {
@@ -813,6 +814,8 @@ export default function Pipeline() {
   const [crmAccountIdByCompanyId, setCrmAccountIdByCompanyId] = useState<Record<number, string>>({});
   const [savedLeadCount, setSavedLeadCount] = useState(0);
   const [firstSaveGuideOpen, setFirstSaveGuideOpen] = useState(false);
+  const [showActivationChecklist, setShowActivationChecklist] = useState(false);
+  const [draftCopiedForActivation, setDraftCopiedForActivation] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(true);
   const [researchOpen, setResearchOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
@@ -1441,6 +1444,7 @@ export default function Pipeline() {
     if (!selected?.outreachBody) return;
     navigator.clipboard.writeText(`Subject: ${selected.outreachSubject}\n\n${selected.outreachBody}`);
     setCopied(true);
+    setDraftCopiedForActivation(true);
     toast.success("Draft copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
   };
@@ -1482,7 +1486,7 @@ export default function Pipeline() {
 
   const handleSaveLead = async (deal: Deal): Promise<boolean> => {
     if (!session?.access_token) {
-      window.location.href = signupHrefForLead(deal.id, deal.company);
+      window.location.href = signupHrefForLead(deal.id, deal.company, { src: "pipeline_save" });
       return false;
     }
     setAdvancingLeadId(deal.id);
@@ -1515,6 +1519,7 @@ export default function Pipeline() {
       // Funnel #20: activation — first saved lead (fires once per browser).
       trackFirstSave({ company: deal.company, industry: deal.industry || null });
       setSavedLeadCount((count) => count + 1);
+      setShowActivationChecklist(true);
       toast.success("Lead saved — develop with SIGNAL and send from the panel on the right.");
       return true;
     } catch (e) {
@@ -1563,7 +1568,7 @@ export default function Pipeline() {
 
   const handleAdvanceLead = async (deal: Deal) => {
     if (!session?.access_token) {
-      window.location.href = signupHrefForLead(deal.id, deal.company);
+      window.location.href = signupHrefForLead(deal.id, deal.company, { src: "pipeline_advance" });
       return;
     }
     setAdvancingLeadId(deal.id);
@@ -1955,6 +1960,16 @@ export default function Pipeline() {
                     deal={selected}
                     saving={advancingLeadId === selected.id}
                     onSave={() => void handleSaveLead(selected)}
+                  />
+                </div>
+              )}
+              {session?.access_token && (showActivationChecklist || savedLeadCount === 1) && (
+                <div className="mt-2">
+                  <ActivationChecklist
+                    company={selected?.company}
+                    draftCopied={draftCopiedForActivation}
+                    hasDraft={Boolean(selected?.outreachBody)}
+                    onCopyDraft={copyDraft}
                   />
                 </div>
               )}
@@ -3054,7 +3069,7 @@ export default function Pipeline() {
                         </button>
                       ) : (
                         <Link
-                          href={signupHrefForLead(selected.id, selected.company)}
+                          href={signupHrefForLead(selected.id, selected.company, { src: "pipeline_detail" })}
                           className="sb-btn sb-btn-primary"
                         >
                           Sign up free — save &amp; copy

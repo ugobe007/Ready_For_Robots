@@ -13,10 +13,16 @@
  */
 
 /** Build a signup href that returns to a lead and names the buyer on the signup page. */
-export function signupHrefForLead(leadId: number | string, company?: string | null): string {
+export function signupHrefForLead(
+  leadId: number | string,
+  company?: string | null,
+  opts?: { src?: string },
+): string {
   const next = `/pipeline?lead=${leadId}&resume=save`;
   let href = `/signup?next=${encodeURIComponent(next)}`;
   const co = (company || "").trim();
   if (co) href += `&co=${encodeURIComponent(co)}`;
+  const src = (opts?.src || "").trim();
+  if (src) href += `&src=${encodeURIComponent(src)}`;
   return href;
 }

@@ -836,6 +836,33 @@ def create_account(
                 confidence=0.85,
                 payload={"source": "crm_create_account"},
             )
+        # Best-effort named contact fill on save (Hunter → Apollo waterfall).
+        if row.company_id and not (row.contact_email or "").strip():
+            try:
+                from app.services.lead_enrichment import enrich_company_and_contact
+
+                co_enrich = db.get(Company, row.company_id)
+                if co_enrich:
+                    enrich_company_and_contact(
+                        co_enrich,
+                        row,
+                        sleep_s=0,
+                        use_apollo=True,
+                        db=db,
+                        persist_contact=True,
+                    )
+                    db.commit()
+                    db.refresh(row)
+            except Exception:
+                logger.info(
+                    "CRM save-time contact enrichment skipped for account %s",
+                    row.id,
+                    exc_info=True,
+                )
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
         pl = None
         if row.company_id:
             co = (

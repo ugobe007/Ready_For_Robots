@@ -68,7 +68,7 @@ export default function Login() {
     return () => sub.subscription.unsubscribe();
   }, [setLocation]);
 
-  async function oauth(provider: "google" | "github") {
+  async function oauth(provider: "google" | "github" | "azure") {
     if (!supabase) {
       setStatus("error");
       setErrMsg("Configure VITE_PUBLIC_SUPABASE_URL and VITE_PUBLIC_SUPABASE_ANON_KEY.");
@@ -82,7 +82,11 @@ export default function Login() {
     });
     if (error) {
       setStatus("error");
-      setErrMsg(error.message);
+      setErrMsg(
+        provider === "azure" && /provider is not enabled/i.test(error.message)
+          ? "Microsoft sign-in is not enabled yet in Supabase Auth (Azure provider). Use Google or a magic link, or enable Azure in the Supabase dashboard."
+          : error.message,
+      );
     }
   }
 
@@ -137,6 +141,14 @@ export default function Login() {
                   className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
                 >
                   Sign in with Google
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void oauth("azure")}
+                  disabled={!supabase}
+                  className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Sign in with Microsoft 365
                 </button>
                 <button
                   type="button"

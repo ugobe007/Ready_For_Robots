@@ -95,6 +95,7 @@ export default function Signup() {
       plan: params.get("plan") || null,
       next: params.get("next") || null,
       intent: params.get("intent") || null,
+      src: params.get("src") || null,
       referrer: typeof document !== "undefined" ? document.referrer || null : null,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -207,7 +208,7 @@ export default function Signup() {
     };
   }, [hubspotIntent, buyerCo]);
 
-  async function oauth(provider: "google" | "github") {
+  async function oauth(provider: "google" | "github" | "azure") {
     if (!supabase) {
       setStatus("error");
       setErrMsg("Configure VITE_PUBLIC_SUPABASE_URL and VITE_PUBLIC_SUPABASE_ANON_KEY.");
@@ -226,7 +227,11 @@ export default function Signup() {
     });
     if (error) {
       setStatus("error");
-      setErrMsg(error.message);
+      setErrMsg(
+        provider === "azure" && /provider is not enabled/i.test(error.message)
+          ? "Microsoft sign-in is not enabled yet in Supabase Auth (Azure provider). Use Google or a magic link, or enable Azure in the Supabase dashboard."
+          : error.message,
+      );
     }
   }
 
@@ -460,8 +465,8 @@ export default function Signup() {
                 {hubspotIntent
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
                   : params.get("next")
-                    ? "Continue in one tap with Google — or use a magic link below."
-                    : "Create an account with Google, GitHub, or a magic link."}
+                    ? "Continue with Google or Microsoft — or use a magic link below."
+                    : "Create an account with Google, Microsoft, GitHub, or a magic link."}
               </p>
               {liveProof && (liveProof.hot || liveProof.companies) && (
                 <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-900">
@@ -485,7 +490,7 @@ export default function Signup() {
                   className="mt-4 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500"
                 />
               )}
-              <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-1.5`}>
+              <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-2`}>
                 <button
                   type="button"
                   onClick={() => void oauth("google")}
@@ -493,6 +498,14 @@ export default function Signup() {
                   className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-40"
                 >
                   Continue with Google — one tap
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void oauth("azure")}
+                  disabled={!supabase}
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-800 transition-all hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Continue with Microsoft 365
                 </button>
                 {!hubspotIntent && (
                   <p className="text-center text-[11px] font-medium text-gray-400">

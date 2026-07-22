@@ -27,7 +27,7 @@ def test_resolve_plan_tier_paid_metadata():
 
 
 def test_pipeline_limits():
-    assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == 12
+    assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == 15
     assert pipeline_limit_for_plan(PLAN_FREE) == PIPELINE_LIMIT_FREE
     assert pipeline_limit_for_plan(PLAN_PAID) == PIPELINE_LIMIT_PAID
     assert PIPELINE_LIMIT_FREE == 10
@@ -69,9 +69,41 @@ def test_trim_pipeline_anonymous_preview_includes_all_tiers():
         + [{"id": 200 + i, "priority_tier": "COLD"} for i in range(10)]
     )
     trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_ANONYMOUS)
-    assert len(trimmed) == 12
-    assert mix["warm"]["shown"] == 4
-    assert mix["monitoring"]["shown"] == 3
+    assert len(trimmed) == 15
+    assert mix["hot"]["shown"] == 6
+    assert mix["warm"]["shown"] == 5
+    assert mix["monitoring"]["shown"] == 4
+
+
+def test_trim_pipeline_anonymous_diversifies_hot_industries():
+    leads = [
+        {"id": i, "priority_tier": "HOT", "company_name": f"Hotel{i}", "industry": "Hospitality"}
+        for i in range(8)
+    ] + [
+        {"id": 100, "priority_tier": "HOT", "company_name": "Warehouse Co", "industry": "Logistics"},
+        {"id": 101, "priority_tier": "HOT", "company_name": "Clinic Co", "industry": "Healthcare"},
+    ]
+    trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_ANONYMOUS)
+    hot = [r for r in trimmed if r["priority_tier"] == "HOT"]
+    industries = {r["industry"] for r in hot}
+    assert "Logistics" in industries
+    assert "Healthcare" in industries
+    assert mix["hot"]["shown"] == 6
+
+
+def test_trim_pipeline_drops_known_robot_vendors():
+    leads = [
+        {"id": 1, "priority_tier": "HOT", "company_name": "Boston Dynamics", "industry": "Robotics"},
+        {"id": 2, "priority_tier": "HOT", "company_name": "Marriott Hotels", "industry": "Hospitality"},
+        {"id": 3, "priority_tier": "WARM", "company_name": "Universal Robots", "industry": "Robotics"},
+        {"id": 4, "priority_tier": "WARM", "company_name": "Hilton", "industry": "Hospitality"},
+    ]
+    trimmed, _ = trim_pipeline_leads_by_tier(leads, PLAN_ANONYMOUS)
+    names = {r["company_name"] for r in trimmed}
+    assert "Boston Dynamics" not in names
+    assert "Universal Robots" not in names
+    assert "Marriott Hotels" in names
+    assert "Hilton" in names
 
 
 def test_apply_pipeline_entitlements_trims_and_tags():

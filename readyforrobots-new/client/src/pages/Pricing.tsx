@@ -24,7 +24,8 @@ const tiers = [
     ctaAction: "signup",
     features: [
       "URL scan and buyer matching",
-      "10 live pipeline leads (HOT / WARM / monitor mix)",
+      "15 live pipeline leads before signup (HOT / WARM / monitor mix)",
+      "10 ranked leads in free workspace after signup",
       "Lead score and why-now context",
       "Save up to 5 leads to your workspace",
       "Outreach draft previews",
@@ -448,7 +449,7 @@ export default function Pricing() {
             <div>
               <p className="text-sm font-semibold text-gray-900 mb-1">No risk. No lock-in.</p>
               <p className="text-xs text-gray-600 leading-relaxed">
-                Starter, Pro, and Premium are designed to be easy to try and easy to grow into. Additional service work is optional and scoped separately from the software subscription.
+                Starter is not a self-serve tier — Free, Pro, and Premium are designed to be easy to try and easy to grow into. Additional service work is optional and scoped separately from the software subscription.
               </p>
             </div>
           </div>

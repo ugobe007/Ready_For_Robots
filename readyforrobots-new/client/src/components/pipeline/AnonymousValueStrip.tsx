@@ -24,7 +24,9 @@ type Props = {
 export default function AnonymousValueStrip({ leadCount, limit, selectedCompany, selectedLeadId }: Props) {
   const company = (selectedCompany || "").trim();
   const hasLead = Boolean(company) && selectedLeadId != null;
-  const ctaHref = hasLead ? signupHrefForLead(selectedLeadId!, company) : "/signup?next=/pipeline";
+  const ctaHref = hasLead
+    ? signupHrefForLead(selectedLeadId!, company, { src: "value_strip" })
+    : "/signup?next=/pipeline&src=value_strip";
   const ctaLabel = hasLead ? `Save ${company} free` : "Start free";
 
   return (
