@@ -2090,6 +2090,13 @@ export default function Pipeline() {
         company: deal.company,
         mode: "send_one",
       });
+      const checklistVariant = deal.id % 2 === 0 ? "a" : "b";
+      trackMarketingEvent(`pipeline_outreach_sent_variant_${checklistVariant}`, {
+        lead_id: deal.id,
+        company: deal.company,
+        variant: checklistVariant,
+        mode: "send_one",
+      });
       if (contactOverride) {
         trackMarketingEvent("pipeline_send_with_captured_contact", {
           lead_id: deal.id,
@@ -2252,6 +2259,49 @@ export default function Pipeline() {
     hasDraft: Boolean(selected?.outreachBody),
     alreadySent: Boolean(selected?.stage === "Outreach Sent"),
   };
+  const sendChecklistVariant = selected && selected.id % 2 === 0 ? "a" : "b";
+  const sendChecklistVariantLabel = sendChecklistVariant === "a" ? "Variant A" : "Variant B";
+  const sendChecklistItems = sendChecklistVariant === "a"
+    ? [
+        {
+          key: "contact" as const,
+          ready: sendReadiness.hasContact,
+          readyLabel: "Contact email confirmed",
+          blockedLabel: "Contact email missing",
+        },
+        {
+          key: "draft" as const,
+          ready: sendReadiness.hasDraft,
+          readyLabel: "Outreach draft ready",
+          blockedLabel: "Outreach draft missing",
+        },
+        {
+          key: "status" as const,
+          ready: !sendReadiness.alreadySent,
+          readyLabel: "Not already sent",
+          blockedLabel: "Already sent",
+        },
+      ]
+    : [
+        {
+          key: "status" as const,
+          ready: !sendReadiness.alreadySent,
+          readyLabel: "Lead still open for send",
+          blockedLabel: "Already sent",
+        },
+        {
+          key: "contact" as const,
+          ready: sendReadiness.hasContact,
+          readyLabel: "Buyer contact email ready",
+          blockedLabel: "Add buyer contact email",
+        },
+        {
+          key: "draft" as const,
+          ready: sendReadiness.hasDraft,
+          readyLabel: "Draft approved for send",
+          blockedLabel: "Generate outreach draft",
+        },
+      ];
 
   useEffect(() => {
     if (!selected || !session?.access_token) return;
@@ -2264,6 +2314,12 @@ export default function Pipeline() {
         has_draft: sendReadiness.hasDraft,
         already_sent: sendReadiness.alreadySent,
         blocker_count: selectedSendBlockers.length,
+        variant: sendChecklistVariant,
+      });
+      trackMarketingEvent(`pipeline_send_checklist_variant_${sendChecklistVariant}_view`, {
+        lead_id: selected.id,
+        company: selected.company,
+        variant: sendChecklistVariant,
       });
     }
     const isReady = sendReadiness.hasContact && sendReadiness.hasDraft && !sendReadiness.alreadySent;
@@ -2272,9 +2328,15 @@ export default function Pipeline() {
       trackMarketingEvent("pipeline_send_checklist_ready", {
         lead_id: selected.id,
         company: selected.company,
+        variant: sendChecklistVariant,
+      });
+      trackMarketingEvent(`pipeline_send_checklist_variant_${sendChecklistVariant}_ready`, {
+        lead_id: selected.id,
+        company: selected.company,
+        variant: sendChecklistVariant,
       });
     }
-  }, [selected, session?.access_token, sendReadiness.hasContact, sendReadiness.hasDraft, sendReadiness.alreadySent, selectedSendBlockers.length]);
+  }, [selected, session?.access_token, sendReadiness.hasContact, sendReadiness.hasDraft, sendReadiness.alreadySent, selectedSendBlockers.length, sendChecklistVariant]);
 
   const firstThreePrimaryActionLabel = nextFirstThreeStep === "save_lead"
     ? "Save this lead"
@@ -3540,17 +3602,26 @@ export default function Pipeline() {
                     )}
 
                     <div className="mb-2 rounded-lg border border-slate-200 bg-slate-50/80 p-2.5">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-700">Pre-send checklist</p>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-700">Pre-send checklist</p>
+                        <span className="rounded-full border border-slate-300 bg-white px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-600">
+                          {sendChecklistVariantLabel}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[10px] text-slate-600">
+                        {sendChecklistVariant === "a"
+                          ? "Checklist order: contact, draft, send status."
+                          : "Checklist order: send status first, then contact and draft."}
+                      </p>
                       <div className="mt-1.5 grid gap-1 text-[10px] text-gray-700 md:grid-cols-3">
-                        <span className={sendReadiness.hasContact ? "font-semibold text-emerald-700" : "text-amber-800"}>
-                          {sendReadiness.hasContact ? "✓" : "•"} Contact email
-                        </span>
-                        <span className={sendReadiness.hasDraft ? "font-semibold text-emerald-700" : "text-amber-800"}>
-                          {sendReadiness.hasDraft ? "✓" : "•"} Outreach draft
-                        </span>
-                        <span className={!sendReadiness.alreadySent ? "font-semibold text-emerald-700" : "text-slate-600"}>
-                          {!sendReadiness.alreadySent ? "✓" : "•"} Not already sent
-                        </span>
+                        {sendChecklistItems.map((item) => (
+                          <span
+                            key={item.key}
+                            className={item.ready ? "font-semibold text-emerald-700" : (item.key === "status" ? "text-slate-600" : "text-amber-800")}
+                          >
+                            {item.ready ? "✓" : "•"} {item.ready ? item.readyLabel : item.blockedLabel}
+                          </span>
+                        ))}
                       </div>
                     </div>
 

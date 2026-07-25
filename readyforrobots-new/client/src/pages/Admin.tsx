@@ -104,6 +104,12 @@ type SiteAnalytics = {
       pipeline_send_with_captured_contact?: number;
       pipeline_send_checklist_view?: number;
       pipeline_send_checklist_ready?: number;
+      pipeline_send_checklist_variant_a_view?: number;
+      pipeline_send_checklist_variant_b_view?: number;
+      pipeline_send_checklist_variant_a_ready?: number;
+      pipeline_send_checklist_variant_b_ready?: number;
+      pipeline_outreach_sent_variant_a?: number;
+      pipeline_outreach_sent_variant_b?: number;
     };
     rates?: {
       report_submit_rate?: number;
@@ -124,6 +130,10 @@ type SiteAnalytics = {
       captured_contact_send_rate?: number;
       send_checklist_ready_rate?: number;
       send_after_checklist_rate?: number;
+      send_checklist_variant_a_ready_rate?: number;
+      send_checklist_variant_b_ready_rate?: number;
+      send_after_checklist_variant_a_rate?: number;
+      send_after_checklist_variant_b_rate?: number;
     };
     first_three?: {
       entered?: {
@@ -165,6 +175,18 @@ type SiteAnalytics = {
       pipeline_save_success?: number;
       pipeline_outreach_sent?: number;
       pipeline_draft_copy?: number;
+      pipeline_contact_assist_open?: number;
+      pipeline_contact_assist_submit?: number;
+      pipeline_contact_assist_invalid?: number;
+      pipeline_send_with_captured_contact?: number;
+      pipeline_send_checklist_view?: number;
+      pipeline_send_checklist_ready?: number;
+      pipeline_send_checklist_variant_a_view?: number;
+      pipeline_send_checklist_variant_b_view?: number;
+      pipeline_send_checklist_variant_a_ready?: number;
+      pipeline_send_checklist_variant_b_ready?: number;
+      pipeline_outreach_sent_variant_a?: number;
+      pipeline_outreach_sent_variant_b?: number;
     };
     prev_first_three?: {
       entered?: {
@@ -1741,6 +1763,21 @@ export default function Admin() {
       .slice(0, 3);
   })();
 
+  const checklistViews = Number(analytics?.marketing_conversion?.events?.pipeline_send_checklist_view ?? 0);
+  const checklistReadyRate = Number(analytics?.marketing_conversion?.rates?.send_checklist_ready_rate ?? 0);
+  const checklistAlertMinViews = 25;
+  const checklistAlertMinReadyRate = 55;
+  const checklistReadinessAlert = checklistViews >= checklistAlertMinViews && checklistReadyRate < checklistAlertMinReadyRate;
+
+  const checklistVariantAViews = Number(analytics?.marketing_conversion?.events?.pipeline_send_checklist_variant_a_view ?? 0);
+  const checklistVariantBViews = Number(analytics?.marketing_conversion?.events?.pipeline_send_checklist_variant_b_view ?? 0);
+  const checklistVariantAReadyRate = Number(analytics?.marketing_conversion?.rates?.send_checklist_variant_a_ready_rate ?? 0);
+  const checklistVariantBReadyRate = Number(analytics?.marketing_conversion?.rates?.send_checklist_variant_b_ready_rate ?? 0);
+  const checklistVariantASendRate = Number(analytics?.marketing_conversion?.rates?.send_after_checklist_variant_a_rate ?? 0);
+  const checklistVariantBSendRate = Number(analytics?.marketing_conversion?.rates?.send_after_checklist_variant_b_rate ?? 0);
+  const checklistVariantReadyDelta = Number((checklistVariantBReadyRate - checklistVariantAReadyRate).toFixed(1));
+  const checklistVariantSampleReady = checklistVariantAViews >= 10 && checklistVariantBViews >= 10;
+
   const sendReadinessBlockers = first3Current?.send_blockers;
 
   if ((authLoading || meLoading) && !hasCachedUi) {
@@ -2740,6 +2777,51 @@ export default function Admin() {
               />
             </div>
           </div>
+
+          <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-900">Day 7 checklist variant experiment</p>
+            <p className="mt-1 text-[11px] text-emerald-900/90">A/B test for checklist copy + order to lift readiness and send conversion.</p>
+            <div className="mt-2 grid gap-2 md:grid-cols-4">
+              <AdminCard
+                label="Variant A readiness"
+                value={pct(checklistVariantAReadyRate)}
+                sub={`views ${formatNumber(checklistVariantAViews)} · send ${pct(checklistVariantASendRate)}`}
+              />
+              <AdminCard
+                label="Variant B readiness"
+                value={pct(checklistVariantBReadyRate)}
+                sub={`views ${formatNumber(checklistVariantBViews)} · send ${pct(checklistVariantBSendRate)}`}
+              />
+              <AdminCard
+                label="Ready-rate lift (B-A)"
+                value={trendLabel(checklistVariantReadyDelta)}
+                sub={checklistVariantSampleReady ? "sample ready for directional read" : "collect >=10 views per variant"}
+              />
+              <AdminCard
+                label="Current winner"
+                value={
+                  checklistVariantBReadyRate > checklistVariantAReadyRate
+                    ? "Variant B"
+                    : checklistVariantBReadyRate < checklistVariantAReadyRate
+                      ? "Variant A"
+                      : "Tie"
+                }
+                sub="based on checklist ready rate"
+              />
+            </div>
+          </div>
+
+          {checklistReadinessAlert && (
+            <div className="mt-3 rounded-xl border border-rose-300 bg-rose-50/80 px-3 py-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-rose-900">Alert: checklist readiness regression</p>
+              <p className="mt-1 text-[11px] text-rose-900/90">
+                Checklist views are high ({formatNumber(checklistViews)}) but ready rate is below target ({pct(checklistReadyRate)} &lt; {pct(checklistAlertMinReadyRate)}).
+              </p>
+              <p className="mt-1 text-[11px] text-rose-900/90">
+                Recommended action: prioritize the winning Day 7 variant and tighten missing-contact remediation in the send panel.
+              </p>
+            </div>
+          )}
         </section>
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_0.9fr]">

@@ -376,6 +376,12 @@ def marketing_conversion_snapshot(
     send_with_captured_contact = events.get("/event/pipeline_send_with_captured_contact", 0)
     send_checklist_view = events.get("/event/pipeline_send_checklist_view", 0)
     send_checklist_ready = events.get("/event/pipeline_send_checklist_ready", 0)
+    send_checklist_variant_a_view = events.get("/event/pipeline_send_checklist_variant_a_view", 0)
+    send_checklist_variant_b_view = events.get("/event/pipeline_send_checklist_variant_b_view", 0)
+    send_checklist_variant_a_ready = events.get("/event/pipeline_send_checklist_variant_a_ready", 0)
+    send_checklist_variant_b_ready = events.get("/event/pipeline_send_checklist_variant_b_ready", 0)
+    pipeline_outreach_sent_variant_a = events.get("/event/pipeline_outreach_sent_variant_a", 0)
+    pipeline_outreach_sent_variant_b = events.get("/event/pipeline_outreach_sent_variant_b", 0)
     step_entered, prev_step_entered = _step_event_counts(
         db,
         cutoff=cutoff,
@@ -433,6 +439,12 @@ def marketing_conversion_snapshot(
             "pipeline_send_with_captured_contact": send_with_captured_contact,
             "pipeline_send_checklist_view": send_checklist_view,
             "pipeline_send_checklist_ready": send_checklist_ready,
+            "pipeline_send_checklist_variant_a_view": send_checklist_variant_a_view,
+            "pipeline_send_checklist_variant_b_view": send_checklist_variant_b_view,
+            "pipeline_send_checklist_variant_a_ready": send_checklist_variant_a_ready,
+            "pipeline_send_checklist_variant_b_ready": send_checklist_variant_b_ready,
+            "pipeline_outreach_sent_variant_a": pipeline_outreach_sent_variant_a,
+            "pipeline_outreach_sent_variant_b": pipeline_outreach_sent_variant_b,
         },
         "first_three": {
             "entered": step_entered,
@@ -460,6 +472,10 @@ def marketing_conversion_snapshot(
             "captured_contact_send_rate": _rate(send_with_captured_contact, contact_assist_submit),
             "send_checklist_ready_rate": _rate(send_checklist_ready, send_checklist_view),
             "send_after_checklist_rate": _rate(pipeline_outreach_sent, send_checklist_view),
+            "send_checklist_variant_a_ready_rate": _rate(send_checklist_variant_a_ready, send_checklist_variant_a_view),
+            "send_checklist_variant_b_ready_rate": _rate(send_checklist_variant_b_ready, send_checklist_variant_b_view),
+            "send_after_checklist_variant_a_rate": _rate(pipeline_outreach_sent_variant_a, send_checklist_variant_a_view),
+            "send_after_checklist_variant_b_rate": _rate(pipeline_outreach_sent_variant_b, send_checklist_variant_b_view),
         },
         "prev_events": {
             "hero_pipeline_click": prev_events.get("/event/home_cta_pipeline_click", 0),
@@ -478,6 +494,12 @@ def marketing_conversion_snapshot(
             "pipeline_send_with_captured_contact": prev_events.get("/event/pipeline_send_with_captured_contact", 0),
             "pipeline_send_checklist_view": prev_events.get("/event/pipeline_send_checklist_view", 0),
             "pipeline_send_checklist_ready": prev_events.get("/event/pipeline_send_checklist_ready", 0),
+            "pipeline_send_checklist_variant_a_view": prev_events.get("/event/pipeline_send_checklist_variant_a_view", 0),
+            "pipeline_send_checklist_variant_b_view": prev_events.get("/event/pipeline_send_checklist_variant_b_view", 0),
+            "pipeline_send_checklist_variant_a_ready": prev_events.get("/event/pipeline_send_checklist_variant_a_ready", 0),
+            "pipeline_send_checklist_variant_b_ready": prev_events.get("/event/pipeline_send_checklist_variant_b_ready", 0),
+            "pipeline_outreach_sent_variant_a": prev_events.get("/event/pipeline_outreach_sent_variant_a", 0),
+            "pipeline_outreach_sent_variant_b": prev_events.get("/event/pipeline_outreach_sent_variant_b", 0),
         },
         "prev_first_three": {
             "entered": prev_step_entered,
