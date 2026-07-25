@@ -9,7 +9,6 @@ import Results from "./pages/Results";
 import Pipeline from "./pages/Pipeline";
 import Compare from "./pages/Compare";
 import Signals from "./pages/Signals";
-import HowItWorks from "./pages/HowItWorks";
 import Intelligence from "./pages/Intelligence";
 import Newsletter from "./pages/Newsletter";
 import BillingSuccess from "./pages/BillingSuccess";
@@ -55,7 +54,9 @@ function Router() {
       <Route path="/signals" component={Signals} />
       <Route path="/intelligence" component={Intelligence} />
       <Route path="/newsletter" component={Newsletter} />
-      <Route path="/how-it-works" component={HowItWorks} />
+      <Route path="/how-it-works">
+        <Redirect to="/intelligence" />
+      </Route>
       <Route path="/preview" component={Preview} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/vendor/design" component={VendorDesignBuilder} />

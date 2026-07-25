@@ -577,10 +577,10 @@ export default function HeroSpotlightLeads() {
           <ChevronRight className="h-3 w-3" />
         </Link>
         <Link
-          href="/how-it-works"
+          href="/intelligence"
           className="text-[11px] font-bold flex items-center gap-1 text-white/45 transition-colors hover:text-white/80"
         >
-          How it works
+          Intelligence
           <ChevronRight className="h-3 w-3" />
         </Link>
       </div>
