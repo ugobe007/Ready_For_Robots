@@ -237,6 +237,7 @@ def marketing_conversion_snapshot(
             "rates": {
                 "report_submit_rate": 0.0,
                 "newsletter_submit_rate": 0.0,
+                "outreach_after_save_rate": 0.0,
             },
         }
 
@@ -273,6 +274,8 @@ def marketing_conversion_snapshot(
     report_success = events.get("/event/home_report_submit_success", 0)
     newsletter_start = events.get("/event/home_newsletter_submit_start", 0)
     newsletter_success = events.get("/event/home_newsletter_submit_success", 0)
+    pipeline_save_success = events.get("/event/pipeline_save_success", 0)
+    pipeline_outreach_sent = events.get("/event/pipeline_outreach_sent", 0)
 
     return {
         "available": True,
@@ -284,10 +287,14 @@ def marketing_conversion_snapshot(
             "report_submit_success": report_success,
             "newsletter_submit_start": newsletter_start,
             "newsletter_submit_success": newsletter_success,
+            "pipeline_save_success": pipeline_save_success,
+            "pipeline_outreach_sent": pipeline_outreach_sent,
+            "pipeline_draft_copy": events.get("/event/pipeline_draft_copy", 0),
         },
         "rates": {
             "report_submit_rate": _rate(report_success, report_start),
             "newsletter_submit_rate": _rate(newsletter_success, newsletter_start),
+            "outreach_after_save_rate": _rate(pipeline_outreach_sent, pipeline_save_success),
         },
         "prev_events": {
             "hero_pipeline_click": prev_events.get("/event/home_cta_pipeline_click", 0),
@@ -297,5 +304,8 @@ def marketing_conversion_snapshot(
             "report_submit_success": prev_events.get("/event/home_report_submit_success", 0),
             "newsletter_submit_start": prev_events.get("/event/home_newsletter_submit_start", 0),
             "newsletter_submit_success": prev_events.get("/event/home_newsletter_submit_success", 0),
+            "pipeline_save_success": prev_events.get("/event/pipeline_save_success", 0),
+            "pipeline_outreach_sent": prev_events.get("/event/pipeline_outreach_sent", 0),
+            "pipeline_draft_copy": prev_events.get("/event/pipeline_draft_copy", 0),
         },
     }

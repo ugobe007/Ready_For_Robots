@@ -95,10 +95,14 @@ type SiteAnalytics = {
       report_submit_success?: number;
       newsletter_submit_start?: number;
       newsletter_submit_success?: number;
+      pipeline_save_success?: number;
+      pipeline_outreach_sent?: number;
+      pipeline_draft_copy?: number;
     };
     rates?: {
       report_submit_rate?: number;
       newsletter_submit_rate?: number;
+      outreach_after_save_rate?: number;
     };
     prev_events?: {
       hero_pipeline_click?: number;
@@ -108,6 +112,9 @@ type SiteAnalytics = {
       report_submit_success?: number;
       newsletter_submit_start?: number;
       newsletter_submit_success?: number;
+      pipeline_save_success?: number;
+      pipeline_outreach_sent?: number;
+      pipeline_draft_copy?: number;
     };
   };
   insights?: {
@@ -2201,6 +2208,27 @@ export default function Admin() {
               label="Newsletter starts"
               value={formatNumber(analytics?.marketing_conversion?.events?.newsletter_submit_start)}
               sub={`submit rate ${(analytics?.marketing_conversion?.rates?.newsletter_submit_rate ?? 0).toFixed(1)}%`}
+            />
+            <AdminCard
+              label="Pipeline saves"
+              value={formatNumber(analytics?.marketing_conversion?.events?.pipeline_save_success)}
+              sub={`vs prev ${deltaLabel(
+                analytics?.marketing_conversion?.events?.pipeline_save_success,
+                analytics?.marketing_conversion?.prev_events?.pipeline_save_success,
+              )}`}
+            />
+            <AdminCard
+              label="Outreach sent"
+              value={formatNumber(analytics?.marketing_conversion?.events?.pipeline_outreach_sent)}
+              sub={`save→send ${(analytics?.marketing_conversion?.rates?.outreach_after_save_rate ?? 0).toFixed(1)}%`}
+            />
+            <AdminCard
+              label="Draft copied"
+              value={formatNumber(analytics?.marketing_conversion?.events?.pipeline_draft_copy)}
+              sub={`vs prev ${deltaLabel(
+                analytics?.marketing_conversion?.events?.pipeline_draft_copy,
+                analytics?.marketing_conversion?.prev_events?.pipeline_draft_copy,
+              )}`}
             />
           </div>
         </section>

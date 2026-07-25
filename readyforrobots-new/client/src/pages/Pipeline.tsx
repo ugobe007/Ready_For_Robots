@@ -37,7 +37,7 @@ import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { signupHrefForLead } from "@/lib/signupHref";
-import { trackFirstSave } from "@/lib/siteAnalytics";
+import { trackFirstSave, trackMarketingEvent } from "@/lib/siteAnalytics";
 import {
   isFreshSignup,
   markFirstSaveGuideSeen,
@@ -1588,6 +1588,11 @@ export default function Pipeline() {
     navigator.clipboard.writeText(`Subject: ${selected.outreachSubject}\n\n${selected.outreachBody}`);
     setCopied(true);
     setDraftCopiedForActivation(true);
+    trackMarketingEvent("pipeline_draft_copy", {
+      lead_id: selected.id,
+      company: selected.company,
+      stage: selected.stage,
+    });
     toast.success("Draft copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
   };
@@ -1661,6 +1666,12 @@ export default function Pipeline() {
       setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Qualified", updatedAt: "just now" } : d)));
       // Funnel #20: activation — first saved lead (fires once per browser).
       trackFirstSave({ company: deal.company, industry: deal.industry || null });
+      trackMarketingEvent("pipeline_save_success", {
+        lead_id: deal.id,
+        company: deal.company,
+        industry: deal.industry || null,
+        stage_before: deal.stage,
+      });
       setSavedLeadCount((count) => count + 1);
       setShowActivationChecklist(true);
       toast.success("Lead saved — develop with SIGNAL and send from the panel on the right.");
@@ -1761,6 +1772,11 @@ export default function Pipeline() {
         );
         if (!sendResponse.ok) throw new Error(await sendResponse.text());
         setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Outreach Sent", updatedAt: "just now" } : d)));
+        trackMarketingEvent("pipeline_outreach_sent", {
+          lead_id: deal.id,
+          company: deal.company,
+          mode: "advance_auto",
+        });
         toast.success("Outreach sent. Replies will return to your workspace.");
         return;
       }
@@ -1910,6 +1926,11 @@ export default function Pipeline() {
       }));
       if (!sendRes.ok) throw new Error(await sendRes.text());
       setDeals((prev) => prev.map((d) => d.id === deal.id ? { ...d, stage: "Outreach Sent" as Stage, updatedAt: "just now" } : d));
+      trackMarketingEvent("pipeline_outreach_sent", {
+        lead_id: deal.id,
+        company: deal.company,
+        mode: "send_one",
+      });
       toast.success(`Outreach sent to ${deal.contact}.`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Send failed");

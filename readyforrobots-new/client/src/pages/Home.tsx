@@ -21,7 +21,6 @@ import {
   MarketingNewsletterBand,
   MarketingPricing,
   MarketingReportSection,
-  MarketingTestimonials,
   MarketingVsGenericAI,
   MarketingWhatSignalDoes,
 } from "@/components/marketing/MarketingSections";
@@ -231,7 +230,6 @@ export default function Home() {
       <MarketingBeforeAfter />
       <MarketingVsGenericAI />
       <MarketingCaseStudies />
-      <MarketingTestimonials />
 
       <HumanoidDailyRecap className="py-8 border-y border-gray-100 bg-slate-50" />
       <HumanoidBenchmarkMarquee compact />
