@@ -68,6 +68,10 @@ _LEGACY_VOICE_MARKERS = (
     "if it's worth a short exchange",
     "we're vendor-neutral, so i care about fit",
     "i'll tell you what's actually holding up in the field",
+    "my job is to help companies find robots that actually fit their workflow",
+    "something i notice on site visits: six months after install",
+    "the ones that last almost never won on spec-sheet speed",
+    "is warehouse automation something",
 )
 
 
@@ -82,6 +86,10 @@ def is_legacy_cal_draft(draft: str | None) -> bool:
     if "— cal" in low and "ready for robots" in low:
         if "deployment advisor" not in low and "automation advisor" not in low:
             return True
+
+    # Old three-line sign-off style now replaced by one compact role line.
+    if "\ncal\ndeployment advisor\nready for robots" in low:
+        return True
 
     for phrase in CAL_BANNED_PHRASES:
         if phrase in low:
