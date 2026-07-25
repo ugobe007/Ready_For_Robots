@@ -1098,6 +1098,9 @@ _HEADLINE_FRAGMENT_EXACT = frozenset({
     "cargo thieves", "iran war", "bypass", "tankers entering hormuz during war",
     "cava proves that", "bankruptcy court approves the sale",
     "hormuz", "cu lines' network expansion",
+    "the top", "the biggest restaurant tech stories", "warehouse utilization",
+    "ai, automation dominate f&b innovations", "a sober look", "delivery robot apologizes",
+    "anchr: $5.8 million",
 })
 
 _HEADLINE_FRAGMENT_PATTERNS = [

@@ -138,6 +138,23 @@ def test_user_reported_junk_company_names_are_rejected(name):
 @pytest.mark.parametrize(
     "name",
     [
+        "The Top",
+        "The biggest restaurant tech stories",
+        "Warehouse Utilization",
+        "AI, Automation Dominate F&B Innovations",
+        "A Sober Look",
+        "Delivery Robot Apologizes",
+        "Anchr: $5.8 Million",
+    ],
+)
+def test_ingest_stream_headline_fragments_are_junk(name):
+    junk, reason = is_junk(name)
+    assert junk is True, reason
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
         "Johnson and Johnson",
         "Johnson & Johnson",
         "Marks and Spencer",
