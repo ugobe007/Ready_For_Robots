@@ -2200,7 +2200,12 @@ def get_lead_by_id(company_id: int, response: Response, db: Session = Depends(ge
     cache_key = f"lead_card:{company_id}"
     cached = cache_read(db, cache_key, stale_ok=True)
     if isinstance(cached, dict) and cached.get("_snapshot_version") == version:
-        return cached
+        if not cached.get("partial"):
+            return cached
+        logger.info(
+            "Lead by-id ignoring cached partial payload for company_id=%s; forcing re-render",
+            company_id,
+        )
 
     # Miss or stale → render once, persist, serve. Subsequent reads (and reads after
     # a deploy/restart) hit the durable snapshot without touching the scoring code.
