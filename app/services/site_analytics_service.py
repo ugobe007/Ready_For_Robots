@@ -342,10 +342,17 @@ def marketing_conversion_snapshot(
         prev_cutoff=prev_cutoff,
         path="/event/pipeline_first3_step_abandoned",
     )
+    step_coaching_click, prev_step_coaching_click = _step_event_counts(
+        db,
+        cutoff=cutoff,
+        prev_cutoff=prev_cutoff,
+        path="/event/pipeline_first3_coaching_click",
+    )
 
     entered_total = sum(step_entered.values())
     completed_total = sum(step_completed.values())
     abandoned_total = sum(step_abandoned.values())
+    coaching_click_total = sum(step_coaching_click.values())
 
     return {
         "available": True,
@@ -365,6 +372,7 @@ def marketing_conversion_snapshot(
             "entered": step_entered,
             "completed": step_completed,
             "abandoned": step_abandoned,
+            "coaching_click": step_coaching_click,
         },
         "rates": {
             "report_submit_rate": _rate(report_success, report_start),
@@ -377,6 +385,10 @@ def marketing_conversion_snapshot(
             "first3_copy_to_send_rate": _rate(step_completed["send_outreach"], step_completed["copy_draft"]),
             "first3_abandon_rate": _rate(abandoned_total, entered_total),
             "first3_completion_rate": _rate(completed_total, entered_total),
+            "first3_coaching_click_rate": _rate(coaching_click_total, entered_total),
+            "first3_save_coaching_click_rate": _rate(step_coaching_click["save_lead"], step_entered["save_lead"]),
+            "first3_copy_coaching_click_rate": _rate(step_coaching_click["copy_draft"], step_entered["copy_draft"]),
+            "first3_send_coaching_click_rate": _rate(step_coaching_click["send_outreach"], step_entered["send_outreach"]),
         },
         "prev_events": {
             "hero_pipeline_click": prev_events.get("/event/home_cta_pipeline_click", 0),
@@ -394,5 +406,6 @@ def marketing_conversion_snapshot(
             "entered": prev_step_entered,
             "completed": prev_step_completed,
             "abandoned": prev_step_abandoned,
+            "coaching_click": prev_step_coaching_click,
         },
     }

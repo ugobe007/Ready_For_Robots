@@ -110,6 +110,10 @@ type SiteAnalytics = {
       first3_copy_to_send_rate?: number;
       first3_abandon_rate?: number;
       first3_completion_rate?: number;
+      first3_coaching_click_rate?: number;
+      first3_save_coaching_click_rate?: number;
+      first3_copy_coaching_click_rate?: number;
+      first3_send_coaching_click_rate?: number;
     };
     first_three?: {
       entered?: {
@@ -123,6 +127,11 @@ type SiteAnalytics = {
         send_outreach?: number;
       };
       abandoned?: {
+        save_lead?: number;
+        copy_draft?: number;
+        send_outreach?: number;
+      };
+      coaching_click?: {
         save_lead?: number;
         copy_draft?: number;
         send_outreach?: number;
@@ -152,6 +161,11 @@ type SiteAnalytics = {
         send_outreach?: number;
       };
       abandoned?: {
+        save_lead?: number;
+        copy_draft?: number;
+        send_outreach?: number;
+      };
+      coaching_click?: {
         save_lead?: number;
         copy_draft?: number;
         send_outreach?: number;
@@ -2449,6 +2463,36 @@ export default function Admin() {
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${trendPillClass(-1 * first3StepRateTrend.abandon)}`}>
               Abandon trend {trendLabel(first3StepRateTrend.abandon)}
             </span>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-900">Coaching effectiveness</p>
+            <div className="mt-2 grid gap-2 md:grid-cols-4">
+              <AdminCard
+                label="All coaching clicks"
+                value={formatNumber(
+                  Number(first3Current?.coaching_click?.save_lead ?? 0)
+                  + Number(first3Current?.coaching_click?.copy_draft ?? 0)
+                  + Number(first3Current?.coaching_click?.send_outreach ?? 0),
+                )}
+                sub={`entered→click ${pct(analytics?.marketing_conversion?.rates?.first3_coaching_click_rate)}`}
+              />
+              <AdminCard
+                label="Step 1 coaching"
+                value={formatNumber(first3Current?.coaching_click?.save_lead)}
+                sub={`click rate ${pct(analytics?.marketing_conversion?.rates?.first3_save_coaching_click_rate)}`}
+              />
+              <AdminCard
+                label="Step 2 coaching"
+                value={formatNumber(first3Current?.coaching_click?.copy_draft)}
+                sub={`click rate ${pct(analytics?.marketing_conversion?.rates?.first3_copy_coaching_click_rate)}`}
+              />
+              <AdminCard
+                label="Step 3 coaching"
+                value={formatNumber(first3Current?.coaching_click?.send_outreach)}
+                sub={`click rate ${pct(analytics?.marketing_conversion?.rates?.first3_send_coaching_click_rate)}`}
+              />
+            </div>
           </div>
         </section>
 
