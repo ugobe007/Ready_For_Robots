@@ -7,7 +7,6 @@ const DARK_HERO_PATHS = new Set([
   "/robots/report",
   "/pricing",
   "/results",
-  "/how-it-works",
   "/intelligence",
   "/compare",
 ]);

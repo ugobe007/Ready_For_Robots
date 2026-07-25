@@ -21,7 +21,6 @@ const LINKS = {
     { label: "Newsletter", href: "/newsletter" },
   ],
   Support: [
-    { label: "How It Works", href: "/how-it-works" },
     { label: "Pricing", href: "/pricing" },
     { label: "Compare", href: "/compare" },
     { label: "Intelligence", href: "/intelligence" },

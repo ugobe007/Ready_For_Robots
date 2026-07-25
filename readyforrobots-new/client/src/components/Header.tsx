@@ -66,7 +66,6 @@ const priorityNavLinks = [
 ];
 
 const supportNavLinks = [
-  { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "Prospecting, qualifying, and outreach" },
   { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
   { label: "Compare", href: "/compare", icon: HelpCircle, desc: "Pipeline vs GTM data tools" },
   { label: "Integrations", href: "/integrations", icon: BriefcaseBusiness, desc: "HubSpot live · more CRMs soon" },
