@@ -1006,8 +1006,6 @@ def _fmt_company(
     gtm = compute_gtm_readiness(sigs, pri.tier, pri.reasons)
 
     if fast_signals:
-        from app.services.lead_signal_display import format_signal_for_sales
-
         top = _dedup_top_signals(sigs, 1)
         sig = top[0] if top else None
         share_summary = format_signal_for_sales(sig.signal_text)[:320] if sig else ""
