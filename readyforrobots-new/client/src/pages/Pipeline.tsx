@@ -67,6 +67,14 @@ import {
 
 type Stage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
+type FirstThreeActionsState = {
+  started: boolean;
+  saved: boolean;
+  copied: boolean;
+  sent: boolean;
+  dismissed: boolean;
+};
+
 interface Deal {
   id: number;
   company: string;
@@ -239,6 +247,98 @@ const PIPELINE_WARM_SLOTS = 20;
 const PIPELINE_MONITOR_SLOTS = 15;
 
 const USER_BUCKETS: UserBucket[] = ["Hot Leads", "Warm Leads", "Monitoring"];
+
+const FIRST_THREE_ACTIONS_KEY = "rfr_first_three_actions_v1";
+const FIRST_THREE_ACTIONS_INITIAL: FirstThreeActionsState = {
+  started: false,
+  saved: false,
+  copied: false,
+  sent: false,
+  dismissed: false,
+};
+
+function readFirstThreeActions(): FirstThreeActionsState {
+  if (typeof window === "undefined") return FIRST_THREE_ACTIONS_INITIAL;
+  try {
+    const raw = window.localStorage.getItem(FIRST_THREE_ACTIONS_KEY);
+    if (!raw) return FIRST_THREE_ACTIONS_INITIAL;
+    const parsed = JSON.parse(raw) as Partial<FirstThreeActionsState>;
+    return {
+      started: Boolean(parsed.started),
+      saved: Boolean(parsed.saved),
+      copied: Boolean(parsed.copied),
+      sent: Boolean(parsed.sent),
+      dismissed: Boolean(parsed.dismissed),
+    };
+  } catch {
+    return FIRST_THREE_ACTIONS_INITIAL;
+  }
+}
+
+function writeFirstThreeActions(state: FirstThreeActionsState) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(FIRST_THREE_ACTIONS_KEY, JSON.stringify(state));
+  } catch {
+    /* private mode */
+  }
+}
+
+function FirstThreeActionsProgress({
+  state,
+  onCopyDraft,
+  onDismiss,
+}: {
+  state: FirstThreeActionsState;
+  onCopyDraft: () => void;
+  onDismiss: () => void;
+}) {
+  const steps = [state.saved, state.copied, state.sent];
+  const completed = steps.filter(Boolean).length;
+  const pct = Math.round((completed / steps.length) * 100);
+  const nextStep = !state.saved
+    ? "Save your first lead"
+    : !state.copied
+      ? "Copy the outreach draft"
+      : !state.sent
+        ? "Send first outreach"
+        : "Completed";
+
+  return (
+    <div className="mb-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2.5">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">First 3 actions</p>
+          <p className="text-[11px] text-emerald-900/80">Continue where you left off: {nextStep}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="text-[10px] font-semibold text-emerald-700 hover:text-emerald-900"
+        >
+          Hide
+        </button>
+      </div>
+
+      <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-emerald-100">
+        <div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${pct}%` }} />
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 text-[10px] text-gray-700">
+        <span className={state.saved ? "font-semibold text-emerald-700" : ""}>1. Save lead</span>
+        <button
+          type="button"
+          onClick={onCopyDraft}
+          disabled={state.copied}
+          className={`text-left ${state.copied ? "font-semibold text-emerald-700" : "hover:text-emerald-800"}`}
+        >
+          2. Copy draft
+        </button>
+        <span className={state.sent ? "font-semibold text-emerald-700" : ""}>3. Send outreach</span>
+      </div>
+    </div>
+  );
+}
 
 const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string; slotCap: number }> = {
   "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-confidence robot-ready opportunities", slotCap: PIPELINE_HOT_SLOTS },
@@ -822,6 +922,7 @@ export default function Pipeline() {
   const [firstSaveGuideOpen, setFirstSaveGuideOpen] = useState(false);
   const [showActivationChecklist, setShowActivationChecklist] = useState(false);
   const [draftCopiedForActivation, setDraftCopiedForActivation] = useState(false);
+  const [firstThreeActions, setFirstThreeActions] = useState<FirstThreeActionsState>(() => readFirstThreeActions());
   const [intelligenceOpen, setIntelligenceOpen] = useState(true);
   const [researchOpen, setResearchOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
@@ -1588,6 +1689,7 @@ export default function Pipeline() {
     navigator.clipboard.writeText(`Subject: ${selected.outreachSubject}\n\n${selected.outreachBody}`);
     setCopied(true);
     setDraftCopiedForActivation(true);
+    setFirstThreeActions((prev) => ({ ...prev, started: true, copied: true, dismissed: false }));
     trackMarketingEvent("pipeline_draft_copy", {
       lead_id: selected.id,
       company: selected.company,
@@ -1672,6 +1774,7 @@ export default function Pipeline() {
         industry: deal.industry || null,
         stage_before: deal.stage,
       });
+      setFirstThreeActions((prev) => ({ ...prev, started: true, saved: true, dismissed: false }));
       setSavedLeadCount((count) => count + 1);
       setShowActivationChecklist(true);
       toast.success("Lead saved — develop with SIGNAL and send from the panel on the right.");
@@ -1777,6 +1880,7 @@ export default function Pipeline() {
           company: deal.company,
           mode: "advance_auto",
         });
+        setFirstThreeActions((prev) => ({ ...prev, started: true, sent: true, dismissed: false }));
         toast.success("Outreach sent. Replies will return to your workspace.");
         return;
       }
@@ -1931,6 +2035,7 @@ export default function Pipeline() {
         company: deal.company,
         mode: "send_one",
       });
+      setFirstThreeActions((prev) => ({ ...prev, started: true, sent: true, dismissed: false }));
       toast.success(`Outreach sent to ${deal.contact}.`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Send failed");
@@ -2004,6 +2109,28 @@ export default function Pipeline() {
   const filteredHot = filtered.filter((d) => userBucketForDeal(d) === "Hot Leads").length;
   const filteredWarm = filtered.filter((d) => userBucketForDeal(d) === "Warm Leads").length;
   const queuedActivations = activations.filter((a) => ["queued", "evaluating", "drafted", "awaiting_approval"].includes(a.status)).length;
+
+  useEffect(() => {
+    if (!session?.access_token) return;
+    if (savedLeadCount > 0) {
+      setFirstThreeActions((prev) => ({ ...prev, started: true, saved: true }));
+    }
+  }, [session?.access_token, savedLeadCount]);
+
+  useEffect(() => {
+    writeFirstThreeActions(firstThreeActions);
+  }, [firstThreeActions]);
+
+  useEffect(() => {
+    if (!selected || selected.stage !== "Outreach Sent") return;
+    setFirstThreeActions((prev) => ({ ...prev, started: true, sent: true }));
+  }, [selected]);
+
+  const showFirstThreeActionsProgress =
+    Boolean(session?.access_token)
+    && firstThreeActions.started
+    && !firstThreeActions.dismissed
+    && !firstThreeActions.sent;
 
   return (
     <div className="pipeline-page-bg flex min-h-screen flex-col">
@@ -2849,6 +2976,15 @@ export default function Pipeline() {
                   </div>
 
                   <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col">
+                  {showFirstThreeActionsProgress && (
+                    <div className="px-5 pt-3">
+                      <FirstThreeActionsProgress
+                        state={firstThreeActions}
+                        onCopyDraft={copyDraft}
+                        onDismiss={() => setFirstThreeActions((prev) => ({ ...prev, dismissed: true }))}
+                      />
+                    </div>
+                  )}
                   {/* Signal block */}
                   <div className="pipeline-detail-section">
                     {!isAdmin && (() => {
