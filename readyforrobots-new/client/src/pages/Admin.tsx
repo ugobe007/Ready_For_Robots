@@ -302,6 +302,39 @@ function pct(value?: number) {
   return `${Number(value ?? 0).toFixed(1)}%`;
 }
 
+function rateFromCounts(numerator?: number, denominator?: number) {
+  const n = Number(numerator ?? 0);
+  const d = Number(denominator ?? 0);
+  if (d <= 0) return 0;
+  return Number(((n / d) * 100).toFixed(1));
+}
+
+function rateDelta(current?: number, previous?: number) {
+  const c = Number(current ?? 0);
+  const p = Number(previous ?? 0);
+  return Number((c - p).toFixed(1));
+}
+
+function trendLabel(delta?: number) {
+  const d = Number(delta ?? 0);
+  const prefix = d > 0 ? "+" : "";
+  return `${prefix}${d.toFixed(1)}pt`;
+}
+
+function trendTone(delta?: number): "up" | "down" | "flat" {
+  const d = Number(delta ?? 0);
+  if (d > 0.04) return "up";
+  if (d < -0.04) return "down";
+  return "flat";
+}
+
+function trendPillClass(delta?: number) {
+  const tone = trendTone(delta);
+  if (tone === "up") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (tone === "down") return "border-red-200 bg-red-50 text-red-700";
+  return "border-gray-200 bg-gray-50 text-gray-600";
+}
+
 // ── Robot Benchmark + LinkedIn Panel ──────────────────────────────────────
 function RobotBenchmarkPanel({ api, headers }: {
   api: string;
@@ -1504,6 +1537,70 @@ export default function Admin() {
 
   const hasCachedUi = !!(localSnapshot?.sections && Object.keys(localSnapshot.sections).length > 0);
 
+  const first3Current = analytics?.marketing_conversion?.first_three;
+  const first3Previous = analytics?.marketing_conversion?.prev_first_three;
+
+  const first3StepRateTrend = {
+    save: rateDelta(
+      analytics?.marketing_conversion?.rates?.first3_save_completion_rate,
+      rateFromCounts(first3Previous?.completed?.save_lead, first3Previous?.entered?.save_lead),
+    ),
+    copy: rateDelta(
+      analytics?.marketing_conversion?.rates?.first3_copy_completion_rate,
+      rateFromCounts(first3Previous?.completed?.copy_draft, first3Previous?.entered?.copy_draft),
+    ),
+    send: rateDelta(
+      analytics?.marketing_conversion?.rates?.first3_send_completion_rate,
+      rateFromCounts(first3Previous?.completed?.send_outreach, first3Previous?.entered?.send_outreach),
+    ),
+    abandon: rateDelta(
+      analytics?.marketing_conversion?.rates?.first3_abandon_rate,
+      rateFromCounts(
+        Number(first3Previous?.abandoned?.save_lead ?? 0)
+          + Number(first3Previous?.abandoned?.copy_draft ?? 0)
+          + Number(first3Previous?.abandoned?.send_outreach ?? 0),
+        Number(first3Previous?.entered?.save_lead ?? 0)
+          + Number(first3Previous?.entered?.copy_draft ?? 0)
+          + Number(first3Previous?.entered?.send_outreach ?? 0),
+      ),
+    ),
+  };
+
+  const biggestLeak = (() => {
+    const steps = [
+      {
+        id: "save_lead",
+        label: "Save lead",
+        completion: Number(analytics?.marketing_conversion?.rates?.first3_save_completion_rate ?? 0),
+      },
+      {
+        id: "copy_draft",
+        label: "Copy draft",
+        completion: Number(analytics?.marketing_conversion?.rates?.first3_copy_completion_rate ?? 0),
+      },
+      {
+        id: "send_outreach",
+        label: "Send outreach",
+        completion: Number(analytics?.marketing_conversion?.rates?.first3_send_completion_rate ?? 0),
+      },
+    ];
+    const ranked = [...steps].sort((a, b) => a.completion - b.completion);
+    const worst = ranked[0];
+    if (!worst) {
+      return { label: "No step data yet", completion: 0, nextMove: "Wait for more activity to rank drop-offs." };
+    }
+    const nextMove = worst.id === "save_lead"
+      ? "Focus on step-1 clarity: tighten save CTA copy and reduce first-save friction."
+      : worst.id === "copy_draft"
+        ? "Focus on draft discoverability: keep outreach panel highlighted and push copy intent cues."
+        : "Focus on send readiness: improve contact completeness and send confidence in-panel.";
+    return {
+      label: worst.label,
+      completion: worst.completion,
+      nextMove,
+    };
+  })();
+
   if ((authLoading || meLoading) && !hasCachedUi) {
     return (
       <div className="min-h-screen bg-slate-50">
@@ -2297,17 +2394,17 @@ export default function Admin() {
             <AdminCard
               label="Step 1 · Save lead"
               value={formatNumber(analytics?.marketing_conversion?.first_three?.entered?.save_lead)}
-              sub={`completed ${formatNumber(analytics?.marketing_conversion?.first_three?.completed?.save_lead)} · abandoned ${formatNumber(analytics?.marketing_conversion?.first_three?.abandoned?.save_lead)} · completion ${pct(analytics?.marketing_conversion?.rates?.first3_save_completion_rate)}`}
+              sub={`completed ${formatNumber(analytics?.marketing_conversion?.first_three?.completed?.save_lead)} · abandoned ${formatNumber(analytics?.marketing_conversion?.first_three?.abandoned?.save_lead)} · completion ${pct(analytics?.marketing_conversion?.rates?.first3_save_completion_rate)} · trend ${trendLabel(first3StepRateTrend.save)}`}
             />
             <AdminCard
               label="Step 2 · Copy draft"
               value={formatNumber(analytics?.marketing_conversion?.first_three?.entered?.copy_draft)}
-              sub={`completed ${formatNumber(analytics?.marketing_conversion?.first_three?.completed?.copy_draft)} · abandoned ${formatNumber(analytics?.marketing_conversion?.first_three?.abandoned?.copy_draft)} · completion ${pct(analytics?.marketing_conversion?.rates?.first3_copy_completion_rate)}`}
+              sub={`completed ${formatNumber(analytics?.marketing_conversion?.first_three?.completed?.copy_draft)} · abandoned ${formatNumber(analytics?.marketing_conversion?.first_three?.abandoned?.copy_draft)} · completion ${pct(analytics?.marketing_conversion?.rates?.first3_copy_completion_rate)} · trend ${trendLabel(first3StepRateTrend.copy)}`}
             />
             <AdminCard
               label="Step 3 · Send outreach"
               value={formatNumber(analytics?.marketing_conversion?.first_three?.entered?.send_outreach)}
-              sub={`completed ${formatNumber(analytics?.marketing_conversion?.first_three?.completed?.send_outreach)} · abandoned ${formatNumber(analytics?.marketing_conversion?.first_three?.abandoned?.send_outreach)} · completion ${pct(analytics?.marketing_conversion?.rates?.first3_send_completion_rate)}`}
+              sub={`completed ${formatNumber(analytics?.marketing_conversion?.first_three?.completed?.send_outreach)} · abandoned ${formatNumber(analytics?.marketing_conversion?.first_three?.abandoned?.send_outreach)} · completion ${pct(analytics?.marketing_conversion?.rates?.first3_send_completion_rate)} · trend ${trendLabel(first3StepRateTrend.send)}`}
             />
           </div>
 
@@ -2325,8 +2422,33 @@ export default function Admin() {
             <AdminCard
               label="Overall abandonment"
               value={pct(analytics?.marketing_conversion?.rates?.first3_abandon_rate)}
-              sub={`overall completion ${pct(analytics?.marketing_conversion?.rates?.first3_completion_rate)}`}
+              sub={`overall completion ${pct(analytics?.marketing_conversion?.rates?.first3_completion_rate)} · trend ${trendLabel(first3StepRateTrend.abandon)}`}
             />
+          </div>
+
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-amber-900">Biggest leak</p>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${trendPillClass(-1 * biggestLeak.completion)}`}>
+                {biggestLeak.label} · {pct(biggestLeak.completion)} completion
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-amber-900/90">{biggestLeak.nextMove}</p>
+          </div>
+
+          <div className="mt-2 flex flex-wrap gap-2">
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${trendPillClass(first3StepRateTrend.save)}`}>
+              Save trend {trendLabel(first3StepRateTrend.save)}
+            </span>
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${trendPillClass(first3StepRateTrend.copy)}`}>
+              Copy trend {trendLabel(first3StepRateTrend.copy)}
+            </span>
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${trendPillClass(first3StepRateTrend.send)}`}>
+              Send trend {trendLabel(first3StepRateTrend.send)}
+            </span>
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${trendPillClass(-1 * first3StepRateTrend.abandon)}`}>
+              Abandon trend {trendLabel(first3StepRateTrend.abandon)}
+            </span>
           </div>
         </section>
 
