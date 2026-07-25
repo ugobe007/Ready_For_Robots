@@ -1775,8 +1775,36 @@ export default function Admin() {
   const checklistVariantBReadyRate = Number(analytics?.marketing_conversion?.rates?.send_checklist_variant_b_ready_rate ?? 0);
   const checklistVariantASendRate = Number(analytics?.marketing_conversion?.rates?.send_after_checklist_variant_a_rate ?? 0);
   const checklistVariantBSendRate = Number(analytics?.marketing_conversion?.rates?.send_after_checklist_variant_b_rate ?? 0);
+  const checklistVariantASends = Number(analytics?.marketing_conversion?.events?.pipeline_outreach_sent_variant_a ?? 0);
+  const checklistVariantBSends = Number(analytics?.marketing_conversion?.events?.pipeline_outreach_sent_variant_b ?? 0);
+  const checklistVariantAPrevViews = Number(analytics?.marketing_conversion?.prev_events?.pipeline_send_checklist_variant_a_view ?? 0);
+  const checklistVariantBPrevViews = Number(analytics?.marketing_conversion?.prev_events?.pipeline_send_checklist_variant_b_view ?? 0);
+  const checklistVariantAPrevReady = Number(analytics?.marketing_conversion?.prev_events?.pipeline_send_checklist_variant_a_ready ?? 0);
+  const checklistVariantBPrevReady = Number(analytics?.marketing_conversion?.prev_events?.pipeline_send_checklist_variant_b_ready ?? 0);
+  const checklistVariantAPrevReadyRate = rateFromCounts(checklistVariantAPrevReady, checklistVariantAPrevViews);
+  const checklistVariantBPrevReadyRate = rateFromCounts(checklistVariantBPrevReady, checklistVariantBPrevViews);
   const checklistVariantReadyDelta = Number((checklistVariantBReadyRate - checklistVariantAReadyRate).toFixed(1));
-  const checklistVariantSampleReady = checklistVariantAViews >= 10 && checklistVariantBViews >= 10;
+  const checklistVariantPrevReadyDelta = Number((checklistVariantBPrevReadyRate - checklistVariantAPrevReadyRate).toFixed(1));
+  const checklistWinnerMinSends = 8;
+  const checklistPromotionMinSends = 20;
+  const checklistPromotionLiftThreshold = 6;
+  const checklistVariantWinnerSampleReady = checklistVariantASends >= checklistWinnerMinSends && checklistVariantBSends >= checklistWinnerMinSends;
+  const checklistPromotionSampleReady = checklistVariantASends >= checklistPromotionMinSends && checklistVariantBSends >= checklistPromotionMinSends;
+  const checklistWinningVariant = checklistVariantBReadyRate > checklistVariantAReadyRate
+    ? "Variant B"
+    : checklistVariantBReadyRate < checklistVariantAReadyRate
+      ? "Variant A"
+      : "Tie";
+  const checklistPromotedVariant = checklistVariantReadyDelta >= checklistPromotionLiftThreshold
+    ? "Variant B"
+    : checklistVariantReadyDelta <= -checklistPromotionLiftThreshold
+      ? "Variant A"
+      : "none";
+  const checklistPromotionSustained = checklistPromotedVariant !== "none"
+    && (checklistPromotedVariant === "Variant B"
+      ? checklistVariantPrevReadyDelta >= checklistPromotionLiftThreshold
+      : checklistVariantPrevReadyDelta <= -checklistPromotionLiftThreshold);
+  const checklistAutoPromotionActive = checklistPromotionSampleReady && checklistPromotionSustained;
 
   const sendReadinessBlockers = first3Current?.send_blockers;
 
@@ -1853,7 +1881,7 @@ export default function Admin() {
                 </p>
               </div>
               <span className="text-[10px] text-amber-700">
-                {debugTelemetry.updatedAt ? `Updated ${fmtDate(debugTelemetry.updatedAt)}` : "Waiting for data"}
+                {debugTelemetry.updatedAt ? `Updated ${formatDate(debugTelemetry.updatedAt)}` : "Waiting for data"}
               </span>
             </div>
             <div className="grid gap-2 md:grid-cols-2">
@@ -2795,19 +2823,25 @@ export default function Admin() {
               <AdminCard
                 label="Ready-rate lift (B-A)"
                 value={trendLabel(checklistVariantReadyDelta)}
-                sub={checklistVariantSampleReady ? "sample ready for directional read" : "collect >=10 views per variant"}
+                sub={checklistVariantWinnerSampleReady ? "send sample ready" : `need >=${checklistWinnerMinSends} sends per variant`}
               />
               <AdminCard
                 label="Current winner"
-                value={
-                  checklistVariantBReadyRate > checklistVariantAReadyRate
-                    ? "Variant B"
-                    : checklistVariantBReadyRate < checklistVariantAReadyRate
-                      ? "Variant A"
-                      : "Tie"
-                }
-                sub="based on checklist ready rate"
+                value={checklistVariantWinnerSampleReady ? checklistWinningVariant : "Insufficient sample"}
+                sub={checklistVariantWinnerSampleReady
+                  ? `based on readiness · sends A:${formatNumber(checklistVariantASends)} B:${formatNumber(checklistVariantBSends)}`
+                  : `requires >=${checklistWinnerMinSends} sends in each variant`}
               />
+            </div>
+
+            <div className="mt-2 rounded-lg border border-emerald-200 bg-white/80 px-2.5 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-800">Auto-promotion policy</p>
+              <p className="mt-1 text-[11px] text-emerald-900/90">
+                Thresholds: ≥{checklistPromotionLiftThreshold.toFixed(1)}pt lift and ≥{checklistPromotionMinSends} sends per variant, sustained across current and previous window.
+              </p>
+              <p className="mt-1 text-[11px] text-emerald-900/90">
+                Current lift {trendLabel(checklistVariantReadyDelta)} · Previous lift {trendLabel(checklistVariantPrevReadyDelta)} · Status {checklistAutoPromotionActive ? `PROMOTE ${checklistPromotedVariant}` : "HOLD"}.
+              </p>
             </div>
           </div>
 
