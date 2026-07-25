@@ -114,6 +114,7 @@ type SiteAnalytics = {
       first3_save_coaching_click_rate?: number;
       first3_copy_coaching_click_rate?: number;
       first3_send_coaching_click_rate?: number;
+      first3_send_blocker_rate?: number;
     };
     first_three?: {
       entered?: {
@@ -135,6 +136,13 @@ type SiteAnalytics = {
         save_lead?: number;
         copy_draft?: number;
         send_outreach?: number;
+      };
+      send_blockers?: {
+        missing_contact?: number;
+        missing_draft?: number;
+        already_sent?: number;
+        not_authenticated?: number;
+        unknown?: number;
       };
     };
     prev_events?: {
@@ -169,6 +177,13 @@ type SiteAnalytics = {
         save_lead?: number;
         copy_draft?: number;
         send_outreach?: number;
+      };
+      send_blockers?: {
+        missing_contact?: number;
+        missing_draft?: number;
+        already_sent?: number;
+        not_authenticated?: number;
+        unknown?: number;
       };
     };
   };
@@ -1642,20 +1657,20 @@ export default function Admin() {
     if (stepId === "save_lead") {
       return {
         title: "Priority test: Step 1 save CTA clarity",
-        rationale: `Lowest completion is ${pct(biggestLeak.completion)} with coaching click rate ${pct(clickRate)}.`,
+        rationale: `Lowest completion is ${pct(biggestLeak.completion)} with guidance click rate ${pct(clickRate)}.`,
         test: "Test CTA copy: 'Save lead to unlock your CRM workflow' vs current, and keep helper text outcome-first.",
       };
     }
     if (stepId === "copy_draft") {
       return {
         title: "Priority test: Step 2 draft discoverability",
-        rationale: `Copy completion is ${pct(biggestLeak.completion)} and coaching click gap is ${trendLabel(clickGap)}.`,
+        rationale: `Copy completion is ${pct(biggestLeak.completion)} and guidance click gap is ${trendLabel(clickGap)}.`,
         test: "Test always-visible sticky mini CTA near signal block: 'Copy outreach draft' with direct scroll and brief pulse.",
       };
     }
     return {
       title: "Priority test: Step 3 send confidence",
-      rationale: `Send completion is ${pct(biggestLeak.completion)} with coaching click rate ${pct(clickRate)}.`,
+      rationale: `Send completion is ${pct(biggestLeak.completion)} with guidance click rate ${pct(clickRate)}.`,
       test: "Test trust copy under send button: 'Sends 1 personalized email, tracks replies in workspace' plus contact-readiness hint.",
     };
   })();
@@ -1716,6 +1731,8 @@ export default function Admin() {
       .sort((a, b) => b.priorityScore - a.priorityScore)
       .slice(0, 3);
   })();
+
+  const sendReadinessBlockers = first3Current?.send_blockers;
 
   if ((authLoading || meLoading) && !hasCachedUi) {
     return (
@@ -2568,10 +2585,10 @@ export default function Admin() {
           </div>
 
           <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 py-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-900">Coaching effectiveness</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-900">Guidance effectiveness</p>
             <div className="mt-2 grid gap-2 md:grid-cols-4">
               <AdminCard
-                label="All coaching clicks"
+                label="All guidance clicks"
                 value={formatNumber(
                   Number(first3Current?.coaching_click?.save_lead ?? 0)
                   + Number(first3Current?.coaching_click?.copy_draft ?? 0)
@@ -2580,17 +2597,17 @@ export default function Admin() {
                 sub={`entered→click ${pct(analytics?.marketing_conversion?.rates?.first3_coaching_click_rate)}`}
               />
               <AdminCard
-                label="Step 1 coaching"
+                label="Step 1 guidance"
                 value={formatNumber(first3Current?.coaching_click?.save_lead)}
                 sub={`click rate ${pct(analytics?.marketing_conversion?.rates?.first3_save_coaching_click_rate)}`}
               />
               <AdminCard
-                label="Step 2 coaching"
+                label="Step 2 guidance"
                 value={formatNumber(first3Current?.coaching_click?.copy_draft)}
                 sub={`click rate ${pct(analytics?.marketing_conversion?.rates?.first3_copy_coaching_click_rate)}`}
               />
               <AdminCard
-                label="Step 3 coaching"
+                label="Step 3 guidance"
                 value={formatNumber(first3Current?.coaching_click?.send_outreach)}
                 sub={`click rate ${pct(analytics?.marketing_conversion?.rates?.first3_send_coaching_click_rate)}`}
               />
@@ -2606,7 +2623,7 @@ export default function Admin() {
 
           <div className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50/60 px-3 py-2.5">
             <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-900">Weekly experiment queue</p>
-            <p className="mt-1 text-[11px] text-indigo-900/90">Top 3 tests ranked by completion leak, coaching click gap, and negative trend.</p>
+            <p className="mt-1 text-[11px] text-indigo-900/90">Top 3 tests ranked by completion leak, guidance click gap, and negative trend.</p>
             <div className="mt-2 space-y-2">
               {weeklyExperimentQueue.map((item, idx) => (
                 <div key={item.id} className="rounded-lg border border-indigo-200 bg-white/80 px-2.5 py-2">
@@ -2618,13 +2635,40 @@ export default function Admin() {
                     </span>
                   </div>
                   <p className="mt-1 text-[11px] text-indigo-900/90">
-                    Completion {pct(item.completion)} · Coaching click {pct(item.coachingRate)} · Trend {trendLabel(item.trend)}
+                    Completion {pct(item.completion)} · Guidance click {pct(item.coachingRate)} · Trend {trendLabel(item.trend)}
                   </p>
                   <p className="mt-1 text-[11px] text-indigo-900/90">Hypothesis: {item.hypothesis}</p>
                   <p className="mt-1 text-[11px] text-indigo-900/90">Test: {item.testIdea}</p>
                   <p className="mt-1 text-[11px] text-indigo-900/90">Success metric: {item.successMetric}</p>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50/60 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-rose-900">Day 4 send readiness blockers</p>
+            <p className="mt-1 text-[11px] text-rose-900/90">Why send is blocked when users hit guidance on step 3.</p>
+            <div className="mt-2 grid gap-2 md:grid-cols-4">
+              <AdminCard
+                label="Missing contact"
+                value={formatNumber(sendReadinessBlockers?.missing_contact)}
+                sub="Add/confirm contact email before send"
+              />
+              <AdminCard
+                label="Missing draft"
+                value={formatNumber(sendReadinessBlockers?.missing_draft)}
+                sub="Run SIGNAL development for draft"
+              />
+              <AdminCard
+                label="Already sent"
+                value={formatNumber(sendReadinessBlockers?.already_sent)}
+                sub="Lead already progressed"
+              />
+              <AdminCard
+                label="Step 3 blocker rate"
+                value={pct(analytics?.marketing_conversion?.rates?.first3_send_blocker_rate)}
+                sub="share of step-3 entries that hit blockers"
+              />
             </div>
           </div>
         </section>

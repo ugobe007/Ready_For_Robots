@@ -2191,6 +2191,14 @@ export default function Pipeline() {
       && session?.access_token
       && sendingLeadId !== selected.id,
   );
+  const selectedSendBlockers = selected
+    ? [
+        !selected.contact ? "missing_contact" : null,
+        !selected.outreachBody ? "missing_draft" : null,
+        selected.stage === "Outreach Sent" ? "already_sent" : null,
+        !session?.access_token ? "not_authenticated" : null,
+      ].filter((reason): reason is string => Boolean(reason))
+    : [];
   const firstThreePrimaryActionLabel = nextFirstThreeStep === "save_lead"
     ? "Save this lead"
     : nextFirstThreeStep === "copy_draft"
@@ -2212,7 +2220,7 @@ export default function Pipeline() {
       : nextFirstThreeStep === "send_outreach"
         ? (canSendSelectedOutreach
           ? "Step 3 closes the loop. Send one live email to move this lead into outreach tracking."
-          : "You need a contact email and draft before sending. We will jump you to the draft area.")
+          : `Send is blocked by: ${selectedSendBlockers.length ? selectedSendBlockers.join(", ") : "missing requirements"}. We will jump you to the draft area.`)
         : "All first actions complete.";
 
   const runFirstThreePrimaryAction = () => {
@@ -2235,6 +2243,13 @@ export default function Pipeline() {
       void sendOneLead(selected);
       return;
     }
+    trackMarketingEvent("pipeline_send_readiness_blocker", {
+      step: "send_outreach",
+      lead_id: selected.id,
+      company: selected.company,
+      blockers: selectedSendBlockers,
+      blocker_reason: selectedSendBlockers[0] || "unknown",
+    });
     spotlightOutreachDraft();
   };
 

@@ -224,6 +224,54 @@ def _step_event_counts(
     return current, previous
 
 
+def _reason_event_counts(
+    db: Session,
+    *,
+    cutoff: datetime,
+    prev_cutoff: datetime | None,
+    path: str,
+    reasons: tuple[str, ...],
+) -> tuple[dict[str, int], dict[str, int]]:
+    """Count /event rows grouped by payload.blocker_reason for windows."""
+    path_expr = SiteAnalyticsEvent.payload.op("->>")("path")
+    reason_expr = SiteAnalyticsEvent.payload.op("->>")("blocker_reason")
+
+    rows = (
+        db.query(reason_expr.label("reason"), func.count(SiteAnalyticsEvent.id).label("count"))
+        .filter(
+            SiteAnalyticsEvent.event_type == EVENT_VISIT,
+            SiteAnalyticsEvent.created_at >= cutoff,
+            path_expr == path,
+            reason_expr.in_(reasons),
+        )
+        .group_by(reason_expr)
+        .all()
+    )
+    current = {reason: 0 for reason in reasons}
+    for row in rows:
+        if row.reason in current:
+            current[str(row.reason)] = int(row.count or 0)
+
+    previous = {reason: 0 for reason in reasons}
+    if prev_cutoff is not None:
+        prev_rows = (
+            db.query(reason_expr.label("reason"), func.count(SiteAnalyticsEvent.id).label("count"))
+            .filter(
+                SiteAnalyticsEvent.event_type == EVENT_VISIT,
+                SiteAnalyticsEvent.created_at >= prev_cutoff,
+                SiteAnalyticsEvent.created_at < cutoff,
+                path_expr == path,
+                reason_expr.in_(reasons),
+            )
+            .group_by(reason_expr)
+            .all()
+        )
+        for row in prev_rows:
+            if row.reason in previous:
+                previous[str(row.reason)] = int(row.count or 0)
+    return current, previous
+
+
 def signup_funnel_metrics(
     db: Session,
     *,
@@ -348,11 +396,19 @@ def marketing_conversion_snapshot(
         prev_cutoff=prev_cutoff,
         path="/event/pipeline_first3_coaching_click",
     )
+    send_blockers, prev_send_blockers = _reason_event_counts(
+        db,
+        cutoff=cutoff,
+        prev_cutoff=prev_cutoff,
+        path="/event/pipeline_send_readiness_blocker",
+        reasons=("missing_contact", "missing_draft", "already_sent", "not_authenticated", "unknown"),
+    )
 
     entered_total = sum(step_entered.values())
     completed_total = sum(step_completed.values())
     abandoned_total = sum(step_abandoned.values())
     coaching_click_total = sum(step_coaching_click.values())
+    send_blockers_total = sum(send_blockers.values())
 
     return {
         "available": True,
@@ -373,6 +429,7 @@ def marketing_conversion_snapshot(
             "completed": step_completed,
             "abandoned": step_abandoned,
             "coaching_click": step_coaching_click,
+            "send_blockers": send_blockers,
         },
         "rates": {
             "report_submit_rate": _rate(report_success, report_start),
@@ -389,6 +446,7 @@ def marketing_conversion_snapshot(
             "first3_save_coaching_click_rate": _rate(step_coaching_click["save_lead"], step_entered["save_lead"]),
             "first3_copy_coaching_click_rate": _rate(step_coaching_click["copy_draft"], step_entered["copy_draft"]),
             "first3_send_coaching_click_rate": _rate(step_coaching_click["send_outreach"], step_entered["send_outreach"]),
+            "first3_send_blocker_rate": _rate(send_blockers_total, step_entered["send_outreach"]),
         },
         "prev_events": {
             "hero_pipeline_click": prev_events.get("/event/home_cta_pipeline_click", 0),
@@ -407,5 +465,6 @@ def marketing_conversion_snapshot(
             "completed": prev_step_completed,
             "abandoned": prev_step_abandoned,
             "coaching_click": prev_step_coaching_click,
+            "send_blockers": prev_send_blockers,
         },
     }
