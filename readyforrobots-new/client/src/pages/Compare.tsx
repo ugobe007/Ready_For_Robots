@@ -95,19 +95,19 @@ export default function Compare() {
 
           <section className="mb-10 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60">
             <div className="grid grid-cols-1 gap-px bg-slate-200 md:grid-cols-2">
-              <div className="bg-gradient-to-br from-rose-100 via-rose-50 to-white p-6 md:p-7">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rose-700">GTM data tools</p>
-                <p className="text-lg font-black text-rose-900 tracking-tight">Built for search and list building</p>
-                <p className="mt-2 text-sm leading-relaxed text-rose-800">Best when your team wants broad account coverage and handles qualification, timing, and outreach externally.</p>
-                <div className="mt-4 inline-flex rounded-full border border-rose-300 bg-rose-100 px-3 py-1 text-[11px] font-semibold text-rose-800">
+              <div className="bg-gradient-to-br from-rose-600 via-rose-500 to-rose-700 p-6 md:p-7 text-white">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rose-100">GTM data tools</p>
+                <p className="text-xl font-black tracking-tight">Search-heavy workflow</p>
+                <p className="mt-2 text-sm leading-relaxed text-rose-50">Great for broad prospect discovery, but your team still has to decide timing, message, and next action manually.</p>
+                <div className="mt-4 inline-flex rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-semibold text-white">
                   Output: records to sort
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-emerald-100 via-emerald-50 to-white p-6 md:p-7">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-emerald-700">ReadyForRobots</p>
-                <p className="text-lg font-black text-emerald-900 tracking-tight">Built for robot sales execution</p>
-                <p className="mt-2 text-sm leading-relaxed text-emerald-800">Best when you need verified buyer intent, SKU-level pitch guidance, and pipeline movement inside CRM.</p>
-                <div className="mt-4 inline-flex rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 text-[11px] font-semibold text-emerald-800">
+              <div className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-700 p-6 md:p-7 text-white">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-emerald-100">ReadyForRobots</p>
+                <p className="text-xl font-black tracking-tight">Execution-ready workflow</p>
+                <p className="mt-2 text-sm leading-relaxed text-emerald-50">Built for robot teams that need verified buyer intent, SKU guidance, and clear pipeline next steps in CRM.</p>
+                <div className="mt-4 inline-flex rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-semibold text-white">
                   Output: actions to run
                 </div>
               </div>
@@ -122,16 +122,16 @@ export default function Compare() {
                 key={ex.tool}
                 className={`rounded-2xl border p-5 ${
                   ex.tool.includes("Ready")
-                    ? "border-emerald-300 bg-gradient-to-br from-emerald-50 to-emerald-100/60 shadow-sm"
-                    : "border-rose-200 bg-gradient-to-br from-rose-50 to-rose-100/60"
+                    ? "border-emerald-300 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white shadow-sm"
+                    : "border-rose-200 bg-gradient-to-br from-rose-500 to-rose-600 text-white"
                 }`}
               >
-                <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${ex.tool.includes("Ready") ? "text-emerald-700" : "text-rose-700"}`}>{ex.tool}</p>
-                <p className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider mb-3 ${ex.tool.includes("Ready") ? "border-emerald-300 bg-emerald-100 text-emerald-800" : "border-rose-300 bg-rose-100 text-rose-800"}`}>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-white/90">{ex.tool}</p>
+                <p className="inline-flex rounded-full border border-white/40 bg-white/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider mb-3 text-white">
                   {ex.tool.includes("Ready") ? "Action output" : "List output"}
                 </p>
-                <p className="text-xs font-mono text-gray-700 mb-3">{ex.query}</p>
-                <p className={`text-sm leading-relaxed ${ex.tool.includes("Ready") ? "text-emerald-950 font-semibold" : "text-rose-900"}`}>
+                <p className="text-xs font-mono text-white/90 mb-3">{ex.query}</p>
+                <p className="text-sm leading-relaxed text-white font-semibold">
                   → {ex.result}
                 </p>
               </div>
@@ -139,26 +139,32 @@ export default function Compare() {
             </div>
           </section>
 
-          <div className="rounded-3xl border border-gray-200 bg-white overflow-hidden shadow-sm mb-12">
-            <div className="grid grid-cols-1 gap-px bg-gray-200 text-[10px] font-bold uppercase tracking-widest md:grid-cols-[190px_1fr_1fr]">
-              <div className="bg-gray-50 px-4 py-3 text-gray-500">Dimension</div>
-              <div className="bg-rose-100 px-4 py-3 text-rose-700">GTM data tools</div>
-              <div className="bg-emerald-100 px-4 py-3 text-emerald-800">ReadyForRobots</div>
+          <section className="mb-12">
+            <h2 className="mb-4 text-center font-display text-2xl md:text-3xl font-black tracking-tight text-slate-900">Panel-by-panel difference</h2>
+            <div className="space-y-3">
+              {rows.map((row) => (
+                <article key={row.dimension} className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
+                  <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">{row.dimension}</p>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5">
+                      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-rose-700">GTM data tools</p>
+                      <p className="flex gap-2 text-xs leading-relaxed text-rose-900">
+                        <X className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
+                        <span>{row.dataTools}</span>
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5">
+                      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-emerald-700">ReadyForRobots</p>
+                      <p className="flex gap-2 text-xs leading-relaxed text-emerald-950 font-medium">
+                        {row.rfrWins && <Check className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />}
+                        <span>{row.rfr}</span>
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
-            {rows.map((row) => (
-              <div key={row.dimension} className="grid grid-cols-1 gap-px bg-gray-100 border-t border-gray-100 md:grid-cols-[190px_1fr_1fr]">
-                <div className="bg-white px-4 py-4 text-sm font-semibold text-gray-900">{row.dimension}</div>
-                <div className="bg-rose-50/40 px-4 py-4 text-xs text-rose-900 leading-relaxed flex gap-2">
-                  <X className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
-                  {row.dataTools}
-                </div>
-                <div className="bg-emerald-50/50 px-4 py-4 text-xs text-emerald-950 leading-relaxed font-medium flex gap-2">
-                  {row.rfrWins && <Check className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />}
-                  {row.rfr}
-                </div>
-              </div>
-            ))}
-          </div>
+          </section>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-12">
             <h2 className="font-display font-bold text-gray-900 mb-2">vs Revenue OS (Reevo, etc.)</h2>
