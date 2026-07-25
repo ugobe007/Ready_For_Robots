@@ -1956,6 +1956,14 @@ export default function Admin() {
       ? saveVariantPrevLift >= saveVariantPromotionLiftThreshold
       : saveVariantPrevLift <= -saveVariantPromotionLiftThreshold);
   const saveVariantAutoPromotionActive = saveVariantPromotionSampleReady && saveVariantPromotionSustained;
+  const saveVariantRecommendation = saveVariantAutoPromotionActive
+    ? (saveVariantPromotedVariant === "Variant B" ? "PROMOTE B" : "PROMOTE A")
+    : "HOLD";
+  const saveVariantRecommendationClass = saveVariantRecommendation === "PROMOTE B"
+    ? "border-emerald-300 bg-emerald-100 text-emerald-900"
+    : saveVariantRecommendation === "PROMOTE A"
+      ? "border-sky-300 bg-sky-100 text-sky-900"
+      : "border-gray-300 bg-gray-100 text-gray-700";
 
   const calSentCount = Number(calMetrics.sent ?? 0);
   const calOpenedCount = Number(calMetrics.opened ?? 0);
@@ -2922,6 +2930,9 @@ export default function Admin() {
               <p className="text-[10px] font-bold uppercase tracking-wide text-amber-900">Biggest leak</p>
               <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${trendPillClass(-1 * biggestLeak.completion)}`}>
                 {biggestLeak.label} · {pct(biggestLeak.completion)} completion
+              </span>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${saveVariantRecommendationClass}`}>
+                Step 1 recommendation: {saveVariantRecommendation}
               </span>
             </div>
             <p className="mt-1 text-[11px] text-amber-900/90">{biggestLeak.nextMove}</p>
