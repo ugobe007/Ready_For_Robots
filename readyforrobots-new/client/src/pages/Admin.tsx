@@ -1038,6 +1038,15 @@ export default function Admin() {
     }
   }, [adminFetch, calVariantPreviewByCompany, me?.is_admin, session?.access_token]);
 
+  const refreshOperatorView = useCallback(async () => {
+    await Promise.all([
+      loadOperatorDashboard(),
+      loadCalStatus(),
+      loadCalInbox(),
+      refreshSection("daily_brief", true),
+    ]);
+  }, [loadCalInbox, loadCalStatus, loadOperatorDashboard, refreshSection]);
+
   const applyCalVariantToDraft = useCallback(async (companyId: number, crmAccountId: string, variantId: string) => {
     setError("");
     setMessage("");
@@ -1069,15 +1078,6 @@ export default function Admin() {
       setActionBusy("");
     }
   }, [adminFetch, loadCalVariantPreview, loadDraftBody, refreshOperatorView]);
-
-  const refreshOperatorView = useCallback(async () => {
-    await Promise.all([
-      loadOperatorDashboard(),
-      loadCalStatus(),
-      loadCalInbox(),
-      refreshSection("daily_brief", true),
-    ]);
-  }, [loadCalInbox, loadCalStatus, loadOperatorDashboard, refreshSection]);
 
   const saveCalDraft = useCallback(async (crmAccountId: string) => {
     const draft = draftBodies[crmAccountId];
