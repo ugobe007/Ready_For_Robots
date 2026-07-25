@@ -102,6 +102,8 @@ type SiteAnalytics = {
       pipeline_contact_assist_submit?: number;
       pipeline_contact_assist_invalid?: number;
       pipeline_send_with_captured_contact?: number;
+      pipeline_send_checklist_view?: number;
+      pipeline_send_checklist_ready?: number;
     };
     rates?: {
       report_submit_rate?: number;
@@ -120,6 +122,8 @@ type SiteAnalytics = {
       first3_send_coaching_click_rate?: number;
       first3_send_blocker_rate?: number;
       captured_contact_send_rate?: number;
+      send_checklist_ready_rate?: number;
+      send_after_checklist_rate?: number;
     };
     first_three?: {
       entered?: {
@@ -2703,6 +2707,36 @@ export default function Admin() {
                   analytics?.marketing_conversion?.prev_events?.pipeline_send_with_captured_contact,
                 )}
                 sub="vs previous window"
+              />
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-violet-200 bg-violet-50/60 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-violet-900">Day 6 pre-send checklist lift</p>
+            <p className="mt-1 text-[11px] text-violet-900/90">Readiness checklist coverage and downstream send lift.</p>
+            <div className="mt-2 grid gap-2 md:grid-cols-4">
+              <AdminCard
+                label="Checklist views"
+                value={formatNumber(analytics?.marketing_conversion?.events?.pipeline_send_checklist_view)}
+                sub="send panel visits with readiness state"
+              />
+              <AdminCard
+                label="Checklist ready"
+                value={formatNumber(analytics?.marketing_conversion?.events?.pipeline_send_checklist_ready)}
+                sub={`view→ready ${pct(analytics?.marketing_conversion?.rates?.send_checklist_ready_rate)}`}
+              />
+              <AdminCard
+                label="Send after checklist"
+                value={pct(analytics?.marketing_conversion?.rates?.send_after_checklist_rate)}
+                sub="outreach sent per checklist view"
+              />
+              <AdminCard
+                label="Checklist momentum"
+                value={deltaLabel(
+                  analytics?.marketing_conversion?.events?.pipeline_send_checklist_ready,
+                  analytics?.marketing_conversion?.prev_events?.pipeline_send_checklist_ready,
+                )}
+                sub="ready events vs previous window"
               />
             </div>
           </div>

@@ -374,6 +374,8 @@ def marketing_conversion_snapshot(
     pipeline_outreach_sent = events.get("/event/pipeline_outreach_sent", 0)
     contact_assist_submit = events.get("/event/pipeline_contact_assist_submit", 0)
     send_with_captured_contact = events.get("/event/pipeline_send_with_captured_contact", 0)
+    send_checklist_view = events.get("/event/pipeline_send_checklist_view", 0)
+    send_checklist_ready = events.get("/event/pipeline_send_checklist_ready", 0)
     step_entered, prev_step_entered = _step_event_counts(
         db,
         cutoff=cutoff,
@@ -429,6 +431,8 @@ def marketing_conversion_snapshot(
             "pipeline_contact_assist_submit": contact_assist_submit,
             "pipeline_contact_assist_invalid": events.get("/event/pipeline_contact_assist_invalid", 0),
             "pipeline_send_with_captured_contact": send_with_captured_contact,
+            "pipeline_send_checklist_view": send_checklist_view,
+            "pipeline_send_checklist_ready": send_checklist_ready,
         },
         "first_three": {
             "entered": step_entered,
@@ -454,6 +458,8 @@ def marketing_conversion_snapshot(
             "first3_send_coaching_click_rate": _rate(step_coaching_click["send_outreach"], step_entered["send_outreach"]),
             "first3_send_blocker_rate": _rate(send_blockers_total, step_entered["send_outreach"]),
             "captured_contact_send_rate": _rate(send_with_captured_contact, contact_assist_submit),
+            "send_checklist_ready_rate": _rate(send_checklist_ready, send_checklist_view),
+            "send_after_checklist_rate": _rate(pipeline_outreach_sent, send_checklist_view),
         },
         "prev_events": {
             "hero_pipeline_click": prev_events.get("/event/home_cta_pipeline_click", 0),
@@ -470,6 +476,8 @@ def marketing_conversion_snapshot(
             "pipeline_contact_assist_submit": prev_events.get("/event/pipeline_contact_assist_submit", 0),
             "pipeline_contact_assist_invalid": prev_events.get("/event/pipeline_contact_assist_invalid", 0),
             "pipeline_send_with_captured_contact": prev_events.get("/event/pipeline_send_with_captured_contact", 0),
+            "pipeline_send_checklist_view": prev_events.get("/event/pipeline_send_checklist_view", 0),
+            "pipeline_send_checklist_ready": prev_events.get("/event/pipeline_send_checklist_ready", 0),
         },
         "prev_first_three": {
             "entered": prev_step_entered,

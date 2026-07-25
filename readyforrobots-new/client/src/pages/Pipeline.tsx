@@ -985,6 +985,8 @@ export default function Pipeline() {
   const firstThreeAbandonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstThreeAbandonSignaturesRef = useRef<Set<string>>(new Set());
   const contactAssistSeenLeadIdsRef = useRef<Set<number>>(new Set());
+  const sendChecklistSeenLeadIdsRef = useRef<Set<number>>(new Set());
+  const sendChecklistReadyLeadIdsRef = useRef<Set<number>>(new Set());
   const byIdTelemetryRef = useRef({
     attempts: 0,
     successes: 0,
@@ -2228,6 +2230,7 @@ export default function Pipeline() {
       company: selected.company,
     });
   }, [selected, session?.access_token]);
+
   const canSendSelectedOutreach = Boolean(
     selected
       && selected.contact
@@ -2244,6 +2247,35 @@ export default function Pipeline() {
         !session?.access_token ? "not_authenticated" : null,
       ].filter((reason): reason is string => Boolean(reason))
     : [];
+  const sendReadiness = {
+    hasContact: Boolean(selected?.contact),
+    hasDraft: Boolean(selected?.outreachBody),
+    alreadySent: Boolean(selected?.stage === "Outreach Sent"),
+  };
+
+  useEffect(() => {
+    if (!selected || !session?.access_token) return;
+    if (!sendChecklistSeenLeadIdsRef.current.has(selected.id)) {
+      sendChecklistSeenLeadIdsRef.current.add(selected.id);
+      trackMarketingEvent("pipeline_send_checklist_view", {
+        lead_id: selected.id,
+        company: selected.company,
+        has_contact: sendReadiness.hasContact,
+        has_draft: sendReadiness.hasDraft,
+        already_sent: sendReadiness.alreadySent,
+        blocker_count: selectedSendBlockers.length,
+      });
+    }
+    const isReady = sendReadiness.hasContact && sendReadiness.hasDraft && !sendReadiness.alreadySent;
+    if (isReady && !sendChecklistReadyLeadIdsRef.current.has(selected.id)) {
+      sendChecklistReadyLeadIdsRef.current.add(selected.id);
+      trackMarketingEvent("pipeline_send_checklist_ready", {
+        lead_id: selected.id,
+        company: selected.company,
+      });
+    }
+  }, [selected, session?.access_token, sendReadiness.hasContact, sendReadiness.hasDraft, sendReadiness.alreadySent, selectedSendBlockers.length]);
+
   const firstThreePrimaryActionLabel = nextFirstThreeStep === "save_lead"
     ? "Save this lead"
     : nextFirstThreeStep === "copy_draft"
@@ -3506,6 +3538,21 @@ export default function Pipeline() {
                         </span>
                       </div>
                     )}
+
+                    <div className="mb-2 rounded-lg border border-slate-200 bg-slate-50/80 p-2.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-700">Pre-send checklist</p>
+                      <div className="mt-1.5 grid gap-1 text-[10px] text-gray-700 md:grid-cols-3">
+                        <span className={sendReadiness.hasContact ? "font-semibold text-emerald-700" : "text-amber-800"}>
+                          {sendReadiness.hasContact ? "✓" : "•"} Contact email
+                        </span>
+                        <span className={sendReadiness.hasDraft ? "font-semibold text-emerald-700" : "text-amber-800"}>
+                          {sendReadiness.hasDraft ? "✓" : "•"} Outreach draft
+                        </span>
+                        <span className={!sendReadiness.alreadySent ? "font-semibold text-emerald-700" : "text-slate-600"}>
+                          {!sendReadiness.alreadySent ? "✓" : "•"} Not already sent
+                        </span>
+                      </div>
+                    </div>
 
                     {selected.outreachSubject && (
                       <div className="mb-2 p-2.5 rounded-lg" style={{ background: "rgba(255,176,0,0.06)", border: "1px solid rgba(255,176,0,0.18)" }}>
