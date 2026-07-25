@@ -403,6 +403,12 @@ function resolvePipelineLeadId(search: string): number | null {
 }
 const PIPELINE_FRESH_MS = 90 * 1000;
 const PIPELINE_TIMEOUT = 8_000;
+const BY_ID_TIMEOUT_MS = 8_000;
+const BY_ID_DEEPLINK_TIMEOUT_MS = 12_000;
+const BY_ID_FAIL_COOLDOWN_MS = 90 * 1000;
+const BY_ID_BREAKER_OPEN_MS = 45 * 1000;
+const BY_ID_BREAKER_FAIL_STREAK = 3;
+const BY_ID_COOLDOWN_TRACK_MAX = 300;
 
 type PipelineFeedPayload = {
   summary?: LeadSummary;
@@ -828,9 +834,149 @@ export default function Pipeline() {
   const dealsRef = useRef(deals);
   dealsRef.current = deals;
   const deepLinkInflightRef = useRef<number | null>(null);
+  const byIdInFlightRef = useRef<Map<number, Promise<Deal | null>>>(new Map());
+  const byIdFailureCooldownUntilRef = useRef<Map<number, number>>(new Map());
+  const byIdFailureStreakRef = useRef(0);
+  const byIdBreakerOpenUntilRef = useRef(0);
+  const byIdTelemetryRef = useRef({
+    attempts: 0,
+    successes: 0,
+    failures: 0,
+    cooldownSkips: 0,
+    breakerSkips: 0,
+    inflightDedupes: 0,
+    breakerOpenCount: 0,
+    lastError: "",
+  });
+
+  const pruneByIdCooldowns = () => {
+    const now = Date.now();
+    for (const [id, until] of byIdFailureCooldownUntilRef.current.entries()) {
+      if (until <= now) byIdFailureCooldownUntilRef.current.delete(id);
+    }
+    // Keep map bounded in case of prolonged browsing through many unique ids.
+    if (byIdFailureCooldownUntilRef.current.size > BY_ID_COOLDOWN_TRACK_MAX) {
+      const sorted = Array.from(byIdFailureCooldownUntilRef.current.entries())
+        .sort((a, b) => a[1] - b[1]);
+      const keep = sorted.slice(-BY_ID_COOLDOWN_TRACK_MAX);
+      byIdFailureCooldownUntilRef.current = new Map(keep);
+    }
+  };
+
+  const publishByIdTelemetry = () => {
+    if (typeof window === "undefined") return;
+    pruneByIdCooldowns();
+    const attempts = byIdTelemetryRef.current.attempts;
+    const failures = byIdTelemetryRef.current.failures;
+    const failRate = attempts > 0 ? Number((failures / attempts).toFixed(3)) : 0;
+    (window as Window & { __rfrPipelineByIdTelemetry?: Record<string, unknown> }).__rfrPipelineByIdTelemetry = {
+      ...byIdTelemetryRef.current,
+      failRate,
+      breakerThreshold: BY_ID_BREAKER_FAIL_STREAK,
+      breakerWindowMs: BY_ID_BREAKER_OPEN_MS,
+      idCooldownMs: BY_ID_FAIL_COOLDOWN_MS,
+      breakerOpen: Date.now() < byIdBreakerOpenUntilRef.current,
+      breakerOpenForMs: Math.max(0, byIdBreakerOpenUntilRef.current - Date.now()),
+      cooldownIds: byIdFailureCooldownUntilRef.current.size,
+      inFlight: byIdInFlightRef.current.size,
+    };
+  };
+
+  const getPipelineFallbackDealById = (leadId: number): Deal | null => {
+    const fromCurrent = dealsRef.current.find((d) => d.id === leadId);
+    if (fromCurrent) return fromCurrent;
+    const cached =
+      readSurfaceCache<PipelineFeedPayload>(PIPELINE_SESSION_KEY, PIPELINE_SESSION_TTL_MS)
+      ?? readSurfaceCache<PipelineFeedPayload>(PIPELINE_SESSION_KEY, PIPELINE_STALE_PAINT_MS);
+    const rows = Array.isArray(cached?.data?.leads) ? cached?.data?.leads : [];
+    if (!rows.length) return null;
+    const raw = rows.find((r) => r.id === leadId);
+    if (!raw) return null;
+    try {
+      return mapApiLeadToDeal(raw, crmStageByCompanyId[leadId]) as Deal;
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchByIdWithGuards = async (
+    leadId: number,
+    opts: { timeoutMs: number; retries?: number; retryDelayMs?: number },
+  ): Promise<Deal | null> => {
+    pruneByIdCooldowns();
+    const inFlight = byIdInFlightRef.current.get(leadId);
+    if (inFlight) {
+      byIdTelemetryRef.current.inflightDedupes += 1;
+      publishByIdTelemetry();
+      return inFlight;
+    }
+
+    const now = Date.now();
+    if (now < byIdBreakerOpenUntilRef.current) {
+      byIdTelemetryRef.current.cooldownSkips += 1;
+      byIdTelemetryRef.current.breakerSkips += 1;
+      publishByIdTelemetry();
+      return getPipelineFallbackDealById(leadId);
+    }
+
+    const cooldownUntil = byIdFailureCooldownUntilRef.current.get(leadId) ?? 0;
+    if (now < cooldownUntil) {
+      byIdTelemetryRef.current.cooldownSkips += 1;
+      publishByIdTelemetry();
+      return getPipelineFallbackDealById(leadId);
+    }
+
+    byIdTelemetryRef.current.attempts += 1;
+    publishByIdTelemetry();
+
+    const request = (async () => {
+      const base = getApiBase();
+      try {
+        const response = await fetchWithTimeoutRetry(
+          `${base}/api/leads/by-id/${leadId}`,
+          liveFetchInit(),
+          opts.timeoutMs,
+          {
+            retries: opts.retries ?? 0,
+            retryDelayMs: opts.retryDelayMs ?? 800,
+          },
+        );
+        if (!response.ok) throw new Error(`by-id ${response.status}`);
+        const lead = (await response.json()) as ApiLead;
+        const mapped = mapApiLeadToDeal(lead, crmStageByCompanyId[lead.id]) as Deal;
+        byIdFailureStreakRef.current = 0;
+        byIdFailureCooldownUntilRef.current.delete(leadId);
+        byIdTelemetryRef.current.successes += 1;
+        byIdTelemetryRef.current.lastError = "";
+        publishByIdTelemetry();
+        return mapped;
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "by-id request failed";
+        byIdTelemetryRef.current.failures += 1;
+        byIdTelemetryRef.current.lastError = message;
+        byIdFailureStreakRef.current += 1;
+        byIdFailureCooldownUntilRef.current.set(leadId, Date.now() + BY_ID_FAIL_COOLDOWN_MS);
+        if (byIdFailureStreakRef.current >= BY_ID_BREAKER_FAIL_STREAK) {
+          byIdBreakerOpenUntilRef.current = Date.now() + BY_ID_BREAKER_OPEN_MS;
+          byIdTelemetryRef.current.breakerOpenCount += 1;
+          byIdFailureStreakRef.current = 0;
+        }
+        publishByIdTelemetry();
+        return getPipelineFallbackDealById(leadId);
+      } finally {
+        byIdInFlightRef.current.delete(leadId);
+      }
+    })();
+
+    byIdInFlightRef.current.set(leadId, request);
+    return request;
+  };
 
   const retryDeepLink = () => {
     deepLinkInflightRef.current = null;
+    byIdFailureCooldownUntilRef.current.delete(deepLinkLeadId ?? -1);
+    byIdBreakerOpenUntilRef.current = 0;
+    publishByIdTelemetry();
     setDeepLinkLoadFailed(false);
     setDeepLinkRetryNonce((n) => n + 1);
   };
@@ -1102,22 +1248,18 @@ export default function Pipeline() {
     deepLinkInflightRef.current = deepLinkLeadId;
     let cancelled = false;
     void (async () => {
-      const base = getApiBase();
       try {
-        const response = await fetchWithTimeoutRetry(
-          `${base}/api/leads/by-id/${deepLinkLeadId}`,
-          liveFetchInit(),
-          12_000,
-          { retries: 2, retryDelayMs: 1200 },
-        );
+        const mapped = await fetchByIdWithGuards(deepLinkLeadId, {
+          timeoutMs: BY_ID_DEEPLINK_TIMEOUT_MS,
+          retries: 2,
+          retryDelayMs: 1200,
+        });
         if (cancelled) return;
-        if (!response.ok) {
+        if (!mapped) {
           deepLinkInflightRef.current = null;
           setDeepLinkLoadFailed(true);
           return;
         }
-        const lead = (await response.json()) as ApiLead;
-        const mapped = mapApiLeadToDeal(lead, crmStageByCompanyId[lead.id]) as Deal;
         if (cancelled) return;
         deepLinkInflightRef.current = null;
         setDeepLinkLoadFailed(false);
@@ -1255,20 +1397,21 @@ export default function Pipeline() {
   useEffect(() => {
     if (!selectedId) return;
     if (deepLinkInflightRef.current === selectedId) return;
-    const base = getApiBase();
     let cancelled = false;
     const timer = window.setTimeout(() => {
       void (async () => {
-        setLoadingResearch(true);
+        const now = Date.now();
+        const breakerOpen = now < byIdBreakerOpenUntilRef.current;
+        const cooldownOpen = now < (byIdFailureCooldownUntilRef.current.get(selectedId) ?? 0);
+        if (!breakerOpen && !cooldownOpen) {
+          setLoadingResearch(true);
+        }
         try {
-          const response = await fetchWithTimeout(
-            `${base}/api/leads/by-id/${selectedId}`,
-            liveFetchInit(),
-            8_000,
-          );
-          if (!response.ok) throw new Error(await response.text());
-          const lead = (await response.json()) as ApiLead;
-          const mapped = mapApiLeadToDeal(lead, crmStageByCompanyId[lead.id]) as Deal;
+          const mapped = await fetchByIdWithGuards(selectedId, {
+            timeoutMs: BY_ID_TIMEOUT_MS,
+            retries: 0,
+          });
+          if (!mapped) return;
           if (!cancelled) {
             setDeals((prev) => {
               if (prev.some((deal) => deal.id === selectedId)) {
@@ -1290,7 +1433,7 @@ export default function Pipeline() {
     };
   // Depend only on selectedId, not deals, to prevent re-firing on every deals update.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId]);
+  }, [selectedId, deepLinkRetryNonce]);
 
   // Load SIGNAL stats once when authenticated admin
   useEffect(() => {

@@ -3,12 +3,12 @@
  * Signal library: browse all 14 signal types, filter by category and industry
  * Violet palette: #111827 bg · #059669 accent · cream text
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, TrendingUp, DollarSign, Newspaper, Building2, Briefcase, Activity, Globe, Zap, Filter, Search, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
-import { getApiBase, getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
+import { fetchWithTimeoutRetry, getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanAndClampText, cleanScrapedText, leadPreviewSentences } from "@/lib/text";
 import { Link } from "wouter";
 import { toast } from "sonner";
@@ -202,6 +202,12 @@ const SIGNAL_TYPES = [
 
 const CATEGORIES = ["All", "Operational", "Growth", "Financial", "Intent", "External"];
 const INDUSTRIES = ["All", "Logistics", "Hospitality", "Healthcare", "Manufacturing", "Food Processing", "Retail"];
+
+const SIGNALS_BASE_POLL_MS = 30_000;
+const SIGNALS_MAX_POLL_MS = 5 * 60 * 1000;
+const SIGNALS_ENDPOINT_COOLDOWN_MS = 90 * 1000;
+const SIGNALS_BREAKER_OPEN_MS = 45 * 1000;
+const SIGNALS_BREAKER_FAIL_STREAK = 3;
 
 const fallbackLiveSignals: LiveOpportunitySignal[] = [
   { id: "silver-peak", company: "Silver Peak Hospitality", type: "Labor Shortage", score: 94, time: "2m ago", color: MARKET_COLORS.emeraldBright, track: "Sales", industry: "Hospitality", text: "40% housekeeping vacancy and overnight staffing pressure." },
@@ -564,6 +570,44 @@ export default function Signals() {
   const [leadSummary, setLeadSummary] = useState<LeadSummary | null>(null);
   const [loadingLiveSignals, setLoadingLiveSignals] = useState(true);
   const [activeSignalIndex, setActiveSignalIndex] = useState(0);
+  const summaryInFlightRef = useRef<Promise<void> | null>(null);
+  const liveInFlightRef = useRef<Promise<void> | null>(null);
+  const summaryFailStreakRef = useRef(0);
+  const liveFailStreakRef = useRef(0);
+  const summaryCooldownUntilRef = useRef(0);
+  const liveCooldownUntilRef = useRef(0);
+  const breakerOpenUntilRef = useRef(0);
+  const signalsTelemetryRef = useRef({
+    summaryAttempts: 0,
+    summaryFailures: 0,
+    summarySkips: 0,
+    summaryDedupes: 0,
+    liveAttempts: 0,
+    liveFailures: 0,
+    liveSkips: 0,
+    liveDedupes: 0,
+    breakerOpenCount: 0,
+    lastError: "",
+  });
+
+  const publishSignalsTelemetry = () => {
+    if (typeof window === "undefined") return;
+    const summaryAttempts = signalsTelemetryRef.current.summaryAttempts;
+    const summaryFailures = signalsTelemetryRef.current.summaryFailures;
+    const liveAttempts = signalsTelemetryRef.current.liveAttempts;
+    const liveFailures = signalsTelemetryRef.current.liveFailures;
+    (window as Window & { __rfrSignalsPollingTelemetry?: Record<string, unknown> }).__rfrSignalsPollingTelemetry = {
+      ...signalsTelemetryRef.current,
+      summaryFailRate: summaryAttempts > 0 ? Number((summaryFailures / summaryAttempts).toFixed(3)) : 0,
+      liveFailRate: liveAttempts > 0 ? Number((liveFailures / liveAttempts).toFixed(3)) : 0,
+      breakerOpen: Date.now() < breakerOpenUntilRef.current,
+      breakerOpenForMs: Math.max(0, breakerOpenUntilRef.current - Date.now()),
+      summaryCooldownForMs: Math.max(0, summaryCooldownUntilRef.current - Date.now()),
+      liveCooldownForMs: Math.max(0, liveCooldownUntilRef.current - Date.now()),
+      summaryFailStreak: summaryFailStreakRef.current,
+      liveFailStreak: liveFailStreakRef.current,
+    };
+  };
 
   const filtered = SIGNAL_TYPES.filter((s) => {
     const matchCat = category === "All" || s.category === category;
@@ -580,47 +624,155 @@ export default function Signals() {
 
   useEffect(() => {
     let cancelled = false;
+    const base = getPublicReadApiBase();
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const maybeOpenBreaker = () => {
+      if (
+        summaryFailStreakRef.current >= SIGNALS_BREAKER_FAIL_STREAK
+        || liveFailStreakRef.current >= SIGNALS_BREAKER_FAIL_STREAK
+      ) {
+        breakerOpenUntilRef.current = Date.now() + SIGNALS_BREAKER_OPEN_MS;
+        signalsTelemetryRef.current.breakerOpenCount += 1;
+        summaryFailStreakRef.current = 0;
+        liveFailStreakRef.current = 0;
+      }
+    };
 
     async function loadLeadSummary() {
-      try {
-        const response = await fetch(`${getPublicReadApiBase()}/api/leads/summary?exclude_junk=true`, liveFetchInit());
-        if (!response.ok) throw new Error(`Lead summary failed with ${response.status}`);
-        const data = await response.json();
-        if (!cancelled) setLeadSummary(data);
-      } catch (error) {
-        console.info(error);
+      if (summaryInFlightRef.current) {
+        signalsTelemetryRef.current.summaryDedupes += 1;
+        publishSignalsTelemetry();
+        return summaryInFlightRef.current;
       }
+
+      const now = Date.now();
+      if (now < breakerOpenUntilRef.current || now < summaryCooldownUntilRef.current) {
+        signalsTelemetryRef.current.summarySkips += 1;
+        publishSignalsTelemetry();
+        return;
+      }
+
+      signalsTelemetryRef.current.summaryAttempts += 1;
+      publishSignalsTelemetry();
+
+      const run = (async () => {
+        try {
+          const response = await fetchWithTimeoutRetry(
+            `${base}/api/leads/summary?exclude_junk=true`,
+            liveFetchInit(),
+            8_000,
+            { retries: 1, retryDelayMs: 800 },
+          );
+          if (!response.ok) throw new Error(`Lead summary failed with ${response.status}`);
+          const data = await response.json();
+          if (!cancelled) setLeadSummary(data as LeadSummary);
+          summaryFailStreakRef.current = 0;
+          summaryCooldownUntilRef.current = 0;
+          publishSignalsTelemetry();
+        } catch (error) {
+          console.info(error);
+          signalsTelemetryRef.current.summaryFailures += 1;
+          signalsTelemetryRef.current.lastError =
+            error instanceof Error ? error.message : "summary fetch failed";
+          summaryFailStreakRef.current += 1;
+          summaryCooldownUntilRef.current = Date.now() + SIGNALS_ENDPOINT_COOLDOWN_MS;
+          maybeOpenBreaker();
+          publishSignalsTelemetry();
+        } finally {
+          summaryInFlightRef.current = null;
+        }
+      })();
+
+      summaryInFlightRef.current = run;
+      return run;
     }
 
     async function loadLiveSignals() {
-      try {
-        const response = await fetch(
-          `${getPublicReadApiBase()}/api/leads?limit=24&tier=HOT&sort=score&exclude_junk=true`,
-          liveFetchInit(),
-        );
-        if (!response.ok) throw new Error(`Live signal feed failed with ${response.status}`);
-        const data = await response.json();
-        const leads = Array.isArray(data) ? data : [];
-        const mapped = leads.map(mapLeadToLiveSignal).filter((signal) => signal.score > 0);
-        if (!mapped.length) throw new Error("No scored leads returned");
-        if (!cancelled) setLiveSignals(mapped);
-      } catch (error) {
-        console.info(error);
-        if (!cancelled) setLiveSignals(fallbackLiveSignals);
-      } finally {
-        if (!cancelled) setLoadingLiveSignals(false);
+      if (liveInFlightRef.current) {
+        signalsTelemetryRef.current.liveDedupes += 1;
+        publishSignalsTelemetry();
+        return liveInFlightRef.current;
       }
+
+      const now = Date.now();
+      if (now < breakerOpenUntilRef.current || now < liveCooldownUntilRef.current) {
+        signalsTelemetryRef.current.liveSkips += 1;
+        if (!cancelled) setLoadingLiveSignals(false);
+        publishSignalsTelemetry();
+        return;
+      }
+
+      signalsTelemetryRef.current.liveAttempts += 1;
+      publishSignalsTelemetry();
+
+      const run = (async () => {
+        try {
+          const response = await fetchWithTimeoutRetry(
+            `${base}/api/leads?limit=24&tier=HOT&sort=score&exclude_junk=true`,
+            liveFetchInit(),
+            8_000,
+            { retries: 1, retryDelayMs: 800 },
+          );
+          if (!response.ok) throw new Error(`Live signal feed failed with ${response.status}`);
+          const data = await response.json();
+          const leads = Array.isArray(data) ? data : [];
+          const mapped = leads.map(mapLeadToLiveSignal).filter((signal) => signal.score > 0);
+          if (!mapped.length) throw new Error("No scored leads returned");
+          if (!cancelled) setLiveSignals(mapped);
+          liveFailStreakRef.current = 0;
+          liveCooldownUntilRef.current = 0;
+          publishSignalsTelemetry();
+        } catch (error) {
+          console.info(error);
+          signalsTelemetryRef.current.liveFailures += 1;
+          signalsTelemetryRef.current.lastError =
+            error instanceof Error ? error.message : "live signal feed failed";
+          liveFailStreakRef.current += 1;
+          liveCooldownUntilRef.current = Date.now() + SIGNALS_ENDPOINT_COOLDOWN_MS;
+          maybeOpenBreaker();
+          if (!cancelled) setLiveSignals(fallbackLiveSignals);
+          publishSignalsTelemetry();
+        } finally {
+          if (!cancelled) setLoadingLiveSignals(false);
+          liveInFlightRef.current = null;
+        }
+      })();
+
+      liveInFlightRef.current = run;
+      return run;
     }
 
-    loadLeadSummary();
-    loadLiveSignals();
-    const refreshTimer = window.setInterval(() => {
-      loadLeadSummary();
-      loadLiveSignals();
-    }, 30000);
+    const nextDelay = () => {
+      if (Date.now() < breakerOpenUntilRef.current) {
+        return Math.min(
+          SIGNALS_MAX_POLL_MS,
+          Math.max(SIGNALS_BASE_POLL_MS, breakerOpenUntilRef.current - Date.now()),
+        );
+      }
+      const failStreak = Math.max(summaryFailStreakRef.current, liveFailStreakRef.current);
+      if (failStreak <= 0) return SIGNALS_BASE_POLL_MS;
+      return Math.min(SIGNALS_MAX_POLL_MS, SIGNALS_BASE_POLL_MS * 2 ** failStreak);
+    };
+
+    const scheduleNext = (delayMs: number) => {
+      if (cancelled) return;
+      if (refreshTimer) window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => {
+        void tick();
+      }, delayMs);
+    };
+
+    const tick = async () => {
+      await Promise.all([loadLeadSummary(), loadLiveSignals()]);
+      publishSignalsTelemetry();
+      scheduleNext(nextDelay());
+    };
+
+    void tick();
     return () => {
       cancelled = true;
-      window.clearInterval(refreshTimer);
+      if (refreshTimer) window.clearTimeout(refreshTimer);
     };
   }, []);
 

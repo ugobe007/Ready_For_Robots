@@ -2206,36 +2206,77 @@ def get_lead_by_id(company_id: int, response: Response, db: Session = Depends(ge
 
     # Miss or stale → render once, persist, serve. Subsequent reads (and reads after
     # a deploy/restart) hit the durable snapshot without touching the scoring code.
-    c = (
-        db.query(Company)
-        .options(joinedload(Company.scores), joinedload(Company.signals))
-        .filter(Company.id == company_id)
-        .first()
-    )
-    if not c:
-        raise HTTPException(status_code=404, detail="Lead not found")
-    junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-    # NOTE: do NOT resolve homepage URLs via LLM here. This endpoint is the
-    # newsletter/homepage deep-link hot path; a synchronous OpenAI call for
-    # website-less leads added ~80s latency and tripped the client timeout
-    # ("Network interrupted while loading this lead"). Homepage backfill happens
-    # during background enrichment instead.
-    payload = _fmt_company(
-        c,
-        junk,
-        junk_reason,
-        pri,
-        llm_homepage_url=None,
-        include_research=True,
-        db=db,
-    )
-    er = _entity_resolution_payload(db, c)
-    if er:
-        payload["entity_resolution"] = er
-    payload["_snapshot_version"] = version
-    # Version-keyed correctness, so the TTL is just a GC backstop, not the freshness gate.
-    cache_write(db, cache_key, payload, ttl_minutes=10080)
-    return payload
+    stage = "load_company"
+    try:
+        c = (
+            db.query(Company)
+            .options(joinedload(Company.scores), joinedload(Company.signals))
+            .filter(Company.id == company_id)
+            .first()
+        )
+        if not c:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        stage = "classify_lead"
+        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+        # NOTE: do NOT resolve homepage URLs via LLM here. This endpoint is the
+        # newsletter/homepage deep-link hot path; a synchronous OpenAI call for
+        # website-less leads added ~80s latency and tripped the client timeout
+        # ("Network interrupted while loading this lead"). Homepage backfill happens
+        # during background enrichment instead.
+        stage = "fmt_company"
+        payload = _fmt_company(
+            c,
+            junk,
+            junk_reason,
+            pri,
+            llm_homepage_url=None,
+            include_research=True,
+            db=db,
+        )
+        stage = "entity_resolution"
+        er = _entity_resolution_payload(db, c)
+        if er:
+            payload["entity_resolution"] = er
+        payload["_snapshot_version"] = version
+        stage = "cache_write"
+        # Version-keyed correctness, so the TTL is just a GC backstop, not the freshness gate.
+        cache_write(db, cache_key, payload, ttl_minutes=10080)
+        return payload
+    except HTTPException:
+        raise
+    except Exception as exc:
+        # Never let render-path exceptions create repeated 500 loops on the client.
+        logger.exception(
+            "Lead by-id render failed for company_id=%s stage=%s: %s",
+            company_id,
+            stage,
+            exc,
+        )
+
+        try:
+            from app.services.content_surfaces import KEY_PIPELINE_FEED
+            from app.services.public_surface_cache import read_public_cache
+
+            cached_feed = read_public_cache(KEY_PIPELINE_FEED, stale_ok=True)
+            if isinstance(cached_feed, dict):
+                leads = cached_feed.get("leads") or []
+                if isinstance(leads, list):
+                    for row in leads:
+                        if isinstance(row, dict) and int(row.get("id") or 0) == company_id:
+                            fallback_payload = dict(row)
+                            fallback_payload["_snapshot_version"] = version
+                            fallback_payload["partial"] = True
+                            fallback_payload["partial_reason"] = "detail_render_failed"
+                            cache_write(db, cache_key, fallback_payload, ttl_minutes=30)
+                            return fallback_payload
+        except Exception as fallback_exc:
+            logger.warning(
+                "Lead by-id cache fallback failed for company_id=%s: %s",
+                company_id,
+                fallback_exc,
+            )
+
+        raise HTTPException(status_code=503, detail="Lead detail temporarily unavailable")
 
 
 @router.get("/{company_id}/research")

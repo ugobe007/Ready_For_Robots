@@ -6,6 +6,7 @@ import CalEmailPreview from "@/components/admin/CalEmailPreview";
 import SupabaseInlineLink from "@/components/admin/SupabaseInlineLink";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
+import CalAutopilotSwitch from "@/components/admin/CalAutopilotSwitch";
 import CalWorkflowPanel, {
   type CalWorkflowMetrics,
   type CalWorkflowStepId,
@@ -122,6 +123,14 @@ type ScrapeTargets = {
 };
 
 type AdminMe = { email?: string; is_admin?: boolean };
+
+type DebugTelemetryState = {
+  pipelineById?: Record<string, unknown>;
+  signalsPolling?: Record<string, unknown>;
+  homepagePool?: Record<string, unknown>;
+  adminSnapshot?: Record<string, unknown>;
+  updatedAt?: string;
+};
 
 type CalProspect = {
   company_id?: number;
@@ -408,7 +417,7 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
-  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "cal-save" | "cal-run" | "supply-draft" | "supply-send" | "scout-activate" | "scout-send" | "cleanup" | "">("");
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "cal-save" | "cal-run" | "cal-autopilot" | "supply-draft" | "supply-send" | "scout-activate" | "scout-send" | "cleanup" | "">("");
   const [sendConfirm, setSendConfirm] = useState<false | "bulk" | "scout-send" | string>(false);
   const [scoutStatus, setScoutStatus] = useState<ScoutStatus | null>(
     initialApplied.scoutStatus as ScoutStatus | null,
@@ -454,6 +463,7 @@ export default function Admin() {
   } | null>(null);
   const [salesOppTotal, setSalesOppTotal] = useState<number | null>(null);
   const [operatorDashboard, setOperatorDashboard] = useState<OperatorDashboard | null>(null);
+  const [debugTelemetry, setDebugTelemetry] = useState<DebugTelemetryState>({});
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -473,6 +483,40 @@ export default function Admin() {
       },
     }));
   }, [api, session?.access_token]);
+
+  useEffect(() => {
+    if (!me?.is_admin) return;
+
+    const readTelemetry = () => {
+      const w = window as Window & {
+        __rfrPipelineByIdTelemetry?: Record<string, unknown>;
+        __rfrSignalsPollingTelemetry?: Record<string, unknown>;
+        __rfrHomepageLeadPoolTelemetry?: Record<string, unknown>;
+        __rfrAdminSnapshotTelemetry?: Record<string, unknown>;
+      };
+      setDebugTelemetry({
+        pipelineById: w.__rfrPipelineByIdTelemetry,
+        signalsPolling: w.__rfrSignalsPollingTelemetry,
+        homepagePool: w.__rfrHomepageLeadPoolTelemetry,
+        adminSnapshot: w.__rfrAdminSnapshotTelemetry,
+        updatedAt: new Date().toISOString(),
+      });
+    };
+
+    readTelemetry();
+    const timer = window.setInterval(readTelemetry, 2000);
+    return () => window.clearInterval(timer);
+  }, [me?.is_admin]);
+
+  const debugRows = useMemo(() => {
+    const rows: Array<{ label: string; data?: Record<string, unknown> }> = [
+      { label: "Pipeline by-id", data: debugTelemetry.pipelineById },
+      { label: "Signals polling", data: debugTelemetry.signalsPolling },
+      { label: "Homepage pool", data: debugTelemetry.homepagePool },
+      { label: "Admin snapshot", data: debugTelemetry.adminSnapshot },
+    ];
+    return rows;
+  }, [debugTelemetry]);
 
   const applySectionData = useCallback((section: AdminSectionName, data: unknown) => {
     switch (section) {
@@ -703,6 +747,7 @@ export default function Admin() {
   const toggleCalAutonomy = async (enabled: boolean) => {
     setError("");
     setMessage("");
+    setActionBusy("cal-autopilot");
     try {
       const res = await adminFetch("/api/admin/cal/autonomy-toggle", {
         method: "POST",
@@ -714,6 +759,8 @@ export default function Admin() {
       setMessage(`Cal autopilot turned ${enabled ? "ON" : "OFF"}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Autopilot toggle failed.");
+    } finally {
+      setActionBusy("");
     }
   };
 
@@ -1433,6 +1480,56 @@ export default function Admin() {
           </p>
         ) : null}
 
+        {me?.is_admin && (
+          <section className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-3">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-extrabold uppercase tracking-wider text-amber-900">
+                  Runtime debug telemetry
+                </p>
+                <p className="text-[11px] text-amber-800">
+                  Breakers, cooldowns, fail-rates from browser-side guardrails.
+                </p>
+              </div>
+              <span className="text-[10px] text-amber-700">
+                {debugTelemetry.updatedAt ? `Updated ${fmtDate(debugTelemetry.updatedAt)}` : "Waiting for data"}
+              </span>
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+              {debugRows.map((row) => {
+                const d = row.data || {};
+                const breakerOpen = Boolean(d.breakerOpen);
+                const failRate = Number(d.failRate ?? 0);
+                const attempts = Number(d.attempts ?? 0);
+                const failures = Number(d.failures ?? 0);
+                const cooldown = Number(d.cooldownForMs ?? d.breakerOpenForMs ?? 0);
+                return (
+                  <div key={row.label} className="rounded-xl border border-amber-200 bg-white/80 px-3 py-2">
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold text-gray-900">{row.label}</p>
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase"
+                        style={{
+                          color: breakerOpen ? "#b91c1c" : "#166534",
+                          background: breakerOpen ? "#fee2e2" : "#dcfce7",
+                        }}
+                      >
+                        {breakerOpen ? "breaker open" : "healthy"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-gray-700">
+                      <span>Attempts: {Number.isFinite(attempts) ? attempts : 0}</span>
+                      <span>Failures: {Number.isFinite(failures) ? failures : 0}</span>
+                      <span>Fail rate: {Number.isFinite(failRate) ? failRate.toFixed(3) : "0.000"}</span>
+                      <span>Cooldown ms: {Number.isFinite(cooldown) ? Math.max(0, Math.round(cooldown)) : 0}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
 
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -1442,6 +1539,14 @@ export default function Admin() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <CalAutopilotSwitch
+              enabled={!!calAutonomy?.enabled}
+              disabled={calAutonomy?.runtime_toggle_available === false}
+              busy={actionBusy === "cal-autopilot"}
+              everyHours={calAutonomy?.every_hours}
+              sendLimit={calAutonomy?.send_limit}
+              onToggle={(on) => void toggleCalAutonomy(on)}
+            />
             <div className="flex rounded-xl border border-gray-200 p-1">
               {TIME_RANGES.map((range) => (
                 <button
@@ -1537,24 +1642,15 @@ export default function Admin() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span
-                className="rounded-full border px-2.5 py-1 text-[10px] font-bold"
-                style={{
-                  color: calAutonomy?.enabled ? "#047857" : "#b45309",
-                  borderColor: calAutonomy?.enabled ? "rgba(5,150,105,0.35)" : "rgba(245,158,11,0.45)",
-                  background: calAutonomy?.enabled ? "rgba(5,150,105,0.08)" : "rgba(255,176,0,0.1)",
-                }}
-              >
-                Autopilot {calAutonomy?.enabled ? "ON" : "OFF"}
-              </span>
-              {calAutonomy?.runtime_toggle_available ? (
-                <SupabaseInlineLink
-                  tone="gray"
-                  onClick={() => void toggleCalAutonomy(!calAutonomy?.enabled)}
-                >
-                  Turn autopilot {calAutonomy?.enabled ? "off" : "on"}
-                </SupabaseInlineLink>
-              ) : null}
+              <CalAutopilotSwitch
+                enabled={!!calAutonomy?.enabled}
+                disabled={calAutonomy?.runtime_toggle_available === false}
+                busy={actionBusy === "cal-autopilot"}
+                everyHours={calAutonomy?.every_hours}
+                sendLimit={calAutonomy?.send_limit}
+                onToggle={(on) => void toggleCalAutonomy(on)}
+                compact
+              />
               <span className="text-xs text-gray-600">
                 {calFilter !== "all" ? (
                   <>
@@ -1902,31 +1998,30 @@ export default function Admin() {
               ) : null}
             </p>
             <div className="text-sm text-gray-700">
-              {calAutonomy?.runtime_toggle_available ? (
-                <>
-                  <SupabaseInlineLink
-                    tone="gray"
-                    onClick={() => void toggleCalAutonomy(!calAutonomy?.enabled)}
-                  >
-                    Autopilot {calAutonomy?.enabled ? "off" : "on"}
-                  </SupabaseInlineLink>
-                  <span className="text-gray-400"> · </span>
-                </>
-              ) : null}
-              <SupabaseInlineLink
-                tone="gray"
-                onClick={() => void runCalAutonomy(true)}
-                busy={actionBusy === "cal-run"}
-              >
-                Dry run
-              </SupabaseInlineLink>
-              <span className="text-gray-400"> · </span>
-              <SupabaseInlineLink
-                onClick={() => void runCalAutonomy(false)}
-                busy={actionBusy === "cal-run"}
-              >
-                Run Cal now
-              </SupabaseInlineLink>
+              <CalAutopilotSwitch
+                enabled={!!calAutonomy?.enabled}
+                disabled={calAutonomy?.runtime_toggle_available === false}
+                busy={actionBusy === "cal-autopilot"}
+                everyHours={calAutonomy?.every_hours}
+                sendLimit={calAutonomy?.send_limit}
+                onToggle={(on) => void toggleCalAutonomy(on)}
+              />
+              <div className="mt-3">
+                <SupabaseInlineLink
+                  tone="gray"
+                  onClick={() => void runCalAutonomy(true)}
+                  busy={actionBusy === "cal-run"}
+                >
+                  Dry run
+                </SupabaseInlineLink>
+                <span className="text-gray-400"> · </span>
+                <SupabaseInlineLink
+                  onClick={() => void runCalAutonomy(false)}
+                  busy={actionBusy === "cal-run"}
+                >
+                  Run Cal now
+                </SupabaseInlineLink>
+              </div>
             </div>
           </div>
         </details>

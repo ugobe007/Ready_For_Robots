@@ -5,8 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
-import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
-import { dedupeHomepageLeads } from "@/lib/homepageLeads";
+import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
 import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import LeadShareBar from "@/components/LeadShareBar";
 
@@ -108,15 +107,13 @@ export default function HeroLivePipeline() {
     let cancelled = false;
     (async () => {
       try {
-        const base = getPublicReadApiBase();
-        const r = await fetch(`${base}/api/leads/homepage`, liveFetchInit());
-        if (!r.ok || cancelled) return;
-        const raw = await r.text();
-        if (raw.trimStart().startsWith("<") || cancelled) return;
-        const data = JSON.parse(raw) as { hotLeads?: HomepageLeadRow[] };
-        const hl = data.hotLeads;
-        if (Array.isArray(hl) && hl.length && !cancelled) {
-          setApiLeads(dedupeHomepageLeads(hl).slice(0, 3));
+        const { leads, live } = await fetchHomepageLeadPool(STATIC_FALLBACK);
+        if (cancelled) return;
+        if (Array.isArray(leads) && leads.length) {
+          setApiLeads(leads.slice(0, 3));
+        }
+        if (!live) {
+          setApiLeads(null);
         }
       } catch {
         /* keep fallback */
