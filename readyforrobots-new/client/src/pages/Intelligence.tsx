@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Building2, FileText, Mail, Search, Send, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, Building2, FileText, Mail, Radio, Search, Send, Zap } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
