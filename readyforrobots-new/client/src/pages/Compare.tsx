@@ -90,24 +90,24 @@ export default function Compare() {
       />
       <div className="page-hero-fade" aria-hidden />
 
-      <main className="flex-1 pb-20 px-6 antialiased bg-[radial-gradient(circle_at_top,rgba(14,116,144,0.08),transparent_50%)]">
+      <main className="flex-1 pb-20 px-6 antialiased bg-[radial-gradient(circle_at_top,rgba(15,23,42,0.045),transparent_52%)]">
         <div className="max-w-5xl mx-auto">
 
           <section className="mb-10 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md shadow-slate-200/50">
             <div className="grid grid-cols-1 gap-px bg-slate-200 md:grid-cols-2">
-              <div className="border-l-4 border-slate-400 bg-slate-100 p-6 md:p-7 text-slate-900">
+              <div className="border-l-2 border-slate-400 bg-white p-6 md:p-7 text-slate-900">
                 <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-700">GTM data tools</p>
                 <p className="text-2xl md:text-3xl font-black tracking-tight leading-tight text-slate-900">Search-heavy workflow</p>
                 <p className="mt-2 text-[15px] leading-relaxed text-slate-700">Great for broad prospect discovery, but your team still has to decide timing, message, and next action manually.</p>
-                <div className="mt-4 inline-flex rounded-full border border-slate-300 bg-slate-200 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-800">
+                <div className="mt-4 inline-flex rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-700">
                   Output: records to sort
                 </div>
               </div>
-              <div className="border-l-4 border-sky-500 bg-sky-50 p-6 md:p-7 text-slate-900">
+              <div className="border-l-2 border-sky-500 bg-white p-6 md:p-7 text-slate-900">
                 <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-sky-700">ReadyForRobots</p>
                 <p className="text-2xl md:text-3xl font-black tracking-tight leading-tight text-slate-900">Execution-ready workflow</p>
                 <p className="mt-2 text-[15px] leading-relaxed text-slate-700">Built for robot teams that need verified buyer intent, SKU guidance, and clear pipeline next steps in CRM.</p>
-                <div className="mt-4 inline-flex rounded-full border border-sky-300 bg-sky-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-sky-800">
+                <div className="mt-4 inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-sky-700">
                   Output: actions to run
                 </div>
               </div>
@@ -122,12 +122,12 @@ export default function Compare() {
                 key={ex.tool}
                 className={`rounded-2xl border p-5 ${
                   ex.tool.includes("Ready")
-                    ? "border-sky-300 bg-sky-50 text-slate-900 shadow-sm"
-                    : "border-slate-300 bg-slate-100 text-slate-900"
+                    ? "border-sky-200 bg-white text-slate-900 shadow-sm"
+                    : "border-slate-200 bg-white text-slate-900"
                 }`}
               >
                 <p className={`text-[11px] font-black uppercase tracking-[0.12em] mb-2 ${ex.tool.includes("Ready") ? "text-sky-700" : "text-slate-700"}`}>{ex.tool}</p>
-                <p className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.09em] mb-3 ${ex.tool.includes("Ready") ? "border-sky-300 bg-sky-100 text-sky-800" : "border-slate-300 bg-slate-200 text-slate-800"}`}>
+                <p className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.09em] mb-3 ${ex.tool.includes("Ready") ? "border-sky-200 bg-sky-50 text-sky-700" : "border-slate-300 bg-slate-100 text-slate-700"}`}>
                   {ex.tool.includes("Ready") ? "Action output" : "List output"}
                 </p>
                 <p className="text-xs font-mono text-slate-700 mb-3">{ex.query}</p>
@@ -146,14 +146,14 @@ export default function Compare() {
                 <article key={row.dimension} className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
                   <p className="mb-3 text-sm font-black uppercase tracking-[0.1em] text-slate-600">{row.dimension}</p>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div className="rounded-xl border border-slate-300 bg-slate-100 p-3.5">
+                    <div className="rounded-xl border border-slate-300 bg-white p-3.5">
                       <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700">GTM data tools</p>
                       <p className="flex gap-2 text-[13px] leading-relaxed text-slate-900">
                         <X className="h-4 w-4 shrink-0 text-slate-600 mt-0.5" />
                         <span>{row.dataTools}</span>
                       </p>
                     </div>
-                    <div className="rounded-xl border border-sky-300 bg-sky-50 p-3.5">
+                    <div className="rounded-xl border border-sky-200 bg-white p-3.5">
                       <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-sky-700">ReadyForRobots</p>
                       <p className="flex gap-2 text-[13px] leading-relaxed text-sky-950 font-semibold">
                         {row.rfrWins && <Check className="h-4 w-4 shrink-0 text-sky-600 mt-0.5" />}
@@ -180,7 +180,7 @@ export default function Compare() {
                 </p>
                 <p className="mt-2 text-[13px] text-gray-500">Horizontal. No robot category. No SKU-level pitch.</p>
               </div>
-              <div className="rounded-xl border border-sky-300 bg-sky-50 p-4">
+              <div className="rounded-xl border border-sky-200 bg-white p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.1em] text-sky-800 mb-2">ReadyForRobots</p>
                 <p className="text-[13px] text-sky-950 leading-relaxed font-semibold">
                   Live robot-buyer signals → HOT/WARM timing → pipeline_action + robot_types_needed → Cal outreach draft → save &amp; sync to HubSpot.
