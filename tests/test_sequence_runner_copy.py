@@ -10,6 +10,7 @@ from app.services.sequence_runner import (
     _clean_industry,
     _render_template,
 )
+from app.services.agent_messaging import build_ladder_touch_body
 
 
 class _Acct:
@@ -33,13 +34,13 @@ def test_render_template_fills_company_and_industry():
 
 
 def test_render_never_emits_broken_industry_grammar():
-    # The step-2 body uses "in {industry}" — with a null/junk industry it must
-    # read "in your industry", never "in Unknown" or a dangling token.
-    step2 = next(s for s in DEFAULT_BUYER_SEQUENCE["steps"] if s["step_number"] == 2)
+    # Production follow-ups render via ladder builders; each touch should include
+    # the reminder identity line and never leak junk industry placeholders.
     for industry in [None, "Unknown", "General Robotics"]:
-        rendered = _render_template(step2["body_template"], _Acct("Acme", industry))
-        assert "in your industry" in rendered
+        rendered = build_ladder_touch_body("teach", "Acme", industry)
+        assert "Quick reminder: I'm Cal at Ready For Robots" in rendered
         assert "{industry}" not in rendered
+        assert "Unknown" not in rendered
         assert "your industry teams" not in rendered  # the old broken construction
 
 
