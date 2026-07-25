@@ -123,6 +123,10 @@ type SiteAnalytics = {
       pipeline_send_checklist_variant_b_ready?: number;
       pipeline_outreach_sent_variant_a?: number;
       pipeline_outreach_sent_variant_b?: number;
+      pipeline_first3_save_variant_a_entered?: number;
+      pipeline_first3_save_variant_b_entered?: number;
+      pipeline_first3_save_variant_a_completed?: number;
+      pipeline_first3_save_variant_b_completed?: number;
     };
     rates?: {
       report_submit_rate?: number;
@@ -147,6 +151,8 @@ type SiteAnalytics = {
       send_checklist_variant_b_ready_rate?: number;
       send_after_checklist_variant_a_rate?: number;
       send_after_checklist_variant_b_rate?: number;
+      first3_save_variant_a_completion_rate?: number;
+      first3_save_variant_b_completion_rate?: number;
     };
     first_three?: {
       entered?: {
@@ -200,6 +206,10 @@ type SiteAnalytics = {
       pipeline_send_checklist_variant_b_ready?: number;
       pipeline_outreach_sent_variant_a?: number;
       pipeline_outreach_sent_variant_b?: number;
+      pipeline_first3_save_variant_a_entered?: number;
+      pipeline_first3_save_variant_b_entered?: number;
+      pipeline_first3_save_variant_a_completed?: number;
+      pipeline_first3_save_variant_b_completed?: number;
     };
     prev_first_three?: {
       entered?: {
@@ -1912,6 +1922,41 @@ export default function Admin() {
       : checklistVariantPrevReadyDelta <= -checklistPromotionLiftThreshold);
   const checklistAutoPromotionActive = checklistPromotionSampleReady && checklistPromotionSustained;
 
+  const saveVariantAEntered = Number(analytics?.marketing_conversion?.events?.pipeline_first3_save_variant_a_entered ?? 0);
+  const saveVariantBEntered = Number(analytics?.marketing_conversion?.events?.pipeline_first3_save_variant_b_entered ?? 0);
+  const saveVariantACompleted = Number(analytics?.marketing_conversion?.events?.pipeline_first3_save_variant_a_completed ?? 0);
+  const saveVariantBCompleted = Number(analytics?.marketing_conversion?.events?.pipeline_first3_save_variant_b_completed ?? 0);
+  const saveVariantACompletionRate = Number(analytics?.marketing_conversion?.rates?.first3_save_variant_a_completion_rate ?? 0);
+  const saveVariantBCompletionRate = Number(analytics?.marketing_conversion?.rates?.first3_save_variant_b_completion_rate ?? 0);
+  const saveVariantAPrevEntered = Number(analytics?.marketing_conversion?.prev_events?.pipeline_first3_save_variant_a_entered ?? 0);
+  const saveVariantBPrevEntered = Number(analytics?.marketing_conversion?.prev_events?.pipeline_first3_save_variant_b_entered ?? 0);
+  const saveVariantAPrevCompleted = Number(analytics?.marketing_conversion?.prev_events?.pipeline_first3_save_variant_a_completed ?? 0);
+  const saveVariantBPrevCompleted = Number(analytics?.marketing_conversion?.prev_events?.pipeline_first3_save_variant_b_completed ?? 0);
+  const saveVariantAPrevCompletionRate = rateFromCounts(saveVariantAPrevCompleted, saveVariantAPrevEntered);
+  const saveVariantBPrevCompletionRate = rateFromCounts(saveVariantBPrevCompleted, saveVariantBPrevEntered);
+  const saveVariantLift = Number((saveVariantBCompletionRate - saveVariantACompletionRate).toFixed(1));
+  const saveVariantPrevLift = Number((saveVariantBPrevCompletionRate - saveVariantAPrevCompletionRate).toFixed(1));
+  const saveVariantWinnerMinEntries = 20;
+  const saveVariantPromotionMinEntries = 40;
+  const saveVariantPromotionLiftThreshold = 5;
+  const saveVariantWinnerSampleReady = saveVariantAEntered >= saveVariantWinnerMinEntries && saveVariantBEntered >= saveVariantWinnerMinEntries;
+  const saveVariantPromotionSampleReady = saveVariantAEntered >= saveVariantPromotionMinEntries && saveVariantBEntered >= saveVariantPromotionMinEntries;
+  const saveVariantWinningVariant = saveVariantBCompletionRate > saveVariantACompletionRate
+    ? "Variant B"
+    : saveVariantBCompletionRate < saveVariantACompletionRate
+      ? "Variant A"
+      : "Tie";
+  const saveVariantPromotedVariant = saveVariantLift >= saveVariantPromotionLiftThreshold
+    ? "Variant B"
+    : saveVariantLift <= -saveVariantPromotionLiftThreshold
+      ? "Variant A"
+      : "none";
+  const saveVariantPromotionSustained = saveVariantPromotedVariant !== "none"
+    && (saveVariantPromotedVariant === "Variant B"
+      ? saveVariantPrevLift >= saveVariantPromotionLiftThreshold
+      : saveVariantPrevLift <= -saveVariantPromotionLiftThreshold);
+  const saveVariantAutoPromotionActive = saveVariantPromotionSampleReady && saveVariantPromotionSustained;
+
   const calSentCount = Number(calMetrics.sent ?? 0);
   const calOpenedCount = Number(calMetrics.opened ?? 0);
   const calRepliedCount = Number(calMetrics.replied ?? 0);
@@ -2955,6 +3000,45 @@ export default function Admin() {
                   <p className="mt-1 text-[11px] text-indigo-900/90">Success metric: {item.successMetric}</p>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50/60 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-sky-900">Step 1 save CTA variant experiment</p>
+            <p className="mt-1 text-[11px] text-sky-900/90">Direct A/B conversion lift for first save, with confidence and auto-promotion gates.</p>
+            <div className="mt-2 grid gap-2 md:grid-cols-4">
+              <AdminCard
+                label="Variant A save completion"
+                value={pct(saveVariantACompletionRate)}
+                sub={`entered ${formatNumber(saveVariantAEntered)} · completed ${formatNumber(saveVariantACompleted)}`}
+              />
+              <AdminCard
+                label="Variant B save completion"
+                value={pct(saveVariantBCompletionRate)}
+                sub={`entered ${formatNumber(saveVariantBEntered)} · completed ${formatNumber(saveVariantBCompleted)}`}
+              />
+              <AdminCard
+                label="Lift (B-A)"
+                value={trendLabel(saveVariantLift)}
+                sub={saveVariantWinnerSampleReady ? "sample ready" : `need >=${saveVariantWinnerMinEntries} entries per variant`}
+              />
+              <AdminCard
+                label="Current winner"
+                value={saveVariantWinnerSampleReady ? saveVariantWinningVariant : "Insufficient sample"}
+                sub={saveVariantWinnerSampleReady
+                  ? `entries A:${formatNumber(saveVariantAEntered)} B:${formatNumber(saveVariantBEntered)}`
+                  : `requires >=${saveVariantWinnerMinEntries} entries each`}
+              />
+            </div>
+
+            <div className="mt-2 rounded-lg border border-sky-200 bg-white/80 px-2.5 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-800">Auto-promotion policy</p>
+              <p className="mt-1 text-[11px] text-sky-900/90">
+                Thresholds: ≥{saveVariantPromotionLiftThreshold.toFixed(1)}pt lift and ≥{saveVariantPromotionMinEntries} entries per variant, sustained across current and previous window.
+              </p>
+              <p className="mt-1 text-[11px] text-sky-900/90">
+                Current lift {trendLabel(saveVariantLift)} · Previous lift {trendLabel(saveVariantPrevLift)} · Status {saveVariantAutoPromotionActive ? `PROMOTE ${saveVariantPromotedVariant}` : "HOLD"}.
+              </p>
             </div>
           </div>
 

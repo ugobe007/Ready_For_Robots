@@ -382,6 +382,10 @@ def marketing_conversion_snapshot(
     send_checklist_variant_b_ready = events.get("/event/pipeline_send_checklist_variant_b_ready", 0)
     pipeline_outreach_sent_variant_a = events.get("/event/pipeline_outreach_sent_variant_a", 0)
     pipeline_outreach_sent_variant_b = events.get("/event/pipeline_outreach_sent_variant_b", 0)
+    first3_save_variant_a_entered = events.get("/event/pipeline_first3_save_variant_a_entered", 0)
+    first3_save_variant_b_entered = events.get("/event/pipeline_first3_save_variant_b_entered", 0)
+    first3_save_variant_a_completed = events.get("/event/pipeline_first3_save_variant_a_completed", 0)
+    first3_save_variant_b_completed = events.get("/event/pipeline_first3_save_variant_b_completed", 0)
     step_entered, prev_step_entered = _step_event_counts(
         db,
         cutoff=cutoff,
@@ -445,6 +449,10 @@ def marketing_conversion_snapshot(
             "pipeline_send_checklist_variant_b_ready": send_checklist_variant_b_ready,
             "pipeline_outreach_sent_variant_a": pipeline_outreach_sent_variant_a,
             "pipeline_outreach_sent_variant_b": pipeline_outreach_sent_variant_b,
+            "pipeline_first3_save_variant_a_entered": first3_save_variant_a_entered,
+            "pipeline_first3_save_variant_b_entered": first3_save_variant_b_entered,
+            "pipeline_first3_save_variant_a_completed": first3_save_variant_a_completed,
+            "pipeline_first3_save_variant_b_completed": first3_save_variant_b_completed,
         },
         "first_three": {
             "entered": step_entered,
@@ -476,6 +484,8 @@ def marketing_conversion_snapshot(
             "send_checklist_variant_b_ready_rate": _rate(send_checklist_variant_b_ready, send_checklist_variant_b_view),
             "send_after_checklist_variant_a_rate": _rate(pipeline_outreach_sent_variant_a, send_checklist_variant_a_view),
             "send_after_checklist_variant_b_rate": _rate(pipeline_outreach_sent_variant_b, send_checklist_variant_b_view),
+            "first3_save_variant_a_completion_rate": _rate(first3_save_variant_a_completed, first3_save_variant_a_entered),
+            "first3_save_variant_b_completion_rate": _rate(first3_save_variant_b_completed, first3_save_variant_b_entered),
         },
         "prev_events": {
             "hero_pipeline_click": prev_events.get("/event/home_cta_pipeline_click", 0),
@@ -500,6 +510,10 @@ def marketing_conversion_snapshot(
             "pipeline_send_checklist_variant_b_ready": prev_events.get("/event/pipeline_send_checklist_variant_b_ready", 0),
             "pipeline_outreach_sent_variant_a": prev_events.get("/event/pipeline_outreach_sent_variant_a", 0),
             "pipeline_outreach_sent_variant_b": prev_events.get("/event/pipeline_outreach_sent_variant_b", 0),
+            "pipeline_first3_save_variant_a_entered": prev_events.get("/event/pipeline_first3_save_variant_a_entered", 0),
+            "pipeline_first3_save_variant_b_entered": prev_events.get("/event/pipeline_first3_save_variant_b_entered", 0),
+            "pipeline_first3_save_variant_a_completed": prev_events.get("/event/pipeline_first3_save_variant_a_completed", 0),
+            "pipeline_first3_save_variant_b_completed": prev_events.get("/event/pipeline_first3_save_variant_b_completed", 0),
         },
         "prev_first_three": {
             "entered": prev_step_entered,

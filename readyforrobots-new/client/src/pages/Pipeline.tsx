@@ -2465,9 +2465,16 @@ export default function Pipeline() {
         lead_id: selected?.id ?? null,
         company: selected?.company ?? null,
       });
+      if (step === "save_lead") {
+        trackMarketingEvent(`pipeline_first3_save_variant_${first3SaveCtaVariant}_completed`, {
+          lead_id: selected?.id ?? null,
+          company: selected?.company ?? null,
+          variant: first3SaveCtaVariant,
+        });
+      }
     }
     firstThreePrevRef.current = firstThreeActions;
-  }, [firstThreeActions, selected?.id, selected?.company]);
+  }, [firstThreeActions, selected?.id, selected?.company, first3SaveCtaVariant]);
 
   useEffect(() => {
     if (!nextFirstThreeStep || !selected) {
@@ -2483,6 +2490,13 @@ export default function Pipeline() {
       company: selected.company,
       save_cta_variant: nextFirstThreeStep === "save_lead" ? first3SaveCtaVariant : null,
     });
+    if (nextFirstThreeStep === "save_lead") {
+      trackMarketingEvent(`pipeline_first3_save_variant_${first3SaveCtaVariant}_entered`, {
+        lead_id: selected.id,
+        company: selected.company,
+        variant: first3SaveCtaVariant,
+      });
+    }
   }, [nextFirstThreeStep, selected, firstThreeActions, first3SaveCtaVariant]);
 
   useEffect(() => {
