@@ -75,6 +75,8 @@ type FirstThreeActionsState = {
   dismissed: boolean;
 };
 
+type FirstThreeStep = "save_lead" | "copy_draft" | "send_outreach";
+
 interface Deal {
   id: number;
   company: string;
@@ -249,6 +251,7 @@ const PIPELINE_MONITOR_SLOTS = 15;
 const USER_BUCKETS: UserBucket[] = ["Hot Leads", "Warm Leads", "Monitoring"];
 
 const FIRST_THREE_ACTIONS_KEY = "rfr_first_three_actions_v1";
+const FIRST_THREE_ABANDON_MS = 120_000;
 const FIRST_THREE_ACTIONS_INITIAL: FirstThreeActionsState = {
   started: false,
   saved: false,
@@ -256,6 +259,17 @@ const FIRST_THREE_ACTIONS_INITIAL: FirstThreeActionsState = {
   sent: false,
   dismissed: false,
 };
+
+function firstThreeNextStep(state: FirstThreeActionsState): FirstThreeStep | null {
+  if (!state.saved) return "save_lead";
+  if (!state.copied) return "copy_draft";
+  if (!state.sent) return "send_outreach";
+  return null;
+}
+
+function firstThreeCompletedCount(state: FirstThreeActionsState): number {
+  return [state.saved, state.copied, state.sent].filter(Boolean).length;
+}
 
 function readFirstThreeActions(): FirstThreeActionsState {
   if (typeof window === "undefined") return FIRST_THREE_ACTIONS_INITIAL;
@@ -287,20 +301,29 @@ function writeFirstThreeActions(state: FirstThreeActionsState) {
 function FirstThreeActionsProgress({
   state,
   onCopyDraft,
+  onPrimaryAction,
+  primaryActionLabel,
+  primaryActionDisabled,
+  helperText,
   onDismiss,
 }: {
   state: FirstThreeActionsState;
   onCopyDraft: () => void;
+  onPrimaryAction: () => void;
+  primaryActionLabel: string;
+  primaryActionDisabled: boolean;
+  helperText: string;
   onDismiss: () => void;
 }) {
   const steps = [state.saved, state.copied, state.sent];
-  const completed = steps.filter(Boolean).length;
+  const completed = firstThreeCompletedCount(state);
   const pct = Math.round((completed / steps.length) * 100);
-  const nextStep = !state.saved
+  const next = firstThreeNextStep(state);
+  const nextStep = next === "save_lead"
     ? "Save your first lead"
-    : !state.copied
+    : next === "copy_draft"
       ? "Copy the outreach draft"
-      : !state.sent
+      : next === "send_outreach"
         ? "Send first outreach"
         : "Completed";
 
@@ -336,6 +359,21 @@ function FirstThreeActionsProgress({
         </button>
         <span className={state.sent ? "font-semibold text-emerald-700" : ""}>3. Send outreach</span>
       </div>
+
+      {!state.sent && (
+        <div className="mt-2 rounded-lg border border-emerald-200/80 bg-white/80 px-2.5 py-2">
+          <p className="text-[10px] text-gray-600">{helperText}</p>
+          <button
+            type="button"
+            disabled={primaryActionDisabled}
+            onClick={onPrimaryAction}
+            className="mt-1.5 inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1.5 text-[10px] font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {primaryActionLabel}
+            <ArrowRight className="h-2.5 w-2.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -923,6 +961,7 @@ export default function Pipeline() {
   const [showActivationChecklist, setShowActivationChecklist] = useState(false);
   const [draftCopiedForActivation, setDraftCopiedForActivation] = useState(false);
   const [firstThreeActions, setFirstThreeActions] = useState<FirstThreeActionsState>(() => readFirstThreeActions());
+  const [outreachDraftSpotlight, setOutreachDraftSpotlight] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(true);
   const [researchOpen, setResearchOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
@@ -939,6 +978,11 @@ export default function Pipeline() {
   const byIdFailureCooldownUntilRef = useRef<Map<number, number>>(new Map());
   const byIdFailureStreakRef = useRef(0);
   const byIdBreakerOpenUntilRef = useRef(0);
+  const outreachDraftRef = useRef<HTMLDivElement | null>(null);
+  const firstThreePrevRef = useRef<FirstThreeActionsState>(firstThreeActions);
+  const firstThreeEnteredRef = useRef<FirstThreeStep | null>(null);
+  const firstThreeAbandonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firstThreeAbandonSignaturesRef = useRef<Set<string>>(new Set());
   const byIdTelemetryRef = useRef({
     attempts: 0,
     successes: 0,
@@ -1699,6 +1743,12 @@ export default function Pipeline() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const spotlightOutreachDraft = () => {
+    setOutreachDraftSpotlight(true);
+    outreachDraftRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => setOutreachDraftSpotlight(false), 1800);
+  };
+
   const generateProposalForDeal = async (deal: Deal) => {
     if (!session?.access_token) {
       toast.error("Sign in to generate a proposal");
@@ -2131,6 +2181,120 @@ export default function Pipeline() {
     && firstThreeActions.started
     && !firstThreeActions.dismissed
     && !firstThreeActions.sent;
+
+  const nextFirstThreeStep = showFirstThreeActionsProgress ? firstThreeNextStep(firstThreeActions) : null;
+  const canSendSelectedOutreach = Boolean(
+    selected
+      && selected.contact
+      && selected.outreachBody
+      && selected.stage !== "Outreach Sent"
+      && session?.access_token
+      && sendingLeadId !== selected.id,
+  );
+  const firstThreePrimaryActionLabel = nextFirstThreeStep === "save_lead"
+    ? "Save this lead"
+    : nextFirstThreeStep === "copy_draft"
+      ? "Go to outreach draft"
+      : nextFirstThreeStep === "send_outreach"
+        ? (canSendSelectedOutreach ? "Send outreach now" : "Review send requirements")
+        : "Continue";
+  const firstThreePrimaryActionDisabled = nextFirstThreeStep === "save_lead"
+    ? Boolean(!selected || advancingLeadId === selected.id)
+    : nextFirstThreeStep === "copy_draft"
+      ? false
+      : nextFirstThreeStep === "send_outreach"
+        ? Boolean(!selected || sendingLeadId === selected.id)
+        : true;
+  const firstThreeHelperText = nextFirstThreeStep === "save_lead"
+    ? "Step 1 unlocks your workspace and marks activation for this account."
+    : nextFirstThreeStep === "copy_draft"
+      ? "Step 2 is fastest from the Outreach draft panel. We will highlight it now."
+      : nextFirstThreeStep === "send_outreach"
+        ? (canSendSelectedOutreach
+          ? "Step 3 closes the loop. Send one live email to move this lead into outreach tracking."
+          : "You need a contact email and draft before sending. We will jump you to the draft area.")
+        : "All first actions complete.";
+
+  const runFirstThreePrimaryAction = () => {
+    if (!nextFirstThreeStep || !selected) return;
+    trackMarketingEvent("pipeline_first3_coaching_click", {
+      step: nextFirstThreeStep,
+      lead_id: selected.id,
+      company: selected.company,
+      completed_count: firstThreeCompletedCount(firstThreeActions),
+    });
+    if (nextFirstThreeStep === "save_lead") {
+      void handleSaveLead(selected);
+      return;
+    }
+    if (nextFirstThreeStep === "copy_draft") {
+      spotlightOutreachDraft();
+      return;
+    }
+    if (canSendSelectedOutreach) {
+      void sendOneLead(selected);
+      return;
+    }
+    spotlightOutreachDraft();
+  };
+
+  useEffect(() => {
+    const prev = firstThreePrevRef.current;
+    const newlyCompleted: FirstThreeStep[] = [];
+    if (!prev.saved && firstThreeActions.saved) newlyCompleted.push("save_lead");
+    if (!prev.copied && firstThreeActions.copied) newlyCompleted.push("copy_draft");
+    if (!prev.sent && firstThreeActions.sent) newlyCompleted.push("send_outreach");
+    for (const step of newlyCompleted) {
+      trackMarketingEvent("pipeline_first3_step_completed", {
+        step,
+        completed_count: firstThreeCompletedCount(firstThreeActions),
+        lead_id: selected?.id ?? null,
+        company: selected?.company ?? null,
+      });
+    }
+    firstThreePrevRef.current = firstThreeActions;
+  }, [firstThreeActions, selected?.id, selected?.company]);
+
+  useEffect(() => {
+    if (!nextFirstThreeStep || !selected) {
+      firstThreeEnteredRef.current = null;
+      return;
+    }
+    if (firstThreeEnteredRef.current === nextFirstThreeStep) return;
+    firstThreeEnteredRef.current = nextFirstThreeStep;
+    trackMarketingEvent("pipeline_first3_step_entered", {
+      step: nextFirstThreeStep,
+      completed_count: firstThreeCompletedCount(firstThreeActions),
+      lead_id: selected.id,
+      company: selected.company,
+    });
+  }, [nextFirstThreeStep, selected, firstThreeActions]);
+
+  useEffect(() => {
+    if (firstThreeAbandonTimerRef.current) {
+      clearTimeout(firstThreeAbandonTimerRef.current);
+      firstThreeAbandonTimerRef.current = null;
+    }
+    if (!showFirstThreeActionsProgress || !nextFirstThreeStep || !selected) return;
+    const signature = `${firstThreeActions.saved ? 1 : 0}${firstThreeActions.copied ? 1 : 0}${firstThreeActions.sent ? 1 : 0}:${nextFirstThreeStep}`;
+    firstThreeAbandonTimerRef.current = setTimeout(() => {
+      if (firstThreeAbandonSignaturesRef.current.has(signature)) return;
+      firstThreeAbandonSignaturesRef.current.add(signature);
+      trackMarketingEvent("pipeline_first3_step_abandoned", {
+        step: nextFirstThreeStep,
+        inactivity_seconds: FIRST_THREE_ABANDON_MS / 1000,
+        completed_count: firstThreeCompletedCount(firstThreeActions),
+        lead_id: selected.id,
+        company: selected.company,
+      });
+    }, FIRST_THREE_ABANDON_MS);
+    return () => {
+      if (firstThreeAbandonTimerRef.current) {
+        clearTimeout(firstThreeAbandonTimerRef.current);
+        firstThreeAbandonTimerRef.current = null;
+      }
+    };
+  }, [showFirstThreeActionsProgress, nextFirstThreeStep, firstThreeActions, selected]);
 
   return (
     <div className="pipeline-page-bg flex min-h-screen flex-col">
@@ -2981,6 +3145,10 @@ export default function Pipeline() {
                       <FirstThreeActionsProgress
                         state={firstThreeActions}
                         onCopyDraft={copyDraft}
+                        onPrimaryAction={runFirstThreePrimaryAction}
+                        primaryActionLabel={firstThreePrimaryActionLabel}
+                        primaryActionDisabled={firstThreePrimaryActionDisabled}
+                        helperText={firstThreeHelperText}
                         onDismiss={() => setFirstThreeActions((prev) => ({ ...prev, dismissed: true }))}
                       />
                     </div>
@@ -3224,7 +3392,10 @@ export default function Pipeline() {
 
                   {/* Outreach draft — primary send path lives here (CRM is advanced editor only) */}
                   {showKanban && session?.access_token && (
-                  <div className="shrink-0 px-5 py-3">
+                  <div
+                    ref={outreachDraftRef}
+                    className={`shrink-0 px-5 py-3 transition-all duration-500 ${outreachDraftSpotlight ? "rounded-xl bg-emerald-50/70 ring-2 ring-emerald-300/80" : ""}`}
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <Mail className="h-3.5 w-3.5" style={{ color: "#059669" }} />
