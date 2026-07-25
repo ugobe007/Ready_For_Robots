@@ -103,6 +103,30 @@ type SiteAnalytics = {
       report_submit_rate?: number;
       newsletter_submit_rate?: number;
       outreach_after_save_rate?: number;
+      first3_save_completion_rate?: number;
+      first3_copy_completion_rate?: number;
+      first3_send_completion_rate?: number;
+      first3_save_to_copy_rate?: number;
+      first3_copy_to_send_rate?: number;
+      first3_abandon_rate?: number;
+      first3_completion_rate?: number;
+    };
+    first_three?: {
+      entered?: {
+        save_lead?: number;
+        copy_draft?: number;
+        send_outreach?: number;
+      };
+      completed?: {
+        save_lead?: number;
+        copy_draft?: number;
+        send_outreach?: number;
+      };
+      abandoned?: {
+        save_lead?: number;
+        copy_draft?: number;
+        send_outreach?: number;
+      };
     };
     prev_events?: {
       hero_pipeline_click?: number;
@@ -115,6 +139,23 @@ type SiteAnalytics = {
       pipeline_save_success?: number;
       pipeline_outreach_sent?: number;
       pipeline_draft_copy?: number;
+    };
+    prev_first_three?: {
+      entered?: {
+        save_lead?: number;
+        copy_draft?: number;
+        send_outreach?: number;
+      };
+      completed?: {
+        save_lead?: number;
+        copy_draft?: number;
+        send_outreach?: number;
+      };
+      abandoned?: {
+        save_lead?: number;
+        copy_draft?: number;
+        send_outreach?: number;
+      };
     };
   };
   insights?: {
@@ -255,6 +296,10 @@ function deltaLabel(current?: number, previous?: number) {
   const d = c - p;
   if (d > 0) return `+${d}`;
   return `${d}`;
+}
+
+function pct(value?: number) {
+  return `${Number(value ?? 0).toFixed(1)}%`;
 }
 
 // ── Robot Benchmark + LinkedIn Panel ──────────────────────────────────────
@@ -2229,6 +2274,58 @@ export default function Admin() {
                 analytics?.marketing_conversion?.events?.pipeline_draft_copy,
                 analytics?.marketing_conversion?.prev_events?.pipeline_draft_copy,
               )}`}
+            />
+          </div>
+        </section>
+
+        <section className="mb-8 rounded-2xl border border-gray-200 bg-white p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "#059669" }}>
+                Day 3 conversion panel
+              </p>
+              <p className="text-xs text-gray-500">
+                Pipeline first-3-actions flow: entered, completed, abandoned, and step drop-off.
+              </p>
+            </div>
+            <span className="rounded-full border border-gray-200 px-2.5 py-1 text-[10px] text-gray-500">
+              {timeRange.toUpperCase()}
+            </span>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <AdminCard
+              label="Step 1 · Save lead"
+              value={formatNumber(analytics?.marketing_conversion?.first_three?.entered?.save_lead)}
+              sub={`completed ${formatNumber(analytics?.marketing_conversion?.first_three?.completed?.save_lead)} · abandoned ${formatNumber(analytics?.marketing_conversion?.first_three?.abandoned?.save_lead)} · completion ${pct(analytics?.marketing_conversion?.rates?.first3_save_completion_rate)}`}
+            />
+            <AdminCard
+              label="Step 2 · Copy draft"
+              value={formatNumber(analytics?.marketing_conversion?.first_three?.entered?.copy_draft)}
+              sub={`completed ${formatNumber(analytics?.marketing_conversion?.first_three?.completed?.copy_draft)} · abandoned ${formatNumber(analytics?.marketing_conversion?.first_three?.abandoned?.copy_draft)} · completion ${pct(analytics?.marketing_conversion?.rates?.first3_copy_completion_rate)}`}
+            />
+            <AdminCard
+              label="Step 3 · Send outreach"
+              value={formatNumber(analytics?.marketing_conversion?.first_three?.entered?.send_outreach)}
+              sub={`completed ${formatNumber(analytics?.marketing_conversion?.first_three?.completed?.send_outreach)} · abandoned ${formatNumber(analytics?.marketing_conversion?.first_three?.abandoned?.send_outreach)} · completion ${pct(analytics?.marketing_conversion?.rates?.first3_send_completion_rate)}`}
+            />
+          </div>
+
+          <div className="mt-3 grid gap-3 md:grid-cols-3">
+            <AdminCard
+              label="Save → Copy"
+              value={pct(analytics?.marketing_conversion?.rates?.first3_save_to_copy_rate)}
+              sub="Progression rate"
+            />
+            <AdminCard
+              label="Copy → Send"
+              value={pct(analytics?.marketing_conversion?.rates?.first3_copy_to_send_rate)}
+              sub="Progression rate"
+            />
+            <AdminCard
+              label="Overall abandonment"
+              value={pct(analytics?.marketing_conversion?.rates?.first3_abandon_rate)}
+              sub={`overall completion ${pct(analytics?.marketing_conversion?.rates?.first3_completion_rate)}`}
             />
           </div>
         </section>

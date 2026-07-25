@@ -176,6 +176,54 @@ def _rate(numerator: int, denominator: int) -> float:
     return round((numerator / denominator) * 100, 1)
 
 
+def _step_event_counts(
+    db: Session,
+    *,
+    cutoff: datetime,
+    prev_cutoff: datetime | None,
+    path: str,
+) -> tuple[dict[str, int], dict[str, int]]:
+    """Count /event step metrics by payload.step for current and previous windows."""
+    steps = ("save_lead", "copy_draft", "send_outreach")
+    path_expr = SiteAnalyticsEvent.payload.op("->>")("path")
+    step_expr = SiteAnalyticsEvent.payload.op("->>")("step")
+
+    rows = (
+        db.query(step_expr.label("step"), func.count(SiteAnalyticsEvent.id).label("count"))
+        .filter(
+            SiteAnalyticsEvent.event_type == EVENT_VISIT,
+            SiteAnalyticsEvent.created_at >= cutoff,
+            path_expr == path,
+            step_expr.in_(steps),
+        )
+        .group_by(step_expr)
+        .all()
+    )
+    current = {step: 0 for step in steps}
+    for row in rows:
+        if row.step in current:
+            current[str(row.step)] = int(row.count or 0)
+
+    previous = {step: 0 for step in steps}
+    if prev_cutoff is not None:
+        prev_rows = (
+            db.query(step_expr.label("step"), func.count(SiteAnalyticsEvent.id).label("count"))
+            .filter(
+                SiteAnalyticsEvent.event_type == EVENT_VISIT,
+                SiteAnalyticsEvent.created_at >= prev_cutoff,
+                SiteAnalyticsEvent.created_at < cutoff,
+                path_expr == path,
+                step_expr.in_(steps),
+            )
+            .group_by(step_expr)
+            .all()
+        )
+        for row in prev_rows:
+            if row.step in previous:
+                previous[str(row.step)] = int(row.count or 0)
+    return current, previous
+
+
 def signup_funnel_metrics(
     db: Session,
     *,
@@ -276,6 +324,28 @@ def marketing_conversion_snapshot(
     newsletter_success = events.get("/event/home_newsletter_submit_success", 0)
     pipeline_save_success = events.get("/event/pipeline_save_success", 0)
     pipeline_outreach_sent = events.get("/event/pipeline_outreach_sent", 0)
+    step_entered, prev_step_entered = _step_event_counts(
+        db,
+        cutoff=cutoff,
+        prev_cutoff=prev_cutoff,
+        path="/event/pipeline_first3_step_entered",
+    )
+    step_completed, prev_step_completed = _step_event_counts(
+        db,
+        cutoff=cutoff,
+        prev_cutoff=prev_cutoff,
+        path="/event/pipeline_first3_step_completed",
+    )
+    step_abandoned, prev_step_abandoned = _step_event_counts(
+        db,
+        cutoff=cutoff,
+        prev_cutoff=prev_cutoff,
+        path="/event/pipeline_first3_step_abandoned",
+    )
+
+    entered_total = sum(step_entered.values())
+    completed_total = sum(step_completed.values())
+    abandoned_total = sum(step_abandoned.values())
 
     return {
         "available": True,
@@ -291,10 +361,22 @@ def marketing_conversion_snapshot(
             "pipeline_outreach_sent": pipeline_outreach_sent,
             "pipeline_draft_copy": events.get("/event/pipeline_draft_copy", 0),
         },
+        "first_three": {
+            "entered": step_entered,
+            "completed": step_completed,
+            "abandoned": step_abandoned,
+        },
         "rates": {
             "report_submit_rate": _rate(report_success, report_start),
             "newsletter_submit_rate": _rate(newsletter_success, newsletter_start),
             "outreach_after_save_rate": _rate(pipeline_outreach_sent, pipeline_save_success),
+            "first3_save_completion_rate": _rate(step_completed["save_lead"], step_entered["save_lead"]),
+            "first3_copy_completion_rate": _rate(step_completed["copy_draft"], step_entered["copy_draft"]),
+            "first3_send_completion_rate": _rate(step_completed["send_outreach"], step_entered["send_outreach"]),
+            "first3_save_to_copy_rate": _rate(step_completed["copy_draft"], step_completed["save_lead"]),
+            "first3_copy_to_send_rate": _rate(step_completed["send_outreach"], step_completed["copy_draft"]),
+            "first3_abandon_rate": _rate(abandoned_total, entered_total),
+            "first3_completion_rate": _rate(completed_total, entered_total),
         },
         "prev_events": {
             "hero_pipeline_click": prev_events.get("/event/home_cta_pipeline_click", 0),
@@ -307,5 +389,10 @@ def marketing_conversion_snapshot(
             "pipeline_save_success": prev_events.get("/event/pipeline_save_success", 0),
             "pipeline_outreach_sent": prev_events.get("/event/pipeline_outreach_sent", 0),
             "pipeline_draft_copy": prev_events.get("/event/pipeline_draft_copy", 0),
+        },
+        "prev_first_three": {
+            "entered": prev_step_entered,
+            "completed": prev_step_completed,
+            "abandoned": prev_step_abandoned,
         },
     }
