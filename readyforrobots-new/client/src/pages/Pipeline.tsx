@@ -963,6 +963,7 @@ export default function Pipeline() {
   const [draftCopiedForActivation, setDraftCopiedForActivation] = useState(false);
   const [firstThreeActions, setFirstThreeActions] = useState<FirstThreeActionsState>(() => readFirstThreeActions());
   const [outreachDraftSpotlight, setOutreachDraftSpotlight] = useState(false);
+  const [checklistVariantOverride, setChecklistVariantOverride] = useState<"a" | "b" | null>(null);
   const [intelligenceOpen, setIntelligenceOpen] = useState(true);
   const [researchOpen, setResearchOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
@@ -2211,6 +2212,55 @@ export default function Pipeline() {
   }, [firstThreeActions]);
 
   useEffect(() => {
+    let cancelled = false;
+    const resolveChecklistVariantOverride = async () => {
+      try {
+        const response = await fetch(`${getApiBase()}/api/analytics?range=7d`, liveFetchInit());
+        if (!response.ok) return;
+        const payload = await response.json() as {
+          marketing_conversion?: {
+            events?: Record<string, number | undefined>;
+            rates?: Record<string, number | undefined>;
+            prev_events?: Record<string, number | undefined>;
+          };
+        };
+        const mc = payload.marketing_conversion;
+        if (!mc) return;
+        const events = mc.events || {};
+        const rates = mc.rates || {};
+        const prev = mc.prev_events || {};
+        const minSends = 20;
+        const liftThreshold = 6;
+        const sendsA = Number(events.pipeline_outreach_sent_variant_a ?? 0);
+        const sendsB = Number(events.pipeline_outreach_sent_variant_b ?? 0);
+        if (sendsA < minSends || sendsB < minSends) {
+          if (!cancelled) setChecklistVariantOverride(null);
+          return;
+        }
+        const currentLift = Number(rates.send_checklist_variant_b_ready_rate ?? 0) - Number(rates.send_checklist_variant_a_ready_rate ?? 0);
+        const prevAViews = Number(prev.pipeline_send_checklist_variant_a_view ?? 0);
+        const prevBViews = Number(prev.pipeline_send_checklist_variant_b_view ?? 0);
+        const prevAReady = Number(prev.pipeline_send_checklist_variant_a_ready ?? 0);
+        const prevBReady = Number(prev.pipeline_send_checklist_variant_b_ready ?? 0);
+        const prevARate = prevAViews > 0 ? (prevAReady / prevAViews) * 100 : 0;
+        const prevBRate = prevBViews > 0 ? (prevBReady / prevBViews) * 100 : 0;
+        const prevLift = prevBRate - prevARate;
+
+        let override: "a" | "b" | null = null;
+        if (currentLift >= liftThreshold && prevLift >= liftThreshold) override = "b";
+        if (currentLift <= -liftThreshold && prevLift <= -liftThreshold) override = "a";
+        if (!cancelled) setChecklistVariantOverride(override);
+      } catch {
+        if (!cancelled) setChecklistVariantOverride(null);
+      }
+    };
+    void resolveChecklistVariantOverride();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!selected || selected.stage !== "Outreach Sent") return;
     setFirstThreeActions((prev) => ({ ...prev, started: true, sent: true }));
   }, [selected]);
@@ -2259,8 +2309,10 @@ export default function Pipeline() {
     hasDraft: Boolean(selected?.outreachBody),
     alreadySent: Boolean(selected?.stage === "Outreach Sent"),
   };
-  const sendChecklistVariant = selected && selected.id % 2 === 0 ? "a" : "b";
+  const sendChecklistAssignedVariant = selected && selected.id % 2 === 0 ? "a" : "b";
+  const sendChecklistVariant = checklistVariantOverride || sendChecklistAssignedVariant;
   const sendChecklistVariantLabel = sendChecklistVariant === "a" ? "Variant A" : "Variant B";
+  const sendChecklistVariantAutoPromoted = checklistVariantOverride === sendChecklistVariant;
   const sendChecklistItems = sendChecklistVariant === "a"
     ? [
         {
@@ -3608,6 +3660,11 @@ export default function Pipeline() {
                           {sendChecklistVariantLabel}
                         </span>
                       </div>
+                      {sendChecklistVariantAutoPromoted && (
+                        <p className="mt-1 text-[10px] font-semibold text-emerald-700">
+                          SIGNAL auto-promotion active for this variant.
+                        </p>
+                      )}
                       <p className="mt-1 text-[10px] text-slate-600">
                         {sendChecklistVariant === "a"
                           ? "Checklist order: contact, draft, send status."
