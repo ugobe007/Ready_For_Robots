@@ -217,3 +217,85 @@ def signup_funnel_metrics(
             "first_save": prev_save,
         },
     }
+
+
+def marketing_conversion_snapshot(
+    db: Session,
+    *,
+    cutoff: datetime,
+    prev_cutoff: datetime | None = None,
+) -> dict[str, Any]:
+    """Homepage conversion event snapshot from tracked marketing actions.
+
+    We store these as EVENT_VISIT rows with payload.path="/event/<action>" so
+    they can be analyzed without creating a new event table/schema.
+    """
+    if not _table_ready(db, SiteAnalyticsEvent.__tablename__):
+        return {
+            "available": False,
+            "events": {},
+            "rates": {
+                "report_submit_rate": 0.0,
+                "newsletter_submit_rate": 0.0,
+            },
+        }
+
+    path_expr = SiteAnalyticsEvent.payload.op("->>")("path")
+    rows = (
+        db.query(path_expr.label("path"), func.count(SiteAnalyticsEvent.id).label("count"))
+        .filter(
+            SiteAnalyticsEvent.event_type == EVENT_VISIT,
+            SiteAnalyticsEvent.created_at >= cutoff,
+            path_expr.like("/event/%"),
+        )
+        .group_by(path_expr)
+        .all()
+    )
+
+    events = {str(r.path): int(r.count or 0) for r in rows if r.path}
+
+    prev_events: dict[str, int] = {}
+    if prev_cutoff is not None:
+        prev_rows = (
+            db.query(path_expr.label("path"), func.count(SiteAnalyticsEvent.id).label("count"))
+            .filter(
+                SiteAnalyticsEvent.event_type == EVENT_VISIT,
+                SiteAnalyticsEvent.created_at >= prev_cutoff,
+                SiteAnalyticsEvent.created_at < cutoff,
+                path_expr.like("/event/%"),
+            )
+            .group_by(path_expr)
+            .all()
+        )
+        prev_events = {str(r.path): int(r.count or 0) for r in prev_rows if r.path}
+
+    report_start = events.get("/event/home_report_submit_start", 0)
+    report_success = events.get("/event/home_report_submit_success", 0)
+    newsletter_start = events.get("/event/home_newsletter_submit_start", 0)
+    newsletter_success = events.get("/event/home_newsletter_submit_success", 0)
+
+    return {
+        "available": True,
+        "events": {
+            "hero_pipeline_click": events.get("/event/home_cta_pipeline_click", 0),
+            "hero_live_pipeline_anchor_click": events.get("/event/home_cta_live_pipeline_anchor_click", 0),
+            "report_modal_open": events.get("/event/home_report_modal_open", 0),
+            "report_submit_start": report_start,
+            "report_submit_success": report_success,
+            "newsletter_submit_start": newsletter_start,
+            "newsletter_submit_success": newsletter_success,
+        },
+        "rates": {
+            "report_submit_rate": _rate(report_success, report_start),
+            "newsletter_submit_rate": _rate(newsletter_success, newsletter_start),
+        },
+        "prev_events": {
+            "hero_pipeline_click": prev_events.get("/event/home_cta_pipeline_click", 0),
+            "hero_live_pipeline_anchor_click": prev_events.get("/event/home_cta_live_pipeline_anchor_click", 0),
+            "report_modal_open": prev_events.get("/event/home_report_modal_open", 0),
+            "report_submit_start": prev_events.get("/event/home_report_submit_start", 0),
+            "report_submit_success": prev_events.get("/event/home_report_submit_success", 0),
+            "newsletter_submit_start": prev_events.get("/event/home_newsletter_submit_start", 0),
+            "newsletter_submit_success": prev_events.get("/event/home_newsletter_submit_success", 0),
+        },
+    }

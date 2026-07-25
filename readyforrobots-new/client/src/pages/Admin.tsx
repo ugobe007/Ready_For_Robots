@@ -85,6 +85,31 @@ type SiteAnalytics = {
     complete_to_save_rate?: number;
     start_to_save_rate?: number;
   };
+  marketing_conversion?: {
+    available?: boolean;
+    events?: {
+      hero_pipeline_click?: number;
+      hero_live_pipeline_anchor_click?: number;
+      report_modal_open?: number;
+      report_submit_start?: number;
+      report_submit_success?: number;
+      newsletter_submit_start?: number;
+      newsletter_submit_success?: number;
+    };
+    rates?: {
+      report_submit_rate?: number;
+      newsletter_submit_rate?: number;
+    };
+    prev_events?: {
+      hero_pipeline_click?: number;
+      hero_live_pipeline_anchor_click?: number;
+      report_modal_open?: number;
+      report_submit_start?: number;
+      report_submit_success?: number;
+      newsletter_submit_start?: number;
+      newsletter_submit_success?: number;
+    };
+  };
   insights?: {
     hottest_trend?: string;
     opportunity?: string;
@@ -215,6 +240,14 @@ const TIME_RANGES = [
 function formatNumber(value?: number) {
   if (value == null) return "—";
   return new Intl.NumberFormat("en-US").format(value);
+}
+
+function deltaLabel(current?: number, previous?: number) {
+  const c = Number(current || 0);
+  const p = Number(previous || 0);
+  const d = c - p;
+  if (d > 0) return `+${d}`;
+  return `${d}`;
 }
 
 // ── Robot Benchmark + LinkedIn Panel ──────────────────────────────────────
@@ -2126,6 +2159,51 @@ export default function Admin() {
             completeToSaveRate: analytics?.signup_funnel?.complete_to_save_rate,
           }}
         />
+
+        <section className="mb-8 rounded-2xl border border-gray-200 bg-white p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "#10b981" }}>
+                Home conversion snapshot
+              </p>
+              <p className="text-xs text-gray-500">
+                Lightweight hero and capture actions from homepage instrumentation.
+              </p>
+            </div>
+            <span className="rounded-full border border-gray-200 px-2.5 py-1 text-[10px] text-gray-500">
+              {timeRange.toUpperCase()}
+            </span>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-4">
+            <AdminCard
+              label="Hero → pipeline"
+              value={formatNumber(analytics?.marketing_conversion?.events?.hero_pipeline_click)}
+              sub={`vs prev ${deltaLabel(
+                analytics?.marketing_conversion?.events?.hero_pipeline_click,
+                analytics?.marketing_conversion?.prev_events?.hero_pipeline_click,
+              )}`}
+            />
+            <AdminCard
+              label="Hero → live anchor"
+              value={formatNumber(analytics?.marketing_conversion?.events?.hero_live_pipeline_anchor_click)}
+              sub={`vs prev ${deltaLabel(
+                analytics?.marketing_conversion?.events?.hero_live_pipeline_anchor_click,
+                analytics?.marketing_conversion?.prev_events?.hero_live_pipeline_anchor_click,
+              )}`}
+            />
+            <AdminCard
+              label="Report modal opens"
+              value={formatNumber(analytics?.marketing_conversion?.events?.report_modal_open)}
+              sub={`submit rate ${(analytics?.marketing_conversion?.rates?.report_submit_rate ?? 0).toFixed(1)}%`}
+            />
+            <AdminCard
+              label="Newsletter starts"
+              value={formatNumber(analytics?.marketing_conversion?.events?.newsletter_submit_start)}
+              sub={`submit rate ${(analytics?.marketing_conversion?.rates?.newsletter_submit_rate ?? 0).toFixed(1)}%`}
+            />
+          </div>
+        </section>
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-2xl border border-gray-200 p-5" >

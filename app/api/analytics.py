@@ -15,6 +15,7 @@ from app.services.site_analytics_service import (
     EVENT_VISIT,
     SIGNUP_FUNNEL_STAGES,
     aggregate_site_metrics,
+    marketing_conversion_snapshot,
     record_site_event,
     signup_funnel_metrics,
 )
@@ -300,6 +301,7 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
         conversion_rate = site_metrics["conversion_rate"]
 
         signup_funnel = signup_funnel_metrics(db, cutoff=cutoff, prev_cutoff=prev_cutoff)
+        marketing_conversion = marketing_conversion_snapshot(db, cutoff=cutoff, prev_cutoff=prev_cutoff)
 
         # ── Insights ──────────────────────────────────────────────────────────
         insights = {
@@ -338,6 +340,7 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
         "email_captures": email_captures,
         "conversion_rate": conversion_rate,
         "signup_funnel": signup_funnel,
+        "marketing_conversion": marketing_conversion,
         "insights": insights,
     }
     _ANALYTICS_CACHE[range] = (time.monotonic(), result)
