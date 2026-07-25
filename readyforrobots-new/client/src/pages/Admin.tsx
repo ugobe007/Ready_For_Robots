@@ -1660,6 +1660,63 @@ export default function Admin() {
     };
   })();
 
+  const weeklyExperimentQueue = (() => {
+    const steps = [
+      {
+        id: "save_lead" as const,
+        label: "Step 1 · Save lead",
+        completion: Number(analytics?.marketing_conversion?.rates?.first3_save_completion_rate ?? 0),
+        coachingRate: coachingRateByStep.save_lead,
+        trend: first3StepRateTrend.save,
+        baseline: "Save lead to unlock your CRM workflow",
+        hypothesis: "Value clarity is too abstract before first save.",
+      },
+      {
+        id: "copy_draft" as const,
+        label: "Step 2 · Copy draft",
+        completion: Number(analytics?.marketing_conversion?.rates?.first3_copy_completion_rate ?? 0),
+        coachingRate: coachingRateByStep.copy_draft,
+        trend: first3StepRateTrend.copy,
+        baseline: "Go to outreach draft",
+        hypothesis: "Users miss where draft actions live in the detail pane.",
+      },
+      {
+        id: "send_outreach" as const,
+        label: "Step 3 · Send outreach",
+        completion: Number(analytics?.marketing_conversion?.rates?.first3_send_completion_rate ?? 0),
+        coachingRate: coachingRateByStep.send_outreach,
+        trend: first3StepRateTrend.send,
+        baseline: "Send outreach now",
+        hypothesis: "Send confidence and contact readiness are not explicit enough.",
+      },
+    ];
+
+    return steps
+      .map((step) => {
+        const completionPenalty = Math.max(0, 100 - step.completion);
+        const coachingPenalty = Math.max(0, 35 - step.coachingRate);
+        const downTrendPenalty = step.trend < 0 ? Math.abs(step.trend) * 2 : 0;
+        const priorityScore = Number((completionPenalty + coachingPenalty + downTrendPenalty).toFixed(1));
+        const testIdea = step.id === "save_lead"
+          ? "Variant B: 'Save lead and open your CRM workspace' with one-line outcome proof under CTA."
+          : step.id === "copy_draft"
+            ? "Variant B: sticky helper in detail pane with a pulsing Copy button for first-time users."
+            : "Variant B: add send trustline + '1 click, reply tracking on' under send button.";
+        return {
+          ...step,
+          priorityScore,
+          testIdea,
+          successMetric: step.id === "save_lead"
+            ? "Lift first3_save_completion_rate"
+            : step.id === "copy_draft"
+              ? "Lift first3_copy_completion_rate"
+              : "Lift first3_send_completion_rate",
+        };
+      })
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, 3);
+  })();
+
   if ((authLoading || meLoading) && !hasCachedUi) {
     return (
       <div className="min-h-screen bg-slate-50">
@@ -2545,6 +2602,30 @@ export default function Admin() {
             <p className="mt-1 text-[11px] font-semibold text-blue-900">{experimentCallout.title}</p>
             <p className="mt-1 text-[11px] text-blue-900/90">{experimentCallout.rationale}</p>
             <p className="mt-1 text-[11px] text-blue-900/90">{experimentCallout.test}</p>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-indigo-200 bg-indigo-50/60 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-900">Weekly experiment queue</p>
+            <p className="mt-1 text-[11px] text-indigo-900/90">Top 3 tests ranked by completion leak, coaching click gap, and negative trend.</p>
+            <div className="mt-2 space-y-2">
+              {weeklyExperimentQueue.map((item, idx) => (
+                <div key={item.id} className="rounded-lg border border-indigo-200 bg-white/80 px-2.5 py-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border border-indigo-200 bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold text-indigo-900">#{idx + 1}</span>
+                    <p className="text-[11px] font-semibold text-indigo-900">{item.label}</p>
+                    <span className="rounded-full border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] text-gray-600">
+                      score {item.priorityScore.toFixed(1)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-indigo-900/90">
+                    Completion {pct(item.completion)} · Coaching click {pct(item.coachingRate)} · Trend {trendLabel(item.trend)}
+                  </p>
+                  <p className="mt-1 text-[11px] text-indigo-900/90">Hypothesis: {item.hypothesis}</p>
+                  <p className="mt-1 text-[11px] text-indigo-900/90">Test: {item.testIdea}</p>
+                  <p className="mt-1 text-[11px] text-indigo-900/90">Success metric: {item.successMetric}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
