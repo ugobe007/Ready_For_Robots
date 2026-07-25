@@ -1839,6 +1839,14 @@ export default function Admin() {
       : checklistVariantPrevReadyDelta <= -checklistPromotionLiftThreshold);
   const checklistAutoPromotionActive = checklistPromotionSampleReady && checklistPromotionSustained;
 
+  const calSentCount = Number(calMetrics.sent ?? 0);
+  const calOpenedCount = Number(calMetrics.opened ?? 0);
+  const calRepliedCount = Number(calMetrics.replied ?? 0);
+  const calOpenRate = rateFromCounts(calOpenedCount, calSentCount);
+  const calReplyRate = rateFromCounts(calRepliedCount, calSentCount);
+  const calOpenAlertMinSent = 20;
+  const calZeroOpenAlert = calSentCount >= calOpenAlertMinSent && calOpenedCount === 0;
+
   const sendReadinessBlockers = first3Current?.send_blockers;
 
   if ((authLoading || meLoading) && !hasCachedUi) {
@@ -2119,6 +2127,25 @@ export default function Admin() {
             onTestDelivery={() => void runCalDiagnostic()}
             onStepFocus={focusCalWorkflowStep}
           />
+
+          {calZeroOpenAlert ? (
+            <div className="mb-4 rounded-xl border border-rose-300 bg-rose-50/85 px-3 py-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-rose-900">Alert: sends with zero opens</p>
+              <p className="mt-1 text-[11px] text-rose-900/90">
+                Cal sent {formatNumber(calSentCount)} emails in this window with open rate {pct(calOpenRate)} and reply rate {pct(calReplyRate)}.
+                This usually means deliverability friction, webhook gaps, or open tracking misconfiguration.
+              </p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
+                <SupabaseInlineLink tone="amber" onClick={() => void runCalDiagnostic()}>
+                  Run delivery diagnostic
+                </SupabaseInlineLink>
+                <span className="text-rose-900/60">·</span>
+                <Link href="/inbox" className="font-semibold text-rose-800 underline underline-offset-2">
+                  Open replies inbox
+                </Link>
+              </div>
+            </div>
+          ) : null}
 
           {/* ── Bulk-send confirm modal ── */}
           {sendConfirm === "bulk" && (
