@@ -124,6 +124,18 @@ def test_partnership_compound_names_are_junk(name):
 @pytest.mark.parametrize(
     "name",
     [
+        "Yachting New Zealand and Hospitality New Zealand",
+        "Opentrons Global Robotics Chief",
+    ],
+)
+def test_user_reported_junk_company_names_are_rejected(name):
+    junk, reason = is_junk(name)
+    assert junk is True, reason
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
         "Johnson and Johnson",
         "Johnson & Johnson",
         "Marks and Spencer",

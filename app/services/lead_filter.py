@@ -600,6 +600,10 @@ _JUNK_PATTERNS = [
     r"^(vp|vice\s+president|ceo|coo|cfo|cto|chief|president|director|manager|"
     r"head|svp|evp)\s+(of\s+)?\w+",
 
+    # Headline/person-title tail captured as company name:
+    # "Opentrons Global Robotics Chief", "Acme Automation VP"
+    r"(?i)^(?:\S+\s+){1,6}(chief|ceo|cto|coo|cfo|president|vice\s+president|vp|director|head|manager|lead|founder)\s*$",
+
     # Numbered-list items scraped from "Top N" articles (e.g. "24.Joanna Vargas …")
     r"^\d+\.\s*\S",
 
@@ -1190,6 +1194,13 @@ _PARTNERSHIP_GENERIC_SIDE_WORDS = frozenset({
     "module", "expansion", "plant", "cell", "connected", "stores", "capex", "mexico", "indiana",
     "texas", "idaho", "scaling", "restaurants", "hospitality", "strategic", "business",
 })
+_PARTNERSHIP_MIRRORED_GEO_SUFFIXES = (
+    "new zealand",
+    "australia",
+    "canada",
+    "ireland",
+    "singapore",
+)
 
 
 def _split_entity_conjunction(name: str) -> tuple[str, str, str] | None:
@@ -1261,6 +1272,16 @@ def is_partnership_compound_name(name: Optional[str]) -> tuple[bool, str]:
     left, right, sep_kind = split
     if left.lower() == right.lower():
         return False, ""
+
+    # Association-style compounds often share a geographic suffix and are not a
+    # single buyer entity (e.g., "Yachting New Zealand and Hospitality New Zealand").
+    if sep_kind == "and" and len(left.split()) >= 2 and len(right.split()) >= 2:
+        left_low = left.lower()
+        right_low = right.lower()
+        for suffix in _PARTNERSHIP_MIRRORED_GEO_SUFFIXES:
+            if left_low.endswith(suffix) and right_low.endswith(suffix):
+                return True, "partnership compound (conjoined associations — not a buyer)"
+
     if not (_looks_like_conjoined_entity(left) and _looks_like_conjoined_entity(right)):
         return False, ""
 
