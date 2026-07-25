@@ -12,11 +12,11 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_signature
 CAL_INTRO = "Hi — I'm Cal, with Ready For Robots."
 
 CAL_BUYER_ROLE_LINE = (
-    "My job is to help companies find robots that actually fit their workflow, and to say clearly when a robot is the wrong move."
+    "I help ops teams figure out where a robot will actually pay off, and where it won't."
 )
 
 CAL_BUYER_REMINDER_LINE = (
-    "Quick reminder: I'm Cal at Ready For Robots — I help companies find robots that fit and avoid expensive pilot mistakes."
+    "Quick reminder: I'm Cal from Ready For Robots. I send practical notes on what tends to work in real deployments."
 )
 
 CAL_VENDOR_ROLE_LINE = (
@@ -535,36 +535,48 @@ def resolve_buyer_variant(company, acct=None) -> str | None:
 def _exploration_question(name: str, industry: str) -> str:
     """One low-commitment question tailored to sector — never a meeting ask."""
     n = (name or "your team").strip()
+    team = n if len(n) <= 24 else "your team"
     low = (industry or "").lower()
     if any(k in low for k in ("logistic", "warehous", "supply", "3pl", "distribution", "fulfil")):
         return (
-            f"Is warehouse automation something {n} is actively exploring, "
+            f"Is warehouse automation something {team} is actively exploring, "
             "or are you still deciding where it might fit?"
         )
     if any(k in low for k in ("hospitality", "hotel", "casino", "resort", "gaming")):
         return (
-            f"Is service robotics on the table at {n} right now, "
+            f"Is service robotics on the table for {team} right now, "
             'or still in the "figuring out where it helps" stage?'
         )
     if any(k in low for k in ("health", "medical", "hospital", "clinic")):
         return (
-            f"Is internal transport or delivery automation on {n}'s radar, "
+            f"Is internal transport or delivery automation on {team}'s radar, "
             "or are you still mapping where it would actually help?"
         )
     if any(k in low for k in ("food", "restaurant", "kitchen", "grocery")):
         return (
-            f"Is back-of-house automation something {n} is weighing, "
+            f"Is back-of-house automation something {team} is weighing, "
             "or still deciding which workflow would be worth testing first?"
         )
     if any(k in low for k in ("manufactur", "factory", "automotive", "industrial")):
         return (
-            f"Is line-side automation something {n} is actively exploring, "
+            f"Is line-side automation something {team} is actively exploring, "
             "or still deciding where a robot would earn its keep?"
         )
     return (
-        f"Is automation something {n} is actively exploring, "
+        f"Is automation something {team} is actively exploring, "
         "or still deciding where it might fit?"
     )
+
+
+def _greeting_name(name: str) -> str:
+    """Use a short, human greeting label for long account names."""
+    n = (name or "your team").strip()
+    if len(n) <= 24:
+        return n
+    first = n.split()[0] if n.split() else "your"
+    if first.lower() == "your":
+        return "your team"
+    return f"{first} team"
 
 
 def _variant_workflow_first(name: str, industry: str) -> str:
@@ -577,8 +589,9 @@ def _variant_workflow_first(name: str, industry: str) -> str:
             f"\n\nIn {sector}, the hours often hide in {ins['hidden']} — "
             f"not the {ins['glam'].lower()} everyone demos first."
         )
+    team = _greeting_name(name)
     return "\n".join([
-        f"Hi {name},",
+        f"Hi {team},",
         "",
         CAL_BUYER_ROLE_LINE,
         "",
@@ -587,7 +600,7 @@ def _variant_workflow_first(name: str, industry: str) -> str:
         "",
         "I usually ask a different question first:",
         "",
-        f"Which workflow is costing {name} the most time every day?",
+        f"Which workflow is costing {team} the most time every day?",
         "",
         "Until that's clear, comparing vendors isn't very useful.",
         "",
@@ -596,8 +609,7 @@ def _variant_workflow_first(name: str, industry: str) -> str:
         "applied to the right workflow.",
         sector_note,
         "",
-        f"{CAL_ORG} is vendor-neutral. My job isn't to recommend a particular robot — "
-        "it's to help teams figure out where automation will actually make a difference.",
+        f"{CAL_ORG} is vendor-neutral. I don't push a specific vendor — I help teams avoid solving the wrong problem.",
         "",
         _exploration_question(name, industry),
         "",
@@ -608,8 +620,9 @@ def _variant_workflow_first(name: str, industry: str) -> str:
 def _variant_what_survives(name: str, industry: str) -> str:
     """Specific field observation: what is still running six months in."""
     ins = _buyer_insight(industry)
+    team = _greeting_name(name)
     return "\n".join([
-        f"Hi {name},",
+        f"Hi {team},",
         "",
         CAL_BUYER_ROLE_LINE,
         "",
@@ -623,7 +636,7 @@ def _variant_what_survives(name: str, industry: str) -> str:
         "anyone picked hardware.",
         "",
         f"{CAL_ORG} is vendor-neutral. I don't get paid to move a particular box; I help "
-        f"teams like {name} avoid automating the wrong job.",
+        f"teams avoid automating the wrong job.",
         "",
         _exploration_question(name, industry),
         "",
@@ -637,12 +650,13 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
     sector = _buyer_sector(industry)
     hidden = ins["hidden"]
     glam = ins["glam"].lower()
+    team = _greeting_name(name)
     return "\n".join([
-        f"Hi {name},",
+        f"Hi {team},",
         "",
         CAL_BUYER_ROLE_LINE,
         "",
-        f"Before {name} compares robot vendors, I ask operators one question:",
+        f"Before {team} compares robot vendors, I ask operators one question:",
         "",
         "Where do the hours actually go?",
         "",
@@ -654,7 +668,7 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
         "Sometimes the right answer is a process fix, not a robot. Sometimes it is a robot — "
         "but only once the bottleneck is named.",
         "",
-        f"I'm vendor-neutral. If {name} tells me where time disappears, I can say whether "
+        f"I'm vendor-neutral. If {team} tells me where time disappears, I can say whether "
         "automation is even the right tool — no pitch attached.",
         "",
         _exploration_question(name, industry),
@@ -759,9 +773,9 @@ def buyer_variant_subject(name: str, industry: str, variant_id: str) -> str:
     generic_sector = sector == "your line of work"
     if variant_id == "what_survives":
         return (
-            "the robots still running six months in"
+            "what still works after six months"
             if generic_sector
-            else f"the {sector} robots still running six months in"
+            else f"what still works after six months in {sector}"
         )
     if variant_id == "bottleneck_first":
         return "start with the bottleneck, not the robot"

@@ -91,7 +91,7 @@ Return JSON only: {{"approved": bool, "confidence": 0-1, "issues": [str], "summa
 
 def cal_signature() -> str:
     """Cal's sign-off — role reinforces credibility without sounding like sales."""
-    return f"— {CAL_NAME}\n\n{CAL_NAME}\n{CAL_TITLE}\n{CAL_ORG}"
+    return f"— {CAL_NAME}\n{CAL_TITLE}, {CAL_ORG}"
 
 
 def cal_persona_payload() -> dict:

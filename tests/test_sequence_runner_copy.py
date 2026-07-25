@@ -38,7 +38,7 @@ def test_render_never_emits_broken_industry_grammar():
     # the reminder identity line and never leak junk industry placeholders.
     for industry in [None, "Unknown", "General Robotics"]:
         rendered = build_ladder_touch_body("teach", "Acme", industry)
-        assert "Quick reminder: I'm Cal at Ready For Robots" in rendered
+        assert "Quick reminder: I'm Cal from Ready For Robots" in rendered
         assert "{industry}" not in rendered
         assert "Unknown" not in rendered
         assert "your industry teams" not in rendered  # the old broken construction
