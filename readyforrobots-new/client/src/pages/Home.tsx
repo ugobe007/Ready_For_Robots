@@ -29,6 +29,7 @@ import HeroUrlScan from "@/components/marketing/HeroUrlScan";
 import { LiveDot } from "@/components/marketing/primitives";
 import { usePipelineStats, formatStat } from "@/hooks/usePipelineStats";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { trackMarketingEvent } from "@/lib/siteAnalytics";
 
 type NewsletterEdition = {
   latestEdition?: { headline?: string; subheadline?: string };
@@ -53,6 +54,7 @@ export default function Home() {
 
   const hotLabel = formatStat(hot, "319");
   const signalsLabel = formatStat(totalSignals, "2,000+");
+  const totalLabel = formatStat(total, "3,957");
 
   useEffect(() => {
     let cancelled = false;
@@ -83,6 +85,11 @@ export default function Home() {
   async function submitReportDownload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!reportForm.email.trim()) return;
+    trackMarketingEvent("home_report_submit_start", {
+      has_name: Boolean(reportForm.name.trim()),
+      has_company: Boolean(reportForm.company.trim()),
+      has_robot_category: Boolean(reportForm.robotCategory.trim()),
+    });
     setReportStatus("submitting");
     try {
       const res = await fetch(
@@ -95,14 +102,17 @@ export default function Home() {
       );
       if (!res.ok) throw new Error("Report request failed");
       setReportStatus("success");
+      trackMarketingEvent("home_report_submit_success");
     } catch {
       setReportStatus("error");
+      trackMarketingEvent("home_report_submit_error");
     }
   }
 
   async function submitNewsletter(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!newsletterEmail.trim()) return;
+    trackMarketingEvent("home_newsletter_submit_start", { source: "homepage_newsletter_band" });
     setNewsletterStatus("submitting");
     try {
       const res = await fetch(
@@ -115,10 +125,17 @@ export default function Home() {
       );
       if (!res.ok) throw new Error("Newsletter signup failed");
       setNewsletterStatus("success");
+      trackMarketingEvent("home_newsletter_submit_success", { source: "homepage_newsletter_band" });
       setNewsletterEmail("");
     } catch {
       setNewsletterStatus("error");
+      trackMarketingEvent("home_newsletter_submit_error", { source: "homepage_newsletter_band" });
     }
+  }
+
+  function openReportModal() {
+    trackMarketingEvent("home_report_modal_open", { source: "homepage_report_section" });
+    setReportOpen(true);
   }
 
   return (
@@ -150,18 +167,29 @@ export default function Home() {
               </div>
 
               <h1 className="hero-display font-bold text-white mb-5 sm:mb-6">
-                Automate Your{" "}
-                <span className="text-emerald-400">Sales Pipeline.</span>
+                Find Robot-Ready Buyers
+                <span className="text-emerald-400"> in Minutes, Not Weeks.</span>
               </h1>
 
               <p className="text-base sm:text-lg text-slate-400 leading-relaxed mb-6 sm:mb-8 max-w-lg">
-                <span className="font-semibold text-slate-200">SIGNAL</span> is the automated sales pipeline for robot
-                OEMs and integrators — ranked buyer intent, outreach drafts, and deal advance in native CRM or HubSpot.
+                <span className="font-semibold text-slate-200">SIGNAL</span> helps robot OEM and integration teams
+                prioritize accounts with active buying signals, generate outreach-ready context, and move deals forward
+                in CRM without manual list building.
               </p>
+
+              <ul className="mb-6 space-y-1.5 text-xs sm:text-sm text-slate-300 max-w-xl">
+                <li>• {hotLabel} HOT accounts showing near-term automation intent</li>
+                <li>• {signalsLabel} cited signals mapped to why-now buying pressure</li>
+                <li>• {totalLabel} scored opportunities ready for outreach triage</li>
+              </ul>
 
               <HeroUrlScan onDark />
 
-              <Link href="/pipeline" className="btn-secondary-hero mb-4">
+              <Link
+                href="/pipeline"
+                className="btn-secondary-hero mb-4"
+                onClick={() => trackMarketingEvent("home_cta_pipeline_click", { location: "hero" })}
+              >
                 Browse the pipeline free
                 <ChevronRight size={16} className="btn-arrow" />
               </Link>
@@ -169,7 +197,11 @@ export default function Home() {
               <p className="text-xs text-slate-500 font-medium mb-1">
                 No signup required · Free to start · Results in seconds
               </p>
-              <Link href="#live-pipeline" className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1">
+              <Link
+                href="#live-pipeline"
+                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1"
+                onClick={() => trackMarketingEvent("home_cta_live_pipeline_anchor_click", { location: "hero" })}
+              >
                 View live pipeline <ArrowRight size={12} />
               </Link>
             </div>
@@ -212,7 +244,7 @@ export default function Home() {
         onEmailChange={setNewsletterEmail}
         onSubmit={submitNewsletter}
       />
-      <MarketingReportSection onOpenReport={() => setReportOpen(true)} />
+      <MarketingReportSection onOpenReport={openReportModal} />
       <MarketingPricing />
       <MarketingFinalCTA hotCount={hot} totalCount={total} />
       <MarketingNewsletterBand

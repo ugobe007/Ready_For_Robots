@@ -32,6 +32,14 @@ export function trackSupplyConversion(payload: Record<string, unknown>) {
   postEvent("/api/track/supply-conversion", payload);
 }
 
+export function trackMarketingEvent(action: string, payload: Record<string, unknown> = {}) {
+  postEvent("/api/track/visit", {
+    path: `/event/${action}`,
+    referrer: typeof document !== "undefined" ? document.referrer || null : null,
+    ...payload,
+  });
+}
+
 /**
  * Buyer signup funnel (conversion board #20): browse → signup → activate.
  * signup_start (intent) → signup_complete (account) → first_save (activated).
