@@ -1038,6 +1038,38 @@ export default function Admin() {
     }
   }, [adminFetch, calVariantPreviewByCompany, me?.is_admin, session?.access_token]);
 
+  const applyCalVariantToDraft = useCallback(async (companyId: number, crmAccountId: string, variantId: string) => {
+    setError("");
+    setMessage("");
+    setActionBusy("cal-save");
+    try {
+      const res = await adminFetch(`/api/admin/cal/apply-variant/${crmAccountId}`, {
+        method: "POST",
+        body: JSON.stringify({ variant_id: variantId }),
+      });
+      const data = await res.json().catch(() => ({})) as {
+        detail?: string;
+        draft_full?: string;
+        variant_id?: string;
+      };
+      if (!res.ok) throw new Error(data.detail || "Could not apply variant");
+
+      if (data.draft_full) {
+        setDraftBodies((prev) => ({ ...prev, [crmAccountId]: data.draft_full || "" }));
+      }
+      await Promise.all([
+        refreshOperatorView(),
+        loadDraftBody(crmAccountId, undefined, true),
+        loadCalVariantPreview(companyId, true),
+      ]);
+      setMessage(`Applied angle: ${(data.variant_id || variantId).replace(/_/g, " ")}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not apply variant.");
+    } finally {
+      setActionBusy("");
+    }
+  }, [adminFetch, loadCalVariantPreview, loadDraftBody, refreshOperatorView]);
+
   const refreshOperatorView = useCallback(async () => {
     await Promise.all([
       loadOperatorDashboard(),
@@ -2376,6 +2408,22 @@ export default function Admin() {
                             <summary className="cursor-pointer text-[10px] font-semibold text-indigo-900">
                               {v.variant_id.replace(/_/g, " ")} · {v.subject}
                             </summary>
+                            {calSelectedProspect.crm_account_id ? (
+                              <div className="mt-1 flex items-center gap-2 text-[10px]">
+                                <SupabaseInlineLink
+                                  tone="blue"
+                                  onClick={() => void applyCalVariantToDraft(
+                                    calSelectedProspect.company_id!,
+                                    calSelectedProspect.crm_account_id!,
+                                    v.variant_id,
+                                  )}
+                                  busy={actionBusy === "cal-save"}
+                                  disabled={actionBusy === "cal-save"}
+                                >
+                                  Apply this angle
+                                </SupabaseInlineLink>
+                              </div>
+                            ) : null}
                             <textarea
                               readOnly
                               value={v.body}

@@ -611,6 +611,10 @@ class CalDraftPatchIn(BaseModel):
     outreach_stage: Optional[str] = None
 
 
+class CalApplyVariantIn(BaseModel):
+    variant_id: str
+
+
 @router.patch("/cal/draft/{account_id}")
 def patch_cal_draft(
     account_id: uuid.UUID,
@@ -651,6 +655,59 @@ def patch_cal_draft(
         "crm_account_id": str(acct.id),
         "draft_full": acct.outreach_draft,
         "contact_email": acct.contact_email,
+        "outreach_stage": acct.outreach_stage,
+    }
+
+
+@router.post("/cal/apply-variant/{account_id}")
+def cal_apply_variant(
+    account_id: uuid.UUID,
+    body: CalApplyVariantIn,
+    db: Session = Depends(get_db),
+    _user: dict = Depends(require_admin),
+):
+    """Rebuild one buyer draft from a selected trust-first variant."""
+    from app.services.agent_messaging import BUYER_VARIANTS
+    from app.services.cal_autonomy import format_cal_draft_storage
+
+    variant_id = (body.variant_id or "").strip()
+    if variant_id not in BUYER_VARIANTS:
+        raise HTTPException(status_code=400, detail="Unknown buyer variant")
+
+    acct = db.query(CrmAccount).filter(CrmAccount.id == account_id).first()
+    if not acct:
+        raise HTTPException(status_code=404, detail="CRM account not found")
+
+    if (getattr(acct, "account_type", None) or "buyer") != "buyer":
+        raise HTTPException(status_code=400, detail="Variant apply is buyer-only")
+
+    company = (
+        db.query(Company).filter(Company.id == acct.company_id).first()
+        if acct.company_id
+        else None
+    )
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found for CRM account")
+
+    subject, draft_body = _cal_draft_for_company(company, fresh=True, variant_id=variant_id)
+    acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
+    acct.outreach_stage = "draft_approved" if not cal_manual_approval_required() else "draft_ready"
+
+    cmeta = dict(company.crm_metadata or {}) if isinstance(company.crm_metadata, dict) else {}
+    cmeta["cal_variant_id"] = variant_id
+    company.crm_metadata = cmeta
+
+    db.commit()
+    db.refresh(acct)
+    db.refresh(company)
+
+    _invalidate_admin_caches()
+    return {
+        "crm_account_id": str(acct.id),
+        "company_id": company.id,
+        "variant_id": variant_id,
+        "subject": subject,
+        "draft_full": acct.outreach_draft,
         "outreach_stage": acct.outreach_stage,
     }
 
