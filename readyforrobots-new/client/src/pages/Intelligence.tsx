@@ -196,7 +196,7 @@ export default function Intelligence() {
         }
         innerClassName="pb-8"
       >
-        <div className="mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+        <div className="mt-6 grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
           <div className="min-w-0 space-y-6">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {signalStats.map(([value, label]) => (
@@ -220,7 +220,7 @@ export default function Intelligence() {
               </Link>
             </div>
           </div>
-          <div className="lg:sticky lg:top-24">
+          <div className="md:self-start lg:sticky lg:top-20">
             <IntelligenceFlow dark />
           </div>
         </div>
