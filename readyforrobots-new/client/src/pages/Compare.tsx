@@ -91,7 +91,22 @@ export default function Compare() {
       <div className="page-hero-fade" aria-hidden />
 
       <main className="flex-1 pb-20 px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
+
+          <section className="mb-10 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="grid grid-cols-1 gap-px bg-slate-200 md:grid-cols-2">
+              <div className="bg-rose-50 p-5">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rose-700">GTM data tools</p>
+                <p className="text-sm font-semibold text-rose-900">Built for search and list building</p>
+                <p className="mt-2 text-xs leading-relaxed text-rose-800">Best when your team wants broad account coverage and handles qualification, timing, and outreach externally.</p>
+              </div>
+              <div className="bg-emerald-50 p-5">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-emerald-700">ReadyForRobots</p>
+                <p className="text-sm font-semibold text-emerald-900">Built for robot sales execution</p>
+                <p className="mt-2 text-xs leading-relaxed text-emerald-800">Best when you need verified buyer intent, SKU-level pitch guidance, and pipeline movement inside CRM.</p>
+              </div>
+            </div>
+          </section>
 
           <div className="grid md:grid-cols-2 gap-4 mb-12">
             {examples.map((ex) => (
@@ -100,12 +115,15 @@ export default function Compare() {
                 className={`rounded-2xl border p-5 ${
                   ex.tool.includes("Ready")
                     ? "border-emerald-300 bg-emerald-50/60 shadow-sm"
-                    : "border-gray-200 bg-white"
+                    : "border-rose-200 bg-rose-50/50"
                 }`}
               >
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">{ex.tool}</p>
+                <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${ex.tool.includes("Ready") ? "text-emerald-700" : "text-rose-700"}`}>{ex.tool}</p>
+                <p className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider mb-3 ${ex.tool.includes("Ready") ? "border-emerald-300 bg-emerald-100 text-emerald-800" : "border-rose-300 bg-rose-100 text-rose-800"}`}>
+                  {ex.tool.includes("Ready") ? "Action output" : "List output"}
+                </p>
                 <p className="text-xs font-mono text-gray-700 mb-3">{ex.query}</p>
-                <p className={`text-sm leading-relaxed ${ex.tool.includes("Ready") ? "text-emerald-900 font-medium" : "text-gray-600"}`}>
+                <p className={`text-sm leading-relaxed ${ex.tool.includes("Ready") ? "text-emerald-900 font-medium" : "text-rose-900"}`}>
                   → {ex.result}
                 </p>
               </div>
@@ -113,16 +131,19 @@ export default function Compare() {
           </div>
 
           <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm mb-12">
-            <div className="grid grid-cols-3 gap-px bg-gray-200 text-[10px] font-bold uppercase tracking-widest">
+            <div className="grid grid-cols-1 gap-px bg-gray-200 text-[10px] font-bold uppercase tracking-widest md:grid-cols-[190px_1fr_1fr]">
               <div className="bg-gray-50 px-4 py-3 text-gray-500">Dimension</div>
-              <div className="bg-gray-50 px-4 py-3 text-gray-500">GTM data tools</div>
+              <div className="bg-rose-50 px-4 py-3 text-rose-700">GTM data tools</div>
               <div className="bg-emerald-50 px-4 py-3 text-emerald-800">ReadyForRobots</div>
             </div>
             {rows.map((row) => (
-              <div key={row.dimension} className="grid grid-cols-3 gap-px bg-gray-100 border-t border-gray-100">
+              <div key={row.dimension} className="grid grid-cols-1 gap-px bg-gray-100 border-t border-gray-100 md:grid-cols-[190px_1fr_1fr]">
                 <div className="bg-white px-4 py-4 text-sm font-semibold text-gray-900">{row.dimension}</div>
-                <div className="bg-white px-4 py-4 text-xs text-gray-600 leading-relaxed">{row.dataTools}</div>
-                <div className="bg-emerald-50/40 px-4 py-4 text-xs text-emerald-950 leading-relaxed font-medium flex gap-2">
+                <div className="bg-rose-50/40 px-4 py-4 text-xs text-rose-900 leading-relaxed flex gap-2">
+                  <X className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
+                  {row.dataTools}
+                </div>
+                <div className="bg-emerald-50/50 px-4 py-4 text-xs text-emerald-950 leading-relaxed font-medium flex gap-2">
                   {row.rfrWins && <Check className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />}
                   {row.rfr}
                 </div>
