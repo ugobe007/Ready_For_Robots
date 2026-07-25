@@ -946,6 +946,7 @@ export default function Pipeline() {
   const [scoutBusy, setScoutBusy] = useState<"draft" | "send" | null>(null);
   const [scoutConfirm, setScoutConfirm] = useState<"draft" | "send" | null>(null);
   const [sendingLeadId, setSendingLeadId] = useState<number | null>(null);
+  const [capturedContactEmail, setCapturedContactEmail] = useState("");
   const [developingLeadId, setDevelopingLeadId] = useState<number | null>(null);
   // Draft preview email modal
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -983,6 +984,7 @@ export default function Pipeline() {
   const firstThreeEnteredRef = useRef<FirstThreeStep | null>(null);
   const firstThreeAbandonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstThreeAbandonSignaturesRef = useRef<Set<string>>(new Set());
+  const contactAssistSeenLeadIdsRef = useRef<Set<number>>(new Set());
   const byIdTelemetryRef = useRef({
     attempts: 0,
     successes: 0,
@@ -2048,12 +2050,13 @@ export default function Pipeline() {
     }
   };
 
-  const sendOneLead = async (deal: Deal) => {
+  const sendOneLead = async (deal: Deal, contactOverride?: string) => {
     if (!session?.access_token) {
       toast.info("Sign in to send outreach.");
       return;
     }
-    if (!deal.contact) {
+    const contactEmail = (contactOverride || deal.contact || "").trim();
+    if (!contactEmail) {
       toast.error("No contact email for this lead.");
       return;
     }
@@ -2076,22 +2079,49 @@ export default function Pipeline() {
       // Send
       const sendRes = await fetch(`${base}/api/crm/accounts/${acct.id}/send-outreach`, liveFetchInit({
         method: "POST", headers,
-        body: JSON.stringify({ contact_email: deal.contact, subject: deal.outreachSubject, outreach_draft: deal.outreachBody, send_identity: "scout" }),
+        body: JSON.stringify({ contact_email: contactEmail, subject: deal.outreachSubject, outreach_draft: deal.outreachBody, send_identity: "scout" }),
       }));
       if (!sendRes.ok) throw new Error(await sendRes.text());
-      setDeals((prev) => prev.map((d) => d.id === deal.id ? { ...d, stage: "Outreach Sent" as Stage, updatedAt: "just now" } : d));
+      setDeals((prev) => prev.map((d) => d.id === deal.id ? { ...d, stage: "Outreach Sent" as Stage, contact: d.contact || contactEmail, updatedAt: "just now" } : d));
       trackMarketingEvent("pipeline_outreach_sent", {
         lead_id: deal.id,
         company: deal.company,
         mode: "send_one",
       });
+      if (contactOverride) {
+        trackMarketingEvent("pipeline_send_with_captured_contact", {
+          lead_id: deal.id,
+          company: deal.company,
+          email_domain: contactEmail.split("@")[1] || null,
+        });
+      }
       setFirstThreeActions((prev) => ({ ...prev, started: true, sent: true, dismissed: false }));
-      toast.success(`Outreach sent to ${deal.contact}.`);
+      toast.success(`Outreach sent to ${contactEmail}.`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Send failed");
     } finally {
       setSendingLeadId(null);
     }
+  };
+
+  const runContactAssistSend = () => {
+    if (!selected) return;
+    const email = capturedContactEmail.trim().toLowerCase();
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!valid) {
+      trackMarketingEvent("pipeline_contact_assist_invalid", {
+        lead_id: selected.id,
+        company: selected.company,
+      });
+      toast.error("Enter a valid contact email before sending.");
+      return;
+    }
+    trackMarketingEvent("pipeline_contact_assist_submit", {
+      lead_id: selected.id,
+      company: selected.company,
+      email_domain: email.split("@")[1] || null,
+    });
+    void sendOneLead(selected, email);
   };
 
   const developLeadWithScout = async (deal: Deal) => {
@@ -2183,6 +2213,21 @@ export default function Pipeline() {
     && !firstThreeActions.sent;
 
   const nextFirstThreeStep = showFirstThreeActionsProgress ? firstThreeNextStep(firstThreeActions) : null;
+
+  useEffect(() => {
+    if (!selected) return;
+    setCapturedContactEmail(selected.contact || "");
+  }, [selected?.id, selected?.contact]);
+
+  useEffect(() => {
+    if (!selected || !session?.access_token || selected.contact || !selected.outreachBody) return;
+    if (contactAssistSeenLeadIdsRef.current.has(selected.id)) return;
+    contactAssistSeenLeadIdsRef.current.add(selected.id);
+    trackMarketingEvent("pipeline_contact_assist_open", {
+      lead_id: selected.id,
+      company: selected.company,
+    });
+  }, [selected, session?.access_token]);
   const canSendSelectedOutreach = Boolean(
     selected
       && selected.contact
@@ -3524,9 +3569,29 @@ export default function Pipeline() {
                       </button>
                     )}
                     {!selected.contact && selected.outreachBody && (
-                      <p className="mt-2 text-[10px] text-amber-800">
-                        Add a contact email on this lead before sending.
-                      </p>
+                      <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 p-2.5">
+                        <p className="text-[10px] text-amber-900">
+                          Add a contact email to send now. This removes the top step-3 blocker.
+                        </p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <input
+                            type="email"
+                            value={capturedContactEmail}
+                            onChange={(e) => setCapturedContactEmail(e.target.value)}
+                            placeholder="name@company.com"
+                            className="h-8 flex-1 rounded-md border border-amber-200 bg-white px-2 text-[11px] text-gray-800 outline-none ring-0 focus:border-emerald-400"
+                          />
+                          <button
+                            type="button"
+                            disabled={sendingLeadId === selected.id}
+                            onClick={runContactAssistSend}
+                            className="inline-flex h-8 items-center gap-1 rounded-md border border-emerald-300 bg-emerald-100 px-2.5 text-[10px] font-semibold text-emerald-800 disabled:opacity-60"
+                          >
+                            <Send className="h-3 w-3" />
+                            {sendingLeadId === selected.id ? "Sending..." : "Send now"}
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                   )}

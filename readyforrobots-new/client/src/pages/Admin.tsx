@@ -98,6 +98,10 @@ type SiteAnalytics = {
       pipeline_save_success?: number;
       pipeline_outreach_sent?: number;
       pipeline_draft_copy?: number;
+      pipeline_contact_assist_open?: number;
+      pipeline_contact_assist_submit?: number;
+      pipeline_contact_assist_invalid?: number;
+      pipeline_send_with_captured_contact?: number;
     };
     rates?: {
       report_submit_rate?: number;
@@ -115,6 +119,7 @@ type SiteAnalytics = {
       first3_copy_coaching_click_rate?: number;
       first3_send_coaching_click_rate?: number;
       first3_send_blocker_rate?: number;
+      captured_contact_send_rate?: number;
     };
     first_three?: {
       entered?: {
@@ -2668,6 +2673,36 @@ export default function Admin() {
                 label="Step 3 blocker rate"
                 value={pct(analytics?.marketing_conversion?.rates?.first3_send_blocker_rate)}
                 sub="share of step-3 entries that hit blockers"
+              />
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-cyan-200 bg-cyan-50/60 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-cyan-900">Day 5 contact assist impact</p>
+            <p className="mt-1 text-[11px] text-cyan-900/90">How often quick contact capture converts blocked sends into sent outreach.</p>
+            <div className="mt-2 grid gap-2 md:grid-cols-4">
+              <AdminCard
+                label="Assist opened"
+                value={formatNumber(analytics?.marketing_conversion?.events?.pipeline_contact_assist_open)}
+                sub="missing-contact cases surfaced"
+              />
+              <AdminCard
+                label="Assist submitted"
+                value={formatNumber(analytics?.marketing_conversion?.events?.pipeline_contact_assist_submit)}
+                sub={`invalid attempts ${formatNumber(analytics?.marketing_conversion?.events?.pipeline_contact_assist_invalid)}`}
+              />
+              <AdminCard
+                label="Sent with captured contact"
+                value={formatNumber(analytics?.marketing_conversion?.events?.pipeline_send_with_captured_contact)}
+                sub={`submit→send ${pct(analytics?.marketing_conversion?.rates?.captured_contact_send_rate)}`}
+              />
+              <AdminCard
+                label="Assist momentum"
+                value={deltaLabel(
+                  analytics?.marketing_conversion?.events?.pipeline_send_with_captured_contact,
+                  analytics?.marketing_conversion?.prev_events?.pipeline_send_with_captured_contact,
+                )}
+                sub="vs previous window"
               />
             </div>
           </div>
