@@ -104,7 +104,7 @@ def generate_demo_request_email(company_data: Dict, contact_response: Optional[s
     
     body = f"""Hello,
 
-{cal_vendor_opening()}
+{cal_vendor_opening(reminder=True)}
 
 {contact_response or "Thanks for the reply."}
 
@@ -132,7 +132,7 @@ def generate_partnership_proposal_email(company_data: Dict, demo_notes: Optional
     
     body = f"""Hello,
 
-{cal_vendor_opening()}
+{cal_vendor_opening(reminder=True)}
 
 Thanks again for walking through {company_name}. Based on what we discussed, I think the next step should stay focused: confirm the buyer categories where your {robot_type} is strongest, then map those to the hottest signal types we are seeing.
 
@@ -171,7 +171,7 @@ def generate_followup_email(company_data: Dict, previous_contact: str, days_sinc
     if tone == "friendly reminder":
         body = f"""Hello,
 
-{cal_vendor_opening()}
+{cal_vendor_opening(reminder=True)}
 
 Following up on my note about {company_name} and the automation sales leads we are seeing around {robot_type}.
 
@@ -182,7 +182,7 @@ If this is close to a market you care about, a quick 15-minute call would tell u
     elif tone == "value-added followup":
         body = f"""Hello,
 
-{cal_vendor_opening()}
+{cal_vendor_opening(reminder=True)}
 
 I wanted to send one more useful angle rather than just bump the same email.
 
@@ -197,7 +197,7 @@ Open to a quick look next week? If the signal trail is not strong enough, I will
     else:  # last attempt
         body = f"""Hello,
 
-{cal_vendor_opening()}
+{cal_vendor_opening(reminder=True)}
 
 I will close the loop here.
 

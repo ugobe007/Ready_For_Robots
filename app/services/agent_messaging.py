@@ -11,6 +11,22 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_signature
 
 CAL_INTRO = "Hi — I'm Cal, with Ready For Robots."
 
+CAL_BUYER_ROLE_LINE = (
+    "My job is to help companies find robots that actually fit their workflow, and to say clearly when a robot is the wrong move."
+)
+
+CAL_BUYER_REMINDER_LINE = (
+    "Quick reminder: I'm Cal at Ready For Robots — I help companies find robots that fit and avoid expensive pilot mistakes."
+)
+
+CAL_VENDOR_ROLE_LINE = (
+    "My job is to help robot companies find customers with real buying intent, not just noisy list traffic."
+)
+
+CAL_VENDOR_REMINDER_LINE = (
+    "Quick reminder: I'm Cal at Ready For Robots — I help robot companies find customers and filter out weak-fit accounts early."
+)
+
 CAL_VENDOR_IDENTITY = (
     "I've spent years inside robot deployments — Anybots, Omron, Panasonic, Mitsubishi, Locus Robotics — "
     "and I've seen the same pattern: great hardware, hard PoCs, harder conversions to paying accounts."
@@ -471,7 +487,17 @@ def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
             f"No right answer — but what comes to mind for {n} usually points straight at where a robot "
             "would earn its keep. Curious what you'd say."
         )
-    return "\n".join(["Hi,", "", core, "", close, "", cal_signature()])
+    return "\n".join([
+        f"Hi {n},",
+        "",
+        CAL_BUYER_REMINDER_LINE,
+        "",
+        core,
+        "",
+        close,
+        "",
+        cal_signature(),
+    ])
 
 
 def pick_buyer_variant(company_id, *, allowed=None) -> str:
@@ -552,7 +578,9 @@ def _variant_workflow_first(name: str, industry: str) -> str:
             f"not the {ins['glam'].lower()} everyone demos first."
         )
     return "\n".join([
-        "Hi,",
+        f"Hi {name},",
+        "",
+        CAL_BUYER_ROLE_LINE,
         "",
         'One thing I\'ve learned: most teams start a robotics evaluation by asking, '
         '"Which robot should we buy?"',
@@ -581,7 +609,9 @@ def _variant_what_survives(name: str, industry: str) -> str:
     """Specific field observation: what is still running six months in."""
     ins = _buyer_insight(industry)
     return "\n".join([
-        "Hi,",
+        f"Hi {name},",
+        "",
+        CAL_BUYER_ROLE_LINE,
         "",
         "Something I notice on site visits: six months after install, you can usually tell "
         "which deployments were aimed at a real bottleneck and which were bought for the demo.",
@@ -608,7 +638,9 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
     hidden = ins["hidden"]
     glam = ins["glam"].lower()
     return "\n".join([
-        "Hi,",
+        f"Hi {name},",
+        "",
+        CAL_BUYER_ROLE_LINE,
         "",
         f"Before {name} compares robot vendors, I ask operators one question:",
         "",
@@ -713,7 +745,11 @@ def build_buyer_variant_body(
     if reason:
         # Inject the grounded hook right after the greeting, ahead of Cal's
         # vantage line, so the email leads with a real, verifiable reason.
-        body = body.replace("Hi,\n\n", f"Hi,\n\n{reason}\n\n", 1)
+        greeting = f"Hi {n},\n\n"
+        if body.startswith(greeting):
+            body = body.replace(greeting, f"{greeting}{reason}\n\n", 1)
+        elif body.startswith("Hi,\n\n"):
+            body = body.replace("Hi,\n\n", f"Hi,\n\n{reason}\n\n", 1)
     return body
 
 
@@ -742,9 +778,15 @@ def cal_opening(*, audience: str = "buyer") -> str:
     return f"{CAL_INTRO}\n\n{explanation}"
 
 
-def cal_vendor_opening() -> str:
+def cal_vendor_opening(*, reminder: bool = False) -> str:
+    if reminder:
+        return (
+            f"{CAL_VENDOR_REMINDER_LINE}\n\n"
+            f"{VENDOR_SIGNAL_EXPLANATION}"
+        )
     return (
         f"{CAL_INTRO}\n\n"
+        f"{CAL_VENDOR_ROLE_LINE}\n\n"
         f"{CAL_VENDOR_IDENTITY}\n\n"
         f"{CAL_VENDOR_SHERPA_LINE}\n\n"
         f"{VENDOR_SIGNAL_EXPLANATION}"
