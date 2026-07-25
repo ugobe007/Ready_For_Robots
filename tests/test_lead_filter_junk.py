@@ -125,7 +125,9 @@ def test_partnership_compound_names_are_junk(name):
     "name",
     [
         "Yachting New Zealand and Hospitality New Zealand",
+        "Hospitality New Zealand and Yachting New Zealand",
         "Opentrons Global Robotics Chief",
+        "Global Robotics Chief",
     ],
 )
 def test_user_reported_junk_company_names_are_rejected(name):
