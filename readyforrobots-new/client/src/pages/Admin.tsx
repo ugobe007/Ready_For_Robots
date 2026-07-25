@@ -1609,9 +1609,54 @@ export default function Admin() {
         ? "Focus on draft discoverability: keep outreach panel highlighted and push copy intent cues."
         : "Focus on send readiness: improve contact completeness and send confidence in-panel.";
     return {
+      id: worst.id,
       label: worst.label,
       completion: worst.completion,
       nextMove,
+    };
+  })();
+
+  const coachingRateByStep = {
+    save_lead: Number(analytics?.marketing_conversion?.rates?.first3_save_coaching_click_rate ?? 0),
+    copy_draft: Number(analytics?.marketing_conversion?.rates?.first3_copy_coaching_click_rate ?? 0),
+    send_outreach: Number(analytics?.marketing_conversion?.rates?.first3_send_coaching_click_rate ?? 0),
+  };
+
+  const coachingRateGapByStep = {
+    save_lead: Number((coachingRateByStep.save_lead - coachingRateByStep.copy_draft).toFixed(1)),
+    copy_draft: Number((coachingRateByStep.copy_draft - coachingRateByStep.save_lead).toFixed(1)),
+    send_outreach: Number((coachingRateByStep.send_outreach - coachingRateByStep.copy_draft).toFixed(1)),
+  };
+
+  const experimentCallout = (() => {
+    const stepId = biggestLeak.id as "save_lead" | "copy_draft" | "send_outreach" | undefined;
+    if (!stepId) {
+      return {
+        title: "No experiment yet",
+        rationale: "Waiting for enough step data to prioritize a single test.",
+        test: "Hold current flow and collect another window of data.",
+      };
+    }
+    const clickRate = coachingRateByStep[stepId] ?? 0;
+    const clickGap = coachingRateGapByStep[stepId] ?? 0;
+    if (stepId === "save_lead") {
+      return {
+        title: "Priority test: Step 1 save CTA clarity",
+        rationale: `Lowest completion is ${pct(biggestLeak.completion)} with coaching click rate ${pct(clickRate)}.`,
+        test: "Test CTA copy: 'Save lead to unlock your CRM workflow' vs current, and keep helper text outcome-first.",
+      };
+    }
+    if (stepId === "copy_draft") {
+      return {
+        title: "Priority test: Step 2 draft discoverability",
+        rationale: `Copy completion is ${pct(biggestLeak.completion)} and coaching click gap is ${trendLabel(clickGap)}.`,
+        test: "Test always-visible sticky mini CTA near signal block: 'Copy outreach draft' with direct scroll and brief pulse.",
+      };
+    }
+    return {
+      title: "Priority test: Step 3 send confidence",
+      rationale: `Send completion is ${pct(biggestLeak.completion)} with coaching click rate ${pct(clickRate)}.`,
+      test: "Test trust copy under send button: 'Sends 1 personalized email, tracks replies in workspace' plus contact-readiness hint.",
     };
   })();
 
@@ -2493,6 +2538,13 @@ export default function Admin() {
                 sub={`click rate ${pct(analytics?.marketing_conversion?.rates?.first3_send_coaching_click_rate)}`}
               />
             </div>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50/60 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-blue-900">High-priority experiment</p>
+            <p className="mt-1 text-[11px] font-semibold text-blue-900">{experimentCallout.title}</p>
+            <p className="mt-1 text-[11px] text-blue-900/90">{experimentCallout.rationale}</p>
+            <p className="mt-1 text-[11px] text-blue-900/90">{experimentCallout.test}</p>
           </div>
         </section>
 
