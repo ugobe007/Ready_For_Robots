@@ -63,6 +63,19 @@ type AdminActivity = {
   created_at?: string;
 };
 
+type CalInboxItem = {
+  id: string;
+  thread_id: string;
+  opportunity_type: "crm" | "supply";
+  title?: string;
+  current_stage?: string;
+  from_email?: string | null;
+  subject?: string | null;
+  body_text?: string | null;
+  detected_intent?: string | null;
+  received_at?: string | null;
+};
+
 type SiteAnalytics = {
   site_visits?: number;
   total_calculations?: number;
@@ -585,6 +598,8 @@ export default function Admin() {
   const [analytics, setAnalytics] = useState<SiteAnalytics | null>(initialApplied.analytics as SiteAnalytics | null);
   const [workflow, setWorkflow] = useState<WorkflowSummary | null>(initialApplied.workflow as WorkflowSummary | null);
   const [targets, setTargets] = useState<ScrapeTargets | null>(initialApplied.targets as ScrapeTargets | null);
+  const [calInboxItems, setCalInboxItems] = useState<CalInboxItem[]>([]);
+  const [calInboxLoading, setCalInboxLoading] = useState(false);
   const [meLoading, setMeLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -971,13 +986,30 @@ export default function Admin() {
     } catch { /* advisory */ }
   }, [adminFetch, session?.access_token]);
 
+  const loadCalInbox = useCallback(async () => {
+    if (!session?.access_token || !me?.is_admin) return;
+    setCalInboxLoading(true);
+    try {
+      const res = await adminFetch("/api/sales/inbox");
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      const rows = Array.isArray(data) ? data as CalInboxItem[] : [];
+      setCalInboxItems(rows.slice(0, 12));
+    } catch {
+      setCalInboxItems([]);
+    } finally {
+      setCalInboxLoading(false);
+    }
+  }, [adminFetch, me?.is_admin, session?.access_token]);
+
   const refreshOperatorView = useCallback(async () => {
     await Promise.all([
       loadOperatorDashboard(),
       loadCalStatus(),
+      loadCalInbox(),
       refreshSection("daily_brief", true),
     ]);
-  }, [loadCalStatus, loadOperatorDashboard, refreshSection]);
+  }, [loadCalInbox, loadCalStatus, loadOperatorDashboard, refreshSection]);
 
   const saveCalDraft = useCallback(async (crmAccountId: string) => {
     const draft = draftBodies[crmAccountId];
@@ -1143,8 +1175,9 @@ export default function Admin() {
       void loadOperatorDashboard();
       void loadSupplyAutonomyStatus();
       void loadCalStatus();
+      void loadCalInbox();
     }
-  }, [authLoading, loadCalAutonomyStatus, loadCalStatus, loadOperatorDashboard, loadSupplyAutonomyStatus, me?.is_admin, session?.access_token]);
+  }, [authLoading, loadCalAutonomyStatus, loadCalInbox, loadCalStatus, loadOperatorDashboard, loadSupplyAutonomyStatus, me?.is_admin, session?.access_token]);
 
   async function importUrls(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -2123,6 +2156,56 @@ export default function Admin() {
           )}
 
           <CalLearningPanel adminFetch={adminFetch} />
+
+          <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50/60 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-sky-900">Received emails (Cal replies)</p>
+                <p className="mt-1 text-[11px] text-sky-900/90">Latest inbound responses from prospects Cal contacted.</p>
+              </div>
+              <div className="flex items-center gap-2 text-[11px]">
+                <SupabaseInlineLink tone="blue" onClick={() => void loadCalInbox()} busy={calInboxLoading}>
+                  Refresh replies
+                </SupabaseInlineLink>
+                <span className="text-sky-800/70">·</span>
+                <Link href="/inbox" className="font-semibold text-sky-800 underline underline-offset-2">
+                  Open full inbox
+                </Link>
+              </div>
+            </div>
+
+            <div className="mt-2 grid gap-2 md:grid-cols-2">
+              {calInboxItems.length ? calInboxItems.slice(0, 6).map((item) => (
+                <div key={item.id} className="rounded-lg border border-sky-200 bg-white/90 px-2.5 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-[11px] font-semibold text-sky-900">{item.title || "Inbound reply"}</p>
+                    <span className="shrink-0 rounded-full border border-sky-200 bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-sky-900">
+                      {item.opportunity_type || "crm"}
+                    </span>
+                  </div>
+                  <p className="mt-1 truncate text-[11px] text-sky-900/90">{item.from_email || "unknown sender"}</p>
+                  <p className="mt-1 text-[10px] text-sky-800/80">{formatDate(item.received_at)}</p>
+                  <p className="mt-1 line-clamp-2 text-[10px] text-sky-800/80">{item.subject || item.body_text || "No message preview"}</p>
+                  <div className="mt-1.5 flex items-center gap-2 text-[10px]">
+                    <Link href="/inbox" className="font-semibold text-sky-800 underline underline-offset-2">
+                      Review
+                    </Link>
+                    <span className="text-sky-800/60">·</span>
+                    <Link
+                      href={`/sales-console?opportunity_id=${encodeURIComponent(item.thread_id)}`}
+                      className="font-semibold text-sky-800 underline underline-offset-2"
+                    >
+                      Thread
+                    </Link>
+                  </div>
+                </div>
+              )) : (
+                <div className="rounded-lg border border-sky-200 bg-white/90 px-2.5 py-3 text-[11px] text-sky-900/80 md:col-span-2">
+                  {calInboxLoading ? "Loading replies..." : "No received emails yet. Cal replies will appear here as prospects respond."}
+                </div>
+              )}
+            </div>
+          </div>
 
           <p className="mb-3 text-[11px] text-gray-600">
             <strong className="text-gray-800">{formatNumber(calMetrics.total)}</strong> HOT/WARM leads
