@@ -103,7 +103,7 @@ export default function Compare() {
                   Output: records to sort
                 </div>
               </div>
-              <div className="border-l-2 border-sky-500 bg-white p-6 md:p-7 text-slate-900">
+              <div className="border-l-2 border-sky-500 bg-sky-50 p-6 md:p-7 text-slate-900">
                 <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-sky-700">ReadyForRobots</p>
                 <p className="text-2xl md:text-3xl font-black tracking-tight leading-tight text-slate-900">Execution-ready workflow</p>
                 <p className="mt-2 text-[15px] leading-relaxed text-slate-700">Built for robot teams that need verified buyer intent, SKU guidance, and clear pipeline next steps in CRM.</p>
@@ -122,7 +122,7 @@ export default function Compare() {
                 key={ex.tool}
                 className={`rounded-2xl border p-5 ${
                   ex.tool.includes("Ready")
-                    ? "border-sky-200 bg-white text-slate-900 shadow-sm"
+                    ? "border-sky-200 bg-sky-50 text-slate-900 shadow-sm"
                     : "border-slate-200 bg-white text-slate-900"
                 }`}
               >
@@ -153,7 +153,7 @@ export default function Compare() {
                         <span>{row.dataTools}</span>
                       </p>
                     </div>
-                    <div className="rounded-xl border border-sky-200 bg-white p-3.5">
+                    <div className="rounded-xl border border-sky-200 bg-sky-50 p-3.5">
                       <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-sky-700">ReadyForRobots</p>
                       <p className="flex gap-2 text-[13px] leading-relaxed text-sky-950 font-semibold">
                         {row.rfrWins && <Check className="h-4 w-4 shrink-0 text-sky-600 mt-0.5" />}
@@ -180,7 +180,7 @@ export default function Compare() {
                 </p>
                 <p className="mt-2 text-[13px] text-gray-500">Horizontal. No robot category. No SKU-level pitch.</p>
               </div>
-              <div className="rounded-xl border border-sky-200 bg-white p-4">
+              <div className="rounded-xl border border-sky-200 bg-sky-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.1em] text-sky-800 mb-2">ReadyForRobots</p>
                 <p className="text-[13px] text-sky-950 leading-relaxed font-semibold">
                   Live robot-buyer signals → HOT/WARM timing → pipeline_action + robot_types_needed → Cal outreach draft → save &amp; sync to HubSpot.
