@@ -2309,6 +2309,13 @@ export default function Pipeline() {
     hasDraft: Boolean(selected?.outreachBody),
     alreadySent: Boolean(selected?.stage === "Outreach Sent"),
   };
+  const first3SaveCtaVariant = selected && selected.id % 2 === 0 ? "a" : "b";
+  const first3SaveCtaLabel = first3SaveCtaVariant === "a"
+    ? "Save this lead"
+    : "Save lead and open your CRM workspace";
+  const first3SaveHelperText = first3SaveCtaVariant === "a"
+    ? "Save now to open your CRM workspace with draft, send, and reply tracking for this lead."
+    : "One click opens your CRM workspace for this lead with draft and send tracking ready to run.";
   const sendChecklistAssignedVariant = selected && selected.id % 2 === 0 ? "a" : "b";
   const sendChecklistVariant = checklistVariantOverride || sendChecklistAssignedVariant;
   const sendChecklistVariantLabel = sendChecklistVariant === "a" ? "Variant A" : "Variant B";
@@ -2391,7 +2398,7 @@ export default function Pipeline() {
   }, [selected, session?.access_token, sendReadiness.hasContact, sendReadiness.hasDraft, sendReadiness.alreadySent, selectedSendBlockers.length, sendChecklistVariant]);
 
   const firstThreePrimaryActionLabel = nextFirstThreeStep === "save_lead"
-    ? "Save this lead"
+    ? first3SaveCtaLabel
     : nextFirstThreeStep === "copy_draft"
       ? "Go to outreach draft"
       : nextFirstThreeStep === "send_outreach"
@@ -2405,7 +2412,7 @@ export default function Pipeline() {
         ? Boolean(!selected || sendingLeadId === selected.id)
         : true;
   const firstThreeHelperText = nextFirstThreeStep === "save_lead"
-    ? "Step 1 unlocks your workspace and marks activation for this account."
+    ? first3SaveHelperText
     : nextFirstThreeStep === "copy_draft"
       ? "Step 2 is fastest from the Outreach draft panel. We will highlight it now."
       : nextFirstThreeStep === "send_outreach"
@@ -2421,6 +2428,7 @@ export default function Pipeline() {
       lead_id: selected.id,
       company: selected.company,
       completed_count: firstThreeCompletedCount(firstThreeActions),
+      save_cta_variant: nextFirstThreeStep === "save_lead" ? first3SaveCtaVariant : null,
     });
     if (nextFirstThreeStep === "save_lead") {
       void handleSaveLead(selected);
@@ -2473,8 +2481,9 @@ export default function Pipeline() {
       completed_count: firstThreeCompletedCount(firstThreeActions),
       lead_id: selected.id,
       company: selected.company,
+      save_cta_variant: nextFirstThreeStep === "save_lead" ? first3SaveCtaVariant : null,
     });
-  }, [nextFirstThreeStep, selected, firstThreeActions]);
+  }, [nextFirstThreeStep, selected, firstThreeActions, first3SaveCtaVariant]);
 
   useEffect(() => {
     if (firstThreeAbandonTimerRef.current) {
