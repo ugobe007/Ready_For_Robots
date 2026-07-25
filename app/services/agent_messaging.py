@@ -532,40 +532,49 @@ def resolve_buyer_variant(company, acct=None) -> str | None:
     return pick_buyer_variant(getattr(company, "id", None))
 
 
-def _exploration_question(name: str, industry: str) -> str:
-    """One low-commitment question tailored to sector — never a meeting ask."""
+def _exploration_question(name: str, industry: str, *, variant_seed: str = "base") -> str:
+    """One low-commitment question tailored to sector with deterministic variation."""
     n = (name or "your team").strip()
     team = n if len(n) <= 24 else "your team"
+    area = "your operation" if team == "your team" else team
+    seed = f"{team}|{(industry or '').lower()}|{variant_seed}"
+    pick = lambda options: options[sum(ord(c) for c in seed) % len(options)]
     low = (industry or "").lower()
     if any(k in low for k in ("logistic", "warehous", "supply", "3pl", "distribution", "fulfil")):
-        return (
-            f"Is warehouse automation something {team} is actively exploring, "
-            "or are you still deciding where it might fit?"
-        )
+        return pick([
+            f"Is warehouse automation something {team} is actively exploring, or still early-stage?",
+            f"Are you currently testing warehouse automation in {area}, or just mapping options?",
+            f"Would warehouse automation be useful for {team} this year, or not a priority yet?",
+        ])
     if any(k in low for k in ("hospitality", "hotel", "casino", "resort", "gaming")):
-        return (
-            f"Is service robotics on the table for {team} right now, "
-            'or still in the "figuring out where it helps" stage?'
-        )
+        return pick([
+            f"Is service robotics on the table for {team} right now, or still in exploration mode?",
+            f"Are you trialing service robotics at {team}, or still deciding where it would help most?",
+            f"Would service robotics be useful for {team} this season, or too early?",
+        ])
     if any(k in low for k in ("health", "medical", "hospital", "clinic")):
-        return (
-            f"Is internal transport or delivery automation on {team}'s radar, "
-            "or are you still mapping where it would actually help?"
-        )
+        return pick([
+            f"Is internal transport automation on {team}'s radar, or still being evaluated?",
+            f"Are you exploring delivery automation at {team}, or still mapping use cases?",
+            f"Would internal logistics automation be useful for {team} this year, or not yet?",
+        ])
     if any(k in low for k in ("food", "restaurant", "kitchen", "grocery")):
-        return (
-            f"Is back-of-house automation something {team} is weighing, "
-            "or still deciding which workflow would be worth testing first?"
-        )
+        return pick([
+            f"Is back-of-house automation something {team} is weighing now, or still exploratory?",
+            f"Are you testing kitchen/back-of-house automation at {team}, or still deciding where to start?",
+            f"Would back-of-house automation help {team} this year, or is timing still early?",
+        ])
     if any(k in low for k in ("manufactur", "factory", "automotive", "industrial")):
-        return (
-            f"Is line-side automation something {team} is actively exploring, "
-            "or still deciding where a robot would earn its keep?"
-        )
-    return (
-        f"Is automation something {team} is actively exploring, "
-        "or still deciding where it might fit?"
-    )
+        return pick([
+            f"Is line-side automation something {team} is actively exploring, or still being scoped?",
+            f"Are you testing automation on the line at {team}, or still deciding where it would pay off?",
+            f"Would line-side automation be useful for {team} this year, or not yet?",
+        ])
+    return pick([
+        f"Is automation something {team} is actively exploring, or still deciding where it fits?",
+        f"Are you currently evaluating automation at {team}, or still in early discovery?",
+        f"Would automation be useful for {team} this year, or not a priority yet?",
+    ])
 
 
 def _greeting_name(name: str) -> str:
@@ -590,28 +599,24 @@ def _variant_workflow_first(name: str, industry: str) -> str:
             f"not the {ins['glam'].lower()} everyone demos first."
         )
     team = _greeting_name(name)
+    team_ref = name if len(name) <= 24 else "your operation"
     return "\n".join([
         f"Hi {team},",
         "",
         CAL_BUYER_ROLE_LINE,
         "",
-        'One thing I\'ve learned: most teams start a robotics evaluation by asking, '
-        '"Which robot should we buy?"',
+        "Quick field note: most teams start by asking, \"Which robot should we buy?\"",
         "",
-        "I usually ask a different question first:",
+        f"Which workflow is costing {team_ref} the most time every day?",
         "",
-        f"Which workflow is costing {team} the most time every day?",
+        "Until that's clear, vendor comparisons are mostly noise.",
         "",
-        "Until that's clear, comparing vendors isn't very useful.",
-        "",
-        "I've seen strong robots struggle because they were solving the wrong problem. "
-        "I've also seen fairly simple automation deliver a solid return when it was "
-        "applied to the right workflow.",
+        "I've seen simple automation produce strong ROI when it solved the right bottleneck.",
         sector_note,
         "",
         f"{CAL_ORG} is vendor-neutral. I don't push a specific vendor — I help teams avoid solving the wrong problem.",
         "",
-        _exploration_question(name, industry),
+        _exploration_question(name, industry, variant_seed="workflow_first"),
         "",
         cal_signature(),
     ])
@@ -626,19 +631,19 @@ def _variant_what_survives(name: str, industry: str) -> str:
         "",
         CAL_BUYER_ROLE_LINE,
         "",
-        "Something I notice on site visits: six months after install, you can usually tell "
-        "which deployments were aimed at a real bottleneck and which were bought for the demo.",
+        "Quick field note from site visits:",
+        "",
+        "Six months in, you can usually tell which deployments solved a real bottleneck and which were mostly a demo.",
         "",
         ins["opinion"],
         "",
-        "The ones that last almost never won on spec-sheet speed. They won because someone "
-        "named the workflow first — integration, software, and staffing included — before "
-        "anyone picked hardware.",
+        "The ones that last usually win on workflow fit, not spec-sheet speed.",
+        "Integration and staffing are usually the decider.",
         "",
         f"{CAL_ORG} is vendor-neutral. I don't get paid to move a particular box; I help "
         f"teams avoid automating the wrong job.",
         "",
-        _exploration_question(name, industry),
+        _exploration_question(name, industry, variant_seed="what_survives"),
         "",
         cal_signature(),
     ])
@@ -651,13 +656,13 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
     hidden = ins["hidden"]
     glam = ins["glam"].lower()
     team = _greeting_name(name)
+    team_ref = name if len(name) <= 24 else "your operation"
     return "\n".join([
         f"Hi {team},",
         "",
         CAL_BUYER_ROLE_LINE,
         "",
-        f"Before {team} compares robot vendors, I ask operators one question:",
-        "",
+        "The first question I ask is simple:",
         "Where do the hours actually go?",
         "",
         f"In {sector}, the answer is usually {hidden} — not {glam}. "
@@ -665,13 +670,13 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
         "",
         ins["opinion"],
         "",
-        "Sometimes the right answer is a process fix, not a robot. Sometimes it is a robot — "
-        "but only once the bottleneck is named.",
+        "Sometimes the right answer is a process fix, not a robot.",
+        "When it is a robot, the bottleneck needs to be clear first.",
         "",
-        f"I'm vendor-neutral. If {team} tells me where time disappears, I can say whether "
+        f"I'm vendor-neutral. If {team_ref} tells me where time disappears, I can say whether "
         "automation is even the right tool — no pitch attached.",
         "",
-        _exploration_question(name, industry),
+        _exploration_question(name, industry, variant_seed="bottleneck_first"),
         "",
         cal_signature(),
     ])
