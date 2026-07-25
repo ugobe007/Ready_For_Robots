@@ -80,12 +80,12 @@ export default function Compare() {
         eyebrow="Compare"
         title={
           <>
-            Data tools find accounts.
+            Data tools surface opportunities.
             <br />
-            <span className="text-sky-300">We run your robot sales pipeline.</span>
+            <span className="text-sky-300">ReadyForRobots delivers qualified leads ready for engagement.</span>
           </>
         }
-        description="Tools like Explee excel at horizontal company search. ReadyForRobots is built for robot companies who need verified buyer intent, the right SKU to pitch, and deals moving in CRM — not another stale list."
+        description="Tools like Explee help teams discover broad opportunities. ReadyForRobots is built for robot companies that need sales leads already qualified by live buyer intent and ready for immediate outreach in CRM."
         innerClassName="pb-8 text-center [&_.page-hero-title]:mx-auto [&_.page-hero-title]:text-4xl md:[&_.page-hero-title]:text-6xl [&_.page-hero-title]:leading-[1.02] [&_.page-hero-title]:tracking-tight [&_.page-hero-description]:mx-auto [&_.page-hero-description]:text-base md:[&_.page-hero-description]:text-lg [&_.page-hero-description]:leading-relaxed"
       />
       <div className="page-hero-fade" aria-hidden />
