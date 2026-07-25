@@ -220,7 +220,7 @@ export default function Intelligence() {
               </Link>
             </div>
           </div>
-          <div className="md:self-start lg:sticky lg:top-20">
+          <div className="hidden md:block md:self-start lg:sticky lg:top-20">
             <IntelligenceFlow dark />
           </div>
         </div>
