@@ -329,6 +329,22 @@ type CalDraftStatus = {
   bootstrap_message?: string;
 };
 
+type CalVariantPreviewItem = {
+  variant_id: string;
+  subject: string;
+  body: string;
+};
+
+type CalVariantPreviewResponse = {
+  company_id: number;
+  company_name?: string;
+  industry?: string;
+  selected_variant?: string | null;
+  stored_variant?: string | null;
+  reason?: string | null;
+  variants: CalVariantPreviewItem[];
+};
+
 type OperatorDashboard = {
   cal_queue?: CalDraftStatus["summary"];
   buyer_vendor?: { buyers?: number; vendors?: number; scope?: string };
@@ -635,6 +651,9 @@ export default function Admin() {
   const [draftBodyLoading, setDraftBodyLoading] = useState<string | null>(null);
   const [draftLoadErrors, setDraftLoadErrors] = useState<Record<string, string>>({});
   const [draftContactEmails, setDraftContactEmails] = useState<Record<string, string>>({});
+  const [calVariantPreviewByCompany, setCalVariantPreviewByCompany] = useState<Record<number, CalVariantPreviewResponse>>({});
+  const [calVariantPreviewLoadingId, setCalVariantPreviewLoadingId] = useState<number | null>(null);
+  const [calVariantPreviewError, setCalVariantPreviewError] = useState("");
   const [calAutonomy, setCalAutonomy] = useState<{
     enabled?: boolean;
     env_enabled?: boolean;
@@ -1001,6 +1020,23 @@ export default function Admin() {
       setCalInboxLoading(false);
     }
   }, [adminFetch, me?.is_admin, session?.access_token]);
+
+  const loadCalVariantPreview = useCallback(async (companyId: number, force = false) => {
+    if (!session?.access_token || !me?.is_admin || !companyId) return;
+    if (!force && calVariantPreviewByCompany[companyId]) return;
+    setCalVariantPreviewError("");
+    setCalVariantPreviewLoadingId(companyId);
+    try {
+      const res = await adminFetch(`/api/admin/cal/variant-preview/${companyId}`);
+      const data = await res.json().catch(() => ({})) as CalVariantPreviewResponse & { detail?: string };
+      if (!res.ok) throw new Error(data.detail || `Could not load variant preview (HTTP ${res.status})`);
+      setCalVariantPreviewByCompany((prev) => ({ ...prev, [companyId]: data }));
+    } catch (err) {
+      setCalVariantPreviewError(err instanceof Error ? err.message : "Could not load variant preview.");
+    } finally {
+      setCalVariantPreviewLoadingId((curr) => (curr === companyId ? null : curr));
+    }
+  }, [adminFetch, calVariantPreviewByCompany, me?.is_admin, session?.access_token]);
 
   const refreshOperatorView = useCallback(async () => {
     await Promise.all([
@@ -1589,6 +1625,11 @@ export default function Admin() {
 
   const calSelectedProspect =
     calSelectedIdx != null ? calFilteredProspects[calSelectedIdx] : calFilteredProspects[0] ?? null;
+
+  const selectedVariantPreview =
+    calSelectedProspect?.company_id != null
+      ? calVariantPreviewByCompany[calSelectedProspect.company_id]
+      : undefined;
 
   const scrollToCalQueue = useCallback(() => {
     scrollToAdminSection("cal-outreach");
@@ -2304,6 +2345,46 @@ export default function Admin() {
                       <p className="mt-1 inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
                         Angle: {buyerAngleLabel(calSelectedProspect.company_id)}
                       </p>
+                    ) : null}
+                    {calSelectedProspect.account_type !== "vendor" && calSelectedProspect.company_id != null ? (
+                      <div className="mt-1 flex items-center gap-2 text-[10px]">
+                        <SupabaseInlineLink
+                          tone="blue"
+                          onClick={() => void loadCalVariantPreview(calSelectedProspect.company_id!, true)}
+                          busy={calVariantPreviewLoadingId === calSelectedProspect.company_id}
+                        >
+                          Preview all 3 angles
+                        </SupabaseInlineLink>
+                        {selectedVariantPreview?.selected_variant ? (
+                          <span className="rounded-full border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-800">
+                            selected: {selectedVariantPreview.selected_variant.replace(/_/g, " ")}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {calVariantPreviewError ? (
+                      <p className="mt-1 text-[10px] text-rose-700">{calVariantPreviewError}</p>
+                    ) : null}
+                    {selectedVariantPreview?.variants?.length ? (
+                      <div className="mt-2 space-y-2 rounded-lg border border-indigo-200 bg-indigo-50/40 p-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-900">Buyer angle preview</p>
+                        {selectedVariantPreview.reason ? (
+                          <p className="text-[10px] text-indigo-900/90">Grounded reason: {selectedVariantPreview.reason}</p>
+                        ) : null}
+                        {selectedVariantPreview.variants.map((v) => (
+                          <details key={v.variant_id} className="rounded-md border border-indigo-200 bg-white/85 px-2 py-1.5">
+                            <summary className="cursor-pointer text-[10px] font-semibold text-indigo-900">
+                              {v.variant_id.replace(/_/g, " ")} · {v.subject}
+                            </summary>
+                            <textarea
+                              readOnly
+                              value={v.body}
+                              rows={8}
+                              className="mt-1.5 w-full rounded-md border border-indigo-100 bg-slate-50 px-2 py-2 font-mono text-[10px] leading-relaxed text-gray-800"
+                            />
+                          </details>
+                        ))}
+                      </div>
                     ) : null}
                     {calSelectedProspect.semantic_summary ? (
                       <p className="mt-2 text-xs text-gray-600 leading-relaxed">{calSelectedProspect.semantic_summary}</p>

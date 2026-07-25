@@ -1425,6 +1425,75 @@ def cal_template_sample(
     }
 
 
+@router.get("/cal/variant-preview/{company_id}")
+def cal_variant_preview(
+    company_id: int,
+    db: Session = Depends(get_db),
+    _user: dict = Depends(require_admin),
+):
+    """Preview all buyer trust-first angles (subject + body) for one company."""
+    from app.models.company import Company
+    from app.services.agent_messaging import (
+        BUYER_VARIANTS,
+        build_buyer_variant_body,
+        build_context_reason,
+        buyer_variant_subject,
+        pick_buyer_variant,
+    )
+    from app.services.brand import is_stagegate_branded
+    from app.services.lead_signal_display import strip_extraction_artifacts
+
+    company = (
+        db.query(Company)
+        .options(joinedload(Company.signals))
+        .filter(Company.id == company_id)
+        .first()
+    )
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    if is_stagegate_branded(company):
+        raise HTTPException(
+            status_code=400,
+            detail="Variant preview is buyer-only. StageGate/vendor accounts do not use buyer trust-first angles.",
+        )
+
+    name = (company.name or "your team").strip()
+    industry = (company.industry or "your industry").strip()
+    blob_parts = [
+        strip_extraction_artifacts(getattr(s, "signal_text", None))
+        for s in list(company.signals or [])[:12]
+    ]
+    signal_blob = " ".join(p for p in blob_parts if p).strip()
+    reason = build_context_reason(name, signal_blob)
+
+    stored_variant = None
+    meta = company.crm_metadata if isinstance(company.crm_metadata, dict) else {}
+    if meta.get("cal_variant_id") in BUYER_VARIANTS:
+        stored_variant = str(meta.get("cal_variant_id"))
+    selected_variant = stored_variant or pick_buyer_variant(getattr(company, "id", None))
+
+    previews: list[dict[str, str]] = []
+    for vid in BUYER_VARIANTS:
+        previews.append(
+            {
+                "variant_id": vid,
+                "subject": buyer_variant_subject(name, industry, vid),
+                "body": build_buyer_variant_body(name, industry, vid, reason=reason),
+            }
+        )
+
+    return {
+        "company_id": company.id,
+        "company_name": company.name,
+        "industry": company.industry,
+        "selected_variant": selected_variant,
+        "stored_variant": stored_variant,
+        "reason": reason,
+        "variants": previews,
+    }
+
+
 class CalAutonomyToggleBody(BaseModel):
     enabled: bool
 
@@ -1442,7 +1511,7 @@ def cal_autonomy_toggle(
 
         raise HTTPException(
             status_code=503,
-            detail="Autopilot toggle unavailable — REDIS_URL not configured on server.",
+            detail="Autopilot toggle failed — could not persist runtime flag.",
         )
     return get_cal_autonomy_status()
 
