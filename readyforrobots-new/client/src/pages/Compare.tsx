@@ -76,7 +76,7 @@ export default function Compare() {
       <Header />
 
       <PageHeroDark
-        maxWidthClass="max-w-4xl"
+        maxWidthClass="max-w-5xl"
         eyebrow="Compare"
         title={
           <>
@@ -90,32 +90,40 @@ export default function Compare() {
       />
       <div className="page-hero-fade" aria-hidden />
 
-      <main className="flex-1 pb-20 px-6">
+      <main className="flex-1 pb-20 px-6 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08),transparent_45%)]">
         <div className="max-w-5xl mx-auto">
 
-          <section className="mb-10 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <section className="mb-10 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60">
             <div className="grid grid-cols-1 gap-px bg-slate-200 md:grid-cols-2">
-              <div className="bg-rose-50 p-5">
+              <div className="bg-gradient-to-br from-rose-100 via-rose-50 to-white p-6 md:p-7">
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rose-700">GTM data tools</p>
-                <p className="text-sm font-semibold text-rose-900">Built for search and list building</p>
-                <p className="mt-2 text-xs leading-relaxed text-rose-800">Best when your team wants broad account coverage and handles qualification, timing, and outreach externally.</p>
+                <p className="text-lg font-black text-rose-900 tracking-tight">Built for search and list building</p>
+                <p className="mt-2 text-sm leading-relaxed text-rose-800">Best when your team wants broad account coverage and handles qualification, timing, and outreach externally.</p>
+                <div className="mt-4 inline-flex rounded-full border border-rose-300 bg-rose-100 px-3 py-1 text-[11px] font-semibold text-rose-800">
+                  Output: records to sort
+                </div>
               </div>
-              <div className="bg-emerald-50 p-5">
+              <div className="bg-gradient-to-br from-emerald-100 via-emerald-50 to-white p-6 md:p-7">
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-emerald-700">ReadyForRobots</p>
-                <p className="text-sm font-semibold text-emerald-900">Built for robot sales execution</p>
-                <p className="mt-2 text-xs leading-relaxed text-emerald-800">Best when you need verified buyer intent, SKU-level pitch guidance, and pipeline movement inside CRM.</p>
+                <p className="text-lg font-black text-emerald-900 tracking-tight">Built for robot sales execution</p>
+                <p className="mt-2 text-sm leading-relaxed text-emerald-800">Best when you need verified buyer intent, SKU-level pitch guidance, and pipeline movement inside CRM.</p>
+                <div className="mt-4 inline-flex rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 text-[11px] font-semibold text-emerald-800">
+                  Output: actions to run
+                </div>
               </div>
             </div>
           </section>
 
-          <div className="grid md:grid-cols-2 gap-4 mb-12">
+          <section className="mb-12">
+            <h2 className="mb-4 text-center font-display text-2xl md:text-3xl font-black tracking-tight text-slate-900">Same query, different outcome</h2>
+            <div className="grid md:grid-cols-2 gap-4">
             {examples.map((ex) => (
               <div
                 key={ex.tool}
                 className={`rounded-2xl border p-5 ${
                   ex.tool.includes("Ready")
-                    ? "border-emerald-300 bg-emerald-50/60 shadow-sm"
-                    : "border-rose-200 bg-rose-50/50"
+                    ? "border-emerald-300 bg-gradient-to-br from-emerald-50 to-emerald-100/60 shadow-sm"
+                    : "border-rose-200 bg-gradient-to-br from-rose-50 to-rose-100/60"
                 }`}
               >
                 <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${ex.tool.includes("Ready") ? "text-emerald-700" : "text-rose-700"}`}>{ex.tool}</p>
@@ -123,18 +131,19 @@ export default function Compare() {
                   {ex.tool.includes("Ready") ? "Action output" : "List output"}
                 </p>
                 <p className="text-xs font-mono text-gray-700 mb-3">{ex.query}</p>
-                <p className={`text-sm leading-relaxed ${ex.tool.includes("Ready") ? "text-emerald-900 font-medium" : "text-rose-900"}`}>
+                <p className={`text-sm leading-relaxed ${ex.tool.includes("Ready") ? "text-emerald-950 font-semibold" : "text-rose-900"}`}>
                   → {ex.result}
                 </p>
               </div>
             ))}
-          </div>
+            </div>
+          </section>
 
-          <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm mb-12">
+          <div className="rounded-3xl border border-gray-200 bg-white overflow-hidden shadow-sm mb-12">
             <div className="grid grid-cols-1 gap-px bg-gray-200 text-[10px] font-bold uppercase tracking-widest md:grid-cols-[190px_1fr_1fr]">
               <div className="bg-gray-50 px-4 py-3 text-gray-500">Dimension</div>
-              <div className="bg-rose-50 px-4 py-3 text-rose-700">GTM data tools</div>
-              <div className="bg-emerald-50 px-4 py-3 text-emerald-800">ReadyForRobots</div>
+              <div className="bg-rose-100 px-4 py-3 text-rose-700">GTM data tools</div>
+              <div className="bg-emerald-100 px-4 py-3 text-emerald-800">ReadyForRobots</div>
             </div>
             {rows.map((row) => (
               <div key={row.dimension} className="grid grid-cols-1 gap-px bg-gray-100 border-t border-gray-100 md:grid-cols-[190px_1fr_1fr]">
