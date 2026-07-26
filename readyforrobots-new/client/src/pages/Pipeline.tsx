@@ -3495,8 +3495,7 @@ export default function Pipeline() {
                     )}
                   </div>
 
-                  {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
-                    <div className="pipeline-detail-section-muted">
+                  <div className="pipeline-detail-section-muted">
                       <button
                         type="button"
                         onClick={() => setIntelligenceOpen((open) => !open)}
@@ -3641,6 +3640,16 @@ export default function Pipeline() {
                               )}
                             </p>
                           )}
+                          {!selected.leadHighlights?.specific_problem
+                            && (selected.leadHighlights?.why_lead || []).length === 0
+                            && !selected.notes
+                            && !selected.shareSummary
+                            && !selected.crmEvidence
+                            && (
+                              <p className="text-[11px] leading-relaxed text-gray-500">
+                                SIGNAL is monitoring this account and will surface friction, workflow scope, timing, and robot fit as new evidence arrives.
+                              </p>
+                            )}
                           {showFullPanel && (selected.leadHighlights?.agent_enrichment?.rich_facts || []).length > 0 && (
                             <div className="space-y-1 rounded-lg border border-emerald-200 bg-emerald-50/60 p-2.5">
                               {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).slice(0, 2).map((fact, i) => (
@@ -3658,7 +3667,6 @@ export default function Pipeline() {
                         </div>
                       )}
                     </div>
-                  )}
 
                   <PipelineRobotPriorityPanel deal={selected} />
 
