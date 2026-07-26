@@ -1097,7 +1097,7 @@ export default function Pipeline() {
   const [firstThreeActions, setFirstThreeActions] = useState<FirstThreeActionsState>(() => readFirstThreeActions());
   const [outreachDraftSpotlight, setOutreachDraftSpotlight] = useState(false);
   const [checklistVariantOverride, setChecklistVariantOverride] = useState<"a" | "b" | null>(null);
-  const [intelligenceOpen, setIntelligenceOpen] = useState(true);
+  const [adminOpsOpen, setAdminOpsOpen] = useState(false);
   const [researchOpen, setResearchOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
   const [hubspotIntegration, setHubspotIntegration] = useState<{
@@ -1334,8 +1334,8 @@ export default function Pipeline() {
   }, [session?.access_token]);
 
   useEffect(() => {
-    setIntelligenceOpen(true);
     setResearchOpen(false);
+    setAdminOpsOpen(false);
   }, [selectedId]);
 
   useEffect(() => {
@@ -3450,26 +3450,49 @@ export default function Pipeline() {
               className="pipeline-detail-shell flex h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] w-full shrink-0 flex-col overflow-hidden lg:w-[380px] xl:w-[400px] lg:sticky lg:top-20"
             >
               {isAdmin && (
-              <ScoutActionBar
-                accessToken={session?.access_token}
-                stats={scoutStats ? {
-                  total: scoutStats.total ?? 0,
-                  drafted: scoutStats.drafted ?? 0,
-                  sendable: scoutStats.sendable ?? scoutStats.drafted ?? 0,
-                  needsApproval: scoutStats.needs_approval,
-                  sent: scoutStats.sent ?? 0,
-                  opened: scoutStats.opened ?? 0,
-                  clicked: scoutStats.clicked ?? 0,
-                  replied: scoutStats.replied ?? 0,
-                } : null}
-                busy={null}
-                autopilotEnabled
-                everyHours={3}
-                sendLimit={25}
-                onRunNow={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
-                onViewQueue={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
-                onViewReplies={() => setLocation("/sales-workflow")}
-              />
+                <div className="shrink-0 border-b border-emerald-200/60 bg-emerald-50/50 px-4 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+                      Cal Autopilot · Admin controls
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setAdminOpsOpen((open) => !open)}
+                      className="rounded-md border border-emerald-300/70 bg-white px-2 py-1 text-[10px] font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
+                    >
+                      {adminOpsOpen ? "Hide" : "Show"} controls
+                    </button>
+                  </div>
+                  {!adminOpsOpen && (
+                    <p className="mt-1 text-[10px] text-emerald-700/90">
+                      Run/send queue controls are collapsed so buyer intelligence stays in view.
+                    </p>
+                  )}
+                  {adminOpsOpen && (
+                    <div className="mt-2">
+                      <ScoutActionBar
+                        accessToken={session?.access_token}
+                        stats={scoutStats ? {
+                          total: scoutStats.total ?? 0,
+                          drafted: scoutStats.drafted ?? 0,
+                          sendable: scoutStats.sendable ?? scoutStats.drafted ?? 0,
+                          needsApproval: scoutStats.needs_approval,
+                          sent: scoutStats.sent ?? 0,
+                          opened: scoutStats.opened ?? 0,
+                          clicked: scoutStats.clicked ?? 0,
+                          replied: scoutStats.replied ?? 0,
+                        } : null}
+                        busy={null}
+                        autopilotEnabled
+                        everyHours={3}
+                        sendLimit={25}
+                        onRunNow={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
+                        onViewQueue={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
+                        onViewReplies={() => setLocation("/sales-workflow")}
+                      />
+                    </div>
+                  )}
+                </div>
               )}
 
               {selected ? (
@@ -3575,31 +3598,37 @@ export default function Pipeline() {
                   </div>
 
                   <div className="pipeline-detail-section-muted">
-                      <button
-                        type="button"
-                        onClick={() => setIntelligenceOpen((open) => !open)}
-                        className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-slate-100"
-                        aria-expanded={intelligenceOpen}
-                      >
-                        <span className={panelSectionLabel}>SIGNAL intelligence</span>
-                        {!intelligenceOpen && (
-                          <span className="flex-1 min-w-0 text-[11px] leading-snug text-gray-600 truncate">
-                            {cleanAndClampText(
-                              selected.leadHighlights?.specific_problem
-                                || selected.shareSummary
-                                || selected.notes
-                                || "Problem, robot fit, and why this lead matters",
-                              72,
-                            )}
-                          </span>
-                        )}
-                        {intelligenceOpen ? (
-                          <ChevronUp className="h-3.5 w-3.5 shrink-0 text-gray-500" />
-                        ) : (
-                          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-500" />
-                        )}
-                      </button>
-                      {intelligenceOpen && (
+                        <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/60 p-2.5">
+                          <div className="flex items-center gap-2">
+                            <p className={panelSectionLabel}>SIGNAL intelligence</p>
+                            {(() => {
+                              const evidence = evidenceStackForDeal(selected);
+                              const gapCount = evidence.missingByKey.size;
+                              if (gapCount <= 0) return null;
+                              return (
+                                <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-800">
+                                  {gapCount} gap{gapCount === 1 ? "" : "s"}
+                                </span>
+                              );
+                            })()}
+                            {(() => {
+                              const evidence = evidenceStackForDeal(selected);
+                              if (evidence.researchState !== "researching") return null;
+                              return (
+                                <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800">
+                                  AI researching gaps
+                                </span>
+                              );
+                            })()}
+                          </div>
+                          {selected.pipelineAction && (
+                            <p className="mt-1.5 text-[11px] leading-relaxed text-emerald-800">
+                              <span className="font-semibold">Next action: </span>
+                              {cleanAndClampText(selected.pipelineAction, 180)}
+                            </p>
+                          )}
+                        </div>
+
                         <div className="pt-2 space-y-2">
                           {selected.leadHighlights?.specific_problem && (
                             <p className="break-words text-[12px] leading-relaxed text-gray-800">
@@ -3773,7 +3802,6 @@ export default function Pipeline() {
                             </p>
                           )}
                         </div>
-                      )}
                     </div>
 
                   <PipelineRobotPriorityPanel deal={selected} />
