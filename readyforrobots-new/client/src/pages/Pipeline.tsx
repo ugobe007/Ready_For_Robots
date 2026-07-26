@@ -105,6 +105,10 @@ interface Deal {
     summary?: string;
     source_url?: string | null;
     source_domain?: string | null;
+    source_kind?: string | null;
+    source_label?: string | null;
+    evidence_tension?: string | null;
+    recommended_action?: string | null;
     detected_at?: string | null;
     significance_score?: number;
   }>;
@@ -114,6 +118,10 @@ interface Deal {
     title?: string;
     summary?: string;
     source_domain?: string | null;
+    source_kind?: string | null;
+    source_label?: string | null;
+    evidence_tension?: string | null;
+    recommended_action?: string | null;
     detected_at?: string | null;
     significance_score?: number;
   } | null;
@@ -138,6 +146,37 @@ interface Deal {
       timing_clues?: string[];
       ontology_gaps?: string[];
     };
+  };
+  crmEvidence?: {
+    friction_point?: string | null;
+    workflow_scope?: {
+      count?: number;
+      label?: string | null;
+      items?: string[];
+    };
+    timing?: {
+      label?: string | null;
+      source?: string | null;
+      confidence?: number | null;
+    };
+    robot_type?: {
+      label?: string | null;
+      items?: string[];
+    };
+    budget?: {
+      top_amount?: string | null;
+      signals?: Array<{ amount?: string; context?: string; source_url?: string }>;
+      has_budget?: boolean;
+    };
+    decision_makers?: Array<{ name?: string; title?: string; source_url?: string; confidence?: number }>;
+    similar_deployments?: Array<{
+      title?: string | null;
+      summary?: string | null;
+      source_domain?: string | null;
+      source_url?: string | null;
+      source_label?: string | null;
+      evidence_tension?: string | null;
+    }>;
   };
 }
 
@@ -842,6 +881,43 @@ function robotTypesForDeal(deal: Deal): string[] {
     ...(highlights?.application_areas || []),
   ].filter(Boolean) as string[];
   return fallback;
+}
+
+function evidenceStackForDeal(deal: Deal) {
+  const evidence = deal.crmEvidence;
+  const workflowItems = (evidence?.workflow_scope?.items || []).filter(Boolean);
+  const robotItems = (evidence?.robot_type?.items || []).filter(Boolean);
+  const budgetSignals = (evidence?.budget?.signals || []).filter(Boolean);
+  const decisionMakers = (evidence?.decision_makers || []).filter(Boolean);
+  const deploymentExamples = (evidence?.similar_deployments || []).filter(Boolean);
+  const fallbackDeploymentExamples = (deal.researchUpdates || [])
+    .filter((update) => update.update_type === "deployment" || update.update_type === "partnership")
+    .slice(0, 3)
+    .map((update) => ({
+      title: update.title,
+      summary: update.summary,
+      source_domain: update.source_domain,
+      source_url: update.source_url,
+      source_label: update.source_label,
+      evidence_tension: update.evidence_tension,
+    }));
+
+  return {
+    frictionPoint:
+      evidence?.friction_point
+      || deal.leadHighlights?.specific_problem
+      || deal.shareSummary
+      || deal.signal,
+    workflowLabel: evidence?.workflow_scope?.label || (workflowItems.length > 1 ? "Multiple workflows" : "One workflow"),
+    workflowItems,
+    timingLabel: evidence?.timing?.label || deal.projectTiming?.display_phrase || deal.projectTiming?.label,
+    robotLabel: evidence?.robot_type?.label || robotItems[0] || (robotTypesForDeal(deal)[0] ?? null),
+    robotItems: robotItems.length ? robotItems : robotTypesForDeal(deal),
+    budgetTopAmount: evidence?.budget?.top_amount || null,
+    budgetSignals,
+    decisionMakers,
+    deploymentExamples: deploymentExamples.length > 0 ? deploymentExamples : fallbackDeploymentExamples,
+  };
 }
 
 function robotPriorityForDeal(deal: Deal): string | null {
@@ -3494,6 +3570,98 @@ export default function Pipeline() {
                                 ))}
                             </ul>
                           )}
+
+                            {/* CRM evidence — what the buyer actually cares about */}
+                            {(() => {
+                              const evidence = evidenceStackForDeal(selected);
+                              const hasEvidence = Boolean(
+                                evidence.frictionPoint
+                                || evidence.workflowItems.length
+                                || evidence.timingLabel
+                                || evidence.robotLabel
+                                || evidence.budgetTopAmount
+                                || evidence.decisionMakers.length
+                                || evidence.deploymentExamples.length,
+                              );
+                              if (!hasEvidence) return null;
+                              return (
+                                <div className="pipeline-detail-section-muted">
+                                  <p className={panelSectionLabel}>Buyer evidence</p>
+                                  <div className="mt-2 grid gap-2">
+                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Friction point</p>
+                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                        {cleanAndClampText(evidence.frictionPoint || "Not yet summarized", 220)}
+                                      </p>
+                                    </div>
+                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Workflow scope</p>
+                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                        <span className="font-semibold text-slate-900">{evidence.workflowLabel}:</span>{" "}
+                                        {evidence.workflowItems.length > 0 ? cleanAndClampText(evidence.workflowItems.join(", "), 180) : "workflow not yet identified"}
+                                      </p>
+                                    </div>
+                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Timing and robot fit</p>
+                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                        <span className="font-semibold text-slate-900">Timing:</span> {cleanAndClampText(evidence.timingLabel || "not yet clear", 80)}
+                                        <span className="mx-1 text-gray-400">·</span>
+                                        <span className="font-semibold text-slate-900">Robots:</span> {cleanAndClampText(evidence.robotLabel || "not yet clear", 80)}
+                                      </p>
+                                    </div>
+                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Budget</p>
+                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                        {evidence.budgetTopAmount ? (
+                                          <>
+                                            <span className="font-semibold text-slate-900">{evidence.budgetTopAmount}</span> appears in the evidence set.
+                                          </>
+                                        ) : (
+                                          "No explicit budget mentioned yet."
+                                        )}
+                                      </p>
+                                      {evidence.budgetSignals.length > 0 && (
+                                        <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-gray-600">
+                                          {evidence.budgetSignals.slice(0, 2).map((signal, index) => (
+                                            <li key={index}>{cleanAndClampText(signal.context || signal.amount || "Budget mention", 160)}</li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                    </div>
+                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Decision makers</p>
+                                      {evidence.decisionMakers.length > 0 ? (
+                                        <ul className="mt-1 space-y-1 text-[12px] leading-relaxed text-gray-800">
+                                          {evidence.decisionMakers.slice(0, 3).map((person, index) => (
+                                            <li key={index}>
+                                              <span className="font-semibold text-slate-900">{cleanAndClampText(person.name || "Unknown", 60)}</span>
+                                              {person.title ? <span className="text-gray-500"> · {cleanAndClampText(person.title, 80)}</span> : null}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      ) : (
+                                        <p className="mt-1 text-[12px] leading-relaxed text-gray-800">No decision maker captured yet.</p>
+                                      )}
+                                    </div>
+                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Similar deployments</p>
+                                      {evidence.deploymentExamples.length > 0 ? (
+                                        <ul className="mt-1 space-y-2 text-[12px] leading-relaxed text-gray-800">
+                                          {evidence.deploymentExamples.slice(0, 3).map((example, index) => (
+                                            <li key={index} className="rounded-md bg-slate-50 px-2 py-1.5">
+                                              <p className="font-semibold text-slate-900">{cleanAndClampText(example.title || "Deployment example", 120)}</p>
+                                              <p className="text-[11px] text-gray-600">{cleanAndClampText(example.summary || "", 150)}</p>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      ) : (
+                                        <p className="mt-1 text-[12px] leading-relaxed text-gray-800">No similar deployment example has been captured yet.</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           {(selected.notes || selected.shareSummary) && (
                             <p className="break-words text-[12px] leading-relaxed text-gray-700">
                               {cleanAndClampText(
@@ -3530,12 +3698,12 @@ export default function Pipeline() {
                       className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-white"
                       aria-expanded={researchOpen}
                     >
-                      <span className={panelSectionLabel}>SIGNAL research</span>
+                      <span className={panelSectionLabel}>Evidence stack</span>
                       {!researchOpen && (
                         <span className="flex-1 min-w-0 text-[11px] text-gray-500 truncate">
                           {(selected.researchUpdates || []).length > 0
                             ? `${(selected.researchUpdates || []).length} cited update(s)`
-                            : "Monitoring for new material"}
+                            : "Monitoring for source-backed evidence"}
                         </span>
                       )}
                       {researchOpen ? (
@@ -3552,7 +3720,7 @@ export default function Pipeline() {
                           </p>
                         )}
                         {loadingResearch && !selected.researchUpdates ? (
-                          <p className="text-[11px] leading-relaxed text-gray-500">SIGNAL is loading cited updates…</p>
+                          <p className="text-[11px] leading-relaxed text-gray-500">SIGNAL is loading cited evidence…</p>
                         ) : (selected.researchUpdates || []).length > 0 ? (
                           <div className="space-y-2">
                             {(selected.researchUpdates || []).slice(0, 3).map((update) => (
@@ -3571,15 +3739,48 @@ export default function Pipeline() {
                                     </span>
                                   )}
                                 </div>
+                                <div className="mb-1.5 flex flex-wrap gap-1.5">
+                                  {update.source_label && (
+                                    <span className="rounded-full border border-amber-300/30 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
+                                      {update.source_label}
+                                    </span>
+                                  )}
+                                  {(update.source_domain || update.source_kind) && (
+                                    <span className="rounded-full border border-slate-300 bg-white/70 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                                      {update.source_domain || update.source_kind}
+                                    </span>
+                                  )}
+                                  {update.evidence_tension && (
+                                    <span className="rounded-full border border-emerald-300/40 bg-emerald-100/80 px-2 py-0.5 text-[10px] font-semibold text-emerald-900">
+                                      {update.evidence_tension}
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="break-words text-[11px] leading-relaxed text-gray-700">
                                   {cleanAndClampText(update.summary, 220)}
                                 </p>
+                                {update.recommended_action && (
+                                  <p className="mt-1.5 break-words text-[11px] leading-relaxed text-slate-700">
+                                    <span className="font-semibold text-slate-900">Next action: </span>
+                                    {cleanAndClampText(update.recommended_action, 180)}
+                                  </p>
+                                )}
+                                {update.source_url && (
+                                  <a
+                                    href={update.source_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="mt-1 inline-flex text-[10px] font-semibold text-amber-700 underline underline-offset-2 hover:text-amber-800"
+                                  >
+                                    Open source evidence
+                                  </a>
+                                )}
                               </div>
                             ))}
                           </div>
                         ) : (
                           <p className="text-[11px] leading-relaxed text-gray-500">
-                            SIGNAL will add cited updates when fresh signals arrive for this account.
+                            SIGNAL will add source-backed evidence when fresh news, LinkedIn posts, blog posts, and industry updates arrive.
                           </p>
                         )}
                       </div>
@@ -3602,9 +3803,9 @@ export default function Pipeline() {
                           </div>
                         </div>
                         <div className="relative mt-3 space-y-2">
-                          <p className={panelSectionLabel}>SIGNAL research</p>
+                          <p className={panelSectionLabel}>Evidence stack</p>
                           <p className="text-[11px] leading-relaxed text-gray-600">
-                            Pro unlocks cited research updates on HOT and WARM leads — budget, timing, and source links refreshed automatically.
+                            Pro unlocks cited evidence on HOT and WARM leads — budget, timing, source links, and recommended actions refreshed automatically.
                           </p>
                           <Link
                             href="/pricing?reason=research"

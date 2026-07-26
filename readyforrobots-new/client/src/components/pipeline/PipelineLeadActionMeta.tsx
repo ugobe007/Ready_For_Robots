@@ -12,6 +12,13 @@ export type PipelineLeadActionFields = {
   core_need?: string | null;
   signal?: string;
   signals?: { display_text?: string }[];
+  crmEvidence?: {
+    friction_point?: string | null;
+    workflow_scope?: { count?: number; label?: string | null; items?: string[] };
+    timing?: { label?: string | null };
+    robot_type?: { label?: string | null };
+    budget?: { top_amount?: string | null; has_budget?: boolean };
+  };
 };
 
 function actionLine(lead: PipelineLeadActionFields): string {
@@ -27,6 +34,20 @@ function robotTypes(lead: PipelineLeadActionFields): string[] {
   return fromApi.slice(0, 4);
 }
 
+function evidenceLine(lead: PipelineLeadActionFields): string {
+  const e = lead.crmEvidence;
+  if (!e) return "";
+  const parts: string[] = [];
+  if (e.workflow_scope?.label) parts.push(e.workflow_scope.label);
+  if (e.timing?.label) parts.push(`Timing: ${e.timing.label}`);
+  if (e.robot_type?.label) parts.push(`Robots: ${e.robot_type.label}`);
+  if (e.budget?.top_amount) parts.push(`Budget: ${e.budget.top_amount}`);
+  else if (e.budget?.has_budget) parts.push("Budget signal detected");
+  if (parts.length > 0) return cleanAndClampText(parts.join(" · "), 180);
+  if (e.friction_point) return cleanAndClampText(e.friction_point, 180);
+  return "";
+}
+
 type Props = {
   lead: PipelineLeadActionFields;
   variant?: "light" | "dark" | "compact";
@@ -36,7 +57,8 @@ type Props = {
 export default function PipelineLeadActionMeta({ lead, variant = "light", className = "" }: Props) {
   const action = actionLine(lead);
   const types = robotTypes(lead);
-  if (!action && types.length === 0) return null;
+  const proof = evidenceLine(lead);
+  if (!action && types.length === 0 && !proof) return null;
 
   const actionClass =
     variant === "dark"
@@ -50,6 +72,13 @@ export default function PipelineLeadActionMeta({ lead, variant = "light", classN
       ? "inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
       : "pipeline-robot-type-chip";
 
+  const proofClass =
+    variant === "dark"
+      ? "text-[11px] text-emerald-200/90 leading-snug"
+      : variant === "compact"
+        ? "text-[10px] text-emerald-700 leading-snug"
+        : "text-[11px] text-emerald-700 leading-snug";
+
   const prefix = action.includes(":") ? action.split(":")[0]?.trim() : null;
   const body =
     prefix && action.includes(":")
@@ -58,6 +87,7 @@ export default function PipelineLeadActionMeta({ lead, variant = "light", classN
 
   return (
     <div className={`space-y-1.5 ${className}`}>
+      {proof && <p className={proofClass}>{proof}</p>}
       {action && (
         <p className={actionClass}>
           {prefix && body ? (

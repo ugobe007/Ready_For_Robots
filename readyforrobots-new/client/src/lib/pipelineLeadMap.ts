@@ -39,6 +39,10 @@ export interface ApiLead {
     summary?: string;
     source_url?: string | null;
     source_domain?: string | null;
+    source_kind?: string | null;
+    source_label?: string | null;
+    evidence_tension?: string | null;
+    recommended_action?: string | null;
     detected_at?: string | null;
     significance_score?: number;
   }>;
@@ -75,6 +79,26 @@ export interface ApiLead {
     } | null;
   } | null;
   lead_inference?: Record<string, unknown> | null;
+  crm_evidence?: {
+    friction_point?: string | null;
+    workflow_scope?: { count?: number; label?: string | null; items?: string[] };
+    timing?: { label?: string | null; source?: string | null; confidence?: number | null };
+    robot_type?: { label?: string | null; items?: string[] };
+    budget?: {
+      top_amount?: string | null;
+      has_budget?: boolean;
+      signals?: Array<{ amount?: string; context?: string; source_url?: string }>;
+    };
+    decision_makers?: Array<{ name?: string; title?: string; source_url?: string; confidence?: number }>;
+    similar_deployments?: Array<{
+      title?: string | null;
+      summary?: string | null;
+      source_domain?: string | null;
+      source_url?: string | null;
+      source_label?: string | null;
+      evidence_tension?: string | null;
+    }>;
+  } | null;
 }
 
 const SIGNAL_COLORS: Record<string, string> = {
@@ -230,5 +254,6 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     latestMaterialUpdate: lead.latest_material_update || null,
     projectTiming: lead.project_timing || undefined,
     leadHighlights: lead.lead_highlights || undefined,
+    crmEvidence: lead.crm_evidence || undefined,
   };
 }

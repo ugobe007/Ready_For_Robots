@@ -342,6 +342,64 @@ def sanitize_lead_for_plan(lead: dict[str, Any], plan: str) -> dict[str, Any]:
     if isinstance(robots_needed, list):
         row["robot_types_needed"] = [str(item) for item in robots_needed[:3] if item]
 
+    evidence = row.get("crm_evidence")
+    if isinstance(evidence, dict):
+        teaser_evidence: dict[str, Any] = {}
+        friction = _truncate(evidence.get("friction_point"), 180)
+        if friction:
+            teaser_evidence["friction_point"] = friction
+        workflow = evidence.get("workflow_scope") if isinstance(evidence.get("workflow_scope"), dict) else {}
+        if workflow:
+            teaser_evidence["workflow_scope"] = {
+                "count": workflow.get("count"),
+                "label": _truncate(workflow.get("label"), 40),
+                "items": [str(item) for item in (workflow.get("items") or [])[:3] if item],
+            }
+        timing = evidence.get("timing") if isinstance(evidence.get("timing"), dict) else {}
+        if timing:
+            teaser_evidence["timing"] = {
+                "label": _truncate(timing.get("label"), 80),
+                "source": _truncate(timing.get("source"), 30),
+            }
+        robot = evidence.get("robot_type") if isinstance(evidence.get("robot_type"), dict) else {}
+        if robot:
+            teaser_evidence["robot_type"] = {
+                "label": _truncate(robot.get("label"), 80),
+                "items": [str(item) for item in (robot.get("items") or [])[:3] if item],
+            }
+        budget = evidence.get("budget") if isinstance(evidence.get("budget"), dict) else {}
+        if budget:
+            teaser_evidence["budget"] = {
+                "top_amount": _truncate(budget.get("top_amount"), 24),
+                "has_budget": bool(budget.get("has_budget")),
+            }
+        dms = evidence.get("decision_makers") if isinstance(evidence.get("decision_makers"), list) else []
+        if dms:
+            teaser_evidence["decision_makers"] = [
+                {
+                    "name": _truncate((dm or {}).get("name"), 60),
+                    "title": _truncate((dm or {}).get("title"), 80),
+                }
+                for dm in dms[:2]
+                if isinstance(dm, dict)
+            ]
+        examples = evidence.get("similar_deployments") if isinstance(evidence.get("similar_deployments"), list) else []
+        if examples:
+            teaser_evidence["similar_deployments"] = [
+                {
+                    "title": _truncate((item or {}).get("title"), 100),
+                    "summary": _truncate((item or {}).get("summary"), 140),
+                }
+                for item in examples[:2]
+                if isinstance(item, dict)
+            ]
+        if teaser_evidence:
+            row["crm_evidence"] = teaser_evidence
+        else:
+            row.pop("crm_evidence", None)
+    else:
+        row.pop("crm_evidence", None)
+
     for key in (
         "lead_inference",
         "research_updates",

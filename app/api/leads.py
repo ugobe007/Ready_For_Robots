@@ -20,6 +20,7 @@ import re
 import threading
 import time
 from datetime import datetime, timezone, date
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -914,6 +915,24 @@ def _fmt_pipeline_card(
             for s in (sigs or [])[:8]
         ),
     )
+    crm_meta = c.crm_metadata if isinstance(getattr(c, "crm_metadata", None), dict) else {}
+    inf = crm_meta.get("lead_inference") if isinstance(crm_meta.get("lead_inference"), dict) else {}
+    research_evidence = crm_meta.get("research_evidence") if isinstance(crm_meta.get("research_evidence"), list) else []
+    research_updates_preview = [
+        {
+            "title": item.get("title"),
+            "summary": item.get("summary"),
+            "source_url": item.get("source_url"),
+            "source_domain": item.get("source_domain"),
+            "source_label": "Company source" if item.get("source_domain") else None,
+            "source_kind": "company",
+            "update_type": item.get("update_type"),
+            "evidence_tension": _research_tension_label(str(item.get("update_type") or "news"), "company"),
+            "significance_score": item.get("significance_score"),
+        }
+        for item in research_evidence[:3]
+        if isinstance(item, dict)
+    ]
 
     payload = {
         "id": c.id,
@@ -930,6 +949,19 @@ def _fmt_pipeline_card(
         "share_blurb": share_blurb or None,
         "pipeline_action": pipeline_action or None,
         "robot_types_needed": robot_types_needed,
+        "lead_highlights": {
+            "specific_problem": (inf or {}).get("specific_problem"),
+            "why_lead": (inf or {}).get("why_lead") or [],
+            "robot_categories": (inf or {}).get("robot_categories") or [],
+            "application_areas": (inf or {}).get("application_areas") or [],
+        } if inf else None,
+        "crm_evidence": _crm_evidence_summary(
+            crm_meta=crm_meta,
+            lead_inference=inf or {},
+            project_timing=None,
+            robot_types_needed=robot_types_needed,
+            research_updates=research_updates_preview,
+        ),
         "pipeline_slim": True,
         **hp.as_dict(),
     }
@@ -1019,6 +1051,7 @@ def _fmt_company(
 
     crm_meta = c.crm_metadata if isinstance(getattr(c, "crm_metadata", None), dict) else {}
     inf = crm_meta.get("lead_inference") if isinstance(crm_meta.get("lead_inference"), dict) else {}
+    research_updates: list[dict] = []
     signal_blob = " ".join(
         strip_extraction_artifacts(getattr(sig, "signal_text", None))
         for sig in (sigs or [])[:12]
@@ -1122,6 +1155,20 @@ def _fmt_company(
                 else None
             ),
         } if (inf or crm_meta.get("agent_enrichment")) else None,
+        "crm_evidence": _crm_evidence_summary(
+            crm_meta=crm_meta,
+            lead_inference=inf or {},
+            project_timing=project_timing,
+            robot_types_needed=humanize_robot_types(
+                automation_profile,
+                industry=industry_display,
+                signal_blob=" ".join(
+                    strip_extraction_artifacts(getattr(sig, "signal_text", None))
+                    for sig in (sigs or [])[:8]
+                ),
+            ),
+            research_updates=research_updates,
+        ),
         **hp.as_dict(),
         **link_extras,
     }
@@ -1134,10 +1181,18 @@ def _fmt_company(
         payload["research_updates"] = research_updates
         payload["last_researched_at"] = _last_researched_at(c, research_updates)
         payload["latest_material_update"] = research_updates[0] if research_updates else None
+        payload["crm_evidence"] = _crm_evidence_summary(
+            crm_meta=crm_meta,
+            lead_inference=inf or {},
+            project_timing=project_timing,
+            robot_types_needed=payload.get("robot_types_needed") or [],
+            research_updates=research_updates,
+        )
     return payload
 
 
 def _research_update_row(row: LeadResearchUpdate) -> dict:
+    source_kind = _research_source_kind(row)
     return {
         "id": row.id,
         "company_id": row.company_id,
@@ -1146,10 +1201,177 @@ def _research_update_row(row: LeadResearchUpdate) -> dict:
         "summary": row.summary,
         "source_url": row.source_url,
         "source_domain": row.source_domain,
+        "source_kind": source_kind,
+        "source_label": _research_source_label(source_kind),
+        "evidence_tension": _research_tension_label(row.update_type, source_kind),
+        "recommended_action": _research_recommended_action(row.update_type, source_kind),
         "detected_at": row.detected_at.isoformat() if row.detected_at else None,
         "significance_score": round(float(row.significance_score or 0), 3),
         "status": row.status,
     }
+
+
+def _crm_evidence_summary(
+    *,
+    crm_meta: dict,
+    lead_inference: dict,
+    project_timing,
+    robot_types_needed: list[str],
+    research_updates: list[dict],
+) -> dict:
+    budget_meta = crm_meta.get("budget") if isinstance(crm_meta.get("budget"), dict) else {}
+    timing_meta = crm_meta.get("timing") if isinstance(crm_meta.get("timing"), dict) else {}
+    decision_makers = crm_meta.get("decision_makers") if isinstance(crm_meta.get("decision_makers"), list) else []
+    automation_requirements = crm_meta.get("automation_requirements") if isinstance(crm_meta.get("automation_requirements"), list) else []
+    inferred_robot_fit = crm_meta.get("inferred_robot_fit") if isinstance(crm_meta.get("inferred_robot_fit"), list) else []
+    application_areas = lead_inference.get("application_areas") if isinstance(lead_inference.get("application_areas"), list) else []
+
+    similar_deployments = [
+        {
+            "title": update.get("title"),
+            "summary": update.get("summary"),
+            "source_domain": update.get("source_domain"),
+            "source_url": update.get("source_url"),
+            "source_label": update.get("source_label"),
+            "evidence_tension": update.get("evidence_tension"),
+        }
+        for update in research_updates
+        if isinstance(update, dict)
+        and (
+            update.get("update_type") in {"deployment", "partnership"}
+            or (update.get("source_kind") in {"industry", "company"} and float(update.get("significance_score") or 0) >= 0.8)
+        )
+    ][:3]
+    if not similar_deployments:
+        similar_deployments = [
+            {
+                "title": update.get("title"),
+                "summary": update.get("summary"),
+                "source_domain": update.get("source_domain"),
+                "source_url": update.get("source_url"),
+                "source_label": update.get("source_label"),
+                "evidence_tension": update.get("evidence_tension"),
+            }
+            for update in research_updates[:2]
+            if isinstance(update, dict)
+        ]
+
+    friction_point = (
+        lead_inference.get("specific_problem")
+        or (lead_inference.get("why_lead") or [None])[0]
+        or (crm_meta.get("lead_inference") or {}).get("specific_problem")
+        or "Why now signal not yet summarized"
+    )
+
+    workflow_items = list(
+        dict.fromkeys(
+            [item for item in automation_requirements if item]
+            + [item for item in application_areas if item]
+            + [item for item in inferred_robot_fit if item]
+        )
+    )[:5]
+    workflow_count = max(len(workflow_items), 1)
+    timing_value = project_timing.to_dict() if project_timing else {}
+
+    return {
+        "friction_point": friction_point,
+        "workflow_scope": {
+            "count": workflow_count,
+            "label": "One workflow" if workflow_count == 1 else "Multiple workflows",
+            "items": workflow_items,
+        },
+        "timing": {
+            "label": timing_value.get("label") or timing_meta.get("top_window"),
+            "source": timing_value.get("source"),
+            "confidence": timing_value.get("confidence"),
+        },
+        "robot_type": {
+            "label": (robot_types_needed or inferred_robot_fit or automation_requirements or [None])[0],
+            "items": list(dict.fromkeys((robot_types_needed or []) + inferred_robot_fit + automation_requirements))[:5],
+        },
+        "budget": {
+            "top_amount": budget_meta.get("top_amount"),
+            "signals": budget_meta.get("signals") or [],
+            "has_budget": bool(budget_meta.get("top_amount") or budget_meta.get("signals")),
+        },
+        "decision_makers": decision_makers[:4],
+        "similar_deployments": similar_deployments,
+    }
+
+
+def _research_source_kind(row: LeadResearchUpdate) -> str:
+    domain = (row.source_domain or "").lower()
+    url = row.source_url or ""
+    path = ""
+    try:
+        parsed = urlparse(url if "://" in url else f"https://{url}")
+        path = (parsed.path or "").lower()
+    except Exception:
+        path = ""
+
+    if "linkedin.com" in domain or "lnkd.in" in domain:
+        return "linkedin"
+    if row.update_type == "news" or "news.google" in domain or "/news" in path:
+        return "news"
+    if any(marker in domain for marker in ("medium.com", "substack.com", "blog", "ghost.io", "wordpress.com")) or "/blog" in path:
+        return "blog"
+    if any(marker in domain for marker in ("industry", "association", "trade", "journal", "magazine")) or any(marker in path for marker in ("/insights", "/resources", "/research", "/reports")):
+        return "industry"
+    return "company"
+
+
+def _research_source_label(source_kind: str) -> str:
+    return {
+        "linkedin": "LinkedIn post",
+        "news": "News item",
+        "blog": "Blog post",
+        "industry": "Industry source",
+        "company": "Company source",
+    }.get(source_kind, "Source")
+
+
+def _research_tension_label(update_type: str, source_kind: str) -> str:
+    base = {
+        "funding": "New budget pressure",
+        "expansion": "Capacity pressure",
+        "hiring": "Staffing pressure",
+        "rfp_procurement": "Vendor selection in motion",
+        "leadership_change": "Ownership has shifted",
+        "deployment": "Implementation is already underway",
+        "partnership": "Ecosystem change to watch",
+        "risk": "Operational strain",
+        "news": "Public signal only",
+    }.get(update_type, "Material signal")
+    if source_kind == "linkedin":
+        return f"{base} from a person signal"
+    if source_kind == "blog":
+        return f"{base} from a deeper narrative"
+    if source_kind == "industry":
+        return f"{base} from an industry source"
+    if source_kind == "company":
+        return f"{base} from the company"
+    return base
+
+
+def _research_recommended_action(update_type: str, source_kind: str) -> str:
+    action = {
+        "funding": "Ask who owns the new budget and which automation work gets funded first.",
+        "expansion": "Ask what site, lane, or facility is opening next and whether automation is in scope.",
+        "hiring": "Ask whether the hiring push is growth, churn, or a bottleneck you can remove.",
+        "rfp_procurement": "Ask who is running vendor selection and what criteria will decide the shortlist.",
+        "leadership_change": "Ask the new owner which workflow changes first and who signs off.",
+        "deployment": "Lead with pilot, install, or retrofit questions tied to the live rollout.",
+        "partnership": "Ask whether the partnership creates an implementation or rollout opportunity.",
+        "risk": "Lead with risk reduction and the operational constraint behind the signal.",
+        "news": "Turn the public signal into a specific workflow question and outreach angle.",
+    }.get(update_type, "Translate the signal into one concrete outreach question.")
+    if source_kind == "linkedin":
+        return f"Use as a rep opener: {action}"
+    if source_kind == "blog":
+        return f"Use the blog narrative to ground: {action}"
+    if source_kind == "industry":
+        return f"Use the industry context to validate: {action}"
+    return action
 
 
 def _lead_research_payload(db: Session, company_id: int, limit: int = 6) -> list[dict]:
