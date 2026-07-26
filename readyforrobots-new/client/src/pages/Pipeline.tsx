@@ -14,7 +14,6 @@ import {
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import PageHeroDark from "@/components/layout/PageHeroDark";
-import ScoutActionBar from "@/components/ScoutActionBar";
 import ProposalPdfModal, { type ProposalData } from "@/components/ProposalPdfModal";
 import { Link, useLocation, useSearch } from "wouter";
 import { openWorkspaceHref } from "@/lib/adminNavLinks";
@@ -1097,7 +1096,6 @@ export default function Pipeline() {
   const [firstThreeActions, setFirstThreeActions] = useState<FirstThreeActionsState>(() => readFirstThreeActions());
   const [outreachDraftSpotlight, setOutreachDraftSpotlight] = useState(false);
   const [checklistVariantOverride, setChecklistVariantOverride] = useState<"a" | "b" | null>(null);
-  const [adminOpsOpen, setAdminOpsOpen] = useState(false);
   const [researchOpen, setResearchOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
   const [hubspotIntegration, setHubspotIntegration] = useState<{
@@ -1335,7 +1333,6 @@ export default function Pipeline() {
 
   useEffect(() => {
     setResearchOpen(false);
-    setAdminOpsOpen(false);
   }, [selectedId]);
 
   useEffect(() => {
@@ -3449,52 +3446,6 @@ export default function Pipeline() {
             <div
               className="pipeline-detail-shell flex h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] w-full shrink-0 flex-col overflow-hidden lg:w-[380px] xl:w-[400px] lg:sticky lg:top-20"
             >
-              {isAdmin && (
-                <div className="shrink-0 border-b border-emerald-200/60 bg-emerald-50/50 px-4 py-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
-                      Cal Autopilot · Admin controls
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setAdminOpsOpen((open) => !open)}
-                      className="rounded-md border border-emerald-300/70 bg-white px-2 py-1 text-[10px] font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
-                    >
-                      {adminOpsOpen ? "Hide" : "Show"} controls
-                    </button>
-                  </div>
-                  {!adminOpsOpen && (
-                    <p className="mt-1 text-[10px] text-emerald-700/90">
-                      Run/send queue controls are collapsed so buyer intelligence stays in view.
-                    </p>
-                  )}
-                  {adminOpsOpen && (
-                    <div className="mt-2">
-                      <ScoutActionBar
-                        accessToken={session?.access_token}
-                        stats={scoutStats ? {
-                          total: scoutStats.total ?? 0,
-                          drafted: scoutStats.drafted ?? 0,
-                          sendable: scoutStats.sendable ?? scoutStats.drafted ?? 0,
-                          needsApproval: scoutStats.needs_approval,
-                          sent: scoutStats.sent ?? 0,
-                          opened: scoutStats.opened ?? 0,
-                          clicked: scoutStats.clicked ?? 0,
-                          replied: scoutStats.replied ?? 0,
-                        } : null}
-                        busy={null}
-                        autopilotEnabled
-                        everyHours={3}
-                        sendLimit={25}
-                        onRunNow={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
-                        onViewQueue={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
-                        onViewReplies={() => setLocation("/sales-workflow")}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
               {selected ? (
                 <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
                   {/* Detail header */}
@@ -3513,7 +3464,19 @@ export default function Pipeline() {
                           {selected.industry}
                         </div>
                       </div>
-                      <PipelineScoreBadge score={selected.score} deal={selected} size="lg" />
+                      <div className="flex flex-col items-end gap-1">
+                        <PipelineScoreBadge score={selected.score} deal={selected} size="lg" />
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
+                            className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800 transition-colors hover:bg-emerald-100"
+                            title="Open Cal Ops"
+                          >
+                            Ops
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Tier / stage badge + contact inline */}
