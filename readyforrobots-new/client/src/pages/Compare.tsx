@@ -198,33 +198,6 @@ export default function Compare() {
             </div>
           </section>
 
-          <section className="mb-12">
-            <h2 className="mb-4 text-center font-display text-3xl md:text-4xl font-black tracking-tight leading-tight text-slate-900">Panel-by-panel difference</h2>
-            <div className="space-y-3">
-              {rows.map((row) => (
-                <article key={row.dimension} className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
-                  <p className="mb-3 text-sm font-black uppercase tracking-[0.1em] text-slate-600">{row.dimension}</p>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div className="rounded-xl border border-slate-300 bg-white p-3.5">
-                      <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700">GTM data tools</p>
-                      <p className="flex gap-2 text-[13px] leading-relaxed text-slate-900">
-                        <X className="h-4 w-4 shrink-0 text-slate-600 mt-0.5" />
-                        <span>{row.dataTools}</span>
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-sky-200 bg-sky-50 p-3.5">
-                      <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-sky-700">ReadyForRobots</p>
-                      <p className="flex gap-2 text-[13px] leading-relaxed text-sky-950 font-semibold">
-                        {row.rfrWins && <Check className="h-4 w-4 shrink-0 text-sky-600 mt-0.5" />}
-                        <span>{row.rfr}</span>
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
           <section className="mb-12 rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight text-slate-900 mb-2">Why ReadyForRobots wins in robotics sales</h2>
             <p className="text-sm text-slate-600 leading-relaxed mb-5">
@@ -254,7 +227,8 @@ export default function Compare() {
           </section>
 
           <section className="mb-12 rounded-2xl border border-slate-200 bg-white p-6 overflow-hidden">
-            <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight text-slate-900 mb-4">Capability comparison</h2>
+            <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight text-slate-900 mb-1">Side-by-side features</h2>
+            <p className="text-sm text-slate-600 mb-4">Capability comparison across Salesforce, HubSpot, Reevo, and ReadyForRobots.</p>
             <div className="overflow-x-auto">
               <table className="min-w-[900px] w-full border-collapse">
                 <thead>
