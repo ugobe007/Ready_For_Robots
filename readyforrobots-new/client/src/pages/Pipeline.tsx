@@ -3495,35 +3495,6 @@ export default function Pipeline() {
                     )}
                   </div>
 
-                  <PipelineRobotPriorityPanel deal={selected} />
-
-                  {selected && ["HOT", "WARM"].includes((selected.priorityTier || "").toUpperCase()) && (
-                    <CalLeadDrop
-                      drop={dealToCalDrop(selected)}
-                      variant="compact"
-                      showDraft={Boolean(session?.access_token)}
-                      onMoveNow={
-                        session?.access_token
-                          ? () => void developLeadWithScout(selected)
-                          : undefined
-                      }
-                      pipelineHref={`/pipeline?lead=${selected.id}`}
-                    />
-                  )}
-
-                  {!session?.access_token && selected && (
-                    <PipelineOutreachValuePanel
-                      deal={selected}
-                      hasSession={false}
-                      copied={copied}
-                      onCopy={copyDraft}
-                    />
-                  )}
-
-                  <div className="pipeline-detail-section-muted">
-                    <LeadShareBar panel lead={dealToShareLead(selected)} />
-                  </div>
-
                   {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
                     <div className="pipeline-detail-section-muted">
                       <button
@@ -3571,97 +3542,97 @@ export default function Pipeline() {
                             </ul>
                           )}
 
-                            {/* CRM evidence — what the buyer actually cares about */}
-                            {(() => {
-                              const evidence = evidenceStackForDeal(selected);
-                              const hasEvidence = Boolean(
-                                evidence.frictionPoint
-                                || evidence.workflowItems.length
-                                || evidence.timingLabel
-                                || evidence.robotLabel
-                                || evidence.budgetTopAmount
-                                || evidence.decisionMakers.length
-                                || evidence.deploymentExamples.length,
-                              );
-                              if (!hasEvidence) return null;
-                              return (
-                                <div className="pipeline-detail-section-muted">
-                                  <p className={panelSectionLabel}>Buyer evidence</p>
-                                  <div className="mt-2 grid gap-2">
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Friction point</p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
-                                        {cleanAndClampText(evidence.frictionPoint || "Not yet summarized", 220)}
-                                      </p>
-                                    </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Workflow scope</p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
-                                        <span className="font-semibold text-slate-900">{evidence.workflowLabel}:</span>{" "}
-                                        {evidence.workflowItems.length > 0 ? cleanAndClampText(evidence.workflowItems.join(", "), 180) : "workflow not yet identified"}
-                                      </p>
-                                    </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Timing and robot fit</p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
-                                        <span className="font-semibold text-slate-900">Timing:</span> {cleanAndClampText(evidence.timingLabel || "not yet clear", 80)}
-                                        <span className="mx-1 text-gray-400">·</span>
-                                        <span className="font-semibold text-slate-900">Robots:</span> {cleanAndClampText(evidence.robotLabel || "not yet clear", 80)}
-                                      </p>
-                                    </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Budget</p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
-                                        {evidence.budgetTopAmount ? (
-                                          <>
-                                            <span className="font-semibold text-slate-900">{evidence.budgetTopAmount}</span> appears in the evidence set.
-                                          </>
-                                        ) : (
-                                          "No explicit budget mentioned yet."
-                                        )}
-                                      </p>
-                                      {evidence.budgetSignals.length > 0 && (
-                                        <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-gray-600">
-                                          {evidence.budgetSignals.slice(0, 2).map((signal, index) => (
-                                            <li key={index}>{cleanAndClampText(signal.context || signal.amount || "Budget mention", 160)}</li>
-                                          ))}
-                                        </ul>
-                                      )}
-                                    </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Decision makers</p>
-                                      {evidence.decisionMakers.length > 0 ? (
-                                        <ul className="mt-1 space-y-1 text-[12px] leading-relaxed text-gray-800">
-                                          {evidence.decisionMakers.slice(0, 3).map((person, index) => (
-                                            <li key={index}>
-                                              <span className="font-semibold text-slate-900">{cleanAndClampText(person.name || "Unknown", 60)}</span>
-                                              {person.title ? <span className="text-gray-500"> · {cleanAndClampText(person.title, 80)}</span> : null}
-                                            </li>
-                                          ))}
-                                        </ul>
+                          {/* CRM evidence — what the buyer actually cares about */}
+                          {(() => {
+                            const evidence = evidenceStackForDeal(selected);
+                            const hasEvidence = Boolean(
+                              evidence.frictionPoint
+                              || evidence.workflowItems.length
+                              || evidence.timingLabel
+                              || evidence.robotLabel
+                              || evidence.budgetTopAmount
+                              || evidence.decisionMakers.length
+                              || evidence.deploymentExamples.length,
+                            );
+                            if (!hasEvidence) return null;
+                            return (
+                              <div className="pipeline-detail-section-muted">
+                                <p className={panelSectionLabel}>Buyer evidence</p>
+                                <div className="mt-2 grid gap-2">
+                                  <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Friction point</p>
+                                    <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                      {cleanAndClampText(evidence.frictionPoint || "Not yet summarized", 220)}
+                                    </p>
+                                  </div>
+                                  <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Workflow scope</p>
+                                    <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                      <span className="font-semibold text-slate-900">{evidence.workflowLabel}:</span>{" "}
+                                      {evidence.workflowItems.length > 0 ? cleanAndClampText(evidence.workflowItems.join(", "), 180) : "workflow not yet identified"}
+                                    </p>
+                                  </div>
+                                  <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Timing and robot fit</p>
+                                    <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                      <span className="font-semibold text-slate-900">Timing:</span> {cleanAndClampText(evidence.timingLabel || "not yet clear", 80)}
+                                      <span className="mx-1 text-gray-400">·</span>
+                                      <span className="font-semibold text-slate-900">Robots:</span> {cleanAndClampText(evidence.robotLabel || "not yet clear", 80)}
+                                    </p>
+                                  </div>
+                                  <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Budget</p>
+                                    <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                      {evidence.budgetTopAmount ? (
+                                        <>
+                                          <span className="font-semibold text-slate-900">{evidence.budgetTopAmount}</span> appears in the evidence set.
+                                        </>
                                       ) : (
-                                        <p className="mt-1 text-[12px] leading-relaxed text-gray-800">No decision maker captured yet.</p>
+                                        "No explicit budget mentioned yet."
                                       )}
-                                    </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Similar deployments</p>
-                                      {evidence.deploymentExamples.length > 0 ? (
-                                        <ul className="mt-1 space-y-2 text-[12px] leading-relaxed text-gray-800">
-                                          {evidence.deploymentExamples.slice(0, 3).map((example, index) => (
-                                            <li key={index} className="rounded-md bg-slate-50 px-2 py-1.5">
-                                              <p className="font-semibold text-slate-900">{cleanAndClampText(example.title || "Deployment example", 120)}</p>
-                                              <p className="text-[11px] text-gray-600">{cleanAndClampText(example.summary || "", 150)}</p>
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      ) : (
-                                        <p className="mt-1 text-[12px] leading-relaxed text-gray-800">No similar deployment example has been captured yet.</p>
-                                      )}
-                                    </div>
+                                    </p>
+                                    {evidence.budgetSignals.length > 0 && (
+                                      <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-gray-600">
+                                        {evidence.budgetSignals.slice(0, 2).map((signal, index) => (
+                                          <li key={index}>{cleanAndClampText(signal.context || signal.amount || "Budget mention", 160)}</li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </div>
+                                  <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Decision makers</p>
+                                    {evidence.decisionMakers.length > 0 ? (
+                                      <ul className="mt-1 space-y-1 text-[12px] leading-relaxed text-gray-800">
+                                        {evidence.decisionMakers.slice(0, 3).map((person, index) => (
+                                          <li key={index}>
+                                            <span className="font-semibold text-slate-900">{cleanAndClampText(person.name || "Unknown", 60)}</span>
+                                            {person.title ? <span className="text-gray-500"> · {cleanAndClampText(person.title, 80)}</span> : null}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">No decision maker captured yet.</p>
+                                    )}
+                                  </div>
+                                  <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Similar deployments</p>
+                                    {evidence.deploymentExamples.length > 0 ? (
+                                      <ul className="mt-1 space-y-2 text-[12px] leading-relaxed text-gray-800">
+                                        {evidence.deploymentExamples.slice(0, 3).map((example, index) => (
+                                          <li key={index} className="rounded-md bg-slate-50 px-2 py-1.5">
+                                            <p className="font-semibold text-slate-900">{cleanAndClampText(example.title || "Deployment example", 120)}</p>
+                                            <p className="text-[11px] text-gray-600">{cleanAndClampText(example.summary || "", 150)}</p>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">No similar deployment example has been captured yet.</p>
+                                    )}
                                   </div>
                                 </div>
-                              );
-                            })()}
+                              </div>
+                            );
+                          })()}
                           {(selected.notes || selected.shareSummary) && (
                             <p className="break-words text-[12px] leading-relaxed text-gray-700">
                               {cleanAndClampText(
@@ -3688,6 +3659,35 @@ export default function Pipeline() {
                       )}
                     </div>
                   )}
+
+                  <PipelineRobotPriorityPanel deal={selected} />
+
+                  {selected && ["HOT", "WARM"].includes((selected.priorityTier || "").toUpperCase()) && (
+                    <CalLeadDrop
+                      drop={dealToCalDrop(selected)}
+                      variant="compact"
+                      showDraft={Boolean(session?.access_token)}
+                      onMoveNow={
+                        session?.access_token
+                          ? () => void developLeadWithScout(selected)
+                          : undefined
+                      }
+                      pipelineHref={`/pipeline?lead=${selected.id}`}
+                    />
+                  )}
+
+                  {!session?.access_token && selected && (
+                    <PipelineOutreachValuePanel
+                      deal={selected}
+                      hasSession={false}
+                      copied={copied}
+                      onCopy={copyDraft}
+                    />
+                  )}
+
+                  <div className="pipeline-detail-section-muted">
+                    <LeadShareBar panel lead={dealToShareLead(selected)} />
+                  </div>
 
                   {/* Latest research — paid workspace */}
                   {showFullPanel && (
