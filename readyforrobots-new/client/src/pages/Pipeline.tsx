@@ -3561,36 +3561,48 @@ export default function Pipeline() {
                   </div>
 
                   <div className="pipeline-detail-section-muted">
-                        <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/60 p-2.5">
-                          <div className="flex items-center gap-2">
-                            <p className={panelSectionLabel}>SIGNAL intelligence</p>
-                            {(() => {
-                              const evidence = evidenceStackForDeal(selected);
-                              const gapCount = evidence.missingByKey.size;
-                              if (gapCount <= 0) return null;
-                              return (
-                                <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-800">
-                                  {gapCount} gap{gapCount === 1 ? "" : "s"}
-                                </span>
-                              );
-                            })()}
-                            {(() => {
-                              const evidence = evidenceStackForDeal(selected);
-                              if (evidence.researchState !== "researching") return null;
-                              return (
-                                <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800">
-                                  AI researching gaps
-                                </span>
-                              );
-                            })()}
-                          </div>
-                          {selected.pipelineAction && (
-                            <p className="mt-1.5 text-[11px] leading-relaxed text-emerald-800">
-                              <span className="font-semibold">Next action: </span>
-                              {cleanAndClampText(selected.pipelineAction, 180)}
-                            </p>
-                          )}
-                        </div>
+                        {(() => {
+                          const evidence = evidenceStackForDeal(selected);
+                          const gapCount = evidence.missingByKey.size;
+                          const summary = cleanAndClampText(
+                            selected.leadHighlights?.specific_problem
+                              || selected.shareSummary
+                              || selected.notes
+                              || "Buyer intent and workflow context are being summarized.",
+                            170,
+                          );
+                          return (
+                            <div className="rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/70 p-3 shadow-[0_1px_0_rgba(16,185,129,0.06)]">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">SIGNAL intelligence</p>
+                                  <p className="mt-0.5 text-[11px] leading-snug text-slate-600">Buyer context first, operator controls second.</p>
+                                </div>
+                                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                                  {gapCount > 0 && (
+                                    <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-800">
+                                      {gapCount} gap{gapCount === 1 ? "" : "s"}
+                                    </span>
+                                  )}
+                                  {evidence.researchState === "researching" && (
+                                    <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800">
+                                      AI researching gaps
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <p className="mt-2 text-[12px] leading-relaxed text-slate-700">{summary}</p>
+                              {selected.pipelineAction && (
+                                <div className="mt-2 rounded-lg border border-emerald-200/80 bg-white/85 px-2.5 py-2">
+                                  <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Next action</p>
+                                  <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-900">
+                                    {cleanAndClampText(selected.pipelineAction, 180)}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         <div className="pt-2 space-y-2">
                           {selected.leadHighlights?.specific_problem && (
