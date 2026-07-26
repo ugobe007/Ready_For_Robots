@@ -70,6 +70,65 @@ const examples = [
   },
 ];
 
+const rfrEngine = [
+  {
+    title: "Discover",
+    copy: "Scan for automation signals across labor, expansion, capex, deployment, and operations events.",
+  },
+  {
+    title: "Curate",
+    copy: "Filter noisy opportunities into relevant robotics demand with context that sales teams can trust.",
+  },
+  {
+    title: "Qualify",
+    copy: "Score readiness and urgency so reps spend time on buyers likely to move this quarter.",
+  },
+  {
+    title: "Categorize",
+    copy: "Classify by industry and workflow to match each account to the right deployment motion.",
+  },
+  {
+    title: "Configure",
+    copy: "Recommend robot types, timing, and next action so outreach can start immediately.",
+  },
+];
+
+const crmGenerations = [
+  { generation: "CRM 1.0", purpose: "Store customer information", example: "Salesforce" },
+  { generation: "CRM 2.0", purpose: "Automate sales workflow", example: "HubSpot" },
+  { generation: "CRM 3.0", purpose: "AI-assisted selling", example: "Reevo, Attio AI, HubSpot AI" },
+  { generation: "CRM 4.0", purpose: "Autonomous revenue generation", example: "ReadyForRobots" },
+];
+
+const capabilityRows = [
+  { capability: "CRM", salesforce: "Yes", hubspot: "Yes", reevo: "Yes", rfr: "Yes (lightweight)" },
+  { capability: "Contact management", salesforce: "Yes", hubspot: "Yes", reevo: "Yes", rfr: "Yes" },
+  { capability: "Pipeline management", salesforce: "Yes", hubspot: "Yes", reevo: "Yes", rfr: "Yes" },
+  { capability: "Email automation", salesforce: "Yes", hubspot: "Yes", reevo: "Yes", rfr: "Yes" },
+  { capability: "AI email writing", salesforce: "Partial", hubspot: "Yes", reevo: "Yes", rfr: "Yes" },
+  { capability: "Workflow automation", salesforce: "Yes", hubspot: "Yes", reevo: "Yes", rfr: "Yes" },
+  { capability: "Meeting scheduling", salesforce: "Yes", hubspot: "Yes", reevo: "Yes", rfr: "Yes" },
+  { capability: "Lead database", salesforce: "Partial", hubspot: "Partial", reevo: "Yes", rfr: "Robot-specific" },
+  { capability: "Intent signals", salesforce: "Limited", hubspot: "Limited", reevo: "Coming soon", rfr: "Robot deployment signals" },
+  { capability: "Company research", salesforce: "Partial", hubspot: "Partial", reevo: "Yes", rfr: "Continuous AI research" },
+  { capability: "Industry intelligence", salesforce: "Limited", hubspot: "Limited", reevo: "Limited", rfr: "Robotics only" },
+  { capability: "Robot readiness score", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+  { capability: "Detect companies ready for robots", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+  { capability: "Detect labor shortages", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+  { capability: "Estimate automation ROI", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+  { capability: "Recommend robot vendors", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+  { capability: "Match customer to OEM", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+  { capability: "Build outreach campaign", salesforce: "Partial", hubspot: "Partial", reevo: "Yes", rfr: "Yes" },
+  { capability: "AI runs outreach automatically", salesforce: "No", hubspot: "Partial", reevo: "Partial", rfr: "Yes" },
+  { capability: "Finds new buyers daily", salesforce: "No", hubspot: "No", reevo: "Partial", rfr: "Yes" },
+  { capability: "Tracks competitor activity", salesforce: "Partial", hubspot: "Partial", reevo: "Partial", rfr: "Yes" },
+  { capability: "Understands robot capabilities", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+  { capability: "Understands facility requirements", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+  { capability: "Deployment planning", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+  { capability: "Pilot program management", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+  { capability: "Robot ROI dashboard", salesforce: "No", hubspot: "No", reevo: "No", rfr: "Yes" },
+];
+
 export default function Compare() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -166,11 +225,67 @@ export default function Compare() {
             </div>
           </section>
 
+          <section className="mb-12 rounded-2xl border border-slate-200 bg-white p-6">
+            <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight text-slate-900 mb-2">Why ReadyForRobots wins in robotics sales</h2>
+            <p className="text-sm text-slate-600 leading-relaxed mb-5">
+              ReadyForRobots does the heavy lift before a rep sends the first message: discover, curate, and qualify leads, then map each account to industry, robot type, and timing.
+            </p>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+              {rfrEngine.map((step) => (
+                <div key={step.title} className="rounded-xl border border-sky-200 bg-sky-50 p-3.5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.1em] text-sky-700 mb-1.5">{step.title}</p>
+                  <p className="text-[13px] leading-relaxed text-slate-800">{step.copy}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mb-12 rounded-2xl border border-slate-200 bg-white p-6">
+            <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight text-slate-900 mb-4">CRM evolution: from records to autonomous revenue</h2>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+              {crmGenerations.map((row) => (
+                <article key={row.generation} className={`rounded-xl border p-4 ${row.generation === "CRM 4.0" ? "border-sky-300 bg-sky-50" : "border-slate-200 bg-slate-50"}`}>
+                  <p className={`text-[10px] font-black uppercase tracking-[0.1em] mb-1.5 ${row.generation === "CRM 4.0" ? "text-sky-700" : "text-slate-700"}`}>{row.generation}</p>
+                  <p className="text-sm font-semibold text-slate-900 mb-1.5">{row.purpose}</p>
+                  <p className="text-xs text-slate-600">{row.example}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="mb-12 rounded-2xl border border-slate-200 bg-white p-6 overflow-hidden">
+            <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight text-slate-900 mb-4">Capability comparison</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-[900px] w-full border-collapse">
+                <thead>
+                  <tr className="text-left">
+                    <th className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700">Capability</th>
+                    <th className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700">Salesforce</th>
+                    <th className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700">HubSpot</th>
+                    <th className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700">Reevo</th>
+                    <th className="border-b border-sky-200 bg-sky-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-sky-800">ReadyForRobots</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {capabilityRows.map((row) => (
+                    <tr key={row.capability}>
+                      <td className="border-b border-slate-100 px-3 py-2 text-[13px] font-semibold text-slate-900">{row.capability}</td>
+                      <td className="border-b border-slate-100 px-3 py-2 text-[13px] text-slate-700">{row.salesforce}</td>
+                      <td className="border-b border-slate-100 px-3 py-2 text-[13px] text-slate-700">{row.hubspot}</td>
+                      <td className="border-b border-slate-100 px-3 py-2 text-[13px] text-slate-700">{row.reevo}</td>
+                      <td className="border-b border-sky-100 bg-sky-50/70 px-3 py-2 text-[13px] font-semibold text-sky-900">{row.rfr}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
           <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-12">
             <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight text-gray-900 mb-2">vs Revenue OS (Reevo, etc.)</h2>
             <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-              Well-funded platforms pitch one system to replace CRM + engagement + intelligence for any B2B team.
-              ReadyForRobots does not ask you to migrate your stack—we add a robotics pipeline on top.
+              Reevo and similar platforms are building horizontal AI-native revenue operating systems for broad B2B teams.
+              ReadyForRobots is vertical: autonomous robotics revenue generation grounded in deployment signals, facility context, and robot-commercialization workflows.
             </p>
             <div className="grid md:grid-cols-2 gap-4 text-sm">
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
