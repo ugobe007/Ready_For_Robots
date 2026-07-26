@@ -3560,7 +3560,7 @@ export default function Pipeline() {
                     )}
                   </div>
 
-                  <div className="pipeline-detail-section-muted">
+                  <div className="pipeline-detail-section-muted -mt-1">
                         {(() => {
                           const evidence = evidenceStackForDeal(selected);
                           const gapCount = evidence.missingByKey.size;
@@ -3572,7 +3572,7 @@ export default function Pipeline() {
                             170,
                           );
                           return (
-                            <div className="rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/70 p-3 shadow-[0_1px_0_rgba(16,185,129,0.06)]">
+                            <div className="rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/70 p-2.5 shadow-[0_1px_0_rgba(16,185,129,0.06)]">
                               <div className="flex items-start justify-between gap-2">
                                 <div>
                                   <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">SIGNAL intelligence</p>
@@ -3604,7 +3604,7 @@ export default function Pipeline() {
                           );
                         })()}
 
-                        <div className="pt-2 space-y-2">
+                        <div className="pt-1.5 space-y-2">
                           {selected.leadHighlights?.specific_problem && (
                             <p className="break-words text-[12px] leading-relaxed text-gray-800">
                               <span className="font-semibold text-gray-900">Problem: </span>
