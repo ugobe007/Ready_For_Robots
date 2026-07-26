@@ -943,6 +943,15 @@ function evidenceStackForDeal(deal: Deal) {
   };
 }
 
+function missingEvidenceCountForDeal(deal: Deal): number {
+  const rows = deal.crmEvidence?.missing_fields || [];
+  if (!Array.isArray(rows)) return 0;
+  return rows.filter((row) => {
+    const status = String(row?.status || "").toLowerCase();
+    return ["empty", "researching", "monitoring"].includes(status);
+  }).length;
+}
+
 function robotPriorityForDeal(deal: Deal): string | null {
   const action = cleanAndClampText(deal.pipelineAction, 480);
   if (action) return action;
@@ -3246,6 +3255,7 @@ export default function Pipeline() {
                       <div className="flex flex-col gap-1.5 mb-3">
                         {stageDeals.map((deal) => {
                           const isSelected = deal.id === effectiveSelectedId;
+                          const missingCount = missingEvidenceCountForDeal(deal);
                           return (
                             <button
                               key={deal.id}
@@ -3265,6 +3275,14 @@ export default function Pipeline() {
                                   >
                                     {displayStageLabel(deal, true)}
                                   </span>
+                                  {missingCount > 0 && (
+                                    <span
+                                      className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
+                                      style={{ color: "#b45309", background: "rgba(245,158,11,0.14)", border: "1px solid rgba(245,158,11,0.28)" }}
+                                    >
+                                      {missingCount} gap{missingCount === 1 ? "" : "s"}
+                                    </span>
+                                  )}
                                   {(deal as { humanoidPilotTier?: string }).humanoidPilotTier &&
                                     ["ACTIVE_PILOT", "PILOT_INTENT"].includes(
                                       String((deal as { humanoidPilotTier?: string }).humanoidPilotTier),
@@ -3333,6 +3351,7 @@ export default function Pipeline() {
                         {bucketDeals.map((deal) => {
                           const isSelected = deal.id === effectiveSelectedId;
                           const tier = userTierBadge(deal);
+                          const missingCount = missingEvidenceCountForDeal(deal);
                           return (
                             <button
                               key={deal.id}
@@ -3353,6 +3372,14 @@ export default function Pipeline() {
                                   >
                                     {tier.label}
                                   </span>
+                                  {missingCount > 0 && (
+                                    <span
+                                      className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
+                                      style={{ color: "#b45309", background: "rgba(245,158,11,0.14)", border: "1px solid rgba(245,158,11,0.28)" }}
+                                    >
+                                      {missingCount} gap{missingCount === 1 ? "" : "s"}
+                                    </span>
+                                  )}
                                   {deal.humanoidPilotTier &&
                                     ["ACTIVE_PILOT", "PILOT_INTENT"].includes(deal.humanoidPilotTier) && (
                                     <span
