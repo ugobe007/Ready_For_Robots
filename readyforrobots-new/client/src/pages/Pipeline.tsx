@@ -952,6 +952,31 @@ function missingEvidenceCountForDeal(deal: Deal): number {
   }).length;
 }
 
+function gapChipStyle(count: number): { color: string; background: string; border: string; label: string } {
+  if (count >= 5) {
+    return {
+      color: "#b91c1c",
+      background: "rgba(239,68,68,0.14)",
+      border: "1px solid rgba(239,68,68,0.30)",
+      label: "urgent",
+    };
+  }
+  if (count >= 3) {
+    return {
+      color: "#c2410c",
+      background: "rgba(249,115,22,0.14)",
+      border: "1px solid rgba(249,115,22,0.30)",
+      label: "watch",
+    };
+  }
+  return {
+    color: "#b45309",
+    background: "rgba(245,158,11,0.14)",
+    border: "1px solid rgba(245,158,11,0.28)",
+    label: "light",
+  };
+}
+
 function robotPriorityForDeal(deal: Deal): string | null {
   const action = cleanAndClampText(deal.pipelineAction, 480);
   if (action) return action;
@@ -3256,6 +3281,7 @@ export default function Pipeline() {
                         {stageDeals.map((deal) => {
                           const isSelected = deal.id === effectiveSelectedId;
                           const missingCount = missingEvidenceCountForDeal(deal);
+                          const chip = gapChipStyle(missingCount);
                           return (
                             <button
                               key={deal.id}
@@ -3278,7 +3304,8 @@ export default function Pipeline() {
                                   {missingCount > 0 && (
                                     <span
                                       className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
-                                      style={{ color: "#b45309", background: "rgba(245,158,11,0.14)", border: "1px solid rgba(245,158,11,0.28)" }}
+                                      title={`Evidence gaps: ${chip.label} priority`}
+                                      style={{ color: chip.color, background: chip.background, border: chip.border }}
                                     >
                                       {missingCount} gap{missingCount === 1 ? "" : "s"}
                                     </span>
@@ -3352,6 +3379,7 @@ export default function Pipeline() {
                           const isSelected = deal.id === effectiveSelectedId;
                           const tier = userTierBadge(deal);
                           const missingCount = missingEvidenceCountForDeal(deal);
+                          const chip = gapChipStyle(missingCount);
                           return (
                             <button
                               key={deal.id}
@@ -3375,7 +3403,8 @@ export default function Pipeline() {
                                   {missingCount > 0 && (
                                     <span
                                       className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
-                                      style={{ color: "#b45309", background: "rgba(245,158,11,0.14)", border: "1px solid rgba(245,158,11,0.28)" }}
+                                      title={`Evidence gaps: ${chip.label} priority`}
+                                      style={{ color: chip.color, background: chip.background, border: chip.border }}
                                     >
                                       {missingCount} gap{missingCount === 1 ? "" : "s"}
                                     </span>
