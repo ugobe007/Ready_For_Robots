@@ -355,6 +355,7 @@ PIPELINE_HOT_SLOTS = int(os.getenv("PIPELINE_HOT_SLOTS", "15"))
 PIPELINE_WARM_SLOTS = int(os.getenv("PIPELINE_WARM_SLOTS", "20"))
 PIPELINE_MONITOR_SLOTS = int(os.getenv("PIPELINE_MONITOR_SLOTS", "15"))
 PIPELINE_FEED_LIMIT = PIPELINE_HOT_SLOTS + PIPELINE_WARM_SLOTS + PIPELINE_MONITOR_SLOTS
+MISSING_EVIDENCE_RESEARCH_COOLDOWN_SEC = int(os.getenv("MISSING_EVIDENCE_RESEARCH_COOLDOWN_SEC", "21600"))
 
 # In-process cache for the public leads list (L1 — per machine, lost on restart).
 _LEADS_LIST_CACHE: dict[str, tuple[float, list]] = {}
@@ -363,6 +364,9 @@ _LEADS_LIST_TTL = float(PIPELINE_LEADS_ROTATION_SEC * 2)
 
 # Keys currently being refreshed in the background (avoid double-refresh storms).
 _LEADS_LIST_REFRESHING: set[str] = set()
+_MISSING_EVIDENCE_RESEARCH_INFLIGHT: set[int] = set()
+_MISSING_EVIDENCE_RESEARCH_LAST_QUEUED_AT: dict[int, float] = {}
+_MISSING_EVIDENCE_RESEARCH_LOCK = threading.Lock()
 
 # ── L2 cache: Supabase pipeline_cache_store ──────────────────────────────────
 # Survives machine restarts and is shared across all Fly.io instances.
@@ -1272,6 +1276,21 @@ def _crm_evidence_summary(
     )[:5]
     workflow_count = max(len(workflow_items), 1)
     timing_value = project_timing.to_dict() if project_timing else {}
+    robot_items = list(dict.fromkeys((robot_types_needed or []) + inferred_robot_fit + automation_requirements))[:5]
+    robot_label = (robot_types_needed or inferred_robot_fit or automation_requirements or [None])[0]
+    timing_label = timing_value.get("label") or timing_meta.get("top_window")
+    budget_has = bool(budget_meta.get("top_amount") or budget_meta.get("signals"))
+
+    missing_fields = _crm_evidence_missing_fields(
+        friction_point=friction_point,
+        workflow_items=workflow_items,
+        timing_label=timing_label,
+        robot_label=robot_label,
+        robot_items=robot_items,
+        budget_has=budget_has,
+        decision_makers=decision_makers,
+        similar_deployments=similar_deployments,
+    )
 
     return {
         "friction_point": friction_point,
@@ -1281,21 +1300,190 @@ def _crm_evidence_summary(
             "items": workflow_items,
         },
         "timing": {
-            "label": timing_value.get("label") or timing_meta.get("top_window"),
+            "label": timing_label,
             "source": timing_value.get("source"),
             "confidence": timing_value.get("confidence"),
         },
         "robot_type": {
-            "label": (robot_types_needed or inferred_robot_fit or automation_requirements or [None])[0],
-            "items": list(dict.fromkeys((robot_types_needed or []) + inferred_robot_fit + automation_requirements))[:5],
+            "label": robot_label,
+            "items": robot_items,
         },
         "budget": {
             "top_amount": budget_meta.get("top_amount"),
             "signals": budget_meta.get("signals") or [],
-            "has_budget": bool(budget_meta.get("top_amount") or budget_meta.get("signals")),
+            "has_budget": budget_has,
         },
         "decision_makers": decision_makers[:4],
         "similar_deployments": similar_deployments,
+        "missing_fields": missing_fields,
+        "research_status": {
+            "needs_research": bool(missing_fields),
+            "state": "empty" if missing_fields else "complete",
+            "missing_count": len(missing_fields),
+        },
+    }
+
+
+def _crm_evidence_missing_fields(
+    *,
+    friction_point: Optional[str],
+    workflow_items: list[str],
+    timing_label: Optional[str],
+    robot_label: Optional[str],
+    robot_items: list[str],
+    budget_has: bool,
+    decision_makers: list,
+    similar_deployments: list,
+) -> list[dict]:
+    missing: list[dict] = []
+
+    if not friction_point or "not yet summarized" in str(friction_point).lower():
+        missing.append({
+            "key": "friction_point",
+            "label": "Friction point",
+            "status": "empty",
+            "research_prompt": "Identify the operational pain point driving urgency.",
+        })
+    if not workflow_items:
+        missing.append({
+            "key": "workflow_scope",
+            "label": "Workflow scope",
+            "status": "empty",
+            "research_prompt": "Determine which workflows are being automated first.",
+        })
+    if not timing_label:
+        missing.append({
+            "key": "timing",
+            "label": "Timing",
+            "status": "empty",
+            "research_prompt": "Find rollout timeline hints or procurement windows.",
+        })
+    if not robot_label and not robot_items:
+        missing.append({
+            "key": "robot_type",
+            "label": "Robot type",
+            "status": "empty",
+            "research_prompt": "Infer the likely robot category from operations context.",
+        })
+    if not budget_has:
+        missing.append({
+            "key": "budget",
+            "label": "Budget",
+            "status": "empty",
+            "research_prompt": "Find budget language, spend hints, or capex references.",
+        })
+    if not decision_makers:
+        missing.append({
+            "key": "decision_makers",
+            "label": "Decision makers",
+            "status": "empty",
+            "research_prompt": "Identify likely owner and approver for automation purchases.",
+        })
+    if not similar_deployments:
+        missing.append({
+            "key": "similar_deployments",
+            "label": "Similar deployments",
+            "status": "empty",
+            "research_prompt": "Find comparable deployments that support this opportunity.",
+        })
+    return missing
+
+
+def _parse_iso_utc(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except Exception:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _mark_missing_fields_research_state(missing_fields: list[dict], state: str) -> list[dict]:
+    tagged: list[dict] = []
+    for item in missing_fields:
+        if not isinstance(item, dict):
+            continue
+        row = dict(item)
+        row["status"] = state
+        tagged.append(row)
+    return tagged
+
+
+def _queue_missing_evidence_research(company_id: int) -> str:
+    now = time.time()
+    with _MISSING_EVIDENCE_RESEARCH_LOCK:
+        if company_id in _MISSING_EVIDENCE_RESEARCH_INFLIGHT:
+            return "researching"
+        last_q = _MISSING_EVIDENCE_RESEARCH_LAST_QUEUED_AT.get(company_id)
+        if last_q and (now - last_q) < MISSING_EVIDENCE_RESEARCH_COOLDOWN_SEC:
+            return "monitoring"
+        _MISSING_EVIDENCE_RESEARCH_INFLIGHT.add(company_id)
+        _MISSING_EVIDENCE_RESEARCH_LAST_QUEUED_AT[company_id] = now
+
+    def _run() -> None:
+        from app.database import SessionLocal as _SL
+        from app.services.lead_research_agent import research_company_updates
+
+        rdb = _SL()
+        try:
+            research_company_updates(
+                rdb,
+                company_id,
+                dry_run=False,
+                lookback_days=30,
+                max_results=10,
+                notify=True,
+            )
+        except Exception as exc:
+            logger.warning("Missing-evidence research failed for company_id=%s: %s", company_id, exc)
+        finally:
+            with _MISSING_EVIDENCE_RESEARCH_LOCK:
+                _MISSING_EVIDENCE_RESEARCH_INFLIGHT.discard(company_id)
+            rdb.close()
+
+    threading.Thread(
+        target=_run,
+        daemon=True,
+        name=f"missing-evidence-research-{company_id}",
+    ).start()
+    return "researching"
+
+
+def _maybe_schedule_missing_evidence_research(
+    *,
+    company: Company,
+    priority_tier: str,
+    payload: dict,
+) -> None:
+    crm_evidence = payload.get("crm_evidence") if isinstance(payload.get("crm_evidence"), dict) else None
+    if not crm_evidence:
+        return
+    missing_fields = crm_evidence.get("missing_fields") if isinstance(crm_evidence.get("missing_fields"), list) else []
+    if not missing_fields:
+        return
+    if priority_tier not in {"HOT", "WARM"}:
+        crm_evidence["research_status"] = {
+            "needs_research": True,
+            "state": "monitoring",
+            "missing_count": len(missing_fields),
+        }
+        return
+
+    recent_research = _last_researched_at(company, payload.get("research_updates") or [])
+    recent_dt = _parse_iso_utc(recent_research)
+    if recent_dt and (datetime.now(timezone.utc) - recent_dt).total_seconds() < MISSING_EVIDENCE_RESEARCH_COOLDOWN_SEC:
+        state = "monitoring"
+    else:
+        state = _queue_missing_evidence_research(company.id)
+
+    crm_evidence["missing_fields"] = _mark_missing_fields_research_state(missing_fields, state)
+    crm_evidence["research_status"] = {
+        "needs_research": True,
+        "state": state,
+        "missing_count": len(missing_fields),
     }
 
 
@@ -2457,6 +2645,11 @@ def get_lead_by_id(company_id: int, response: Response, db: Session = Depends(ge
             llm_homepage_url=None,
             include_research=True,
             db=db,
+        )
+        _maybe_schedule_missing_evidence_research(
+            company=c,
+            priority_tier=pri.tier,
+            payload=payload,
         )
         stage = "entity_resolution"
         er = _entity_resolution_payload(db, c)

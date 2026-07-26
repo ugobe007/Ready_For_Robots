@@ -177,6 +177,17 @@ interface Deal {
       source_label?: string | null;
       evidence_tension?: string | null;
     }>;
+    missing_fields?: Array<{
+      key?: string;
+      label?: string;
+      status?: string;
+      research_prompt?: string;
+    }>;
+    research_status?: {
+      needs_research?: boolean;
+      state?: string;
+      missing_count?: number;
+    };
   };
 }
 
@@ -901,6 +912,16 @@ function evidenceStackForDeal(deal: Deal) {
       source_label: update.source_label,
       evidence_tension: update.evidence_tension,
     }));
+  const missingByKey = new Map<string, { key: string; label: string; status: string; researchPrompt?: string }>();
+  (evidence?.missing_fields || []).forEach((row) => {
+    if (!row?.key) return;
+    missingByKey.set(row.key, {
+      key: row.key,
+      label: row.label || row.key,
+      status: row.status || "empty",
+      researchPrompt: row.research_prompt,
+    });
+  });
 
   return {
     frictionPoint:
@@ -917,6 +938,8 @@ function evidenceStackForDeal(deal: Deal) {
     budgetSignals,
     decisionMakers,
     deploymentExamples: deploymentExamples.length > 0 ? deploymentExamples : fallbackDeploymentExamples,
+    missingByKey,
+    researchState: evidence?.research_status?.state || null,
   };
 }
 
@@ -3554,25 +3577,54 @@ export default function Pipeline() {
                               || evidence.deploymentExamples.length,
                             );
                             if (!hasEvidence) return null;
+
+                            const missingTag = (fieldKey: string) => {
+                              const missing = evidence.missingByKey.get(fieldKey);
+                              if (!missing) return null;
+                              const state = String(missing.status || "empty").toLowerCase();
+                              const label = state === "researching"
+                                ? "Researching"
+                                : state === "monitoring"
+                                  ? "Monitoring"
+                                  : "Missing";
+                              const tone = state === "researching"
+                                ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                                : state === "monitoring"
+                                  ? "border-slate-300 bg-slate-100 text-slate-700"
+                                  : "border-amber-300 bg-amber-50 text-amber-800";
+                              return (
+                                <span className={`ml-1.5 inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${tone}`}>
+                                  {label}
+                                </span>
+                              );
+                            };
+
                             return (
                               <div className="pipeline-detail-section-muted">
-                                <p className={panelSectionLabel}>Buyer evidence</p>
+                                <p className={panelSectionLabel}>
+                                  Buyer evidence
+                                  {evidence.researchState === "researching" ? (
+                                    <span className="ml-2 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800">
+                                      AI researching gaps
+                                    </span>
+                                  ) : null}
+                                </p>
                                 <div className="mt-2 grid gap-2">
                                   <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Friction point</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Friction point{missingTag("friction_point")}</p>
                                     <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
                                       {cleanAndClampText(evidence.frictionPoint || "Not yet summarized", 220)}
                                     </p>
                                   </div>
                                   <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Workflow scope</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Workflow scope{missingTag("workflow_scope")}</p>
                                     <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
                                       <span className="font-semibold text-slate-900">{evidence.workflowLabel}:</span>{" "}
                                       {evidence.workflowItems.length > 0 ? cleanAndClampText(evidence.workflowItems.join(", "), 180) : "workflow not yet identified"}
                                     </p>
                                   </div>
                                   <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Timing and robot fit</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Timing and robot fit{missingTag("timing")}{missingTag("robot_type")}</p>
                                     <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
                                       <span className="font-semibold text-slate-900">Timing:</span> {cleanAndClampText(evidence.timingLabel || "not yet clear", 80)}
                                       <span className="mx-1 text-gray-400">·</span>
@@ -3580,7 +3632,7 @@ export default function Pipeline() {
                                     </p>
                                   </div>
                                   <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Budget</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Budget{missingTag("budget")}</p>
                                     <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
                                       {evidence.budgetTopAmount ? (
                                         <>
@@ -3599,7 +3651,7 @@ export default function Pipeline() {
                                     )}
                                   </div>
                                   <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Decision makers</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Decision makers{missingTag("decision_makers")}</p>
                                     {evidence.decisionMakers.length > 0 ? (
                                       <ul className="mt-1 space-y-1 text-[12px] leading-relaxed text-gray-800">
                                         {evidence.decisionMakers.slice(0, 3).map((person, index) => (
@@ -3614,7 +3666,7 @@ export default function Pipeline() {
                                     )}
                                   </div>
                                   <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Similar deployments</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Similar deployments{missingTag("similar_deployments")}</p>
                                     {evidence.deploymentExamples.length > 0 ? (
                                       <ul className="mt-1 space-y-2 text-[12px] leading-relaxed text-gray-800">
                                         {evidence.deploymentExamples.slice(0, 3).map((example, index) => (

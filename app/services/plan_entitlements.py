@@ -393,6 +393,24 @@ def sanitize_lead_for_plan(lead: dict[str, Any], plan: str) -> dict[str, Any]:
                 for item in examples[:2]
                 if isinstance(item, dict)
             ]
+        missing_fields = evidence.get("missing_fields") if isinstance(evidence.get("missing_fields"), list) else []
+        if missing_fields:
+            teaser_evidence["missing_fields"] = [
+                {
+                    "key": _truncate((item or {}).get("key"), 40),
+                    "label": _truncate((item or {}).get("label"), 60),
+                    "status": _truncate((item or {}).get("status"), 20),
+                }
+                for item in missing_fields[:8]
+                if isinstance(item, dict)
+            ]
+        research_status = evidence.get("research_status") if isinstance(evidence.get("research_status"), dict) else {}
+        if research_status:
+            teaser_evidence["research_status"] = {
+                "needs_research": bool(research_status.get("needs_research")),
+                "state": _truncate(research_status.get("state"), 20),
+                "missing_count": int(research_status.get("missing_count") or 0),
+            }
         if teaser_evidence:
             row["crm_evidence"] = teaser_evidence
         else:

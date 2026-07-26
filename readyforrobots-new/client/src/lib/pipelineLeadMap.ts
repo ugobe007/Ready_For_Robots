@@ -98,6 +98,17 @@ export interface ApiLead {
       source_label?: string | null;
       evidence_tension?: string | null;
     }>;
+    missing_fields?: Array<{
+      key?: string;
+      label?: string;
+      status?: string;
+      research_prompt?: string;
+    }>;
+    research_status?: {
+      needs_research?: boolean;
+      state?: string;
+      missing_count?: number;
+    };
   } | null;
 }
 
