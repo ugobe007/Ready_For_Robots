@@ -3587,7 +3587,7 @@ export default function Pipeline() {
                                           <span className="font-semibold text-slate-900">{evidence.budgetTopAmount}</span> appears in the evidence set.
                                         </>
                                       ) : (
-                                        "No explicit budget mentioned yet."
+                                        "No public budget signal yet. Confirm range and budget owner on the first call."
                                       )}
                                     </p>
                                     {evidence.budgetSignals.length > 0 && (
@@ -3610,7 +3610,7 @@ export default function Pipeline() {
                                         ))}
                                       </ul>
                                     ) : (
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">No decision maker captured yet.</p>
+                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">Decision owner not identified yet. Ask who signs off on operations automation.</p>
                                     )}
                                   </div>
                                   <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
@@ -3625,7 +3625,7 @@ export default function Pipeline() {
                                         ))}
                                       </ul>
                                     ) : (
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">No similar deployment example has been captured yet.</p>
+                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">No matched deployment example yet. SIGNAL will add one as new evidence is published.</p>
                                     )}
                                   </div>
                                 </div>
