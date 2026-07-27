@@ -925,6 +925,21 @@ def _fmt_pipeline_card(
     )
     crm_meta = c.crm_metadata if isinstance(getattr(c, "crm_metadata", None), dict) else {}
     inf = crm_meta.get("lead_inference") if isinstance(crm_meta.get("lead_inference"), dict) else {}
+    contact_intelligence = (
+        crm_meta.get("contact_intelligence")
+        if isinstance(crm_meta.get("contact_intelligence"), dict)
+        else None
+    )
+    best_phone = (
+        (contact_intelligence.get("phone") or {}).get("best", {}).get("phone")
+        if isinstance(contact_intelligence, dict)
+        else None
+    )
+    best_linkedin = (
+        (contact_intelligence.get("linkedin") or {}).get("best_profile")
+        if isinstance(contact_intelligence, dict)
+        else None
+    )
     research_evidence = crm_meta.get("research_evidence") if isinstance(crm_meta.get("research_evidence"), list) else []
     research_updates_preview = [
         {
@@ -963,6 +978,9 @@ def _fmt_pipeline_card(
             "robot_categories": (inf or {}).get("robot_categories") or [],
             "application_areas": (inf or {}).get("application_areas") or [],
         } if inf else None,
+        "contact_intelligence": contact_intelligence,
+        "inferred_contact_phone": best_phone,
+        "inferred_linkedin_profile": best_linkedin,
         "crm_evidence": _crm_evidence_summary(
             crm_meta=crm_meta,
             lead_inference=inf or {},
@@ -1076,6 +1094,21 @@ def _fmt_company(
 
     crm_meta = c.crm_metadata if isinstance(getattr(c, "crm_metadata", None), dict) else {}
     inf = crm_meta.get("lead_inference") if isinstance(crm_meta.get("lead_inference"), dict) else {}
+    contact_intelligence = (
+        crm_meta.get("contact_intelligence")
+        if isinstance(crm_meta.get("contact_intelligence"), dict)
+        else None
+    )
+    best_phone = (
+        (contact_intelligence.get("phone") or {}).get("best", {}).get("phone")
+        if isinstance(contact_intelligence, dict)
+        else None
+    )
+    best_linkedin = (
+        (contact_intelligence.get("linkedin") or {}).get("best_profile")
+        if isinstance(contact_intelligence, dict)
+        else None
+    )
     research_updates: list[dict] = []
     signal_blob = " ".join(
         strip_extraction_artifacts(getattr(sig, "signal_text", None))
@@ -1180,6 +1213,9 @@ def _fmt_company(
                 else None
             ),
         } if (inf or crm_meta.get("agent_enrichment")) else None,
+        "contact_intelligence": contact_intelligence,
+        "inferred_contact_phone": best_phone,
+        "inferred_linkedin_profile": best_linkedin,
         "crm_evidence": _crm_evidence_summary(
             crm_meta=crm_meta,
             lead_inference=inf or {},

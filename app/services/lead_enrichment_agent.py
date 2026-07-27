@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 from app.models.company import Company
 from app.models.signal import Signal
 from app.services.inference_engine import analyze
+from app.services.lead_contact_intelligence import enrich_company_contact_intelligence
 from app.services.lead_inference_engine import refresh_company_inference
 from app.services.learned_signal_ontology import (
     BUCKET_KEYS,
@@ -70,6 +71,7 @@ class LeadAgentEnrichment:
     procurement_clues: List[str] = field(default_factory=list)
     timing_clues: List[str] = field(default_factory=list)
     signal_types_effective: List[str] = field(default_factory=list)
+    contact_intelligence: Dict[str, Any] = field(default_factory=dict)
     llm_used: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
@@ -226,6 +228,19 @@ def enrich_lead_with_agent(
     if not result.signal_types_effective and sig_types:
         result.signal_types_effective = list(dict.fromkeys(sig_types))[:6]
 
+    try:
+        result.contact_intelligence = enrich_company_contact_intelligence(
+            company,
+            signals,
+            contacts=getattr(company, "contacts", None),
+        )
+    except Exception as exc:
+        logger.warning("Contact intelligence enrichment failed id=%s: %s", company.id, exc)
+        result.contact_intelligence = {
+            "status": "error",
+            "error": str(exc)[:220],
+        }
+
     meta = dict(company.crm_metadata or {})
     meta["agent_enrichment"] = {
         **result.to_dict(),
@@ -243,6 +258,8 @@ def enrich_lead_with_agent(
             getattr(r, "description", str(r)) for r in (intent.fired_rules or [])[:5]
         ],
     }
+    if result.contact_intelligence:
+        meta["contact_intelligence"] = result.contact_intelligence
     company.crm_metadata = meta
     db.add(company)
     db.commit()

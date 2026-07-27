@@ -98,6 +98,14 @@ interface Deal {
   stage: Stage;
   updatedAt: string;
   contact?: string;
+  contactPhone?: string;
+  linkedInProfile?: {
+    url?: string;
+    score?: number;
+    confidence?: string;
+    person?: string;
+    person_title?: string;
+  };
   contactTitle?: string;
   outreachSubject?: string;
   outreachBody?: string;
@@ -209,6 +217,72 @@ interface Deal {
       needs_research?: boolean;
       state?: string;
       missing_count?: number;
+    };
+  };
+  contactIntelligence?: {
+    status?: string;
+    updated_at?: string;
+    phone?: {
+      best?: {
+        phone?: string;
+        raw?: string;
+        source?: string;
+        score?: number;
+        evidence?: string;
+      } | null;
+      candidates?: Array<{
+        phone?: string;
+        raw?: string;
+        source?: string;
+        score?: number;
+        evidence?: string;
+      }>;
+    };
+    linkedin?: {
+      status?: string;
+      best_profile?: {
+        url?: string;
+        title?: string;
+        snippet?: string;
+        score?: number;
+        confidence?: string;
+        person?: string;
+        person_title?: string;
+      } | null;
+      disambiguation?: {
+        status?: string;
+        target_person?: string;
+        target_company?: string;
+        reason?: string;
+        script?: string[];
+        candidates?: Array<{
+          url?: string;
+          title?: string;
+          snippet?: string;
+          score?: number;
+        }>;
+      } | null;
+    };
+    sales_intuition?: {
+      why_sales_lead?: {
+        specific_problem?: string | null;
+        reasons?: string[];
+      };
+      robot_history?: Array<{
+        signal_type?: string | null;
+        summary?: string;
+        source_url?: string | null;
+      }>;
+      larger_opportunity?: {
+        industry?: string | null;
+        points?: string[];
+      };
+      competitor_robot_usage?: Array<{
+        title?: string;
+        summary?: string;
+        source_url?: string | null;
+        source_domain?: string | null;
+      }>;
     };
   };
 }
@@ -1163,6 +1237,111 @@ function PipelineLeadQualityPanel({ deal }: { deal: Deal }) {
                 </p>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
+  const intel = deal.contactIntelligence;
+  const phoneBest = intel?.phone?.best;
+  const linkedinBest = intel?.linkedin?.best_profile || deal.linkedInProfile;
+  const disambiguation = intel?.linkedin?.disambiguation;
+  const whyLead = intel?.sales_intuition?.why_sales_lead;
+  const opportunityPoints = (intel?.sales_intuition?.larger_opportunity?.points || []).filter(Boolean);
+  const competitorClues = (intel?.sales_intuition?.competitor_robot_usage || []).filter(Boolean);
+  const robotHistory = (intel?.sales_intuition?.robot_history || []).filter(Boolean);
+
+  if (!intel && !deal.contactPhone && !deal.linkedInProfile) return null;
+
+  return (
+    <div className="pipeline-detail-section-muted mt-2">
+      <p className={panelSectionLabel}>Contact intelligence</p>
+      <div className="mt-2 space-y-2 rounded-xl border border-slate-200 bg-white/85 p-3">
+        <div className="grid gap-2 md:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Phone</p>
+            <p className="mt-1 text-[12px] font-semibold text-slate-900">
+              {cleanAndClampText(phoneBest?.phone || deal.contactPhone || "not found", 40)}
+            </p>
+            {phoneBest?.evidence && (
+              <p className="mt-1 text-[10px] leading-relaxed text-slate-600">
+                {cleanAndClampText(phoneBest.evidence, 140)}
+              </p>
+            )}
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">LinkedIn profile</p>
+            {linkedinBest?.url ? (
+              <>
+                <a
+                  href={linkedinBest.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex text-[12px] font-semibold text-emerald-800 underline"
+                >
+                  Open profile
+                </a>
+                <p className="mt-1 text-[10px] text-slate-600">
+                  {cleanAndClampText(linkedinBest.person || linkedinBest.title || "Best match", 80)}
+                </p>
+              </>
+            ) : (
+              <p className="mt-1 text-[12px] text-slate-700">No confirmed profile yet</p>
+            )}
+          </div>
+        </div>
+
+        {disambiguation?.status === "required" && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50/80 p-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-800">LinkedIn disambiguation required</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-amber-900">
+              {cleanAndClampText(disambiguation.reason || "Multiple plausible profiles found", 180)}
+            </p>
+            {(disambiguation.script || []).slice(0, 3).map((step, i) => (
+              <p key={`${step}-${i}`} className="mt-1 text-[10px] leading-relaxed text-amber-800">
+                {i + 1}. {cleanAndClampText(step, 180)}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {(whyLead?.specific_problem || (whyLead?.reasons || []).length > 0) && (
+          <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Why this is a sales lead</p>
+            {whyLead?.specific_problem && (
+              <p className="mt-1 text-[12px] leading-relaxed text-slate-800">
+                {cleanAndClampText(whyLead.specific_problem, 180)}
+              </p>
+            )}
+            {(whyLead?.reasons || []).slice(0, 2).map((reason, idx) => (
+              <p key={`${reason}-${idx}`} className="mt-1 text-[11px] leading-relaxed text-slate-700">
+                • {cleanAndClampText(reason, 150)}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {(opportunityPoints.length > 0 || robotHistory.length > 0 || competitorClues.length > 0) && (
+          <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Opportunity and competitive context</p>
+            {opportunityPoints.slice(0, 2).map((point, idx) => (
+              <p key={`${point}-${idx}`} className="mt-1 text-[11px] leading-relaxed text-slate-700">
+                • {cleanAndClampText(point, 170)}
+              </p>
+            ))}
+            {robotHistory[0]?.summary && (
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-700">
+                <span className="font-semibold text-slate-900">Robot history:</span> {cleanAndClampText(robotHistory[0].summary, 170)}
+              </p>
+            )}
+            {competitorClues[0]?.summary && (
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-700">
+                <span className="font-semibold text-slate-900">Competitor clue:</span> {cleanAndClampText(competitorClues[0].summary, 170)}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -3673,6 +3852,7 @@ export default function Pipeline() {
                     </div>
 
                   <PipelineRobotPriorityPanel deal={selected} />
+                  <PipelineContactIntelligencePanel deal={selected} />
 
                   {selected && ["HOT", "WARM"].includes((selected.priorityTier || "").toUpperCase()) && (
                     <CalLeadDrop

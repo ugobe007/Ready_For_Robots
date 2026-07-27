@@ -14,6 +14,80 @@ export interface ApiLead {
   inferred_contact_email?: string | null;
   inferred_contact_cc?: string[];
   inferred_contact_role?: string | null;
+  inferred_contact_phone?: string | null;
+  inferred_linkedin_profile?: {
+    url?: string;
+    score?: number;
+    confidence?: string;
+    person?: string;
+    person_title?: string;
+  } | null;
+  contact_intelligence?: {
+    status?: string;
+    updated_at?: string;
+    phone?: {
+      best?: {
+        phone?: string;
+        raw?: string;
+        source?: string;
+        score?: number;
+        evidence?: string;
+      } | null;
+      candidates?: Array<{
+        phone?: string;
+        raw?: string;
+        source?: string;
+        score?: number;
+        evidence?: string;
+      }>;
+    };
+    linkedin?: {
+      status?: string;
+      best_profile?: {
+        url?: string;
+        title?: string;
+        snippet?: string;
+        score?: number;
+        confidence?: string;
+        person?: string;
+        person_title?: string;
+      } | null;
+      disambiguation?: {
+        status?: string;
+        target_person?: string;
+        target_company?: string;
+        reason?: string;
+        script?: string[];
+        candidates?: Array<{
+          url?: string;
+          title?: string;
+          snippet?: string;
+          score?: number;
+        }>;
+      } | null;
+    };
+    sales_intuition?: {
+      why_sales_lead?: {
+        specific_problem?: string | null;
+        reasons?: string[];
+      };
+      robot_history?: Array<{
+        signal_type?: string | null;
+        summary?: string;
+        source_url?: string | null;
+      }>;
+      larger_opportunity?: {
+        industry?: string | null;
+        points?: string[];
+      };
+      competitor_robot_usage?: Array<{
+        title?: string;
+        summary?: string;
+        source_url?: string | null;
+        source_domain?: string | null;
+      }>;
+    };
+  } | null;
   location_city?: string | null;
   location_state?: string | null;
   score?: number | { overall_score?: number; overall_intent_score?: number };
@@ -258,6 +332,9 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     stage: (crmStage ?? stageForLead(lead)) as PipelineStage,
     updatedAt: "live",
     contact: lead.inferred_contact_email || undefined,
+    contactPhone: lead.inferred_contact_phone || undefined,
+    linkedInProfile: lead.inferred_linkedin_profile || undefined,
+    contactIntelligence: lead.contact_intelligence || undefined,
     contactTitle: lead.inferred_contact_role
       ? `${lead.inferred_contact_role.replace(/_/g, " ")} (inferred)`
       : undefined,
