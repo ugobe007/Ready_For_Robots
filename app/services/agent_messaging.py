@@ -12,7 +12,7 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_signature
 CAL_INTRO = "Hi — I'm Cal, with Ready For Robots."
 
 CAL_BUYER_ROLE_LINE = (
-    "I'm with ReadyForRobots SIGNAL. I study deployments that are still running months later, not just the demos."
+    "I'm Cal with Ready For Robots. I study deployments that are still running months later, not just the demos."
 )
 
 CAL_BUYER_REMINDER_LINE = (

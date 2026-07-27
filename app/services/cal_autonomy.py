@@ -396,8 +396,8 @@ def notify_admin_of_format_change(
 
     from app.services.resend_email import ResendEmailError, send_email_via_resend
 
-    subject = "SIGNAL updated outreach format — review sample"
-    body = f"""SIGNAL refreshed the outreach template used for prospective buyers.
+    subject = "Cal outreach template updated — review sample"
+    body = f"""Cal refreshed the outreach template used for prospective buyers.
 
 Previous fingerprint: {previous_fingerprint or "(none)"}
 New fingerprint: {new_fingerprint}
@@ -406,20 +406,20 @@ Template version: {os.getenv("CAL_TEMPLATE_VERSION") or "2"}
 Sample company: {sample_company}
 Sample subject: {sample_subject}
 
---- Sample draft SIGNAL will send (autonomous sends continue) ---
+--- Sample draft Cal will send (autonomous sends continue) ---
 
 {sample_draft}
 
 ---
 Review in the command center: /admin#cal-outreach
-Reply to this email if you want SIGNAL paused or the tone adjusted.
+Reply to this email if you want Cal outreach paused or the tone adjusted.
 """
     try:
         send_email_via_resend(
             to_email=to_email,
             subject=subject,
             body_text=body,
-            from_display_name="Ready For Robots · SIGNAL ops",
+            from_display_name="Ready For Robots · Cal ops",
             idempotency_key=f"cal-format-review-{new_fingerprint}",
         )
         return True
