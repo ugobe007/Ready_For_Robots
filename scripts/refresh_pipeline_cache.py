@@ -120,7 +120,13 @@ def _pipeline_cache_status(api_base: str) -> dict:
     }
 
 
-def _wait_for_remote_cache(*, api_base: str, timeout_sec: int, poll_sec: int) -> int:
+def _wait_for_remote_cache(
+    *,
+    api_base: str,
+    timeout_sec: int,
+    poll_sec: int,
+    previous_built_at: str | None = None,
+) -> int:
     import time
 
     deadline = time.time() + timeout_sec
@@ -144,7 +150,8 @@ def _wait_for_remote_cache(*, api_base: str, timeout_sec: int, poll_sec: int) ->
             f"  cache_pending={pending!r} built_at={built_at!r} leads={leads}",
             flush=True,
         )
-        if pending is not True and built_at and leads > 0:
+        rotated = bool(built_at) and (not previous_built_at or built_at != previous_built_at)
+        if pending is not True and leads > 0 and rotated:
             print("Pipeline cache ready.", flush=True)
             return 0
         time.sleep(poll_sec)
@@ -188,6 +195,12 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.remote:
+        prev_built_at = None
+        if args.wait:
+            try:
+                prev_built_at = _pipeline_cache_status(args.api_base).get("built_at")
+            except Exception:
+                prev_built_at = None
         try:
             url, header_args = resolve_remote_refresh_request(args.api_base)
         except ValueError as exc:
@@ -227,6 +240,7 @@ def main() -> int:
                 api_base=args.api_base.rstrip("/"),
                 timeout_sec=args.wait_timeout,
                 poll_sec=args.poll_interval,
+                previous_built_at=prev_built_at,
             )
         print(
             "Refresh started in background. Re-run with --wait or check built_at in ~15–20 min.",

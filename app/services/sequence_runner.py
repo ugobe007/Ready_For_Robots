@@ -27,14 +27,19 @@ DEFAULT_BUYER_SEQUENCE = {
         {
             "step_number": 1,
             "delay_days": 0,
-            "subject_template": "A robot that earns its spot — {company_name}",
+            "subject_template": "a deployment note for {company_name}",
             "body_template": (
-                "Hi — I'm Cal with Ready For Robots.\n\n"
-                "I help teams in {industry} find the spots where a robot actually pays for "
-                "itself — and, just as usefully, the spots where it doesn't. No hype, no "
-                "\"robots will change everything\" keynote.\n\n"
-                "Worth a quick look at what's working for operators like {company_name}?\n\n"
-                "— Cal\nReady For Robots"
+                "Hi {company_name},\n\n"
+                "I'm Cal with Ready For Robots.\n\n"
+                "I spend my time studying robot deployments — not the demos, the ones still "
+                "running months later.\n\n"
+                "One thing shows up over and over: deployments fail less from hardware limits "
+                "and more from assigning automation to the wrong problem.\n\n"
+                "That's why we're vendor-neutral. I focus first on whether automation belongs "
+                "in a workflow before anyone compares robots.\n\n"
+                "Out of curiosity, is {company_name} evaluating automation now, or is it still "
+                "further down the road?\n\n"
+                "— Cal\nDeployment Advisor\nReady For Robots"
             ),
             "action_label": "Intro",
         },

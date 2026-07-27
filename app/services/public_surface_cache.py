@@ -129,6 +129,7 @@ def refresh_pipeline_surface_caches(db: Session, *, include_humanoid_report: boo
     write_public_cache(db, KEY_SUMMARY_EXCLUDE_JUNK, summary_exclude)
     write_public_cache(db, KEY_SUMMARY_INCLUDE_JUNK, _compute_pipeline_summary(db, False))
 
+    leads_cache: dict[tuple[int, str], list] = {}
     for limit, tier, key in (
         (50, None, KEY_LEADS_50),
         (18, None, KEY_LEADS_18),
@@ -136,6 +137,7 @@ def refresh_pipeline_surface_caches(db: Session, *, include_humanoid_report: boo
     ):
         leads = build_public_leads_list(db, limit=limit, tier=tier)
         write_public_cache(db, key, leads)
+        leads_cache[(limit, tier or "all")] = leads
         stats[f"leads_{limit}_{tier or 'all'}"] = len(leads)
 
     for search_q in INDUSTRY_SEARCH_CACHE_QUERIES:
@@ -149,7 +151,20 @@ def refresh_pipeline_surface_caches(db: Session, *, include_humanoid_report: boo
     write_public_cache(db, KEY_CAL_LEAD_DROPS, cal_drops)
     stats["cal_lead_drops"] = cal_drops.get("count", 0)
 
-    pipeline_leads = build_public_pipeline_feed(db, limit=PIPELINE_FEED_LIMIT)
+    try:
+        pipeline_leads = build_public_pipeline_feed(db, limit=PIPELINE_FEED_LIMIT)
+        stats["pipeline_feed_source"] = "fresh"
+    except Exception as exc:
+        logger.warning("Pipeline feed build failed; using warmed lead-list fallback: %s", exc)
+        fallback = (
+            leads_cache.get((50, "all"))
+            or leads_cache.get((18, "all"))
+            or leads_cache.get((12, "HOT"))
+            or []
+        )
+        pipeline_leads = list(fallback[:PIPELINE_FEED_LIMIT])
+        stats["pipeline_feed_source"] = "fallback_lead_list"
+
     pipeline_feed = {
         "leads": pipeline_leads,
         "summary": _summary_for_homepage(summary_exclude),

@@ -12,7 +12,7 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_signature
 CAL_INTRO = "Hi — I'm Cal, with Ready For Robots."
 
 CAL_BUYER_ROLE_LINE = (
-    "I'm with ReadyForRobots SIGNAL. I help ops teams find where robots will pay back fastest — and where they won't."
+    "I'm with ReadyForRobots SIGNAL. I study deployments that are still running months later, not just the demos."
 )
 
 CAL_BUYER_REMINDER_LINE = (
@@ -39,27 +39,25 @@ CAL_VENDOR_SHERPA_LINE = (
 
 # Plain, honest, first-person. Say what I do and why I'm writing — no slogans.
 BUYER_SIGNAL_EXPLANATION = (
-    "I help operations teams figure out which robots would actually fit the way they run, "
-    "and which ones aren't worth the trouble. A lot of what I do is talk people out of a pilot "
-    "that was never going to work."
+    "I don't evaluate robots first. I evaluate whether the job should be automated in the first place. "
+    "A lot of my work is helping teams avoid pilots that were never going to hold up in live operations."
 )
 
 # Quiet credibility — a plain observation about what makes robots pay off, no bravado.
 BUYER_ROI_PROOF = (
-    "The teams that get real value out of it usually aren't the ones who bought the most impressive "
-    "robot. They're the ones who matched a specific machine to the one job that was actually costing "
-    "them. When the fit is right, it tends to pay for itself inside a year or two."
+    "Most deployments don't fail because hardware is weak. They fail because the robot was assigned to "
+    "the wrong problem. The ones that succeed usually disappear into daily operations instead of needing "
+    "constant exceptions and extra labor."
 )
 
 BUYER_OUTREACH_CTA = (
-    "If it's useful, I'm happy to put together a short list of vendors that have actually deployed in "
-    "operations like yours — and flag the couple I'd be careful about. No call, no pitch; just reply "
-    "and I'll send it over."
+    "If it's useful, I can share a short vendor-neutral read on which workflows are worth automating "
+    "first and which ones I'd leave alone for now. No call, no pitch."
 )
 
 # Honest closing beat — builds trust rather than performing confidence.
 BUYER_CAL_PERSONALITY = (
-    "And if I don't think a robot is the right answer for you yet, I'll tell you that too."
+    "If I don't think automation belongs in that workflow yet, I'll say that directly."
 )
 
 VENDOR_SIGNAL_EXPLANATION = (
@@ -88,7 +86,7 @@ CAL_VENDOR_OFFRAMP_LINE = (
     "The point is fewer wasted PoCs, not more pipeline noise."
 )
 
-CAL_VENDOR_STRATEGY_CALL_CTA = "Worth 15 minutes to walk through the matches?"
+CAL_VENDOR_STRATEGY_CALL_CTA = "If helpful, we can do a short walkthrough after you've reviewed the matches."
 
 CAL_VENDOR_BUYER_MATCH_CTA = "Want me to send the buyer profiles? I'll flag what fits and what doesn't."
 
@@ -628,9 +626,9 @@ def _variant_what_survives(name: str, industry: str) -> str:
     team = _greeting_name(name)
     sector = _buyer_sector(industry)
     workflow_line = (
-        f"For {sector} teams, the break point is usually workflow fit — not spec-sheet speed."
+        f"For {sector} teams, the break point is usually operational readiness — not spec-sheet speed."
         if sector != "your line of work"
-        else "Most break points come from workflow fit — not spec-sheet speed."
+        else "Most break points come from operational readiness — not spec-sheet speed."
     )
     return "\n".join([
         f"Hi {team},",

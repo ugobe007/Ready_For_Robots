@@ -18,7 +18,7 @@ from app.services.cal_persona import (
 def test_cal_signature_includes_role():
     sig = cal_signature()
     assert sig.startswith("— Cal")
-    assert f"\nCal\n{CAL_TITLE}\nReady For Robots" in sig
+    assert f"\n{CAL_TITLE}, Ready For Robots" in sig
 
 
 def test_persona_payload_exports_voice_rules():
