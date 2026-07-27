@@ -2713,8 +2713,10 @@ export default function Pipeline() {
             <div className="pipeline-page-header">
               <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="min-w-0">
-                  <p className="sb-kicker mb-0.5">Filter pipeline</p>
-                  <p className="pipeline-filter-hint">Search industry, company, or signal</p>
+                  <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-900">
+                    Search pipeline
+                  </span>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">Find buyers by industry, company, or signal.</p>
                 </div>
 
                 <div className="relative w-full sm:w-[340px]">
@@ -2726,7 +2728,7 @@ export default function Pipeline() {
                       setFilter("All");
                     }}
                     list="pipeline-industries"
-                    placeholder="Search industry, company, or signal…"
+                    placeholder="Search pipeline: industry, company, or signal…"
                     className="sb-input py-2 pl-9 pr-10"
                   />
                   {industryQuery && (
