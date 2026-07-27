@@ -50,7 +50,7 @@ function evidenceLine(lead: PipelineLeadActionFields): string {
 
 type Props = {
   lead: PipelineLeadActionFields;
-  variant?: "light" | "dark" | "compact";
+  variant?: "light" | "dark" | "compact" | "hero";
   className?: string;
 };
 
@@ -63,6 +63,8 @@ export default function PipelineLeadActionMeta({ lead, variant = "light", classN
   const actionClass =
     variant === "dark"
       ? "text-slate-300 text-sm"
+      : variant === "hero"
+        ? "text-[12px] text-slate-700 leading-snug"
       : variant === "compact"
         ? "text-[11px] text-stone-700 leading-snug"
         : "text-xs text-gray-700 leading-snug";
@@ -70,11 +72,15 @@ export default function PipelineLeadActionMeta({ lead, variant = "light", classN
   const chipClass =
     variant === "dark"
       ? "inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
+      : variant === "hero"
+        ? "inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700"
       : "pipeline-robot-type-chip";
 
   const proofClass =
     variant === "dark"
       ? "text-[11px] text-emerald-200/90 leading-snug"
+      : variant === "hero"
+        ? "text-[11px] text-sky-700 leading-snug"
       : variant === "compact"
         ? "text-[10px] text-emerald-700 leading-snug"
         : "text-[11px] text-emerald-700 leading-snug";
@@ -92,7 +98,15 @@ export default function PipelineLeadActionMeta({ lead, variant = "light", classN
         <p className={actionClass}>
           {prefix && body ? (
             <>
-              <span className={variant === "dark" ? "font-bold text-emerald-400" : "font-bold text-emerald-800"}>
+              <span
+                className={
+                  variant === "dark"
+                    ? "font-bold text-emerald-400"
+                    : variant === "hero"
+                      ? "font-bold text-amber-700"
+                      : "font-bold text-emerald-800"
+                }
+              >
                 {prefix}:
               </span>{" "}
               {body}

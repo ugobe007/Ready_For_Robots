@@ -133,13 +133,13 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
   const rows = visible.slice(0, 3);
 
   return (
-    <div className="hero-widget-glow pipeline-panel">
-      <div className="pipeline-panel-header flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+    <div className="hero-widget-glow home-hero-panel">
+      <div className="home-hero-panel-header flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="font-display text-sm font-semibold text-white">Live pipeline</span>
+          <span className="font-display text-sm font-semibold text-slate-900">Live pipeline</span>
         </div>
-        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono-data text-xs font-bold text-emerald-300">
+        <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 font-mono-data text-xs font-bold text-amber-700">
           {hotLabel} HOT
         </span>
       </div>
@@ -149,24 +149,24 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
           const Icon = iconForIndustry(lead.industry);
           const tier = (lead.priority_tier || "WARM").toUpperCase();
           const href = leadHref(lead, live);
-          const rowClass = `pipeline-panel-row flex items-start gap-3 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 ${
+          const rowClass = `home-hero-panel-row flex items-start gap-3 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 ${
             rowIndex === 2 ? "hidden sm:flex" : ""
           }`;
           const body = (
             <>
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/10 shadow-sm mt-0.5">
-                <Icon size={16} className="text-emerald-300" />
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm">
+                <Icon size={16} className="text-sky-700" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="truncate font-display text-sm font-semibold text-white">
+                  <span className="truncate font-display text-sm font-semibold text-slate-900">
                     {lead.company_name}
                   </span>
-                  <HeatBadge heat={tier} onDark />
+                  <HeatBadge heat={tier} />
                 </div>
-                <PipelineLeadActionMeta lead={lead} variant="dark" />
+                <PipelineLeadActionMeta lead={lead} variant="hero" />
                 {href && (
-                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 opacity-0 transition-opacity group-hover:opacity-100">
+                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 opacity-0 transition-opacity group-hover:opacity-100">
                     See the pitch + outreach draft <ArrowRight size={11} />
                   </span>
                 )}
@@ -191,7 +191,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
               key={`${lead.id}-${rowIndex}`}
               href={href}
               aria-label={`Open ${lead.company_name || "this lead"} — pitch action and outreach draft`}
-              className={`group cursor-pointer transition-colors hover:bg-white/[0.04] ${rowClass}`}
+              className={`group cursor-pointer transition-colors hover:bg-sky-50/70 ${rowClass}`}
             >
               {body}
             </Link>
@@ -199,14 +199,14 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
         })}
       </div>
 
-      <div className="pipeline-panel-footer flex items-center justify-between px-4 py-2.5 sm:px-5 sm:py-3">
-        <span className="font-mono-data text-[10px] text-slate-400 sm:text-xs">
+      <div className="home-hero-panel-footer flex items-center justify-between px-4 py-2.5 sm:px-5 sm:py-3">
+        <span className="font-mono-data text-[10px] text-slate-500 sm:text-xs">
           Showing {rows.length} of {totalLabel} active opportunities
           {!live && <span className="text-slate-500"> · preview</span>}
         </span>
         <Link
           href="/pipeline"
-          className="flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20"
+          className="flex items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-2 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100"
         >
           View all <ArrowRight size={12} />
         </Link>
