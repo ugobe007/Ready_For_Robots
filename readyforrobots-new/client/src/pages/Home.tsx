@@ -148,8 +148,8 @@ export default function Home() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/55 to-transparent" aria-hidden />
 
         <div className="container home-hero-container relative">
-          <div className="grid gap-8 lg:grid-cols-12 lg:gap-8 xl:gap-10 items-center">
-            <div className="animate-fade-in-up order-1 lg:col-span-8">
+          <div className="grid items-center gap-6 lg:grid-cols-12 lg:gap-5 xl:gap-6">
+            <div className="animate-fade-in-up order-1 lg:col-span-7">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-slate-100 sm:mb-6">
                 <LiveDot />
                 <span className="font-mono-data">
@@ -170,23 +170,14 @@ export default function Home() {
                 Start with one URL. You get a ranked buyer list, source-backed timing signals, and a draft outreach angle your team can use immediately.
               </p>
 
-              <div className="mb-6 max-w-2xl rounded-2xl border border-white/12 bg-white/[0.04] p-3.5 sm:p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-200/90">What you get in 5 minutes</p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                  <div className="rounded-xl border border-white/10 bg-slate-900/45 p-2.5">
-                    <p className="text-[11px] font-semibold text-slate-100">Ranked buyers</p>
-                    <p className="mt-1 text-xs text-slate-300">{hotLabel} HOT accounts prioritized by buying momentum.</p>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-slate-900/45 p-2.5">
-                    <p className="text-[11px] font-semibold text-slate-100">Why-now evidence</p>
-                    <p className="mt-1 text-xs text-slate-300">{signalsLabel} live intent events with source-backed context.</p>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-slate-900/45 p-2.5">
-                    <p className="text-[11px] font-semibold text-slate-100">Decision maker path</p>
-                    <p className="mt-1 text-xs text-slate-300">Suggested pitch angle and outreach direction for each lead.</p>
-                  </div>
-                </div>
-              </div>
+              <p className="mb-4 max-w-2xl text-xs font-medium text-slate-300 sm:text-sm">
+                <span className="font-semibold uppercase tracking-[0.14em] text-emerald-200">In 5 minutes:</span>{" "}
+                <span className="text-slate-100">{hotLabel} HOT ranked buyers</span>
+                <span className="mx-2 text-slate-500">·</span>
+                <span>{signalsLabel} source-backed intent events</span>
+                <span className="mx-2 text-slate-500">·</span>
+                <span>decision-maker outreach direction per lead</span>
+              </p>
 
               <HeroUrlScan onDark />
 
@@ -194,7 +185,7 @@ export default function Home() {
                 ReadyForRobots continuously reads market movement and turns it into outreach-ready pipeline decisions.
               </p>
 
-              <ul className="home-hero-list mb-6 max-w-xl space-y-1.5 text-sm sm:text-base">
+              <ul className="home-hero-list mb-4 max-w-xl space-y-1.5 text-sm sm:text-base">
                 <li>• {hotLabel} HOT accounts with verified buying momentum</li>
                 <li>• {signalsLabel} intent events with analyst-style "why now" context</li>
                 <li>• {totalLabel} ranked opportunities matched to likely robot fit</li>
@@ -212,9 +203,9 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="animate-fade-in-up order-2 lg:col-span-4 lg:order-2" style={{ animationDelay: "120ms" }}>
+            <div className="animate-fade-in-up order-2 lg:col-span-5 lg:order-2" style={{ animationDelay: "120ms" }}>
               <div className="relative max-md:mt-2">
-                <div className="relative home-hero-pipeline-shell lg:ml-auto lg:max-w-[38rem] lg:origin-right lg:scale-[0.95] lg:opacity-90 xl:scale-[0.97] xl:opacity-95">
+                <div className="relative home-hero-pipeline-shell lg:-ml-4 lg:max-w-[36rem] lg:origin-right lg:scale-[0.98] xl:-ml-6 xl:max-w-[37rem] xl:scale-100">
                   <MarketingHeroPipeline hotCount={hot} totalCount={total} />
                 </div>
               </div>
