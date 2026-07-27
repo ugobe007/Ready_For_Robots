@@ -170,15 +170,6 @@ export default function Home() {
                 Start with one URL. You get a ranked buyer list, source-backed timing signals, and a draft outreach angle your team can use immediately.
               </p>
 
-              <p className="mb-3 max-w-2xl text-xs font-medium text-slate-300 sm:text-sm">
-                <span className="font-semibold uppercase tracking-[0.14em] text-emerald-200">In 5 minutes:</span>{" "}
-                <span className="text-slate-100">{hotLabel} HOT ranked buyers</span>
-                <span className="mx-2 text-slate-500">·</span>
-                <span>{signalsLabel} source-backed intent events</span>
-                <span className="mx-2 text-slate-500">·</span>
-                <span>decision-maker outreach direction per lead</span>
-              </p>
-
               <HeroUrlScan onDark />
 
               <p className="mb-2 max-w-lg text-xs leading-relaxed text-slate-400 sm:mb-3 sm:text-sm">
