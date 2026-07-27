@@ -3,7 +3,7 @@
  * Wired to live pipeline stats, homepage leads, newsletter, and report APIs.
  */
 import { useEffect, useState } from "react";
-import { ArrowRight, ChevronRight, X } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import HumanoidDailyRecap from "@/components/HumanoidDailyRecap";
@@ -145,8 +145,8 @@ export default function Home() {
         id="hero-cta"
         className="relative overflow-hidden pt-24 pb-14 sm:pt-28 sm:pb-20 home-hero-bg"
       >
-        <div className="pointer-events-none absolute -top-28 right-[-10%] h-80 w-80 rounded-full bg-emerald-300/35 blur-3xl home-hero-orb" aria-hidden />
-        <div className="pointer-events-none absolute bottom-[-7rem] left-[-8%] h-72 w-72 rounded-full bg-sky-200/45 blur-3xl home-hero-orb home-hero-orb-delay" aria-hidden />
+        <div className="pointer-events-none absolute -top-28 right-[-10%] h-80 w-80 rounded-full bg-amber-300/45 blur-3xl home-hero-orb" aria-hidden />
+        <div className="pointer-events-none absolute bottom-[-7rem] left-[-8%] h-72 w-72 rounded-full bg-sky-300/40 blur-3xl home-hero-orb home-hero-orb-delay" aria-hidden />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/75 to-transparent" aria-hidden />
 
         <div className="container relative">
@@ -165,9 +165,8 @@ export default function Home() {
               </h1>
 
               <p className="home-hero-lead mb-6 max-w-lg text-base leading-relaxed sm:mb-8 sm:text-lg">
-                <span className="font-semibold text-slate-900">SIGNAL</span> helps robot OEM and integration teams
-                prioritize accounts with active buying signals, generate outreach-ready context, and move deals forward
-                in CRM without manual list building.
+                <span className="font-semibold text-slate-900">SIGNAL</span> shows who is buying robots now,
+                why now, and what to send next.
               </p>
 
               <ul className="home-hero-list mb-6 max-w-xl space-y-1.5 text-xs sm:text-sm">
@@ -178,24 +177,15 @@ export default function Home() {
 
               <HeroUrlScan onDark />
 
-              <Link
-                href="/pipeline"
-                className="home-hero-cta mb-4"
-                onClick={() => trackMarketingEvent("home_cta_pipeline_click", { location: "hero" })}
-              >
-                Browse the pipeline free
-                <ChevronRight size={16} className="btn-arrow" />
-              </Link>
-
               <p className="mb-1 text-xs font-medium text-slate-500">
                 No signup required · Free to start · Results in seconds
               </p>
               <Link
-                href="#live-pipeline"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
-                onClick={() => trackMarketingEvent("home_cta_live_pipeline_anchor_click", { location: "hero" })}
+                href="/pipeline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:text-sky-800"
+                onClick={() => trackMarketingEvent("home_cta_pipeline_click", { location: "hero_secondary_link" })}
               >
-                View live pipeline <ArrowRight size={12} />
+                Browse full pipeline <ArrowRight size={12} />
               </Link>
             </div>
 
