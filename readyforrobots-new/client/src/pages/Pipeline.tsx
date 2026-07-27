@@ -65,6 +65,16 @@ import {
 } from "@/components/ui/alert-dialog";
 
 type Stage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
+type QualityBandFilter = "all" | "high" | "medium" | "low";
+type QualitySort =
+  | "default"
+  | "quality_desc"
+  | "quality_asc"
+  | "buyer_authenticity"
+  | "urgency_window"
+  | "robot_fit_confidence"
+  | "decision_maker_confidence"
+  | "contactability_confidence";
 
 type FirstThreeActionsState = {
   started: boolean;
@@ -95,6 +105,19 @@ interface Deal {
   shareSummary?: string;
   shareBlurb?: string;
   pipelineAction?: string;
+  leadQuality?: {
+    schema?: string;
+    overall_score?: number;
+    confidence_band?: string;
+    dimension_scores?: Record<string, number>;
+    weights?: Record<string, number>;
+    weight_source?: string;
+    missing_fields_count?: number;
+    evidence_traces?: Array<{ dimension?: string; score?: number; evidence?: string }>;
+    quality_gate?: { passed?: boolean; reason?: string };
+  };
+  confidenceBand?: string;
+  evidenceTrace?: Array<{ dimension?: string; score?: number; evidence?: string }>;
   priorityTier?: string;
   robotTypesNeeded?: string[];
   researchUpdates?: Array<{
@@ -1035,6 +1058,118 @@ function PipelineRobotPriorityPanel({ deal }: { deal: Deal }) {
   );
 }
 
+function PipelineLeadQualityPanel({ deal }: { deal: Deal }) {
+  const quality = deal.leadQuality;
+  const traces = deal.evidenceTrace || quality?.evidence_traces || [];
+  if (!quality && traces.length === 0) return null;
+
+  const dimensionScores = quality?.dimension_scores || {};
+  const weights = quality?.weights || {};
+  const orderedDimensions = [
+    "buyer_authenticity",
+    "urgency_window",
+    "robot_fit_confidence",
+    "decision_maker_confidence",
+    "contactability_confidence",
+  ].filter((key) => typeof dimensionScores[key] === "number");
+  const confidenceBand = (deal.confidenceBand || quality?.confidence_band || "band unknown").toLowerCase();
+  const gatePassed = quality?.quality_gate?.passed !== false;
+  const gateReason = cleanAndClampText(quality?.quality_gate?.reason || "evidence sufficient", 80);
+
+  const bandTone =
+    confidenceBand === "high"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      : confidenceBand === "medium"
+        ? "border-amber-200 bg-amber-50 text-amber-800"
+        : "border-rose-200 bg-rose-50 text-rose-800";
+
+  const dimensionLabel = (key: string) => {
+    if (key === "buyer_authenticity") return "Buyer authenticity";
+    if (key === "urgency_window") return "Urgency window";
+    if (key === "robot_fit_confidence") return "Robot fit";
+    if (key === "decision_maker_confidence") return "Decision-maker confidence";
+    if (key === "contactability_confidence") return "Contactability";
+    return key.replace(/_/g, " ");
+  };
+
+  return (
+    <div className="pipeline-detail-section-muted mt-2">
+      <p className={panelSectionLabel}>Quality signal</p>
+      <div className="mt-2 rounded-xl border border-slate-200 bg-white/85 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Lead quality score</p>
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${bandTone}`}>
+            {cleanAndClampText(confidenceBand, 24)}
+          </span>
+        </div>
+        <div className="mt-2 flex items-end justify-between gap-3">
+          <p className="text-[24px] font-semibold leading-none text-slate-900">
+            {typeof quality?.overall_score === "number" ? quality.overall_score.toFixed(1) : "—"}
+          </p>
+          <div className="text-right">
+            <p className={`text-[10px] font-semibold uppercase tracking-wide ${gatePassed ? "text-emerald-700" : "text-rose-700"}`}>
+              {gatePassed ? "quality gate passed" : "quality gate blocked"}
+            </p>
+            <p className="mt-0.5 text-[10px] text-slate-500">{gateReason}</p>
+          </div>
+        </div>
+        {orderedDimensions.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {orderedDimensions.map((dimension) => {
+              const score = Number(dimensionScores[dimension] ?? 0);
+              const weight = Number(weights[dimension] ?? 0) * 100;
+              return (
+                <div key={dimension}>
+                  <div className="mb-1 flex items-center justify-between gap-2 text-[10px]">
+                    <span className="font-semibold uppercase tracking-wide text-slate-600">{dimensionLabel(dimension)}</span>
+                    <span className="font-mono text-slate-500">{score.toFixed(0)} · {weight.toFixed(0)}% wt</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500"
+                      style={{ width: `${Math.max(6, Math.min(100, score))}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-700">
+            {quality?.weight_source || "baseline_v1"}
+          </span>
+          {(quality?.missing_fields_count || 0) > 0 && (
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-800">
+              {quality?.missing_fields_count} evidence gap{quality?.missing_fields_count === 1 ? "" : "s"}
+            </span>
+          )}
+        </div>
+        {traces.length > 0 && (
+          <div className="mt-3 space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Evidence traces</p>
+            {traces.slice(0, 5).map((trace, index) => (
+              <div key={`${trace.dimension || index}`} className="rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">
+                    {dimensionLabel(trace.dimension || "signal")}
+                  </span>
+                  {typeof trace.score === "number" ? (
+                    <span className="font-mono text-[10px] text-slate-500">{trace.score.toFixed(0)}</span>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-slate-700">
+                  {cleanAndClampText(trace.evidence || "No trace available.", 220)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Pipeline() {
   const { session } = useAuth();
   const [, setLocation] = useLocation();
@@ -1053,6 +1188,8 @@ export default function Pipeline() {
   const [activations, setActivations] = useState<ScoutActivation[]>([]);
   const [filter, setFilter] = useState<string>("All");
   const [industryQuery, setIndustryQuery] = useState("");
+  const [qualityBandFilter, setQualityBandFilter] = useState<QualityBandFilter>("all");
+  const [qualitySort, setQualitySort] = useState<QualitySort>("default");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedActivationId, setSelectedActivationId] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
@@ -1751,34 +1888,62 @@ export default function Pipeline() {
     () => Array.from(new Set([...pipelineSearchSuggestions(), ...industries])).sort(),
     [industries],
   );
+  const qualityControlsActive = qualityBandFilter !== "all" || qualitySort !== "default";
   const activeSearchQuery = industryQuery.trim() || (filter !== "All" ? filter : "");
   const hasActiveSearch = Boolean(activeSearchQuery);
   const pipelineSource = rotationPool.length > deals.length ? rotationPool : deals;
   const previewLimit = entitlements?.pipeline_limit ?? 12;
   const rotationSource = useMemo(() => {
-    if (hasActiveSearch || showKanban) return pipelineSource;
+    if (hasActiveSearch || qualityControlsActive || showKanban) return pipelineSource;
     if (panelPlan === "anonymous" && pipelineSource.length > previewLimit) {
       return pickRotatingWindow(pipelineSource, previewLimit, rotateOffset);
     }
     return pipelineSource;
-  }, [hasActiveSearch, showKanban, panelPlan, pipelineSource, previewLimit, rotateOffset]);
+  }, [hasActiveSearch, qualityControlsActive, showKanban, panelPlan, pipelineSource, previewLimit, rotateOffset]);
   const rotatedDeals = useMemo(() => {
-    if (hasActiveSearch || showKanban) return null;
+    if (hasActiveSearch || qualityControlsActive || showKanban) return null;
     return buildRotatedPipelineDeals(rotationSource, rotateOffset);
-  }, [hasActiveSearch, showKanban, rotationSource, rotateOffset]);
+  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationSource, rotateOffset]);
   const listDeals = rotatedDeals ?? deals;
+  const dealQualityScore = (deal: Deal) => Number(deal.leadQuality?.overall_score ?? 0);
+  const dealBand = (deal: Deal) => String(deal.confidenceBand || deal.leadQuality?.confidence_band || "").toLowerCase();
+  const dealDimensionScore = (deal: Deal, dimension: Exclude<QualitySort, "default" | "quality_desc" | "quality_asc">) =>
+    Number(deal.leadQuality?.dimension_scores?.[dimension] ?? 0);
   const clientSearchMatches = useMemo(
     () => (hasActiveSearch ? listDeals.filter((d) => dealMatchesSearchQuery(d, activeSearchQuery)) : listDeals),
     [listDeals, hasActiveSearch, activeSearchQuery],
   );
   const filtered = useMemo(() => {
-    if (!hasActiveSearch) return listDeals;
-    if (serverSearchDeals.length > 0) return serverSearchDeals;
-    return clientSearchMatches;
-  }, [listDeals, hasActiveSearch, serverSearchDeals, clientSearchMatches]);
+    const base = !hasActiveSearch
+      ? listDeals
+      : serverSearchDeals.length > 0
+        ? serverSearchDeals
+        : clientSearchMatches;
+
+    let next = qualityBandFilter === "all"
+      ? base
+      : base.filter((deal) => dealBand(deal) === qualityBandFilter);
+
+    if (qualitySort !== "default") {
+      next = [...next].sort((a, b) => {
+        if (qualitySort === "quality_desc") return dealQualityScore(b) - dealQualityScore(a);
+        if (qualitySort === "quality_asc") return dealQualityScore(a) - dealQualityScore(b);
+        return dealDimensionScore(b, qualitySort) - dealDimensionScore(a, qualitySort);
+      });
+    }
+
+    return next;
+  }, [
+    listDeals,
+    hasActiveSearch,
+    serverSearchDeals,
+    clientSearchMatches,
+    qualityBandFilter,
+    qualitySort,
+  ]);
 
   useEffect(() => {
-    if (hasActiveSearch || showKanban || rotationPaused) return;
+    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused) return;
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
@@ -1788,11 +1953,11 @@ export default function Pipeline() {
       PIPELINE_LEAD_READ_MS,
     );
     return () => window.clearInterval(timer);
-  }, [hasActiveSearch, showKanban, rotationPaused, rotationSource, pipelineSource.length, panelPlan, previewLimit]);
+  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationPaused, rotationSource, pipelineSource.length, panelPlan, previewLimit]);
 
   // Keep CRM detail panel in sync with the rotating spotlight lead.
   useEffect(() => {
-    if (hasActiveSearch || showKanban || rotationPaused || deepLinkLeadId != null) return;
+    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused || deepLinkLeadId != null) return;
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
@@ -2152,7 +2317,7 @@ export default function Pipeline() {
       }));
       if (!r.ok) throw new Error(await r.text());
       const d = await r.json() as { activated: number };
-      toast.success(`Cal drafted ${d.activated} emails.`);
+      toast.success(`SIGNAL drafted ${d.activated} emails.`);
       await loadScoutStats();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Draft failed");
@@ -2173,7 +2338,7 @@ export default function Pipeline() {
       }));
       if (!r.ok) throw new Error(await r.text());
       const d = await r.json() as { sent: number };
-      toast.success(`Cal sent ${d.sent} emails.`);
+      toast.success(`SIGNAL sent ${d.sent} emails.`);
       await loadScoutStats();
       setDeals((prev) => prev.map((d2) => d2.stage === "Draft Ready" ? { ...d2, stage: "Outreach Sent" as Stage, updatedAt: "just now" } : d2));
     } catch (e) {
@@ -2672,8 +2837,8 @@ export default function Pipeline() {
             title={isAdmin ? "Active Signals → Live Pipeline" : "Live Pipeline"}
             description={
               session?.access_token
-                ? "Pick a lead on the left → develop with SIGNAL → send from the panel on the right. Replies land in Inbox."
-                : "Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
+                ? "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Pick a lead on the left → develop with SIGNAL → send from the panel on the right. Replies land in Inbox."
+                : "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
             }
             stats={[
               { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "—", tone: "white" },
@@ -2745,6 +2910,60 @@ export default function Pipeline() {
                       <option key={ind} value={ind} />
                     ))}
                   </datalist>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap gap-2">
+                  {([
+                    { key: "all", label: "All confidence" },
+                    { key: "high", label: "High confidence" },
+                    { key: "medium", label: "Medium confidence" },
+                    { key: "low", label: "Low confidence" },
+                  ] as const).map((option) => {
+                    const active = qualityBandFilter === option.key;
+                    return (
+                      <button
+                        key={option.key}
+                        type="button"
+                        onClick={() => setQualityBandFilter(option.key)}
+                        className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors ${
+                          active
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <select
+                    value={qualitySort}
+                    onChange={(e) => setQualitySort(e.target.value as QualitySort)}
+                    className="sb-input min-w-[230px] py-2 text-sm"
+                  >
+                    <option value="default">Default ranking</option>
+                    <option value="quality_desc">Sort: lead quality high → low</option>
+                    <option value="quality_asc">Sort: lead quality low → high</option>
+                    <option value="buyer_authenticity">Sort: buyer authenticity</option>
+                    <option value="urgency_window">Sort: urgency window</option>
+                    <option value="robot_fit_confidence">Sort: robot fit</option>
+                    <option value="decision_maker_confidence">Sort: decision-maker confidence</option>
+                    <option value="contactability_confidence">Sort: contactability</option>
+                  </select>
+                  {qualityControlsActive && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQualityBandFilter("all");
+                        setQualitySort("default");
+                      }}
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-600 hover:text-slate-900"
+                    >
+                      Reset quality view
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -2869,7 +3088,7 @@ export default function Pipeline() {
           {/* ── SIGNAL stats strip (admin only) ── */}
           {isAdmin && session?.access_token && scoutStats && (
             <div className="flex items-center gap-3 flex-wrap text-[11px] text-gray-500 px-1">
-              <span className="font-bold uppercase tracking-[0.15em] text-[10px]" style={{ color: "#10b981" }}>Cal</span>
+              <span className="font-bold uppercase tracking-[0.15em] text-[10px]" style={{ color: "#10b981" }}>SIGNAL</span>
               <span>{scoutStats.drafted} drafted</span>
               <span className="text-gray-300">·</span>
               <span>{scoutStats.sent} sent</span>
@@ -2891,14 +3110,14 @@ export default function Pipeline() {
           {/* Confirm modals for bulk actions (admin only) */}
           {isAdmin && scoutConfirm === "draft" && (
             <div className="rounded-xl border border-blue-400/30 bg-blue-400/8 px-4 py-3 flex items-center gap-3">
-              <p className="text-[11px] text-blue-900 flex-1">Cal will draft outreach emails for all HOT and WARM prospects that don't have one yet. Continue?</p>
+              <p className="text-[11px] text-blue-900 flex-1">SIGNAL will draft outreach emails for all HOT and WARM prospects that don't have one yet. Continue?</p>
               <button onClick={() => void runScoutDraftAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-50 border border-blue-400/40 text-blue-800">Run</button>
               <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500">Cancel</button>
             </div>
           )}
           {isAdmin && scoutConfirm === "send" && (
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/8 px-4 py-3 flex items-center gap-3">
-              <p className="text-[11px] text-emerald-900 flex-1">Cal will send all drafted outreach emails. This triggers live sends via Resend. Continue?</p>
+              <p className="text-[11px] text-emerald-900 flex-1">SIGNAL will send all drafted outreach emails. This triggers live sends via Resend. Continue?</p>
               <button onClick={() => void runScoutSendAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-50 border border-emerald-400/40 text-emerald-800">Send</button>
               <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500">Cancel</button>
             </div>
@@ -3144,7 +3363,7 @@ export default function Pipeline() {
                             type="button"
                             onClick={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
                             className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800 transition-colors hover:bg-emerald-100"
-                            title="Open Cal Ops"
+                            title="Open SIGNAL Ops"
                           >
                             Ops
                           </button>
@@ -3294,6 +3513,7 @@ export default function Pipeline() {
                                 .map((line, i) => (
                                   <li key={i}>{cleanAndClampText(line, panelPlan === "anonymous" ? 140 : 160)}</li>
                                 ))}
+                                <PipelineLeadQualityPanel deal={selected} />
                             </ul>
                           )}
 
@@ -3631,7 +3851,7 @@ export default function Pipeline() {
                           onClick={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
                           className="text-[10px] font-semibold text-emerald-700 underline-offset-2 hover:underline"
                         >
-                          Cal bulk queue
+                          SIGNAL bulk queue
                         </button>
                       )}
                       <div className="flex items-center gap-1.5">
@@ -3914,7 +4134,7 @@ export default function Pipeline() {
                       ? `No leads match "${activeSearchQuery}". Try food service, hospitality, logistics, or a company name.`
                       : isAdmin
                         ? isAdmin
-                          ? "Select a deal to review signal detail and Cal outreach"
+                          ? "Select a deal to review signal detail and SIGNAL outreach"
                           : "Select a deal to review signal detail and outreach draft"
                         : "Select a lead to review signals, research, and SIGNAL scoring"}
                   </p>

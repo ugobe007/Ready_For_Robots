@@ -124,7 +124,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
         next[slot] = pick;
         return next;
       });
-    }, 2800);
+    }, 5600);
     return () => window.clearInterval(timer);
   }, [pool]);
 
@@ -137,9 +137,9 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
       <div className="home-hero-panel-header flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="font-display text-sm font-semibold text-slate-900">Live pipeline</span>
+          <span className="font-display text-sm font-semibold text-slate-100">Live pipeline</span>
         </div>
-        <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 font-mono-data text-xs font-bold text-amber-700">
+        <span className="rounded-full border border-amber-300/60 bg-amber-400/18 px-2.5 py-0.5 font-mono-data text-xs font-bold text-amber-200">
           {hotLabel} HOT
         </span>
       </div>
@@ -154,26 +154,26 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
           }`;
           const body = (
             <>
-              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm">
-                <Icon size={16} className="text-sky-700" />
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-slate-800/70 shadow-sm">
+                <Icon size={16} className="text-sky-300" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="truncate font-display text-sm font-semibold text-slate-900">
+                  <span className="truncate font-display text-sm font-semibold text-slate-100">
                     {lead.company_name}
                   </span>
-                  <HeatBadge heat={tier} />
+                  <HeatBadge heat={tier} onDark />
                 </div>
                 <PipelineLeadActionMeta lead={lead} variant="hero" />
                 {href && (
-                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 opacity-0 transition-opacity group-hover:opacity-100">
+                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-300 opacity-0 transition-opacity group-hover:opacity-100">
                     See the pitch + outreach draft <ArrowRight size={11} />
                   </span>
                 )}
               </div>
               <div className="shrink-0 text-right">
-                <div className="score-number text-2xl leading-none">{scoreOf(lead)}</div>
-                <div className="mt-0.5 font-mono-data text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className="score-number text-2xl leading-none text-emerald-400">{scoreOf(lead)}</div>
+                <div className="mt-0.5 font-mono-data text-xs font-semibold uppercase tracking-wide text-slate-400">
                   {live ? "live" : "demo"}
                 </div>
               </div>
@@ -191,7 +191,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
               key={`${lead.id}-${rowIndex}`}
               href={href}
               aria-label={`Open ${lead.company_name || "this lead"} — pitch action and outreach draft`}
-              className={`group cursor-pointer transition-colors hover:bg-sky-50/70 ${rowClass}`}
+              className={`group cursor-pointer transition-colors hover:bg-sky-500/10 ${rowClass}`}
             >
               {body}
             </Link>
@@ -200,13 +200,13 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
       </div>
 
       <div className="home-hero-panel-footer flex items-center justify-between px-4 py-2.5 sm:px-5 sm:py-3">
-        <span className="font-mono-data text-[10px] text-slate-500 sm:text-xs">
+        <span className="font-mono-data text-[10px] text-slate-400 sm:text-xs">
           Showing {rows.length} of {totalLabel} active opportunities
-          {!live && <span className="text-slate-500"> · preview</span>}
+          {!live && <span className="text-slate-400"> · preview</span>}
         </span>
         <Link
           href="/pipeline"
-          className="flex items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-2 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100"
+          className="flex items-center gap-1 rounded-lg bg-sky-400/10 px-2 py-1 text-xs font-semibold text-sky-200 hover:bg-sky-400/20"
         >
           View all <ArrowRight size={12} />
         </Link>

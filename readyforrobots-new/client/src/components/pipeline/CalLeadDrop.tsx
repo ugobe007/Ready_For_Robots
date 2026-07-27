@@ -80,7 +80,7 @@ export default function CalLeadDrop({
           </div>
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-800">
-              Cal&apos;s recommendation
+              SIGNAL recommendation
             </p>
             <h3 className="text-lg font-bold text-gray-900 truncate">{drop.company_name}</h3>
             <p className="text-xs text-gray-500 mt-0.5">
@@ -103,7 +103,7 @@ export default function CalLeadDrop({
             className="rounded-xl px-3 py-2.5 text-sm leading-relaxed"
             style={{ background: "rgba(5,150,105,0.06)", color: "#065f46" }}
           >
-            <span className="font-semibold">Cal: </span>
+            <span className="font-semibold">SIGNAL: </span>
             {drop.cal_observation || drop.cal_prompt}
           </div>
         )}

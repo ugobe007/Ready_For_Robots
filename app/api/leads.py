@@ -70,6 +70,10 @@ from app.services.gtm_readiness import compute_gtm_readiness
 from app.services.lead_primary_link import enrich_lead_link_fields
 from app.services.lead_signal_display import format_signal_for_sales, strip_extraction_artifacts
 from app.services.lead_sales_copy import humanize_robot_types
+from app.services.lead_quality_engine import (
+    BASE_QUALITY_WEIGHTS,
+    compute_lead_quality_profile,
+)
 from app.services.company_url_openai import resolve_homepage_urls_for_companies
 from app.services.company_domain import (
     dedupe_companies_ordered,
@@ -969,6 +973,23 @@ def _fmt_pipeline_card(
         "pipeline_slim": True,
         **hp.as_dict(),
     }
+    slim_quality = compute_lead_quality_profile(
+        priority_tier=pri.tier,
+        priority_score=float(getattr(pri, "score", 0.0) or 0.0),
+        is_junk=bool(junk),
+        junk_reason=junk_reason,
+        overall_score=overall,
+        signal_count=len(sigs),
+        crm_evidence=payload.get("crm_evidence"),
+        project_timing=None,
+        robot_types_needed=payload.get("robot_types_needed") or [],
+        has_contact_path=bool(c.website),
+        weights=BASE_QUALITY_WEIGHTS,
+        weight_source="baseline_v1",
+    )
+    payload["lead_quality"] = slim_quality
+    payload["confidence_band"] = slim_quality.get("confidence_band")
+    payload["evidence_trace"] = slim_quality.get("evidence_traces")
     if sig:
         payload["signals"] = [
             {
@@ -1176,6 +1197,25 @@ def _fmt_company(
         **hp.as_dict(),
         **link_extras,
     }
+
+    quality_profile = compute_lead_quality_profile(
+        priority_tier=pri.tier,
+        priority_score=float(getattr(pri, "score", 0.0) or 0.0),
+        is_junk=bool(junk),
+        junk_reason=junk_reason,
+        overall_score=float(overall_100 or 0.0),
+        signal_count=int(signal_count_total or 0),
+        crm_evidence=payload.get("crm_evidence"),
+        project_timing=payload.get("project_timing"),
+        robot_types_needed=payload.get("robot_types_needed") or [],
+        has_contact_path=bool((outreach_guess and outreach_guess.primary) or c.website),
+        weights=BASE_QUALITY_WEIGHTS,
+        weight_source="baseline_v1",
+    )
+    payload["lead_quality"] = quality_profile
+    payload["confidence_band"] = quality_profile.get("confidence_band")
+    payload["evidence_trace"] = quality_profile.get("evidence_traces")
+
     if outreach_guess:
         payload["inferred_contact_email"] = outreach_guess.primary
         payload["inferred_contact_cc"] = outreach_guess.cc

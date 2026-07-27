@@ -1,0 +1,25 @@
+{
+  "python.analysis.exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.pytest_cache",
+    "**/.mypy_cache",
+    "**/.ruff_cache",
+    "**/.git",
+    "**/.venv",
+    "**/dist",
+    "**/build",
+    "data",
+    "docs",
+    "frontend",
+    "logs",
+    "migrations/versions",
+    "missions",
+    "New_Ready",
+    "readyforrobots-new",
+    "readyforrobots-redesign",
+    "reports",
+    "resources"
+  ],
+  "python-envs.defaultEnvManager": "ms-python.python:system"
+}

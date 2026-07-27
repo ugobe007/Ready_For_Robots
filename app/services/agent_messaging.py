@@ -12,7 +12,7 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_signature
 CAL_INTRO = "Hi — I'm Cal, with Ready For Robots."
 
 CAL_BUYER_ROLE_LINE = (
-    "I help ops teams figure out where a robot will actually pay off, and where it won't."
+    "I'm with ReadyForRobots SIGNAL. I help ops teams find where robots will pay back fastest — and where they won't."
 )
 
 CAL_BUYER_REMINDER_LINE = (
@@ -626,22 +626,25 @@ def _variant_what_survives(name: str, industry: str) -> str:
     """Specific field observation: what is still running six months in."""
     ins = _buyer_insight(industry)
     team = _greeting_name(name)
+    sector = _buyer_sector(industry)
+    workflow_line = (
+        f"For {sector} teams, the break point is usually workflow fit — not spec-sheet speed."
+        if sector != "your line of work"
+        else "Most break points come from workflow fit — not spec-sheet speed."
+    )
     return "\n".join([
         f"Hi {team},",
         "",
         CAL_BUYER_ROLE_LINE,
         "",
-        "Quick field note from site visits:",
-        "",
+        "Quick field note:",
         "Six months in, you can usually tell which deployments solved a real bottleneck and which were mostly a demo.",
         "",
         ins["opinion"],
-        "",
-        "The ones that last usually win on workflow fit, not spec-sheet speed.",
+        workflow_line,
         "Integration and staffing are usually the decider.",
         "",
-        f"{CAL_ORG} is vendor-neutral. I don't get paid to move a particular box; I help "
-        f"teams avoid automating the wrong job.",
+        f"{CAL_ORG} is vendor-neutral. I help teams avoid automating the wrong job.",
         "",
         _exploration_question(name, industry, variant_seed="what_survives"),
         "",

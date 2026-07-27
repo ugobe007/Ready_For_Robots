@@ -21,11 +21,17 @@ export default function HeroUrlScan({ onDark = false }: Props) {
   }
 
   return (
-    <form onSubmit={submit} className="mb-4 max-w-xl">
-      <label htmlFor="hero-product-url" className={`mb-2 block text-xs font-semibold ${onDark ? "text-slate-400" : "text-gray-600"}`}>
-        Enter your product URL → see matched leads instantly
+    <form
+      onSubmit={submit}
+      className={`mb-4 max-w-xl rounded-2xl ${onDark ? "p-0" : ""}`}
+    >
+      <label
+        htmlFor="hero-product-url"
+        className={`mb-2 block text-xs font-semibold ${onDark ? "text-emerald-200" : "text-gray-600"}`}
+      >
+        Enter URL
       </label>
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <input
           id="hero-product-url"
           type="text"
@@ -33,26 +39,26 @@ export default function HeroUrlScan({ onDark = false }: Props) {
           autoComplete="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="yourcompany.com or product page URL"
+          placeholder="yourcompany.com or URL"
           className={
             onDark
-              ? "min-w-0 flex-1 rounded-xl border border-sky-300/30 bg-white/10 px-4 py-3.5 text-sm text-white placeholder-slate-500 shadow-sm outline-none transition-colors focus:border-sky-400/70 focus:ring-2 focus:ring-sky-400/25"
+              ? "min-w-0 flex-1 rounded-xl border-2 border-emerald-400/55 bg-slate-900/80 px-4 py-3.5 text-sm text-slate-50 placeholder-slate-300 shadow-sm outline-none transition-colors focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/30"
               : "min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-colors focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
           }
         />
         <button
           type="submit"
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-3.5 text-base font-semibold text-slate-950 shadow-md transition-all duration-150 hover:bg-amber-400 hover:shadow-lg active:scale-[0.97]"
+          className={
+            onDark
+              ? "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-transparent px-6 py-3.5 text-base font-semibold text-emerald-300 transition-all duration-150 hover:bg-emerald-500/10 hover:text-emerald-200 active:scale-[0.97]"
+              : "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-transparent px-6 py-3.5 text-base font-semibold text-emerald-700 transition-all duration-150 hover:bg-emerald-50 active:scale-[0.97]"
+          }
         >
           <Zap size={18} />
-          Find buyers
+          Find leads
           <ArrowRight size={16} />
         </button>
       </div>
-      <p className={`mt-2 text-[11px] leading-relaxed ${onDark ? "text-slate-500" : "text-gray-600"}`}>
-        See who is buying robots like yours —{" "}
-        <span className={`font-semibold ${onDark ? "text-sky-200" : "text-sky-800"}`}>before your competitor&apos;s SDR does.</span>
-      </p>
     </form>
   );
 }

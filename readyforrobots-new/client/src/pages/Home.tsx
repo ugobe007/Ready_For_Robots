@@ -143,46 +143,47 @@ export default function Home() {
 
       <section
         id="hero-cta"
-        className="relative overflow-hidden pt-24 pb-14 sm:pt-28 sm:pb-20 home-hero-bg"
+        className="relative overflow-hidden pt-16 pb-8 sm:pt-20 sm:pb-10 home-hero-bg"
       >
-        <div className="pointer-events-none absolute -top-28 right-[-10%] h-80 w-80 rounded-full bg-amber-300/45 blur-3xl home-hero-orb" aria-hidden />
-        <div className="pointer-events-none absolute bottom-[-7rem] left-[-8%] h-72 w-72 rounded-full bg-sky-300/40 blur-3xl home-hero-orb home-hero-orb-delay" aria-hidden />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/75 to-transparent" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/55 to-transparent" aria-hidden />
 
-        <div className="container relative">
+        <div className="container home-hero-container relative">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="animate-fade-in-up order-1">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-900 sm:mb-6">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-slate-100 sm:mb-6">
                 <LiveDot />
                 <span className="font-mono-data">
                   {hotLabel} HOT · {signalsLabel} live signals · updated daily
                 </span>
               </div>
 
-              <h1 className="home-hero-title mb-5 font-bold sm:mb-6">
+              <h1 className="home-hero-title mb-5 max-w-[11.5ch] font-bold sm:mb-6">
                 Find Robot-Ready Buyers
-                <span className="text-emerald-700"> in Minutes, Not Weeks.</span>
+                <span className="text-emerald-400 drop-shadow-[0_0_22px_rgba(16,185,129,0.28)]"> in Minutes, Not Weeks.</span>
               </h1>
 
-              <p className="home-hero-lead mb-6 max-w-lg text-base leading-relaxed sm:mb-8 sm:text-lg">
-                <span className="font-semibold text-slate-900">SIGNAL</span> shows who is buying robots now,
-                why now, and what to send next.
+              <p className="home-hero-lead mb-4 max-w-lg text-base leading-relaxed text-slate-200 sm:mb-5 sm:text-lg">
+                <span className="font-semibold text-slate-50">ReadyForRobots</span> is your active sales agent: it <span className="font-semibold text-emerald-300">finds companies ready for robots</span>, shows why they are buying now, and identifies decision makers.
               </p>
-
-              <ul className="home-hero-list mb-6 max-w-xl space-y-1.5 text-xs sm:text-sm">
-                <li>• {hotLabel} HOT accounts showing near-term automation intent</li>
-                <li>• {signalsLabel} cited signals mapped to why-now buying pressure</li>
-                <li>• {totalLabel} scored opportunities ready for outreach triage</li>
-              </ul>
 
               <HeroUrlScan onDark />
 
-              <p className="mb-1 text-xs font-medium text-slate-500">
-                No signup required · Free to start · Results in seconds
+              <p className="mb-3 max-w-lg text-xs leading-relaxed text-slate-400 sm:mb-4 sm:text-sm">
+                SIGNAL continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions.
+              </p>
+
+              <ul className="home-hero-list mb-6 max-w-lg space-y-1.5 text-xs sm:text-sm">
+                <li>• {hotLabel} HOT accounts with verified buying momentum</li>
+                <li>• {signalsLabel} intent events with analyst-style "why now" context</li>
+                <li>• {totalLabel} ranked opportunities matched to likely robot fit</li>
+              </ul>
+
+              <p className="mb-1 text-xs font-medium text-slate-300">
+                See buyer signals in seconds. No signup wall.
               </p>
               <Link
                 href="/pipeline"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 hover:text-sky-800"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-sky-300 hover:text-sky-200"
                 onClick={() => trackMarketingEvent("home_cta_pipeline_click", { location: "hero_secondary_link" })}
               >
                 Browse full pipeline <ArrowRight size={12} />
@@ -191,10 +192,6 @@ export default function Home() {
 
             <div className="animate-fade-in-up order-2 lg:order-2" style={{ animationDelay: "120ms" }}>
               <div className="relative max-md:mt-2">
-                <div
-                  className="pointer-events-none absolute -inset-3 rounded-3xl bg-emerald-200/70 blur-2xl sm:-inset-5 sm:blur-3xl"
-                  aria-hidden
-                />
                 <div className="relative home-hero-pipeline-shell">
                   <MarketingHeroPipeline hotCount={hot} totalCount={total} />
                 </div>
@@ -205,6 +202,7 @@ export default function Home() {
       </section>
 
       <div className="home-hero-fade" aria-hidden />
+      <div className="home-hero-divider" aria-hidden />
 
       <div id="about">
         <MarketingWhatSignalDoes hotCount={hot} totalCount={total} />

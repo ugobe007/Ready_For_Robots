@@ -7,11 +7,11 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { trackRobotSearch } from "@/lib/siteAnalytics";
 import { toast } from "sonner";
 
-const TEAL = "#059669";
+const EMERALD = "#10b981";
 
 const inputClass =
-  "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[rgba(3,218,197,0.35)]";
-const labelClass = "mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-gray-400";
+  "w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2.5 text-sm text-slate-100 outline-none placeholder:text-slate-500 transition-colors focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/15";
+const labelClass = "mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-400";
 
 const ROBOT_TYPES = [
   { value: "humanoid", label: "Humanoid" },
@@ -85,179 +85,179 @@ export default function FindRobots() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-gray-900">
+    <div className="min-h-screen flex flex-col bg-slate-950 text-white">
       <Header />
 
-      <section className="mx-auto max-w-2xl px-4 pt-24 pb-16">
-        <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>
-          Buyer intake
-        </p>
-        <h1
-          className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl"
-         
-        >
-          Find the right robots for your operation
-        </h1>
-        <p className="mt-3 text-sm leading-relaxed text-gray-500">
-          Tell us what you are automating, which type of robot you need, and when you plan to deploy.
-          Ready For Robots matches your use case to vendors, pilots, and deployment examples from our index.
-        </p>
+      <section className="relative overflow-hidden px-4 pt-24 pb-16 sm:pt-28 sm:pb-20">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/90 to-transparent" aria-hidden />
+        <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute right-0 top-40 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl" aria-hidden />
 
-        {submitted ? (
-          <div
-            className="mt-10 rounded-xl border px-6 py-8 text-center"
-            style={{ borderColor: "rgba(3,218,197,0.2)", background: "rgba(3,218,197,0.06)" }}
-          >
-            <CheckCircle2 className="mx-auto h-10 w-10" style={{ color: TEAL }} />
-            <h2 className="mt-4 text-lg font-bold text-gray-900">Thank you — request received</h2>
-            <p className="mt-2 text-sm text-gray-500">
-              Our team will review your use case and reach out with matched robots and next steps.
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
-              <Link href="/robots" className="text-emerald-600/90 hover:text-emerald-700 underline underline-offset-4">
-                Browse humanoid index
-              </Link>
-              <Link href="/" className="text-gray-500 hover:text-gray-600 underline underline-offset-4">
-                Scan your operation
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={onSubmit} className="mt-10 space-y-5">
-            <div className="grid gap-5 sm:grid-cols-2">
-              <label className="block sm:col-span-2">
-                <span className={labelClass}>Work email *</span>
-                <input
-                  className={inputClass}
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="you@company.com"
-                />
-              </label>
-              <label className="block">
-                <span className={labelClass}>Your name</span>
-                <input
-                  className={inputClass}
-                  autoComplete="name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Jane Smith"
-                />
-              </label>
-              <label className="block">
-                <span className={labelClass}>Job title</span>
-                <input
-                  className={inputClass}
-                  value={form.jobTitle}
-                  onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
-                  placeholder="VP Operations"
-                />
-              </label>
-              <label className="block sm:col-span-2">
-                <span className={labelClass}>Company *</span>
-                <input
-                  className={inputClass}
-                  required
-                  autoComplete="organization"
-                  value={form.company}
-                  onChange={(e) => setForm({ ...form, company: e.target.value })}
-                  placeholder="Acme Logistics"
-                />
-              </label>
-              <label className="block sm:col-span-2">
-                <span className={labelClass}>Phone (optional)</span>
-                <input
-                  className={inputClass}
-                  type="tel"
-                  autoComplete="tel"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="+1 555 000 0000"
-                />
-              </label>
-            </div>
+        <div className="relative mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/[0.04] px-5 py-6 shadow-2xl shadow-black/30 backdrop-blur sm:px-8 sm:py-8">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">
+            Buyer intake
+          </p>
+          <h1 className="mt-2 max-w-2xl text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            Find the right robots for your operation
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-300">
+            Tell us what you are automating, which type of robot you need, and when you plan to deploy.
+            Ready For Robots matches your use case to vendors, pilots, and deployment examples from our index.
+          </p>
 
-            <label className="block">
-              <span className={labelClass}>Robot type you are looking for *</span>
-              <select
-                className={inputClass}
-                required
-                value={form.robotType}
-                onChange={(e) => setForm({ ...form, robotType: e.target.value })}
-              >
-                <option value="" disabled>
-                  Select category
-                </option>
-                {ROBOT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+          {submitted ? (
+            <div className="mt-10 rounded-2xl border border-emerald-400/20 bg-emerald-400/8 px-6 py-8 text-center">
+              <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-300" />
+              <h2 className="mt-4 text-lg font-bold text-white">Thank you — request received</h2>
+              <p className="mt-2 text-sm text-slate-300">
+                Our team will review your use case and reach out with matched robots and next steps.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
+                <Link href="/robots" className="text-emerald-300 hover:text-emerald-200 underline underline-offset-4">
+                  Browse humanoid index
+                </Link>
+                <Link href="/" className="text-slate-300 hover:text-white underline underline-offset-4">
+                  Scan your operation
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={onSubmit} className="mt-10 space-y-5">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <label className="block sm:col-span-2">
+                  <span className={labelClass}>Work email *</span>
+                  <input
+                    className={inputClass}
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="you@company.com"
+                  />
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Your name</span>
+                  <input
+                    className={inputClass}
+                    autoComplete="name"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="Jane Smith"
+                  />
+                </label>
+                <label className="block">
+                  <span className={labelClass}>Job title</span>
+                  <input
+                    className={inputClass}
+                    value={form.jobTitle}
+                    onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
+                    placeholder="VP Operations"
+                  />
+                </label>
+                <label className="block sm:col-span-2">
+                  <span className={labelClass}>Company *</span>
+                  <input
+                    className={inputClass}
+                    required
+                    autoComplete="organization"
+                    value={form.company}
+                    onChange={(e) => setForm({ ...form, company: e.target.value })}
+                    placeholder="Acme Logistics"
+                  />
+                </label>
+                <label className="block sm:col-span-2">
+                  <span className={labelClass}>Phone (optional)</span>
+                  <input
+                    className={inputClass}
+                    type="tel"
+                    autoComplete="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    placeholder="+1 555 000 0000"
+                  />
+                </label>
+              </div>
+
+              <label className="block">
+                <span className={labelClass}>Robot type you are looking for *</span>
+                <select
+                  className={inputClass}
+                  required
+                  value={form.robotType}
+                  onChange={(e) => setForm({ ...form, robotType: e.target.value })}
+                >
+                  <option value="" disabled>
+                    Select category
                   </option>
-                ))}
-              </select>
-            </label>
+                  {ROBOT_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <label className="block">
-              <span className={labelClass}>Use case *</span>
-              <textarea
-                className={`${inputClass} min-h-[120px] leading-relaxed`}
-                required
-                minLength={10}
-                rows={5}
-                value={form.useCase}
-                onChange={(e) => setForm({ ...form, useCase: e.target.value })}
-                placeholder="Describe the task, facility, throughput goals, and any constraints (safety, shifts, integration with WMS/ERP, etc.)"
+              <label className="block">
+                <span className={labelClass}>Use case *</span>
+                <textarea
+                  className={`${inputClass} min-h-[120px] leading-relaxed`}
+                  required
+                  minLength={10}
+                  rows={5}
+                  value={form.useCase}
+                  onChange={(e) => setForm({ ...form, useCase: e.target.value })}
+                  placeholder="Describe the task, facility, throughput goals, and any constraints (safety, shifts, integration with WMS/ERP, etc.)"
+                />
+              </label>
+
+              <label className="block">
+                <span className={labelClass}>When do you plan to implement automation? *</span>
+                <select
+                  className={inputClass}
+                  required
+                  value={form.implementationTimeline}
+                  onChange={(e) => setForm({ ...form, implementationTimeline: e.target.value })}
+                >
+                  <option value="" disabled>
+                    Select timeline
+                  </option>
+                  {TIMELINES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                className="hidden"
+                aria-hidden
+                value={form.website}
+                onChange={(e) => setForm({ ...form, website: e.target.value })}
               />
-            </label>
 
-            <label className="block">
-              <span className={labelClass}>When do you plan to implement automation? *</span>
-              <select
-                className={inputClass}
-                required
-                value={form.implementationTimeline}
-                onChange={(e) => setForm({ ...form, implementationTimeline: e.target.value })}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-slate-950 transition-all disabled:opacity-50"
+                style={{ background: EMERALD }}
               >
-                <option value="" disabled>
-                  Select timeline
-                </option>
-                {TIMELINES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+                {submitting ? "Submitting…" : "Submit request"}
+                <ArrowRight className="h-4 w-4" />
+              </button>
 
-            <input
-              type="text"
-              name="website"
-              tabIndex={-1}
-              autoComplete="off"
-              className="hidden"
-              aria-hidden
-              value={form.website}
-              onChange={(e) => setForm({ ...form, website: e.target.value })}
-            />
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-[#0a0118] transition-opacity disabled:opacity-50"
-              style={{ background: TEAL }}
-            >
-              {submitting ? "Submitting…" : "Submit request"}
-              <ArrowRight className="h-4 w-4" />
-            </button>
-
-            <p className="text-[11px] text-gray-400">
-              By submitting, you agree we may contact you about robotics vendors and deployment options.
-              We do not sell your information to third-party lists.
-            </p>
-          </form>
-        )}
+              <p className="text-[11px] text-slate-400">
+                By submitting, you agree we may contact you about robotics vendors and deployment options.
+                We do not sell your information to third-party lists.
+              </p>
+            </form>
+          )}
+        </div>
       </section>
       <SiteFooter />
     </div>

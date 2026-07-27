@@ -31,6 +31,7 @@ from app.services.outreach_email_inference import infer_cc_outreach_emails, infe
 logger = logging.getLogger(__name__)
 from app.services.lead_filter import pick_primary_score
 from app.services.lead_primary_link import enrich_lead_link_fields
+from app.services.lead_quality_engine import build_lead_quality_monitoring_snapshot
 
 router = APIRouter(dependencies=[Depends(require_admin)])
 
@@ -245,6 +246,39 @@ def rep_feedback_summary(db: Session = Depends(get_db)):
         "by_vote": by_vote,
         "by_reason": by_reason,
         "total": sum(by_vote.values()),
+    }
+
+
+@router.get("/lead-quality-metrics")
+def lead_quality_metrics(
+    lookback_days: int = Query(14, ge=1, le=120),
+    db: Session = Depends(get_db),
+):
+    """Dashboard-facing quality metrics and weight recommendations."""
+    snapshot = build_lead_quality_monitoring_snapshot(db, lookback_days=lookback_days)
+    outcome = snapshot.get("outcome_reweight") if isinstance(snapshot.get("outcome_reweight"), dict) else {}
+    quality = outcome.get("quality_signals") if isinstance(outcome.get("quality_signals"), dict) else {}
+    totals = outcome.get("feedback_totals") if isinstance(outcome.get("feedback_totals"), dict) else {}
+
+    # v1 proxies until full closed-loop attribution is landed in outreach outcomes.
+    top_k_precision_proxy = round(float(totals.get("up_rate") or 0.0), 1)
+    contamination_rate = round(float(quality.get("contamination_rate") or 0.0), 1)
+    evidence_completeness_proxy = round(max(0.0, 100.0 - contamination_rate), 1)
+    positive_reply_by_band_proxy = {
+        "high": round(top_k_precision_proxy * 1.05, 1),
+        "medium": round(top_k_precision_proxy * 0.95, 1),
+        "low": round(top_k_precision_proxy * 0.75, 1),
+    }
+
+    return {
+        **snapshot,
+        "dashboard_metrics": {
+            "top_k_precision_proxy": top_k_precision_proxy,
+            "contamination_rate": contamination_rate,
+            "evidence_completeness_proxy": evidence_completeness_proxy,
+            "positive_reply_by_score_band_proxy": positive_reply_by_band_proxy,
+            "time_to_first_qualified_hours_proxy": None,
+        },
     }
 
 

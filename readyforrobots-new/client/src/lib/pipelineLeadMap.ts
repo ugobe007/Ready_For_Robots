@@ -21,6 +21,19 @@ export interface ApiLead {
   share_summary?: string | null;
   share_blurb?: string | null;
   pipeline_action?: string | null;
+  lead_quality?: {
+    schema?: string;
+    overall_score?: number;
+    confidence_band?: string;
+    dimension_scores?: Record<string, number>;
+    weights?: Record<string, number>;
+    weight_source?: string;
+    missing_fields_count?: number;
+    evidence_traces?: Array<{ dimension?: string; score?: number; evidence?: string }>;
+    quality_gate?: { passed?: boolean; reason?: string };
+  };
+  confidence_band?: string | null;
+  evidence_trace?: Array<{ dimension?: string; score?: number; evidence?: string }>;
   humanoid_pilot_tier?: string | null;
   humanoid_pilot_score?: number | null;
   humanoid_pilot_label?: string | null;
@@ -254,6 +267,9 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     shareSummary: lead.share_summary || undefined,
     shareBlurb: lead.share_blurb || undefined,
     pipelineAction: lead.pipeline_action || undefined,
+    leadQuality: lead.lead_quality || undefined,
+    confidenceBand: lead.confidence_band || lead.lead_quality?.confidence_band || undefined,
+    evidenceTrace: lead.evidence_trace || lead.lead_quality?.evidence_traces || undefined,
     humanoidPilotTier: lead.humanoid_pilot_tier || undefined,
     humanoidPilotScore: lead.humanoid_pilot_score ?? undefined,
     humanoidPilotLabel: lead.humanoid_pilot_label || undefined,

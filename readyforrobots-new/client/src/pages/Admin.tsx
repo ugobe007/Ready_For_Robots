@@ -248,6 +248,25 @@ type SiteAnalytics = {
   };
 };
 
+type LeadQualityMetrics = {
+  feedback_coverage_companies?: number;
+  top_feedback_companies?: Array<{ company_id?: number; company_name?: string; feedback_count?: number }>;
+  outcome_reweight?: {
+    feedback_totals?: { total?: number; up?: number; down?: number; up_rate?: number };
+    quality_signals?: { contamination_rate?: number; timing_mismatch_rate?: number };
+    recommended_weights?: Record<string, number>;
+    base_weights?: Record<string, number>;
+    notes?: string[];
+  };
+  dashboard_metrics?: {
+    top_k_precision_proxy?: number;
+    contamination_rate?: number;
+    evidence_completeness_proxy?: number;
+    positive_reply_by_score_band_proxy?: Record<string, number>;
+    time_to_first_qualified_hours_proxy?: number | null;
+  };
+};
+
 type WorkflowAction = {
   id?: string;
   source?: string;
@@ -570,6 +589,109 @@ function AdminCard({
   return <div className={className}>{body}</div>;
 }
 
+function LeadQualityAdminPanel({ metrics }: { metrics: LeadQualityMetrics | null }) {
+  const dash = metrics?.dashboard_metrics;
+  const outcome = metrics?.outcome_reweight;
+  const weights = outcome?.recommended_weights || {};
+  const replyBand = dash?.positive_reply_by_score_band_proxy || {};
+  const topWeights = Object.entries(weights)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  const labelFor = (key: string) => {
+    if (key === "buyer_authenticity") return "Buyer authenticity";
+    if (key === "urgency_window") return "Urgency window";
+    if (key === "robot_fit_confidence") return "Robot fit";
+    if (key === "decision_maker_confidence") return "Decision-maker confidence";
+    if (key === "contactability_confidence") return "Contactability";
+    return key.replace(/_/g, " ");
+  };
+
+  return (
+    <section className="mb-8 rounded-2xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-sky-50 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Lead quality panel</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">Quality, contamination, and weighting signals for SIGNAL tuning.</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-slate-600">
+            Feedback coverage {formatNumber(metrics?.feedback_coverage_companies)} companies over the last 14 days.
+          </p>
+        </div>
+        <div className="grid min-w-[280px] flex-1 grid-cols-2 gap-2 md:grid-cols-4">
+          <AdminCard label="Top-K precision" value={pct(dash?.top_k_precision_proxy)} sub="positive feedback proxy" />
+          <AdminCard label="Contamination" value={pct(dash?.contamination_rate)} sub="wrong-company + spam" />
+          <AdminCard label="Evidence completeness" value={pct(dash?.evidence_completeness_proxy)} sub="quality trace coverage" />
+          <AdminCard label="Votes" value={formatNumber(outcome?.feedback_totals?.total)} sub={`${pct(outcome?.feedback_totals?.up_rate)} up-vote rate`} />
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-2xl border border-white/80 bg-white/85 p-4 shadow-sm">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Recommended weights</p>
+          <div className="mt-3 space-y-3">
+            {topWeights.length > 0 ? topWeights.map(([key, value]) => (
+              <div key={key}>
+                <div className="mb-1 flex items-center justify-between gap-2 text-[11px]">
+                  <span className="font-semibold text-slate-700">{labelFor(key)}</span>
+                  <span className="font-mono text-slate-500">{(value * 100).toFixed(1)}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500"
+                    style={{ width: `${Math.max(8, Math.min(100, value * 100))}%` }}
+                  />
+                </div>
+              </div>
+            )) : (
+              <p className="text-[12px] text-slate-500">No feedback-driven weights yet.</p>
+            )}
+          </div>
+          {(outcome?.notes || []).length > 0 && (
+            <div className="mt-4 space-y-2 rounded-xl border border-emerald-100 bg-emerald-50/70 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Reweight notes</p>
+              {(outcome?.notes || []).slice(0, 3).map((note) => (
+                <p key={note} className="text-[11px] leading-relaxed text-emerald-900">{note}</p>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-white/80 bg-white/85 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Reply by score band</p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {(["high", "medium", "low"] as const).map((band) => (
+                <div key={band} className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-center">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{band}</p>
+                  <p className="mt-1 text-lg font-semibold text-slate-900">{pct(replyBand[band])}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/80 bg-white/85 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Most reviewed companies</p>
+            <div className="mt-3 space-y-2">
+              {(metrics?.top_feedback_companies || []).slice(0, 5).map((company) => (
+                <div key={company.company_id || company.company_name} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2">
+                  <div>
+                    <p className="text-[12px] font-semibold text-slate-900">{company.company_name || "Unknown company"}</p>
+                    <p className="text-[10px] uppercase tracking-wide text-slate-500">feedback concentration</p>
+                  </div>
+                  <span className="font-mono text-[12px] text-slate-600">{formatNumber(company.feedback_count)}</span>
+                </div>
+              ))}
+              {(metrics?.top_feedback_companies || []).length === 0 && (
+                <p className="text-[12px] text-slate-500">No concentrated feedback cluster yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // Trust-first angles, in the same deterministic order as the backend
 // BUYER_VARIANTS so the operator sees which angle a lead's draft used.
 const BUYER_ANGLE_LABELS = ["Workflow-first", "What survives", "Bottleneck-first"];
@@ -686,6 +808,7 @@ export default function Admin() {
   const [salesOppTotal, setSalesOppTotal] = useState<number | null>(null);
   const [operatorDashboard, setOperatorDashboard] = useState<OperatorDashboard | null>(null);
   const [debugTelemetry, setDebugTelemetry] = useState<DebugTelemetryState>({});
+  const [leadQualityMetrics, setLeadQualityMetrics] = useState<LeadQualityMetrics | null>(null);
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -837,15 +960,17 @@ export default function Admin() {
         setWorkflow(null);
         setTargets(null);
         setDailyBrief(null);
+        setLeadQualityMetrics(null);
         return;
       }
       void syncAdminSnapshot();
+      void loadLeadQualityMetrics();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Admin load failed.");
     } finally {
       setMeLoading(false);
     }
-  }, [adminFetch, syncAdminSnapshot, session?.access_token]);
+  }, [adminFetch, loadLeadQualityMetrics, syncAdminSnapshot, session?.access_token]);
 
   const loadCalStatus = useCallback(async () => {
     if (!session?.access_token) return;
@@ -1121,6 +1246,16 @@ export default function Admin() {
       const res = await adminFetch("/api/admin/supply/autonomy-status");
       if (res.ok) setSupplyAutonomy(await res.json());
     } catch { /* advisory */ }
+  }, [adminFetch, session?.access_token]);
+
+  const loadLeadQualityMetrics = useCallback(async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await adminFetch("/api/admin/lead-quality-metrics?lookback_days=14");
+      if (res.ok) setLeadQualityMetrics(await res.json());
+    } catch {
+      setLeadQualityMetrics(null);
+    }
   }, [adminFetch, session?.access_token]);
 
   const runCalAutonomy = async (dryRun: boolean) => {
@@ -3302,6 +3437,8 @@ export default function Admin() {
           <AdminCard label="Scored" value={formatNumber(stats?.totals?.scored)} />
           <AdminCard label="Avg Score" value={stats?.conversion_metrics?.avg_score?.toFixed(1) || "—"} sub={`${stats?.conversion_metrics?.hot_rate ?? "—"}% hot rate`} />
         </section>
+
+        <LeadQualityAdminPanel metrics={leadQualityMetrics} />
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border border-gray-200 p-5" >

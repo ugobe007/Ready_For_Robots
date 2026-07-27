@@ -30,6 +30,10 @@ _SITE = (os.getenv("PUBLIC_SITE_URL") or "https://readyforrobots.com").rstrip("/
 _POSITIVE_INTENTS = ("interested", "meeting", "pricing", "referral")
 _NEGATIVE_INTENTS = ("not_a_fit", "unsubscribe")
 
+_MIN_DELIVERY_RATE_FOR_RANKING = 70.0
+_MIN_TAGGED_SENDS_FOR_RANKING = 6
+_MIN_SENDS_PER_ANGLE_FOR_LEXICON = 3
+
 
 def _redis_client():
     from app.services.cal_autonomy import _redis_client as client_fn
@@ -68,6 +72,18 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
             variant_expr.isnot(None),
         )
         .all()
+    )
+
+    # Health denominator: all sent outreach in-window (tagged + untagged).
+    all_sent_n = (
+        db.query(func.count(OutreachMessage.id))
+        .filter(
+            OutreachMessage.sent_at.isnot(None),
+            OutreachMessage.sent_at >= since,
+            OutreachMessage.sent_at <= now,
+        )
+        .scalar()
+        or 0
     )
 
     # Reply intent keyed by the message it answered.
@@ -155,6 +171,44 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
         )
     variant_rows.sort(key=lambda r: (r["positive_rate"], r["reply_rate"], r["sent"]), reverse=True)
 
+    total_sent = totals["sent"]
+    delivered_rate = _pct(totals["delivered"], total_sent)
+    tagged_coverage = _pct(total_sent, int(all_sent_n)) if all_sent_n else 0.0
+
+    health_notes: list[str] = []
+    if total_sent == 0:
+        health_notes.append("No tagged intro sends in this window.")
+    if total_sent > 0 and totals["opened"] == 0:
+        health_notes.append(
+            "No opens recorded. This is likely a deliverability or open-tracking issue before it is a copy issue."
+        )
+    if total_sent > 0 and delivered_rate < _MIN_DELIVERY_RATE_FOR_RANKING:
+        health_notes.append(
+            f"Delivered rate is {delivered_rate}% (< {_MIN_DELIVERY_RATE_FOR_RANKING:.0f}%). Treat angle performance as unreliable."
+        )
+    if all_sent_n and tagged_coverage < 80.0:
+        health_notes.append(
+            f"Only {tagged_coverage}% of sends are tagged with an angle. Verify tagging coverage before comparing angles."
+        )
+
+    ranking_ok = (
+        total_sent >= _MIN_TAGGED_SENDS_FOR_RANKING
+        and delivered_rate >= _MIN_DELIVERY_RATE_FOR_RANKING
+        and totals["opened"] > 0
+    )
+
+    ranking_gate_reasons: list[str] = []
+    if total_sent < _MIN_TAGGED_SENDS_FOR_RANKING:
+        ranking_gate_reasons.append(
+            f"need {_MIN_TAGGED_SENDS_FOR_RANKING}+ tagged sends (have {total_sent})"
+        )
+    if delivered_rate < _MIN_DELIVERY_RATE_FOR_RANKING and total_sent > 0:
+        ranking_gate_reasons.append(
+            f"delivered rate below {_MIN_DELIVERY_RATE_FOR_RANKING:.0f}% ({delivered_rate}%)"
+        )
+    if totals["opened"] == 0 and total_sent > 0:
+        ranking_gate_reasons.append("no opens recorded")
+
     industry_rows = sorted(
         (
             {
@@ -183,6 +237,19 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
             "reply_rate": _pct(totals["replied"], totals["sent"]),
             "positive_rate": _pct(totals["positive"], totals["sent"]),
         },
+        "window": {
+            "since": since.isoformat(),
+            "until": now.isoformat(),
+        },
+        "health": {
+            "all_sent": int(all_sent_n),
+            "tagged_sent": total_sent,
+            "tagged_coverage": tagged_coverage,
+            "delivered_rate": delivered_rate,
+            "ranking_enabled": ranking_ok,
+            "ranking_gate_reasons": ranking_gate_reasons,
+            "notes": health_notes,
+        },
         "variants": variant_rows,
         "industries": industry_rows,
     }
@@ -191,9 +258,11 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
 def render_communication_learning_text(report: dict[str, Any]) -> str:
     days = round((report.get("period_hours") or 168) / 24)
     t = report.get("totals") or {}
+    h = report.get("health") or {}
     sent_n = t.get("sent", 0)
+
     lines = [
-        f"Cal communication learning report — last {days}d",
+        f"SIGNAL communication learning report — last {days}d",
         "",
         "How to read this: directional signal, not statistical proof. At our send "
         "volume, treat these as hints about which angle earns trust — not a verdict. "
@@ -208,8 +277,22 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
         f"  • Positive replies: {t.get('positive', 0)}  ({t.get('positive_rate', 0)}% of sends)",
         f"  • Negative / opt-out: {t.get('negative', 0)}",
         "",
-        "By angle (ranked by positive-reply rate)",
+        "Tracking health",
+        f"  • Tagged coverage: {h.get('tagged_sent', 0)}/{h.get('all_sent', 0)} sends ({h.get('tagged_coverage', 0)}%)",
+        f"  • Delivered rate: {h.get('delivered_rate', 0)}%",
     ]
+
+    for note in (h.get("notes") or []):
+        lines.append(f"  • {note}")
+
+    ranking_enabled = bool(h.get("ranking_enabled"))
+    gate_reasons = h.get("ranking_gate_reasons") or []
+    if ranking_enabled:
+        lines.extend(["", "By angle (ranked by positive-reply rate)"])
+    else:
+        reason_text = "; ".join(gate_reasons) if gate_reasons else "tracking/data-quality gate not met"
+        lines.extend(["", f"By angle (ranking disabled: {reason_text})"])
+
     variants = report.get("variants") or []
     if not any(v["sent"] for v in variants):
         lines.append("  • No tagged sends yet in this window — nothing to compare.")
@@ -225,8 +308,7 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
             if v.get("subject_sample"):
                 lines.append(f"      subject: \"{v['subject_sample']}\"")
 
-    # Lexicon read — which subject line correlates with the best positive rate.
-    scored = [v for v in variants if v["sent"] >= 3]
+    scored = [v for v in variants if v["sent"] >= _MIN_SENDS_PER_ANGLE_FOR_LEXICON]
     if not scored:
         lines.extend([
             "",
@@ -234,8 +316,7 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
             "  • Not enough sends per angle yet (need ~3+ each) to call a winner. "
             "Keep rotating.",
         ])
-    elif any(v["positive"] for v in scored):
-        # Real positive signal exists → the positive-rate ranking is meaningful.
+    elif any(v["positive"] for v in scored) and ranking_enabled:
         best = scored[0]
         lines.extend([
             "",
@@ -251,10 +332,6 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
                 f"— candidate to retire if the gap holds."
             )
     else:
-        # No positive replies on ANY angle yet — the positive-rate ranking above is
-        # all zeros, so it cannot name a winner or loser. Say so plainly (never
-        # suggest retiring an angle on a 0-vs-0 "gap") and fall back to open rate as
-        # the only directional proxy we have.
         by_open = sorted(
             scored,
             key=lambda r: (_pct(r["opened"], r["sent"]), r["sent"]),
@@ -264,6 +341,8 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
         lines.extend([
             "",
             "Lexicon read",
+            "  • Angle ranking is disabled until tracking health improves. Use this "
+            "section only as directional context.",
             "  • No replies on any angle yet, so none has earned trust — the "
             "positive-rate ranking above is not meaningful. Do NOT retire an angle "
             "on this.",
@@ -292,10 +371,10 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
     lines.extend([
         "",
         "Links",
-        f"  • Admin (Cal control): {_SITE}/admin",
+        f"  • Admin (SIGNAL control): {_SITE}/admin",
         f"  • Replies inbox: {_SITE}/inbox",
         "",
-        "Weekly. Reply to adjust which angles Cal keeps rotating.",
+        "Weekly. Reply to adjust which angles SIGNAL keeps rotating.",
     ])
     return "\n".join(lines)
 
@@ -332,9 +411,9 @@ def send_communication_learning_report(
     try:
         result = send_email_via_resend(
             to_email=recipients,
-            subject=f"Cal learning report — last {days}d ({report['totals']['positive']} positive replies)",
+            subject=f"SIGNAL learning report — last {days}d ({report['totals']['positive']} positive replies)",
             body_text=body,
-            from_display_name="Ready For Robots · Cal",
+            from_display_name="Ready For Robots · SIGNAL ops",
             idempotency_key=f"cal-comm-learning-{today}",
         )
     except ResendEmailError as exc:

@@ -275,6 +275,13 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
     unsent = int(queue_summary.get("unsent_drafted") or 0)
     replied_total = int(queue_summary.get("replied") or 0)
 
+    if intro_sent == 0 and hot > 0 and sendable > 0:
+        needs_you.append(
+            "  • Queue stall: 0 new intros in the last "
+            f"{period_hours}h with {hot} HOT prospects and {sendable} drafts ready. "
+            "Check verification/enrichment and send gating."
+        )
+
     # Deliverability (trailing 7d) — makes the bounce trend visible and signals when
     # the circuit breaker is likely to pause new intros.
     from app.services.lead_enrichment import recent_bounce_rate
@@ -321,7 +328,7 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
 
     return {
         "date": day_label,
-        "subject": f"Cal daily update — {day_label}",
+        "subject": f"SIGNAL daily update — {day_label}",
         "body_text": body,
         "recipients": get_cal_digest_recipients(),
         "autopilot": autopilot,
@@ -347,7 +354,7 @@ def render_cal_daily_digest_text(
     needs_you: list[str],
     auto_filtered: list[str] | None = None,
 ) -> str:
-    autopilot_line = "ON — Cal runs draft/send/follow-up cycles on the worker." if autopilot_on else (
+    autopilot_line = "ON — SIGNAL runs draft/send/follow-up cycles on the worker." if autopilot_on else (
         "OFF — scheduled cycles paused (manual Run cycle still works in admin)."
     )
     hot = int(queue_summary.get("hot") or 0)
@@ -357,16 +364,16 @@ def render_cal_daily_digest_text(
     replied_total = int(activity.get("replied_total") or 0)
 
     lines = [
-        f"Cal daily update — {day_label}",
+        f"SIGNAL daily update — {day_label}",
         "",
-        "What Cal did (last {0}h)".format(period_hours),
+        "What SIGNAL did (last {0}h)".format(period_hours),
         f"  • Buyer intro emails sent: {activity.get('intro_sent', 0)}",
         f"  • Follow-up emails sent: {activity.get('followup_sent', 0)}",
         f"  • Inbound replies received: {activity.get('replies', 0)}",
         f"  • Drafts created or refreshed: {activity.get('drafts_touched', 0)}",
         "",
         "Queue right now",
-        f"  • HOT / WARM prospects in Cal queue: {hot} / {warm}",
+        f"  • HOT / WARM prospects in SIGNAL queue: {hot} / {warm}",
         f"  • Drafts ready to send: {sendable}",
         f"  • Drafts waiting (unsent): {unsent}",
         f"  • Active follow-up sequences: {activity.get('enroll_active', 0)} "
@@ -410,7 +417,7 @@ def render_cal_daily_digest_text(
     if int(activity.get("intro_sent") or 0) == 0 and (sendable > 0 or hot > 0):
         lines.extend([
             "Why 0 new intros",
-            "  • Cal only emails verified contacts. Ready drafts without a verified "
+            "  • SIGNAL only emails verified contacts. Ready drafts without a verified "
             "email wait for enrichment; the rest of the HOT/WARM pool is already "
             "contacted and is now in follow-up. New intros resume as fresh, verified "
             "buyers land in the queue.",
@@ -430,24 +437,24 @@ def render_cal_daily_digest_text(
     if needs_you:
         lines.extend(["Needs you", *needs_you[:8], ""])
     else:
-        lines.extend(["Needs you", "  • Nothing urgent — Cal is running.", ""])
+        lines.extend(["Needs you", "  • Nothing urgent — SIGNAL is running.", ""])
 
     if auto_filtered:
         lines.extend([
-            "Auto-filtered by Cal (FYI — no action needed)",
-            "  These were skipped as OEMs/vendors, not buyers. Cal did not email them.",
+            "Auto-filtered by SIGNAL (FYI — no action needed)",
+            "  These were skipped as OEMs/vendors, not buyers. SIGNAL did not email them.",
             *auto_filtered[:6],
             "",
         ])
 
     lines.extend([
         "Links",
-        f"  • Admin (Cal control): {_SITE}/admin",
+        f"  • Admin (SIGNAL control): {_SITE}/admin",
         f"  • Replies inbox: {_SITE}/inbox",
         f"  • Calendar (book meetings): {_SITE}/calendar",
         "",
-        "You receive this once per day while Cal daily digest is enabled.",
-        "Reply to this email if you want Cal paused or the tone adjusted.",
+        "You receive this once per day while SIGNAL daily digest is enabled.",
+        "Reply to this email if you want SIGNAL paused or the tone adjusted.",
     ])
     return "\n".join(lines)
 
@@ -475,7 +482,7 @@ def send_cal_daily_digest(
             to_email=recipients,
             subject=digest["subject"],
             body_text=digest["body_text"],
-            from_display_name="Ready For Robots · Cal",
+            from_display_name="Ready For Robots · SIGNAL ops",
             idempotency_key=f"cal-daily-digest-{today}",
         )
     except ResendEmailError as exc:

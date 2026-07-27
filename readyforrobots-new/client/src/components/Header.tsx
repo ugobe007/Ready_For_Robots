@@ -168,7 +168,7 @@ export default function Header() {
           pipelineCommand
             ? "bg-[#0b1020]/98 backdrop-blur-xl shadow-lg border-b border-white/10"
             : scrolled
-              ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-100"
+              ? "bg-[#0b1020]/96 backdrop-blur-xl shadow-lg border-b border-white/10"
               : onDarkSurface
                 ? "bg-transparent border-b border-white/5"
                 : "bg-white/80 backdrop-blur-md"
@@ -254,7 +254,7 @@ export default function Header() {
                 href="/find-robots"
                 className="hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all"
               >
-                Find Robots
+                Find leads
               </Link>
 
               {!session ? (
