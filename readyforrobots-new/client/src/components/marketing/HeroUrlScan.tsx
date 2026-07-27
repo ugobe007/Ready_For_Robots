@@ -29,7 +29,7 @@ export default function HeroUrlScan({ onDark = false }: Props) {
         htmlFor="hero-product-url"
         className={`mb-1.5 block text-xs font-semibold ${onDark ? "text-emerald-200" : "text-gray-600"}`}
       >
-        Enter URL
+        Enter your company URL
       </label>
       <div className="flex flex-col gap-1.5 sm:flex-row">
         <input

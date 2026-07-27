@@ -157,41 +157,24 @@ export default function Home() {
                 </span>
               </div>
 
-              <h1 className="home-hero-title mb-4 max-w-[12.1ch] font-bold sm:mb-5">
-                Find Robot-Ready Buyers
-                <span className="text-emerald-400 drop-shadow-[0_0_22px_rgba(16,185,129,0.28)]"> in Minutes, Not Weeks.</span>
+              <h1 className="home-hero-title mb-4 max-w-[13.2ch] font-bold sm:mb-5">
+                Deployment Intelligence
+                <span className="text-emerald-400 drop-shadow-[0_0_22px_rgba(16,185,129,0.28)]"> for Robotics.</span>
               </h1>
 
               <p className="home-hero-lead mb-3 max-w-2xl text-lg leading-relaxed text-slate-100 sm:mb-4 sm:text-[1.34rem] sm:leading-[1.45]">
-                <span className="font-semibold text-slate-50">ReadyForRobots</span> is your active sales agent: it <span className="font-semibold text-emerald-300">finds companies ready for robots</span>, shows why they are buying now, and identifies decision makers.
+                <span className="font-semibold text-slate-50">ReadyForRobots</span> helps robot companies identify organizations entering the automation buying cycle.
               </p>
 
               <p className="mb-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:mb-5 sm:text-base">
-                Start with one URL. You get a ranked buyer list, source-backed timing signals, and a draft outreach angle your team can use immediately.
+                By analyzing operational, workforce, investment, and market signals, we reveal where robots are most likely to deliver value and when buyers are most likely to act.
               </p>
 
               <HeroUrlScan onDark />
 
-              <p className="mb-2 max-w-lg text-xs leading-relaxed text-slate-400 sm:mb-3 sm:text-sm">
-                ReadyForRobots continuously reads market movement and turns it into outreach-ready pipeline decisions.
+              <p className="mb-1 max-w-lg text-xs leading-relaxed text-slate-400 sm:text-sm">
+                Enter your company website to generate your first deployment pipeline.
               </p>
-
-              <ul className="home-hero-list mb-3 max-w-xl space-y-1 text-sm sm:text-base">
-                <li>• {hotLabel} HOT accounts with verified buying momentum</li>
-                <li>• {signalsLabel} intent events with analyst-style "why now" context</li>
-                <li>• {totalLabel} ranked opportunities matched to likely robot fit</li>
-              </ul>
-
-              <p className="mb-1 text-xs font-medium text-slate-300">
-                See buyer signals in seconds. No signup wall.
-              </p>
-              <Link
-                href="/pipeline"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-sky-300 hover:text-sky-200"
-                onClick={() => trackMarketingEvent("home_cta_pipeline_click", { location: "hero_secondary_link" })}
-              >
-                Browse full pipeline <ArrowRight size={12} />
-              </Link>
             </div>
 
             <div className="animate-fade-in-up order-2 lg:col-span-5 lg:order-2" style={{ animationDelay: "120ms" }}>
