@@ -262,7 +262,7 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
     sent_n = t.get("sent", 0)
 
     lines = [
-        f"SIGNAL communication learning report — last {days}d",
+        f"Cal communication learning report — last {days}d",
         "",
         "How to read this: directional signal, not statistical proof. At our send "
         "volume, treat these as hints about which angle earns trust — not a verdict. "
