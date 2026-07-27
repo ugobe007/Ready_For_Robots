@@ -143,34 +143,34 @@ export default function Home() {
 
       <section
         id="hero-cta"
-        className="relative overflow-hidden pt-16 pb-8 sm:pt-20 sm:pb-10 home-hero-bg"
+        className="relative overflow-hidden pt-14 pb-6 sm:pt-16 sm:pb-8 home-hero-bg"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/55 to-transparent" aria-hidden />
 
         <div className="container home-hero-container relative">
           <div className="grid items-center gap-6 lg:grid-cols-12 lg:gap-5 xl:gap-6">
             <div className="animate-fade-in-up order-1 lg:col-span-7">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-slate-100 sm:mb-6">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-slate-100 sm:mb-5">
                 <LiveDot />
                 <span className="font-mono-data">
                   {hotLabel} HOT · {signalsLabel} live signals · updated daily
                 </span>
               </div>
 
-              <h1 className="home-hero-title mb-5 max-w-[12.5ch] font-bold sm:mb-6">
+              <h1 className="home-hero-title mb-4 max-w-[12.1ch] font-bold sm:mb-5">
                 Find Robot-Ready Buyers
                 <span className="text-emerald-400 drop-shadow-[0_0_22px_rgba(16,185,129,0.28)]"> in Minutes, Not Weeks.</span>
               </h1>
 
-              <p className="home-hero-lead mb-4 max-w-2xl text-lg leading-relaxed text-slate-100 sm:mb-5 sm:text-[1.38rem] sm:leading-[1.5]">
+              <p className="home-hero-lead mb-3 max-w-2xl text-lg leading-relaxed text-slate-100 sm:mb-4 sm:text-[1.34rem] sm:leading-[1.45]">
                 <span className="font-semibold text-slate-50">ReadyForRobots</span> is your active sales agent: it <span className="font-semibold text-emerald-300">finds companies ready for robots</span>, shows why they are buying now, and identifies decision makers.
               </p>
 
-              <p className="mb-5 max-w-2xl text-sm leading-relaxed text-slate-300 sm:mb-6 sm:text-base">
+              <p className="mb-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:mb-5 sm:text-base">
                 Start with one URL. You get a ranked buyer list, source-backed timing signals, and a draft outreach angle your team can use immediately.
               </p>
 
-              <p className="mb-4 max-w-2xl text-xs font-medium text-slate-300 sm:text-sm">
+              <p className="mb-3 max-w-2xl text-xs font-medium text-slate-300 sm:text-sm">
                 <span className="font-semibold uppercase tracking-[0.14em] text-emerald-200">In 5 minutes:</span>{" "}
                 <span className="text-slate-100">{hotLabel} HOT ranked buyers</span>
                 <span className="mx-2 text-slate-500">·</span>
@@ -181,11 +181,11 @@ export default function Home() {
 
               <HeroUrlScan onDark />
 
-              <p className="mb-3 max-w-lg text-xs leading-relaxed text-slate-400 sm:mb-4 sm:text-sm">
+              <p className="mb-2 max-w-lg text-xs leading-relaxed text-slate-400 sm:mb-3 sm:text-sm">
                 ReadyForRobots continuously reads market movement and turns it into outreach-ready pipeline decisions.
               </p>
 
-              <ul className="home-hero-list mb-4 max-w-xl space-y-1.5 text-sm sm:text-base">
+              <ul className="home-hero-list mb-3 max-w-xl space-y-1 text-sm sm:text-base">
                 <li>• {hotLabel} HOT accounts with verified buying momentum</li>
                 <li>• {signalsLabel} intent events with analyst-style "why now" context</li>
                 <li>• {totalLabel} ranked opportunities matched to likely robot fit</li>
