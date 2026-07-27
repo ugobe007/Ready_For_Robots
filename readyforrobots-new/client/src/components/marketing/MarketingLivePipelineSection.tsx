@@ -146,11 +146,11 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
           <div>
             <div className="flex items-center gap-2 mb-3">
               <LiveDot />
-              <span className="text-emerald-400 text-xs font-mono-data font-semibold uppercase tracking-widest">
+              <span className="text-sky-300 text-xs font-mono-data font-semibold uppercase tracking-widest">
                 Live Pipeline
               </span>
               {live && (
-                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
+                <span className="rounded-full border border-amber-400/35 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
                   Live data
                 </span>
               )}
@@ -163,7 +163,7 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
             </p>
           </div>
           <div className="text-slate-400 text-sm font-mono-data">
-            Live pipeline · <span className="text-emerald-400 font-bold">{hotLabel} hot leads</span>
+            Live pipeline · <span className="text-amber-300 font-bold">{hotLabel} hot leads</span>
           </div>
         </div>
 
@@ -201,7 +201,7 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
                   <PipelineLeadActionMeta lead={lead} variant="dark" />
                 </div>
                 <div className="col-span-2 text-center">
-                  <span className="score-number text-2xl text-emerald-400">{score}</span>
+                  <span className="score-number text-2xl">{score}</span>
                 </div>
                 <div className="col-span-2 flex items-center justify-end gap-2">
                   <LeadShareBar
@@ -232,20 +232,20 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/pipeline"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] text-sm"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] text-sm"
             >
               Open full pipeline
               <ArrowRight size={14} />
             </Link>
             <Link
               href="/compare"
-              className="inline-flex items-center gap-2 px-5 py-3 text-slate-200 hover:text-white font-semibold rounded-xl border border-white/15 hover:border-emerald-400/40 transition-all text-sm"
+              className="inline-flex items-center gap-2 px-5 py-3 text-slate-200 hover:text-white font-semibold rounded-xl border border-sky-300/30 hover:border-sky-300/60 transition-all text-sm"
             >
               vs data tools
             </Link>
             <Link
               href="/results?url="
-              className="inline-flex items-center gap-2 px-5 py-3 text-emerald-300 hover:text-white font-semibold rounded-xl border border-white/15 hover:border-emerald-400/40 transition-all text-sm"
+              className="inline-flex items-center gap-2 px-5 py-3 text-sky-300 hover:text-white font-semibold rounded-xl border border-sky-300/30 hover:border-sky-300/60 transition-all text-sm"
             >
               <Zap size={16} />
               URL scan

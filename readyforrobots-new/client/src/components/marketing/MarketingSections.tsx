@@ -38,6 +38,8 @@ export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
       statValue: 150,
       statSuffix: "+",
       statLabel: "live sources",
+      iconTone: "bg-sky-100 text-sky-700",
+      railTone: "border-l-sky-500",
     },
     {
       icon: BarChart3,
@@ -47,6 +49,8 @@ export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
       statValue: statTarget(totalCount, 3957),
       statSuffix: "",
       statLabel: "active signals",
+      iconTone: "bg-amber-100 text-amber-700",
+      railTone: "border-l-amber-500",
     },
     {
       icon: TrendingUp,
@@ -56,6 +60,8 @@ export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
       statValue: 62,
       statSuffix: "%",
       statLabel: "strong buying intent",
+      iconTone: "bg-emerald-100 text-emerald-700",
+      railTone: "border-l-emerald-500",
     },
   ];
 
@@ -76,11 +82,11 @@ export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
             return (
               <div
                 key={f.title}
-                className="p-7 rounded-xl border border-gray-100 border-l-4 border-l-emerald-500 shadow-sm hover:shadow-md transition-shadow duration-200"
+                className={`rounded-xl border border-gray-200 border-l-4 p-7 shadow-sm transition-shadow duration-200 hover:shadow-md ${f.railTone}`}
               >
                 <div className="flex items-start justify-between mb-5">
-                  <div className="w-11 h-11 bg-emerald-50 rounded-lg flex items-center justify-center">
-                    <Icon size={22} className="text-emerald-600" />
+                  <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${f.iconTone}`}>
+                    <Icon size={22} />
                   </div>
                   <div className="text-right">
                     <AnimatedStat
@@ -114,7 +120,7 @@ export function MarketingHowItWorks() {
         kicker: "Signal detected",
         title: "Apex Logistics",
         lines: ["3 DC expansions · Midwest US", "Labor shortage filing · match"],
-        accent: "text-emerald-600",
+        accent: "text-sky-700",
         bar: 72,
       },
     },
@@ -149,7 +155,7 @@ export function MarketingHowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="py-20 bg-slate-50 overflow-hidden">
+    <section id="how-it-works" className="py-20 bg-slate-100/70 overflow-hidden">
       <div className="container">
         <div className="mb-14 max-w-2xl">
           <p className="section-eyebrow mb-3">How It Works</p>
@@ -160,7 +166,7 @@ export function MarketingHowItWorks() {
 
         <div className="relative">
           <div
-            className="hidden lg:block absolute top-[4.25rem] left-[12%] right-[12%] h-0.5 bg-gradient-to-r from-emerald-200 via-emerald-500 to-emerald-200"
+            className="hidden lg:block absolute top-[4.25rem] left-[12%] right-[12%] h-0.5 bg-gradient-to-r from-sky-300 via-amber-400 to-emerald-300"
             aria-hidden
           />
 
@@ -171,10 +177,22 @@ export function MarketingHowItWorks() {
                 <div key={step.num} className="relative flex flex-col">
                   <div className="flex flex-col items-center text-center mb-5">
                     <div className="relative z-10 mb-4">
-                      <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/25 ring-4 ring-white">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ring-4 ring-white shadow-lg ${
+                        i === 0
+                          ? "bg-sky-600 shadow-sky-500/25"
+                          : i === 1
+                            ? "bg-amber-500 shadow-amber-500/25"
+                            : "bg-emerald-600 shadow-emerald-600/25"
+                      }`}>
                         <Icon size={28} className="text-white" />
                       </div>
-                      <span className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-white border border-emerald-200 font-mono-data text-[10px] font-bold text-emerald-700 shadow-sm">
+                      <span className={`absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-white border font-mono-data text-[10px] font-bold shadow-sm ${
+                        i === 0
+                          ? "border-sky-200 text-sky-700"
+                          : i === 1
+                            ? "border-amber-200 text-amber-700"
+                            : "border-emerald-200 text-emerald-700"
+                      }`}>
                         {step.num}
                       </span>
                     </div>
@@ -184,10 +202,10 @@ export function MarketingHowItWorks() {
 
                   <div className="mt-auto rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                     <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-gray-100">
-                      <span className="text-[10px] font-mono-data font-semibold uppercase tracking-widest text-gray-500">
+                      <span className="text-[10px] font-mono-data font-semibold uppercase tracking-widest text-slate-600">
                         {step.mockup.kicker}
                       </span>
-                      <FileText size={14} className="text-emerald-500 shrink-0" />
+                      <FileText size={14} className={`shrink-0 ${i === 0 ? "text-sky-500" : i === 1 ? "text-amber-500" : "text-emerald-500"}`} />
                     </div>
                     <p className={`text-sm font-semibold mb-2 ${step.mockup.accent}`}>{step.mockup.title}</p>
                     <div className="space-y-1">
@@ -317,13 +335,13 @@ export function MarketingVsGenericAI() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-slate-900 py-16 lg:py-24">
       <div
         className="absolute inset-0 opacity-[0.4] pointer-events-none"
         aria-hidden
         style={{
           backgroundImage:
-            "radial-gradient(circle at 15% 20%, rgba(16,185,129,0.12) 0%, transparent 45%), radial-gradient(circle at 85% 80%, rgba(5,150,105,0.1) 0%, transparent 40%)",
+            "radial-gradient(circle at 15% 20%, rgba(56,189,248,0.18) 0%, transparent 45%), radial-gradient(circle at 85% 80%, rgba(245,158,11,0.18) 0%, transparent 40%)",
         }}
       />
       <div className="container relative">
@@ -331,7 +349,7 @@ export function MarketingVsGenericAI() {
           <p className="section-eyebrow section-eyebrow-on-dark mb-3">Why not just use a generic AI tool?</p>
           <h2 className="section-headline font-bold text-white">
             Generic AI guesses.{" "}
-            <span className="text-emerald-400">SIGNAL knows who&apos;s buying robots.</span>
+            <span className="text-sky-300">SIGNAL knows who&apos;s buying robots.</span>
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Horizontal &ldquo;AI&rdquo; search and data tools hand you a list. ReadyForRobots hands you a moving
@@ -354,15 +372,15 @@ export function MarketingVsGenericAI() {
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/[0.06] p-5 shadow-[0_0_40px_-12px_rgba(16,185,129,0.4)]">
-            <p className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-300">
-              <CheckCircle size={15} className="text-emerald-400" aria-hidden />
+          <div className="rounded-2xl border border-sky-300/35 bg-sky-400/[0.08] p-5 shadow-[0_0_40px_-12px_rgba(56,189,248,0.45)]">
+            <p className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-sky-200">
+              <CheckCircle size={15} className="text-sky-300" aria-hidden />
               ReadyForRobots SIGNAL
             </p>
             <ul className="space-y-3">
               {rows.map((row) => (
-                <li key={row.rfr} className="flex items-start gap-2.5 text-sm font-medium leading-relaxed text-emerald-50">
-                  <CheckCircle size={15} className="mt-0.5 flex-shrink-0 text-emerald-400" aria-hidden />
+                <li key={row.rfr} className="flex items-start gap-2.5 text-sm font-medium leading-relaxed text-slate-100">
+                  <CheckCircle size={15} className="mt-0.5 flex-shrink-0 text-sky-300" aria-hidden />
                   {row.rfr}
                 </li>
               ))}
@@ -373,7 +391,7 @@ export function MarketingVsGenericAI() {
         <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
           <Link
             href="/compare"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-slate-950 transition-all hover:bg-emerald-400"
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 transition-all hover:bg-amber-400"
           >
             See the full comparison
             <ArrowRight size={14} />
@@ -395,7 +413,7 @@ export function MarketingCaseStudies() {
     {
       industry: "HOSPITALITY",
       outcome: "15-robot deployment",
-      outcomeColor: "bg-emerald-100 text-emerald-700",
+      outcomeColor: "bg-amber-100 text-amber-700",
       signals: [
         '"Can\'t staff overnight shifts" + "40% housekeeping vacancy" in earnings call',
         "Reached out 4 months before RFP with overnight automation case study",
@@ -405,7 +423,7 @@ export function MarketingCaseStudies() {
     {
       industry: "LOGISTICS",
       outcome: "$2.4M contract",
-      outcomeColor: "bg-blue-100 text-blue-700",
+      outcomeColor: "bg-sky-100 text-sky-700",
       signals: [
         '"Opening 2 new DCs" + posting for "automation engineer"',
         "Contacted during facility design phase with layout recommendations",
@@ -415,7 +433,7 @@ export function MarketingCaseStudies() {
   ];
 
   return (
-    <section id="case-studies" className="py-20 bg-slate-50">
+    <section id="case-studies" className="py-20 bg-white">
       <div className="container">
         <div className="mb-14">
           <p className="section-eyebrow mb-3">Real Signals. Real Deals.</p>
@@ -423,7 +441,7 @@ export function MarketingCaseStudies() {
         </div>
         <div className="grid md:grid-cols-2 gap-6">
           {cases.map((c) => (
-            <div key={c.industry} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+            <div key={c.industry} className="rounded-2xl border border-gray-200 bg-slate-50/70 shadow-sm p-8">
               <div className="flex items-center justify-between mb-6">
                 <span className="text-xs font-mono-data font-semibold text-gray-500 uppercase tracking-widest">
                   {c.industry}
@@ -535,7 +553,7 @@ export function MarketingBenchmark({ benchReport }: { benchReport: BenchReport |
       ];
 
   return (
-    <section className="py-20 bg-slate-50">
+    <section className="py-20 bg-slate-100/70">
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
@@ -547,7 +565,7 @@ export function MarketingBenchmark({ benchReport }: { benchReport: BenchReport |
               The HEIR benchmark tracks humanoid robots across data pipeline, cognition, mobility, and deployment
               readiness. Updated monthly.
             </p>
-            <Link href="/robots" className="inline-flex items-center gap-2 text-emerald-600 font-semibold text-sm hover:text-emerald-700">
+            <Link href="/robots" className="inline-flex items-center gap-2 text-sky-700 font-semibold text-sm hover:text-sky-800">
               View full benchmark <ArrowRight size={16} />
             </Link>
           </div>
@@ -589,9 +607,9 @@ export function MarketingReportSection({ onOpenReport }: { onOpenReport: () => v
   return (
     <section className="py-20 bg-white">
       <div className="container">
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-10 lg:p-14 flex flex-col lg:flex-row items-center gap-10">
+        <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 p-10 lg:p-14 flex flex-col lg:flex-row items-center gap-10">
           <div className="flex-1">
-            <p className="text-emerald-400 text-xs font-mono-data font-semibold uppercase tracking-widest mb-3">
+            <p className="text-amber-300 text-xs font-mono-data font-semibold uppercase tracking-widest mb-3">
               Market Intelligence
             </p>
             <h2 className="font-display text-3xl lg:text-4xl font-bold text-white tracking-tight mb-4">
@@ -608,7 +626,7 @@ export function MarketingReportSection({ onOpenReport }: { onOpenReport: () => v
                 { value: "62%", label: "strong buying intent" },
               ].map((stat) => (
                 <div key={stat.label}>
-                  <div className="font-mono-data font-bold text-3xl text-emerald-400 mb-1">{stat.value}</div>
+                  <div className="font-mono-data font-bold text-3xl text-sky-300 mb-1">{stat.value}</div>
                   <div className="text-slate-500 text-xs">{stat.label}</div>
                 </div>
               ))}
@@ -616,7 +634,7 @@ export function MarketingReportSection({ onOpenReport }: { onOpenReport: () => v
             <button
               type="button"
               onClick={onOpenReport}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] text-sm"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] text-sm"
             >
               Download Free Report
               <ArrowRight size={16} />
@@ -659,7 +677,7 @@ const HOME_PRICING_TIERS = [
     period: "/mo",
     tagline: "Full pipeline + SIGNAL research for active sellers",
     icon: Cpu,
-    accent: "border-emerald-300 ring-1 ring-emerald-200 shadow-lg shadow-emerald-100/40",
+    accent: "border-sky-300 ring-1 ring-sky-200 shadow-lg shadow-sky-100/50",
     iconBg: "bg-amber-50 text-amber-600",
     cta: "Upgrade to Pro",
     href: checkoutLoginPath("pro"),
@@ -688,7 +706,7 @@ export function MarketingPricing() {
   const [, setLocation] = useLocation();
 
   return (
-    <section id="pricing" className="py-20 bg-slate-50 border-t border-gray-100">
+    <section id="pricing" className="py-20 bg-white border-t border-gray-100">
       <div className="container">
         <div className="text-center mb-12 max-w-2xl mx-auto">
           <p className="section-eyebrow mb-3">Pricing</p>
@@ -754,7 +772,7 @@ export function MarketingPricing() {
                     }}
                     className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all active:scale-[0.98] ${
                       tier.highlight
-                        ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md"
+                        ? "bg-sky-600 text-white hover:bg-sky-700 shadow-md"
                         : "border-2 border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
                     }`}
                   >
@@ -798,7 +816,7 @@ export function MarketingFinalCTA({ hotCount, totalCount }: StatsProps) {
               <AnimatedStat
                 value={s.value}
                 suffix={s.suffix}
-                className="score-number text-3xl text-emerald-400 block"
+                className="score-number text-3xl text-sky-300 block"
               />
               <div className="text-slate-500 text-xs font-mono-data mt-0.5">{s.label}</div>
             </div>
@@ -810,14 +828,14 @@ export function MarketingFinalCTA({ hotCount, totalCount }: StatsProps) {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/results?url="
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all duration-150 active:scale-[0.97] shadow-lg text-base"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition-all duration-150 active:scale-[0.97] shadow-lg text-base"
           >
             Find buyers
             <ArrowRight size={16} />
           </Link>
           <Link
             href="/pipeline"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl border border-white/20 transition-all duration-150 active:scale-[0.97] text-base"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-sky-500/20 hover:bg-sky-500/30 text-sky-100 font-semibold rounded-xl border border-sky-300/35 transition-all duration-150 active:scale-[0.97] text-base"
           >
             Browse the pipeline free
           </Link>
@@ -850,12 +868,12 @@ export function MarketingNewsletterBand({
         aria-hidden
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 70% 80% at 50% 0%, rgba(16,185,129,0.18), transparent 60%)",
+            "radial-gradient(ellipse 70% 80% at 50% 0%, rgba(56,189,248,0.22), transparent 60%)",
         }}
       />
       <div className="container relative py-16 lg:py-20">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono-data font-semibold uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/35 text-amber-300 text-xs font-mono-data font-semibold uppercase tracking-widest mb-6">
             <Mail size={14} />
             Weekly brief
           </div>
@@ -872,12 +890,12 @@ export function MarketingNewsletterBand({
               onChange={(e) => onEmailChange(e.target.value)}
               placeholder="work email"
               required
-              className="flex-1 min-w-0 px-4 py-3.5 bg-white/5 border border-white/15 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40 transition-colors"
+              className="flex-1 min-w-0 px-4 py-3.5 bg-white/5 border border-white/15 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400/40 transition-colors"
             />
             <button
               type="submit"
               disabled={newsletterStatus === "submitting"}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-emerald-900/30"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-sky-950/30"
             >
               {newsletterStatus === "submitting" ? "Subscribing…" : "Subscribe free"}
               <Zap size={16} />

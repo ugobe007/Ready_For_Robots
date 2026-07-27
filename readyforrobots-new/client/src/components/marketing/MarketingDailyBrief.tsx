@@ -37,9 +37,9 @@ export default function MarketingDailyBrief({
     "A daily scan of sales triggers, partnership motion, and automation buying intent from the ReadyForRobots signal engine.";
 
   return (
-    <section className="py-20 bg-white border-t border-gray-100">
+    <section className="py-20 bg-slate-50 border-t border-gray-100">
       <div className="container grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="rounded-3xl border border-emerald-100 p-6 lg:p-7 bg-gradient-to-br from-emerald-50/80 to-slate-50">
+        <div className="rounded-3xl border border-sky-100 p-6 lg:p-7 bg-gradient-to-br from-sky-50 to-white">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="section-eyebrow mb-3">Today&apos;s Robot Intelligence Brief</p>
@@ -50,7 +50,7 @@ export default function MarketingDailyBrief({
             </div>
             <Link
               href="/newsletter"
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-emerald-700"
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-sky-700"
             >
               Read the brief
               <ArrowRight className="h-3.5 w-3.5" />
@@ -66,7 +66,7 @@ export default function MarketingDailyBrief({
                   "Fresh signal intelligence from ReadyForRobots.";
                 return (
                   <div key={`${story.company || story.headline || index}`} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                    <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-emerald-600">
+                    <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-amber-600">
                       {cleanScrapedText(story.category) || "Signal"}
                     </p>
                     <p className="text-sm font-bold leading-snug text-gray-900">{headline}</p>
@@ -78,8 +78,8 @@ export default function MarketingDailyBrief({
           ) : null}
         </div>
 
-        <div className="rounded-3xl border border-gray-100 bg-slate-50 p-6">
-          <Mail className="mb-5 h-5 w-5 text-emerald-600" />
+        <div className="rounded-3xl border border-gray-200 bg-white p-6">
+          <Mail className="mb-5 h-5 w-5 text-amber-600" />
           <p className="text-lg font-display font-bold text-gray-900">Get the brief daily</p>
           <p className="mt-3 text-sm leading-relaxed text-gray-600">
             A short, signal-driven digest of robot demand, buyer timing, and where Signal sees sales or partnership motion.
@@ -90,12 +90,12 @@ export default function MarketingDailyBrief({
               onChange={(e) => onEmailChange(e.target.value)}
               type="email"
               placeholder="work email"
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-sky-500"
             />
             <button
               type="submit"
               disabled={newsletterStatus === "submitting"}
-              className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-50"
+              className="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-amber-400 disabled:opacity-50"
             >
               {newsletterStatus === "submitting" ? "Subscribing..." : "Subscribe Free"}
             </button>

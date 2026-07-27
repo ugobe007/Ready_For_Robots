@@ -52,6 +52,11 @@
   --emerald-light: oklch(0.65 0.15 162);
   --navy: oklch(0.23 0.06 240);
   --amber-brand: oklch(0.75 0.17 80);
+  --amber-strong: #d97706;
+  --sky-strong: #0284c7;
+  --sky-soft: #e0f2fe;
+  --neutral-strong: #0f172a;
+  --neutral-muted: #475569;
 
   --primary: oklch(0.527 0.154 162);
   --primary-foreground: oklch(1 0 0);
@@ -192,7 +197,7 @@
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: oklch(0.527 0.154 162);
+    color: var(--amber-strong);
   }
 
   .badge-hot {
@@ -220,7 +225,7 @@
   .score-number {
     font-family: 'JetBrains Mono', monospace;
     font-weight: 700;
-    color: oklch(0.527 0.154 162);
+    color: var(--sky-strong);
   }
 
   .badge-hot-on-dark {
@@ -565,7 +570,7 @@
 
   /* Home — Before vs After ReadyForRobots comparison cards */
   .before-after-section {
-    @apply bg-slate-50 py-16 sm:py-20;
+    @apply bg-slate-100/80 py-16 sm:py-20;
   }
 
   .before-after-panel-before {
@@ -583,13 +588,13 @@
   }
 
   .before-after-panel-after {
-    @apply overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-sm;
+    @apply overflow-hidden rounded-2xl border border-sky-200 bg-white shadow-sm;
     border-left-width: 5px;
-    border-left-color: #059669;
+    border-left-color: #0284c7;
   }
 
   .before-after-panel-after-header {
-    @apply border-b border-emerald-100 bg-emerald-50/90 px-6 py-3.5;
+    @apply border-b border-sky-100 bg-sky-50/90 px-6 py-3.5;
   }
 
   .before-after-panel-after-body {
@@ -601,7 +606,7 @@
   }
 
   .before-after-badge-after {
-    @apply inline-flex rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-900 ring-1 ring-emerald-200;
+    @apply inline-flex rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-sky-900 ring-1 ring-sky-200;
   }
 
   .before-after-panel-label {
@@ -613,7 +618,7 @@
   }
 
   .before-after-panel-label-after {
-    @apply text-emerald-900;
+    @apply text-sky-900;
   }
 
   .before-after-list-item {
