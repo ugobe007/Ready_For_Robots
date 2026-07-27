@@ -290,7 +290,7 @@ export default function Home() {
                       required={key === "email"}
                       value={reportForm[key]}
                       onChange={(e) => setReportForm((current) => ({ ...current, [key]: e.target.value }))}
-                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none focus:border-emerald-500"
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none focus:border-sky-500"
                     />
                   </label>
                 ))}
@@ -300,7 +300,7 @@ export default function Home() {
                 <button
                   type="submit"
                   disabled={reportStatus === "submitting"}
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-50"
+                  className="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-amber-400 disabled:opacity-50"
                 >
                   {reportStatus === "submitting" ? "Requesting..." : "Download Free Report"}
                 </button>

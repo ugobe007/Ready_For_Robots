@@ -140,7 +140,7 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
   const totalLabel = formatStat(resolvedTotal ?? totalCount, "3,957");
 
   return (
-    <section id="live-pipeline" className="py-20 bg-slate-900 scroll-mt-24">
+    <section id="live-pipeline" className="py-24 bg-slate-900 scroll-mt-24">
       <div className="container">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-10 gap-4">
           <div>
@@ -191,7 +191,7 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
                     <Icon size={16} className="text-slate-300" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-white font-semibold text-sm font-display group-hover:text-emerald-300 transition-colors truncate">
+                    <div className="text-white font-semibold text-sm font-display group-hover:text-sky-300 transition-colors truncate">
                       {lead.company_name}
                     </div>
                     <div className="text-slate-400 text-xs font-mono-data uppercase truncate">{lead.industry}</div>
@@ -229,7 +229,7 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
             Showing {rows.length} of <span className="text-white font-bold">{totalLabel}</span> active opportunities
             {!live && <span className="text-slate-500"> · sample preview</span>}
           </p>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-4">
             <Link
               href="/pipeline"
               className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] text-sm"
@@ -239,13 +239,13 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
             </Link>
             <Link
               href="/compare"
-              className="inline-flex items-center gap-2 px-5 py-3 text-slate-200 hover:text-white font-semibold rounded-xl border border-sky-300/30 hover:border-sky-300/60 transition-all text-sm"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-slate-300 transition-colors hover:text-sky-200"
             >
               vs data tools
             </Link>
             <Link
               href="/results?url="
-              className="inline-flex items-center gap-2 px-5 py-3 text-sky-300 hover:text-white font-semibold rounded-xl border border-sky-300/30 hover:border-sky-300/60 transition-all text-sm"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-slate-300 transition-colors hover:text-sky-200"
             >
               <Zap size={16} />
               URL scan

@@ -60,13 +60,13 @@ export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
       statValue: 62,
       statSuffix: "%",
       statLabel: "strong buying intent",
-      iconTone: "bg-emerald-100 text-emerald-700",
-      railTone: "border-l-emerald-500",
+      iconTone: "bg-slate-100 text-slate-700",
+      railTone: "border-l-slate-500",
     },
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-16 lg:py-20 bg-white">
       <div className="container">
         <div className="text-center mb-14">
           <p className="section-eyebrow mb-3">What ReadyForRobots SIGNAL Does</p>
@@ -155,7 +155,7 @@ export function MarketingHowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="py-20 bg-slate-100/70 overflow-hidden">
+    <section id="how-it-works" className="py-24 lg:py-28 bg-slate-100/70 overflow-hidden">
       <div className="container">
         <div className="mb-14 max-w-2xl">
           <p className="section-eyebrow mb-3">How It Works</p>
@@ -166,7 +166,7 @@ export function MarketingHowItWorks() {
 
         <div className="relative">
           <div
-            className="hidden lg:block absolute top-[4.25rem] left-[12%] right-[12%] h-0.5 bg-gradient-to-r from-sky-300 via-amber-400 to-emerald-300"
+            className="hidden lg:block absolute top-[4.25rem] left-[12%] right-[12%] h-0.5 bg-gradient-to-r from-sky-300 via-amber-400 to-slate-400"
             aria-hidden
           />
 
@@ -182,7 +182,7 @@ export function MarketingHowItWorks() {
                           ? "bg-sky-600 shadow-sky-500/25"
                           : i === 1
                             ? "bg-amber-500 shadow-amber-500/25"
-                            : "bg-emerald-600 shadow-emerald-600/25"
+                                : "bg-slate-700 shadow-slate-500/20"
                       }`}>
                         <Icon size={28} className="text-white" />
                       </div>
@@ -191,7 +191,7 @@ export function MarketingHowItWorks() {
                           ? "border-sky-200 text-sky-700"
                           : i === 1
                             ? "border-amber-200 text-amber-700"
-                            : "border-emerald-200 text-emerald-700"
+                                : "border-slate-200 text-slate-700"
                       }`}>
                         {step.num}
                       </span>
@@ -205,7 +205,7 @@ export function MarketingHowItWorks() {
                       <span className="text-[10px] font-mono-data font-semibold uppercase tracking-widest text-slate-600">
                         {step.mockup.kicker}
                       </span>
-                      <FileText size={14} className={`shrink-0 ${i === 0 ? "text-sky-500" : i === 1 ? "text-amber-500" : "text-emerald-500"}`} />
+                      <FileText size={14} className={`shrink-0 ${i === 0 ? "text-sky-500" : i === 1 ? "text-amber-500" : "text-slate-500"}`} />
                     </div>
                     <p className={`text-sm font-semibold mb-2 ${step.mockup.accent}`}>{step.mockup.title}</p>
                     <div className="space-y-1">
@@ -301,7 +301,7 @@ export function MarketingBeforeAfter() {
               <ul className="space-y-3">
                 {after.map((item) => (
                   <li key={item} className="before-after-list-item before-after-list-item-after">
-                    <CheckCircle size={15} className="text-emerald-600 flex-shrink-0 mt-0.5" aria-hidden />
+                    <CheckCircle size={15} className="text-sky-600 flex-shrink-0 mt-0.5" aria-hidden />
                     {item}
                   </li>
                 ))}
@@ -388,7 +388,7 @@ export function MarketingVsGenericAI() {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
+        <div className="mt-8 flex flex-col sm:flex-row items-center gap-4">
           <Link
             href="/compare"
             className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 transition-all hover:bg-amber-400"
@@ -398,7 +398,7 @@ export function MarketingVsGenericAI() {
           </Link>
           <Link
             href="/pipeline"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition-all hover:bg-white/5"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-slate-300 transition-colors hover:text-sky-200"
           >
             Browse the live pipeline free
           </Link>
@@ -433,7 +433,7 @@ export function MarketingCaseStudies() {
   ];
 
   return (
-    <section id="case-studies" className="py-20 bg-white">
+    <section id="case-studies" className="py-16 lg:py-20 bg-white">
       <div className="container">
         <div className="mb-14">
           <p className="section-eyebrow mb-3">Real Signals. Real Deals.</p>
@@ -497,7 +497,7 @@ export function MarketingTestimonials() {
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-24 bg-slate-50/70">
       <div className="container">
         <div className="mb-14">
           <p className="section-eyebrow mb-3">From the Sales Floor</p>
@@ -529,7 +529,7 @@ export function MarketingTestimonials() {
                   <div className="font-display font-semibold text-gray-900 text-sm">{t.name}</div>
                   <div className="text-gray-500 text-xs">{t.company}</div>
                 </div>
-                <span className="text-xs font-mono-data font-bold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
+                <span className="text-xs font-mono-data font-bold px-2.5 py-1 bg-sky-50 text-sky-700 rounded-full border border-sky-100">
                   {t.outcome}
                 </span>
               </div>
@@ -553,7 +553,7 @@ export function MarketingBenchmark({ benchReport }: { benchReport: BenchReport |
       ];
 
   return (
-    <section className="py-20 bg-slate-100/70">
+    <section className="py-16 lg:py-20 bg-slate-100/70">
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
@@ -605,7 +605,7 @@ export function MarketingBenchmark({ benchReport }: { benchReport: BenchReport |
 
 export function MarketingReportSection({ onOpenReport }: { onOpenReport: () => void }) {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-24 bg-white">
       <div className="container">
         <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 p-10 lg:p-14 flex flex-col lg:flex-row items-center gap-10">
           <div className="flex-1">
@@ -665,7 +665,7 @@ const HOME_PRICING_TIERS = [
     tagline: "Browse the live pipeline — no card required",
     icon: Zap,
     accent: "border-gray-200",
-    iconBg: "bg-emerald-50 text-emerald-600",
+    iconBg: "bg-sky-50 text-sky-600",
     cta: "Start free",
     href: "/signup?plan=free&next=%2Fpipeline",
     features: ["URL scan & buyer matching", "10 live pipeline leads", "Save up to 5 leads"],
@@ -706,7 +706,7 @@ export function MarketingPricing() {
   const [, setLocation] = useLocation();
 
   return (
-    <section id="pricing" className="py-20 bg-white border-t border-gray-100">
+    <section id="pricing" className="py-16 lg:py-20 bg-white border-t border-gray-100">
       <div className="container">
         <div className="text-center mb-12 max-w-2xl mx-auto">
           <p className="section-eyebrow mb-3">Pricing</p>
@@ -729,7 +729,7 @@ export function MarketingPricing() {
                 }`}
               >
                 {tier.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-950">
                     {tier.badge}
                   </div>
                 )}
@@ -747,7 +747,7 @@ export function MarketingPricing() {
                 <ul className="space-y-2 mb-6 flex-1">
                   {tier.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-xs text-gray-700">
-                      <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />
+                      <CheckCircle2 size={14} className="text-sky-600 shrink-0 mt-0.5" />
                       {feature}
                     </li>
                   ))}
@@ -787,7 +787,7 @@ export function MarketingPricing() {
 
         <p className="text-center text-xs text-gray-500">
           Month-to-month when billing is enabled.{" "}
-          <Link href="/pricing" className="font-semibold text-emerald-700 hover:text-emerald-800">
+          <Link href="/pricing" className="font-semibold text-sky-700 hover:text-sky-800">
             Compare all features →
           </Link>
         </p>
@@ -835,7 +835,7 @@ export function MarketingFinalCTA({ hotCount, totalCount }: StatsProps) {
           </Link>
           <Link
             href="/pipeline"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-sky-500/20 hover:bg-sky-500/30 text-sky-100 font-semibold rounded-xl border border-sky-300/35 transition-all duration-150 active:scale-[0.97] text-base"
+            className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-sky-200 transition-colors hover:text-white"
           >
             Browse the pipeline free
           </Link>
@@ -902,14 +902,14 @@ export function MarketingNewsletterBand({
             </button>
           </form>
           {newsletterStatus === "success" && (
-            <p className="text-emerald-400 text-sm mt-4 font-medium">You&apos;re subscribed — check your inbox.</p>
+            <p className="text-sky-300 text-sm mt-4 font-medium">You&apos;re subscribed — check your inbox.</p>
           )}
           {newsletterStatus === "error" && (
             <p className="text-red-400 text-sm mt-4">Could not subscribe. Try again.</p>
           )}
           <Link
             href="/newsletter"
-            className="inline-flex items-center gap-1.5 mt-6 text-sm text-slate-500 hover:text-emerald-400 transition-colors"
+            className="inline-flex items-center gap-1.5 mt-6 text-sm text-slate-500 hover:text-sky-300 transition-colors"
           >
             Read today&apos;s edition <ArrowRight size={14} />
           </Link>

@@ -37,7 +37,7 @@ export default function MarketingDailyBrief({
     "A daily scan of sales triggers, partnership motion, and automation buying intent from the ReadyForRobots signal engine.";
 
   return (
-    <section className="py-20 bg-slate-50 border-t border-gray-100">
+    <section className="py-24 bg-slate-50 border-t border-gray-100">
       <div className="container grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
         <div className="rounded-3xl border border-sky-100 p-6 lg:p-7 bg-gradient-to-br from-sky-50 to-white">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -50,7 +50,7 @@ export default function MarketingDailyBrief({
             </div>
             <Link
               href="/newsletter"
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-sky-700"
+              className="inline-flex shrink-0 items-center gap-1 text-xs font-bold uppercase tracking-wide text-sky-700 transition-colors hover:text-sky-800"
             >
               Read the brief
               <ArrowRight className="h-3.5 w-3.5" />
@@ -100,7 +100,7 @@ export default function MarketingDailyBrief({
               {newsletterStatus === "submitting" ? "Subscribing..." : "Subscribe Free"}
             </button>
           </form>
-          {newsletterStatus === "success" && <p className="mt-3 text-xs text-emerald-600">Subscribed.</p>}
+          {newsletterStatus === "success" && <p className="mt-3 text-xs text-sky-700">Subscribed.</p>}
           {newsletterStatus === "error" && <p className="mt-3 text-xs text-red-600">Could not subscribe. Try again.</p>}
         </div>
       </div>

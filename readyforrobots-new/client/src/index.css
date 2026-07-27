@@ -324,7 +324,7 @@
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: oklch(0.72 0.14 162);
+    color: #fbbf24;
   }
 
   .page-hero-title {
@@ -565,7 +565,7 @@
   }
 
   .pipeline-panel .score-number {
-    color: oklch(0.72 0.14 162);
+    color: var(--sky-strong);
   }
 
   /* Home — Before vs After ReadyForRobots comparison cards */
