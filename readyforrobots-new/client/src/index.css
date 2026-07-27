@@ -404,6 +404,81 @@
     @apply h-8 bg-gradient-to-b from-[#111827] to-slate-50;
   }
 
+  @keyframes homeHeroOrbFloat {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+      opacity: 0.65;
+    }
+    50% {
+      transform: translate3d(0, -10px, 0) scale(1.04);
+      opacity: 0.85;
+    }
+  }
+
+  .home-hero-bg {
+    background:
+      radial-gradient(80% 60% at 88% 4%, rgba(16, 185, 129, 0.18), transparent 62%),
+      radial-gradient(60% 46% at 2% 88%, rgba(14, 165, 233, 0.18), transparent 54%),
+      linear-gradient(180deg, #f8fffc 0%, #eff8ff 48%, #f8fafc 100%);
+  }
+
+  .home-hero-orb {
+    animation: homeHeroOrbFloat 9s ease-in-out infinite;
+  }
+
+  .home-hero-orb-delay {
+    animation-delay: 1.4s;
+  }
+
+  .home-hero-title {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: clamp(2.2rem, 5.1vw, 4.7rem);
+    line-height: 1.03;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+  }
+
+  .home-hero-lead {
+    color: #334155;
+  }
+
+  .home-hero-list {
+    color: #475569;
+  }
+
+  .home-hero-cta {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-base font-semibold text-white transition-all duration-200 active:scale-[0.97];
+    background: linear-gradient(135deg, #0f766e 0%, #059669 45%, #10b981 100%);
+    box-shadow:
+      0 12px 24px rgba(5, 150, 105, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  }
+
+  .home-hero-cta:hover {
+    filter: saturate(1.06) brightness(1.02);
+    box-shadow:
+      0 16px 30px rgba(5, 150, 105, 0.26),
+      inset 0 1px 0 rgba(255, 255, 255, 0.26);
+  }
+
+  .home-hero-cta .btn-arrow {
+    transition: transform 0.2s ease;
+  }
+
+  .home-hero-cta:hover .btn-arrow {
+    transform: translateX(4px);
+  }
+
+  .home-hero-pipeline-shell {
+    border-radius: 1rem;
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.18);
+  }
+
+  .home-hero-fade {
+    @apply h-10 bg-gradient-to-b from-[#f8fafc] to-slate-50;
+  }
+
   .hero-mesh-bg {
     background:
       radial-gradient(ellipse 80% 55% at 88% 8%, rgba(16, 185, 129, 0.14), transparent 52%),

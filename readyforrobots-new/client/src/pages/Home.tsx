@@ -143,40 +143,34 @@ export default function Home() {
 
       <section
         id="hero-cta"
-        className="relative pt-24 pb-14 sm:pt-28 sm:pb-20 overflow-hidden hero-mesh-bg"
+        className="relative overflow-hidden pt-24 pb-14 sm:pt-28 sm:pb-20 home-hero-bg"
       >
-        <div className="absolute inset-0 hero-grid-texture pointer-events-none" aria-hidden />
-        <div
-          className="absolute inset-0 opacity-[0.35] pointer-events-none mix-blend-soft-light"
-          aria-hidden
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 30%, rgba(16,185,129,0.15) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(5,150,105,0.1) 0%, transparent 35%)",
-          }}
-        />
+        <div className="pointer-events-none absolute -top-28 right-[-10%] h-80 w-80 rounded-full bg-emerald-300/35 blur-3xl home-hero-orb" aria-hidden />
+        <div className="pointer-events-none absolute bottom-[-7rem] left-[-8%] h-72 w-72 rounded-full bg-sky-200/45 blur-3xl home-hero-orb home-hero-orb-delay" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/75 to-transparent" aria-hidden />
 
         <div className="container relative">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="animate-fade-in-up order-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 page-hero-badge mb-5 sm:mb-6">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-900 sm:mb-6">
                 <LiveDot />
                 <span className="font-mono-data">
                   {hotLabel} HOT · {signalsLabel} live signals · updated daily
                 </span>
               </div>
 
-              <h1 className="hero-display font-bold text-white mb-5 sm:mb-6">
+              <h1 className="home-hero-title mb-5 font-bold sm:mb-6">
                 Find Robot-Ready Buyers
-                <span className="text-emerald-400"> in Minutes, Not Weeks.</span>
+                <span className="text-emerald-700"> in Minutes, Not Weeks.</span>
               </h1>
 
-              <p className="text-base sm:text-lg text-slate-400 leading-relaxed mb-6 sm:mb-8 max-w-lg">
-                <span className="font-semibold text-slate-200">SIGNAL</span> helps robot OEM and integration teams
+              <p className="home-hero-lead mb-6 max-w-lg text-base leading-relaxed sm:mb-8 sm:text-lg">
+                <span className="font-semibold text-slate-900">SIGNAL</span> helps robot OEM and integration teams
                 prioritize accounts with active buying signals, generate outreach-ready context, and move deals forward
                 in CRM without manual list building.
               </p>
 
-              <ul className="mb-6 space-y-1.5 text-xs sm:text-sm text-slate-300 max-w-xl">
+              <ul className="home-hero-list mb-6 max-w-xl space-y-1.5 text-xs sm:text-sm">
                 <li>• {hotLabel} HOT accounts showing near-term automation intent</li>
                 <li>• {signalsLabel} cited signals mapped to why-now buying pressure</li>
                 <li>• {totalLabel} scored opportunities ready for outreach triage</li>
@@ -186,19 +180,19 @@ export default function Home() {
 
               <Link
                 href="/pipeline"
-                className="btn-secondary-hero mb-4"
+                className="home-hero-cta mb-4"
                 onClick={() => trackMarketingEvent("home_cta_pipeline_click", { location: "hero" })}
               >
                 Browse the pipeline free
                 <ChevronRight size={16} className="btn-arrow" />
               </Link>
 
-              <p className="text-xs text-slate-500 font-medium mb-1">
+              <p className="mb-1 text-xs font-medium text-slate-500">
                 No signup required · Free to start · Results in seconds
               </p>
               <Link
                 href="#live-pipeline"
-                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
                 onClick={() => trackMarketingEvent("home_cta_live_pipeline_anchor_click", { location: "hero" })}
               >
                 View live pipeline <ArrowRight size={12} />
@@ -208,10 +202,10 @@ export default function Home() {
             <div className="animate-fade-in-up order-2 lg:order-2" style={{ animationDelay: "120ms" }}>
               <div className="relative max-md:mt-2">
                 <div
-                  className="absolute -inset-3 sm:-inset-5 rounded-3xl bg-emerald-300/35 blur-2xl sm:blur-3xl pointer-events-none"
+                  className="pointer-events-none absolute -inset-3 rounded-3xl bg-emerald-200/70 blur-2xl sm:-inset-5 sm:blur-3xl"
                   aria-hidden
                 />
-                <div className="relative">
+                <div className="relative home-hero-pipeline-shell">
                   <MarketingHeroPipeline hotCount={hot} totalCount={total} />
                 </div>
               </div>
@@ -220,7 +214,7 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="page-hero-fade" aria-hidden />
+      <div className="home-hero-fade" aria-hidden />
 
       <div id="about">
         <MarketingWhatSignalDoes hotCount={hot} totalCount={total} />
