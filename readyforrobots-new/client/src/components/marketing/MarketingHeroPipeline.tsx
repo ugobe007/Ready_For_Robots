@@ -174,11 +174,13 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
                   <HeatBadge heat={tier} onDark />
                 </div>
                 <PipelineLeadActionMeta lead={lead} variant="hero" />
-                {href && (
-                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-300 opacity-0 transition-opacity group-hover:opacity-100">
-                    Open action brief <ArrowRight size={11} />
-                  </span>
-                )}
+                <span className={`mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold transition-colors ${
+                  href
+                    ? "text-sky-300 group-hover:text-sky-200"
+                    : "text-slate-500"
+                }`}>
+                  {href ? "Open action brief" : "Preview mode"} <ArrowRight size={11} />
+                </span>
               </div>
               <div className="shrink-0 text-right">
                 <div className="score-number text-2xl leading-none text-emerald-400">{scoreOf(lead)}</div>
@@ -199,7 +201,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
             <Link
               key={`${lead.id}-${rowIndex}`}
               href={href}
-              aria-label={`Open ${lead.company_name || "this lead"} — pitch action and outreach draft`}
+              aria-label={`Open ${lead.company_name || "this lead"} in pipeline — pitch action and outreach draft`}
               className={`group cursor-pointer transition-colors hover:bg-sky-500/10 ${rowClass}`}
             >
               {body}
