@@ -431,29 +431,32 @@
 
   .home-hero-bg {
     background:
-      radial-gradient(52% 44% at 82% 6%, rgba(16, 185, 129, 0.16), transparent 58%),
-      radial-gradient(60% 48% at 8% 88%, rgba(14, 165, 233, 0.16), transparent 54%),
-      radial-gradient(46% 38% at 30% 18%, rgba(16, 185, 129, 0.07), transparent 60%),
-      linear-gradient(180deg, #050a14 0%, #0a1222 52%, #0f172a 100%);
+      /* Strong emerald spotlight right — the light source the glass panel floats in */
+      radial-gradient(ellipse 68% 80% at 80% 52%, rgba(16, 185, 129, 0.28), transparent 62%),
+      /* Secondary sky haze bottom-left */
+      radial-gradient(ellipse 55% 45% at 4% 92%, rgba(14, 165, 233, 0.20), transparent 55%),
+      /* Top-left emerald warmth */
+      radial-gradient(ellipse 42% 36% at 18% 10%, rgba(16, 185, 129, 0.10), transparent 58%),
+      /* Near-black deep navy base */
+      linear-gradient(160deg, #020810 0%, #060d1a 45%, #0a1225 100%);
   }
 
+  /* Fine dot matrix — more intentional than a grid, fades toward edges */
   .home-hero-grid {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image:
-      linear-gradient(rgba(148, 163, 184, 0.055) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(148, 163, 184, 0.055) 1px, transparent 1px);
-    background-size: 44px 44px;
-    mask-image: radial-gradient(ellipse 90% 70% at 50% 22%, black 12%, transparent 74%);
-    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 22%, black 12%, transparent 74%);
+    background-image: radial-gradient(circle, rgba(52, 211, 153, 0.18) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(ellipse 75% 68% at 38% 38%, black 0%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse 75% 68% at 38% 38%, black 0%, transparent 78%);
   }
 
   .home-hero-glow-orb {
     position: absolute;
     pointer-events: none;
     border-radius: 9999px;
-    filter: blur(80px);
+    filter: blur(90px);
     animation: homeHeroOrbFloat 9s ease-in-out infinite;
   }
 
@@ -467,20 +470,19 @@
 
   .home-hero-title {
     font-family: var(--font-display);
-    font-size: clamp(2.35rem, 5.2vw, 4.85rem);
-    line-height: 0.99;
+    font-size: clamp(2.5rem, 5.4vw, 5rem);
+    line-height: 1.0;
     letter-spacing: -0.035em;
     font-kerning: normal;
-    color: #f8fafc;
-    text-wrap: balance;
+    color: #f1f5f9;
   }
 
   .home-hero-title-accent {
-    background: linear-gradient(100deg, #6ee7b7 0%, #34d399 45%, #10b981 100%);
+    background: linear-gradient(105deg, #a7f3d0 0%, #34d399 40%, #10b981 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(0 0 26px rgba(16, 185, 129, 0.32));
+    filter: drop-shadow(0 0 32px rgba(52, 211, 153, 0.45));
   }
 
   .home-hero-lead {
@@ -491,56 +493,68 @@
     color: #94a3b8;
   }
 
+  /* Shell: box-shadow ring + outer glow — no pseudo-element needed */
   .home-hero-pipeline-shell {
     position: relative;
-    border-radius: 1.25rem;
+    border-radius: 1.375rem;
+    box-shadow:
+      0 0 0 1px rgba(52, 211, 153, 0.55),
+      0 0 0 4px rgba(16, 185, 129, 0.10),
+      0 0 80px -8px rgba(16, 185, 129, 0.45),
+      0 32px 90px -20px rgba(0, 0, 0, 0.85);
+    transition: box-shadow 0.3s ease;
   }
 
-  .home-hero-pipeline-shell::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: 1.3rem;
-    padding: 1px;
-    background: linear-gradient(
-      160deg,
-      rgba(52, 211, 153, 0.45) 0%,
-      rgba(148, 163, 184, 0.16) 32%,
-      rgba(148, 163, 184, 0.1) 60%,
-      rgba(56, 189, 248, 0.3) 100%
-    );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    z-index: 1;
+  .home-hero-pipeline-shell:hover {
+    box-shadow:
+      0 0 0 1px rgba(52, 211, 153, 0.70),
+      0 0 0 5px rgba(16, 185, 129, 0.14),
+      0 0 100px -6px rgba(16, 185, 129, 0.55),
+      0 36px 96px -20px rgba(0, 0, 0, 0.9);
   }
 
+  /* True glassmorphism: see the emerald glow through the panel */
   .home-hero-panel {
-    @apply overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#0b1222]/90;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    overflow: hidden;
+    border-radius: 1.375rem;
+    background: rgba(6, 12, 28, 0.55);
+    border: none;
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
   }
 
   .home-hero-panel-header {
-    @apply border-b border-white/10;
-    background: linear-gradient(115deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.7) 42%, rgba(15, 23, 42, 0.55) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(118deg,
+      rgba(16, 185, 129, 0.18) 0%,
+      rgba(52, 211, 153, 0.06) 38%,
+      rgba(6, 12, 28, 0.40) 100%);
   }
 
   .home-hero-panel-footer {
-    @apply border-t border-white/10 bg-slate-950/60;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(4, 8, 20, 0.45);
   }
 
   .home-hero-panel-row {
-    @apply border-b border-white/[0.07] transition-colors duration-300 last:border-0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background-color 0.25s ease;
+  }
+
+  .home-hero-panel-row:last-child {
+    border-bottom: none;
   }
 
   .home-hero-panel-row:nth-child(odd) {
-    @apply bg-white/[0.015];
+    background: rgba(255, 255, 255, 0.015);
   }
 
   .home-hero-panel-row:nth-child(even) {
-    @apply bg-white/[0.045];
+    background: rgba(255, 255, 255, 0.032);
+  }
+
+  .home-hero-panel-row:hover {
+    background: rgba(52, 211, 153, 0.06) !important;
   }
 
   /* ─── Hero animations ─────────────────────────────────────────── */
@@ -663,11 +677,8 @@
     mask-image: radial-gradient(ellipse 92% 72% at 50% 28%, black 18%, transparent 78%);
   }
 
-  .hero-widget-glow {
-    box-shadow:
-      0 24px 70px -24px rgba(2, 6, 23, 0.9),
-      0 0 90px -30px rgba(16, 185, 129, 0.4);
-  }
+  /* Shell carries the glow; this class is kept for compatibility but cleared */
+  .hero-widget-glow {}
 
   .btn-secondary-hero {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl border border-white/15 transition-all duration-200 active:scale-[0.97] text-base;

@@ -176,10 +176,13 @@ export default function Home() {
         id="hero-cta"
         className="relative overflow-hidden pt-14 pb-10 sm:pt-16 sm:pb-12 home-hero-bg"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/55 to-transparent" aria-hidden />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/60 to-transparent" aria-hidden />
         <div className="home-hero-grid" aria-hidden />
-        <div ref={orb1Ref} className="home-hero-glow-orb -top-24 right-[8%] h-72 w-72 bg-emerald-500/[0.14]" aria-hidden />
-        <div ref={orb2Ref} className="home-hero-glow-orb home-hero-orb-delay bottom-[-6rem] left-[-4rem] h-80 w-80 bg-sky-500/[0.1]" aria-hidden />
+        {/* Large ambient orbs that give the background its color depth */}
+        <div ref={orb1Ref} className="home-hero-glow-orb -top-16 right-[2%] h-[28rem] w-[28rem] bg-emerald-400/[0.22]" aria-hidden />
+        <div ref={orb2Ref} className="home-hero-glow-orb home-hero-orb-delay bottom-[-8rem] left-[-6rem] h-96 w-96 bg-sky-400/[0.16]" aria-hidden />
+        {/* Extra concentrated spotlight directly behind the pipeline panel */}
+        <div className="pointer-events-none absolute right-[4%] top-[8%] h-[32rem] w-[38rem] rounded-full bg-emerald-400/[0.13]" style={{ filter: "blur(60px)" }} aria-hidden />
 
         <div className="container home-hero-container relative">
           <div className="grid items-center gap-6 lg:grid-cols-12 lg:gap-5 xl:gap-6">
@@ -194,10 +197,9 @@ export default function Home() {
                 </span>
               </div>
 
-              <h1 className="home-hero-title mb-4 max-w-[13.2ch] font-bold sm:mb-5">
-                <span className="hero-word block" style={{ animationDelay: "80ms" }}>Deployment</span>
-                <span className="hero-word block" style={{ animationDelay: "160ms" }}>Intelligence</span>
-                <span className="hero-word home-hero-title-accent block" style={{ animationDelay: "240ms" }}>for Robotics.</span>
+              <h1 className="home-hero-title hero-word mb-4 max-w-[11ch] sm:mb-5" style={{ animationDelay: "80ms" }}>
+                Deployment Intelligence{" "}
+                <span className="home-hero-title-accent">for Robotics.</span>
               </h1>
 
               <p className="hero-word home-hero-lead mb-3 max-w-2xl text-lg leading-relaxed text-slate-100 sm:mb-4 sm:text-[1.34rem] sm:leading-[1.45]" style={{ animationDelay: "320ms" }}>
