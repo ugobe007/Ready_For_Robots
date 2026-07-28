@@ -42,7 +42,7 @@ export default function HeroUrlScan({ onDark = false }: Props) {
           placeholder="yourcompany.com or URL"
           className={
             onDark
-              ? "min-w-0 flex-1 rounded-xl border-2 border-emerald-400/55 bg-slate-900/80 px-4 py-3 text-sm text-slate-50 placeholder-slate-300 shadow-sm outline-none transition-colors focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/30"
+              ? "min-w-0 flex-1 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-slate-50 placeholder-slate-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] outline-none backdrop-blur-sm transition-all focus:border-emerald-300/70 focus:bg-slate-900/70 focus:ring-2 focus:ring-emerald-300/25"
               : "min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-colors focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
           }
         />
@@ -50,7 +50,7 @@ export default function HeroUrlScan({ onDark = false }: Props) {
           type="submit"
           className={
             onDark
-              ? "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-transparent px-6 py-3 text-base font-semibold text-emerald-300 transition-all duration-150 hover:bg-emerald-500/10 hover:text-emerald-200 active:scale-[0.97]"
+              ? "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-500 px-6 py-3 text-base font-semibold text-slate-950 shadow-[0_8px_24px_-8px_rgba(16,185,129,0.65)] transition-all duration-150 hover:from-emerald-300 hover:to-emerald-400 hover:shadow-[0_10px_28px_-8px_rgba(16,185,129,0.8)] active:scale-[0.97]"
               : "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-transparent px-6 py-3 text-base font-semibold text-emerald-700 transition-all duration-150 hover:bg-emerald-50 active:scale-[0.97]"
           }
         >
