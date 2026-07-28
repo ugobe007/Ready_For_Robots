@@ -704,14 +704,14 @@ export function MarketingPricing() {
   const [, setLocation] = useLocation();
 
   return (
-    <section id="pricing" className="py-16 lg:py-20 bg-white border-t border-gray-100">
-      <div className="container">
+    <section id="pricing" className="pricing-dark-section py-16 lg:py-20">
+      <div className="container relative">
         <div className="text-center mb-12 max-w-2xl mx-auto">
-          <p className="section-eyebrow mb-3">Pricing</p>
-          <h2 className="section-headline font-bold text-gray-900 mb-3">
+          <p className="section-eyebrow section-eyebrow-on-dark mb-3">Pricing</p>
+          <h2 className="section-headline font-bold text-white mb-3">
             Simple plans for robot sales teams
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-400">
             Start free — scan URLs, browse the pipeline, upgrade when you need research and CRM sync.
           </p>
         </div>
@@ -719,33 +719,36 @@ export function MarketingPricing() {
         <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto mb-8">
           {HOME_PRICING_TIERS.map((tier) => {
             const Icon = tier.icon;
+            const cardClass = tier.highlight ? "pricing-glass-card-pro" : "pricing-glass-card";
             return (
               <div
                 key={tier.name}
-                className={`relative flex flex-col rounded-2xl border bg-white p-6 ${tier.accent} ${
-                  tier.highlight ? "md:-translate-y-1" : ""
-                }`}
+                className={`${cardClass} ${tier.highlight ? "md:-translate-y-1" : ""}`}
               >
                 {tier.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-950">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-950 shadow-[0_4px_14px_-4px_rgba(16,185,129,0.7)]">
                     {tier.badge}
                   </div>
                 )}
                 <div className="flex items-center gap-2.5 mb-4 mt-1">
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${tier.iconBg}`}>
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                    tier.highlight
+                      ? "bg-emerald-400/15 text-emerald-300"
+                      : "bg-white/8 text-slate-300"
+                  }`}>
                     <Icon size={18} />
                   </div>
-                  <span className="font-display font-bold text-gray-900">{tier.name}</span>
+                  <span className="font-display font-bold text-slate-100">{tier.name}</span>
                 </div>
                 <div className="mb-2 flex items-baseline gap-1">
-                  <span className="font-mono-data text-3xl font-bold text-gray-900">{tier.price}</span>
-                  {tier.period && <span className="text-sm text-gray-500">{tier.period}</span>}
+                  <span className={`font-mono-data text-3xl font-bold ${tier.highlight ? "text-emerald-300" : "text-slate-100"}`}>{tier.price}</span>
+                  {tier.period && <span className="text-sm text-slate-500">{tier.period}</span>}
                 </div>
-                <p className="text-xs text-gray-600 mb-5 leading-relaxed">{tier.tagline}</p>
+                <p className="text-xs text-slate-400 mb-5 leading-relaxed">{tier.tagline}</p>
                 <ul className="space-y-2 mb-6 flex-1">
                   {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-xs text-gray-700">
-                      <CheckCircle2 size={14} className="text-sky-600 shrink-0 mt-0.5" />
+                    <li key={feature} className="flex items-start gap-2 text-xs text-slate-300">
+                      <CheckCircle2 size={14} className={`shrink-0 mt-0.5 ${tier.highlight ? "text-emerald-400" : "text-sky-400"}`} />
                       {feature}
                     </li>
                   ))}
@@ -753,7 +756,7 @@ export function MarketingPricing() {
                 {"external" in tier && tier.external ? (
                   <a
                     href={tier.href}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-gray-300 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-gray-800 transition-colors hover:bg-slate-100"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-slate-200 transition-all hover:bg-white/10 hover:text-white"
                   >
                     {tier.cta}
                     <ArrowRight size={14} />
@@ -770,8 +773,8 @@ export function MarketingPricing() {
                     }}
                     className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all active:scale-[0.98] ${
                       tier.highlight
-                        ? "bg-sky-600 text-white hover:bg-sky-700 shadow-md"
-                        : "border-2 border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
+                        ? "bg-gradient-to-b from-emerald-400 to-emerald-500 text-slate-950 font-bold shadow-[0_6px_20px_-6px_rgba(16,185,129,0.65)] hover:from-emerald-300 hover:to-emerald-400"
+                        : "border border-white/15 bg-white/[0.06] text-slate-200 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     {tier.cta}
@@ -783,9 +786,9 @@ export function MarketingPricing() {
           })}
         </div>
 
-        <p className="text-center text-xs text-gray-500">
+        <p className="text-center text-xs text-slate-500">
           Month-to-month when billing is enabled.{" "}
-          <Link href="/pricing" className="font-semibold text-sky-700 hover:text-sky-800">
+          <Link href="/pricing" className="font-semibold text-emerald-400 hover:text-emerald-300">
             Compare all features →
           </Link>
         </p>
@@ -799,9 +802,16 @@ export function MarketingFinalCTA({ hotCount, totalCount }: StatsProps) {
   const totalTarget = statTarget(totalCount, 3957);
 
   return (
-    <section className="py-24 bg-slate-900">
-      <div className="container text-center">
-        <h2 className="font-display text-4xl lg:text-5xl font-bold text-white tracking-tight mb-4">
+    <section className="cta-section-bg relative overflow-hidden py-24">
+      {/* Glow orbs */}
+      <div className="pointer-events-none absolute -top-20 left-[10%] h-64 w-64 rounded-full bg-emerald-500/[0.12] blur-[70px]" aria-hidden />
+      <div className="pointer-events-none absolute bottom-[-4rem] right-[8%] h-72 w-72 rounded-full bg-sky-500/[0.09] blur-[80px]" aria-hidden />
+      <div className="container relative text-center">
+        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/[0.07] px-3.5 py-1.5 text-[11px] font-semibold text-emerald-200 shadow-[0_0_24px_-8px_rgba(16,185,129,0.4)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)]" />
+          Live pipeline · updated daily
+        </div>
+        <h2 className="font-display text-4xl lg:text-5xl font-bold text-white tracking-tight mb-6" style={{ textWrap: "balance" } as React.CSSProperties}>
           Discover. Develop. Close robot deals.
         </h2>
         <div className="flex items-center justify-center gap-8 mb-8 flex-wrap">
@@ -814,7 +824,7 @@ export function MarketingFinalCTA({ hotCount, totalCount }: StatsProps) {
               <AnimatedStat
                 value={s.value}
                 suffix={s.suffix}
-                className="score-number text-3xl text-sky-300 block"
+                className="score-number text-3xl text-emerald-300 block drop-shadow-[0_0_16px_rgba(52,211,153,0.5)]"
               />
               <div className="text-slate-500 text-xs font-mono-data mt-0.5">{s.label}</div>
             </div>
@@ -826,14 +836,14 @@ export function MarketingFinalCTA({ hotCount, totalCount }: StatsProps) {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/results?url="
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition-all duration-150 active:scale-[0.97] shadow-lg text-base"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-b from-emerald-400 to-emerald-500 text-slate-950 font-bold rounded-xl transition-all duration-150 active:scale-[0.97] shadow-[0_8px_28px_-8px_rgba(16,185,129,0.7)] hover:from-emerald-300 hover:to-emerald-400 hover:shadow-[0_10px_32px_-8px_rgba(16,185,129,0.85)] text-base"
           >
             Find buyers
             <ArrowRight size={16} />
           </Link>
           <Link
             href="/pipeline"
-            className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-sky-200 transition-colors hover:text-white"
+            className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-slate-300 transition-colors hover:text-white"
           >
             Browse the pipeline free
           </Link>
@@ -888,12 +898,12 @@ export function MarketingNewsletterBand({
               onChange={(e) => onEmailChange(e.target.value)}
               placeholder="work email"
               required
-              className="flex-1 min-w-0 px-4 py-3.5 bg-white/5 border border-white/15 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400/40 transition-colors"
+              className="flex-1 min-w-0 px-4 py-3.5 bg-white/[0.06] border border-white/15 rounded-xl text-white text-sm placeholder-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm focus:outline-none focus:border-emerald-300/70 focus:ring-2 focus:ring-emerald-300/20 transition-all"
             />
             <button
               type="submit"
               disabled={newsletterStatus === "submitting"}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-sky-950/30"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-b from-emerald-400 to-emerald-500 text-slate-950 font-bold rounded-xl transition-all disabled:opacity-50 shadow-[0_6px_20px_-6px_rgba(16,185,129,0.65)] hover:from-emerald-300 hover:to-emerald-400 hover:shadow-[0_8px_24px_-6px_rgba(16,185,129,0.8)] active:scale-[0.97]"
             >
               {newsletterStatus === "submitting" ? "Subscribing…" : "Subscribe free"}
               <Zap size={16} />
