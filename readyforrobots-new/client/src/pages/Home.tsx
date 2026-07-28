@@ -143,7 +143,7 @@ export default function Home() {
 
       <section
         id="hero-cta"
-        className="relative overflow-hidden pt-14 pb-6 sm:pt-16 sm:pb-8 home-hero-bg"
+        className="relative overflow-hidden pt-14 pb-10 sm:pt-16 sm:pb-12 home-hero-bg"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/55 to-transparent" aria-hidden />
 
@@ -172,7 +172,7 @@ export default function Home() {
 
               <HeroUrlScan onDark />
 
-              <p className="mb-1 max-w-lg text-xs leading-relaxed text-slate-400 sm:text-sm">
+              <p className="mb-4 max-w-lg text-xs leading-relaxed text-slate-400 sm:mb-6 sm:text-sm">
                 Enter your company website to generate your first deployment pipeline.
               </p>
             </div>
