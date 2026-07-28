@@ -73,6 +73,14 @@ function scoreOf(lead: LeadRow): number | string {
   return v != null ? Math.round(Number(v)) : "—";
 }
 
+function nextActionText(lead: LeadRow): string | null {
+  const raw = lead.pipeline_action || lead.core_need || lead.share_summary || lead.signals?.[0]?.display_text || null;
+  if (!raw) return null;
+  const cleaned = raw.replace(/^priority:\s*/i, "").trim();
+  if (!cleaned) return null;
+  return cleaned.length > 92 ? `${cleaned.slice(0, 89)}...` : cleaned;
+}
+
 /**
  * Deep link a real, live lead into its value proof (pitch + outreach draft) on
  * /pipeline. Fallback/demo rows (negative ids or preview mode) stay non-clickable
@@ -131,6 +139,9 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
   const hotLabel = formatStat(hotCount, "319");
   const totalLabel = formatStat(totalCount, "3,957");
   const rows = visible.slice(0, 3);
+  const topLiveLead = rows
+    .map((lead) => ({ lead, href: leadHref(lead, live) }))
+    .find((entry) => Boolean(entry.href));
 
   return (
     <div className="hero-widget-glow home-hero-panel">
@@ -165,9 +176,15 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
                   <HeatBadge heat={tier} onDark />
                 </div>
                 <PipelineLeadActionMeta lead={lead} variant="hero" />
+                {nextActionText(lead) && (
+                  <div className="mt-1.5 rounded-md border border-emerald-300/20 bg-emerald-400/[0.07] px-2 py-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">Next action</span>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-100/95">{nextActionText(lead)}</p>
+                  </div>
+                )}
                 {href && (
                   <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-300 opacity-0 transition-opacity group-hover:opacity-100">
-                    See the pitch + outreach draft <ArrowRight size={11} />
+                    Open action brief <ArrowRight size={11} />
                   </span>
                 )}
               </div>
@@ -199,17 +216,27 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
         })}
       </div>
 
-      <div className="home-hero-panel-footer flex items-center justify-between px-4 py-2.5 sm:px-5 sm:py-3">
+      <div className="home-hero-panel-footer px-4 py-2.5 sm:px-5 sm:py-3">
         <span className="font-mono-data text-[10px] text-slate-400 sm:text-xs">
           Showing {rows.length} of {totalLabel} active opportunities
           {!live && <span className="text-slate-400"> · preview</span>}
         </span>
-        <Link
-          href="/pipeline"
-          className="flex items-center gap-1 rounded-lg bg-sky-400/10 px-2 py-1 text-xs font-semibold text-sky-200 hover:bg-sky-400/20"
-        >
-          View all <ArrowRight size={12} />
-        </Link>
+        <div className="mt-2 flex items-center gap-2">
+          {topLiveLead?.href && (
+            <Link
+              href={topLiveLead.href}
+              className="inline-flex items-center gap-1 rounded-lg bg-emerald-400/15 px-2.5 py-1 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/25"
+            >
+              Start with {topLiveLead.lead.company_name || "top lead"} <ArrowRight size={12} />
+            </Link>
+          )}
+          <Link
+            href="/pipeline"
+            className="inline-flex items-center gap-1 rounded-lg bg-sky-400/10 px-2 py-1 text-xs font-semibold text-sky-200 hover:bg-sky-400/20"
+          >
+            View all <ArrowRight size={12} />
+          </Link>
+        </div>
       </div>
     </div>
   );
