@@ -100,9 +100,9 @@ type Props = {
 
 export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
   const [pool, setPool] = useState<LeadRow[]>(FALLBACK);
-  const [visible, setVisible] = useState<LeadRow[]>(FALLBACK.slice(0, 3));
+  const [visible, setVisible] = useState<LeadRow[]>(FALLBACK.slice(0, 2));
   const [live, setLive] = useState(false);
-  const poolCursor = useRef(3);
+  const poolCursor = useRef(2);
   const rotateSlot = useRef(0);
 
   useEffect(() => {
@@ -111,8 +111,8 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
       const { leads, live: isLive } = await fetchHomepageLeadPool(FALLBACK);
       if (cancelled) return;
       setPool(leads);
-      setVisible(leads.slice(0, 3));
-      poolCursor.current = Math.min(3, leads.length);
+      setVisible(leads.slice(0, 2));
+      poolCursor.current = Math.min(2, leads.length);
       setLive(isLive);
     })();
     return () => {
@@ -121,13 +121,13 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
   }, []);
 
   useEffect(() => {
-    if (pool.length <= 3) return;
+    if (pool.length <= 2) return;
     const timer = window.setInterval(() => {
       setVisible((current) => {
         const next = [...current];
         const pick = pool[poolCursor.current % pool.length];
         poolCursor.current = (poolCursor.current + 1) % pool.length;
-        const slot = rotateSlot.current % 3;
+        const slot = rotateSlot.current % 2;
         rotateSlot.current += 1;
         next[slot] = pick;
         return next;
@@ -138,7 +138,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
 
   const hotLabel = formatStat(hotCount, "319");
   const totalLabel = formatStat(totalCount, "3,957");
-  const rows = visible.slice(0, 3);
+  const rows = visible.slice(0, 2);
   const topLiveLead = rows
     .map((lead) => ({ lead, href: leadHref(lead, live) }))
     .find((entry) => Boolean(entry.href));
@@ -160,9 +160,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
           const Icon = iconForIndustry(lead.industry);
           const tier = (lead.priority_tier || "WARM").toUpperCase();
           const href = leadHref(lead, live);
-          const rowClass = `home-hero-panel-row flex items-start gap-3 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 ${
-            rowIndex === 2 ? "hidden sm:flex" : ""
-          }`;
+          const rowClass = `home-hero-panel-row flex items-start gap-3 px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-3`;
           const body = (
             <>
               <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-slate-800/70 shadow-sm">
@@ -176,12 +174,6 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
                   <HeatBadge heat={tier} onDark />
                 </div>
                 <PipelineLeadActionMeta lead={lead} variant="hero" />
-                {nextActionText(lead) && (
-                  <div className="mt-1.5 rounded-md border border-emerald-300/20 bg-emerald-400/[0.07] px-2 py-1">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">Next action</span>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-100/95">{nextActionText(lead)}</p>
-                  </div>
-                )}
                 {href && (
                   <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-300 opacity-0 transition-opacity group-hover:opacity-100">
                     Open action brief <ArrowRight size={11} />
