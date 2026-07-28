@@ -55,9 +55,15 @@ type Props = {
 };
 
 export default function PipelineLeadActionMeta({ lead, variant = "light", className = "" }: Props) {
-  const action = actionLine(lead);
-  const types = robotTypes(lead);
-  const proof = evidenceLine(lead);
+  const rawAction = actionLine(lead);
+  // Hero: one tight line only
+  const action =
+    variant === "hero" && rawAction.length > 68
+      ? rawAction.slice(0, 65).trimEnd() + "…"
+      : rawAction;
+  // Hero: no chips, no evidence — keep cards compact
+  const types = variant === "hero" ? [] : robotTypes(lead);
+  const proof = variant === "hero" ? "" : evidenceLine(lead);
   if (!action && types.length === 0 && !proof) return null;
 
   const actionClass =
