@@ -213,10 +213,6 @@ export default function Home() {
               <div className="hero-word" style={{ animationDelay: "430ms" }}>
                 <HeroUrlScan onDark />
               </div>
-
-              <p className="hero-word mb-4 max-w-lg text-xs leading-relaxed text-slate-400 sm:mb-6 sm:text-sm" style={{ animationDelay: "480ms" }}>
-                Enter your company website to generate your first deployment pipeline.
-              </p>
             </div>
 
             <div className="order-2 lg:col-span-5 lg:order-2">

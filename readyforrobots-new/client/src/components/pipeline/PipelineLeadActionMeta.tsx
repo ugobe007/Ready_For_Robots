@@ -61,8 +61,9 @@ export default function PipelineLeadActionMeta({ lead, variant = "light", classN
     ? rawAction.slice(0, 65).trimEnd() + "…"
     : rawAction;
   const types = robotTypes(lead);
-  // Hero variant: skip the evidence line to keep cards compact
+  // Hero variant: skip evidence line and robot type chips to keep cards compact
   const proof = variant === "hero" ? "" : evidenceLine(lead);
+  const heroTypes: string[] = [];
   if (!action && types.length === 0 && !proof) return null;
 
   const actionClass =
@@ -121,9 +122,9 @@ export default function PipelineLeadActionMeta({ lead, variant = "light", classN
           )}
         </p>
       )}
-      {types.length > 0 && (
+      {(variant === "hero" ? heroTypes : types).length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {types.map((type) => (
+          {(variant === "hero" ? heroTypes : types).map((type) => (
             <span key={type} className={chipClass}>
               {type}
             </span>
