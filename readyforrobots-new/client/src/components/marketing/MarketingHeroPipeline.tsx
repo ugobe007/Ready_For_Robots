@@ -160,7 +160,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
           const Icon = iconForIndustry(lead.industry);
           const tier = (lead.priority_tier || "WARM").toUpperCase();
           const href = leadHref(lead, live);
-          const rowClass = `home-hero-panel-row flex items-start gap-3 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 ${
+          const rowClass = `home-hero-panel-row flex items-start gap-3 px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-3 ${
             rowIndex === 2 ? "hidden sm:flex" : ""
           }`;
           const body = (
@@ -176,12 +176,6 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
                   <HeatBadge heat={tier} onDark />
                 </div>
                 <PipelineLeadActionMeta lead={lead} variant="hero" />
-                {nextActionText(lead) && (
-                  <div className="mt-1.5 rounded-md border border-emerald-300/20 bg-emerald-400/[0.07] px-2 py-1">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">Next action</span>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-100/95">{nextActionText(lead)}</p>
-                  </div>
-                )}
                 {href && (
                   <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-300 opacity-0 transition-opacity group-hover:opacity-100">
                     Open action brief <ArrowRight size={11} />
