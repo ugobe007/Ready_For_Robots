@@ -34,7 +34,7 @@ export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
       icon: Search,
       title: "Discover",
       description:
-        "Automation-ready buyers — timing, intent, and fit from live market signals. 150+ sources scanned 24/7.",
+        "Automation-ready buyers from live timing, intent, and fit signals.",
       statValue: 150,
       statSuffix: "+",
       statLabel: "live sources",
@@ -45,7 +45,7 @@ export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
       icon: BarChart3,
       title: "Develop",
       description:
-        "Signal briefs and tailored outreach for each account. Every company scored on fit and timing.",
+        "Signal briefs and outreach context for each account, scored by fit and timing.",
       statValue: statTarget(totalCount, 3957),
       statSuffix: "",
       statLabel: "active signals",
@@ -56,7 +56,7 @@ export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
       icon: TrendingUp,
       title: "Close",
       description:
-        "Advance deals through follow-ups, re-engagement, and meeting-ready intelligence — from first signal to signed contract.",
+        "Advance deals with follow-ups, re-engagement, and meeting-ready intelligence.",
       statValue: 62,
       statSuffix: "%",
       statLabel: "strong buying intent",
@@ -66,25 +66,23 @@ export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
   ];
 
   return (
-    <section className="py-16 lg:py-20 bg-white">
+    <section className="py-12 lg:py-14 bg-white">
       <div className="container">
-        <div className="text-center mb-14">
+        <div className="text-center mb-8">
           <p className="section-eyebrow mb-3">What ReadyForRobots SIGNAL Does</p>
           <h2 className="section-headline font-bold text-gray-900">
-            Discover, develop, and close
-            <br />
-            robot sales — from one system.
+            Discover, develop, and close robot sales.
           </h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-4 lg:gap-5">
           {features.map((f) => {
             const Icon = f.icon;
             return (
               <div
                 key={f.title}
-                className={`rounded-xl border border-gray-200 border-l-4 p-7 shadow-sm transition-shadow duration-200 hover:shadow-md ${f.railTone}`}
+                className={`rounded-xl border border-gray-200 border-l-4 p-5 shadow-sm transition-shadow duration-200 hover:shadow-md ${f.railTone}`}
               >
-                <div className="flex items-start justify-between mb-5">
+                <div className="mb-4 flex items-start justify-between">
                   <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${f.iconTone}`}>
                     <Icon size={22} />
                   </div>
@@ -97,7 +95,7 @@ export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
                     <div className="text-gray-500 text-xs font-mono-data">{f.statLabel}</div>
                   </div>
                 </div>
-                <h3 className="font-display text-xl font-bold text-gray-900 mb-2">{f.title}</h3>
+                <h3 className="mb-1.5 font-display text-xl font-bold text-gray-900">{f.title}</h3>
                 <p className="text-gray-600 leading-relaxed text-sm">{f.description}</p>
               </div>
             );
@@ -114,7 +112,7 @@ export function MarketingHowItWorks() {
       num: "01",
       title: "Discover",
       description:
-        "150+ sources scanned 24/7 for labor shortages, expansion, CapEx, and hiring patterns that indicate robot-ready buyers.",
+        "Continuous signal coverage spots labor, expansion, CapEx, and hiring patterns that indicate robot demand.",
       icon: Search,
       mockup: {
         kicker: "Signal detected",
@@ -128,7 +126,7 @@ export function MarketingHowItWorks() {
       num: "02",
       title: "Develop",
       description:
-        "Every company is scored on fit and timing, then developed with signal-specific briefs and trigger-aware outreach drafts.",
+        "Each company is scored on fit and timing, then developed with signal-specific briefs and outreach drafts.",
       icon: Target,
       mockup: {
         kicker: "Fit score",
@@ -142,7 +140,7 @@ export function MarketingHowItWorks() {
       num: "03",
       title: "Close",
       description:
-        "Pipeline advances through follow-ups, re-engagement, and meeting-ready intelligence — from first signal to signed deal.",
+        "Pipeline advances with follow-ups and meeting-ready intelligence before the RFP is released.",
       icon: TrendingUp,
       mockup: {
         kicker: "Draft outreach",
@@ -155,9 +153,9 @@ export function MarketingHowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 lg:py-28 bg-slate-100/70 overflow-hidden">
+    <section id="how-it-works" className="overflow-hidden bg-slate-100/70 py-14 lg:py-16">
       <div className="container">
-        <div className="mb-14 max-w-2xl">
+        <div className="mb-8 max-w-2xl">
           <p className="section-eyebrow mb-3">How It Works</p>
           <h2 className="section-headline font-bold text-gray-900">
             From signal to signed deal — automated.
@@ -170,12 +168,12 @@ export function MarketingHowItWorks() {
             aria-hidden
           />
 
-          <div className="grid lg:grid-cols-3 gap-10 lg:gap-8">
+          <div className="grid gap-6 lg:grid-cols-3 lg:gap-6">
             {steps.map((step, i) => {
               const Icon = step.icon;
               return (
                 <div key={step.num} className="relative flex flex-col">
-                  <div className="flex flex-col items-center text-center mb-5">
+                  <div className="mb-4 flex flex-col items-center text-center">
                     <div className="relative z-10 mb-4">
                       <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ring-4 ring-white shadow-lg ${
                         i === 0
@@ -197,17 +195,17 @@ export function MarketingHowItWorks() {
                       </span>
                     </div>
                     <h3 className="font-display text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed max-w-xs">{step.description}</p>
+                    <p className="max-w-xs text-sm leading-relaxed text-gray-600">{step.description}</p>
                   </div>
 
-                  <div className="mt-auto rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-gray-100">
+                  <div className="mt-auto rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm">
+                    <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
                       <span className="text-[10px] font-mono-data font-semibold uppercase tracking-widest text-slate-600">
                         {step.mockup.kicker}
                       </span>
                       <FileText size={14} className={`shrink-0 ${i === 0 ? "text-sky-500" : i === 1 ? "text-amber-500" : "text-slate-500"}`} />
                     </div>
-                    <p className={`text-sm font-semibold mb-2 ${step.mockup.accent}`}>{step.mockup.title}</p>
+                    <p className={`mb-1.5 text-sm font-semibold ${step.mockup.accent}`}>{step.mockup.title}</p>
                     <div className="space-y-1">
                       {step.mockup.lines.map((line) => (
                         <p key={line} className="text-xs text-gray-600 leading-relaxed font-mono-data">
@@ -215,7 +213,7 @@ export function MarketingHowItWorks() {
                         </p>
                       ))}
                     </div>
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="mt-2.5 flex items-center gap-2">
                       <div className="signal-strength-track flex-1 max-w-none">
                         <div className="signal-strength-fill" style={{ width: `${step.mockup.bar}%` }} />
                       </div>
@@ -433,16 +431,16 @@ export function MarketingCaseStudies() {
   ];
 
   return (
-    <section id="case-studies" className="py-16 lg:py-20 bg-white">
+    <section id="case-studies" className="bg-white py-12 lg:py-14">
       <div className="container">
-        <div className="mb-14">
+        <div className="mb-8">
           <p className="section-eyebrow mb-3">Real Signals. Real Deals.</p>
           <h2 className="section-headline font-bold text-gray-900 tracking-tight">Close before the RFP.</h2>
         </div>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:gap-5">
           {cases.map((c) => (
-            <div key={c.industry} className="rounded-2xl border border-gray-200 bg-slate-50/70 shadow-sm p-8">
-              <div className="flex items-center justify-between mb-6">
+            <div key={c.industry} className="rounded-2xl border border-gray-200 bg-slate-50/70 p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
                 <span className="text-xs font-mono-data font-semibold text-gray-500 uppercase tracking-widest">
                   {c.industry}
                 </span>
@@ -450,7 +448,7 @@ export function MarketingCaseStudies() {
                   {c.outcome}
                 </span>
               </div>
-              <ul className="space-y-4">
+              <ul className="space-y-2.5">
                 {c.signals.map((signal) => (
                   <li key={signal} className="text-sm text-gray-700 leading-relaxed">
                     {signal}

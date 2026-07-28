@@ -13,7 +13,6 @@ import MarketingLivePipelineSection from "@/components/marketing/MarketingLivePi
 import MarketingDailyBrief from "@/components/marketing/MarketingDailyBrief";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import {
-  MarketingBeforeAfter,
   MarketingBenchmark,
   MarketingCaseStudies,
   MarketingFinalCTA,
@@ -21,7 +20,6 @@ import {
   MarketingNewsletterBand,
   MarketingPricing,
   MarketingReportSection,
-  MarketingVsGenericAI,
   MarketingWhatSignalDoes,
 } from "@/components/marketing/MarketingSections";
 import HeroUrlScan from "@/components/marketing/HeroUrlScan";
@@ -195,10 +193,8 @@ export default function Home() {
         <MarketingWhatSignalDoes hotCount={hot} totalCount={total} />
       </div>
       <MarketingHowItWorks />
-      <MarketingLivePipelineSection hotCount={hot} totalCount={total} />
-      <MarketingBeforeAfter />
-      <MarketingVsGenericAI />
       <MarketingCaseStudies />
+      <MarketingLivePipelineSection hotCount={hot} totalCount={total} />
 
       <HumanoidDailyRecap className="py-8 border-y border-gray-100 bg-slate-50" />
       <HumanoidBenchmarkMarquee compact />
