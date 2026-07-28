@@ -144,11 +144,14 @@ export default function Home() {
         className="relative overflow-hidden pt-14 pb-10 sm:pt-16 sm:pb-12 home-hero-bg"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/55 to-transparent" aria-hidden />
+        <div className="home-hero-grid" aria-hidden />
+        <div className="home-hero-glow-orb -top-24 right-[8%] h-72 w-72 bg-emerald-500/[0.14]" aria-hidden />
+        <div className="home-hero-glow-orb home-hero-orb-delay bottom-[-6rem] left-[-4rem] h-80 w-80 bg-sky-500/[0.1]" aria-hidden />
 
         <div className="container home-hero-container relative">
           <div className="grid items-center gap-6 lg:grid-cols-12 lg:gap-5 xl:gap-6">
             <div className="animate-fade-in-up order-1 lg:col-span-7">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-slate-100 sm:mb-5">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-400/[0.08] px-3.5 py-1.5 text-[11px] font-semibold text-emerald-100 shadow-[0_0_24px_-8px_rgba(16,185,129,0.45)] backdrop-blur-sm sm:mb-5">
                 <LiveDot />
                 <span className="font-mono-data">
                   {hotLabel} HOT · {signalsLabel} live signals · updated daily
@@ -157,7 +160,7 @@ export default function Home() {
 
               <h1 className="home-hero-title mb-4 max-w-[13.2ch] font-bold sm:mb-5">
                 Deployment Intelligence
-                <span className="text-emerald-400 drop-shadow-[0_0_22px_rgba(16,185,129,0.28)]"> for Robotics.</span>
+                <span className="home-hero-title-accent"> for Robotics.</span>
               </h1>
 
               <p className="home-hero-lead mb-3 max-w-2xl text-lg leading-relaxed text-slate-100 sm:mb-4 sm:text-[1.34rem] sm:leading-[1.45]">
