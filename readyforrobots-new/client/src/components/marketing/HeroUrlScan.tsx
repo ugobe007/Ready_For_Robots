@@ -59,6 +59,11 @@ export default function HeroUrlScan({ onDark = false }: Props) {
           <ArrowRight size={15} />
         </button>
       </div>
+      {onDark && (
+        <p className="mt-2 text-xs leading-relaxed text-slate-500">
+          Enter your company website to generate your first deployment pipeline.
+        </p>
+      )}
     </form>
   );
 }
