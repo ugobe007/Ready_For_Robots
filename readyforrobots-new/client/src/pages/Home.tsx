@@ -2,7 +2,7 @@
  * Home — Precision Intelligence redesign (emerald light SaaS)
  * Wired to live pipeline stats, homepage leads, newsletter, and report APIs.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, X } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
@@ -52,6 +52,39 @@ export default function Home() {
   const hotLabel = formatStat(hot, "319");
   const signalsLabel = formatStat(totalSignals, "2,000+");
   const totalLabel = formatStat(total, "3,957");
+
+  // ── Parallax orbs ────────────────────────────────────────────────
+  const orb1Ref = useRef<HTMLDivElement>(null);
+  const orb2Ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (orb1Ref.current) orb1Ref.current.style.transform = `translateY(${y * 0.12}px)`;
+      if (orb2Ref.current) orb2Ref.current.style.transform = `translateY(${-y * 0.08}px)`;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ── Pipeline panel slide-in via IntersectionObserver ─────────────
+  const pipelineRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = pipelineRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.classList.add("in-view");
+      return;
+    }
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add("in-view"); obs.disconnect(); } },
+      { threshold: 0.12 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -145,13 +178,16 @@ export default function Home() {
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/55 to-transparent" aria-hidden />
         <div className="home-hero-grid" aria-hidden />
-        <div className="home-hero-glow-orb -top-24 right-[8%] h-72 w-72 bg-emerald-500/[0.14]" aria-hidden />
-        <div className="home-hero-glow-orb home-hero-orb-delay bottom-[-6rem] left-[-4rem] h-80 w-80 bg-sky-500/[0.1]" aria-hidden />
+        <div ref={orb1Ref} className="home-hero-glow-orb -top-24 right-[8%] h-72 w-72 bg-emerald-500/[0.14]" aria-hidden />
+        <div ref={orb2Ref} className="home-hero-glow-orb home-hero-orb-delay bottom-[-6rem] left-[-4rem] h-80 w-80 bg-sky-500/[0.1]" aria-hidden />
 
         <div className="container home-hero-container relative">
           <div className="grid items-center gap-6 lg:grid-cols-12 lg:gap-5 xl:gap-6">
-            <div className="animate-fade-in-up order-1 lg:col-span-7">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-400/[0.08] px-3.5 py-1.5 text-[11px] font-semibold text-emerald-100 shadow-[0_0_24px_-8px_rgba(16,185,129,0.45)] backdrop-blur-sm sm:mb-5">
+            <div className="order-1 lg:col-span-7">
+              <div
+                className="hero-word mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-400/[0.08] px-3.5 py-1.5 text-[11px] font-semibold text-emerald-100 shadow-[0_0_24px_-8px_rgba(16,185,129,0.45)] backdrop-blur-sm sm:mb-5"
+                style={{ animationDelay: "0ms" }}
+              >
                 <LiveDot />
                 <span className="font-mono-data">
                   {hotLabel} HOT · {signalsLabel} live signals · updated daily
@@ -159,28 +195,35 @@ export default function Home() {
               </div>
 
               <h1 className="home-hero-title mb-4 max-w-[13.2ch] font-bold sm:mb-5">
-                Deployment Intelligence
-                <span className="home-hero-title-accent"> for Robotics.</span>
+                <span className="hero-word block" style={{ animationDelay: "80ms" }}>Deployment</span>
+                <span className="hero-word block" style={{ animationDelay: "160ms" }}>Intelligence</span>
+                <span className="hero-word home-hero-title-accent block" style={{ animationDelay: "240ms" }}>for Robotics.</span>
               </h1>
 
-              <p className="home-hero-lead mb-3 max-w-2xl text-lg leading-relaxed text-slate-100 sm:mb-4 sm:text-[1.34rem] sm:leading-[1.45]">
+              <p className="hero-word home-hero-lead mb-3 max-w-2xl text-lg leading-relaxed text-slate-100 sm:mb-4 sm:text-[1.34rem] sm:leading-[1.45]" style={{ animationDelay: "320ms" }}>
                 <span className="font-semibold text-slate-50">ReadyForRobots</span> helps robot companies identify organizations entering the automation buying cycle.
               </p>
 
-              <p className="mb-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:mb-5 sm:text-base">
+              <p className="hero-word mb-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:mb-5 sm:text-base" style={{ animationDelay: "380ms" }}>
                 By analyzing operational, workforce, investment, and market signals, we reveal where robots are most likely to deliver value and when buyers are most likely to act.
               </p>
 
-              <HeroUrlScan onDark />
+              <div className="hero-word" style={{ animationDelay: "430ms" }}>
+                <HeroUrlScan onDark />
+              </div>
 
-              <p className="mb-4 max-w-lg text-xs leading-relaxed text-slate-400 sm:mb-6 sm:text-sm">
+              <p className="hero-word mb-4 max-w-lg text-xs leading-relaxed text-slate-400 sm:mb-6 sm:text-sm" style={{ animationDelay: "480ms" }}>
                 Enter your company website to generate your first deployment pipeline.
               </p>
             </div>
 
-            <div className="animate-fade-in-up order-2 lg:col-span-5 lg:order-2" style={{ animationDelay: "120ms" }}>
+            <div className="order-2 lg:col-span-5 lg:order-2">
               <div className="relative max-md:mt-2">
-                <div className="relative home-hero-pipeline-shell lg:-ml-4 lg:max-w-[36rem] lg:origin-right lg:scale-[0.98] xl:-ml-6 xl:max-w-[37rem] xl:scale-100">
+                <div
+                  ref={pipelineRef}
+                  className="hero-panel-animate relative home-hero-pipeline-shell lg:-ml-4 lg:max-w-[36rem] lg:origin-right lg:scale-[0.98] xl:-ml-6 xl:max-w-[37rem] xl:scale-100"
+                  style={{ transitionDelay: "200ms" }}
+                >
                   <MarketingHeroPipeline hotCount={hot} totalCount={total} />
                 </div>
               </div>
