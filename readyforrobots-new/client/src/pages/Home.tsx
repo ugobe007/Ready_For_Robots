@@ -185,8 +185,9 @@ export default function Home() {
         <div
           className="pointer-events-none absolute right-[4%] top-[8%] h-[32rem] w-[38rem] rounded-full"
           style={{
-            background: "linear-gradient(132deg, rgba(16, 185, 129, 0.28) 0%, rgba(20, 184, 166, 0.24) 48%, rgba(56, 189, 248, 0.24) 100%)",
-            filter: "blur(58px)",
+            background:
+              "radial-gradient(ellipse at 38% 50%, rgba(16, 185, 129, 0.26) 0%, rgba(20, 184, 166, 0.22) 42%, rgba(56, 189, 248, 0.20) 70%, rgba(56, 189, 248, 0) 100%)",
+            filter: "blur(64px)",
           }}
           aria-hidden
         />

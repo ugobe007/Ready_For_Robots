@@ -434,19 +434,18 @@
 
   .home-hero-bg {
     background:
-      /* Unified emerald -> cyan spotlight directly behind the right panel */
+      /* Smooth single blend behind the right panel */
       radial-gradient(
-        ellipse 58% 78% at 82% 48%,
-        rgba(16, 185, 129, 0.34) 0%,
-        rgba(20, 184, 166, 0.28) 34%,
-        rgba(14, 165, 233, 0.24) 58%,
-        rgba(56, 189, 248, 0.12) 74%,
-        transparent 88%
+        ellipse 64% 82% at 82% 48%,
+        rgba(16, 185, 129, 0.30) 0%,
+        rgba(20, 184, 166, 0.25) 38%,
+        rgba(56, 189, 248, 0.22) 66%,
+        rgba(56, 189, 248, 0.08) 80%,
+        transparent 92%
       ),
-      /* Sky haze bottom-left for depth */
-      radial-gradient(ellipse 52% 42% at 6% 92%, rgba(14, 165, 233, 0.18), transparent 52%),
-      /* Subtle top-left warmth */
-      radial-gradient(ellipse 40% 34% at 18% 10%, rgba(16, 185, 129, 0.08), transparent 55%),
+      /* Very soft ambient support only */
+      radial-gradient(ellipse 62% 48% at 10% 90%, rgba(14, 165, 233, 0.10), transparent 60%),
+      radial-gradient(ellipse 42% 34% at 20% 12%, rgba(16, 185, 129, 0.06), transparent 62%),
       /* Near-black deep navy base */
       linear-gradient(160deg, #020810 0%, #060d1a 45%, #0a1225 100%);
   }
