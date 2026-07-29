@@ -2111,6 +2111,14 @@ export default function Pipeline() {
       });
     }
 
+    // Deep-linked lead must always be in filtered so the CRM panel can render.
+    // The anonymous rotation window caps buckets by slot count, which can exclude
+    // the linked lead even after it's fetched. Pin it at the front when missing.
+    if (deepLinkLeadId != null && !next.some((d) => d.id === deepLinkLeadId)) {
+      const pinned = deals.find((d) => d.id === deepLinkLeadId);
+      if (pinned) next = [pinned, ...next];
+    }
+
     return next;
   }, [
     listDeals,
@@ -2119,6 +2127,8 @@ export default function Pipeline() {
     clientSearchMatches,
     qualityBandFilter,
     qualitySort,
+    deepLinkLeadId,
+    deals,
   ]);
 
   useEffect(() => {
