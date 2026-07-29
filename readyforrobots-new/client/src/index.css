@@ -434,10 +434,15 @@
 
   .home-hero-bg {
     background:
-      /* Primary emerald spotlight — concentrated right where the panel floats */
-      radial-gradient(ellipse 50% 68% at 84% 48%, rgba(16, 185, 129, 0.32), transparent 56%),
-      /* Wider soft halo around the panel */
-      radial-gradient(ellipse 66% 84% at 80% 52%, rgba(20, 184, 166, 0.18), transparent 64%),
+      /* Unified emerald -> cyan spotlight directly behind the right panel */
+      radial-gradient(
+        ellipse 58% 78% at 82% 48%,
+        rgba(16, 185, 129, 0.34) 0%,
+        rgba(20, 184, 166, 0.28) 34%,
+        rgba(14, 165, 233, 0.24) 58%,
+        rgba(56, 189, 248, 0.12) 74%,
+        transparent 88%
+      ),
       /* Sky haze bottom-left for depth */
       radial-gradient(ellipse 52% 42% at 6% 92%, rgba(14, 165, 233, 0.18), transparent 52%),
       /* Subtle top-left warmth */

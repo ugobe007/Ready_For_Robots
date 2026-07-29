@@ -182,7 +182,14 @@ export default function Home() {
         <div ref={orb1Ref} className="home-hero-glow-orb -top-16 right-[2%] h-[28rem] w-[28rem] bg-emerald-400/[0.22]" aria-hidden />
         <div ref={orb2Ref} className="home-hero-glow-orb home-hero-orb-delay bottom-[-8rem] left-[-6rem] h-96 w-96 bg-sky-400/[0.16]" aria-hidden />
         {/* Extra concentrated spotlight directly behind the pipeline panel */}
-        <div className="pointer-events-none absolute right-[4%] top-[8%] h-[32rem] w-[38rem] rounded-full bg-emerald-400/[0.16]" style={{ filter: "blur(58px)" }} aria-hidden />
+        <div
+          className="pointer-events-none absolute right-[4%] top-[8%] h-[32rem] w-[38rem] rounded-full"
+          style={{
+            background: "linear-gradient(132deg, rgba(16, 185, 129, 0.28) 0%, rgba(20, 184, 166, 0.24) 48%, rgba(56, 189, 248, 0.24) 100%)",
+            filter: "blur(58px)",
+          }}
+          aria-hidden
+        />
 
         <div className="container home-hero-container relative">
           <div className="grid items-center gap-6 lg:grid-cols-12 lg:gap-5 xl:gap-6">
