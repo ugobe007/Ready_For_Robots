@@ -2163,7 +2163,11 @@ export default function Pipeline() {
     selectedId != null && (filtered.some((d) => d.id === selectedId) || pendingDeepLink)
       ? selectedId
       : (filtered[0]?.id ?? null);
-  const selected = filtered.find((d) => d.id === effectiveSelectedId) ?? null;
+  const selected =
+    filtered.find((d) => d.id === effectiveSelectedId)
+    ?? (pendingDeepLink && effectiveSelectedId != null
+      ? deals.find((d) => d.id === effectiveSelectedId) ?? null
+      : null);
   const selectedActivation = activations.find((a) => a.id === selectedActivationId) ?? activations[0] ?? null;
 
   // Manual lead click = engagement. Pin the selection and stop auto-rotation so the
