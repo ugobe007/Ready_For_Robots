@@ -100,7 +100,7 @@
   --sidebar-ring: oklch(0.527 0.154 162);
 
   /* Pipeline workspace panels — visible light grey (slate-100 was too close to white) */
-  --pipeline-panel-bg: #e5e7eb;
+  --pipeline-panel-bg: #d8dee8;
 }
 
 .dark {
@@ -834,7 +834,7 @@
   /* Sales Pipeline page — command rail + light workspace for readable CRM detail */
   .pipeline-page-bg {
     @apply min-h-screen;
-    background: linear-gradient(180deg, #090f1f 0%, #0b1121 420px, #c7d2e2 420px, #dce4ef 100%);
+    background: linear-gradient(180deg, #090f1f 0%, #0b1121 420px, #bcc7d8 420px, #d2dbe7 100%);
   }
 
   .pipeline-command-rail {
