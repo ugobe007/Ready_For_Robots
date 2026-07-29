@@ -73,14 +73,6 @@ function scoreOf(lead: LeadRow): number | string {
   return v != null ? Math.round(Number(v)) : "—";
 }
 
-function nextActionText(lead: LeadRow): string | null {
-  const raw = lead.pipeline_action || lead.core_need || lead.share_summary || lead.signals?.[0]?.display_text || null;
-  if (!raw) return null;
-  const cleaned = raw.replace(/^priority:\s*/i, "").trim();
-  if (!cleaned) return null;
-  return cleaned.length > 92 ? `${cleaned.slice(0, 89)}...` : cleaned;
-}
-
 /**
  * Deep link a real, live lead into its value proof (pitch + outreach draft) on
  * /pipeline. Fallback/demo rows (negative ids or preview mode) stay non-clickable
@@ -217,14 +209,14 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
           {topLiveLead?.href && (
             <Link
               href={topLiveLead.href}
-              className="inline-flex items-center gap-1 rounded-lg bg-emerald-400/15 px-2.5 py-1 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/25"
+              className="inline-flex items-center gap-1 rounded-lg bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/20"
             >
-              Start with {topLiveLead.lead.company_name || "top lead"} <ArrowRight size={12} />
+              Open top live brief <ArrowRight size={12} />
             </Link>
           )}
           <Link
             href="/pipeline"
-            className="inline-flex items-center gap-1 rounded-lg bg-sky-400/10 px-2 py-1 text-xs font-semibold text-sky-200 hover:bg-sky-400/20"
+            className="inline-flex items-center gap-1 px-1 text-xs font-semibold text-sky-200 hover:text-sky-100"
           >
             View all <ArrowRight size={12} />
           </Link>

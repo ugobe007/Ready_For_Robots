@@ -3199,7 +3199,16 @@ export default function Pipeline() {
               <div className="space-y-1.5 border-b border-gray-200 px-3 py-2 sm:px-4">
                 {loadErr && (
                   <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
-                    {loadErr}
+                    <div className="flex items-center justify-between gap-2">
+                      <span>{loadErr}</span>
+                      <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        className="shrink-0 rounded-md border border-amber-300 bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-900 hover:bg-amber-100"
+                      >
+                        Retry
+                      </button>
+                    </div>
                   </div>
                 )}
                 {!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0 && (
