@@ -53,21 +53,6 @@ export default function Home() {
   const signalsLabel = formatStat(totalSignals, "2,000+");
   const totalLabel = formatStat(total, "3,957");
 
-  // ── Parallax orbs ────────────────────────────────────────────────
-  const orb1Ref = useRef<HTMLDivElement>(null);
-  const orb2Ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (orb1Ref.current) orb1Ref.current.style.transform = `translateY(${y * 0.12}px)`;
-      if (orb2Ref.current) orb2Ref.current.style.transform = `translateY(${-y * 0.08}px)`;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   // ── Pipeline panel slide-in via IntersectionObserver ─────────────
   const pipelineRef = useRef<HTMLDivElement>(null);
 
@@ -178,19 +163,6 @@ export default function Home() {
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/60 to-transparent" aria-hidden />
         <div className="home-hero-grid" aria-hidden />
-        {/* Large ambient orbs that give the background its color depth */}
-        <div ref={orb1Ref} className="home-hero-glow-orb -top-16 right-[2%] h-[28rem] w-[28rem] bg-emerald-400/[0.22]" aria-hidden />
-        <div ref={orb2Ref} className="home-hero-glow-orb home-hero-orb-delay bottom-[-8rem] left-[-6rem] h-96 w-96 bg-sky-400/[0.16]" aria-hidden />
-        {/* Extra concentrated spotlight directly behind the pipeline panel */}
-        <div
-          className="pointer-events-none absolute right-[4%] top-[8%] h-[32rem] w-[38rem] rounded-full"
-          style={{
-            background:
-              "radial-gradient(ellipse at 38% 50%, rgba(16, 185, 129, 0.26) 0%, rgba(20, 184, 166, 0.22) 42%, rgba(56, 189, 248, 0.20) 70%, rgba(56, 189, 248, 0) 100%)",
-            filter: "blur(64px)",
-          }}
-          aria-hidden
-        />
 
         <div className="container home-hero-container relative">
           <div className="grid items-center gap-6 lg:grid-cols-12 lg:gap-5 xl:gap-6">
@@ -225,9 +197,10 @@ export default function Home() {
 
             <div className="order-2 lg:col-span-5 lg:order-2">
               <div className="relative max-md:mt-2">
+                <div className="home-hero-panel-glow" aria-hidden />
                 <div
                   ref={pipelineRef}
-                  className="hero-panel-animate relative home-hero-pipeline-shell lg:-ml-4 lg:max-w-[36rem] lg:origin-right lg:scale-[0.98] xl:-ml-6 xl:max-w-[37rem] xl:scale-100"
+                  className="hero-panel-animate relative z-10 home-hero-pipeline-shell lg:-ml-4 lg:max-w-[36rem] lg:origin-right lg:scale-[0.98] xl:-ml-6 xl:max-w-[37rem] xl:scale-100"
                   style={{ transitionDelay: "200ms" }}
                 >
                   <MarketingHeroPipeline hotCount={hot} totalCount={total} />

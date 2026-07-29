@@ -434,20 +434,28 @@
 
   .home-hero-bg {
     background:
-      /* Smooth single blend behind the right panel */
-      radial-gradient(
-        ellipse 64% 82% at 82% 48%,
-        rgba(16, 185, 129, 0.30) 0%,
-        rgba(20, 184, 166, 0.25) 38%,
-        rgba(56, 189, 248, 0.22) 66%,
-        rgba(56, 189, 248, 0.08) 80%,
-        transparent 92%
-      ),
-      /* Very soft ambient support only */
-      radial-gradient(ellipse 62% 48% at 10% 90%, rgba(14, 165, 233, 0.10), transparent 60%),
-      radial-gradient(ellipse 42% 34% at 20% 12%, rgba(16, 185, 129, 0.06), transparent 62%),
+      /* Neutral depth only; panel glow is now scoped to the panel container */
+      radial-gradient(ellipse 82% 64% at 80% 52%, rgba(15, 23, 42, 0.32), transparent 74%),
+      radial-gradient(ellipse 70% 56% at 12% 92%, rgba(30, 41, 59, 0.28), transparent 68%),
       /* Near-black deep navy base */
       linear-gradient(160deg, #020810 0%, #060d1a 45%, #0a1225 100%);
+  }
+
+  .home-hero-panel-glow {
+    position: absolute;
+    inset: -12% -10% -14% -8%;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 9999px;
+    background: radial-gradient(
+      ellipse at 58% 50%,
+      rgba(16, 185, 129, 0.34) 0%,
+      rgba(20, 184, 166, 0.28) 38%,
+      rgba(56, 189, 248, 0.24) 66%,
+      rgba(56, 189, 248, 0.00) 88%
+    );
+    filter: blur(46px);
+    transform: translateZ(0);
   }
 
   /* Fine dot matrix — more intentional than a grid, fades toward edges */
