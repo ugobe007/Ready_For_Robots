@@ -59,9 +59,9 @@
   --amber-strong: #d97706;
   --sky-strong: #0284c7;
   --sky-soft: #e0f2fe;
-  --brand-gradient-start: #34d399;
-  --brand-gradient-mid: #2dd4bf;
-  --brand-gradient-end: #7dd3fc;
+  --brand-gradient-start: #10b981;
+  --brand-gradient-mid: #14b8a6;
+  --brand-gradient-end: #38bdf8;
   --neutral-strong: #0f172a;
   --neutral-muted: #475569;
 
@@ -435,13 +435,13 @@
   .home-hero-bg {
     background:
       /* Primary emerald spotlight — concentrated right where the panel floats */
-      radial-gradient(ellipse 52% 72% at 84% 48%, rgba(45, 212, 191, 0.20), transparent 58%),
+      radial-gradient(ellipse 50% 68% at 84% 48%, rgba(16, 185, 129, 0.32), transparent 56%),
       /* Wider soft halo around the panel */
-      radial-gradient(ellipse 72% 90% at 78% 52%, rgba(52, 211, 153, 0.07), transparent 68%),
+      radial-gradient(ellipse 66% 84% at 80% 52%, rgba(20, 184, 166, 0.18), transparent 64%),
       /* Sky haze bottom-left for depth */
-      radial-gradient(ellipse 55% 45% at 4% 92%, rgba(56, 189, 248, 0.20), transparent 54%),
+      radial-gradient(ellipse 52% 42% at 6% 92%, rgba(14, 165, 233, 0.18), transparent 52%),
       /* Subtle top-left warmth */
-      radial-gradient(ellipse 42% 36% at 18% 10%, rgba(45, 212, 191, 0.09), transparent 57%),
+      radial-gradient(ellipse 40% 34% at 18% 10%, rgba(16, 185, 129, 0.08), transparent 55%),
       /* Near-black deep navy base */
       linear-gradient(160deg, #020810 0%, #060d1a 45%, #0a1225 100%);
   }
@@ -492,7 +492,7 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(0 0 30px rgba(45, 212, 191, 0.32));
+    filter: drop-shadow(0 0 28px rgba(20, 184, 166, 0.38));
   }
 
   .home-hero-lead {
@@ -536,9 +536,9 @@
   .home-hero-panel-header {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     background: linear-gradient(118deg,
-      rgba(52, 211, 153, 0.18) 0%,
-      rgba(45, 212, 191, 0.10) 38%,
-      rgba(56, 189, 248, 0.08) 64%,
+      rgba(16, 185, 129, 0.22) 0%,
+      rgba(20, 184, 166, 0.14) 38%,
+      rgba(14, 165, 233, 0.10) 64%,
       rgba(6, 12, 28, 0.40) 100%);
   }
 
