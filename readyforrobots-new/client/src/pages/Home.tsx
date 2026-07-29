@@ -162,7 +162,6 @@ export default function Home() {
         className="relative overflow-hidden pt-14 pb-10 sm:pt-16 sm:pb-12 home-hero-bg"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/60 to-transparent" aria-hidden />
-        <div className="home-hero-grid" aria-hidden />
 
         <div className="container home-hero-container relative">
           <div className="grid items-center gap-6 lg:grid-cols-12 lg:gap-5 xl:gap-6">
