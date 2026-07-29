@@ -2080,9 +2080,11 @@ export default function Pipeline() {
     return pipelineSource;
   }, [hasActiveSearch, qualityControlsActive, showKanban, panelPlan, pipelineSource, previewLimit, rotateOffset]);
   const rotatedDeals = useMemo(() => {
-    if (hasActiveSearch || qualityControlsActive || showKanban) return null;
+    // Bypass the rotation window while a deep-link lead is active so the full
+    // deals array is used as listDeals and the CRM panel stays stable.
+    if (hasActiveSearch || qualityControlsActive || showKanban || deepLinkLeadId != null) return null;
     return buildRotatedPipelineDeals(rotationSource, rotateOffset);
-  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationSource, rotateOffset]);
+  }, [hasActiveSearch, qualityControlsActive, showKanban, deepLinkLeadId, rotationSource, rotateOffset]);
   const listDeals = rotatedDeals ?? deals;
   const dealQualityScore = (deal: Deal) => Number(deal.leadQuality?.overall_score ?? 0);
   const dealBand = (deal: Deal) => String(deal.confidenceBand || deal.leadQuality?.confidence_band || "").toLowerCase();
@@ -2111,14 +2113,6 @@ export default function Pipeline() {
       });
     }
 
-    // Deep-linked lead must always be in filtered so the CRM panel can render.
-    // The anonymous rotation window caps buckets by slot count, which can exclude
-    // the linked lead even after it's fetched. Pin it at the front when missing.
-    if (deepLinkLeadId != null && !next.some((d) => d.id === deepLinkLeadId)) {
-      const pinned = deals.find((d) => d.id === deepLinkLeadId);
-      if (pinned) next = [pinned, ...next];
-    }
-
     return next;
   }, [
     listDeals,
@@ -2127,12 +2121,12 @@ export default function Pipeline() {
     clientSearchMatches,
     qualityBandFilter,
     qualitySort,
-    deepLinkLeadId,
-    deals,
   ]);
 
   useEffect(() => {
-    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused) return;
+    // Pause the rotation offset while a deep-link lead is being displayed so
+    // the rotation window doesn't shift under the CRM panel.
+    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused || deepLinkLeadId != null) return;
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
@@ -2142,7 +2136,7 @@ export default function Pipeline() {
       PIPELINE_LEAD_READ_MS,
     );
     return () => window.clearInterval(timer);
-  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationPaused, rotationSource, pipelineSource.length, panelPlan, previewLimit]);
+  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationPaused, deepLinkLeadId, rotationSource, pipelineSource.length, panelPlan, previewLimit]);
 
   // Keep CRM detail panel in sync with the rotating spotlight lead.
   useEffect(() => {
