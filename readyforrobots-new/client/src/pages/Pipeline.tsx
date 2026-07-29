@@ -1423,6 +1423,9 @@ export default function Pipeline() {
   const dealsRef = useRef(deals);
   dealsRef.current = deals;
   const deepLinkInflightRef = useRef<number | null>(null);
+  /** Holds the last successfully-fetched deep-link deal so it can be
+   *  re-injected into deals if an applyPipelineFeed call ever drops it. */
+  const deepLinkDealRef = useRef<Deal | null>(null);
   const byIdInFlightRef = useRef<Map<number, Promise<Deal | null>>>(new Map());
   const byIdFailureCooldownUntilRef = useRef<Map<number, number>>(new Map());
   const byIdFailureStreakRef = useRef(0);
@@ -1822,6 +1825,9 @@ export default function Pipeline() {
 
   useEffect(() => {
     setDeepLinkLoadFailed(false);
+    // Clear the stored deal when the deep-link target changes so stale data
+    // from a previous ?lead= session cannot re-inject into the new one.
+    if (!deepLinkLeadId) deepLinkDealRef.current = null;
   }, [deepLinkLeadId]);
 
   useEffect(() => {
@@ -1861,6 +1867,9 @@ export default function Pipeline() {
         setDeepLinkLoadFailed(false);
         setDeals((prev) => {
           const mappedRow = mapped as Deal;
+          // Store in ref so the re-injection effect can restore it if any
+          // subsequent applyPipelineFeed call drops it from deals.
+          deepLinkDealRef.current = mappedRow;
           if (prev.some((d) => d.id === deepLinkLeadId)) {
             return prev.map((d) => (d.id === deepLinkLeadId ? { ...d, ...mappedRow } : d));
           }
@@ -1881,6 +1890,20 @@ export default function Pipeline() {
       }
     };
   }, [deepLinkLeadId, deepLinkRetryNonce]);
+
+  // Safety net: if anything (e.g. an applyPipelineFeed race) ever drops the
+  // deep-link deal from deals after it was successfully fetched, put it back.
+  // This runs after every deals change and is a no-op when the deal is present.
+  useEffect(() => {
+    if (!deepLinkLeadId || !deepLinkDealRef.current) return;
+    if (deepLinkDealRef.current.id !== deepLinkLeadId) return;
+    if (deals.some((d) => d.id === deepLinkLeadId)) return;
+    const dealToRestore = deepLinkDealRef.current;
+    setDeals((prev) => {
+      if (prev.some((d) => d.id === deepLinkLeadId)) return prev; // already there
+      return [dealToRestore, ...prev];
+    });
+  }, [deals, deepLinkLeadId]);
 
   // Background entitlement refresh when auth resolves — skip if feed is already fresh.
   useEffect(() => {
