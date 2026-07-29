@@ -134,6 +134,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
   const topLiveLead = rows
     .map((lead) => ({ lead, href: leadHref(lead, live) }))
     .find((entry) => Boolean(entry.href));
+  const topLiveCompany = topLiveLead?.lead.company_name?.trim() || "this lead";
 
   return (
     <div className="hero-widget-glow home-hero-panel">
@@ -156,7 +157,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
           const body = (
             <>
               <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-slate-800/70 shadow-sm">
-                <Icon size={16} className="text-sky-300" />
+                <Icon size={16} className="text-slate-300" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
@@ -167,7 +168,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
                 </div>
                 <PipelineLeadActionMeta lead={lead} variant="hero" />
                 {href && (
-                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-300 opacity-0 transition-opacity group-hover:opacity-100">
+                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-slate-300 opacity-0 transition-[opacity,color] group-hover:text-sky-200 group-hover:opacity-100">
                     Open action brief <ArrowRight size={11} />
                   </span>
                 )}
@@ -205,6 +206,11 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
           Showing {rows.length} of {totalLabel} active opportunities
           {!live && <span className="text-slate-400"> · preview</span>}
         </span>
+        {topLiveLead?.href && (
+          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-300/85 sm:text-[11px]">
+            Best next step: open {topLiveCompany} brief
+          </p>
+        )}
         <div className="mt-2 flex items-center gap-2">
           {topLiveLead?.href && (
             <Link
