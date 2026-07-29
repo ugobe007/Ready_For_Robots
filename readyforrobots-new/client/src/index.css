@@ -834,7 +834,7 @@
   /* Sales Pipeline page — command rail + light workspace for readable CRM detail */
   .pipeline-page-bg {
     @apply min-h-screen;
-    background: linear-gradient(180deg, #0b1020 0%, #0b1020 420px, #cbd5e1 420px, #e2e8f0 100%);
+    background: linear-gradient(180deg, #090f1f 0%, #0b1121 420px, #c7d2e2 420px, #dce4ef 100%);
   }
 
   .pipeline-command-rail {
@@ -846,7 +846,7 @@
   }
 
   .pipeline-workspace {
-    @apply overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-md;
+    @apply overflow-hidden rounded-2xl border border-slate-400 bg-white shadow-[0_14px_40px_-20px_rgba(15,23,42,0.35)];
     color-scheme: light;
   }
 
@@ -880,7 +880,7 @@
   }
 
   .pipeline-page-header {
-    @apply relative overflow-hidden border-b border-slate-200 bg-slate-100 px-4 py-4 sm:px-5;
+    @apply relative overflow-hidden border-b border-slate-300 bg-gradient-to-b from-slate-100 to-slate-200/85 px-4 py-4 sm:px-5;
   }
 
   .pipeline-page-header::before {
@@ -933,12 +933,12 @@
   }
 
   .pipeline-metrics-grid {
-    @apply grid grid-cols-2 gap-2 border-b border-gray-300 p-3 lg:grid-cols-4;
+    @apply grid grid-cols-2 gap-2 border-b border-slate-300 p-3 lg:grid-cols-4;
     background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-metric-card {
-    @apply relative overflow-hidden rounded-md border border-gray-300 bg-white px-2.5 py-2 shadow-sm;
+    @apply relative overflow-hidden rounded-md border border-slate-300 bg-white px-2.5 py-2 shadow-[0_8px_18px_-14px_rgba(15,23,42,0.45)];
   }
 
   .pipeline-metric-card::before {
@@ -948,7 +948,7 @@
   }
 
   .pipeline-tier-header {
-    @apply sticky top-0 z-10 mb-1 flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-slate-700;
+    @apply sticky top-0 z-10 mb-1 flex items-center gap-2 rounded-md border border-slate-300 bg-slate-50 px-2 py-1.5 text-slate-700;
   }
 
   .pipeline-tier-title {
@@ -961,12 +961,12 @@
   }
 
   .pipeline-list-columns {
-    @apply mb-1 hidden grid-cols-12 gap-2 rounded-md border border-gray-300 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-500 sm:grid;
+    @apply mb-1 hidden grid-cols-12 gap-2 rounded-md border border-slate-300 bg-slate-50 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600 sm:grid;
     background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-deal-row {
-    @apply rounded-md border border-gray-200 bg-white transition-all duration-300;
+    @apply rounded-md border border-slate-300 bg-white shadow-[0_10px_20px_-18px_rgba(15,23,42,0.55)] transition-all duration-300;
     border-left-width: 3px;
     animation: fadeInUp 0.4s cubic-bezier(0.23, 1, 0.32, 1) both;
   }
@@ -976,20 +976,20 @@
   }
 
   .pipeline-deal-row-hover {
-    @apply hover:border-gray-300 hover:bg-slate-50;
+    @apply hover:border-slate-400 hover:bg-slate-50 hover:shadow-[0_12px_22px_-16px_rgba(15,23,42,0.45)];
   }
 
   .pipeline-list-shell {
-    @apply rounded-md border border-gray-300 p-2;
+    @apply rounded-md border border-slate-300 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)];
     background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-detail-shell {
-    @apply shrink-0 overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm;
+    @apply shrink-0 overflow-hidden rounded-md border border-slate-300 bg-white shadow-[0_16px_30px_-22px_rgba(15,23,42,0.6)];
   }
 
   .pipeline-detail-header {
-    @apply relative shrink-0 overflow-hidden border-b border-gray-200 bg-slate-50 px-3 py-3;
+    @apply relative shrink-0 overflow-hidden border-b border-slate-300 bg-gradient-to-b from-emerald-50/55 to-white px-3 py-3;
   }
 
   .pipeline-detail-header::before {
@@ -1027,15 +1027,15 @@
   }
 
   .pipeline-detail-section {
-    @apply shrink-0 border-b border-gray-100 bg-white px-3 py-2 text-gray-800;
+    @apply shrink-0 border-b border-slate-200 bg-white px-3 py-2 text-slate-800;
   }
 
   .pipeline-detail-section-muted {
-    @apply shrink-0 border-b border-gray-100 bg-slate-50 px-3 py-2 text-gray-700;
+    @apply shrink-0 border-b border-slate-200 bg-slate-50/85 px-3 py-2 text-slate-700;
   }
 
   .pipeline-detail-actions {
-    @apply shrink-0 flex flex-wrap items-center gap-1.5 border-t border-gray-200 bg-slate-50 px-3 py-2;
+    @apply shrink-0 flex flex-wrap items-center gap-1.5 border-t border-slate-300 bg-slate-100/80 px-3 py-2;
   }
 
   .pipeline-detail-share {
@@ -1051,7 +1051,7 @@
   }
 
   .pipeline-market-snippet {
-    @apply mx-3 mb-2 rounded-lg border border-gray-300 px-3 py-2.5 shadow-sm sm:mx-4;
+    @apply mx-3 mb-2 rounded-lg border border-slate-300 px-3 py-2.5 shadow-[0_6px_16px_-14px_rgba(15,23,42,0.45)] sm:mx-4;
     background-color: var(--pipeline-panel-bg);
   }
 
