@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArrowRight, BarChart3, Bot, Check, ChevronDown, ExternalLink, Filter, Layers3, Menu, Search, TrendingUp, X } from "lucide-react";
 
 const leads = [
@@ -27,34 +27,7 @@ function Score({ score }: { score:number }) { return <div className="flex items-
 
 function Dashboard() {
   const rowHeight = 74;
-  const [leadStart, setLeadStart] = useState(0);
-  const [isCycling, setIsCycling] = useState(false);
-  const [animateTrack, setAnimateTrack] = useState(false);
-  const visibleLeads = Array.from({ length: leads.length + 1 }, (_, offset) => leads[(leadStart + offset) % leads.length]);
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setAnimateTrack(true);
-      setIsCycling(true);
-    }, 2800);
-    return () => window.clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    if (!isCycling) return;
-    const timeoutId = window.setTimeout(() => {
-      setLeadStart((current) => (current + 1) % leads.length);
-      setIsCycling(false);
-      requestAnimationFrame(() => setAnimateTrack(false));
-    }, 480);
-    return () => window.clearTimeout(timeoutId);
-  }, [isCycling]);
-
-  useEffect(() => {
-    if (isCycling || !animateTrack) return;
-    const frameId = requestAnimationFrame(() => setAnimateTrack(false));
-    return () => cancelAnimationFrame(frameId);
-  }, [animateTrack, isCycling]);
+  const tickerLeads = [...leads, ...leads];
 
   return <div className="signal-float relative w-full max-w-[590px] overflow-hidden rounded-2xl border border-[#3f6169] bg-[#0f1b24]/96 shadow-[0_40px_110px_rgba(0,200,150,.22),0_18px_48px_rgba(0,0,0,.62)]">
     <div className="absolute -inset-10 -z-10 rounded-full bg-[#00c896]/20 blur-3xl"/>
@@ -62,12 +35,13 @@ function Dashboard() {
     <div className="grid grid-cols-3 gap-px border-b border-[#25363d] bg-[#25363d]"><div className="bg-[#101a22] px-5 py-4"><div className="signal-mono text-[9px] text-[#a3b5c0]">QUALIFIED NOW</div><div className="mt-1 text-2xl font-semibold tracking-tight text-white">281</div><div className="mt-1 text-[10px] text-[#00c896]">↑ 14.8% vs yesterday</div></div><div className="bg-[#101a22] px-5 py-4"><div className="signal-mono text-[9px] text-[#a3b5c0]">AVG. INTENT</div><div className="mt-1 text-2xl font-semibold tracking-tight text-white">82.4</div><div className="mt-1 text-[10px] text-[#f6ab3c]">HIGH CONFIDENCE</div></div><div className="bg-[#101a22] px-5 py-4"><div className="signal-mono text-[9px] text-[#a3b5c0]">NEW THIS HOUR</div><div className="mt-1 text-2xl font-semibold tracking-tight text-white">47</div><div className="mt-1 text-[10px] text-[#58c4ea]">REAL-TIME FEED</div></div></div>
     <div className="overflow-hidden p-2" style={{ height: `${rowHeight * leads.length + 16}px` }}>
       <div
-        className={animateTrack ? "transition-transform duration-500 ease-out" : ""}
-        style={{ transform: `translateY(-${isCycling ? rowHeight : 0}px)` }}
+        className="animate-[leadTicker_12s_linear_infinite]"
+        style={{ willChange: "transform" }}
       >
-        {visibleLeads.map((lead, index)=><div key={`${lead.org}-${leadStart}-${index}`} className="group grid h-[74px] grid-cols-[1.2fr_1.6fr_auto] items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-[#17262c]"><div className="min-w-0"><div className="flex items-center gap-2"><span className="truncate text-[12px] font-semibold text-[#e6f1ef]">{lead.org}</span><span className={`signal-mono rounded px-1.5 py-0.5 text-[8px] tracking-wider ${lead.tag === "HOT" ? "bg-[#3e2913] text-[#f6ab3c]" : "bg-[#26343b] text-[#9aafb1]"}`}>{lead.tag}</span></div><div className="mt-1 truncate text-[10px] text-[#b9cdcf]">{lead.detail}</div></div><div className="hidden sm:block"><div className="text-[11px] text-[#d5e5e4]">{lead.type}</div><div className="mt-1 signal-mono text-[9px] text-[#92acb8]">{lead.age} ago · verified</div></div><Score score={lead.score}/></div>)}
+        {tickerLeads.map((lead, index)=><div key={`${lead.org}-${index}`} className="group grid h-[74px] grid-cols-[1.2fr_1.6fr_auto] items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-[#17262c]"><div className="min-w-0"><div className="flex items-center gap-2"><span className="truncate text-[12px] font-semibold text-[#e6f1ef]">{lead.org}</span><span className={`signal-mono rounded px-1.5 py-0.5 text-[8px] tracking-wider ${lead.tag === "HOT" ? "bg-[#3e2913] text-[#f6ab3c]" : "bg-[#26343b] text-[#9aafb1]"}`}>{lead.tag}</span></div><div className="mt-1 truncate text-[10px] text-[#b9cdcf]">{lead.detail}</div></div><div className="hidden sm:block"><div className="text-[11px] text-[#d5e5e4]">{lead.type}</div><div className="mt-1 signal-mono text-[9px] text-[#92acb8]">{lead.age} ago · verified</div></div><Score score={lead.score}/></div>)}
       </div>
     </div>
+    <style>{`@keyframes leadTicker{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}`}</style>
     <div className="flex items-center justify-between border-t border-[#25363d] px-5 py-3"><span className="signal-mono text-[9px] text-[#9cb3bf]">3,851 ACTIVE SIGNALS IN WORKSPACE</span><span className="flex items-center gap-1 text-[10px] font-semibold text-[#00c896]">Open pipeline <ArrowRight className="h-3 w-3"/></span></div>
   </div>
 }
