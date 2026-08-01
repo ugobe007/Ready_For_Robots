@@ -48,6 +48,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/journey/url" component={Home} />
+      <Route path="/journey/identity" component={Home} />
+      <Route path="/journey/activate" component={Home} />
       <Route path="/results" component={Results} />
       <Route path="/pipeline" component={Pipeline} />
       <Route path="/compare" component={Compare} />
