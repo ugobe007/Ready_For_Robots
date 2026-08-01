@@ -285,10 +285,10 @@ export default function Home() {
               <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                 {watchStats.map((stat) => (
                   <article key={stat.title} className="border-t border-slate-700/80 pt-6">
-                    <p className="text-3xl font-semibold text-[#00d0a2]">{stat.title}</p>
+                    <p className="text-2xl font-semibold text-[#00d0a2]">{stat.title}</p>
                     <div className="mt-8 flex items-end justify-between">
-                      <p className="text-6xl font-semibold tracking-[-0.02em] text-slate-50">{stat.count}</p>
-                      <p className="pb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Matches</p>
+                      <p className="text-5xl font-semibold tracking-[-0.02em] text-slate-50">{stat.count}</p>
+                      <p className="pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Matches</p>
                     </div>
                     <div className="mt-8 h-[3px] w-full bg-slate-700">
                       <div
