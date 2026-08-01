@@ -245,8 +245,8 @@ export default function Home() {
           <>
             <section className="border-t border-slate-800/80 pt-20">
               <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#00d0a2]">What is ReadyForRobots</p>
-              <h2 className="mt-5 max-w-4xl text-[clamp(2rem,4.2vw,3.8rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-[#00d0a2]">
-                The sales pipeline that runs itself, built for robot companies and distributors.
+              <h2 className="mt-5 max-w-4xl text-[clamp(2rem,4.2vw,3.8rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-slate-50">
+                The sales pipeline <span className="text-[#00d0a2]">that runs itself</span>, built for robot companies and distributors.
               </h2>
               <p className="mt-6 max-w-4xl text-xl leading-9 text-slate-300">
                 SIGNAL watches procurement filings, hiring spikes, CapEx announcements, and facility buildouts across live
@@ -279,7 +279,9 @@ export default function Home() {
 
             <section className="border-t border-slate-800/80 pt-24">
               <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#00d0a2]">What we watch</p>
-              <h2 className="mt-4 text-[clamp(2rem,4vw,3.4rem)] font-semibold tracking-[-0.02em] text-[#00d0a2]">150+ live data sources. Always on.</h2>
+              <h2 className="mt-4 text-[clamp(2rem,4vw,3.4rem)] font-semibold tracking-[-0.02em] text-slate-50">
+                150+ live data sources. <span className="text-[#00d0a2]">Always on.</span>
+              </h2>
               <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                 {watchStats.map((stat) => (
                   <article key={stat.title} className="border-t border-slate-700/80 pt-6">
@@ -305,7 +307,7 @@ export default function Home() {
             </section>
 
             <section className="mt-24 border-t border-slate-800/80 py-24 text-center">
-              <h2 className="mx-auto max-w-3xl text-[clamp(2.8rem,7vw,5.8rem)] font-semibold leading-[0.95] tracking-[-0.04em] text-slate-50">
+              <h2 className="mx-auto max-w-3xl text-[clamp(2.1rem,4.8vw,4.2rem)] font-semibold leading-[0.98] tracking-[-0.03em] text-slate-50">
                 Ready to automate your pipeline?
               </h2>
               <button
