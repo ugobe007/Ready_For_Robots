@@ -59,6 +59,16 @@ const watchStats = [
   { title: "Executive change", count: "208", tone: "slate" },
 ] as const;
 
+const limitedPreviewLeads = [
+  { company: "Accor Hotels", signal: "Labor shortage", fit: "Hospitality automation", score: 94 },
+  { company: "DHL Supply Chain", signal: "Facility expansion", fit: "Warehouse robotics", score: 91 },
+  { company: "Kroger Fulfillment", signal: "CapEx announcement", fit: "Palletizing", score: 88 },
+  { company: "Mayo Clinic", signal: "Executive change", fit: "Autonomous transport", score: 86 },
+  { company: "Port of Rotterdam", signal: "RFP activity", fit: "Yard automation", score: 84 },
+];
+
+type WorkflowType = "robot_company" | "looking_for_robots";
+
 function normalizeUrlInput(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "";
@@ -81,15 +91,23 @@ function Logo() {
 export default function Home() {
   const [location, setLocation] = useLocation();
   const [urlInput, setUrlInput] = useState("");
-  const [identityConfirmed, setIdentityConfirmed] = useState(false);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowType | null>(null);
   const [leadIndex, setLeadIndex] = useState(0);
 
   const search = typeof window !== "undefined" ? window.location.search : "";
   const params = useMemo(() => new URLSearchParams(search), [search]);
   const journeyUrl = params.get("company_url") || "";
+  const workflowFromQuery = params.get("wf") === "buyer" ? "looking_for_robots" : params.get("wf") === "robot_company" ? "robot_company" : null;
+  const resolvedWorkflow = selectedWorkflow || workflowFromQuery;
   const normalizedUrl = useMemo(() => normalizeUrlInput(urlInput || journeyUrl), [journeyUrl, urlInput]);
-  const pageMode: "url" | "identity" | "activate" =
-    location === "/journey/identity" ? "identity" : location === "/journey/activate" ? "activate" : "url";
+  const pageMode: "url" | "identity" | "preview" | "activate" =
+    location === "/journey/identity"
+      ? "identity"
+      : location === "/journey/preview"
+        ? "preview"
+        : location === "/journey/activate"
+          ? "activate"
+          : "url";
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -99,30 +117,39 @@ export default function Home() {
   }, []);
 
   const activateHref = useMemo(() => {
-    if (!normalizedUrl) return "/signup";
+    if (!normalizedUrl || !resolvedWorkflow) return "/signup";
     const params = new URLSearchParams();
     params.set("next", "/pipeline");
-    params.set("wf", "robot_company");
+    params.set("wf", resolvedWorkflow === "robot_company" ? "robot_company" : "buyer");
     params.set("company_url", normalizedUrl);
+    params.set("preview_limit", "5");
     params.set("src", "home_workflow");
     return `/signup?${params.toString()}`;
-  }, [normalizedUrl]);
+  }, [normalizedUrl, resolvedWorkflow]);
 
   const goToIdentity = () => {
     if (!normalizedUrl) return;
     setLocation(`/journey/identity?company_url=${encodeURIComponent(normalizedUrl)}`);
   };
 
+  const goToPreview = () => {
+    if (!normalizedUrl || !resolvedWorkflow) return;
+    const wf = resolvedWorkflow === "robot_company" ? "robot_company" : "buyer";
+    setLocation(`/journey/preview?company_url=${encodeURIComponent(normalizedUrl)}&wf=${wf}`);
+  };
+
   const goToActivate = () => {
-    if (!normalizedUrl || !identityConfirmed) return;
-    setLocation(`/journey/activate?company_url=${encodeURIComponent(normalizedUrl)}`);
+    if (!normalizedUrl || !resolvedWorkflow) return;
+    const wf = resolvedWorkflow === "robot_company" ? "robot_company" : "buyer";
+    setLocation(`/journey/activate?company_url=${encodeURIComponent(normalizedUrl)}&wf=${wf}`);
   };
 
   const persistWorkflowContext = () => {
-    if (typeof window === "undefined" || !normalizedUrl) return;
+    if (typeof window === "undefined" || !normalizedUrl || !resolvedWorkflow) return;
     const payload = {
-      wf: "robot_company",
+      wf: resolvedWorkflow === "robot_company" ? "robot_company" : "buyer",
       company_url: normalizedUrl,
+      preview_limit: 5,
       src: "home_workflow",
       ts: Date.now(),
     };
@@ -158,6 +185,9 @@ export default function Home() {
               Automate... Your Sales <span className="text-[#00d0a2]">Pipeline.</span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-[15px] leading-8 text-slate-300">{valueLine}</p>
+            <p className="mx-auto mt-4 max-w-xl text-[12px] font-medium tracking-[0.08em] text-slate-400">
+              Step [1] Enter URL  ·  Step [2] Select workflow  ·  Step [3] View 5 leads  ·  Step [4] Sign up to save
+            </p>
             <div className="mt-7 inline-flex min-h-[24px] items-center gap-2 text-sm font-medium text-[#71e7cb]">
               <span className="h-2 w-2 rounded-full bg-[#00d0a2]" />
               <span className="transition-opacity duration-300">{rotatingLeads[leadIndex]}</span>
@@ -188,21 +218,74 @@ export default function Home() {
 
             {pageMode === "identity" && (
               <div className="mx-auto mt-9 max-w-xl">
-                <p className="text-sm text-[#c8d8ea]">Confirm you represent a robot company for {normalizedUrl}.</p>
-                <label className="mt-4 inline-flex items-center gap-2 text-sm text-white">
-                  <input
-                    type="checkbox"
-                    checked={identityConfirmed}
-                    onChange={(e) => setIdentityConfirmed(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#426185] bg-transparent"
-                  />
-                  I confirm this is a robot company account.
-                </label>
+                <p className="text-sm text-[#c8d8ea]">For {normalizedUrl}, which workflow do you need?</p>
+                <div className="mt-5 grid gap-3 text-left">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedWorkflow("robot_company")}
+                    className={`rounded-lg border px-4 py-3 text-sm transition ${
+                      resolvedWorkflow === "robot_company"
+                        ? "border-[#00c896] bg-[#0d2c27] text-white"
+                        : "border-slate-700 bg-slate-900/50 text-slate-300 hover:border-slate-500"
+                    }`}
+                  >
+                    I am a robot company
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedWorkflow("looking_for_robots")}
+                    className={`rounded-lg border px-4 py-3 text-sm transition ${
+                      resolvedWorkflow === "looking_for_robots"
+                        ? "border-[#00c896] bg-[#0d2c27] text-white"
+                        : "border-slate-700 bg-slate-900/50 text-slate-300 hover:border-slate-500"
+                    }`}
+                  >
+                    I am looking for robots
+                  </button>
+                </div>
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    onClick={goToPreview}
+                    disabled={!resolvedWorkflow || !normalizedUrl}
+                    className="inline-flex items-center gap-2 rounded-md bg-[#00c896] px-5 py-2.5 text-sm font-semibold text-[#06261f] disabled:opacity-50"
+                  >
+                    Continue
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {pageMode === "preview" && (
+              <div className="mx-auto mt-9 max-w-3xl text-left">
+                <p className="mb-4 text-sm text-slate-300">
+                  Limited pipeline preview for {normalizedUrl}. Showing 5 leads only.
+                </p>
+                <div className="overflow-hidden rounded-xl border border-slate-700 bg-slate-900/60">
+                  <div className="grid grid-cols-[1.4fr_1.1fr_1fr_auto] gap-2 border-b border-slate-700 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                    <span>Company</span>
+                    <span>Signal</span>
+                    <span>Robot fit</span>
+                    <span>Score</span>
+                  </div>
+                  {limitedPreviewLeads.map((lead) => (
+                    <div key={lead.company} className="grid grid-cols-[1.4fr_1.1fr_1fr_auto] gap-2 border-b border-slate-800 px-4 py-3 text-sm text-slate-200 last:border-b-0">
+                      <span className="font-semibold text-slate-100">{lead.company}</span>
+                      <span className="text-slate-300">{lead.signal}</span>
+                      <span className="text-slate-300">{lead.fit}</span>
+                      <span className="font-semibold text-[#00d0a2]">{lead.score}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-4 text-xs font-medium text-amber-300">
+                  Preview limit active: no export and no additional leads until signup.
+                </p>
                 <div className="mt-6">
                   <button
                     type="button"
                     onClick={goToActivate}
-                    disabled={!identityConfirmed || !normalizedUrl}
+                    disabled={!resolvedWorkflow || !normalizedUrl}
                     className="inline-flex items-center gap-2 rounded-md bg-[#00c896] px-5 py-2.5 text-sm font-semibold text-[#06261f] disabled:opacity-50"
                   >
                     Continue
@@ -214,7 +297,7 @@ export default function Home() {
 
             {pageMode === "activate" && (
               <div className="mx-auto mt-9 max-w-xl">
-                <p className="text-sm text-[#c8d8ea]">Pipeline ready for {normalizedUrl}. Activate to continue.</p>
+                <p className="text-sm text-[#c8d8ea]">Sign up to save your 5-lead list and continue building your pipeline.</p>
                 <div className="mt-6">
                   <Link
                     href={activateHref}
@@ -227,7 +310,7 @@ export default function Home() {
                 </div>
                 <p className="mt-4 inline-flex items-center gap-2 text-xs text-[#7fd8be]">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Sign up to save your pipeline.
+                  Upgrade unlocks 50+ leads, full CRM, and automated sales process.
                 </p>
               </div>
             )}
