@@ -51,16 +51,32 @@ export default function Home() {
   const currentStep = !workflow ? 1 : !urlConfirmed ? 2 : 3;
   const options = workflow === "buyer" ? buyerReasons : robotCompanyFocus;
 
-  const primaryHref = useMemo(() => {
-    if (workflow === "robot_company") {
-      return "/signup?next=/pipeline";
-    }
-    return "/signup?next=/results";
-  }, [workflow]);
+  const activateHref = useMemo(() => {
+    if (!workflow || !urlConfirmed || !normalizedUrl) return "/signup";
+    const params = new URLSearchParams();
+    params.set("next", workflow === "robot_company" ? "/pipeline" : "/results");
+    params.set("wf", workflow);
+    params.set("company_url", normalizedUrl);
+    if (selectedIntent) params.set("intent_focus", selectedIntent);
+    params.set("src", "home_workflow");
+    return `/signup?${params.toString()}`;
+  }, [normalizedUrl, selectedIntent, urlConfirmed, workflow]);
 
   const handleContinueUrl = () => {
     if (!normalizedUrl) return;
     setUrlConfirmed(true);
+  };
+
+  const persistWorkflowContext = () => {
+    if (typeof window === "undefined" || !workflow || !urlConfirmed || !normalizedUrl) return;
+    const payload = {
+      wf: workflow,
+      company_url: normalizedUrl,
+      intent_focus: selectedIntent || null,
+      src: "home_workflow",
+      ts: Date.now(),
+    };
+    window.sessionStorage.setItem("rfr_workflow_context", JSON.stringify(payload));
   };
 
   return (
@@ -218,13 +234,24 @@ export default function Home() {
                       : "Create your workspace to save automation guidance and matched opportunities."}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Link
-                      href={primaryHref}
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#00c896] px-4 py-2.5 text-sm font-bold text-[#06261f]"
-                    >
-                      Activate workflow
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    {workflow && urlConfirmed && normalizedUrl ? (
+                      <Link
+                        href={activateHref}
+                        onClick={persistWorkflowContext}
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#00c896] px-4 py-2.5 text-sm font-bold text-[#06261f]"
+                      >
+                        Activate workflow
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#2d4562] px-4 py-2.5 text-sm font-bold text-[#89a3bf]"
+                      >
+                        Complete steps 1 and 2
+                      </button>
+                    )}
                     <Link href="/login" className="text-xs font-semibold text-[#7fa2c8] hover:text-white">
                       Already active? Sign in
                     </Link>

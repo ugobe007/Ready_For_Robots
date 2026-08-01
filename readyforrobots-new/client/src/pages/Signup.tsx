@@ -12,6 +12,14 @@ import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCa
 import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlanParam, storeCheckoutIntent, navigateAfterAuth } from "@/lib/authNext";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
+const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
+
+type WorkflowPrefill = {
+  wf?: "robot_company" | "buyer";
+  intent_focus?: string;
+  company_url?: string;
+  src?: string;
+};
 
 type InboxLink = { label: string; url: string };
 
@@ -52,6 +60,29 @@ function emailInboxLinks(email: string): InboxLink[] {
   ];
 }
 
+function readWorkflowSessionContext(): WorkflowPrefill {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.sessionStorage.getItem(WORKFLOW_CONTEXT_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as WorkflowPrefill;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function appendWorkflowPrefill(path: string, prefill: WorkflowPrefill): string {
+  const [base, query = ""] = path.split("?", 2);
+  const nextParams = new URLSearchParams(query);
+  if (prefill.wf) nextParams.set("wf", prefill.wf);
+  if (prefill.intent_focus) nextParams.set("intent_focus", prefill.intent_focus);
+  if (prefill.company_url) nextParams.set("company_url", prefill.company_url);
+  if (prefill.src) nextParams.set("src", prefill.src);
+  const serialized = nextParams.toString();
+  return serialized ? `${base}?${serialized}` : base;
+}
+
 export default function Signup() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
@@ -77,7 +108,18 @@ export default function Signup() {
   // so we restate exactly what they unlock (value-first conversion continuity).
   const buyerCo = (params.get("co") || "").trim().slice(0, 80);
 
-  const nextPath = () => resolvePostAuthPath("/pipeline");
+  const workflowPrefill = useMemo<WorkflowPrefill>(() => {
+    const fromQuery: WorkflowPrefill = {
+      wf: (params.get("wf") as WorkflowPrefill["wf"]) || undefined,
+      intent_focus: params.get("intent_focus") || undefined,
+      company_url: params.get("company_url") || undefined,
+      src: params.get("src") || undefined,
+    };
+    if (fromQuery.wf || fromQuery.intent_focus || fromQuery.company_url) return fromQuery;
+    return readWorkflowSessionContext();
+  }, [params]);
+
+  const nextPath = () => appendWorkflowPrefill(resolvePostAuthPath("/pipeline"), workflowPrefill);
 
   useEffect(() => {
     const plan = readPlanParam(search);
@@ -88,6 +130,12 @@ export default function Signup() {
     const next = params.get("next");
     if (next && next.startsWith("/")) storePendingNext(next);
   }, [params, search]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!workflowPrefill.wf && !workflowPrefill.intent_focus && !workflowPrefill.company_url) return;
+    window.sessionStorage.setItem(WORKFLOW_CONTEXT_KEY, JSON.stringify(workflowPrefill));
+  }, [workflowPrefill]);
 
   // Funnel #20: record signup intent (denominator). Fires once per page view.
   useEffect(() => {
@@ -321,6 +369,20 @@ export default function Signup() {
                     ? "Sign up to unlock every URL scan match, save leads to CRM, and copy signal-matched outreach drafts."
                     : "For robot OEMs and integrators — SIGNAL ranks buyer intent, drafts outreach, and advances deals in native CRM or HubSpot."}
             </p>
+            {(workflowPrefill.wf || workflowPrefill.intent_focus) && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {workflowPrefill.wf && (
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700">
+                    Workflow: {workflowPrefill.wf === "robot_company" ? "Robot company" : "Potential customer"}
+                  </span>
+                )}
+                {workflowPrefill.intent_focus && (
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700">
+                    Focus: {workflowPrefill.intent_focus}
+                  </span>
+                )}
+              </div>
+            )}
             {liveProof && (liveProof.hot || liveProof.companies) && (
               <p className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-900">
                 Live now ·{" "}
