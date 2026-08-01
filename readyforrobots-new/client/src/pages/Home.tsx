@@ -304,7 +304,7 @@ export default function Home() {
                     onClick={persistWorkflowContext}
                     className="inline-flex items-center gap-2 rounded-md bg-[#00c896] px-5 py-2.5 text-sm font-semibold text-[#06261f]"
                   >
-                    Activate pipeline
+                    Sign up to save your list
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
