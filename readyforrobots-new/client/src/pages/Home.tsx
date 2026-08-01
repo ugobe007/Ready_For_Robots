@@ -152,10 +152,10 @@ export default function Home() {
         <section className="flex min-h-[72vh] items-center justify-center">
           <div className="w-full max-w-2xl text-center">
             <h1
-              className="text-[clamp(2.4rem,6vw,5rem)] font-semibold leading-[0.92] tracking-[-0.04em] text-slate-50"
+              className="text-[clamp(3rem,8vw,6.4rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-slate-50"
               style={{ textShadow: "0 8px 28px rgba(5, 10, 20, 0.45)" }}
             >
-              Automate Your Sales <span className="text-[#00d0a2]">PIPELINE</span>.
+              Automate... Your Sales <span className="text-[#00d0a2]">Pipeline.</span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-[15px] leading-8 text-slate-300">{valueLine}</p>
             <div className="mt-7 inline-flex min-h-[24px] items-center gap-2 text-sm font-medium text-[#71e7cb]">
