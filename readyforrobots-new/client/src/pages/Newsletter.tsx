@@ -586,17 +586,16 @@ export default function Newsletter() {
               Same stories as this page — curated for robotics GTM teams every morning.
             </p>
           </div>
-          <Link
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
+          <button
+            type="button"
+            onClick={() => {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-gray-950"
           >
             Subscribe at top
             <ArrowRight className="h-4 w-4" />
-          </Link>
+          </button>
         </div>
       </main>
 
