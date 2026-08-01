@@ -1,64 +1,255 @@
-import { useState } from "react";
-import { ArrowRight, BarChart3, Bot, Check, ChevronDown, ExternalLink, Filter, Layers3, Menu, Search, TrendingUp, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowRight, Building2, Factory, LogIn, Search } from "lucide-react";
+import { Link } from "wouter";
 
-const leads = [
-  { org:"Amazon", type:"Facility expansion", detail:"New 1.2M sq ft fulfillment center · Ohio", score:96, age:"8m", tag:"HOT" },
-  { org:"Walmart", type:"Labor shortage", detail:"Automation hiring spike across 14 sites", score:91, age:"21m", tag:"HOT" },
-  { org:"Japan Airlines", type:"CapEx announcement", detail:"¥48B ground operations modernization", score:84, age:"42m", tag:"WATCH" },
-  { org:"DHL Supply Chain", type:"Executive change", detail:"VP Robotics & Automation appointed", score:78, age:"1h", tag:"WATCH" },
-];
-const signals = [
-  { label:"Labor shortage", count:"1,284", score:98, color:"bg-[#00c896]" },
-  { label:"Facility expansion", count:"642", score:91, color:"bg-[#00c896]" },
-  { label:"CapEx announcement", count:"517", score:77, color:"bg-[#f6ab3c]" },
-  { label:"Executive change", count:"208", score:64, color:"bg-[#668895]" },
-];
+type WorkflowKind = "robot_company" | "buyer";
 
-const steps = [
-  { n:"01", t:"Find", d:"We monitor 150+ live sources — procurement filings, hiring spikes, CapEx announcements, facility permits — to surface companies actively entering the robot buying cycle." },
-  { n:"02", t:"Score", d:"Every organization is classified by signal type and scored by readiness. Your pipeline arrives pre-ranked, with evidence behind every lead, not guesswork." },
-  { n:"03", t:"Track", d:"We follow each opportunity through its full project lifecycle — from first buying signal through active procurement — so you know exactly when to act." },
-  { n:"04", t:"Automate", d:"Qualified leads sync to your CRM with outreach context, trigger briefs, and follow-up prompts built in. Your sales funnel runs without manual research." },
+const buyerReasons = [
+  "Labor shortage",
+  "Throughput bottlenecks",
+  "Quality issues",
+  "Safety risk",
+  "Cost pressure",
+  "Expansion planning",
 ];
 
-function Logo() { return <div className="flex items-center gap-3"><img src="/logo-r.png" alt="ReadyForRobots" className="h-8 w-8 rounded-[9px] object-contain" /><div className="leading-none"><div className="text-[13px] font-bold tracking-[.13em] text-white">READYFORROBOTS</div><div className="signal-mono mt-1 text-[9px] tracking-[.3em] text-[#58c4ea]">SIGNAL / INTELLIGENCE</div></div></div> }
-function LivePill() { return <div className="inline-flex items-center gap-2 rounded-full border border-[#00c896]/25 bg-[#0e201f]/80 px-3 py-1.5 signal-mono text-[10px] tracking-[.08em] text-[#93bdd2]"><span className="signal-pulse h-1.5 w-1.5 rounded-full bg-[#58c4ea]"/> LIVE DATA <span className="text-[#60797b]">/</span> 150+ SOURCES</div> }
-function Score({ score }: { score:number }) { return <div className="flex items-center gap-2"><div className="h-1.5 w-16 overflow-hidden rounded-full bg-[#1e3035]"><div className={`h-full rounded-full ${score > 90 ? "bg-[#00c896]" : score > 75 ? "bg-[#f6ab3c]" : "bg-[#668895]"}`} style={{width:`${score}%`}}/></div><span className="signal-mono text-[11px] font-bold text-[#dce9e6]">{score}</span></div> }
+const robotCompanyFocus = [
+  "Warehouse and logistics buyers",
+  "Manufacturing buyers",
+  "Food and beverage buyers",
+  "Healthcare and medtech buyers",
+  "Airport and mobility buyers",
+  "Retail and service buyers",
+];
 
-function Dashboard() {
-  const rowHeight = 74;
-  const tickerLeads = [...leads, ...leads];
+function normalizeUrlInput(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+  return `https://${trimmed}`;
+}
 
-  return <div className="signal-float relative w-full max-w-[590px] overflow-hidden rounded-2xl border border-[#3f6169] bg-[#0f1b24]/96 shadow-[0_40px_110px_rgba(0,200,150,.22),0_18px_48px_rgba(0,0,0,.62)]">
-    <div className="absolute -inset-10 -z-10 rounded-full bg-[#00c896]/20 blur-3xl"/>
-    <div className="flex items-center justify-between border-b border-[#25363d] px-5 py-4"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#00c896]"/><span className="signal-mono text-[11px] tracking-[.14em] text-[#d8e9e8]">LIVE PIPELINE</span><span className="rounded bg-[#193542] px-1.5 py-0.5 signal-mono text-[9px] text-[#58c4ea]">SYNCED</span></div><div className="flex gap-2 text-[#98b2bf]"><Filter className="h-3.5 w-3.5"/><span className="signal-mono text-[10px]">LAST 24H</span></div></div>
-    <div className="grid grid-cols-3 gap-px border-b border-[#25363d] bg-[#25363d]"><div className="bg-[#101a22] px-5 py-4"><div className="signal-mono text-[9px] text-[#a3b5c0]">QUALIFIED NOW</div><div className="mt-1 text-2xl font-semibold tracking-tight text-white">281</div><div className="mt-1 text-[10px] text-[#00c896]">↑ 14.8% vs yesterday</div></div><div className="bg-[#101a22] px-5 py-4"><div className="signal-mono text-[9px] text-[#a3b5c0]">AVG. INTENT</div><div className="mt-1 text-2xl font-semibold tracking-tight text-white">82.4</div><div className="mt-1 text-[10px] text-[#f6ab3c]">HIGH CONFIDENCE</div></div><div className="bg-[#101a22] px-5 py-4"><div className="signal-mono text-[9px] text-[#a3b5c0]">NEW THIS HOUR</div><div className="mt-1 text-2xl font-semibold tracking-tight text-white">47</div><div className="mt-1 text-[10px] text-[#58c4ea]">REAL-TIME FEED</div></div></div>
-    <div className="overflow-hidden p-2" style={{ height: `${rowHeight * leads.length + 16}px` }}>
-      <div
-        className="animate-[leadTicker_12s_linear_infinite]"
-        style={{ willChange: "transform" }}
-      >
-        {tickerLeads.map((lead, index)=><div key={`${lead.org}-${index}`} className="group grid h-[74px] grid-cols-[1.2fr_1.6fr_auto] items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-[#17262c]"><div className="min-w-0"><div className="flex items-center gap-2"><span className="truncate text-[12px] font-semibold text-[#e6f1ef]">{lead.org}</span><span className={`signal-mono rounded px-1.5 py-0.5 text-[8px] tracking-wider ${lead.tag === "HOT" ? "bg-[#3e2913] text-[#f6ab3c]" : "bg-[#26343b] text-[#9aafb1]"}`}>{lead.tag}</span></div><div className="mt-1 truncate text-[10px] text-[#b9cdcf]">{lead.detail}</div></div><div className="hidden sm:block"><div className="text-[11px] text-[#d5e5e4]">{lead.type}</div><div className="mt-1 signal-mono text-[9px] text-[#92acb8]">{lead.age} ago · verified</div></div><Score score={lead.score}/></div>)}
+function Logo() {
+  return (
+    <div className="flex items-center gap-3">
+      <img src="/logo-r.png" alt="ReadyForRobots" className="h-8 w-8 rounded-[9px] object-contain" />
+      <div className="leading-none">
+        <div className="text-[13px] font-bold tracking-[.13em] text-white">READYFORROBOTS</div>
+        <div className="mt-1 text-[9px] tracking-[.3em] text-[#58c4ea]">SIGNAL / WORKFLOW</div>
       </div>
     </div>
-    <style>{`@keyframes leadTicker{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}`}</style>
-    <div className="flex items-center justify-between border-t border-[#25363d] px-5 py-3"><span className="signal-mono text-[9px] text-[#9cb3bf]">3,851 ACTIVE SIGNALS IN WORKSPACE</span><span className="flex items-center gap-1 text-[10px] font-semibold text-[#00c896]">Open pipeline <ArrowRight className="h-3 w-3"/></span></div>
-  </div>
+  );
 }
 
 export default function Home() {
-  const [menu, setMenu] = useState(false);
-  const [domain, setDomain] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  return <main className="min-h-screen overflow-x-hidden bg-[#0a1024] text-[#edf4f3]">
-    <style>{`.signal-page ::selection{background:#00c896;color:#0b0f19}.signal-page{scroll-behavior:smooth}`}</style>
-    <nav className="sticky top-0 z-50 border-b border-[#1b2932]/80 bg-[#0a1024]/80 backdrop-blur-xl"><div className="mx-auto flex h-[72px] max-w-[1240px] items-center justify-between px-5 lg:px-8"><Logo/><div className="hidden items-center gap-7 lg:flex"><a href="/pipeline" className="text-[12px] text-[#afbec8] transition-colors hover:text-white">Pipeline</a><a href="/signals" className="text-[12px] text-[#afbec8] transition-colors hover:text-white">Signals</a><a href="/robots" className="text-[12px] text-[#afbec8] transition-colors hover:text-white">Robots</a><a href="/pricing" className="text-[12px] text-[#afbec8] transition-colors hover:text-white">Pricing</a><a href="/intelligence" className="text-[12px] text-[#afbec8] transition-colors hover:text-white">Intelligence</a><a href="/pricing" className="flex items-center gap-1 text-[12px] text-[#afbec8] transition-colors hover:text-white">More <ChevronDown className="h-3 w-3"/></a></div><div className="hidden items-center gap-5 md:flex"><a href="/find-robots" className="rounded-md border border-[#405057] px-4 py-2 text-[12px] font-medium text-[#d3dfde] hover:border-[#00c896]">Find leads</a><a href="/login" className="text-[12px] text-[#d9e7e8] hover:text-white">Sign in</a><a href="/signup" className="rounded-md bg-[#00c896] px-4 py-2.5 text-[12px] font-bold text-[#07120f] shadow-[0_0_24px_rgba(0,200,150,.18)] hover:bg-[#18d8a5]">Activate SIGNAL</a></div><button onClick={()=>setMenu(!menu)} className="text-white md:hidden" aria-label="Toggle menu">{menu?<X/>:<Menu/>}</button></div>{menu&&<div className="border-t border-[#1b2932] bg-[#0e1630] px-5 py-5 md:hidden"><div className="grid gap-4 text-sm text-[#a2b3b3]"><a href="/signals" onClick={()=>setMenu(false)}>Signals</a><a href="/pipeline" onClick={()=>setMenu(false)}>Pipeline</a><a href="/intelligence" onClick={()=>setMenu(false)}>Intelligence</a><a href="/signup" className="w-fit rounded bg-[#00c896] px-4 py-2 font-bold text-[#07120f]">Activate SIGNAL</a></div></div>}</nav>
-    <section className="signal-noise signal-grid signal-scan relative isolate overflow-hidden border-b border-[#1c2a31]"><div className="absolute left-1/2 top-[-220px] -z-10 h-[540px] w-[780px] -translate-x-1/2 rounded-full bg-[#38bdf8]/[.07] blur-[110px]"/><div className="mx-auto max-w-[1240px] px-5 pb-20 pt-16 lg:px-8 lg:pb-28 lg:pt-24"><div className="grid items-center gap-16 lg:grid-cols-[.9fr_1.1fr] lg:gap-10"><div className="signal-rise"><LivePill/><p className="signal-mono mt-7 text-[11px] tracking-[.14em] text-[#9eb7c3]">FOR ROBOT COMPANIES &amp; DISTRIBUTORS</p><h1 className="mt-5 max-w-[650px] text-[clamp(3.25rem,7vw,6.7rem)] font-semibold leading-[.91] tracking-[-.07em] text-white">Robot Sales<br/><span className="text-[#00c896]">Automated</span><br/>End to End.</h1><p className="mt-7 max-w-[500px] text-[16px] leading-7 text-[#b0bfca]">We find companies ready to buy robots, classify and score their readiness, track their buying lifecycle, and push qualified opportunities into your CRM — automatically. Your pipeline runs itself.</p><div className="mt-9 flex max-w-[520px] flex-col gap-2 rounded-xl border border-[#42626a] bg-[#111d27]/92 p-2 shadow-2xl sm:flex-row"><div className="flex flex-1 items-center gap-3 px-3"><Search className="h-4 w-4 text-[#95b2c1]"/><input value={domain} onChange={e=>setDomain(e.target.value)} placeholder="Enter your company URL" className="w-full bg-transparent py-3 text-sm text-white outline-none placeholder:text-[#89a8b7]"/></div><button onClick={()=>setSubmitted(true)} className="signal-sheen rounded-lg bg-[#00c896] px-5 py-3 text-sm font-bold text-[#07120f] transition-transform hover:scale-[1.02]">{submitted?"Workspace queued":"Find leads"} <ArrowRight className="ml-2 inline h-4 w-4"/></button></div><p className="mt-3 signal-mono text-[9px] tracking-[.08em] text-[#97afbc]"><Check className="mr-1 inline h-3 w-3 text-[#00c896]"/> FREE WORKSPACE · NO CREDIT CARD · FIRST SIGNALS IN MINUTES</p></div><div className="signal-rise signal-delay-2 lg:pl-4 signal-panel-wrap"><div className="signal-panel-right-glow"/><Dashboard/></div></div></div></section>
-    <section id="signals" className="mx-auto max-w-[1240px] px-5 py-20 lg:px-8 lg:py-28"><div className="mb-12 flex flex-col justify-between gap-5 md:flex-row md:items-end"><div><div className="signal-mono text-[10px] tracking-[.22em] text-[#00c896]">01 / WHAT WE DETECT</div><h2 className="mt-4 max-w-[680px] text-4xl font-semibold tracking-[-.04em] text-white md:text-5xl">The moment a robot<br/><span className="text-[#a9c0bf]">becomes inevitable.</span></h2></div><p className="max-w-[330px] text-sm leading-6 text-[#a6b8c2]">Signals are the breadcrumbs left behind by every serious automation decision. We find them, verify them, and rank them.</p></div><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">{signals.map((s,i)=><div key={s.label} className={`signal-rise signal-delay-${i+1} group rounded-xl border border-[#26373d] bg-[#111a22] p-5 transition-colors hover:border-[#00c896]/50`}><div className="flex items-start justify-between"><div className="grid h-9 w-9 place-items-center rounded-lg bg-[#1b2b30] text-[#00c896]">{i===0?<TrendingUp className="h-4 w-4"/>:i===1?<Layers3 className="h-4 w-4"/>:i===2?<BarChart3 className="h-4 w-4"/>:<Bot className="h-4 w-4"/>}</div><span className="signal-mono text-[10px] text-[#9fbab9]">{s.count} MATCHES</span></div><h3 className="mt-8 text-[15px] font-semibold text-[#e8f2ef]">{s.label}</h3><div className="mt-5 flex items-center justify-between"><span className="text-[11px] text-[#a4b6c0]">Signal strength</span><span className="signal-mono text-sm font-bold text-white">{s.score}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#25353a]"><div className={`h-full ${s.color} transition-all`} style={{width:`${s.score}%`}}/></div></div>)}</div></section>
-    <section id="robots" className="border-y border-[#1d2b31] bg-[#0e1529]"><div className="mx-auto grid max-w-[1240px] grid-cols-2 px-5 py-8 md:grid-cols-4 lg:px-8">{[["3,851","ACTIVE SIGNALS"],["281","HOT RIGHT NOW"],["150+","LIVE SOURCES"],["62%","STRONG INTENT"]].map(([v,l],i)=><div key={l} className={`border-[#283940] px-5 py-2 ${i>0?"border-l":""}`}><div className="signal-mono text-3xl font-bold tracking-[-.06em] text-white md:text-4xl">{v}</div><div className="mt-2 text-[9px] tracking-[.14em] text-[#6d8587]">{l}</div></div>)}</div></section>
-    <section id="intelligence" className="mx-auto max-w-[1240px] px-5 py-20 lg:px-8 lg:py-28"><div className="grid gap-14 lg:grid-cols-[.8fr_1.2fr]"><div><div className="signal-mono text-[10px] tracking-[.22em] text-[#58c4ea]">02 / HOW IT WORKS</div><h2 className="mt-4 text-4xl font-semibold tracking-[-.05em] text-white md:text-5xl">From first hint<br/>to signed deal.</h2><p className="mt-6 max-w-[370px] text-sm leading-6 text-[#a6b8c2]">SIGNAL compresses months of market research into a live, prioritized view of who is ready to buy.</p><a href="/intelligence" className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#00c896] hover:text-[#1ae3ad]">See the intelligence layer <ArrowRight className="h-4 w-4"/></a></div><div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">{steps.map(({n,t,d})=><div key={n} className="relative border-t border-[#33464b] pt-5"><span className="signal-mono text-[11px] text-[#58c4ea]">{n}</span><h3 className="mt-7 text-lg font-semibold text-white">{t}</h3><p className="mt-3 text-sm leading-6 text-[#a5b7c1]">{d}</p></div>)}</div></div></section>
-    <section id="pipeline" className="mx-auto max-w-[1240px] px-5 pb-24 lg:px-8"><div className="rounded-2xl border border-[#2a3d43] bg-[#101a22] shadow-[0_25px_80px_rgba(0,0,0,.24)]"><div className="flex flex-col gap-4 border-b border-[#273940] px-5 py-5 sm:flex-row sm:items-center sm:justify-between"><div><div className="signal-mono text-[10px] tracking-[.2em] text-[#58c4ea]">03 / LIVE PIPELINE</div><h2 className="mt-2 text-xl font-semibold text-white">Accounts entering the cycle</h2></div><div className="flex gap-2"><a href="/pipeline" className="rounded-md border border-[#34484e] px-3 py-2 text-[11px] text-[#a6b8b8]"><Filter className="mr-1 inline h-3 w-3"/> Filters</a><a href="/pipeline" className="rounded-md bg-[#173a33] px-3 py-2 text-[11px] font-semibold text-[#00c896]">Export view <ExternalLink className="ml-1 inline h-3 w-3"/></a></div></div><div className="overflow-x-auto"><table className="w-full min-w-[700px] text-left"><thead className="border-b border-[#273940] signal-mono text-[9px] tracking-[.12em] text-[#627b7d]"><tr><th className="px-5 py-4 font-normal">ORGANIZATION</th><th className="px-5 py-4 font-normal">SIGNAL</th><th className="px-5 py-4 font-normal">EVIDENCE</th><th className="px-5 py-4 font-normal">STRENGTH</th><th className="px-5 py-4 font-normal">STATUS</th></tr></thead><tbody>{leads.map(l=><tr key={l.org} className="border-b border-[#213239] last:border-0 hover:bg-[#15242a]"><td className="px-5 py-5 text-sm font-semibold text-[#e4efed]">{l.org}</td><td className="px-5 py-5 text-sm text-[#a4b4be]">{l.type}</td><td className="px-5 py-5 text-xs text-[#71888b]">{l.detail}</td><td className="px-5 py-5"><Score score={l.score}/></td><td className="px-5 py-5"><span className={`signal-mono rounded px-2 py-1 text-[9px] ${l.tag==="HOT"?"bg-[#3d2915] text-[#f6ab3c]":"bg-[#20333a] text-[#9db1b2]"}`}>{l.tag}</span></td></tr>)}</tbody></table></div></div></section>
-    <section id="pricing" className="relative overflow-hidden border-t border-[#1c2b31] bg-[#101936]"><div className="absolute right-[-120px] top-[-140px] h-[420px] w-[420px] rounded-full bg-[#38bdf8]/12 blur-[100px]"/><div className="relative mx-auto flex max-w-[1240px] flex-col justify-between gap-10 px-5 py-20 md:flex-row md:items-center lg:px-8 lg:py-24"><div><div className="signal-mono text-[10px] tracking-[.2em] text-[#58c4ea]">START FOR FREE</div><h2 className="mt-4 max-w-[700px] text-4xl font-semibold tracking-[-.06em] text-white md:text-6xl">Automate your<br/><span className="text-[#7a8faa]">robot sales pipeline.</span></h2><p className="mt-5 text-sm text-[#8ea3b1]">Free workspace to start. Your first scored leads in minutes — no CRM setup required.</p></div><a href="/signup" className="signal-sheen flex w-fit items-center gap-3 rounded-lg bg-[#00c896] px-6 py-4 text-sm font-bold text-[#07120f] shadow-[0_0_35px_rgba(0,200,150,.22)]">Activate SIGNAL <ArrowRight className="h-4 w-4"/></a></div></section>
-    <footer className="mx-auto flex max-w-[1240px] flex-col gap-5 px-5 py-8 text-[10px] text-[#607779] sm:flex-row sm:items-center sm:justify-between lg:px-8"><Logo/><div className="flex gap-5"><span>© 2025 ReadyForRobots</span><span>Privacy</span><span>Terms</span></div><span className="signal-mono">SIGNAL IS LIVE / 24:17:09 UTC</span></footer>
-  </main>
+  const [workflow, setWorkflow] = useState<WorkflowKind | null>(null);
+  const [urlInput, setUrlInput] = useState("");
+  const [urlConfirmed, setUrlConfirmed] = useState(false);
+  const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
+
+  const normalizedUrl = useMemo(() => normalizeUrlInput(urlInput), [urlInput]);
+  const currentStep = !workflow ? 1 : !urlConfirmed ? 2 : 3;
+  const options = workflow === "buyer" ? buyerReasons : robotCompanyFocus;
+
+  const primaryHref = useMemo(() => {
+    if (workflow === "robot_company") {
+      return "/signup?next=/pipeline";
+    }
+    return "/signup?next=/results";
+  }, [workflow]);
+
+  const handleContinueUrl = () => {
+    if (!normalizedUrl) return;
+    setUrlConfirmed(true);
+  };
+
+  return (
+    <main className="min-h-screen bg-[#081126] text-[#edf4f3]">
+      <div className="mx-auto max-w-[1120px] px-5 pb-16 pt-8 lg:px-8 lg:pb-24">
+        <header className="mb-10 flex items-center justify-between">
+          <Link href="/" className="shrink-0">
+            <Logo />
+          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10"
+            >
+              <LogIn className="h-3.5 w-3.5" />
+              Sign in
+            </Link>
+          </div>
+        </header>
+
+        <section className="relative overflow-hidden rounded-3xl border border-[#214066] bg-[#0c1a33] p-6 shadow-[0_40px_100px_rgba(8,17,38,0.65)] lg:p-10">
+          <div className="pointer-events-none absolute -right-24 -top-20 h-64 w-64 rounded-full bg-[#38bdf8]/20 blur-3xl" aria-hidden />
+          <div className="pointer-events-none absolute -left-24 bottom-[-90px] h-64 w-64 rounded-full bg-[#00c896]/14 blur-3xl" aria-hidden />
+
+          <div className="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#58c4ea]">Step 1-2-3 Workflow</p>
+              <h1 className="mt-4 text-[clamp(2.1rem,5.2vw,4.2rem)] font-semibold leading-[0.95] tracking-[-0.04em] text-white">
+                Start with your URL.
+                <br />
+                Then we guide your next move.
+              </h1>
+              <p className="mt-5 max-w-[560px] text-[15px] leading-7 text-[#9ab2c9]">
+                Two workflows: one for robot companies building pipeline, and one for potential customers evaluating automation.
+                Active users can skip this flow and sign in immediately.
+              </p>
+
+              <div className="mt-8 rounded-2xl border border-[#27466f] bg-[#0a1730] p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#86a5c5]">Current step</p>
+                  <p className="text-xs font-semibold text-[#58c4ea]">Step {currentStep} of 3</p>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-[#112645]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#00c896] to-[#38bdf8] transition-all duration-300"
+                    style={{ width: `${(currentStep / 3) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="relative rounded-2xl border border-[#2a4b73] bg-[#0b1a36] p-5 lg:p-6">
+              <div className="space-y-5">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#7fa2c8]">Step 1</p>
+                  <p className="mt-1 text-base font-semibold text-white">Who are you?</p>
+                  <div className="mt-3 grid gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWorkflow("robot_company");
+                        setUrlConfirmed(false);
+                        setSelectedIntent(null);
+                      }}
+                      className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition ${
+                        workflow === "robot_company"
+                          ? "border-[#00c896] bg-[#0f2b3e]"
+                          : "border-[#2b4a71] bg-[#0a1832] hover:border-[#3c6494]"
+                      }`}
+                    >
+                      <Factory className="mt-0.5 h-4 w-4 text-[#00c896]" />
+                      <div>
+                        <p className="text-sm font-semibold text-white">Robot company</p>
+                        <p className="mt-0.5 text-xs text-[#8eabc8]">Identify and rank buyers, then move deals in pipeline.</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWorkflow("buyer");
+                        setUrlConfirmed(false);
+                        setSelectedIntent(null);
+                      }}
+                      className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition ${
+                        workflow === "buyer"
+                          ? "border-[#38bdf8] bg-[#0e2a42]"
+                          : "border-[#2b4a71] bg-[#0a1832] hover:border-[#3c6494]"
+                      }`}
+                    >
+                      <Building2 className="mt-0.5 h-4 w-4 text-[#58c4ea]" />
+                      <div>
+                        <p className="text-sm font-semibold text-white">Potential customer</p>
+                        <p className="mt-0.5 text-xs text-[#8eabc8]">Evaluate where automation fits and why now.</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <div className={workflow ? "opacity-100" : "opacity-45 pointer-events-none"}>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#7fa2c8]">Step 2</p>
+                  <p className="mt-1 text-base font-semibold text-white">Enter your company URL</p>
+                  <div className="mt-3 flex gap-2 rounded-xl border border-[#2b4a71] bg-[#09152b] p-2">
+                    <Search className="ml-2 mt-2 h-4 w-4 shrink-0 text-[#7ea0c5]" />
+                    <input
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      placeholder="example.com"
+                      className="w-full bg-transparent py-2 text-sm text-white outline-none placeholder:text-[#6f89a8]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleContinueUrl}
+                      disabled={!workflow || !normalizedUrl}
+                      className="rounded-lg bg-[#00c896] px-3.5 py-2 text-xs font-bold text-[#07221c] disabled:opacity-50"
+                    >
+                      Continue
+                    </button>
+                  </div>
+                  {urlConfirmed && (
+                    <p className="mt-2 text-xs text-[#7fd8be]">URL captured: {normalizedUrl}</p>
+                  )}
+                </div>
+
+                <div className={urlConfirmed ? "opacity-100" : "opacity-45 pointer-events-none"}>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#7fa2c8]">Step 3</p>
+                  <p className="mt-1 text-base font-semibold text-white">
+                    {workflow === "robot_company"
+                      ? "Which buyer segment should we prioritize first?"
+                      : "What problem are you trying to automate first?"}
+                  </p>
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {options.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setSelectedIntent(option)}
+                        className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
+                          selectedIntent === option
+                            ? "border-[#00c896] bg-[#0f2b3e] text-white"
+                            : "border-[#2b4a71] bg-[#0a1832] text-[#9bb5cf] hover:border-[#3c6494]"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[#2b4a71] bg-[#09182f] p-4">
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#7fa2c8]">Next</p>
+                  <p className="mt-1 text-sm text-[#c8d8ea]">
+                    {workflow === "robot_company"
+                      ? "Create your workspace to save ranked buyers and guidance in pipeline."
+                      : "Create your workspace to save automation guidance and matched opportunities."}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Link
+                      href={primaryHref}
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#00c896] px-4 py-2.5 text-sm font-bold text-[#06261f]"
+                    >
+                      Activate workflow
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                    <Link href="/login" className="text-xs font-semibold text-[#7fa2c8] hover:text-white">
+                      Already active? Sign in
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-8 grid gap-3 md:grid-cols-3">
+          <div className="rounded-xl border border-[#24466f] bg-[#0d1d3a] p-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#58c4ea]">Robot companies</p>
+            <p className="mt-1 text-sm text-[#a7bfd7]">Find qualified buyers, understand intent, and move deals with pipeline guidance.</p>
+          </div>
+          <div className="rounded-xl border border-[#24466f] bg-[#0d1d3a] p-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#58c4ea]">Potential customers</p>
+            <p className="mt-1 text-sm text-[#a7bfd7]">Identify automation problems, urgency drivers, and likely robot fit.</p>
+          </div>
+          <div className="rounded-xl border border-[#24466f] bg-[#0d1d3a] p-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#58c4ea]">Returning users</p>
+            <p className="mt-1 text-sm text-[#a7bfd7]">Skip the workflow via Sign in and continue directly in your workspace.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 }
