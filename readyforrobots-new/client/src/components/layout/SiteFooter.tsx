@@ -15,7 +15,7 @@ const LINKS = {
   Product: [
     { label: "Pipeline", href: "/pipeline" },
     { label: "Signals", href: "/signals" },
-    { label: "Activate SIGNAL", href: "/results?url=" },
+    { label: "Activate SIGNAL", href: "/signup" },
     { label: "Robots", href: "/robots" },
     { label: "Humanoid Report", href: "/robots/report" },
     { label: "Newsletter", href: "/newsletter" },

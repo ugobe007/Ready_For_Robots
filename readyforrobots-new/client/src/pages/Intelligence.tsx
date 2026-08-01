@@ -139,7 +139,7 @@ export default function Intelligence() {
             <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white">
               Explore robot signals <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <Link href="/results?url=" className="group inline-flex items-center gap-1.5 font-semibold text-amber-400 transition-colors hover:text-amber-300">
+            <Link href="/signup" className="group inline-flex items-center gap-1.5 font-semibold text-amber-400 transition-colors hover:text-amber-300">
               Activate SIGNAL <Zap className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -336,7 +336,7 @@ export default function Intelligence() {
           </section>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-5 text-[13px]">
-            <Link href="/results?url=" className="group inline-flex items-center gap-1.5 font-semibold transition-colors" style={{ color: "#FFB000" }}>
+            <Link href="/signup" className="group inline-flex items-center gap-1.5 font-semibold transition-colors" style={{ color: "#FFB000" }}>
               Activate SIGNAL from live intelligence <Send className="h-3.5 w-3.5" />
             </Link>
             <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-gray-500 transition-colors hover:text-gray-800">

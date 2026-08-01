@@ -263,7 +263,7 @@ export default function Header() {
                     Sign in
                   </Link>
                   <Link
-                    href="/results?url="
+                    href="/signup"
                     className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-all active:scale-[0.97]"
                   >
                     <Zap size={14} />
@@ -404,7 +404,7 @@ export default function Header() {
 
         <div className="px-4 pt-4 pb-2 space-y-2">
           <Link
-            href="/results?url="
+            href="/signup"
             onClick={closeDrawer}
             className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm"
           >

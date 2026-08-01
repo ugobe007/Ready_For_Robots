@@ -238,7 +238,7 @@ export default function PipelinePreview() {
             Showing {signals.length} of {footerTotal.toLocaleString()} active opportunities
           </p>
           <Link
-            href="/results?url="
+            href="/signup"
             className="flex items-center gap-1.5 text-xs font-semibold transition-colors" style={{ color: "#a78bfa" }}
           >
             Activate SIGNAL

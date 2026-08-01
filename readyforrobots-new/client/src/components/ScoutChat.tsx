@@ -36,7 +36,7 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
             SIGNAL scans your URL, matches prospective sales leads, and queues follow-up plans from the results page.
           </p>
           <Link
-            href="/results?url="
+            href="/signup"
             onClick={onClose}
             className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
           >
