@@ -3,12 +3,12 @@ import { ArrowRight, CheckCircle2, LogIn, Search } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 const rotatingLeads = [
-  "Siemens Energy",
-  "ABB Robotics",
-  "Daifuku North America",
-  "KUKA Systems",
-  "Dematic",
-  "Swisslog",
+  "Accor Hotels - housekeeping automation expansion",
+  "DHL Supply Chain - warehouse AMR procurement",
+  "Kroger Fulfillment - palletizing automation buildout",
+  "Mayo Clinic - autonomous transport pilot",
+  "Port of Rotterdam - yard automation RFP",
+  "Boeing Charleston - inspection robotics initiative",
 ];
 
 const coreValueCards = [
@@ -244,8 +244,8 @@ export default function Home() {
         {pageMode === "url" && (
           <>
             <section className="border-t border-slate-800/80 pt-20">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#58c4ea]">What is ReadyForRobots</p>
-              <h2 className="mt-5 max-w-4xl text-[clamp(2rem,4.2vw,3.8rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-slate-50">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#00d0a2]">What is ReadyForRobots</p>
+              <h2 className="mt-5 max-w-4xl text-[clamp(2rem,4.2vw,3.8rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-[#00d0a2]">
                 The sales pipeline that runs itself, built for robot companies and distributors.
               </h2>
               <p className="mt-6 max-w-4xl text-xl leading-9 text-slate-300">
@@ -253,11 +253,11 @@ export default function Home() {
                 sources. When a company enters the robot buying cycle, we catch it, score it, and push it to your pipeline.
               </p>
 
-              <div className="mt-12 grid gap-0 rounded-xl border border-slate-700/70 bg-slate-900/60 md:grid-cols-3">
+              <div className="mt-12 grid gap-10 md:grid-cols-3">
                 {coreValueCards.map((card) => (
-                  <article key={card.id} className="border-b border-slate-800/80 p-8 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0">
+                  <article key={card.id} className="border-t border-slate-700/70 pt-6">
                     <p className="text-[11px] font-semibold tracking-[0.28em] text-[#00d0a2]">{card.id}</p>
-                    <h3 className="mt-6 text-3xl font-semibold leading-tight text-slate-100">{card.title}</h3>
+                    <h3 className="mt-6 text-3xl font-semibold leading-tight text-[#00d0a2]">{card.title}</h3>
                     <p className="mt-5 text-xl leading-8 text-slate-300">{card.body}</p>
                   </article>
                 ))}
@@ -265,12 +265,12 @@ export default function Home() {
             </section>
 
             <section className="border-t border-slate-800/80 pt-24">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#58c4ea]">How it works</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#00d0a2]">How it works</p>
               <div className="mt-10 grid gap-8 md:grid-cols-2 xl:grid-cols-4">
                 {howItWorks.map((item) => (
                   <article key={item.id} className="border-t border-slate-700/70 pt-8">
                     <p className="text-[11px] font-semibold tracking-[0.28em] text-[#00d0a2]">{item.id}</p>
-                    <h3 className="mt-4 text-4xl font-semibold text-slate-100">{item.title}</h3>
+                    <h3 className="mt-4 text-4xl font-semibold text-[#00d0a2]">{item.title}</h3>
                     <p className="mt-4 text-xl leading-8 text-slate-300">{item.body}</p>
                   </article>
                 ))}
@@ -278,12 +278,12 @@ export default function Home() {
             </section>
 
             <section className="border-t border-slate-800/80 pt-24">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#58c4ea]">What we watch</p>
-              <h2 className="mt-4 text-[clamp(2rem,4vw,3.4rem)] font-semibold tracking-[-0.02em] text-slate-50">150+ live data sources. Always on.</h2>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#00d0a2]">What we watch</p>
+              <h2 className="mt-4 text-[clamp(2rem,4vw,3.4rem)] font-semibold tracking-[-0.02em] text-[#00d0a2]">150+ live data sources. Always on.</h2>
               <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                 {watchStats.map((stat) => (
-                  <article key={stat.title} className="rounded-xl border border-slate-700/80 bg-slate-900/60 p-6">
-                    <p className="text-3xl font-semibold text-slate-100">{stat.title}</p>
+                  <article key={stat.title} className="border-t border-slate-700/80 pt-6">
+                    <p className="text-3xl font-semibold text-[#00d0a2]">{stat.title}</p>
                     <div className="mt-8 flex items-end justify-between">
                       <p className="text-6xl font-semibold tracking-[-0.02em] text-slate-50">{stat.count}</p>
                       <p className="pb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Matches</p>
@@ -305,7 +305,7 @@ export default function Home() {
             </section>
 
             <section className="mt-24 border-t border-slate-800/80 py-24 text-center">
-              <h2 className="mx-auto max-w-3xl text-[clamp(2rem,4.5vw,4rem)] font-semibold leading-tight tracking-[-0.03em] text-slate-50">
+              <h2 className="mx-auto max-w-3xl text-[clamp(2.8rem,7vw,5.8rem)] font-semibold leading-[0.95] tracking-[-0.04em] text-slate-50">
                 Ready to automate your pipeline?
               </h2>
               <button
