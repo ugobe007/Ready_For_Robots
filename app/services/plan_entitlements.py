@@ -32,16 +32,16 @@ PIPELINE_WARM_SLOTS = int(os.getenv("PIPELINE_WARM_SLOTS", "20"))
 PIPELINE_MONITOR_SLOTS = int(os.getenv("PIPELINE_MONITOR_SLOTS", "15"))
 PIPELINE_TIERED_TOTAL = PIPELINE_HOT_SLOTS + PIPELINE_WARM_SLOTS + PIPELINE_MONITOR_SLOTS
 
-# Anonymous preview: more variety at peak intent (was 5/4/3 = 12).
+# Anonymous preview: fuller live pipeline while preserving mixed HOT/WARM/monitoring view.
 PIPELINE_LIMIT_ANONYMOUS = 15
 PIPELINE_ANON_HOT_SLOTS = 6
-PIPELINE_ANON_WARM_SLOTS = 5
-PIPELINE_ANON_MONITOR_SLOTS = 4
+PIPELINE_ANON_WARM_SLOTS = 6
+PIPELINE_ANON_MONITOR_SLOTS = 3
 
-PIPELINE_LIMIT_FREE = 10
-PIPELINE_FREE_HOT_SLOTS = 4
-PIPELINE_FREE_WARM_SLOTS = 4
-PIPELINE_FREE_MONITOR_SLOTS = 2
+PIPELINE_LIMIT_FREE = 15
+PIPELINE_FREE_HOT_SLOTS = 6
+PIPELINE_FREE_WARM_SLOTS = 6
+PIPELINE_FREE_MONITOR_SLOTS = 3
 
 PIPELINE_LIMIT_PAID = PIPELINE_TIERED_TOTAL
 SAVED_LEADS_LIMIT_FREE = 5
@@ -187,6 +187,8 @@ def _tier_slots_for_plan(plan: str) -> tuple[int, int, int]:
 
 
 def _lead_tier_key(row: dict[str, Any]) -> str:
+    if row.get("monitoring_source") == "synthetic_warm_tail":
+        return "COLD"
     tier = (row.get("priority_tier") or "").strip().upper()
     if tier in ("HOT", "WARM", "COLD"):
         return tier
@@ -209,6 +211,7 @@ def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple
     For anonymous preview, also diversify HOT by industry so the first viewport
     is not five hospitality rows.
     """
+    from app.services.lead_filter import is_junk
     from app.services.robot_vendor_names import is_known_robotics_vendor_name
 
     hot_n, warm_n, cold_n = _tier_slots_for_plan(plan)
@@ -219,6 +222,8 @@ def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple
         name = (row.get("company_name") or row.get("name") or "").strip()
         if name and is_known_robotics_vendor_name(name):
             continue  # never surface OEMs as buyer opportunities
+        if name and is_junk(name, mode="buyer")[0]:
+            continue  # runtime safety net for legacy headline rows that escaped ingest filtering
         bucket = _lead_tier_key(row)
         if bucket == "HOT":
             hot.append(row)
@@ -233,12 +238,35 @@ def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple
         trimmed_hot = hot[:hot_n]
     trimmed_warm = warm[:warm_n]
     trimmed_cold = cold[:cold_n]
+
+    trimmed = trimmed_hot + trimmed_warm + trimmed_cold
+
+    # Anonymous preview should not collapse when one bucket (often monitoring) is sparse.
+    # Backfill remaining slots from highest-priority leftovers while preserving cap.
+    if plan == PLAN_ANONYMOUS and len(trimmed) < PIPELINE_LIMIT_ANONYMOUS:
+        picked_ids = {
+            row.get("id")
+            for row in trimmed
+            if isinstance(row, dict) and row.get("id") is not None
+        }
+        leftovers: list[dict[str, Any]] = []
+        for bucket in (hot, warm, cold):
+            for row in bucket:
+                rid = row.get("id") if isinstance(row, dict) else None
+                if rid in picked_ids:
+                    continue
+                leftovers.append(row)
+        for row in leftovers:
+            if len(trimmed) >= PIPELINE_LIMIT_ANONYMOUS:
+                break
+            trimmed.append(row)
+
     tier_mix = {
         "hot": {"shown": len(trimmed_hot), "cap": hot_n},
         "warm": {"shown": len(trimmed_warm), "cap": warm_n},
         "monitoring": {"shown": len(trimmed_cold), "cap": cold_n},
     }
-    return trimmed_hot + trimmed_warm + trimmed_cold, tier_mix
+    return trimmed, tier_mix
 
 
 def _diversify_by_industry(rows: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:

@@ -8,7 +8,7 @@ import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getPublicReadApiBase } from "@/lib/apiBase";
 import { readSupplyAttribution, trackSupplyConversion, trackSignupStart } from "@/lib/siteAnalytics";
-import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
+import { clearSupabaseOAuthParams, readSupabaseOAuthError } from "@/lib/authCallback";
 import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlanParam, storeCheckoutIntent, navigateAfterAuth } from "@/lib/authNext";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
@@ -91,6 +91,7 @@ export default function Signup() {
   const [errMsg, setErrMsg] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendNote, setResendNote] = useState("");
+  const [oauthPending, setOauthPending] = useState<null | "google" | "github" | "azure">(null);
   const [liveProof, setLiveProof] = useState<{ hot?: number; companies?: number } | null>(null);
   // A real named HOT buyer from the live pipeline — turns abstract counts into a
   // concrete win the user can picture acting on (value-first proof at the decision point).
@@ -119,6 +120,10 @@ export default function Signup() {
     return readWorkflowSessionContext();
   }, [params]);
 
+  const intendedPostAuthPath = useMemo(
+    () => appendWorkflowPrefill(postAuthRedirectTarget("/pipeline"), workflowPrefill),
+    [workflowPrefill],
+  );
   const nextPath = () => appendWorkflowPrefill(resolvePostAuthPath("/pipeline"), workflowPrefill);
 
   useEffect(() => {
@@ -256,7 +261,7 @@ export default function Signup() {
     };
   }, [hubspotIntent, buyerCo]);
 
-  async function oauth(provider: "google" | "github" | "azure" | "linkedin_oidc") {
+  async function oauth(provider: "google" | "github" | "azure") {
     if (!supabase) {
       setStatus("error");
       setErrMsg("Configure VITE_PUBLIC_SUPABASE_URL and VITE_PUBLIC_SUPABASE_ANON_KEY.");
@@ -269,14 +274,18 @@ export default function Signup() {
     }
     persistFullName();
     setErrMsg("");
+    setStatus("idle");
+    setOauthPending(provider);
+    storePendingNext(intendedPostAuthPath);
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: provider as any,
-      options: { redirectTo: supabaseOAuthRedirect(postAuthRedirectTarget("/pipeline")) },
+      provider,
+      options: { redirectTo: supabaseOAuthRedirect(intendedPostAuthPath) },
     });
     if (error) {
+      setOauthPending(null);
       setStatus("error");
       setErrMsg(
-        (provider === "azure" || provider === "linkedin_oidc") && /provider is not enabled/i.test(error.message)
+        provider === "azure" && /provider is not enabled/i.test(error.message)
           ? "This OAuth provider is not enabled yet in Supabase Auth. Use Google or GitHub, or enable the provider in Supabase."
           : error.message,
       );
@@ -292,7 +301,8 @@ export default function Signup() {
 
   async function sendMagicLink(): Promise<boolean> {
     if (!email.trim() || !supabase) return false;
-    const redirectTo = supabaseOAuthRedirect(postAuthRedirectTarget("/pipeline"));
+    storePendingNext(intendedPostAuthPath);
+    const redirectTo = supabaseOAuthRedirect(intendedPostAuthPath);
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: redirectTo },
@@ -353,7 +363,7 @@ export default function Signup() {
                 : pipelineIntent
                   ? buyerCo
                     ? `Save ${buyerCo}. Copy the draft. Run your pipeline.`
-                    : "Save the lead. Copy the draft. Run your pipeline."
+                    : <><span className="text-emerald-300">Save the Lead.</span> Copy the draft. Run your pipeline.</>
                   : resultsIntent
                     ? "Unlock your matched buyers in one workspace."
                     : "Automate your robot sales funnel."}
@@ -425,7 +435,7 @@ export default function Signup() {
               </ul>
             )}
             {liveBuyer && (
-              <div className="mt-6 rounded-2xl border border-slate-700 bg-slate-900/70 p-4 shadow-sm">
+              <div className="mt-6 rounded-2xl border border-slate-700 p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
                   <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -447,7 +457,7 @@ export default function Signup() {
                     {liveBuyer.robots.map((r) => (
                       <span
                         key={r}
-                        className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800"
+                        className="rounded-full border border-emerald-500 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
                       >
                         {r}
                       </span>
@@ -462,7 +472,7 @@ export default function Signup() {
           </div>
 
           {status === "sent" ? (
-            <div className="rounded-2xl border border-emerald-800 bg-emerald-950/30 px-6 py-8 text-center">
+            <div className="rounded-2xl border border-emerald-800 px-6 py-8 text-center">
               <h2 className="text-xl font-bold text-slate-100">Check your email</h2>
               <p className="mt-3 text-sm text-slate-300">
                 We sent a one-tap sign-in link to <span className="font-semibold text-emerald-700">{email}</span>.
@@ -484,8 +494,8 @@ export default function Signup() {
                         rel="noopener noreferrer"
                         className={
                           i === 0
-                            ? "inline-block w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700"
-                            : "inline-block w-full rounded-xl border border-emerald-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-emerald-300 transition-all hover:bg-slate-800"
+                            ? "inline-block w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400"
+                            : "inline-block w-full rounded-xl border border-emerald-700 px-4 py-3 text-sm font-semibold text-emerald-300 transition-all hover:border-emerald-500"
                         }
                       >
                         {inbox.label} →
@@ -519,7 +529,7 @@ export default function Signup() {
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-700 bg-slate-900/70 p-6 shadow-sm">
+            <div className="rounded-2xl border border-slate-700 p-6 shadow-sm">
               <h2 className="font-display text-xl font-bold text-slate-100">
                 {hubspotIntent ? "Sign up for HubSpot sync" : "Start free"}
               </h2>
@@ -530,11 +540,8 @@ export default function Signup() {
                     ? "Use OAuth and we automatically create your account — then your 5-lead list is saved."
                     : "Use OAuth to create your account instantly, then upgrade to unlock 50+ leads and full CRM automation."}
               </p>
-              <p className="mt-3 rounded-lg border border-amber-700/70 bg-amber-950/30 px-3 py-2 text-xs font-medium text-amber-300">
-                This preview is limited to 5 leads. Signup required to save your list and continue building your pipeline.
-              </p>
               {liveProof && (liveProof.hot || liveProof.companies) && (
-                <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-800 bg-emerald-950/30 px-3 py-2 text-[11px] font-semibold text-emerald-300">
+                <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-800 px-3 py-2 text-[11px] font-semibold text-emerald-300">
                   <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
@@ -552,39 +559,34 @@ export default function Signup() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Full name"
-                  className="mt-4 w-full rounded-xl border border-slate-600 bg-slate-950 px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
+                  className="mt-4 w-full rounded-xl border border-slate-600 bg-transparent px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
                 />
               )}
               <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-2`}>
                 <button
                   type="button"
                   onClick={() => void oauth("google")}
-                  disabled={!supabase}
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-40"
+                  disabled={!supabase || oauthPending !== null}
+                  className="w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
                 >
-                  Continue with Google — one tap
+                  {oauthPending === "google" ? "Redirecting to Google..." : "Continue with Google OAuth — one tap"}
                 </button>
                 <button
                   type="button"
                   onClick={() => void oauth("github")}
-                  disabled={!supabase}
-                  className="w-full rounded-xl border border-slate-600 bg-slate-900 px-4 py-3 text-sm font-bold text-slate-100 transition-all hover:bg-slate-800 disabled:opacity-40"
+                  disabled={!supabase || oauthPending !== null}
+                  className="w-full rounded-xl border border-slate-600 px-4 py-3 text-sm font-bold text-slate-100 transition-all hover:border-slate-400 disabled:opacity-40"
                 >
-                  Continue with GitHub
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void oauth("linkedin_oidc")}
-                  disabled={!supabase}
-                  className="w-full rounded-xl border border-slate-600 bg-slate-900 px-4 py-3 text-sm font-bold text-slate-100 transition-all hover:bg-slate-800 disabled:opacity-40"
-                >
-                  Continue with LinkedIn
+                  {oauthPending === "github" ? "Redirecting to GitHub..." : "Continue with GitHub"}
                 </button>
                 {!hubspotIntent && (
                   <p className="text-center text-[11px] font-medium text-slate-400">
-                    OAuth only · account created automatically · no password required
+                    Google OAuth + GitHub are live · account created automatically · no password required
                   </p>
                 )}
+              </div>
+              <div className="mt-4 rounded-xl border border-cyan-700 px-4 py-3 text-xs text-cyan-300">
+                Microsoft sign in coming soon.
               </div>
               <div className="my-5 flex items-center gap-3">
                 <span className="h-px flex-1 bg-slate-700" />
@@ -601,35 +603,29 @@ export default function Signup() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@robotcompany.com"
                   disabled={status === "sending"}
-                  className="w-full rounded-xl border border-slate-600 bg-slate-950 px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
+                  className="w-full rounded-xl border border-slate-600 bg-transparent px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
                 />
                 {status === "error" && (
-                  <p className="rounded-lg border border-red-700 bg-red-950/40 px-3 py-2 text-xs text-red-300">{errMsg}</p>
+                  <p className="rounded-lg border border-red-700 px-3 py-2 text-xs text-red-300">{errMsg}</p>
                 )}
                 <button
                   type="submit"
                   disabled={status === "sending" || !email.trim()}
                   className={
                     hubspotIntent
-                      ? "w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-40"
-                      : "w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:bg-emerald-950/30 disabled:opacity-40"
+                      ? "w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
+                      : "w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
                   }
                 >
                   {status === "sending" ? "Sending..." : hubspotIntent ? "Sign up & connect HubSpot" : "Email me a sign-in link"}
                 </button>
               </form>
               {!hubspotIntent && (
-                <p className="mt-4 text-center text-[11px] text-slate-400">
-                  Prefer Microsoft 365?{" "}
-                  <button
-                    type="button"
-                    onClick={() => void oauth("azure")}
-                    disabled={!supabase}
-                    className="font-semibold text-slate-300 underline-offset-2 hover:text-emerald-300 hover:underline disabled:opacity-40"
-                  >
-                    Continue with Microsoft
+                <div className="mt-4 text-center text-[11px] text-slate-400">
+                  <button type="button" disabled className="font-semibold text-slate-500 underline-offset-2 opacity-60">
+                    Microsoft sign in coming soon.
                   </button>
-                </p>
+                </div>
               )}
               <p className="mt-5 text-center text-xs text-slate-400">
                 Already have an account?{" "}

@@ -30,20 +30,20 @@ def test_pipeline_limits():
     assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == 15
     assert pipeline_limit_for_plan(PLAN_FREE) == PIPELINE_LIMIT_FREE
     assert pipeline_limit_for_plan(PLAN_PAID) == PIPELINE_LIMIT_PAID
-    assert PIPELINE_LIMIT_FREE == 10
+    assert PIPELINE_LIMIT_FREE == 15
 
 
-def test_trim_pipeline_leads_free_tier_capped_at_ten():
+def test_trim_pipeline_leads_free_tier_capped_at_fifteen():
     leads = (
         [{"id": i, "priority_tier": "HOT"} for i in range(20)]
         + [{"id": 100 + i, "priority_tier": "WARM"} for i in range(20)]
         + [{"id": 200 + i, "priority_tier": "COLD"} for i in range(20)]
     )
     trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_FREE)
-    assert len(trimmed) == 10
-    assert mix["hot"]["shown"] == 4
-    assert mix["warm"]["shown"] == 4
-    assert mix["monitoring"]["shown"] == 2
+    assert len(trimmed) == 15
+    assert mix["hot"]["shown"] == 6
+    assert mix["warm"]["shown"] == 6
+    assert mix["monitoring"]["shown"] == 3
 
 
 def test_trim_pipeline_leads_by_tier_preserves_buckets():
@@ -71,8 +71,8 @@ def test_trim_pipeline_anonymous_preview_includes_all_tiers():
     trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_ANONYMOUS)
     assert len(trimmed) == 15
     assert mix["hot"]["shown"] == 6
-    assert mix["warm"]["shown"] == 5
-    assert mix["monitoring"]["shown"] == 4
+    assert mix["warm"]["shown"] == 6
+    assert mix["monitoring"]["shown"] == 3
 
 
 def test_trim_pipeline_anonymous_diversifies_hot_industries():
@@ -89,6 +89,16 @@ def test_trim_pipeline_anonymous_diversifies_hot_industries():
     assert "Logistics" in industries
     assert "Healthcare" in industries
     assert mix["hot"]["shown"] == 6
+
+
+def test_trim_pipeline_anonymous_backfills_when_monitoring_sparse():
+    leads = (
+        [{"id": i, "priority_tier": "HOT"} for i in range(16)]
+        + [{"id": 100 + i, "priority_tier": "WARM"} for i in range(12)]
+    )
+    trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_ANONYMOUS)
+    assert mix["monitoring"]["shown"] == 0
+    assert len(trimmed) == 15
 
 
 def test_trim_pipeline_drops_known_robot_vendors():
@@ -119,13 +129,34 @@ def test_apply_pipeline_entitlements_trims_and_tags():
         ],
     }
     out = apply_pipeline_entitlements(feed, PLAN_FREE)
-    assert len(out["leads"]) == 8
+    assert len(out["leads"]) == 12
     assert out["entitlements"]["plan"] == PLAN_FREE
-    assert out["entitlements"]["pipeline_limit"] == 10
-    assert out["entitlements"]["tier_mix"]["hot"]["shown"] == 4
-    assert out["entitlements"]["tier_mix"]["warm"]["shown"] == 4
+    assert out["entitlements"]["pipeline_limit"] == 15
+    assert out["entitlements"]["tier_mix"]["hot"]["shown"] == 6
+    assert out["entitlements"]["tier_mix"]["warm"]["shown"] == 6
     assert out["entitlements"]["tier_mix"]["monitoring"]["shown"] == 0
     assert "share_summary" in out["leads"][0]
+
+
+def test_trim_pipeline_drops_headline_style_news_rows():
+    leads = [
+        {
+            "id": 1,
+            "priority_tier": "HOT",
+            "company_name": "Los Gatos hotel seized through swift foreclosure as market wobbles - The Mercury News.",
+            "industry": "Hospitality",
+        },
+        {
+            "id": 2,
+            "priority_tier": "HOT",
+            "company_name": "Hilton",
+            "industry": "Hospitality",
+        },
+    ]
+    trimmed, _ = trim_pipeline_leads_by_tier(leads, PLAN_FREE)
+    names = {r["company_name"] for r in trimmed}
+    assert "Los Gatos hotel seized through swift foreclosure as market wobbles - The Mercury News." not in names
+    assert "Hilton" in names
 
 
 def test_sanitize_anonymous_keeps_scout_teaser():

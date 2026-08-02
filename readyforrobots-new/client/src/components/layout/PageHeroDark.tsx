@@ -17,6 +17,7 @@ type PageHeroDarkProps = {
   className?: string;
   innerClassName?: string;
   maxWidthClass?: string;
+  showGrid?: boolean;
 };
 
 const statToneClass: Record<NonNullable<HeroStat["tone"]>, string> = {
@@ -36,10 +37,11 @@ export default function PageHeroDark({
   className = "",
   innerClassName = "",
   maxWidthClass = "max-w-6xl",
+  showGrid = true,
 }: PageHeroDarkProps) {
   return (
     <section className={`page-hero-dark ${className}`}>
-      <div className="page-hero-dark-grid pointer-events-none" aria-hidden />
+      {showGrid ? <div className="page-hero-dark-grid pointer-events-none" aria-hidden /> : null}
       <div className={`container ${maxWidthClass} page-hero-dark-inner ${innerClassName}`}>
         {badge}
         {eyebrow ? <p className="section-eyebrow-on-dark mb-2">{eyebrow}</p> : null}

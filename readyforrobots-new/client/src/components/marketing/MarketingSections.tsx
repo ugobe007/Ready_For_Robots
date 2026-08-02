@@ -563,6 +563,25 @@ export function MarketingBenchmark({ benchReport }: { benchReport: BenchReport |
               The HEIR benchmark tracks humanoid robots across data pipeline, cognition, mobility, and deployment
               readiness. Updated monthly.
             </p>
+            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">Featured update</p>
+              <p className="mt-1 text-sm font-semibold text-gray-900">
+                HEIR July 2026 Update: 20 new humanoids + US China-origin restriction intelligence
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                <Link href="/robots/report?edition=2026-07-update" className="font-semibold text-sky-700 hover:text-sky-800">
+                  Open update
+                </Link>
+                <a
+                  href="/api/humanoid/intelligence-report/pdf?top_n=12"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-slate-700 hover:text-slate-900"
+                >
+                  Download PDF
+                </a>
+              </div>
+            </div>
             <Link href="/robots" className="inline-flex items-center gap-2 text-sky-700 font-semibold text-sm hover:text-sky-800">
               View full benchmark <ArrowRight size={16} />
             </Link>
@@ -666,7 +685,7 @@ const HOME_PRICING_TIERS = [
     iconBg: "bg-sky-50 text-sky-600",
     cta: "Start free",
     href: "/signup?plan=free&next=%2Fpipeline",
-    features: ["URL scan & buyer matching", "10 live pipeline leads", "Save up to 5 leads"],
+    features: ["URL scan & buyer matching", "15 live pipeline leads", "Save up to 5 leads"],
     highlight: false,
   },
   {
@@ -725,7 +744,7 @@ export function MarketingPricing() {
                 key={tier.name}
                 className={`${cardClass} ${tier.highlight ? "md:-translate-y-1" : ""}`}
               >
-                {tier.badge && (
+                {"badge" in tier && tier.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-950 shadow-[0_4px_14px_-4px_rgba(16,185,129,0.7)]">
                     {tier.badge}
                   </div>

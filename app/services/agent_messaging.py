@@ -9,14 +9,14 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_signature
 # Wise, abbreviated, in-the-know. Engineer-led teams, PoC → deployment reality.
 # Honesty and trust over hype. Draws on deep robotics industry experience.
 
-CAL_INTRO = "Hi — I'm Cal, with Ready For Robots."
+CAL_INTRO = "Hi, I am Cal. I work at ReadyForRobots as a deployment advisor. I focus on robot deployments and their metrics, to help companies improve ROI."
 
 CAL_BUYER_ROLE_LINE = (
-    "I'm Cal with Ready For Robots. I study deployments that are still running months later, not just the demos."
+    "This is Cal from Ready For Robots. I track which deployments still work months later, not just in demo week."
 )
 
 CAL_BUYER_REMINDER_LINE = (
-    "Quick reminder: I'm Cal from Ready For Robots. I send practical notes on what tends to work in real deployments."
+    "One practical note, then one question."
 )
 
 CAL_VENDOR_ROLE_LINE = (
@@ -90,8 +90,8 @@ CAL_VENDOR_STRATEGY_CALL_CTA = "If helpful, we can do a short walkthrough after 
 
 CAL_VENDOR_BUYER_MATCH_CTA = "Want me to send the buyer profiles? I'll flag what fits and what doesn't."
 
-# Customer-facing rep voice (robot sales rep → buyer ops). No Ready For Robots branding.
-REP_OUTREACH_CTA = "Worth a quick reply if you're the right person to explore this?"
+# Customer-facing rep voice (robot sales rep -> buyer ops). No Ready For Robots branding.
+REP_OUTREACH_CTA = "If this belongs with someone else on your ops team, could you point me to the right contact?"
 
 
 def rep_outreach_signature() -> str:
@@ -486,7 +486,7 @@ def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
             "would earn its keep. Curious what you'd say."
         )
     return "\n".join([
-        f"Hi {n},",
+        f"Hi {n}, this is Cal again.",
         "",
         CAL_BUYER_REMINDER_LINE,
         "",
@@ -540,7 +540,7 @@ def _exploration_question(name: str, industry: str, *, variant_seed: str = "base
     low = (industry or "").lower()
     if any(k in low for k in ("logistic", "warehous", "supply", "3pl", "distribution", "fulfil")):
         return pick([
-            f"Is warehouse automation something {team} is actively exploring, or still early-stage?",
+            f"Are warehouse automation projects something {team} is actively exploring, or still early-stage?",
             f"Are you currently testing warehouse automation in {area}, or just mapping options?",
             f"Would warehouse automation be useful for {team} this year, or not a priority yet?",
         ])
@@ -592,27 +592,30 @@ def _variant_workflow_first(name: str, industry: str) -> str:
     ins = _buyer_insight(industry)
     sector_note = ""
     if sector != "your line of work":
+        glam = (ins["glam"] or "").strip().lower()
+        if glam.startswith("the "):
+            glam = glam[4:]
         sector_note = (
             f"\n\nIn {sector}, the hours often hide in {ins['hidden']} — "
-            f"not the {ins['glam'].lower()} everyone demos first."
+            f"not the {glam} everyone demos first."
         )
     team = _greeting_name(name)
     team_ref = name if len(name) <= 24 else "your operation"
     return "\n".join([
-        f"Hi {team},",
+        f"Hi {team}, this is Cal.",
         "",
-        CAL_BUYER_ROLE_LINE,
+        "I spend most of my time in live operations data and deployment post-mortems.",
         "",
-        "Quick field note: most teams start by asking, \"Which robot should we buy?\"",
+        "Most teams start with vendor comparison. I usually start one step earlier.",
         "",
-        f"Which workflow is costing {team_ref} the most time every day?",
+        f"Which workflow is quietly costing {team_ref} the most time every day?",
         "",
-        "Until that's clear, vendor comparisons are mostly noise.",
+        "Until that's clear, robot selection is mostly noise.",
         "",
-        "I've seen simple automation produce strong ROI when it solved the right bottleneck.",
+        "I've seen simple automation beat flashy demos when the bottleneck was defined first.",
         sector_note,
         "",
-        f"{CAL_ORG} is vendor-neutral. I don't push a specific vendor — I help teams avoid solving the wrong problem.",
+        f"{CAL_ORG} is vendor-neutral. If automation is not the right move yet, I'll tell you directly.",
         "",
         _exploration_question(name, industry, variant_seed="workflow_first"),
         "",
@@ -631,18 +634,17 @@ def _variant_what_survives(name: str, industry: str) -> str:
         else "Most break points come from operational readiness — not spec-sheet speed."
     )
     return "\n".join([
-        f"Hi {team},",
+        f"Hi {team}, this is Cal.",
         "",
-        CAL_BUYER_ROLE_LINE,
+        "I watch what happens after pilots, when teams are back in normal operating mode.",
         "",
-        "Quick field note:",
-        "Six months in, you can usually tell which deployments solved a real bottleneck and which were mostly a demo.",
+        "Six months in, you can usually tell what solved a real bottleneck and what was mostly a demo.",
         "",
         ins["opinion"],
         workflow_line,
         "Integration and staffing are usually the decider.",
         "",
-        f"{CAL_ORG} is vendor-neutral. I help teams avoid automating the wrong job.",
+        f"{CAL_ORG} is vendor-neutral. I help teams avoid automating the wrong job too early.",
         "",
         _exploration_question(name, industry, variant_seed="what_survives"),
         "",
@@ -659,12 +661,11 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
     team = _greeting_name(name)
     team_ref = name if len(name) <= 24 else "your operation"
     return "\n".join([
-        f"Hi {team},",
+        f"Hi {team}, this is Cal.",
         "",
-        CAL_BUYER_ROLE_LINE,
+        "I help ops teams decide where automation should start and where it should wait.",
         "",
-        "The first question I ask is simple:",
-        "Where do the hours actually go?",
+        "The first question I ask is simple: where do the hours actually go?",
         "",
         f"In {sector}, the answer is usually {hidden} — not {glam}. "
         "Most bake-offs start with the visible task anyway.",
@@ -672,10 +673,10 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
         ins["opinion"],
         "",
         "Sometimes the right answer is a process fix, not a robot.",
-        "When it is a robot, the bottleneck needs to be clear first.",
+        "When it is a robot, the bottleneck should be clear first.",
         "",
-        f"I'm vendor-neutral. If {team_ref} tells me where time disappears, I can say whether "
-        "automation is even the right tool — no pitch attached.",
+        f"I'm vendor-neutral. If {team_ref} tells me where time disappears, I can give you a sharp read "
+        "on whether automation is worth testing now — no pitch attached.",
         "",
         _exploration_question(name, industry, variant_seed="bottleneck_first"),
         "",
@@ -762,6 +763,17 @@ def build_buyer_variant_body(
     }
     fn = builders.get(variant_id, _variant_workflow_first)
     body = fn(n, industry or "your industry")
+    if n and n not in body:
+        # Preserve the exact account name in every intro so assembly checks and
+        # downstream attribution can always anchor the message to this company.
+        anchor = f"Reaching out with one note for {n}."
+        if body.startswith("Hi") and "\n\n" in body:
+            first, rest = body.split("\n\n", 1)
+            body = f"{first}\n\n{anchor}\n\n{rest}"
+        elif body.startswith("Hi"):
+            body = f"{body}\n\n{anchor}"
+        else:
+            body = f"Hi {n},\n\n{anchor}\n\n{body}"
     if reason:
         # Inject the grounded hook right after the greeting, ahead of Cal's
         # vantage line, so the email leads with a real, verifiable reason.

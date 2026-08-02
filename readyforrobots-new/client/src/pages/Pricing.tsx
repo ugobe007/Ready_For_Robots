@@ -25,7 +25,7 @@ const tiers = [
     features: [
       "URL scan and buyer matching",
       "15 live pipeline leads before signup (HOT / WARM / monitor mix)",
-      "10 ranked leads in free workspace after signup",
+      "15 ranked leads in free workspace after signup",
       "Lead score and why-now context",
       "Save up to 5 leads to your workspace",
       "Outreach draft previews",
@@ -105,7 +105,7 @@ const faqs = [
   },
   {
     q: "Which plan should I start with?",
-    a: "Start on Free — scan URLs, browse 10 live pipeline leads, and save your first 5 accounts. Upgrade to Pro when you need cited SIGNAL research and HubSpot auto-sync.",
+    a: "Start on Free — scan URLs, browse 15 live pipeline leads, and save your first 5 accounts. Upgrade to Pro when you need cited SIGNAL research and HubSpot auto-sync.",
   },
   {
     q: "How do you define a 'matched prospect'?",

@@ -126,6 +126,14 @@ interface Deal {
   };
   confidenceBand?: string;
   evidenceTrace?: Array<{ dimension?: string; score?: number; evidence?: string }>;
+  humanoidPilotTier?: string;
+  humanoidPilotScore?: number;
+  humanoidPilotLabel?: string;
+  humanoidPilotAction?: string;
+  humanoidOriginStatus?: string;
+  humanoidNonUsVendorFlag?: boolean;
+  humanoidNonUsVendorCount?: number;
+  humanoidNonUsVendorModels?: string[];
   priorityTier?: string;
   robotTypesNeeded?: string[];
   researchUpdates?: Array<{
@@ -654,11 +662,11 @@ type PipelineEntitlements = {
   };
 };
 
-const PIPELINE_LIMIT_FREE = 10;
+const PIPELINE_LIMIT_FREE = 15;
 const PIPELINE_LIMIT_PAID = 50;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
 const PIPELINE_LEAD_READ_MS = 7_000;
-const PIPELINE_SESSION_KEY = "pipeline_feed_v4";
+const PIPELINE_SESSION_KEY = "pipeline_feed_v5";
 const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 /** Stale paint while API revalidates — avoids blank page when Fly is slow. */
 const PIPELINE_STALE_PAINT_MS = 7 * 24 * 60 * 60 * 1000;
@@ -1087,8 +1095,10 @@ function PipelineRobotPriorityPanel({ deal }: { deal: Deal }) {
   const hasHumanoid =
     deal.humanoidPilotTier &&
     ["ACTIVE_PILOT", "PILOT_INTENT"].includes(String(deal.humanoidPilotTier));
+  const nonUsCount = Number(deal.humanoidNonUsVendorCount || 0);
+  const nonUsModels = (deal.humanoidNonUsVendorModels || []).filter(Boolean);
 
-  if (!priorityLine && robotTypes.length === 0 && !hasHumanoid) return null;
+  if (!priorityLine && robotTypes.length === 0 && !hasHumanoid && !deal.humanoidNonUsVendorFlag) return null;
 
   const priorityPrefix = priorityLine?.split(":")[0]?.trim();
   const priorityBody =
@@ -1126,6 +1136,13 @@ function PipelineRobotPriorityPanel({ deal }: { deal: Deal }) {
         <p className="mt-2 text-[11px] text-emerald-800">
           <span className="font-semibold">Humanoid signal:</span>{" "}
           {cleanAndClampText(deal.humanoidPilotLabel || "Active pilot intent", 120)}
+        </p>
+      )}
+      {deal.humanoidNonUsVendorFlag && (
+        <p className="mt-2 text-[11px] text-amber-800">
+          <span className="font-semibold">Origin risk:</span>{" "}
+          {nonUsCount > 0 ? `${nonUsCount} non-US humanoid vendor model${nonUsCount === 1 ? "" : "s"} detected` : "Non-US humanoid vendor detected"}
+          {nonUsModels.length > 0 ? ` (${cleanAndClampText(nonUsModels.slice(0, 3).join(", "), 140)})` : ""}
         </p>
       )}
     </div>
@@ -1285,7 +1302,7 @@ function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
                   Open profile
                 </a>
                 <p className="mt-1 text-[10px] text-slate-600">
-                  {cleanAndClampText(linkedinBest.person || linkedinBest.title || "Best match", 80)}
+                  {cleanAndClampText(linkedinBest.person || linkedinBest.person_title || "Best match", 80)}
                 </p>
               </>
             ) : (
@@ -2071,7 +2088,19 @@ export default function Pipeline() {
   const activeSearchQuery = industryQuery.trim() || (filter !== "All" ? filter : "");
   const hasActiveSearch = Boolean(activeSearchQuery);
   const pipelineSource = rotationPool.length > deals.length ? rotationPool : deals;
-  const previewLimit = entitlements?.pipeline_limit ?? 12;
+  const previewLimit = entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE;
+  const freeLeadCap = Math.min(entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE, PIPELINE_LIMIT_FREE);
+  const freeVisibleLeads = Math.min(entitlements?.visible_count ?? deals.length, freeLeadCap);
+  const freeLeadsRemaining = Math.max(0, freeLeadCap - freeVisibleLeads);
+  const freeUpgradeMessage =
+    freeLeadsRemaining <= 2
+      ? `You have viewed ${freeVisibleLeads}/${freeLeadCap} leads. Upgrade to Pro to unlock more buyers and automate your sales pipeline.`
+      : `Ready to scale beyond ${freeLeadCap} leads? Upgrade to Pro to unlock more buyers and automate your sales pipeline.`;
+  const sessionDisplayName =
+    session?.user?.user_metadata?.full_name
+    || session?.user?.user_metadata?.name
+    || session?.user?.email?.split("@")[0]
+    || "there";
   const rotationSource = useMemo(() => {
     if (hasActiveSearch || qualityControlsActive || showKanban) return pipelineSource;
     if (panelPlan === "anonymous" && pipelineSource.length > previewLimit) {
@@ -2111,6 +2140,9 @@ export default function Pipeline() {
       });
     }
 
+    if (panelPlan === "free" && next.length > PIPELINE_LIMIT_FREE) {
+      return next.slice(0, PIPELINE_LIMIT_FREE);
+    }
     return next;
   }, [
     listDeals,
@@ -2119,6 +2151,7 @@ export default function Pipeline() {
     clientSearchMatches,
     qualityBandFilter,
     qualitySort,
+    panelPlan,
   ]);
 
   useEffect(() => {
@@ -3011,6 +3044,7 @@ export default function Pipeline() {
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
           <PageHeroDark
             maxWidthClass="max-w-[1500px]"
+            showGrid={false}
             badge={
               <div className="page-hero-badge">
                 {typeof dbTotal === "number" ? dbTotal.toLocaleString() : "—"} active opportunities · updated live
@@ -3065,6 +3099,11 @@ export default function Pipeline() {
                     Search pipeline
                   </span>
                   <p className="mt-1 text-sm font-semibold text-slate-900">Find buyers by industry, company, or signal.</p>
+                  {session?.access_token && (
+                    <p className="mt-1 text-[12px] font-medium text-emerald-900">
+                      Welcome back, {sessionDisplayName}. Your sales workspace is active.
+                    </p>
+                  )}
                 </div>
 
                 <div className="relative w-full sm:w-[340px]">
@@ -3152,6 +3191,25 @@ export default function Pipeline() {
             </div>
 
             <div className="px-3 sm:px-4 pt-2">
+              <div className="sticky top-2 z-30 mb-2 rounded-xl border-2 border-amber-400 bg-gradient-to-r from-amber-100 via-white to-emerald-100 px-4 py-3 shadow-[0_14px_28px_-16px_rgba(245,158,11,0.9)]">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="inline-flex items-center rounded-full border border-amber-300 bg-amber-200/70 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-amber-900">
+                      Priority
+                    </p>
+                    <p className="mt-1 flex items-center gap-1.5 text-base font-extrabold text-emerald-900">
+                      <Sparkles className="h-4 w-4 text-amber-600" />
+                      Upgrade to Pro and begin building your sales campaign.
+                    </p>
+                  </div>
+                  <Link
+                    href="/pricing?upgrade=pro&src=pipeline_top_banner"
+                    className="inline-flex items-center justify-center rounded-lg border-2 border-amber-500 bg-amber-400 px-4 py-2 text-sm font-extrabold text-amber-950 shadow-sm transition hover:bg-amber-300"
+                  >
+                    Upgrade to Pro
+                  </Link>
+                </div>
+              </div>
               {panelPlan === "anonymous" && (
                 <AnonymousValueStrip
                   leadCount={deals.length}
@@ -3198,6 +3256,21 @@ export default function Pipeline() {
                   savedCount={savedLeadCount}
                 />
               </div>
+              {session?.access_token && panelPlan === "free" && (
+                <div className="mt-2 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white px-4 py-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm font-semibold text-emerald-900">
+                      {freeUpgradeMessage}
+                    </p>
+                    <Link
+                      href="/pricing?upgrade=pro"
+                      className="inline-flex items-center justify-center rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:border-emerald-400"
+                    >
+                      Upgrade to Pro
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
             {(loadErr || (!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0)) && (
               <div className="space-y-1.5 border-b border-gray-200 px-3 py-2 sm:px-4">
@@ -3316,7 +3389,7 @@ export default function Pipeline() {
           )}
 
           {/* ── Two-panel layout ── */}
-          <div className="pipeline-deals-layout flex min-h-0 gap-2 p-2 sm:p-3" style={{ minHeight: "calc(100vh - 200px)" }}>
+          <div className="pipeline-deals-layout flex min-h-0 flex-col gap-2 p-2 sm:p-3 lg:min-h-[calc(100vh-200px)] lg:flex-row">
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="pipeline-list-shell flex min-w-0 flex-1 flex-col gap-1 overflow-y-auto">
@@ -3400,6 +3473,14 @@ export default function Pipeline() {
                                       style={{ color: "#059669", background: "rgba(3,218,197,0.12)", border: "1px solid rgba(3,218,197,0.25)" }}
                                     >
                                       Humanoid
+                                    </span>
+                                  )}
+                                  {deal.humanoidNonUsVendorFlag && (
+                                    <span
+                                      className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
+                                      style={{ color: "#b45309", background: "rgba(245,158,11,0.14)", border: "1px solid rgba(245,158,11,0.28)" }}
+                                    >
+                                      Non-US
                                     </span>
                                   )}
                                 </div>
@@ -3499,6 +3580,14 @@ export default function Pipeline() {
                                       Humanoid
                                     </span>
                                   )}
+                                  {deal.humanoidNonUsVendorFlag && (
+                                    <span
+                                      className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
+                                      style={{ color: "#b45309", background: "rgba(245,158,11,0.14)", border: "1px solid rgba(245,158,11,0.28)" }}
+                                    >
+                                      Non-US
+                                    </span>
+                                  )}
                                 </div>
                                 <PipelineLeadActionMeta lead={deal} variant="compact" />
                               </div>
@@ -3528,7 +3617,7 @@ export default function Pipeline() {
 
             {/* RIGHT: selected lead detail */}
             <div
-              className="pipeline-detail-shell flex h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] w-full shrink-0 flex-col overflow-hidden lg:w-[380px] xl:w-[400px] lg:sticky lg:top-20"
+              className="pipeline-detail-shell flex h-auto max-h-none w-full shrink-0 flex-col overflow-hidden lg:sticky lg:top-20 lg:h-[calc(100vh-100px)] lg:max-h-[calc(100vh-100px)] lg:w-[380px] xl:w-[400px]"
             >
               {selected ? (
                 <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -3858,7 +3947,7 @@ export default function Pipeline() {
                           )}
                           {panelPlan === "anonymous" && (
                             <p className="text-[10px] leading-relaxed text-emerald-700">
-                              Free workspace unlocks full research, save up to 5 leads, and copy outreach drafts.
+                              Free workspace unlocks up to 15 leads, save up to 5 leads, and copy outreach drafts. Upgrade to Pro to unlock more leads and automate your sales pipeline.
                             </p>
                           )}
                         </div>
@@ -4342,6 +4431,27 @@ export default function Pipeline() {
                   ) : null}
                 </div>
               )}
+            </div>
+          </div>
+          <div className="border-t border-slate-200 px-3 py-3 sm:px-4">
+            <div className="rounded-xl border-2 border-amber-400 bg-gradient-to-r from-amber-100 via-white to-emerald-100 px-4 py-3 shadow-[0_14px_28px_-16px_rgba(245,158,11,0.9)]">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="inline-flex items-center rounded-full border border-amber-300 bg-amber-200/70 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-amber-900">
+                    Priority
+                  </p>
+                  <p className="mt-1 flex items-center gap-1.5 text-base font-extrabold text-emerald-900">
+                    <Sparkles className="h-4 w-4 text-amber-600" />
+                    Upgrade to Pro and begin building your sales campaign.
+                  </p>
+                </div>
+                <Link
+                  href="/pricing?upgrade=pro&src=pipeline_bottom_banner"
+                  className="inline-flex items-center justify-center rounded-lg border-2 border-amber-500 bg-amber-400 px-4 py-2 text-sm font-extrabold text-amber-950 shadow-sm transition hover:bg-amber-300"
+                >
+                  Upgrade to Pro
+                </Link>
+              </div>
             </div>
           </div>
           </div>
