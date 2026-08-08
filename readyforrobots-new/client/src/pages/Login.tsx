@@ -1,5 +1,5 @@
 /**
- * Sign in — Supabase magic link + OAuth (Precision Intelligence light theme).
+ * Sign in — Supabase magic link + OAuth (dark workflow theme).
  */
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -30,13 +30,23 @@ export default function Login() {
 
     const params = new URLSearchParams(window.location.search);
     const authError = params.get("auth_error");
-    if (authError) {
+
+    const handleAuthErrorIfNeeded = async () => {
+      if (!authError) return;
+      const { data } = await client.auth.getSession();
+      if (data?.session) {
+        const dest = resolvePostAuthPath("/pipeline");
+        navigateAfterAuth(dest);
+        return;
+      }
       setStatus("error");
       setErrMsg(decodeURIComponent(authError.replace(/\+/g, " ")));
       params.delete("auth_error");
       const next = params.toString();
       window.history.replaceState(null, "", next ? `/login?${next}` : "/login");
-    }
+    };
+
+    void handleAuthErrorIfNeeded();
 
     async function afterLogin() {
       const { data } = await client.auth.getSession();
@@ -111,34 +121,34 @@ export default function Login() {
   const loginSearch = typeof window !== "undefined" ? window.location.search : "";
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-[#081126] text-slate-100">
       <Header />
       <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-16">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
             <p className="section-eyebrow mb-2">Sign in</p>
-            <h1 className="font-display text-2xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
-            <p className="text-sm text-gray-500 mt-2">Sign in to work with SIGNAL in your pipeline workspace.</p>
+            <h1 className="font-display text-3xl font-bold text-slate-100 tracking-tight">Welcome back</h1>
+            <p className="text-sm text-slate-300 mt-2">Sign in to work with SIGNAL in your pipeline workspace.</p>
           </div>
 
           {status === "sent" ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-8 text-center">
-              <h2 className="text-base font-semibold text-gray-900 mb-2">Check your email</h2>
-              <p className="text-sm text-gray-600">
-                We sent a magic link to <span className="font-semibold text-emerald-700">{email}</span>.
+            <div className="rounded-2xl border border-emerald-400/35 bg-emerald-950/30 px-6 py-8 text-center">
+              <h2 className="text-base font-semibold text-slate-100 mb-2">Check your email</h2>
+              <p className="text-sm text-slate-300">
+                We sent a magic link to <span className="font-semibold text-emerald-300">{email}</span>.
               </p>
-              <button type="button" onClick={() => setStatus("idle")} className="mt-5 text-xs text-gray-500 hover:text-gray-800">
-                ← use a different email
+              <button type="button" onClick={() => setStatus("idle")} className="mt-5 text-xs text-slate-400 hover:text-slate-200">
+                Back to sign-in options
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-gray-200 bg-white px-6 py-8 shadow-sm">
+            <div className="rounded-2xl border border-slate-700/70 bg-[#0b162f]/85 px-6 py-8 shadow-[0_20px_45px_-25px_rgba(0,0,0,0.8)]">
               <div className="flex flex-col gap-2 mb-5">
                 <button
                   type="button"
                   onClick={() => void oauth("google")}
                   disabled={!supabase}
-                  className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="w-full flex items-center justify-center gap-2 border border-slate-600 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
                 >
                   Sign in with Google
                 </button>
@@ -146,7 +156,7 @@ export default function Login() {
                   type="button"
                   onClick={() => void oauth("azure")}
                   disabled={!supabase}
-                  className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="w-full flex items-center justify-center gap-2 border border-slate-600 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
                 >
                   Sign in with Microsoft 365
                 </button>
@@ -154,15 +164,15 @@ export default function Login() {
                   type="button"
                   onClick={() => void oauth("github")}
                   disabled={!supabase}
-                  className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="w-full flex items-center justify-center gap-2 border border-slate-600 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
                 >
                   Sign in with GitHub
                 </button>
               </div>
               <div className="flex items-center gap-3 mb-5">
-                <span className="flex-1 h-px bg-gray-200" />
-                <span className="text-[10px] text-gray-400 uppercase tracking-widest">or</span>
-                <span className="flex-1 h-px bg-gray-200" />
+                <span className="flex-1 h-px bg-slate-700" />
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest">or</span>
+                <span className="flex-1 h-px bg-slate-700" />
               </div>
               <form onSubmit={(e) => void magicLink(e)} className="space-y-3">
                 <input
@@ -172,15 +182,15 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   disabled={status === "sending"}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-500"
+                  className="w-full rounded-xl border border-slate-600 bg-[#0a1327] px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-400"
                 />
                 {status === "error" && (
-                  <p className="text-xs text-red-600 border border-red-200 bg-red-50 rounded-lg px-3 py-2 whitespace-pre-wrap">{errMsg}</p>
+                  <p className="text-xs text-red-200 border border-red-400/40 bg-red-900/30 rounded-lg px-3 py-2 whitespace-pre-wrap">{errMsg}</p>
                 )}
                 <button
                   type="submit"
                   disabled={status === "sending" || !email.trim()}
-                  className="w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40"
+                  className="w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-[#06261f] bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40"
                 >
                   {status === "sending" ? "Sending…" : "Send magic link"}
                 </button>
@@ -189,13 +199,13 @@ export default function Login() {
           )}
 
           <div className="mt-6 text-center space-y-3">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-400">
               New to ReadyForRobots?{" "}
-              <Link href={`/signup${loginSearch}`} className="font-semibold text-emerald-600 hover:text-emerald-700">
+              <Link href={`/signup${loginSearch}`} className="font-semibold text-emerald-300 hover:text-emerald-200">
                 Start free workspace
               </Link>
             </p>
-            <Link href="/" className="block text-xs text-gray-400 hover:text-gray-600">
+            <Link href="/" className="block text-xs text-slate-500 hover:text-slate-300">
               ← Back home
             </Link>
           </div>

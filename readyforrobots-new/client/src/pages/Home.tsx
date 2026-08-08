@@ -3,20 +3,69 @@ import { ArrowRight, CheckCircle2, LogIn, Search, Sparkles } from "lucide-react"
 import { Link, useLocation } from "wouter";
 import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
 
-const rotatingLeads = [
-  "Accor Hotels - housekeeping automation expansion",
-  "DHL Supply Chain - warehouse AMR procurement",
-  "Kroger Fulfillment - palletizing automation buildout",
-  "Mayo Clinic - autonomous transport pilot",
-  "Port of Rotterdam - yard automation RFP",
-  "Boeing Charleston - inspection robotics initiative",
+type HomepageLeadRow = {
+  id: number;
+  company_name?: string;
+  priority_tier?: string;
+  core_need?: string | null;
+  share_summary?: string | null;
+  pipeline_action?: string | null;
+  robot_types_needed?: string[];
+  signals?: { display_text?: string }[];
+};
+
+const liveBuyerSignals = [
+  {
+    company: "LINEAGE LOGISTICS",
+    heat: "HOT",
+    summary: "New distribution capacity + warehouse hiring pressure",
+    robotFit: "AMR / Material Handling",
+    whyNow: "Facility expansion",
+    buyers: "4 identified",
+  },
+  {
+    company: "HYATT HOTELS",
+    heat: "HOT",
+    summary: "Housekeeping labor shortages across multiple properties",
+    robotFit: "Cleaning / Service Robotics",
+    whyNow: "Labor pressure",
+    buyers: "6 identified",
+  },
+  {
+    company: "MANUFACTURER",
+    heat: "WARM",
+    summary: "New $180M production facility announced",
+    robotFit: "Material Handling / Inspection",
+    whyNow: "New facility",
+    buyers: "3 identified",
+  },
 ];
 
-const howItWorks = [
-  { id: "01", title: "Show me customers", body: "Start with companies most likely to buy automation right now." },
-  { id: "02", title: "Why these customers", body: "Get the context your sales team needs to qualify quickly." },
-  { id: "03", title: "Who do I call", body: "See likely buyer roles so reps can move from research to outreach." },
-  { id: "04", title: "Help me contact them", body: "Use guided outreach to start better conversations and book meetings." },
+const liveLeadFallback: HomepageLeadRow[] = [
+  {
+    id: -1,
+    company_name: "Lineage Logistics",
+    priority_tier: "HOT",
+    core_need: "New distribution capacity + warehouse hiring pressure",
+    pipeline_action: "Facility expansion",
+    robot_types_needed: ["AMR", "Material Handling"],
+  },
+  {
+    id: -2,
+    company_name: "Hyatt Hotels",
+    priority_tier: "HOT",
+    core_need: "Housekeeping labor shortages across multiple properties",
+    pipeline_action: "Labor pressure",
+    robot_types_needed: ["Cleaning", "Service Robotics"],
+  },
+  {
+    id: -3,
+    company_name: "Manufacturer",
+    priority_tier: "WARM",
+    core_need: "New $180M production facility announced",
+    pipeline_action: "New facility",
+    robot_types_needed: ["Material Handling", "Inspection"],
+  },
 ];
 
 const previewLeadPool = [
@@ -94,6 +143,30 @@ function normalizeUrlInput(raw: string): string {
   return `https://${trimmed}`;
 }
 
+function signalSummary(lead: HomepageLeadRow): string {
+  const summary = (lead.share_summary || "").trim();
+  if (summary) return summary.slice(0, 108);
+  const need = (lead.core_need || "").trim();
+  if (need) return need.slice(0, 108);
+  const signalText = (lead.signals?.[0]?.display_text || "").trim();
+  if (signalText) return signalText.slice(0, 108);
+  return "Active automation buying signals detected";
+}
+
+function whyNowText(lead: HomepageLeadRow): string {
+  const action = (lead.pipeline_action || "").trim();
+  if (!action) return "Buying window active";
+  const noPrefix = action.replace(/^priority:\s*/i, "").trim();
+  return noPrefix.slice(0, 52);
+}
+
+function robotFitText(lead: HomepageLeadRow): string {
+  if (Array.isArray(lead.robot_types_needed) && lead.robot_types_needed.length > 0) {
+    return lead.robot_types_needed.slice(0, 2).join(" / ");
+  }
+  return "Automation Systems";
+}
+
 function Logo() {
   return (
     <div className="flex items-center gap-3">
@@ -119,10 +192,12 @@ function StepFrame({ title, copy, children }: { title: string; copy: string; chi
 export default function Home() {
   const [location, setLocation] = useLocation();
   const [urlInput, setUrlInput] = useState("");
-  const [leadIndex, setLeadIndex] = useState(0);
   const [previewLeadOffset, setPreviewLeadOffset] = useState(0);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [unlockMoreCount, setUnlockMoreCount] = useState(417);
+  const [livePool, setLivePool] = useState<HomepageLeadRow[]>(liveLeadFallback);
+  const [livePoolCursor, setLivePoolCursor] = useState(0);
+  const [isLiveFeed, setIsLiveFeed] = useState(false);
 
   const search = typeof window !== "undefined" ? window.location.search : "";
   const params = useMemo(() => new URLSearchParams(search), [search]);
@@ -138,11 +213,6 @@ export default function Home() {
       return previewLeadPool[i];
     });
   }, [previewLeadOffset]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setLeadIndex((prev) => (prev + 1) % rotatingLeads.length), 1800);
-    return () => window.clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     setPreviewLeadOffset(Math.floor(Math.random() * previewLeadPool.length));
@@ -175,6 +245,58 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLiveLeads = async () => {
+      try {
+        const { leads, live } = await fetchHomepageLeadPool<HomepageLeadRow>(liveLeadFallback);
+        if (cancelled) return;
+        setIsLiveFeed(Boolean(live));
+        if (Array.isArray(leads) && leads.length > 0) {
+          setLivePool(leads);
+        }
+      } catch {
+        if (!cancelled) setIsLiveFeed(false);
+        // Keep fallback lead stream if live fetch is unavailable.
+      }
+    };
+
+    void loadLiveLeads();
+    const refreshTimer = window.setInterval(() => {
+      void loadLiveLeads();
+    }, 90_000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(refreshTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (livePool.length <= 1) return;
+    const rotateTimer = window.setInterval(() => {
+      setLivePoolCursor((prev) => (prev + 1) % livePool.length);
+    }, 5600);
+    return () => window.clearInterval(rotateTimer);
+  }, [livePool]);
+
+  const rotatingSignalRows = useMemo(() => {
+    if (!livePool.length) return liveBuyerSignals;
+    return Array.from({ length: Math.min(3, livePool.length) }, (_, index) => {
+      const lead = livePool[(livePoolCursor + index) % livePool.length];
+      const heat = (lead.priority_tier || "WARM").toUpperCase();
+      return {
+        company: (lead.company_name || "Manufacturer").toUpperCase(),
+        heat: heat === "HOT" ? "HOT" : "WARM",
+        summary: signalSummary(lead),
+        robotFit: robotFitText(lead),
+        whyNow: whyNowText(lead),
+        buyers: heat === "HOT" ? "4 identified" : "3 identified",
+      };
+    });
+  }, [livePool, livePoolCursor]);
+
   const activateHref = useMemo(() => {
     if (!normalizedUrl) return "/signup";
     const nextParams = new URLSearchParams();
@@ -189,7 +311,17 @@ export default function Home() {
 
   const goToIdentity = () => {
     if (!normalizedUrl) return;
-    setLocation(`/journey/identity?company_url=${encodeURIComponent(normalizedUrl)}`);
+    setLocation(`/pipeline?url=${encodeURIComponent(normalizedUrl)}&src=home_url_submit`);
+  };
+
+  const focusHeroInput = () => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    const el = typeof document !== "undefined" ? document.getElementById("hero-company-url") : null;
+    if (el instanceof HTMLInputElement) {
+      window.setTimeout(() => el.focus(), 220);
+    }
   };
 
   const persistWorkflowContext = () => {
@@ -233,16 +365,17 @@ export default function Home() {
     return () => window.clearTimeout(doneTimer);
   }, [analysisProgress, normalizedUrl, pageMode, resolvedWorkflow, setLocation]);
 
-  const valueLine = "Find companies that are ready for automation before your competitors do. We show you who they are, why they're ready, and how to start the conversation.";
-
   return (
     <main className="min-h-screen bg-[#081126] text-[#edf4f3]">
-      <div className="mx-auto max-w-[1120px] px-5 pb-16 pt-8 lg:px-8 lg:pb-24">
-        <header className="mb-10 flex items-center justify-between">
+      <div className="mx-auto max-w-[1180px] px-5 pb-14 pt-6 sm:pt-10 lg:px-10 lg:pb-28 lg:pt-12">
+        <header className="mb-6 flex items-center justify-between sm:mb-12">
           <Link href="/" className="shrink-0">
             <Logo />
           </Link>
           <div className="flex items-center gap-3">
+            <Link href="/signup?next=/pipeline" className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/40 px-3.5 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/10">
+              Start free workspace
+            </Link>
             <Link href="/login" className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10">
               <LogIn className="h-3.5 w-3.5" />
               Sign in
@@ -250,40 +383,43 @@ export default function Home() {
           </div>
         </header>
 
-        <section className={`flex items-center justify-center ${pageMode === "url" ? "min-h-[72vh]" : "min-h-[60vh]"}`}>
-          <div className="w-full max-w-2xl text-center">
-            <h1 className={`${pageMode === "url" ? "text-[clamp(2.7rem,7.6vw,6rem)]" : "text-[clamp(2.2rem,6.5vw,4.4rem)]"} font-semibold leading-[0.92] tracking-[-0.038em] text-slate-50`} style={{ textShadow: "0 8px 28px rgba(5, 10, 20, 0.45)" }}>
-              Sell More Robots.
-            </h1>
-            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-8 text-slate-300">{valueLine}</p>
+        <section className={`flex items-center justify-center ${pageMode === "url" ? "min-h-[60vh] sm:min-h-[72vh] lg:min-h-[78vh]" : "min-h-[60vh]"}`}>
+          <div className="w-full max-w-3xl text-center lg:text-left">
             {pageMode === "url" && (
-              <div className="mx-auto mt-5 max-w-xl rounded-xl border border-white/15 bg-[#0b162f] px-4 py-3 text-left text-xs leading-relaxed text-slate-300">
-                <p>
-                  <span className="font-semibold text-[#00d0a2]">Robot companies make money.</span>
+              <div className="mx-auto max-w-3xl text-center lg:mx-0 lg:text-left">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.36em] text-[#7adfc8] sm:text-[11px]">READYFORROBOTS SIGNAL</p>
+                <h1 className="mt-4 text-[clamp(2.1rem,8.4vw,6.3rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-slate-50 sm:mt-6" style={{ textShadow: "0 10px 34px rgba(5, 10, 20, 0.48)" }}>
+                  Find Companies That <span className="text-[#00d0a2]">Need Your Robots.</span>
+                </h1>
+                <p className="mx-auto mt-5 max-w-[54ch] text-[16px] leading-7 text-slate-300 sm:mt-7 sm:text-[18px] sm:leading-8 lg:mx-0 lg:text-[19px] lg:leading-9">
+                  ReadyForRobots finds companies actively looking for automation and shows you <strong className="font-semibold text-slate-100">who to contact, why they need your robot, and when to reach them.</strong>
                 </p>
-                <p className="mt-1">
-                  <span className="font-semibold text-slate-100">Businesses save money.</span>
+                <div className="mx-auto mt-7 w-full max-w-[780px] border-b border-emerald-400/45 pb-3 sm:mt-10 lg:mx-0 lg:mt-11">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Search className="h-4 w-4 shrink-0 text-[#7fd7ea]" />
+                    <input
+                      id="hero-company-url"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      placeholder="yourrobotcompany.com"
+                      className="w-full min-w-0 bg-transparent text-base text-white outline-none placeholder:text-[#9fb4ca]"
+                    />
+                    <button
+                      type="button"
+                      onClick={goToIdentity}
+                      disabled={!normalizedUrl}
+                      className="inline-flex shrink-0 items-center justify-center gap-2 text-[15px] font-semibold text-[#00d0a2] transition hover:text-[#4cf0c8] disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
+                    >
+                      Find Buyers
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm text-slate-300 sm:mt-4 sm:text-[15px]">See your first matches in seconds. No signup required.</p>
+                <p className="mt-4 text-xs font-medium tracking-[0.03em] text-[#8ec8b9] sm:mt-6 sm:text-sm sm:tracking-[0.04em]">
+                  8,765 buying signals | 3,861 matched opportunities | Updated continuously
                 </p>
-              </div>
-            )}
-            <div className="mt-7 inline-flex min-h-[24px] items-center gap-2 text-sm font-medium text-[#71e7cb]">
-              <span className="h-2 w-2 rounded-full bg-[#00d0a2]" />
-              <span className="transition-opacity duration-300">{rotatingLeads[leadIndex]}</span>
-            </div>
 
-            {pageMode === "url" && (
-              <div className="mx-auto mt-8 max-w-xl text-center">
-                <p className="mt-2 text-sm text-slate-300">Enter your website.</p>
-                <div className="mx-auto mt-4 flex max-w-lg items-center gap-2 border-b border-[#37587b] pb-3 text-left">
-                  <Search className="h-4 w-4 shrink-0 text-[#7ea0c5]" />
-                  <input value={urlInput} onChange={(e) => setUrlInput(e.target.value)} placeholder="Enter your company URL" className="w-full bg-transparent text-base text-white outline-none placeholder:text-[#6f89a8]" />
-                </div>
-                <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-                  <button type="button" onClick={goToIdentity} disabled={!normalizedUrl} className="inline-flex items-center gap-2 rounded-md bg-[#00c896] px-5 py-2.5 text-sm font-semibold text-[#06261f] disabled:opacity-50">
-                    Find Customers
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
               </div>
             )}
 
@@ -360,7 +496,7 @@ export default function Home() {
               </StepFrame>
             )}
 
-            <div className="mt-10 text-xs text-[#7fa2c8]">
+            <div className="mt-8 text-xs text-[#7fa2c8] sm:mt-12">
               Already active? <Link href="/login" className="font-semibold text-[#9fcaef] hover:text-white">Sign in</Link>
             </div>
           </div>
@@ -368,28 +504,103 @@ export default function Home() {
 
         {pageMode === "url" && (
           <>
-            <section className="mt-14 border-t border-slate-800/80 pt-12">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#00d0a2]">How It Works In 4 Steps</p>
-              <h2 className="mt-4 max-w-3xl text-[clamp(1.8rem,3.8vw,3rem)] font-semibold leading-[1.08] tracking-[-0.02em] text-slate-50">
-                Show me customers. Explain why. Tell me who to call. Help me start outreach.
+            <section className="mt-10 border-t border-slate-800/70 pt-14 sm:pt-16">
+              <h2 className="max-w-5xl text-[clamp(2rem,4.6vw,4rem)] font-semibold leading-[1.0] tracking-[-0.03em] text-slate-50">
+                Companies Are Looking for Robots Right Now.
               </h2>
-              <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                {howItWorks.map((item) => (
-                  <article key={item.id} className="rounded-xl border border-slate-700/70 bg-[#0b162f]/70 p-5">
-                    <p className="text-[11px] font-semibold tracking-[0.28em] text-[#00d0a2]">{item.id}</p>
-                    <h3 className="mt-3 text-xl font-semibold text-[#00d0a2]">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-7 text-slate-300">{item.body}</p>
-                  </article>
-                ))}
+              <p className="mt-4 text-[17px] text-slate-300 sm:text-[19px]">ReadyForRobots detects the signals. You get the opportunity.</p>
+
+              <div className="mt-9 overflow-hidden rounded-2xl border border-emerald-400/35 bg-[#061124] shadow-[0_28px_70px_-35px_rgba(10,184,140,0.9)] sm:mt-10">
+                <div className="flex items-center justify-between border-b border-emerald-900/45 bg-[#0b1b31] px-5 py-4 font-mono text-[11px] uppercase tracking-[0.2em] text-[#87dbca] sm:px-6">
+                  <span>Live Buyer Signals</span>
+                  <span className="inline-flex items-center gap-2 text-[#8ce6d2]">
+                    <span className={`h-2 w-2 rounded-full ${isLiveFeed ? "bg-[#22d3a7] animate-pulse" : "bg-amber-300"}`} />
+                    {isLiveFeed ? "Live" : "Preview"}
+                  </span>
+                </div>
+
+                <div className="font-mono">
+                  {rotatingSignalRows.map((row, index) => (
+                    <article key={row.company} className="border-b border-[#16304b] px-5 py-4 last:border-b-0 sm:px-6 sm:py-5">
+                      <div className="flex items-baseline justify-between gap-4">
+                        <h3 className="text-[15px] font-semibold tracking-[0.06em] text-emerald-300 sm:text-base">{row.company}</h3>
+                        <p className={`text-xs font-semibold tracking-[0.14em] ${row.heat === "HOT" ? "text-[#f59e0b]" : "text-[#7dd3fc]"}`}>
+                          {row.heat === "HOT" ? "HOT" : "WARM"}
+                        </p>
+                      </div>
+                      <p className="mt-2 text-sm text-slate-300">{row.summary}</p>
+                      <p className="mt-2 text-sm text-[#a7c7de]">Robot Fit: {row.robotFit}</p>
+                      <p className="mt-1 text-sm text-[#a7c7de]">Why Now: {row.whyNow}</p>
+                      <p className="mt-1 text-sm text-[#a7c7de]">Decision Makers: {row.buyers}</p>
+                      {index < rotatingSignalRows.length - 1 ? (
+                        <div className="mt-4 h-px w-full bg-gradient-to-r from-transparent via-[#30506b] to-transparent" aria-hidden />
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <Link href="/signals" className="inline-flex items-center gap-2 text-base font-semibold text-[#85e8ce] transition hover:text-[#b5f7e4]">
+                  See why they&apos;re buying
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                {!isLiveFeed ? <p className="mt-2 text-xs text-amber-200/90">Live API unavailable right now. Showing fallback examples until the feed reconnects.</p> : null}
               </div>
             </section>
 
-            <section className="mt-14 border-t border-slate-800/80 py-16 text-center">
-              <h2 className="mx-auto max-w-3xl text-[clamp(2.1rem,4.8vw,4.2rem)] font-semibold leading-[0.98] tracking-[-0.03em] text-slate-50">Ready to sell more robots?</h2>
-              <button type="button" onClick={() => setLocation("/journey/identity")} className="mt-10 inline-flex items-center gap-2 rounded-md bg-[#00c896] px-8 py-3 text-base font-semibold text-[#06261f]">
-                Find Customers
-                <ArrowRight className="h-5 w-5" />
-              </button>
+            <section className="mt-12 sm:mt-14">
+              <div className="overflow-hidden rounded-2xl border border-emerald-300/20 bg-[#0b1a2e] shadow-[0_20px_55px_-35px_rgba(0,200,150,0.75)]">
+                <img
+                  src="/marketing/robot-industrial.jpg"
+                  alt="Autonomous mobile robots operating inside an active warehouse"
+                  className="h-36 w-full object-cover object-center sm:h-44 lg:h-52"
+                  loading="lazy"
+                />
+                <div className="border-t border-emerald-400/20 bg-[#081327] px-4 py-2.5 sm:px-5">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#8acfbf]">Live deployment environments. Real buying pressure.</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="mt-16 border-t border-slate-800/70 pt-14 sm:mt-20 sm:pt-16">
+              <h2 className="max-w-5xl text-[clamp(1.9rem,4.4vw,3.6rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-slate-50">
+                Stop Selling Robots to Companies That Aren&apos;t Buying.
+              </h2>
+              <p className="mt-6 max-w-4xl text-[17px] leading-8 text-slate-300 sm:text-[18px]">
+                Most robot sales teams start with a list of companies and try to figure out who might need automation.
+              </p>
+              <p className="mt-4 text-xl font-semibold text-[#9af2dc] sm:text-[1.45rem]">ReadyForRobots starts with the need.</p>
+
+              <div className="mt-10 grid gap-5 md:grid-cols-2">
+                <article className="rounded-2xl border border-red-300/25 bg-[#130f14] p-6">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-red-200/90">Traditional prospecting</p>
+                  <p className="mt-4 text-sm leading-8 text-red-100/85">Company -&gt; Research -&gt; Cold Call -&gt; Follow Up -&gt; Wait -&gt; Maybe</p>
+                </article>
+                <article className="rounded-2xl border border-emerald-300/30 bg-[#071a19] p-6">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100">ReadyForRobots</p>
+                  <p className="mt-4 text-sm leading-8 text-emerald-100">Need Detected -&gt; Robot Matched -&gt; Buyer Identified -&gt; Sell</p>
+                </article>
+              </div>
+
+              <h3 className="mt-12 text-[clamp(1.8rem,3.8vw,3rem)] font-semibold leading-tight tracking-[-0.02em] text-slate-50">
+                Don&apos;t find leads. <span className="text-[#00d0a2]">Find demand.</span>
+              </h3>
+              <p className="mt-6 text-[12px] font-semibold uppercase tracking-[0.2em] text-[#8fe0cb] sm:text-[13px]">
+                Find Demand -&gt; See the Signal -&gt; Understand Why -&gt; Contact the Buyer
+              </p>
+
+              <div className="mt-12 border-t border-slate-800/60 pt-8 text-center">
+                <p className="text-sm text-slate-300">Start with one URL. See active demand before your team makes the first call.</p>
+                <button
+                  type="button"
+                  onClick={focusHeroInput}
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#00c896] px-7 py-3 text-base font-semibold text-[#05271e] transition hover:bg-[#00d9a3]"
+                >
+                  Find Buyers
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
             </section>
           </>
         )}

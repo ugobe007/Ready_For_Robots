@@ -44,6 +44,7 @@ type CalActions = {
   onSendAll?: () => void;
   onOpenQueue?: () => void;
   draftBusy?: boolean;
+  redraftBusy?: boolean;
   sendBusy?: boolean;
 };
 
@@ -155,7 +156,7 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                     rank: 3,
                     key: "cal-redraft",
                     node: (
-                      <SupabaseInlineLink tone="amber" onClick={calActions.onRedraft} busy={calActions.draftBusy}>
+                        <SupabaseInlineLink tone="amber" onClick={calActions.onRedraft} busy={calActions.redraftBusy ?? calActions.draftBusy}>
                         Redraft {calUnsent} unsent
                       </SupabaseInlineLink>
                     ),

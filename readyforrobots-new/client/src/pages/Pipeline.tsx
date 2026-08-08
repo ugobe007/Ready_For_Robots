@@ -533,8 +533,8 @@ function FirstThreeActionsProgress({
 }
 
 const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string; slotCap: number }> = {
-  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-confidence robot-ready opportunities", slotCap: PIPELINE_HOT_SLOTS },
-  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Strong signals — qualify and track", slotCap: PIPELINE_WARM_SLOTS },
+  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-alignment opportunities ready for MSD", slotCap: PIPELINE_HOT_SLOTS },
+  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Qualified signals pending deeper alignment", slotCap: PIPELINE_WARM_SLOTS },
   "Monitoring":  { color: "#059669", dot: "#059669", desc: "Early signals SIGNAL is tracking", slotCap: PIPELINE_MONITOR_SLOTS },
 };
 
@@ -707,6 +707,13 @@ type PipelineFeedPayload = {
   leads?: ApiLead[];
   entitlements?: PipelineEntitlements;
   cache_pending?: boolean;
+};
+type SubmittedUrlMatchPayload = {
+  submitted_url?: string;
+  submitted_domain?: string;
+  robot_capabilities?: { type?: string; use_case?: string; capabilities?: string[] };
+  match_count?: number;
+  leads?: ApiLead[];
 };
 
 async function fetchPipelineLeadsFallback(base: string, headers?: HeadersInit): Promise<ApiLead[]> {
@@ -1371,6 +1378,22 @@ export default function Pipeline() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const deepLinkLeadId = useMemo(() => resolvePipelineLeadId(search), [search]);
+  const submittedUrl = useMemo(() => {
+    const params = new URLSearchParams(search);
+    return (params.get("url") || "").trim();
+  }, [search]);
+  const submittedHostname = useMemo(() => {
+    if (!submittedUrl) return "";
+    try {
+      const normalized = submittedUrl.includes("://") ? submittedUrl : `https://${submittedUrl}`;
+      return new URL(normalized).hostname.toLowerCase().replace(/^www\./, "");
+    } catch {
+      return submittedUrl.toLowerCase().replace(/^www\./, "").split("/")[0].split("?")[0].trim();
+    }
+  }, [submittedUrl]);
+  const [scopeToSubmittedUrl, setScopeToSubmittedUrl] = useState(false);
+  const [submittedUrlMatches, setSubmittedUrlMatches] = useState<ApiLead[]>([]);
+  const [submittedUrlMatchLoading, setSubmittedUrlMatchLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [rotationPool, setRotationPool] = useState<Deal[]>([]);
@@ -1446,6 +1469,41 @@ export default function Pipeline() {
   const byIdBreakerOpenUntilRef = useRef(0);
   const outreachDraftRef = useRef<HTMLDivElement | null>(null);
   const firstThreePrevRef = useRef<FirstThreeActionsState>(firstThreeActions);
+
+  useEffect(() => {
+    setScopeToSubmittedUrl(Boolean(submittedHostname));
+  }, [submittedHostname]);
+  useEffect(() => {
+    if (!submittedUrl) {
+      setSubmittedUrlMatches([]);
+      setSubmittedUrlMatchLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const base = getPublicReadApiBase();
+    setSubmittedUrlMatchLoading(true);
+    void fetchWithTimeoutRetry(
+      `${base}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=15`,
+      publicFetchInit(),
+      PIPELINE_TIMEOUT,
+      { retries: 1, retryDelayMs: 800 },
+    )
+      .then(async (res) => {
+        if (cancelled || !res.ok) return;
+        const payload = (await res.json()) as SubmittedUrlMatchPayload;
+        if (cancelled) return;
+        setSubmittedUrlMatches(Array.isArray(payload.leads) ? payload.leads : []);
+      })
+      .catch(() => {
+        if (!cancelled) setSubmittedUrlMatches([]);
+      })
+      .finally(() => {
+        if (!cancelled) setSubmittedUrlMatchLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [submittedUrl]);
   const firstThreeEnteredRef = useRef<FirstThreeStep | null>(null);
   const firstThreeAbandonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstThreeAbandonSignaturesRef = useRef<Set<string>>(new Set());
@@ -2154,6 +2212,23 @@ export default function Pipeline() {
     panelPlan,
   ]);
 
+  const matchedScopedDeals = useMemo(
+    () => mapPipelineRows(submittedUrlMatches, crmStageByCompanyId),
+    [submittedUrlMatches, crmStageByCompanyId],
+  );
+  const scopeMatchesCount = matchedScopedDeals.length;
+  const displayedDeals = useMemo(
+    () => (scopeToSubmittedUrl && scopeMatchesCount > 0 ? matchedScopedDeals : filtered),
+    [filtered, matchedScopedDeals, scopeMatchesCount, scopeToSubmittedUrl],
+  );
+
+  useEffect(() => {
+    if (!submittedHostname) return;
+    if (scopeToSubmittedUrl && scopeMatchesCount === 0) {
+      setScopeToSubmittedUrl(false);
+    }
+  }, [submittedHostname, scopeMatchesCount, scopeToSubmittedUrl]);
+
   useEffect(() => {
     if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused) return;
     const canRotate =
@@ -2173,31 +2248,31 @@ export default function Pipeline() {
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
-    if (!canRotate || filtered.length === 0) return;
-    setSelectedId(filtered[0].id);
+    if (!canRotate || displayedDeals.length === 0) return;
+    setSelectedId(displayedDeals[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- advance panel only on rotation tick
   }, [rotateOffset]);
 
   useEffect(() => {
     if (!session?.access_token || savedLeadCount !== 0 || loadingLeads) return;
     if (!shouldShowFirstSaveGuide()) return;
-    const leadId = selectedId ?? filtered[0]?.id;
-    if (leadId == null || !filtered.some((d) => d.id === leadId)) return;
+    const leadId = selectedId ?? displayedDeals[0]?.id;
+    if (leadId == null || !displayedDeals.some((d) => d.id === leadId)) return;
     const delay = isFreshSignup() ? 400 : 1200;
     const timer = window.setTimeout(() => setFirstSaveGuideOpen(true), delay);
     return () => window.clearTimeout(timer);
-  }, [session?.access_token, savedLeadCount, loadingLeads, filtered, selectedId]);
+  }, [session?.access_token, savedLeadCount, loadingLeads, displayedDeals, selectedId]);
 
   const pendingDeepLink =
     selectedId != null &&
     deepLinkLeadId === selectedId &&
-    !filtered.some((d) => d.id === selectedId);
+    !displayedDeals.some((d) => d.id === selectedId);
   const effectiveSelectedId =
-    selectedId != null && (filtered.some((d) => d.id === selectedId) || pendingDeepLink)
+    selectedId != null && (displayedDeals.some((d) => d.id === selectedId) || pendingDeepLink)
       ? selectedId
-      : (filtered[0]?.id ?? null);
+      : (displayedDeals[0]?.id ?? null);
   const selected =
-    filtered.find((d) => d.id === effectiveSelectedId)
+    displayedDeals.find((d) => d.id === effectiveSelectedId)
     ?? (pendingDeepLink && effectiveSelectedId != null
       ? deals.find((d) => d.id === effectiveSelectedId) ?? null
       : null);
@@ -2703,12 +2778,21 @@ export default function Pipeline() {
     }
   };
 
-  const dbTotal = summary?.companies_in_database ?? summary?.total ?? (loadingSummary ? undefined : filtered.length);
-  const hotDeals = summary?.hot ?? (loadingSummary ? undefined : filtered.filter((d) => userBucketForDeal(d) === "Hot Leads").length);
-  const warmDeals = summary?.warm ?? (loadingSummary ? undefined : filtered.filter((d) => userBucketForDeal(d) === "Warm Leads").length);
-  const visibleDeals = filtered.length;
-  const filteredHot = filtered.filter((d) => userBucketForDeal(d) === "Hot Leads").length;
-  const filteredWarm = filtered.filter((d) => userBucketForDeal(d) === "Warm Leads").length;
+  const dbTotal =
+    scopeToSubmittedUrl && scopeMatchesCount > 0
+      ? displayedDeals.length
+      : summary?.companies_in_database ?? summary?.total ?? (loadingSummary ? undefined : displayedDeals.length);
+  const hotDeals =
+    scopeToSubmittedUrl && scopeMatchesCount > 0
+      ? displayedDeals.filter((d) => userBucketForDeal(d) === "Hot Leads").length
+      : summary?.hot ?? (loadingSummary ? undefined : displayedDeals.filter((d) => userBucketForDeal(d) === "Hot Leads").length);
+  const warmDeals =
+    scopeToSubmittedUrl && scopeMatchesCount > 0
+      ? displayedDeals.filter((d) => userBucketForDeal(d) === "Warm Leads").length
+      : summary?.warm ?? (loadingSummary ? undefined : displayedDeals.filter((d) => userBucketForDeal(d) === "Warm Leads").length);
+  const visibleDeals = displayedDeals.length;
+  const filteredHot = displayedDeals.filter((d) => userBucketForDeal(d) === "Hot Leads").length;
+  const filteredWarm = displayedDeals.filter((d) => userBucketForDeal(d) === "Warm Leads").length;
   const queuedActivations = activations.filter((a) => ["queued", "evaluating", "drafted", "awaiting_approval"].includes(a.status)).length;
 
   useEffect(() => {
@@ -3104,6 +3188,31 @@ export default function Pipeline() {
                       Welcome back, {sessionDisplayName}. Your sales workspace is active.
                     </p>
                   )}
+                  {submittedHostname && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] ${scopeToSubmittedUrl ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-slate-300 bg-white text-slate-700"}`}>
+                        {scopeToSubmittedUrl ? "Scoped" : "All results"}
+                      </span>
+                      <p className="text-[11px] text-slate-600">
+                        {submittedUrlMatchLoading
+                          ? `Matching ${submittedHostname} to live buyer demand...`
+                          : scopeMatchesCount === 0
+                          ? `No direct matches for ${submittedHostname} yet. Showing the full pipeline instead.`
+                          : scopeToSubmittedUrl
+                            ? `Showing matches related to ${submittedHostname} (${scopeMatchesCount} results).`
+                            : `Showing all pipeline results (${filtered.length} total).`}
+                      </p>
+                      {scopeMatchesCount > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => setScopeToSubmittedUrl((v) => !v)}
+                          className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-900"
+                        >
+                          {scopeToSubmittedUrl ? "Show all results" : "Show submitted URL scope"}
+                        </button>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
 
                 <div className="relative w-full sm:w-[340px]">
@@ -3272,7 +3381,7 @@ export default function Pipeline() {
                 </div>
               )}
             </div>
-            {(loadErr || (!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0)) && (
+            {(loadErr || (!loadingLeads && !loadErr && !hasActiveSearch && displayedDeals.length === 0)) && (
               <div className="space-y-1.5 border-b border-gray-200 px-3 py-2 sm:px-4">
                 {loadErr && (
                   <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
@@ -3288,7 +3397,7 @@ export default function Pipeline() {
                     </div>
                   </div>
                 )}
-                {!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0 && (
+                {!loadingLeads && !loadErr && !hasActiveSearch && displayedDeals.length === 0 && (
                   <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-emerald-900">
                     <p className="text-xs font-semibold">
                       Live pipeline is rebuilding — your buyers are still here.
@@ -3375,14 +3484,14 @@ export default function Pipeline() {
           {/* Confirm modals for bulk actions (admin only) */}
           {isAdmin && scoutConfirm === "draft" && (
             <div className="rounded-xl border border-blue-400/30 bg-blue-400/8 px-4 py-3 flex items-center gap-3">
-              <p className="text-[11px] text-blue-900 flex-1">SIGNAL will draft outreach emails for all HOT and WARM prospects that don't have one yet. Continue?</p>
+              <p className="text-[11px] text-blue-900 flex-1">SIGNAL will draft MSD outreach for all HOT and WARM prospects that do not have one yet. Continue?</p>
               <button onClick={() => void runScoutDraftAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-50 border border-blue-400/40 text-blue-800">Run</button>
               <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500">Cancel</button>
             </div>
           )}
           {isAdmin && scoutConfirm === "send" && (
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/8 px-4 py-3 flex items-center gap-3">
-              <p className="text-[11px] text-emerald-900 flex-1">SIGNAL will send all drafted outreach emails. This triggers live sends via Resend. Continue?</p>
+              <p className="text-[11px] text-emerald-900 flex-1">SIGNAL will activate all drafted outreach now. This triggers live sends via Resend. Continue?</p>
               <button onClick={() => void runScoutSendAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-50 border border-emerald-400/40 text-emerald-800">Send</button>
               <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500">Cancel</button>
             </div>
@@ -3399,7 +3508,7 @@ export default function Pipeline() {
                 <div className="col-span-1 text-center">Score</div>
                 <div className="col-span-2 text-right">Tier</div>
               </div>
-              {(loadingLeads || serverSearchLoading) && filtered.length === 0 ? (
+              {(loadingLeads || serverSearchLoading) && displayedDeals.length === 0 ? (
                 <div className="mx-1 mb-2 rounded-xl border border-dashed border-stone-400 bg-stone-100/80 px-4 py-8 text-center">
                   <RefreshCw className="mx-auto h-6 w-6 animate-spin text-emerald-600" />
                   <p className="mt-3 text-sm font-medium text-stone-700">
@@ -3408,7 +3517,7 @@ export default function Pipeline() {
                 </div>
               ) : showKanban ? (
               STAGES.map((stage) => {
-                const stageDeals = filtered.filter((d) => d.stage === stage);
+                const stageDeals = displayedDeals.filter((d) => d.stage === stage);
                 const meta = STAGE_META[stage];
                 return (
                   <div key={stage}>
@@ -3437,9 +3546,17 @@ export default function Pipeline() {
                           const missingCount = missingEvidenceCountForDeal(deal);
                           const chip = gapChipStyle(missingCount);
                           return (
-                            <button
+                            <div
                               key={deal.id}
+                              role="button"
+                              tabIndex={0}
                               onClick={() => selectLead(deal.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  selectLead(deal.id);
+                                }
+                              }}
                               className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${dealRowSurface(isSelected)}`}
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
@@ -3502,7 +3619,7 @@ export default function Pipeline() {
                                   className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-600" : "text-gray-300 group-hover:text-emerald-500"}`}
                                 />
                               </div>
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -3512,7 +3629,7 @@ export default function Pipeline() {
               })
               ) : (
               USER_BUCKETS.map((bucket) => {
-                const bucketDeals = filtered.filter((d) => userBucketForDeal(d) === bucket);
+                const bucketDeals = displayedDeals.filter((d) => userBucketForDeal(d) === bucket);
                 const meta = USER_BUCKET_META[bucket];
                 return (
                   <div key={bucket}>
@@ -3543,10 +3660,17 @@ export default function Pipeline() {
                           const missingCount = missingEvidenceCountForDeal(deal);
                           const chip = gapChipStyle(missingCount);
                           return (
-                            <button
+                            <div
                               key={deal.id}
-                              type="button"
+                              role="button"
+                              tabIndex={0}
                               onClick={() => selectLead(deal.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  selectLead(deal.id);
+                                }
+                              }}
                               className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${dealRowSurface(isSelected)}`}
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
@@ -3604,7 +3728,7 @@ export default function Pipeline() {
                                   className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-600" : "text-gray-300 group-hover:text-emerald-500"}`}
                                 />
                               </div>
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -4099,7 +4223,7 @@ export default function Pipeline() {
                         <div className="relative mt-3 space-y-2">
                           <p className={panelSectionLabel}>Evidence stack</p>
                           <p className="text-[11px] leading-relaxed text-gray-600">
-                            Pro unlocks cited evidence on HOT and WARM leads — budget, timing, source links, and recommended actions refreshed automatically.
+                            Pro unlocks cited evidence on HOT and WARM leads so reps can verify alignment quickly — budget, timing, source links, and recommended actions refreshed automatically.
                           </p>
                           <Link
                             href="/pricing?reason=research"
@@ -4412,7 +4536,7 @@ export default function Pipeline() {
                       ? "Network interrupted while loading this lead."
                       : pendingDeepLink
                       ? "Loading linked lead…"
-                      : hasActiveSearch && filtered.length === 0 && !serverSearchLoading
+                      : hasActiveSearch && displayedDeals.length === 0 && !serverSearchLoading
                       ? `No leads match "${activeSearchQuery}". Try food service, hospitality, logistics, or a company name.`
                       : isAdmin
                         ? isAdmin

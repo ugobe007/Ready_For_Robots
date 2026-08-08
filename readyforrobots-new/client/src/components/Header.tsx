@@ -267,7 +267,7 @@ export default function Header() {
                     className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-all active:scale-[0.97]"
                   >
                     <Zap size={14} />
-                    Activate SIGNAL
+                    Start free workspace
                   </Link>
                 </>
               ) : (
@@ -409,7 +409,7 @@ export default function Header() {
             className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm"
           >
             <Zap className="h-4 w-4" />
-            Activate SIGNAL
+            Start free workspace
           </Link>
           <Link
             href="/find-robots"

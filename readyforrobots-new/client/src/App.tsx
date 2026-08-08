@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Results from "./pages/Results";
+import SalesSamples from "./pages/SalesSamples";
 import Pipeline from "./pages/Pipeline";
 import Compare from "./pages/Compare";
 import Signals from "./pages/Signals";
@@ -53,6 +54,7 @@ function Router() {
       <Route path="/journey/preview" component={Home} />
       <Route path="/journey/activate" component={Home} />
       <Route path="/results" component={Results} />
+      <Route path="/sales/samples" component={SalesSamples} />
       <Route path="/pipeline" component={Pipeline} />
       <Route path="/compare" component={Compare} />
       <Route path="/signals" component={Signals} />
@@ -90,6 +92,9 @@ function Router() {
         <Redirect to="/pipeline" />
       </Route>
       <Route path="/admin/special-projects" component={SpecialProjectsAdmin} />
+      <Route path="/admin/sales-samples">
+        <Redirect to="/sales/samples" />
+      </Route>
       <Route path="/admin" component={Admin} />
       <Route path="/p/:token" component={ProjectPortal} />
       <Route path="/readyforrobots/admin/prospects">
