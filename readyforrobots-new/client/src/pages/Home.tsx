@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ArrowRight, CheckCircle2, LogIn, Search, Sparkles } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
+import { getPublicReadApiBase } from "@/lib/apiBase";
+import { useAuth } from "@/contexts/AuthContext";
 
 type HomepageLeadRow = {
   id: number;
@@ -74,6 +76,7 @@ const previewLeadPool = [
     signal: "Facility expansion",
     fit: "Warehouse robotics",
     score: 97,
+    likelyContact: "VP of Distribution Operations",
     specialReason: "Large-scale fulfillment expansion usually creates immediate AMR and picking demand across multiple sites.",
   },
   {
@@ -81,6 +84,7 @@ const previewLeadPool = [
     signal: "Labor shortage",
     fit: "Sortation robotics",
     score: 95,
+    likelyContact: "Director of Hub Operations",
     specialReason: "Sustained labor pressure in high-volume hubs pushes faster buy-cycles for dock and sortation automation.",
   },
   {
@@ -88,6 +92,7 @@ const previewLeadPool = [
     signal: "CapEx announcement",
     fit: "Palletizing",
     score: 93,
+    likelyContact: "Senior Manager, Automation Programs",
     specialReason: "Fresh CapEx signals budgeted automation projects, which usually shortens vendor evaluation timelines.",
   },
   {
@@ -95,6 +100,7 @@ const previewLeadPool = [
     signal: "Executive change",
     fit: "Autonomous transport",
     score: 90,
+    likelyContact: "Operations Excellence Lead",
     specialReason: "Leadership transitions often reset operations priorities and open new automation initiatives.",
   },
   {
@@ -102,6 +108,7 @@ const previewLeadPool = [
     signal: "RFP activity",
     fit: "Yard automation",
     score: 88,
+    likelyContact: "Terminal Operations Director",
     specialReason: "Live RFP activity means the buying window is active now, not theoretical.",
   },
   {
@@ -109,6 +116,7 @@ const previewLeadPool = [
     signal: "Procurement filing",
     fit: "Case handling robotics",
     score: 92,
+    likelyContact: "Director of Fulfillment Engineering",
     specialReason: "Procurement filings are direct evidence that purchasing teams are actively sourcing solutions.",
   },
   {
@@ -116,6 +124,7 @@ const previewLeadPool = [
     signal: "Inspection mandate",
     fit: "Vision inspection",
     score: 89,
+    likelyContact: "Manufacturing Quality Director",
     specialReason: "Compliance-driven inspection projects usually carry high urgency and executive visibility.",
   },
   {
@@ -123,6 +132,7 @@ const previewLeadPool = [
     signal: "Throughput bottleneck",
     fit: "Autonomous carts",
     score: 87,
+    likelyContact: "Logistics Program Manager",
     specialReason: "Healthcare throughput bottlenecks are expensive, so transport automation often gets prioritized quickly.",
   },
 ];
@@ -142,6 +152,8 @@ function normalizeUrlInput(raw: string): string {
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
   return `https://${trimmed}`;
 }
+
+const PIPELINE_SUBMIT_CONTEXT_KEY = "rfr_pipeline_submit_context";
 
 function signalSummary(lead: HomepageLeadRow): string {
   const summary = (lead.share_summary || "").trim();
@@ -190,6 +202,7 @@ function StepFrame({ title, copy, children }: { title: string; copy: string; chi
 }
 
 export default function Home() {
+  const { session } = useAuth();
   const [location, setLocation] = useLocation();
   const [urlInput, setUrlInput] = useState("");
   const [previewLeadOffset, setPreviewLeadOffset] = useState(0);
@@ -219,27 +232,18 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setPreviewLeadOffset((prev) => (prev + 1) % previewLeadPool.length);
-    }, 7500);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
     let active = true;
-    void fetchHomepageLeadPool<{
-      id?: number;
-      company_name?: string;
-      website?: string | null;
-      website_domain?: string | null;
-    }>([]).then((pool) => {
-      if (!active) return;
-      const total = Number(pool.summary?.total ?? pool.leads.length);
-      if (!Number.isFinite(total) || total <= 0) return;
-      setUnlockMoreCount(Math.max(1, total - 1));
-    }).catch(() => {
-      // Keep fallback count when live summary is unavailable.
-    });
+    void fetch(`${getPublicReadApiBase()}/api/leads/summary?exclude_junk=true`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((summary) => {
+        if (!active || !summary) return;
+        const total = Number(summary.total ?? summary.companies_in_database ?? 0);
+        if (!Number.isFinite(total) || total <= 0) return;
+        setUnlockMoreCount(Math.max(1, total - 3));
+      })
+      .catch(() => {
+        // Keep fallback count when live summary is unavailable.
+      });
     return () => {
       active = false;
     };
@@ -300,7 +304,7 @@ export default function Home() {
   const activateHref = useMemo(() => {
     if (!normalizedUrl) return "/signup";
     const nextParams = new URLSearchParams();
-    nextParams.set("next", "/pipeline");
+    nextParams.set("next", `/results?url=${encodeURIComponent(normalizedUrl)}&limit=5&src=home_signup_return`);
     const resolvedWf = resolvedWorkflow === "looking_for_robots" ? "buyer" : "robot_company";
     nextParams.set("wf", resolvedWf);
     nextParams.set("company_url", normalizedUrl);
@@ -311,7 +315,22 @@ export default function Home() {
 
   const goToIdentity = () => {
     if (!normalizedUrl) return;
-    setLocation(`/pipeline?url=${encodeURIComponent(normalizedUrl)}&src=home_url_submit`);
+    persistWorkflowContext();
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(
+        PIPELINE_SUBMIT_CONTEXT_KEY,
+        JSON.stringify({
+          url: normalizedUrl,
+          src: "home_url_submit",
+          ts: Date.now(),
+        }),
+      );
+      if (session?.access_token) {
+        window.location.assign(`/results?url=${encodeURIComponent(normalizedUrl)}&limit=5&src=home_url_submit`);
+        return;
+      }
+    }
+    window.location.assign(activateHref);
   };
 
   const focusHeroInput = () => {
@@ -415,9 +434,9 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-                <p className="mt-3 text-sm text-slate-300 sm:mt-4 sm:text-[15px]">See your first matches in seconds. No signup required.</p>
+                <p className="mt-3 text-sm text-slate-300 sm:mt-4 sm:text-[15px]">Submit your URL, create your workspace, review early matches, then open the full pipeline.</p>
                 <p className="mt-4 text-xs font-medium tracking-[0.03em] text-[#8ec8b9] sm:mt-6 sm:text-sm sm:tracking-[0.04em]">
-                  8,765 buying signals | 3,861 matched opportunities | Updated continuously
+                  8,765 buying signals · 3,861 matched opportunities · Updated continuously
                 </p>
 
               </div>
@@ -446,47 +465,51 @@ export default function Home() {
             )}
 
             {pageMode === "preview" && (
-              <StepFrame title="Your next customer" copy="Why this customer, who to call, and how to start the conversation.">
-                {(() => {
-                  const topLead = previewLeads[0];
-                  const confidence = Math.min(99, topLead.score + 2);
-                  return (
-                    <div className="mx-auto max-w-2xl rounded-2xl border border-emerald-400/45 bg-[#0b162f] p-5 text-left shadow-[0_20px_45px_-25px_rgba(0,200,150,0.8)]">
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-900/50 pb-3">
-                        <p className="text-2xl font-semibold text-emerald-200">{topLead.company}</p>
-                        <div className="rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-3 py-1">
-                          <p className="text-[10px] uppercase tracking-wider text-emerald-200/80">Ready To Buy</p>
-                          <p className="text-lg font-semibold text-emerald-200">{topLead.score}%</p>
+              <StepFrame
+                title={`Your next ${Math.min(3, previewLeads.length)} customers`}
+                copy="Why these customers, who to call, and how to start the conversation."
+              >
+                <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-3">
+                  {previewLeads.slice(0, 3).map((lead) => {
+                    const confidence = Math.min(99, lead.score + 2);
+                    return (
+                      <article key={`${lead.company}-${lead.signal}`} className="rounded-2xl border border-emerald-400/45 bg-[#0b162f] p-5 text-left shadow-[0_20px_45px_-25px_rgba(0,200,150,0.8)]">
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-900/50 pb-3">
+                          <p className="text-xl font-semibold text-emerald-200">{lead.company}</p>
+                          <div className="rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-3 py-1">
+                            <p className="text-[10px] uppercase tracking-wider text-emerald-200/80">Ready To Buy</p>
+                            <p className="text-lg font-semibold text-emerald-200">{lead.score}%</p>
+                          </div>
                         </div>
-                      </div>
-                      <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">Why this match</p>
-                      <ul className="mt-2 space-y-1.5 text-sm text-slate-200">
-                        <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />{topLead.signal}</li>
-                        <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />New automation hiring indicators detected</li>
-                        <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />Robot fit: {topLead.fit}</li>
-                        <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />Similar deployment signals confirmed</li>
-                      </ul>
-                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                        <div className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2">
-                          <p className="text-[10px] uppercase tracking-wider text-slate-400">Likely Contact</p>
-                          <p className="text-sm font-semibold text-slate-100">Director of Operations</p>
+                        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">Why this match</p>
+                        <ul className="mt-2 space-y-1.5 text-sm text-slate-200">
+                          <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />{lead.signal}</li>
+                          <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />New automation hiring indicators detected</li>
+                          <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />Robot fit: {lead.fit}</li>
+                          <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />{lead.specialReason}</li>
+                        </ul>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2">
+                            <p className="text-[10px] uppercase tracking-wider text-slate-400">Likely Contact</p>
+                            <p className="text-sm font-semibold text-slate-100">{lead.likelyContact}</p>
+                          </div>
+                          <div className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2">
+                            <p className="text-[10px] uppercase tracking-wider text-slate-400">Confidence</p>
+                            <p className="text-sm font-semibold text-slate-100">{confidence}%</p>
+                          </div>
                         </div>
-                        <div className="rounded-lg border border-slate-700 bg-slate-900/40 px-3 py-2">
-                          <p className="text-[10px] uppercase tracking-wider text-slate-400">Confidence</p>
-                          <p className="text-sm font-semibold text-slate-100">{confidence}%</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-                <p className="mt-5 text-lg font-semibold text-emerald-200">We found {unlockMoreCount.toLocaleString()} more. Unlock them.</p>
+                      </article>
+                    );
+                  })}
+                </div>
+                <p className="mt-5 text-lg font-semibold text-emerald-200">We found {unlockMoreCount.toLocaleString()} more buyers in the pipeline. Unlock them.</p>
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
                   <button
                     type="button"
                     onClick={() => setPreviewLeadOffset((prev) => (prev + 1) % previewLeadPool.length)}
                     className="inline-flex items-center gap-2 rounded-md border border-slate-600 px-3.5 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-emerald-400 hover:text-emerald-200"
                   >
-                    Show another match
+                    Show another set
                   </button>
                   <Link href={activateHref} onClick={persistWorkflowContext} className="inline-flex items-center gap-2 rounded-md bg-[#00c896] px-5 py-2.5 text-sm font-semibold text-[#06261f] transition hover:bg-[#00d9a3]">
                     Unlock {unlockMoreCount.toLocaleString()} More Buyers
@@ -504,14 +527,14 @@ export default function Home() {
 
         {pageMode === "url" && (
           <>
-            <section className="mt-10 border-t border-slate-800/70 pt-14 sm:pt-16">
+            <section className="mt-10 border-t border-slate-800/70 pt-12 sm:pt-14">
               <h2 className="max-w-5xl text-[clamp(2rem,4.6vw,4rem)] font-semibold leading-[1.0] tracking-[-0.03em] text-slate-50">
-                Companies Are Looking for Robots Right Now.
+                Companies Looking for Robots Right Now.
               </h2>
               <p className="mt-4 text-[17px] text-slate-300 sm:text-[19px]">ReadyForRobots detects the signals. You get the opportunity.</p>
 
-              <div className="mt-9 overflow-hidden rounded-2xl border border-emerald-400/35 bg-[#061124] shadow-[0_28px_70px_-35px_rgba(10,184,140,0.9)] sm:mt-10">
-                <div className="flex items-center justify-between border-b border-emerald-900/45 bg-[#0b1b31] px-5 py-4 font-mono text-[11px] uppercase tracking-[0.2em] text-[#87dbca] sm:px-6">
+              <div className="mt-8 border-y border-emerald-400/35 bg-[#061124] sm:mt-9">
+                <div className="flex items-center justify-between border-b border-emerald-900/45 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#87dbca]">
                   <span>Live Buyer Signals</span>
                   <span className="inline-flex items-center gap-2 text-[#8ce6d2]">
                     <span className={`h-2 w-2 rounded-full ${isLiveFeed ? "bg-[#22d3a7] animate-pulse" : "bg-amber-300"}`} />
@@ -521,19 +544,19 @@ export default function Home() {
 
                 <div className="font-mono">
                   {rotatingSignalRows.map((row, index) => (
-                    <article key={row.company} className="border-b border-[#16304b] px-5 py-4 last:border-b-0 sm:px-6 sm:py-5">
+                    <article key={row.company} className="border-b border-[#16304b] py-2 last:border-b-0">
                       <div className="flex items-baseline justify-between gap-4">
-                        <h3 className="text-[15px] font-semibold tracking-[0.06em] text-emerald-300 sm:text-base">{row.company}</h3>
-                        <p className={`text-xs font-semibold tracking-[0.14em] ${row.heat === "HOT" ? "text-[#f59e0b]" : "text-[#7dd3fc]"}`}>
+                        <h3 className="text-[14px] font-semibold tracking-[0.06em] text-emerald-300 sm:text-[15px]">{row.company}</h3>
+                        <p className={`text-[11px] font-semibold tracking-[0.14em] ${row.heat === "HOT" ? "text-[#f59e0b]" : "text-[#7dd3fc]"}`}>
                           {row.heat === "HOT" ? "HOT" : "WARM"}
                         </p>
                       </div>
-                      <p className="mt-2 text-sm text-slate-300">{row.summary}</p>
-                      <p className="mt-2 text-sm text-[#a7c7de]">Robot Fit: {row.robotFit}</p>
-                      <p className="mt-1 text-sm text-[#a7c7de]">Why Now: {row.whyNow}</p>
-                      <p className="mt-1 text-sm text-[#a7c7de]">Decision Makers: {row.buyers}</p>
+                      <p className="mt-1 truncate text-[12px] leading-5 text-slate-300">{row.summary}</p>
+                      <p className="mt-0.5 text-[12px] leading-5 text-[#a7c7de]">
+                        Robot Fit: {row.robotFit} · Why Now: {row.whyNow} · Decision Makers: {row.buyers}
+                      </p>
                       {index < rotatingSignalRows.length - 1 ? (
-                        <div className="mt-4 h-px w-full bg-gradient-to-r from-transparent via-[#30506b] to-transparent" aria-hidden />
+                        <div className="mt-2 h-px w-full bg-gradient-to-r from-transparent via-[#2a455d] to-transparent" aria-hidden />
                       ) : null}
                     </article>
                   ))}
@@ -549,20 +572,6 @@ export default function Home() {
               </div>
             </section>
 
-            <section className="mt-12 sm:mt-14">
-              <div className="overflow-hidden rounded-2xl border border-emerald-300/20 bg-[#0b1a2e] shadow-[0_20px_55px_-35px_rgba(0,200,150,0.75)]">
-                <img
-                  src="/marketing/robot-industrial.jpg"
-                  alt="Autonomous mobile robots operating inside an active warehouse"
-                  className="h-36 w-full object-cover object-center sm:h-44 lg:h-52"
-                  loading="lazy"
-                />
-                <div className="border-t border-emerald-400/20 bg-[#081327] px-4 py-2.5 sm:px-5">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#8acfbf]">Live deployment environments. Real buying pressure.</p>
-                </div>
-              </div>
-            </section>
-
             <section className="mt-16 border-t border-slate-800/70 pt-14 sm:mt-20 sm:pt-16">
               <h2 className="max-w-5xl text-[clamp(1.9rem,4.4vw,3.6rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-slate-50">
                 Stop Selling Robots to Companies That Aren&apos;t Buying.
@@ -572,22 +581,22 @@ export default function Home() {
               </p>
               <p className="mt-4 text-xl font-semibold text-[#9af2dc] sm:text-[1.45rem]">ReadyForRobots starts with the need.</p>
 
-              <div className="mt-10 grid gap-5 md:grid-cols-2">
-                <article className="rounded-2xl border border-red-300/25 bg-[#130f14] p-6">
+              <div className="mt-10 space-y-5">
+                <div className="rounded-xl border border-red-300/25 bg-[#130f14] px-5 py-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-red-200/90">Traditional prospecting</p>
-                  <p className="mt-4 text-sm leading-8 text-red-100/85">Company -&gt; Research -&gt; Cold Call -&gt; Follow Up -&gt; Wait -&gt; Maybe</p>
-                </article>
-                <article className="rounded-2xl border border-emerald-300/30 bg-[#071a19] p-6">
+                  <p className="mt-2 font-mono text-sm leading-8 text-red-100/85">Company -&gt; Research -&gt; Cold Call -&gt; Follow Up -&gt; Wait -&gt; Maybe</p>
+                </div>
+                <div className="rounded-xl border border-emerald-300/30 bg-[#071a19] px-5 py-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100">ReadyForRobots</p>
-                  <p className="mt-4 text-sm leading-8 text-emerald-100">Need Detected -&gt; Robot Matched -&gt; Buyer Identified -&gt; Sell</p>
-                </article>
+                  <p className="mt-2 font-mono text-sm leading-8 text-emerald-100">Need Detected -&gt; Robot Matched -&gt; Buyer Identified -&gt; Sell</p>
+                </div>
               </div>
 
               <h3 className="mt-12 text-[clamp(1.8rem,3.8vw,3rem)] font-semibold leading-tight tracking-[-0.02em] text-slate-50">
                 Don&apos;t find leads. <span className="text-[#00d0a2]">Find demand.</span>
               </h3>
               <p className="mt-6 text-[12px] font-semibold uppercase tracking-[0.2em] text-[#8fe0cb] sm:text-[13px]">
-                Find Demand -&gt; See the Signal -&gt; Understand Why -&gt; Contact the Buyer
+                FIND DEMAND -&gt; SEE THE SIGNAL -&gt; UNDERSTAND WHY -&gt; CONTACT THE BUYER
               </p>
 
               <div className="mt-12 border-t border-slate-800/60 pt-8 text-center">

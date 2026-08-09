@@ -32,6 +32,9 @@ import { isDarkHeroRoute } from "@/lib/darkHeroRoutes";
 import { loginHref, clearPendingNext } from "@/lib/authNext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
+const PIPELINE_SUBMIT_CONTEXT_KEY = "rfr_pipeline_submit_context";
+const PIPELINE_SUBMIT_CONTEXT_TTL_MS = 2 * 60 * 60 * 1000;
+
 function smoothScroll(href: string) {
   if (href.startsWith("#")) {
     const el = document.querySelector(href);
@@ -77,6 +80,22 @@ const moreNavLinks = [
   { label: "Studio", href: "/social", icon: ClipboardList, desc: "Content Studio — social posts" },
   { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, and quotes" },
 ];
+
+function pipelineHrefWithSubmitContext(baseHref = "/pipeline"): string {
+  if (typeof window === "undefined") return baseHref;
+  try {
+    const raw = window.sessionStorage.getItem(PIPELINE_SUBMIT_CONTEXT_KEY);
+    if (!raw) return baseHref;
+    const parsed = JSON.parse(raw) as { url?: string; ts?: number };
+    const submittedUrl = (parsed.url || "").trim();
+    const ts = Number(parsed.ts || 0);
+    if (!submittedUrl) return baseHref;
+    if (!Number.isFinite(ts) || Date.now() - ts > PIPELINE_SUBMIT_CONTEXT_TTL_MS) return baseHref;
+    return `/pipeline?url=${encodeURIComponent(submittedUrl)}&src=nav_pipeline_context`;
+  } catch {
+    return baseHref;
+  }
+}
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -141,6 +160,11 @@ export default function Header() {
     const path = l.href.split("#", 1)[0];
     return location === path || (typeof window !== "undefined" && l.href.includes("#") && location === path && window.location.hash === l.href.slice(l.href.indexOf("#")));
   });
+  const resolvedPriorityNavLinks = priorityNavLinks.map((link) =>
+    link.href === "/pipeline"
+      ? { ...link, href: pipelineHrefWithSubmitContext("/pipeline") }
+      : link,
+  );
 
   const handleSignOut = async () => {
     closeDrawer();
@@ -189,8 +213,8 @@ export default function Header() {
             </Link>
 
             <nav className="hidden lg:flex items-center gap-1 min-w-0">
-              {priorityNavLinks.map((link) => (
-                <Link key={link.href} href={link.href} className={navLinkClass(link.href)}>
+              {resolvedPriorityNavLinks.map((link) => (
+                <Link key={`${link.label}-${link.href}`} href={link.href} className={navLinkClass(link.href.split("?", 1)[0])}>
                   {link.label}
                 </Link>
               ))}
@@ -422,12 +446,12 @@ export default function Header() {
 
         <div className="px-4 pb-2 border-b border-gray-100">
           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-1 mb-2">Product</p>
-          {priorityNavLinks.map((item) => {
+          {resolvedPriorityNavLinks.map((item) => {
             const Icon = item.icon;
-            const isActive = location === item.href;
+            const isActive = location === item.href.split("?", 1)[0];
             return (
               <Link
-                key={item.href}
+                key={`${item.label}-${item.href}`}
                 href={item.href}
                 onClick={closeDrawer}
                 className={`flex items-center gap-3 px-3 py-3 rounded-xl mb-0.5 ${

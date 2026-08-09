@@ -1397,6 +1397,7 @@ def agent_assess_humanoid(
     name: str,
     vendor: str,
     *,
+    model_slug: str = "",
     country: str = "",
     status: str = "research",
     product_url: str = "",
@@ -1467,8 +1468,10 @@ Return JSON:
 
     from app.services.humanoid_ai_stack import scoring_specs, specs_for_storage
 
+    resolved_slug = (model_slug or f"{vendor}-{name}").strip().lower()
+
     if not parsed:
-        specs = specs_for_storage(dict(existing_specs or {}), model_slug)
+        specs = specs_for_storage(dict(existing_specs or {}), resolved_slug)
         scores = compute_scores(scoring_specs(specs), status=status, vendor=vendor)
         return {
             "status": status,
@@ -1485,7 +1488,7 @@ Return JSON:
 
     agent_specs = {**(existing_specs or {}), **(parsed.get("specs") or {})}
     agent_specs = {k: v for k, v in agent_specs.items() if v is not None and k != "ai_stack"}
-    agent_specs = specs_for_storage(agent_specs, model_slug)
+    agent_specs = specs_for_storage(agent_specs, resolved_slug)
 
     scores = compute_scores(scoring_specs(agent_specs), status=agent_status, vendor=vendor)
 

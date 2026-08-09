@@ -32,13 +32,34 @@ def test_persona_payload_exports_voice_rules():
 def test_workflow_first_matches_observation_led_shape():
     body = build_buyer_variant_body("Acme Logistics", "Logistics", "workflow_first")
     low = body.lower()
-    assert "which robot should we buy" in low
-    assert "which workflow is costing acme logistics" in low
+    assert body.startswith("Hi Acme Logistics, this is Cal.")
+    assert "which workflow is quietly costing acme logistics" in low
     assert "vendor-neutral" in low
+    assert "quick field note" not in low
     assert "worth a quick call" not in low
     assert "i spend my days" not in low
     assert body.endswith("Ready For Robots")
     assert "Deployment Advisor" in body
+
+
+def test_buyer_intro_first_paragraph_is_concise():
+    name = "Acme Logistics"
+    for vid in BUYER_VARIANTS:
+        body = build_buyer_variant_body(name, "Logistics", vid)
+        paragraphs = [p for p in body.split("\n\n") if p.strip()]
+        assert len(paragraphs) >= 2
+        first_after_greeting = paragraphs[1]
+        non_empty_lines = [ln for ln in first_after_greeting.splitlines() if ln.strip()]
+        assert 1 <= len(non_empty_lines) <= 2, f"{vid} opener too long"
+
+
+def test_long_name_anchor_keeps_greeting_first():
+    name = "UPS Supply Chain Solutions"
+    body = build_buyer_variant_body(name, "Logistics", "workflow_first")
+    lines = [ln for ln in body.splitlines() if ln.strip()]
+    assert lines[0].startswith("Hi ")
+    assert "this is Cal." in lines[0]
+    assert name in body
 
 
 def test_buyer_variants_pass_assembly_without_banned_phrases():

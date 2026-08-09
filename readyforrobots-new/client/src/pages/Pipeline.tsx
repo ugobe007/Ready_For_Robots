@@ -695,6 +695,24 @@ function resolvePipelineLeadId(search: string): number | null {
 }
 const PIPELINE_FRESH_MS = 90 * 1000;
 const PIPELINE_TIMEOUT = 8_000;
+const PIPELINE_SUBMIT_CONTEXT_KEY = "rfr_pipeline_submit_context";
+const PIPELINE_SUBMIT_CONTEXT_TTL_MS = 2 * 60 * 60 * 1000;
+
+function getSubmittedUrlFromStorage(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    const raw = window.sessionStorage.getItem(PIPELINE_SUBMIT_CONTEXT_KEY);
+    if (!raw) return "";
+    const parsed = JSON.parse(raw) as { url?: string; ts?: number };
+    const url = (parsed.url || "").trim();
+    const ts = Number(parsed.ts || 0);
+    if (!url) return "";
+    if (Date.now() - ts > PIPELINE_SUBMIT_CONTEXT_TTL_MS) return "";
+    return url;
+  } catch {
+    return "";
+  }
+}
 const BY_ID_TIMEOUT_MS = 8_000;
 const BY_ID_DEEPLINK_TIMEOUT_MS = 12_000;
 const BY_ID_FAIL_COOLDOWN_MS = 90 * 1000;
@@ -711,7 +729,8 @@ type PipelineFeedPayload = {
 type SubmittedUrlMatchPayload = {
   submitted_url?: string;
   submitted_domain?: string;
-  robot_capabilities?: { type?: string; use_case?: string; capabilities?: string[] };
+  matching_mode?: "matched" | "no_match" | "no_profile";
+  robot_capabilities?: { type?: string; use_case?: string; capabilities?: string[]; profile_score?: number };
   match_count?: number;
   leads?: ApiLead[];
 };
@@ -1377,11 +1396,37 @@ export default function Pipeline() {
   const { session } = useAuth();
   const [, setLocation] = useLocation();
   const search = useSearch();
-  const deepLinkLeadId = useMemo(() => resolvePipelineLeadId(search), [search]);
-  const submittedUrl = useMemo(() => {
+  const [storageSubmittedUrl, setStorageSubmittedUrl] = useState("");
+  const submittedUrlFromQuery = useMemo(() => {
     const params = new URLSearchParams(search);
     return (params.get("url") || "").trim();
   }, [search]);
+  const submittedSrcFromQuery = useMemo(() => {
+    const params = new URLSearchParams(search);
+    return (params.get("src") || "").trim();
+  }, [search]);
+
+  useEffect(() => {
+    if (submittedUrlFromQuery) {
+      setStorageSubmittedUrl("");
+      return;
+    }
+    setStorageSubmittedUrl(getSubmittedUrlFromStorage());
+  }, [submittedUrlFromQuery]);
+
+  const deepLinkLeadId = useMemo(() => resolvePipelineLeadId(search), [search]);
+  const submittedUrl = submittedUrlFromQuery || storageSubmittedUrl;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (submittedUrlFromQuery || !storageSubmittedUrl) return;
+    const params = new URLSearchParams(search);
+    params.set("url", storageSubmittedUrl);
+    if (!submittedSrcFromQuery) params.set("src", "home_url_submit_recovered");
+    const next = `/pipeline?${params.toString()}`;
+    window.history.replaceState({}, "", next);
+    setLocation(next);
+  }, [search, setLocation, storageSubmittedUrl, submittedSrcFromQuery, submittedUrlFromQuery]);
   const submittedHostname = useMemo(() => {
     if (!submittedUrl) return "";
     try {
@@ -1394,6 +1439,8 @@ export default function Pipeline() {
   const [scopeToSubmittedUrl, setScopeToSubmittedUrl] = useState(false);
   const [submittedUrlMatches, setSubmittedUrlMatches] = useState<ApiLead[]>([]);
   const [submittedUrlMatchLoading, setSubmittedUrlMatchLoading] = useState(false);
+  const [submittedUrlMatchError, setSubmittedUrlMatchError] = useState(false);
+  const [submittedUrlWeakProfile, setSubmittedUrlWeakProfile] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [rotationPool, setRotationPool] = useState<Deal[]>([]);
@@ -1477,10 +1524,13 @@ export default function Pipeline() {
     if (!submittedUrl) {
       setSubmittedUrlMatches([]);
       setSubmittedUrlMatchLoading(false);
+      setSubmittedUrlMatchError(false);
+      setSubmittedUrlWeakProfile(false);
       return;
     }
     let cancelled = false;
     const base = getPublicReadApiBase();
+    setSubmittedUrlMatchError(false);
     setSubmittedUrlMatchLoading(true);
     void fetchWithTimeoutRetry(
       `${base}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=15`,
@@ -1489,13 +1539,32 @@ export default function Pipeline() {
       { retries: 1, retryDelayMs: 800 },
     )
       .then(async (res) => {
-        if (cancelled || !res.ok) return;
+        if (cancelled) return;
+        if (!res.ok) {
+          setSubmittedUrlMatchError(true);
+          return;
+        }
         const payload = (await res.json()) as SubmittedUrlMatchPayload;
         if (cancelled) return;
-        setSubmittedUrlMatches(Array.isArray(payload.leads) ? payload.leads : []);
+        const capabilityType = String(payload.robot_capabilities?.type || "").toLowerCase();
+        const capabilityCount = Array.isArray(payload.robot_capabilities?.capabilities)
+          ? payload.robot_capabilities!.capabilities!.length
+          : 0;
+        const profileScore = Number(payload.robot_capabilities?.profile_score ?? 0);
+        const weakProfile =
+          payload.matching_mode === "no_profile" ||
+          ((capabilityType === "" || capabilityType === "unknown") && capabilityCount === 0 && profileScore < 50);
+
+        setSubmittedUrlMatchError(false);
+        setSubmittedUrlWeakProfile(weakProfile);
+        setSubmittedUrlMatches(weakProfile ? [] : Array.isArray(payload.leads) ? payload.leads : []);
       })
       .catch(() => {
-        if (!cancelled) setSubmittedUrlMatches([]);
+        if (!cancelled) {
+          // Keep last successful scoped result set if present; transient network aborts
+          // during dev-server reload should not be shown as "no match".
+          setSubmittedUrlMatchError(true);
+        }
       })
       .finally(() => {
         if (!cancelled) setSubmittedUrlMatchLoading(false);
@@ -2167,9 +2236,9 @@ export default function Pipeline() {
     return pipelineSource;
   }, [hasActiveSearch, qualityControlsActive, showKanban, panelPlan, pipelineSource, previewLimit, rotateOffset]);
   const rotatedDeals = useMemo(() => {
-    if (hasActiveSearch || qualityControlsActive || showKanban) return null;
+    if (hasActiveSearch || qualityControlsActive || showKanban || panelPlan !== "anonymous") return null;
     return buildRotatedPipelineDeals(rotationSource, rotateOffset);
-  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationSource, rotateOffset]);
+  }, [hasActiveSearch, qualityControlsActive, showKanban, panelPlan, rotationSource, rotateOffset]);
   const listDeals = rotatedDeals ?? deals;
   const dealQualityScore = (deal: Deal) => Number(deal.leadQuality?.overall_score ?? 0);
   const dealBand = (deal: Deal) => String(deal.confidenceBand || deal.leadQuality?.confidence_band || "").toLowerCase();
@@ -2217,17 +2286,11 @@ export default function Pipeline() {
     [submittedUrlMatches, crmStageByCompanyId],
   );
   const scopeMatchesCount = matchedScopedDeals.length;
+  const scopedNoMatches = scopeToSubmittedUrl && !submittedUrlMatchLoading && !submittedUrlMatchError && scopeMatchesCount === 0;
   const displayedDeals = useMemo(
-    () => (scopeToSubmittedUrl && scopeMatchesCount > 0 ? matchedScopedDeals : filtered),
-    [filtered, matchedScopedDeals, scopeMatchesCount, scopeToSubmittedUrl],
+    () => (scopeToSubmittedUrl ? matchedScopedDeals : filtered),
+    [filtered, matchedScopedDeals, scopeToSubmittedUrl],
   );
-
-  useEffect(() => {
-    if (!submittedHostname) return;
-    if (scopeToSubmittedUrl && scopeMatchesCount === 0) {
-      setScopeToSubmittedUrl(false);
-    }
-  }, [submittedHostname, scopeMatchesCount, scopeToSubmittedUrl]);
 
   useEffect(() => {
     if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused) return;
@@ -2277,6 +2340,60 @@ export default function Pipeline() {
       ? deals.find((d) => d.id === effectiveSelectedId) ?? null
       : null);
   const selectedActivation = activations.find((a) => a.id === selectedActivationId) ?? activations[0] ?? null;
+  const isSignedIn = Boolean(session?.access_token);
+  const isFirstWorkspaceRun = isSignedIn && savedLeadCount === 0;
+  const hasSavedLead = savedLeadCount > 0;
+  const nextStepsTitle = isFirstWorkspaceRun
+    ? "What to do next"
+    : "Next steps";
+  const nextStepsItems = submittedHostname
+    ? scopedNoMatches
+      ? [
+          `Try a broader company URL for ${submittedHostname}, starting with the homepage or root domain.`,
+          "Switch to full results to find adjacent buyers you can work right now.",
+          isSignedIn
+            ? "Save one strong lead and send first outreach while SIGNAL keeps matching your submitted URL."
+            : "Start a free workspace to save one strong lead and send first outreach while SIGNAL keeps matching your submitted URL.",
+        ]
+      : isFirstWorkspaceRun
+        ? [
+            `Review the top matches related to ${submittedHostname} and identify the best two or three buyers.`,
+            "Save your best-fit lead to start your pipeline workspace.",
+            "Open the saved lead, copy the outreach draft, and send your first message.",
+            "Move the best opportunity forward in the pipeline workspace below.",
+          ]
+        : isSignedIn && hasSavedLead
+          ? [
+              `Review the matched buyers for ${submittedHostname} and keep the strongest opportunities in scope.`,
+              "Advance your saved lead in the pipeline workspace or save one more high-fit account.",
+              "Copy the outreach draft or open the selected lead details to keep momentum.",
+            ]
+        : [
+            `Review the matched buyers for ${submittedHostname} and keep the strongest opportunities in scope.`,
+            "Save or advance the best lead in your pipeline workspace.",
+            "Copy the outreach draft and use the CRM panel below to keep momentum.",
+          ]
+    : isFirstWorkspaceRun
+      ? [
+          "Start with the highest-fit HOT lead in the list.",
+          "Save your best lead to open your working pipeline.",
+          "Copy the outreach draft and send your first message.",
+          "Submit a company URL from Home anytime to scope the pipeline to related buyers.",
+        ]
+      : isSignedIn && hasSavedLead
+        ? [
+            "Review your saved lead first, then add the next best-fit account from the list.",
+            "Advance the selected opportunity or copy the outreach draft from the details panel.",
+            "Submit a company URL from Home anytime to scope the pipeline to related buyers.",
+          ]
+      : [
+          "Start with the highest-fit HOT lead in the list.",
+          "Save or advance the best lead in your pipeline workspace.",
+          "Submit a company URL from Home anytime to scope the pipeline to related buyers.",
+        ];
+  const canSaveSelected = Boolean(selected) && (!isSignedIn || selected?.stage !== "Qualified");
+  const canCopySelectedDraft = Boolean(selected?.outreachBody);
+  const canOpenSelectedDraft = Boolean(selected?.outreachBody) && showKanban && Boolean(session?.access_token);
 
   // Manual lead click = engagement. Pin the selection and stop auto-rotation so the
   // visitor can finish reading the outreach draft before we ask them to sign up.
@@ -2335,9 +2452,23 @@ export default function Pipeline() {
   };
 
   const spotlightOutreachDraft = () => {
+    const panel = outreachDraftRef.current;
+    if (!panel) return;
     setOutreachDraftSpotlight(true);
-    outreachDraftRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.setTimeout(() => setOutreachDraftSpotlight(false), 1800);
+    panel.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => {
+      panel.scrollIntoView({ behavior: "smooth", block: "center" });
+      panel.focus({ preventScroll: true });
+      panel.animate(
+        [
+          { transform: "scale(1)", boxShadow: "0 0 0 rgba(16, 185, 129, 0)" },
+          { transform: "scale(1.015)", boxShadow: "0 0 0 8px rgba(16, 185, 129, 0.18)" },
+          { transform: "scale(1)", boxShadow: "0 0 0 0 rgba(16, 185, 129, 0)" },
+        ],
+        { duration: 900, easing: "ease-out" },
+      );
+    }, 140);
+    window.setTimeout(() => setOutreachDraftSpotlight(false), 2400);
   };
 
   const generateProposalForDeal = async (deal: Deal) => {
@@ -2779,15 +2910,15 @@ export default function Pipeline() {
   };
 
   const dbTotal =
-    scopeToSubmittedUrl && scopeMatchesCount > 0
+    scopeToSubmittedUrl
       ? displayedDeals.length
       : summary?.companies_in_database ?? summary?.total ?? (loadingSummary ? undefined : displayedDeals.length);
   const hotDeals =
-    scopeToSubmittedUrl && scopeMatchesCount > 0
+    scopeToSubmittedUrl
       ? displayedDeals.filter((d) => userBucketForDeal(d) === "Hot Leads").length
       : summary?.hot ?? (loadingSummary ? undefined : displayedDeals.filter((d) => userBucketForDeal(d) === "Hot Leads").length);
   const warmDeals =
-    scopeToSubmittedUrl && scopeMatchesCount > 0
+    scopeToSubmittedUrl
       ? displayedDeals.filter((d) => userBucketForDeal(d) === "Warm Leads").length
       : summary?.warm ?? (loadingSummary ? undefined : displayedDeals.filter((d) => userBucketForDeal(d) === "Warm Leads").length);
   const visibleDeals = displayedDeals.length;
@@ -3131,7 +3262,7 @@ export default function Pipeline() {
             showGrid={false}
             badge={
               <div className="page-hero-badge">
-                {typeof dbTotal === "number" ? dbTotal.toLocaleString() : "—"} active opportunities · updated live
+                {typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading"} active opportunities · updated live
               </div>
             }
             eyebrow="SIGNAL · Sales intelligence"
@@ -3142,9 +3273,9 @@ export default function Pipeline() {
                 : "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
             }
             stats={[
-              { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "—", tone: "white" },
-              { label: "Hot", value: typeof hotDeals === "number" ? hotDeals : "—", tone: "amber" },
-              { label: "Warm", value: typeof warmDeals === "number" ? warmDeals : "—", tone: "amber" },
+              { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading", tone: "white" },
+              { label: "Hot", value: typeof hotDeals === "number" ? hotDeals : "Loading", tone: "amber" },
+              { label: "Warm", value: typeof warmDeals === "number" ? warmDeals : "Loading", tone: "amber" },
               { label: "Visible", value: visibleDeals, tone: "emerald" },
             ]}
             innerClassName="pb-6 pt-20"
@@ -3190,29 +3321,79 @@ export default function Pipeline() {
                   )}
                   {submittedHostname && (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] ${scopeToSubmittedUrl ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-slate-300 bg-white text-slate-700"}`}>
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] ${scopeToSubmittedUrl ? "border-emerald-700 bg-emerald-200 text-emerald-950" : "border-slate-500 bg-slate-100 text-slate-900"}`}>
                         {scopeToSubmittedUrl ? "Scoped" : "All results"}
                       </span>
-                      <p className="text-[11px] text-slate-600">
+                      <span className="inline-flex items-center rounded-full border border-slate-500 bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-900">
+                        Submitted URL: {submittedHostname}
+                      </span>
+                      <p className="text-[11px] font-medium text-slate-800">
                         {submittedUrlMatchLoading
                           ? `Matching ${submittedHostname} to live buyer demand...`
-                          : scopeMatchesCount === 0
-                          ? `No direct matches for ${submittedHostname} yet. Showing the full pipeline instead.`
+                          : submittedUrlMatchError
+                          ? `Temporarily unable to refresh matches for ${submittedHostname}. Showing latest available scoped results.`
+                          : scopeToSubmittedUrl && scopeMatchesCount === 0
+                          ? submittedUrlWeakProfile
+                            ? `No direct matches for ${submittedHostname}. We could not infer enough robot profile detail from that URL yet.`
+                            : `No direct matches for ${submittedHostname} yet. Adjust your URL or switch to full pipeline results.`
+                          : !scopeToSubmittedUrl && scopeMatchesCount === 0
+                          ? `No direct matches found for ${submittedHostname}. You are viewing full pipeline results.`
                           : scopeToSubmittedUrl
                             ? `Showing matches related to ${submittedHostname} (${scopeMatchesCount} results).`
                             : `Showing all pipeline results (${filtered.length} total).`}
                       </p>
-                      {scopeMatchesCount > 0 ? (
+                      {!submittedUrlMatchLoading ? (
                         <button
                           type="button"
                           onClick={() => setScopeToSubmittedUrl((v) => !v)}
-                          className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:border-slate-400 hover:text-slate-900"
+                          className="rounded-md border border-slate-600 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-900 hover:border-slate-800 hover:bg-slate-100"
                         >
                           {scopeToSubmittedUrl ? "Show all results" : "Show submitted URL scope"}
                         </button>
                       ) : null}
                     </div>
                   )}
+                  <div className="mt-2 rounded-lg border border-emerald-700 bg-emerald-200 px-3 py-2 text-[11px] text-slate-950 shadow-sm">
+                    <p className="font-semibold">{nextStepsTitle}:</p>
+                    <ol className="mt-1 space-y-0.5 pl-4">
+                      {nextStepsItems.map((item, index) => (
+                        <li key={`${index}-${item.slice(0, 24)}`} className="list-decimal">
+                          {item}
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {canSaveSelected ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selected) void handleSaveLead(selected);
+                          }}
+                          className="inline-flex items-center justify-center rounded-md border border-emerald-900 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-emerald-950 hover:border-emerald-950 hover:bg-emerald-50"
+                        >
+                          {isSignedIn ? "Save selected lead" : "Start free workspace"}
+                        </button>
+                      ) : null}
+                      {canCopySelectedDraft ? (
+                        <button
+                          type="button"
+                          onClick={copyDraft}
+                          className="inline-flex items-center justify-center rounded-md border border-slate-700 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-900 hover:border-slate-900 hover:bg-slate-50"
+                        >
+                          {copied ? "Copied draft" : "Copy draft"}
+                        </button>
+                      ) : null}
+                      {canOpenSelectedDraft ? (
+                        <button
+                          type="button"
+                          onClick={spotlightOutreachDraft}
+                          className="inline-flex items-center justify-center rounded-md border border-slate-700 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-900 hover:border-slate-900 hover:bg-slate-50"
+                        >
+                          Open selected lead
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative w-full sm:w-[340px]">
@@ -3399,15 +3580,37 @@ export default function Pipeline() {
                 )}
                 {!loadingLeads && !loadErr && !hasActiveSearch && displayedDeals.length === 0 && (
                   <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-emerald-900">
-                    <p className="text-xs font-semibold">
-                      Live pipeline is rebuilding — your buyers are still here.
-                    </p>
-                    <p className="mt-1 text-[11px] leading-snug text-emerald-800">
-                      {typeof hotDeals === "number" || typeof warmDeals === "number"
-                        ? `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm robot buyers scored across ${formatMetric(dbTotal)} tracked accounts. The ranked feed paints in seconds — keep moving while it syncs.`
-                        : "The ranked buyer feed paints in a few seconds. Keep moving while it syncs."}
-                    </p>
+                    {scopedNoMatches ? (
+                      <>
+                        <p className="text-xs font-semibold">
+                          No direct buyer matches yet for {submittedHostname}.
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-emerald-800">
+                          SIGNAL did not find a direct URL match in this pass. Switch to full pipeline results now, or try the company root domain to widen matching.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs font-semibold">
+                          Live pipeline is rebuilding — your buyers are still here.
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-emerald-800">
+                          {typeof hotDeals === "number" || typeof warmDeals === "number"
+                            ? `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm robot buyers scored across ${formatMetric(dbTotal)} tracked accounts. The ranked feed paints in seconds — keep moving while it syncs.`
+                            : "The ranked buyer feed paints in a few seconds. Keep moving while it syncs."}
+                        </p>
+                      </>
+                    )}
                     <div className="mt-2 flex flex-wrap gap-2">
+                      {scopedNoMatches ? (
+                        <button
+                          type="button"
+                          onClick={() => setScopeToSubmittedUrl(false)}
+                          className="inline-flex items-center rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-700"
+                        >
+                          Show full pipeline results
+                        </button>
+                      ) : null}
                       <Link
                         href="/signals"
                         className="inline-flex items-center rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-700"
@@ -3642,7 +3845,7 @@ export default function Pipeline() {
                         style={{ color: meta.color, background: `${meta.color}15`, fontFamily: "'JetBrains Mono', monospace" }}
                       >
                         {bucketDeals.length}
-                        {!hasActiveSearch && bucketDeals.length < meta.slotCap ? (
+                        {panelPlan === "anonymous" && !hasActiveSearch && bucketDeals.length < meta.slotCap ? (
                           <span className="text-gray-400 font-normal"> / {meta.slotCap}</span>
                         ) : null}
                       </span>
@@ -4242,8 +4445,14 @@ export default function Pipeline() {
                   {showKanban && session?.access_token && (
                   <div
                     ref={outreachDraftRef}
-                    className={`shrink-0 px-5 py-3 transition-all duration-500 ${outreachDraftSpotlight ? "rounded-xl bg-emerald-50/70 ring-2 ring-emerald-300/80" : ""}`}
+                    tabIndex={-1}
+                    className={`shrink-0 scroll-mt-24 px-5 py-3 outline-none transition-all duration-500 ${outreachDraftSpotlight ? "rounded-2xl bg-emerald-100/90 ring-4 ring-emerald-400 shadow-[0_0_0_10px_rgba(16,185,129,0.18)]" : ""}`}
                   >
+                    {outreachDraftSpotlight && (
+                      <div className="mb-2 inline-flex items-center rounded-full border border-emerald-300 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-900 shadow-sm">
+                        Draft ready below
+                      </div>
+                    )}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <Mail className="h-3.5 w-3.5" style={{ color: "#059669" }} />

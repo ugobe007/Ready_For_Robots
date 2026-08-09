@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from typing import Any, Optional
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -303,7 +304,15 @@ def cal_buyer_outreach_body(company: Any, *, fresh: bool = False, variant_id: st
     name = (getattr(company, "name", None) or "your team").strip()
     industry = (getattr(company, "industry", None) or "your industry").strip()
     vid = variant_id or pick_buyer_variant(getattr(company, "id", None))
-    reason = build_context_reason(name, _company_signal_blob(company))
+    # Default OFF: extracted headline snippets can sound fabricated or noisy in
+    # autonomous outbound. Operators can explicitly re-enable if they want the
+    # grounded-event hook style.
+    include_reason = (os.getenv("CAL_INCLUDE_SIGNAL_REASON") or "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    reason = build_context_reason(name, _company_signal_blob(company)) if include_reason else None
     return build_buyer_variant_body(name, industry, vid, reason=reason)
 
 
@@ -649,6 +658,7 @@ def run_cal_autonomy_cycle(
     )
     from app.services.lead_enrichment import (
         address_previously_bounced,
+        company_website_domain,
         outreach_recipient_trusted,
         recent_bounce_rate,
         resolve_outreach_email,
@@ -658,6 +668,8 @@ def run_cal_autonomy_cycle(
     from app.services.outreach_email_inference import infer_cc_outreach_emails
     from app.services.resend_email import ResendEmailError, send_email_via_resend
     from app.models.crm import CrmAccount
+
+    use_apollo = (os.getenv("CAL_USE_APOLLO") or "0").strip().lower() in ("1", "true", "yes")
 
     draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
     send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
@@ -811,7 +823,7 @@ def run_cal_autonomy_cycle(
 
         # Always resolve so we know the email SOURCE — a pre-stored acct.contact_email
         # may be a laundered name-guess from a prior cycle.
-        to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=True)
+        to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=use_apollo)
         if not to_email:
             errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
             continue
@@ -825,6 +837,47 @@ def run_cal_autonomy_cycle(
         # Hard-gate: never send to guessed domains. Verified provider OR the
         # email must sit on the company's real website domain.
         trusted, trust_reason = outreach_recipient_trusted(company, acct, to_email, email_source)
+        if not trusted and email_source == "crm_contact":
+            # Legacy rows can carry guessed/stale crm_contact addresses that never
+            # passed provider verification. Clear and re-run the resolver waterfall
+            # so Hunter/Apollo/domain verification gets a chance before we skip.
+            acct.contact_email = None
+            retry_email, retry_source, _retry_title = resolve_outreach_email(
+                company,
+                acct,
+                use_apollo=use_apollo,
+            )
+            if retry_email:
+                to_email = retry_email
+                email_source = retry_source
+                if address_previously_bounced(db, to_email):
+                    skipped_suppressed += 1
+                    continue
+                trusted, trust_reason = outreach_recipient_trusted(company, acct, to_email, email_source)
+        if not trusted and email_source in ("domain_inferred", "person_inferred", "crm_contact"):
+            # Controlled fallback: when Apollo/Hunter cannot verify contacts, allow
+            # inference only if it is on the real website domain and looks like a
+            # conservative role inbox. Deliverability is still checked below.
+            fallback_on = (os.getenv("CAL_INFERRED_FALLBACK_ENABLED", "1") or "1").strip().lower() in (
+                "1",
+                "true",
+                "yes",
+            )
+            if fallback_on and to_email and "@" in to_email:
+                inferred_local, inferred_domain = to_email.rsplit("@", 1)
+                web_domain = company_website_domain(company, acct)
+                role_local_ok = inferred_local.strip().lower() in {
+                    "info",
+                    "contact",
+                    "hello",
+                    "team",
+                    "sales",
+                    "operations",
+                    "partnerships",
+                }
+                if web_domain and inferred_domain.strip().lower() == web_domain and role_local_ok:
+                    trusted = True
+                    trust_reason = f"inferred_fallback:{email_source}"
         if not trusted:
             skipped_unverified += 1
             errors.append({
@@ -929,6 +982,7 @@ def run_cal_autonomy_cycle(
                 send_identity="cal",
                 variant_id=variant_id,
                 canary=deliverability_paused,
+                email_source=email_source,
             )
             sent += 1
             if deliverability_paused:

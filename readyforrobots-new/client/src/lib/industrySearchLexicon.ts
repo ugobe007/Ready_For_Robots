@@ -195,7 +195,7 @@ function matchOntologyQuery(query: string): OntologyMatch {
   const sectorFullMatch = new Set<string>();
   const directTerms = [q];
 
-  for (const [termKey, refs] of TERM_INDEX.entries()) {
+  for (const [termKey, refs] of Array.from(TERM_INDEX.entries())) {
     if (!termMatchesQuery(termKey, q)) continue;
     directTerms.push(termKey);
     for (const { sectorId, subId, raw } of refs) {
@@ -217,7 +217,7 @@ function matchOntologyQuery(query: string): OntologyMatch {
     directTerms.push(ref.subject, ...ref.modifiers, ...ref.terms);
   }
 
-  for (const sectorId of sectorFullMatch) {
+  for (const sectorId of Array.from(sectorFullMatch)) {
     if (!matchedSectorSubs.has(sectorId)) matchedSectorSubs.set(sectorId, new Set());
   }
 

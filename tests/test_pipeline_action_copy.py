@@ -46,9 +46,11 @@ def test_fmt_pipeline_card_includes_pipeline_action():
     company = SimpleNamespace(
         id=1,
         name="Accor Hotels",
+        website="https://www.accor.com",
         industry="Hospitality",
         location_city="Paris",
         location_state="",
+        location_country="FR",
         employee_estimate=None,
         crm_metadata=None,
         signals=[
@@ -74,9 +76,11 @@ def test_fmt_pipeline_card_includes_robot_types_needed():
     company = SimpleNamespace(
         id=2,
         name="FedEx Supply Chain",
+        website="https://www.fedex.com",
         industry="Logistics",
         location_city="Memphis",
         location_state="TN",
+        location_country="US",
         employee_estimate=5000,
         crm_metadata=None,
         automation_profile=None,
@@ -94,3 +98,39 @@ def test_fmt_pipeline_card_includes_robot_types_needed():
     robots = card.get("robot_types_needed") or []
     assert isinstance(robots, list)
     assert len(robots) >= 1
+
+
+def test_fmt_pipeline_card_includes_compat_fields():
+    from types import SimpleNamespace
+
+    from app.api.leads import _fmt_pipeline_card
+
+    company = SimpleNamespace(
+        id=3,
+        name="Marriott International",
+        website="https://www.marriott.com",
+        industry="Hospitality",
+        location_city="Bethesda",
+        location_state="MD",
+        location_country="US",
+        employee_estimate=10000,
+        crm_metadata=None,
+        signals=[
+            SimpleNamespace(
+                signal_type="expansion",
+                signal_text="Marriott expands service robot deployment across properties.",
+                signal_strength=0.77,
+            )
+        ],
+        scores=[SimpleNamespace(overall_intent_score=86.0)],
+    )
+    pri = SimpleNamespace(tier="HOT", score=86.0)
+
+    card = _fmt_pipeline_card(company, False, "", pri, fast=False)
+
+    assert card.get("website") == "https://www.marriott.com"
+    assert card.get("company_url") == "https://www.marriott.com"
+    assert card.get("location_country") == "US"
+    assert card.get("company_country") == "US"
+    assert card.get("lead_tier") == "HOT"
+    assert card.get("signal_strength") == pytest.approx(0.77)

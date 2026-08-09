@@ -65,6 +65,14 @@ def test_ladder_touches_have_no_ai_tells_or_theater():
                 assert banned not in low, f"{touch}/{industry!r} regressed theater: {banned}"
 
 
+def test_ladder_touches_reintroduce_cal_again():
+    name = "Acme Distribution"
+    for industry in _INDUSTRIES:
+        for touch in LADDER_TOUCHES:
+            body = build_ladder_touch_body(touch, name, industry)
+            assert body.startswith(f"Hi {name}, this is Cal again."), f"{touch}/{industry!r} missing re-intro"
+
+
 def test_ladder_touches_teach_and_differ_from_intro():
     # Each touch should be substantive and distinct from the Day-1 intro variants.
     name = "Globex Logistics"

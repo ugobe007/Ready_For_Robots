@@ -33,7 +33,7 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
         </div>
         <div className="p-5 text-sm text-gray-600 leading-relaxed">
           <p className="mb-3">
-            SIGNAL scans your URL, matches prospective sales leads, and queues follow-up plans from the results page.
+            SIGNAL scans your URL, captures qualified buyer leads, scores alignment, and queues activation plans from the results page.
           </p>
           <Link
             href="/signup"
@@ -44,7 +44,7 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
             Activate SIGNAL
           </Link>
           <p className="mt-4 text-xs text-gray-400">
-            Follow-up automation starts after you activate matched leads or select individual leads on the pipeline.
+            Follow-up automation starts after you activate aligned leads or select individual leads on the pipeline.
           </p>
         </div>
       </div>

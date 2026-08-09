@@ -222,6 +222,12 @@ KNOWN_ROBOTICS_VENDOR_NAMES: Set[str] = {
     "physical intelligence",
     "persona ai",
     "cloudminds",
+    # User-flagged humanoid / robotics vendors
+    "unitai",
+    "unit ai",
+    "unitai labs",
+    "synapticon",
+    "synapticon gmbh",
     # ── Material-handling / AS-RS / warehouse-automation OEMs & integrators ──────
     # (surfaced as buyer leads via funding/product headlines — they are vendors)
     "daifuku",
@@ -269,6 +275,7 @@ def _all_vendor_names() -> frozenset[str]:
 
 # Humanoid catalog lists deployment partners (e.g. GXO piloting Digit) — still buyer accounts.
 _BUYER_DEPLOYMENT_PARTNERS = frozenset({
+    "faraday future",
     "gxo logistics",
     "gxo",
 }) | HUMANOID_CATALOG_BUYER_VENDORS

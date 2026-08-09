@@ -4,11 +4,13 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
   ArrowRight,
   Bell,
   Bot,
   CalendarCheck,
   CheckCircle2,
+  Copy,
   FileText,
   LockKeyhole,
   MapPin,
@@ -16,6 +18,7 @@ import {
   Presentation,
   Send,
   Sparkles,
+  Shield,
   TrendingUp,
   UploadCloud,
   Users,
@@ -31,7 +34,7 @@ import { normalizeUrl } from "@/lib/normalizeUrl";
 import { getApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
 import { trackUrlScan, readSupplyAttribution, trackSupplyConversion } from "@/lib/siteAnalytics";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
-import { authHeader } from "@/lib/supabase";
+import { authHeader, getFreshAccessToken } from "@/lib/supabase";
 import { cleanScrapedText } from "@/lib/text";
 import { toast } from "sonner";
 import LeadShareBar from "@/components/LeadShareBar";
@@ -192,6 +195,29 @@ function buildOutreachFields(p: Pick<Prospect, "company" | "signal" | "relevance
   return { outreachSubject, outreachBody, draft };
 }
 
+function buildRfqSpecPacket(p: Pick<Prospect, "company" | "industry" | "action" | "signal">) {
+  const subject = `RFQ or bid-project request for ${p.company}`;
+  const body = [
+    "Hi,",
+    "",
+    `I'm reaching out because ${p.company} surfaced with an active automation signal in ${p.industry}.`,
+    `Context: ${p.signal}`,
+    "",
+    "Are you currently preparing RFQs or bid projects for the robot workflows you are evaluating?",
+    "If yes, could you share the requirements (robot type, throughput, payload, site constraints, integration requirements, timeline, and budget band)?",
+    "",
+    "If it helps, I can send a short RFQ and bid-project checklist your team can edit quickly.",
+    "",
+    "Best,",
+    "[Your name]",
+    "",
+    "---",
+    `Internal handoff note: Route this lead to Robert after RFQ/bid-project details are received. Suggested next step: ${p.action}`,
+  ].join("\n");
+
+  return `Subject: ${subject}\n\n${body}`;
+}
+
 function formatEmployees(value: number | null | undefined): string {
   if (!value || value <= 0) return "Unknown";
   return new Intl.NumberFormat("en-US").format(value);
@@ -220,6 +246,12 @@ function formatSignalAge(iso?: string | null): string | undefined {
   if (days < 14) return `Signal ${days}d ago`;
   if (days < 60) return `Signal ${Math.floor(days / 7)}w ago`;
   return `Signal ${Math.floor(days / 30)}mo ago`;
+}
+
+function clampResultsLimit(raw: string | null): number {
+  const parsed = Number(raw || "");
+  if (!Number.isFinite(parsed)) return 8;
+  return Math.max(3, Math.min(30, Math.round(parsed)));
 }
 
 function mapApiLead(lead: ApiLead, index: number): Prospect {
@@ -392,11 +424,29 @@ const fallbackProspects: Prospect[] = [
   return { ...p, ...outreach };
 });
 
+function fallbackProspectsForLimit(limit: number): Prospect[] {
+  if (limit <= fallbackProspects.length) return fallbackProspects.slice(0, limit);
+  return Array.from({ length: limit }, (_, index) => {
+    const base = fallbackProspects[index % fallbackProspects.length];
+    const pass = Math.floor(index / fallbackProspects.length);
+    if (pass === 0) return base;
+    return {
+      ...base,
+      id: `${base.id}-sample-${pass + 1}`,
+      company: `${base.company} ${pass + 1}`,
+      stage: base.stage.includes("Lead") ? base.stage : `${base.stage} Lead`,
+    };
+  });
+}
+
 export default function Results() {
   const search = useSearch();
   const params = new URLSearchParams(search);
   const initialUrl = params.get("url")?.trim() || "";
-  const { session } = useAuth();
+  const requestedLimit = clampResultsLimit(params.get("limit"));
+  const sampleMode = params.get("sample") === "1";
+  const sampleName = (params.get("sample_name") || "").trim();
+  const { session, loading: authLoading } = useAuth();
 
   useEffect(() => {
     const attribution = readSupplyAttribution(search);
@@ -427,6 +477,49 @@ export default function Results() {
   const [deckFileName, setDeckFileName] = useState("");
   const [activationId, setActivationId] = useState<number | null>(null);
   const [activatingScout, setActivatingScout] = useState(false);
+  const [sampleAccessLoading, setSampleAccessLoading] = useState(sampleMode);
+  const [sampleAccessAllowed, setSampleAccessAllowed] = useState(!sampleMode);
+  const [sampleAccessEmail, setSampleAccessEmail] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function verifySampleAccess() {
+      if (!sampleMode) {
+        if (!cancelled) {
+          setSampleAccessAllowed(true);
+          setSampleAccessLoading(false);
+        }
+        return;
+      }
+      if (authLoading) return;
+      if (!session?.access_token) {
+        if (!cancelled) {
+          setSampleAccessAllowed(false);
+          setSampleAccessLoading(false);
+        }
+        return;
+      }
+      setSampleAccessLoading(true);
+      try {
+        const token = await getFreshAccessToken(session.access_token);
+        const meRes = await fetch(`${getApiBase()}/api/user/me`, liveFetchInit({ headers: authHeader(token) }));
+        if (!meRes.ok) throw new Error(`user/me ${meRes.status}`);
+        const me = await meRes.json() as { email?: string; is_admin?: boolean };
+        if (!cancelled) {
+          setSampleAccessEmail(me.email || "");
+          setSampleAccessAllowed(Boolean(me.is_admin));
+        }
+      } catch {
+        if (!cancelled) setSampleAccessAllowed(false);
+      } finally {
+        if (!cancelled) setSampleAccessLoading(false);
+      }
+    }
+    void verifySampleAccess();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, sampleMode, session?.access_token]);
 
   const selectedCount = selectedIds.size;
   const activatedCount = activatedIds.size;
@@ -451,7 +544,15 @@ export default function Results() {
     });
   };
 
+  const copyRfqPacket = (prospect: Prospect) => {
+    const packet = buildRfqSpecPacket(prospect);
+    void navigator.clipboard.writeText(packet).then(() => {
+      toast.success("RFQ/bid-project request packet copied");
+    });
+  };
+
   useEffect(() => {
+    if (sampleMode && (sampleAccessLoading || !sampleAccessAllowed)) return;
     if (!submittedUrl) return;
     trackUrlScan(submittedUrl, "results");
     setScanStep(1);
@@ -492,7 +593,7 @@ export default function Results() {
               company_url: submittedUrl,
               fingerprint: scoutFingerprint(),
               robot_name: host,
-              limit: 8,
+              limit: requestedLimit,
             }),
           },
           25_000,
@@ -523,14 +624,14 @@ export default function Results() {
         if (!response.ok) throw new Error(`Scan failed with ${response.status}`);
         const data = await response.json() as RobotReadyResponse;
         const matches = Array.isArray(data.matched_companies) ? data.matched_companies : [];
-        const mapped = matches.slice(0, 8).map(mapApiLead);
+        const mapped = matches.slice(0, requestedLimit).map(mapApiLead);
         if (!mapped.length) throw new Error("No URL-specific matches returned");
         if (!cancelled) setProspects(mapped);
       } catch (error) {
         console.error(error);
         if (!cancelled) {
           setUsingFallback(true);
-          setProspects(fallbackProspects);
+          setProspects(fallbackProspectsForLimit(requestedLimit));
           toast.info("SIGNAL could not reach the matcher in time — showing sample leads while the API recovers.");
         }
       } finally {
@@ -552,7 +653,7 @@ export default function Results() {
       cancelled = true;
       window.clearInterval(stepTimer);
     };
-  }, [submittedUrl]);
+  }, [requestedLimit, sampleAccessAllowed, sampleAccessLoading, sampleMode, submittedUrl]);
 
   useEffect(() => {
     setSelectedIds(new Set(prospects.map((p) => p.id)));
@@ -585,6 +686,54 @@ export default function Results() {
       .sort((a, b) => b.score - a.score)
       .slice(0, 3)
       .map((p) => p.id);
+  }
+
+  if (sampleMode && (authLoading || sampleAccessLoading)) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
+        <main className="mx-auto max-w-4xl px-6 pt-28 text-center text-gray-500">Checking admin access...</main>
+      </div>
+    );
+  }
+
+  if (sampleMode && !session) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
+        <main className="mx-auto max-w-xl px-6 pt-28 text-center">
+          <Shield className="mx-auto mb-4 h-7 w-7 text-amber-500" />
+          <h1 className="text-2xl font-bold text-gray-900">Admin sign in required</h1>
+          <p className="mt-3 text-sm text-gray-600">Sample pipeline links are private to admin accounts.</p>
+          <Link href={`/login?next=${encodeURIComponent(`/results?${params.toString()}`)}`} className="mt-6 inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600">
+            Sign in
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
+  if (sampleMode && !sampleAccessAllowed) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
+        <main className="mx-auto max-w-xl px-6 pt-28 text-center">
+          <AlertTriangle className="mx-auto mb-4 h-7 w-7 text-red-400" />
+          <h1 className="text-2xl font-bold text-gray-900">Admin access required</h1>
+          <p className="mt-3 text-sm text-gray-600">
+            {sampleAccessEmail || "This account"} is signed in but not in ADMIN_EMAILS.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/admin" className="inline-flex rounded-xl border border-gray-300 px-5 py-3 text-sm font-bold text-gray-700">
+              Open admin
+            </Link>
+            <Link href="/pipeline" className="inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600">
+              Back to pipeline
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   async function activateScout(overrides: { scope?: ScopeChoice; mode?: ModeChoice; material?: MaterialChoice } = {}) {
@@ -670,10 +819,12 @@ export default function Results() {
             maxWidthClass="max-w-4xl"
             badge={<div className="page-hero-badge">Scan complete · matched buyers ready</div>}
             eyebrow="SIGNAL results"
-            title={scanning ? "Scanning for matched buyers…" : "Your matched buyers"}
+            title={scanning ? "Scanning for aligned buyers…" : sampleMode ? `Your ${requestedLimit}-company sample pipeline` : "Your qualified, aligned buyers"}
             description={
               submittedUrl
-                ? `Results for ${submittedUrl} — save leads, copy outreach drafts, and run them in your pipeline.`
+                ? sampleMode
+                  ? `Sample pipeline for ${sampleName || submittedUrl} · ${requestedLimit} companies you can share with prospects.`
+                  : `Results for ${submittedUrl} — capture qualified leads, assess alignment, and activate MSD sales motion in your pipeline.`
                 : undefined
             }
             innerClassName="pb-8"
@@ -747,6 +898,27 @@ export default function Results() {
 
           {submittedUrl && !loading && !scanning && (
             <>
+              {sampleMode && typeof window !== "undefined" && (
+                <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 sm:flex-row sm:items-center sm:justify-between">
+                  <p>
+                    Share-ready sample pipeline: <span className="font-semibold">{requestedLimit} companies</span>
+                    {sampleName ? <span> for <span className="font-semibold">{sampleName}</span></span> : null}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(window.location.href).then(() => {
+                        toast.success("Sample pipeline link copied");
+                      });
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy link
+                  </button>
+                </div>
+              )}
+
               <ResultsFomoBanner
                 prospects={sortedProspects}
                 isSignedIn={isSignedIn}
@@ -761,7 +933,7 @@ export default function Results() {
                     </p>
                   )}
                   <p className="text-sm text-gray-700">
-                    Based on <span className="text-gray-900 font-medium break-all">{submittedUrl}</span>. Select the leads you want SIGNAL to develop.
+                    Based on <span className="text-gray-900 font-medium break-all">{submittedUrl}</span>. Select the leads you want SIGNAL to align and activate.
                   </p>
                 </div>
                 <button
@@ -788,10 +960,10 @@ export default function Results() {
                       <Bot className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#FFB000" }} />
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
-                          Activate SIGNAL sales motion
+                          Activate MSD sales motion
                         </p>
                         <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-500">
-                          Choose materials, lead scope, and operating mode. SIGNAL will save leads to CRM and prepare the workflow before any outbound messages or follow-ups.
+                          Choose materials, lead scope, and operating mode. SIGNAL will save leads to CRM, score alignment context, and prepare workflow activation before any outbound messages.
                         </p>
                       </div>
                     </div>
@@ -1102,6 +1274,19 @@ export default function Results() {
                           <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 text-emerald-800 bg-emerald-50 border border-emerald-200">
                             {p.timing}
                           </span>
+                        </div>
+                      )}
+
+                      {!isLocked && (
+                        <div className="px-4 sm:px-6 pb-4">
+                          <button
+                            type="button"
+                            onClick={() => copyRfqPacket(p)}
+                            className="inline-flex items-center gap-2 rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-[11px] font-semibold text-cyan-900 hover:bg-cyan-100"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            Copy RFQ/bid-project request + handoff note
+                          </button>
                         </div>
                       )}
 

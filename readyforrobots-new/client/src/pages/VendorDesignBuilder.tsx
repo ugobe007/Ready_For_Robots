@@ -153,7 +153,7 @@ export default function VendorDesignBuilder() {
       <PageHeroDark
         eyebrow="Vendor tools"
         title="Deployment design studio"
-        subtitle="Map the physical workflow first, then validate ROI for the buyer."
+        description="Map the physical workflow first, then validate ROI for the buyer."
       />
 
       <main className="max-w-[1400px] mx-auto px-4 sm:px-6 pb-16 -mt-4 relative z-10 space-y-5">

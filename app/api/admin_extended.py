@@ -1863,6 +1863,7 @@ def cal_bulk_send(
                 idempotency_key=f"cal-bulk-{acct.id}",
                 send_identity="cal",
                 variant_id=variant_id,
+                email_source=email_source,
             )
             sent_count += 1
             enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id, variant_id=variant_id)

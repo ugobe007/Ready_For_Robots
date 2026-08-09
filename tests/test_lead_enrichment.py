@@ -3,9 +3,11 @@ from unittest.mock import MagicMock, patch
 
 from app.services.lead_enrichment import (
     infer_sales_email,
+    is_generic_role_inbox,
     outreach_recipient_trusted,
     persist_outreach_contact,
     resolve_outreach_email,
+    source_is_provider_verified,
     verify_email_deliverable,
 )
 
@@ -230,3 +232,15 @@ def test_verify_email_rejects_noreply():
     ok, reason = verify_email_deliverable("noreply@example.com")
     assert ok is False
     assert reason == "role_blocked"
+
+
+def test_generic_role_inbox_detection():
+    assert is_generic_role_inbox("info@acme.com") is True
+    assert is_generic_role_inbox("operations@acme.com") is True
+    assert is_generic_role_inbox("jane.doe@acme.com") is False
+
+
+def test_source_is_provider_verified():
+    assert source_is_provider_verified("apollo") is True
+    assert source_is_provider_verified("hunter_domain") is True
+    assert source_is_provider_verified("domain_inferred") is False

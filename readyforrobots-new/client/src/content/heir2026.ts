@@ -2,6 +2,11 @@
 
 export const HEIR_REPORTS = [
   {
+    title: "July 2026 update",
+    description: "Updated HEIR intelligence with new humanoids and US China-origin restriction impacts.",
+    href: "/robots/report?edition=2026-07-update",
+  },
+  {
     title: "Full report",
     description: "Complete HEIR 2026 analysis — framework, vendor map, and deployment economics.",
     href: "/reports/HEIR_2026_Humanoid_Engineering_Intelligence_Report.pdf",

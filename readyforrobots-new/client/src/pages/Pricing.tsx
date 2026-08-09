@@ -129,7 +129,7 @@ const faqs = [
   },
   {
     q: "How is this different from Explee, Apollo, or other company search tools?",
-    a: "Those tools help you find accounts and export contacts—we help robot sales teams run the full funnel. ReadyForRobots surfaces buyers showing live robot intent (capex, labor, deployment signals), ranks HOT/WARM timing, tells you which robot categories to pitch, and advances deals in our pipeline or HubSpot. You are not buying another stale list; you are automating a sales pipeline built for robotics. See our full comparison at /compare.",
+    a: "Those tools help you find accounts and export contacts. ReadyForRobots runs Full Stack Sales for robotics: capture qualified buyers with live robot intent, assess alignment to your capabilities, then activate motion through MSD across outreach and CRM. You are not buying another stale list; you are running an ISA platform built for robotics revenue. See our full comparison at /compare.",
   },
   {
     q: "Do you help with robot deployment services?",
@@ -254,11 +254,11 @@ export default function Pricing() {
       <PageHeroDark
         maxWidthClass="max-w-5xl"
         eyebrow="Pricing"
-        title="Simple pricing for robot sales teams"
+        title="Full Stack Sales pricing for robot teams"
         description={
           <>
             <span className="font-bold uppercase tracking-widest text-emerald-400">Signal</span>
-            {" — robotics prospecting, qualifying, and outreach synced to "}
+            {" — ISA qualification + alignment scoring, then MSD sales activation synced to "}
             <span className="font-bold text-amber-400">HubSpot</span>
             {" or your CRM. Free workspace to start — Pro and Premium checkout when billing is enabled."}
           </>

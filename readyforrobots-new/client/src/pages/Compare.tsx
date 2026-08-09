@@ -141,10 +141,10 @@ export default function Compare() {
           <>
             Data tools surface opportunities.
             <br />
-            <span className="text-sky-300">ReadyForRobots delivers qualified leads ready for engagement.</span>
+            <span className="text-sky-300">ReadyForRobots runs Full Stack Sales for robotics teams.</span>
           </>
         }
-        description="Tools like Explee help teams discover broad opportunities. ReadyForRobots is built for robot companies that need sales leads already qualified by live buyer intent and ready for immediate outreach in CRM."
+        description="Tools like Explee help teams discover broad opportunities. ReadyForRobots is an ISA platform: capture qualified leads, assess alignment, then activate pipeline motion through MSD in your native workflow or HubSpot."
         innerClassName="pb-8 text-center [&_.page-hero-title]:mx-auto [&_.page-hero-title]:text-4xl md:[&_.page-hero-title]:text-6xl [&_.page-hero-title]:leading-[1.02] [&_.page-hero-title]:tracking-tight [&_.page-hero-description]:mx-auto [&_.page-hero-description]:text-base md:[&_.page-hero-description]:text-lg [&_.page-hero-description]:leading-relaxed"
       />
       <div className="page-hero-fade" aria-hidden />
@@ -164,10 +164,10 @@ export default function Compare() {
               </div>
               <div className="border-l-2 border-sky-500 bg-sky-50 p-6 md:p-7 text-slate-900">
                 <p className="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-sky-700">ReadyForRobots</p>
-                <p className="text-2xl md:text-3xl font-black tracking-tight leading-tight text-slate-900">Execution-ready workflow</p>
-                <p className="mt-2 text-[15px] leading-relaxed text-slate-700">Built for robot teams that need verified buyer intent, SKU guidance, and clear pipeline next steps in CRM.</p>
+                <p className="text-2xl md:text-3xl font-black tracking-tight leading-tight text-slate-900">ISA workflow on FSS architecture</p>
+                <p className="mt-2 text-[15px] leading-relaxed text-slate-700">Built for robot teams that need qualified buyer intent, alignment scoring, and clear MSD activation in CRM.</p>
                 <div className="mt-4 inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-sky-700">
-                  Output: actions to run
+                  Output: alignment to action
                 </div>
               </div>
             </div>
@@ -201,7 +201,7 @@ export default function Compare() {
           <section className="mb-12 rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight text-slate-900 mb-2">Why ReadyForRobots wins in robotics sales</h2>
             <p className="text-sm text-slate-600 leading-relaxed mb-5">
-              ReadyForRobots does the heavy lift before a rep sends the first message: discover, curate, and qualify leads, then map each account to industry, robot type, and timing.
+              ReadyForRobots does the heavy lift before a rep sends the first message: capture and qualify buyers, assess alignment to robot capability, then activate MSD to move the deal.
             </p>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
               {rfrEngine.map((step) => (
@@ -272,7 +272,7 @@ export default function Compare() {
               <div className="rounded-xl border border-sky-200 bg-sky-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.1em] text-sky-800 mb-2">ReadyForRobots</p>
                 <p className="text-[13px] text-sky-950 leading-relaxed font-semibold">
-                  Live robot-buyer signals → HOT/WARM timing → pipeline_action + robot_types_needed → Cal outreach draft → save &amp; sync to HubSpot.
+                  Qualified signal capture → alignment scoring (ISA) → pipeline_action + robot_types_needed (FSS) → Cal outreach activation (MSD) → save &amp; sync to HubSpot.
                 </p>
                 <p className="mt-2 text-[13px] text-sky-800">Vertical pipeline. Proof before signup on /pipeline.</p>
               </div>

@@ -21,15 +21,6 @@ export default function AuthCallback() {
     const search = window.location.search;
     const next = readNextParam(search) ?? peekPendingNext() ?? postAuthRedirectTarget("/pipeline");
 
-    const oauthErr = readSupabaseOAuthError();
-    if (oauthErr) {
-      const detail = oauthErr.includes("Unable to exchange external code")
-        ? `${oauthErr}\n\nGoogle Cloud has the right Client ID, but Supabase cannot exchange the code — the Client secret saved in Supabase → Authentication → Providers → Google does not match Google Cloud.\n\nFix: Google Cloud → Credentials → your Web client → Reset secret → copy the new GOCSPX-… secret → paste into Supabase Google provider → Save. Also add http://localhost:3000/** to Supabase URL Configuration if testing locally.`
-        : oauthErr;
-      setLocation(`/login?next=${encodeURIComponent(next)}&auth_error=${encodeURIComponent(detail)}`);
-      return;
-    }
-
     let done = false;
     const finish = () => {
       if (done) return;
@@ -43,10 +34,29 @@ export default function AuthCallback() {
     };
 
     void (async () => {
+      const oauthErr = readSupabaseOAuthError();
+      if (oauthErr) {
+        // If a session already exists, suppress transient OAuth error params and continue.
+        const { data } = await client.auth.getSession();
+        if (data?.session) {
+          finish();
+          return;
+        }
+        const detail = oauthErr.includes("Unable to exchange external code")
+          ? `${oauthErr}\n\nGoogle Cloud has the right Client ID, but Supabase cannot exchange the code — the Client secret saved in Supabase → Authentication → Providers → Google does not match Google Cloud.\n\nFix: Google Cloud → Credentials → your Web client → Reset secret → copy the new GOCSPX-… secret → paste into Supabase Google provider → Save. Also add http://localhost:3000/** to Supabase URL Configuration if testing locally.`
+          : oauthErr;
+        setLocation(`/login?next=${encodeURIComponent(next)}&auth_error=${encodeURIComponent(detail)}`);
+        return;
+      }
+
       const { error } = await finishSupabaseOAuthCallback(client, pathname, search);
       if (error) {
-        setLocation(`/login?next=${encodeURIComponent(next)}&auth_error=${encodeURIComponent(error)}`);
-        return;
+        // Double callbacks can throw exchange errors after session is already established.
+        const { data } = await client.auth.getSession();
+        if (!data?.session) {
+          setLocation(`/login?next=${encodeURIComponent(next)}&auth_error=${encodeURIComponent(error)}`);
+          return;
+        }
       }
       const { data } = await client.auth.getSession();
       if (data.session) finish();

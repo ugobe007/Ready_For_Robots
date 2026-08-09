@@ -8,7 +8,7 @@ type RobotLeaderRow = {
 
 type Props = {
   robots: RobotLeaderRow[];
-  indexValue: (robot: RobotLeaderRow, dim: string) => number;
+  indexValue: (robot: any, dim: "mobility" | "manipulation" | "cognition" | "safety" | "data_pipeline" | "production") => number;
 };
 
 type LeaderCard = {

@@ -29,6 +29,8 @@ type Props = {
   autopilotEnabled?: boolean;
   activeStep?: CalWorkflowStepId | null;
   busy: string;
+  draftBusy?: boolean;
+  redraftBusy?: boolean;
   onDraftAll: () => void;
   onRedraft: () => void;
   onFixEmails: () => void;
@@ -164,7 +166,7 @@ function buildDoNow(
         step,
         tone: "go",
         title: "Write first drafts",
-        detail: `${pending.toLocaleString()} HOT/WARM lead${pending === 1 ? "" : "s"} still need Cal's intro.`,
+        detail: `${pending.toLocaleString()} HOT/WARM lead${pending === 1 ? "" : "s"} still need alignment-ready Cal intros.`,
         actionLabel: `Draft ${pending.toLocaleString()} pending`,
         onAction: handlers.onDraftAll,
         disabled: pending === 0,
@@ -190,7 +192,7 @@ function buildDoNow(
         title: "Review before send",
         detail:
           sendable > 0
-            ? `${sendable.toLocaleString()} ready to send — read 3–4 drafts for fit, names, and angle first.`
+            ? `${sendable.toLocaleString()} ready to activate — read 3–4 drafts for alignment, names, and angle first.`
             : `${unsent.toLocaleString()} unsent draft${unsent === 1 ? "" : "s"} in the queue below.`,
         actionLabel: "Open review queue",
         onAction: handlers.onReview,
@@ -200,7 +202,7 @@ function buildDoNow(
         step,
         tone: "go",
         title: "Send a small batch",
-        detail: `${sendable.toLocaleString()} draft${sendable === 1 ? "" : "s"} have verified emails. You'll confirm before anything goes out.`,
+        detail: `${sendable.toLocaleString()} draft${sendable === 1 ? "" : "s"} have verified emails. You'll confirm before MSD activation starts.`,
         actionLabel: `Send ${sendable.toLocaleString()}`,
         onAction: handlers.onSendAll,
         disabled: sendable === 0,
@@ -255,6 +257,8 @@ export default function CalWorkflowPanel({
   autopilotEnabled,
   activeStep,
   busy,
+  draftBusy,
+  redraftBusy,
   onDraftAll,
   onRedraft,
   onFixEmails,
@@ -404,7 +408,7 @@ export default function CalWorkflowPanel({
             label={`Draft ${n(metrics.pending_draft).toLocaleString()} pending`}
             tone="primary"
             disabled={n(metrics.pending_draft) === 0}
-            busy={busy === "cal-draft" && n(metrics.pending_draft) > 0}
+            busy={draftBusy ?? (busy === "cal-draft" && n(metrics.pending_draft) > 0)}
             onClick={onDraftAll}
           />
         </div>
@@ -415,7 +419,7 @@ export default function CalWorkflowPanel({
             label={`Redraft ${unsent.toLocaleString()}`}
             tone="amber"
             disabled={unsent === 0}
-            busy={busy === "cal-draft" && n(metrics.pending_draft) === 0}
+            busy={redraftBusy ?? (busy === "cal-redraft" && n(metrics.pending_draft) === 0)}
             onClick={onRedraft}
           />
           <p className="mt-1.5 text-[10px] leading-snug text-amber-950/80">

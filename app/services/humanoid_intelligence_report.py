@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import logging
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,144 @@ SCORE_KEY = {
     "data_pipeline": "score_endurance",
     "production": "score_market_readiness",
 }
+
+RECENT_WINDOW_DAYS = 60
+RECENT_RELEASE_RE = re.compile(
+    r"\b(launch(?:ed|es|ing)?|debut(?:ed|s)?|unveil(?:ed|s)?|introduc(?:ed|es)|announc(?:ed|es)|release(?:d|s)?)\b",
+    re.I,
+)
+
+US_ALLIED_COUNTRIES = {
+    "usa", "united states", "us",
+    "canada", "uk", "united kingdom", "germany", "japan",
+    "south korea", "norway", "switzerland", "spain", "israel",
+    "australia", "poland", "france", "italy", "netherlands", "sweden",
+}
+US_COUNTRY_KEYS = {"usa", "united states", "us"}
+
+
+def _parse_iso_utc(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def _country_key(country: Optional[str]) -> str:
+    return (country or "Unknown").strip().lower()
+
+
+def _policy_profile(country: Optional[str]) -> dict:
+    ckey = _country_key(country)
+    label = (country or "Unknown").strip() or "Unknown"
+
+    if ckey == "china":
+        return {
+            "country": label,
+            "policy_tag": "high_restriction_risk",
+            "us_market_access_risk": "high",
+            "us_demand_shift_score": 12,
+            "policy_score": 24,
+            "rationale": "Higher US market-access risk under foreign-supplier restrictions; near-term US demand shifts toward domestic/allied suppliers.",
+        }
+    if ckey in {"usa", "united states", "us"}:
+        return {
+            "country": label,
+            "policy_tag": "us_favored",
+            "us_market_access_risk": "low",
+            "us_demand_shift_score": 92,
+            "policy_score": 92,
+            "rationale": "US suppliers are structurally favored when import restrictions tighten, increasing domestic pilot and procurement preference.",
+        }
+    if ckey in US_ALLIED_COUNTRIES:
+        return {
+            "country": label,
+            "policy_tag": "allied_advantage",
+            "us_market_access_risk": "low_to_medium",
+            "us_demand_shift_score": 72,
+            "policy_score": 74,
+            "rationale": "Allied suppliers may benefit from demand reallocation with materially lower policy friction than restricted-origin vendors.",
+        }
+    return {
+        "country": label,
+        "policy_tag": "uncertain",
+        "us_market_access_risk": "medium",
+        "us_demand_shift_score": 48,
+        "policy_score": 50,
+        "rationale": "Policy impact is mixed and supplier-specific; demand may shift but requires account-level procurement validation.",
+    }
+
+
+def _recent_activity_60d(row: dict, news: dict, *, now: datetime) -> dict:
+    window_start = now - timedelta(days=RECENT_WINDOW_DAYS)
+    articles = list(news.get("articles") or [])
+    launch_hits: List[dict] = []
+    trial_hits: List[dict] = []
+    deployment_hits: List[dict] = []
+    newest: Optional[datetime] = None
+
+    for art in articles:
+        scraped_at = _parse_iso_utc(art.get("scraped_at"))
+        if not scraped_at or scraped_at < window_start:
+            continue
+        newest = scraped_at if newest is None else max(newest, scraped_at)
+        title_blob = f"{art.get('title') or ''} {art.get('title_zh') or ''}"
+        level = art.get("evidence_level") or "general"
+        if RECENT_RELEASE_RE.search(title_blob):
+            launch_hits.append(art)
+        if level == "deployment":
+            deployment_hits.append(art)
+        elif level == "trial":
+            trial_hits.append(art)
+
+    status = str(row.get("status") or "research").lower()
+    status_boost = 14 if status == "available" else 10 if status == "pilot" else 4
+    launch_count = len(launch_hits)
+    deployment_count = len(deployment_hits)
+    trial_count = len(trial_hits)
+    recency_score = min(
+        100,
+        launch_count * 32 + deployment_count * 24 + trial_count * 14 + status_boost,
+    )
+
+    signal_kind = "none"
+    if deployment_count > 0:
+        signal_kind = "deployment"
+    elif trial_count > 0:
+        signal_kind = "trial"
+    elif launch_count > 0:
+        signal_kind = "launch"
+
+    headline_samples = [
+        {
+            "title": (a.get("title_en") or a.get("title")),
+            "url": a.get("url"),
+            "detected_at": a.get("scraped_at"),
+            "evidence_level": a.get("evidence_level"),
+        }
+        for a in (launch_hits + deployment_hits + trial_hits)[:4]
+        if a.get("title") or a.get("title_en")
+    ]
+
+    created_at = _parse_iso_utc(row.get("created_at"))
+    is_new_catalog_entry = bool(created_at and created_at >= window_start)
+
+    return {
+        "window_days": RECENT_WINDOW_DAYS,
+        "signal_kind": signal_kind,
+        "launch_headlines": launch_count,
+        "deployment_headlines": deployment_count,
+        "trial_headlines": trial_count,
+        "is_new_catalog_entry": is_new_catalog_entry,
+        "freshest_signal_at": newest.isoformat() if newest else None,
+        "recency_score": recency_score,
+        "headline_samples": headline_samples,
+    }
 
 
 def _deployments(specs: dict) -> int:
@@ -231,6 +370,9 @@ def _build_robot_profile(row: dict, rank: int) -> dict:
     dep = summarize_robot(row)
     news = _parse_news_sources(row.get("sources") or [])
     tier = dep["deployment_tier"]
+    now = datetime.now(timezone.utc)
+    recent = _recent_activity_60d(row, news, now=now)
+    policy = _policy_profile(row.get("country"))
 
     poc_count = 0
     if tier in ("poc", "demo"):
@@ -250,6 +392,7 @@ def _build_robot_profile(row: dict, rank: int) -> dict:
         "vendor": row.get("vendor"),
         "image_url": row.get("image_url"),
         "status": row.get("status"),
+        "country": row.get("country"),
         "score_total": dep["score_total"],
         "heif_total": dep["heif_total"],
         "deployment_tier": tier,
@@ -270,6 +413,8 @@ def _build_robot_profile(row: dict, rank: int) -> dict:
             "integration_signal_count": integration_count,
         },
         "news_evidence": news,
+        "recent_activity_60d": recent,
+        "policy_positioning": policy,
         "score_rationale": _score_rationale(row),
         "why_top_rank": _why_top_rank(row, rank, news, dep),
         "top_headlines": [
@@ -477,6 +622,113 @@ def build_humanoid_intelligence_report_payload(
     comparisons = _build_comparisons(sorted_robots, profiles, deployment_summary)
     total = len(sorted_robots)
 
+    recent_launches = sorted(
+        [
+            {
+                "rank": p["rank"],
+                "name": p["name"],
+                "vendor": p["vendor"],
+                "country": p.get("country"),
+                "recency_score": (p.get("recent_activity_60d") or {}).get("recency_score", 0),
+                "signal_kind": (p.get("recent_activity_60d") or {}).get("signal_kind", "none"),
+                "freshest_signal_at": (p.get("recent_activity_60d") or {}).get("freshest_signal_at"),
+                "launch_headlines": (p.get("recent_activity_60d") or {}).get("launch_headlines", 0),
+                "deployment_headlines": (p.get("recent_activity_60d") or {}).get("deployment_headlines", 0),
+                "trial_headlines": (p.get("recent_activity_60d") or {}).get("trial_headlines", 0),
+                "score_total": p.get("score_total"),
+                "heif_total": p.get("heif_total"),
+            }
+            for p in profiles
+            if (p.get("recent_activity_60d") or {}).get("recency_score", 0) > 0
+        ],
+        key=lambda x: (x.get("recency_score") or 0, x.get("deployment_headlines") or 0, x.get("launch_headlines") or 0),
+        reverse=True,
+    )
+
+    policy_rows = [p.get("policy_positioning") or {} for p in profiles]
+    policy_counts = Counter((pr.get("policy_tag") or "unknown") for pr in policy_rows)
+    beneficiaries = sorted(
+        [
+            {
+                "rank": p["rank"],
+                "name": p["name"],
+                "vendor": p["vendor"],
+                "country": p.get("country"),
+                "policy_score": (p.get("policy_positioning") or {}).get("policy_score", 0),
+                "demand_shift_score": (p.get("policy_positioning") or {}).get("us_demand_shift_score", 0),
+                "policy_tag": (p.get("policy_positioning") or {}).get("policy_tag"),
+            }
+            for p in profiles
+        ],
+        key=lambda x: (x.get("policy_score") or 0, x.get("demand_shift_score") or 0),
+        reverse=True,
+    )
+
+    constrained = sorted(
+        [
+            {
+                "rank": p["rank"],
+                "name": p["name"],
+                "vendor": p["vendor"],
+                "country": p.get("country"),
+                "policy_score": (p.get("policy_positioning") or {}).get("policy_score", 0),
+                "policy_tag": (p.get("policy_positioning") or {}).get("policy_tag"),
+            }
+            for p in profiles
+            if (p.get("policy_positioning") or {}).get("policy_tag") == "high_restriction_risk"
+        ],
+        key=lambda x: (x.get("policy_score") or 0, -(x.get("rank") or 999)),
+    )
+
+    non_us_suppliers = sorted(
+        [
+            {
+                "rank": p["rank"],
+                "name": p["name"],
+                "vendor": p["vendor"],
+                "country": p.get("country"),
+                "policy_tag": (p.get("policy_positioning") or {}).get("policy_tag"),
+                "policy_score": (p.get("policy_positioning") or {}).get("policy_score", 0),
+            }
+            for p in profiles
+            if _country_key(p.get("country")) not in US_COUNTRY_KEYS
+        ],
+        key=lambda x: (x.get("policy_score") or 0, -(x.get("rank") or 999)),
+    )
+
+    china_restriction_suppliers = [
+        row for row in constrained if _country_key(row.get("country")) == "china"
+    ]
+
+    avg_policy_score = round(
+        sum(float((pr.get("policy_score") or 0)) for pr in policy_rows) / max(1, len(policy_rows)),
+        1,
+    )
+
+    policy_intelligence = {
+        "policy_window": "US 2026 China-origin supplier restriction cycle (procurement and market-access risk)",
+        "notes": [
+            "New US restrictions targeting China-origin suppliers can re-route near-term humanoid procurement toward domestic and allied vendors.",
+            "Treat this as go-to-market risk intelligence, not legal advice; validate at deal level with procurement, legal, and compliance teams.",
+        ],
+        "policy_tag_breakdown_top_slice": dict(policy_counts),
+        "average_policy_score_top_slice": avg_policy_score,
+        "demand_shift_beneficiaries": beneficiaries[:10],
+        "higher_access_risk_suppliers": constrained[:10],
+        "non_us_suppliers": non_us_suppliers[:20],
+        "china_restriction_update": {
+            "headline": "China-origin supplier restrictions raise US access risk for affected humanoid vendors.",
+            "affected_supplier_count_top_slice": len(china_restriction_suppliers),
+            "affected_suppliers_top_slice": china_restriction_suppliers[:10],
+            "recommended_actions": [
+                "Prioritize domestic/allied alternatives for near-term US pilots in regulated or security-sensitive accounts.",
+                "Prepare account-level fallback plans (vendor swap + timeline impact) before procurement review.",
+                "Track policy changes monthly and refresh supplier risk tags before deal-stage progression.",
+            ],
+            "last_updated": datetime.now(timezone.utc).date().isoformat(),
+        },
+    }
+
     adoption_metrics = {
         "robots_in_top_slice": len(profiles),
         "catalog_commercial_deployments_sum": catalog_deployments,
@@ -554,6 +806,8 @@ def build_humanoid_intelligence_report_payload(
                 )
                 if k in deployment_summary
             },
+            "recent_market_entries_60d": recent_launches[:15],
+            "policy_intelligence": policy_intelligence,
             "customer_landscape": customer_landscape[:20],
             "top_ranked": profiles,
             "all_robots_deployment": deployment_summary.get("robots", [])[:30],

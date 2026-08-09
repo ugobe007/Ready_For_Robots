@@ -2,6 +2,7 @@
  * Sign up — account creation entry point using Supabase auth (dark workflow theme).
  */
 import { useEffect, useMemo, useState } from "react";
+import { Github } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
@@ -22,6 +23,19 @@ type WorkflowPrefill = {
 };
 
 type InboxLink = { label: string; url: string };
+
+function GoogleGlyph() {
+  return (
+    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-4 w-4" focusable="false">
+        <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-1.4 3.5-5.5 3.5-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 6.8 2 2.6 6.2 2.6 11.4S6.8 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"/>
+        <path fill="#34A853" d="M3.7 7.3l3.2 2.3c.9-1.8 2.8-3 5.1-3 1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 8.1 2 4.8 4.2 3.2 7.3Z"/>
+        <path fill="#4285F4" d="M12 20.8c2.5 0 4.7-.8 6.3-2.3l-2.9-2.4c-.8.6-1.8 1-3.4 1-4.1 0-5.3-2.8-5.5-3.5l-3.3 2.5c1.6 3.1 4.9 4.7 8.8 4.7Z"/>
+        <path fill="#FBBC05" d="M3.2 16.1l3.3-2.5c-.1-.4-.2-.9-.2-1.4s.1-1 .2-1.4L3.2 8.3c-.4 1-.6 2-.6 3.1s.2 2.1.6 3.1Z"/>
+      </svg>
+    </span>
+  );
+}
 
 /**
  * Map an email address to its webmail inbox(es) so a user on the "check your
@@ -83,6 +97,15 @@ function appendWorkflowPrefill(path: string, prefill: WorkflowPrefill): string {
   return serialized ? `${base}?${serialized}` : base;
 }
 
+function workflowResultsPath(prefill: WorkflowPrefill): string {
+  if (!prefill.company_url) return "/pipeline";
+  const params = new URLSearchParams();
+  params.set("url", prefill.company_url);
+  params.set("limit", "5");
+  if (prefill.src) params.set("src", `${prefill.src}_signup_return`);
+  return `/results?${params.toString()}`;
+}
+
 export default function Signup() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
@@ -120,11 +143,16 @@ export default function Signup() {
     return readWorkflowSessionContext();
   }, [params]);
 
-  const intendedPostAuthPath = useMemo(
-    () => appendWorkflowPrefill(postAuthRedirectTarget("/pipeline"), workflowPrefill),
+  const workflowReturnPath = useMemo(
+    () => workflowResultsPath(workflowPrefill),
     [workflowPrefill],
   );
-  const nextPath = () => appendWorkflowPrefill(resolvePostAuthPath("/pipeline"), workflowPrefill);
+
+  const intendedPostAuthPath = useMemo(
+    () => appendWorkflowPrefill(postAuthRedirectTarget(workflowReturnPath), workflowPrefill),
+    [workflowPrefill, workflowReturnPath],
+  );
+  const nextPath = () => appendWorkflowPrefill(resolvePostAuthPath(workflowReturnPath), workflowPrefill);
 
   useEffect(() => {
     const plan = readPlanParam(search);
@@ -465,7 +493,7 @@ export default function Signup() {
                   </div>
                 )}
                 <p className="mt-3 text-[11px] font-medium text-slate-400">
-                  Sign up to save these 5 leads. Upgrade to unlock 50+ leads, full CRM, and automated sales process.
+                  Sign up to save these matched leads. Upgrade to unlock full lead coverage, CRM sync, and automated sales process.
                 </p>
               </div>
             )}
@@ -537,8 +565,8 @@ export default function Signup() {
                 {hubspotIntent
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
                   : params.get("next")
-                    ? "Use OAuth and we automatically create your account — then your 5-lead list is saved."
-                    : "Use OAuth to create your account instantly, then upgrade to unlock 50+ leads and full CRM automation."}
+                    ? "Use one-tap OAuth and we create your account instantly, then your matched leads are saved."
+                    : "Use one-tap OAuth to create your account instantly, then upgrade to unlock full pipeline coverage and CRM automation."}
               </p>
               {liveProof && (liveProof.hot || liveProof.companies) && (
                 <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-800 px-3 py-2 text-[11px] font-semibold text-emerald-300">
@@ -567,17 +595,19 @@ export default function Signup() {
                   type="button"
                   onClick={() => void oauth("google")}
                   disabled={!supabase || oauthPending !== null}
-                  className="w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
                 >
-                  {oauthPending === "google" ? "Redirecting to Google..." : "Continue with Google OAuth — one tap"}
+                  <GoogleGlyph />
+                  {oauthPending === "google" ? "Redirecting to Google..." : "Continue with Google — one tap"}
                 </button>
                 <button
                   type="button"
                   onClick={() => void oauth("github")}
                   disabled={!supabase || oauthPending !== null}
-                  className="w-full rounded-xl border border-slate-600 px-4 py-3 text-sm font-bold text-slate-100 transition-all hover:border-slate-400 disabled:opacity-40"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600 px-4 py-3 text-sm font-bold text-slate-100 transition-all hover:border-slate-400 disabled:opacity-40"
                 >
-                  {oauthPending === "github" ? "Redirecting to GitHub..." : "Continue with GitHub"}
+                  <Github className="h-4 w-4" aria-hidden="true" />
+                  {oauthPending === "github" ? "Redirecting to GitHub..." : "Continue with GitHub — one tap"}
                 </button>
                 {!hubspotIntent && (
                   <p className="text-center text-[11px] font-medium text-slate-400">

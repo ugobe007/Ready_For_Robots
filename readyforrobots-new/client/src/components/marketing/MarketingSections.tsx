@@ -246,12 +246,12 @@ export function MarketingBeforeAfter() {
     "No visibility into partnership opportunities",
   ];
   const after = [
-    "Signal-triggered outreach with exact buying reason",
+    "Signal-triggered activation with exact buying reason",
     "Contact during the decision window, not after",
-    "Drafted message referencing their specific signal",
+    "Drafted message referencing their specific signal and alignment context",
     "Warm conversations with buyers who have a real need",
     "Shape requirements before competitors know it exists",
-    "SDR spends 100% of time on qualified conversations",
+    "SDR spends 100% of time on qualified, aligned conversations",
     "Signal surfaces integrators and channel partners",
   ];
 
@@ -316,7 +316,7 @@ export function MarketingVsGenericAI() {
   const rows = [
     {
       dumb: "Search 100M+ companies — no idea who's buying robots now",
-      rfr: "Curated robot-buyer intent, ranked HOT / WARM / COLD by real events",
+      rfr: "Curated robot-buyer intent with alignment scoring, ranked HOT / WARM / COLD by real events",
     },
     {
       dumb: '"CTO at a logistics company" — you guess the pitch',

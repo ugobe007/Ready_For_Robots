@@ -1,5 +1,5 @@
 // Customer-facing outreach voice — written as the robot sales rep, not ReadyForRobots.
-export const OUTREACH_CTA = "Worth a quick reply if you're the right person to explore this?";
+export const OUTREACH_CTA = "Find Companies Ready For Robots";
 export const OUTREACH_SIGNATURE = "Best,\n[Your name]";
 
 /** @deprecated Use rep voice in body only — no platform intro line. */

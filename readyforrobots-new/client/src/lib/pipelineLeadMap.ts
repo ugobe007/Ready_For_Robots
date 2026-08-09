@@ -112,6 +112,10 @@ export interface ApiLead {
   humanoid_pilot_score?: number | null;
   humanoid_pilot_label?: string | null;
   humanoid_pilot_action?: string | null;
+  humanoid_origin_status?: string | null;
+  humanoid_non_us_vendor_flag?: boolean;
+  humanoid_non_us_vendor_count?: number;
+  humanoid_non_us_vendor_models?: string[];
   robot_types_needed?: string[];
   signals?: Array<{
     signal_type?: string;
@@ -351,6 +355,10 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     humanoidPilotScore: lead.humanoid_pilot_score ?? undefined,
     humanoidPilotLabel: lead.humanoid_pilot_label || undefined,
     humanoidPilotAction: lead.humanoid_pilot_action || undefined,
+    humanoidOriginStatus: lead.humanoid_origin_status || undefined,
+    humanoidNonUsVendorFlag: Boolean(lead.humanoid_non_us_vendor_flag),
+    humanoidNonUsVendorCount: lead.humanoid_non_us_vendor_count ?? undefined,
+    humanoidNonUsVendorModels: lead.humanoid_non_us_vendor_models || [],
     priorityTier: lead.priority_tier || undefined,
     robotTypesNeeded: lead.robot_types_needed || [],
     researchUpdates: lead.research_updates,

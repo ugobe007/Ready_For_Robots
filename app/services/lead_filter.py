@@ -1726,6 +1726,17 @@ SELLER_OR_PUBLISHER_CONTEXT_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Divestiture stories are usually exit signals, not active buyer intent.
+NON_BUYER_DIVESTITURE_RE = re.compile(
+    r"\b(?:sold|sells?|divest(?:ed|iture|ing)?|spun?\s+off|spin(?:ning)?\s+off|"
+    r"disposed?\s+of|exited)\b.{0,90}\b(?:automation|robotics?|warehouse\s+automation|"
+    r"automation\s+unit|robotics?\s+unit|automation\s+business|robotics?\s+business|"
+    r"automation\s+division|robotics?\s+division)\b"
+    r"|\b(?:automation|robotics?|warehouse\s+automation)\b.{0,90}\b(?:unit|business|division)\b"
+    r".{0,50}\b(?:sold|divest(?:ed|iture|ing)?|spun?\s+off|disposed?\s+of|exited)\b",
+    re.IGNORECASE,
+)
+
 # ─── Priority scoring knobs (Hot / Warm / Emerging) — also surfaced on /api/leads/scoring-system ───
 # Tuned looser (Mar 2026 v2): lower composite floors, higher boosts, broader HOT signal set.
 PRIORITY_COMPOSITE_CAP = 100.0
@@ -1918,6 +1929,9 @@ def _buyer_opportunity_gate(
 
     sig_types = [getattr(s, "signal_type", None) or "" for s in sigs]
     blob = _signal_text_blob(sigs)
+
+    if NON_BUYER_DIVESTITURE_RE.search(blob):
+        return False, "divestiture story (sold/spun-off automation business) — not an active buyer opportunity"
 
     if name and is_allowlisted_company_name(name):
         return True, ""

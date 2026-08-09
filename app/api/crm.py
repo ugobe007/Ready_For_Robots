@@ -390,38 +390,111 @@ def _draft_subject(acct: CrmAccount, variant_id: str | None = None) -> str:
 
 def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:
     """Email from robot sales rep to buyer ops — first person, no platform branding."""
-    industry = (acct.industry or "your industry").strip()
-    name = (acct.name or "your team").strip()
-    industry_lower = industry.lower()
+    def _display_account_name(raw: str | None) -> str:
+        name = (raw or "your team").strip()
+        # Some upstream flows can accidentally append recommended-action text to
+        # account names (for example: "Americold -- contact new executive...").
+        # Keep the buyer-facing draft anchored to the clean company name.
+        for sep in (" -- ", " — ", " - "):
+            if sep in name:
+                head, tail = name.split(sep, 1)
+                low_tail = tail.strip().lower()
+                if any(
+                    token in low_tail
+                    for token in (
+                        "contact ",
+                        "pitch",
+                        "budget",
+                        "build-out",
+                        "reach out",
+                        "new executive",
+                    )
+                ):
+                    name = head.strip() or name
+                    break
+        return name
 
-    lines: list[str] = ["Hey,", ""]
+    industry = (acct.industry or "your industry").strip()
+    name = _display_account_name(acct.name)
+    industry_lower = industry.lower()
+    closing_line = f"If helpful, I'll send a short, vendor-neutral recommendation for {name} before we discuss anything live."
+
+    lines: list[str] = [f"Hi {name},", ""]
 
     if industry_lower in ("logistics", "warehousing"):
         lines.append(
-            f"I've been following what's happening at {name} in logistics — "
-            f"teams in that space often have at least one workflow where floor automation pays for itself."
+            "I work with logistics teams on one thing: picking the first workflow where automation "
+            "actually pays back in live operations."
+        )
+        lines.extend(
+            [
+                "",
+                "The best first project is usually receiving, replenishment, or exception handling "
+                "rather than the most visible robot demo.",
+            ]
         )
     elif industry_lower in ("hospitality", "hotels", "casinos & gaming"):
+        closing_line = (
+            f"If helpful, I'll send a short, vendor-neutral housekeeping and turnover workflow "
+            f"recommendation for {name} before we discuss anything live."
+        )
         lines.append(
-            f"I've been watching labor and overnight coverage pressure at {name} — "
-            f"that's usually when hospitality teams start evaluating service and cleaning automation."
+            "I work with hospitality teams on one thing: choosing service and cleaning workflows "
+            "that still perform under real weekend occupancy."
+        )
+        lines.extend(
+            [
+                "",
+                "The win is usually one constrained workflow with clear housekeeping turnover or overnight "
+                "coverage gaps, not a broad rollout.",
+            ]
         )
     elif industry_lower in ("healthcare", "medical technology"):
+        closing_line = (
+            f"If helpful, I'll send a short, vendor-neutral EVS and transport workflow "
+            f"recommendation for {name} before we discuss anything live."
+        )
         lines.append(
-            f"I've had {name} on my radar in healthcare — "
-            f"there's often an AMR or logistics automation angle when clinical ops scale."
+            "I work with healthcare ops teams on one thing: selecting transport and internal logistics "
+            "workflows where AMRs reduce staff miles without adding operational friction."
+        )
+        lines.extend(
+            [
+                "",
+                "The highest-payback cases tend to be repetitive EVS, meds/supplies, and lab movement "
+                "routes with clean handoffs and elevator access.",
+            ]
         )
     elif industry_lower in ("food service", "food processing & manufacturing"):
+        closing_line = (
+            f"If helpful, I'll send a short, vendor-neutral changeover and OEE-focused workflow "
+            f"recommendation for {name} before we discuss anything live."
+        )
         lines.append(
-            f"I noticed operational signals around {name} in food service — "
-            f"back-of-house and line automation tend to come up when throughput is tight."
+            "I work with food teams on one thing: picking back-of-house and line workflows where automation "
+            "relieves throughput pressure without creating changeover headaches."
+        )
+        lines.extend(
+            [
+                "",
+                "The projects that last usually start with one repeatable bottleneck, with changeover time "
+                "and OEE tracked before expanding.",
+            ]
         )
     else:
         lines.append(
-            f"I've had {name} on my radar in {industry} — "
-            f"there may be an automation angle worth a quick look on your side."
+            "I help operations teams scope where automation is likely to pay back quickly and where "
+            "it is better to wait."
+        )
+        lines.extend(
+            [
+                "",
+                f"If useful, I can send a brief view of which workflow at {name} is most likely to deliver early ROI.",
+            ]
         )
 
+    lines.append("")
+    lines.append(closing_line)
     lines.append("")
     lines.append(REP_OUTREACH_CTA)
 

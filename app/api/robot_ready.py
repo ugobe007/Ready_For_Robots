@@ -22,8 +22,9 @@ Returns:
 """
 from fastapi import APIRouter, Depends
 import re
+import logging
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List, Dict
@@ -40,10 +41,12 @@ from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.lead_signal_display import format_signal_for_sales, strip_extraction_artifacts
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 # Cache only the lead-candidate index. Final matches are recomputed for every submitted URL.
 LEAD_CANDIDATE_CACHE_TTL = 180
 LEAD_CANDIDATE_INDEX_LIMIT = 350
+LEAD_CANDIDATE_INDEX_FALLBACK_LIMIT = 120
 LEAD_CANDIDATE_FINAL_LIMIT = 25
 _lead_candidate_cache: dict = {}
 _lead_candidate_lock = threading.Lock()
@@ -211,7 +214,7 @@ def _extract_key_signals(signals: List) -> List[Dict]:
     return picked
 
 
-def _build_lead_candidate_index(db: Session) -> List[Dict]:
+def _build_lead_candidate_index(db: Session, limit: int = LEAD_CANDIDATE_INDEX_LIMIT) -> List[Dict]:
     latest_score = (
         db.query(
             Score.company_id.label("company_id"),
@@ -223,9 +226,9 @@ def _build_lead_candidate_index(db: Session) -> List[Dict]:
     rows = (
         db.query(Company)
         .join(latest_score, latest_score.c.company_id == Company.id)
-        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .options(selectinload(Company.scores), selectinload(Company.signals))
         .order_by(latest_score.c.best_score.desc())
-        .limit(LEAD_CANDIDATE_INDEX_LIMIT)
+        .limit(limit)
         .all()
     )
 
@@ -266,7 +269,20 @@ def _get_fresh_lead_candidate_index(db: Session) -> List[Dict]:
         if entry and now - entry["ts"] <= LEAD_CANDIDATE_CACHE_TTL:
             return entry["data"]
 
-    candidates = _build_lead_candidate_index(db)
+    try:
+        candidates = _build_lead_candidate_index(db, LEAD_CANDIDATE_INDEX_LIMIT)
+    except Exception:
+        logger.exception("robot-ready candidate index build failed at primary limit=%s", LEAD_CANDIDATE_INDEX_LIMIT)
+        try:
+            candidates = _build_lead_candidate_index(db, LEAD_CANDIDATE_INDEX_FALLBACK_LIMIT)
+        except Exception:
+            logger.exception("robot-ready candidate index build failed at fallback limit=%s", LEAD_CANDIDATE_INDEX_FALLBACK_LIMIT)
+            with _lead_candidate_lock:
+                stale = _lead_candidate_cache.get("v1")
+            if stale and isinstance(stale.get("data"), list):
+                return stale["data"]
+            return []
+
     with _lead_candidate_lock:
         _lead_candidate_cache["v1"] = {"ts": time.monotonic(), "data": candidates}
     return candidates
@@ -443,7 +459,7 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
     # Sort by match score
     matches.sort(key=lambda x: x['match_score'], reverse=True)
     
-    return matches[:25]  # Return top 25
+    return matches[:25]
 
 
 def generate_value_prop(company, robot_caps: Dict, signals: List) -> str:

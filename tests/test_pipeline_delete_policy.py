@@ -101,3 +101,39 @@ def test_market_report_unknown_quarantined():
     )
     assert ok
     assert bucket == "junk_name"
+
+
+def test_vendor_intelligence_only_never_hard_deleted():
+    co = SimpleNamespace(
+        name="Humanoid",
+        is_internal=True,
+        crm_metadata={"quality_flags": {"vendor_intelligence_only": True}},
+    )
+    ok, _, _ = hard_delete_allowed(co, [_sig("humanoid robot pilot")])
+    assert not ok
+
+
+def test_vendor_intelligence_only_unknown_not_deleted_or_quarantined():
+    co = SimpleNamespace(
+        name="Humanoid",
+        is_internal=True,
+        industry="Unknown",
+        crm_metadata={"quality_flags": {"vendor_intelligence_only": True}},
+    )
+    ok_del, _, _ = unknown_industry_delete_allowed(
+        "Humanoid",
+        "Unknown",
+        [_sig("humanoid deployment")],
+        from_is_junk=(False, ""),
+        company=co,
+    )
+    ok_q, _, _ = unknown_rss_noise_quarantine_allowed(
+        "Humanoid",
+        "Unknown",
+        [_sig("humanoid deployment")],
+        from_is_junk=(False, ""),
+        from_classify=(True, "robotics vendor / OEM (not a buyer opportunity)", None),
+        company=co,
+    )
+    assert not ok_del
+    assert not ok_q

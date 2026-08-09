@@ -771,7 +771,8 @@ async def cron_discover_humanoids(
 # ── Report generator ─────────────────────────────────────────────────────────
 
 _HUMANOID_REPORT_SQL = """
-    SELECT name, vendor, model_slug, status, specs, sources,
+    SELECT name, vendor, model_slug, status, country, specs, sources,
+           created_at, last_scraped_at,
            score_mobility, score_manipulation, score_autonomy,
            score_safety, score_endurance, score_market_readiness, score_total,
            heif_mobility, heif_manipulation, heif_cognition,

@@ -26,6 +26,13 @@ function tealNum(v: unknown) {
   return <span className="font-mono font-semibold tabular-nums" style={{ color: RR.teal }}>{fmtNum(v)}</span>;
 }
 
+function fmtShortDate(value?: string | null): string {
+  if (!value) return "recent";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "recent";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 type Props = {
   report: HumanoidIntelligenceReportData | null;
   loading: boolean;
@@ -96,6 +103,113 @@ export default function HumanoidIntelligenceReport({ report, loading, error }: P
                   ))}
                 </div>
               </div>
+            )}
+
+            {(report.recent_market_entries_60d?.length ?? 0) > 0 && (
+              <div>
+                <ReportSectionLabel>New signals in last 60 days</ReportSectionLabel>
+                <ReportTable
+                  minWidth="560px"
+                  headers={["#", "Robot", "Signal", "60d score", "Headlines", "Latest"]}
+                  rows={(report.recent_market_entries_60d ?? []).slice(0, 10).map((row) => [
+                    row.rank,
+                    <>
+                      <span className="font-semibold" style={{ color: RR.text }}>{row.name}</span>
+                      <span className="block text-[10px]" style={{ color: RR.textDim }}>
+                        {row.vendor}{row.country ? ` · ${row.country}` : ""}
+                      </span>
+                    </>,
+                    row.signal_kind,
+                    tealNum(row.recency_score),
+                    `${fmtNum(row.launch_headlines)} launch · ${fmtNum(row.deployment_headlines)} deploy · ${fmtNum(row.trial_headlines)} trial`,
+                    fmtShortDate(row.freshest_signal_at),
+                  ])}
+                />
+              </div>
+            )}
+
+            {report.policy_intelligence && (
+              <ReportPanel accent="purple">
+                <ReportSectionLabel>US policy intelligence</ReportSectionLabel>
+                {report.policy_intelligence.policy_window ? (
+                  <ReportBodyText className="mb-2">{report.policy_intelligence.policy_window}</ReportBodyText>
+                ) : null}
+                {(report.policy_intelligence.notes ?? []).map((line) => (
+                  <ReportBodyText key={line} className="mb-1 last:mb-0">{line}</ReportBodyText>
+                ))}
+
+                {report.policy_intelligence.china_restriction_update ? (
+                  <div className="mt-3 rounded-lg border px-3 py-2" style={{ borderColor: "rgba(217,119,6,0.3)", background: "rgba(217,119,6,0.08)" }}>
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: RR.textDim }}>
+                      China restriction update
+                    </p>
+                    {report.policy_intelligence.china_restriction_update.headline ? (
+                      <p className="text-[12px] mb-1" style={{ color: RR.textMuted }}>
+                        {report.policy_intelligence.china_restriction_update.headline}
+                      </p>
+                    ) : null}
+                    <p className="text-[11px]" style={{ color: RR.textDim }}>
+                      Affected suppliers (top slice): {fmtNum(report.policy_intelligence.china_restriction_update.affected_supplier_count_top_slice)}
+                      {report.policy_intelligence.china_restriction_update.last_updated ? ` · updated ${report.policy_intelligence.china_restriction_update.last_updated}` : ""}
+                    </p>
+                    {(report.policy_intelligence.china_restriction_update.recommended_actions?.length ?? 0) > 0 ? (
+                      <ul className="mt-2 space-y-1">
+                        {(report.policy_intelligence.china_restriction_update.recommended_actions ?? []).slice(0, 3).map((line) => (
+                          <li key={line} className="text-[11px]" style={{ color: RR.textMuted }}>
+                            • {line}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {(report.policy_intelligence.demand_shift_beneficiaries?.length ?? 0) > 0 && (
+                  <div className="mt-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: RR.textDim }}>
+                      Demand-shift beneficiaries
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(report.policy_intelligence.demand_shift_beneficiaries ?? []).slice(0, 8).map((row) => (
+                        <span
+                          key={`${row.rank}-${row.name}`}
+                          className="rounded-full border px-2.5 py-0.5 text-[10px]"
+                          style={{ borderColor: RR.border, background: RR.bgElevated, color: RR.textMuted }}
+                          title={`Policy score ${fmtNum(row.policy_score)} · Demand shift ${fmtNum(row.demand_shift_score)}`}
+                        >
+                          {row.name}
+                          <span className="ml-1" style={{ color: RR.textDim }}>
+                            ({row.country || "Unknown"})
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(report.policy_intelligence.higher_access_risk_suppliers?.length ?? 0) > 0 && (
+                  <div className="mt-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: RR.textDim }}>
+                      Higher access-risk suppliers
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(report.policy_intelligence.higher_access_risk_suppliers ?? []).slice(0, 8).map((row) => (
+                        <span
+                          key={`${row.rank}-${row.name}`}
+                          className="rounded-full border px-2.5 py-0.5 text-[10px]"
+                          style={{ borderColor: "rgba(217,119,6,0.32)", background: "rgba(217,119,6,0.10)", color: RR.textMuted }}
+                          title={`Policy score ${fmtNum(row.policy_score)}`}
+                        >
+                          {row.name}
+                          <span className="ml-1" style={{ color: RR.textDim }}>
+                            ({row.country || "Unknown"})
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </ReportPanel>
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-2">

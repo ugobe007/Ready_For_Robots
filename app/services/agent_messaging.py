@@ -20,11 +20,11 @@ CAL_BUYER_REMINDER_LINE = (
 )
 
 CAL_VENDOR_ROLE_LINE = (
-    "My job is to help robot companies find customers with real buying intent, not just noisy list traffic."
+    "My job is to help robot companies capture qualified buyers, assess alignment, and activate real sales motion instead of noisy list traffic."
 )
 
 CAL_VENDOR_REMINDER_LINE = (
-    "Quick reminder: I'm Cal at Ready For Robots — I help robot companies find customers and filter out weak-fit accounts early."
+    "Quick reminder: I'm Cal at Ready For Robots — I help robot companies qualify buyers, assess fit early, and activate the right next sales step."
 )
 
 CAL_VENDOR_IDENTITY = (
@@ -51,8 +51,7 @@ BUYER_ROI_PROOF = (
 )
 
 BUYER_OUTREACH_CTA = (
-    "If it's useful, I can share a short vendor-neutral read on which workflows are worth automating "
-    "first and which ones I'd leave alone for now. No call, no pitch."
+    "Find Companies Ready For Robots"
 )
 
 # Honest closing beat — builds trust rather than performing confidence.
@@ -61,8 +60,8 @@ BUYER_CAL_PERSONALITY = (
 )
 
 VENDOR_SIGNAL_EXPLANATION = (
-    "We map buyer demand signals and match them to robot capabilities — "
-    "the accounts showing real intent, not list noise."
+    "We capture buyer demand signals, score alignment against robot capabilities, and turn that into actionable sales motion — "
+    "real intent, not list noise."
 )
 
 CAL_VENDOR_PIPELINE_EXPLANATION = (
@@ -464,7 +463,12 @@ def ladder_touch_subject(touch: str, name: str, industry: str) -> str:
     """Insight-led subject for a follow-up touch (teach / trend / question)."""
     content = _ladder_content(industry)
     key = f"{touch}_subject"
-    return content.get(key, _GENERIC_LADDER.get(key, "a quick note"))
+    base = content.get(key, _GENERIC_LADDER.get(key, "a quick note"))
+    if touch == "teach":
+        return f"alignment note: {base}"
+    if touch == "trend":
+        return f"alignment trend: {base}"
+    return base
 
 
 def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
@@ -474,11 +478,14 @@ def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
     content = _ladder_content(industry)
     core = content.get(touch, _GENERIC_LADDER.get(touch, ""))
     if touch == "teach":
-        close = f"If it's useful, I'll tell you where I'd point a first robot at {n} — and where I wouldn't."
+        close = (
+            f"If it's useful, I'll tell you where I'd point a first robot at {n} — and where I wouldn't. "
+            "If the fit is real, we can activate the next MSD step from there."
+        )
     elif touch == "trend":
         close = (
             f"If {n} is weighing vendors this year, I'll tell you which ones tend to hold up in a real "
-            "operation. No pitch."
+            "operation. No pitch. If alignment is there, we can activate the right MSD path."
         )
     else:  # question
         close = (
@@ -540,38 +547,38 @@ def _exploration_question(name: str, industry: str, *, variant_seed: str = "base
     low = (industry or "").lower()
     if any(k in low for k in ("logistic", "warehous", "supply", "3pl", "distribution", "fulfil")):
         return pick([
-            f"Are warehouse automation projects something {team} is actively exploring, or still early-stage?",
-            f"Are you currently testing warehouse automation in {area}, or just mapping options?",
-            f"Would warehouse automation be useful for {team} this year, or not a priority yet?",
+            "Do you have any RFQs or bid projects open for warehouse automation right now, or is timing still early?",
+            f"If {team} has RFQs or bid projects for warehouse workflows, can you send them so I can hand this directly to Robert?",
+            "Would it help if I reviewed the RFQs and bid projects you already have for warehouse automation?",
         ])
     if any(k in low for k in ("hospitality", "hotel", "casino", "resort", "gaming")):
         return pick([
-            f"Is service robotics on the table for {team} right now, or still in exploration mode?",
-            f"Are you trialing service robotics at {team}, or still deciding where it would help most?",
-            f"Would service robotics be useful for {team} this season, or too early?",
+            "Are you running an RFQ/spec list for service robotics yet, or still framing requirements?",
+            f"If {team} already has a service-robotics spec list, can you share it so Robert can follow up with the right fit?",
+            "Would a practical RFQ template for service robotics help, or do you already have one internally?",
         ])
     if any(k in low for k in ("health", "medical", "hospital", "clinic")):
         return pick([
-            f"Is internal transport automation on {team}'s radar, or still being evaluated?",
-            f"Are you exploring delivery automation at {team}, or still mapping use cases?",
-            f"Would internal logistics automation be useful for {team} this year, or not yet?",
+            "Do you already have an RFQ/spec list for internal transport or delivery automation?",
+            f"If {team} has a draft spec list, can you send it so Robert can review and respond directly?",
+            "Would it help if I send a short RFQ checklist for healthcare logistics workflows?",
         ])
     if any(k in low for k in ("food", "restaurant", "kitchen", "grocery")):
         return pick([
-            f"Is back-of-house automation something {team} is weighing now, or still exploratory?",
-            f"Are you testing kitchen/back-of-house automation at {team}, or still deciding where to start?",
-            f"Would back-of-house automation help {team} this year, or is timing still early?",
+            "Are you already running an RFQ/spec for back-of-house automation, or still defining requirements?",
+            f"If {team} has a spec list, can you share it and I'll hand this to Robert for direct follow-up?",
+            "Would a kitchen/back-of-house RFQ checklist help, or do you already have one prepared?",
         ])
     if any(k in low for k in ("manufactur", "factory", "automotive", "industrial")):
         return pick([
-            f"Is line-side automation something {team} is actively exploring, or still being scoped?",
-            f"Are you testing automation on the line at {team}, or still deciding where it would pay off?",
-            f"Would line-side automation be useful for {team} this year, or not yet?",
+            "Are you running a line-side automation RFQ/spec yet, or still scoping internally?",
+            f"If {team} has a spec list, can you share it so Robert can follow up with a fit recommendation?",
+            "Would a concise manufacturing RFQ checklist be useful, or is your spec already set?",
         ])
     return pick([
-        f"Is automation something {team} is actively exploring, or still deciding where it fits?",
-        f"Are you currently evaluating automation at {team}, or still in early discovery?",
-        f"Would automation be useful for {team} this year, or not a priority yet?",
+        "Do you have any RFQs or bid projects open for the workflows you're evaluating, or is timing still early?",
+        f"If {team} has RFQs or bid projects in play, can you share them so I can hand this directly to Robert?",
+        "Would it help if I reviewed the RFQs and bid projects already in motion for your team?",
     ])
 
 
@@ -618,6 +625,7 @@ def _variant_workflow_first(name: str, industry: str) -> str:
         f"{CAL_ORG} is vendor-neutral. If automation is not the right move yet, I'll tell you directly.",
         "",
         _exploration_question(name, industry, variant_seed="workflow_first"),
+        "If you share the RFQ or bid-project details, I'll hand this to Robert for direct follow-up.",
         "",
         cal_signature(),
     ])
@@ -633,18 +641,39 @@ def _variant_what_survives(name: str, industry: str) -> str:
         if sector != "your line of work"
         else "Most break points come from operational readiness — not spec-sheet speed."
     )
+    if "logistic" in (industry or "").lower() or "warehous" in (industry or "").lower() or "supply" in (industry or "").lower():
+        body_lines = [
+            f"Hi {team}, this is Cal.",
+            "",
+            f"Reaching out with one note for {name}.",
+            "",
+            "I look at deployments after launch, when peak volume and staffing reality hit.",
+            "",
+            "The pattern I keep seeing: teams win when they start with one measurable workflow bottleneck and owner.",
+            "",
+            ins["opinion"],
+            workflow_line,
+            "Integration and staffing still decide most outcomes.",
+            "",
+            "I'm focused on active RFQs and bid projects tied to live deployment plans, not early browsing.",
+            "",
+            "Do you have any RFQs or bid projects open for warehouse automation right now, or is timing still early?",
+            "",
+            cal_signature(),
+        ]
+        return "\n".join(body_lines)
     return "\n".join([
         f"Hi {team}, this is Cal.",
         "",
-        "I watch what happens after pilots, when teams are back in normal operating mode.",
+        "I look at deployments after launch, when peak volume and staffing reality hit.",
         "",
-        "Six months in, you can usually tell what solved a real bottleneck and what was mostly a demo.",
+        "The pattern I keep seeing: teams win when they start with one measurable workflow bottleneck and owner.",
         "",
         ins["opinion"],
         workflow_line,
-        "Integration and staffing are usually the decider.",
+        "Integration and staffing still decide most outcomes.",
         "",
-        f"{CAL_ORG} is vendor-neutral. I help teams avoid automating the wrong job too early.",
+        "I'm focused on active RFQs and bid projects tied to live deployment plans, not early browsing.",
         "",
         _exploration_question(name, industry, variant_seed="what_survives"),
         "",
@@ -679,6 +708,7 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
         "on whether automation is worth testing now — no pitch attached.",
         "",
         _exploration_question(name, industry, variant_seed="bottleneck_first"),
+        "If you already have RFQ or bid-project details, send them and I'll hand this directly to Robert.",
         "",
         cal_signature(),
     ])
@@ -791,17 +821,17 @@ def buyer_variant_subject(name: str, industry: str, variant_id: str) -> str:
     generic_sector = sector == "your line of work"
     if variant_id == "what_survives":
         return (
-            "what still works after six months"
+            "alignment check on active RFQs and bid projects"
             if generic_sector
-            else f"what still works after six months in {sector}"
+            else f"alignment check on active RFQs and bid projects in {sector}"
         )
     if variant_id == "bottleneck_first":
-        return "start with the bottleneck, not the robot"
+        return "alignment starts at the bottleneck, not the robot"
     # workflow_first (default)
     return (
-        "where automation projects usually go sideways"
+        "where automation alignment usually breaks"
         if generic_sector
-        else f"where {sector} automation usually goes sideways"
+        else f"where {sector} automation alignment usually breaks"
     )
 
 

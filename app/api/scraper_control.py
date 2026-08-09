@@ -69,6 +69,7 @@ def _run_intelligence_scraper_sync(
     import logging
     log = logging.getLogger(__name__)
     from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
+    from app.scrapers.scraper_watchdog import get_watchdog
     db = SessionLocal()
     try:
         scraper = IntelligenceNewsScraper(db=db)
@@ -87,6 +88,15 @@ def _run_intelligence_scraper_sync(
             stats.get("signals_created", 0),
         )
         try:
+            get_watchdog().record_external_run(
+                "intelligence_sync",
+                status="success",
+                urls_attempted=int(stats.get("companies_discovered", 0) or 0),
+                urls_succeeded=int(stats.get("companies_discovered", 0) or 0),
+            )
+        except Exception as wd_exc:
+            log.warning("Watchdog external run record failed: %s", wd_exc)
+        try:
             from app.services.public_surface_cache import schedule_public_cache_refresh
 
             schedule_public_cache_refresh(pipeline_only=True, reason="scraper_complete")
@@ -94,6 +104,14 @@ def _run_intelligence_scraper_sync(
             log.warning("Pipeline cache refresh after scraper failed: %s", refresh_exc)
         return stats
     except Exception as e:
+        try:
+            get_watchdog().record_external_run(
+                "intelligence_sync",
+                status="failed",
+                errors=[str(e)],
+            )
+        except Exception:
+            pass
         log.exception("Intelligence scraper failed: %s", e)
         raise
     finally:
@@ -290,6 +308,7 @@ async def cron_refresh_pipeline_surfaces(
 async def cron_refresh_content_surfaces(
     background_tasks: BackgroundTasks,
     token: str = Query("", description="Secret token (SCRAPER_CRON_TOKEN)"),
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
     force: bool = Query(False, description="Full newsletter rebuild"),
 ) -> Dict[str, Any]:
     """
@@ -299,9 +318,14 @@ async def cron_refresh_content_surfaces(
     """
     import os
 
+    from app.admin_auth import get_admin_key
+
     expected = os.getenv("SCRAPER_CRON_TOKEN")
-    if expected and token != expected:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    admin = get_admin_key()
+    ok_cron = bool(expected and token.strip() == expected)
+    ok_admin = bool(admin and x_admin_key and x_admin_key.strip() == admin)
+    if not ok_cron and not ok_admin:
+        raise HTTPException(status_code=403, detail="Invalid token or X-Admin-Key")
 
     background_tasks.add_task(_run_content_surfaces_refresh_sync, newsletter_force=force)
     return {

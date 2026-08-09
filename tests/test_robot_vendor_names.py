@@ -11,6 +11,8 @@ from app.services.robot_vendor_names import is_known_robotics_vendor_name, vendo
         "Physical Intelligence",
         "Skild AI",
         "Persona AI",
+        "Unit AI",
+        "Synapticon GmbH",
         "Keenon Robotics",
         "Milagrow",
         "ECOVACS Robotics",
@@ -36,6 +38,7 @@ def test_new_oem_names_flagged_as_vendor(name):
         "Toyota Material Handling",
         "Samsung Electronics",
         "Mercedes-Benz",
+        "Faraday Future",
         "GXO Logistics",
     ],
 )

@@ -85,7 +85,7 @@ export default function Preview() {
       <PageHeroDark
         eyebrow="Monday · sales pipeline"
         title={PREVIEW_TITLE}
-        subtitle={data?.subhead || PREVIEW_SUBHEAD}
+        description={data?.subhead || PREVIEW_SUBHEAD}
       />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16 -mt-6 relative z-10">

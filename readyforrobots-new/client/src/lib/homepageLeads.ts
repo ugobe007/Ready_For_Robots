@@ -109,10 +109,10 @@ export function dedupeHomepageLeads<
   return leads.filter((lead) => {
     const keys = companyEntityDedupeKeys(lead);
     if (!keys.size) return Boolean(lead.company_name || lead.id != null);
-    for (const key of keys) {
+    for (const key of Array.from(keys)) {
       if (seen.has(key)) return false;
     }
-    for (const key of keys) seen.add(key);
+    for (const key of Array.from(keys)) seen.add(key);
     return true;
   });
 }

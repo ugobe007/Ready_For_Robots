@@ -23,16 +23,16 @@ export default function ResultsValueStrip({ leadCount, scanUrl, unlockedCount }:
       <div className="flex items-start gap-2 flex-1 min-w-0">
         <Sparkles className="h-4 w-4 shrink-0 text-emerald-700 mt-0.5" />
         <div>
-          <p className="text-xs font-bold text-emerald-900">Real pipeline matches — not a generic list</p>
+          <p className="text-xs font-bold text-emerald-900">Qualified alignment matches — not a generic list</p>
           <p className="text-[11px] leading-relaxed text-emerald-800/90 mt-0.5">
             {locked > 0 ? (
               <>
-                You&apos;re viewing <strong>{unlocked} of {leadCount}</strong> buyers with full signal detail and outreach drafts.
+                You&apos;re viewing <strong>{unlocked} of {leadCount}</strong> buyers with full signal detail, alignment context, and outreach drafts.
                 Sign up free to unlock {locked} more match{locked === 1 ? "" : "es"} and save to your pipeline.
               </>
             ) : (
               <>
-                {leadCount} matched buyer{leadCount === 1 ? "" : "s"} with pitch actions and outreach drafts —
+                {leadCount} matched buyer{leadCount === 1 ? "" : "s"} with alignment actions and outreach drafts —
                 sign up free to copy, save, and track every lead.
               </>
             )}

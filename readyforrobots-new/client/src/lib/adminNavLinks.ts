@@ -35,6 +35,7 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
     links: [
       { label: "Command center", href: "/admin", shortLabel: "Daily brief · Cal queue", adminOnly: true },
       { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions", adminOnly: true },
+      { label: "Sales samples", href: "/sales/samples", shortLabel: "Build 15-company demos", adminOnly: true },
       { label: "Special projects", href: "/admin/special-projects", shortLabel: "Bespoke client GTM (NIMO)", adminOnly: true },
     ],
   },
@@ -79,6 +80,7 @@ export function isAdminNavActive(currentPath: string, href: string): boolean {
     return path === "/admin" && (!hash || hash === "#cal-outreach" || hash === "#cal");
   }
   if (target === "/admin/prospects") return path === "/admin/prospects";
+  if (target === "/sales/samples") return path === "/sales/samples" || path === "/admin/sales-samples";
   if (target === "/pipeline") return path === "/pipeline" || path === "/admin/prospects";
   if (target === "/integrations") return path === "/integrations" || path.startsWith("/integrations/");
 

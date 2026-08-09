@@ -134,13 +134,36 @@ def leads_match_submitted_url(
         page_text = f"{submitted_domain} robotics automation solution from {submitted_domain}".strip()
 
     robot_caps = analyze_robot_capabilities(submitted_domain, page_text)
-    matched = match_companies(robot_caps, db)[:limit]
+
+    robot_type = str(robot_caps.get("type") or "").strip().lower()
+    use_case = str(robot_caps.get("use_case") or "").strip().lower()
+    capabilities = robot_caps.get("capabilities") if isinstance(robot_caps.get("capabilities"), list) else []
+    profile_score = float(robot_caps.get("profile_score") or 0)
+    weak_profile = (
+        robot_type in {"", "unknown"}
+        and use_case in {"", "general automation"}
+        and len(capabilities) == 0
+        and profile_score < 50
+    )
+    if weak_profile:
+        return {
+            "submitted_url": submitted_url,
+            "submitted_domain": submitted_domain,
+            "robot_capabilities": robot_caps,
+            "matching_mode": "no_profile",
+            "match_count": 0,
+            "leads": [],
+        }
+
+    matched_all = match_companies(robot_caps, db)
+    matched = matched_all[:limit]
     matched_ids = [int(m.get("id")) for m in matched if m.get("id") is not None]
     if not matched_ids:
         return {
             "submitted_url": submitted_url,
             "submitted_domain": submitted_domain,
             "robot_capabilities": robot_caps,
+            "matching_mode": "no_match",
             "match_count": 0,
             "leads": [],
         }
@@ -178,6 +201,7 @@ def leads_match_submitted_url(
         "submitted_url": submitted_url,
         "submitted_domain": submitted_domain,
         "robot_capabilities": robot_caps,
+        "matching_mode": "matched",
         "match_count": len(rows),
         "leads": rows,
     }

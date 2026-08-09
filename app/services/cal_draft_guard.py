@@ -58,6 +58,16 @@ _WRONG_VENDOR_PHRASES = (
     "we've identified",
 )
 
+# Older CTA variants that should be force-refreshed in saved drafts.
+_STALE_CTA_MARKERS = (
+    "if your team has active rfqs or bid projects for this workflow",
+    "if your team has rfqs or bid projects for this workflow",
+    "reply with the rfq/bid package and project specs",
+    "i'll help route the right follow-up",
+    "i'll hand it directly to robert for follow-up",
+    "i'll hand this directly to robert today",
+)
+
 # Pre–voice-rewrite templates (v2) — still stored on many CRM accounts.
 _LEGACY_VOICE_MARKERS = (
     "part of my job surprises people",
@@ -112,6 +122,16 @@ def draft_needs_regeneration(draft: str | None, *, account_type: str = "buyer") 
     low = (draft or "").lower()
     if at == "buyer" and any(p in low for p in _WRONG_BUYER_PHRASES):
         return True, "Buyer account has vendor-facing draft — regenerating"
+    if at == "buyer":
+        try:
+            from app.services.agent_messaging import BUYER_OUTREACH_CTA
+
+            current_cta = (BUYER_OUTREACH_CTA or "").strip().lower()
+        except Exception:
+            current_cta = ""
+        has_stale_cta = any(marker in low for marker in _STALE_CTA_MARKERS)
+        if has_stale_cta and (not current_cta or current_cta not in low):
+            return True, "Buyer draft has stale CTA — regenerating"
     if at == "vendor" and any(p in low for p in _WRONG_VENDOR_PHRASES) and "buyer lead" not in low:
         return True, "Vendor account has buyer-facing draft — regenerating"
     return False, "ok"

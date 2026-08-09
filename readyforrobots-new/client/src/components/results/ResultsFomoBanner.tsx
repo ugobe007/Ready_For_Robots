@@ -28,7 +28,7 @@ export default function ResultsFomoBanner({ prospects, isSignedIn, scanUrl }: Pr
         Scan complete · act before someone else does
       </p>
       <h2 className="font-display text-xl sm:text-2xl font-bold text-gray-900 leading-snug">
-        {prospects.length} buyer{prospects.length === 1 ? "" : "s"} match your product
+        {prospects.length} buyer{prospects.length === 1 ? "" : "s"} align to your product
         {hotCount > 0 ? (
           <>
             {" · "}
@@ -37,7 +37,7 @@ export default function ResultsFomoBanner({ prospects, isSignedIn, scanUrl }: Pr
         ) : null}
       </h2>
       <p className="mt-2 text-sm text-gray-700 max-w-2xl">
-        Each row includes robot types, timing, and a rep-voice outreach draft. Generic list tools will not have this specificity.
+        Each row includes robot types, timing, and a rep-voice outreach draft with alignment context. Generic list tools do not provide this.
       </p>
       {!isSignedIn && locked > 0 && (
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-3">
@@ -45,7 +45,7 @@ export default function ResultsFomoBanner({ prospects, isSignedIn, scanUrl }: Pr
             <LockKeyhole className="h-4 w-4 shrink-0 text-blue-800 mt-0.5" />
             <p className="text-xs leading-relaxed text-blue-950">
               <strong>{unlocked} of {prospects.length} unlocked.</strong> Sign up free to reveal{" "}
-              {locked} more matched lead{locked === 1 ? "" : "s"}, copy drafts, and save to your pipeline.
+              {locked} more aligned lead{locked === 1 ? "" : "s"}, copy drafts, and save to your pipeline.
             </p>
           </div>
           <Link

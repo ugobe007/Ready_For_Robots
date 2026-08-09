@@ -14,7 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.services.humanoid_catalog_cleanup import is_junk_humanoid_row
-from app.services.public_surface_cache import read_public_cache
+from app.services.public_surface_cache import PUBLIC_CACHE_REVALIDATE_SEC, read_public_cache
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,12 @@ def hydrate_robots_list_mem_cache(payload: dict) -> None:
 
 def get_robots_list_mem_cache() -> Optional[dict]:
     entry = _robots_list_mem.get("v1")
-    return entry["data"] if entry else None
+    if not entry:
+        return None
+    if time.monotonic() - float(entry.get("ts") or 0.0) >= PUBLIC_CACHE_REVALIDATE_SEC:
+        _robots_list_mem.pop("v1", None)
+        return None
+    return entry["data"]
 
 
 def hydrate_intelligence_mem_cache(payload: dict) -> None:
@@ -47,7 +52,12 @@ def hydrate_intelligence_mem_cache(payload: dict) -> None:
 
 def get_intelligence_mem_cache() -> Optional[dict]:
     entry = _intelligence_mem.get("v1")
-    return entry["data"] if entry else None
+    if not entry:
+        return None
+    if time.monotonic() - float(entry.get("ts") or 0.0) >= PUBLIC_CACHE_REVALIDATE_SEC:
+        _intelligence_mem.pop("v1", None)
+        return None
+    return entry["data"]
 
 
 def fetch_robots_list_rows(db: Session) -> List[dict]:
@@ -60,6 +70,7 @@ def fetch_robots_list_rows(db: Session) -> List[dict]:
                    country, vendor_name_cn, robot_name_cn, vendor_url,
                    humanoid_guide_url, github_url, verification_status,
                    vendor_aliases, robot_aliases,
+                     created_at,
                    specs, score_mobility, score_manipulation, score_autonomy,
                    score_safety, score_endurance, score_market_readiness,
                    score_total,
