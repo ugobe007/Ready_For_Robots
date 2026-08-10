@@ -457,7 +457,13 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
         })
     
     # Sort by match score
-    matches.sort(key=lambda x: x['match_score'], reverse=True)
+    # Prefer HOT buyers first, then match_score — Results preview should surface hot leads.
+    def _match_rank(row: Dict) -> tuple:
+        tier = (row.get("priority_tier") or "").strip().upper()
+        tier_rank = 0 if tier == "HOT" else 1 if tier == "WARM" else 2
+        return (tier_rank, -(row.get("match_score") or 0))
+
+    matches.sort(key=_match_rank)
     
     return matches[:25]
 

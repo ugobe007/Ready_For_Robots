@@ -93,10 +93,10 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   DATA_QUALITY_EVERY_HOURS = "168"
   DATA_QUALITY_FIRST_RUN_DELAY_HOURS = "12"
   QUALITY_LOG_EXPORT_LIMIT = "2500"
-  # Pipeline page tier slots (hot + warm + monitoring = 50 on paid)
-  PIPELINE_HOT_SLOTS = "15"
-  PIPELINE_WARM_SLOTS = "20"
-  PIPELINE_MONITOR_SLOTS = "15"
+  # Pipeline page tier slots (hot + warm + monitoring ≈ 90 on paid)
+  PIPELINE_HOT_SLOTS = "40"
+  PIPELINE_WARM_SLOTS = "30"
+  PIPELINE_MONITOR_SLOTS = "20"
   # Defer heavy cache rebuild after deploy so /api/leads/pipeline stays responsive.
   PUBLIC_CACHE_STARTUP_DELAY_SEC = "300"
   # Web machine: skip social interval rebuilds (worker runs them).

@@ -399,9 +399,9 @@ const STAGE_META: Record<Stage, { color: string; dot: string; label: string; des
 
 type UserBucket = "Hot Leads" | "Warm Leads" | "Monitoring";
 
-const PIPELINE_HOT_SLOTS = 15;
-const PIPELINE_WARM_SLOTS = 20;
-const PIPELINE_MONITOR_SLOTS = 15;
+const PIPELINE_HOT_SLOTS = 40;
+const PIPELINE_WARM_SLOTS = 30;
+const PIPELINE_MONITOR_SLOTS = 20;
 
 const USER_BUCKETS: UserBucket[] = ["Hot Leads", "Warm Leads", "Monitoring"];
 
@@ -663,7 +663,7 @@ type PipelineEntitlements = {
   };
 };
 
-const PIPELINE_LIMIT_FREE = 15;
+const PIPELINE_LIMIT_FREE = 30;
 const PIPELINE_LIMIT_PAID = 50;
 /** Target curated working list after Results → Pipeline onboarding. */
 const BUILD_PIPELINE_TARGET = 25;
