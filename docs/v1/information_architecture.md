@@ -50,7 +50,7 @@ Mobile uses a compact header with robot selector and bottom navigation for Radar
 ┌────────────────────────────────────────────────────────────────────────────┐
 │ ReadyForRobots                                                             │
 │                                                                            │
-│                    Find where your robot should be working.                │
+│                    Find Companies That Need Your Robots.                   │
 │                                                                            │
 │  Robot URL                                                                 │
 │  ┌──────────────────────────────────────────────────────────────────────┐  │
