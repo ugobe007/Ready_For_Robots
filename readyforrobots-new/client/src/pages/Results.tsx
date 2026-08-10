@@ -1255,6 +1255,7 @@ export default function Results() {
                             {p.leadId != null && (
                               <div className="mt-3">
                                 <LeadShareBar
+                                  variant="dark"
                                   lead={{
                                     id: p.leadId,
                                     company_name: p.company,
