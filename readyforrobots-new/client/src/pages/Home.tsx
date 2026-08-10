@@ -410,19 +410,22 @@ export default function Home() {
                   READYFORROBOTS SIGNAL
                 </p>
                 <h1 className="mt-4 text-[clamp(2.1rem,8.4vw,6.3rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-slate-50 sm:mt-6" style={{ textShadow: "0 10px 34px rgba(5, 10, 20, 0.48)" }}>
-                  Find Companies That <span className="text-[#00d0a2]">Need Your Robots.</span>
+                  Find Jobs for <span className="text-[#00d0a2]">Robots.</span>
                 </h1>
                 <p className="mx-auto mt-5 max-w-[54ch] text-[16px] leading-7 text-slate-300 sm:mt-7 sm:text-[18px] sm:leading-8 lg:mx-0 lg:text-[19px] lg:leading-9">
-                  ReadyForRobots finds companies actively looking for automation and shows you <strong className="font-semibold text-slate-100">who to contact, why they need your robot, and when to reach them.</strong>
+                  ReadyForRobots finds where companies are hiring people to do work your robot can automate—then shows you where to sell.
                 </p>
                 <div className="mx-auto mt-7 w-full max-w-[780px] border-b border-emerald-400/45 pb-3 sm:mt-10 lg:mx-0 lg:mt-11">
+                  <label htmlFor="hero-company-url" className="mb-2 block text-left text-xs font-semibold uppercase tracking-[0.18em] text-[#8ec8b9]">
+                    Enter your robot URL
+                  </label>
                   <div className="flex min-w-0 items-center gap-2">
                     <Search className="h-4 w-4 shrink-0 text-[#7fd7ea]" />
                     <input
                       id="hero-company-url"
                       value={urlInput}
                       onChange={(e) => setUrlInput(e.target.value)}
-                      placeholder="yourrobotcompany.com"
+                      placeholder="yourrobotcompany.com/robot"
                       className="w-full min-w-0 bg-transparent text-base text-white outline-none placeholder:text-[#9fb4ca]"
                     />
                     <button
@@ -431,16 +434,13 @@ export default function Home() {
                       disabled={!normalizedUrl}
                       className="inline-flex shrink-0 items-center justify-center gap-2 text-[15px] font-semibold text-[#00d0a2] transition hover:text-[#4cf0c8] disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
                     >
-                      Find Buyers
+                      Find Jobs
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
                 <p className="mt-3 text-sm text-slate-300 sm:mt-4 sm:text-[15px]">
-                  Submit your URL, create your workspace, review early matches, then open the full pipeline.
-                </p>
-                <p className="mt-4 text-xs font-medium tracking-[0.03em] text-[#8ec8b9] sm:mt-6 sm:text-sm sm:tracking-[0.04em]">
-                  8,765 buying signals · 3,861 matched opportunities · Updated continuously
+                  Find the work. Match the robot. Win the customer.
                 </p>
 
               </div>
@@ -610,7 +610,7 @@ export default function Home() {
                   onClick={focusHeroInput}
                   className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#00c896] px-7 py-3 text-base font-semibold text-[#05271e] transition hover:bg-[#00d9a3]"
                 >
-                  Find Buyers
+                  Find Jobs
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
