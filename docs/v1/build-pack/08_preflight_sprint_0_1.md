@@ -28,9 +28,10 @@ Do **not** add `expanding` to `OpportunityState` unless OpenAPI is explicitly am
 
 Surface V1 progressively behind `V1_ROBOT_INTELLIGENCE`:
 
-1. **Already:** Home CTA → robot analysis when flag on  
-2. **Next (Sprint 6):** V1 shell nav — Robot · Radar · Opportunities · Activity (hide Pipeline/CRM/outreach)  
-3. **Optional:** per-team entitlement later  
+1. **Home stays SIGNAL** — headline/CTA remain buyer-finding (`Find Companies That Need Your Robots` / **Find Buyers**). Do not hijack Home for robot-URL analysis.
+2. **V1 analysis** lives on `/robots/analysis/:id` (and APIs) — not the primary Home action.
+3. **Next (Sprint 6):** V1 shell nav — Robot · Radar · Opportunities · Activity (hide Pipeline/CRM/outreach)
+4. **Optional:** per-team entitlement later 
 
 Hunter email enrichment, if ever used, stays behind post-V1 or admin-only tools — never as V1 Call Priority UI.
 

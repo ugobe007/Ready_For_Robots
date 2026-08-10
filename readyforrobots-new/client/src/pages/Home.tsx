@@ -2,10 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ArrowRight, CheckCircle2, LogIn, Search, Sparkles } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
-import { getApiBase, getPublicReadApiBase } from "@/lib/apiBase";
+import { getPublicReadApiBase } from "@/lib/apiBase";
 import { useAuth } from "@/contexts/AuthContext";
-
-const V1_ANALYSIS_TOKEN_KEY = "rfr_v1_analysis_token";
 
 type HomepageLeadRow = {
   id: number;
@@ -213,9 +211,6 @@ export default function Home() {
   const [livePool, setLivePool] = useState<HomepageLeadRow[]>(liveLeadFallback);
   const [livePoolCursor, setLivePoolCursor] = useState(0);
   const [isLiveFeed, setIsLiveFeed] = useState(false);
-  const [v1Enabled, setV1Enabled] = useState(false);
-  const [v1Submitting, setV1Submitting] = useState(false);
-  const [v1Error, setV1Error] = useState<string | null>(null);
 
   const search = typeof window !== "undefined" ? window.location.search : "";
   const params = useMemo(() => new URLSearchParams(search), [search]);
@@ -234,22 +229,6 @@ export default function Home() {
 
   useEffect(() => {
     setPreviewLeadOffset(Math.floor(Math.random() * previewLeadPool.length));
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    void fetch(`${getApiBase()}/api/v1/meta`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((body) => {
-        if (!active) return;
-        setV1Enabled(Boolean(body?.enabled));
-      })
-      .catch(() => {
-        if (active) setV1Enabled(false);
-      });
-    return () => {
-      active = false;
-    };
   }, []);
 
   useEffect(() => {
@@ -336,34 +315,6 @@ export default function Home() {
 
   const goToIdentity = () => {
     if (!normalizedUrl) return;
-    if (v1Enabled) {
-      void (async () => {
-        setV1Submitting(true);
-        setV1Error(null);
-        try {
-          const res = await fetch(`${getApiBase()}/api/v1/robot-analyses`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ source_url: normalizedUrl }),
-          });
-          const body = await res.json().catch(() => null);
-          if (!res.ok) {
-            throw new Error(body?.error?.message || `Analysis failed (${res.status})`);
-          }
-          try {
-            sessionStorage.setItem(`${V1_ANALYSIS_TOKEN_KEY}:${body.analysis_id}`, body.analysis_token);
-          } catch {
-            // ignore storage failures
-          }
-          setLocation(`/robots/analysis/${body.analysis_id}`);
-        } catch (err) {
-          setV1Error(err instanceof Error ? err.message : "Could not start robot analysis");
-        } finally {
-          setV1Submitting(false);
-        }
-      })();
-      return;
-    }
     persistWorkflowContext();
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(
@@ -456,29 +407,13 @@ export default function Home() {
             {pageMode === "url" && (
               <div className="mx-auto max-w-3xl text-center lg:mx-0 lg:text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.36em] text-[#7adfc8] sm:text-[11px]">
-                  {v1Enabled ? "READYFORROBOTS V1" : "READYFORROBOTS SIGNAL"}
+                  READYFORROBOTS SIGNAL
                 </p>
                 <h1 className="mt-4 text-[clamp(2.1rem,8.4vw,6.3rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-slate-50 sm:mt-6" style={{ textShadow: "0 10px 34px rgba(5, 10, 20, 0.48)" }}>
-                  {v1Enabled ? (
-                    <>
-                      Find where your robot <span className="text-[#00d0a2]">should be working.</span>
-                    </>
-                  ) : (
-                    <>
-                      Find Companies That <span className="text-[#00d0a2]">Need Your Robots.</span>
-                    </>
-                  )}
+                  Find Companies That <span className="text-[#00d0a2]">Need Your Robots.</span>
                 </h1>
                 <p className="mx-auto mt-5 max-w-[54ch] text-[16px] leading-7 text-slate-300 sm:mt-7 sm:text-[18px] sm:leading-8 lg:mx-0 lg:text-[19px] lg:leading-9">
-                  {v1Enabled ? (
-                    <>
-                      Paste a product URL. We build a source-grounded capability profile — unknowns stay unknown — then find facilities doing that work.
-                    </>
-                  ) : (
-                    <>
-                      ReadyForRobots finds companies actively looking for automation and shows you <strong className="font-semibold text-slate-100">who to contact, why they need your robot, and when to reach them.</strong>
-                    </>
-                  )}
+                  ReadyForRobots finds companies actively looking for automation and shows you <strong className="font-semibold text-slate-100">who to contact, why they need your robot, and when to reach them.</strong>
                 </p>
                 <div className="mx-auto mt-7 w-full max-w-[780px] border-b border-emerald-400/45 pb-3 sm:mt-10 lg:mx-0 lg:mt-11">
                   <div className="flex min-w-0 items-center gap-2">
@@ -487,25 +422,22 @@ export default function Home() {
                       id="hero-company-url"
                       value={urlInput}
                       onChange={(e) => setUrlInput(e.target.value)}
-                      placeholder={v1Enabled ? "https://yourcompany.com/robot" : "yourrobotcompany.com"}
+                      placeholder="yourrobotcompany.com"
                       className="w-full min-w-0 bg-transparent text-base text-white outline-none placeholder:text-[#9fb4ca]"
                     />
                     <button
                       type="button"
                       onClick={goToIdentity}
-                      disabled={!normalizedUrl || v1Submitting}
+                      disabled={!normalizedUrl}
                       className="inline-flex shrink-0 items-center justify-center gap-2 text-[15px] font-semibold text-[#00d0a2] transition hover:text-[#4cf0c8] disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
                     >
-                      {v1Enabled ? (v1Submitting ? "Analyzing…" : "Find Opportunities") : "Find Buyers"}
+                      Find Buyers
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-                {v1Error && <p className="mt-3 text-sm text-red-300">{v1Error}</p>}
                 <p className="mt-3 text-sm text-slate-300 sm:mt-4 sm:text-[15px]">
-                  {v1Enabled
-                    ? "Or describe your robot after submit — V1 starts from a product URL."
-                    : "Submit your URL, create your workspace, review early matches, then open the full pipeline."}
+                  Submit your URL, create your workspace, review early matches, then open the full pipeline.
                 </p>
                 <p className="mt-4 text-xs font-medium tracking-[0.03em] text-[#8ec8b9] sm:mt-6 sm:text-sm sm:tracking-[0.04em]">
                   8,765 buying signals · 3,861 matched opportunities · Updated continuously
