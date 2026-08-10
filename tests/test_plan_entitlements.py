@@ -121,11 +121,11 @@ def test_apply_pipeline_entitlements_trims_and_tags():
     feed = {
         "summary": {"hot": 40, "warm": 10, "total": 100},
         "leads": [
-            {"id": i, "company_name": f"C{i}", "priority_tier": "HOT", "share_summary": "secret"}
+            {"id": i, "company_name": f"Hot Co {i}", "priority_tier": "HOT", "share_summary": "secret"}
             for i in range(20)
         ]
         + [
-            {"id": 100 + i, "company_name": f"W{i}", "priority_tier": "WARM", "share_summary": "secret"}
+            {"id": 100 + i, "company_name": f"Warm Co {i}", "priority_tier": "WARM", "share_summary": "secret"}
             for i in range(20)
         ],
     }
