@@ -97,6 +97,12 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   PIPELINE_HOT_SLOTS = "40"
   PIPELINE_WARM_SLOTS = "30"
   PIPELINE_MONITOR_SLOTS = "20"
+  # Self-running market graph loop (tension + vendor↔buyer matches + refresh queue)
+  ENABLE_SCHEDULED_MARKET_GRAPH_LOOP = "1"
+  MARKET_GRAPH_EVERY_HOURS = "12"
+  MARKET_GRAPH_FIRST_RUN_DELAY_MINUTES = "45"
+  MARKET_GRAPH_DEMAND_LIMIT = "80"
+  MARKET_GRAPH_VENDOR_LIMIT = "200"
   # Defer heavy cache rebuild after deploy so /api/leads/pipeline stays responsive.
   PUBLIC_CACHE_STARTUP_DELAY_SEC = "300"
   # Web machine: skip social interval rebuilds (worker runs them).

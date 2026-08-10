@@ -194,7 +194,7 @@ function Logo() {
 function StepFrame({ title, copy, children }: { title: string; copy: string; children: ReactNode }) {
   return (
     <div className="mx-auto mt-8 w-full max-w-3xl text-center">
-      <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-slate-50">{title}</h2>
+      <h2 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-slate-50 sm:text-2xl">{title}</h2>
       <p className="mt-3 text-sm leading-7 text-slate-300">{copy}</p>
       <div className="mt-6">{children}</div>
     </div>
@@ -541,10 +541,10 @@ export default function Home() {
         {pageMode === "url" && (
           <>
             <section className="mt-10 border-t border-slate-800/70 pt-12 sm:pt-14">
-              <h2 className="max-w-5xl text-[clamp(2rem,4.6vw,4rem)] font-semibold leading-[1.0] tracking-[-0.03em] text-slate-50">
+              <h2 className="max-w-5xl text-[clamp(1.35rem,2.8vw,2rem)] font-semibold leading-[1.15] tracking-[-0.03em] text-slate-50">
                 Companies Looking for Robots Right Now.
               </h2>
-              <p className="mt-4 text-[17px] text-slate-300 sm:text-[19px]">ReadyForRobots detects the signals. You get the opportunity.</p>
+              <p className="mt-3 text-[15px] text-slate-300 sm:text-[16px]">ReadyForRobots detects the signals. You get the opportunity.</p>
 
               <div className="mt-8 border-y border-emerald-400/35 bg-[#061124] sm:mt-9">
                 <div className="flex items-center justify-between border-b border-emerald-900/45 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#87dbca]">
@@ -586,13 +586,13 @@ export default function Home() {
             </section>
 
             <section className="mt-16 border-t border-slate-800/70 pt-14 sm:mt-20 sm:pt-16">
-              <h2 className="max-w-5xl text-[clamp(1.9rem,4.4vw,3.6rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-slate-50">
+              <h2 className="max-w-5xl text-[clamp(1.3rem,2.6vw,1.85rem)] font-semibold leading-[1.2] tracking-[-0.03em] text-slate-50">
                 Stop Selling Robots to Companies That Aren&apos;t Buying.
               </h2>
-              <p className="mt-6 max-w-4xl text-[17px] leading-8 text-slate-300 sm:text-[18px]">
+              <p className="mt-4 max-w-4xl text-[15px] leading-7 text-slate-300 sm:text-[16px]">
                 Most robot sales teams start with a list of companies and try to figure out who might need automation.
               </p>
-              <p className="mt-4 text-xl font-semibold text-[#9af2dc] sm:text-[1.45rem]">ReadyForRobots starts with the need.</p>
+              <p className="mt-3 text-base font-semibold text-[#9af2dc] sm:text-lg">ReadyForRobots starts with the need.</p>
 
               <div className="mt-10 space-y-5">
                 <div className="rounded-xl border border-red-300/25 bg-[#130f14] px-5 py-4">
@@ -605,7 +605,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <h3 className="mt-12 text-[clamp(1.8rem,3.8vw,3rem)] font-semibold leading-tight tracking-[-0.02em] text-slate-50">
+              <h3 className="mt-10 text-[clamp(1.25rem,2.4vw,1.75rem)] font-semibold leading-tight tracking-[-0.02em] text-slate-50">
                 Don&apos;t find leads. <span className="text-[#00d0a2]">Find demand.</span>
               </h3>
               <p className="mt-6 text-[12px] font-semibold uppercase tracking-[0.2em] text-[#8fe0cb] sm:text-[13px]">

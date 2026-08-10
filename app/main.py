@@ -300,6 +300,7 @@ def _run_worker_startup() -> None:
     _start_scheduled_communication_learning()
     _start_scheduled_supply_autonomy()
     _start_scheduled_newsletter_publish()
+    _start_scheduled_market_graph_loop()
     _sync_buyer_sequence_steps()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
@@ -1141,6 +1142,66 @@ def _start_scheduled_supply_autonomy():
     logger.info(
         "In-app supply autonomy thread started (every %s hours)",
         os.getenv("SUPPLY_AUTONOMY_EVERY_HOURS", "6"),
+    )
+
+
+def _scheduled_market_graph_loop():
+    """Self-running demand↔supply graph: tension, matches, customer refresh queue."""
+    from app.services.market_graph_loop import run_market_graph_loop
+
+    first_delay_min = int(os.getenv("MARKET_GRAPH_FIRST_RUN_DELAY_MINUTES", "45"))
+    interval_hours = float(os.getenv("MARKET_GRAPH_EVERY_HOURS", "12"))
+    if interval_hours <= 0:
+        return
+    print(
+        f"[market-graph-loop] scheduler armed first_run_min={first_delay_min} "
+        f"interval_hours={interval_hours}",
+        flush=True,
+    )
+    time.sleep(max(60, first_delay_min * 60))
+    while True:
+        try:
+            result = run_market_graph_loop()
+            logger.info(
+                "Market graph loop finished status=%s tensions=%s matches=%s",
+                result.get("status"),
+                result.get("tension_count"),
+                result.get("match_count"),
+            )
+        except Exception as exc:
+            logger.exception("Market graph loop failed: %s", exc)
+        time.sleep(max(1800, int(interval_hours * 3600)))
+
+
+def _start_scheduled_market_graph_loop():
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app market graph loop skipped on web process")
+        return
+    if os.getenv("ENABLE_SCHEDULED_MARKET_GRAPH_LOOP", "1").strip().lower() in (
+        "0", "false", "no"
+    ):
+        logger.info("In-app market graph loop disabled")
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_MARKET_GRAPH_LOOP", "").lower() in ("1", "true", "yes")
+        or os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
+    )
+    if not enabled:
+        return
+    t = threading.Thread(
+        target=_scheduled_market_graph_loop,
+        daemon=True,
+        name="market-graph-loop",
+    )
+    t.start()
+    print("[market-graph-loop] scheduler thread started", flush=True)
+    logger.info(
+        "In-app market graph loop thread started (every %s hours, first run in %s min)",
+        os.getenv("MARKET_GRAPH_EVERY_HOURS", "12"),
+        os.getenv("MARKET_GRAPH_FIRST_RUN_DELAY_MINUTES", "45"),
     )
 
 
