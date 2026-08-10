@@ -665,6 +665,8 @@ type PipelineEntitlements = {
 
 const PIPELINE_LIMIT_FREE = 15;
 const PIPELINE_LIMIT_PAID = 50;
+/** Target curated working list after Results → Pipeline onboarding. */
+const BUILD_PIPELINE_TARGET = 25;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
 const PIPELINE_LEAD_READ_MS = 7_000;
 const PIPELINE_SESSION_KEY = "pipeline_feed_v5";
@@ -1406,11 +1408,18 @@ export default function Pipeline() {
     const params = new URLSearchParams(search);
     return (params.get("src") || "").trim();
   }, [search]);
+  const viewFromQuery = useMemo(() => {
+    const params = new URLSearchParams(search);
+    return (params.get("view") || "").trim().toLowerCase();
+  }, [search]);
   const activationIdFromQuery = useMemo(() => {
     const value = Number(new URLSearchParams(search).get("activation"));
     return Number.isFinite(value) && value > 0 ? value : null;
   }, [search]);
   const arrivedFromSignalActivation = submittedSrcFromQuery === "signal_activation";
+  const arrivedFromResultsScan =
+    submittedSrcFromQuery === "results_scan" || submittedSrcFromQuery === "results_next_step";
+  const preferFullPipelineView = viewFromQuery === "all" || arrivedFromResultsScan;
 
   useEffect(() => {
     if (submittedUrlFromQuery) {
@@ -1499,6 +1508,8 @@ export default function Pipeline() {
   const [crmStageByCompanyId, setCrmStageByCompanyId] = useState<Record<number, string>>({});
   const [crmAccountIdByCompanyId, setCrmAccountIdByCompanyId] = useState<Record<number, string>>({});
   const [savedLeadCount, setSavedLeadCount] = useState(0);
+  /** After Results: show instructions first; CTA starts the 25-lead build. */
+  const [build25Started, setBuild25Started] = useState(false);
   const [firstSaveGuideOpen, setFirstSaveGuideOpen] = useState(false);
   const [showActivationChecklist, setShowActivationChecklist] = useState(false);
   const [draftCopiedForActivation, setDraftCopiedForActivation] = useState(false);
@@ -1539,8 +1550,13 @@ export default function Pipeline() {
   }, [activationIdFromQuery, activations]);
 
   useEffect(() => {
+    // Results handoff should land on the full live pipeline, not a scoped-empty filter.
+    if (preferFullPipelineView) {
+      setScopeToSubmittedUrl(false);
+      return;
+    }
     setScopeToSubmittedUrl(Boolean(submittedHostname));
-  }, [submittedHostname]);
+  }, [preferFullPipelineView, submittedHostname]);
   useEffect(() => {
     if (!submittedUrl) {
       setSubmittedUrlMatches([]);
@@ -2364,8 +2380,26 @@ export default function Pipeline() {
   const isSignedIn = Boolean(session?.access_token);
   const isFirstWorkspaceRun = isSignedIn && savedLeadCount === 0;
   const hasSavedLead = savedLeadCount > 0;
-  const nextStepsTitle = "Next step";
-  const nextStepsItems = submittedHostname
+  const build25Progress = Math.min(savedLeadCount, BUILD_PIPELINE_TARGET);
+  const nextStepsTitle = arrivedFromResultsScan ? "Step 3 · Large sales pipeline" : "Next step";
+  const nextStepsHeadline = arrivedFromResultsScan
+    ? !build25Started
+      ? "Read the plan, then build your 25-lead pipeline"
+      : `Building your pipeline · ${build25Progress}/${BUILD_PIPELINE_TARGET} saved`
+    : "Pick a lead → save it → copy draft → send";
+  const nextStepsItems = arrivedFromResultsScan
+    ? !build25Started
+      ? [
+          "This is the full live market queue — larger than your 5-lead preview.",
+          "Next you'll build a working list of up to 25 sales leads.",
+          "Then curate the best companies and run an outreach plan for each.",
+        ]
+      : [
+          `Curate: Save strong fits until you reach ${BUILD_PIPELINE_TARGET} in your working list (${build25Progress} saved).`,
+          "Outreach: open a saved company, review why-now signals, copy the draft.",
+          "Send, then keep shortlisting the next accounts from this pipeline.",
+        ]
+    : submittedHostname
     ? scopedNoMatches
       ? [
           `Widen the search: try the homepage URL for ${submittedHostname}.`,
@@ -2411,7 +2445,17 @@ export default function Pipeline() {
   const canSaveSelected = Boolean(selected) && (!isSignedIn || !crmAccountIdByCompanyId[selected!.id]);
   const canCopySelectedDraft = Boolean(selected?.outreachBody);
   const canOpenSelectedDraft = Boolean(selected?.outreachBody) && showKanban && Boolean(session?.access_token);
-  const nextStepPrimaryLabel = !isSignedIn
+  const nextStepPrimaryLabel = arrivedFromResultsScan
+    ? !build25Started
+      ? "Build your 25 sales lead pipeline"
+      : canSaveSelected
+        ? `Save lead · ${build25Progress}/${BUILD_PIPELINE_TARGET}`
+        : canCopySelectedDraft
+          ? "Outreach: Copy draft"
+          : selected
+            ? "Outreach: Review this company"
+            : "Pick a lead to curate"
+    : !isSignedIn
     ? "Next step: Start free workspace"
     : canSaveSelected
       ? "Next step: Save selected lead"
@@ -2590,10 +2634,38 @@ export default function Pipeline() {
     }
   };
 
+  const startBuild25Pipeline = () => {
+    setBuild25Started(true);
+    document.getElementById("pipeline-leads")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    toast.success(`Build started — save up to ${BUILD_PIPELINE_TARGET} leads, then run outreach.`);
+  };
+
   const runNextStepPrimary = () => {
+    if (arrivedFromResultsScan && !build25Started) {
+      startBuild25Pipeline();
+      return;
+    }
+    if (arrivedFromResultsScan && build25Started && !selected) {
+      document.getElementById("pipeline-leads")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     if (!isSignedIn) {
-      const next = selected?.id != null ? `/pipeline?lead=${selected.id}` : "/pipeline";
+      const params = new URLSearchParams();
+      params.set("view", "all");
+      params.set("src", "pipeline_next_step");
+      if (selected?.id != null) params.set("lead", String(selected.id));
+      if (submittedUrl) params.set("url", submittedUrl);
+      const next = `/pipeline?${params.toString()}`;
       window.location.href = `/signup?next=${encodeURIComponent(next)}&src=pipeline_next_step`;
+      return;
+    }
+    if (arrivedFromResultsScan && canSaveSelected && selected) {
+      void handleSaveLead(selected);
+      return;
+    }
+    if (arrivedFromResultsScan && canCopySelectedDraft) {
+      copyDraft();
+      spotlightOutreachDraft();
       return;
     }
     if (canSaveSelected && selected) {
@@ -3342,6 +3414,7 @@ export default function Pipeline() {
               hasContact={Boolean(selected?.contact)}
               sent={selected?.stage === "Outreach Sent"}
               variant="dark"
+              browseFirst={arrivedFromResultsScan}
             />
             {session?.access_token && (
               <WorkspaceQuickLinks
@@ -3352,6 +3425,58 @@ export default function Pipeline() {
               />
             )}
           </div>
+
+          {arrivedFromResultsScan && !arrivedFromSignalActivation && (
+            <section className="overflow-hidden rounded-xl border border-amber-400/40 bg-[#1a1407] shadow-[0_18px_45px_-30px_rgba(245,158,11,0.55)]">
+              <div className="grid gap-4 px-4 py-4 sm:px-5 lg:grid-cols-[1fr_auto] lg:items-center">
+                <div className="min-w-0">
+                  <span className="inline-flex items-center rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200">
+                    {build25Started
+                      ? `Building · ${build25Progress}/${BUILD_PIPELINE_TARGET} leads`
+                      : "Step 3 of 3 · Large sales pipeline"}
+                  </span>
+                  <h2 className="mt-2 text-xl font-bold text-white sm:text-2xl">
+                    {build25Started
+                      ? "Curate sales leads & run outreach"
+                      : "Your large sales pipeline — with instructions"}
+                  </h2>
+                  <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-300">
+                    {build25Started
+                      ? `Save the best companies into your working list (goal: ${BUILD_PIPELINE_TARGET}). Open each lead for why-now signals, copy the draft, and send outreach.`
+                      : "You finished the 5-lead preview. This is the full live market queue. Read the steps below, then start building a curated pipeline of up to 25 sales leads and an outreach plan."}
+                    {!build25Started && submittedHostname
+                      ? ` Context from ${submittedHostname} stays available if you want to filter later.`
+                      : ""}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[11px] font-semibold text-slate-300">
+                    {!build25Started ? (
+                      <>
+                        <span className="text-amber-200">1. Review instructions</span>
+                        <span>2. Build your 25-lead pipeline</span>
+                        <span>3. Curate + outreach</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className={build25Progress > 0 ? "text-emerald-300" : "text-amber-200"}>
+                          1. Save leads ({build25Progress}/{BUILD_PIPELINE_TARGET})
+                        </span>
+                        <span>2. Copy outreach draft</span>
+                        <span>3. Send &amp; continue</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={runNextStepPrimary}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 lg:w-auto"
+                >
+                  {nextStepPrimaryLabel}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </section>
+          )}
 
           {arrivedFromSignalActivation && (
             <section className="overflow-hidden rounded-xl border border-emerald-400/40 bg-[#071a19] shadow-[0_18px_45px_-30px_rgba(16,185,129,0.85)]">
@@ -3441,7 +3566,7 @@ export default function Pipeline() {
                   <div className="mt-2 rounded-xl border border-emerald-700/80 bg-[#0b162f] px-3 py-3 text-[11px] text-slate-100 shadow-sm">
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">{nextStepsTitle}</p>
                     <p className="mt-1 text-sm font-semibold text-white">
-                      Pick a lead → save it → copy draft → send
+                      {nextStepsHeadline}
                     </p>
                     <ol className="mt-2 space-y-1 pl-4 text-slate-300">
                       {nextStepsItems.map((item, index) => (
@@ -3454,7 +3579,11 @@ export default function Pipeline() {
                       <button
                         type="button"
                         onClick={runNextStepPrimary}
-                        disabled={isSignedIn && !selected && !canCopySelectedDraft}
+                        disabled={
+                          arrivedFromResultsScan && (!build25Started || !selected)
+                            ? false
+                            : isSignedIn && !selected && !canCopySelectedDraft
+                        }
                         className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-[11px] font-bold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {nextStepPrimaryLabel}
@@ -3786,7 +3915,7 @@ export default function Pipeline() {
           )}
 
           {/* ── Two-panel layout ── */}
-          <div className="pipeline-deals-layout flex min-h-0 flex-col gap-2 p-2 sm:p-3 lg:min-h-[calc(100vh-200px)] lg:flex-row">
+          <div id="pipeline-leads" className="pipeline-deals-layout flex min-h-0 flex-col gap-2 p-2 sm:p-3 lg:min-h-[calc(100vh-200px)] lg:flex-row">
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="pipeline-list-shell flex min-w-0 flex-1 flex-col gap-1 overflow-y-auto">

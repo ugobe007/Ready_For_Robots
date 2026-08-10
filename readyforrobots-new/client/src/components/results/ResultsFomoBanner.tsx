@@ -37,7 +37,7 @@ export default function ResultsFomoBanner({ prospects, isSignedIn, scanUrl }: Pr
         ) : null}
       </h2>
       <p className="mt-2 max-w-2xl text-sm text-slate-300">
-        Each row includes robot types, timing, and a rep-voice outreach draft with alignment context. Generic list tools do not provide this.
+        Each row shows fit, timing, and why-now context. Next step is the large Pipeline — with instructions — not email drafting here.
       </p>
       {!isSignedIn && locked > 0 && (
         <div className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-400/30 bg-[#081126]/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -45,7 +45,7 @@ export default function ResultsFomoBanner({ prospects, isSignedIn, scanUrl }: Pr
             <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
             <p className="text-xs leading-relaxed text-slate-200">
               <strong className="text-white">{unlocked} of {prospects.length} unlocked.</strong> Sign up free to reveal{" "}
-              {locked} more aligned lead{locked === 1 ? "" : "s"}, copy drafts, and save to your pipeline.
+              {locked} more aligned lead{locked === 1 ? "" : "s"}, then open Pipeline.
             </p>
           </div>
           <Link

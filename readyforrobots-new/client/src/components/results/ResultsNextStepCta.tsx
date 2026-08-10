@@ -1,31 +1,31 @@
 /**
- * Results page — always-visible next-step CTA so the scan → pipeline workflow is obvious.
+ * Results sticky CTA — Pipeline only. No prepare/draft/email actions on Results.
+ * Flow: 5 leads → large Pipeline (instructions) → build 25-lead list.
  */
 import { ArrowRight, CheckCircle2, Circle } from "lucide-react";
 import { Link } from "wouter";
 
 type Props = {
-  isSignedIn: boolean;
   matchCount: number;
-  activating?: boolean;
-  onPrepareTop: () => void;
   pipelineHref: string;
-  signupHref: string;
+  isSignedIn: boolean;
+  signupHref?: string;
 };
 
 export default function ResultsNextStepCta({
-  isSignedIn,
   matchCount,
-  activating = false,
-  onPrepareTop,
   pipelineHref,
-  signupHref,
+  isSignedIn,
+  signupHref = "/signup",
 }: Props) {
   const steps = [
-    { label: "Find jobs", done: true },
-    { label: "Review matches", done: matchCount > 0 },
-    { label: "Work pipeline", done: false, active: true },
+    { label: "1. URL", done: true },
+    { label: "2. 5 leads", done: matchCount > 0 },
+    { label: "3. Pipeline", done: false, active: true },
   ];
+
+  const href = isSignedIn ? pipelineHref : signupHref;
+  const label = isSignedIn ? "Open Pipeline with instructions" : "Sign up to continue";
 
   return (
     <div className="sticky bottom-3 z-40 mt-8">
@@ -34,14 +34,12 @@ export default function ResultsNextStepCta({
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">Next step</p>
             <h3 className="mt-1 text-lg font-bold text-white sm:text-xl">
-              {isSignedIn
-                ? "Prepare your top buyers, then work them in Pipeline"
-                : "Create a free workspace to save matches and open Pipeline"}
+              Move to the large sales Pipeline
             </h3>
             <p className="mt-1 max-w-2xl text-sm text-slate-300">
               {matchCount > 0
-                ? `${matchCount} job opportunities found. Find the work → match the robot → win the customer.`
-                : "Once matches load, move the strongest buyers into your working pipeline."}
+                ? `${matchCount} matched leads reviewed. No email drafting here — open Pipeline for instructions, then build your 25-lead list.`
+                : "No email drafting here — open Pipeline for instructions, then build your 25-lead list."}
             </p>
             <ol className="mt-3 flex flex-wrap items-center gap-2">
               {steps.map((step) => (
@@ -55,44 +53,24 @@ export default function ResultsNextStepCta({
                         : "border-white/10 text-slate-500"
                   }`}
                 >
-                  {step.done ? (
-                    <CheckCircle2 className="h-3 w-3" />
-                  ) : (
-                    <Circle className="h-3 w-3" />
-                  )}
+                  {step.done ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
                   {step.label}
                 </li>
               ))}
             </ol>
           </div>
 
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[260px]">
-            {isSignedIn ? (
-              <button
-                type="button"
-                onClick={onPrepareTop}
-                disabled={activating || matchCount === 0}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {activating ? "Preparing…" : "Next step: Prepare top 3"}
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            ) : (
-              <Link
-                href={signupHref}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300"
-              >
-                Next step: Start free workspace
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            )}
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[280px]">
             <Link
-              href={pipelineHref}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-xs font-semibold text-slate-100 transition hover:bg-white/10"
+              href={href}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300"
             >
-              {isSignedIn ? "Open Pipeline now" : "Preview Pipeline"}
-              <ArrowRight className="h-3.5 w-3.5" />
+              {label}
+              <ArrowRight className="h-4 w-4" />
             </Link>
+            <p className="text-center text-[11px] text-slate-400">
+              Instructions on Pipeline · then curate &amp; outreach
+            </p>
           </div>
         </div>
       </div>

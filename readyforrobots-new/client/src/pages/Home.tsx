@@ -392,7 +392,7 @@ export default function Home() {
             <Logo />
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/signup?next=/pipeline" className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/40 px-3.5 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/10">
+            <Link href="/signup?src=home_header&next=/" className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/40 px-3.5 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/10">
               Start free workspace
             </Link>
             <Link href="/login" className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10">
@@ -425,6 +425,12 @@ export default function Home() {
                       id="hero-company-url"
                       value={urlInput}
                       onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && normalizedUrl) {
+                          e.preventDefault();
+                          goToIdentity();
+                        }
+                      }}
                       placeholder="yourrobotcompany.com/robot"
                       className="w-full min-w-0 bg-transparent text-base text-white outline-none placeholder:text-[#9fb4ca]"
                     />
@@ -441,6 +447,9 @@ export default function Home() {
                 </div>
                 <p className="mt-3 text-sm text-slate-300 sm:mt-4 sm:text-[15px]">
                   Find the work. Match the robot. Win the customer.
+                </p>
+                <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
+                  1. Submit URL · 2. {session?.access_token ? "5 sales leads" : "Sign up → 5 sales leads"} · 3. Large pipeline → build 25
                 </p>
 
               </div>

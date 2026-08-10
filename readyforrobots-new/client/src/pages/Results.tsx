@@ -6,21 +6,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
-  Bell,
-  Bot,
-  CalendarCheck,
   CheckCircle2,
   Copy,
   FileText,
   LockKeyhole,
   MapPin,
-  MousePointer2,
-  Presentation,
-  Send,
-  Sparkles,
   Shield,
   TrendingUp,
-  UploadCloud,
   Users,
   Zap,
 } from "lucide-react";
@@ -38,7 +30,6 @@ import { authHeader, getFreshAccessToken } from "@/lib/supabase";
 import { cleanScrapedText } from "@/lib/text";
 import { toast } from "sonner";
 import LeadShareBar from "@/components/LeadShareBar";
-import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import ResultsValueStrip from "@/components/results/ResultsValueStrip";
 import ResultsFomoBanner, { RESULTS_ANONYMOUS_UNLOCK } from "@/components/results/ResultsFomoBanner";
 import ResultsNextStepCta from "@/components/results/ResultsNextStepCta";
@@ -127,53 +118,6 @@ type Prospect = {
   robotTypes?: string[];
   signalAge?: string;
 };
-
-type MaterialChoice = "upload" | "suggest" | "skip";
-type ScopeChoice = "all" | "selected" | "top";
-type ModeChoice = "manual" | "assisted" | "autopilot";
-
-const MATERIAL_OPTIONS: Array<{
-  id: MaterialChoice;
-  title: string;
-  desc: string;
-  icon: typeof UploadCloud;
-}> = [
-  {
-    id: "upload",
-    title: "Upload sales deck",
-    desc: "Give SIGNAL your current presentation so follow-up uses your actual positioning.",
-    icon: UploadCloud,
-  },
-  {
-    id: "suggest",
-    title: "Suggest deck strategy",
-    desc: "SIGNAL proposes a deck format, proof points, and ROI story for you to implement.",
-    icon: Presentation,
-  },
-  {
-    id: "skip",
-    title: "Skip materials",
-    desc: "Start with lead evaluation, sales strategy, activity schedule, and draft outreach.",
-    icon: Sparkles,
-  },
-];
-
-const SCOPE_OPTIONS: Array<{ id: ScopeChoice; title: string; desc: string }> = [
-  { id: "all", title: "Activate all leads", desc: "SIGNAL works every matched lead in this results set." },
-  { id: "selected", title: "Use selected leads", desc: "Only the leads you checked below move into SIGNAL activation." },
-  { id: "top", title: "Let SIGNAL prioritize", desc: "SIGNAL starts with the strongest three leads by score and signal quality." },
-];
-
-const MODE_OPTIONS: Array<{
-  id: ModeChoice;
-  title: string;
-  desc: string;
-  gated: boolean;
-}> = [
-  { id: "manual", title: "Manual", desc: "SIGNAL evaluates leads and prepares strategy plus draft outreach for your review.", gated: false },
-  { id: "assisted", title: "Assisted", desc: "SIGNAL drafts outreach, asks before sending, then tracks replies.", gated: true },
-  { id: "autopilot", title: "Autopilot", desc: "SIGNAL sends approved messages, follows up, and escalates technical questions when needed.", gated: true },
-];
 
 function scoreColor(score: number): string {
   return score >= 90 ? "#34d399" : score >= 75 ? "#10b981" : "#FFB000";
@@ -467,17 +411,10 @@ export default function Results() {
   const [scanning, setScanning] = useState(Boolean(initialUrl));
   const [loading, setLoading] = useState(Boolean(initialUrl));
   const [prospects, setProspects] = useState<Prospect[]>([]);
-  const [copiedProspectId, setCopiedProspectId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [choosingScout, setChoosingScout] = useState(false);
   const [activatedIds, setActivatedIds] = useState<Set<string>>(new Set());
   const [usingFallback, setUsingFallback] = useState(false);
-  const [materialChoice, setMaterialChoice] = useState<MaterialChoice>("suggest");
-  const [scopeChoice, setScopeChoice] = useState<ScopeChoice>("top");
-  const [modeChoice, setModeChoice] = useState<ModeChoice>("manual");
-  const [deckFileName, setDeckFileName] = useState("");
   const [activationId, setActivationId] = useState<number | null>(null);
-  const [activatingScout, setActivatingScout] = useState(false);
   const [sampleAccessLoading, setSampleAccessLoading] = useState(sampleMode);
   const [sampleAccessAllowed, setSampleAccessAllowed] = useState(!sampleMode);
   const [sampleAccessEmail, setSampleAccessEmail] = useState("");
@@ -522,7 +459,6 @@ export default function Results() {
     };
   }, [authLoading, sampleMode, session?.access_token]);
 
-  const selectedCount = selectedIds.size;
   const activatedCount = activatedIds.size;
   const isSignedIn = Boolean(session);
   const sortedProspects = useMemo(
@@ -532,18 +468,34 @@ export default function Results() {
   const anonymousUnlockedCount = Math.min(RESULTS_ANONYMOUS_UNLOCK, sortedProspects.length);
   const topLeadId = sortedProspects[0]?.leadId;
 
-  const resultsSignupNext = topLeadId
-    ? `/pipeline?lead=${topLeadId}`
-    : "/pipeline";
+  const resultsPageHref = useMemo(() => {
+    const next = new URLSearchParams();
+    if (submittedUrl) next.set("url", submittedUrl);
+    next.set("limit", String(requestedLimit));
+    next.set("src", "signup_return_results");
+    return `/results?${next.toString()}`;
+  }, [requestedLimit, submittedUrl]);
 
-  const copyProspectDraft = (prospect: Prospect) => {
-    const text = `Subject: ${prospect.outreachSubject}\n\n${prospect.outreachBody}`;
-    void navigator.clipboard.writeText(text).then(() => {
-      setCopiedProspectId(prospect.id);
-      toast.success("Draft copied to clipboard");
-      window.setTimeout(() => setCopiedProspectId(null), 2000);
-    });
-  };
+  const fullPipelineHref = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("src", "results_scan");
+    params.set("view", "all");
+    if (submittedUrl) params.set("url", submittedUrl);
+    if (topLeadId != null) params.set("lead", String(topLeadId));
+    return `/pipeline?${params.toString()}`;
+  }, [submittedUrl, topLeadId]);
+
+  // After signup from Results, land back on the 5-lead preview — then Pipeline is step 3.
+  const resultsSignupNext = resultsPageHref;
+  const resultsSignupHref = `/signup?next=${encodeURIComponent(resultsSignupNext)}&src=results_gate`;
+
+  // Workflow: URL → signup (new) → Results → Pipeline. Keep unsigned users on the signup step.
+  useEffect(() => {
+    if (sampleMode || authLoading) return;
+    if (session?.access_token) return;
+    if (!submittedUrl) return;
+    window.location.replace(resultsSignupHref);
+  }, [authLoading, resultsSignupHref, sampleMode, session?.access_token, submittedUrl]);
 
   const copyRfqPacket = (prospect: Prospect) => {
     const packet = buildRfqSpecPacket(prospect);
@@ -562,13 +514,7 @@ export default function Results() {
     setProspects([]);
     setSelectedIds(new Set());
     setActivatedIds(new Set());
-    setChoosingScout(false);
-    setMaterialChoice("suggest");
-    setScopeChoice("top");
-    setModeChoice("manual");
-    setDeckFileName("");
     setActivationId(null);
-    setActivatingScout(false);
     setUsingFallback(false);
 
     let cancelled = false;
@@ -680,15 +626,6 @@ export default function Results() {
     });
   }
 
-  function activationIdsForScope(scope = scopeChoice): string[] {
-    if (scope === "all") return prospects.map((p) => p.id);
-    if (scope === "selected") return Array.from(selectedIds);
-    return [...prospects]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3)
-      .map((p) => p.id);
-  }
-
   if (sampleMode && (authLoading || sampleAccessLoading)) {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
@@ -737,75 +674,27 @@ export default function Results() {
     );
   }
 
-  async function activateScout(overrides: { scope?: ScopeChoice; mode?: ModeChoice; material?: MaterialChoice } = {}) {
-    if (!session?.access_token) {
-      const top = [...prospects].sort((a, b) => b.score - a.score)[0];
-      const next = top?.leadId ? `/pipeline?lead=${top.leadId}` : resultsSignupNext;
-      toast.info("Sign up free to save this lead, copy the draft, and run it in your pipeline.");
-      window.location.href = `/signup?next=${encodeURIComponent(next)}`;
-      return;
-    }
-    const scope = overrides.scope ?? scopeChoice;
-    const mode = overrides.mode ?? modeChoice;
-    const material = overrides.material ?? materialChoice;
-    const ids = activationIdsForScope(scope);
-    if (!ids.length) {
-      toast.error("Select at least one lead for SIGNAL.");
-      return;
-    }
-    setScopeChoice(scope);
-    setModeChoice(mode);
-    setMaterialChoice(material);
-    setActivatingScout(true);
-    try {
-      const selectedProspects = prospects.filter((p) => ids.includes(p.id));
-      const selectedLeads = selectedProspects.map((p) => ({
-          id: p.id,
-          company: p.company,
-          score: p.score,
-          signal: p.signal,
-          signalType: p.signalType,
-          action: p.action,
-          timing: p.timing,
-          relevance: p.relevance,
-        }));
-      const response = await fetch(`${getApiBase()}/api/scout/activations`, liveFetchInit({
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authHeader(session?.access_token),
-        },
-        body: JSON.stringify({
-          fingerprint: scoutFingerprint(),
-          sourceUrl: submittedUrl,
-          materialChoice: material,
-          materialFilename: deckFileName || undefined,
-          scopeChoice: scope,
-          modeChoice: mode,
-          leads: selectedLeads,
-        }),
-      }));
-      if (!response.ok) throw new Error(await response.text());
-      const activation = await response.json();
-      const createdActivationId = Number(activation.id) || null;
-      setActivationId(createdActivationId);
-      setActivatedIds(new Set(ids));
-      setChoosingScout(false);
-      toast.success(`SIGNAL is preparing outreach for ${selectedLeads.length} buyer${selectedLeads.length === 1 ? "" : "s"}. Opening your working pipeline…`);
-      const pipelineParams = new URLSearchParams();
-      pipelineParams.set("src", "signal_activation");
-      if (createdActivationId) pipelineParams.set("activation", String(createdActivationId));
-      const firstLeadId = selectedProspects[0]?.leadId;
-      if (firstLeadId != null) pipelineParams.set("lead", String(firstLeadId));
-      if (submittedUrl) pipelineParams.set("url", submittedUrl);
-      window.setTimeout(() => {
-        window.location.assign(`/pipeline?${pipelineParams.toString()}`);
-      }, 650);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not activate SIGNAL.");
-    } finally {
-      setActivatingScout(false);
-    }
+  // Workflow gate: new users sign up before the 5-lead Results page.
+  if (!sampleMode && submittedUrl && (authLoading || !session?.access_token)) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#081126]">
+        <Header />
+        <main className="mx-auto max-w-xl px-6 pt-28 text-center text-slate-300">
+          <p className="text-sm font-semibold text-white">
+            {authLoading ? "Checking your workspace…" : "Sign up to see your matched sales leads…"}
+          </p>
+          {!authLoading && (
+            <Link
+              href={resultsSignupHref}
+              className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950"
+            >
+              Continue to sign up
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          )}
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -938,39 +827,34 @@ export default function Results() {
               <div className="mb-6 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-4 sm:px-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">Next step</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">Step 2 of 3 · 5 sales leads</p>
                     <p className="mt-1 text-base font-bold text-white sm:text-lg">
-                      {isSignedIn
-                        ? "Prepare your strongest matches, then open Pipeline to sell"
-                        : "Unlock matches, then open Pipeline to work the opportunities"}
+                      Review these 5 leads — then open the large Pipeline
                     </p>
                     <p className="mt-1 text-sm text-slate-300">
-                      Based on <span className="font-medium text-slate-100 break-all">{submittedUrl}</span>
-                      {usingFallback ? " · sample mode" : ""}. Review cards below, then continue.
+                      Matches for{" "}
+                      <span className="font-medium text-slate-100 break-all">{submittedUrl}</span>
+                      {usingFallback ? " · sample mode" : ""}. No email drafting on this page — Pipeline comes next with instructions.
                     </p>
                   </div>
-                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[240px]">
-                    <button
-                      type="button"
-                      onClick={() => void activateScout({ scope: "top", mode: "manual", material: "skip" })}
-                      disabled={activatingScout}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <Bot className="h-4 w-4" />
-                      {activatingScout
-                        ? "Preparing…"
-                        : isSignedIn
-                          ? "Next step: Prepare top 3"
-                          : "Next step: Start workspace"}
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setChoosingScout((current) => !current)}
-                      className="text-center text-xs font-semibold text-slate-400 underline decoration-slate-600 underline-offset-4 hover:text-slate-200"
-                    >
-                      {choosingScout ? "Hide options" : "Customize buyers or automation mode"}
-                    </button>
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[260px]">
+                    {isSignedIn ? (
+                      <Link
+                        href={fullPipelineHref}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300"
+                      >
+                        Open Pipeline with instructions
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <Link
+                        href={resultsSignupHref}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300"
+                      >
+                        Sign up to see 5 leads
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
@@ -981,178 +865,6 @@ export default function Results() {
                   scanUrl={submittedUrl}
                   unlockedCount={anonymousUnlockedCount}
                 />
-              )}
-
-              {choosingScout && (
-                <div className="mb-6 rounded-2xl border border-white/10 bg-[#0b162f] px-5 py-4">
-                  <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex items-start gap-3">
-                      <Bot className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#FFB000" }} />
-                      <div>
-                        <p className="text-sm font-semibold text-slate-100">
-                          Choose how SIGNAL prepares your pipeline
-                        </p>
-                        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
-                          Choose materials, buyers, and review mode. SIGNAL will save them to CRM and prepare account-specific outreach before anything is sent.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/35 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">
-                        <CheckCircle2 className="h-3 w-3" /> {activationIdsForScope().length} leads selected for review
-                      </span>
-                      {!isSignedIn && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/35 bg-amber-400/10 px-2.5 py-1 text-[10px] font-bold text-amber-200">
-                          <LockKeyhole className="h-3 w-3" /> Account required to send
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid gap-4">
-                    <div className="border-b border-white/10 pb-4">
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[10px] font-normal text-emerald-300">01</span>
-                        <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-300">Sales materials</p>
-                      </div>
-                      <div className="grid gap-2 md:grid-cols-3">
-                        {MATERIAL_OPTIONS.map((option) => {
-                          const Icon = option.icon;
-                          const active = materialChoice === option.id;
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => setMaterialChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-white/5"
-                              style={active
-                                ? { borderColor: "rgba(52,211,153,0.45)", background: "rgba(16,185,129,0.12)" }
-                                : { borderColor: "rgba(255,255,255,0.12)", background: "#081126" }}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="flex min-w-0 items-center gap-2">
-                                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: active ? "#6ee7b7" : "#94a3b8" }} />
-                                  <span className="truncate text-xs font-bold text-slate-100">{option.title}</span>
-                                </span>
-                                {active && <CheckCircle2 className="h-4 w-4 text-emerald-300" />}
-                              </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{option.desc}</p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {materialChoice === "upload" && (
-                        <label className="mt-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-white/15 bg-[#081126] px-3 py-2.5 text-xs text-slate-400 hover:border-emerald-400/50">
-                          <span>{deckFileName || "Choose a PDF, PPT, or deck file"}</span>
-                          <span className="font-normal text-emerald-300">Browse</span>
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept=".pdf,.ppt,.pptx"
-                            onChange={(e) => setDeckFileName(e.target.files?.[0]?.name || "")}
-                          />
-                        </label>
-                      )}
-                    </div>
-
-                    <div className="border-b border-white/10 pb-4">
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-normal text-emerald-300">02</span>
-                          <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-300">Lead scope</p>
-                        </div>
-                        <p className="text-[11px] text-slate-400">
-                          {selectedCount} selected
-                        </p>
-                      </div>
-                      <div className="grid gap-2 md:grid-cols-3">
-                        {SCOPE_OPTIONS.map((option) => {
-                          const active = scopeChoice === option.id;
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => setScopeChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-white/5"
-                              style={active
-                                ? { borderColor: "rgba(52,211,153,0.42)", background: "rgba(16,185,129,0.12)" }
-                                : { borderColor: "rgba(255,255,255,0.12)", background: "#081126" }}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-slate-100">{option.title}</p>
-                                {active && <CheckCircle2 className="h-4 w-4 text-emerald-300" />}
-                              </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{option.desc}</p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="border-b border-white/10 pb-4">
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[10px] font-normal text-emerald-300">03</span>
-                        <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-300">Automation mode</p>
-                      </div>
-                      <div className="grid gap-2 md:grid-cols-3">
-                        {MODE_OPTIONS.map((option) => {
-                          const active = modeChoice === option.id;
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => setModeChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-white/5"
-                              style={active
-                                ? { borderColor: "rgba(52,211,153,0.42)", background: "rgba(16,185,129,0.12)" }
-                                : { borderColor: "rgba(255,255,255,0.12)", background: "#081126" }}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-slate-100">{option.title}</p>
-                                {active ? <CheckCircle2 className="h-4 w-4 text-emerald-300" /> : option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-slate-500" />}
-                              </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{option.desc}</p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-emerald-300">SIGNAL starts with</p>
-                      <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-slate-300 md:grid-cols-4">
-                        <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-emerald-300" /> Lead evaluation</span>
-                        <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5 text-emerald-300" /> Sales strategy</span>
-                        <span className="flex items-center gap-1.5"><CalendarCheck className="h-3.5 w-3.5 text-emerald-300" /> Activity schedule</span>
-                        <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5 text-emerald-300" /> Reply alerts</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 border-t border-white/10 pt-4 sm:flex-row sm:items-center">
-                      <button
-                        type="button"
-                        onClick={() => activateScout()}
-                        disabled={activatingScout}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-amber-500 bg-amber-500 px-4 py-2.5 text-xs font-bold text-gray-900 transition-all hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {activatingScout ? "Preparing buyers..." : "Prepare selected buyers"} <Send className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          activateScout({ mode: "manual", material: "skip", scope: "top" });
-                        }}
-                        disabled={activatingScout}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-[#081126] px-5 py-3 text-xs font-bold text-slate-100 transition-all hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        Prepare top 3 now <MousePointer2 className="h-3.5 w-3.5" />
-                      </button>
-                      <p className="text-[11px] text-slate-400 sm:ml-auto">
-                        Auth first. CRM capture first. Sending stays gated by your review.
-                      </p>
-                    </div>
-                  </div>
-                </div>
               )}
 
               {activatedCount > 0 && (
@@ -1330,22 +1042,28 @@ export default function Results() {
                         </div>
                       )}
 
-                      <div className="px-4 sm:px-6 pb-5 border-t border-white/10">
-                        <PipelineOutreachValuePanel
-                          deal={{
-                            id: p.leadId ?? 0,
-                            company: p.company,
-                            outreachSubject: p.outreachSubject,
-                            outreachBody: p.outreachBody,
-                          }}
-                          hasSession={isSignedIn}
-                          copied={copiedProspectId === p.id}
-                          onCopy={() => copyProspectDraft(p)}
-                          signupNext={resultsSignupNext}
-                          variant="compact"
-                          locked={isLocked}
-                          tone="dark"
-                        />
+                      <div className="px-4 sm:px-6 pb-5 border-t border-white/10 pt-4">
+                        {isLocked ? (
+                          <Link
+                            href={resultsSignupHref}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-2.5 text-xs font-bold text-amber-100 hover:bg-amber-400/20 sm:w-auto"
+                          >
+                            Sign up to unlock · then open Pipeline
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Link>
+                        ) : (
+                          <Link
+                            href={
+                              p.leadId != null
+                                ? `/pipeline?src=results_scan&view=all&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
+                                : fullPipelineHref
+                            }
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-2.5 text-xs font-bold text-amber-100 hover:bg-amber-400/20 sm:w-auto"
+                          >
+                            Open in Pipeline
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Link>
+                        )}
                       </div>
                     </div>
                   );
@@ -1353,12 +1071,10 @@ export default function Results() {
               </div>
 
               <ResultsNextStepCta
-                isSignedIn={isSignedIn}
                 matchCount={sortedProspects.length}
-                activating={activatingScout}
-                onPrepareTop={() => void activateScout({ scope: "top", mode: "manual", material: "skip" })}
-                pipelineHref={topLeadId ? `/pipeline?lead=${topLeadId}&src=results_next_step` : "/pipeline?src=results_next_step"}
-                signupHref={`/signup?next=${encodeURIComponent(resultsSignupNext)}&src=results_next_step`}
+                pipelineHref={fullPipelineHref}
+                isSignedIn={isSignedIn}
+                signupHref={resultsSignupHref}
               />
             </>
           )}
