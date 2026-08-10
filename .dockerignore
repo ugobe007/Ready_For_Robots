@@ -1,6 +1,7 @@
 # Virtual environments (huge - 237MB+)
 .venv/
 .venv_new/
+.venv-harness/
 venv/
 env/
 
