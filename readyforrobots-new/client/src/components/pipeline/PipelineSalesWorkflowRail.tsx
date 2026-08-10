@@ -40,11 +40,11 @@ export default function PipelineSalesWorkflowRail(props: Props) {
   const current = resolveCurrent(props);
 
   const steps: { id: Stage; label: string; hint: string; icon: typeof Target }[] = [
-    { id: "browse", label: "Pick lead", hint: "Select a HOT/WARM row", icon: Target },
-    { id: "save", label: "Save", hint: "Add to your workspace", icon: Zap },
-    { id: "draft", label: "Draft", hint: "Develop with SIGNAL", icon: Mail },
-    { id: "send", label: "Send", hint: "One click from the panel", icon: Mail },
-    { id: "track", label: "Replies", hint: "Inbox & activity feed", icon: ArrowRight },
+    { id: "browse", label: "1. Pick", hint: "Select the highest-fit HOT lead", icon: Target },
+    { id: "save", label: "2. Save", hint: "Add to your workspace", icon: Zap },
+    { id: "draft", label: "3. Draft", hint: "Copy SIGNAL outreach", icon: Mail },
+    { id: "send", label: "4. Send", hint: "Send from the detail panel", icon: Mail },
+    { id: "track", label: "5. Replies", hint: "Track in Inbox", icon: ArrowRight },
   ];
 
   return (
@@ -114,11 +114,17 @@ export default function PipelineSalesWorkflowRail(props: Props) {
           );
         })}
       </ol>
-      {!hasSession && (
-        <p className={`mt-2 text-[11px] ${dark ? "text-slate-400" : "text-gray-500"}`}>
-          Sign in to save leads, draft outreach, and send from this page — no separate CRM required.
-        </p>
-      )}
+      <p className={`mt-2 text-[11px] ${dark ? "text-slate-300" : "text-gray-600"}`}>
+        {hasSession
+          ? current === "browse" || current === "save"
+            ? "Next step: select a HOT lead, then Save it to open your working pipeline."
+            : current === "draft"
+              ? "Next step: copy the outreach draft in the detail panel."
+              : current === "send"
+                ? "Next step: send the draft, then watch Inbox for replies."
+                : "Next step: check Inbox and advance the opportunity."
+          : "Next step: browse a HOT lead, then start a free workspace to save, draft, and send."}
+      </p>
     </div>
   );
 }

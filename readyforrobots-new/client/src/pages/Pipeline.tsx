@@ -2364,57 +2364,64 @@ export default function Pipeline() {
   const isSignedIn = Boolean(session?.access_token);
   const isFirstWorkspaceRun = isSignedIn && savedLeadCount === 0;
   const hasSavedLead = savedLeadCount > 0;
-  const nextStepsTitle = isFirstWorkspaceRun
-    ? "What to do next"
-    : "Next steps";
+  const nextStepsTitle = "Next step";
   const nextStepsItems = submittedHostname
     ? scopedNoMatches
       ? [
-          `Try a broader company URL for ${submittedHostname}, starting with the homepage or root domain.`,
-          "Switch to full results to find adjacent buyers you can work right now.",
+          `Widen the search: try the homepage URL for ${submittedHostname}.`,
+          "Switch to full pipeline results and pick the strongest HOT lead.",
           isSignedIn
-            ? "Save one strong lead and send first outreach while SIGNAL keeps matching your submitted URL."
-            : "Start a free workspace to save one strong lead and send first outreach while SIGNAL keeps matching your submitted URL.",
+            ? "Save that lead, copy the outreach draft, and send."
+            : "Start a free workspace, save that lead, then copy and send the draft.",
         ]
       : isFirstWorkspaceRun
         ? [
-            `Review the top matches related to ${submittedHostname} and identify the best two or three buyers.`,
-            "Save your best-fit lead to start your pipeline workspace.",
-            "Open the saved lead, copy the outreach draft, and send your first message.",
-            "Move the best opportunity forward in the pipeline workspace below.",
+            `Pick the best buyer related to ${submittedHostname} from the list (left).`,
+            "Click Save to put them in your working pipeline.",
+            "Copy the outreach draft in the detail panel, then send.",
           ]
         : isSignedIn && hasSavedLead
           ? [
-              `Review the matched buyers for ${submittedHostname} and keep the strongest opportunities in scope.`,
-              "Advance your saved lead in the pipeline workspace or save one more high-fit account.",
-              "Copy the outreach draft or open the selected lead details to keep momentum.",
+              `Keep the strongest ${submittedHostname} matches in scope.`,
+              "Advance your saved lead or save one more high-fit account.",
+              "Copy the draft from the detail panel and send your next touch.",
             ]
         : [
-            `Review the matched buyers for ${submittedHostname} and keep the strongest opportunities in scope.`,
-            "Save or advance the best lead in your pipeline workspace.",
-            "Copy the outreach draft and use the CRM panel below to keep momentum.",
+            `Review matches for ${submittedHostname} and pick one HOT lead.`,
+            "Save it to your workspace (or start free to unlock save).",
+            "Copy the outreach draft and keep moving in the panel on the right.",
           ]
     : isFirstWorkspaceRun
       ? [
-          "Start with the highest-fit HOT lead in the list.",
-          "Save your best lead to open your working pipeline.",
+          "Select the highest-fit HOT lead in the list.",
+          "Save it — that opens your working pipeline.",
           "Copy the outreach draft and send your first message.",
-          "Submit a company URL from Home anytime to scope the pipeline to related buyers.",
         ]
       : isSignedIn && hasSavedLead
         ? [
-            "Review your saved lead first, then add the next best-fit account from the list.",
-            "Advance the selected opportunity or copy the outreach draft from the details panel.",
-            "Submit a company URL from Home anytime to scope the pipeline to related buyers.",
+            "Open your saved lead first, then add the next best account.",
+            "Copy the outreach draft from the details panel.",
+            "Send, then track replies in Inbox.",
           ]
       : [
-          "Start with the highest-fit HOT lead in the list.",
-          "Save or advance the best lead in your pipeline workspace.",
-          "Submit a company URL from Home anytime to scope the pipeline to related buyers.",
+          "Select the highest-fit HOT lead in the list.",
+          "Save it (or start free workspace to unlock save + drafts).",
+          "Copy the outreach draft and send from the detail panel.",
         ];
   const canSaveSelected = Boolean(selected) && (!isSignedIn || !crmAccountIdByCompanyId[selected!.id]);
   const canCopySelectedDraft = Boolean(selected?.outreachBody);
   const canOpenSelectedDraft = Boolean(selected?.outreachBody) && showKanban && Boolean(session?.access_token);
+  const nextStepPrimaryLabel = !isSignedIn
+    ? "Next step: Start free workspace"
+    : canSaveSelected
+      ? "Next step: Save selected lead"
+      : canCopySelectedDraft
+        ? "Next step: Copy outreach draft"
+        : canOpenSelectedDraft
+          ? "Next step: Open selected lead"
+          : selected
+            ? "Next step: Review selected lead"
+            : "Next step: Pick a HOT lead";
 
   // Manual lead click = engagement. Pin the selection and stop auto-rotation so the
   // visitor can finish reading the outreach draft before we ask them to sign up.
@@ -2580,6 +2587,25 @@ export default function Pipeline() {
       return false;
     } finally {
       setAdvancingLeadId(null);
+    }
+  };
+
+  const runNextStepPrimary = () => {
+    if (!isSignedIn) {
+      const next = selected?.id != null ? `/pipeline?lead=${selected.id}` : "/pipeline";
+      window.location.href = `/signup?next=${encodeURIComponent(next)}&src=pipeline_next_step`;
+      return;
+    }
+    if (canSaveSelected && selected) {
+      void handleSaveLead(selected);
+      return;
+    }
+    if (canCopySelectedDraft) {
+      copyDraft();
+      return;
+    }
+    if (canOpenSelectedDraft) {
+      spotlightOutreachDraft();
     }
   };
 
@@ -3308,24 +3334,22 @@ export default function Pipeline() {
           <div className="pipeline-command-rail flex flex-col gap-3">
             {session?.access_token && <AdminNav variant="dark" />}
 
+            <PipelineSalesWorkflowRail
+              hasSession={Boolean(session?.access_token)}
+              hasSavedLeads={savedLeadCount > 0}
+              hasSelection={Boolean(selected)}
+              hasDraft={Boolean(selected?.outreachBody)}
+              hasContact={Boolean(selected?.contact)}
+              sent={selected?.stage === "Outreach Sent"}
+              variant="dark"
+            />
             {session?.access_token && (
-              <>
-                <PipelineSalesWorkflowRail
-                  hasSession={Boolean(session?.access_token)}
-                  hasSavedLeads={savedLeadCount > 0}
-                  hasSelection={Boolean(selected)}
-                  hasDraft={Boolean(selected?.outreachBody)}
-                  hasContact={Boolean(selected?.contact)}
-                  sent={selected?.stage === "Outreach Sent"}
-                  variant="dark"
-                />
-                <WorkspaceQuickLinks
-                  savedCount={savedLeadCount}
-                  hubspotConnected={hubspotIntegration?.connected}
-                  queuedActions={queuedActivations}
-                  variant="dark"
-                />
-              </>
+              <WorkspaceQuickLinks
+                savedCount={savedLeadCount}
+                hubspotConnected={hubspotIntegration?.connected}
+                queuedActions={queuedActivations}
+                variant="dark"
+              />
             )}
           </div>
 
@@ -3414,32 +3438,32 @@ export default function Pipeline() {
                       ) : null}
                     </div>
                   )}
-                  <div className="mt-2 rounded-lg border border-emerald-700 bg-emerald-200 px-3 py-2 text-[11px] text-slate-950 shadow-sm">
-                    <p className="font-semibold">{nextStepsTitle}:</p>
-                    <ol className="mt-1 space-y-0.5 pl-4">
+                  <div className="mt-2 rounded-xl border border-emerald-700/80 bg-[#0b162f] px-3 py-3 text-[11px] text-slate-100 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">{nextStepsTitle}</p>
+                    <p className="mt-1 text-sm font-semibold text-white">
+                      Pick a lead → save it → copy draft → send
+                    </p>
+                    <ol className="mt-2 space-y-1 pl-4 text-slate-300">
                       {nextStepsItems.map((item, index) => (
                         <li key={`${index}-${item.slice(0, 24)}`} className="list-decimal">
                           {item}
                         </li>
                       ))}
                     </ol>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {canSaveSelected ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (selected) void handleSaveLead(selected);
-                          }}
-                          className="inline-flex items-center justify-center rounded-md border border-emerald-900 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-emerald-950 hover:border-emerald-950 hover:bg-emerald-50"
-                        >
-                          {isSignedIn ? "Save selected lead" : "Start free workspace"}
-                        </button>
-                      ) : null}
-                      {canCopySelectedDraft ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={runNextStepPrimary}
+                        disabled={isSignedIn && !selected && !canCopySelectedDraft}
+                        className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-[11px] font-bold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {nextStepPrimaryLabel}
+                      </button>
+                      {isSignedIn && canCopySelectedDraft && canSaveSelected ? (
                         <button
                           type="button"
                           onClick={copyDraft}
-                          className="inline-flex items-center justify-center rounded-md border border-slate-700 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-900 hover:border-slate-900 hover:bg-slate-50"
+                          className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10"
                         >
                           {copied ? "Copied draft" : "Copy draft"}
                         </button>
@@ -3448,7 +3472,7 @@ export default function Pipeline() {
                         <button
                           type="button"
                           onClick={spotlightOutreachDraft}
-                          className="inline-flex items-center justify-center rounded-md border border-slate-700 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-900 hover:border-slate-900 hover:bg-slate-50"
+                          className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10"
                         >
                           Open selected lead
                         </button>

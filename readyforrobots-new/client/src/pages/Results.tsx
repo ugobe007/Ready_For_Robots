@@ -41,6 +41,7 @@ import LeadShareBar from "@/components/LeadShareBar";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import ResultsValueStrip from "@/components/results/ResultsValueStrip";
 import ResultsFomoBanner, { RESULTS_ANONYMOUS_UNLOCK } from "@/components/results/ResultsFomoBanner";
+import ResultsNextStepCta from "@/components/results/ResultsNextStepCta";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -934,33 +935,43 @@ export default function Results() {
                 scanUrl={submittedUrl}
               />
 
-              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  {usingFallback && (
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2 text-slate-500">
-                      Sample mode · connect live pipeline for real matches
+              <div className="mb-6 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-4 sm:px-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">Next step</p>
+                    <p className="mt-1 text-base font-bold text-white sm:text-lg">
+                      {isSignedIn
+                        ? "Prepare your strongest matches, then open Pipeline to sell"
+                        : "Unlock matches, then open Pipeline to work the opportunities"}
                     </p>
-                  )}
-                  <p className="text-sm text-slate-300">
-                    Based on <span className="text-slate-100 font-medium break-all">{submittedUrl}</span>. SIGNAL will prepare the strongest buyers for action.
-                  </p>
-                </div>
-                <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-                  <button
-                    type="button"
-                    onClick={() => void activateScout({ scope: "top", mode: "manual", material: "skip" })}
-                    disabled={activatingScout}
-                    className="inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl border-2 border-amber-500 bg-amber-500 px-6 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60 sm:shrink-0"
-                  >
-                    <Bot className="h-4 w-4" /> {activatingScout ? "Preparing your pipeline…" : "Activate SIGNAL · Prepare top 3"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setChoosingScout((current) => !current)}
-                    className="text-xs font-semibold text-slate-400 underline decoration-slate-600 underline-offset-4 hover:text-slate-200"
-                  >
-                    {choosingScout ? "Hide options" : "Customize buyers or automation mode"}
-                  </button>
+                    <p className="mt-1 text-sm text-slate-300">
+                      Based on <span className="font-medium text-slate-100 break-all">{submittedUrl}</span>
+                      {usingFallback ? " · sample mode" : ""}. Review cards below, then continue.
+                    </p>
+                  </div>
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[240px]">
+                    <button
+                      type="button"
+                      onClick={() => void activateScout({ scope: "top", mode: "manual", material: "skip" })}
+                      disabled={activatingScout}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Bot className="h-4 w-4" />
+                      {activatingScout
+                        ? "Preparing…"
+                        : isSignedIn
+                          ? "Next step: Prepare top 3"
+                          : "Next step: Start workspace"}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChoosingScout((current) => !current)}
+                      className="text-center text-xs font-semibold text-slate-400 underline decoration-slate-600 underline-offset-4 hover:text-slate-200"
+                    >
+                      {choosingScout ? "Hide options" : "Customize buyers or automation mode"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1340,6 +1351,15 @@ export default function Results() {
                   );
                 })}
               </div>
+
+              <ResultsNextStepCta
+                isSignedIn={isSignedIn}
+                matchCount={sortedProspects.length}
+                activating={activatingScout}
+                onPrepareTop={() => void activateScout({ scope: "top", mode: "manual", material: "skip" })}
+                pipelineHref={topLeadId ? `/pipeline?lead=${topLeadId}&src=results_next_step` : "/pipeline?src=results_next_step"}
+                signupHref={`/signup?next=${encodeURIComponent(resultsSignupNext)}&src=results_next_step`}
+              />
             </>
           )}
         </div>
