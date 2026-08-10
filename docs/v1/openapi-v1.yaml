@@ -1,0 +1,815 @@
+openapi: 3.1.0
+info:
+  title: ReadyForRobots Robot Customer Acquisition Intelligence API
+  version: 1.0.0
+  description: V1 contract for robot analysis, facility opportunity ranking, qualification, and outcomes.
+servers:
+  - url: /api/v1
+paths:
+  /robot-analyses:
+    post:
+      operationId: createRobotAnalysis
+      summary: Start public robot product analysis
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRobotAnalysis'
+      responses:
+        '202':
+          description: Analysis accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RobotAnalysisAccepted'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /robot-analyses/{analysisId}:
+    get:
+      operationId: getRobotAnalysis
+      summary: Get analysis progress or draft profile
+      parameters:
+        - $ref: '#/components/parameters/AnalysisId'
+      responses:
+        '200':
+          description: Current analysis state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RobotAnalysis'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /robot-analyses/{analysisId}/confirm:
+    post:
+      operationId: confirmRobotAnalysis
+      summary: Confirm profile and append OEM corrections
+      parameters:
+        - $ref: '#/components/parameters/AnalysisId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmRobotProfile'
+      responses:
+        '200':
+          description: Profile confirmed and search started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmedRobotProfile'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /robots/{robotId}/opportunity-searches:
+    post:
+      operationId: createOpportunitySearch
+      summary: Start facility/work search for a robot profile
+      security:
+        - bearerAuth: []
+        - analysisToken: []
+      parameters:
+        - $ref: '#/components/parameters/RobotId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOpportunitySearch'
+      responses:
+        '202':
+          description: Search accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpportunitySearch'
+  /opportunity-searches/{searchId}:
+    get:
+      operationId: getOpportunitySearch
+      summary: Get work/facility/matching progress
+      security:
+        - bearerAuth: []
+        - analysisToken: []
+      parameters:
+        - name: searchId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Search progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpportunitySearch'
+  /robots/{robotId}/opportunities:
+    get:
+      operationId: listRobotOpportunities
+      summary: List ranked facility opportunities
+      security:
+        - bearerAuth: []
+        - analysisToken: []
+      parameters:
+        - $ref: '#/components/parameters/RobotId'
+        - name: priority
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/CallPriority'
+        - name: industry
+          in: query
+          schema:
+            type: string
+        - name: work_type
+          in: query
+          schema:
+            type: string
+        - name: state_region
+          in: query
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Ranked opportunity page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpportunityPage'
+  /opportunities:
+    get:
+      operationId: listMyOpportunities
+      summary: List authenticated team's decision queue
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Team opportunity queue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpportunityPage'
+  /opportunities/{opportunityId}:
+    get:
+      operationId: getOpportunity
+      summary: Get facility/work decision detail
+      security:
+        - bearerAuth: []
+        - analysisToken: []
+      parameters:
+        - $ref: '#/components/parameters/OpportunityId'
+      responses:
+        '200':
+          description: Opportunity detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpportunityDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /opportunities/{opportunityId}/qualification:
+    get:
+      operationId: getOpportunityQualification
+      summary: Get the current qualification gap and next questions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OpportunityId'
+      responses:
+        '200':
+          description: Qualification state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualificationState'
+  /opportunities/{opportunityId}/answers:
+    post:
+      operationId: answerQualificationQuestion
+      summary: Append a structured qualification answer
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OpportunityId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QualificationAnswerInput'
+      responses:
+        '200':
+          description: Answer and recalculation diff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualificationResult'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /opportunities/{opportunityId}/transitions:
+    post:
+      operationId: transitionOpportunity
+      summary: Execute an evidence-gated opportunity command
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OpportunityId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransitionResult'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /opportunities/{opportunityId}/outcomes:
+    post:
+      operationId: reportOpportunityOutcome
+      summary: Append a structured loss, pilot, or deployment outcome
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OpportunityId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutcomeInput'
+      responses:
+        '201':
+          description: Outcome recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutcomeResult'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    analysisToken:
+      type: apiKey
+      in: cookie
+      name: rfr_analysis_token
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 128
+    AnalysisId:
+      name: analysisId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RobotId:
+      name: robotId
+      in: path
+      required: true
+      schema:
+        type: integer
+    OpportunityId:
+      name: opportunityId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    TruthState:
+      type: string
+      enum: [observed, inferred, oem_verified, customer_confirmed, site_verified, deployment_verified, unknown]
+    OpportunityState:
+      type: string
+      enum: [discovered, matched, prioritized, contacted, engaged, qualified, site_review, pilot, deployed]
+    Disposition:
+      type: string
+      enum: [active, watch, paused, lost]
+    CallPriority:
+      type: string
+      enum: [call_now, qualify, watch, wrong_robot, insufficient_evidence, do_not_surface]
+    ProvenancedValue:
+      type: object
+      required: [value, truth_state, confidence, evidence_refs]
+      properties:
+        value: {}
+        truth_state:
+          $ref: '#/components/schemas/TruthState'
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        evidence_refs:
+          type: array
+          items:
+            type: string
+            format: uuid
+    CreateRobotAnalysis:
+      type: object
+      properties:
+        source_url:
+          type: [string, 'null']
+          format: uri
+        description:
+          type: [string, 'null']
+          maxLength: 4000
+      anyOf:
+        - required: [source_url]
+        - required: [description]
+    RobotAnalysisAccepted:
+      type: object
+      required: [schema_version, analysis_id, analysis_token, status, status_url]
+      properties:
+        schema_version:
+          const: v1
+        analysis_id:
+          type: string
+          format: uuid
+        analysis_token:
+          type: string
+        status:
+          const: queued
+        status_url:
+          type: string
+    RobotAnalysis:
+      type: object
+      required: [schema_version, analysis_id, status, progress]
+      properties:
+        schema_version:
+          const: v1
+        analysis_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, crawling, extracting, needs_review, confirmed, finding_work, resolving_facilities, matching, ranking, complete, failed, unsupported_robot, insufficient_product_evidence]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        message:
+          type: string
+        retryable:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            type: string
+        profile_etag:
+          type: [string, 'null']
+        draft_profile:
+          type: [object, 'null']
+          additionalProperties: true
+    ProfileCorrection:
+      type: object
+      required: [field_path, value, truth_state]
+      properties:
+        field_path:
+          type: string
+        value: {}
+        truth_state:
+          const: oem_verified
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+    ConfirmRobotProfile:
+      type: object
+      required: [profile_etag, corrections]
+      properties:
+        profile_etag:
+          type: string
+        corrections:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileCorrection'
+    ConfirmedRobotProfile:
+      type: object
+      required: [schema_version, robot_id, profile_version_id, opportunity_search_id]
+      properties:
+        schema_version:
+          const: v1
+        robot_id:
+          type: integer
+        profile_version_id:
+          type: string
+          format: uuid
+        opportunity_search_id:
+          type: string
+          format: uuid
+        critical_unknowns:
+          type: array
+          items:
+            type: string
+    CreateOpportunitySearch:
+      type: object
+      properties:
+        profile_version_id:
+          type: string
+          format: uuid
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+        state_region:
+          type: [string, 'null']
+        industry:
+          type: [string, 'null']
+        maximum_facilities:
+          type: integer
+          minimum: 10
+          maximum: 500
+          default: 150
+    OpportunitySearch:
+      type: object
+      required: [schema_version, search_id, status, counts]
+      properties:
+        schema_version:
+          const: v1
+        search_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, finding_work, resolving_facilities, matching, ranking, complete, failed]
+        counts:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+        warnings:
+          type: array
+          items:
+            type: string
+    Dimension:
+      type: object
+      required: [label, confidence, reasons]
+      properties:
+        score:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 100
+        label:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        reasons:
+          type: array
+          items:
+            type: string
+    OpportunityCard:
+      type: object
+      required: [id, facility, work, priority, work_match, evidence, why_now, automation_theses]
+      properties:
+        id:
+          type: string
+          format: uuid
+        facility:
+          type: object
+          additionalProperties: true
+        work:
+          type: object
+          additionalProperties: true
+        priority:
+          $ref: '#/components/schemas/CallPriority'
+        work_match:
+          type: string
+          enum: [excellent, good, possible, poor, insufficient_information]
+        evidence:
+          type: string
+        why_now:
+          type: array
+          items:
+            type: string
+        automation_theses:
+          type: array
+          items:
+            type: string
+            enum: [replace, transfer, expand, cover, protect, safety]
+        unknown_count:
+          type: integer
+        blockers:
+          type: array
+          items:
+            type: string
+    OpportunityPage:
+      type: object
+      required: [schema_version, items]
+      properties:
+        schema_version:
+          const: v1
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpportunityCard'
+        next_cursor:
+          type: [string, 'null']
+        counts:
+          type: object
+          additionalProperties:
+            type: integer
+    OpportunityDetail:
+      allOf:
+        - $ref: '#/components/schemas/OpportunityCard'
+        - type: object
+          required: [schema_version, state, disposition, dimensions, known, inferred, unknowns, allowed_commands]
+          properties:
+            schema_version:
+              const: v1
+            public_id:
+              type: string
+            state:
+              $ref: '#/components/schemas/OpportunityState'
+            disposition:
+              $ref: '#/components/schemas/Disposition'
+            dimensions:
+              type: object
+              required: [work_match, labor_pressure, operational_exposure, buyability, deployability, evidence_confidence, account_resolvability]
+              additionalProperties:
+                $ref: '#/components/schemas/Dimension'
+            known:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProvenancedValue'
+            inferred:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProvenancedValue'
+            unknowns:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            allowed_commands:
+              type: array
+              items:
+                type: string
+    QualificationQuestion:
+      type: object
+      required: [id, prompt, answer_type, impact, affected_dimensions]
+      properties:
+        id:
+          type: string
+          format: uuid
+        prompt:
+          type: string
+        answer_type:
+          type: string
+          enum: [number, range, boolean, enum, short_text]
+        unit:
+          type: [string, 'null']
+        options:
+          type: array
+          items:
+            type: string
+        impact:
+          type: string
+        affected_dimensions:
+          type: array
+          items:
+            type: string
+        may_create_blocker:
+          type: boolean
+    QualificationState:
+      type: object
+      required: [schema_version, understood_percent, questions]
+      properties:
+        schema_version:
+          const: v1
+        understood_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        questions:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/QualificationQuestion'
+    QualificationAnswerInput:
+      type: object
+      required: [question_id, answer, answer_state, truth_state, source]
+      properties:
+        question_id:
+          type: string
+          format: uuid
+        answer: {}
+        answer_state:
+          type: string
+          enum: [known, unknown, not_applicable, conflicting]
+        truth_state:
+          $ref: '#/components/schemas/TruthState'
+        source:
+          type: object
+          required: [type, occurred_at]
+          properties:
+            type:
+              type: string
+            occurred_at:
+              type: string
+              format: date-time
+    QualificationResult:
+      type: object
+      required: [schema_version, understood_percent, recalculation, allowed_commands]
+      properties:
+        schema_version:
+          const: v1
+        understood_percent:
+          type: integer
+        recalculation:
+          type: object
+          additionalProperties: true
+        next_question:
+          anyOf:
+            - $ref: '#/components/schemas/QualificationQuestion'
+            - type: 'null'
+        allowed_commands:
+          type: array
+          items:
+            type: string
+    TransitionInput:
+      type: object
+      required: [command, occurred_at]
+      properties:
+        command:
+          type: string
+          enum: [mark_contacted, mark_engaged, mark_qualified, request_site_review, start_pilot, mark_deployed, watch, pause, resume, mark_lost]
+        contact_result:
+          type: [string, 'null']
+        loss_reason:
+          type: [string, 'null']
+        reason:
+          type: [string, 'null']
+        resume_at:
+          type: [string, 'null']
+          format: date-time
+        evidence_refs:
+          type: array
+          items:
+            type: string
+            format: uuid
+        occurred_at:
+          type: string
+          format: date-time
+    TransitionResult:
+      type: object
+      required: [schema_version, opportunity_id, state, disposition, event_id]
+      properties:
+        schema_version:
+          const: v1
+        opportunity_id:
+          type: string
+          format: uuid
+        state:
+          $ref: '#/components/schemas/OpportunityState'
+        disposition:
+          $ref: '#/components/schemas/Disposition'
+        event_id:
+          type: string
+          format: uuid
+        next_action:
+          type: [string, 'null']
+    OutcomeInput:
+      type: object
+      required: [outcome_type, occurred_at]
+      properties:
+        outcome_type:
+          type: string
+          enum: [not_pursued, no_engagement, lost, pilot, deployed, expanded]
+        loss_reason:
+          type: [string, 'null']
+        prediction_wrong:
+          type: boolean
+          default: false
+        robot_profile_version_id:
+          type: [string, 'null']
+          format: uuid
+        work_unit_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        units_deployed:
+          type: [integer, 'null']
+          minimum: 0
+        deployment_scope:
+          type: [string, 'null']
+          enum: [pilot, production, expansion, null]
+        metrics:
+          type: object
+          additionalProperties: true
+        note:
+          type: [string, 'null']
+          maxLength: 2000
+        occurred_at:
+          type: string
+          format: date-time
+    OutcomeResult:
+      type: object
+      required: [schema_version, outcome_id, event_id, learned]
+      properties:
+        schema_version:
+          const: v1
+        outcome_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        learned:
+          type: array
+          items:
+            type: string
+    ErrorEnvelope:
+      type: object
+      required: [schema_version, error]
+      properties:
+        schema_version:
+          const: v1
+        error:
+          type: object
+          required: [code, message, retryable]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            retryable:
+              type: boolean
+            field_errors:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            required_facts:
+              type: array
+              items:
+                type: string
+  responses:
+    ValidationError:
+      description: Request or evidence validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: Resource version or transition conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'

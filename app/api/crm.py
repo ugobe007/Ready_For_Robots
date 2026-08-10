@@ -61,6 +61,11 @@ from app.services.cal_insights import pick_cal_insight
 from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import crm_workflow_intelligence, record_sales_experience
+from app.services.deployment_conversion import (
+    CONVERSION_STAGES,
+    ensure_deployment_opportunity,
+    record_conversion_transition,
+)
 from app.services.crm_engagement_sync import (
     serialize_engagement,
     sync_account_stage_to_engagement,
@@ -183,6 +188,16 @@ class DraftOutreachIn(BaseModel):
     collateral_policy: Optional[str] = None
     collateral_links: Optional[str] = None
     style_instruction: Optional[str] = None
+
+
+class DeploymentTransitionIn(BaseModel):
+    to_stage: str
+    evidence_level: str
+    contact_result: Optional[str] = None
+    reason: Optional[str] = None
+    evidence: Optional[list[dict[str, Any]]] = None
+    facts_learned: Optional[dict[str, Any]] = None
+    prediction_snapshot: Optional[dict[str, Any]] = None
 
 
 def _serialize_team_row(team: Team, role: str) -> dict[str, Any]:
@@ -854,6 +869,7 @@ def create_account(
             raise HTTPException(status_code=400, detail="name is required when company_id is omitted")
 
         existing = None
+        created = False
         if body.company_id is not None:
             existing = (
                 db.query(CrmAccount)
@@ -894,21 +910,28 @@ def create_account(
             )
             db.add(row)
             db.flush()
+            created = True
             sync_account_stage_to_engagement(db, row)
-            db.commit()
-            db.refresh(row)
+        opportunity = ensure_deployment_opportunity(db, account=row, owner_user_id=uid)
+        if created:
             record_sales_experience(
                 db,
                 event_type="crm_lead_saved",
-                outcome="qualified",
+                outcome="observed",
                 team_id=row.team_id,
                 user_id=uid,
                 crm_account_id=row.id,
+                sales_opportunity_id=opportunity.id,
                 company_id=row.company_id,
                 channel="crm",
                 confidence=0.85,
-                payload={"source": "crm_create_account"},
+                payload={
+                    "source": "crm_create_account",
+                    "deployment_opportunity_id": opportunity.payload.get("public_id"),
+                },
             )
+        db.commit()
+        db.refresh(row)
         # Best-effort named contact fill on save (Hunter → Apollo waterfall).
         if row.company_id and not (row.contact_email or "").strip():
             try:
@@ -965,6 +988,52 @@ def create_account(
         ) from e
     except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
         _raise_crm_db_error(e)
+
+
+@router.post("/accounts/{account_id}/deployment-transition")
+def transition_account_deployment(
+    account_id: str,
+    body: DeploymentTransitionIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        aid = uuid.UUID(account_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid account id") from None
+    acct = _crm_account_for_user(db, uid, aid)
+    if not acct:
+        raise HTTPException(status_code=404, detail="Account not found or access denied")
+    try:
+        opportunity = ensure_deployment_opportunity(db, account=acct, owner_user_id=uid)
+        event = record_conversion_transition(
+            db,
+            opportunity=opportunity,
+            to_stage=body.to_stage,
+            actor="seller",
+            occurred_at=datetime.now(timezone.utc).isoformat(),
+            evidence_level=body.evidence_level,
+            prediction_snapshot=body.prediction_snapshot,
+            contact_result=body.contact_result,
+            reason=body.reason,
+            evidence=body.evidence,
+            facts_learned=body.facts_learned,
+        )
+        db.commit()
+        return {
+            "opportunity_id": opportunity.payload.get("public_id"),
+            "stage": opportunity.current_stage,
+            "disposition": getattr(opportunity, "disposition", None)
+            or (opportunity.payload or {}).get("disposition", "active"),
+            "event_id": str(event.id),
+        }
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as exc:
+        db.rollback()
+        _raise_crm_db_error(exc)
 
 
 @router.patch("/accounts/{account_id}", response_model=CrmAccountOut)
@@ -1460,6 +1529,7 @@ def send_account_outreach(
         from app.services.sequence_runner import enroll_account
 
         enroll_account(db, team_id=acct.team_id, crm_account_id=acct.id)
+        opportunity = ensure_deployment_opportunity(db, account=acct, owner_user_id=uid)
         record_sales_experience(
             db,
             event_type="crm_outreach_sent",
@@ -1477,6 +1547,22 @@ def send_account_outreach(
                 "bcc": bcc,
             },
         )
+        current_stage = (opportunity.current_stage or "new").lower()
+        if current_stage != "lost" and (
+            current_stage == "new"
+            or current_stage not in CONVERSION_STAGES
+            or CONVERSION_STAGES.index(current_stage) < CONVERSION_STAGES.index("contacted")
+        ):
+            record_conversion_transition(
+                db,
+                opportunity=opportunity,
+                to_stage="contacted",
+                actor="seller",
+                occurred_at=now.isoformat(),
+                evidence_level="e1_observed",
+                contact_result="no_response",
+                evidence=[{"type": "outreach_message", "id": str(msg.id)}],
+            )
         db.commit()
 
         effective_reply_to = None if _inbound_missing else reply_to

@@ -1,0 +1,596 @@
+vendor_name,family,model_slug,model_name,primary_class,work_to_map,commercial_maturity,calibration_tier,source
+Seegrid,Palion,seegrid-palion-lift,Palion Lift,autonomous_lift_tow,"pallets,towing,material_movement",commercial,1,tier1_oem_catalog_v1
+Seegrid,Palion,seegrid-palion-tow,Palion Tow,autonomous_tugger,"towing,material_movement",commercial,1,tier1_oem_catalog_v1
+Seegrid,Palion,seegrid-palion-lift-rs1,Lift RS1,autonomous_forklift,"low_lift_pallet,parts_to_line",commercial,1,tier1_oem_catalog_v1
+Vecna Robotics,AFL / AMR,vecna-afl,Vecna AFL,autonomous_forklift,pallet_movement,commercial,1,tier1_oem_catalog_v1
+Vecna Robotics,AFL / AMR,vecna-amr,Vecna AMR,amr,material_transport,commercial,1,tier1_oem_catalog_v1
+Vecna Robotics,AFL / AMR,vecna-tugger,Vecna Tugger,autonomous_tugger,line_replenishment,commercial,1,tier1_oem_catalog_v1
+Fox Robotics,FoxBot,foxbot-atl,FoxBot ATL,autonomous_forklift,"trailer_loading,trailer_unloading",commercial,1,tier1_oem_catalog_v1
+Third Wave Automation,TWA Reach,twa-reach,TWA Reach,autonomous_forklift,warehouse_pallet_handling,pilot,1,tier1_oem_catalog_v1
+Cyngn,DriveMod,cyngn-drivemod,DriveMod,autonomous_industrial_vehicle,material_movement,commercial,1,tier1_oem_catalog_v1
+OTTO Motors,OTTO family,otto-100,OTTO 100,amr,"material_transport,cart_transport",commercial,1,tier1_oem_catalog_v1
+OTTO Motors,OTTO family,otto-750,OTTO 750,amr,material_transport,commercial,1,tier1_oem_catalog_v1
+OTTO Motors,OTTO family,otto-1500,OTTO 1500,amr,heavy_material_transport,commercial,1,tier1_oem_catalog_v1
+OTTO Motors,OTTO family,otto-lifter,OTTO Lifter,autonomous_forklift,pallet_pickup_drop,commercial,1,tier1_oem_catalog_v1
+Mobile Industrial Robots (MiR),MiR AMR,mir-250,MiR250,amr,cart_transport,commercial,1,tier1_oem_catalog_v1
+Mobile Industrial Robots (MiR),MiR AMR,mir-600,MiR600,amr,"cart_transport,pallet_transport",commercial,1,tier1_oem_catalog_v1
+Mobile Industrial Robots (MiR),MiR AMR,mir-1350,MiR1350,amr,heavy_cart_transport,commercial,1,tier1_oem_catalog_v1
+Mobile Industrial Robots (MiR),MiR AMR,mir-1200-pallet-jack,MiR1200 Pallet Jack,pallet_moving_amr,pallet_transport,commercial,1,tier1_oem_catalog_v1
+Locus Robotics,LocusOne,locus-origin,Locus Origin,amr,"picking,fulfillment",commercial,1,tier1_oem_catalog_v1
+Locus Robotics,LocusOne,locus-vector,Locus Vector,amr,"picking,fulfillment",commercial,1,tier1_oem_catalog_v1
+Geekplus,Geekplus AMR,geekplus-p800,Geekplus P800,warehouse_amr,"picking,moving,sorting",commercial,1,tier1_oem_catalog_v1
+Geekplus,Geekplus AMR,geekplus-poppick,Geekplus PopPick,goods_to_person,"picking,sorting",commercial,1,tier1_oem_catalog_v1
+Geekplus,Geekplus AMR,geekplus-rover,Geekplus Rover,warehouse_amr,"moving,sorting",commercial,1,tier1_oem_catalog_v1
+ForwardX Robotics,Flex / Max,forwardx-flex,ForwardX Flex,amr,picking,commercial,1,tier1_oem_catalog_v1
+ForwardX Robotics,Flex / Max,forwardx-max,ForwardX Max,amr,pallet_movement,commercial,1,tier1_oem_catalog_v1
+GreyOrange,Ranger,greyorange-ranger,Ranger,warehouse_robotics,goods_to_person,commercial,1,tier1_oem_catalog_v1
+GreyOrange,Ranger,greyorange-ranger-gtp,Ranger GTP,goods_to_person,goods_to_person,commercial,1,tier1_oem_catalog_v1
+Exotec,Skypod,exotec-skypod,Skypod,asrs,"goods_to_person,high_bay_storage",commercial,1,tier1_oem_catalog_v1
+Brightpick,Autopicker,brightpick-autopicker,Autopicker,mobile_manipulation,autonomous_picking,commercial,1,tier1_oem_catalog_v1
+Dexterity,Dexterity platform,dexterity-platform,Dexterity Robotics Platform,manipulation,"loading,unloading,handling",pilot,1,tier1_oem_catalog_v1
+Pickle Robot,Pickle,pickle-robot,Pickle,mobile_manipulation,truck_unloading,commercial,1,tier1_oem_catalog_v1
+Mujin,MujinController,mujin-controller,MujinController systems,industrial_manipulation,"palletizing,depalletizing",commercial,1,tier1_oem_catalog_v1
+Agility Robotics,Digit,agility-digit,Digit,humanoid,"tote_movement,material_movement",commercial,1,tier1_oem_catalog_v1
+Figure,Figure,figure-02,Figure 02,humanoid,"manufacturing,logistics",pilot,1,tier1_oem_catalog_v1
+Figure,Figure,figure-01,Figure 01,humanoid,manufacturing,prototype,1,tier1_oem_catalog_v1
+Apptronik,Apollo,apptronik-apollo,Apollo,humanoid,"manufacturing,logistics",pilot,1,tier1_oem_catalog_v1
+Boston Dynamics,Atlas / Stretch,bd-atlas,Atlas,humanoid,industrial_manipulation,prototype,1,tier1_oem_catalog_v1
+Boston Dynamics,Atlas / Stretch,bd-stretch,Stretch,mobile_manipulation,"case_unload,trailer_unload",commercial,1,tier1_oem_catalog_v1
+Sanctuary AI,Phoenix,sanctuary-phoenix,Phoenix,humanoid,general_manipulation,pilot,1,tier1_oem_catalog_v1
+1X Technologies,NEO,1x-neo,NEO,humanoid,general_physical_tasks,pilot,1,tier1_oem_catalog_v1
+Unitree,G1 / H1,unitree-g1,G1,humanoid,"general,research,commercial",commercial,1,tier1_oem_catalog_v1
+Unitree,G1 / H1,unitree-h1,H1,humanoid,"general,research",commercial,1,tier1_oem_catalog_v1
+UBTECH Robotics,Walker,ubtech-walker,Walker,humanoid,"industrial,manufacturing",pilot,1,tier1_oem_catalog_v1
+UBTECH Robotics,Walker,ubtech-walker-s,Walker S,humanoid,"industrial,manufacturing",pilot,1,tier1_oem_catalog_v1
+AgiBot,A / X / G,agibot-a,AgiBot A-series,humanoid,"manufacturing,general",pilot,1,tier1_oem_catalog_v1
+AgiBot,A / X / G,agibot-x,AgiBot X-series,humanoid,"manufacturing,general",pilot,1,tier1_oem_catalog_v1
+AgiBot,A / X / G,agibot-g,AgiBot G-series,humanoid,general,prototype,1,tier1_oem_catalog_v1
+Bear Robotics,Servi,bear-servi,Servi,service_amr,"food_delivery,service_delivery",commercial,1,tier1_oem_catalog_v1
+Bear Robotics,Servi,bear-servi-plus,Servi Plus,service_amr,"food_delivery,bussing",commercial,1,tier1_oem_catalog_v1
+Pudu Robotics,PUDU family,pudu-bellabot,BellaBot,service_cleaning,delivery,commercial,1,tier1_oem_catalog_v1
+Pudu Robotics,PUDU family,pudu-flashbot,FlashBot,service_cleaning,delivery,commercial,1,tier1_oem_catalog_v1
+Pudu Robotics,PUDU family,pudu-cc1,CC1,cleaning_amr,cleaning,commercial,1,tier1_oem_catalog_v1
+Avidbots,Neo,avidbots-neo,Neo,cleaning_amr,commercial_floor_cleaning,commercial,1,tier1_oem_catalog_v1
+Brain Corp,BrainOS,brainos-scrubber,BrainOS-powered scrubber,cleaning_autonomy,floor_cleaning,commercial,1,tier1_oem_catalog_v1
+Tennant,AMR scrubbers,tennant-amr-scrubber,Tennant AMR scrubber,cleaning_robot,industrial_floor_cleaning,commercial,1,tier1_oem_catalog_v1
+MiR (Mobile Industrial Robots),MiR (Mobile Industrial Robots) family,mir-mobile-industrial-robots-mir250,MiR250,amr_agv_material_transport,cart/pallet transport,commercial,2,vendor_primary_robots
+MiR (Mobile Industrial Robots),MiR (Mobile Industrial Robots) family,mir-mobile-industrial-robots-600,600,amr_agv_material_transport,cart/pallet transport,commercial,2,vendor_primary_robots
+MiR (Mobile Industrial Robots),MiR (Mobile Industrial Robots) family,mir-mobile-industrial-robots-1350,1350,amr_agv_material_transport,cart/pallet transport,commercial,2,vendor_primary_robots
+Geek+,Geek+ family,geek-p800,P800,amr_agv_material_transport,GTP / sorting,commercial,2,vendor_primary_robots
+Geek+,Geek+ family,geek-poppick,PopPick,amr_agv_material_transport,GTP / sorting,commercial,2,vendor_primary_robots
+Hai Robotics,Hai Robotics family,hai-robotics-haipick,HAIPICK,amr_agv_material_transport,ACR / tote handling,commercial,2,vendor_primary_robots
+Quicktron,Quicktron family,quicktron-quicktron-amr,Quicktron AMR,amr_agv_material_transport,warehouse transport,commercial,2,vendor_primary_robots
+Fetch Robotics / Zebra,Fetch Robotics / Zebra family,fetch-robotics-zebra-fetchfreight,FetchFreight,amr_agv_material_transport,AMR transport,commercial,2,vendor_primary_robots
+Fetch Robotics / Zebra,Fetch Robotics / Zebra family,fetch-robotics-zebra-cart,Cart,amr_agv_material_transport,AMR transport,commercial,2,vendor_primary_robots
+6 River Systems (Shopify),6 River Systems (Shopify) family,6-river-systems-shopify-chuck,Chuck,amr_agv_material_transport,fulfillment AMR,commercial,2,vendor_primary_robots
+AutoGuide Mobile Robots,AutoGuide Mobile Robots family,autoguide-mobile-robots-max-n10,MAX N10,amr_agv_material_transport,tugger/AMR,commercial,2,vendor_primary_robots
+Clearpath Robotics,Clearpath Robotics family,clearpath-robotics-otto,OTTO,amr_agv_material_transport,AMR platforms,commercial,2,vendor_primary_robots
+Clearpath Robotics,Clearpath Robotics family,clearpath-robotics-otto-fleet,OTTO Fleet,amr_agv_material_transport,AMR platforms,commercial,2,vendor_primary_robots
+Omron Mobile Robots,Omron Mobile Robots family,omron-mobile-robots-ld,LD,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+Omron Mobile Robots,Omron Mobile Robots family,omron-mobile-robots-hd-series,HD series,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+Kivnon,Kivnon family,kivnon-kivnon-agv,Kivnon AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Swisslog,Swisslog family,swisslog-carrypick,CarryPick,amr_agv_material_transport,GTP AMR,commercial,2,vendor_primary_robots
+Dematic,Dematic family,dematic-mobile-robots,Mobile Robots,amr_agv_material_transport,warehouse AMR,commercial,2,vendor_primary_robots
+Murata Machinery,Murata Machinery family,murata-machinery-agv,AGV,amr_agv_material_transport,material transport,commercial,2,vendor_primary_robots
+Murata Machinery,Murata Machinery family,murata-machinery-amr,AMR,amr_agv_material_transport,material transport,commercial,2,vendor_primary_robots
+Daifuku,Daifuku family,daifuku-agv-systems,AGV systems,amr_agv_material_transport,material transport,commercial,2,vendor_primary_robots
+JBT Corporation,JBT Corporation family,jbt-corporation-agv,AGV,amr_agv_material_transport,industrial AGV,commercial,2,vendor_primary_robots
+Oceaneering AGV,Oceaneering AGV family,oceaneering-agv-agv,AGV,amr_agv_material_transport,industrial AGV,commercial,2,vendor_primary_robots
+Transbotics,Transbotics family,transbotics-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Bastians,Bastians family,bastians-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+inVia Robotics,inVia Robotics family,invia-robotics-picker,Picker,amr_agv_material_transport,GTP AMR,commercial,2,vendor_primary_robots
+IAM Robotics,IAM Robotics family,iam-robotics-swift,Swift,amr_agv_material_transport,mobile pick,commercial,2,vendor_primary_robots
+Magazino,Magazino family,magazino-toru,TORU,amr_agv_material_transport,piece picking AMR,commercial,2,vendor_primary_robots
+Magazino,Magazino family,magazino-soto,SOTO,amr_agv_material_transport,piece picking AMR,commercial,2,vendor_primary_robots
+SAFELOG,SAFELOG family,safelog-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+AGILOX,AGILOX family,agilox-one,ONE,amr_agv_material_transport,swarm AMR/fork,commercial,2,vendor_primary_robots
+AGILOX,AGILOX family,agilox-ocf,OCF,amr_agv_material_transport,swarm AMR/fork,commercial,2,vendor_primary_robots
+SEER Robotics,SEER Robotics family,seer-robotics-amr,AMR,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+Hikrobot,Hikrobot family,hikrobot-latent-amr,Latent AMR,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+Standard Robots,Standard Robots family,standard-robots-amr,AMR,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+CSG Huashu,CSG Huashu family,csg-huashu-amr,AMR,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+Youibot,Youibot family,youibot-amr,AMR,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+Multiway Robotics,Multiway Robotics family,multiway-robotics-amr,AMR,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+Multiway Robotics,Multiway Robotics family,multiway-robotics-fork,fork,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+VisionNav Robotics,VisionNav Robotics family,visionnav-robotics-visionnav-amr,VisionNav AMR,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+Knott AGV,Knott AGV family,knott-agv-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+DS Automotion,DS Automotion family,ds-automotion-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Servus Intralogistics,Servus Intralogistics family,servus-intralogistics-servus,Servus,amr_agv_material_transport,in-production AMR,commercial,2,vendor_primary_robots
+Grenzebach,Grenzebach family,grenzebach-lifting-agv,Lifting AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+ASTI Mobile Robotics (ABB),ASTI Mobile Robotics (ABB) family,asti-mobile-robotics-abb-asti-amr,ASTI AMR,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+BlueBotics,BlueBotics family,bluebotics-ant-navigation,ANT navigation,amr_agv_material_transport,AMR autonomy,commercial,2,vendor_primary_robots
+Kollmorgen AGV,Kollmorgen AGV family,kollmorgen-agv-ndc,NDC,amr_agv_material_transport,AGV controls,commercial,2,vendor_primary_robots
+SICK Mobile Robots,SICK Mobile Robots family,sick-mobile-robots-safety-amr-stack,safety AMR stack,amr_agv_material_transport,AMR sensing,commercial,2,vendor_primary_robots
+Neobotix,Neobotix family,neobotix-mobile-platforms,mobile platforms,amr_agv_material_transport,AMR platforms,commercial,2,vendor_primary_robots
+Robotnik,Robotnik family,robotnik-rb-vogui,RB-VOGUI,amr_agv_material_transport,mobile platforms,commercial,2,vendor_primary_robots
+PAL Robotics,PAL Robotics family,pal-robotics-tiago,TIAGo,amr_agv_material_transport,service mobile,commercial,2,vendor_primary_robots
+PAL Robotics,PAL Robotics family,pal-robotics-ari,ARI,amr_agv_material_transport,service mobile,commercial,2,vendor_primary_robots
+Addverb,Addverb family,addverb-sortie,SortIE,amr_agv_material_transport,warehouse AMR,commercial,2,vendor_primary_robots
+Addverb,Addverb family,addverb-cartie,CartIE,amr_agv_material_transport,warehouse AMR,commercial,2,vendor_primary_robots
+System Logistics,System Logistics family,system-logistics-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Eurofork,Eurofork family,eurofork-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Scaglia INDEVA,Scaglia INDEVA family,scaglia-indeva-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Mirage AGV,Mirage AGV family,mirage-agv-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Rocla AGV (Mitsubishi Logisnext),Rocla AGV (Mitsubishi Logisnext) family,rocla-agv-mitsubishi-logisnext-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Mitsubishi Logisnext,Mitsubishi Logisnext family,mitsubishi-logisnext-agv,AGV,amr_agv_material_transport,material handling,commercial,2,vendor_primary_robots
+Mitsubishi Logisnext,Mitsubishi Logisnext family,mitsubishi-logisnext-fork,fork,amr_agv_material_transport,material handling,commercial,2,vendor_primary_robots
+Toyota Material Handling AGV,Toyota Material Handling AGV family,toyota-material-handling-agv-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Jungheinrich AGV,Jungheinrich AGV family,jungheinrich-agv-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Still AGV,Still AGV family,still-agv-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Linde Material Handling AGV,Linde Material Handling AGV family,linde-material-handling-agv-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Crown Equipment AGV,Crown Equipment AGV family,crown-equipment-agv-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Hyster-Yale AGV,Hyster-Yale AGV family,hyster-yale-agv-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Raymond AGV,Raymond AGV family,raymond-agv-agv,AGV,amr_agv_material_transport,AGV,commercial,2,vendor_primary_robots
+Balyo,Balyo family,balyo-driven-by-balyo,Driven by Balyo,amr_agv_material_transport,autonomous pallet,commercial,2,vendor_primary_robots
+Symbotic,Symbotic family,symbotic-symbotic-system,Symbotic system,amr_agv_material_transport,warehouse robotics,commercial,2,vendor_primary_robots
+Ocado Technology,Ocado Technology family,ocado-technology-grid-bots,grid bots,amr_agv_material_transport,grocery automation,commercial,2,vendor_primary_robots
+Alert Innovation (Walmart),Alert Innovation (Walmart) family,alert-innovation-walmart-alphabot,Alphabot,amr_agv_material_transport,GTP,commercial,2,vendor_primary_robots
+Takeoff Technologies,Takeoff Technologies family,takeoff-technologies-egrocery-microfulfillment,eGrocery microfulfillment,amr_agv_material_transport,microfulfillment,commercial,2,vendor_primary_robots
+Fabric,Fabric family,fabric-microfulfillment,microfulfillment,amr_agv_material_transport,microfulfillment,commercial,2,vendor_primary_robots
+Attabotics,Attabotics family,attabotics-3d-structure,3D structure,amr_agv_material_transport,storage/retrieval,commercial,2,vendor_primary_robots
+AutoStore,AutoStore family,autostore-r5,R5,amr_agv_material_transport,cube storage,commercial,2,vendor_primary_robots
+AutoStore,AutoStore family,autostore-r5,R5+,amr_agv_material_transport,cube storage,commercial,2,vendor_primary_robots
+Berkshire Grey,Berkshire Grey family,berkshire-grey-robotic-sortation,robotic sortation,amr_agv_material_transport,sortation,commercial,2,vendor_primary_robots
+Kindred AI (Ocado),Kindred AI (Ocado) family,kindred-ai-ocado-sort,SORT,amr_agv_material_transport,piece picking,commercial,2,vendor_primary_robots
+Caja Robotics,Caja Robotics family,caja-robotics-amr,AMR,amr_agv_material_transport,fulfillment AMR,commercial,2,vendor_primary_robots
+Gideon Brothers,Gideon Brothers family,gideon-brothers-amr,AMR,amr_agv_material_transport,material transport,commercial,2,vendor_primary_robots
+Milvus Robotics,Milvus Robotics family,milvus-robotics-amr,AMR,amr_agv_material_transport,AMR,commercial,2,vendor_primary_robots
+Ottonomy,Ottonomy family,ottonomy-ottobot,Ottobot,amr_agv_material_transport,indoor/outdoor AMR,commercial,2,vendor_primary_robots
+Hangcha Intelligent,Hangcha Intelligent family,hangcha-intelligent-intelligent-forklift,intelligent forklift,autonomous_forklift_pallet,autonomous forklift,commercial,2,vendor_primary_robots
+EP Equipment,EP Equipment family,ep-equipment-ep-autonomous,EP autonomous,autonomous_forklift_pallet,pallet trucks,commercial,2,vendor_primary_robots
+Heli Intelligent,Heli Intelligent family,heli-intelligent-heli-agv-fork,Heli AGV fork,autonomous_forklift_pallet,autonomous forklift,commercial,2,vendor_primary_robots
+Yale Reliant / robotic,Yale Reliant / robotic family,yale-reliant-robotic-robotic-solutions,robotic solutions,autonomous_forklift_pallet,material handling,commercial,2,vendor_primary_robots
+Clark Material Handling robotic,Clark Material Handling robotic family,clark-material-handling-robotic-robotic-forklift,robotic forklift,autonomous_forklift_pallet,forklift automation,commercial,2,vendor_primary_robots
+Combilift AGV,Combilift AGV family,combilift-agv-combi-agv,Combi-AGV,autonomous_forklift_pallet,long-load AGV,commercial,2,vendor_primary_robots
+Hubtex AGV,Hubtex AGV family,hubtex-agv-agv-multidirectional,AGV multidirectional,autonomous_forklift_pallet,sideloader AGV,commercial,2,vendor_primary_robots
+BAUMANN AGV,BAUMANN AGV family,baumann-agv-sideloader-agv,sideloader AGV,autonomous_forklift_pallet,long loads,commercial,2,vendor_primary_robots
+Landing AI Logistics partners,Landing AI Logistics partners family,landing-ai-logistics-partners-vision-forklift,vision forklift,autonomous_forklift_pallet,vision autonomy,commercial,2,vendor_primary_robots
+Outrider,Outrider family,outrider-yard-truck-autonomy,yard truck autonomy,autonomous_forklift_pallet,yard logistics,commercial,2,vendor_primary_robots
+Gatik,Gatik family,gatik-middle-mile-autonomy,middle-mile autonomy,autonomous_forklift_pallet,freight,commercial,2,vendor_primary_robots
+Phantom Auto,Phantom Auto family,phantom-auto-teleop-forklift,teleop forklift,autonomous_forklift_pallet,remote forklift,commercial,2,vendor_primary_robots
+Robotic Research / RR.AI,Robotic Research / RR.AI family,robotic-research-rr-ai-autodrive,AutoDrive,autonomous_forklift_pallet,vehicle autonomy,commercial,2,vendor_primary_robots
+EK Robotics,EK Robotics family,ek-robotics-agv,AGV,autonomous_forklift_pallet,AGV,commercial,2,vendor_primary_robots
+EK Robotics,EK Robotics family,ek-robotics-amr,AMR,autonomous_forklift_pallet,AGV,commercial,2,vendor_primary_robots
+MT Robot,MT Robot family,mt-robot-forklift-amr,forklift AMR,autonomous_forklift_pallet,autonomous forklift,commercial,2,vendor_primary_robots
+Reeman Robotics,Reeman Robotics family,reeman-robotics-forklift-amr,forklift AMR,autonomous_forklift_pallet,autonomous forklift,commercial,2,vendor_primary_robots
+Zhejiang Guozi Robotics,Zhejiang Guozi Robotics family,zhejiang-guozi-robotics-forklift-amr,forklift AMR,autonomous_forklift_pallet,autonomous forklift,commercial,2,vendor_primary_robots
+Shanghai Noblelift Intelligent,Shanghai Noblelift Intelligent family,shanghai-noblelift-intelligent-intelligent-trucks,intelligent trucks,autonomous_forklift_pallet,pallet trucks,commercial,2,vendor_primary_robots
+Doosan Industrial Vehicle robotic,Doosan Industrial Vehicle robotic family,doosan-industrial-vehicle-robotic-robotic-forklift,robotic forklift,autonomous_forklift_pallet,forklift,commercial,2,vendor_primary_robots
+Hyundai Material Handling robotic,Hyundai Material Handling robotic family,hyundai-material-handling-robotic-robotic-forklift,robotic forklift,autonomous_forklift_pallet,forklift,commercial,2,vendor_primary_robots
+Mitsubishi Forklift Automation,Mitsubishi Forklift Automation family,mitsubishi-forklift-automation-automated,automated,autonomous_forklift_pallet,forklift AGV,commercial,2,vendor_primary_robots
+UniCarriers automated,UniCarriers automated family,unicarriers-automated-automated,automated,autonomous_forklift_pallet,forklift AGV,commercial,2,vendor_primary_robots
+PALOMAT automated pallet,PALOMAT automated pallet family,palomat-automated-pallet-pallet-magazine,pallet magazine,autonomous_forklift_pallet,pallet handling,commercial,2,vendor_primary_robots
+SoftBank Robotics warehouse partners,SoftBank Robotics warehouse partners family,softbank-robotics-warehouse-partners-warehouse-amr-partners,warehouse AMR partners,autonomous_forklift_pallet,warehouse,commercial,2,vendor_primary_robots
+FANUC,FANUC family,fanuc-r-2000,R-2000,industrial_robot_arms,welding/handling,commercial,2,vendor_primary_robots
+FANUC,FANUC family,fanuc-lr-mate,LR Mate,industrial_robot_arms,welding/handling,commercial,2,vendor_primary_robots
+KUKA,KUKA family,kuka-kr-series,KR series,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Yaskawa Motoman,Yaskawa Motoman family,yaskawa-motoman-gp,GP,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Yaskawa Motoman,Yaskawa Motoman family,yaskawa-motoman-hc-series,HC series,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Kawasaki Robotics,Kawasaki Robotics family,kawasaki-robotics-rs,RS,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Kawasaki Robotics,Kawasaki Robotics family,kawasaki-robotics-bx-series,BX series,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Mitsubishi Electric Robotics,Mitsubishi Electric Robotics family,mitsubishi-electric-robotics-rv,RV,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Mitsubishi Electric Robotics,Mitsubishi Electric Robotics family,mitsubishi-electric-robotics-rh,RH,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Nachi Robotics,Nachi Robotics family,nachi-robotics-mz,MZ,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Nachi Robotics,Nachi Robotics family,nachi-robotics-mc,MC,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Denso Robotics,Denso Robotics family,denso-robotics-vs,VS,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Denso Robotics,Denso Robotics family,denso-robotics-hm,HM,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Epson Robots,Epson Robots family,epson-robots-scara,SCARA,industrial_robot_arms,assembly,commercial,2,vendor_primary_robots
+Epson Robots,Epson Robots family,epson-robots-6-axis,6-axis,industrial_robot_arms,assembly,commercial,2,vendor_primary_robots
+Staubli Robotics,Staubli Robotics family,staubli-robotics-tx,TX,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Staubli Robotics,Staubli Robotics family,staubli-robotics-ts,TS,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Comau,Comau family,comau-nj,NJ,industrial_robot_arms,automotive arms,commercial,2,vendor_primary_robots
+Comau,Comau family,comau-racer,Racer,industrial_robot_arms,automotive arms,commercial,2,vendor_primary_robots
+Igus ReBeL / robolink,Igus ReBeL / robolink family,igus-rebel-robolink-rebel,ReBeL,industrial_robot_arms,low-cost arms,commercial,2,vendor_primary_robots
+Reis Robotics,Reis Robotics family,reis-robotics-welding-systems,welding systems,industrial_robot_arms,welding,commercial,2,vendor_primary_robots
+CLOOS Robotics,CLOOS Robotics family,cloos-robotics-welding-robots,welding robots,industrial_robot_arms,welding,commercial,2,vendor_primary_robots
+OTC Daihen,OTC Daihen family,otc-daihen-welding-robots,welding robots,industrial_robot_arms,welding,commercial,2,vendor_primary_robots
+Panasonic Robotics welding,Panasonic Robotics welding family,panasonic-robotics-welding-welding-robots,welding robots,industrial_robot_arms,welding,commercial,2,vendor_primary_robots
+Hyundai Robotics,Hyundai Robotics family,hyundai-robotics-hs,HS,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Hyundai Robotics,Hyundai Robotics family,hyundai-robotics-hh,HH,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Hanwha Robotics,Hanwha Robotics family,hanwha-robotics-hcr,HCR,industrial_robot_arms,industrial/cobot,commercial,2,vendor_primary_robots
+Hanwha Robotics,Hanwha Robotics family,hanwha-robotics-hcr-series,HCR series,industrial_robot_arms,industrial/cobot,commercial,2,vendor_primary_robots
+Estun Automation,Estun Automation family,estun-automation-er-series,ER series,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+SIASUN,SIASUN family,siasun-industrial-robots,industrial robots,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+EFORT Intelligent,EFORT Intelligent family,efort-intelligent-er-series,ER series,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+STEP Electric,STEP Electric family,step-electric-industrial-robots,industrial robots,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+GSK CNC Equipment robots,GSK CNC Equipment robots family,gsk-cnc-equipment-robots-gsk-robots,GSK robots,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Peitian Robotics,Peitian Robotics family,peitian-robotics-industrial-robots,industrial robots,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Harbin Boshi Automation,Harbin Boshi Automation family,harbin-boshi-automation-industrial-robots,industrial robots,industrial_robot_arms,industrial arms,commercial,2,vendor_primary_robots
+Rethink Robotics (original Sawyer legacy),Rethink Robotics (original Sawyer legacy) family,rethink-robotics-original-sawyer-legacy-sawyer-legacy,Sawyer legacy,industrial_robot_arms,cobot/arm,discontinued,2,vendor_primary_robots
+Brooks Automation,Brooks Automation family,brooks-automation-semiconductor-robots,semiconductor robots,industrial_robot_arms,wafer handling,commercial,2,vendor_primary_robots
+Genmark Automation,Genmark Automation family,genmark-automation-wafer-robots,wafer robots,industrial_robot_arms,semiconductor,commercial,2,vendor_primary_robots
+RORZE,RORZE family,rorze-wafer-robots,wafer robots,industrial_robot_arms,semiconductor,commercial,2,vendor_primary_robots
+Hirata Corporation,Hirata Corporation family,hirata-corporation-transfer-robots,transfer robots,industrial_robot_arms,semiconductor/FPD,commercial,2,vendor_primary_robots
+Yamaha Robotics,Yamaha Robotics family,yamaha-robotics-scara,SCARA,industrial_robot_arms,assembly,commercial,2,vendor_primary_robots
+Yamaha Robotics,Yamaha Robotics family,yamaha-robotics-linear,linear,industrial_robot_arms,assembly,commercial,2,vendor_primary_robots
+IAI Corporation,IAI Corporation family,iai-corporation-actuators,actuators,industrial_robot_arms,assembly,commercial,2,vendor_primary_robots
+IAI Corporation,IAI Corporation family,iai-corporation-robots,robots,industrial_robot_arms,assembly,commercial,2,vendor_primary_robots
+Toshiba Machine / Shibaura Machine,Toshiba Machine / Shibaura Machine family,toshiba-machine-shibaura-machine-industrial-robots,industrial robots,industrial_robot_arms,injection/handling,commercial,2,vendor_primary_robots
+Olympus robotics medical arms,Olympus robotics medical arms family,olympus-robotics-medical-arms-medical-systems,medical systems,industrial_robot_arms,medical,commercial,2,vendor_primary_robots
+Intuitive Surgical,Intuitive Surgical family,intuitive-surgical-da-vinci,da Vinci,industrial_robot_arms,surgical robot,commercial,2,vendor_primary_robots
+Stryker Mako,Stryker Mako family,stryker-mako-mako,Mako,industrial_robot_arms,orthopedic robot,commercial,2,vendor_primary_robots
+Medtronic Hugo / Mazor,Medtronic Hugo / Mazor family,medtronic-hugo-mazor-hugo,Hugo,industrial_robot_arms,surgical,commercial,2,vendor_primary_robots
+Medtronic Hugo / Mazor,Medtronic Hugo / Mazor family,medtronic-hugo-mazor-mazor,Mazor,industrial_robot_arms,surgical,commercial,2,vendor_primary_robots
+CMR Surgical,CMR Surgical family,cmr-surgical-versius,Versius,industrial_robot_arms,surgical,commercial,2,vendor_primary_robots
+Asensus Surgical,Asensus Surgical family,asensus-surgical-senhance,Senhance,industrial_robot_arms,surgical,commercial,2,vendor_primary_robots
+Smith+Nephew CORI,Smith+Nephew CORI family,smith-nephew-cori-cori,CORI,industrial_robot_arms,ortho robot,commercial,2,vendor_primary_robots
+Zimmer Biomet ROSA,Zimmer Biomet ROSA family,zimmer-biomet-rosa-rosa,ROSA,industrial_robot_arms,ortho robot,commercial,2,vendor_primary_robots
+Johnson & Johnson Ottava,Johnson & Johnson Ottava family,johnson-johnson-ottava-ottava,Ottava,industrial_robot_arms,surgical,pilot,2,vendor_primary_robots
+Brainlab robotics,Brainlab robotics family,brainlab-robotics-cirq,cirq,industrial_robot_arms,surgical assist,commercial,2,vendor_primary_robots
+Renishaw neurological robots,Renishaw neurological robots family,renishaw-neurological-robots-neuromate,neuromate,industrial_robot_arms,neuro surgery,commercial,2,vendor_primary_robots
+Auris Health (J&J),Auris Health (J&J) family,auris-health-j-j-monarch,Monarch,industrial_robot_arms,bronchoscopy robot,commercial,2,vendor_primary_robots
+PROCEPT BioRobotics,PROCEPT BioRobotics family,procept-biorobotics-aquabeam,AquaBeam,industrial_robot_arms,urology robot,commercial,2,vendor_primary_robots
+Accuray,Accuray family,accuray-cyberknife,CyberKnife,industrial_robot_arms,radiosurgery,commercial,2,vendor_primary_robots
+Elekta,Elekta family,elekta-unity,Unity,industrial_robot_arms,radiotherapy,commercial,2,vendor_primary_robots
+Elekta,Elekta family,elekta-linac-robotics,linac robotics,industrial_robot_arms,radiotherapy,commercial,2,vendor_primary_robots
+Siemens Healthineers robotics,Siemens Healthineers robotics family,siemens-healthineers-robotics-imaging-robotics,imaging robotics,industrial_robot_arms,medical,commercial,2,vendor_primary_robots
+GE Healthcare robotics,GE Healthcare robotics family,ge-healthcare-robotics-imaging-systems,imaging systems,industrial_robot_arms,medical,commercial,2,vendor_primary_robots
+Philips Image Guided Therapy robotics,Philips Image Guided Therapy robotics family,philips-image-guided-therapy-robotics-igt-robotics,IGT robotics,industrial_robot_arms,medical,commercial,2,vendor_primary_robots
+Franka Emika industrial,Franka Emika industrial family,franka-emika-industrial-fr3,FR3,industrial_robot_arms,research/industrial,commercial,2,vendor_primary_robots
+Kassow Robots,Kassow Robots family,kassow-robots-7-axis,7-axis,industrial_robot_arms,industrial cobot-class,commercial,2,vendor_primary_robots
+Universal Robots,Universal Robots family,universal-robots-ur3e,UR3e,cobots,collaborative arms,commercial,2,vendor_primary_robots
+Universal Robots,Universal Robots family,universal-robots-5e,5e,cobots,collaborative arms,commercial,2,vendor_primary_robots
+Universal Robots,Universal Robots family,universal-robots-10e,10e,cobots,collaborative arms,commercial,2,vendor_primary_robots
+Doosan Robotics,Doosan Robotics family,doosan-robotics-a,A,cobots,cobots,commercial,2,vendor_primary_robots
+Doosan Robotics,Doosan Robotics family,doosan-robotics-m,M,cobots,cobots,commercial,2,vendor_primary_robots
+Doosan Robotics,Doosan Robotics family,doosan-robotics-h-series,H series,cobots,cobots,commercial,2,vendor_primary_robots
+Techman Robot,Techman Robot family,techman-robot-tm-ai-cobot,TM AI Cobot,cobots,vision cobot,commercial,2,vendor_primary_robots
+Fanuc CRX,Fanuc CRX family,fanuc-crx-crx,CRX,cobots,cobot,commercial,2,vendor_primary_robots
+AUBO Robotics,AUBO Robotics family,aubo-robotics-i-series,i series,cobots,cobot,commercial,2,vendor_primary_robots
+JAKA Robotics,JAKA Robotics family,jaka-robotics-zu,Zu,cobots,cobot,commercial,2,vendor_primary_robots
+JAKA Robotics,JAKA Robotics family,jaka-robotics-pro,Pro,cobots,cobot,commercial,2,vendor_primary_robots
+Elephant Robotics,Elephant Robotics family,elephant-robotics-mycobot,myCobot,cobots,compact cobot,commercial,2,vendor_primary_robots
+Dobot,Dobot family,dobot-cr,CR,cobots,cobot,commercial,2,vendor_primary_robots
+Dobot,Dobot family,dobot-mg400,MG400,cobots,cobot,commercial,2,vendor_primary_robots
+Elite Robots,Elite Robots family,elite-robots-ec-series,EC series,cobots,cobot,commercial,2,vendor_primary_robots
+Han's Robot,Han's Robot family,han-s-robot-elfin,Elfin,cobots,cobot,commercial,2,vendor_primary_robots
+Productive Robotics,Productive Robotics family,productive-robotics-ob7,OB7,cobots,cobot,commercial,2,vendor_primary_robots
+Neura Robotics,Neura Robotics family,neura-robotics-mira,MIRA,cobots,cognitive cobot/humanoid,commercial,2,vendor_primary_robots
+Neura Robotics,Neura Robotics family,neura-robotics-4ne1,4NE1,cobots,cognitive cobot/humanoid,commercial,2,vendor_primary_robots
+Bota Systems sensing,Bota Systems sensing family,bota-systems-sensing-force-torque,force torque,cobots,cobot sensing,commercial,2,vendor_primary_robots
+OnRobot,OnRobot family,onrobot-eoat,EOAT,cobots,cobot tooling,commercial,2,vendor_primary_robots
+Robotiq,Robotiq family,robotiq-grippers,grippers,cobots,cobot tooling,commercial,2,vendor_primary_robots
+Robotiq,Robotiq family,robotiq-ft,FT,cobots,cobot tooling,commercial,2,vendor_primary_robots
+Schunk cobot grippers,Schunk cobot grippers family,schunk-cobot-grippers-eoat,EOAT,cobots,grippers,commercial,2,vendor_primary_robots
+Zimmer Group,Zimmer Group family,zimmer-group-eoat,EOAT,cobots,grippers,commercial,2,vendor_primary_robots
+ATI Industrial Automation,ATI Industrial Automation family,ati-industrial-automation-ft-sensors,FT sensors,cobots,tooling,commercial,2,vendor_primary_robots
+Soft Robotics Inc,Soft Robotics Inc family,soft-robotics-inc-mgrip,mGrip,cobots,soft grippers,commercial,2,vendor_primary_robots
+Weiss Robotics,Weiss Robotics family,weiss-robotics-grippers,grippers,cobots,EOAT,commercial,2,vendor_primary_robots
+RH-AL-Robotics,RH-AL-Robotics family,rh-al-robotics-cobot,cobot,cobots,cobot,commercial,2,vendor_primary_robots
+Rokae,Rokae family,rokae-xmate,xMate,cobots,cobot,commercial,2,vendor_primary_robots
+Tuopu Robotics,Tuopu Robotics family,tuopu-robotics-cobot,cobot,cobots,cobot,commercial,2,vendor_primary_robots
+Qjar Robotics,Qjar Robotics family,qjar-robotics-cobot,cobot,cobots,cobot,commercial,2,vendor_primary_robots
+Fairino,Fairino family,fairino-fr-series,FR series,cobots,cobot,commercial,2,vendor_primary_robots
+HITBOT,HITBOT family,hitbot-z-arm,Z-Arm,cobots,SCARA cobot,commercial,2,vendor_primary_robots
+Standard Bots,Standard Bots family,standard-bots-ro1,RO1,cobots,cobot,commercial,2,vendor_primary_robots
+Automata Technologies,Automata Technologies family,automata-technologies-eva,EVA,cobots,lab cobot,commercial,2,vendor_primary_robots
+AgileX Cobot partners,AgileX Cobot partners family,agilex-cobot-partners-mobile-cobot-bases,mobile cobot bases,cobots,mobile manip,commercial,2,vendor_primary_robots
+Mecademic,Mecademic family,mecademic-meca500,Meca500,cobots,micro cobot,commercial,2,vendor_primary_robots
+RightHand Robotics,RightHand Robotics family,righthand-robotics-rightpick,RightPick,picking_manipulation_palletizing,piece picking,commercial,2,vendor_primary_robots
+Covariant,Covariant family,covariant-rfm,RFM,picking_manipulation_palletizing,AI picking,commercial,2,vendor_primary_robots
+Plus One Robotics,Plus One Robotics family,plus-one-robotics-yonder,Yonder,picking_manipulation_palletizing,parcel induction,commercial,2,vendor_primary_robots
+Ambi Robotics,Ambi Robotics family,ambi-robotics-ambisort,AmbiSort,picking_manipulation_palletizing,sortation picking,commercial,2,vendor_primary_robots
+Osaro,Osaro family,osaro-osaro-pick,Osaro Pick,picking_manipulation_palletizing,piece picking,commercial,2,vendor_primary_robots
+Robust AI,Robust AI family,robust-ai-carter,Carter,picking_manipulation_palletizing,mobile manipulation,commercial,2,vendor_primary_robots
+Boston Dynamics Stretch,Boston Dynamics Stretch family,boston-dynamics-stretch-stretch,Stretch,picking_manipulation_palletizing,case unload,commercial,2,vendor_primary_robots
+XYZ Robotics,XYZ Robotics family,xyz-robotics-picking-cells,picking cells,picking_manipulation_palletizing,piece picking,commercial,2,vendor_primary_robots
+SSI Schaefer robotics,SSI Schaefer robotics family,ssi-schaefer-robotics-robotics-cells,robotics cells,picking_manipulation_palletizing,picking,commercial,2,vendor_primary_robots
+TGW Robotics,TGW Robotics family,tgw-robotics-rovolution,Rovolution,picking_manipulation_palletizing,picking,commercial,2,vendor_primary_robots
+Knapp Open Shuttle / Pick-it-Easy,Knapp Open Shuttle / Pick-it-Easy family,knapp-open-shuttle-pick-it-easy-pick-it-easy,Pick-it-Easy,picking_manipulation_palletizing,picking,commercial,2,vendor_primary_robots
+Witron,Witron family,witron-opm,OPM,picking_manipulation_palletizing,warehouse automation,commercial,2,vendor_primary_robots
+Honeywell Intelligrated robotics,Honeywell Intelligrated robotics family,honeywell-intelligrated-robotics-robotic-unnax,robotic UNNAX,picking_manipulation_palletizing,unloading,commercial,2,vendor_primary_robots
+Fortna robotics design,Fortna robotics design family,fortna-robotics-design-systems,systems,picking_manipulation_palletizing,warehouse robotics SI,commercial,2,vendor_primary_robots
+Bastian Solutions robotics,Bastian Solutions robotics family,bastian-solutions-robotics-robotic-cells,robotic cells,picking_manipulation_palletizing,integration,commercial,2,vendor_primary_robots
+Invata Intralogistics,Invata Intralogistics family,invata-intralogistics-robotic-systems,robotic systems,picking_manipulation_palletizing,integration,commercial,2,vendor_primary_robots
+Numina Group,Numina Group family,numina-group-rds,RDS,picking_manipulation_palletizing,warehouse controls,commercial,2,vendor_primary_robots
+Righthand / Onward Robotics,Righthand / Onward Robotics family,righthand-onward-robotics-hearme,HearMe,picking_manipulation_palletizing,collaborative picking,commercial,2,vendor_primary_robots
+Tompkins Robotics,Tompkins Robotics family,tompkins-robotics-t-sort,t-Sort,picking_manipulation_palletizing,sortation,commercial,2,vendor_primary_robots
+Megvii Robotics logistics,Megvii Robotics logistics family,megvii-robotics-logistics-warehouse-robots,warehouse robots,picking_manipulation_palletizing,picking,commercial,2,vendor_primary_robots
+Kuwaiti / Falcon Autotech,Kuwaiti / Falcon Autotech family,kuwaiti-falcon-autotech-sortation,sortation,picking_manipulation_palletizing,sortation,commercial,2,vendor_primary_robots
+Figure AI,Figure AI family,figure-ai-figure-02,Figure 02,humanoids_general_purpose,manufacturing/logistics,pilot,2,vendor_primary_robots
+Tesla Optimus,Tesla Optimus family,tesla-optimus-optimus,Optimus,humanoids_general_purpose,manufacturing,prototype,2,vendor_primary_robots
+UBTECH,UBTECH family,ubtech-walker,Walker,humanoids_general_purpose,industrial/service,pilot,2,vendor_primary_robots
+UBTECH,UBTECH family,ubtech-walker-s,Walker S,humanoids_general_purpose,industrial/service,pilot,2,vendor_primary_robots
+AgiBot (Zhiyuan),AgiBot (Zhiyuan) family,agibot-zhiyuan-a,A,humanoids_general_purpose,manufacturing/general,pilot,2,vendor_primary_robots
+AgiBot (Zhiyuan),AgiBot (Zhiyuan) family,agibot-zhiyuan-x,X,humanoids_general_purpose,manufacturing/general,pilot,2,vendor_primary_robots
+AgiBot (Zhiyuan),AgiBot (Zhiyuan) family,agibot-zhiyuan-g,G,humanoids_general_purpose,manufacturing/general,pilot,2,vendor_primary_robots
+Fourier Intelligence,Fourier Intelligence family,fourier-intelligence-gr-series,GR series,humanoids_general_purpose,humanoid,pilot,2,vendor_primary_robots
+EngineAI,EngineAI family,engineai-sa01,SA01,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Kepler Exploration,Kepler Exploration family,kepler-exploration-forerunner,Forerunner,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+LimX Dynamics,LimX Dynamics family,limx-dynamics-tron,TRON,humanoids_general_purpose,humanoid/legged,prototype,2,vendor_primary_robots
+LimX Dynamics,LimX Dynamics family,limx-dynamics-cl-1,CL-1,humanoids_general_purpose,humanoid/legged,prototype,2,vendor_primary_robots
+Booster Robotics,Booster Robotics family,booster-robotics-booster-t1,Booster T1,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Noetix Robotics,Noetix Robotics family,noetix-robotics-noetix,Noetix,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Robotera,Robotera family,robotera-star1,Star1,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+PNDbotics,PNDbotics family,pndbotics-adam,Adam,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Leju Robotics,Leju Robotics family,leju-robotics-kuavo,Kuavo,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Stardust Intelligence,Stardust Intelligence family,stardust-intelligence-humanoid,humanoid,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+High Torque Robotics,High Torque Robotics family,high-torque-robotics-humanoid-actuators-platforms,humanoid actuators platforms,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Deep Robotics humanoid line,Deep Robotics humanoid line family,deep-robotics-humanoid-line-humanoid-r-d,humanoid R&D,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Xiaomi CyberOne,Xiaomi CyberOne family,xiaomi-cyberone-cyberone,CyberOne,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+ByteDance robotics research,ByteDance robotics research family,bytedance-robotics-research-research-humanoid,research humanoid,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Tencent Robotics X,Tencent Robotics X family,tencent-robotics-x-research-platforms,research platforms,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Huawei robotics research,Huawei robotics research family,huawei-robotics-research-research,research,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Reflective / Reflex Robotics,Reflective / Reflex Robotics family,reflective-reflex-robotics-reflex,Reflex,humanoids_general_purpose,industrial humanoid,pilot,2,vendor_primary_robots
+Humanoid (HMND),Humanoid (HMND) family,humanoid-hmnd-hmnd-01-alpha,HMND 01 Alpha,humanoids_general_purpose,industrial humanoid,pilot,2,vendor_primary_robots
+Honda ASIMO legacy,Honda ASIMO legacy family,honda-asimo-legacy-asimo,ASIMO,humanoids_general_purpose,research,discontinued,2,vendor_primary_robots
+Toyota T-HR3 / human support,Toyota T-HR3 / human support family,toyota-t-hr3-human-support-t-hr3,T-HR3,humanoids_general_purpose,research,prototype,2,vendor_primary_robots
+Kawada Nextage,Kawada Nextage family,kawada-nextage-nextage,Nextage,humanoids_general_purpose,dual-arm humanoid-like,commercial,2,vendor_primary_robots
+Waseda / partner humanoids,Waseda / partner humanoids family,waseda-partner-humanoids-research,research,humanoids_general_purpose,research,prototype,2,vendor_primary_robots
+Clone Robotics,Clone Robotics family,clone-robotics-android-hands,android hands,humanoids_general_purpose,humanoid components,prototype,2,vendor_primary_robots
+Galbot,Galbot family,galbot-galbot,Galbot,humanoids_general_purpose,mobile manip/humanoid,pilot,2,vendor_primary_robots
+MagicLab,MagicLab family,magiclab-humanoid,humanoid,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Astribot,Astribot family,astribot-s1,S1,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Foundation Future Industries,Foundation Future Industries family,foundation-future-industries-humanoid-research,humanoid research,humanoids_general_purpose,humanoid,prototype,2,vendor_primary_robots
+Nilfisk Liberty,Nilfisk Liberty family,nilfisk-liberty-liberty-sc50,Liberty SC50,cleaning_robots,scrubbing,commercial,2,vendor_primary_robots
+Kärcher KIRA,Kärcher KIRA family,k-rcher-kira-kira-b-50,KIRA B 50,cleaning_robots,scrubbing,commercial,2,vendor_primary_robots
+Pudu CC1,Pudu CC1 family,pudu-cc1-cc1,CC1,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+Gausium,Gausium family,gausium-phantas,Phantas,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+Gausium,Gausium family,gausium-scrubber,Scrubber,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+LionsBot,LionsBot family,lionsbot-r3,R3,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+LionsBot,LionsBot family,lionsbot-orex,Orex,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+Gaussian Robotics,Gaussian Robotics family,gaussian-robotics-scrubbers,scrubbers,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+Diversey TASKI,Diversey TASKI family,diversey-taski-taski-intellibot,TASKI Intellibot,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+IceRobotics / cleaning partners,IceRobotics / cleaning partners family,icerobotics-cleaning-partners-agri-sensors,agri sensors,cleaning_robots,specialty,commercial,2,vendor_primary_robots
+Cleanfix Robotics,Cleanfix Robotics family,cleanfix-robotics-40-series,40-Series,cleaning_robots,restroom cleaning,commercial,2,vendor_primary_robots
+Peppermint Robotics,Peppermint Robotics family,peppermint-robotics-mitra,Mitra,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+Peppermint Robotics,Peppermint Robotics family,peppermint-robotics-cleaners,cleaners,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+Solow Robotics,Solow Robotics family,solow-robotics-cleaning,cleaning,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+Ecovacs commercial,Ecovacs commercial family,ecovacs-commercial-commercial,commercial,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+Robomow / commercial outdoor,Robomow / commercial outdoor family,robomow-commercial-outdoor-mowers,mowers,cleaning_robots,outdoor,commercial,2,vendor_primary_robots
+Husqvarna Automower commercial,Husqvarna Automower commercial family,husqvarna-automower-commercial-automower,Automower,cleaning_robots,mowing,commercial,2,vendor_primary_robots
+Belrobotics,Belrobotics family,belrobotics-bigmow,Bigmow,cleaning_robots,sports turf,commercial,2,vendor_primary_robots
+RC Mowers,RC Mowers family,rc-mowers-remote,remote,cleaning_robots,mowing,commercial,2,vendor_primary_robots
+RC Mowers,RC Mowers family,rc-mowers-auto-mowers,auto mowers,cleaning_robots,mowing,commercial,2,vendor_primary_robots
+Scythe Robotics,Scythe Robotics family,scythe-robotics-m-52,M.52,cleaning_robots,commercial mowing,commercial,2,vendor_primary_robots
+Renu Robotics,Renu Robotics family,renu-robotics-renubot,Renubot,cleaning_robots,solar farm vegetation,commercial,2,vendor_primary_robots
+Keenon Robotics,Keenon Robotics family,keenon-robotics-t8,T8,hospitality_foodservice_delivery,delivery,commercial,2,vendor_primary_robots
+Keenon Robotics,Keenon Robotics family,keenon-robotics-peanut,Peanut,hospitality_foodservice_delivery,delivery,commercial,2,vendor_primary_robots
+Relay Robotics,Relay Robotics family,relay-robotics-relay,Relay,hospitality_foodservice_delivery,hotel delivery,commercial,2,vendor_primary_robots
+Savioke Relay,Savioke Relay family,savioke-relay-relay,Relay,hospitality_foodservice_delivery,hotel delivery,commercial,2,vendor_primary_robots
+Aethon TUG,Aethon TUG family,aethon-tug-tug,TUG,hospitality_foodservice_delivery,hospital delivery,commercial,2,vendor_primary_robots
+Diligent Robotics,Diligent Robotics family,diligent-robotics-moxi,Moxi,hospitality_foodservice_delivery,hospital assist,commercial,2,vendor_primary_robots
+Temi,Temi family,temi-temi,Temi,hospitality_foodservice_delivery,telepresence service,commercial,2,vendor_primary_robots
+Richtech Robotics,Richtech Robotics family,richtech-robotics-adam,ADAM,hospitality_foodservice_delivery,bar/service,commercial,2,vendor_primary_robots
+Richtech Robotics,Richtech Robotics family,richtech-robotics-matradee,Matradee,hospitality_foodservice_delivery,bar/service,commercial,2,vendor_primary_robots
+Miso Robotics,Miso Robotics family,miso-robotics-flippy,Flippy,hospitality_foodservice_delivery,kitchen automation,commercial,2,vendor_primary_robots
+Hyphen,Hyphen family,hyphen-maker-assembly,Maker assembly,hospitality_foodservice_delivery,kitchen,commercial,2,vendor_primary_robots
+Creator,Creator family,creator-burger-robot,burger robot,hospitality_foodservice_delivery,kitchen,commercial,2,vendor_primary_robots
+Spyce / Sweetgreen,Spyce / Sweetgreen family,spyce-sweetgreen-kitchen-automation,kitchen automation,hospitality_foodservice_delivery,kitchen,commercial,2,vendor_primary_robots
+Picnic,Picnic family,picnic-pizza-automation,pizza automation,hospitality_foodservice_delivery,kitchen,commercial,2,vendor_primary_robots
+Nala Robotics,Nala Robotics family,nala-robotics-kitchen-robots,kitchen robots,hospitality_foodservice_delivery,kitchen,commercial,2,vendor_primary_robots
+Pazzi,Pazzi family,pazzi-pizza-robot,pizza robot,hospitality_foodservice_delivery,kitchen,commercial,2,vendor_primary_robots
+Oracle / MICROS kitchen partners,Oracle / MICROS kitchen partners family,oracle-micros-kitchen-partners-kitchen-display-partners,kitchen display partners,hospitality_foodservice_delivery,kitchen ops,commercial,2,vendor_primary_robots
+Starship Technologies indoor,Starship Technologies indoor family,starship-technologies-indoor-delivery-robots,delivery robots,hospitality_foodservice_delivery,campus delivery,commercial,2,vendor_primary_robots
+Serve Robotics,Serve Robotics family,serve-robotics-sidewalk-delivery,sidewalk delivery,hospitality_foodservice_delivery,delivery,commercial,2,vendor_primary_robots
+Coco Delivery,Coco Delivery family,coco-delivery-sidewalk-robots,sidewalk robots,hospitality_foodservice_delivery,delivery,commercial,2,vendor_primary_robots
+Kiwibot,Kiwibot family,kiwibot-campus-delivery,campus delivery,hospitality_foodservice_delivery,delivery,commercial,2,vendor_primary_robots
+Refraction AI,Refraction AI family,refraction-ai-last-meter,last-meter,hospitality_foodservice_delivery,delivery,commercial,2,vendor_primary_robots
+SoftBank Robotics America hospitality,SoftBank Robotics America hospitality family,softbank-robotics-america-hospitality-whiz,Whiz,hospitality_foodservice_delivery,service,commercial,2,vendor_primary_robots
+SoftBank Robotics America hospitality,SoftBank Robotics America hospitality family,softbank-robotics-america-hospitality-pepper,Pepper,hospitality_foodservice_delivery,service,commercial,2,vendor_primary_robots
+LG CLOi ServeBot,LG CLOi ServeBot family,lg-cloi-servebot-cloi,CLOi,hospitality_foodservice_delivery,service delivery,commercial,2,vendor_primary_robots
+Samsung Bot Care / service,Samsung Bot Care / service family,samsung-bot-care-service-bot-care,Bot Care,hospitality_foodservice_delivery,service,commercial,2,vendor_primary_robots
+ANYbotics,ANYbotics family,anybotics-anymal,ANYmal,inspection_security_quadrupeds,industrial inspection,commercial,2,vendor_primary_robots
+Ghost Robotics,Ghost Robotics family,ghost-robotics-vision-60,Vision 60,inspection_security_quadrupeds,security/defense,commercial,2,vendor_primary_robots
+Exyn Technologies,Exyn Technologies family,exyn-technologies-exynaero,ExynAero,inspection_security_quadrupeds,aerial inspection,commercial,2,vendor_primary_robots
+Flyability,Flyability family,flyability-elios,Elios,inspection_security_quadrupeds,confined aerial,commercial,2,vendor_primary_robots
+Skydio,Skydio family,skydio-x10,X10,inspection_security_quadrupeds,inspection drones,commercial,2,vendor_primary_robots
+Percepto,Percepto family,percepto-aim,AIM,inspection_security_quadrupeds,autonomous drones,commercial,2,vendor_primary_robots
+Dedrone / Axon,Dedrone / Axon family,dedrone-axon-airspace-security,airspace security,inspection_security_quadrupeds,security,commercial,2,vendor_primary_robots
+Knightscope,Knightscope family,knightscope-k5,K5,inspection_security_quadrupeds,security robots,commercial,2,vendor_primary_robots
+Knightscope,Knightscope family,knightscope-k1,K1,inspection_security_quadrupeds,security robots,commercial,2,vendor_primary_robots
+SMP Robotics,SMP Robotics family,smp-robotics-security-robots,security robots,inspection_security_quadrupeds,security,commercial,2,vendor_primary_robots
+Cobalt Robotics,Cobalt Robotics family,cobalt-robotics-cobalt,Cobalt,inspection_security_quadrupeds,indoor security,commercial,2,vendor_primary_robots
+Asylon Robotics,Asylon Robotics family,asylon-robotics-dronesentry,DroneSentry,inspection_security_quadrupeds,perimeter security,commercial,2,vendor_primary_robots
+Sarcos / Guardian,Sarcos / Guardian family,sarcos-guardian-guardian,Guardian,inspection_security_quadrupeds,teleop inspection,commercial,2,vendor_primary_robots
+Energid / Hexagon inspection,Energid / Hexagon inspection family,energid-hexagon-inspection-inspection-systems,inspection systems,inspection_security_quadrupeds,inspection,commercial,2,vendor_primary_robots
+John Deere autonomous,John Deere autonomous family,john-deere-autonomous-autonomous-tractor,autonomous tractor,agriculture,field autonomy,commercial,2,vendor_primary_robots
+CNH Industrial Raven / Case,CNH Industrial Raven / Case family,cnh-industrial-raven-case-raven-autonomy,Raven Autonomy,agriculture,ag autonomy,commercial,2,vendor_primary_robots
+AGCO Fendt,AGCO Fendt family,agco-fendt-fendt-guide,Fendt Guide,agriculture,precision ag,commercial,2,vendor_primary_robots
+Naïo Technologies,Naïo Technologies family,na-o-technologies-oz,Oz,agriculture,weeding robots,commercial,2,vendor_primary_robots
+Naïo Technologies,Naïo Technologies family,na-o-technologies-dino,Dino,agriculture,weeding robots,commercial,2,vendor_primary_robots
+FarmWise,FarmWise family,farmwise-titan,Titan,agriculture,weeding,commercial,2,vendor_primary_robots
+Carbon Robotics,Carbon Robotics family,carbon-robotics-laserweeder,LaserWeeder,agriculture,laser weeding,commercial,2,vendor_primary_robots
+Iron Ox,Iron Ox family,iron-ox-greenhouse-robots,greenhouse robots,agriculture,indoor ag,commercial,2,vendor_primary_robots
+Plenty,Plenty family,plenty-vertical-farm-automation,vertical farm automation,agriculture,indoor ag,commercial,2,vendor_primary_robots
+AppHarvest automation,AppHarvest automation family,appharvest-automation-greenhouse,greenhouse,agriculture,indoor ag,commercial,2,vendor_primary_robots
+Harvest CROO,Harvest CROO family,harvest-croo-strawberry-robot,strawberry robot,agriculture,harvesting,commercial,2,vendor_primary_robots
+Advanced Farm Technologies,Advanced Farm Technologies family,advanced-farm-technologies-apple-harvester,apple harvester,agriculture,harvesting,commercial,2,vendor_primary_robots
+Tortuga AgTech,Tortuga AgTech family,tortuga-agtech-berry-robots,berry robots,agriculture,harvesting,commercial,2,vendor_primary_robots
+FFRobotics,FFRobotics family,ffrobotics-apple-harvester,apple harvester,agriculture,harvesting,commercial,2,vendor_primary_robots
+Tevel Aerobotics,Tevel Aerobotics family,tevel-aerobotics-flying-harvesters,flying harvesters,agriculture,harvesting,commercial,2,vendor_primary_robots
+Ecorobotix,Ecorobotix family,ecorobotix-ara,ARA,agriculture,precision spray,commercial,2,vendor_primary_robots
+Small Robot Company,Small Robot Company family,small-robot-company-tom,Tom,agriculture,field robots,commercial,2,vendor_primary_robots
+Small Robot Company,Small Robot Company family,small-robot-company-dick,Dick,agriculture,field robots,commercial,2,vendor_primary_robots
+Small Robot Company,Small Robot Company family,small-robot-company-harry,Harry,agriculture,field robots,commercial,2,vendor_primary_robots
+Saga Robotics,Saga Robotics family,saga-robotics-thorvald,Thorvald,agriculture,UV/berry,commercial,2,vendor_primary_robots
+Muddy Machines,Muddy Machines family,muddy-machines-sprout-harvester,sprout harvester,agriculture,harvesting,commercial,2,vendor_primary_robots
+Agrobot,Agrobot family,agrobot-strawberry-robot,strawberry robot,agriculture,harvesting,commercial,2,vendor_primary_robots
+Dogtooth Technologies,Dogtooth Technologies family,dogtooth-technologies-soft-fruit-robots,soft fruit robots,agriculture,harvesting,commercial,2,vendor_primary_robots
+Burro,Burro family,burro-burro,Burro,agriculture,farm transport,commercial,2,vendor_primary_robots
+Monarch Tractor,Monarch Tractor family,monarch-tractor-mk-v,MK-V,agriculture,electric autonomous tractor,commercial,2,vendor_primary_robots
+GUSS Automation,GUSS Automation family,guss-automation-guss-sprayer,GUSS sprayer,agriculture,orchard spray,commercial,2,vendor_primary_robots
+SwarmFarm Robotics,SwarmFarm Robotics family,swarmfarm-robotics-swarmbot,SwarmBot,agriculture,field robots,commercial,2,vendor_primary_robots
+AgXeed,AgXeed family,agxeed-agbot,AgBot,agriculture,autonomous tractor,commercial,2,vendor_primary_robots
+Yanmar autonomous ag,Yanmar autonomous ag family,yanmar-autonomous-ag-autonomous-tractor,autonomous tractor,agriculture,ag autonomy,commercial,2,vendor_primary_robots
+Kubota autonomous,Kubota autonomous family,kubota-autonomous-ag-robots,ag robots,agriculture,ag autonomy,commercial,2,vendor_primary_robots
+Iseki autonomous,Iseki autonomous family,iseki-autonomous-ag-robots,ag robots,agriculture,ag,commercial,2,vendor_primary_robots
+XAG,XAG family,xag-agricultural-drones,agricultural drones,agriculture,spray drones,commercial,2,vendor_primary_robots
+DJI Agriculture,DJI Agriculture family,dji-agriculture-agras,Agras,agriculture,spray drones,commercial,2,vendor_primary_robots
+Topcon Agriculture autonomy,Topcon Agriculture autonomy family,topcon-agriculture-autonomy-guidance,guidance,agriculture,precision ag,commercial,2,vendor_primary_robots
+Trimble Agriculture,Trimble Agriculture family,trimble-agriculture-guidance,guidance,agriculture,precision ag,commercial,2,vendor_primary_robots
+Trimble Agriculture,Trimble Agriculture family,trimble-agriculture-autonomy,autonomy,agriculture,precision ag,commercial,2,vendor_primary_robots
+Built Robotics,Built Robotics family,built-robotics-exosystem,Exosystem,construction,excavator autonomy,commercial,2,vendor_primary_robots
+SafeAI,SafeAI family,safeai-heavy-equipment-autonomy,heavy equipment autonomy,construction,haul trucks,commercial,2,vendor_primary_robots
+Caterpillar Command,Caterpillar Command family,caterpillar-command-command-for-dozing,Command for dozing,construction,autonomous equipment,commercial,2,vendor_primary_robots
+Komatsu Autonomous Haulage,Komatsu Autonomous Haulage family,komatsu-autonomous-haulage-ahs,AHS,construction,haul trucks,commercial,2,vendor_primary_robots
+Volvo CE autonomous,Volvo CE autonomous family,volvo-ce-autonomous-ta15,TA15,construction,construction autonomy,commercial,2,vendor_primary_robots
+Volvo CE autonomous,Volvo CE autonomous family,volvo-ce-autonomous-hx04,HX04,construction,construction autonomy,commercial,2,vendor_primary_robots
+Dusty Robotics,Dusty Robotics family,dusty-robotics-fieldprinter,FieldPrinter,construction,layout printing,commercial,2,vendor_primary_robots
+Canvas,Canvas family,canvas-drywall-robot,drywall robot,construction,finishing,commercial,2,vendor_primary_robots
+Okibo,Okibo family,okibo-plastering-robot,plastering robot,construction,finishing,commercial,2,vendor_primary_robots
+Construction Robotics,Construction Robotics family,construction-robotics-sam,SAM,construction,bricklaying,commercial,2,vendor_primary_robots
+Construction Robotics,Construction Robotics family,construction-robotics-mule,MULE,construction,bricklaying,commercial,2,vendor_primary_robots
+Fastbrick Robotics,Fastbrick Robotics family,fastbrick-robotics-hadrian-x,Hadrian X,construction,block laying,commercial,2,vendor_primary_robots
+Scaled Robotics,Scaled Robotics family,scaled-robotics-site-scanner,site scanner,construction,progress monitoring,commercial,2,vendor_primary_robots
+Doxel,Doxel family,doxel-site-ai-robots,site AI robots,construction,progress monitoring,commercial,2,vendor_primary_robots
+Hilti Jaibot,Hilti Jaibot family,hilti-jaibot-jaibot,Jaibot,construction,ceiling drilling,commercial,2,vendor_primary_robots
+nLink,nLink family,nlink-drilling-robot,drilling robot,construction,ceiling drilling,commercial,2,vendor_primary_robots
+Brokk,Brokk family,brokk-demolition-robots,demolition robots,construction,demolition,commercial,2,vendor_primary_robots
+TopTec Spezialmaschinen,TopTec Spezialmaschinen family,toptec-spezialmaschinen-construction-robots,construction robots,construction,specialized,commercial,2,vendor_primary_robots
+Advanced Construction Robotics,Advanced Construction Robotics family,advanced-construction-robotics-tybot,TyBot,construction,rebar tying,commercial,2,vendor_primary_robots
+Advanced Construction Robotics,Advanced Construction Robotics family,advanced-construction-robotics-ironbot,IronBot,construction,rebar tying,commercial,2,vendor_primary_robots
+Toggle Robotics,Toggle Robotics family,toggle-robotics-prefab-robots,prefab robots,construction,prefab,commercial,2,vendor_primary_robots
+Branch Technology,Branch Technology family,branch-technology-c-fab,C-FAB,construction,additive construction,commercial,2,vendor_primary_robots
+ICON,ICON family,icon-vulcan,Vulcan,construction,3D print construction,commercial,2,vendor_primary_robots
+Apis Cor,Apis Cor family,apis-cor-3d-printer,3D printer,construction,3D print construction,commercial,2,vendor_primary_robots
+SQ4D,SQ4D family,sq4d-arcs,ARCS,construction,3D print construction,commercial,2,vendor_primary_robots
+Mighty Buildings,Mighty Buildings family,mighty-buildings-3d-prefab,3D prefab,construction,prefab,commercial,2,vendor_primary_robots
+Autodesk Construction partners robotics,Autodesk Construction partners robotics family,autodesk-construction-partners-robotics-partner-robots,partner robots,construction,digital construction,commercial,2,vendor_primary_robots
+Swisslog Healthcare,Swisslog Healthcare family,swisslog-healthcare-translogic,TransLogic,healthcare_hospital_service,hospital transport,commercial,2,vendor_primary_robots
+Swisslog Healthcare,Swisslog Healthcare family,swisslog-healthcare-relay,Relay,healthcare_hospital_service,hospital transport,commercial,2,vendor_primary_robots
+Omnicell robotics,Omnicell robotics family,omnicell-robotics-pharmacy-robots,pharmacy robots,healthcare_hospital_service,pharmacy,commercial,2,vendor_primary_robots
+BD Rowa,BD Rowa family,bd-rowa-pharmacy-automation,pharmacy automation,healthcare_hospital_service,pharmacy,commercial,2,vendor_primary_robots
+Xenex,Xenex family,xenex-lightstrike,LightStrike,healthcare_hospital_service,UV disinfection,commercial,2,vendor_primary_robots
+UVD Robots,UVD Robots family,uvd-robots-uvd,UVD,healthcare_hospital_service,UV disinfection,commercial,2,vendor_primary_robots
+Akara Robotics,Akara Robotics family,akara-robotics-stevie,Stevie,healthcare_hospital_service,eldercare/UV,commercial,2,vendor_primary_robots
+Akara Robotics,Akara Robotics family,akara-robotics-uv,UV,healthcare_hospital_service,eldercare/UV,commercial,2,vendor_primary_robots
+Double Robotics,Double Robotics family,double-robotics-double-3,Double 3,healthcare_hospital_service,telepresence,commercial,2,vendor_primary_robots
+OhmniLabs,OhmniLabs family,ohmnilabs-ohmni,Ohmni,healthcare_hospital_service,telepresence,commercial,2,vendor_primary_robots
+Nuro,Nuro family,nuro-nuro-r3,Nuro R3,last_mile_outdoor_delivery,road delivery,commercial,2,vendor_primary_robots
+Amazon Scout (legacy),Amazon Scout (legacy) family,amazon-scout-legacy-scout,Scout,last_mile_outdoor_delivery,sidewalk,discontinued,2,vendor_primary_robots
+Cartken,Cartken family,cartken-cartken,Cartken,last_mile_outdoor_delivery,sidewalk,commercial,2,vendor_primary_robots
+Robby Technologies,Robby Technologies family,robby-technologies-robby,Robby,last_mile_outdoor_delivery,sidewalk,commercial,2,vendor_primary_robots
+Neolix,Neolix family,neolix-x3,X3,last_mile_outdoor_delivery,unmanned delivery vehicle,commercial,2,vendor_primary_robots
+White Rhino Auto,White Rhino Auto family,white-rhino-auto-delivery-ugv,delivery UGV,last_mile_outdoor_delivery,delivery,commercial,2,vendor_primary_robots
+Meituan delivery robots,Meituan delivery robots family,meituan-delivery-robots-delivery-robots,delivery robots,last_mile_outdoor_delivery,delivery,commercial,2,vendor_primary_robots
+Alibaba Xiaomanlv,Alibaba Xiaomanlv family,alibaba-xiaomanlv-xiaomanlv,Xiaomanlv,last_mile_outdoor_delivery,delivery,commercial,2,vendor_primary_robots
+JD.com delivery robots,JD.com delivery robots family,jd-com-delivery-robots-delivery-robots,delivery robots,last_mile_outdoor_delivery,delivery,commercial,2,vendor_primary_robots
+SITA / airport baggage robotics partners,SITA / airport baggage robotics partners family,sita-airport-baggage-robotics-partners-baggage-robots,baggage robots,specialty_commercial,airport,commercial,2,vendor_primary_robots
+Aurrigo,Aurrigo family,aurrigo-auto-dolly,Auto-Dolly,specialty_commercial,airport baggage,commercial,2,vendor_primary_robots
+Olis Robotics,Olis Robotics family,olis-robotics-teleop-industrial,teleop industrial,specialty_commercial,remote ops,commercial,2,vendor_primary_robots
+Reach Robotics,Reach Robotics family,reach-robotics-reach-bravo,Reach Bravo,specialty_commercial,underwater manip,commercial,2,vendor_primary_robots
+Saab Seaeye,Saab Seaeye family,saab-seaeye-rovs,ROVs,specialty_commercial,underwater,commercial,2,vendor_primary_robots
+Greensea IQ,Greensea IQ family,greensea-iq-opensea,OPENSEA,specialty_commercial,marine autonomy,commercial,2,vendor_primary_robots
+Fellow Robots retail,Fellow Robots retail family,fellow-robots-retail-retail-robots,retail robots,specialty_commercial,retail inventory,commercial,2,vendor_primary_robots
+6 River Systems,6 River Systems family,6-river-systems-chuck,Chuck,amr_agv_material_transport,fulfillment AMR,commercial,2,vendor_primary_robots
+Syrius Robotics,Syrius Robotics family,syrius-robotics-e-retriever,E retriever,amr_agv_material_transport,fulfillment,commercial,2,vendor_primary_robots
+InOrbit partner fleets,InOrbit partner fleets family,inorbit-partner-fleets-fleet-platforms,fleet platforms,amr_agv_material_transport,AMR ops,commercial,2,vendor_primary_robots
+IGM Robotersysteme,IGM Robotersysteme family,igm-robotersysteme-welding-robots,welding robots,industrial_robot_arms,welding,commercial,2,vendor_primary_robots
+Panasonic Connect welding robots,Panasonic Connect welding robots family,panasonic-connect-welding-robots-tm,TM,industrial_robot_arms,welding,commercial,2,vendor_primary_robots
+Panasonic Connect welding robots,Panasonic Connect welding robots family,panasonic-connect-welding-robots-tl,TL,industrial_robot_arms,welding,commercial,2,vendor_primary_robots
+Elite Robot,Elite Robot family,elite-robot-ec-series,EC series,cobots,cobot,commercial,2,vendor_primary_robots
+Rainbow Robotics,Rainbow Robotics family,rainbow-robotics-rb-series,RB series,cobots,cobot,commercial,2,vendor_primary_robots
+Neuromeka,Neuromeka family,neuromeka-indy,Indy,cobots,cobot,commercial,2,vendor_primary_robots
+Grabit Inc,Grabit Inc family,grabit-inc-electroadhesion-grippers,electroadhesion grippers,picking_manipulation_palletizing,pick,commercial,2,vendor_primary_robots
+Shadow Robot Company,Shadow Robot Company family,shadow-robot-company-dexterous-hand,Dexterous Hand,picking_manipulation_palletizing,manipulation,commercial,2,vendor_primary_robots
+Pilz service robotics,Pilz service robotics family,pilz-service-robotics-service-robotics-module,Service Robotics Module,picking_manipulation_palletizing,safe manip,commercial,2,vendor_primary_robots
+Unchained Robotics,Unchained Robotics family,unchained-robotics-modular-cells,modular cells,picking_manipulation_palletizing,pick/pack,commercial,2,vendor_primary_robots
+Robomotive,Robomotive family,robomotive-bin-picking,bin picking,picking_manipulation_palletizing,bin pick,commercial,2,vendor_primary_robots
+Solomon 3D vision pick,Solomon 3D vision pick family,solomon-3d-vision-pick-accupick,AccuPick,picking_manipulation_palletizing,bin pick,commercial,2,vendor_primary_robots
+Photoneo,Photoneo family,photoneo-locator,Locator,picking_manipulation_palletizing,bin pick vision,commercial,2,vendor_primary_robots
+Photoneo,Photoneo family,photoneo-motioncam,MotionCam,picking_manipulation_palletizing,bin pick vision,commercial,2,vendor_primary_robots
+Mech-Mind Robotics,Mech-Mind Robotics family,mech-mind-robotics-mech-eye,Mech-Eye,picking_manipulation_palletizing,3D pick,commercial,2,vendor_primary_robots
+Mech-Mind Robotics,Mech-Mind Robotics family,mech-mind-robotics-mech-viz,Mech-Viz,picking_manipulation_palletizing,3D pick,commercial,2,vendor_primary_robots
+Sereact,Sereact family,sereact-pickgpt,PickGPT,picking_manipulation_palletizing,AI pick,commercial,2,vendor_primary_robots
+Kepler Exploration Robot,Kepler Exploration Robot family,kepler-exploration-robot-forerunner,Forerunner,humanoids_general_purpose,humanoid,commercial,2,vendor_primary_robots
+Mentee Robotics,Mentee Robotics family,mentee-robotics-menteebot,MenteeBot,humanoids_general_purpose,humanoid,commercial,2,vendor_primary_robots
+Wandercraft,Wandercraft family,wandercraft-atalante,Atalante,humanoids_general_purpose,exoskeleton/humanoid gait,commercial,2,vendor_primary_robots
+Intelligent Cleaning Equipment ICE,Intelligent Cleaning Equipment ICE family,intelligent-cleaning-equipment-ice-robot-scrubbers,robot scrubbers,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+Wave Robotics cleaning,Wave Robotics cleaning family,wave-robotics-cleaning-commercial-clean,commercial clean,cleaning_robots,scrubber,commercial,2,vendor_primary_robots
+Adaptalift Cleanbots,Adaptalift Cleanbots family,adaptalift-cleanbots-cleanbots,cleanbots,cleaning_robots,cleaning,commercial,2,vendor_primary_robots
+Solowash / robotic wash,Solowash / robotic wash family,solowash-robotic-wash-vehicle-wash-robots,vehicle wash robots,cleaning_robots,wash,commercial,2,vendor_primary_robots
+OrionStar Robotics,OrionStar Robotics family,orionstar-robotics-lucki,Lucki,hospitality_foodservice_delivery,service,commercial,2,vendor_primary_robots
+OrionStar Robotics,OrionStar Robotics family,orionstar-robotics-hello,Hello,hospitality_foodservice_delivery,service,commercial,2,vendor_primary_robots
+Hease Robotics,Hease Robotics family,hease-robotics-hoomano,Hoomano,hospitality_foodservice_delivery,reception,commercial,2,vendor_primary_robots
+Hease Robotics,Hease Robotics family,hease-robotics-heasy,Heasy,hospitality_foodservice_delivery,reception,commercial,2,vendor_primary_robots
+Goodtime Robotics,Goodtime Robotics family,goodtime-robotics-qsr-automation,QSR automation,hospitality_foodservice_delivery,QSR,commercial,2,vendor_primary_robots
+Hyphen robotic kitchen,Hyphen robotic kitchen family,hyphen-robotic-kitchen-maker-station,Maker station,hospitality_foodservice_delivery,assembly kitchen,commercial,2,vendor_primary_robots
+Energy Robotics,Energy Robotics family,energy-robotics-fleet-autonomy,fleet autonomy,inspection_security_quadrupeds,inspection,commercial,2,vendor_primary_robots
+ExRobotics,ExRobotics family,exrobotics-exr-1,ExR-1,inspection_security_quadrupeds,ATEX inspection,commercial,2,vendor_primary_robots
+Taurob,Taurob family,taurob-inspector,Inspector,inspection_security_quadrupeds,ATEX,commercial,2,vendor_primary_robots
+Square Robot,Square Robot family,square-robot-submersible-tank,submersible tank,inspection_security_quadrupeds,tank inspection,commercial,2,vendor_primary_robots
+Invert Robotics,Invert Robotics family,invert-robotics-crawler-inspection,crawler inspection,inspection_security_quadrupeds,NDT,commercial,2,vendor_primary_robots
+Agerris,Agerris family,agerris-digital-farmhand,Digital Farmhand,agriculture,field,commercial,2,vendor_primary_robots
+Volvo Autonomous Solutions,Volvo Autonomous Solutions family,volvo-autonomous-solutions-ta15,TA15,construction,haulage,commercial,2,vendor_primary_robots
+Volvo Autonomous Solutions,Volvo Autonomous Solutions family,volvo-autonomous-solutions-haul,HAUL,construction,haulage,commercial,2,vendor_primary_robots
+Toyota HSR hospitals,Toyota HSR hospitals family,toyota-hsr-hospitals-hsr,HSR,healthcare_hospital_service,care assist,commercial,2,vendor_primary_robots
+Meituan autonomous delivery,Meituan autonomous delivery family,meituan-autonomous-delivery-delivery-bots,delivery bots,last_mile_outdoor_delivery,last mile,commercial,2,vendor_primary_robots
+JD Logistics drones/bots,JD Logistics drones/bots family,jd-logistics-drones-bots-delivery-robots,delivery robots,last_mile_outdoor_delivery,last mile,commercial,2,vendor_primary_robots
+Uber Elevate / AV delivery partners,Uber Elevate / AV delivery partners family,uber-elevate-av-delivery-partners-av-delivery,AV delivery,last_mile_outdoor_delivery,last mile,commercial,2,vendor_primary_robots
+FedEx Roxo,FedEx Roxo family,fedex-roxo-roxo,Roxo,last_mile_outdoor_delivery,same-day bot,commercial,2,vendor_primary_robots
+DHL Parcelcopter / robot pilots,DHL Parcelcopter / robot pilots family,dhl-parcelcopter-robot-pilots-robot-delivery-pilots,robot delivery pilots,last_mile_outdoor_delivery,last mile,commercial,2,vendor_primary_robots
+Alibaba Cainiao robots,Alibaba Cainiao robots family,alibaba-cainiao-robots-cainiao-bots,Cainiao bots,last_mile_outdoor_delivery,last mile,commercial,2,vendor_primary_robots
+Bossa Nova Robotics,Bossa Nova Robotics family,bossa-nova-robotics-shelf-scanning,shelf scanning,specialty_commercial,retail,commercial,2,vendor_primary_robots
+Simbe Robotics,Simbe Robotics family,simbe-robotics-tally,Tally,specialty_commercial,retail inventory,commercial,2,vendor_primary_robots
+Badger Technologies,Badger Technologies family,badger-technologies-retail-robot,retail robot,specialty_commercial,retail,commercial,2,vendor_primary_robots
+HaiPick Systems,HaiPick Systems family,haipick-systems-haipick-systems-platform,HaiPick Systems platform,amr_agv_material_transport,,unknown,2,vendor_primary_robots
+Vention,Vention family,vention-vention-platform,Vention platform,industrial_robot_arms,,unknown,2,vendor_primary_robots
+Flexiv,Flexiv family,flexiv-flexiv-platform,Flexiv platform,cobots,,unknown,2,vendor_primary_robots
+Zhiyuan Robotics,Zhiyuan Robotics family,zhiyuan-robotics-zhiyuan-robotics-platform,Zhiyuan Robotics platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+Dji,Dji family,dji-dji-platform,Dji platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+Mir,Mir family,mir-mir-platform,Mir platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+AI to Wear: German Bionic,AI to Wear: German Bionic family,ai-to-wear-german-bionic-ai-to-wear-german-bionic-platform,AI to Wear: German Bionic platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+WIRobotics,WIRobotics family,wirobotics-wirobotics-platform,WIRobotics platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+IntBot,IntBot family,intbot-intbot-platform,IntBot platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+Lotte Hotel,Lotte Hotel family,lotte-hotel-lotte-hotel-platform,Lotte Hotel platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+Pudu,Pudu family,pudu-pudu-platform,Pudu platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+Andromeda Robotics,Andromeda Robotics family,andromeda-robotics-andromeda-robotics-platform,Andromeda Robotics platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+Chery Robotics,Chery Robotics family,chery-robotics-chery-robotics-platform,Chery Robotics platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+CloudMinds,CloudMinds family,cloudminds-cloudminds-platform,CloudMinds platform,humanoids_general_purpose,,unknown,2,vendor_primary_robots
+Rohde & Schwarz,Rohde & Schwarz family,rohde-schwarz-rohde-schwarz-platform,Rohde & Schwarz platform,hospitality_foodservice_delivery,,unknown,2,vendor_primary_robots
+Baubot,Baubot family,baubot-baubot,Baubot,autonomous_forklift_pallet,on-site mobile,commercial,2,vendor_primary_robots
+Autonomous Solutions Inc ASI,Autonomous Solutions Inc ASI family,autonomous-solutions-inc-asi-mobius,Mobius,autonomous_forklift_pallet,vehicle autonomy,commercial,2,vendor_primary_robots
+Unbox Robotics,Unbox Robotics family,unbox-robotics-unbox-robotics-platform,Unbox Robotics platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Carbon,Carbon family,carbon-carbon-platform,Carbon platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Eos,Eos family,eos-eos-platform,Eos platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Robosizeme,Robosizeme family,robosizeme-robosizeme-platform,Robosizeme platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Mobile Industrial Robots,Mobile Industrial Robots family,mobile-industrial-robots-mobile-industrial-robots-platform,Mobile Industrial Robots platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Yaskawa,Yaskawa family,yaskawa-yaskawa-platform,Yaskawa platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Fetch Robotics,Fetch Robotics family,fetch-robotics-fetch-robotics-platform,Fetch Robotics platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Korean All-Solid,Korean All-Solid family,korean-all-solid-korean-all-solid-platform,Korean All-Solid platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Blue Ocean Robotics,Blue Ocean Robotics family,blue-ocean-robotics-blue-ocean-robotics-platform,Blue Ocean Robotics platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Waymo,Waymo family,waymo-waymo-platform,Waymo platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Cognex,Cognex family,cognex-cognex-platform,Cognex platform,autonomous_forklift_pallet,,unknown,2,vendor_primary_robots
+Moon Surgical,Moon Surgical family,moon-surgical-moon-surgical-platform,Moon Surgical platform,cobots,,unknown,2,vendor_primary_robots
+Omron,Omron family,omron-omron-platform,Omron platform,cobots,,unknown,2,vendor_primary_robots
+Skild Ai,Skild Ai family,skild-ai-skild-ai-platform,Skild Ai platform,cobots,,unknown,2,vendor_primary_robots
+Milagrow,Milagrow family,milagrow-milagrow-platform,Milagrow platform,cobots,,unknown,2,vendor_primary_robots
+Autonomous Solutions,Autonomous Solutions family,autonomous-solutions-autonomous-solutions-platform,Autonomous Solutions platform,cobots,,unknown,2,vendor_primary_robots
+Tgw,Tgw family,tgw-tgw-platform,Tgw platform,cobots,,unknown,2,vendor_primary_robots
+Richtech,Richtech family,richtech-richtech-platform,Richtech platform,picking_manipulation_palletizing,,unknown,2,vendor_primary_robots
+Intelligrated,Intelligrated family,intelligrated-intelligrated-platform,Intelligrated platform,picking_manipulation_palletizing,,unknown,2,vendor_primary_robots
+Keenon,Keenon family,keenon-keenon-platform,Keenon platform,picking_manipulation_palletizing,,unknown,2,vendor_primary_robots
+Libiao,Libiao family,libiao-libiao-platform,Libiao platform,picking_manipulation_palletizing,,unknown,2,vendor_primary_robots
+StudioLab,StudioLab family,studiolab-studiolab-platform,StudioLab platform,picking_manipulation_palletizing,,unknown,2,vendor_primary_robots
+Dexmate,Dexmate family,dexmate-dexmate-platform,Dexmate platform,picking_manipulation_palletizing,,unknown,2,vendor_primary_robots
+DLR,DLR family,dlr-dlr-platform,DLR platform,cleaning_robots,,unknown,2,vendor_primary_robots
+Eden Robotics,Eden Robotics family,eden-robotics-eden-robotics-platform,Eden Robotics platform,cleaning_robots,,unknown,2,vendor_primary_robots
+Engineered Arts,Engineered Arts family,engineered-arts-engineered-arts-platform,Engineered Arts platform,cleaning_robots,,unknown,2,vendor_primary_robots
+Estun Codroid,Estun Codroid family,estun-codroid-estun-codroid-platform,Estun Codroid platform,cleaning_robots,,unknown,2,vendor_primary_robots
+Faraday Future,Faraday Future family,faraday-future-faraday-future-platform,Faraday Future platform,cleaning_robots,,unknown,2,vendor_primary_robots
+Galaxea Dynamics,Galaxea Dynamics family,galaxea-dynamics-galaxea-dynamics-platform,Galaxea Dynamics platform,hospitality_foodservice_delivery,,unknown,2,vendor_primary_robots
+Generalist AI,Generalist AI family,generalist-ai-generalist-ai-platform,Generalist AI platform,hospitality_foodservice_delivery,,unknown,2,vendor_primary_robots
+Generative Bionics,Generative Bionics family,generative-bionics-generative-bionics-platform,Generative Bionics platform,hospitality_foodservice_delivery,,unknown,2,vendor_primary_robots
+Hexagon Robotics,Hexagon Robotics family,hexagon-robotics-hexagon-robotics-platform,Hexagon Robotics platform,hospitality_foodservice_delivery,,unknown,2,vendor_primary_robots
+Kawasaki Heavy Industries,Kawasaki Heavy Industries family,kawasaki-heavy-industries-kawasaki-heavy-industries-platform,Kawasaki Heavy Industries platform,hospitality_foodservice_delivery,,unknown,2,vendor_primary_robots
+Kepler,Kepler family,kepler-kepler-platform,Kepler platform,hospitality_foodservice_delivery,,unknown,2,vendor_primary_robots
+Matrix Robotics,Matrix Robotics family,matrix-robotics-matrix-robotics-platform,Matrix Robotics platform,inspection_security_quadrupeds,,unknown,2,vendor_primary_robots
+NASA Johnson,NASA Johnson family,nasa-johnson-nasa-johnson-platform,NASA Johnson platform,inspection_security_quadrupeds,,unknown,2,vendor_primary_robots
+Noble Machines,Noble Machines family,noble-machines-noble-machines-platform,Noble Machines platform,inspection_security_quadrupeds,,unknown,2,vendor_primary_robots
+Pangolin Robot,Pangolin Robot family,pangolin-robot-pangolin-robot-platform,Pangolin Robot platform,inspection_security_quadrupeds,,unknown,2,vendor_primary_robots
+Paxini Robotics,Paxini Robotics family,paxini-robotics-paxini-robotics-platform,Paxini Robotics platform,inspection_security_quadrupeds,,unknown,2,vendor_primary_robots
+Persona AI,Persona AI family,persona-ai-persona-ai-platform,Persona AI platform,inspection_security_quadrupeds,,unknown,2,vendor_primary_robots
+PrimeBOT,PrimeBOT family,primebot-primebot-platform,PrimeBOT platform,inspection_security_quadrupeds,,unknown,2,vendor_primary_robots
+Qinglong Bot,Qinglong Bot family,qinglong-bot-qinglong-bot-platform,Qinglong Bot platform,agriculture,,unknown,2,vendor_primary_robots
+Realbotix,Realbotix family,realbotix-realbotix-platform,Realbotix platform,agriculture,,unknown,2,vendor_primary_robots
+RealMan Robotics,RealMan Robotics family,realman-robotics-realman-robotics-platform,RealMan Robotics platform,healthcare_hospital_service,,unknown,2,vendor_primary_robots
+Samsung Research,Samsung Research family,samsung-research-samsung-research-platform,Samsung Research platform,healthcare_hospital_service,,unknown,2,vendor_primary_robots
+Segway Robotics,Segway Robotics family,segway-robotics-segway-robotics-platform,Segway Robotics platform,healthcare_hospital_service,,unknown,2,vendor_primary_robots
+Shanghai Electric,Shanghai Electric family,shanghai-electric-shanghai-electric-platform,Shanghai Electric platform,healthcare_hospital_service,,unknown,2,vendor_primary_robots
+Spirit AI,Spirit AI family,spirit-ai-spirit-ai-platform,Spirit AI platform,healthcare_hospital_service,,unknown,2,vendor_primary_robots
+STEP Robotics,STEP Robotics family,step-robotics-step-robotics-platform,STEP Robotics platform,healthcare_hospital_service,,unknown,2,vendor_primary_robots
+Ti5 Robot,Ti5 Robot family,ti5-robot-ti5-robot-platform,Ti5 Robot platform,healthcare_hospital_service,,unknown,2,vendor_primary_robots
+Toyota,Toyota family,toyota-toyota-platform,Toyota platform,healthcare_hospital_service,,unknown,2,vendor_primary_robots
+XPeng Robotics,XPeng Robotics family,xpeng-robotics-xpeng-robotics-platform,XPeng Robotics platform,healthcare_hospital_service,,unknown,2,vendor_primary_robots
+UMA,UMA family,uma-uma-platform,UMA platform,healthcare_hospital_service,humanoid labor,unknown,2,vendor_primary_robots

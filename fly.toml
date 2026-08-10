@@ -68,6 +68,8 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   GOOGLE_CALENDAR_REDIRECT_URI = "https://ready-2-robot.fly.dev/api/integrations/google-calendar/callback"
   # Supabase URL (for JWKS verification if legacy JWT secret doesn't match)
   SUPABASE_URL = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
+  # V1 Robot Customer Acquisition Intelligence + market-graph catalog APIs
+  V1_ROBOT_INTELLIGENCE = "true"
   # Web machine: API only — Celery workers compete for Supabase pool slots on 1024MB.
   SKIP_CELERY = "1"
   # In-app scheduler (daemon thread) — secondary pass runs daily without Celery Beat

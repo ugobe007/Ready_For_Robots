@@ -64,7 +64,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type Stage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
+type Stage = "New Signal" | "Discovered" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 type QualityBandFilter = "all" | "high" | "medium" | "low";
 type QualitySort =
   | "default"
@@ -386,10 +386,11 @@ interface MarketSnippet {
   color: string;
 }
 
-const STAGES: Stage[] = ["New Signal", "Draft Ready", "Outreach Sent", "Qualified", "Meeting Set"];
+const STAGES: Stage[] = ["New Signal", "Discovered", "Draft Ready", "Outreach Sent", "Qualified", "Meeting Set"];
 
 const STAGE_META: Record<Stage, { color: string; dot: string; label: string; desc: string }> = {
   "New Signal":    { color: "#10b981", dot: "#10b981", label: "New Signal",    desc: "Just detected" },
+  "Discovered":    { color: "#14b8a6", dot: "#14b8a6", label: "Discovered",    desc: "Saved for review" },
   "Draft Ready":   { color: "#60a5fa", dot: "#60a5fa", label: "Draft Ready",   desc: "Outreach drafted" },
   "Outreach Sent": { color: "#FFB000", dot: "#FFB000", label: "Outreach Sent", desc: "Awaiting reply" },
   "Qualified":     { color: "#34d399", dot: "#34d399", label: "Qualified",     desc: "Engaged buyer" },
@@ -1405,6 +1406,11 @@ export default function Pipeline() {
     const params = new URLSearchParams(search);
     return (params.get("src") || "").trim();
   }, [search]);
+  const activationIdFromQuery = useMemo(() => {
+    const value = Number(new URLSearchParams(search).get("activation"));
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }, [search]);
+  const arrivedFromSignalActivation = submittedSrcFromQuery === "signal_activation";
 
   useEffect(() => {
     if (submittedUrlFromQuery) {
@@ -1516,6 +1522,21 @@ export default function Pipeline() {
   const byIdBreakerOpenUntilRef = useRef(0);
   const outreachDraftRef = useRef<HTMLDivElement | null>(null);
   const firstThreePrevRef = useRef<FirstThreeActionsState>(firstThreeActions);
+
+  useEffect(() => {
+    if (!arrivedFromSignalActivation) return;
+    setFirstThreeActions((prev) => ({
+      ...prev,
+      started: true,
+      saved: true,
+      dismissed: false,
+    }));
+  }, [arrivedFromSignalActivation]);
+
+  useEffect(() => {
+    if (!activationIdFromQuery || !activations.some((activation) => activation.id === activationIdFromQuery)) return;
+    setSelectedActivationId(activationIdFromQuery);
+  }, [activationIdFromQuery, activations]);
 
   useEffect(() => {
     setScopeToSubmittedUrl(Boolean(submittedHostname));
@@ -2391,7 +2412,7 @@ export default function Pipeline() {
           "Save or advance the best lead in your pipeline workspace.",
           "Submit a company URL from Home anytime to scope the pipeline to related buyers.",
         ];
-  const canSaveSelected = Boolean(selected) && (!isSignedIn || selected?.stage !== "Qualified");
+  const canSaveSelected = Boolean(selected) && (!isSignedIn || !crmAccountIdByCompanyId[selected!.id]);
   const canCopySelectedDraft = Boolean(selected?.outreachBody);
   const canOpenSelectedDraft = Boolean(selected?.outreachBody) && showKanban && Boolean(session?.access_token);
 
@@ -2537,7 +2558,10 @@ export default function Pipeline() {
         }
         throw new Error(errText);
       }
-      setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Qualified", updatedAt: "just now" } : d)));
+      const account = (await createResponse.json()) as { id: string; outreach_stage?: string | null };
+      setCrmAccountIdByCompanyId((prev) => ({ ...prev, [deal.id]: account.id }));
+      setCrmStageByCompanyId((prev) => ({ ...prev, [deal.id]: account.outreach_stage || "new" }));
+      setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Discovered", updatedAt: "just now" } : d)));
       // Funnel #20: activation — first saved lead (fires once per browser).
       trackFirstSave({ company: deal.company, industry: deal.industry || null });
       trackMarketingEvent("pipeline_save_success", {
@@ -3304,6 +3328,43 @@ export default function Pipeline() {
               </>
             )}
           </div>
+
+          {arrivedFromSignalActivation && (
+            <section className="overflow-hidden rounded-xl border border-emerald-400/40 bg-[#071a19] shadow-[0_18px_45px_-30px_rgba(16,185,129,0.85)]">
+              <div className="grid gap-4 px-4 py-4 sm:px-5 lg:grid-cols-[1fr_auto] lg:items-center">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">
+                      SIGNAL activated
+                    </span>
+                    {activationIdFromQuery && (
+                      <span className="text-[11px] font-medium text-slate-400">Queue #{activationIdFromQuery}</span>
+                    )}
+                  </div>
+                  <h2 className="mt-2 text-xl font-bold text-white sm:text-2xl">
+                    {selected ? `${selected.company} is ready for your review.` : "Your buyer pipeline is being prepared."}
+                  </h2>
+                  <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-300">
+                    SIGNAL saved the selected buyers to CRM and is preparing account-specific outreach. Review the why-now evidence, then copy the draft and send your first message.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[11px] font-semibold text-slate-300">
+                    <span className="text-emerald-300">1. Buyers saved</span>
+                    <span className={firstThreeActions.copied ? "text-emerald-300" : ""}>2. Review and copy draft</span>
+                    <span className={firstThreeActions.sent ? "text-emerald-300" : ""}>3. Send outreach</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={runFirstThreePrimaryAction}
+                  disabled={!selected || firstThreePrimaryActionDisabled}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
+                >
+                  {selected?.outreachBody ? "Review prepared outreach" : "Review selected buyer"}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </section>
+          )}
 
           <div className="pipeline-workspace">
             {/* ── Workspace toolbar ── */}

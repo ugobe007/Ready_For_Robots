@@ -21,6 +21,8 @@ class SalesOpportunity(Base):
     owner_user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id", ondelete="SET NULL"), nullable=True, index=True)
     title = Column(String(240), nullable=False)
     current_stage = Column(String(64), nullable=False, server_default="new", index=True)
+    # V1: watch/paused/lost are dispositions; they must not erase monotonic truth in current_stage.
+    disposition = Column(String(32), nullable=False, server_default="active", index=True)
     status = Column(String(32), nullable=False, server_default="open", index=True)
     automation_level = Column(String(32), nullable=False, server_default="first_reply_auto")
     next_best_action = Column(JSONB, nullable=False, server_default="{}")

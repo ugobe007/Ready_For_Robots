@@ -6,6 +6,8 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Results from "./pages/Results";
+import RobotAnalysisReview from "./pages/RobotAnalysisReview";
+import RobotDetailReview from "./pages/RobotDetailReview";
 import SalesSamples from "./pages/SalesSamples";
 import Pipeline from "./pages/Pipeline";
 import Compare from "./pages/Compare";
@@ -49,6 +51,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/robots/analysis/:analysisId" component={RobotAnalysisReview} />
+      <Route path="/robots/:robotId/review" component={RobotDetailReview} />
       <Route path="/journey/url" component={Home} />
       <Route path="/journey/identity" component={Home} />
       <Route path="/journey/preview" component={Home} />

@@ -1,0 +1,2824 @@
+{
+  "dataset_id": "tier1_oem_catalog_v1",
+  "version": "1.0.0",
+  "calibration_tier": 1,
+  "policy": "Deep calibration population \u2014 match machines not GTM leads",
+  "manufacturers": [
+    {
+      "slug": "seegrid",
+      "name": "Seegrid",
+      "website": "https://seegrid.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "seegrid-family",
+          "name": "Palion",
+          "primary_class": "autonomous_lift_tow",
+          "models": [
+            {
+              "slug": "seegrid-palion-lift",
+              "name": "Palion Lift",
+              "primary_class": "autonomous_lift_tow",
+              "work_to_map": [
+                "pallets",
+                "towing",
+                "material_movement"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "lift",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "tow",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "acquire_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "floor_placement",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "seegrid-palion-tow",
+              "name": "Palion Tow",
+              "primary_class": "autonomous_tugger",
+              "work_to_map": [
+                "towing",
+                "material_movement"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "tow",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "line_side_replenishment",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "seegrid-palion-lift-rs1",
+              "name": "Lift RS1",
+              "primary_class": "autonomous_forklift",
+              "work_to_map": [
+                "low_lift_pallet",
+                "parts_to_line"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "lift",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "vecna-robotics",
+      "name": "Vecna Robotics",
+      "website": "https://www.vecnarobotics.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "vecna-robotics-family",
+          "name": "AFL / AMR",
+          "primary_class": "autonomous_forklift",
+          "models": [
+            {
+              "slug": "vecna-afl",
+              "name": "Vecna AFL",
+              "primary_class": "autonomous_forklift",
+              "work_to_map": [
+                "pallet_movement"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "lift",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry_pallet",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "acquire_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "vecna-amr",
+              "name": "Vecna AMR",
+              "primary_class": "amr",
+              "work_to_map": [
+                "material_transport"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "vecna-tugger",
+              "name": "Vecna Tugger",
+              "primary_class": "autonomous_tugger",
+              "work_to_map": [
+                "line_replenishment"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "tow",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "fox-robotics",
+      "name": "Fox Robotics",
+      "website": "https://www.foxrobotics.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "fox-robotics-family",
+          "name": "FoxBot",
+          "primary_class": "autonomous_forklift",
+          "models": [
+            {
+              "slug": "foxbot-atl",
+              "name": "FoxBot ATL",
+              "primary_class": "autonomous_forklift",
+              "work_to_map": [
+                "trailer_loading",
+                "trailer_unloading"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "lift",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "trailer_entry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "trailer_entry",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "acquire_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "third-wave-automation",
+      "name": "Third Wave Automation",
+      "website": "https://www.thirdwave.ai",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "third-wave-automation-family",
+          "name": "TWA Reach",
+          "primary_class": "autonomous_forklift",
+          "models": [
+            {
+              "slug": "twa-reach",
+              "name": "TWA Reach",
+              "primary_class": "autonomous_forklift",
+              "work_to_map": [
+                "warehouse_pallet_handling"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "pilot",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "lift",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry_pallet",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "acquire_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "rack_placement",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "cyngn",
+      "name": "Cyngn",
+      "website": "https://cyngn.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "cyngn-family",
+          "name": "DriveMod",
+          "primary_class": "autonomous_industrial_vehicle",
+          "models": [
+            {
+              "slug": "cyngn-drivemod",
+              "name": "DriveMod",
+              "primary_class": "autonomous_industrial_vehicle",
+              "work_to_map": [
+                "material_movement"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "otto-motors",
+      "name": "OTTO Motors",
+      "website": "https://ottomotors.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "otto-motors-family",
+          "name": "OTTO family",
+          "primary_class": "amr",
+          "models": [
+            {
+              "slug": "otto-100",
+              "name": "OTTO 100",
+              "primary_class": "amr",
+              "work_to_map": [
+                "material_transport",
+                "cart_transport"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "dock",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "otto-750",
+              "name": "OTTO 750",
+              "primary_class": "amr",
+              "work_to_map": [
+                "material_transport"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "dock",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "otto-1500",
+              "name": "OTTO 1500",
+              "primary_class": "amr",
+              "work_to_map": [
+                "heavy_material_transport"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "dock",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "otto-lifter",
+              "name": "OTTO Lifter",
+              "primary_class": "autonomous_forklift",
+              "work_to_map": [
+                "pallet_pickup_drop"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "lift",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry_pallet",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "acquire_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "floor_placement",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "mir",
+      "name": "Mobile Industrial Robots (MiR)",
+      "website": "https://www.mobile-industrial-robots.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "mir-family",
+          "name": "MiR AMR",
+          "primary_class": "amr",
+          "models": [
+            {
+              "slug": "mir-250",
+              "name": "MiR250",
+              "primary_class": "amr",
+              "work_to_map": [
+                "cart_transport"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "dock",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "mir-600",
+              "name": "MiR600",
+              "primary_class": "amr",
+              "work_to_map": [
+                "cart_transport",
+                "pallet_transport"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "dock",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "mir-1350",
+              "name": "MiR1350",
+              "primary_class": "amr",
+              "work_to_map": [
+                "heavy_cart_transport"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "dock",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "mir-1200-pallet-jack",
+              "name": "MiR1200 Pallet Jack",
+              "primary_class": "pallet_moving_amr",
+              "work_to_map": [
+                "pallet_transport"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry_pallet",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "acquire_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "locus-robotics",
+      "name": "Locus Robotics",
+      "website": "https://locusrobotics.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "locus-robotics-family",
+          "name": "LocusOne",
+          "primary_class": "amr",
+          "models": [
+            {
+              "slug": "locus-origin",
+              "name": "Locus Origin",
+              "primary_class": "amr",
+              "work_to_map": [
+                "picking",
+                "fulfillment"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick_assist",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "locus-vector",
+              "name": "Locus Vector",
+              "primary_class": "amr",
+              "work_to_map": [
+                "picking",
+                "fulfillment"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick_assist",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "geekplus",
+      "name": "Geekplus",
+      "website": "https://www.geekplus.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "geekplus-family",
+          "name": "Geekplus AMR",
+          "primary_class": "warehouse_amr",
+          "models": [
+            {
+              "slug": "geekplus-p800",
+              "name": "Geekplus P800",
+              "primary_class": "warehouse_amr",
+              "work_to_map": [
+                "picking",
+                "moving",
+                "sorting"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "shelf_carry",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "geekplus-poppick",
+              "name": "Geekplus PopPick",
+              "primary_class": "goods_to_person",
+              "work_to_map": [
+                "picking",
+                "sorting"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "geekplus-rover",
+              "name": "Geekplus Rover",
+              "primary_class": "warehouse_amr",
+              "work_to_map": [
+                "moving",
+                "sorting"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "forwardx",
+      "name": "ForwardX Robotics",
+      "website": "https://www.forwardx.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "forwardx-family",
+          "name": "Flex / Max",
+          "primary_class": "amr",
+          "models": [
+            {
+              "slug": "forwardx-flex",
+              "name": "ForwardX Flex",
+              "primary_class": "amr",
+              "work_to_map": [
+                "picking"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick_assist",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "forwardx-max",
+              "name": "ForwardX Max",
+              "primary_class": "amr",
+              "work_to_map": [
+                "pallet_movement"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry_pallet",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "greyorange",
+      "name": "GreyOrange",
+      "website": "https://www.greyorange.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "greyorange-family",
+          "name": "Ranger",
+          "primary_class": "warehouse_robotics",
+          "models": [
+            {
+              "slug": "greyorange-ranger",
+              "name": "Ranger",
+              "primary_class": "warehouse_robotics",
+              "work_to_map": [
+                "goods_to_person"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "shelf_carry",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "greyorange-ranger-gtp",
+              "name": "Ranger GTP",
+              "primary_class": "goods_to_person",
+              "work_to_map": [
+                "goods_to_person"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "exotec",
+      "name": "Exotec",
+      "website": "https://www.exotec.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "exotec-family",
+          "name": "Skypod",
+          "primary_class": "asrs",
+          "models": [
+            {
+              "slug": "exotec-skypod",
+              "name": "Skypod",
+              "primary_class": "asrs",
+              "work_to_map": [
+                "goods_to_person",
+                "high_bay_storage"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "climb",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "bin_carry",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "brightpick",
+      "name": "Brightpick",
+      "website": "https://www.brightpick.ai",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "brightpick-family",
+          "name": "Autopicker",
+          "primary_class": "mobile_manipulation",
+          "models": [
+            {
+              "slug": "brightpick-autopicker",
+              "name": "Autopicker",
+              "primary_class": "mobile_manipulation",
+              "work_to_map": [
+                "autonomous_picking"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "manipulate",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "tote_case_handling",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "dexterity",
+      "name": "Dexterity",
+      "website": "https://www.dexterity.ai",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "dexterity-family",
+          "name": "Dexterity platform",
+          "primary_class": "manipulation",
+          "models": [
+            {
+              "slug": "dexterity-platform",
+              "name": "Dexterity Robotics Platform",
+              "primary_class": "manipulation",
+              "work_to_map": [
+                "loading",
+                "unloading",
+                "handling"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "pilot",
+              "capability_stubs": [
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "manipulate",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "load",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "pickle-robot",
+      "name": "Pickle Robot",
+      "website": "https://www.picklerobot.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "pickle-robot-family",
+          "name": "Pickle",
+          "primary_class": "mobile_manipulation",
+          "models": [
+            {
+              "slug": "pickle-robot",
+              "name": "Pickle",
+              "primary_class": "mobile_manipulation",
+              "work_to_map": [
+                "truck_unloading"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "unload",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "manipulate",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "trailer_entry",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "tote_case_handling",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "mujin",
+      "name": "Mujin",
+      "website": "https://www.mujin-corp.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "mujin-family",
+          "name": "MujinController",
+          "primary_class": "industrial_manipulation",
+          "models": [
+            {
+              "slug": "mujin-controller",
+              "name": "MujinController systems",
+              "primary_class": "industrial_manipulation",
+              "work_to_map": [
+                "palletizing",
+                "depalletizing"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "palletize",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "manipulate",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "acquire_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "rack_placement",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "agility-robotics",
+      "name": "Agility Robotics",
+      "website": "https://agilityrobotics.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "agility-robotics-family",
+          "name": "Digit",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "agility-digit",
+              "name": "Digit",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "tote_movement",
+                "material_movement"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "handle_tote",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "operate_around_people",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "tote_case_handling",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "floor_placement",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "figure",
+      "name": "Figure",
+      "website": "https://www.figure.ai",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "figure-family",
+          "name": "Figure",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "figure-02",
+              "name": "Figure 02",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "manufacturing",
+                "logistics"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "pilot",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "manipulate",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "figure-01",
+              "name": "Figure 01",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "manufacturing"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "prototype",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "apptronik",
+      "name": "Apptronik",
+      "website": "https://apptronik.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "apptronik-family",
+          "name": "Apollo",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "apptronik-apollo",
+              "name": "Apollo",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "manufacturing",
+                "logistics"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "pilot",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "boston-dynamics",
+      "name": "Boston Dynamics",
+      "website": "https://bostondynamics.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "boston-dynamics-family",
+          "name": "Atlas / Stretch",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "bd-atlas",
+              "name": "Atlas",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "industrial_manipulation"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "prototype",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "manipulate",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "bd-stretch",
+              "name": "Stretch",
+              "primary_class": "mobile_manipulation",
+              "work_to_map": [
+                "case_unload",
+                "trailer_unload"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "unload",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "trailer_entry",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "tote_case_handling",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "sanctuary-ai",
+      "name": "Sanctuary AI",
+      "website": "https://www.sanctuary.ai",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "sanctuary-ai-family",
+          "name": "Phoenix",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "sanctuary-phoenix",
+              "name": "Phoenix",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "general_manipulation"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "pilot",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "manipulate",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "1x",
+      "name": "1X Technologies",
+      "website": "https://www.1x.tech",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "1x-family",
+          "name": "NEO",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "1x-neo",
+              "name": "NEO",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "general_physical_tasks"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "pilot",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "unitree",
+      "name": "Unitree",
+      "website": "https://www.unitree.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "unitree-family",
+          "name": "G1 / H1",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "unitree-g1",
+              "name": "G1",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "general",
+                "research",
+                "commercial"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "unitree-h1",
+              "name": "H1",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "general",
+                "research"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ubtech",
+      "name": "UBTECH Robotics",
+      "website": "https://www.ubtrobot.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "ubtech-family",
+          "name": "Walker",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "ubtech-walker",
+              "name": "Walker",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "industrial",
+                "manufacturing"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "pilot",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "ubtech-walker-s",
+              "name": "Walker S",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "industrial",
+                "manufacturing"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "pilot",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "agibot",
+      "name": "AgiBot",
+      "website": "https://agibot.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "agibot-family",
+          "name": "A / X / G",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "agibot-a",
+              "name": "AgiBot A-series",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "manufacturing",
+                "general"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "pilot",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "agibot-x",
+              "name": "AgiBot X-series",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "manufacturing",
+                "general"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "pilot",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "pick",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "place",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "agibot-g",
+              "name": "AgiBot G-series",
+              "primary_class": "humanoid",
+              "work_to_map": [
+                "general"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "prototype",
+              "capability_stubs": [
+                {
+                  "key": "walk",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "bear-robotics",
+      "name": "Bear Robotics",
+      "website": "https://www.bearrobotics.ai",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "bear-robotics-family",
+          "name": "Servi",
+          "primary_class": "service_amr",
+          "models": [
+            {
+              "slug": "bear-servi",
+              "name": "Servi",
+              "primary_class": "service_amr",
+              "work_to_map": [
+                "food_delivery",
+                "service_delivery"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "dock",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "operate_around_people",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "bear-servi-plus",
+              "name": "Servi Plus",
+              "primary_class": "service_amr",
+              "work_to_map": [
+                "food_delivery",
+                "bussing"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "carry",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "pudu-robotics",
+      "name": "Pudu Robotics",
+      "website": "https://www.pudurobotics.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "pudu-robotics-family",
+          "name": "PUDU family",
+          "primary_class": "service_cleaning",
+          "models": [
+            {
+              "slug": "pudu-bellabot",
+              "name": "BellaBot",
+              "primary_class": "service_cleaning",
+              "work_to_map": [
+                "delivery"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "operate_around_people",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "pudu-flashbot",
+              "name": "FlashBot",
+              "primary_class": "service_cleaning",
+              "work_to_map": [
+                "delivery"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "transport",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            },
+            {
+              "slug": "pudu-cc1",
+              "name": "CC1",
+              "primary_class": "cleaning_amr",
+              "work_to_map": [
+                "cleaning"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "clean",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "avidbots",
+      "name": "Avidbots",
+      "website": "https://www.avidbots.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "avidbots-family",
+          "name": "Neo",
+          "primary_class": "cleaning_amr",
+          "models": [
+            {
+              "slug": "avidbots-neo",
+              "name": "Neo",
+              "primary_class": "cleaning_amr",
+              "work_to_map": [
+                "commercial_floor_cleaning"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "clean",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "navigate_indoor",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "brain-corp",
+      "name": "Brain Corp",
+      "website": "https://www.braincorp.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "brain-corp-family",
+          "name": "BrainOS",
+          "primary_class": "cleaning_autonomy",
+          "models": [
+            {
+              "slug": "brainos-scrubber",
+              "name": "BrainOS-powered scrubber",
+              "primary_class": "cleaning_autonomy",
+              "work_to_map": [
+                "floor_cleaning"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "clean",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "navigate_indoor",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "tennant",
+      "name": "Tennant",
+      "website": "https://www.tennantco.com",
+      "country": null,
+      "calibration_tier": 1,
+      "families": [
+        {
+          "slug": "tennant-family",
+          "name": "AMR scrubbers",
+          "primary_class": "cleaning_robot",
+          "models": [
+            {
+              "slug": "tennant-amr-scrubber",
+              "name": "Tennant AMR scrubber",
+              "primary_class": "cleaning_robot",
+              "work_to_map": [
+                "industrial_floor_cleaning"
+              ],
+              "calibration_tier": 1,
+              "commercial_maturity": "commercial",
+              "capability_stubs": [
+                {
+                  "key": "move",
+                  "truth_state": "unknown"
+                },
+                {
+                  "key": "clean",
+                  "truth_state": "unknown"
+                }
+              ],
+              "work_envelope_stubs": [
+                {
+                  "key": "move_pallet",
+                  "status": "unknown",
+                  "truth_state": "unknown"
+                }
+              ],
+              "product_url": null,
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true,
+                  "description": "Baseline configuration stub"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

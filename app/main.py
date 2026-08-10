@@ -54,6 +54,8 @@ from app.api.integrations import router as integrations_router
 from app.api.integrations_hubspot import router as integrations_hubspot_router
 from app.api.integrations_google_calendar import router as integrations_google_calendar_router
 from app.api.vendor_design import router as vendor_design_router
+from app.api.v1 import router as v1_router
+from app.api.v1.errors import V1HTTPException, error_response
 from app.database import get_db
 import app.models
 import app.models.shared_calculation
@@ -508,6 +510,21 @@ app.include_router(integrations_hubspot_router, prefix="/api", tags=["integratio
 app.include_router(integrations_google_calendar_router, prefix="/api", tags=["integrations"])
 app.include_router(robot_buyer_leads_router, prefix="/api/robot-buyer-leads", tags=["robot-buyer-leads"])
 app.include_router(vendor_design_router, prefix="/api/vendor-design", tags=["vendor-design"])
+app.include_router(v1_router, prefix="/api/v1", tags=["v1"])
+
+
+@app.exception_handler(V1HTTPException)
+async def v1_http_exception_handler(request: Request, exc: V1HTTPException):
+    """Preserve OpenAPI ErrorEnvelope shape for /api/v1 (detail is already the body)."""
+    detail = exc.detail if isinstance(exc.detail, dict) else None
+    if detail and "schema_version" in detail and "error" in detail:
+        return JSONResponse(status_code=exc.status_code, content=detail)
+    return error_response(
+        exc.status_code,
+        code="v1_error",
+        message=str(exc.detail),
+        retryable=False,
+    )
 
 if _mcp_asgi is not None:
     app.mount("/mcp", _mcp_asgi, name="mcp")

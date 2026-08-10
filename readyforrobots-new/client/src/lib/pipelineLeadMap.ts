@@ -4,7 +4,7 @@ import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { outreachInsightForIndustry } from "@/lib/industryContext";
 import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 
-export type PipelineStage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
+export type PipelineStage = "New Signal" | "Discovered" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
 export interface ApiLead {
   id: number;
@@ -301,6 +301,7 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
 export function pipelineStageFromCrmOutreach(stage?: string | null): PipelineStage | null {
   const s = (stage || "").toLowerCase();
   if (!s) return null;
+  if (s === "new") return "Discovered";
   if (["draft_ready", "review_required", "draft_approved"].includes(s)) return "Draft Ready";
   if (["intro_sent", "sequence_step_sent", "sent"].includes(s)) return "Outreach Sent";
   if (["replied", "qualified", "nurture", "discovery"].includes(s)) return "Qualified";
@@ -311,6 +312,7 @@ export function pipelineStageFromCrmOutreach(stage?: string | null): PipelineSta
 export function crmOutreachStageFromPipelineStage(stage: PipelineStage): string {
   const map: Record<PipelineStage, string> = {
     "New Signal": "new",
+    "Discovered": "new",
     "Draft Ready": "draft_ready",
     "Outreach Sent": "intro_sent",
     "Qualified": "qualified",

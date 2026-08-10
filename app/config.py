@@ -14,6 +14,14 @@ class Config:
     API_VERSION = "v1"
     API_PREFIX = f"/api/{API_VERSION}"
 
+    # V1 Robot Customer Acquisition Intelligence (docs/v1). Off by default.
+    V1_ROBOT_INTELLIGENCE = os.getenv("V1_ROBOT_INTELLIGENCE", "false").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
     # Supabase Auth — JWT secret for verifying user tokens on the backend
     # Found in: Supabase Dashboard → Project Settings → API → JWT Secret
     SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")

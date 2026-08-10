@@ -19,12 +19,12 @@ export default function ResultsValueStrip({ leadCount, scanUrl, unlockedCount }:
   const locked = Math.max(leadCount - unlocked, 0);
 
   return (
-    <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+    <div className="mb-6 flex flex-col gap-3 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 sm:flex-row sm:items-center">
       <div className="flex items-start gap-2 flex-1 min-w-0">
-        <Sparkles className="h-4 w-4 shrink-0 text-emerald-700 mt-0.5" />
+        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
         <div>
-          <p className="text-xs font-bold text-emerald-900">Qualified alignment matches — not a generic list</p>
-          <p className="text-[11px] leading-relaxed text-emerald-800/90 mt-0.5">
+          <p className="text-xs font-bold text-emerald-100">Qualified alignment matches — not a generic list</p>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-100/80">
             {locked > 0 ? (
               <>
                 You&apos;re viewing <strong>{unlocked} of {leadCount}</strong> buyers with full signal detail, alignment context, and outreach drafts.
@@ -41,7 +41,7 @@ export default function ResultsValueStrip({ leadCount, scanUrl, unlockedCount }:
       </div>
       <Link
         href={`/signup?next=${encodeURIComponent(signupNext)}`}
-        className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-emerald-600 bg-white px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100"
+        className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-300 px-3 py-2 text-xs font-bold text-emerald-950 hover:bg-emerald-200"
       >
         {locked > 0 ? "Unlock all matches" : "Sign up free — copy draft"}
         <ArrowRight className="h-3.5 w-3.5" />

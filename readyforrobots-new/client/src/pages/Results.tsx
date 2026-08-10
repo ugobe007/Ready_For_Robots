@@ -757,9 +757,8 @@ export default function Results() {
     setMaterialChoice(material);
     setActivatingScout(true);
     try {
-      const selectedLeads = prospects
-        .filter((p) => ids.includes(p.id))
-        .map((p) => ({
+      const selectedProspects = prospects.filter((p) => ids.includes(p.id));
+      const selectedLeads = selectedProspects.map((p) => ({
           id: p.id,
           company: p.company,
           score: p.score,
@@ -787,10 +786,20 @@ export default function Results() {
       }));
       if (!response.ok) throw new Error(await response.text());
       const activation = await response.json();
-      setActivationId(Number(activation.id) || null);
+      const createdActivationId = Number(activation.id) || null;
+      setActivationId(createdActivationId);
       setActivatedIds(new Set(ids));
       setChoosingScout(false);
-      toast.success(`SIGNAL review queue #${activation.id} created. Leads are saved to CRM and waiting for your approval.`);
+      toast.success(`SIGNAL is preparing outreach for ${selectedLeads.length} buyer${selectedLeads.length === 1 ? "" : "s"}. Opening your working pipeline…`);
+      const pipelineParams = new URLSearchParams();
+      pipelineParams.set("src", "signal_activation");
+      if (createdActivationId) pipelineParams.set("activation", String(createdActivationId));
+      const firstLeadId = selectedProspects[0]?.leadId;
+      if (firstLeadId != null) pipelineParams.set("lead", String(firstLeadId));
+      if (submittedUrl) pipelineParams.set("url", submittedUrl);
+      window.setTimeout(() => {
+        window.location.assign(`/pipeline?${pipelineParams.toString()}`);
+      }, 650);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not activate SIGNAL.");
     } finally {
@@ -799,7 +808,7 @@ export default function Results() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-[#081126]">
       <Header />
 
       {!submittedUrl ? (
@@ -824,7 +833,7 @@ export default function Results() {
               submittedUrl
                 ? sampleMode
                   ? `Sample pipeline for ${sampleName || submittedUrl} · ${requestedLimit} companies you can share with prospects.`
-                  : `Results for ${submittedUrl} — capture qualified leads, assess alignment, and activate MSD sales motion in your pipeline.`
+                  : `Results for ${submittedUrl} — review qualified buyers, prepare outreach, and move the strongest matches into your pipeline.`
                 : undefined
             }
             innerClassName="pb-8"
@@ -833,12 +842,12 @@ export default function Results() {
         </>
       )}
 
-      <main className="flex-1 pb-16 sm:pb-20 px-4 sm:px-6">
+      <main className="flex-1 pb-16 sm:pb-20 px-4 sm:px-6 text-slate-100">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 text-xs text-gray-600 mb-6 sm:mb-8">
-            <Link href="/" className="hover:text-gray-600 transition-colors">Home</Link>
+          <div className="flex items-center gap-2 text-xs text-slate-400 mb-6 sm:mb-8">
+            <Link href="/" className="hover:text-slate-200 transition-colors">Home</Link>
             <span>/</span>
-            <span className="text-gray-500">{submittedUrl ? `Results for ${submittedUrl}` : "Activate SIGNAL"}</span>
+            <span className="text-slate-500">{submittedUrl ? `Results for ${submittedUrl}` : "Activate SIGNAL"}</span>
           </div>
 
           {!submittedUrl && (
@@ -879,12 +888,12 @@ export default function Results() {
                   return (
                   <div key={step} className="flex items-center gap-3 text-sm">
                     {done ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
                     ) : (
                       <div className={`h-3.5 w-3.5 rounded-full border shrink-0 ${active ? "border-amber-500 animate-pulse" : "border-gray-300"}`} />
                     )}
                     <span
-                      className={`font-mono text-xs font-medium ${active ? "text-amber-700" : done ? "text-emerald-700" : "text-gray-600"}`}
+                      className={`font-mono text-xs font-medium ${active ? "text-amber-300" : done ? "text-emerald-300" : "text-slate-500"}`}
                       style={{ fontFamily: "'JetBrains Mono', monospace" }}
                     >
                       {step}
@@ -932,17 +941,27 @@ export default function Results() {
                       Sample mode · connect live pipeline for real matches
                     </p>
                   )}
-                  <p className="text-sm text-gray-700">
-                    Based on <span className="text-gray-900 font-medium break-all">{submittedUrl}</span>. Select the leads you want SIGNAL to align and activate.
+                  <p className="text-sm text-slate-300">
+                    Based on <span className="text-slate-100 font-medium break-all">{submittedUrl}</span>. SIGNAL will prepare the strongest buyers for action.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setChoosingScout((current) => !current)}
-                  className="inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl border-2 border-amber-500 bg-amber-500 px-6 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-amber-400 sm:shrink-0"
-                >
-                  <Bot className="h-4 w-4" /> Activate SIGNAL
-                </button>
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+                  <button
+                    type="button"
+                    onClick={() => void activateScout({ scope: "top", mode: "manual", material: "skip" })}
+                    disabled={activatingScout}
+                    className="inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl border-2 border-amber-500 bg-amber-500 px-6 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60 sm:shrink-0"
+                  >
+                    <Bot className="h-4 w-4" /> {activatingScout ? "Preparing your pipeline…" : "Activate SIGNAL · Prepare top 3"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setChoosingScout((current) => !current)}
+                    className="text-xs font-semibold text-slate-400 underline decoration-slate-600 underline-offset-4 hover:text-slate-200"
+                  >
+                    {choosingScout ? "Hide options" : "Customize buyers or automation mode"}
+                  </button>
+                </div>
               </div>
 
               {!isSignedIn && (
@@ -960,10 +979,10 @@ export default function Results() {
                       <Bot className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#FFB000" }} />
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
-                          Activate MSD sales motion
+                          Choose how SIGNAL prepares your pipeline
                         </p>
                         <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-500">
-                          Choose materials, lead scope, and operating mode. SIGNAL will save leads to CRM, score alignment context, and prepare workflow activation before any outbound messages.
+                          Choose materials, buyers, and review mode. SIGNAL will save them to CRM and prepare account-specific outreach before anything is sent.
                         </p>
                       </div>
                     </div>
@@ -1105,7 +1124,7 @@ export default function Results() {
                         disabled={activatingScout}
                         className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-amber-500 bg-amber-500 px-4 py-2.5 text-xs font-bold text-gray-900 transition-all hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        {activatingScout ? "Creating activation..." : "Start SIGNAL activation"} <Send className="h-3.5 w-3.5" />
+                        {activatingScout ? "Preparing buyers..." : "Prepare selected buyers"} <Send className="h-3.5 w-3.5" />
                       </button>
                       <button
                         type="button"
@@ -1115,7 +1134,7 @@ export default function Results() {
                         disabled={activatingScout}
                         className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-gray-50 px-5 py-3 text-xs font-bold text-gray-800 transition-all hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        Skip setup and draft only <MousePointer2 className="h-3.5 w-3.5" />
+                        Prepare top 3 now <MousePointer2 className="h-3.5 w-3.5" />
                       </button>
                       <p className="text-[11px] text-gray-600 sm:ml-auto">
                         Auth first. CRM capture first. Sending stays gated by your review.
