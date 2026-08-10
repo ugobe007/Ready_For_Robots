@@ -40,17 +40,17 @@ export default function ResultsFomoBanner({ prospects, isSignedIn, scanUrl }: Pr
         Each row includes robot types, timing, and a rep-voice outreach draft with alignment context. Generic list tools do not provide this.
       </p>
       {!isSignedIn && locked > 0 && (
-        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-sky-400/30 bg-sky-400/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-400/30 bg-[#081126]/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-2">
-            <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-sky-300" />
-            <p className="text-xs leading-relaxed text-sky-100">
-              <strong>{unlocked} of {prospects.length} unlocked.</strong> Sign up free to reveal{" "}
+            <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+            <p className="text-xs leading-relaxed text-slate-200">
+              <strong className="text-white">{unlocked} of {prospects.length} unlocked.</strong> Sign up free to reveal{" "}
               {locked} more aligned lead{locked === 1 ? "" : "s"}, copy drafts, and save to your pipeline.
             </p>
           </div>
           <Link
             href={`/signup?next=${encodeURIComponent(signupNext)}`}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-sky-400 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-sky-300"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-300"
           >
             Unlock all matches
             <ArrowRight className="h-3.5 w-3.5" />

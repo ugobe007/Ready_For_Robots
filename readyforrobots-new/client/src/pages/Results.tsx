@@ -852,13 +852,13 @@ export default function Results() {
 
           {!submittedUrl && (
             <section className="py-4 sm:py-8">
-              <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-10 shadow-sm">
+              <div className="rounded-3xl border border-white/10 bg-[#0b162f] p-6 sm:p-10 shadow-[0_20px_45px_-30px_rgba(0,0,0,0.8)]">
                 <form onSubmit={submitUrl} className="flex flex-col sm:flex-row gap-3">
                   <input
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     placeholder="https://your-robot-company.com/product"
-                    className="min-w-0 flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-base sm:text-sm text-gray-900 outline-none placeholder:text-gray-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                    className="min-w-0 flex-1 rounded-xl border border-white/15 bg-[#081126] px-4 py-3 text-base sm:text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
                   />
                   <button
                     type="submit"
@@ -890,7 +890,7 @@ export default function Results() {
                     {done ? (
                       <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
                     ) : (
-                      <div className={`h-3.5 w-3.5 rounded-full border shrink-0 ${active ? "border-amber-500 animate-pulse" : "border-gray-300"}`} />
+                      <div className={`h-3.5 w-3.5 rounded-full border shrink-0 ${active ? "border-amber-400 animate-pulse" : "border-slate-600"}`} />
                     )}
                     <span
                       className={`font-mono text-xs font-medium ${active ? "text-amber-300" : done ? "text-emerald-300" : "text-slate-500"}`}
@@ -908,7 +908,7 @@ export default function Results() {
           {submittedUrl && !loading && !scanning && (
             <>
               {sampleMode && typeof window !== "undefined" && (
-                <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100 sm:flex-row sm:items-center sm:justify-between">
                   <p>
                     Share-ready sample pipeline: <span className="font-semibold">{requestedLimit} companies</span>
                     {sampleName ? <span> for <span className="font-semibold">{sampleName}</span></span> : null}
@@ -920,7 +920,7 @@ export default function Results() {
                         toast.success("Sample pipeline link copied");
                       });
                     }}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-400/40 bg-[#081126]/60 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/15"
                   >
                     <Copy className="h-3.5 w-3.5" />
                     Copy link
@@ -937,7 +937,7 @@ export default function Results() {
               <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   {usingFallback && (
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2 text-gray-500">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2 text-slate-500">
                       Sample mode · connect live pipeline for real matches
                     </p>
                   )}
@@ -973,25 +973,25 @@ export default function Results() {
               )}
 
               {choosingScout && (
-                <div className="mb-6 rounded-2xl border border-gray-200 bg-white px-5 py-4">
-                  <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="mb-6 rounded-2xl border border-white/10 bg-[#0b162f] px-5 py-4">
+                  <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex items-start gap-3">
                       <Bot className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#FFB000" }} />
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">
+                        <p className="text-sm font-semibold text-slate-100">
                           Choose how SIGNAL prepares your pipeline
                         </p>
-                        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-500">
+                        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-400">
                           Choose materials, buyers, and review mode. SIGNAL will save them to CRM and prepare account-specific outreach before anything is sent.
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-800">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/35 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">
                         <CheckCircle2 className="h-3 w-3" /> {activationIdsForScope().length} leads selected for review
                       </span>
                       {!isSignedIn && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-900">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/35 bg-amber-400/10 px-2.5 py-1 text-[10px] font-bold text-amber-200">
                           <LockKeyhole className="h-3 w-3" /> Account required to send
                         </span>
                       )}
@@ -999,10 +999,10 @@ export default function Results() {
                   </div>
 
                   <div className="mt-4 grid gap-4">
-                    <div className="border-b border-gray-100 pb-4">
+                    <div className="border-b border-white/10 pb-4">
                       <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[10px] font-normal" style={{ color: "#047857" }}>01</span>
-                        <p className="text-[10px] font-normal uppercase tracking-widest" style={{ color: "#047857" }}>Sales materials</p>
+                        <span className="text-[10px] font-normal text-emerald-300">01</span>
+                        <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-300">Sales materials</p>
                       </div>
                       <div className="grid gap-2 md:grid-cols-3">
                         {MATERIAL_OPTIONS.map((option) => {
@@ -1013,27 +1013,27 @@ export default function Results() {
                               key={option.id}
                               type="button"
                               onClick={() => setMaterialChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
+                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-white/5"
                               style={active
-                                ? { borderColor: "rgba(5,150,105,0.45)", background: "rgba(5,150,105,0.08)" }
-                                : { borderColor: "#e5e7eb", background: "#ffffff" }}
+                                ? { borderColor: "rgba(52,211,153,0.45)", background: "rgba(16,185,129,0.12)" }
+                                : { borderColor: "rgba(255,255,255,0.12)", background: "#081126" }}
                             >
                               <div className="flex items-center justify-between gap-2">
                                 <span className="flex min-w-0 items-center gap-2">
-                                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: active ? "#047857" : "#9ca3af" }} />
-                                  <span className="truncate text-xs font-bold text-gray-900">{option.title}</span>
+                                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: active ? "#6ee7b7" : "#94a3b8" }} />
+                                  <span className="truncate text-xs font-bold text-slate-100">{option.title}</span>
                                 </span>
-                                {active && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+                                {active && <CheckCircle2 className="h-4 w-4 text-emerald-300" />}
                               </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{option.desc}</p>
+                              <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{option.desc}</p>
                             </button>
                           );
                         })}
                       </div>
                       {materialChoice === "upload" && (
-                        <label className="mt-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-500 hover:border-emerald-300">
+                        <label className="mt-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-white/15 bg-[#081126] px-3 py-2.5 text-xs text-slate-400 hover:border-emerald-400/50">
                           <span>{deckFileName || "Choose a PDF, PPT, or deck file"}</span>
-                          <span className="font-normal text-emerald-700">Browse</span>
+                          <span className="font-normal text-emerald-300">Browse</span>
                           <input
                             type="file"
                             className="hidden"
@@ -1044,13 +1044,13 @@ export default function Results() {
                       )}
                     </div>
 
-                    <div className="border-b border-gray-100 pb-4">
+                    <div className="border-b border-white/10 pb-4">
                       <div className="mb-2 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-normal text-emerald-700">02</span>
-                          <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-700">Lead scope</p>
+                          <span className="text-[10px] font-normal text-emerald-300">02</span>
+                          <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-300">Lead scope</p>
                         </div>
-                        <p className="text-[11px] text-gray-600">
+                        <p className="text-[11px] text-slate-400">
                           {selectedCount} selected
                         </p>
                       </div>
@@ -1062,26 +1062,26 @@ export default function Results() {
                               key={option.id}
                               type="button"
                               onClick={() => setScopeChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
+                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-white/5"
                               style={active
-                                ? { borderColor: "rgba(5,150,105,0.42)", background: "rgba(5,150,105,0.08)" }
-                                : { borderColor: "#e5e7eb", background: "#ffffff" }}
+                                ? { borderColor: "rgba(52,211,153,0.42)", background: "rgba(16,185,129,0.12)" }
+                                : { borderColor: "rgba(255,255,255,0.12)", background: "#081126" }}
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-gray-900">{option.title}</p>
-                                {active && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+                                <p className="text-xs font-bold text-slate-100">{option.title}</p>
+                                {active && <CheckCircle2 className="h-4 w-4 text-emerald-300" />}
                               </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{option.desc}</p>
+                              <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{option.desc}</p>
                             </button>
                           );
                         })}
                       </div>
                     </div>
 
-                    <div className="border-b border-gray-100 pb-4">
+                    <div className="border-b border-white/10 pb-4">
                       <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[10px] font-normal text-emerald-700">03</span>
-                        <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-700">Automation mode</p>
+                        <span className="text-[10px] font-normal text-emerald-300">03</span>
+                        <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-300">Automation mode</p>
                       </div>
                       <div className="grid gap-2 md:grid-cols-3">
                         {MODE_OPTIONS.map((option) => {
@@ -1091,16 +1091,16 @@ export default function Results() {
                               key={option.id}
                               type="button"
                               onClick={() => setModeChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
+                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-white/5"
                               style={active
-                                ? { borderColor: "rgba(5,150,105,0.42)", background: "rgba(5,150,105,0.08)" }
-                                : { borderColor: "#e5e7eb", background: "#ffffff" }}
+                                ? { borderColor: "rgba(52,211,153,0.42)", background: "rgba(16,185,129,0.12)" }
+                                : { borderColor: "rgba(255,255,255,0.12)", background: "#081126" }}
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-gray-900">{option.title}</p>
-                                {active ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-gray-400" />}
+                                <p className="text-xs font-bold text-slate-100">{option.title}</p>
+                                {active ? <CheckCircle2 className="h-4 w-4 text-emerald-300" /> : option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-slate-500" />}
                               </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{option.desc}</p>
+                              <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{option.desc}</p>
                             </button>
                           );
                         })}
@@ -1108,16 +1108,16 @@ export default function Results() {
                     </div>
 
                     <div>
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-emerald-800">SIGNAL starts with</p>
-                      <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-gray-700 md:grid-cols-4">
-                        <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-emerald-600" /> Lead evaluation</span>
-                        <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5 text-emerald-600" /> Sales strategy</span>
-                        <span className="flex items-center gap-1.5"><CalendarCheck className="h-3.5 w-3.5 text-emerald-600" /> Activity schedule</span>
-                        <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5 text-emerald-600" /> Reply alerts</span>
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-emerald-300">SIGNAL starts with</p>
+                      <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-slate-300 md:grid-cols-4">
+                        <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-emerald-300" /> Lead evaluation</span>
+                        <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5 text-emerald-300" /> Sales strategy</span>
+                        <span className="flex items-center gap-1.5"><CalendarCheck className="h-3.5 w-3.5 text-emerald-300" /> Activity schedule</span>
+                        <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5 text-emerald-300" /> Reply alerts</span>
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:items-center">
+                    <div className="flex flex-col gap-2 border-t border-white/10 pt-4 sm:flex-row sm:items-center">
                       <button
                         type="button"
                         onClick={() => activateScout()}
@@ -1132,11 +1132,11 @@ export default function Results() {
                           activateScout({ mode: "manual", material: "skip", scope: "top" });
                         }}
                         disabled={activatingScout}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-gray-50 px-5 py-3 text-xs font-bold text-gray-800 transition-all hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-[#081126] px-5 py-3 text-xs font-bold text-slate-100 transition-all hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Prepare top 3 now <MousePointer2 className="h-3.5 w-3.5" />
                       </button>
-                      <p className="text-[11px] text-gray-600 sm:ml-auto">
+                      <p className="text-[11px] text-slate-400 sm:ml-auto">
                         Auth first. CRM capture first. Sending stays gated by your review.
                       </p>
                     </div>
@@ -1145,9 +1145,9 @@ export default function Results() {
               )}
 
               {activatedCount > 0 && (
-                <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-                  <p className="text-sm font-bold text-emerald-900 mb-1">SIGNAL review queue created</p>
-                  <p className="text-xs text-gray-700">
+                <div className="mb-5 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-5">
+                  <p className="text-sm font-bold text-emerald-100 mb-1">SIGNAL review queue created</p>
+                  <p className="text-xs text-slate-300">
                     {activationId ? `Activation #${activationId}: ` : ""}
                     Leads were saved to CRM. Review SIGNAL&apos;s workflow, draft outreach, timing, and cadence before any outbound action begins.
                   </p>
@@ -1162,12 +1162,12 @@ export default function Results() {
                   return (
                     <div
                       key={p.id}
-                      className={`rounded-2xl border bg-white shadow-sm overflow-hidden transition-colors ${
-                        isLocked ? "border-blue-200 hover:border-blue-300" : "border-gray-200 hover:border-emerald-300"
+                      className={`rounded-2xl border bg-[#0b162f] shadow-[0_20px_45px_-30px_rgba(0,0,0,0.85)] overflow-hidden transition-colors ${
+                        isLocked ? "border-sky-400/30 hover:border-sky-400/50" : "border-white/10 hover:border-emerald-400/40"
                       }`}
                     >
                       <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 flex flex-col sm:flex-row sm:items-start gap-4">
-                        <label className="flex items-center gap-2 text-xs text-gray-700 sm:pt-4">
+                        <label className="flex items-center gap-2 text-xs text-slate-300 sm:pt-4">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -1182,12 +1182,12 @@ export default function Results() {
                               {p.score}
                             </span>
                           </div>
-                          <span className="text-[9px] text-gray-600 uppercase tracking-widest">score</span>
+                          <span className="text-[9px] text-slate-500 uppercase tracking-widest">score</span>
                         </div>
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h2 className={`text-base font-bold ${isLocked ? "text-gray-500" : "text-gray-900"}`}>
+                            <h2 className={`text-base font-bold ${isLocked ? "text-slate-500" : "text-slate-50"}`}>
                               {isLocked ? `Locked lead · ${p.industry}` : p.company}
                             </h2>
                             {!isLocked && (
@@ -1196,17 +1196,17 @@ export default function Results() {
                               </span>
                             )}
                             {isLocked && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-blue-900 bg-blue-50 border border-blue-200">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-sky-100 bg-sky-400/15 border border-sky-400/35">
                                 <LockKeyhole className="h-3 w-3" /> Sign up to unlock
                               </span>
                             )}
                             {p.signalAge && !isLocked && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-amber-900 bg-amber-50 border border-amber-200">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-amber-200 bg-amber-400/15 border border-amber-400/35">
                                 {p.signalAge}
                               </span>
                             )}
                           </div>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 mb-3">
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 mb-3">
                             {!isLocked && (
                               <>
                                 <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{p.location}</span>
@@ -1215,14 +1215,14 @@ export default function Results() {
                             )}
                             <span>{p.industry}</span>
                             {isLocked && p.priorityTier && (
-                              <span className="font-semibold text-amber-800">{p.priorityTier}</span>
+                              <span className="font-semibold text-amber-300">{p.priorityTier}</span>
                             )}
                           </div>
 
                           {isLocked ? (
-                            <div className="flex min-w-0 items-start gap-2.5 overflow-hidden p-3 rounded-xl border border-blue-200 bg-blue-50/70">
-                              <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-800" />
-                              <p className="text-xs leading-relaxed text-blue-950">
+                            <div className="flex min-w-0 items-start gap-2.5 overflow-hidden p-3 rounded-xl border border-sky-400/30 bg-sky-400/10">
+                              <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5 text-sky-300" />
+                              <p className="text-xs leading-relaxed text-sky-100">
                                 {p.priorityTier ? `${p.priorityTier} · ` : ""}
                                 {p.industry} buyer with robot-fit signal — sign up to read the full evidence and outreach draft.
                               </p>
@@ -1241,14 +1241,14 @@ export default function Results() {
 
                       {!isLocked && (p.shareSummary || (p.robotTypes && p.robotTypes.length > 0)) && (
                         <div className="px-4 sm:px-6 pb-2">
-                          <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-800 mb-1">Intelligence</p>
+                          <div className="rounded-xl border border-cyan-400/30 bg-cyan-400/10 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-200 mb-1">Intelligence</p>
                             {p.shareSummary && (
-                              <p className="text-xs text-gray-700 leading-relaxed">{p.shareSummary}</p>
+                              <p className="text-xs text-slate-300 leading-relaxed">{p.shareSummary}</p>
                             )}
                             {p.robotTypes && p.robotTypes.length > 0 && (
-                              <p className="mt-2 text-[11px] text-gray-700">
-                                <span className="font-semibold text-gray-900">Robots: </span>
+                              <p className="mt-2 text-[11px] text-slate-300">
+                                <span className="font-semibold text-slate-100">Robots: </span>
                                 {p.robotTypes.join(" · ")}
                               </p>
                             )}
@@ -1270,16 +1270,16 @@ export default function Results() {
 
                       {!isLocked && (
                         <div className="px-4 sm:px-6 pb-4 grid gap-3 sm:grid-cols-2">
-                          <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-800">Why relevant</p>
-                            <p className="mb-3 block break-words rounded-lg border-l-2 border-amber-500 bg-amber-50 px-3 py-2 text-sm font-medium leading-relaxed text-amber-900" style={{ overflowWrap: "anywhere" }}>
+                          <div className="min-w-0 rounded-xl border border-white/10 bg-[#081126]/70 p-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-300">Why relevant</p>
+                            <p className="mb-3 block break-words rounded-lg border-l-2 border-amber-400 bg-amber-400/10 px-3 py-2 text-sm font-medium leading-relaxed text-amber-200" style={{ overflowWrap: "anywhere" }}>
                               “{p.signal}”
                             </p>
-                            <p className="break-words text-xs text-gray-700 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
+                            <p className="break-words text-xs text-slate-300 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
                           </div>
-                          <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-800">Score rationale</p>
-                            <p className="text-xs text-gray-700 leading-relaxed">{p.scoreReason}</p>
+                          <div className="min-w-0 rounded-xl border border-white/10 bg-[#081126]/70 p-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-300">Score rationale</p>
+                            <p className="text-xs text-slate-300 leading-relaxed">{p.scoreReason}</p>
                           </div>
                         </div>
                       )}
@@ -1287,10 +1287,10 @@ export default function Results() {
                       {!isLocked && (
                         <div className="px-4 sm:px-6 pb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                           <div className="flex items-center gap-2 flex-1">
-                            <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                            <span className="text-sm text-gray-800">{p.action}</span>
+                            <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
+                            <span className="text-sm text-slate-200">{p.action}</span>
                           </div>
-                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 text-emerald-800 bg-emerald-50 border border-emerald-200">
+                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 text-emerald-200 bg-emerald-400/10 border border-emerald-400/30">
                             {p.timing}
                           </span>
                         </div>
@@ -1301,7 +1301,7 @@ export default function Results() {
                           <button
                             type="button"
                             onClick={() => copyRfqPacket(p)}
-                            className="inline-flex items-center gap-2 rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-[11px] font-semibold text-cyan-900 hover:bg-cyan-100"
+                            className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/35 bg-cyan-400/10 px-3 py-1.5 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-400/20"
                           >
                             <FileText className="h-3.5 w-3.5" />
                             Copy RFQ/bid-project request + handoff note
@@ -1310,15 +1310,15 @@ export default function Results() {
                       )}
 
                       {isActive && (
-                        <div className="mx-4 sm:mx-6 mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-900 mb-1">SIGNAL follow-up plan</p>
-                          <p className="text-xs text-gray-700 leading-relaxed">
+                        <div className="mx-4 sm:mx-6 mb-4 rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200 mb-1">SIGNAL follow-up plan</p>
+                          <p className="text-xs text-slate-300 leading-relaxed">
                             Draft signal-specific outreach, send first touch after approval, follow up in 3 business days, track response, and escalate technical questions when needed.
                           </p>
                         </div>
                       )}
 
-                      <div className="px-4 sm:px-6 pb-5 border-t border-gray-100">
+                      <div className="px-4 sm:px-6 pb-5 border-t border-white/10">
                         <PipelineOutreachValuePanel
                           deal={{
                             id: p.leadId ?? 0,
@@ -1332,6 +1332,7 @@ export default function Results() {
                           signupNext={resultsSignupNext}
                           variant="compact"
                           locked={isLocked}
+                          tone="dark"
                         />
                       </div>
                     </div>
