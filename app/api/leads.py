@@ -118,7 +118,7 @@ def _submitted_url_match_input(raw_url: str) -> tuple[str, str]:
 @router.get("/match-url")
 def leads_match_submitted_url(
     url: str = Query(..., min_length=3, description="Robot company URL to match against buyer demand"),
-    limit: int = Query(15, ge=1, le=25),
+    limit: int = Query(50, ge=1, le=90),
     db: Session = Depends(get_db),
 ):
     """

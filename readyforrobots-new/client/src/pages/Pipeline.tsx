@@ -402,6 +402,7 @@ type UserBucket = "Hot Leads" | "Warm Leads" | "Monitoring";
 const PIPELINE_HOT_SLOTS = 40;
 const PIPELINE_WARM_SLOTS = 30;
 const PIPELINE_MONITOR_SLOTS = 20;
+const PIPELINE_FEED_TOTAL = PIPELINE_HOT_SLOTS + PIPELINE_WARM_SLOTS + PIPELINE_MONITOR_SLOTS;
 
 const USER_BUCKETS: UserBucket[] = ["Hot Leads", "Warm Leads", "Monitoring"];
 
@@ -663,13 +664,13 @@ type PipelineEntitlements = {
   };
 };
 
-const PIPELINE_LIMIT_FREE = 30;
-const PIPELINE_LIMIT_PAID = 50;
+const PIPELINE_LIMIT_FREE = PIPELINE_FEED_TOTAL;
+const PIPELINE_LIMIT_PAID = PIPELINE_FEED_TOTAL;
 /** Target curated working list after Results → Pipeline onboarding. */
 const BUILD_PIPELINE_TARGET = 25;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
 const PIPELINE_LEAD_READ_MS = 7_000;
-const PIPELINE_SESSION_KEY = "pipeline_feed_v5";
+const PIPELINE_SESSION_KEY = "pipeline_feed_v6";
 const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 /** Stale paint while API revalidates — avoids blank page when Fly is slow. */
 const PIPELINE_STALE_PAINT_MS = 7 * 24 * 60 * 60 * 1000;
@@ -1550,12 +1551,8 @@ export default function Pipeline() {
   }, [activationIdFromQuery, activations]);
 
   useEffect(() => {
-    // Results handoff should land on the full live pipeline, not a scoped-empty filter.
-    if (preferFullPipelineView) {
-      setScopeToSubmittedUrl(false);
-      return;
-    }
-    setScopeToSubmittedUrl(Boolean(submittedHostname));
+    // Always default to the full live pipeline. URL scope is opt-in via the toolbar toggle.
+    setScopeToSubmittedUrl(false);
   }, [preferFullPipelineView, submittedHostname]);
   useEffect(() => {
     if (!submittedUrl) {
@@ -1570,7 +1567,7 @@ export default function Pipeline() {
     setSubmittedUrlMatchError(false);
     setSubmittedUrlMatchLoading(true);
     void fetchWithTimeoutRetry(
-      `${base}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=15`,
+      `${base}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=50`,
       publicFetchInit(),
       PIPELINE_TIMEOUT,
       { retries: 1, retryDelayMs: 800 },
