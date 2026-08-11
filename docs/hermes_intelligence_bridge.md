@@ -19,6 +19,8 @@ rfr-signup-ux-audit      ──write──► docs/ux_signup_audit.md
 Base path: `{RFR_API_BASE}/api/v1/market-graph/*`  
 Default API: `https://ready-2-robot.fly.dev`
 
+Also: [hermes_cal_bridge.md](hermes_cal_bridge.md) — how Hermes intelligence feeds Cal / Scout / Pipeline.
+
 ## Auth
 
 - Header: `X-Admin-Key: <ADMIN_KEY>` (Fly secret / Hermes `RFR_ADMIN_KEY`), **or**

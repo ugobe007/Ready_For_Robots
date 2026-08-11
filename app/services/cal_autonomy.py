@@ -312,8 +312,47 @@ def cal_buyer_outreach_body(company: Any, *, fresh: bool = False, variant_id: st
         "true",
         "yes",
     )
-    reason = build_context_reason(name, _company_signal_blob(company)) if include_reason else None
+    include_hermes = (os.getenv("CAL_INCLUDE_HERMES_REASON") or "1").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    reason = None
+    if include_reason:
+        reason = build_context_reason(name, _company_signal_blob(company))
+    elif include_hermes:
+        reason = _hermes_context_reason(company)
     return build_buyer_variant_body(name, industry, vid, reason=reason)
+
+
+def _hermes_context_reason(company: Any) -> Optional[str]:
+    """Short grounded opener from Hermes overlays only (no noisy HTML signals)."""
+    meta = getattr(company, "crm_metadata", None) or {}
+    if not isinstance(meta, dict):
+        return None
+    hq = meta.get("hermes_qualify") if isinstance(meta.get("hermes_qualify"), dict) else {}
+    try:
+        fit = float(hq.get("automation_fit")) if hq.get("automation_fit") is not None else -1.0
+    except (TypeError, ValueError):
+        fit = -1.0
+    jobs = meta.get("hermes_job_orders") if isinstance(meta.get("hermes_job_orders"), list) else []
+    titles = [
+        str(j.get("job_title")).strip()
+        for j in jobs[-3:]
+        if isinstance(j, dict) and (j.get("job_title") or "").strip()
+    ]
+    if fit < 60 and not titles:
+        return None
+    name = (getattr(company, "name", None) or "your team").strip()
+    if titles:
+        return f"noticed {name} hiring for {titles[0]}"
+    rationale = (hq.get("rationale") or "").strip()
+    if rationale and len(rationale) > 24:
+        # Keep one short clause — never paste a full research digest into outbound.
+        clip = rationale.split(".")[0].strip()
+        if 20 <= len(clip) <= 120:
+            return clip[0].lower() + clip[1:] if clip[0].isupper() else clip
+    return None
 
 
 def _company_signal_blob(company: Any) -> str:
@@ -322,6 +361,9 @@ def _company_signal_blob(company: Any) -> str:
     Returns "" (no reason cited) if signals aren't loaded/attached, so a detached
     instance or a company with no signals simply falls back to the clean industry
     opener — Cal never fabricates a reason.
+
+    Also folds Hermes overlays (job titles + qualify rationale) when present so
+    Cal can ground on the same intelligence Hermes already ingested.
     """
     try:
         from app.services.lead_signal_display import strip_extraction_artifacts
@@ -330,7 +372,22 @@ def _company_signal_blob(company: Any) -> str:
         parts = [
             strip_extraction_artifacts(getattr(s, "signal_text", None)) for s in sigs
         ]
-        return " ".join(p for p in parts if p).strip()
+        blob = " ".join(p for p in parts if p).strip()
+        meta = getattr(company, "crm_metadata", None) or {}
+        if isinstance(meta, dict):
+            hq = meta.get("hermes_qualify") if isinstance(meta.get("hermes_qualify"), dict) else {}
+            rationale = (hq.get("rationale") or "").strip()
+            if rationale:
+                blob = f"{blob} {rationale}".strip()
+            jobs = meta.get("hermes_job_orders") if isinstance(meta.get("hermes_job_orders"), list) else []
+            titles = [
+                str(j.get("job_title")).strip()
+                for j in jobs[-5:]
+                if isinstance(j, dict) and j.get("job_title")
+            ]
+            if titles:
+                blob = f"{blob} Open roles: {'; '.join(titles)}".strip()
+        return blob
     except Exception:  # noqa: BLE001 — grounding is optional; never break drafting
         return ""
 
@@ -630,6 +687,35 @@ def prioritize_unsent(companies: list, accounts_by_company_id: dict) -> list:
     return sorted(companies, key=_already_contacted)
 
 
+def _hermes_automation_fit(company: Any) -> float:
+    """Hermes qualify overlay score (0–100), or -1 if absent."""
+    meta = getattr(company, "crm_metadata", None) or {}
+    if not isinstance(meta, dict):
+        return -1.0
+    hq = meta.get("hermes_qualify")
+    if not isinstance(hq, dict):
+        return -1.0
+    try:
+        return float(hq.get("automation_fit"))
+    except (TypeError, ValueError):
+        return -1.0
+
+
+def prioritize_hermes_qualified(companies: list, *, min_fit: float = 60.0) -> list:
+    """Within score/unsent order, prefer companies Hermes already qualified.
+
+    Hermes writes ``crm_metadata.hermes_qualify`` via market-graph ingest.
+    Cal still sends only through its own gates — this only reorders the pool.
+    """
+    def _rank(entry) -> tuple:
+        fit = _hermes_automation_fit(entry[0])
+        has = 0 if fit >= min_fit else 1
+        # Higher fit first among Hermes-qualified
+        return (has, -fit if fit >= 0 else 0.0)
+
+    return sorted(companies, key=_rank)
+
+
 def run_cal_autonomy_cycle(
     db: Session,
     *,
@@ -703,6 +789,8 @@ def run_cal_autonomy_cycle(
     # Prioritise never-sent buyers so the draft batch and send loop reach
     # actionable runway first (incl. accounts reset after a bounce-era send).
     companies = prioritize_unsent(companies, existing)
+    # Then prefer Hermes-qualified buyers (automation_fit overlays from ingest).
+    companies = prioritize_hermes_qualified(companies)
 
     drafted = 0
     refreshed = 0

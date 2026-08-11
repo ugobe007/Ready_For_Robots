@@ -581,6 +581,25 @@ def market_graph_vendor_news_list(
         return {"count": 0, "items": [], "error": str(exc)[:240]}
 
 
+@router.get("/cal-status")
+def market_graph_cal_status(
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Hermes-readable Cal autonomy snapshot (Redis heartbeat + toggle). Auth: admin/cron."""
+    try:
+        from app.services.cal_autonomy import get_cal_autonomy_status
+
+        status = get_cal_autonomy_status()
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)[:240], "auth": _auth.get("auth")}
+    return {
+        "ok": True,
+        "cal": status,
+        "auth": _auth.get("auth"),
+        "doc": "docs/hermes_cal_bridge.md",
+    }
+
+
 @router.post("/run")
 def market_graph_run(
     persist: bool = Query(True),
