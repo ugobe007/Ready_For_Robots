@@ -135,6 +135,23 @@ export interface ApiLead {
     evidence_level?: string | null;
     confidence?: number | null;
   } | null;
+  hermes_qualify?: {
+    automation_fit?: number | null;
+    labor_intensity?: string | null;
+    facility_clarity?: string | null;
+    blockers?: string[];
+    rationale?: string | null;
+    vendor_shortlist?: Array<{ vendor?: string | null; model?: string | null; why?: string | null }>;
+    truth_state?: string | null;
+    updated_at?: string | null;
+  } | null;
+  hermes_job_titles?: string[];
+  hermes_decision_makers?: Array<{
+    name?: string;
+    title?: string | null;
+    source_url?: string | null;
+    confidence?: number | null;
+  }>;
   signals?: Array<{
     signal_type?: string;
     signal_label?: string;
@@ -390,6 +407,9 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     workMatchManufacturer: lead.work_match_manufacturer || undefined,
     workHardBlockers: lead.work_hard_blockers || [],
     comparableDeployment: lead.comparable_deployment || undefined,
+    hermesQualify: lead.hermes_qualify || undefined,
+    hermesJobTitles: lead.hermes_job_titles || [],
+    hermesDecisionMakers: lead.hermes_decision_makers || [],
     researchUpdates: lead.research_updates,
     lastResearchedAt: lead.last_researched_at || null,
     latestMaterialUpdate: lead.latest_material_update || null,

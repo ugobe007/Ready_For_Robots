@@ -29,6 +29,8 @@ Concrete integration: Hermes crawls public OEM/customer deployment news nightly;
 
 Never put the key in digests or skill state files committed to git.
 
+For the full multi-track agent roster (jobs, qualify, DMs, news, UX audit), see [hermes_intelligence_bridge.md](hermes_intelligence_bridge.md).
+
 ## Hermes setup (once)
 
 ```bash

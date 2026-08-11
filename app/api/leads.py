@@ -1211,6 +1211,7 @@ def _fmt_pipeline_card(
         "work_match_manufacturer": None,
         "work_hard_blockers": [],
         "comparable_deployment": None,
+        **_hermes_pipeline_fields(crm_meta),
         **hp.as_dict(),
     }
     slim_quality = compute_lead_quality_profile(
@@ -1460,6 +1461,7 @@ def _fmt_company(
             robot_types_needed=robot_types_needed,
             research_updates=research_updates,
         ),
+        **_hermes_pipeline_fields(crm_meta),
         **hp.as_dict(),
         **link_extras,
     }
@@ -1521,6 +1523,93 @@ def _research_update_row(row: LeadResearchUpdate) -> dict:
     }
 
 
+def _hermes_pipeline_fields(crm_meta: Optional[dict]) -> dict:
+    """Public pipeline fields from Hermes overlays on company.crm_metadata."""
+    meta = crm_meta if isinstance(crm_meta, dict) else {}
+    qualify = meta.get("hermes_qualify") if isinstance(meta.get("hermes_qualify"), dict) else None
+    jobs = meta.get("hermes_job_orders") if isinstance(meta.get("hermes_job_orders"), list) else []
+    dms = meta.get("hermes_decision_makers") if isinstance(meta.get("hermes_decision_makers"), list) else []
+    vendor_shortlist = []
+    if qualify:
+        raw = qualify.get("vendor_shortlist")
+        if isinstance(raw, list):
+            for item in raw[:5]:
+                if isinstance(item, dict):
+                    vendor_shortlist.append(
+                        {
+                            "vendor": item.get("vendor") or item.get("manufacturer_name"),
+                            "model": item.get("model") or item.get("robot_model"),
+                            "why": item.get("why"),
+                        }
+                    )
+                elif isinstance(item, str) and item.strip():
+                    vendor_shortlist.append({"vendor": item.strip(), "model": None, "why": None})
+    job_titles = []
+    for j in jobs[-5:]:
+        if isinstance(j, dict) and j.get("job_title"):
+            job_titles.append(str(j.get("job_title"))[:160])
+    dm_preview = []
+    for d in dms[-6:]:
+        if not isinstance(d, dict):
+            continue
+        name = (d.get("name") or "").strip()
+        if not name:
+            continue
+        dm_preview.append(
+            {
+                "name": name[:120],
+                "title": (d.get("title") or None),
+                "source_url": d.get("source_url"),
+                "confidence": d.get("confidence"),
+            }
+        )
+    return {
+        "hermes_qualify": (
+            {
+                "automation_fit": qualify.get("automation_fit"),
+                "labor_intensity": qualify.get("labor_intensity"),
+                "facility_clarity": qualify.get("facility_clarity"),
+                "blockers": list(qualify.get("blockers") or [])[:8],
+                "rationale": (qualify.get("rationale") or "")[:500] or None,
+                "vendor_shortlist": vendor_shortlist,
+                "truth_state": qualify.get("truth_state") or "HERMES_OVERLAY",
+                "updated_at": qualify.get("updated_at"),
+            }
+            if qualify
+            else None
+        ),
+        "hermes_job_titles": job_titles,
+        "hermes_decision_makers": dm_preview,
+    }
+
+
+def _merge_hermes_decision_makers(crm_dms: list, hermes_dms: list) -> list:
+    """Prefer named CRM DMs; append Hermes public DMs without duplicate names."""
+    out: list = []
+    seen: set[str] = set()
+    for src in (crm_dms or []) + (hermes_dms or []):
+        if not isinstance(src, dict):
+            continue
+        name = (src.get("name") or "").strip()
+        if not name:
+            continue
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(
+            {
+                "name": name[:120],
+                "title": src.get("title"),
+                "source_url": src.get("source_url"),
+                "confidence": src.get("confidence"),
+            }
+        )
+        if len(out) >= 6:
+            break
+    return out
+
+
 def _crm_evidence_summary(
     *,
     crm_meta: dict,
@@ -1532,6 +1621,12 @@ def _crm_evidence_summary(
     budget_meta = crm_meta.get("budget") if isinstance(crm_meta.get("budget"), dict) else {}
     timing_meta = crm_meta.get("timing") if isinstance(crm_meta.get("timing"), dict) else {}
     decision_makers = crm_meta.get("decision_makers") if isinstance(crm_meta.get("decision_makers"), list) else []
+    hermes_dms = (
+        crm_meta.get("hermes_decision_makers")
+        if isinstance(crm_meta.get("hermes_decision_makers"), list)
+        else []
+    )
+    decision_makers = _merge_hermes_decision_makers(decision_makers, hermes_dms)
     automation_requirements = crm_meta.get("automation_requirements") if isinstance(crm_meta.get("automation_requirements"), list) else []
     inferred_robot_fit = crm_meta.get("inferred_robot_fit") if isinstance(crm_meta.get("inferred_robot_fit"), list) else []
     application_areas = lead_inference.get("application_areas") if isinstance(lead_inference.get("application_areas"), list) else []

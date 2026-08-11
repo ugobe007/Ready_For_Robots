@@ -154,6 +154,23 @@ interface Deal {
     evidence_level?: string | null;
     confidence?: number | null;
   };
+  hermesQualify?: {
+    automation_fit?: number | null;
+    labor_intensity?: string | null;
+    facility_clarity?: string | null;
+    blockers?: string[];
+    rationale?: string | null;
+    vendor_shortlist?: Array<{ vendor?: string | null; model?: string | null; why?: string | null }>;
+    truth_state?: string | null;
+    updated_at?: string | null;
+  };
+  hermesJobTitles?: string[];
+  hermesDecisionMakers?: Array<{
+    name?: string;
+    title?: string | null;
+    source_url?: string | null;
+    confidence?: number | null;
+  }>;
   researchUpdates?: Array<{
     id: number;
     update_type?: string;
@@ -1039,6 +1056,7 @@ function WorkMatchBadge({
     | "workflowFamily"
     | "workHardBlockers"
     | "comparableDeployment"
+    | "hermesQualify"
   >;
   size?: "sm" | "lg";
 }) {
@@ -1058,6 +1076,9 @@ function WorkMatchBadge({
     wm != null ? `Work Match ${Math.round(wm)}%${deal.workMatchLabel ? ` (${deal.workMatchLabel})` : ""}` : null,
     family ? `Workflow: ${family}` : null,
     deal.workMatchManufacturer ? `Best robot: ${deal.workMatchManufacturer}` : null,
+    deal.hermesQualify?.automation_fit != null
+      ? `Hermes automation fit ${Math.round(Number(deal.hermesQualify.automation_fit))}`
+      : null,
     blocked ? `Blockers: ${blockers.join(", ")}` : null,
     deal.comparableDeployment?.robot
       ? `Evidence: ${deal.comparableDeployment.robot} @ ${deal.comparableDeployment.customer || "site"}`
@@ -2718,10 +2739,18 @@ export default function Pipeline() {
       return;
     }
     if (!isSignedIn) {
+      if (selected?.id != null) {
+        const nextParams: Record<string, string> = { view: "all" };
+        if (submittedUrl) nextParams.url = submittedUrl;
+        window.location.href = signupHrefForLead(selected.id, selected.company, {
+          src: "pipeline_next_step",
+          nextParams,
+        });
+        return;
+      }
       const params = new URLSearchParams();
       params.set("view", "all");
       params.set("src", "pipeline_next_step");
-      if (selected?.id != null) params.set("lead", String(selected.id));
       if (submittedUrl) params.set("url", submittedUrl);
       const next = `/pipeline?${params.toString()}`;
       window.location.href = `/signup?next=${encodeURIComponent(next)}&src=pipeline_next_step`;
@@ -4260,6 +4289,14 @@ export default function Pipeline() {
                               : ""}
                           </p>
                         )}
+                        {selected.hermesQualify?.automation_fit != null && (
+                          <p className="max-w-[11rem] text-right text-[10px] leading-snug text-sky-700">
+                            Hermes fit {Math.round(Number(selected.hermesQualify.automation_fit))}
+                            {selected.hermesQualify.vendor_shortlist?.[0]?.vendor
+                              ? ` · ${selected.hermesQualify.vendor_shortlist[0].vendor}`
+                              : ""}
+                          </p>
+                        )}
                         {isAdmin && (
                           <button
                             type="button"
@@ -4302,6 +4339,70 @@ export default function Pipeline() {
                     </div>
                     </div>
                   </div>
+
+                  {(selected.hermesQualify ||
+                    (selected.hermesJobTitles && selected.hermesJobTitles.length > 0) ||
+                    (selected.hermesDecisionMakers && selected.hermesDecisionMakers.length > 0)) && (
+                    <div className="border-b border-slate-100 bg-sky-50/60 px-5 py-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-sky-900">
+                        Hermes intelligence
+                        {selected.hermesQualify?.truth_state ? (
+                          <span className="ml-1.5 font-semibold normal-case tracking-normal text-sky-700/80">
+                            · overlay (not CRM truth)
+                          </span>
+                        ) : null}
+                      </p>
+                      {selected.hermesQualify?.automation_fit != null && (
+                        <p className="mt-1 text-[12px] leading-snug text-slate-800">
+                          Automation fit{" "}
+                          <span className="font-semibold">{Math.round(Number(selected.hermesQualify.automation_fit))}</span>
+                          {selected.hermesQualify.labor_intensity
+                            ? ` · labor ${selected.hermesQualify.labor_intensity}`
+                            : ""}
+                          {selected.hermesQualify.facility_clarity
+                            ? ` · facility ${selected.hermesQualify.facility_clarity}`
+                            : ""}
+                        </p>
+                      )}
+                      {selected.hermesQualify?.rationale && (
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
+                          {selected.hermesQualify.rationale}
+                        </p>
+                      )}
+                      {(selected.hermesQualify?.vendor_shortlist || []).length > 0 && (
+                        <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-700">
+                          {(selected.hermesQualify?.vendor_shortlist || []).slice(0, 3).map((v, i) => (
+                            <li key={`${v.vendor || "v"}-${i}`}>
+                              <span className="font-medium">{v.vendor}</span>
+                              {v.model ? ` · ${v.model}` : ""}
+                              {v.why ? ` — ${v.why}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {(selected.hermesQualify?.blockers || []).length > 0 && (
+                        <p className="mt-1 text-[11px] text-amber-800">
+                          Blockers: {(selected.hermesQualify?.blockers || []).join("; ")}
+                        </p>
+                      )}
+                      {(selected.hermesJobTitles || []).length > 0 && (
+                        <p className="mt-1.5 text-[11px] text-slate-700">
+                          <span className="font-semibold text-slate-800">Open roles: </span>
+                          {(selected.hermesJobTitles || []).slice(0, 3).join(" · ")}
+                        </p>
+                      )}
+                      {(selected.hermesDecisionMakers || []).length > 0 && (
+                        <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-700">
+                          {(selected.hermesDecisionMakers || []).slice(0, 4).map((dm, i) => (
+                            <li key={`${dm.name || "dm"}-${i}`}>
+                              <span className="font-medium">{dm.name}</span>
+                              {dm.title ? ` · ${dm.title}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col">
                   {showFirstThreeActionsProgress && (

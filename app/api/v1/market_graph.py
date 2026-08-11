@@ -56,6 +56,73 @@ class DeploymentIngestBody(BaseModel):
     dry_run: bool = False
 
 
+class JobSignalIn(BaseModel):
+    job_title: str = Field(..., min_length=2, max_length=240)
+    employer: str = Field(..., min_length=1, max_length=240)
+    excerpt: str = Field(..., min_length=20, max_length=20000)
+    source_url: Optional[str] = Field(None, max_length=2000)
+    location: Optional[str] = Field(None, max_length=240)
+    source_date: Optional[str] = Field(None, max_length=32)
+    industry: Optional[str] = Field(None, max_length=120)
+
+
+class JobSignalsIngestBody(BaseModel):
+    jobs: list[JobSignalIn] = Field(..., min_length=1, max_length=40)
+    hermes_run_id: Optional[str] = Field(None, max_length=120)
+    dry_run: bool = False
+
+
+class QualifyOverlayIn(BaseModel):
+    company_id: Optional[int] = None
+    signal_url: Optional[str] = Field(None, max_length=2000)
+    automation_fit: int = Field(..., ge=0, le=100)
+    labor_intensity: Optional[str] = Field(None, max_length=64)
+    facility_clarity: Optional[str] = Field(None, max_length=64)
+    blockers: list[str] = Field(default_factory=list)
+    rationale: Optional[str] = Field(None, max_length=2000)
+    vendor_shortlist: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class QualifyOverlayBody(BaseModel):
+    overlays: list[QualifyOverlayIn] = Field(..., min_length=1, max_length=40)
+    hermes_run_id: Optional[str] = Field(None, max_length=120)
+    dry_run: bool = False
+
+
+class ContactIn(BaseModel):
+    company_id: int
+    name: str = Field(..., min_length=2, max_length=240)
+    title: Optional[str] = Field(None, max_length=240)
+    linkedin_url: Optional[str] = Field(None, max_length=2000)
+    email: Optional[str] = Field(None, max_length=320)
+    source_url: Optional[str] = Field(None, max_length=2000)
+    confidence: int = Field(50, ge=0, le=100)
+
+
+class ContactsIngestBody(BaseModel):
+    contacts: list[ContactIn] = Field(..., min_length=1, max_length=40)
+    hermes_run_id: Optional[str] = Field(None, max_length=120)
+    dry_run: bool = False
+
+
+class VendorNewsIn(BaseModel):
+    entity_name: str = Field(..., min_length=1, max_length=240)
+    text: str = Field(..., min_length=20, max_length=20000)
+    news_type: str = Field("product", max_length=64)
+    entity_kind: str = Field("vendor", max_length=32)
+    source_url: Optional[str] = Field(None, max_length=2000)
+    source_date: Optional[str] = Field(None, max_length=32)
+    title: Optional[str] = Field(None, max_length=480)
+    company_id: Optional[int] = None
+    confidence: float = Field(0.5, ge=0.0, le=1.0)
+
+
+class VendorNewsIngestBody(BaseModel):
+    items: list[VendorNewsIn] = Field(..., min_length=1, max_length=40)
+    hermes_run_id: Optional[str] = Field(None, max_length=120)
+    dry_run: bool = False
+
+
 def _require_ingest_auth(
     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
     token: str = Query("", description="SCRAPER_CRON_TOKEN alternative"),
@@ -273,6 +340,245 @@ def market_graph_deployment_evidence_ingest(
         "auth": _auth.get("auth"),
         "doc": "docs/hermes_deployment_bridge.md",
     }
+
+
+@router.post("/job-signals/ingest")
+def market_graph_job_signals_ingest(
+    body: JobSignalsIngestBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Hermes → RFR: open job orders correlated to robot automation."""
+    from app.services.hermes_intelligence_ingest import ingest_job_signal
+
+    accepted: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    for idx, job in enumerate(body.jobs):
+        try:
+            result = ingest_job_signal(
+                db,
+                job_title=job.job_title,
+                employer=job.employer,
+                excerpt=job.excerpt,
+                source_url=job.source_url,
+                location=job.location,
+                source_date=job.source_date,
+                industry=job.industry,
+                dry_run=body.dry_run,
+            )
+            accepted.append({"index": idx, **result})
+        except Exception as exc:
+            logger.warning("job-signal ingest %s failed: %s", idx, exc)
+            errors.append({"index": idx, "error": str(exc)[:300]})
+
+    if not body.dry_run and accepted:
+        try:
+            db.commit()
+        except Exception as exc:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"commit failed: {exc}") from exc
+
+    return {
+        "ok": len(errors) == 0,
+        "hermes_run_id": body.hermes_run_id,
+        "accepted": len(accepted),
+        "failed": len(errors),
+        "results": accepted,
+        "errors": errors,
+        "auth": _auth.get("auth"),
+        "doc": "docs/hermes_intelligence_bridge.md",
+    }
+
+
+@router.post("/qualify-overlay")
+def market_graph_qualify_overlay(
+    body: QualifyOverlayBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Hermes qualification overlay (not customer-confirmed CRM truth)."""
+    from app.services.hermes_intelligence_ingest import apply_qualify_overlay
+
+    accepted: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    for idx, item in enumerate(body.overlays):
+        try:
+            if item.company_id is None and not item.signal_url:
+                raise ValueError("company_id or signal_url required")
+            result = apply_qualify_overlay(
+                db,
+                company_id=item.company_id,
+                signal_url=item.signal_url,
+                automation_fit=item.automation_fit,
+                labor_intensity=item.labor_intensity,
+                facility_clarity=item.facility_clarity,
+                blockers=item.blockers,
+                rationale=item.rationale,
+                vendor_shortlist=item.vendor_shortlist,
+                hermes_run_id=body.hermes_run_id,
+                dry_run=body.dry_run,
+            )
+            accepted.append({"index": idx, **result})
+        except Exception as exc:
+            logger.warning("qualify-overlay %s failed: %s", idx, exc)
+            errors.append({"index": idx, "error": str(exc)[:300]})
+
+    if not body.dry_run and accepted:
+        try:
+            db.commit()
+        except Exception as exc:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"commit failed: {exc}") from exc
+
+    return {
+        "ok": len(errors) == 0,
+        "hermes_run_id": body.hermes_run_id,
+        "accepted": len(accepted),
+        "failed": len(errors),
+        "results": accepted,
+        "errors": errors,
+        "auth": _auth.get("auth"),
+        "doc": "docs/hermes_intelligence_bridge.md",
+    }
+
+
+@router.post("/contacts/ingest")
+def market_graph_contacts_ingest(
+    body: ContactsIngestBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Hermes → RFR: public-sourced decision-maker contacts."""
+    from app.services.hermes_intelligence_ingest import ingest_contact
+
+    accepted: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    skipped = 0
+    for idx, c in enumerate(body.contacts):
+        try:
+            result = ingest_contact(
+                db,
+                company_id=c.company_id,
+                name=c.name,
+                title=c.title,
+                linkedin_url=c.linkedin_url,
+                email=c.email,
+                source_url=c.source_url,
+                confidence=c.confidence,
+                dry_run=body.dry_run,
+            )
+            if result.get("skipped"):
+                skipped += 1
+            accepted.append({"index": idx, **result})
+        except Exception as exc:
+            logger.warning("contacts ingest %s failed: %s", idx, exc)
+            errors.append({"index": idx, "error": str(exc)[:300]})
+
+    if not body.dry_run and any(not r.get("skipped") for r in accepted):
+        try:
+            db.commit()
+        except Exception as exc:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"commit failed: {exc}") from exc
+
+    return {
+        "ok": len(errors) == 0,
+        "hermes_run_id": body.hermes_run_id,
+        "accepted": len(accepted) - skipped,
+        "skipped": skipped,
+        "failed": len(errors),
+        "results": accepted,
+        "errors": errors,
+        "auth": _auth.get("auth"),
+        "doc": "docs/hermes_intelligence_bridge.md",
+    }
+
+
+@router.post("/vendor-news/ingest")
+def market_graph_vendor_news_ingest(
+    body: VendorNewsIngestBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Hermes → RFR: vendor capability/pricing/model news + customer signals."""
+    from app.services.hermes_intelligence_ingest import ingest_vendor_news
+
+    accepted: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    for idx, item in enumerate(body.items):
+        try:
+            result = ingest_vendor_news(
+                db,
+                entity_name=item.entity_name,
+                text=item.text,
+                news_type=item.news_type,
+                entity_kind=item.entity_kind,
+                source_url=item.source_url,
+                source_date=item.source_date,
+                title=item.title,
+                company_id=item.company_id,
+                confidence=item.confidence,
+                hermes_run_id=body.hermes_run_id,
+                dry_run=body.dry_run,
+            )
+            accepted.append({"index": idx, **result})
+        except Exception as exc:
+            logger.warning("vendor-news ingest %s failed: %s", idx, exc)
+            errors.append({"index": idx, "error": str(exc)[:300]})
+
+    if not body.dry_run and accepted:
+        try:
+            db.commit()
+        except Exception as exc:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"commit failed: {exc}") from exc
+
+    return {
+        "ok": len(errors) == 0,
+        "hermes_run_id": body.hermes_run_id,
+        "accepted": len(accepted),
+        "failed": len(errors),
+        "results": accepted,
+        "errors": errors,
+        "auth": _auth.get("auth"),
+        "doc": "docs/hermes_intelligence_bridge.md",
+    }
+
+
+@router.get("/vendor-news")
+def market_graph_vendor_news_list(
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    try:
+        from app.models.vendor_news import VendorNewsItem
+
+        rows = (
+            db.query(VendorNewsItem)
+            .order_by(VendorNewsItem.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+        return {
+            "count": len(rows),
+            "items": [
+                {
+                    "news_id": r.news_id,
+                    "news_type": r.news_type,
+                    "entity_kind": r.entity_kind,
+                    "entity_name": r.entity_name,
+                    "company_id": r.company_id,
+                    "title": r.title,
+                    "source_url": r.source_url,
+                    "source_date": r.source_date,
+                    "confidence": r.confidence,
+                }
+                for r in rows
+            ],
+            "doc": "docs/hermes_intelligence_bridge.md",
+        }
+    except Exception as exc:
+        return {"count": 0, "items": [], "error": str(exc)[:240]}
 
 
 @router.post("/run")

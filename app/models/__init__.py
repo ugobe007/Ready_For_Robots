@@ -22,6 +22,7 @@ from app.models.deployment_evidence import (
     DeploymentMetric,
     DeploymentSource,
 )
+from app.models.vendor_news import VendorNewsItem
 from app.models.robot_company import RobotCompany
 from app.models.crm import Team, TeamMember, CrmAccount, CrmEngagement
 from app.models.lead_rep_feedback import LeadRepFeedback
