@@ -117,6 +117,24 @@ export interface ApiLead {
   humanoid_non_us_vendor_count?: number;
   humanoid_non_us_vendor_models?: string[];
   robot_types_needed?: string[];
+  work_unit_id?: string | null;
+  workflow_family?: string | null;
+  work_task?: string | null;
+  work_match?: number | null;
+  work_match_label?: string | null;
+  work_match_score?: number | null;
+  work_match_manufacturer?: string | null;
+  work_hard_blockers?: string[];
+  comparable_deployment?: {
+    deployment_id?: string;
+    robot?: string | null;
+    customer?: string | null;
+    facility?: string | null;
+    work_type?: string | null;
+    deployment_stage?: string | null;
+    evidence_level?: string | null;
+    confidence?: number | null;
+  } | null;
   signals?: Array<{
     signal_type?: string;
     signal_label?: string;
@@ -363,6 +381,15 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     humanoidNonUsVendorModels: lead.humanoid_non_us_vendor_models || [],
     priorityTier: lead.priority_tier || undefined,
     robotTypesNeeded: lead.robot_types_needed || [],
+    workUnitId: lead.work_unit_id || undefined,
+    workflowFamily: lead.workflow_family || undefined,
+    workTask: lead.work_task || undefined,
+    workMatch: lead.work_match ?? undefined,
+    workMatchLabel: lead.work_match_label || undefined,
+    workMatchScore: lead.work_match_score ?? undefined,
+    workMatchManufacturer: lead.work_match_manufacturer || undefined,
+    workHardBlockers: lead.work_hard_blockers || [],
+    comparableDeployment: lead.comparable_deployment || undefined,
     researchUpdates: lead.research_updates,
     lastResearchedAt: lead.last_researched_at || null,
     latestMaterialUpdate: lead.latest_material_update || null,

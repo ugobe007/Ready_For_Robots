@@ -1,0 +1,72 @@
+{
+  "ontology_id": "rfr_deployment_stages_v1",
+  "version": "1.0.0",
+  "description": "Normalize robotics 'deployment' hype into stages. Public Deployment Evidence — not live telemetry.",
+  "deployment_stages": [
+    "ANNOUNCED",
+    "AGREEMENT",
+    "EVALUATION",
+    "PROOF_OF_CONCEPT",
+    "PILOT",
+    "LIVE_DEPLOYMENT",
+    "COMMERCIAL_DEPLOYMENT",
+    "MULTI_SITE",
+    "EXPANSION",
+    "COMPLETED",
+    "CANCELLED",
+    "UNKNOWN"
+  ],
+  "evidence_levels": {
+    "A": "Customer or joint report with operating metrics",
+    "B": "OEM reports named customer + concrete metrics",
+    "C": "Named commercial deployment, no operating metrics",
+    "D": "Pilot / proof of concept",
+    "E": "Agreement / intent / planned deployment",
+    "F": "Unverified media / vague claim"
+  },
+  "quantity_fields": {
+    "robots": ["robots_announced", "robots_committed", "robots_pilot", "robots_live", "robots_verified"],
+    "sites": ["sites_announced", "sites_live", "sites_verified"]
+  },
+  "source_priority": [
+    "customer_site",
+    "customer_press",
+    "oem_case_study",
+    "sec_filing",
+    "earnings",
+    "reputable_news",
+    "integrator_case_study",
+    "conference",
+    "social"
+  ],
+  "metric_keys": [
+    "robots_deployed",
+    "deployment_sites",
+    "operating_hours",
+    "shifts",
+    "hours_per_shift",
+    "items_moved",
+    "totes_moved",
+    "pallets_moved",
+    "parts_processed",
+    "picks",
+    "deliveries",
+    "throughput_before",
+    "throughput_after",
+    "cycle_time_before",
+    "cycle_time_after",
+    "labor_before",
+    "labor_after",
+    "labor_saved",
+    "labor_reallocated",
+    "uptime",
+    "intervention_rate",
+    "failure_rate",
+    "cost_savings",
+    "roi",
+    "payback",
+    "pilot_start",
+    "commercial_start",
+    "expansion_date"
+  ]
+}

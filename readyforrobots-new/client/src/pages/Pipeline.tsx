@@ -136,6 +136,24 @@ interface Deal {
   humanoidNonUsVendorModels?: string[];
   priorityTier?: string;
   robotTypesNeeded?: string[];
+  workUnitId?: string;
+  workflowFamily?: string;
+  workTask?: string;
+  workMatch?: number;
+  workMatchLabel?: string;
+  workMatchScore?: number;
+  workMatchManufacturer?: string;
+  workHardBlockers?: string[];
+  comparableDeployment?: {
+    deployment_id?: string;
+    robot?: string | null;
+    customer?: string | null;
+    facility?: string | null;
+    work_type?: string | null;
+    deployment_stage?: string | null;
+    evidence_level?: string | null;
+    confidence?: number | null;
+  };
   researchUpdates?: Array<{
     id: number;
     update_type?: string;
@@ -1000,6 +1018,59 @@ function PipelineScoreBadge({
       style={{ borderColor: accent }}
     >
       <span>{score}</span>
+    </div>
+  );
+}
+
+function workflowFamilyLabel(family?: string): string {
+  if (!family || family === "unknown") return "";
+  return family.replace(/_/g, " ");
+}
+
+function WorkMatchBadge({
+  deal,
+  size = "sm",
+}: {
+  deal: Pick<
+    Deal,
+    | "workMatch"
+    | "workMatchLabel"
+    | "workMatchManufacturer"
+    | "workflowFamily"
+    | "workHardBlockers"
+    | "comparableDeployment"
+  >;
+  size?: "sm" | "lg";
+}) {
+  const wm = deal.workMatch;
+  const blockers = deal.workHardBlockers || [];
+  const family = workflowFamilyLabel(deal.workflowFamily);
+  if (wm == null && !family) return null;
+  const blocked = blockers.length > 0;
+  const label =
+    wm != null
+      ? `WM ${Math.round(wm)}`
+      : family
+        ? `Work`
+        : null;
+  if (!label) return null;
+  const titleParts = [
+    wm != null ? `Work Match ${Math.round(wm)}%${deal.workMatchLabel ? ` (${deal.workMatchLabel})` : ""}` : null,
+    family ? `Workflow: ${family}` : null,
+    deal.workMatchManufacturer ? `Best robot: ${deal.workMatchManufacturer}` : null,
+    blocked ? `Blockers: ${blockers.join(", ")}` : null,
+    deal.comparableDeployment?.robot
+      ? `Evidence: ${deal.comparableDeployment.robot} @ ${deal.comparableDeployment.customer || "site"}`
+      : null,
+  ].filter(Boolean);
+  const color = blocked ? "#b45309" : wm != null && wm >= 70 ? "#047857" : wm != null && wm >= 50 ? "#0369a1" : "#57534e";
+  return (
+    <div
+      className={size === "lg" ? "pipeline-score-badge pipeline-score-badge-lg" : "pipeline-score-badge"}
+      style={{ borderColor: color, color, minWidth: size === "lg" ? undefined : "2.75rem" }}
+      title={titleParts.join(" · ")}
+    >
+      <span className="text-[10px] font-bold tracking-tight">{label}</span>
     </div>
   );
 }
@@ -3975,6 +4046,7 @@ export default function Pipeline() {
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
                               <PipelineScoreBadge score={deal.score} deal={deal} />
+                              <WorkMatchBadge deal={deal} />
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -4089,6 +4161,7 @@ export default function Pipeline() {
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
                               <PipelineScoreBadge score={deal.score} deal={deal} />
+                              <WorkMatchBadge deal={deal} />
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -4177,6 +4250,16 @@ export default function Pipeline() {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <PipelineScoreBadge score={selected.score} deal={selected} size="lg" />
+                        <WorkMatchBadge deal={selected} size="lg" />
+                        {selected.workMatch != null && (
+                          <p className="max-w-[11rem] text-right text-[10px] leading-snug text-stone-500">
+                            Work Match {Math.round(selected.workMatch)}%
+                            {selected.workMatchManufacturer ? ` · ${selected.workMatchManufacturer}` : ""}
+                            {selected.comparableDeployment?.robot
+                              ? ` · Evidence: ${selected.comparableDeployment.robot}`
+                              : ""}
+                          </p>
+                        )}
                         {isAdmin && (
                           <button
                             type="button"

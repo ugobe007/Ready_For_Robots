@@ -1201,6 +1201,16 @@ def _fmt_pipeline_card(
             research_updates=research_updates_preview,
         ),
         "pipeline_slim": True,
+        # Work Match overlay (filled by build_public_pipeline_feed batch attach)
+        "work_unit_id": None,
+        "workflow_family": None,
+        "work_task": None,
+        "work_match": None,
+        "work_match_label": None,
+        "work_match_score": None,
+        "work_match_manufacturer": None,
+        "work_hard_blockers": [],
+        "comparable_deployment": None,
         **hp.as_dict(),
     }
     slim_quality = compute_lead_quality_profile(
@@ -2412,6 +2422,32 @@ def _staged_tuples_to_feed_rows(staged: list, *, slim: bool = False) -> list:
     ]
 
 
+def _attach_work_match_overlays(db: Session, rows: list) -> list:
+    """Batch-attach persisted WORK / Work Match fields onto pipeline card dicts."""
+    if not rows:
+        return rows
+    try:
+        from app.services.work_unit_store import best_work_overlays_for_companies
+    except Exception:
+        return rows
+    ids = [int(r["id"]) for r in rows if r.get("id") is not None]
+    overlays = best_work_overlays_for_companies(db, ids)
+    for r in rows:
+        ov = overlays.get(int(r["id"])) if r.get("id") is not None else None
+        if not ov:
+            continue
+        r["work_unit_id"] = ov.get("work_unit_id")
+        r["workflow_family"] = ov.get("workflow_family")
+        r["work_task"] = ov.get("work_task")
+        r["work_match"] = ov.get("work_match")
+        r["work_match_label"] = ov.get("work_match_label")
+        r["work_match_score"] = ov.get("match_score")
+        r["work_match_manufacturer"] = ov.get("manufacturer_name")
+        r["work_hard_blockers"] = ov.get("hard_blockers") or []
+        r["comparable_deployment"] = ov.get("comparable_deployment")
+    return rows
+
+
 def build_public_pipeline_feed(db: Session, *, limit: int = PIPELINE_FEED_LIMIT) -> list:
     """
     Tiered pipeline slice: HOT + WARM + monitoring (COLD) slots for /pipeline UI.
@@ -2477,7 +2513,8 @@ def build_public_pipeline_feed(db: Session, *, limit: int = PIPELINE_FEED_LIMIT)
             synth_rows.append(row)
         cold_rows = cold_rows + synth_rows
 
-    return hot_rows[:hot_n] + warm_rows[:warm_n] + cold_rows[:cold_n]
+    feed = hot_rows[:hot_n] + warm_rows[:warm_n] + cold_rows[:cold_n]
+    return _attach_work_match_overlays(db, feed)
 
 
 def hydrate_pipeline_feed_cache(feed: dict) -> None:
@@ -2965,6 +3002,10 @@ def get_lead_by_id(company_id: int, response: Response, db: Session = Depends(ge
             include_research=True,
             db=db,
         )
+        try:
+            _attach_work_match_overlays(db, [payload])
+        except Exception:
+            pass
         _maybe_schedule_missing_evidence_research(
             company=c,
             priority_tier=pri.tier,

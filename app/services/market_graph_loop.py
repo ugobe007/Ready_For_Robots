@@ -1,13 +1,15 @@
 """
-Market graph loop — self-running demand↔supply cross-index.
+Market graph loop — WORK-centric OBSERVE→LEARN cycle (v1 implementation).
 
-Runs on the Fly worker (same pattern as secondary_pass / Cal autonomy). Each cycle:
-1. Sample buyer demand (HOT/WARM leads + signal types)
-2. Sample vendor supply (manufacturers catalog)
-3. Detect market tension (demand without matching supply coverage)
-4. Propose vendor↔customer match edges for review/surfacing
-5. Flag stale customer profiles that need data refresh
-6. Persist a durable snapshot for product surfaces + admin status
+Canonical architecture: docs/rfr_intelligence_architecture.md
+Ontology: docs/ontology/rfr_graph.v1.json
+
+Graph = intelligence structure (what connects robot ↔ job).
+Loop  = learning behavior (what we learned after we acted).
+
+Current cycle maps industry-bucket demand/supply into:
+  OBSERVE → UNDERSTAND (partial) → MATCH → PRIORITIZE → LEARN (snapshot)
+ACT / QUALIFY / VERIFY write Truth Graph edges later (CRM + deployments).
 
 Does not invent scrapers — reuses classify_lead, Manufacturer catalog, and scores.
 """
@@ -24,6 +26,17 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 logger = logging.getLogger(__name__)
 
 KEY_MARKET_GRAPH_LOOP = "public:market_graph:loop:v1"
+
+CORE_LOOP_STAGES = (
+    "OBSERVE",
+    "UNDERSTAND",
+    "MATCH",
+    "PRIORITIZE",
+    "ACT",
+    "QUALIFY",
+    "VERIFY",
+    "LEARN",
+)
 
 _LOCK = threading.Lock()
 _STATE_LOCK = threading.Lock()
@@ -120,11 +133,26 @@ def match_edge_score(
     return round(min(100.0, (base * 45.0) + (industry_hit * 40.0) + (tier_boost * 15.0)), 1)
 
 
+def _signal_texts(company) -> List[str]:
+    texts: List[str] = []
+    for s in company.signals or []:
+        for attr in ("ingestion_raw_text", "signal_text"):
+            val = getattr(s, attr, None)
+            if val and str(val).strip():
+                texts.append(str(val).strip())
+                break
+    return texts[:8]
+
+
 def _load_demand_sample(db, *, limit: int) -> List[Dict[str, Any]]:
     from sqlalchemy.orm import joinedload
 
     from app.models.company import Company
     from app.services.lead_filter import classify_lead, pick_primary_score
+    from app.services.work_unit_reconstruct import (
+        reconstruct_work_units_from_texts,
+        work_unit_summary,
+    )
 
     rows = (
         db.query(Company)
@@ -145,6 +173,11 @@ def _load_demand_sample(db, *, limit: int) -> List[Dict[str, Any]]:
             for s in (company.signals or [])
             if getattr(s, "signal_type", None)
         ]
+        texts = _signal_texts(company)
+        work = reconstruct_work_units_from_texts(
+            texts,
+            source_id=f"company:{company.id}",
+        )
         out.append(
             {
                 "company_id": int(company.id),
@@ -156,6 +189,9 @@ def _load_demand_sample(db, *, limit: int) -> List[Dict[str, Any]]:
                 "signal_types": signal_types[:12],
                 "updated_at": company.updated_at.isoformat() if company.updated_at else None,
                 "website": company.website,
+                "work": work_unit_summary(work),
+                "required_primitives": work.required_primitives,
+                "workflow_family": work.workflow_family,
             }
         )
         if len(out) >= limit:
@@ -165,6 +201,7 @@ def _load_demand_sample(db, *, limit: int) -> List[Dict[str, Any]]:
 
 def _load_vendor_sample(db, *, limit: int) -> List[Dict[str, Any]]:
     from app.models.robot_catalog import Manufacturer
+    from app.services.robot_primitives import primitives_from_vendor_text
 
     rows = (
         db.query(Manufacturer)
@@ -178,6 +215,11 @@ def _load_vendor_sample(db, *, limit: int) -> List[Dict[str, Any]]:
         categories = m.robot_categories if isinstance(m.robot_categories, list) else []
         buckets = {industry_bucket(str(i)) for i in industries}
         buckets.discard("unknown")
+        caps = primitives_from_vendor_text(
+            robot_categories=[str(c) for c in categories],
+            name=m.name,
+            primary_industries=[str(i) for i in industries],
+        )
         out.append(
             {
                 "manufacturer_id": str(m.id),
@@ -189,6 +231,9 @@ def _load_vendor_sample(db, *, limit: int) -> List[Dict[str, Any]]:
                 "buckets": sorted(buckets) or ["other"],
                 "commercial_maturity": m.commercial_maturity,
                 "confidence": float(m.confidence or 0),
+                "supported_primitives": caps["supported_primitives"],
+                "primitive_categories": caps["categories"],
+                "capability_truth_state": caps["truth_state"],
             }
         )
     return out
@@ -256,28 +301,74 @@ def detect_tensions(
     return tensions
 
 
+def _industry_aligned(buyer_industry: Optional[str], vendor: Dict[str, Any]) -> bool:
+    bucket = industry_bucket(buyer_industry)
+    vendor_text = " ".join(
+        [*(vendor.get("primary_industries") or []), *(vendor.get("robot_categories") or [])]
+    ).lower()
+    if bucket != "unknown" and bucket in vendor_text:
+        return True
+    if buyer_industry and any(
+        (buyer_industry or "").lower() in (v or "").lower()
+        for v in (vendor.get("primary_industries") or [])
+    ):
+        return True
+    return False
+
+
 def propose_matches(
     demand: Sequence[Dict[str, Any]],
     vendors: Sequence[Dict[str, Any]],
     *,
     limit: int = 40,
 ) -> List[Dict[str, Any]]:
+    from app.services.primitive_match import work_robot_match_score
+
     edges: List[Dict[str, Any]] = []
     for buyer in demand:
-        ranked: List[Tuple[float, Dict[str, Any]]] = []
+        ranked: List[Tuple[float, Dict[str, Any], Dict[str, Any]]] = []
         for vendor in vendors:
-            score = match_edge_score(
-                buyer_industry=buyer.get("industry"),
+            industry_hit = _industry_aligned(buyer.get("industry"), vendor)
+            score, detail = work_robot_match_score(
+                required_primitives=buyer.get("required_primitives") or [],
+                supported_primitives=vendor.get("supported_primitives") or [],
+                workflow_family=str(buyer.get("workflow_family") or ""),
+                industry_aligned=industry_hit,
                 buyer_tier=str(buyer.get("tier") or ""),
                 buyer_score=float(buyer.get("score") or 0),
-                vendor_industries=vendor.get("primary_industries") or [],
-                vendor_categories=vendor.get("robot_categories") or [],
             )
-            if score < 45:
+            # Keep legacy industry score as floor when no primitives on either side
+            if detail.get("match_mode") == "industry_fallback":
+                legacy = match_edge_score(
+                    buyer_industry=buyer.get("industry"),
+                    buyer_tier=str(buyer.get("tier") or ""),
+                    buyer_score=float(buyer.get("score") or 0),
+                    vendor_industries=vendor.get("primary_industries") or [],
+                    vendor_categories=vendor.get("robot_categories") or [],
+                )
+                score = max(score, legacy)
+            if score < 45 and not detail.get("hard_blockers"):
                 continue
-            ranked.append((score, vendor))
+            # Still surface hard blockers (wrong machine) at low score for LEARN
+            if detail.get("hard_blockers") and score < 20:
+                continue
+            ranked.append((score, vendor, detail))
         ranked.sort(key=lambda item: -item[0])
-        for score, vendor in ranked[:3]:
+        for score, vendor, detail in ranked[:3]:
+            confidence = round(min(1.0, max(0.0, float(score) / 100.0)), 3)
+            work = buyer.get("work") or {}
+            blockers = detail.get("hard_blockers") or []
+            why = (
+                f"Work Match {detail.get('work_match')}% ({detail.get('work_match_label')}) "
+                f"on {work.get('workflow_family') or 'work'} → {vendor['name']}"
+                if detail.get("match_mode") == "primitive_spine" and detail.get("work_match") is not None
+                else (
+                    f"{buyer.get('tier')} buyer in {buyer.get('industry') or 'unknown'} "
+                    f"aligned to {vendor['name']} coverage"
+                )
+            )
+            if blockers:
+                why = f"{why}; blockers={','.join(blockers)}"
             edges.append(
                 {
                     "buyer_company_id": buyer["company_id"],
@@ -287,14 +378,121 @@ def propose_matches(
                     "manufacturer_id": vendor["manufacturer_id"],
                     "manufacturer_name": vendor["name"],
                     "match_score": score,
-                    "why": (
-                        f"{buyer.get('tier')} buyer in {buyer.get('industry') or 'unknown'} "
-                        f"aligned to {vendor['name']} coverage"
-                    ),
+                    "work_match": detail.get("work_match"),
+                    "work_match_label": detail.get("work_match_label"),
+                    "workflow_family": buyer.get("workflow_family"),
+                    "work_unit_id": work.get("work_unit_id"),
+                    "required_primitives": buyer.get("required_primitives") or [],
+                    "supported_primitives": vendor.get("supported_primitives") or [],
+                    "matched_primitives": detail.get("matched") or [],
+                    "missing_primitives": detail.get("missing") or [],
+                    "hard_blockers": blockers,
+                    "match_mode": detail.get("match_mode"),
+                    "why": why,
+                    "predicate": "MATCHES",
+                    "subject_family": "ROBOT",
+                    "object_family": "WORK",
+                    "confidence": confidence,
+                    "truth_state": "SIGNAL_INFERRED",
+                    "source": "market_graph_loop_primitive_spine",
+                    "layer": "knowledge",
                 }
             )
     edges.sort(key=lambda e: -(e.get("match_score") or 0))
     return edges[:limit]
+
+
+def build_loop_stages(
+    *,
+    demand_count: int,
+    vendor_count: int,
+    tension_count: int,
+    match_count: int,
+    refresh_queue_count: int,
+    researched: int,
+) -> Dict[str, Any]:
+    """Map this run onto the canonical OBSERVE→LEARN stages."""
+    return {
+        "OBSERVE": {
+            "status": "completed",
+            "artifacts": ["labor_signals", "vendor_catalog"],
+            "demand_sampled": demand_count,
+            "vendors_sampled": vendor_count,
+        },
+        "UNDERSTAND": {
+            "status": "completed",
+            "note": "WORK units reconstructed from signal/job text onto primitives.v1",
+            "artifacts": ["work_units", "required_primitives", "industry_buckets"],
+        },
+        "MATCH": {
+            "status": "completed",
+            "artifacts": ["primitive_spine_match_edges"],
+            "match_count": match_count,
+        },
+        "PRIORITIZE": {
+            "status": "completed",
+            "artifacts": ["tensions", "refresh_queue"],
+            "tension_count": tension_count,
+            "refresh_queue_count": refresh_queue_count,
+        },
+        "ACT": {
+            "status": "deferred",
+            "note": "Seller outreach lives in Pipeline / CRM — not this worker",
+        },
+        "QUALIFY": {
+            "status": "deferred",
+            "note": "Customer-confirmed facts → Truth Graph writeback TBD",
+        },
+        "VERIFY": {
+            "status": "deferred",
+            "note": "Pilot / deployment / loss → DEPLOYMENT nodes TBD",
+        },
+        "LEARN": {
+            "status": "partial" if researched == 0 else "completed",
+            "artifacts": ["snapshot_cache", "optional_research_refresh"],
+            "researched": researched,
+            "note": "Persists Knowledge snapshot; Truth correction loop not yet wired",
+        },
+    }
+
+
+def build_knowledge_truth_layers(
+    *,
+    demand: Sequence[Dict[str, Any]],
+    vendors: Sequence[Dict[str, Any]],
+    matches: Sequence[Dict[str, Any]],
+    tensions: Sequence[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Split beliefs (Knowledge) from validated outcomes (Truth)."""
+    return {
+        "knowledge": {
+            "node_families_touched": ["COMPANY", "LABOR", "WORK", "ROBOT", "OPPORTUNITY"],
+            "center": "WORK",
+            "spine": "docs/ontology/primitives.v1.json",
+            "note": (
+                "WORK units inferred from signal/job text; robot capabilities from "
+                "catalog categories — both on primitives.v1"
+            ),
+            "companies_sampled": len(demand),
+            "work_units_with_primitives": sum(
+                1 for d in demand if d.get("required_primitives")
+            ),
+            "robots_via_vendors": len(vendors),
+            "vendors_with_primitives": sum(
+                1 for v in vendors if v.get("supported_primitives")
+            ),
+            "inferred_match_edges": len(matches),
+            "tension_hypotheses": len(tensions),
+        },
+        "truth": {
+            "edges": [],
+            "deployments": [],
+            "note": (
+                "Empty until QUALIFY/VERIFY write CUSTOMER_CONFIRMED / "
+                "SITE_VERIFIED / DEPLOYMENT_VERIFIED / DISPROVED edges"
+            ),
+        },
+    }
 
 
 def build_refresh_queue(demand: Sequence[Dict[str, Any]], *, limit: int = 25) -> List[Dict[str, Any]]:
@@ -326,7 +524,7 @@ def run_market_graph_loop(
     vendor_limit: Optional[int] = None,
     persist: bool = True,
 ) -> Dict[str, Any]:
-    """One full Observe → Orient → Match → Persist cycle."""
+    """One OBSERVE → MATCH → PRIORITIZE → LEARN cycle (ACT/QUALIFY/VERIFY deferred)."""
     if not _LOCK.acquire(blocking=False):
         return {"status": "skipped", "reason": "already_running"}
 
@@ -353,9 +551,32 @@ def run_market_graph_loop(
         if os.getenv("MARKET_GRAPH_RUN_RESEARCH", "").strip().lower() in ("1", "true", "yes"):
             researched = _maybe_research_refresh(db, refresh_queue[:5])
 
+        stages = build_loop_stages(
+            demand_count=len(demand),
+            vendor_count=len(vendors),
+            tension_count=len(tensions),
+            match_count=len(matches),
+            refresh_queue_count=len(refresh_queue),
+            researched=researched,
+        )
+        layers = build_knowledge_truth_layers(
+            demand=demand, vendors=vendors, matches=matches, tensions=tensions
+        )
+
         payload = {
             "status": "completed",
             "generated_at": _utc_now(),
+            "architecture": {
+                "doc": "docs/rfr_intelligence_architecture.md",
+                "ontology": "docs/ontology/rfr_graph.v1.json",
+                "center": "WORK",
+                "mantra": [
+                    "Find the Work.",
+                    "Match the Robot.",
+                    "Test the Truth.",
+                    "Learn from Every Deployment.",
+                ],
+            },
             "demand_sampled": len(demand),
             "vendors_sampled": len(vendors),
             "tension_count": len(tensions),
@@ -365,7 +586,21 @@ def run_market_graph_loop(
             "tensions": tensions[:20],
             "matches": matches[:40],
             "refresh_queue": refresh_queue[:25],
-            "loop": [
+            "work_units": [
+                {
+                    "company_id": d["company_id"],
+                    "company_name": d["company_name"],
+                    **(d.get("work") or {}),
+                }
+                for d in demand
+                if d.get("required_primitives")
+            ][:30],
+            "loop": list(CORE_LOOP_STAGES),
+            "loop_stages": stages,
+            "knowledge": layers["knowledge"],
+            "truth": layers["truth"],
+            # Legacy step names kept for ops dashboards
+            "loop_ops": [
                 "research_demand",
                 "index_vendors",
                 "detect_tension",
@@ -382,6 +617,26 @@ def run_market_graph_loop(
             except Exception as exc:
                 logger.warning("market graph cache write failed: %s", exc)
                 payload["cache_write_error"] = str(exc)[:240]
+            try:
+                from app.services.work_unit_store import persist_market_graph_work
+
+                persisted = persist_market_graph_work(db, demand, matches)
+                payload["persisted"] = persisted
+            except Exception as exc:
+                logger.warning("work unit persist failed: %s", exc)
+                payload["persisted"] = {"error": str(exc)[:240]}
+            try:
+                from app.services.deployment_evidence_engine import seed_canonical_public_deployments
+
+                if os.getenv("MARKET_GRAPH_SEED_DEPLOYMENT_EVIDENCE", "1").strip().lower() in (
+                    "1",
+                    "true",
+                    "yes",
+                    "",
+                ):
+                    payload["deployment_evidence_seeded"] = seed_canonical_public_deployments(db)
+            except Exception as exc:
+                logger.warning("deployment evidence seed failed: %s", exc)
 
         _record_finish(payload)
         print(

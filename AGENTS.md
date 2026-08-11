@@ -41,12 +41,20 @@ From `docs/lead_quality_north_star.md` — optimize in this order:
 
 ## Market intelligence
 
+**Product architecture (WORK graph + learning loop):** `docs/rfr_intelligence_architecture.md`  
+Ontology: `docs/ontology/rfr_graph.v1.json` · Spine: `docs/work_unit_reconstruction.md` · Deployment Evidence: `docs/deployment_evidence_engine.md` · Worker: `docs/market_graph_loop.md`
+
+- **Graph** = structure (what connects robot ↔ job). Center is **WORK**, not company or robot.
+- **Loop** = OBSERVE LABOR → MATCH ROBOT → OBSERVE DEPLOYMENTS → STRENGTHEN/WEAKEN → KEEP WATCHING.
+- **Knowledge** generates predictions; **Deployment Evidence** (public sources) strengthens/weakens them — live telemetry is optional later.
+
 Read `docs/market_thesis.md` before choosing missions. The intelligence loop feeds the execution loop:
 
 | Loop | Cadence | Output |
 |------|---------|--------|
 | **Intelligence** | Weekly (or first cycle of week) | Updated thesis, ranked backlog |
 | **Execution** | Daily | Code, deploy, metrics delta |
+| **Market graph** | Worker (~12h) | Tension + match edges → cache (`/api/v1/market-graph/*`) |
 
 Snapshot `intelligence` slice (junk reasons, gap frequency, industry deltas) drives FrictionMiner and mission selection.
 
