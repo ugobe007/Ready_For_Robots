@@ -2536,12 +2536,12 @@ export default function Pipeline() {
   const nextStepsTitle = arrivedFromResultsScan
     ? !build25Started
       ? "Step 4 · Provide customer name and information"
-      : "Step 5 · 15 sales leads"
+      : "Step 5 of 5 · 15 sales leads"
     : "Next step";
   const nextStepsHeadline = arrivedFromResultsScan
     ? !build25Started
       ? "Provide customer name and information to unlock 15 sales leads"
-      : `Building your matched pipeline · ${build25Progress}/${BUILD_PIPELINE_TARGET} saved`
+      : "Curate sales leads & run outreach"
     : "Pick a lead → save it → copy draft → send";
   const nextStepsItems = arrivedFromResultsScan
     ? !build25Started
@@ -2551,9 +2551,9 @@ export default function Pipeline() {
           `Unlock ${BUILD_PIPELINE_TARGET} matched sales leads — not the global market queue.`,
         ]
       : [
-          `Curate: Save strong fits until you reach ${BUILD_PIPELINE_TARGET} in your matched list (${build25Progress} saved).`,
-          "Outreach: open a saved company, review why-now signals, copy the draft.",
-          "Send, then keep shortlisting the next matched accounts.",
+          `1. Save strong fits (${build25Progress}/${BUILD_PIPELINE_TARGET}).`,
+          "2. Copy Cal’s outreach draft.",
+          "3. Send, then continue shortlisting.",
         ]
     : submittedHostname
     ? scopedNoMatches
@@ -3686,23 +3686,6 @@ export default function Pipeline() {
                     </div>
                   </div>
 
-                  <ol className="mt-7 grid gap-3 sm:grid-cols-3">
-                    {[
-                      { n: "1", t: "Customer name & info", d: "Company name, robot category, and ICP." },
-                      { n: "2", t: `${BUILD_PIPELINE_TARGET} sales leads`, d: "Buyers scored against your robot profile." },
-                      { n: "3", t: "Curate + outreach", d: "Save fits, copy Cal’s note, send." },
-                    ].map((step) => (
-                      <li
-                        key={step.n}
-                        className="rounded-xl border border-emerald-400/20 bg-black/25 px-4 py-4"
-                      >
-                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Step {step.n}</p>
-                        <p className="mt-2 text-lg font-semibold text-emerald-50 sm:text-xl">{step.t}</p>
-                        <p className="mt-1.5 text-sm leading-relaxed text-emerald-200/75 sm:text-[15px]">{step.d}</p>
-                      </li>
-                    ))}
-                  </ol>
-
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                     <button
                       type="button"
@@ -3826,18 +3809,13 @@ export default function Pipeline() {
                     <p className="text-sm font-semibold text-slate-800 sm:text-base">
                       {workspaceProfileComplete
                         ? isSignedIn
-                          ? `Unlock your ${BUILD_PIPELINE_TARGET} sales leads.`
-                          : `Free account unlocks ${BUILD_PIPELINE_TARGET} sales leads for your robot URL.`
-                        : "Provide customer name and information above to continue."}
+                          ? `Your ${BUILD_PIPELINE_TARGET} sales leads unlock after you save customer details above.`
+                          : `Free account unlocks ${BUILD_PIPELINE_TARGET} sales leads after customer details above.`
+                        : "Provide customer name and information in the form above."}
                     </p>
-                    <button
-                      type="button"
-                      onClick={runNextStepPrimary}
-                      className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-6 py-4 text-base font-extrabold text-slate-950 transition hover:bg-amber-300 sm:text-lg"
-                    >
-                      {nextStepPrimaryLabel}
-                      <ArrowRight className="h-5 w-5" />
-                    </button>
+                    <p className="mt-3 text-xs font-medium text-slate-500">
+                      Use the yellow button in the Step 4 panel above — one action only.
+                    </p>
                   </div>
                 </div>
               </div>
