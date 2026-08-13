@@ -840,42 +840,19 @@ export default function Results() {
               />
 
               <div className="mb-6 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-4 sm:px-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">
-                      {isSignedIn ? "Step 3 of 5 · 5 sales leads" : "Step 2 of 5 · Sign up for 5 sales leads"}
-                    </p>
-                    <p className="mt-1 text-base font-bold text-white sm:text-lg">
-                      {isSignedIn
-                        ? "Review these 5 sales leads — then provide customer name and information"
-                        : "Sign up to see 5 sales leads"}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-300">
-                      Matches for{" "}
-                      <span className="font-medium text-slate-100 break-all">{submittedUrl}</span>
-                      {usingFallback ? " · sample mode" : ""}. Next: customer info → 15 matched sales leads.
-                    </p>
-                  </div>
-                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[260px]">
-                    {isSignedIn ? (
-                      <Link
-                        href={fullPipelineHref}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300"
-                      >
-                        Provide customer name &amp; information
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    ) : (
-                      <Link
-                        href={resultsSignupHref}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300"
-                      >
-                        Sign up to see 5 sales leads
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    )}
-                  </div>
-                </div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">
+                  {isSignedIn ? "Step 3 of 5 · 5 sales leads" : "Step 2 of 5 · Sign up for 5 sales leads"}
+                </p>
+                <p className="mt-1 text-base font-bold text-white sm:text-lg">
+                  {isSignedIn
+                    ? "Review these 5 sales leads — then provide customer name and information"
+                    : "Sign up to see 5 sales leads"}
+                </p>
+                <p className="mt-1 text-sm text-slate-300">
+                  Matches for{" "}
+                  <span className="font-medium text-slate-100 break-all">{submittedUrl}</span>
+                  {usingFallback ? " · sample mode" : ""}. Use the Next step button below when you’re ready.
+                </p>
               </div>
 
               {!isSignedIn && (
