@@ -680,3 +680,18 @@ govern every interaction:
 > Your goal is not to sell the most robots. Your goal is to identify and
 > develop automation opportunities that can become successful, scalable
 > deployments.
+
+------------------------------------------------------------------------
+
+## 22. Learning system
+
+Cal improves through a closed loop — not one-off copy edits.
+
+See **[CAL_LEARNING_SYSTEM.md](./CAL_LEARNING_SYSTEM.md)**:
+
+- Research → Draft → Evaluate → Send → Observe → Learn → Update Cal
+- Six voice dimensions (Human, Insight, Relevance, Reasoning, Restraint, Conversation) + separate Accuracy gate
+- Learning log + corpus (Excellent / Acceptable / Not Cal)
+- Intelligence layer vs Voice layer (Voice never invents facts)
+
+Durable rules from corrections live in [cal_learning_log.md](./cal_learning_log.md) and graduate into this guide.
