@@ -2533,18 +2533,22 @@ export default function Pipeline() {
   const isFirstWorkspaceRun = isSignedIn && savedLeadCount === 0;
   const hasSavedLead = savedLeadCount > 0;
   const build25Progress = Math.min(savedLeadCount, BUILD_PIPELINE_TARGET);
-  const nextStepsTitle = arrivedFromResultsScan ? "Step 3 · URL-matched sales pipeline" : "Next step";
+  const nextStepsTitle = arrivedFromResultsScan
+    ? !build25Started
+      ? "Step 4 · Provide customer name and information"
+      : "Step 5 · 15 sales leads"
+    : "Next step";
   const nextStepsHeadline = arrivedFromResultsScan
     ? !build25Started
-      ? "Your free workspace unlocks 15 buyers matched to your robot URL"
+      ? "Provide customer name and information to unlock 15 sales leads"
       : `Building your matched pipeline · ${build25Progress}/${BUILD_PIPELINE_TARGET} saved`
     : "Pick a lead → save it → copy draft → send";
   const nextStepsItems = arrivedFromResultsScan
     ? !build25Started
       ? [
-          "We looked up your URL, scored your robot company, and matched equally scored buyer opportunities.",
-          `Free account unlocks your working list of ${BUILD_PIPELINE_TARGET} matched sales leads — not the global market queue.`,
-          "Then curate the best companies and run outreach for each.",
+          "Submit URL → sign up → review 5 sales leads (done).",
+          "Provide customer name and information (company, category, ICP).",
+          `Unlock ${BUILD_PIPELINE_TARGET} matched sales leads — not the global market queue.`,
         ]
       : [
           `Curate: Save strong fits until you reach ${BUILD_PIPELINE_TARGET} in your matched list (${build25Progress} saved).`,
@@ -2600,10 +2604,10 @@ export default function Pipeline() {
   const nextStepPrimaryLabel = arrivedFromResultsScan
     ? !build25Started
       ? !workspaceProfileComplete
-        ? "Save company details"
+        ? "Save customer name & information"
         : isSignedIn
-          ? `Open your ${BUILD_PIPELINE_TARGET} matched sales leads`
-          : `Create free account · unlock ${BUILD_PIPELINE_TARGET} matched leads`
+          ? `Open your ${BUILD_PIPELINE_TARGET} sales leads`
+          : `Create free account · unlock ${BUILD_PIPELINE_TARGET} sales leads`
       : canSaveSelected
         ? `Save lead · ${build25Progress}/${BUILD_PIPELINE_TARGET}`
         : canCopySelectedDraft
@@ -3642,35 +3646,34 @@ export default function Pipeline() {
               className={`scroll-mt-4 overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(245,158,11,0.55)] ${
                 build25Started
                   ? "border-emerald-400/35 bg-[#071a14]"
-                  : "border-amber-400/50 bg-gradient-to-br from-[#1c1608] via-[#12100a] to-[#0b1220]"
+                  : "border-emerald-400/40 bg-gradient-to-br from-[#071a14] via-[#0a1f18] to-[#0b1220]"
               }`}
             >
               {!build25Started ? (
                 <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300 sm:text-sm">
-                    Step 3 of 3 · URL-matched sales pipeline
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300/90 sm:text-sm">
+                    Step 4 of 5 · Provide customer name and information
                   </p>
-                  <h2 className="mt-3 max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-[2.65rem]">
-                    Tell us your robot company, then unlock {BUILD_PIPELINE_TARGET} matched buyers.
+                  <h2 className="mt-3 max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-emerald-100 sm:text-4xl lg:text-[2.65rem]">
+                    Provide customer name and information
                   </h2>
-                  <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-300 sm:text-lg sm:leading-8">
-                    Lookup → score → match. We scored
+                  <p className="mt-4 max-w-3xl text-base leading-relaxed text-emerald-200/90 sm:text-lg sm:leading-8">
+                    You reviewed 5 sales leads. Add your company name, robot category, and ideal customer so we can unlock{" "}
+                    {BUILD_PIPELINE_TARGET} matched sales leads
                     {submittedHostname ? (
                       <>
                         {" "}
-                        <span className="font-semibold text-amber-100">{submittedHostname}</span>
+                        for{" "}
+                        <span className="font-semibold text-emerald-100">{submittedHostname}</span>
                       </>
-                    ) : (
-                      " your robot company"
-                    )}
-                    . Add company name, category, and ICP so we pair equally scored opportunities — then
-                    {isSignedIn ? " open your matched list." : " create a free account to unlock it."}
+                    ) : null}
+                    .
                   </p>
 
-                  <div className="mt-6 rounded-2xl border border-amber-400/30 bg-black/30 p-4 sm:p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">Workspace details</p>
-                    <p className="mt-1 text-sm text-slate-400">
-                      Required before unlocking the {BUILD_PIPELINE_TARGET}-lead matched pipeline.
+                  <div className="mt-6 rounded-2xl border border-emerald-400/25 bg-black/35 p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Customer details</p>
+                    <p className="mt-1 text-sm text-emerald-200/80">
+                      Required before unlocking your {BUILD_PIPELINE_TARGET} sales leads.
                     </p>
                     <div className="mt-4">
                       <RobotWorkspaceProfileFields
@@ -3685,17 +3688,17 @@ export default function Pipeline() {
 
                   <ol className="mt-7 grid gap-3 sm:grid-cols-3">
                     {[
-                      { n: "1", t: "Company details", d: "Name, robot category, and ICP for your workspace." },
-                      { n: "2", t: `${BUILD_PIPELINE_TARGET} matched leads`, d: "Buyers scored in the same band as your robot profile." },
+                      { n: "1", t: "Customer name & info", d: "Company name, robot category, and ICP." },
+                      { n: "2", t: `${BUILD_PIPELINE_TARGET} sales leads`, d: "Buyers scored against your robot profile." },
                       { n: "3", t: "Curate + outreach", d: "Save fits, copy Cal’s note, send." },
                     ].map((step) => (
                       <li
                         key={step.n}
-                        className="rounded-xl border border-amber-400/25 bg-black/25 px-4 py-4"
+                        className="rounded-xl border border-emerald-400/20 bg-black/25 px-4 py-4"
                       >
-                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">Step {step.n}</p>
-                        <p className="mt-2 text-lg font-semibold text-white sm:text-xl">{step.t}</p>
-                        <p className="mt-1.5 text-sm leading-relaxed text-slate-400 sm:text-[15px]">{step.d}</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Step {step.n}</p>
+                        <p className="mt-2 text-lg font-semibold text-emerald-50 sm:text-xl">{step.t}</p>
+                        <p className="mt-1.5 text-sm leading-relaxed text-emerald-200/75 sm:text-[15px]">{step.d}</p>
                       </li>
                     ))}
                   </ol>
@@ -3709,12 +3712,12 @@ export default function Pipeline() {
                       {nextStepPrimaryLabel}
                       <ArrowRight className="h-5 w-5" />
                     </button>
-                    <p className="text-sm text-slate-400 sm:max-w-xs">
+                    <p className="text-sm text-emerald-200/80 sm:max-w-xs">
                       {workspaceProfileComplete
                         ? isSignedIn
-                          ? "Opens your URL-matched list only — not the global market feed."
-                          : "Details saved — next create your free account to unlock 15 matches."
-                        : "Fill the three fields above, then continue."}
+                          ? "Opens your 15 URL-matched sales leads — not the global market feed."
+                          : "Details saved — next create your free account to unlock 15 sales leads."
+                        : "Fill the three fields above, then unlock 15 sales leads."}
                     </p>
                   </div>
                 </div>
@@ -3798,7 +3801,7 @@ export default function Pipeline() {
                     : `${BUILD_PIPELINE_TARGET} matched sales leads waiting`}
                 </p>
                 <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-                  These {BUILD_PIPELINE_TARGET} leads are scored against your robot URL profile. Unlock the matched list to curate and outreach — not the global market feed.
+                  Step 5 unlocks these {BUILD_PIPELINE_TARGET} sales leads after you provide customer name and information above.
                 </p>
               </div>
               <div className="relative px-5 py-6 sm:px-8 sm:py-8">
@@ -3823,9 +3826,9 @@ export default function Pipeline() {
                     <p className="text-sm font-semibold text-slate-800 sm:text-base">
                       {workspaceProfileComplete
                         ? isSignedIn
-                          ? `Unlock your ${BUILD_PIPELINE_TARGET} URL-matched sales leads.`
-                          : `Free account unlocks ${BUILD_PIPELINE_TARGET} matched leads for your robot URL.`
-                        : "Add company name, category, and ICP above to continue."}
+                          ? `Unlock your ${BUILD_PIPELINE_TARGET} sales leads.`
+                          : `Free account unlocks ${BUILD_PIPELINE_TARGET} sales leads for your robot URL.`
+                        : "Provide customer name and information above to continue."}
                     </p>
                     <button
                       type="button"

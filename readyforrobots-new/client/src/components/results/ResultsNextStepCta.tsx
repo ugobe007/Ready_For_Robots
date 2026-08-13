@@ -1,6 +1,6 @@
 /**
  * Results sticky CTA — Pipeline only. No prepare/draft/email actions on Results.
- * Flow: 5 leads → large Pipeline (instructions) → build 25-lead list.
+ * Flow: URL → signup → 5 leads → customer info → 15 matched leads.
  */
 import { ArrowRight, CheckCircle2, Circle } from "lucide-react";
 import { Link } from "wouter";
@@ -20,12 +20,16 @@ export default function ResultsNextStepCta({
 }: Props) {
   const steps = [
     { label: "1. URL", done: true },
-    { label: "2. 5 leads", done: matchCount > 0 },
-    { label: "3. Pipeline", done: false, active: true },
+    { label: "2. Sign up", done: isSignedIn },
+    { label: "3. 5 sales leads", done: matchCount > 0 && isSignedIn, active: isSignedIn && matchCount > 0 },
+    { label: "4. Customer info", done: false, active: false },
+    { label: "5. 15 sales leads", done: false },
   ];
 
   const href = isSignedIn ? pipelineHref : signupHref;
-  const label = isSignedIn ? "Open Pipeline with instructions" : "Sign up to continue";
+  const label = isSignedIn
+    ? "Next: provide customer name & information"
+    : "Sign up to see 5 sales leads";
 
   return (
     <div className="sticky bottom-3 z-40 mt-8">
@@ -34,12 +38,12 @@ export default function ResultsNextStepCta({
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">Next step</p>
             <h3 className="mt-1 text-lg font-bold text-white sm:text-xl">
-              Move to the large sales Pipeline
+              {isSignedIn ? "Unlock 15 matched sales leads" : "Create your free account"}
             </h3>
             <p className="mt-1 max-w-2xl text-sm text-slate-300">
-              {matchCount > 0
-                ? `${matchCount} matched leads reviewed. No email drafting here — open Pipeline for instructions, then build your 25-lead list.`
-                : "No email drafting here — open Pipeline for instructions, then build your 25-lead list."}
+              {isSignedIn
+                ? `${matchCount > 0 ? `${matchCount} leads reviewed. ` : ""}Next: provide customer name and information, then open your 15 matched sales leads.`
+                : "Sign up, review 5 sales leads, provide customer name and information, then unlock 15 matched leads."}
             </p>
             <ol className="mt-3 flex flex-wrap items-center gap-2">
               {steps.map((step) => (
@@ -69,7 +73,7 @@ export default function ResultsNextStepCta({
               <ArrowRight className="h-4 w-4" />
             </Link>
             <p className="text-center text-[11px] text-slate-400">
-              Instructions on Pipeline · then curate &amp; outreach
+              Customer info on Pipeline · then 15 matched leads
             </p>
           </div>
         </div>

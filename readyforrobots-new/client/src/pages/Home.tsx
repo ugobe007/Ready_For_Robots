@@ -313,7 +313,8 @@ export default function Home() {
     return `/signup?${nextParams.toString()}`;
   }, [normalizedUrl, resolvedWorkflow]);
 
-  const goToIdentity = () => {
+  /** Submit URL only — never route "Start free workspace" through this. */
+  const submitRobotUrl = () => {
     if (!normalizedUrl) return;
     persistWorkflowContext();
     if (typeof window !== "undefined") {
@@ -325,12 +326,18 @@ export default function Home() {
           ts: Date.now(),
         }),
       );
-      if (session?.access_token) {
-        window.location.assign(`/results?url=${encodeURIComponent(normalizedUrl)}&limit=5&src=home_url_submit`);
-        return;
-      }
     }
-    window.location.assign(activateHref);
+    // Flow: URL → signup (if needed) → 5 sales leads → customer info → 15 leads.
+    if (!session?.access_token) {
+      const next = `/results?url=${encodeURIComponent(normalizedUrl)}&limit=5&src=home_signup_return`;
+      window.location.assign(
+        `/signup?next=${encodeURIComponent(next)}&src=home_url_submit&company_url=${encodeURIComponent(normalizedUrl)}`,
+      );
+      return;
+    }
+    window.location.assign(
+      `/results?url=${encodeURIComponent(normalizedUrl)}&limit=5&src=home_url_submit`,
+    );
   };
 
   const focusHeroInput = () => {
@@ -392,13 +399,37 @@ export default function Home() {
             <Logo />
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/signup?src=home_header&next=/" className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/40 px-3.5 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/10">
-              Start free workspace
-            </Link>
-            <Link href="/login" className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10">
-              <LogIn className="h-3.5 w-3.5" />
-              Sign in
-            </Link>
+            {session?.access_token ? (
+              <Link
+                href="/pipeline"
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/40 px-3.5 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/10"
+              >
+                Open workspace
+              </Link>
+            ) : (
+              <Link
+                href="/signup?src=home_header&next=/pipeline"
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/40 px-3.5 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/10"
+              >
+                Start free workspace
+              </Link>
+            )}
+            {session?.access_token ? (
+              <Link
+                href="/profile"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10"
+              >
+                Account
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                Sign in
+              </Link>
+            )}
           </div>
         </header>
 
@@ -413,7 +444,7 @@ export default function Home() {
                   Find Jobs for <span className="text-[#00d0a2]">Robots.</span>
                 </h1>
                 <p className="mx-auto mt-5 max-w-[54ch] text-[16px] leading-7 text-slate-300 sm:mt-7 sm:text-[18px] sm:leading-8 lg:mx-0 lg:text-[19px] lg:leading-9">
-                  ReadyForRobots finds where companies are hiring people to do work your robot can automate—then shows you where to sell.
+                  ReadyForRobots finds where companies are hiring for work your robot can do — then Cal writes a short, timely note so you start an informed conversation, not a cold pitch.
                 </p>
                 <div className="mx-auto mt-7 w-full max-w-[780px] border-b border-emerald-400/45 pb-3 sm:mt-10 lg:mx-0 lg:mt-11">
                   <label htmlFor="hero-company-url" className="mb-2 block text-left text-xs font-semibold uppercase tracking-[0.18em] text-[#8ec8b9]">
@@ -428,7 +459,7 @@ export default function Home() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && normalizedUrl) {
                           e.preventDefault();
-                          goToIdentity();
+                          submitRobotUrl();
                         }
                       }}
                       placeholder="yourrobotcompany.com/robot"
@@ -436,7 +467,7 @@ export default function Home() {
                     />
                     <button
                       type="button"
-                      onClick={goToIdentity}
+                      onClick={submitRobotUrl}
                       disabled={!normalizedUrl}
                       className="inline-flex shrink-0 items-center justify-center gap-2 text-[15px] font-semibold text-[#00d0a2] transition hover:text-[#4cf0c8] disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
                     >
@@ -446,10 +477,10 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="mt-3 text-sm text-slate-300 sm:mt-4 sm:text-[15px]">
-                  Find the work. Match the robot. Win the customer.
+                  Find the work. Match the robot. Start the first informed conversation.
                 </p>
                 <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
-                  1. Submit URL · 2. {session?.access_token ? "5 sales leads" : "Sign up → 5 sales leads"} · 3. Large pipeline → build 25
+                  1. Submit URL · 2. {session?.access_token ? "5 sales leads" : "Sign up → 5 sales leads"} · 3. Customer info · 4. 15 sales leads
                 </p>
 
               </div>

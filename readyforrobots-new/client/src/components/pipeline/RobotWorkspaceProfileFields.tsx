@@ -15,17 +15,17 @@ export default function RobotWorkspaceProfileFields({
   tone = "dark",
   idPrefix = "rfr-profile",
 }: Props) {
-  const label = tone === "dark" ? "text-slate-300" : "text-slate-700";
+  const label = tone === "dark" ? "text-emerald-200/90" : "text-slate-700";
   const input =
     tone === "dark"
-      ? "w-full rounded-xl border border-slate-600 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none focus:border-amber-400"
+      ? "w-full rounded-xl border border-emerald-500/35 bg-black/30 px-3 py-2.5 text-sm text-emerald-50 placeholder:text-emerald-200/40 outline-none focus:border-emerald-300"
       : "w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-amber-500";
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <label className="block sm:col-span-2">
         <span className={`mb-1.5 block text-[11px] font-bold uppercase tracking-[0.16em] ${label}`}>
-          Robot company name
+          Customer / company name
         </span>
         <input
           id={`${idPrefix}-company`}

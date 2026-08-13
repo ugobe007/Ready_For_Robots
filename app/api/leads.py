@@ -1185,9 +1185,11 @@ def _fmt_pipeline_card(
         if isinstance(item, dict)
     ]
 
+    from app.services.company_name_fixes import canonical_display_name
+
     payload = {
         "id": c.id,
-        "company_name": c.name,
+        "company_name": canonical_display_name(c.name) or c.name,
         "website": c.website,
         "company_url": c.website,
         "industry": industry_display,
@@ -1404,9 +1406,11 @@ def _fmt_company(
     )
     humanoid_origin = _humanoid_origin_tags(sigs, robot_types_needed)
 
+    from app.services.company_name_fixes import canonical_display_name
+
     payload = {
         "id":             c.id,
-        "company_name":   c.name,
+        "company_name":   canonical_display_name(c.name) or c.name,
         "website":        c.website,
         "company_url":    c.website,
         "industry":       industry_display,
@@ -3714,6 +3718,8 @@ def _repair_pipeline_lead_compat_fields(payload: dict, db: Session) -> dict:
     `company_country`, and `signal_strength`. Repair them at read time so
     clients and health checks remain stable until the next full cache rebuild.
     """
+    from app.services.company_name_fixes import canonical_display_name
+
     leads = payload.get("leads") if isinstance(payload, dict) else None
     if not isinstance(leads, list) or not leads:
         return payload
@@ -3723,6 +3729,10 @@ def _repair_pipeline_lead_compat_fields(payload: dict, db: Session) -> dict:
     for lead in leads:
         if not isinstance(lead, dict):
             continue
+
+        fixed_name = canonical_display_name(lead.get("company_name"))
+        if fixed_name and fixed_name != lead.get("company_name"):
+            lead["company_name"] = fixed_name
 
         priority_tier = (lead.get("priority_tier") or "").strip().upper()
         if not lead.get("lead_tier") and priority_tier:
@@ -3742,8 +3752,7 @@ def _repair_pipeline_lead_compat_fields(payload: dict, db: Session) -> dict:
 
         if lead.get("signal_strength") is None:
             strength = None
-            sigs = lead.get("signals")
-            if isinstance(sigs, list) and sigs and isinstance(sigs[0], dict):
+            sigs = lead.get("signals")            if isinstance(sigs, list) and sigs and isinstance(sigs[0], dict):
                 raw = sigs[0].get("strength")
                 if raw is not None:
                     try:

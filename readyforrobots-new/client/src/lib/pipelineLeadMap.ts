@@ -358,9 +358,14 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
   const { type, text, color } = topSignal(lead);
   const score = numericScore(lead);
   const crmStage = pipelineStageFromCrmOutreach(crmOutreachStage);
+  const companyName = (() => {
+    const raw = (lead.company_name || "").trim();
+    if (raw.toLowerCase() === "cheese") return "Santori Cheese";
+    return raw || `Company #${lead.id}`;
+  })();
   return {
     id: lead.id,
-    company: lead.company_name || `Company #${lead.id}`,
+    company: companyName,
     location: loc,
     industry: lead.industry || "—",
     score,
@@ -376,7 +381,7 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     contactTitle: lead.inferred_contact_role
       ? `${lead.inferred_contact_role.replace(/_/g, " ")} (inferred)`
       : undefined,
-    outreachSubject: outreachSubject(lead.company_name, type),
+    outreachSubject: outreachSubject(companyName, type),
     outreachBody: outreachBody(lead, type, text),
     notes: cleanScrapedText(lead.pipeline_action || lead.share_summary) || undefined,
     shareSummary: lead.share_summary || undefined,
