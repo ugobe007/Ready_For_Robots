@@ -12,12 +12,21 @@ export type RobotWorkspaceProfile = {
 
 export const ROBOT_CATEGORY_OPTIONS = [
   "AMR / warehouse automation",
+  "Autonomous forklift / lift truck",
+  "Palletizing / packaging",
   "Cobot / manipulation",
+  "Industrial arm / welding",
   "Humanoid",
+  "Quadruped / mobile platform",
   "Service / hospitality",
+  "Food processing / kitchen",
+  "Healthcare / hospital logistics",
   "Cleaning / disinfection",
   "Inspection / security",
-  "Industrial arm / welding",
+  "Delivery / last-mile",
+  "Agriculture / outdoor",
+  "Drone / aerial",
+  "Underwater / marine",
   "Other robot systems",
 ] as const;
 

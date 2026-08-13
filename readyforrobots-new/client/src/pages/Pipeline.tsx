@@ -44,15 +44,9 @@ import {
   type RobotWorkspaceProfile,
 } from "@/lib/robotWorkspaceProfile";
 import { trackFirstSave, trackMarketingEvent } from "@/lib/siteAnalytics";
-import {
-  isFreshSignup,
-  markFirstSaveGuideSeen,
-  shouldShowFirstSaveGuide,
-} from "@/lib/firstSaveGuide";
 import LeadShareBar from "@/components/LeadShareBar";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
 import FirstSaveNudge from "@/components/pipeline/FirstSaveNudge";
-import FirstSaveGuideModal from "@/components/pipeline/FirstSaveGuideModal";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import CalLeadDrop, { dealToCalDrop } from "@/components/pipeline/CalLeadDrop";
@@ -1660,7 +1654,6 @@ export default function Pipeline() {
     };
   }, [step3Intro, loadingLeads]);
 
-  const [firstSaveGuideOpen, setFirstSaveGuideOpen] = useState(false);
   const [showActivationChecklist, setShowActivationChecklist] = useState(false);
   const [draftCopiedForActivation, setDraftCopiedForActivation] = useState(false);
   const [firstThreeActions, setFirstThreeActions] = useState<FirstThreeActionsState>(() => readFirstThreeActions());
@@ -2504,16 +2497,6 @@ export default function Pipeline() {
     setSelectedId(displayedDeals[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- advance panel only on rotation tick
   }, [rotateOffset, step3Intro]);
-
-  useEffect(() => {
-    if (!session?.access_token || savedLeadCount !== 0 || loadingLeads) return;
-    if (!shouldShowFirstSaveGuide()) return;
-    const leadId = selectedId ?? displayedDeals[0]?.id;
-    if (leadId == null || !displayedDeals.some((d) => d.id === leadId)) return;
-    const delay = isFreshSignup() ? 400 : 1200;
-    const timer = window.setTimeout(() => setFirstSaveGuideOpen(true), delay);
-    return () => window.clearTimeout(timer);
-  }, [session?.access_token, savedLeadCount, loadingLeads, displayedDeals, selectedId]);
 
   const pendingDeepLink =
     selectedId != null &&
@@ -3643,36 +3626,36 @@ export default function Pipeline() {
           {arrivedFromResultsScan && !arrivedFromSignalActivation && (
             <section
               id="pipeline-step3-guide"
-              className={`scroll-mt-4 overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(245,158,11,0.55)] ${
+              className={`scroll-mt-4 overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(15,23,42,0.85)] ${
                 build25Started
-                  ? "border-emerald-400/35 bg-[#071a14]"
-                  : "border-emerald-400/40 bg-gradient-to-br from-[#071a14] via-[#0a1f18] to-[#0b1220]"
+                  ? "border-slate-500/45 bg-[#0b162f]"
+                  : "border-slate-500/50 bg-gradient-to-br from-[#0b162f] via-[#111827] to-[#1e293b]"
               }`}
             >
               {!build25Started ? (
                 <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300/90 sm:text-sm">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300/90 sm:text-sm">
                     Step 4 of 5 · Provide customer name and information
                   </p>
-                  <h2 className="mt-3 max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-emerald-100 sm:text-4xl lg:text-[2.65rem]">
+                  <h2 className="mt-3 max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-[2.65rem]">
                     Provide customer name and information
                   </h2>
-                  <p className="mt-4 max-w-3xl text-base leading-relaxed text-emerald-200/90 sm:text-lg sm:leading-8">
+                  <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-300 sm:text-lg sm:leading-8">
                     You reviewed 5 sales leads. Add your company name, robot category, and ideal customer so we can unlock{" "}
                     {BUILD_PIPELINE_TARGET} matched sales leads
                     {submittedHostname ? (
                       <>
                         {" "}
                         for{" "}
-                        <span className="font-semibold text-emerald-100">{submittedHostname}</span>
+                        <span className="font-semibold text-white">{submittedHostname}</span>
                       </>
                     ) : null}
                     .
                   </p>
 
-                  <div className="mt-6 rounded-2xl border border-emerald-400/25 bg-black/35 p-4 sm:p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Customer details</p>
-                    <p className="mt-1 text-sm text-emerald-200/80">
+                  <div className="mt-6 rounded-2xl border border-slate-500/40 bg-[#081126]/70 p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-300">Customer details</p>
+                    <p className="mt-1 text-sm text-slate-400">
                       Required before unlocking your {BUILD_PIPELINE_TARGET} sales leads.
                     </p>
                     <div className="mt-4">
@@ -3695,7 +3678,7 @@ export default function Pipeline() {
                       {nextStepPrimaryLabel}
                       <ArrowRight className="h-5 w-5" />
                     </button>
-                    <p className="text-sm text-emerald-200/80 sm:max-w-xs">
+                    <p className="text-sm text-slate-400 sm:max-w-xs">
                       {workspaceProfileComplete
                         ? isSignedIn
                           ? "Opens your 15 URL-matched sales leads — not the global market feed."
@@ -3707,17 +3690,17 @@ export default function Pipeline() {
               ) : (
                 <div className="grid w-full gap-4 px-5 py-5 sm:px-7 lg:grid-cols-[1fr_auto] lg:items-center">
                   <div className="min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300/90">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300/90">
                       Step 5 of 5 · {BUILD_PIPELINE_TARGET} sales leads
                     </p>
                     <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
                       Curate sales leads &amp; run outreach
                     </h2>
-                    <p className="mt-2 max-w-3xl text-sm leading-relaxed text-emerald-100/85 sm:text-base">
+                    <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
                       Save the best companies into your working list (goal: {BUILD_PIPELINE_TARGET}). Open each lead for why-now signals, copy Cal’s note, and send.
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-emerald-100/80 sm:text-sm">
-                      <span className={build25Progress > 0 ? "text-emerald-300" : "text-amber-200"}>
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-slate-300 sm:text-sm">
+                      <span className={build25Progress > 0 ? "text-sky-300" : "text-amber-200"}>
                         1. Save leads ({build25Progress}/{BUILD_PIPELINE_TARGET})
                       </span>
                       <span>2. Copy outreach draft</span>
@@ -5492,24 +5475,6 @@ export default function Pipeline() {
           }
         />
       )}
-      <FirstSaveGuideModal
-        open={firstSaveGuideOpen}
-        onOpenChange={setFirstSaveGuideOpen}
-        deal={selected}
-        saving={Boolean(selected && advancingLeadId === selected.id)}
-        onDismiss={() => {
-          markFirstSaveGuideSeen();
-          setFirstSaveGuideOpen(false);
-        }}
-        onSave={() => {
-          if (!selected) return;
-          void handleSaveLead(selected).then((saved) => {
-            if (!saved) return;
-            markFirstSaveGuideSeen();
-            setFirstSaveGuideOpen(false);
-          });
-        }}
-      />
       <AlertDialog open={saveLimitOpen} onOpenChange={setSaveLimitOpen}>
         <AlertDialogContent className="border-emerald-500/30 bg-[#12082a] text-cream">
           <AlertDialogHeader>
