@@ -342,15 +342,22 @@ def _capability_signal_bonus(robot_caps: Dict, signals: List[Dict]) -> int:
     return min(24, bonus)
 
 
+# URL search → lookup → score OEM → match equally scored buyer opportunities.
+URL_MATCHED_PIPELINE_LIMIT = 15
+
+
 def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] = None, target_regions: List[str] = None) -> List[Dict]:
     """
-    Match robot capabilities with companies in the database.
-    Returns top matches with scores and customized pitches.
-    Filters by target industries and regions if specified.
+    Match a scored robot-company profile to equally scored buyer opportunities.
+
+    Ranking prefers: industry/capability fit, then buyers whose intent score is
+    near the OEM profile_score (score parity), then HOT/WARM tier.
+    Returns at most URL_MATCHED_PIPELINE_LIMIT rows.
     """
     candidates = _get_fresh_lead_candidate_index(db)
     matches = []
-    
+    robot_profile_score = float(robot_caps.get("profile_score") or 50)
+
     # Region mapping for filtering
     REGION_STATES = {
         'Northeast US': ['NY', 'NJ', 'PA', 'MA', 'CT', 'RI', 'VT', 'NH', 'ME'],
@@ -363,14 +370,14 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
         'Europe': ['UK', 'GB', 'DE', 'FR', 'IT', 'ES'],
         'Global': [],  # Accept all
     }
-    
+
     for candidate in candidates:
         # Filter by industry if specified
         if target_industries:
             company_industry = candidate.get("industry") or ""
             if not any(target_ind.lower() in company_industry.lower() for target_ind in target_industries):
                 continue
-        
+
         # Filter by region if specified
         if target_regions and 'Global' not in target_regions:
             company_state = candidate.get("location_state") or ""
@@ -385,38 +392,39 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
                     break
             if not matches_region:
                 continue
-        
+
         # Calculate match score based on:
         # 1. Industry fit
-        # 2. Overall intent score
-        # 3. Specific signals
-        
+        # 2. Score parity vs OEM profile_score
+        # 3. Intent + signals + capability overlap
         match_score = 0.0
         industry = candidate.get("industry") or ""
         signals = candidate.get("signals") or []
-        
-        # Industry matching
+        intent = float(candidate.get("overall_intent_score") or 0)
+
         robot_use_case = robot_caps.get("use_case", "")
         industry_match = _industry_match_score(robot_use_case, industry)
         match_score += industry_match
-        
-        # Intent score (0-100 scale, weight 30%)
-        match_score += (candidate.get("overall_intent_score") or 0) * 0.3
-        
-        # Signal boost
-        signal_boost = min(20, (candidate.get("signal_count") or len(signals)) * 2)  # up to 20 points
+
+        # Equally scored opportunities: reward buyers near the OEM profile score.
+        parity_gap = abs(intent - robot_profile_score)
+        parity_bonus = max(0.0, 22.0 - (parity_gap * 0.45))
+        match_score += parity_bonus
+
+        # Intent contributes less once parity is explicit (avoid double-counting).
+        match_score += intent * 0.18
+
+        signal_boost = min(20, (candidate.get("signal_count") or len(signals)) * 2)
         match_score += signal_boost
         match_score += _capability_signal_bonus(robot_caps, signals)
-        
+
         match_score = min(100, int(match_score))
-        
-        if match_score < 30:  # Skip low matches
+
+        if match_score < 30:
             continue
-        
-        # Generate value proposition
+
         value_prop = generate_value_prop(candidate, robot_caps, signals)
-        
-        # Recommended action
+
         action = "Reach out with personalized demo offer"
         signal_types = {s.get("signal_type") for s in signals}
         if 'strategic_hire' in signal_types:
@@ -427,7 +435,7 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
             action = "Propose as part of new facility build-out"
         elif _capability_signal_bonus(robot_caps, signals) >= 12:
             action = "Lead with the capability-fit use case from the scanned URL"
-        
+
         matches.append({
             "id": candidate.get("id"),
             "company_name": candidate.get("company_name"),
@@ -439,6 +447,8 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
             "priority_score": candidate.get("priority_score"),
             "priority_reasons": candidate.get("priority_reasons", []),
             "match_score": match_score,
+            "score_parity_gap": round(parity_gap, 1),
+            "robot_profile_score": robot_profile_score,
             "value_proposition": value_prop,
             "key_signals": [s.get("display_text") for s in signals[:3]],
             "signals": signals[:5],
@@ -455,17 +465,17 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
                 "suggested_motion": action,
             },
         })
-    
-    # Sort by match score
-    # Prefer HOT buyers first, then match_score — Results preview should surface hot leads.
+
+    # Prefer score-parity fit, then HOT/WARM, then raw match_score.
     def _match_rank(row: Dict) -> tuple:
         tier = (row.get("priority_tier") or "").strip().upper()
         tier_rank = 0 if tier == "HOT" else 1 if tier == "WARM" else 2
-        return (tier_rank, -(row.get("match_score") or 0))
+        parity = float(row.get("score_parity_gap") or 99)
+        return (parity, tier_rank, -(row.get("match_score") or 0))
 
     matches.sort(key=_match_rank)
-    
-    return matches[:25]
+
+    return matches[:URL_MATCHED_PIPELINE_LIMIT]
 
 
 def generate_value_prop(company, robot_caps: Dict, signals: List) -> str:

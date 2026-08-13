@@ -479,7 +479,6 @@ export default function Results() {
   const fullPipelineHref = useMemo(() => {
     const params = new URLSearchParams();
     params.set("src", "results_scan");
-    params.set("view", "all");
     if (submittedUrl) params.set("url", submittedUrl);
     if (topLeadId != null) params.set("lead", String(topLeadId));
     return `/pipeline?${params.toString()}`;
@@ -1055,7 +1054,7 @@ export default function Results() {
                           <Link
                             href={
                               p.leadId != null
-                                ? `/pipeline?src=results_scan&view=all&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
+                                ? `/pipeline?src=results_scan&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
                                 : fullPipelineHref
                             }
                             className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-2.5 text-xs font-bold text-amber-100 hover:bg-amber-400/20 sm:w-auto"

@@ -702,7 +702,7 @@ type PipelineEntitlements = {
 const PIPELINE_LIMIT_FREE = PIPELINE_FEED_TOTAL;
 const PIPELINE_LIMIT_PAID = PIPELINE_FEED_TOTAL;
 /** Target curated working list after Results → Pipeline onboarding. */
-const BUILD_PIPELINE_TARGET = 25;
+const BUILD_PIPELINE_TARGET = 15;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
 const PIPELINE_LEAD_READ_MS = 7_000;
 const PIPELINE_SESSION_KEY = "pipeline_feed_v6";
@@ -1512,7 +1512,8 @@ export default function Pipeline() {
   const arrivedFromSignalActivation = submittedSrcFromQuery === "signal_activation";
   const arrivedFromResultsScan =
     submittedSrcFromQuery === "results_scan" || submittedSrcFromQuery === "results_next_step";
-  const preferFullPipelineView = viewFromQuery === "all" || arrivedFromResultsScan;
+  /** URL submit searches stay on matched prospects — never default to the global market queue. */
+  const preferUrlMatchedPipeline = Boolean(submittedUrlFromQuery || arrivedFromResultsScan);
 
   useEffect(() => {
     if (submittedUrlFromQuery) {
@@ -1601,11 +1602,11 @@ export default function Pipeline() {
   const [crmStageByCompanyId, setCrmStageByCompanyId] = useState<Record<number, string>>({});
   const [crmAccountIdByCompanyId, setCrmAccountIdByCompanyId] = useState<Record<number, string>>({});
   const [savedLeadCount, setSavedLeadCount] = useState(0);
-  /** After Results: show instructions first; CTA starts the 25-lead build. */
+  /** After Results: show instructions first; CTA unlocks the 15-lead URL-matched pipeline. */
   const [build25Started, setBuild25Started] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
-      return sessionStorage.getItem("rfr_build25_started") === "1";
+      return sessionStorage.getItem("rfr_build15_started") === "1" || sessionStorage.getItem("rfr_build25_started") === "1";
     } catch {
       return false;
     }
@@ -1677,9 +1678,11 @@ export default function Pipeline() {
   }, [activationIdFromQuery, activations]);
 
   useEffect(() => {
-    // Always default to the full live pipeline. URL scope is opt-in via the toolbar toggle.
-    setScopeToSubmittedUrl(false);
-  }, [preferFullPipelineView, submittedHostname]);
+    // URL submit → matched prospects only (not the global market queue).
+    if (submittedHostname || preferUrlMatchedPipeline) {
+      setScopeToSubmittedUrl(true);
+    }
+  }, [preferUrlMatchedPipeline, submittedHostname]);
   useEffect(() => {
     if (!submittedUrl) {
       setSubmittedUrlMatches([]);
@@ -1693,7 +1696,7 @@ export default function Pipeline() {
     setSubmittedUrlMatchError(false);
     setSubmittedUrlMatchLoading(true);
     void fetchWithTimeoutRetry(
-      `${base}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=50`,
+      `${base}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=${BUILD_PIPELINE_TARGET}`,
       publicFetchInit(),
       PIPELINE_TIMEOUT,
       { retries: 1, retryDelayMs: 800 },
@@ -2442,7 +2445,7 @@ export default function Pipeline() {
   ]);
 
   const matchedScopedDeals = useMemo(
-    () => mapPipelineRows(submittedUrlMatches, crmStageByCompanyId),
+    () => mapPipelineRows(submittedUrlMatches, crmStageByCompanyId).slice(0, BUILD_PIPELINE_TARGET),
     [submittedUrlMatches, crmStageByCompanyId],
   );
   const scopeMatchesCount = matchedScopedDeals.length;
@@ -2504,23 +2507,23 @@ export default function Pipeline() {
   const isFirstWorkspaceRun = isSignedIn && savedLeadCount === 0;
   const hasSavedLead = savedLeadCount > 0;
   const build25Progress = Math.min(savedLeadCount, BUILD_PIPELINE_TARGET);
-  const nextStepsTitle = arrivedFromResultsScan ? "Step 3 · Large sales pipeline" : "Next step";
+  const nextStepsTitle = arrivedFromResultsScan ? "Step 3 · URL-matched sales pipeline" : "Next step";
   const nextStepsHeadline = arrivedFromResultsScan
     ? !build25Started
-      ? "Read the plan, then build your 25-lead pipeline"
-      : `Building your pipeline · ${build25Progress}/${BUILD_PIPELINE_TARGET} saved`
+      ? "Your free workspace unlocks 15 buyers matched to your robot URL"
+      : `Building your matched pipeline · ${build25Progress}/${BUILD_PIPELINE_TARGET} saved`
     : "Pick a lead → save it → copy draft → send";
   const nextStepsItems = arrivedFromResultsScan
     ? !build25Started
       ? [
-          "This is the full live market queue — larger than your 5-lead preview.",
-          "Next you'll build a working list of up to 25 sales leads.",
-          "Then curate the best companies and run an outreach plan for each.",
+          "We looked up your URL, scored your robot company, and matched equally scored buyer opportunities.",
+          `Free account unlocks your working list of ${BUILD_PIPELINE_TARGET} matched sales leads — not the global market queue.`,
+          "Then curate the best companies and run outreach for each.",
         ]
       : [
-          `Curate: Save strong fits until you reach ${BUILD_PIPELINE_TARGET} in your working list (${build25Progress} saved).`,
+          `Curate: Save strong fits until you reach ${BUILD_PIPELINE_TARGET} in your matched list (${build25Progress} saved).`,
           "Outreach: open a saved company, review why-now signals, copy the draft.",
-          "Send, then keep shortlisting the next accounts from this pipeline.",
+          "Send, then keep shortlisting the next matched accounts.",
         ]
     : submittedHostname
     ? scopedNoMatches
@@ -2570,7 +2573,9 @@ export default function Pipeline() {
   const canOpenSelectedDraft = Boolean(selected?.outreachBody) && showKanban && Boolean(session?.access_token);
   const nextStepPrimaryLabel = arrivedFromResultsScan
     ? !build25Started
-      ? "Build your 25 sales lead pipeline"
+      ? isSignedIn
+        ? `Open your ${BUILD_PIPELINE_TARGET} matched sales leads`
+        : `Create free account · unlock ${BUILD_PIPELINE_TARGET} matched leads`
       : canSaveSelected
         ? `Save lead · ${build25Progress}/${BUILD_PIPELINE_TARGET}`
         : canCopySelectedDraft
@@ -2760,32 +2765,44 @@ export default function Pipeline() {
   const startBuild25Pipeline = () => {
     setBuild25Started(true);
     try {
-      sessionStorage.setItem("rfr_build25_started", "1");
+      sessionStorage.setItem("rfr_build15_started", "1");
     } catch {
       /* ignore */
     }
     document.getElementById("pipeline-leads")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    toast.success(`Build started — save up to ${BUILD_PIPELINE_TARGET} leads, then run outreach.`);
+    toast.success(`Matched pipeline unlocked — save up to ${BUILD_PIPELINE_TARGET} leads scored against your URL.`);
   };
+
+  const matchedPipelineSignupHref = (() => {
+    const params = new URLSearchParams();
+    params.set("src", "results_scan");
+    if (submittedUrl) params.set("url", submittedUrl);
+    if (selected?.id != null) params.set("lead", String(selected.id));
+    return `/signup?next=${encodeURIComponent(`/pipeline?${params.toString()}`)}&src=pipeline_matched_unlock&company_url=${encodeURIComponent(submittedUrl || "")}`;
+  })();
 
   const startFreeWorkspaceHref = (() => {
     if (selected?.id != null) {
-      const nextParams: Record<string, string> = { view: "all" };
+      const nextParams: Record<string, string> = {};
       if (submittedUrl) nextParams.url = submittedUrl;
+      if (arrivedFromResultsScan) nextParams.src = "results_scan";
       return signupHrefForLead(selected.id, selected.company, {
         src: "pipeline_next_step",
         nextParams,
       });
     }
     const params = new URLSearchParams();
-    params.set("view", "all");
-    params.set("src", "pipeline_next_step");
+    params.set("src", arrivedFromResultsScan ? "results_scan" : "pipeline_next_step");
     if (submittedUrl) params.set("url", submittedUrl);
     return `/signup?next=${encodeURIComponent(`/pipeline?${params.toString()}`)}&src=pipeline_next_step`;
   })();
 
   const runNextStepPrimary = () => {
     if (arrivedFromResultsScan && !build25Started) {
+      if (!isSignedIn) {
+        window.location.href = matchedPipelineSignupHref;
+        return;
+      }
       startBuild25Pipeline();
       return;
     }
@@ -3588,27 +3605,34 @@ export default function Pipeline() {
               {!build25Started ? (
                 <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
                   <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300 sm:text-sm">
-                    Step 3 of 3 · Large sales pipeline
+                    Step 3 of 3 · URL-matched sales pipeline
                   </p>
                   <h2 className="mt-3 max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-[2.65rem]">
-                    Don&apos;t just browse — build your working list of 25.
+                    {isSignedIn
+                      ? `Open ${BUILD_PIPELINE_TARGET} buyers matched to your robot URL.`
+                      : `Create a free account to unlock ${BUILD_PIPELINE_TARGET} matched sales leads.`}
                   </h2>
                   <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-300 sm:text-lg sm:leading-8">
-                    You finished the 5-lead preview. The live market queue is below.
+                    Lookup → score → match. We scored
                     {submittedHostname ? (
                       <>
                         {" "}
-                        Context from <span className="font-semibold text-amber-100">{submittedHostname}</span> stays available.
+                        <span className="font-semibold text-amber-100">{submittedHostname}</span>
                       </>
-                    ) : null}{" "}
-                    Reviewing without saving is how deals die. Start your curated pipeline, then run outreach.
+                    ) : (
+                      " your robot company"
+                    )}{" "}
+                    and paired it with equally scored customer opportunities — not the global market queue.
+                    {isSignedIn
+                      ? " Unlock your matched list, save fits, then run outreach."
+                      : " Free account details unlock the matched pipeline."}
                   </p>
 
                   <ol className="mt-7 grid gap-3 sm:grid-cols-3">
                     {[
-                      { n: "1", t: "Read this plan", d: "Know the goal before you scroll the queue." },
-                      { n: "2", t: "Build 25 leads", d: "Save the strongest fits into your working list." },
-                      { n: "3", t: "Curate + outreach", d: "Open each lead, copy Cal’s note, send." },
+                      { n: "1", t: "URL scored", d: "Your robot company profile from the submitted URL." },
+                      { n: "2", t: `${BUILD_PIPELINE_TARGET} matched leads`, d: "Buyers scored in the same band as your robot profile." },
+                      { n: "3", t: "Curate + outreach", d: "Save fits, copy Cal’s note, send." },
                     ].map((step) => (
                       <li
                         key={step.n}
@@ -3627,11 +3651,13 @@ export default function Pipeline() {
                       onClick={runNextStepPrimary}
                       className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-7 py-4 text-base font-extrabold text-slate-950 transition hover:bg-amber-300 sm:w-auto sm:min-w-[280px] sm:text-lg"
                     >
-                      Build your 25 sales lead pipeline
+                      {nextStepPrimaryLabel}
                       <ArrowRight className="h-5 w-5" />
                     </button>
                     <p className="text-sm text-slate-400 sm:max-w-xs">
-                      Takes one click. Then save fits from the queue — notes alone won&apos;t move deals.
+                      {isSignedIn
+                        ? "Opens your URL-matched list only — browse-the-market is not this path."
+                        : "Account first, then your 15 matched leads. Preview stays on Results."}
                     </p>
                   </div>
                 </div>
@@ -3708,12 +3734,14 @@ export default function Pipeline() {
           {step3Intro ? (
             <div className="pipeline-workspace overflow-hidden rounded-2xl border border-amber-400/40 bg-gradient-to-b from-slate-50 to-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.45)]">
               <div className="border-b border-amber-200/80 bg-amber-50/80 px-5 py-4 sm:px-8">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-800">Market queue ready · locked</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-800">URL-matched queue · locked</p>
                 <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
-                  {typeof dbTotal === "number" ? dbTotal.toLocaleString() : filtered.length || "…"} live buyers waiting
+                  {scopeMatchesCount > 0
+                    ? `${Math.min(scopeMatchesCount, BUILD_PIPELINE_TARGET)} buyers matched to your robot profile`
+                    : `${BUILD_PIPELINE_TARGET} matched sales leads waiting`}
                 </p>
                 <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-                  Opening the list first trains you to browse and leave. Start your 25-lead build, then curate and outreach.
+                  These {BUILD_PIPELINE_TARGET} leads are scored against your robot URL profile. Unlock the matched list to curate and outreach — not the global market feed.
                 </p>
               </div>
               <div className="relative px-5 py-6 sm:px-8 sm:py-8">
@@ -3729,21 +3757,23 @@ export default function Pipeline() {
                   ))}
                   {(displayedDeals.length > 0 ? displayedDeals : deals).length === 0 ? (
                     <li className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-                      Loading market queue…
+                      Loading matched opportunities…
                     </li>
                   ) : null}
                 </ul>
                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-white via-white/85 to-white/40 px-4">
                   <div className="w-full max-w-md rounded-2xl border border-amber-400/60 bg-white/95 p-5 text-center shadow-xl sm:p-6">
                     <p className="text-sm font-semibold text-slate-800 sm:text-base">
-                      Unlock the queue by starting your working list of 25.
+                      {isSignedIn
+                        ? `Unlock your ${BUILD_PIPELINE_TARGET} URL-matched sales leads.`
+                        : `Free account unlocks ${BUILD_PIPELINE_TARGET} matched leads for your robot URL.`}
                     </p>
                     <button
                       type="button"
                       onClick={runNextStepPrimary}
                       className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-6 py-4 text-base font-extrabold text-slate-950 transition hover:bg-amber-300 sm:text-lg"
                     >
-                      Build your 25 sales lead pipeline
+                      {nextStepPrimaryLabel}
                       <ArrowRight className="h-5 w-5" />
                     </button>
                   </div>
@@ -3767,28 +3797,24 @@ export default function Pipeline() {
                   )}
                   {submittedHostname && (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] ${scopeToSubmittedUrl ? "border-emerald-700 bg-emerald-200 text-emerald-950" : "border-slate-500 bg-slate-100 text-slate-900"}`}>
-                        {scopeToSubmittedUrl ? "Scoped" : "All results"}
+                      <span className="inline-flex items-center rounded-full border border-emerald-700 bg-emerald-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-950">
+                        URL matched · {BUILD_PIPELINE_TARGET} max
                       </span>
                       <span className="inline-flex items-center rounded-full border border-slate-500 bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-900">
                         Submitted URL: {submittedHostname}
                       </span>
                       <p className="text-[11px] font-medium text-slate-800">
                         {submittedUrlMatchLoading
-                          ? `Matching ${submittedHostname} to live buyer demand...`
+                          ? `Looking up ${submittedHostname}, scoring the robot company, matching opportunities…`
                           : submittedUrlMatchError
-                          ? `Temporarily unable to refresh matches for ${submittedHostname}. Showing latest available scoped results.`
-                          : scopeToSubmittedUrl && scopeMatchesCount === 0
+                          ? `Temporarily unable to refresh matches for ${submittedHostname}. Showing latest available matched results.`
+                          : scopeMatchesCount === 0
                           ? submittedUrlWeakProfile
-                            ? `No direct matches for ${submittedHostname}. We could not infer enough robot profile detail from that URL yet.`
-                            : `No direct matches for ${submittedHostname} yet. Adjust your URL or switch to full pipeline results.`
-                          : !scopeToSubmittedUrl && scopeMatchesCount === 0
-                          ? `No direct matches found for ${submittedHostname}. You are viewing full pipeline results.`
-                          : scopeToSubmittedUrl
-                            ? `Showing matches related to ${submittedHostname} (${scopeMatchesCount} results).`
-                            : `Showing all pipeline results (${filtered.length} total).`}
+                            ? `No matches for ${submittedHostname}. We could not score enough robot profile detail from that URL yet.`
+                            : `No equal-score matches for ${submittedHostname} yet. Try the company homepage URL.`
+                          : `Showing ${scopeMatchesCount} buyers matched to ${submittedHostname} (equally scored opportunities).`}
                       </p>
-                      {!submittedUrlMatchLoading ? (
+                      {!preferUrlMatchedPipeline && !submittedUrlMatchLoading ? (
                         <button
                           type="button"
                           onClick={() => setScopeToSubmittedUrl((v) => !v)}

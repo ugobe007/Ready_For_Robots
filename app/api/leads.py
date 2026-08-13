@@ -118,13 +118,15 @@ def _submitted_url_match_input(raw_url: str) -> tuple[str, str]:
 @router.get("/match-url")
 def leads_match_submitted_url(
     url: str = Query(..., min_length=3, description="Robot company URL to match against buyer demand"),
-    limit: int = Query(50, ge=1, le=90),
+    limit: int = Query(15, ge=1, le=90),
     db: Session = Depends(get_db),
 ):
     """
-    Match a submitted robot company URL to best-fit buyer leads and return rows in
-    the same lightweight shape used by /api/leads/pipeline.
+    Lookup URL → score robot company → match equally scored buyer opportunities.
+    Returns at most `limit` rows (product default: 15) in pipeline-card shape.
     """
+    from app.api.robot_ready import URL_MATCHED_PIPELINE_LIMIT
+
     submitted_url, submitted_domain = _submitted_url_match_input(url)
     if not submitted_url or not submitted_domain:
         raise HTTPException(status_code=400, detail="Valid URL is required")
@@ -153,10 +155,11 @@ def leads_match_submitted_url(
             "matching_mode": "no_profile",
             "match_count": 0,
             "leads": [],
+            "pipeline_limit": URL_MATCHED_PIPELINE_LIMIT,
         }
 
     matched_all = match_companies(robot_caps, db)
-    matched = matched_all[:limit]
+    matched = matched_all[: min(limit, URL_MATCHED_PIPELINE_LIMIT)]
     matched_ids = [int(m.get("id")) for m in matched if m.get("id") is not None]
     if not matched_ids:
         return {
@@ -166,6 +169,7 @@ def leads_match_submitted_url(
             "matching_mode": "no_match",
             "match_count": 0,
             "leads": [],
+            "pipeline_limit": URL_MATCHED_PIPELINE_LIMIT,
         }
 
     companies = (
@@ -187,6 +191,8 @@ def leads_match_submitted_url(
             continue
         row = _fmt_pipeline_card(company, junk, junk_reason, pri)
         row["url_match_score"] = match.get("match_score")
+        row["score_parity_gap"] = match.get("score_parity_gap")
+        row["robot_profile_score"] = match.get("robot_profile_score")
         row["submitted_domain"] = submitted_domain
         row["submitted_url"] = submitted_url
         if match.get("recommended_action") and not row.get("pipeline_action"):
@@ -204,6 +210,7 @@ def leads_match_submitted_url(
         "matching_mode": "matched",
         "match_count": len(rows),
         "leads": rows,
+        "pipeline_limit": URL_MATCHED_PIPELINE_LIMIT,
     }
 
 
@@ -1527,6 +1534,7 @@ def _hermes_pipeline_fields(crm_meta: Optional[dict]) -> dict:
     """Public pipeline fields from Hermes overlays on company.crm_metadata."""
     meta = crm_meta if isinstance(crm_meta, dict) else {}
     qualify = meta.get("hermes_qualify") if isinstance(meta.get("hermes_qualify"), dict) else None
+    buying = meta.get("hermes_buying_window") if isinstance(meta.get("hermes_buying_window"), dict) else None
     jobs = meta.get("hermes_job_orders") if isinstance(meta.get("hermes_job_orders"), list) else []
     dms = meta.get("hermes_decision_makers") if isinstance(meta.get("hermes_decision_makers"), list) else []
     vendor_shortlist = []
@@ -1563,6 +1571,18 @@ def _hermes_pipeline_fields(crm_meta: Optional[dict]) -> dict:
                 "confidence": d.get("confidence"),
             }
         )
+    factor_preview = []
+    if buying:
+        for f in list(buying.get("factors") or [])[:6]:
+            if isinstance(f, dict):
+                factor_preview.append(
+                    {
+                        "type": f.get("type"),
+                        "name": f.get("name") or f.get("peer"),
+                        "phase": f.get("phase"),
+                        "days_until": f.get("days_until") or f.get("recency_days"),
+                    }
+                )
     return {
         "hermes_qualify": (
             {
@@ -1576,6 +1596,19 @@ def _hermes_pipeline_fields(crm_meta: Optional[dict]) -> dict:
                 "updated_at": qualify.get("updated_at"),
             }
             if qualify
+            else None
+        ),
+        "hermes_buying_window": (
+            {
+                "urgency_0_100": buying.get("urgency_0_100"),
+                "window_label": (buying.get("window_label") or None),
+                "cal_hint": (buying.get("cal_hint") or "")[:280] or None,
+                "confidence": buying.get("confidence"),
+                "factors": factor_preview,
+                "truth_state": buying.get("truth_state") or "HERMES_OVERLAY",
+                "updated_at": buying.get("updated_at"),
+            }
+            if buying
             else None
         ),
         "hermes_job_titles": job_titles,
