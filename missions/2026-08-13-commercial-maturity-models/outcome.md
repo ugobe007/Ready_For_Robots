@@ -1,21 +1,22 @@
 # Outcome: commercial maturity models
 
 **Date:** 2026-08-13  
-**Status:** complete (spec)
+**Status:** complete (spec) — v1.1 expanded
 
 ## Delivered
 
-- Canonical IP: `docs/commercial_maturity_models.md`
-  - Robot company stages: Startup → Experienced → Seasoned → Professional (deployments > age)
-  - Customer stages: Explorer → Evaluator → Operator → Scaled Operator
-  - Relationship matrix + product packaging by stage
-  - Cal as commercial judgment, not AI SDR
-  - Post-lead readiness checklist
+- Canonical IP: `docs/commercial_maturity_models.md` (v1.1)
+  - **R1–R4** robot company maturity + **RCMS** (weighted 0–100)
+  - **C1–C4** customer automation maturity + **CAMS** (weighted 0–100)
+  - **O1–O9** opportunity maturity (third axis)
+  - Updated 4×4 matrix (Cal behavior by cell)
+  - Maturity-gap archetypes (R1×C1, R1×C4, R4×C1, R4×C4)
+  - Packaging by R-level; post-lead readiness checklist
 - Wired into: `product_market_fit.md`, `market_thesis.md`, `competitive_positioning.md`, `CAL_LEARNING_SYSTEM.md`, `cal_persona_spec.md`
 
 ## Follow-ups
 
-1. Manual tags on a sample of robot-company workspaces (Stage 1 of maturity implementation)
-2. Score commercial maturity from deployment evidence (Stage 2)
-3. Cal routing / warnings for Startup × Scaled Operator (Stage 3)
-4. Differentiated signup/home packaging by seller stage (Stage 4)
+1. **In progress pack:** `docs/calibration/maturity_tagging_sheet_v0_1.md` + sellers/buyers/pairs CSVs (20×20 validation)
+2. Implement RCMS / CAMS from deployment + public evidence
+3. Cal routing / warnings for R1 × C4; branch on O-level
+4. Differentiated signup/home packaging by R-level
