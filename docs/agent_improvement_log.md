@@ -2,6 +2,26 @@
 
 Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
+## 2026-08-13 — Commercial maturity thesis
+
+### Findings
+
+- Matching supply/demand is secondary. Asymmetry is **commercial maturity**: buyers often outpace young robot companies in deployment knowledge.
+- Brand dual meaning: customer ready for robots *and* robot company ready for the customer.
+- Cal = commercial judgment layer, not AI SDR. Startup × Scaled Operator is high risk without coaching.
+
+### Done
+
+- Spec IP: `docs/commercial_maturity_models.md`
+- Mission: `missions/2026-08-13-commercial-maturity-models/`
+- PMF / thesis / competitive / Cal docs updated
+
+### Ranked proposals
+
+1. **[H/M]** Manual-tag 20 robot companies + 20 buyers on maturity axes; validate matrix cells. — owner: `product`
+2. **[M/M]** Cal coaching tone by matrix cell; warn Startup × Scaled Operator before send. — owner: `cal`
+3. **[M/L]** Commercial Maturity Score from deployments + public evidence. — owner: `engineering`
+
 ## 2026-08-13 — Cal Learning System
 
 ### Findings

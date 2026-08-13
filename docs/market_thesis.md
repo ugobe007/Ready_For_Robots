@@ -2,15 +2,17 @@
 
 Living document for the agent harness **intelligence loop**. Updated by research missions (`MarketIntel`, `FrictionMiner`, `ProductThesis`). Execution missions must align with active bets unless fixing a P0 blocker (empty pipeline, broken deploy).
 
-**Last updated:** 2026-06-16 (PMF focus: automated sales pipeline for robot companies)
+**Last updated:** 2026-08-13 (commercial maturity thesis)
 
 ---
 
 ## What we sell
 
-**The automated sales pipeline for robot companies** — OEMs and integrators sign up to automate their sales funnel on verified buyer intent.
+**The commercial intelligence layer + automated sales pipeline for robot companies** — OEMs and integrators automate their funnel on verified buyer intent, with Cal bringing commercial judgment that young companies often lack.
 
-They run deals in our **native CRM** (`/pipeline`, `/crm`) or **sync to HubSpot**. We win on intent + autonomy, not dashboard parity with Salesforce.
+They run deals in our **native CRM** (`/pipeline`, `/crm`) or **sync to HubSpot**. We win on intent + autonomy + **maturity-aware coaching**, not dashboard parity with Salesforce.
+
+**Primary asymmetry is not “who has leads.”** It is commercial maturity: customers often know more about robotics evaluation and deployment than startups assume. Full model: [commercial_maturity_models.md](./commercial_maturity_models.md).
 
 Product shape (from `docs/readyforrobots-ux.md` and `docs/product_market_fit.md`):
 

@@ -2,7 +2,7 @@
 
 **For ProductSurface, MarketIntel, Orchestrator, and sales copy.**
 
-**Last updated:** 2026-06-30
+**Last updated:** 2026-08-13
 
 ---
 
@@ -12,7 +12,9 @@ Prospects will stack us against horizontal GTM data providers — especially [Ex
 
 They will also hear from **“Revenue Operating System”** vendors — especially [Reevo](https://reevo.ai) ($80M+, Khosla / Kleiner Perkins, Nov 2025) — pitching one platform that replaces CRM, engagement, and intelligence for any B2B team.
 
-**We do not win on database size, filter breadth, or stack consolidation.** We win on **robot sales outcomes**: verified buyer intent → qualified pipeline → outreach → CRM advance.
+**We do not win on database size, filter breadth, or stack consolidation.** We win on **robot sales outcomes**: verified buyer intent → qualified pipeline → outreach → CRM advance — with **commercial maturity** awareness (is the robot company ready for this customer?).
+
+**Deeper line:** Explee finds accounts. AI SDRs spray messages. ReadyForRobots makes robot companies **ready for the customer** and moves deals that can become deployments. See [commercial_maturity_models.md](./commercial_maturity_models.md).
 
 ---
 
