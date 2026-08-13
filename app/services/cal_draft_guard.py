@@ -9,8 +9,10 @@ _MIN_DRAFT_CHARS = 280
 _COMPLETE_MARKERS = (
     "worth a quick reply",
     "ready for robots",
+    "readyforrobots",
     "— cal",
     "- cal",
+    "\ncal\n",
     "deployment advisor",
     "automation advisor",
     "vendor-neutral",
@@ -21,6 +23,9 @@ _COMPLETE_MARKERS = (
     "reply — i'll send",
     "short list of vendors",
     "who to skip",
+    "jobs robots can actually do well",
+    "i'd be interested in your perspective",
+    "i'm cal with readyforrobots",
 )
 _TRUNCATED_TAIL = re.compile(r"\b\w{1,12}$")  # ends mid-word (no sentence punctuation)
 
@@ -92,12 +97,21 @@ def is_legacy_cal_draft(draft: str | None) -> bool:
         return False
     low = text.lower()
 
-    # New voice always signs with role line.
+    # Current approved buyer close: "Cal\nReadyForRobots" (with or without spaces).
+    plain_close = bool(re.search(r"(?m)^cal\s*$", low)) and "readyforrobots" in low.replace(" ", "")
+    if plain_close:
+        for phrase in CAL_BANNED_PHRASES:
+            if phrase in low:
+                return True
+        return any(marker in low for marker in _LEGACY_VOICE_MARKERS)
+
+    # Role-line sign-off without title is incomplete/legacy unless current close is present.
     if "— cal" in low and "ready for robots" in low:
         if "deployment advisor" not in low and "automation advisor" not in low:
-            return True
+            if "i'd be interested in your perspective" not in low and "jobs robots can actually do well" not in low:
+                return True
 
-    # Old three-line sign-off style now replaced by one compact role line.
+    # Old three-line sign-off style.
     if "\ncal\ndeployment advisor\nready for robots" in low:
         return True
 

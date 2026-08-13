@@ -176,10 +176,26 @@ export default function Signup() {
     params.get("src") === "pipeline_matched_unlock" ||
     (pipelineIntent && Boolean(workflowPrefill.company_url || params.get("company_url")));
 
+  /** Keep URL-matched unlock on /pipeline?url=… — never fall back to bare /pipeline or Results. */
+  const matchedPipelineReturnPath = useMemo(() => {
+    const companyUrl = (workflowPrefill.company_url || params.get("company_url") || "").trim();
+    if (!matchedUnlockIntent || !companyUrl) return null;
+    const p = new URLSearchParams();
+    p.set("src", "results_scan");
+    p.set("url", companyUrl);
+    const leadMatch = nextRaw.match(/[?&]lead=(\d+)/);
+    if (leadMatch) p.set("lead", leadMatch[1]);
+    return `/pipeline?${p.toString()}`;
+  }, [matchedUnlockIntent, workflowPrefill.company_url, params, nextRaw]);
+
   const workflowReturnPath = useMemo(() => {
+    // Explicit deep links win — preserve query (url/src/lead) across OAuth.
+    if (nextRaw.startsWith("/pipeline") || nextRaw.startsWith("/pricing")) return nextRaw;
+    if (nextRaw === "/") return "/pipeline";
+    if (matchedPipelineReturnPath) return matchedPipelineReturnPath;
     if (!shouldHonorWorkflowResults(nextRaw, workflowPrefill)) return "/pipeline";
     return workflowResultsPath(workflowPrefill);
-  }, [nextRaw, workflowPrefill]);
+  }, [nextRaw, workflowPrefill, matchedPipelineReturnPath]);
 
   const intendedPostAuthPath = useMemo(
     () => {

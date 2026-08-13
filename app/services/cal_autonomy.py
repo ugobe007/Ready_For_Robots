@@ -345,13 +345,19 @@ def _hermes_context_reason(company: Any) -> Optional[str]:
         return None
     name = (getattr(company, "name", None) or "your team").strip()
     if titles:
-        return f"noticed {name} hiring for {titles[0]}"
+        return f"noticed {name} is hiring for {titles[0]} — that timing caught my eye"
     rationale = (hq.get("rationale") or "").strip()
     if rationale and len(rationale) > 24:
         # Keep one short clause — never paste a full research digest into outbound.
         clip = rationale.split(".")[0].strip()
         if 20 <= len(clip) <= 120:
-            return clip[0].lower() + clip[1:] if clip[0].isupper() else clip
+            clause = clip[0].lower() + clip[1:] if clip[0].isupper() else clip
+            return f"caught this on {name}: {clause}"
+    if _cal_include_buying_window():
+        bw = meta.get("hermes_buying_window") if isinstance(meta.get("hermes_buying_window"), dict) else {}
+        hint = (bw.get("cal_hint") or "").strip()
+        if 20 <= len(hint) <= 140:
+            return hint[0].lower() + hint[1:] if hint[0].isupper() else hint
     return None
 
 
@@ -716,6 +722,42 @@ def prioritize_hermes_qualified(companies: list, *, min_fit: float = 60.0) -> li
     return sorted(companies, key=_rank)
 
 
+def _cal_include_buying_window() -> bool:
+    return (os.getenv("CAL_INCLUDE_BUYING_WINDOW") or "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+
+
+def _hermes_buying_urgency(company: Any) -> float:
+    """Hermes buying-window urgency (0–100), or -1 if absent."""
+    meta = getattr(company, "crm_metadata", None) or {}
+    if not isinstance(meta, dict):
+        return -1.0
+    bw = meta.get("hermes_buying_window")
+    if not isinstance(bw, dict):
+        return -1.0
+    try:
+        return float(bw.get("urgency_0_100"))
+    except (TypeError, ValueError):
+        return -1.0
+
+
+def prioritize_buying_window(companies: list, *, min_urgency: float = 50.0) -> list:
+    """Within existing order, prefer high Hermes buying-window urgency.
+
+    Only used when ``CAL_INCLUDE_BUYING_WINDOW`` is on. Timing ≠ fit — this
+    reorders after Hermes qualify priority; Cal send gates unchanged.
+    """
+    def _rank(entry) -> tuple:
+        urg = _hermes_buying_urgency(entry[0])
+        has = 0 if urg >= min_urgency else 1
+        return (has, -urg if urg >= 0 else 0.0)
+
+    return sorted(companies, key=_rank)
+
+
 def run_cal_autonomy_cycle(
     db: Session,
     *,
@@ -791,6 +833,9 @@ def run_cal_autonomy_cycle(
     companies = prioritize_unsent(companies, existing)
     # Then prefer Hermes-qualified buyers (automation_fit overlays from ingest).
     companies = prioritize_hermes_qualified(companies)
+    # Optional: prefer timing urgency (FY / shows / peer proof) when flagged.
+    if _cal_include_buying_window():
+        companies = prioritize_buying_window(companies)
 
     drafted = 0
     refreshed = 0

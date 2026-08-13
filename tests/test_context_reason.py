@@ -73,7 +73,9 @@ def test_variant_with_reason_injects_and_stays_complete():
         body = build_buyer_variant_body("Acme Logistics", "Logistics", vid, reason=reason)
         assert reason in body, f"{vid} did not inject the reason"
         # Reason lands after the greeting, before Cal's vantage line.
-        assert body.startswith("Hi,\n\n" + reason)
+        paragraphs = [p for p in body.split("\n\n") if p.strip()]
+        assert paragraphs[0].startswith("Hi Acme Logistics,")
+        assert paragraphs[1] == reason
         full = f"Subject: what actually holds up\n\n{body}"
         ok, why = is_complete_cal_draft(full)
         assert ok, f"{vid} with reason failed guard: {why}"

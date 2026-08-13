@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 
-from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_signature
+from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_buyer_email_signature, cal_signature
 
 # ── Cal voice: veteran sherpa for robot companies ─────────────────────────────
 # Wise, abbreviated, in-the-know. Engineer-led teams, PoC → deployment reality.
@@ -39,15 +39,16 @@ CAL_VENDOR_SHERPA_LINE = (
 
 # Plain, honest, first-person. Say what I do and why I'm writing — no slogans.
 BUYER_SIGNAL_EXPLANATION = (
-    "I don't evaluate robots first. I evaluate whether the job should be automated in the first place. "
-    "A lot of my work is helping teams avoid pilots that were never going to hold up in live operations."
+    "I start with the operational problem and physical task, not the robot. "
+    "A lot of the work is deciding whether automation belongs in the workflow at all, "
+    "and what would have to be true before a deployment could succeed."
 )
 
 # Quiet credibility — a plain observation about what makes robots pay off, no bravado.
 BUYER_ROI_PROOF = (
-    "Most deployments don't fail because hardware is weak. They fail because the robot was assigned to "
-    "the wrong problem. The ones that succeed usually disappear into daily operations instead of needing "
-    "constant exceptions and extra labor."
+    "Most deployments do not fail because the hardware is weak. They fail because the robot "
+    "was assigned to the wrong problem, or the workflow, integration, and support were never "
+    "scoped. The ones that succeed disappear into daily operations."
 )
 
 BUYER_OUTREACH_CTA = (
@@ -56,7 +57,7 @@ BUYER_OUTREACH_CTA = (
 
 # Honest closing beat — builds trust rather than performing confidence.
 BUYER_CAL_PERSONALITY = (
-    "If I don't think automation belongs in that workflow yet, I'll say that directly."
+    "If robotics is not the right solution yet, I will say that directly."
 )
 
 VENDOR_SIGNAL_EXPLANATION = (
@@ -136,13 +137,11 @@ def max_signature() -> str:
     return "— Max\nReady For Robots"
 
 
-# ── Trust-first buyer variants ────────────────────────────────────────────────
-# Three genuinely different openers — different premises, not reworded twins.
-# All are humble and non-presumptuous: Cal names a real reason for writing, admits
-# he doesn't know their context, leaves room for "we already tried robots and it
-# flopped," and asks with low commitment plus explicit permission to say no.
-# Every variant must (a) mention the company name (assembly gate) and (b) end with
-# the Cal sign-off (draft-completeness gate).
+# ── Buyer variants (persona: Observation → Interpretation → Next Step) ───────
+# Three different premises, same voice: smart, analytical, practical, complete
+# sentences. Problems/tasks before robots. Evidence before claims. Room to say
+# robotics is not the right move yet. Every variant must (a) mention the company
+# name (assembly gate) and (b) end with Cal's sign-off (draft-completeness gate).
 
 BUYER_VARIANTS: tuple[str, ...] = ("workflow_first", "what_survives", "bottleneck_first")
 
@@ -165,78 +164,159 @@ def _buyer_sector(industry: str) -> str:
     return low
 
 
-# Cal is a vendor-neutral deployment advisor, not a salesperson. Each vertical
-# gets: `glam` = the workflow everyone automates first (and over-focuses on),
-# `hidden` = where labor hours actually disappear, and `opinion` = one strong,
-# memorable, deployment-earned point of view. The voice teaches; it doesn't pitch.
+# Per vertical: visible talk-track, short headache beats, people-noun for openers.
 _GENERIC_INSIGHT = {
-    "glam": "the most visible task",
-    "hidden": "the repetitive back-of-house work — moving material and handling the same exceptions over and over",
-    "opinion": "The coolest robot in the room is rarely the one that pays for itself.",
+    "visible": "the most visible task",
+    "people": "operations teams",
+    "look_at": "operations",
+    "task": "moving material, handling exceptions, and cleaning up after the process",
+    "pressure_para": (
+        "A lot of material still has to move between steps, exceptions create work that "
+        "doesn't fit the standard process, and people end up filling the gaps."
+    ),
+    "interpretation": (
+        "I've seen demos look great and still fall apart once the work hits real traffic "
+        "and exception handling."
+    ),
 }
 
-_INDUSTRY_INSIGHT: tuple[tuple[tuple[str, ...], dict[str, str]], ...] = (
+_INDUSTRY_INSIGHT: tuple[tuple[tuple[str, ...], dict[str, object]], ...] = (
     (
-        ("logistic", "warehous", "supply chain", "fulfil", "distribution", "3pl"),
+        ("logistic", "warehous", "supply chain", "fulfill", "distribution", "3pl"),
         {
-            "glam": "Picking",
-            "hidden": "receiving, replenishment, pallet moves, inventory exceptions, and returns",
-            "opinion": "The fastest AMR on the floor is rarely the one that survives real peak volume.",
+            "visible": "picking",
+            "people": "warehouse and distribution teams",
+            "look_at": "warehouse and distribution operations",
+            "task": "receiving, replenishment, pallet moves, inventory exceptions, and returns",
+            "pressure_para": (
+                "Receiving and replenishment involve a lot of material movement, pallets have to move "
+                "continuously through the operation, and inventory exceptions and returns create work "
+                "that doesn't always fit neatly into the normal warehouse flow. Those are often the "
+                "places where people end up filling the gaps."
+            ),
+            "interpretation": (
+                "That usually means more forklift traffic and labor pressure even when everyone "
+                "is still debating pick rates."
+            ),
         },
     ),
     (
         ("hospitality", "hotel", "casino", "gaming", "resort"),
         {
-            "glam": "The lobby delivery robot",
-            "hidden": "linen runs, housekeeping carts, overnight floor cleaning, and room-service logistics",
-            "opinion": "A robot that shines in an empty lobby usually stalls the first busy weekend.",
+            "visible": "lobby delivery",
+            "people": "hotels and resorts",
+            "look_at": "hospitality operations",
+            "task": "linen runs, housekeeping carts, overnight floor cleaning, and room-service logistics",
+            "pressure_para": (
+                "Linen runs, housekeeping carts, overnight floor cleaning, and room-service logistics "
+                "keep moving whether the lobby is quiet or packed. Those back-of-house paths are often "
+                "where people end up filling the gaps."
+            ),
+            "interpretation": (
+                "Guest-facing demos photograph well. The ones that last are usually chosen for "
+                "a full building on a busy weekend."
+            ),
         },
     ),
     (
         ("health", "medical", "hospital", "clinic", "elder", "senior living"),
         {
-            "glam": "The robot that gets posted on LinkedIn",
-            "hidden": "moving supplies, meds, lab samples, linen, and waste between floors",
-            "opinion": "In a hospital the ROI is almost never the flashy robot — it's the miles staff walk every shift.",
+            "visible": "the robot that gets public attention",
+            "people": "hospital and clinical ops teams",
+            "look_at": "hospital operations",
+            "task": "moving supplies, meds, lab samples, linen, and waste between floors",
+            "pressure_para": (
+                "Supplies, meds, lab samples, linen, and waste still have to move between floors all day. "
+                "That transport work often pulls clinical time away from patients, and people end up "
+                "filling the gaps when the process breaks down."
+            ),
+            "interpretation": (
+                "The return I keep seeing is staff miles and delayed transport — "
+                "not the machine that makes the press release."
+            ),
         },
     ),
     (
         ("food", "restaurant", "kitchen", "beverage", "grocery"),
         {
-            "glam": "The cooking robot",
-            "hidden": "prep, portioning, dishwashing, packaging, and product changeovers",
-            "opinion": "Most kitchen automation dies on changeover, not on the cook.",
+            "visible": "cooking automation",
+            "people": "food operations teams",
+            "look_at": "food operations",
+            "task": "prep, portioning, dishwashing, packaging, and product changeovers",
+            "pressure_para": (
+                "Prep, portioning, dishwashing, packaging, and product changeovers create a lot of "
+                "repetitive work that doesn't always show up in the cooking demo. Those stations are "
+                "often where people end up filling the gaps."
+            ),
+            "interpretation": (
+                "Most kitchen automation I've watched fail on changeover and sanitation between "
+                "products, not on the cook task that films well."
+            ),
         },
     ),
     (
         ("manufactur", "industrial", "automotive", "assembly", "factory", "cnc", "metal"),
         {
-            "glam": "The six-axis arm on the line",
-            "hidden": "machine tending, moving material between cells, and end-of-line packaging",
-            "opinion": "A cell that only runs one part number looks great until your mix changes.",
+            "visible": "the arm on the main line",
+            "people": "manufacturing teams",
+            "look_at": "manufacturing operations",
+            "task": "machine tending, moving material between cells, and end-of-line packaging",
+            "pressure_para": (
+                "Machine tending, moving material between cells, and end-of-line packaging often create "
+                "more day-to-day pressure than the main line itself. Those are frequently the places "
+                "where people end up filling the gaps."
+            ),
+            "interpretation": (
+                "A cell tuned to one part number can look excellent until mix or volume changes."
+            ),
         },
     ),
     (
         ("retail", "store", "e-commerce", "ecommerce", "apparel", "consumer goods"),
         {
-            "glam": "The shelf-scanning robot",
-            "hidden": "backroom sortation, replenishment, and inventory exceptions",
-            "opinion": "A robot that just produces another dashboard rarely changes what staff actually do.",
+            "visible": "shelf scanning",
+            "people": "retail and fulfillment teams",
+            "look_at": "retail and fulfillment operations",
+            "task": "backroom sortation, replenishment, and inventory exceptions",
+            "pressure_para": (
+                "Backroom sortation, replenishment, and inventory exceptions keep the floor stocked, "
+                "but that work doesn't always fit neatly into the standard process. Those are often "
+                "the places where people end up filling the gaps."
+            ),
+            "interpretation": (
+                "Another dashboard rarely changes what staff actually do. "
+                "The useful work is usually in the backroom flow that feeds the floor."
+            ),
         },
     ),
 )
 
 
-def _buyer_insight(industry: str) -> dict[str, str]:
+
+def _buyer_insight(industry: str) -> dict[str, object]:
     """Return Cal's deployment read for an industry (substring match, generic fallback)."""
     ind = (industry or "").strip()
     if "(" in ind:
         ind = ind.split("(", 1)[0].strip()
     low = ind.lower()
+    base: dict[str, object] = dict(_GENERIC_INSIGHT)
     for keys, insight in _INDUSTRY_INSIGHT:
         if any(k in low for k in keys):
-            return insight
-    return _GENERIC_INSIGHT
+            base = dict(insight)
+            break
+    # Food distributors — operator-approved PFG shape.
+    if "food" in low and any(k in low for k in ("distribut", "wholesale", "warehouse", "logistic", "3pl")):
+        base["people"] = "food distributors"
+        base["look_at"] = "food distribution"
+        base["visible"] = "picking"
+        base["task"] = "receiving, replenishment, pallet moves, inventory exceptions, and returns"
+        base["pressure_para"] = (
+            "Receiving and replenishment involve a lot of material movement, pallets have to move "
+            "continuously through the operation, and inventory exceptions and returns create work "
+            "that doesn't always fit neatly into the normal warehouse flow. Those are often the "
+            "places where people end up filling the gaps."
+        )
+    return base
 
 
 # ── Relationship ladder: teaching follow-ups ──────────────────────────────────
@@ -460,14 +540,14 @@ def _ladder_content(industry: str) -> dict[str, str]:
 
 
 def ladder_touch_subject(touch: str, name: str, industry: str) -> str:
-    """Insight-led subject for a follow-up touch (teach / trend / question)."""
+    """Curiosity-led subject for a follow-up touch (teach / trend / question)."""
     content = _ladder_content(industry)
     key = f"{touch}_subject"
     base = content.get(key, _GENERIC_LADDER.get(key, "a quick note"))
     if touch == "teach":
-        return f"alignment note: {base}"
+        return f"one field note: {base}"
     if touch == "trend":
-        return f"alignment trend: {base}"
+        return f"something I'm seeing: {base}"
     return base
 
 
@@ -479,18 +559,18 @@ def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
     core = content.get(touch, _GENERIC_LADDER.get(touch, ""))
     if touch == "teach":
         close = (
-            f"If it's useful, I'll tell you where I'd point a first robot at {n} — and where I wouldn't. "
-            "If the fit is real, we can activate the next MSD step from there."
+            f"If it is useful for {n}, I can share where I would start — and where I would wait. "
+            "No pitch either way."
         )
     elif touch == "trend":
         close = (
-            f"If {n} is weighing vendors this year, I'll tell you which ones tend to hold up in a real "
-            "operation. No pitch. If alignment is there, we can activate the right MSD path."
+            f"If {n} is weighing vendors this year, I can say which patterns tend to hold up. "
+            "Curious what you are seeing on your side."
         )
     else:  # question
         close = (
-            f"No right answer — but what comes to mind for {n} usually points straight at where a robot "
-            "would earn its keep. Curious what you'd say."
+            f"No right answer — what comes to mind for {n} usually points at where a robot "
+            "would earn its keep. Curious what you would say."
         )
     return "\n".join([
         f"Hi {n}, this is Cal again.",
@@ -537,181 +617,183 @@ def resolve_buyer_variant(company, acct=None) -> str | None:
     return pick_buyer_variant(getattr(company, "id", None))
 
 
-def _exploration_question(name: str, industry: str, *, variant_seed: str = "base") -> str:
-    """One low-commitment question tailored to sector with deterministic variation."""
+def _friendly_sector(industry: str) -> str:
+    """Natural sector label — drop slash taxonomies like 'food distribution / wholesale'."""
+    sector = _buyer_sector(industry)
+    if " / " in sector:
+        sector = sector.split(" / ", 1)[0].strip()
+    if " & " in sector and len(sector) > 28:
+        sector = sector.split(" & ", 1)[0].strip()
+    return sector
+
+
+_KNOWN_TEAM_SHORT = {
+    "performance food group": "PFG",
+    "united parcel service": "UPS",
+    "fedex": "FedEx",
+    "dhl": "DHL",
+    "medline": "Medline",
+    "hellofresh": "HelloFresh",
+}
+
+
+def _short_label(name: str) -> str:
+    """Short label for conversational references (PFG, Acme, …)."""
     n = (name or "your team").strip()
-    team = n if len(n) <= 24 else "your team"
-    area = "your operation" if team == "your team" else team
-    seed = f"{team}|{(industry or '').lower()}|{variant_seed}"
-    pick = lambda options: options[sum(ord(c) for c in seed) % len(options)]
-    low = (industry or "").lower()
-    if any(k in low for k in ("logistic", "warehous", "supply", "3pl", "distribution", "fulfil")):
-        return pick([
-            "Do you have any RFQs or bid projects open for warehouse automation right now, or is timing still early?",
-            f"If {team} has RFQs or bid projects for warehouse workflows, can you send them so I can hand this directly to Robert?",
-            "Would it help if I reviewed the RFQs and bid projects you already have for warehouse automation?",
-        ])
-    if any(k in low for k in ("hospitality", "hotel", "casino", "resort", "gaming")):
-        return pick([
-            "Are you running an RFQ/spec list for service robotics yet, or still framing requirements?",
-            f"If {team} already has a service-robotics spec list, can you share it so Robert can follow up with the right fit?",
-            "Would a practical RFQ template for service robotics help, or do you already have one internally?",
-        ])
-    if any(k in low for k in ("health", "medical", "hospital", "clinic")):
-        return pick([
-            "Do you already have an RFQ/spec list for internal transport or delivery automation?",
-            f"If {team} has a draft spec list, can you send it so Robert can review and respond directly?",
-            "Would it help if I send a short RFQ checklist for healthcare logistics workflows?",
-        ])
-    if any(k in low for k in ("food", "restaurant", "kitchen", "grocery")):
-        return pick([
-            "Are you already running an RFQ/spec for back-of-house automation, or still defining requirements?",
-            f"If {team} has a spec list, can you share it and I'll hand this to Robert for direct follow-up?",
-            "Would a kitchen/back-of-house RFQ checklist help, or do you already have one prepared?",
-        ])
-    if any(k in low for k in ("manufactur", "factory", "automotive", "industrial")):
-        return pick([
-            "Are you running a line-side automation RFQ/spec yet, or still scoping internally?",
-            f"If {team} has a spec list, can you share it so Robert can follow up with a fit recommendation?",
-            "Would a concise manufacturing RFQ checklist be useful, or is your spec already set?",
-        ])
-    return pick([
-        "Do you have any RFQs or bid projects open for the workflows you're evaluating, or is timing still early?",
-        f"If {team} has RFQs or bid projects in play, can you share them so I can hand this directly to Robert?",
-        "Would it help if I reviewed the RFQs and bid projects already in motion for your team?",
-    ])
+    key = n.lower()
+    if key in _KNOWN_TEAM_SHORT:
+        return _KNOWN_TEAM_SHORT[key]
+    words = [w for w in n.replace(",", " ").split() if w]
+    if len(words) >= 3 and all(w[:1].isalpha() for w in words[:3]):
+        # Prefer a human short name over alphabet soup for ordinary companies.
+        return words[0]
+    if len(n) <= 18:
+        return n
+    return words[0] if words else "your team"
 
 
 def _greeting_name(name: str) -> str:
-    """Use a short, human greeting label for long account names."""
+    """Warm greeting label: 'PFG team' / 'Acme' — not a cold legal entity dump."""
     n = (name or "your team").strip()
-    if len(n) <= 24:
-        return n
-    first = n.split()[0] if n.split() else "your"
-    if first.lower() == "your":
-        return "your team"
-    return f"{first} team"
+    short = _short_label(n)
+    if short != n or len(n) > 22:
+        return f"{short} team"
+    return short
+
+
+def _cal_intro() -> str:
+    return (
+        "I'm Cal with ReadyForRobots. I research how companies are using robotics and help "
+        "identify jobs where automation could actually make a difference."
+    )
+
+
+def _mission_close() -> str:
+    return "I'd be interested in your perspective."
+
+
+def _pressure_paragraph(insight: dict[str, object]) -> str:
+    para = str(insight.get("pressure_para") or "").strip()
+    if para:
+        return para
+    return (
+        "A lot of material still has to move between steps, exceptions create work that "
+        "doesn't fit the standard process, and people end up filling the gaps."
+    )
+
+
+def _look_at_label(insight: dict[str, object], industry: str) -> str:
+    look = str(insight.get("look_at") or "").strip()
+    if look:
+        return look
+    sector = _friendly_sector(industry)
+    return sector if sector != "your line of work" else "operations"
 
 
 def _variant_workflow_first(name: str, industry: str) -> str:
-    """Which workflow vs which robot — Cal's flagship observation."""
-    sector = _buyer_sector(industry)
+    """Tasks before technology — operator-approved conversational shape."""
     ins = _buyer_insight(industry)
-    sector_note = ""
-    if sector != "your line of work":
-        glam = (ins["glam"] or "").strip().lower()
-        if glam.startswith("the "):
-            glam = glam[4:]
-        sector_note = (
-            f"\n\nIn {sector}, the hours often hide in {ins['hidden']} — "
-            f"not the {glam} everyone demos first."
-        )
     team = _greeting_name(name)
-    team_ref = name if len(name) <= 24 else "your operation"
+    short = _short_label(name)
+    visible = str(ins.get("visible") or "the most visible task")
+    look_at = _look_at_label(ins, industry)
     return "\n".join([
-        f"Hi {team}, this is Cal.",
+        f"Hi {team},",
         "",
-        "I spend most of my time in live operations data and deployment post-mortems.",
+        _cal_intro(),
         "",
-        "Most teams start with vendor comparison. I usually start one step earlier.",
+        (
+            f"I've been looking at {look_at}, and I keep noticing something I wanted to check with you. "
+            f"{visible[:1].upper()}{visible[1:]} gets most of the attention, but a lot of the day-to-day "
+            "pressure seems to happen elsewhere — often before teams have named the work clearly."
+        ),
         "",
-        f"Which workflow is quietly costing {team_ref} the most time every day?",
+        _pressure_paragraph(ins),
         "",
-        "Until that's clear, robot selection is mostly noise.",
+        f"I'm curious if that's true at {short}.",
         "",
-        "I've seen simple automation beat flashy demos when the bottleneck was defined first.",
-        sector_note,
+        (
+            "Where do you see the biggest opportunity to automate today? "
+            f"Is it still {visible}, or are there other parts of the operation that cause more problems?"
+        ),
         "",
-        f"{CAL_ORG} is vendor-neutral. If automation is not the right move yet, I'll tell you directly.",
+        _mission_close(),
         "",
-        _exploration_question(name, industry, variant_seed="workflow_first"),
-        "If you share the RFQ or bid-project details, I'll hand this to Robert for direct follow-up.",
-        "",
-        cal_signature(),
+        cal_buyer_email_signature(),
     ])
 
 
 def _variant_what_survives(name: str, industry: str) -> str:
-    """Specific field observation: what is still running six months in."""
+    """Deployment over demos — same conversational shape."""
     ins = _buyer_insight(industry)
     team = _greeting_name(name)
-    sector = _buyer_sector(industry)
-    workflow_line = (
-        f"For {sector} teams, the break point is usually operational readiness — not spec-sheet speed."
-        if sector != "your line of work"
-        else "Most break points come from operational readiness — not spec-sheet speed."
-    )
-    if "logistic" in (industry or "").lower() or "warehous" in (industry or "").lower() or "supply" in (industry or "").lower():
-        body_lines = [
-            f"Hi {team}, this is Cal.",
-            "",
-            f"Reaching out with one note for {name}.",
-            "",
-            "I look at deployments after launch, when peak volume and staffing reality hit.",
-            "",
-            "The pattern I keep seeing: teams win when they start with one measurable workflow bottleneck and owner.",
-            "",
-            ins["opinion"],
-            workflow_line,
-            "Integration and staffing still decide most outcomes.",
-            "",
-            "I'm focused on active RFQs and bid projects tied to live deployment plans, not early browsing.",
-            "",
-            "Do you have any RFQs or bid projects open for warehouse automation right now, or is timing still early?",
-            "",
-            cal_signature(),
-        ]
-        return "\n".join(body_lines)
+    short = _short_label(name)
+    visible = str(ins.get("visible") or "the most visible task")
+    look_at = _look_at_label(ins, industry)
     return "\n".join([
-        f"Hi {team}, this is Cal.",
+        f"Hi {team},",
         "",
-        "I look at deployments after launch, when peak volume and staffing reality hit.",
+        _cal_intro(),
         "",
-        "The pattern I keep seeing: teams win when they start with one measurable workflow bottleneck and owner.",
+        (
+            f"I've been looking at {look_at}, and I keep noticing something I wanted to check with you. "
+            "A demo can look great and still fail once real traffic, exceptions, and support show up."
+        ),
         "",
-        ins["opinion"],
-        workflow_line,
-        "Integration and staffing still decide most outcomes.",
+        (
+            "The projects that hold up usually start with one clear operational problem — "
+            f"not a shortlist of robots. {_pressure_paragraph(ins)}"
+        ),
         "",
-        "I'm focused on active RFQs and bid projects tied to live deployment plans, not early browsing.",
+        f"I'm curious how {short} thinks about that.",
         "",
-        _exploration_question(name, industry, variant_seed="what_survives"),
+        (
+            f"If you were starting fresh, would you begin with {visible}, "
+            "or with the quieter workflow that actually creates more problems?"
+        ),
         "",
-        cal_signature(),
+        _mission_close(),
+        "",
+        cal_buyer_email_signature(),
     ])
 
 
 def _variant_bottleneck_first(name: str, industry: str) -> str:
-    """Start with the bottleneck — one practical lesson, one question."""
+    """Operator-approved PFG shape — human intro, pressure paragraph, open question."""
     ins = _buyer_insight(industry)
-    sector = _buyer_sector(industry)
-    hidden = ins["hidden"]
-    glam = ins["glam"].lower()
     team = _greeting_name(name)
-    team_ref = name if len(name) <= 24 else "your operation"
+    short = _short_label(name)
+    visible = str(ins.get("visible") or "the most visible task")
+    look_at = _look_at_label(ins, industry)
+    visible_cap = f"{visible[:1].upper()}{visible[1:]}"
     return "\n".join([
-        f"Hi {team}, this is Cal.",
+        f"Hi {team},",
         "",
-        "I help ops teams decide where automation should start and where it should wait.",
+        _cal_intro(),
         "",
-        "The first question I ask is simple: where do the hours actually go?",
+        (
+            f"I've been looking at {look_at}, and I keep noticing something I wanted to check with you. "
+            f"{visible_cap} gets most of the attention, but a lot of the day-to-day pressure seems to happen elsewhere."
+        ),
         "",
-        f"In {sector}, the answer is usually {hidden} — not {glam}. "
-        "Most bake-offs start with the visible task anyway.",
+        _pressure_paragraph(ins),
         "",
-        ins["opinion"],
+        f"I'm curious if that's true at {short}.",
         "",
-        "Sometimes the right answer is a process fix, not a robot.",
-        "When it is a robot, the bottleneck should be clear first.",
+        (
+            "Where do you see the biggest opportunity to automate today? "
+            f"Is it still {visible}, or are there other parts of the operation that cause more problems?"
+        ),
         "",
-        f"I'm vendor-neutral. If {team_ref} tells me where time disappears, I can give you a sharp read "
-        "on whether automation is worth testing now — no pitch attached.",
+        _mission_close(),
         "",
-        _exploration_question(name, industry, variant_seed="bottleneck_first"),
-        "If you already have RFQ or bid-project details, send them and I'll hand this directly to Robert.",
-        "",
-        cal_signature(),
+        cal_buyer_email_signature(),
     ])
+
+
+
+
+
 
 
 # A concrete, external event is the only thing Cal will cite as a reason — an
@@ -793,45 +875,51 @@ def build_buyer_variant_body(
     }
     fn = builders.get(variant_id, _variant_workflow_first)
     body = fn(n, industry or "your industry")
-    if n and n not in body:
-        # Preserve the exact account name in every intro so assembly checks and
-        # downstream attribution can always anchor the message to this company.
-        anchor = f"Reaching out with one note for {n}."
+    short = _short_label(n)
+    anchored = (n.lower() in body.lower()) or (short.lower() in body.lower())
+    if n and not anchored:
+        # Prefer short conversational labels; only force an anchor if neither appears.
+        anchor = f"I'm curious if that's true at {short}."
         if body.startswith("Hi") and "\n\n" in body:
             first, rest = body.split("\n\n", 1)
             body = f"{first}\n\n{anchor}\n\n{rest}"
         elif body.startswith("Hi"):
             body = f"{body}\n\n{anchor}"
         else:
-            body = f"Hi {n},\n\n{anchor}\n\n{body}"
+            body = f"Hi {short} team,\n\n{anchor}\n\n{body}"
     if reason:
-        # Inject the grounded hook right after the greeting, ahead of Cal's
-        # vantage line, so the email leads with a real, verifiable reason.
-        greeting = f"Hi {n},\n\n"
-        if body.startswith(greeting):
-            body = body.replace(greeting, f"{greeting}{reason}\n\n", 1)
+        # Inject the grounded hook right after the greeting line so the email
+        # leads with a real, verifiable reason before Cal's field observation.
+        if body.startswith("Hi") and "\n\n" in body:
+            first, rest = body.split("\n\n", 1)
+            if not rest.startswith(reason):
+                body = f"{first}\n\n{reason}\n\n{rest}"
         elif body.startswith("Hi,\n\n"):
             body = body.replace("Hi,\n\n", f"Hi,\n\n{reason}\n\n", 1)
     return body
 
 
 def buyer_variant_subject(name: str, industry: str, variant_id: str) -> str:
-    """Insight-led subject — a topic Cal is about to teach, not a pitch."""
+    """Grounded subject — operational topic, not a pitch or curiosity teaser."""
     sector = _buyer_sector(industry)
     generic_sector = sector == "your line of work"
     if variant_id == "what_survives":
         return (
-            "alignment check on active RFQs and bid projects"
+            "demo versus deployment"
             if generic_sector
-            else f"alignment check on active RFQs and bid projects in {sector}"
+            else f"demo versus deployment in {sector}"
         )
     if variant_id == "bottleneck_first":
-        return "alignment starts at the bottleneck, not the robot"
+        return (
+            "where the operational hours go"
+            if generic_sector
+            else f"where the hours go in {sector}"
+        )
     # workflow_first (default)
     return (
-        "where automation alignment usually breaks"
+        "start with the task, not the robot"
         if generic_sector
-        else f"where {sector} automation alignment usually breaks"
+        else f"start with the task in {sector}"
     )
 
 

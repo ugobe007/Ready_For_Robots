@@ -35,12 +35,12 @@ export default function AnonymousValueStrip({ leadCount, limit, selectedCompany,
         <Sparkles className="h-4 w-4 shrink-0 text-emerald-700 mt-0.5" />
         <div>
           <p className="pipeline-value-strip-title">
-            {hasLead ? `Save ${company} and copy its outreach draft` : "See value before you sign up"}
+            {hasLead ? `Notice the timing on ${company}` : "See what Cal notices before you sign up"}
           </p>
           <p className="pipeline-value-strip-body">
             {hasLead
-              ? `Free workspace: sign up and land right back on ${company} — its outreach draft saved and ready to copy, plus HubSpot sync.`
-              : `Browse ${Math.min(leadCount, limit)} live leads with pitch actions, robot types, and outreach drafts — no account required. Free workspace adds save, copy, and HubSpot sync.`}
+              ? `Read Cal's note for ${company} — short, timely, no hard sell. Free workspace saves the lead and lets you copy the draft.`
+              : `Browse ${Math.min(leadCount, limit)} live buyers with pitch actions, robot types, and Cal's research notes — no account required. Free workspace adds save, copy, and HubSpot sync.`}
           </p>
         </div>
       </div>

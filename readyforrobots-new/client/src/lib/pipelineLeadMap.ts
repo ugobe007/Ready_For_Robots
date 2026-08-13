@@ -1,8 +1,7 @@
 /** Map FastAPI /api/leads row → Pipeline UI deal shape (stages are local until CRM sync exists). */
 
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
-import { outreachInsightForIndustry } from "@/lib/industryContext";
-import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
+import { CAL_SIGNATURE } from "@/lib/agentMessaging";
 
 export type PipelineStage = "New Signal" | "Discovered" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
@@ -278,59 +277,57 @@ function topSignal(lead: ApiLead): { type: string; text: string; color: string }
   return { type: label, text, color };
 }
 
-function industryInsight(industry?: string | null): string {
-  return outreachInsightForIndustry(industry);
-}
-
-function signalOpening(signalType: string, signalText: string): string {
-  const lowerType = signalType.toLowerCase();
-  if (lowerType.includes("labor") || lowerType.includes("job")) {
-    return `I saw the labor and hiring signal around your team: ${signalText}`;
-  }
-  if (lowerType.includes("expansion") || lowerType.includes("capacity")) {
-    return `I saw the expansion signal around your operation: ${signalText}`;
-  }
-  if (lowerType.includes("capex") || lowerType.includes("funding")) {
-    return `I saw the budget or investment signal around your organization: ${signalText}`;
-  }
-  if (lowerType.includes("automation") || lowerType.includes("robot")) {
-    return `I saw the automation signal around your team: ${signalText}`;
-  }
-  return `I saw this market signal connected to your organization: ${signalText}`;
-}
-
 function outreachSubject(companyName?: string, signalType?: string): string {
-  const company = companyName || "your team";
   const typ = (signalType || "").toLowerCase();
-  if (typ.includes("labor") || typ.includes("job")) return `labor question for ${company}`;
-  if (typ.includes("expansion") || typ.includes("capex") || typ.includes("funding")) return `automation signal we picked up on ${company}`;
-  if (typ.includes("hospitality") || typ.includes("hotel")) return `automation angle at ${company}?`;
-  return `quick question about ${company}`;
+  if (typ.includes("labor") || typ.includes("job")) return "hiring signal and task fit";
+  if (typ.includes("expansion") || typ.includes("capex") || typ.includes("funding")) {
+    return "expansion signal — start with the workflow";
+  }
+  if (typ.includes("hospitality") || typ.includes("hotel")) return "where the hours go on property";
+  return "start with the task, not the robot";
 }
 
 function outreachBody(lead: ApiLead, signalType: string, signalText: string): string {
   const company = lead.company_name || "your team";
+  const short =
+    company.toLowerCase() === "performance food group"
+      ? "PFG"
+      : company.split(/\s+/).length >= 3
+        ? company.split(/\s+/)[0]
+        : company;
   const lowerType = signalType.toLowerCase();
-  const industry = (lead.industry || "your industry").toLowerCase();
-  const action = (lead.pipeline_action || "").trim();
+  const industry = (lead.industry || "operations").split(" / ")[0].trim();
+  const hermesJob = (lead.hermes_job_titles || []).find((t) => (t || "").trim())?.trim();
+  const clip = cleanAndClampText(signalText, 140).replace(/\s+/g, " ").trim();
 
-  let hook: string;
-  if (action) {
-    const actionBody = action.includes(":") ? action.slice(action.indexOf(":") + 1).trim() : action;
-    const normalized =
-      actionBody.length > 0
-        ? `${actionBody.charAt(0).toLowerCase()}${actionBody.slice(1)}`
-        : actionBody;
-    hook = `I've been following ${company} — ${normalized}`;
+  let notice: string;
+  if (hermesJob) {
+    notice = `I've been looking at hiring around ${company}, and I keep noticing something I wanted to check with you. A role for ${hermesJob} often shows up when operational load is rising.`;
+  } else if (clip && clip.length > 24) {
+    notice = `I've been looking at ${company}, and I keep noticing something I wanted to check with you: ${clip}${clip.endsWith(".") ? "" : "."}`;
   } else if (lowerType.includes("labor") || lowerType.includes("job")) {
-    hook = `I've been watching staffing pressure at ${company} in ${industry} — that's usually when teams start looking at automation on the floor.`;
+    notice = `I've been looking at ${industry}, and I keep noticing something I wanted to check with you. Hiring spikes often show up before anyone names the repetitive work absorbing the hours.`;
   } else if (lowerType.includes("expansion") || lowerType.includes("capex") || lowerType.includes("funding")) {
-    hook = `I noticed expansion and CapEx activity around ${company}. In ${industry}, that's often when one workflow automation project makes the case for itself.`;
+    notice = `I've been looking at expansion activity around ${company}, and I keep noticing something I wanted to check with you. Material movement and labor demand often rise before anyone has locked a robot specification.`;
   } else {
-    hook = `I've had ${company} on my radar in ${industry} — there may be an automation angle worth a quick look on your side.`;
+    notice = `I've been looking at ${industry}, and I keep noticing something I wanted to check with you. The visible task gets most of the attention, but a lot of the day-to-day pressure seems to happen elsewhere.`;
   }
 
-  return ["Hey,", "", hook, "", OUTREACH_CTA, "", OUTREACH_SIGNATURE].join("\n");
+  const question = `I'm curious if that's true at ${short}. Where do you see the biggest opportunity to automate today?`;
+
+  return [
+    `Hi ${short} team,`,
+    "",
+    "I'm Cal with ReadyForRobots. I research how companies are using robotics and help identify jobs where automation could actually make a difference.",
+    "",
+    notice,
+    "",
+    question,
+    "",
+    "I'd be interested in your perspective.",
+    "",
+    CAL_SIGNATURE,
+  ].join("\n");
 }
 
 export function pipelineStageFromCrmOutreach(stage?: string | null): PipelineStage | null {

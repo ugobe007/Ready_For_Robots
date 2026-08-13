@@ -46,9 +46,9 @@ def test_every_buyer_variant_passes_guard_and_assembly():
         full = f"Subject: {subject}\n\n{body}"
         ok, reason = is_complete_cal_draft(full)
         assert ok, f"{vid} failed guard: {reason}"
-        assert name in body, f"{vid} missing company name"
-        assert "— Cal" in body and "Ready For Robots" in body
-        assert "Deployment Advisor" in body
+        assert "UPS" in body, f"{vid} missing company anchor"
+        assert "Cal" in body and "ReadyForRobots" in body
+        assert "Deployment Advisor" not in body
         needs, _ = draft_needs_regeneration(full, account_type="buyer")
         assert not needs, f"{vid} wrongly flagged for regeneration"
         assert assemble_buyer_outreach(company_name=name, subject=subject, body=body).approved
@@ -58,26 +58,29 @@ def test_every_buyer_variant_passes_guard_and_assembly():
 
 
 def test_buyer_variants_are_humble_not_presumptuous():
-    # The whole point of the rewrite: don't diagnose their business. Each angle
-    # must leave room for "not now" / "already tried" rather than asserting pain.
+    # Conversational honesty: invite their perspective, don't diagnose them.
     name = "Acme Distribution"
-    humility_markers = (
-        "not yet",
-        "vendor-neutral",
-        "vendor neutral",
-        "no pitch",
-        "isn't very useful",
-        "wrong problem",
-        "wrong job",
-        "right workflow",
-        "actively exploring",
-        "still deciding",
+    honesty_markers = (
+        "i'm curious",
+        "i keep noticing",
+        "i've been looking",
+        "i'm cal with readyforrobots",
+        "i'd be interested in your perspective",
+        "biggest opportunity",
+        "somewhere else",
+        "happen elsewhere",
     )
     for vid in BUYER_VARIANTS:
         body = build_buyer_variant_body(name, "Logistics", vid).lower()
         for banned in _THEATER:
             assert banned not in body, f"{vid} regressed marketing theater: {banned}"
-        assert any(m in body for m in humility_markers), f"{vid} reads presumptuous"
+        assert "hand this to robert" not in body
+        assert "rfq" not in body
+        assert "quick field pattern" not in body
+        assert "rings true" not in body
+        assert "operational pressure often shows up" not in body
+        assert any(m in body for m in honesty_markers), f"{vid} reads presumptuous: {body[:200]}"
+        assert len(body.split()) <= 280, f"{vid} too long: {len(body.split())} words"
 
 
 def test_buyer_variant_selection_is_deterministic_round_robin():

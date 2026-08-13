@@ -65,10 +65,10 @@ export default function PipelineOutreachValuePanel({
           <LockKeyhole className={`h-4 w-4 shrink-0 mt-0.5 ${dark ? "text-sky-300" : "text-blue-800"}`} />
           <div className="min-w-0 flex-1">
             <p className={`text-[10px] font-bold uppercase tracking-widest ${dark ? "text-sky-200" : "text-blue-900"}`}>
-              Outreach draft ready
+              Cal's note ready
             </p>
             <p className={`mt-1 text-[11px] leading-relaxed ${dark ? "text-sky-100/90" : "text-blue-950"}`}>
-              SIGNAL wrote a rep-voice email for {deal.company}. Sign up free to read the full draft, copy it, and save this lead.
+              A short, timely note for {deal.company} — market timing, not a hard sell. Sign up free to read the full draft, copy it, and save this lead.
             </p>
             <Link
               href={signupHref}
@@ -111,7 +111,7 @@ export default function PipelineOutreachValuePanel({
                   : "text-[10px] font-bold uppercase tracking-widest text-gray-400"
             }
           >
-            Your outreach draft — ready to send
+            What Cal would send — problem first, then fit
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -181,7 +181,7 @@ export default function PipelineOutreachValuePanel({
       {!hasSession && (
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className={`text-[11px] leading-relaxed ${dark ? "text-emerald-200/90" : "text-emerald-800"}`}>
-            This draft is written in your voice for this buyer. Sign up free to copy, save, and track this lead.
+            Notice the timing — this is market insight, not a pitch. Sign up free to copy, save, and track this lead.
           </p>
           <Link
             href={signupHref}
