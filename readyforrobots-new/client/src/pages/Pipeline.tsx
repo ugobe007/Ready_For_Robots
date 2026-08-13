@@ -3722,18 +3722,18 @@ export default function Pipeline() {
                   </div>
                 </div>
               ) : (
-                <div className="grid gap-4 px-5 py-5 sm:px-7 lg:grid-cols-[1fr_auto] lg:items-center">
+                <div className="grid w-full gap-4 px-5 py-5 sm:px-7 lg:grid-cols-[1fr_auto] lg:items-center">
                   <div className="min-w-0">
-                    <span className="inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">
-                      Building · {build25Progress}/{BUILD_PIPELINE_TARGET} leads
-                    </span>
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300/90">
+                      Step 5 of 5 · {BUILD_PIPELINE_TARGET} sales leads
+                    </p>
                     <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
                       Curate sales leads &amp; run outreach
                     </h2>
-                    <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
+                    <p className="mt-2 max-w-3xl text-sm leading-relaxed text-emerald-100/85 sm:text-base">
                       Save the best companies into your working list (goal: {BUILD_PIPELINE_TARGET}). Open each lead for why-now signals, copy Cal’s note, and send.
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-slate-300 sm:text-sm">
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-emerald-100/80 sm:text-sm">
                       <span className={build25Progress > 0 ? "text-emerald-300" : "text-amber-200"}>
                         1. Save leads ({build25Progress}/{BUILD_PIPELINE_TARGET})
                       </span>
@@ -3846,8 +3846,8 @@ export default function Pipeline() {
           <div className="pipeline-workspace">
             {/* ── Workspace toolbar ── */}
             <div className="pipeline-page-header">
-              <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <div className="min-w-0">
+                  <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div className="min-w-0 flex-1">
                   <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-900">
                     Search pipeline
                   </span>
@@ -3865,7 +3865,7 @@ export default function Pipeline() {
                       <span className="inline-flex items-center rounded-full border border-slate-500 bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-900">
                         Submitted URL: {submittedHostname}
                       </span>
-                      <p className="text-[11px] font-medium text-slate-800">
+                      <p className="w-full text-[11px] font-medium text-slate-800">
                         {submittedUrlMatchLoading
                           ? `Looking up ${submittedHostname}, scoring the robot company, matching opportunities…`
                           : submittedUrlMatchError
@@ -3887,6 +3887,8 @@ export default function Pipeline() {
                       ) : null}
                     </div>
                   )}
+                  {/* One instruction rail lives in the Step 5 banner above — don't duplicate it here. */}
+                  {!(arrivedFromResultsScan && build25Started) ? (
                   <div className="mt-2 w-full rounded-xl border border-emerald-700/80 bg-[#0b162f] px-4 py-4 text-[13px] text-slate-100 shadow-sm sm:px-5 sm:py-5 sm:text-sm">
                     <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-300 sm:text-xs">{nextStepsTitle}</p>
                     <p className="mt-2 text-base font-semibold text-white sm:text-lg">
@@ -3941,9 +3943,10 @@ export default function Pipeline() {
                       ) : null}
                     </div>
                   </div>
+                  ) : null}
                 </div>
 
-                <div className="relative w-full sm:w-[340px]">
+                <div className={`relative w-full ${arrivedFromResultsScan && build25Started ? "sm:w-full lg:max-w-md" : "sm:w-[340px]"}`}>
                   <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600" />
                   <input
                     value={industryQuery}
