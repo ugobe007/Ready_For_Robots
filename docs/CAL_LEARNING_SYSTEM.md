@@ -246,6 +246,16 @@ Promotion checklist:
 | **4 — Outcome wiring** | CRM events → learning log / behavior scores | Engineering |
 | **5 — Continuous update** | Weekly rule promotion from log + corpus refresh | Orchestrator |
 
+### Stage 1 tools (live)
+
+| Tool | Use |
+|------|-----|
+| [`scripts/cal_score_draft.py`](../scripts/cal_score_draft.py) | Evaluate a draft (file / stdin / variant) — `--gate` fails &lt; 24/30 |
+| [`scripts/cal_log_learning.py`](../scripts/cal_log_learning.py) | Append a Learning Log row |
+| [`scripts/cal_preflight.py`](../scripts/cal_preflight.py) | Includes advisory `[1b] Voice rubric` sample |
+| [`docs/cal_stage1_operator_card.md`](./cal_stage1_operator_card.md) | Daily operator checklist |
+| [`app/services/cal_voice_rubric.py`](../app/services/cal_voice_rubric.py) | Heuristic rubric (Stage 2 may add LLM judge) |
+
 Do not skip Stage 1. Automation without logged judgment recreates slogan Cal.
 
 ---
