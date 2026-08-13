@@ -1,4 +1,4 @@
-# Customer-facing outreach voice — Cal research & deployment advisor.
+// Customer-facing outreach voice — Cal research & deployment advisor.
 export const OUTREACH_CTA =
   "Where do you see the biggest opportunity to automate today? I'd be interested in your perspective.";
 export const OUTREACH_SIGNATURE = ["Cal", "ReadyForRobots"].join("\n");
