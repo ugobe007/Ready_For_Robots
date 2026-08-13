@@ -11,6 +11,13 @@ import { getPublicReadApiBase } from "@/lib/apiBase";
 import { readSupplyAttribution, trackSupplyConversion, trackSignupStart } from "@/lib/siteAnalytics";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError } from "@/lib/authCallback";
 import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlanParam, storeCheckoutIntent, navigateAfterAuth } from "@/lib/authNext";
+import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
+import {
+  isRobotWorkspaceProfileComplete,
+  readRobotWorkspaceProfile,
+  writeRobotWorkspaceProfile,
+  type RobotWorkspaceProfile,
+} from "@/lib/robotWorkspaceProfile";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
@@ -106,6 +113,19 @@ function workflowResultsPath(prefill: WorkflowPrefill): string {
   return `/results?${params.toString()}`;
 }
 
+/** Prefer an explicit ?next= destination over stale workflow URL-scan context. */
+function shouldHonorWorkflowResults(nextRaw: string, prefill: WorkflowPrefill): boolean {
+  if (!prefill.company_url) return false;
+  if (nextRaw.startsWith("/results")) return true;
+  // Explicit pipeline / home / pricing returns must not revive a prior URL submit.
+  if (nextRaw.startsWith("/pipeline") || nextRaw === "/" || nextRaw.startsWith("/pricing")) {
+    return false;
+  }
+  // Header "Start free workspace" is never a URL-submit continuation.
+  if ((prefill.src || "").includes("home_header")) return false;
+  return true;
+}
+
 export default function Signup() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
@@ -121,6 +141,15 @@ export default function Signup() {
   const [liveBuyer, setLiveBuyer] = useState<
     { company: string; industry?: string; tier?: string; blurb?: string; robots: string[] } | null
   >(null);
+  const [workspaceProfile, setWorkspaceProfile] = useState<RobotWorkspaceProfile>(() => {
+    const existing = readRobotWorkspaceProfile();
+    return {
+      company_name: existing?.company_name || "",
+      category: existing?.category || "",
+      icp: existing?.icp || "",
+      company_url: existing?.company_url || undefined,
+    };
+  });
 
   const search = typeof window !== "undefined" ? window.location.search : "";
   const params = useMemo(() => new URLSearchParams(search), [search]);
@@ -143,16 +172,32 @@ export default function Signup() {
     return readWorkflowSessionContext();
   }, [params]);
 
-  const workflowReturnPath = useMemo(
-    () => workflowResultsPath(workflowPrefill),
-    [workflowPrefill],
-  );
+  const matchedUnlockIntent =
+    params.get("src") === "pipeline_matched_unlock" ||
+    (pipelineIntent && Boolean(workflowPrefill.company_url || params.get("company_url")));
+
+  const workflowReturnPath = useMemo(() => {
+    if (!shouldHonorWorkflowResults(nextRaw, workflowPrefill)) return "/pipeline";
+    return workflowResultsPath(workflowPrefill);
+  }, [nextRaw, workflowPrefill]);
 
   const intendedPostAuthPath = useMemo(
-    () => appendWorkflowPrefill(postAuthRedirectTarget(workflowReturnPath), workflowPrefill),
-    [workflowPrefill, workflowReturnPath],
+    () => {
+      const base = shouldHonorWorkflowResults(nextRaw, workflowPrefill)
+        ? appendWorkflowPrefill(postAuthRedirectTarget(workflowReturnPath), workflowPrefill)
+        : postAuthRedirectTarget(workflowReturnPath);
+      return base;
+    },
+    [workflowPrefill, workflowReturnPath, nextRaw],
   );
-  const nextPath = () => appendWorkflowPrefill(resolvePostAuthPath(workflowReturnPath), workflowPrefill);
+  const nextPath = () => {
+    const resolved = resolvePostAuthPath(workflowReturnPath);
+    // Never re-attach a stale company_url onto an explicit pipeline/home return.
+    if (!shouldHonorWorkflowResults(nextRaw, workflowPrefill) && !resolved.startsWith("/results")) {
+      return resolved;
+    }
+    return appendWorkflowPrefill(resolved, workflowPrefill);
+  };
 
   useEffect(() => {
     const plan = readPlanParam(search);
@@ -169,6 +214,22 @@ export default function Signup() {
     if (!workflowPrefill.wf && !workflowPrefill.intent_focus && !workflowPrefill.company_url) return;
     window.sessionStorage.setItem(WORKFLOW_CONTEXT_KEY, JSON.stringify(workflowPrefill));
   }, [workflowPrefill]);
+
+  useEffect(() => {
+    if (!matchedUnlockIntent || !workflowPrefill.company_url) return;
+    setWorkspaceProfile((prev) => {
+      if (prev.company_url === workflowPrefill.company_url && prev.company_name) return prev;
+      const host = workflowPrefill.company_url!
+        .replace(/^https?:\/\//, "")
+        .replace(/^www\./, "")
+        .split("/")[0];
+      return {
+        ...prev,
+        company_url: workflowPrefill.company_url,
+        company_name: prev.company_name || host || "",
+      };
+    });
+  }, [matchedUnlockIntent, workflowPrefill.company_url]);
 
   // Funnel #20: record signup intent (denominator). Fires once per page view.
   useEffect(() => {
@@ -300,6 +361,17 @@ export default function Signup() {
       setErrMsg("Enter your full name so SIGNAL can authenticate your HubSpot workspace.");
       return;
     }
+    if (matchedUnlockIntent && !isRobotWorkspaceProfileComplete(workspaceProfile)) {
+      setStatus("error");
+      setErrMsg("Add company name, robot category, and ICP before creating your account.");
+      return;
+    }
+    if (matchedUnlockIntent) {
+      writeRobotWorkspaceProfile({
+        ...workspaceProfile,
+        company_url: workflowPrefill.company_url || workspaceProfile.company_url,
+      });
+    }
     persistFullName();
     setErrMsg("");
     setStatus("idle");
@@ -350,6 +422,17 @@ export default function Signup() {
       setStatus("error");
       setErrMsg("Enter your full name so SIGNAL can authenticate your HubSpot workspace.");
       return;
+    }
+    if (matchedUnlockIntent && !isRobotWorkspaceProfileComplete(workspaceProfile)) {
+      setStatus("error");
+      setErrMsg("Add company name, robot category, and ICP before creating your account.");
+      return;
+    }
+    if (matchedUnlockIntent) {
+      writeRobotWorkspaceProfile({
+        ...workspaceProfile,
+        company_url: workflowPrefill.company_url || workspaceProfile.company_url,
+      });
     }
     persistFullName();
     setStatus("sending");
@@ -405,7 +488,7 @@ export default function Signup() {
                     : "Free workspace: land on your matched lead, save it in one click, copy the outreach draft, and sync to HubSpot when you are ready."
                   : resultsIntent
                     ? "Sign up to unlock every URL scan match, save leads to CRM, and copy signal-matched outreach drafts."
-                    : "For robot OEMs and integrators — SIGNAL ranks buyer intent, drafts outreach, and advances deals in native CRM or HubSpot."}
+                    : "For robot OEMs and integrators — live buyer intent, Cal's timely notes, and the first informed conversation with a robot buyer — not another giant contact list."}
             </p>
             {(workflowPrefill.wf || workflowPrefill.intent_focus) && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -436,7 +519,7 @@ export default function Signup() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-emerald-700">✓</span>
-                  HOT/WARM buyers with pitch actions and robot categories
+                  HOT/WARM buyers with pitch actions and Cal's curiosity-led notes
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-emerald-700">✓</span>
@@ -559,15 +642,38 @@ export default function Signup() {
           ) : (
             <div className="rounded-2xl border border-slate-700 p-6 shadow-sm">
               <h2 className="font-display text-xl font-bold text-slate-100">
-                {hubspotIntent ? "Sign up for HubSpot sync" : "Start free"}
+                {hubspotIntent ? "Sign up for HubSpot sync" : matchedUnlockIntent ? "Company details + free account" : "Start free"}
               </h2>
               <p className="mt-2 text-sm text-slate-300">
                 {hubspotIntent
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
-                  : params.get("next")
+                  : matchedUnlockIntent
+                    ? "Confirm company name, robot category, and ICP — then create your account to unlock 15 matched sales leads."
+                    : params.get("next")
                     ? "Use one-tap OAuth and we create your account instantly, then your matched leads are saved."
                     : "Use one-tap OAuth to create your account instantly, then upgrade to unlock full pipeline coverage and CRM automation."}
               </p>
+              {matchedUnlockIntent && (
+                <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-300">
+                    Required for matched pipeline
+                  </p>
+                  <div className="mt-3">
+                    <RobotWorkspaceProfileFields
+                      value={workspaceProfile}
+                      onChange={setWorkspaceProfile}
+                      submittedHostname={
+                        (workflowPrefill.company_url || "")
+                          .replace(/^https?:\/\//, "")
+                          .replace(/^www\./, "")
+                          .split("/")[0] || undefined
+                      }
+                      tone="dark"
+                      idPrefix="signup-matched"
+                    />
+                  </div>
+                </div>
+              )}
               {liveProof && (liveProof.hot || liveProof.companies) && (
                 <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-800 px-3 py-2 text-[11px] font-semibold text-emerald-300">
                   <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">

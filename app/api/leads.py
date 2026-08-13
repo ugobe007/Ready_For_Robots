@@ -119,6 +119,10 @@ def _submitted_url_match_input(raw_url: str) -> tuple[str, str]:
 def leads_match_submitted_url(
     url: str = Query(..., min_length=3, description="Robot company URL to match against buyer demand"),
     limit: int = Query(15, ge=1, le=90),
+    industries: Optional[str] = Query(
+        None,
+        description="Optional comma-separated ICP industries to bias matching",
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -158,7 +162,19 @@ def leads_match_submitted_url(
             "pipeline_limit": URL_MATCHED_PIPELINE_LIMIT,
         }
 
-    matched_all = match_companies(robot_caps, db)
+    industry_list = [
+        part.strip()
+        for part in str(industries or "").split(",")
+        if part and part.strip()
+    ][:8]
+    matched_all = match_companies(
+        robot_caps,
+        db,
+        target_industries=industry_list or None,
+    )
+    # If ICP industries were too narrow, fall back to open match so unlock still works.
+    if industry_list and not matched_all:
+        matched_all = match_companies(robot_caps, db)
     matched = matched_all[: min(limit, URL_MATCHED_PIPELINE_LIMIT)]
     matched_ids = [int(m.get("id")) for m in matched if m.get("id") is not None]
     if not matched_ids:

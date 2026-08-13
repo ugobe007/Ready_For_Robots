@@ -36,6 +36,13 @@ import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { signupHrefForLead } from "@/lib/signupHref";
+import {
+  icpIndustryTokens,
+  isRobotWorkspaceProfileComplete,
+  readRobotWorkspaceProfile,
+  writeRobotWorkspaceProfile,
+  type RobotWorkspaceProfile,
+} from "@/lib/robotWorkspaceProfile";
 import { trackFirstSave, trackMarketingEvent } from "@/lib/siteAnalytics";
 import {
   isFreshSignup,
@@ -53,6 +60,7 @@ import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
 import ActivationChecklist from "@/components/pipeline/ActivationChecklist";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import PipelineSalesWorkflowRail from "@/components/pipeline/PipelineSalesWorkflowRail";
+import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1612,6 +1620,20 @@ export default function Pipeline() {
     }
   });
   const step3Intro = arrivedFromResultsScan && !build25Started;
+  const [workspaceProfile, setWorkspaceProfile] = useState<RobotWorkspaceProfile>(() => {
+    const existing = readRobotWorkspaceProfile();
+    return {
+      company_name: existing?.company_name || "",
+      category: existing?.category || "",
+      icp: existing?.icp || "",
+      company_url: existing?.company_url || undefined,
+    };
+  });
+  const workspaceProfileComplete = isRobotWorkspaceProfileComplete(workspaceProfile);
+  const [matchIndustryKey, setMatchIndustryKey] = useState(() => {
+    const existing = readRobotWorkspaceProfile();
+    return isRobotWorkspaceProfileComplete(existing) ? existing!.icp : "";
+  });
 
   // Land on instructions — never restore scroll to the lead list (browse-and-leave trap).
   useEffect(() => {
@@ -1695,8 +1717,12 @@ export default function Pipeline() {
     const base = getPublicReadApiBase();
     setSubmittedUrlMatchError(false);
     setSubmittedUrlMatchLoading(true);
+    const industries = icpIndustryTokens(matchIndustryKey);
+    const industryQs = industries.length
+      ? `&industries=${encodeURIComponent(industries.join(","))}`
+      : "";
     void fetchWithTimeoutRetry(
-      `${base}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=${BUILD_PIPELINE_TARGET}`,
+      `${base}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=${BUILD_PIPELINE_TARGET}${industryQs}`,
       publicFetchInit(),
       PIPELINE_TIMEOUT,
       { retries: 1, retryDelayMs: 800 },
@@ -1735,7 +1761,7 @@ export default function Pipeline() {
     return () => {
       cancelled = true;
     };
-  }, [submittedUrl]);
+  }, [submittedUrl, matchIndustryKey]);
   const firstThreeEnteredRef = useRef<FirstThreeStep | null>(null);
   const firstThreeAbandonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstThreeAbandonSignaturesRef = useRef<Set<string>>(new Set());
@@ -2573,9 +2599,11 @@ export default function Pipeline() {
   const canOpenSelectedDraft = Boolean(selected?.outreachBody) && showKanban && Boolean(session?.access_token);
   const nextStepPrimaryLabel = arrivedFromResultsScan
     ? !build25Started
-      ? isSignedIn
-        ? `Open your ${BUILD_PIPELINE_TARGET} matched sales leads`
-        : `Create free account · unlock ${BUILD_PIPELINE_TARGET} matched leads`
+      ? !workspaceProfileComplete
+        ? "Save company details"
+        : isSignedIn
+          ? `Open your ${BUILD_PIPELINE_TARGET} matched sales leads`
+          : `Create free account · unlock ${BUILD_PIPELINE_TARGET} matched leads`
       : canSaveSelected
         ? `Save lead · ${build25Progress}/${BUILD_PIPELINE_TARGET}`
         : canCopySelectedDraft
@@ -2773,6 +2801,20 @@ export default function Pipeline() {
     toast.success(`Matched pipeline unlocked — save up to ${BUILD_PIPELINE_TARGET} leads scored against your URL.`);
   };
 
+  const persistWorkspaceProfile = (): boolean => {
+    if (!isRobotWorkspaceProfileComplete(workspaceProfile)) {
+      toast.error("Add company name, robot category, and ICP before unlocking.");
+      return false;
+    }
+    const saved = writeRobotWorkspaceProfile({
+      ...workspaceProfile,
+      company_url: submittedUrl || workspaceProfile.company_url,
+    });
+    setWorkspaceProfile(saved);
+    setMatchIndustryKey(saved.icp);
+    return true;
+  };
+
   const matchedPipelineSignupHref = (() => {
     const params = new URLSearchParams();
     params.set("src", "results_scan");
@@ -2799,6 +2841,7 @@ export default function Pipeline() {
 
   const runNextStepPrimary = () => {
     if (arrivedFromResultsScan && !build25Started) {
+      if (!persistWorkspaceProfile()) return;
       if (!isSignedIn) {
         window.location.href = matchedPipelineSignupHref;
         return;
@@ -3608,9 +3651,7 @@ export default function Pipeline() {
                     Step 3 of 3 · URL-matched sales pipeline
                   </p>
                   <h2 className="mt-3 max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-[2.65rem]">
-                    {isSignedIn
-                      ? `Open ${BUILD_PIPELINE_TARGET} buyers matched to your robot URL.`
-                      : `Create a free account to unlock ${BUILD_PIPELINE_TARGET} matched sales leads.`}
+                    Tell us your robot company, then unlock {BUILD_PIPELINE_TARGET} matched buyers.
                   </h2>
                   <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-300 sm:text-lg sm:leading-8">
                     Lookup → score → match. We scored
@@ -3621,16 +3662,30 @@ export default function Pipeline() {
                       </>
                     ) : (
                       " your robot company"
-                    )}{" "}
-                    and paired it with equally scored customer opportunities — not the global market queue.
-                    {isSignedIn
-                      ? " Unlock your matched list, save fits, then run outreach."
-                      : " Free account details unlock the matched pipeline."}
+                    )}
+                    . Add company name, category, and ICP so we pair equally scored opportunities — then
+                    {isSignedIn ? " open your matched list." : " create a free account to unlock it."}
                   </p>
+
+                  <div className="mt-6 rounded-2xl border border-amber-400/30 bg-black/30 p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">Workspace details</p>
+                    <p className="mt-1 text-sm text-slate-400">
+                      Required before unlocking the {BUILD_PIPELINE_TARGET}-lead matched pipeline.
+                    </p>
+                    <div className="mt-4">
+                      <RobotWorkspaceProfileFields
+                        value={workspaceProfile}
+                        onChange={setWorkspaceProfile}
+                        submittedHostname={submittedHostname || undefined}
+                        tone="dark"
+                        idPrefix="pipeline-step3"
+                      />
+                    </div>
+                  </div>
 
                   <ol className="mt-7 grid gap-3 sm:grid-cols-3">
                     {[
-                      { n: "1", t: "URL scored", d: "Your robot company profile from the submitted URL." },
+                      { n: "1", t: "Company details", d: "Name, robot category, and ICP for your workspace." },
                       { n: "2", t: `${BUILD_PIPELINE_TARGET} matched leads`, d: "Buyers scored in the same band as your robot profile." },
                       { n: "3", t: "Curate + outreach", d: "Save fits, copy Cal’s note, send." },
                     ].map((step) => (
@@ -3655,9 +3710,11 @@ export default function Pipeline() {
                       <ArrowRight className="h-5 w-5" />
                     </button>
                     <p className="text-sm text-slate-400 sm:max-w-xs">
-                      {isSignedIn
-                        ? "Opens your URL-matched list only — browse-the-market is not this path."
-                        : "Account first, then your 15 matched leads. Preview stays on Results."}
+                      {workspaceProfileComplete
+                        ? isSignedIn
+                          ? "Opens your URL-matched list only — not the global market feed."
+                          : "Details saved — next create your free account to unlock 15 matches."
+                        : "Fill the three fields above, then continue."}
                     </p>
                   </div>
                 </div>
@@ -3764,9 +3821,11 @@ export default function Pipeline() {
                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-white via-white/85 to-white/40 px-4">
                   <div className="w-full max-w-md rounded-2xl border border-amber-400/60 bg-white/95 p-5 text-center shadow-xl sm:p-6">
                     <p className="text-sm font-semibold text-slate-800 sm:text-base">
-                      {isSignedIn
-                        ? `Unlock your ${BUILD_PIPELINE_TARGET} URL-matched sales leads.`
-                        : `Free account unlocks ${BUILD_PIPELINE_TARGET} matched leads for your robot URL.`}
+                      {workspaceProfileComplete
+                        ? isSignedIn
+                          ? `Unlock your ${BUILD_PIPELINE_TARGET} URL-matched sales leads.`
+                          : `Free account unlocks ${BUILD_PIPELINE_TARGET} matched leads for your robot URL.`
+                        : "Add company name, category, and ICP above to continue."}
                     </p>
                     <button
                       type="button"
