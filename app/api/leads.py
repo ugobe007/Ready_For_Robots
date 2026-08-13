@@ -3752,7 +3752,8 @@ def _repair_pipeline_lead_compat_fields(payload: dict, db: Session) -> dict:
 
         if lead.get("signal_strength") is None:
             strength = None
-            sigs = lead.get("signals")            if isinstance(sigs, list) and sigs and isinstance(sigs[0], dict):
+            sigs = lead.get("signals")
+            if isinstance(sigs, list) and sigs and isinstance(sigs[0], dict):
                 raw = sigs[0].get("strength")
                 if raw is not None:
                     try:
