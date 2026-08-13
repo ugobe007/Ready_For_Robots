@@ -23,7 +23,7 @@ import PageHeroDark from "@/components/layout/PageHeroDark";
 import { useAuth } from "@/contexts/AuthContext";
 import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 import { normalizeUrl } from "@/lib/normalizeUrl";
-import { getApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
+import { getApiBase, getDirectApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
 import { trackUrlScan, readSupplyAttribution, trackSupplyConversion } from "@/lib/siteAnalytics";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader, getFreshAccessToken } from "@/lib/supabase";
@@ -521,12 +521,51 @@ export default function Results() {
     setUsingFallback(false);
 
     let cancelled = false;
+    let finished = false;
+    let hardDeadline = 0;
     const stepTimer = window.setInterval(() => {
       setScanStep((current) => Math.min(current + 1, SCAN_STEPS.length - 1));
     }, 650);
 
+    const finishScan = (mapped: Prospect[], usedFallback: boolean) => {
+      if (cancelled || finished) return;
+      finished = true;
+      window.clearInterval(stepTimer);
+      if (hardDeadline) window.clearTimeout(hardDeadline);
+      setScanStep(SCAN_STEPS.length - 1);
+      setProspects(mapped);
+      setUsingFallback(usedFallback);
+      if (usedFallback) {
+        toast.info("SIGNAL could not reach the matcher in time — showing sample leads while the API recovers.");
+      }
+      window.setTimeout(() => {
+        if (!cancelled) {
+          setLoading(false);
+          setScanning(false);
+        }
+      }, 350);
+    };
+
     async function runScan() {
+      const apiBase = getDirectApiBase();
       try {
+        // Fast path: same matcher Pipeline uses (avoids slow scout/robot-ready scrape).
+        const matchRes = await fetchWithTimeoutRetry(
+          `${apiBase}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=${requestedLimit}`,
+          liveFetchInit(),
+          12_000,
+          { retries: 0 },
+        );
+        if (matchRes.ok) {
+          const matchData = (await matchRes.json()) as { leads?: ApiLead[] };
+          const rows = Array.isArray(matchData.leads) ? matchData.leads : [];
+          const mapped = rows.slice(0, requestedLimit).map(mapApiLead);
+          if (mapped.length) {
+            finishScan(mapped, false);
+            return;
+          }
+        }
+
         const host = (() => {
           try {
             return new URL(submittedUrl).hostname.replace(/^www\./, "");
@@ -535,7 +574,7 @@ export default function Results() {
           }
         })();
         const scoutRes = await fetchWithTimeoutRetry(
-          `${getApiBase()}/api/scout/scan-for-results`,
+          `${apiBase}/api/scout/scan-for-results`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -546,62 +585,35 @@ export default function Results() {
               limit: requestedLimit,
             }),
           },
-          25_000,
-          { retries: 1, retryDelayMs: 800 },
+          10_000,
+          { retries: 0 },
         );
         if (scoutRes.ok) {
-          const scoutData = await scoutRes.json() as { prospects?: ScoutProspectRow[] };
+          const scoutData = (await scoutRes.json()) as { prospects?: ScoutProspectRow[] };
           const rows = Array.isArray(scoutData.prospects) ? scoutData.prospects : [];
           const mapped = rows.map(mapScoutProspect);
           if (mapped.length) {
-            if (!cancelled) setProspects(mapped);
+            finishScan(mapped, false);
             return;
           }
         }
-        const response = await fetchWithTimeoutRetry(
-          `${getApiBase()}/api/robot-ready/submit`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              robot_name: host,
-              url: submittedUrl,
-            }),
-          },
-          25_000,
-          { retries: 1, retryDelayMs: 800 },
-        );
-        if (!response.ok) throw new Error(`Scan failed with ${response.status}`);
-        const data = await response.json() as RobotReadyResponse;
-        const matches = Array.isArray(data.matched_companies) ? data.matched_companies : [];
-        const mapped = matches.slice(0, requestedLimit).map(mapApiLead);
-        if (!mapped.length) throw new Error("No URL-specific matches returned");
-        if (!cancelled) setProspects(mapped);
+        throw new Error(`Scan failed with ${scoutRes.status}`);
       } catch (error) {
         console.error(error);
-        if (!cancelled) {
-          setUsingFallback(true);
-          setProspects(fallbackProspectsForLimit(requestedLimit));
-          toast.info("SIGNAL could not reach the matcher in time — showing sample leads while the API recovers.");
-        }
-      } finally {
-        if (!cancelled) {
-          window.clearInterval(stepTimer);
-          setScanStep(SCAN_STEPS.length - 1);
-          window.setTimeout(() => {
-            if (!cancelled) {
-              setLoading(false);
-              setScanning(false);
-            }
-          }, 450);
-        }
+        finishScan(fallbackProspectsForLimit(requestedLimit), true);
       }
     }
 
-    runScan();
+    // Hard wall-clock: never leave the scan spinner spinning.
+    hardDeadline = window.setTimeout(() => {
+      finishScan(fallbackProspectsForLimit(requestedLimit), true);
+    }, 16_000);
+
+    void runScan();
     return () => {
       cancelled = true;
       window.clearInterval(stepTimer);
+      if (hardDeadline) window.clearTimeout(hardDeadline);
     };
   }, [requestedLimit, sampleAccessAllowed, sampleAccessLoading, sampleMode, submittedUrl]);
 
