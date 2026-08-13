@@ -12,7 +12,6 @@ import {
   LockKeyhole,
   MapPin,
   Shield,
-  TrendingUp,
   Users,
   Zap,
 } from "lucide-react";
@@ -31,7 +30,7 @@ import { cleanScrapedText } from "@/lib/text";
 import { toast } from "sonner";
 import LeadShareBar from "@/components/LeadShareBar";
 import ResultsValueStrip from "@/components/results/ResultsValueStrip";
-import ResultsFomoBanner, { RESULTS_ANONYMOUS_UNLOCK } from "@/components/results/ResultsFomoBanner";
+import { RESULTS_ANONYMOUS_UNLOCK } from "@/components/results/ResultsFomoBanner";
 import ResultsNextStepCta from "@/components/results/ResultsNextStepCta";
 
 const SCAN_STEPS = [
@@ -833,26 +832,37 @@ export default function Results() {
                 </div>
               )}
 
-              <ResultsFomoBanner
-                prospects={sortedProspects}
-                isSignedIn={isSignedIn}
-                scanUrl={submittedUrl}
-              />
-
-              <div className="mb-6 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-4 sm:px-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">
+              <div className="mb-4 rounded-lg border border-amber-400/50 bg-transparent px-3 py-2.5 sm:px-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
                   {isSignedIn ? "Step 3 of 5 · 5 sales leads" : "Step 2 of 5 · Sign up for 5 sales leads"}
+                  {sortedProspects.length > 0 ? (
+                    <>
+                      {" · "}
+                      <span className="text-emerald-300">
+                        {sortedProspects.length} buyers
+                        {sortedProspects.filter((p) => p.priorityTier === "HOT" || (p.stage || "").toUpperCase().includes("HOT")).length > 0
+                          ? ` · ${sortedProspects.filter((p) => p.priorityTier === "HOT" || (p.stage || "").toUpperCase().includes("HOT")).length} HOT`
+                          : ""}
+                      </span>
+                    </>
+                  ) : null}
                 </p>
-                <p className="mt-1 text-base font-bold text-white sm:text-lg">
+                <p className="mt-1 text-sm font-semibold text-white sm:text-base">
                   {isSignedIn
                     ? "Review these 5 sales leads — then provide customer name and information"
                     : "Sign up to see 5 sales leads"}
                 </p>
-                <p className="mt-1 text-sm text-slate-300">
-                  Matches for{" "}
-                  <span className="font-medium text-slate-100 break-all">{submittedUrl}</span>
-                  {usingFallback ? " · sample mode" : ""}. Use the Next step button below when you’re ready.
+                <p className="mt-0.5 text-xs text-emerald-200/80">
+                  <span className="break-all text-slate-300">{submittedUrl}</span>
+                  {usingFallback ? " · sample mode" : ""}
+                  {" · "}
+                  Use Next step below when ready.
                 </p>
+                {!isSignedIn && (
+                  <p className="mt-2 text-xs text-slate-400">
+                    Free signup unlocks the full 5-lead preview, then Pipeline.
+                  </p>
+                )}
               </div>
 
               {!isSignedIn && (
@@ -873,7 +883,7 @@ export default function Results() {
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {sortedProspects.map((p, index) => {
                   const isSelected = selectedIds.has(p.id);
                   const isActive = activatedIds.has(p.id);
@@ -881,171 +891,157 @@ export default function Results() {
                   return (
                     <div
                       key={p.id}
-                      className={`rounded-2xl border bg-[#0b162f] shadow-[0_20px_45px_-30px_rgba(0,0,0,0.85)] overflow-hidden transition-colors ${
-                        isLocked ? "border-sky-400/30 hover:border-sky-400/50" : "border-white/10 hover:border-emerald-400/40"
+                      className={`rounded-lg border bg-transparent overflow-hidden transition-colors ${
+                        isLocked ? "border-sky-400/40 hover:border-sky-400/60" : "border-white/20 hover:border-emerald-400/50"
                       }`}
                     >
-                      <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 flex flex-col sm:flex-row sm:items-start gap-4">
-                        <label className="flex items-center gap-2 text-xs text-slate-300 sm:pt-4">
+                      <div className="px-3 py-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5">
+                        <label className="flex items-center gap-1.5 text-[11px] text-slate-400 sm:pt-1">
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleSelected(p.id)}
-                            className="h-4 w-4 accent-emerald-600"
+                            className="h-3.5 w-3.5 accent-emerald-600"
                           />
                           Select
                         </label>
-                        <div className="shrink-0 flex flex-col items-center gap-1">
-                          <div className="h-14 w-14 rounded-full border-2 flex items-center justify-center" style={{ borderColor: scoreColor(p.score), background: `${scoreColor(p.score)}12` }}>
-                            <span className="font-mono text-lg font-bold" style={{ color: scoreColor(p.score), fontFamily: "'JetBrains Mono', monospace" }}>
+                        <div className="shrink-0 flex items-center gap-1.5 sm:flex-col sm:gap-0.5">
+                          <div
+                            className="h-9 w-9 rounded-full border flex items-center justify-center bg-transparent"
+                            style={{ borderColor: scoreColor(p.score) }}
+                          >
+                            <span
+                              className="font-mono text-sm font-bold"
+                              style={{ color: scoreColor(p.score), fontFamily: "'JetBrains Mono', monospace" }}
+                            >
                               {p.score}
                             </span>
                           </div>
-                          <span className="text-[9px] text-slate-500 uppercase tracking-widest">score</span>
+                          <span className="text-[8px] text-slate-500 uppercase tracking-widest">score</span>
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h2 className={`text-base font-bold ${isLocked ? "text-slate-500" : "text-slate-50"}`}>
+                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                            <h2 className={`text-sm font-bold leading-tight ${isLocked ? "text-slate-500" : "text-slate-50"}`}>
                               {isLocked ? `Locked lead · ${p.industry}` : p.company}
                             </h2>
                             {!isLocked && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: isActive ? "#34d399" : "#10b981", background: isActive ? "rgba(52,211,153,0.12)" : "rgba(5,150,105,0.15)", border: isActive ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(5,150,105,0.3)" }}>
+                              <span
+                                className="text-[10px] font-semibold"
+                                style={{ color: isActive ? "#34d399" : "#6ee7b7" }}
+                              >
                                 {isActive ? "Review Queued" : p.stage}
                               </span>
                             )}
                             {isLocked && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-sky-100 bg-sky-400/15 border border-sky-400/35">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-sky-300">
                                 <LockKeyhole className="h-3 w-3" /> Sign up to unlock
                               </span>
                             )}
                             {p.signalAge && !isLocked && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-amber-200 bg-amber-400/15 border border-amber-400/35">
-                                {p.signalAge}
-                              </span>
+                              <span className="text-[10px] font-medium text-amber-300/90">{p.signalAge}</span>
                             )}
                           </div>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 mb-3">
+                          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0 text-[11px] text-slate-400">
                             {!isLocked && (
                               <>
-                                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{p.location}</span>
-                                <span className="flex items-center gap-1"><Users className="h-3 w-3" />{p.employees} employees</span>
+                                <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" />{p.location}</span>
+                                <span className="inline-flex items-center gap-0.5"><Users className="h-3 w-3" />{p.employees}</span>
                               </>
                             )}
                             <span>{p.industry}</span>
                             {isLocked && p.priorityTier && (
                               <span className="font-semibold text-amber-300">{p.priorityTier}</span>
                             )}
-                          </div>
+                          </p>
 
                           {isLocked ? (
-                            <div className="flex min-w-0 items-start gap-2.5 overflow-hidden p-3 rounded-xl border border-sky-400/30 bg-sky-400/10">
-                              <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5 text-sky-300" />
-                              <p className="text-xs leading-relaxed text-sky-100">
-                                {p.priorityTier ? `${p.priorityTier} · ` : ""}
-                                {p.industry} buyer with robot-fit signal — sign up to read the full evidence and outreach draft.
-                              </p>
-                            </div>
+                            <p className="mt-1.5 border-l border-sky-400/50 pl-2 text-[11px] leading-snug text-sky-100/90">
+                              {p.priorityTier ? `${p.priorityTier} · ` : ""}
+                              {p.industry} buyer with robot-fit signal — sign up for full evidence.
+                            </p>
                           ) : (
-                            <div className="flex min-w-0 items-start gap-2.5 overflow-hidden p-3 rounded-xl" style={{ background: `${p.signalColor}0d`, border: `1px solid ${p.signalColor}25` }}>
-                              <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: p.signalColor }} />
-                              <div className="min-w-0">
-                                <span className="text-[10px] font-bold uppercase tracking-widest mr-2" style={{ color: p.signalColor }}>{p.signalType}</span>
-                                <span className="mt-1 block break-words text-xs font-normal leading-relaxed" style={{ color: "#FFB000", overflowWrap: "anywhere" }}>{p.signal}</span>
-                              </div>
-                            </div>
+                            <p className="mt-1.5 border-l pl-2 text-[11px] leading-snug" style={{ borderColor: `${p.signalColor}80` }}>
+                              <span className="font-semibold uppercase tracking-wide mr-1.5" style={{ color: p.signalColor }}>{p.signalType}</span>
+                              <span className="text-amber-200/90">{p.signal}</span>
+                            </p>
                           )}
                         </div>
                       </div>
 
                       {!isLocked && (p.shareSummary || (p.robotTypes && p.robotTypes.length > 0)) && (
-                        <div className="px-4 sm:px-6 pb-2">
-                          <div className="rounded-xl border border-cyan-400/30 bg-cyan-400/10 p-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-200 mb-1">Intelligence</p>
-                            {p.shareSummary && (
-                              <p className="text-xs text-slate-300 leading-relaxed">{p.shareSummary}</p>
-                            )}
-                            {p.robotTypes && p.robotTypes.length > 0 && (
-                              <p className="mt-2 text-[11px] text-slate-300">
-                                <span className="font-semibold text-slate-100">Robots: </span>
-                                {p.robotTypes.join(" · ")}
-                              </p>
-                            )}
-                            {p.leadId != null && (
-                              <div className="mt-3">
-                                <LeadShareBar
-                                  variant="dark"
-                                  lead={{
-                                    id: p.leadId,
-                                    company_name: p.company,
-                                    priority_tier: p.priorityTier,
-                                    share_summary: p.shareSummary,
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </div>
+                        <div className="mx-3 mb-2 border border-cyan-400/35 bg-transparent px-2 py-1.5">
+                          <p className="text-[10px] leading-snug text-cyan-100/90">
+                            <span className="font-semibold uppercase tracking-wide text-cyan-300">Intelligence · </span>
+                            {p.shareSummary || ""}
+                            {p.robotTypes && p.robotTypes.length > 0 ? (
+                              <span className="text-slate-400"> · Robots: {p.robotTypes.join(" · ")}</span>
+                            ) : null}
+                          </p>
+                          {p.leadId != null && (
+                            <div className="mt-1.5">
+                              <LeadShareBar
+                                variant="dark"
+                                lead={{
+                                  id: p.leadId,
+                                  company_name: p.company,
+                                  priority_tier: p.priorityTier,
+                                  share_summary: p.shareSummary,
+                                }}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
 
                       {!isLocked && (
-                        <div className="px-4 sm:px-6 pb-4 grid gap-3 sm:grid-cols-2">
-                          <div className="min-w-0 rounded-xl border border-white/10 bg-[#081126]/70 p-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-300">Why relevant</p>
-                            <p className="mb-3 block break-words rounded-lg border-l-2 border-amber-400 bg-amber-400/10 px-3 py-2 text-sm font-medium leading-relaxed text-amber-200" style={{ overflowWrap: "anywhere" }}>
-                              “{p.signal}”
-                            </p>
-                            <p className="break-words text-xs text-slate-300 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
-                          </div>
-                          <div className="min-w-0 rounded-xl border border-white/10 bg-[#081126]/70 p-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-300">Score rationale</p>
-                            <p className="text-xs text-slate-300 leading-relaxed">{p.scoreReason}</p>
-                          </div>
+                        <div className="mx-3 mb-2 grid gap-1.5 sm:grid-cols-2">
+                          <p className="border border-white/15 bg-transparent px-2 py-1.5 text-[11px] leading-snug text-slate-300">
+                            <span className="font-semibold text-emerald-300">Why · </span>
+                            <span className="text-amber-200/90">“{p.signal}”</span>
+                            {" — "}
+                            {p.relevance}
+                          </p>
+                          <p className="border border-white/15 bg-transparent px-2 py-1.5 text-[11px] leading-snug text-slate-300">
+                            <span className="font-semibold text-emerald-300">Score · </span>
+                            {p.scoreReason}
+                          </p>
                         </div>
                       )}
 
                       {!isLocked && (
-                        <div className="px-4 sm:px-6 pb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                          <div className="flex items-center gap-2 flex-1">
-                            <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
-                            <span className="text-sm text-slate-200">{p.action}</span>
-                          </div>
-                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 text-emerald-200 bg-emerald-400/10 border border-emerald-400/30">
-                            {p.timing}
+                        <div className="mx-3 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+                          <span className="inline-flex items-center gap-1 text-slate-200">
+                            <ArrowRight className="h-3 w-3 text-emerald-300" />
+                            {p.action}
                           </span>
-                        </div>
-                      )}
-
-                      {!isLocked && (
-                        <div className="px-4 sm:px-6 pb-4">
+                          <span className="font-semibold text-emerald-300">{p.timing}</span>
                           <button
                             type="button"
                             onClick={() => copyRfqPacket(p)}
-                            className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/35 bg-cyan-400/10 px-3 py-1.5 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-400/20"
+                            className="inline-flex items-center gap-1 border border-cyan-400/40 bg-transparent px-1.5 py-0.5 text-[10px] font-semibold text-cyan-100 hover:border-cyan-300"
                           >
-                            <FileText className="h-3.5 w-3.5" />
-                            Copy RFQ/bid-project request + handoff note
+                            <FileText className="h-3 w-3" />
+                            Copy RFQ note
                           </button>
                         </div>
                       )}
 
                       {isActive && (
-                        <div className="mx-4 sm:mx-6 mb-4 rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-3">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200 mb-1">SIGNAL follow-up plan</p>
-                          <p className="text-xs text-slate-300 leading-relaxed">
-                            Draft signal-specific outreach, send first touch after approval, follow up in 3 business days, track response, and escalate technical questions when needed.
-                          </p>
-                        </div>
+                        <p className="mx-3 mb-2 border border-emerald-400/35 bg-transparent px-2 py-1 text-[10px] leading-snug text-emerald-100/90">
+                          <span className="font-semibold uppercase tracking-wide text-emerald-300">SIGNAL plan · </span>
+                          Draft outreach, send after approval, follow up in 3 days, track response.
+                        </p>
                       )}
 
-                      <div className="px-4 sm:px-6 pb-5 border-t border-white/10 pt-4">
+                      <div className="mx-3 mb-2.5 flex flex-wrap items-center gap-2 border-t border-white/10 pt-2">
                         {isLocked ? (
                           <Link
                             href={resultsSignupHref}
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-2.5 text-xs font-bold text-amber-100 hover:bg-amber-400/20 sm:w-auto"
+                            className="inline-flex items-center gap-1.5 border border-amber-400/50 bg-transparent px-2.5 py-1 text-[11px] font-bold text-amber-100 hover:border-amber-300"
                           >
-                            Sign up to unlock · then open Pipeline
-                            <ArrowRight className="h-3.5 w-3.5" />
+                            Sign up to unlock
+                            <ArrowRight className="h-3 w-3" />
                           </Link>
                         ) : (
                           <Link
@@ -1054,10 +1050,10 @@ export default function Results() {
                                 ? `/pipeline?src=results_scan&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
                                 : fullPipelineHref
                             }
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-2.5 text-xs font-bold text-amber-100 hover:bg-amber-400/20 sm:w-auto"
+                            className="inline-flex items-center gap-1.5 border border-amber-400/50 bg-transparent px-2.5 py-1 text-[11px] font-bold text-amber-100 hover:border-amber-300"
                           >
                             Open in Pipeline
-                            <ArrowRight className="h-3.5 w-3.5" />
+                            <ArrowRight className="h-3 w-3" />
                           </Link>
                         )}
                       </div>
