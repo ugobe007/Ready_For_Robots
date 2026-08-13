@@ -1602,7 +1602,41 @@ export default function Pipeline() {
   const [crmAccountIdByCompanyId, setCrmAccountIdByCompanyId] = useState<Record<number, string>>({});
   const [savedLeadCount, setSavedLeadCount] = useState(0);
   /** After Results: show instructions first; CTA starts the 25-lead build. */
-  const [build25Started, setBuild25Started] = useState(false);
+  const [build25Started, setBuild25Started] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return sessionStorage.getItem("rfr_build25_started") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const step3Intro = arrivedFromResultsScan && !build25Started;
+
+  // Land on instructions — never restore scroll to the lead list (browse-and-leave trap).
+  useEffect(() => {
+    if (!step3Intro || typeof window === "undefined") return;
+    try {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
+    } catch {
+      /* ignore */
+    }
+    const jump = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.getElementById("pipeline-step3-guide")?.scrollIntoView({ block: "start", behavior: "auto" });
+    };
+    jump();
+    const t0 = window.setTimeout(jump, 50);
+    const t1 = window.setTimeout(jump, 250);
+    const t2 = window.setTimeout(jump, 800);
+    return () => {
+      window.clearTimeout(t0);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [step3Intro, loadingLeads]);
+
   const [firstSaveGuideOpen, setFirstSaveGuideOpen] = useState(false);
   const [showActivationChecklist, setShowActivationChecklist] = useState(false);
   const [draftCopiedForActivation, setDraftCopiedForActivation] = useState(false);
@@ -2419,7 +2453,7 @@ export default function Pipeline() {
   );
 
   useEffect(() => {
-    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused) return;
+    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused || step3Intro) return;
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
@@ -2429,18 +2463,18 @@ export default function Pipeline() {
       PIPELINE_LEAD_READ_MS,
     );
     return () => window.clearInterval(timer);
-  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationPaused, rotationSource, pipelineSource.length, panelPlan, previewLimit]);
+  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationPaused, rotationSource, pipelineSource.length, panelPlan, previewLimit, step3Intro]);
 
   // Keep CRM detail panel in sync with the rotating spotlight lead.
   useEffect(() => {
-    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused || deepLinkLeadId != null) return;
+    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused || deepLinkLeadId != null || step3Intro) return;
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
     if (!canRotate || displayedDeals.length === 0) return;
     setSelectedId(displayedDeals[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- advance panel only on rotation tick
-  }, [rotateOffset]);
+  }, [rotateOffset, step3Intro]);
 
   useEffect(() => {
     if (!session?.access_token || savedLeadCount !== 0 || loadingLeads) return;
@@ -2725,9 +2759,30 @@ export default function Pipeline() {
 
   const startBuild25Pipeline = () => {
     setBuild25Started(true);
+    try {
+      sessionStorage.setItem("rfr_build25_started", "1");
+    } catch {
+      /* ignore */
+    }
     document.getElementById("pipeline-leads")?.scrollIntoView({ behavior: "smooth", block: "start" });
     toast.success(`Build started — save up to ${BUILD_PIPELINE_TARGET} leads, then run outreach.`);
   };
+
+  const startFreeWorkspaceHref = (() => {
+    if (selected?.id != null) {
+      const nextParams: Record<string, string> = { view: "all" };
+      if (submittedUrl) nextParams.url = submittedUrl;
+      return signupHrefForLead(selected.id, selected.company, {
+        src: "pipeline_next_step",
+        nextParams,
+      });
+    }
+    const params = new URLSearchParams();
+    params.set("view", "all");
+    params.set("src", "pipeline_next_step");
+    if (submittedUrl) params.set("url", submittedUrl);
+    return `/signup?next=${encodeURIComponent(`/pipeline?${params.toString()}`)}&src=pipeline_next_step`;
+  })();
 
   const runNextStepPrimary = () => {
     if (arrivedFromResultsScan && !build25Started) {
@@ -2739,21 +2794,8 @@ export default function Pipeline() {
       return;
     }
     if (!isSignedIn) {
-      if (selected?.id != null) {
-        const nextParams: Record<string, string> = { view: "all" };
-        if (submittedUrl) nextParams.url = submittedUrl;
-        window.location.href = signupHrefForLead(selected.id, selected.company, {
-          src: "pipeline_next_step",
-          nextParams,
-        });
-        return;
-      }
-      const params = new URLSearchParams();
-      params.set("view", "all");
-      params.set("src", "pipeline_next_step");
-      if (submittedUrl) params.set("url", submittedUrl);
-      const next = `/pipeline?${params.toString()}`;
-      window.location.href = `/signup?next=${encodeURIComponent(next)}&src=pipeline_next_step`;
+      // Navigation-only — do not call URL-submit / scan handlers from this CTA.
+      window.location.href = startFreeWorkspaceHref;
       return;
     }
     if (arrivedFromResultsScan && canSaveSelected && selected) {
@@ -3476,102 +3518,153 @@ export default function Pipeline() {
 
       <main className="flex-1 px-4 pb-6 pt-4 lg:px-6">
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
-          <PageHeroDark
-            maxWidthClass="max-w-[1500px]"
-            showGrid={false}
-            badge={
-              <div className="page-hero-badge">
-                {typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading"} active opportunities · updated live
-              </div>
-            }
-            eyebrow="SIGNAL · Sales intelligence"
-            title={isAdmin ? "Active Signals → Live Pipeline" : "Live Pipeline"}
-            description={
-              session?.access_token
-                ? "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Pick a lead on the left → develop with SIGNAL → send from the panel on the right. Replies land in Inbox."
-                : "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
-            }
-            stats={[
-              { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading", tone: "white" },
-              { label: "Hot", value: typeof hotDeals === "number" ? hotDeals : "Loading", tone: "amber" },
-              { label: "Warm", value: typeof warmDeals === "number" ? warmDeals : "Loading", tone: "amber" },
-              { label: "Visible", value: visibleDeals, tone: "emerald" },
-            ]}
-            innerClassName="pb-6 pt-20"
-          />
-
-          <div className="pipeline-command-rail flex flex-col gap-3">
-            {session?.access_token && <AdminNav variant="dark" />}
-
-            <PipelineSalesWorkflowRail
-              hasSession={Boolean(session?.access_token)}
-              hasSavedLeads={savedLeadCount > 0}
-              hasSelection={Boolean(selected)}
-              hasDraft={Boolean(selected?.outreachBody)}
-              hasContact={Boolean(selected?.contact)}
-              sent={selected?.stage === "Outreach Sent"}
-              variant="dark"
-              browseFirst={arrivedFromResultsScan}
+          {!step3Intro ? (
+            <PageHeroDark
+              maxWidthClass="max-w-[1500px]"
+              showGrid={false}
+              badge={
+                <div className="page-hero-badge">
+                  {typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading"} active opportunities · updated live
+                </div>
+              }
+              eyebrow="SIGNAL · Sales intelligence"
+              title={isAdmin ? "Active Signals → Live Pipeline" : "Live Pipeline"}
+              description={
+                session?.access_token
+                  ? "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Pick a lead on the left → develop with SIGNAL → send from the panel on the right. Replies land in Inbox."
+                  : "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
+              }
+              stats={[
+                { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading", tone: "white" },
+                { label: "Hot", value: typeof hotDeals === "number" ? hotDeals : "Loading", tone: "amber" },
+                { label: "Warm", value: typeof warmDeals === "number" ? warmDeals : "Loading", tone: "amber" },
+                { label: "Visible", value: visibleDeals, tone: "emerald" },
+              ]}
+              innerClassName="pb-6 pt-20"
             />
-            {session?.access_token && (
-              <WorkspaceQuickLinks
-                savedCount={savedLeadCount}
-                hubspotConnected={hubspotIntegration?.connected}
-                queuedActions={queuedActivations}
+          ) : (
+            <div className="flex items-center justify-between gap-3 pt-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              <span>ReadyForRobots · Workspace</span>
+              {session?.access_token ? (
+                <span className="normal-case tracking-normal text-emerald-300/90">Signed in · {sessionDisplayName}</span>
+              ) : null}
+            </div>
+          )}
+
+          {!step3Intro ? (
+            <div className="pipeline-command-rail flex flex-col gap-3">
+              {session?.access_token && <AdminNav variant="dark" />}
+
+              <PipelineSalesWorkflowRail
+                hasSession={Boolean(session?.access_token)}
+                hasSavedLeads={savedLeadCount > 0}
+                hasSelection={Boolean(selected)}
+                hasDraft={Boolean(selected?.outreachBody)}
+                hasContact={Boolean(selected?.contact)}
+                sent={selected?.stage === "Outreach Sent"}
                 variant="dark"
+                browseFirst={arrivedFromResultsScan}
               />
-            )}
-          </div>
+              {session?.access_token && (
+                <WorkspaceQuickLinks
+                  savedCount={savedLeadCount}
+                  hubspotConnected={hubspotIntegration?.connected}
+                  queuedActions={queuedActivations}
+                  variant="dark"
+                />
+              )}
+            </div>
+          ) : null}
 
           {arrivedFromResultsScan && !arrivedFromSignalActivation && (
-            <section className="overflow-hidden rounded-xl border border-amber-400/40 bg-[#1a1407] shadow-[0_18px_45px_-30px_rgba(245,158,11,0.55)]">
-              <div className="grid gap-4 px-4 py-4 sm:px-5 lg:grid-cols-[1fr_auto] lg:items-center">
-                <div className="min-w-0">
-                  <span className="inline-flex items-center rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200">
-                    {build25Started
-                      ? `Building · ${build25Progress}/${BUILD_PIPELINE_TARGET} leads`
-                      : "Step 3 of 3 · Large sales pipeline"}
-                  </span>
-                  <h2 className="mt-2 text-xl font-bold text-white sm:text-2xl">
-                    {build25Started
-                      ? "Curate sales leads & run outreach"
-                      : "Your large sales pipeline — with instructions"}
-                  </h2>
-                  <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-300">
-                    {build25Started
-                      ? `Save the best companies into your working list (goal: ${BUILD_PIPELINE_TARGET}). Open each lead for why-now signals, copy the draft, and send outreach.`
-                      : "You finished the 5-lead preview. This is the full live market queue. Read the steps below, then start building a curated pipeline of up to 25 sales leads and an outreach plan."}
-                    {!build25Started && submittedHostname
-                      ? ` Context from ${submittedHostname} stays available if you want to filter later.`
-                      : ""}
+            <section
+              id="pipeline-step3-guide"
+              className={`scroll-mt-4 overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(245,158,11,0.55)] ${
+                build25Started
+                  ? "border-emerald-400/35 bg-[#071a14]"
+                  : "border-amber-400/50 bg-gradient-to-br from-[#1c1608] via-[#12100a] to-[#0b1220]"
+              }`}
+            >
+              {!build25Started ? (
+                <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300 sm:text-sm">
+                    Step 3 of 3 · Large sales pipeline
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[11px] font-semibold text-slate-300">
-                    {!build25Started ? (
+                  <h2 className="mt-3 max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-[2.65rem]">
+                    Don&apos;t just browse — build your working list of 25.
+                  </h2>
+                  <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-300 sm:text-lg sm:leading-8">
+                    You finished the 5-lead preview. The live market queue is below.
+                    {submittedHostname ? (
                       <>
-                        <span className="text-amber-200">1. Review instructions</span>
-                        <span>2. Build your 25-lead pipeline</span>
-                        <span>3. Curate + outreach</span>
+                        {" "}
+                        Context from <span className="font-semibold text-amber-100">{submittedHostname}</span> stays available.
                       </>
-                    ) : (
-                      <>
-                        <span className={build25Progress > 0 ? "text-emerald-300" : "text-amber-200"}>
-                          1. Save leads ({build25Progress}/{BUILD_PIPELINE_TARGET})
-                        </span>
-                        <span>2. Copy outreach draft</span>
-                        <span>3. Send &amp; continue</span>
-                      </>
-                    )}
+                    ) : null}{" "}
+                    Reviewing without saving is how deals die. Start your curated pipeline, then run outreach.
+                  </p>
+
+                  <ol className="mt-7 grid gap-3 sm:grid-cols-3">
+                    {[
+                      { n: "1", t: "Read this plan", d: "Know the goal before you scroll the queue." },
+                      { n: "2", t: "Build 25 leads", d: "Save the strongest fits into your working list." },
+                      { n: "3", t: "Curate + outreach", d: "Open each lead, copy Cal’s note, send." },
+                    ].map((step) => (
+                      <li
+                        key={step.n}
+                        className="rounded-xl border border-amber-400/25 bg-black/25 px-4 py-4"
+                      >
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">Step {step.n}</p>
+                        <p className="mt-2 text-lg font-semibold text-white sm:text-xl">{step.t}</p>
+                        <p className="mt-1.5 text-sm leading-relaxed text-slate-400 sm:text-[15px]">{step.d}</p>
+                      </li>
+                    ))}
+                  </ol>
+
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <button
+                      type="button"
+                      onClick={runNextStepPrimary}
+                      className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-7 py-4 text-base font-extrabold text-slate-950 transition hover:bg-amber-300 sm:w-auto sm:min-w-[280px] sm:text-lg"
+                    >
+                      Build your 25 sales lead pipeline
+                      <ArrowRight className="h-5 w-5" />
+                    </button>
+                    <p className="text-sm text-slate-400 sm:max-w-xs">
+                      Takes one click. Then save fits from the queue — notes alone won&apos;t move deals.
+                    </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={runNextStepPrimary}
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 lg:w-auto"
-                >
-                  {nextStepPrimaryLabel}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
+              ) : (
+                <div className="grid gap-4 px-5 py-5 sm:px-7 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div className="min-w-0">
+                    <span className="inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">
+                      Building · {build25Progress}/{BUILD_PIPELINE_TARGET} leads
+                    </span>
+                    <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
+                      Curate sales leads &amp; run outreach
+                    </h2>
+                    <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
+                      Save the best companies into your working list (goal: {BUILD_PIPELINE_TARGET}). Open each lead for why-now signals, copy Cal’s note, and send.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-slate-300 sm:text-sm">
+                      <span className={build25Progress > 0 ? "text-emerald-300" : "text-amber-200"}>
+                        1. Save leads ({build25Progress}/{BUILD_PIPELINE_TARGET})
+                      </span>
+                      <span>2. Copy outreach draft</span>
+                      <span>3. Send &amp; continue</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={runNextStepPrimary}
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 lg:w-auto"
+                  >
+                    {nextStepPrimaryLabel}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </section>
           )}
 
@@ -3612,6 +3705,52 @@ export default function Pipeline() {
             </section>
           )}
 
+          {step3Intro ? (
+            <div className="pipeline-workspace overflow-hidden rounded-2xl border border-amber-400/40 bg-gradient-to-b from-slate-50 to-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.45)]">
+              <div className="border-b border-amber-200/80 bg-amber-50/80 px-5 py-4 sm:px-8">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-800">Market queue ready · locked</p>
+                <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
+                  {typeof dbTotal === "number" ? dbTotal.toLocaleString() : filtered.length || "…"} live buyers waiting
+                </p>
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+                  Opening the list first trains you to browse and leave. Start your 25-lead build, then curate and outreach.
+                </p>
+              </div>
+              <div className="relative px-5 py-6 sm:px-8 sm:py-8">
+                <ul className="pointer-events-none select-none space-y-2 opacity-45 blur-[1.5px]">
+                  {(displayedDeals.length > 0 ? displayedDeals : deals).slice(0, 5).map((deal) => (
+                    <li
+                      key={deal.id}
+                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3"
+                    >
+                      <span className="truncate text-sm font-semibold text-slate-800">{deal.company}</span>
+                      <span className="text-xs font-bold uppercase tracking-wide text-slate-500">{deal.priorityTier || deal.stage}</span>
+                    </li>
+                  ))}
+                  {(displayedDeals.length > 0 ? displayedDeals : deals).length === 0 ? (
+                    <li className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                      Loading market queue…
+                    </li>
+                  ) : null}
+                </ul>
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-white via-white/85 to-white/40 px-4">
+                  <div className="w-full max-w-md rounded-2xl border border-amber-400/60 bg-white/95 p-5 text-center shadow-xl sm:p-6">
+                    <p className="text-sm font-semibold text-slate-800 sm:text-base">
+                      Unlock the queue by starting your working list of 25.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={runNextStepPrimary}
+                      className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-6 py-4 text-base font-extrabold text-slate-950 transition hover:bg-amber-300 sm:text-lg"
+                    >
+                      Build your 25 sales lead pipeline
+                      <ArrowRight className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
           <div className="pipeline-workspace">
             {/* ── Workspace toolbar ── */}
             <div className="pipeline-page-header">
@@ -3660,31 +3799,40 @@ export default function Pipeline() {
                       ) : null}
                     </div>
                   )}
-                  <div className="mt-2 rounded-xl border border-emerald-700/80 bg-[#0b162f] px-3 py-3 text-[11px] text-slate-100 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">{nextStepsTitle}</p>
-                    <p className="mt-1 text-sm font-semibold text-white">
+                  <div className="mt-2 w-full rounded-xl border border-emerald-700/80 bg-[#0b162f] px-4 py-4 text-[13px] text-slate-100 shadow-sm sm:px-5 sm:py-5 sm:text-sm">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-300 sm:text-xs">{nextStepsTitle}</p>
+                    <p className="mt-2 text-base font-semibold text-white sm:text-lg">
                       {nextStepsHeadline}
                     </p>
-                    <ol className="mt-2 space-y-1 pl-4 text-slate-300">
+                    <ol className="mt-3 space-y-2 pl-5 text-slate-300 sm:text-[15px]">
                       {nextStepsItems.map((item, index) => (
-                        <li key={`${index}-${item.slice(0, 24)}`} className="list-decimal">
+                        <li key={`${index}-${item.slice(0, 24)}`} className="list-decimal leading-relaxed">
                           {item}
                         </li>
                       ))}
                     </ol>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={runNextStepPrimary}
-                        disabled={
-                          arrivedFromResultsScan && (!build25Started || !selected)
-                            ? false
-                            : isSignedIn && !selected && !canCopySelectedDraft
-                        }
-                        className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-[11px] font-bold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {nextStepPrimaryLabel}
-                      </button>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {!isSignedIn && !arrivedFromResultsScan ? (
+                        <Link
+                          href={startFreeWorkspaceHref}
+                          className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-[11px] font-bold text-slate-950 hover:bg-amber-300"
+                        >
+                          {nextStepPrimaryLabel}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={runNextStepPrimary}
+                          disabled={
+                            arrivedFromResultsScan && (!build25Started || !selected)
+                              ? false
+                              : isSignedIn && !selected && !canCopySelectedDraft
+                          }
+                          className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-[11px] font-bold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {nextStepPrimaryLabel}
+                        </button>
+                      )}
                       {isSignedIn && canCopySelectedDraft && canSaveSelected ? (
                         <button
                           type="button"
@@ -5183,6 +5331,7 @@ export default function Pipeline() {
             </div>
           </div>
           </div>
+          )}
         </div>
       </main>
 
