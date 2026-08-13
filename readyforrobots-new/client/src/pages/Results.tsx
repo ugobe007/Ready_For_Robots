@@ -832,8 +832,8 @@ export default function Results() {
                 </div>
               )}
 
-              <div className="mb-4 rounded-lg border border-amber-400/50 bg-transparent px-3 py-2.5 sm:px-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
+              <div className="mb-3 border border-amber-400/50 bg-transparent px-2.5 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">
                   {isSignedIn ? "Step 3 of 5 · 5 sales leads" : "Step 2 of 5 · Sign up for 5 sales leads"}
                   {sortedProspects.length > 0 ? (
                     <>
@@ -847,19 +847,19 @@ export default function Results() {
                     </>
                   ) : null}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-white sm:text-base">
+                <p className="mt-0.5 text-sm font-semibold text-emerald-200">
                   {isSignedIn
                     ? "Review these 5 sales leads — then provide customer name and information"
                     : "Sign up to see 5 sales leads"}
                 </p>
-                <p className="mt-0.5 text-xs text-emerald-200/80">
+                <p className="mt-0.5 text-[11px] text-slate-400">
                   <span className="break-all text-slate-300">{submittedUrl}</span>
                   {usingFallback ? " · sample mode" : ""}
                   {" · "}
                   Use Next step below when ready.
                 </p>
                 {!isSignedIn && (
-                  <p className="mt-2 text-xs text-slate-400">
+                  <p className="mt-1 text-[11px] text-slate-500">
                     Free signup unlocks the full 5-lead preview, then Pipeline.
                   </p>
                 )}
@@ -895,8 +895,8 @@ export default function Results() {
                         isLocked ? "border-sky-400/40 hover:border-sky-400/60" : "border-white/20 hover:border-emerald-400/50"
                       }`}
                     >
-                      <div className="px-3 py-2.5 flex flex-col sm:flex-row sm:items-start gap-2.5">
-                        <label className="flex items-center gap-1.5 text-[11px] text-slate-400 sm:pt-1">
+                      <div className="px-2.5 py-1.5 flex flex-col sm:flex-row sm:items-start gap-2">
+                        <label className="flex items-center gap-1.5 text-[10px] text-slate-400 sm:pt-0.5">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -905,19 +905,19 @@ export default function Results() {
                           />
                           Select
                         </label>
-                        <div className="shrink-0 flex items-center gap-1.5 sm:flex-col sm:gap-0.5">
+                        <div className="shrink-0 flex items-center gap-1.5 sm:flex-col sm:gap-0">
                           <div
-                            className="h-9 w-9 rounded-full border flex items-center justify-center bg-transparent"
+                            className="h-7 w-7 rounded-full border flex items-center justify-center bg-transparent"
                             style={{ borderColor: scoreColor(p.score) }}
                           >
                             <span
-                              className="font-mono text-sm font-bold"
+                              className="font-mono text-xs font-bold"
                               style={{ color: scoreColor(p.score), fontFamily: "'JetBrains Mono', monospace" }}
                             >
                               {p.score}
                             </span>
                           </div>
-                          <span className="text-[8px] text-slate-500 uppercase tracking-widest">score</span>
+                          <span className="text-[7px] text-slate-500 uppercase tracking-widest">score</span>
                         </div>
 
                         <div className="min-w-0 flex-1">
@@ -970,7 +970,7 @@ export default function Results() {
                       </div>
 
                       {!isLocked && (p.shareSummary || (p.robotTypes && p.robotTypes.length > 0)) && (
-                        <div className="mx-3 mb-2 border border-cyan-400/35 bg-transparent px-2 py-1.5">
+                        <div className="mx-3 mb-1.5 border-l border-cyan-400/50 pl-2">
                           <p className="text-[10px] leading-snug text-cyan-100/90">
                             <span className="font-semibold uppercase tracking-wide text-cyan-300">Intelligence · </span>
                             {p.shareSummary || ""}
@@ -979,7 +979,7 @@ export default function Results() {
                             ) : null}
                           </p>
                           {p.leadId != null && (
-                            <div className="mt-1.5">
+                            <div className="mt-1">
                               <LeadShareBar
                                 variant="dark"
                                 lead={{
@@ -995,14 +995,14 @@ export default function Results() {
                       )}
 
                       {!isLocked && (
-                        <div className="mx-3 mb-2 grid gap-1.5 sm:grid-cols-2">
-                          <p className="border border-white/15 bg-transparent px-2 py-1.5 text-[11px] leading-snug text-slate-300">
+                        <div className="mx-3 mb-1.5 grid gap-1 sm:grid-cols-2">
+                          <p className="border-l border-white/25 pl-2 text-[10px] leading-snug text-slate-300">
                             <span className="font-semibold text-emerald-300">Why · </span>
                             <span className="text-amber-200/90">“{p.signal}”</span>
                             {" — "}
                             {p.relevance}
                           </p>
-                          <p className="border border-white/15 bg-transparent px-2 py-1.5 text-[11px] leading-snug text-slate-300">
+                          <p className="border-l border-white/25 pl-2 text-[10px] leading-snug text-slate-300">
                             <span className="font-semibold text-emerald-300">Score · </span>
                             {p.scoreReason}
                           </p>
@@ -1010,7 +1010,7 @@ export default function Results() {
                       )}
 
                       {!isLocked && (
-                        <div className="mx-3 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+                        <div className="mx-3 mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px]">
                           <span className="inline-flex items-center gap-1 text-slate-200">
                             <ArrowRight className="h-3 w-3 text-emerald-300" />
                             {p.action}
@@ -1028,13 +1028,13 @@ export default function Results() {
                       )}
 
                       {isActive && (
-                        <p className="mx-3 mb-2 border border-emerald-400/35 bg-transparent px-2 py-1 text-[10px] leading-snug text-emerald-100/90">
+                        <p className="mx-3 mb-1.5 border-l border-emerald-400/50 pl-2 text-[10px] leading-snug text-emerald-100/90">
                           <span className="font-semibold uppercase tracking-wide text-emerald-300">SIGNAL plan · </span>
                           Draft outreach, send after approval, follow up in 3 days, track response.
                         </p>
                       )}
 
-                      <div className="mx-3 mb-2.5 flex flex-wrap items-center gap-2 border-t border-white/10 pt-2">
+                      <div className="mx-3 mb-2 flex flex-wrap items-center gap-2 border-t border-white/10 pt-1.5">
                         {isLocked ? (
                           <Link
                             href={resultsSignupHref}
