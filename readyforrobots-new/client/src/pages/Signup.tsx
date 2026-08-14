@@ -18,6 +18,13 @@ import {
   writeRobotWorkspaceProfile,
   type RobotWorkspaceProfile,
 } from "@/lib/robotWorkspaceProfile";
+import {
+  OEM_CAL_SIGNUP_BULLETS_RESULTS,
+  OEM_CAL_SIGNUP_H1_DEFAULT,
+  OEM_CAL_SIGNUP_H1_RESULTS,
+  OEM_CAL_SIGNUP_SUB_DEFAULT,
+  OEM_CAL_SIGNUP_SUB_RESULTS,
+} from "@/lib/oemCalCopy";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
@@ -492,8 +499,8 @@ export default function Signup() {
                     ? `Save ${buyerCo}. Copy the draft. Run your pipeline.`
                     : <><span className="text-emerald-300">Save the Lead.</span> Copy the draft. Run your pipeline.</>
                   : resultsIntent
-                    ? "Unlock your matched buyers in one workspace."
-                    : "Automate your robot sales funnel."}
+                    ? OEM_CAL_SIGNUP_H1_RESULTS
+                    : OEM_CAL_SIGNUP_H1_DEFAULT}
             </h1>
             <p className="mt-5 max-w-lg text-sm leading-relaxed text-slate-300">
               {hubspotIntent
@@ -503,8 +510,8 @@ export default function Signup() {
                     ? `Free workspace: land back on ${buyerCo}, save it in one click, copy the outreach draft SIGNAL wrote for them, and sync to HubSpot when you are ready.`
                     : "Free workspace: land on your matched lead, save it in one click, copy the outreach draft, and sync to HubSpot when you are ready."
                   : resultsIntent
-                    ? "Sign up to unlock every URL scan match, save leads to CRM, and copy signal-matched outreach drafts."
-                    : "For robot OEMs and integrators — live buyer intent, Cal's timely notes, and the first informed conversation with a robot buyer — not another giant contact list."}
+                    ? OEM_CAL_SIGNUP_SUB_RESULTS
+                    : OEM_CAL_SIGNUP_SUB_DEFAULT}
             </p>
             {(workflowPrefill.wf || workflowPrefill.intent_focus) && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -535,7 +542,7 @@ export default function Signup() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-emerald-700">✓</span>
-                  HOT/WARM buyers with pitch actions and Cal's curiosity-led notes
+                  HOT/WARM buyers with pitch actions and Cal&apos;s short OEM notes
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-emerald-700">✓</span>
@@ -545,20 +552,18 @@ export default function Signup() {
             )}
             {(pipelineIntent || resultsIntent) && !hubspotIntent && (
               <ul className="mt-4 space-y-2 text-xs text-slate-300">
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  {buyerCo
+                {(resultsIntent ? OEM_CAL_SIGNUP_BULLETS_RESULTS : [
+                  buyerCo
                     ? `Pick up right where you left off on ${buyerCo} — draft waiting in pipeline`
-                    : "Pick up on the same lead after signup — draft waiting in pipeline"}
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  Copy signal-matched outreach drafts in one click
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  Live pipeline leads · pitch actions · robot categories
-                </li>
+                    : "Pick up on the same lead after signup — draft waiting in pipeline",
+                  "Copy signal-matched outreach drafts in one click",
+                  "Live pipeline leads · pitch actions · robot categories",
+                ]).map((line) => (
+                  <li key={line} className="flex gap-2">
+                    <span className="font-bold text-emerald-700">✓</span>
+                    {line}
+                  </li>
+                ))}
               </ul>
             )}
             {liveBuyer && (
@@ -665,6 +670,8 @@ export default function Signup() {
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
                   : matchedUnlockIntent
                     ? "Confirm company name, robot category, and ICP — then create your account to unlock 15 matched sales leads."
+                    : resultsIntent
+                    ? "One-tap signup keeps Cal's matched buyers in your workspace — then customer info unlocks 15 sales leads."
                     : params.get("next")
                     ? "Use one-tap OAuth and we create your account instantly, then your matched leads are saved."
                     : "Use one-tap OAuth to create your account instantly, then upgrade to unlock full pipeline coverage and CRM automation."}

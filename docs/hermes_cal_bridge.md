@@ -23,11 +23,21 @@ job-orders / qualify / DMs / news
 | Agent | Owns | Does **not** |
 |-------|------|----------------|
 | **Hermes** | Public research: jobs, qualify overlays, DMs, vendor news, deployment evidence | Send buyer email; bypass Cal gates |
+| **Floor Manager** | Hourly Cal/OEM scoreboard + max 3 coach actions (`rfr-sales-floor-manager`) | Send email; invent metrics |
 | **Cal** | Draft → verify contact → assembly gate → Resend send → follow-ups | Invent deployment facts; scrape the open web |
 | **Scout** | Public chat / discovery UX | Hermes cron research |
 | **Pipeline** | Human operator CRM surface | Autonomy |
 
-**Rule:** Hermes writes **intelligence**; Cal writes **outreach**. Never give Hermes a parallel send path.
+**Rule:** Hermes writes **intelligence**; Floor Manager **coaches**; Cal writes **outreach**. Never give Hermes a parallel send path.
+
+### OemCal vs BuyerCal
+
+| Mode | Surfaces | Voice |
+|------|----------|-------|
+| **OemCal** | Results, Signup, sticky CTA (`oemCalCopy.ts`) | “These buyers fit your robot — claim them” |
+| **BuyerCal** | Outbound assembly (`cal_persona.py`) | Observation → interpretation → next step |
+
+Floor Manager emits `VOICE` if conversion copy drifts into researcher essays.
 
 ## Shared data (correlation)
 
@@ -35,6 +45,7 @@ job-orders / qualify / DMs / news
 |--------------|---------------|---------|
 | Job orders | `signals` (`hermes_job_order`) + WORK units | Improves HOT/WARM signals; draft grounding |
 | Qualify | `crm_metadata.hermes_qualify` | Pool priority (`automation_fit` ≥ 60 first); optional reason line |
+| Buying windows | `crm_metadata.hermes_buying_window` | Timing urgency (FY / shows / peer proof); pool reorder + optional `cal_hint` when `CAL_INCLUDE_BUYING_WINDOW=1` (default **off**) |
 | Decision makers | `contacts` + `crm_metadata.hermes_decision_makers` | Contact waterfall / CRM evidence |
 | Vendor / deployment news | `vendor_news_items` / deployment tables | Matching & proof — not auto-send |
 
@@ -45,14 +56,16 @@ Cal still requires verified/trusted email + assembly + bounce gates before any s
 In `app/services/cal_autonomy.py`:
 
 1. **`prioritize_hermes_qualified`** — after unsent prioritization, prefer Hermes-qualified companies.
-2. **`_hermes_context_reason`** — when `CAL_INCLUDE_HERMES_REASON=1` (default), may add a short grounded opener from Hermes job titles / qualify (not a full research dump).
-3. Signal blob fold-in of Hermes rationale/jobs when `CAL_INCLUDE_SIGNAL_REASON=1`.
+2. **`prioritize_buying_window`** — when `CAL_INCLUDE_BUYING_WINDOW=1`, prefer high `urgency_0_100` after qualify priority.
+3. **`_hermes_context_reason`** — when `CAL_INCLUDE_HERMES_REASON=1` (default), may add a short grounded opener from Hermes job titles / qualify (not a full research dump). With buying-window flag on, may use `cal_hint` if no job/rationale clause.
+4. Signal blob fold-in of Hermes rationale/jobs when `CAL_INCLUDE_SIGNAL_REASON=1`.
 
 Env:
 
 | Var | Default | Meaning |
 |-----|---------|---------|
 | `CAL_INCLUDE_HERMES_REASON` | `1` | Allow short Hermes-grounded opener |
+| `CAL_INCLUDE_BUYING_WINDOW` | `0` | Reorder by timing urgency + allow `cal_hint` in opener |
 | `CAL_INCLUDE_SIGNAL_REASON` | `0` | Broader signal-snippet reasons (noisier) |
 
 ## Hermes ops: Cal health

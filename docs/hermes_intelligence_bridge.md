@@ -12,6 +12,7 @@ rfr-qualify-match        ──POST──►  /qualify-overlay
 rfr-decision-makers      ──POST──►  /contacts/ingest
 rfr-vendor-customer-news ──POST──►  /vendor-news/ingest
                          ──POST──►  /deployment-evidence/ingest (escalations)
+rfr-buying-windows       ──POST──►  /buying-window-overlay
 rfr-workflow-improve     ──write──► docs/agent_improvement_log.md
 rfr-signup-ux-audit      ──write──► docs/ux_signup_audit.md
 ```
@@ -46,8 +47,10 @@ Hermes env:
 | 5 | Decision makers | `rfr-decision-makers` | `POST .../contacts/ingest` |
 | 6 | Deployment metrics/methods | (deployment skill digest) | same as #1 |
 | 7 | Vendor + customer news | `rfr-vendor-customer-news` | `POST .../vendor-news/ingest` |
+| 8 | Buying windows | `rfr-buying-windows` | `POST .../buying-window-overlay` → `hermes_buying_window` |
 | — | Workflow improve | `rfr-workflow-improve` | `docs/agent_improvement_log.md` |
 | — | Signup UX audit | `rfr-signup-ux-audit` | `docs/ux_signup_audit.md` (recs only) |
+| — | Sales floor manager | `rfr-sales-floor-manager` | Hourly Cal/OEM coach → `docs/cal_floor_manager_log.md` |
 
 Qualify overlays use `truth_state: HERMES_OVERLAY` — not customer-confirmed CRM QUALIFY.
 
@@ -60,8 +63,10 @@ Pin every job: `--provider ai-gateway --model anthropic/claude-sonnet-4.6`, `del
 | `0 6 * * *` | `research/rfr-deployment-evidence` |
 | `0 7 * * *` | `research/rfr-job-orders` |
 | `30 8 * * *` | `research/rfr-qualify-match` |
+| `0 9 * * *` | `research/rfr-buying-windows` |
 | `0 10 * * *` | `research/rfr-decision-makers` |
 | `0 11 * * *` | `research/rfr-vendor-customer-news` |
+| `20 * * * *` | `research/rfr-sales-floor-manager` (hourly coach) |
 | `0 9 * * 0` | `research/rfr-workflow-improve` |
 | `0 9 * * 1` | `research/rfr-signup-ux-audit` |
 
@@ -109,6 +114,29 @@ curl -s -X POST "$RFR_API_BASE/api/v1/market-graph/qualify-overlay" \
 ```
 
 Persists under `company.crm_metadata.hermes_qualify`.
+
+### Buying-window overlay
+
+```bash
+curl -s -X POST "$RFR_API_BASE/api/v1/market-graph/buying-window-overlay" \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Key: $RFR_ADMIN_KEY" \
+  -d '{
+    "dry_run": true,
+    "overlays": [{
+      "company_id": 941,
+      "urgency_0_100": 72,
+      "window_label": "peer proof + FY Q4 push",
+      "factors": [
+        {"type": "peer_proof", "peer": "DHL Supply Chain", "robot": "Locus", "recency_days": 12}
+      ],
+      "cal_hint": "Reference peer deployment; offer briefing in next 10 days.",
+      "confidence": 0.65
+    }]
+  }'
+```
+
+Persists under `company.crm_metadata.hermes_buying_window`. Timing urgency ≠ automation fit. Spec: [buying_window_intelligence_v0_1.md](buying_window_intelligence_v0_1.md).
 
 ### Contacts
 
@@ -162,6 +190,7 @@ See [hermes_deployment_bridge.md](hermes_deployment_bridge.md).
 | deployment | `~/.hermes/rfr-deployment-watches/` |
 | job-orders | `~/.hermes/rfr-job-order-watches/` |
 | qualify-match | `~/.hermes/rfr-qualify-watches/` |
+| buying-windows | `~/.hermes/rfr-buying-window-watches/` |
 | decision-makers | `~/.hermes/rfr-dm-watches/` |
 | vendor-customer-news | `~/.hermes/rfr-news-watches/` |
 

@@ -32,6 +32,11 @@ import LeadShareBar from "@/components/LeadShareBar";
 import ResultsValueStrip from "@/components/results/ResultsValueStrip";
 import { RESULTS_ANONYMOUS_UNLOCK } from "@/components/results/ResultsFomoBanner";
 import ResultsNextStepCta from "@/components/results/ResultsNextStepCta";
+import {
+  OEM_CAL_RESULTS_HEAD_ANON,
+  OEM_CAL_RESULTS_HEAD_SIGNED,
+  oemCalResultsAnonLine,
+} from "@/lib/oemCalCopy";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -847,20 +852,23 @@ export default function Results() {
                     </>
                   ) : null}
                 </p>
-                <p className="mt-0.5 text-sm font-semibold text-emerald-200">
+                <p className="mt-0.5 text-sm font-semibold text-white">
+                  {isSignedIn ? OEM_CAL_RESULTS_HEAD_SIGNED : OEM_CAL_RESULTS_HEAD_ANON}
+                </p>
+                <p className="mt-0.5 text-[11px] text-emerald-200/90">
                   {isSignedIn
-                    ? "Review these 5 sales leads — then provide customer name and information"
-                    : "Sign up to see 5 sales leads"}
+                    ? "Cal matched these buyers to your robot URL — add company details next to unlock 15."
+                    : oemCalResultsAnonLine(sortedProspects.length)}
                 </p>
                 <p className="mt-0.5 text-[11px] text-slate-400">
                   <span className="break-all text-slate-300">{submittedUrl}</span>
                   {usingFallback ? " · sample mode" : ""}
                   {" · "}
-                  Use Next step below when ready.
+                  Use Cal · OEM next step below when ready.
                 </p>
                 {!isSignedIn && (
                   <p className="mt-1 text-[11px] text-slate-500">
-                    Free signup unlocks the full 5-lead preview, then Pipeline.
+                    Free signup keeps these matches in your workspace, then Pipeline.
                   </p>
                 )}
               </div>

@@ -1,10 +1,15 @@
 /**
- * Results sticky CTA — Pipeline only. No prepare/draft/email actions on Results.
+ * Results sticky CTA — Pipeline only. OemCal commercial proof voice.
  * Flow: URL → signup → 5 leads → customer info → 15 matched leads.
- * Compact: single row so it does not cover lead cards.
  */
 import { ArrowRight, CheckCircle2, Circle } from "lucide-react";
 import { Link } from "wouter";
+import {
+  OEM_CAL_RESULTS_CTA_ANON,
+  OEM_CAL_RESULTS_CTA_SIGNED,
+  oemCalResultsAnonLine,
+  oemCalResultsSignedLine,
+} from "@/lib/oemCalCopy";
 
 type Props = {
   matchCount: number;
@@ -28,7 +33,7 @@ export default function ResultsNextStepCta({
   ];
 
   const href = isSignedIn ? pipelineHref : signupHref;
-  const label = isSignedIn ? "Provide customer name & information" : "Sign up to see 5 sales leads";
+  const label = isSignedIn ? OEM_CAL_RESULTS_CTA_SIGNED : OEM_CAL_RESULTS_CTA_ANON;
 
   return (
     <div className="sticky bottom-2 z-40 mt-6">
@@ -36,10 +41,8 @@ export default function ResultsNextStepCta({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold text-emerald-200">
-              <span className="uppercase tracking-[0.14em] text-amber-300">Next · </span>
-              {isSignedIn
-                ? `${matchCount} reviewed → customer info → 15 sales leads`
-                : "Sign up → 5 leads → customer info → 15 leads"}
+              <span className="uppercase tracking-[0.14em] text-amber-300">Cal · OEM · </span>
+              {isSignedIn ? oemCalResultsSignedLine(matchCount) : oemCalResultsAnonLine(matchCount)}
             </p>
             <ol className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
               {steps.map((step) => (
