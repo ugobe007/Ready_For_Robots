@@ -1264,6 +1264,22 @@ def _fmt_pipeline_card(
                 "display_text": format_signal_for_sales(sig.signal_text),
             }
         ]
+    from app.services.cal_seller_brief import build_cal_seller_brief
+
+    hermes_jobs = payload.get("hermes_job_titles") or []
+    hermes_job = ""
+    if isinstance(hermes_jobs, list) and hermes_jobs:
+        hermes_job = str(hermes_jobs[0] or "").strip()
+    payload["cal_seller_brief"] = build_cal_seller_brief(
+        company_name=str(payload.get("company_name") or c.name or ""),
+        industry=str(industry_display or ""),
+        signal_text=format_signal_for_sales(sig.signal_text) if sig else "",
+        signal_type=str(getattr(sig, "signal_type", "") or "") if sig else "",
+        pipeline_action=str(pipeline_action or ""),
+        robot_types=list(robot_types_needed or []),
+        share_summary=str(share_summary or ""),
+        hermes_job_title=hermes_job,
+    )
     return payload
 
 
@@ -1493,6 +1509,33 @@ def _fmt_company(
         **link_extras,
     }
 
+    from app.services.cal_seller_brief import build_cal_seller_brief
+
+    hermes_jobs = payload.get("hermes_job_titles") or []
+    hermes_job = ""
+    if isinstance(hermes_jobs, list) and hermes_jobs:
+        hermes_job = str(hermes_jobs[0] or "").strip()
+    first_sig = sigs_for_response[0] if sigs_for_response else None
+    pitch_src = ""
+    if isinstance(gtm, dict):
+        pitch_src = str(gtm.get("suggested_motion") or "").strip()
+    if not pitch_src and isinstance(inf, dict):
+        why_lead = inf.get("why_lead")
+        if isinstance(why_lead, list) and why_lead:
+            pitch_src = str(why_lead[0] or "").strip()
+        elif isinstance(inf.get("specific_problem"), str):
+            pitch_src = str(inf.get("specific_problem") or "").strip()
+    payload["cal_seller_brief"] = build_cal_seller_brief(
+        company_name=str(payload.get("company_name") or c.name or ""),
+        industry=str(payload.get("industry") or ""),
+        signal_text=format_signal_for_sales(first_sig.signal_text) if first_sig else "",
+        signal_type=str(getattr(first_sig, "signal_type", "") or "") if first_sig else "",
+        pipeline_action=pitch_src,
+        robot_types=list(robot_types_needed or []),
+        share_summary=str(share_summary or ""),
+        hermes_job_title=hermes_job,
+    )
+
     quality_profile = compute_lead_quality_profile(
         priority_tier=pri.tier,
         priority_score=float(getattr(pri, "score", 0.0) or 0.0),
@@ -1591,6 +1634,27 @@ def _hermes_pipeline_fields(crm_meta: Optional[dict]) -> dict:
                 "confidence": d.get("confidence"),
             }
         )
+    videos_raw = meta.get("hermes_video_evidence") if isinstance(meta.get("hermes_video_evidence"), list) else []
+    video_preview = []
+    for v in videos_raw[-8:]:
+        if not isinstance(v, dict):
+            continue
+        url = (v.get("source_url") or "").strip()
+        if not url:
+            continue
+        video_preview.append(
+            {
+                "title": (v.get("title") or None),
+                "source_url": url[:500],
+                "platform": v.get("platform"),
+                "evidence_kind": v.get("evidence_kind"),
+                "workflow_hint": (v.get("workflow_hint") or None),
+                "robot_visible": (v.get("robot_visible") or None),
+                "facility_hint": (v.get("facility_hint") or None),
+                "confidence": v.get("confidence"),
+                "published_at": v.get("published_at"),
+            }
+        )
     factor_preview = []
     if buying:
         for f in list(buying.get("factors") or [])[:6]:
@@ -1633,6 +1697,7 @@ def _hermes_pipeline_fields(crm_meta: Optional[dict]) -> dict:
         ),
         "hermes_job_titles": job_titles,
         "hermes_decision_makers": dm_preview,
+        "hermes_video_evidence": video_preview or None,
     }
 
 
@@ -4033,6 +4098,107 @@ def leads_summary(
 
     schedule_public_cache_refresh(force=True, pipeline_only=True, reason="summary_miss")
     return _empty_summary_payload()
+
+
+_MARKET_PULSE_CACHE: dict[str, object] = {"ts": 0.0, "data": None}
+_MARKET_PULSE_TTL_SEC = 120.0
+_ACTIVE_DEPLOYMENT_STAGES = (
+    "PILOT",
+    "LIVE_DEPLOYMENT",
+    "COMMERCIAL_DEPLOYMENT",
+    "MULTI_SITE",
+    "EXPANSION",
+)
+
+
+def _build_market_pulse(db: Session) -> dict:
+    """Homepage hero totals — buyers, vendors, public deployment evidence."""
+    from app.models.deployment_evidence import DeploymentEvent
+    from app.models.robot_catalog import Manufacturer
+    from app.models.robot_company import RobotCompany
+
+    # Prefer warm summary cache so we don't re-scan companies on every hero hit.
+    summary: dict = {}
+    try:
+        from app.services.public_surface_cache import KEY_SUMMARY_EXCLUDE_JUNK, read_public_cache
+
+        cached = read_public_cache(KEY_SUMMARY_EXCLUDE_JUNK, stale_ok=True)
+        if isinstance(cached, dict):
+            summary = cached
+    except Exception:
+        summary = {}
+
+    if not summary:
+        try:
+            summary = _compute_pipeline_summary_fast(db)
+        except Exception:
+            summary = _empty_summary_payload()
+
+    hot = int(summary.get("hot") or 0)
+    warm = int(summary.get("warm") or 0)
+    signals = int(summary.get("total_signals") or summary.get("signals_in_database") or 0)
+
+    robot_vendors = 0
+    try:
+        rc = int(db.query(func.count(RobotCompany.id)).scalar() or 0)
+        mf = int(db.query(func.count(Manufacturer.id)).scalar() or 0)
+        robot_vendors = max(rc, mf)
+    except Exception as exc:
+        logger.warning("market-pulse vendor count failed: %s", exc)
+
+    active_deployments = 0
+    try:
+        active_deployments = int(
+            db.query(func.count(DeploymentEvent.id))
+            .filter(DeploymentEvent.deployment_stage.in_(_ACTIVE_DEPLOYMENT_STAGES))
+            .scalar()
+            or 0
+        )
+        if active_deployments <= 0:
+            active_deployments = int(db.query(func.count(DeploymentEvent.id)).scalar() or 0)
+    except Exception as exc:
+        logger.warning("market-pulse deployment count failed: %s", exc)
+
+    return {
+        "buyer_opportunities": hot + warm,
+        "hot_windows": hot,
+        "robot_vendors": robot_vendors,
+        "active_deployments": active_deployments,
+        "buying_signals": signals,
+        "built_at": datetime.now(timezone.utc).isoformat(),
+        "doc": "Hero market pulse for homepage tension (non-CTA).",
+    }
+
+
+@router.get("/market-pulse")
+def market_pulse(
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    """Public hero metrics: buyer opportunities, vendors, active deployments."""
+    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=600"
+    now = time.monotonic()
+    cached = _MARKET_PULSE_CACHE.get("data")
+    ts = float(_MARKET_PULSE_CACHE.get("ts") or 0)
+    if cached is not None and now - ts < _MARKET_PULSE_TTL_SEC:
+        return cached
+    try:
+        payload = _build_market_pulse(db)
+    except Exception as exc:
+        logger.warning("market-pulse build failed: %s", exc)
+        if cached is not None:
+            return cached
+        return {
+            "buyer_opportunities": 0,
+            "hot_windows": 0,
+            "robot_vendors": 0,
+            "active_deployments": 0,
+            "buying_signals": 0,
+            "error": str(exc)[:200],
+        }
+    _MARKET_PULSE_CACHE["ts"] = now
+    _MARKET_PULSE_CACHE["data"] = payload
+    return payload
 
 
 @router.post("/reclassify-unknown")

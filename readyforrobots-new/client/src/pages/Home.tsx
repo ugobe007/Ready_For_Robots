@@ -441,10 +441,10 @@ export default function Home() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.36em] text-[#7adfc8] sm:text-[11px]">
                   READYFORROBOTS SIGNAL
                 </p>
-                <div className="mt-4 sm:mt-5">
+                <div className="mt-2.5 sm:mt-3">
                   <HomeMarketPulse />
                 </div>
-                <h1 className="mt-3 text-[clamp(2.1rem,8.4vw,6.3rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-slate-50 sm:mt-4" style={{ textShadow: "0 10px 34px rgba(5, 10, 20, 0.48)" }}>
+                <h1 className="mt-4 text-[clamp(2.1rem,8.4vw,6.3rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-slate-50 sm:mt-5" style={{ textShadow: "0 10px 34px rgba(5, 10, 20, 0.48)" }}>
                   Find Jobs for <span className="text-[#00d0a2]">Robots.</span>
                 </h1>
                 <p className="mx-auto mt-5 max-w-[54ch] text-[16px] leading-7 text-slate-300 sm:mt-7 sm:text-[18px] sm:leading-8 lg:mx-0 lg:text-[19px] lg:leading-9">
