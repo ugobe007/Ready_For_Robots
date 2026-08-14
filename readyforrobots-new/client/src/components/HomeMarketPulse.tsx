@@ -1,20 +1,25 @@
 /**
- * Hero market pulse — one-line ticker under SIGNAL (buyers · hot · live).
+ * Hero market pulse — action = deployments; evidence = buyers + leads.
  */
 import { useEffect, useState } from "react";
 import { fetchWithTimeoutRetry, getPublicReadApiBase } from "@/lib/apiBase";
 
 type PulseNums = {
+  deployments: number;
   buyers: number;
-  hot: number;
+  leads: number;
   live: boolean;
 };
 
 const FALLBACK: PulseNums = {
+  deployments: 10,
   buyers: 1979,
-  hot: 279,
+  leads: 279,
   live: false,
 };
+
+/** Action accent — distinct from SIGNAL emerald evidence. */
+const DEPLOY_COLOR = "#22d3ee";
 
 function fmt(n: number): string {
   if (!Number.isFinite(n) || n < 0) return "—";
@@ -25,11 +30,13 @@ function parsePulseJson(data: unknown): PulseNums | null {
   if (!data || typeof data !== "object") return null;
   const d = data as Record<string, unknown>;
   const buyers = Number(d.buyer_opportunities);
-  const hot = Number(d.hot_windows);
+  const leads = Number(d.hot_windows);
+  const deployments = Number(d.active_deployments);
   if (!Number.isFinite(buyers) || buyers <= 0) return null;
   return {
     buyers,
-    hot: Number.isFinite(hot) && hot >= 0 ? hot : 0,
+    leads: Number.isFinite(leads) && leads >= 0 ? leads : 0,
+    deployments: Number.isFinite(deployments) && deployments >= 0 ? deployments : 0,
     live: true,
   };
 }
@@ -42,7 +49,7 @@ function parseHomepageSummary(data: unknown): PulseNums | null {
   const warm = Number(summary.warm) || 0;
   const buyers = hot + warm;
   if (buyers <= 0) return null;
-  return { buyers, hot, live: true };
+  return { deployments: 0, buyers, leads: hot, live: true };
 }
 
 export default function HomeMarketPulse() {
@@ -106,17 +113,28 @@ export default function HomeMarketPulse() {
     >
       <span className="relative mr-0.5 inline-flex h-1.5 w-1.5 shrink-0 self-center">
         <span
-          className={`absolute inline-flex h-full w-full rounded-full bg-[#3ecf8e] ${pulse.live ? "animate-ping opacity-50" : "opacity-0"}`}
+          className={`absolute inline-flex h-full w-full rounded-full ${pulse.live ? "animate-ping opacity-50" : "opacity-0"}`}
+          style={{ backgroundColor: DEPLOY_COLOR }}
         />
-        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#3ecf8e]" />
+        <span
+          className="relative inline-flex h-1.5 w-1.5 rounded-full"
+          style={{ backgroundColor: DEPLOY_COLOR }}
+        />
+      </span>
+      <span className="font-medium tabular-nums" style={{ color: DEPLOY_COLOR }}>
+        {fmt(pulse.deployments)}
+      </span>
+      <span className="text-slate-500">deployments</span>
+      <span className="text-slate-600" aria-hidden>
+        ·
       </span>
       <span className="font-medium tabular-nums text-[#3ecf8e]">{fmt(pulse.buyers)}</span>
       <span className="text-slate-500">buyers</span>
       <span className="text-slate-600" aria-hidden>
         ·
       </span>
-      <span className="font-medium tabular-nums text-slate-100">{fmt(pulse.hot)}</span>
-      <span className="text-slate-500">hot</span>
+      <span className="font-medium tabular-nums text-slate-100">{fmt(pulse.leads)}</span>
+      <span className="text-slate-500">leads</span>
       <span className="text-slate-600" aria-hidden>
         ·
       </span>
