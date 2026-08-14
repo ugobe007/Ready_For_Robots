@@ -4102,7 +4102,11 @@ def leads_summary(
 
 _MARKET_PULSE_CACHE: dict[str, object] = {"ts": 0.0, "data": None}
 _MARKET_PULSE_TTL_SEC = 120.0
-_ACTIVE_DEPLOYMENT_STAGES = (
+# Hero "deployments" = public deployment evidence claims (not only live/commercial).
+# Exclude UNKNOWN junk; keep announced/agreement/pilot+ as countable action proof.
+_PULSE_DEPLOYMENT_STAGES = (
+    "ANNOUNCED",
+    "AGREEMENT",
     "PILOT",
     "LIVE_DEPLOYMENT",
     "COMMERCIAL_DEPLOYMENT",
@@ -4150,7 +4154,7 @@ def _build_market_pulse(db: Session) -> dict:
     try:
         active_deployments = int(
             db.query(func.count(DeploymentEvent.id))
-            .filter(DeploymentEvent.deployment_stage.in_(_ACTIVE_DEPLOYMENT_STAGES))
+            .filter(DeploymentEvent.deployment_stage.in_(_PULSE_DEPLOYMENT_STAGES))
             .scalar()
             or 0
         )

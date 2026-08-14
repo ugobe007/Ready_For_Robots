@@ -18,8 +18,8 @@ const FALLBACK: PulseNums = {
   live: false,
 };
 
-/** Action accent — distinct from SIGNAL emerald evidence. */
-const DEPLOY_COLOR = "#22d3ee";
+/** Action accent — amber-orange, distinct from SIGNAL emerald evidence. */
+const DEPLOY_COLOR = "#f59e0b";
 
 function fmt(n: number): string {
   if (!Number.isFinite(n) || n < 0) return "—";
