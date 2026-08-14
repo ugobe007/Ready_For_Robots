@@ -147,24 +147,35 @@ export async function fetchHomepageLeadPool<
 
   const run = (async (): Promise<HomepagePoolResult> => {
     try {
-      const [homepageRes, hotRes] = await Promise.all([
-        fetchWithTimeoutRetry(
+      // Homepage is the source of truth for the marketing live strip.
+      // Secondary HOT list is best-effort only — never fail the pool if homepage works.
+      let homepageRes: Response | null = null;
+      let hotRes: Response | null = null;
+      try {
+        homepageRes = await fetchWithTimeoutRetry(
           `${getPublicReadApiBase()}/api/leads/homepage`,
           liveFetchInit(),
           HOMEPAGE_POOL_TIMEOUT_MS,
           { retries: 1, retryDelayMs: 800 },
-        ),
-        fetchWithTimeoutRetry(
+        );
+      } catch (e) {
+        homepagePoolTelemetry.lastError =
+          e instanceof Error ? `homepage: ${e.message}` : "homepage fetch failed";
+      }
+      try {
+        hotRes = await fetchWithTimeoutRetry(
           `${getPublicReadApiBase()}/api/leads?limit=24&tier=HOT&sort=score&exclude_junk=true`,
           liveFetchInit(),
           HOMEPAGE_POOL_TIMEOUT_MS,
-          { retries: 1, retryDelayMs: 800 },
-        ),
-      ]);
+          { retries: 0, retryDelayMs: 0 },
+        );
+      } catch {
+        /* optional enrichment — ignore */
+      }
 
       const merged: HomepagePoolResult["leads"] = [];
       let summary: { total?: number; hot?: number } | undefined;
-      if (homepageRes.ok) {
+      if (homepageRes?.ok) {
         const data = (await homepageRes.json()) as {
           hotLeads?: HomepagePoolResult["leads"];
           summary?: { total?: number; hot?: number };
@@ -172,7 +183,7 @@ export async function fetchHomepageLeadPool<
         if (Array.isArray(data.hotLeads)) merged.push(...data.hotLeads);
         if (data.summary) summary = data.summary;
       }
-      if (hotRes.ok) {
+      if (hotRes?.ok) {
         const hotData = await hotRes.json();
         if (Array.isArray(hotData)) merged.push(...(hotData as HomepagePoolResult["leads"]));
       }
