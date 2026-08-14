@@ -82,31 +82,31 @@ export default function HomeMarketPulse() {
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#3ecf8e]" />
         </span>
         <span
-          className="text-[11px] font-normal uppercase tracking-[0.12em] text-[#3ecf8e]"
+          className="text-[12px] font-normal uppercase tracking-[0.12em] text-[#3ecf8e]"
           style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}
         >
           Robot labor market — {pulse.live ? "live" : "cached"}
         </span>
       </div>
 
-      <div className="flex w-full min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-2 border-y border-white/10 py-2 lg:justify-start lg:gap-x-0">
+      <div className="flex w-full min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-2 border-y border-white/10 py-2 lg:justify-start lg:gap-x-0">
         {cells.map((cell, i) => (
           <div
             key={cell.label}
             className={[
-              "flex min-w-0 flex-1 basis-[calc(50%-0.375rem)] flex-col items-center gap-0 sm:basis-0 lg:items-start",
-              i > 0 ? "lg:border-l lg:border-white/10 lg:pl-4" : "",
-              i < cells.length - 1 ? "lg:pr-4" : "",
+              "flex min-w-0 flex-1 basis-[calc(50%-0.25rem)] flex-col items-center gap-0 overflow-hidden sm:basis-0 lg:items-start",
+              i > 0 ? "lg:border-l lg:border-white/10 lg:pl-3" : "",
+              i < cells.length - 1 ? "lg:pr-3" : "",
             ].join(" ")}
           >
             <span
-              className={`text-[15px] font-medium leading-none tracking-tight sm:text-[16px] ${valueClass(cell.accent)}`}
+              className={`text-[17px] font-medium leading-none tracking-tight tabular-nums sm:text-[18px] ${valueClass(cell.accent)}`}
               style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}
             >
               {fmt(cell.value)}
             </span>
             <span
-              className="mt-0.5 text-[10px] font-normal leading-none tracking-wide text-slate-500"
+              className="mt-0.5 max-w-full truncate text-[11px] font-normal leading-none tracking-tight text-slate-500"
               style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}
             >
               {cell.label}
@@ -117,7 +117,7 @@ export default function HomeMarketPulse() {
 
       {pulse.buying_signals > 0 ? (
         <p
-          className="mt-1.5 text-center text-[10px] font-normal leading-none tracking-wide text-slate-600 lg:text-left"
+          className="mt-1.5 text-center text-[11px] font-normal leading-none tracking-tight text-slate-600 lg:text-left"
           style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}
         >
           {fmt(pulse.buying_signals)} buying signals scored
