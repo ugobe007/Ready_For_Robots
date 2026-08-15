@@ -56,7 +56,7 @@ import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import CalLeadDrop, { dealToCalDrop } from "@/components/pipeline/CalLeadDrop";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
-import ActivationChecklist from "@/components/pipeline/ActivationChecklist";
+import ActivationChecklist, { isActivationChecklistDismissed } from "@/components/pipeline/ActivationChecklist";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import PipelineSalesWorkflowRail from "@/components/pipeline/PipelineSalesWorkflowRail";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
@@ -2632,9 +2632,13 @@ export default function Pipeline() {
       : canSaveSelected
         ? `Save lead · ${build25Progress}/${BUILD_PIPELINE_TARGET}`
         : canCopySelectedDraft
-          ? "Outreach: Copy draft"
+          ? firstThreeActions.saved
+            ? "Next: Copy outreach draft"
+            : "Outreach: Copy draft"
           : selected
-            ? "Outreach: Review this company"
+            ? firstThreeActions.saved
+              ? "Next: Review draft on the right"
+              : "Outreach: Review this company"
             : "Pick a lead to curate"
     : !isSignedIn
     ? "Next step: Start free workspace"
@@ -2824,7 +2828,15 @@ export default function Pipeline() {
       setFirstThreeActions((prev) => ({ ...prev, started: true, saved: true, dismissed: false }));
       setSavedLeadCount((count) => count + 1);
       setShowActivationChecklist(true);
-      toast.success("Lead saved — develop with SIGNAL and send from the panel on the right.");
+      const nextHint = deal.outreachBody || deal.sellerBrief
+        ? `Next: copy the outreach draft for ${deal.company}, then send.`
+        : `Next: open ${deal.company} on the right, review the brief, then copy and send.`;
+      toast.success(`Saved ${deal.company}. ${nextHint}`);
+      // Keep motion going — don't leave the user staring at a finished CTA.
+      window.setTimeout(() => {
+        spotlightOutreachDraft();
+        document.getElementById("pipeline-outreach-next")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 120);
       return true;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save lead with SIGNAL");
@@ -3274,29 +3286,42 @@ export default function Pipeline() {
     }
   };
 
-  const dbTotal =
-    scopeToSubmittedUrl
-      ? displayedDeals.length
-      : summary?.companies_in_database ?? summary?.total ?? (loadingSummary ? undefined : displayedDeals.length);
-  const hotDeals =
-    scopeToSubmittedUrl
-      ? displayedDeals.filter((d) => userBucketForDeal(d) === "Hot Leads").length
-      : summary?.hot ?? (loadingSummary ? undefined : displayedDeals.filter((d) => userBucketForDeal(d) === "Hot Leads").length);
-  const warmDeals =
-    scopeToSubmittedUrl
-      ? displayedDeals.filter((d) => userBucketForDeal(d) === "Warm Leads").length
-      : summary?.warm ?? (loadingSummary ? undefined : displayedDeals.filter((d) => userBucketForDeal(d) === "Warm Leads").length);
+  // Market totals always come from /api/leads/summary (or pipeline.summary) — never the URL-matched slice.
+  const dbTotal = summary?.companies_in_database ?? summary?.total;
+  const hotDeals = summary?.hot;
+  const warmDeals = summary?.warm;
   const visibleDeals = displayedDeals.length;
   const filteredHot = displayedDeals.filter((d) => userBucketForDeal(d) === "Hot Leads").length;
   const filteredWarm = displayedDeals.filter((d) => userBucketForDeal(d) === "Warm Leads").length;
   const queuedActivations = activations.filter((a) => ["queued", "evaluating", "drafted", "awaiting_approval"].includes(a.status)).length;
+  const sliceHot = scopeToSubmittedUrl ? filteredHot : hotDeals;
+  const sliceWarm = scopeToSubmittedUrl ? filteredWarm : warmDeals;
 
   useEffect(() => {
-    if (!session?.access_token) return;
     if (savedLeadCount > 0) {
       setFirstThreeActions((prev) => ({ ...prev, started: true, saved: true }));
     }
   }, [session?.access_token, savedLeadCount]);
+
+  // Always hydrate market totals from the public summary endpoint (independent of the matched slice).
+  useEffect(() => {
+    let cancelled = false;
+    const base = getPublicReadApiBase();
+    setLoadingSummary(true);
+    void fetchPipelineSummaryFallback(base)
+      .then((payload) => {
+        if (cancelled || !payload) return;
+        if ((payload.total ?? 0) > 0 || (payload.hot ?? 0) > 0 || (payload.companies_in_database ?? 0) > 0) {
+          setSummary(payload);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSummary(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     writeFirstThreeActions(firstThreeActions);
@@ -3754,14 +3779,25 @@ export default function Pipeline() {
                       Curate sales leads &amp; run outreach
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
-                      Save the best companies into your working list (goal: {BUILD_PIPELINE_TARGET}). Open each lead for why-now signals, copy Cal’s note, and send.
+                      {build25Progress > 0 && !firstThreeActions.copied
+                        ? `Saved ${build25Progress}/${BUILD_PIPELINE_TARGET}. Next: copy the outreach draft for ${selected?.company || "this lead"}, then send.`
+                        : build25Progress > 0 && firstThreeActions.copied && !firstThreeActions.sent
+                          ? `Draft copied for ${selected?.company || "this lead"}. Next: send outreach, then keep shortlisting.`
+                          : `Save the best companies into your working list (goal: ${BUILD_PIPELINE_TARGET}). Open each lead for why-now signals, copy Cal’s note, and send.`}
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-slate-300 sm:text-sm">
+                    <div
+                      id="pipeline-outreach-next"
+                      className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-slate-300 sm:text-sm"
+                    >
                       <span className={build25Progress > 0 ? "text-sky-300" : "text-amber-200"}>
                         1. Save leads ({build25Progress}/{BUILD_PIPELINE_TARGET})
                       </span>
-                      <span>2. Copy outreach draft</span>
-                      <span>3. Send &amp; continue</span>
+                      <span className={firstThreeActions.copied ? "text-sky-300" : build25Progress > 0 ? "text-amber-200" : ""}>
+                        2. Copy outreach draft
+                      </span>
+                      <span className={firstThreeActions.sent ? "text-sky-300" : firstThreeActions.copied ? "text-amber-200" : ""}>
+                        3. Send &amp; continue
+                      </span>
                     </div>
                   </div>
                   <button
@@ -4097,12 +4133,12 @@ export default function Pipeline() {
                   />
                 </div>
               )}
-              {session?.access_token && (showActivationChecklist || savedLeadCount === 1) && (
+              {session?.access_token && (showActivationChecklist || savedLeadCount >= 1) && !isActivationChecklistDismissed() && (
                 <div className="mt-2">
                   <ActivationChecklist
                     company={selected?.company}
-                    draftCopied={draftCopiedForActivation}
-                    hasDraft={Boolean(selected?.outreachBody)}
+                    draftCopied={draftCopiedForActivation || firstThreeActions.copied}
+                    hasDraft={Boolean(selected?.outreachBody || selected?.sellerBrief)}
                     onCopyDraft={copyDraft}
                   />
                 </div>
@@ -4201,7 +4237,7 @@ export default function Pipeline() {
             <PipelineMetric
               label={isAdmin ? "Database total" : "Market watchlist"}
               value={formatMetric(dbTotal)}
-              sub={loadingSummary
+              sub={loadingSummary || dbTotal == null
                 ? "Refreshing market totals..."
                 : `${formatMetric(summary?.signals_in_database ?? summary?.total_signals)} scored buying signals`}
               color="#111827"
@@ -4219,13 +4255,15 @@ export default function Pipeline() {
               color="#FFB000"
             />
             <PipelineMetric
-              label={isAdmin ? "Working slice" : "In this view"}
+              label={isAdmin ? "Working slice" : scopeToSubmittedUrl ? "Matched view" : "In this view"}
               value={formatMetric(visibleDeals)}
               sub={isAdmin
                 ? `${formatMetric(queuedActivations)} SIGNAL activations queued`
                 : hasActiveSearch
                   ? `${formatMetric(filteredHot)} hot · ${formatMetric(filteredWarm)} warm matching search`
-                  : `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm leads loaded`}
+                  : scopeToSubmittedUrl
+                    ? `${formatMetric(sliceHot)} hot · ${formatMetric(sliceWarm)} warm in this matched set`
+                    : `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm in market`}
               color="#10b981"
             />
           </section>
