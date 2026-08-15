@@ -2699,15 +2699,15 @@ export default function Pipeline() {
           ? `Open your ${BUILD_PIPELINE_TARGET} sales leads`
           : `Create free account · unlock ${BUILD_PIPELINE_TARGET} sales leads`
       : step5Phase === "copy"
-        ? `Copy outreach draft · ${selected?.company || "this lead"}`
+        ? "Copy outreach draft"
         : step5Phase === "send"
           ? selected?.contact
-            ? `Send outreach · ${selected.company}`
+            ? "Send outreach"
             : "Add contact email, then send"
           : step5Phase === "save" && step5SaveTarget
             ? `Save lead · ${build25Progress}/${BUILD_PIPELINE_TARGET}`
             : canCopySelectedDraft
-              ? `Copy outreach draft · ${selected?.company || "this lead"}`
+              ? "Copy outreach draft"
               : selected
                 ? "Open lead brief on the right"
                 : "Pick a lead to curate"
@@ -2725,13 +2725,13 @@ export default function Pipeline() {
 
   const nextStepCoachText = arrivedFromResultsScan && build25Started
     ? step5Phase === "copy"
-      ? `Lead saved. Next: copy the outreach draft for ${selected?.company || "this buyer"}, paste into your email, and send.`
+      ? "Lead saved. Next: pick a lead, copy the outreach draft, paste into your email, and send."
       : step5Phase === "send"
         ? selected?.contact
-          ? `Draft ready. Next: send to ${selected.contact}, then save another lead until you hit ${BUILD_PIPELINE_TARGET}.`
-          : "Draft ready. Type a contact email in the right panel, send, then keep saving leads."
+          ? `Draft ready. Next: send outreach, then keep saving until you hit ${BUILD_PIPELINE_TARGET}.`
+          : "Draft ready. Add a contact email in the right panel, send, then keep saving leads."
         : step5Phase === "save" && step5SaveTarget
-          ? `Next: save ${step5SaveTarget.company} (${build25Progress + 1}/${BUILD_PIPELINE_TARGET}), then copy the draft and send.`
+          ? `Next: save a lead (${build25Progress + 1}/${BUILD_PIPELINE_TARGET}), then copy the draft and send.`
           : build25Progress >= BUILD_PIPELINE_TARGET
             ? "All 15 slots filled. Keep sending from saved leads, or open CRM to track replies."
             : "Pick a lead on the left, then use the yellow button for the next action."
@@ -2923,9 +2923,9 @@ export default function Pipeline() {
       setShowActivationChecklist(true);
       setDraftCopiedForActivation(false);
       const nextHint = deal.outreachBody || deal.sellerBrief
-        ? `Next: copy the outreach draft for ${deal.company}, then send.`
-        : `Next: open ${deal.company} on the right, review the brief, then copy and send.`;
-      toast.success(`Saved ${deal.company}. ${nextHint}`);
+        ? "Next: pick a lead, copy the outreach draft, paste into your email, and send."
+        : "Next: pick a lead on the right, review the brief, then copy and send.";
+      toast.success(`Lead saved. ${nextHint}`);
       // Keep motion going — don't leave the user staring at a finished CTA.
       window.setTimeout(() => {
         spotlightOutreachDraft();
@@ -3003,7 +3003,7 @@ export default function Pipeline() {
       if (step5Phase === "copy" && selected) {
         if (canCopySelectedDraft) {
           copyDraft();
-          toast.success(`Draft copied for ${selected.company}. Next: paste into email and send.`);
+          toast.success("Draft copied. Next: paste into your email and send.");
         }
         spotlightOutreachDraft();
         return;
@@ -3902,9 +3902,9 @@ export default function Pipeline() {
                     </h2>
                     <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
                       {build25Progress > 0 && !firstThreeActions.copied
-                        ? `Saved ${build25Progress}/${BUILD_PIPELINE_TARGET}. Next: copy the outreach draft for ${selected?.company || "this lead"}, then send.`
+                        ? `Saved ${build25Progress}/${BUILD_PIPELINE_TARGET}. Next: pick a lead, copy the outreach draft, then send.`
                         : build25Progress > 0 && firstThreeActions.copied && !firstThreeActions.sent
-                          ? `Draft copied for ${selected?.company || "this lead"}. Next: send outreach, then keep shortlisting.`
+                          ? "Draft copied. Next: send outreach, then keep shortlisting."
                           : `Save the best companies into your working list (goal: ${BUILD_PIPELINE_TARGET}). Open each lead for why-now signals, copy Cal’s note, and send.`}
                     </p>
                     <div
@@ -3932,7 +3932,7 @@ export default function Pipeline() {
                       <ArrowRight className="h-4 w-4" />
                     </button>
                     {nextStepCoachText ? (
-                      <p className="max-w-sm text-left text-[11px] leading-snug text-slate-300 lg:text-right">
+                      <p className="max-w-md text-left text-sm font-semibold leading-snug text-emerald-400 sm:text-base lg:text-right">
                         {nextStepCoachText}
                       </p>
                     ) : null}
