@@ -2663,26 +2663,54 @@ export default function Pipeline() {
           "Copy the outreach draft and send from the detail panel.",
         ];
   const canSaveSelected = Boolean(selected) && (!isSignedIn || !crmAccountIdByCompanyId[selected!.id]);
-  const canCopySelectedDraft = Boolean(selected?.outreachBody);
-  const canOpenSelectedDraft = Boolean(selected?.outreachBody) && showKanban && Boolean(session?.access_token);
+  const canCopySelectedDraft = Boolean(selected?.outreachBody || selected?.sellerBrief);
+  const canOpenSelectedDraft = Boolean(selected?.outreachBody || selected?.sellerBrief) && showKanban && Boolean(session?.access_token);
+  /** Next unmatched lead in the Step 5 queue — keep Save · n/15 alive until the goal is hit. */
+  const nextUnsavedDeal = useMemo(() => {
+    if (!arrivedFromResultsScan || !build25Started || !isSignedIn) return null;
+    if (build25Progress >= BUILD_PIPELINE_TARGET) return null;
+    return displayedDeals.find((d) => !crmAccountIdByCompanyId[d.id]) ?? null;
+  }, [
+    arrivedFromResultsScan,
+    build25Started,
+    isSignedIn,
+    build25Progress,
+    displayedDeals,
+    crmAccountIdByCompanyId,
+  ]);
+  const step5SaveTarget = (canSaveSelected && selected ? selected : nextUnsavedDeal) ?? null;
+  // Step 5 state machine: save → copy → send → save next (until 15), never dead-end on a vague CRM scroll.
+  const step5Phase: "unlock" | "save" | "copy" | "send" | "done" = !arrivedFromResultsScan
+    ? "done"
+    : !build25Started
+      ? "unlock"
+      : firstThreeActions.saved && !firstThreeActions.copied
+        ? "copy"
+        : firstThreeActions.copied && !firstThreeActions.sent
+          ? "send"
+          : step5SaveTarget
+            ? "save"
+            : "done";
   const nextStepPrimaryLabel = arrivedFromResultsScan
-    ? !build25Started
+    ? step5Phase === "unlock"
       ? !workspaceProfileComplete
         ? "Save customer name & information"
         : isSignedIn
           ? `Open your ${BUILD_PIPELINE_TARGET} sales leads`
           : `Create free account · unlock ${BUILD_PIPELINE_TARGET} sales leads`
-      : canSaveSelected
-        ? `Save lead · ${build25Progress}/${BUILD_PIPELINE_TARGET}`
-        : canCopySelectedDraft
-          ? firstThreeActions.saved
-            ? "Next: Copy outreach draft"
-            : "Outreach: Copy draft"
-          : selected
-            ? firstThreeActions.saved
-              ? "Next: Review draft on the right"
-              : "Outreach: Review this company"
-            : "Pick a lead to curate"
+      : step5Phase === "copy"
+        ? `Copy outreach draft · ${selected?.company || "this lead"}`
+        : step5Phase === "send"
+          ? selected?.contact
+            ? `Send outreach · ${selected.company}`
+            : "Add contact email, then send"
+          : step5Phase === "save" && step5SaveTarget
+            ? `Save lead · ${build25Progress}/${BUILD_PIPELINE_TARGET}`
+            : canCopySelectedDraft
+              ? `Copy outreach draft · ${selected?.company || "this lead"}`
+              : selected
+                ? "Open lead brief on the right"
+                : "Pick a lead to curate"
     : !isSignedIn
     ? "Next step: Start free workspace"
     : canSaveSelected
@@ -2694,6 +2722,20 @@ export default function Pipeline() {
           : selected
             ? "Next step: Review selected lead"
             : "Next step: Pick a HOT lead";
+
+  const nextStepCoachText = arrivedFromResultsScan && build25Started
+    ? step5Phase === "copy"
+      ? `Lead saved. Next: copy the outreach draft for ${selected?.company || "this buyer"}, paste into your email, and send.`
+      : step5Phase === "send"
+        ? selected?.contact
+          ? `Draft ready. Next: send to ${selected.contact}, then save another lead until you hit ${BUILD_PIPELINE_TARGET}.`
+          : "Draft ready. Type a contact email in the right panel, send, then keep saving leads."
+        : step5Phase === "save" && step5SaveTarget
+          ? `Next: save ${step5SaveTarget.company} (${build25Progress + 1}/${BUILD_PIPELINE_TARGET}), then copy the draft and send.`
+          : build25Progress >= BUILD_PIPELINE_TARGET
+            ? "All 15 slots filled. Keep sending from saved leads, or open CRM to track replies."
+            : "Pick a lead on the left, then use the yellow button for the next action."
+    : null;
 
   // Manual lead click = engagement. Pin the selection and stop auto-rotation so the
   // visitor can finish reading the outreach draft before we ask them to sign up.
@@ -2868,9 +2910,18 @@ export default function Pipeline() {
         industry: deal.industry || null,
         stage_before: deal.stage,
       });
-      setFirstThreeActions((prev) => ({ ...prev, started: true, saved: true, dismissed: false }));
+      setFirstThreeActions((prev) => ({
+        ...prev,
+        started: true,
+        saved: true,
+        // Reset copy/send so each newly saved lead gets a full save → copy → send loop.
+        copied: false,
+        sent: false,
+        dismissed: false,
+      }));
       setSavedLeadCount((count) => count + 1);
       setShowActivationChecklist(true);
+      setDraftCopiedForActivation(false);
       const nextHint = deal.outreachBody || deal.sellerBrief
         ? `Next: copy the outreach draft for ${deal.company}, then send.`
         : `Next: open ${deal.company} on the right, review the brief, then copy and send.`;
@@ -2948,22 +2999,50 @@ export default function Pipeline() {
       startBuild25Pipeline();
       return;
     }
-    if (arrivedFromResultsScan && build25Started && !selected) {
-      document.getElementById("pipeline-leads")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (arrivedFromResultsScan && build25Started) {
+      if (step5Phase === "copy" && selected) {
+        if (canCopySelectedDraft) {
+          copyDraft();
+          toast.success(`Draft copied for ${selected.company}. Next: paste into email and send.`);
+        }
+        spotlightOutreachDraft();
+        return;
+      }
+      if (step5Phase === "send" && selected) {
+        if (selected.contact && selected.outreachBody && selected.stage !== "Outreach Sent") {
+          void sendOneLead(selected);
+          return;
+        }
+        spotlightOutreachDraft();
+        toast.message(
+          selected.contact
+            ? "Open the right panel and click Send outreach."
+            : "Add a contact email in the right panel, then send.",
+        );
+        return;
+      }
+      if (step5Phase === "save" && step5SaveTarget) {
+        if (selected?.id !== step5SaveTarget.id) {
+          selectLead(step5SaveTarget.id);
+        }
+        void handleSaveLead(step5SaveTarget);
+        return;
+      }
+      if (!selected) {
+        document.getElementById("pipeline-leads")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      if (canCopySelectedDraft) {
+        copyDraft();
+        spotlightOutreachDraft();
+        return;
+      }
+      spotlightOutreachDraft();
       return;
     }
     if (!isSignedIn) {
       // Navigation-only — do not call URL-submit / scan handlers from this CTA.
       window.location.href = startFreeWorkspaceHref;
-      return;
-    }
-    if (arrivedFromResultsScan && canSaveSelected && selected) {
-      void handleSaveLead(selected);
-      return;
-    }
-    if (arrivedFromResultsScan && canCopySelectedDraft) {
-      copyDraft();
-      spotlightOutreachDraft();
       return;
     }
     if (canSaveSelected && selected) {
@@ -3469,12 +3548,8 @@ export default function Pipeline() {
     alreadySent: Boolean(selected?.stage === "Outreach Sent"),
   };
   const first3SaveCtaVariant = selected && selected.id % 2 === 0 ? "a" : "b";
-  const first3SaveCtaLabel = first3SaveCtaVariant === "a"
-    ? "Save this lead"
-    : "Save lead and open your CRM workspace";
-  const first3SaveHelperText = first3SaveCtaVariant === "a"
-    ? "Save now to open your CRM workspace with draft, send, and reply tracking for this lead."
-    : "One click opens your CRM workspace for this lead with draft and send tracking ready to run.";
+  const first3SaveCtaLabel = "Save this lead";
+  const first3SaveHelperText = "Step 1: save this buyer, then copy the draft and send — that is the full motion.";
   const sendChecklistAssignedVariant = selected && selected.id % 2 === 0 ? "a" : "b";
   const sendChecklistVariant = checklistVariantOverride || sendChecklistAssignedVariant;
   const sendChecklistVariantLabel = sendChecklistVariant === "a" ? "Variant A" : "Variant B";
@@ -3559,25 +3634,25 @@ export default function Pipeline() {
   const firstThreePrimaryActionLabel = nextFirstThreeStep === "save_lead"
     ? first3SaveCtaLabel
     : nextFirstThreeStep === "copy_draft"
-      ? "Go to outreach draft"
+      ? "Copy outreach draft"
       : nextFirstThreeStep === "send_outreach"
-        ? (canSendSelectedOutreach ? "Send outreach now" : "Review send requirements")
+        ? (canSendSelectedOutreach ? "Send outreach now" : "Add contact, then send")
         : "Continue";
   const firstThreePrimaryActionDisabled = nextFirstThreeStep === "save_lead"
     ? Boolean(!selected || advancingLeadId === selected.id)
     : nextFirstThreeStep === "copy_draft"
-      ? false
+      ? Boolean(!selected)
       : nextFirstThreeStep === "send_outreach"
         ? Boolean(!selected || sendingLeadId === selected.id)
         : true;
   const firstThreeHelperText = nextFirstThreeStep === "save_lead"
-    ? first3SaveHelperText
+    ? "Step 1: save this buyer into your working list."
     : nextFirstThreeStep === "copy_draft"
-      ? "Step 2 is fastest from the Outreach draft panel. We will highlight it now."
+      ? "Step 2: copy the outreach draft, then paste it into your email client."
       : nextFirstThreeStep === "send_outreach"
         ? (canSendSelectedOutreach
-          ? "Step 3 closes the loop. Send one live email to move this lead into outreach tracking."
-          : `Send is blocked by: ${selectedSendBlockers.length ? selectedSendBlockers.join(", ") : "missing requirements"}. We will jump you to the draft area.`)
+          ? "Step 3: send one live email to move this lead into outreach tracking."
+          : `Send is blocked by: ${selectedSendBlockers.length ? selectedSendBlockers.join(", ") : "missing requirements"}. Fix that in the right panel, then send.`)
         : "All first actions complete.";
 
   const runFirstThreePrimaryAction = () => {
@@ -3594,6 +3669,10 @@ export default function Pipeline() {
       return;
     }
     if (nextFirstThreeStep === "copy_draft") {
+      if (canCopySelectedDraft) {
+        copyDraft();
+        toast.success(`Draft copied for ${selected.company}. Next: send outreach.`);
+      }
       spotlightOutreachDraft();
       return;
     }
@@ -3843,14 +3922,21 @@ export default function Pipeline() {
                       </span>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={runNextStepPrimary}
-                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 lg:w-auto"
-                  >
-                    {nextStepPrimaryLabel}
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                  <div className="flex w-full flex-col gap-2 lg:w-auto lg:items-end">
+                    <button
+                      type="button"
+                      onClick={runNextStepPrimary}
+                      className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 lg:w-auto"
+                    >
+                      {nextStepPrimaryLabel}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                    {nextStepCoachText ? (
+                      <p className="max-w-sm text-left text-[11px] leading-snug text-slate-300 lg:text-right">
+                        {nextStepCoachText}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
               )}
             </section>
