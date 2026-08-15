@@ -6,7 +6,7 @@ import { getPublicReadApiBase } from "@/lib/apiBase";
 import { useAuth } from "@/contexts/AuthContext";
 import HomeMarketPulse from "@/components/HomeMarketPulse";
 import PixelIcon from "@/components/PixelIcon";
-import { KARE_GRIPPER } from "@/lib/kareIcons";
+import { KARE_FACE } from "@/lib/kareIcons";
 
 type HomepageLeadRow = {
   id: number;
@@ -454,7 +454,7 @@ export default function Home() {
                     Live buyer intent matched to what your robot can do — who needs it, why now, and what to pitch — so you sell into demand, not cold lists.
                   </p>
                   <div className="shrink-0 pt-0.5" aria-hidden="true">
-                    <PixelIcon map={KARE_GRIPPER} scale={5} fill="#3ecf8e" background="transparent" />
+                    <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
                   </div>
                 </div>
                 <div className="mt-7 w-full max-w-[780px] border-b border-emerald-400/45 pb-3 sm:mt-10 lg:mt-11">
