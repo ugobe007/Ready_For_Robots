@@ -94,6 +94,14 @@ export interface ApiLead {
   share_summary?: string | null;
   share_blurb?: string | null;
   pipeline_action?: string | null;
+  cal_seller_brief?: {
+    headline?: string;
+    why_now?: string;
+    pitch?: string;
+    robot_fit?: string;
+    next_step?: string;
+    for_whom?: string;
+  } | null;
   lead_quality?: {
     schema?: string;
     overall_score?: number;
@@ -151,6 +159,17 @@ export interface ApiLead {
     source_url?: string | null;
     confidence?: number | null;
   }>;
+  hermes_video_evidence?: Array<{
+    title?: string | null;
+    source_url?: string;
+    platform?: string | null;
+    evidence_kind?: string | null;
+    workflow_hint?: string | null;
+    robot_visible?: string | null;
+    facility_hint?: string | null;
+    confidence?: number | null;
+    published_at?: string | null;
+  }> | null;
   signals?: Array<{
     signal_type?: string;
     signal_label?: string;
@@ -353,6 +372,34 @@ export function crmOutreachStageFromPipelineStage(stage: PipelineStage): string 
   return map[stage];
 }
 
+function buildSellerBrief(lead: ApiLead, companyName: string, signalType: string, signalText: string) {
+  const fromApi = lead.cal_seller_brief;
+  if (fromApi?.headline && fromApi?.why_now) {
+    return {
+      headline: fromApi.headline,
+      whyNow: fromApi.why_now,
+      pitch: fromApi.pitch || lead.pipeline_action || "",
+      robotFit: fromApi.robot_fit || (lead.robot_types_needed || []).slice(0, 3).join(", "),
+      nextStep: fromApi.next_step || `Save ${companyName} → copy Cal's note → start the conversation`,
+    };
+  }
+  const robots = (lead.robot_types_needed || []).map((r) => String(r).trim()).filter(Boolean).slice(0, 3);
+  const robotFit = robots.join(", ") || "the robot class you sell";
+  const hermesJob = (lead.hermes_job_titles || []).find((t) => (t || "").trim())?.trim();
+  const why =
+    hermesJob
+      ? `${companyName} is hiring for ${hermesJob} — timing that usually means operational load is already rising.`
+      : cleanAndClampText(lead.share_summary || signalText, 180) ||
+        `Active ${(signalType || "buying").toLowerCase()} signal in ${(lead.industry || "their operations").split(" / ")[0]}.`;
+  return {
+    headline: `Why ${companyName} is a fit for your robot`,
+    whyNow: why,
+    pitch: cleanScrapedText(lead.pipeline_action || "") || `Lead with how ${robotFit} removes a concrete workflow bottleneck — not a generic automation pitch.`,
+    robotFit,
+    nextStep: `Save ${companyName} → copy Cal's outreach note → start the conversation`,
+  };
+}
+
 export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null) {
   const loc = [lead.location_city, lead.location_state].filter(Boolean).join(", ") || "—";
   const { type, text, color } = topSignal(lead);
@@ -363,6 +410,7 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     if (raw.toLowerCase() === "cheese") return "Santori Cheese";
     return raw || `Company #${lead.id}`;
   })();
+  const sellerBrief = buildSellerBrief(lead, companyName, type, text);
   return {
     id: lead.id,
     company: companyName,
@@ -381,6 +429,7 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     contactTitle: lead.inferred_contact_role
       ? `${lead.inferred_contact_role.replace(/_/g, " ")} (inferred)`
       : undefined,
+    sellerBrief,
     outreachSubject: outreachSubject(companyName, type),
     outreachBody: outreachBody(lead, type, text),
     notes: cleanScrapedText(lead.pipeline_action || lead.share_summary) || undefined,
@@ -412,6 +461,7 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     hermesQualify: lead.hermes_qualify || undefined,
     hermesJobTitles: lead.hermes_job_titles || [],
     hermesDecisionMakers: lead.hermes_decision_makers || [],
+    hermesVideoEvidence: lead.hermes_video_evidence || [],
     researchUpdates: lead.research_updates,
     lastResearchedAt: lead.last_researched_at || null,
     latestMaterialUpdate: lead.latest_material_update || null,

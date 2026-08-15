@@ -27,16 +27,14 @@ import {
 } from "@/lib/oemCalCopy";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
+import {
+  resolveSignupWorkflowReturnPath,
+  shouldHonorWorkflowResults,
+  type WorkflowPrefill,
+} from "@/lib/signupWorkflowPath";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
-
-type WorkflowPrefill = {
-  wf?: "robot_company" | "buyer";
-  intent_focus?: string;
-  company_url?: string;
-  src?: string;
-};
 
 type InboxLink = { label: string; url: string };
 
@@ -113,28 +111,6 @@ function appendWorkflowPrefill(path: string, prefill: WorkflowPrefill): string {
   return serialized ? `${base}?${serialized}` : base;
 }
 
-function workflowResultsPath(prefill: WorkflowPrefill): string {
-  if (!prefill.company_url) return "/pipeline";
-  const params = new URLSearchParams();
-  params.set("url", prefill.company_url);
-  params.set("limit", "5");
-  if (prefill.src) params.set("src", `${prefill.src}_signup_return`);
-  return `/results?${params.toString()}`;
-}
-
-/** Prefer an explicit ?next= destination over stale workflow URL-scan context. */
-function shouldHonorWorkflowResults(nextRaw: string, prefill: WorkflowPrefill): boolean {
-  if (!prefill.company_url) return false;
-  if (nextRaw.startsWith("/results")) return true;
-  // Explicit pipeline / home / pricing returns must not revive a prior URL submit.
-  if (nextRaw.startsWith("/pipeline") || nextRaw === "/" || nextRaw.startsWith("/pricing")) {
-    return false;
-  }
-  // Header "Start free workspace" is never a URL-submit continuation.
-  if ((prefill.src || "").includes("home_header")) return false;
-  return true;
-}
-
 export default function Signup() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
@@ -198,12 +174,11 @@ export default function Signup() {
   }, [matchedUnlockIntent, workflowPrefill.company_url, params, nextRaw]);
 
   const workflowReturnPath = useMemo(() => {
-    // Explicit deep links win — preserve query (url/src/lead) across OAuth.
-    if (nextRaw.startsWith("/pipeline") || nextRaw.startsWith("/pricing")) return nextRaw;
-    if (nextRaw === "/") return "/pipeline";
-    if (matchedPipelineReturnPath) return matchedPipelineReturnPath;
-    if (!shouldHonorWorkflowResults(nextRaw, workflowPrefill)) return "/pipeline";
-    return workflowResultsPath(workflowPrefill);
+    return resolveSignupWorkflowReturnPath({
+      nextRaw,
+      prefill: workflowPrefill,
+      matchedPipelineReturnPath,
+    });
   }, [nextRaw, workflowPrefill, matchedPipelineReturnPath]);
 
   const intendedPostAuthPath = useMemo(

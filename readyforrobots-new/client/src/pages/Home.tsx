@@ -451,7 +451,7 @@ export default function Home() {
                 </h1>
                 <div className="mt-5 flex w-full items-start justify-start gap-4 sm:mt-7 sm:gap-7 lg:gap-8">
                   <p className="min-w-0 max-w-[54ch] flex-1 text-left text-[16px] leading-7 text-slate-300 sm:text-[18px] sm:leading-8 lg:text-[19px] lg:leading-9">
-                    ReadyForRobots finds where companies are hiring for work your robot can do — then Cal writes a short, timely note so you start an informed conversation, not a cold pitch.
+                    Live buyer intent matched to what your robot can do — who needs it, why now, and what to pitch — so you sell into demand, not cold lists.
                   </p>
                   <div className="shrink-0 pt-0.5" aria-hidden="true">
                     <PixelIcon map={KARE_GRIPPER} scale={5} fill="#3ecf8e" background="transparent" />
@@ -488,7 +488,7 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="mt-3 text-sm text-slate-300 sm:mt-4 sm:text-[15px]">
-                  Find the work. Match the robot. Start the first informed conversation.
+                  Find demand. Match your robot. Sell into the buying window.
                 </p>
                 <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
                   1. Submit URL · 2. {session?.access_token ? "5 sales leads" : "Sign up → 5 sales leads"} · 3. Customer info · 4. 15 sales leads

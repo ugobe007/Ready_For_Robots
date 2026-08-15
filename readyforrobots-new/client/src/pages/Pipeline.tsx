@@ -37,6 +37,11 @@ import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { signupHrefForLead } from "@/lib/signupHref";
 import {
+  clearBuild15UnlockFlags,
+  hasReviewedFiveLeads,
+  workflowResultsPath,
+} from "@/lib/signupWorkflowPath";
+import {
   icpIndustryTokens,
   isRobotWorkspaceProfileComplete,
   readRobotWorkspaceProfile,
@@ -109,6 +114,13 @@ interface Deal {
     person_title?: string;
   };
   contactTitle?: string;
+  sellerBrief?: {
+    headline?: string;
+    whyNow?: string;
+    pitch?: string;
+    robotFit?: string;
+    nextStep?: string;
+  };
   outreachSubject?: string;
   outreachBody?: string;
   notes?: string;
@@ -172,6 +184,17 @@ interface Deal {
     title?: string | null;
     source_url?: string | null;
     confidence?: number | null;
+  }>;
+  hermesVideoEvidence?: Array<{
+    title?: string | null;
+    source_url?: string;
+    platform?: string | null;
+    evidence_kind?: string | null;
+    workflow_hint?: string | null;
+    robot_visible?: string | null;
+    facility_hint?: string | null;
+    confidence?: number | null;
+    published_at?: string | null;
   }>;
   researchUpdates?: Array<{
     id: number;
@@ -1517,6 +1540,19 @@ export default function Pipeline() {
   /** URL submit searches stay on matched prospects — never default to the global market queue. */
   const preferUrlMatchedPipeline = Boolean(submittedUrlFromQuery || arrivedFromResultsScan);
 
+  // Recovery: signup/OAuth sometimes landed on Pipeline Step 5 without the 5-lead Results review.
+  useEffect(() => {
+    if (!arrivedFromResultsScan) return;
+    if (!submittedUrlFromQuery) return;
+    if (hasReviewedFiveLeads()) return;
+    clearBuild15UnlockFlags();
+    const dest = workflowResultsPath(
+      { company_url: submittedUrlFromQuery, src: "pipeline_needs_5_review" },
+      `/results?url=${encodeURIComponent(submittedUrlFromQuery)}&limit=5`,
+    );
+    window.location.replace(dest);
+  }, [arrivedFromResultsScan, submittedUrlFromQuery]);
+
   useEffect(() => {
     if (submittedUrlFromQuery) {
       setStorageSubmittedUrl("");
@@ -1608,6 +1644,8 @@ export default function Pipeline() {
   const [build25Started, setBuild25Started] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
+      // Stale unlock flags must not skip Step 3 (5 sales leads) / Step 4.
+      if (!hasReviewedFiveLeads()) return false;
       return sessionStorage.getItem("rfr_build15_started") === "1" || sessionStorage.getItem("rfr_build25_started") === "1";
     } catch {
       return false;
@@ -2652,8 +2690,26 @@ export default function Pipeline() {
   };
 
   const copyDraft = () => {
-    if (!selected?.outreachBody) return;
-    navigator.clipboard.writeText(`Subject: ${selected.outreachSubject}\n\n${selected.outreachBody}`);
+    if (!selected) return;
+    const brief = selected.sellerBrief;
+    const briefText = brief
+      ? [
+          brief.headline || "",
+          brief.whyNow ? `Why now: ${brief.whyNow}` : "",
+          brief.pitch ? `Pitch: ${brief.pitch}` : "",
+          brief.robotFit ? `Robot fit: ${brief.robotFit}` : "",
+          brief.nextStep ? `Next: ${brief.nextStep}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : "";
+    const emailText =
+      selected.outreachBody
+        ? `Subject: ${selected.outreachSubject || ""}\n\n${selected.outreachBody}`
+        : "";
+    const payload = briefText || emailText;
+    if (!payload) return;
+    navigator.clipboard.writeText(payload);
     setCopied(true);
     setDraftCopiedForActivation(true);
     setFirstThreeActions((prev) => ({ ...prev, started: true, copied: true, dismissed: false }));
@@ -2661,8 +2717,9 @@ export default function Pipeline() {
       lead_id: selected.id,
       company: selected.company,
       stage: selected.stage,
+      artifact: briefText ? "seller_brief" : "buyer_email",
     });
-    toast.success("Draft copied to clipboard");
+    toast.success(briefText ? "Seller brief copied" : "Draft copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -4542,7 +4599,8 @@ export default function Pipeline() {
 
                   {(selected.hermesQualify ||
                     (selected.hermesJobTitles && selected.hermesJobTitles.length > 0) ||
-                    (selected.hermesDecisionMakers && selected.hermesDecisionMakers.length > 0)) && (
+                    (selected.hermesDecisionMakers && selected.hermesDecisionMakers.length > 0) ||
+                    (selected.hermesVideoEvidence && selected.hermesVideoEvidence.length > 0)) && (
                     <div className="border-b border-slate-100 bg-sky-50/60 px-5 py-3">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-sky-900">
                         Hermes intelligence
@@ -4600,6 +4658,32 @@ export default function Pipeline() {
                             </li>
                           ))}
                         </ul>
+                      )}
+                      {(selected.hermesVideoEvidence || []).length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-800">
+                            Customer use-case videos
+                          </p>
+                          <ul className="mt-1 space-y-1 text-[11px] text-slate-700">
+                            {(selected.hermesVideoEvidence || []).slice(0, 4).map((vid, i) => (
+                              <li key={`${vid.source_url}-${i}`} className="leading-snug">
+                                <a
+                                  href={vid.source_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="font-medium text-sky-800 underline-offset-2 hover:underline"
+                                >
+                                  {vid.title || vid.source_url}
+                                </a>
+                                <span className="text-slate-500">
+                                  {vid.platform ? ` · ${vid.platform}` : ""}
+                                  {vid.workflow_hint ? ` · ${vid.workflow_hint}` : ""}
+                                  {vid.robot_visible ? ` · ${vid.robot_visible}` : ""}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       )}
                     </div>
                   )}

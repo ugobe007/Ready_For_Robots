@@ -1264,22 +1264,26 @@ def _fmt_pipeline_card(
                 "display_text": format_signal_for_sales(sig.signal_text),
             }
         ]
-    from app.services.cal_seller_brief import build_cal_seller_brief
-
     hermes_jobs = payload.get("hermes_job_titles") or []
     hermes_job = ""
     if isinstance(hermes_jobs, list) and hermes_jobs:
         hermes_job = str(hermes_jobs[0] or "").strip()
-    payload["cal_seller_brief"] = build_cal_seller_brief(
-        company_name=str(payload.get("company_name") or c.name or ""),
-        industry=str(industry_display or ""),
-        signal_text=format_signal_for_sales(sig.signal_text) if sig else "",
-        signal_type=str(getattr(sig, "signal_type", "") or "") if sig else "",
-        pipeline_action=str(pipeline_action or ""),
-        robot_types=list(robot_types_needed or []),
-        share_summary=str(share_summary or ""),
-        hermes_job_title=hermes_job,
-    )
+    try:
+        from app.services.cal_seller_brief import build_cal_seller_brief
+
+        payload["cal_seller_brief"] = build_cal_seller_brief(
+            company_name=str(payload.get("company_name") or c.name or ""),
+            industry=str(industry_display or ""),
+            signal_text=format_signal_for_sales(sig.signal_text) if sig else "",
+            signal_type=str(getattr(sig, "signal_type", "") or "") if sig else "",
+            pipeline_action=str(pipeline_action or ""),
+            robot_types=list(robot_types_needed or []),
+            share_summary=str(share_summary or ""),
+            hermes_job_title=hermes_job,
+        )
+    except Exception:
+        # Never break match-url / pipeline cards if seller-brief assembly fails.
+        payload["cal_seller_brief"] = None
     return payload
 
 
@@ -1509,8 +1513,6 @@ def _fmt_company(
         **link_extras,
     }
 
-    from app.services.cal_seller_brief import build_cal_seller_brief
-
     hermes_jobs = payload.get("hermes_job_titles") or []
     hermes_job = ""
     if isinstance(hermes_jobs, list) and hermes_jobs:
@@ -1525,16 +1527,21 @@ def _fmt_company(
             pitch_src = str(why_lead[0] or "").strip()
         elif isinstance(inf.get("specific_problem"), str):
             pitch_src = str(inf.get("specific_problem") or "").strip()
-    payload["cal_seller_brief"] = build_cal_seller_brief(
-        company_name=str(payload.get("company_name") or c.name or ""),
-        industry=str(payload.get("industry") or ""),
-        signal_text=format_signal_for_sales(first_sig.signal_text) if first_sig else "",
-        signal_type=str(getattr(first_sig, "signal_type", "") or "") if first_sig else "",
-        pipeline_action=pitch_src,
-        robot_types=list(robot_types_needed or []),
-        share_summary=str(share_summary or ""),
-        hermes_job_title=hermes_job,
-    )
+    try:
+        from app.services.cal_seller_brief import build_cal_seller_brief
+
+        payload["cal_seller_brief"] = build_cal_seller_brief(
+            company_name=str(payload.get("company_name") or c.name or ""),
+            industry=str(payload.get("industry") or ""),
+            signal_text=format_signal_for_sales(first_sig.signal_text) if first_sig else "",
+            signal_type=str(getattr(first_sig, "signal_type", "") or "") if first_sig else "",
+            pipeline_action=pitch_src,
+            robot_types=list(robot_types_needed or []),
+            share_summary=str(share_summary or ""),
+            hermes_job_title=hermes_job,
+        )
+    except Exception:
+        payload["cal_seller_brief"] = None
 
     quality_profile = compute_lead_quality_profile(
         priority_tier=pri.tier,

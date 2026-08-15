@@ -37,6 +37,7 @@ import {
   OEM_CAL_RESULTS_HEAD_SIGNED,
   oemCalResultsAnonLine,
 } from "@/lib/oemCalCopy";
+import { markReviewedFiveLeads } from "@/lib/signupWorkflowPath";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -80,6 +81,15 @@ type ApiLead = {
   recommended_action?: string;
   key_signals?: string[];
   created_at?: string | null;
+  hermes_job_titles?: string[];
+  pipeline_action?: string | null;
+  cal_seller_brief?: {
+    headline?: string;
+    why_now?: string;
+    pitch?: string;
+    robot_fit?: string;
+    next_step?: string;
+  } | null;
 };
 
 type RobotReadyResponse = {
@@ -96,6 +106,14 @@ type RobotReadyResponse = {
   estimated_deal_value?: number;
   top_industry?: string;
   total_leads?: number;
+};
+
+type SellerBrief = {
+  headline: string;
+  whyNow: string;
+  pitch: string;
+  robotFit: string;
+  nextStep: string;
 };
 
 type Prospect = {
@@ -115,6 +133,7 @@ type Prospect = {
   draft: string;
   outreachSubject: string;
   outreachBody: string;
+  sellerBrief: SellerBrief;
   stage: string;
   leadId?: number;
   shareSummary?: string;
@@ -142,6 +161,42 @@ function buildOutreachFields(p: Pick<Prospect, "company" | "signal" | "relevance
   const outreachBody = `Hey,\n\n${hook}\n\n${OUTREACH_CTA}\n\n${OUTREACH_SIGNATURE}`;
   const draft = `Subject: ${outreachSubject}\n\n${outreachBody}`;
   return { outreachSubject, outreachBody, draft };
+}
+
+function buildSellerBrief(
+  company: string,
+  opts: {
+    fromApi?: ApiLead["cal_seller_brief"];
+    relevance: string;
+    action: string;
+    signal: string;
+    robotTypes?: string[];
+    hermesJobs?: string[];
+  },
+): SellerBrief {
+  const api = opts.fromApi;
+  const robots = (opts.robotTypes || []).map((r) => String(r).trim()).filter(Boolean).slice(0, 3);
+  const robotFit = api?.robot_fit || robots.join(", ") || "the robot class you sell";
+  if (api?.headline && api?.why_now) {
+    return {
+      headline: api.headline,
+      whyNow: api.why_now,
+      pitch: api.pitch || opts.action,
+      robotFit,
+      nextStep: api.next_step || `Save ${company} → copy Cal's brief → start the conversation`,
+    };
+  }
+  const hermesJob = (opts.hermesJobs || []).find((t) => (t || "").trim())?.trim();
+  const whyNow = hermesJob
+    ? `${company} is hiring for ${hermesJob} — timing that usually means operational load is already rising.`
+    : opts.relevance || opts.signal;
+  return {
+    headline: `Why ${company} is a fit for your robot`,
+    whyNow,
+    pitch: opts.action || `Lead with how ${robotFit} removes a concrete workflow bottleneck — not a generic automation pitch.`,
+    robotFit,
+    nextStep: `Save ${company} → copy Cal's brief → start the conversation`,
+  };
 }
 
 function buildRfqSpecPacket(p: Pick<Prospect, "company" | "industry" | "action" | "signal">) {
@@ -242,12 +297,19 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
     signalType,
     signalColor: scoreColor(score),
     timing: lead.gtm?.readiness_label ? `Stage: ${lead.gtm.readiness_label}` : timingFromScore(score),
-    action: lead.recommended_action || lead.gtm?.suggested_motion || "Reach out with a personalized automation use case",
+    action: lead.pipeline_action || lead.recommended_action || lead.gtm?.suggested_motion || "Reach out with a personalized automation use case",
     relevance,
     scoreReason,
     draft: "",
     outreachSubject: "",
     outreachBody: "",
+    sellerBrief: {
+      headline: "",
+      whyNow: "",
+      pitch: "",
+      robotFit: "",
+      nextStep: "",
+    },
     stage,
     leadId: typeof lead.id === "number" ? lead.id : undefined,
     shareSummary: lead.share_summary || undefined,
@@ -255,6 +317,14 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
     robotTypes: lead.robot_types_needed,
     signalAge: formatSignalAge(lead.created_at),
   };
+  prospect.sellerBrief = buildSellerBrief(company, {
+    fromApi: lead.cal_seller_brief,
+    relevance: prospect.relevance,
+    action: prospect.action,
+    signal: prospect.signal,
+    robotTypes: lead.robot_types_needed,
+    hermesJobs: lead.hermes_job_titles,
+  });
   const outreach = buildOutreachFields(prospect);
   prospect.outreachSubject = outreach.outreachSubject;
   prospect.outreachBody = outreach.outreachBody;
@@ -303,10 +373,22 @@ function mapScoutProspect(row: ScoutProspectRow, index: number): Prospect {
     draft: "",
     outreachSubject: "",
     outreachBody: "",
+    sellerBrief: {
+      headline: "",
+      whyNow: "",
+      pitch: "",
+      robotFit: "",
+      nextStep: "",
+    },
     stage: row.tier ? `${row.tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal",
     leadId: row.id && /^\d+$/.test(String(row.id)) ? Number(row.id) : undefined,
     priorityTier: row.tier,
   };
+  prospect.sellerBrief = buildSellerBrief(company, {
+    relevance: prospect.relevance,
+    action: prospect.action,
+    signal: prospect.signal,
+  });
   const outreach = buildOutreachFields(prospect);
   prospect.outreachSubject = outreach.outreachSubject;
   prospect.outreachBody = outreach.outreachBody;
@@ -374,7 +456,12 @@ const fallbackProspects: Prospect[] = [
   },
 ].map((p) => {
   const outreach = buildOutreachFields(p);
-  return { ...p, ...outreach };
+  const sellerBrief = buildSellerBrief(p.company, {
+    relevance: p.relevance,
+    action: p.action,
+    signal: p.signal,
+  });
+  return { ...p, ...outreach, sellerBrief };
 });
 
 function fallbackProspectsForLimit(limit: number): Prospect[] {
@@ -539,6 +626,8 @@ export default function Results() {
       setScanStep(SCAN_STEPS.length - 1);
       setProspects(mapped);
       setUsingFallback(usedFallback);
+      // Gate Pipeline step 4/5 — signup must not jump past this 5-lead review.
+      markReviewedFiveLeads();
       if (usedFallback) {
         toast.info("SIGNAL could not reach the matcher in time — showing sample leads while the API recovers.");
       }
@@ -1003,25 +1092,32 @@ export default function Results() {
                       )}
 
                       {!isLocked && (
-                        <div className="mx-3 mb-1.5 grid gap-1 sm:grid-cols-2">
-                          <p className="border-l border-white/25 pl-2 text-[10px] leading-snug text-slate-300">
-                            <span className="font-semibold text-emerald-300">Why · </span>
-                            <span className="text-amber-200/90">“{p.signal}”</span>
-                            {" — "}
-                            {p.relevance}
+                        <div className="mx-3 mb-1.5 border-l border-emerald-400/50 pl-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+                            Cal → you · seller brief
                           </p>
-                          <p className="border-l border-white/25 pl-2 text-[10px] leading-snug text-slate-300">
-                            <span className="font-semibold text-emerald-300">Score · </span>
-                            {p.scoreReason}
+                          <p className="mt-0.5 text-[11px] font-semibold text-slate-100">{p.sellerBrief.headline}</p>
+                          <p className="mt-1 text-[10px] leading-snug text-slate-300">
+                            <span className="font-semibold text-amber-200">Why now · </span>
+                            {p.sellerBrief.whyNow}
+                          </p>
+                          <p className="mt-0.5 text-[10px] leading-snug text-slate-300">
+                            <span className="font-semibold text-amber-200">Pitch · </span>
+                            {p.sellerBrief.pitch}
+                          </p>
+                          <p className="mt-0.5 text-[10px] leading-snug text-slate-400">
+                            <span className="font-semibold text-cyan-300">Robot fit · </span>
+                            {p.sellerBrief.robotFit}
+                            <span className="text-slate-500"> · {p.scoreReason}</span>
                           </p>
                         </div>
                       )}
 
                       {!isLocked && (
                         <div className="mx-3 mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px]">
-                          <span className="inline-flex items-center gap-1 text-slate-200">
+                          <span className="inline-flex items-center gap-1 text-emerald-200">
                             <ArrowRight className="h-3 w-3 text-emerald-300" />
-                            {p.action}
+                            {p.sellerBrief.nextStep}
                           </span>
                           <span className="font-semibold text-emerald-300">{p.timing}</span>
                           <button
