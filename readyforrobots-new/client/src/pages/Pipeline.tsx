@@ -686,20 +686,22 @@ function UpgradeProPriorityBanner({ src }: { src: string }) {
     <div className="rounded-xl border border-slate-500/55 bg-[#0b162f] px-4 py-3 shadow-[0_14px_28px_-16px_rgba(15,23,42,0.9)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="inline-flex items-center rounded-full border border-sky-400/35 bg-sky-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-sky-200">
+          <p className="inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-400">
             Priority
           </p>
           <p className="mt-1 text-base font-extrabold text-white">
             Upgrade to Pro and automate your sales campaign.
           </p>
         </div>
-        <Link
-          href={`/pricing?upgrade=pro&src=${src}`}
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-400/60 bg-emerald-500 px-4 py-2.5 text-sm font-extrabold text-slate-950 shadow-sm transition hover:bg-emerald-400"
-        >
-          <PixelIcon map={KARE_FACE} scale={2} fill="#0b162f" background="transparent" className="shrink-0" />
-          Upgrade to Pro
-        </Link>
+        <div className="flex shrink-0 items-center gap-2.5">
+          <PixelIcon map={KARE_FACE} scale={2} fill="#3ecf8e" background="transparent" className="shrink-0" />
+          <Link
+            href={`/pricing?upgrade=pro&src=${src}`}
+            className="inline-flex items-center justify-center rounded-lg border border-emerald-400/60 bg-emerald-500 px-4 py-2.5 text-sm font-extrabold text-slate-950 shadow-sm transition hover:bg-emerald-400"
+          >
+            Upgrade to Pro
+          </Link>
+        </div>
       </div>
     </div>
   );
