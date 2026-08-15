@@ -4110,16 +4110,19 @@ def leads_summary(
 _MARKET_PULSE_CACHE: dict[str, object] = {"ts": 0.0, "data": None}
 _MARKET_PULSE_TTL_SEC = 120.0
 # Hero "deployments" = public deployment evidence claims (not only live/commercial).
-# Exclude UNKNOWN junk; keep announced/agreement/pilot+ as countable action proof.
+# Include announced/agreement/pilot+/eval; named-customer UNKNOWN still counts (not F junk).
 _PULSE_DEPLOYMENT_STAGES = (
     "ANNOUNCED",
     "AGREEMENT",
+    "EVALUATION",
+    "PROOF_OF_CONCEPT",
     "PILOT",
     "LIVE_DEPLOYMENT",
     "COMMERCIAL_DEPLOYMENT",
     "MULTI_SITE",
     "EXPANSION",
 )
+_PULSE_EVIDENCE_LEVELS = ("A", "B", "C", "D", "E")
 
 
 def _build_market_pulse(db: Session) -> dict:
@@ -4159,9 +4162,24 @@ def _build_market_pulse(db: Session) -> dict:
 
     active_deployments = 0
     try:
+        # Prefer unique vendor||customer pairs so duplicate claim rows don't inflate the hero.
+        pair_key = func.lower(
+            func.concat(
+                func.coalesce(DeploymentEvent.vendor_name, ""),
+                "|",
+                func.coalesce(DeploymentEvent.customer_name, ""),
+            )
+        )
+        named_customer = and_(
+            DeploymentEvent.customer_name.isnot(None),
+            func.length(func.trim(DeploymentEvent.customer_name)) > 0,
+            DeploymentEvent.evidence_level.in_(_PULSE_EVIDENCE_LEVELS),
+        )
+        staged = DeploymentEvent.deployment_stage.in_(_PULSE_DEPLOYMENT_STAGES)
         active_deployments = int(
-            db.query(func.count(DeploymentEvent.id))
-            .filter(DeploymentEvent.deployment_stage.in_(_PULSE_DEPLOYMENT_STAGES))
+            db.query(func.count(func.distinct(pair_key)))
+            .filter(or_(staged, named_customer))
+            .filter(pair_key != "|")  # drop rows with neither vendor nor customer
             .scalar()
             or 0
         )

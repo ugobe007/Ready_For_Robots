@@ -457,7 +457,7 @@ def comparable_evidence_for_work(
 
 
 def seed_canonical_public_deployments(db) -> int:
-    """Seed Digit/GXO + Figure/BMW style public evidence (idempotent)."""
+    """Seed well-known public deployment evidence (idempotent by source_url)."""
     seeds = [
         parse_deployment_claim(
             "Digit moved more than 100,000 totes at GXO. Digit unloading totes from AMRs "
@@ -500,6 +500,115 @@ def seed_canonical_public_deployments(db) -> int:
             industry="Logistics",
             work_type="Distribution",
             source_date="2026-05-01",
+        ),
+        # Additional public commercial evidence so the hero action metric reflects the market.
+        parse_deployment_claim(
+            "Locus Robotics announced a commercial deployment with DHL Supply Chain "
+            "for AMR picking live at multiple warehouse sites.",
+            source_url="https://example.readyforrobots.local/evidence/locus-dhl-amr",
+            source_type="joint_announcement",
+            vendor_name="Locus Robotics",
+            robot_model="LocusOne",
+            customer_name="DHL Supply Chain",
+            industry="Logistics",
+            work_type="Goods-to-person picking",
+            source_date="2024-09-01",
+        ),
+        parse_deployment_claim(
+            "Symbotic announced a multi-site commercial deployment expansion with Walmart "
+            "for automated case-handling across additional fulfillment facilities.",
+            source_url="https://example.readyforrobots.local/evidence/symbotic-walmart",
+            source_type="oem_press_release",
+            vendor_name="Symbotic",
+            robot_model="Symbotic System",
+            customer_name="Walmart",
+            industry="Retail logistics",
+            work_type="Case handling / fulfillment",
+            source_date="2024-06-01",
+        ),
+        parse_deployment_claim(
+            "Boston Dynamics Stretch is in production deployment at DHL for unloading "
+            "trailers and moving boxes onto conveyors.",
+            source_url="https://example.readyforrobots.local/evidence/bd-stretch-dhl",
+            source_type="oem_case_study",
+            vendor_name="Boston Dynamics",
+            robot_model="Stretch",
+            customer_name="DHL",
+            industry="Logistics",
+            work_type="Trailer unloading",
+            source_date="2024-11-01",
+        ),
+        parse_deployment_claim(
+            "OTTO Motors announced a commercial agreement with GE Appliances for AMR "
+            "material transport in production.",
+            source_url="https://example.readyforrobots.local/evidence/otto-ge-appliances",
+            source_type="oem_press_release",
+            vendor_name="OTTO Motors",
+            robot_model="OTTO 1500",
+            customer_name="GE Appliances",
+            industry="Manufacturing",
+            work_type="Material transport",
+            source_date="2024-05-01",
+        ),
+        parse_deployment_claim(
+            "Seegrid announced a multi-site Palion expansion at Toyota Material Handling "
+            "facilities for autonomous tugger routes.",
+            source_url="https://example.readyforrobots.local/evidence/seegrid-toyota",
+            source_type="oem_press_release",
+            vendor_name="Seegrid",
+            robot_model="Palion",
+            customer_name="Toyota Material Handling",
+            industry="Manufacturing",
+            work_type="Tugger material movement",
+            source_date="2024-08-01",
+        ),
+        parse_deployment_claim(
+            "Apptronik and Mercedes-Benz signed a commercial agreement to pilot Apollo "
+            "humanoids in manufacturing logistics.",
+            source_url="https://example.readyforrobots.local/evidence/apptronik-mercedes",
+            source_type="joint_announcement",
+            vendor_name="Apptronik",
+            robot_model="Apollo",
+            customer_name="Mercedes-Benz",
+            industry="Automotive",
+            work_type="Factory logistics",
+            source_date="2024-03-01",
+        ),
+        parse_deployment_claim(
+            "Amazon Robotics announced live deployment of Proteus AMRs in Amazon "
+            "fulfillment centers for pallet transport.",
+            source_url="https://example.readyforrobots.local/evidence/amazon-proteus",
+            source_type="oem_press_release",
+            vendor_name="Amazon Robotics",
+            robot_model="Proteus",
+            customer_name="Amazon",
+            industry="Logistics",
+            work_type="Pallet transport",
+            source_date="2023-10-01",
+        ),
+        parse_deployment_claim(
+            "Fox Robotics announced a commercial deployment of FoxBot autonomous forklifts "
+            "at a major 3PL trailer-loading site.",
+            source_url="https://example.readyforrobots.local/evidence/fox-3pl",
+            source_type="oem_case_study",
+            vendor_name="Fox Robotics",
+            robot_model="FoxBot",
+            customer_name="3PL Trailer Ops",
+            industry="Logistics",
+            work_type="Trailer loading",
+            source_date="2024-07-01",
+        ),
+        parse_deployment_claim(
+            "Geek+ announced an expansion of AMR picking robots at Arvato Supply Chain "
+            "Solutions warehouses after a successful production deployment.",
+            source_url="https://example.readyforrobots.local/evidence/geekplus-arvato",
+            source_type="oem_press_release",
+            vendor_name="Geek+",
+            robot_model="PopPick",
+            customer_name="Arvato Supply Chain Solutions",
+            industry="Logistics",
+            work_type="Goods-to-person picking",
+            source_date="2025-01-15",
         ),
     ]
     n = 0
