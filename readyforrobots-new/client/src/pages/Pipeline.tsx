@@ -1647,7 +1647,7 @@ export default function Pipeline() {
   }, [submittedUrl]);
   const [scopeToSubmittedUrl, setScopeToSubmittedUrl] = useState(false);
   const [submittedUrlMatches, setSubmittedUrlMatches] = useState<ApiLead[]>([]);
-  const [submittedUrlMatchLoading, setSubmittedUrlMatchLoading] = useState(false);
+  const [submittedUrlMatchLoading, setSubmittedUrlMatchLoading] = useState(() => Boolean(submittedUrl));
   const [submittedUrlMatchError, setSubmittedUrlMatchError] = useState(false);
   const [submittedUrlWeakProfile, setSubmittedUrlWeakProfile] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -1771,11 +1771,20 @@ export default function Pipeline() {
   const pipelineLeadsLoading =
     loadingLeads || serverSearchLoading || submittedUrlMatchLoading;
   const [loadCountdown, setLoadCountdown] = useState(12);
+  const [loadUiVisible, setLoadUiVisible] = useState(true);
+  const loadShownAtRef = useRef(0);
   useEffect(() => {
     if (!pipelineLeadsLoading) {
-      setLoadCountdown(12);
-      return;
+      const elapsed = Date.now() - (loadShownAtRef.current || Date.now());
+      const remain = Math.max(0, 1200 - elapsed);
+      const t = window.setTimeout(() => {
+        setLoadUiVisible(false);
+        setLoadCountdown(12);
+      }, remain);
+      return () => window.clearTimeout(t);
     }
+    loadShownAtRef.current = Date.now();
+    setLoadUiVisible(true);
     setLoadCountdown(12);
     const id = window.setInterval(() => {
       setLoadCountdown((s) => (s > 0 ? s - 1 : 0));
@@ -3817,6 +3826,19 @@ export default function Pipeline() {
       <Header />
 
       <main className="flex-1 px-4 pb-6 pt-4 lg:px-6">
+        {loadUiVisible ? (
+          <div className="sticky top-0 z-40 -mx-4 mb-3 border-b border-emerald-200/80 bg-emerald-50/95 px-4 py-2.5 backdrop-blur sm:-mx-6 sm:px-6">
+            <div className="mx-auto flex max-w-[1500px] items-center gap-3">
+              <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
+              <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950">
+                Loading sales leads…
+              </p>
+              <span className="font-mono text-xl font-extrabold tabular-nums text-emerald-600">
+                {loadCountdown}s
+              </span>
+            </div>
+          </div>
+        ) : null}
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
           {!step3Intro ? (
             <PageHeroDark
@@ -4501,7 +4523,7 @@ export default function Pipeline() {
                 <div className="col-span-1 text-center">Score</div>
                 <div className="col-span-2 text-right">Tier</div>
               </div>
-              {(loadingLeads || serverSearchLoading || submittedUrlMatchLoading) && displayedDeals.length === 0 ? (
+              {(loadUiVisible || loadingLeads || serverSearchLoading || submittedUrlMatchLoading) && displayedDeals.length === 0 ? (
                 <MatchedPipelineSkeleton
                   hostname={
                     submittedUrlMatchLoading && scopeToSubmittedUrl
@@ -5645,7 +5667,7 @@ export default function Pipeline() {
                 </div>
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center bg-stone-50 p-8 text-center">
-                  {(loadingLeads || serverSearchLoading || submittedUrlMatchLoading) && !selected ? (
+                  {(loadUiVisible || loadingLeads || serverSearchLoading || submittedUrlMatchLoading) && !selected ? (
                     <>
                       <div className="mb-3 flex items-center gap-3">
                         <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
