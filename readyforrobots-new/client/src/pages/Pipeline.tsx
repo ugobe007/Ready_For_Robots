@@ -662,6 +662,49 @@ function MatchedPipelineSkeleton({
   );
 }
 
+/** Compact face + countdown strip — always visible while leads hydrate. */
+function PipelineLeadsLoadingStrip({ secondsLeft }: { secondsLeft: number }) {
+  return (
+    <div
+      className="mx-1 mb-2 flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-3"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <div className="shrink-0 rounded-md border border-emerald-200 bg-white p-1.5">
+        <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
+      </div>
+      <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950">Loading sales leads…</p>
+      <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600" aria-label={`${secondsLeft} seconds remaining`}>
+        {secondsLeft}s
+      </span>
+    </div>
+  );
+}
+
+function UpgradeProPriorityBanner({ src }: { src: string }) {
+  return (
+    <div className="rounded-xl border border-slate-500/55 bg-[#0b162f] px-4 py-3 shadow-[0_14px_28px_-16px_rgba(15,23,42,0.9)]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="inline-flex items-center rounded-full border border-sky-400/35 bg-sky-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-sky-200">
+            Priority
+          </p>
+          <p className="mt-1 text-base font-extrabold text-white">
+            Upgrade to Pro and automate your sales campaign.
+          </p>
+        </div>
+        <Link
+          href={`/pricing?upgrade=pro&src=${src}`}
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-400/60 bg-emerald-500 px-4 py-2.5 text-sm font-extrabold text-slate-950 shadow-sm transition hover:bg-emerald-400"
+        >
+          <PixelIcon map={KARE_FACE} scale={2} fill="#0b162f" background="transparent" className="shrink-0" />
+          Upgrade to Pro
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 const userBucketForDeal = (deal: Pick<Deal, "score" | "priorityTier">): UserBucket => {
   const tier = (deal.priorityTier || "").toUpperCase();
   if (tier === "HOT") return "Hot Leads";
@@ -1772,24 +1815,25 @@ export default function Pipeline() {
     loadingLeads || serverSearchLoading || submittedUrlMatchLoading;
   const [loadCountdown, setLoadCountdown] = useState(12);
   const [loadUiVisible, setLoadUiVisible] = useState(true);
-  const loadShownAtRef = useRef(0);
+  const loadStartedAtRef = useRef(Date.now());
   useEffect(() => {
-    if (!pipelineLeadsLoading) {
-      const elapsed = Date.now() - (loadShownAtRef.current || Date.now());
-      const remain = Math.max(0, 1200 - elapsed);
-      const t = window.setTimeout(() => {
-        setLoadUiVisible(false);
-        setLoadCountdown(12);
-      }, remain);
-      return () => window.clearTimeout(t);
+    const MIN_VISIBLE_MS = 3500;
+    if (pipelineLeadsLoading) {
+      loadStartedAtRef.current = Date.now();
+      setLoadUiVisible(true);
+      setLoadCountdown(12);
+      const id = window.setInterval(() => {
+        setLoadCountdown((s) => (s > 0 ? s - 1 : 0));
+      }, 1000);
+      return () => window.clearInterval(id);
     }
-    loadShownAtRef.current = Date.now();
-    setLoadUiVisible(true);
-    setLoadCountdown(12);
-    const id = window.setInterval(() => {
-      setLoadCountdown((s) => (s > 0 ? s - 1 : 0));
-    }, 1000);
-    return () => window.clearInterval(id);
+    const elapsed = Date.now() - loadStartedAtRef.current;
+    const remain = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    const t = window.setTimeout(() => {
+      setLoadUiVisible(false);
+      setLoadCountdown(12);
+    }, remain);
+    return () => window.clearTimeout(t);
   }, [pipelineLeadsLoading, submittedUrl, matchIndustryKey]);
 
   const [showActivationChecklist, setShowActivationChecklist] = useState(false);
@@ -3827,13 +3871,15 @@ export default function Pipeline() {
 
       <main className="flex-1 px-4 pb-6 pt-4 lg:px-6">
         {loadUiVisible ? (
-          <div className="sticky top-0 z-40 -mx-4 mb-3 border-b border-emerald-200/80 bg-emerald-50/95 px-4 py-2.5 backdrop-blur sm:-mx-6 sm:px-6">
+          <div className="sticky top-16 z-40 -mx-4 mb-3 border-b border-emerald-300 bg-emerald-50 px-4 py-3 sm:-mx-6 sm:px-6">
             <div className="mx-auto flex max-w-[1500px] items-center gap-3">
-              <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
-              <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950">
+              <div className="shrink-0 rounded-md border border-emerald-200 bg-white p-1.5">
+                <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
+              </div>
+              <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950 sm:text-base">
                 Loading sales leads…
               </p>
-              <span className="font-mono text-xl font-extrabold tabular-nums text-emerald-600">
+              <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600 sm:text-3xl">
                 {loadCountdown}s
               </span>
             </div>
@@ -4084,6 +4130,16 @@ export default function Pipeline() {
                       </div>
                       <p className="mt-3 text-sm font-semibold text-emerald-900">Loading matched opportunities…</p>
                     </li>
+                  ) : loadUiVisible ? (
+                    <li className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                      <div className="flex items-center justify-center gap-3">
+                        <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
+                        <span className="text-sm font-bold text-emerald-950">Loading sales leads…</span>
+                        <span className="font-mono text-xl font-extrabold tabular-nums text-emerald-600">
+                          {loadCountdown}s
+                        </span>
+                      </div>
+                    </li>
                   ) : null}
                 </ul>
                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-white via-white/85 to-white/40 px-4">
@@ -4291,24 +4347,8 @@ export default function Pipeline() {
             </div>
 
             <div className="px-3 sm:px-4 pt-2">
-              <div className="sticky top-2 z-30 mb-2 rounded-xl border-2 border-amber-400 bg-gradient-to-r from-amber-100 via-white to-emerald-100 px-4 py-3 shadow-[0_14px_28px_-16px_rgba(245,158,11,0.9)]">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="inline-flex items-center rounded-full border border-amber-300 bg-amber-200/70 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-amber-900">
-                      Priority
-                    </p>
-                    <p className="mt-1 flex items-center gap-1.5 text-base font-extrabold text-emerald-900">
-                      <Sparkles className="h-4 w-4 text-amber-600" />
-                      Upgrade to Pro and begin building your sales campaign.
-                    </p>
-                  </div>
-                  <Link
-                    href="/pricing?upgrade=pro&src=pipeline_top_banner"
-                    className="inline-flex items-center justify-center rounded-lg border-2 border-amber-500 bg-amber-400 px-4 py-2 text-sm font-extrabold text-amber-950 shadow-sm transition hover:bg-amber-300"
-                  >
-                    Upgrade to Pro
-                  </Link>
-                </div>
+              <div className="sticky top-2 z-30 mb-2">
+                <UpgradeProPriorityBanner src="pipeline_top_banner" />
               </div>
               {panelPlan === "anonymous" && (
                 <AnonymousValueStrip
@@ -4517,6 +4557,7 @@ export default function Pipeline() {
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="pipeline-list-shell flex min-w-0 flex-1 flex-col gap-1 overflow-y-auto">
+              {loadUiVisible ? <PipelineLeadsLoadingStrip secondsLeft={loadCountdown} /> : null}
               <div className="pipeline-list-columns">
                 <div className="col-span-5">Company</div>
                 <div className="col-span-4 hidden md:block">Signal</div>
@@ -4526,7 +4567,7 @@ export default function Pipeline() {
               {(loadUiVisible || loadingLeads || serverSearchLoading || submittedUrlMatchLoading) && displayedDeals.length === 0 ? (
                 <MatchedPipelineSkeleton
                   hostname={
-                    submittedUrlMatchLoading && scopeToSubmittedUrl
+                    (submittedUrlMatchLoading || Boolean(submittedUrl)) && scopeToSubmittedUrl
                       ? submittedHostname || undefined
                       : serverSearchLoading
                         ? activeSearchQuery || undefined
@@ -5714,25 +5755,7 @@ export default function Pipeline() {
             </div>
           </div>
           <div className="border-t border-slate-200 px-3 py-3 sm:px-4">
-            <div className="rounded-xl border-2 border-amber-400 bg-gradient-to-r from-amber-100 via-white to-emerald-100 px-4 py-3 shadow-[0_14px_28px_-16px_rgba(245,158,11,0.9)]">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="inline-flex items-center rounded-full border border-amber-300 bg-amber-200/70 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-amber-900">
-                    Priority
-                  </p>
-                  <p className="mt-1 flex items-center gap-1.5 text-base font-extrabold text-emerald-900">
-                    <Sparkles className="h-4 w-4 text-amber-600" />
-                    Upgrade to Pro and begin building your sales campaign.
-                  </p>
-                </div>
-                <Link
-                  href="/pricing?upgrade=pro&src=pipeline_bottom_banner"
-                  className="inline-flex items-center justify-center rounded-lg border-2 border-amber-500 bg-amber-400 px-4 py-2 text-sm font-extrabold text-amber-950 shadow-sm transition hover:bg-amber-300"
-                >
-                  Upgrade to Pro
-                </Link>
-              </div>
-            </div>
+            <UpgradeProPriorityBanner src="pipeline_bottom_banner" />
           </div>
           </div>
           )}
