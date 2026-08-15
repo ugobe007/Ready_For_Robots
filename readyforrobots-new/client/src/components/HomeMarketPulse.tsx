@@ -107,7 +107,7 @@ export default function HomeMarketPulse() {
 
   return (
     <p
-      className="flex w-full min-w-0 flex-wrap items-baseline justify-center gap-x-1.5 gap-y-1 text-[13px] leading-none tracking-tight sm:text-[14px] lg:justify-start"
+      className="flex w-full min-w-0 flex-wrap items-baseline justify-start gap-x-1.5 gap-y-1 text-[13px] leading-none tracking-tight sm:text-[14px]"
       style={mono}
       aria-label="Robot labor market pulse"
     >

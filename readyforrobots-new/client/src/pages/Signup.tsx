@@ -25,6 +25,8 @@ import {
   OEM_CAL_SIGNUP_SUB_DEFAULT,
   OEM_CAL_SIGNUP_SUB_RESULTS,
 } from "@/lib/oemCalCopy";
+import PixelIcon from "@/components/PixelIcon";
+import { KARE_FACE } from "@/lib/kareIcons";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
@@ -535,36 +537,46 @@ export default function Signup() {
               </p>
             )}
             {!hubspotIntent && !pipelineIntent && !resultsIntent && (
-              <ul className="mt-4 space-y-2 text-xs text-slate-300">
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  Native pipeline + kanban — or connect HubSpot in one click
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  HOT/WARM buyers with pitch actions and Cal&apos;s short OEM notes
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  Free to start · no credit card
-                </li>
-              </ul>
+              <div className="mt-4 flex max-w-xl items-center gap-5">
+                <ul className="min-w-0 flex-1 space-y-2 text-xs text-slate-300">
+                  <li className="flex gap-2">
+                    <span className="font-bold text-emerald-700">✓</span>
+                    Native pipeline + kanban — or connect HubSpot in one click
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-emerald-700">✓</span>
+                    HOT/WARM buyers with pitch actions and Cal&apos;s short OEM notes
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-emerald-700">✓</span>
+                    Free to start · no credit card
+                  </li>
+                </ul>
+                <div className="shrink-0" aria-hidden="true">
+                  <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+                </div>
+              </div>
             )}
             {(pipelineIntent || resultsIntent) && !hubspotIntent && (
-              <ul className="mt-4 space-y-2 text-xs text-slate-300">
-                {(resultsIntent ? OEM_CAL_SIGNUP_BULLETS_RESULTS : [
-                  buyerCo
-                    ? `Pick up right where you left off on ${buyerCo} — draft waiting in pipeline`
-                    : "Pick up on the same lead after signup — draft waiting in pipeline",
-                  "Copy signal-matched outreach drafts in one click",
-                  "Live pipeline leads · pitch actions · robot categories",
-                ]).map((line) => (
-                  <li key={line} className="flex gap-2">
-                    <span className="font-bold text-emerald-700">✓</span>
-                    {line}
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-4 flex max-w-xl items-center gap-5">
+                <ul className="min-w-0 flex-1 space-y-2 text-xs text-slate-300">
+                  {(resultsIntent ? OEM_CAL_SIGNUP_BULLETS_RESULTS : [
+                    buyerCo
+                      ? `Pick up right where you left off on ${buyerCo} — draft waiting in pipeline`
+                      : "Pick up on the same lead after signup — draft waiting in pipeline",
+                    "Copy signal-matched outreach drafts in one click",
+                    "Live pipeline leads · pitch actions · robot categories",
+                  ]).map((line) => (
+                    <li key={line} className="flex gap-2">
+                      <span className="font-bold text-emerald-700">✓</span>
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+                <div className="shrink-0" aria-hidden="true">
+                  <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+                </div>
+              </div>
             )}
             {liveBuyer && (
               <div className="mt-6 rounded-2xl border border-slate-700 p-4 shadow-sm">

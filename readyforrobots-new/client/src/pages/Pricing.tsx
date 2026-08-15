@@ -11,6 +11,8 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAuth } from "@/contexts/AuthContext";
 import { signupHrefForCheckout } from "@/lib/authNext";
 import { fetchBillingConfig, startCheckout, type BillingConfig } from "@/lib/billing";
+import PixelIcon from "@/components/PixelIcon";
+import { KARE_FACE } from "@/lib/kareIcons";
 
 const tiers = [
   {
@@ -256,14 +258,19 @@ export default function Pricing() {
         eyebrow="Pricing"
         title="Full Stack Sales pricing for robot teams"
         description={
-          <>
-            <span className="font-bold uppercase tracking-widest text-emerald-400">Signal</span>
-            {" — ISA qualification + alignment scoring, then MSD sales activation synced to "}
-            <span className="font-bold text-amber-400">HubSpot</span>
-            {" or your CRM. Free workspace to start — Pro and Premium checkout when billing is enabled."}
-          </>
+          <div className="flex items-center justify-center gap-6">
+            <p className="min-w-0 max-w-2xl flex-1 text-left sm:text-center">
+              <span className="font-bold uppercase tracking-widest text-emerald-400">Signal</span>
+              {" — ISA qualification + alignment scoring, then MSD sales activation synced to "}
+              <span className="font-bold text-amber-400">HubSpot</span>
+              {" or your CRM. Free workspace to start — Pro and Premium checkout when billing is enabled."}
+            </p>
+            <div className="shrink-0" aria-hidden="true">
+              <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+            </div>
+          </div>
         }
-        innerClassName="pb-8 text-center [&_.page-hero-title]:mx-auto [&_.page-hero-description]:mx-auto"
+        innerClassName="pb-8 text-center [&_.page-hero-title]:mx-auto [&_.page-hero-description]:mx-auto [&_.page-hero-description]:max-w-3xl"
       />
       <div className="page-hero-fade" aria-hidden />
 

@@ -42,6 +42,7 @@ import Preview from "./pages/Preview";
 import Privacy from "./pages/Privacy";
 import VendorDesignBuilder from "./pages/VendorDesignBuilder";
 import DesignShare from "./pages/DesignShare";
+import IconReview from "./pages/IconReview";
 import { AuthProvider } from "./contexts/AuthContext";
 import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
@@ -79,6 +80,7 @@ function Router() {
       <Route path="/billing/success" component={BillingSuccess} />
       <Route path="/social" component={Social} />
       <Route path="/experiment" component={ExperimentIdeas} />
+      <Route path="/icon-review" component={IconReview} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/auth/callback" component={AuthCallback} />

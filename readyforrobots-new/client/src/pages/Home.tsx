@@ -5,6 +5,8 @@ import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
 import { getPublicReadApiBase } from "@/lib/apiBase";
 import { useAuth } from "@/contexts/AuthContext";
 import HomeMarketPulse from "@/components/HomeMarketPulse";
+import PixelIcon from "@/components/PixelIcon";
+import { KARE_GRIPPER } from "@/lib/kareIcons";
 
 type HomepageLeadRow = {
   id: number;
@@ -434,10 +436,10 @@ export default function Home() {
           </div>
         </header>
 
-        <section className={`flex items-center justify-center ${pageMode === "url" ? "min-h-[60vh] sm:min-h-[72vh] lg:min-h-[78vh]" : "min-h-[60vh]"}`}>
-          <div className="w-full max-w-3xl text-center lg:text-left">
+        <section className={`flex items-center justify-start ${pageMode === "url" ? "min-h-[60vh] sm:min-h-[72vh] lg:min-h-[78vh]" : "min-h-[60vh]"}`}>
+          <div className="w-full max-w-3xl text-left">
             {pageMode === "url" && (
-              <div className="mx-auto max-w-3xl text-center lg:mx-0 lg:text-left">
+              <div className="w-full max-w-3xl text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.36em] text-[#7adfc8] sm:text-[11px]">
                   READYFORROBOTS SIGNAL
                 </p>
@@ -447,10 +449,15 @@ export default function Home() {
                 <h1 className="mt-4 text-[clamp(2.1rem,8.4vw,6.3rem)] font-semibold leading-[0.9] tracking-[-0.045em] text-slate-50 sm:mt-5" style={{ textShadow: "0 10px 34px rgba(5, 10, 20, 0.48)" }}>
                   Find Jobs for <span className="text-[#00d0a2]">Robots.</span>
                 </h1>
-                <p className="mx-auto mt-5 max-w-[54ch] text-[16px] leading-7 text-slate-300 sm:mt-7 sm:text-[18px] sm:leading-8 lg:mx-0 lg:text-[19px] lg:leading-9">
-                  ReadyForRobots finds where companies are hiring for work your robot can do — then Cal writes a short, timely note so you start an informed conversation, not a cold pitch.
-                </p>
-                <div className="mx-auto mt-7 w-full max-w-[780px] border-b border-emerald-400/45 pb-3 sm:mt-10 lg:mx-0 lg:mt-11">
+                <div className="mt-5 flex w-full items-start justify-start gap-4 sm:mt-7 sm:gap-7 lg:gap-8">
+                  <p className="min-w-0 max-w-[54ch] flex-1 text-left text-[16px] leading-7 text-slate-300 sm:text-[18px] sm:leading-8 lg:text-[19px] lg:leading-9">
+                    ReadyForRobots finds where companies are hiring for work your robot can do — then Cal writes a short, timely note so you start an informed conversation, not a cold pitch.
+                  </p>
+                  <div className="shrink-0 pt-0.5" aria-hidden="true">
+                    <PixelIcon map={KARE_GRIPPER} scale={5} fill="#3ecf8e" background="transparent" />
+                  </div>
+                </div>
+                <div className="mt-7 w-full max-w-[780px] border-b border-emerald-400/45 pb-3 sm:mt-10 lg:mt-11">
                   <label htmlFor="hero-company-url" className="mb-2 block text-left text-xs font-semibold uppercase tracking-[0.18em] text-[#8ec8b9]">
                     Enter your robot URL
                   </label>

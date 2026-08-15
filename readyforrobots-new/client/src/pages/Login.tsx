@@ -9,6 +9,8 @@ import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getApiBase } from "@/lib/apiBase";
 import { readNextParam, peekPendingNext, postAuthRedirectTarget, storePendingNext, readPlanParam, storeCheckoutIntent, resolvePostAuthPath, navigateAfterAuth } from "@/lib/authNext";
+import PixelIcon from "@/components/PixelIcon";
+import { KARE_FACE } from "@/lib/kareIcons";
 
 function GoogleGlyph() {
   return (
@@ -152,10 +154,15 @@ export default function Login() {
       <Header />
       <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-16">
         <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
-            <p className="section-eyebrow mb-2">Sign in</p>
-            <h1 className="font-display text-3xl font-bold text-slate-100 tracking-tight">Welcome back</h1>
-            <p className="text-sm text-slate-300 mt-2">Sign in to work with SIGNAL in your pipeline workspace.</p>
+          <div className="mb-8 flex items-center justify-center gap-5 text-left">
+            <div className="min-w-0">
+              <p className="section-eyebrow mb-2">Sign in</p>
+              <h1 className="font-display text-3xl font-bold tracking-tight text-slate-100">Welcome back</h1>
+              <p className="mt-2 text-sm text-slate-300">Sign in to work with SIGNAL in your pipeline workspace.</p>
+            </div>
+            <div className="shrink-0" aria-hidden="true">
+              <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+            </div>
           </div>
 
           {status === "sent" ? (
