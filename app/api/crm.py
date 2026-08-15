@@ -221,9 +221,32 @@ def _raise_crm_db_error(exc: Exception) -> None:
     if isinstance(exc, OperationalError):
         raise HTTPException(status_code=503, detail=CRM_CONNECTION_HINT) from exc
     if isinstance(exc, ProgrammingError):
-        orig = str(getattr(exc, "orig", None) or exc).lower()
-        if "does not exist" in orig or "no such table" in orig:
-            raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from exc
+        orig = str(getattr(exc, "orig", None) or exc)
+        low = orig.lower()
+        # Don't blame `teams` for every missing relation/column — surface the real object.
+        if "undefinedcolumn" in low or ("column" in low and "does not exist" in low):
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    f"CRM schema mismatch (missing column). {orig[:220]} "
+                    "Run pending Alembic migrations on Fly's DATABASE_URL, then retry."
+                ),
+            ) from exc
+        if "undefinedtable" in low or ("relation" in low and "does not exist" in low) or "no such table" in low:
+            if "teams" in low:
+                raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from exc
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    f"CRM schema mismatch (missing table). {orig[:220]} "
+                    "Confirm Fly DATABASE_URL and run migrations. See GET /api/crm/db-status."
+                ),
+            ) from exc
+        if "does not exist" in low:
+            raise HTTPException(
+                status_code=503,
+                detail=f"CRM schema mismatch: {orig[:240]}",
+            ) from exc
         raise HTTPException(
             status_code=503,
             detail=f"SQL error: {str(getattr(exc, 'orig', exc))[:220]}",
@@ -912,24 +935,48 @@ def create_account(
             db.flush()
             created = True
             sync_account_stage_to_engagement(db, row)
-        opportunity = ensure_deployment_opportunity(db, account=row, owner_user_id=uid)
-        if created:
-            record_sales_experience(
-                db,
-                event_type="crm_lead_saved",
-                outcome="observed",
-                team_id=row.team_id,
-                user_id=uid,
-                crm_account_id=row.id,
-                sales_opportunity_id=opportunity.id,
-                company_id=row.company_id,
-                channel="crm",
-                confidence=0.85,
-                payload={
-                    "source": "crm_create_account",
-                    "deployment_opportunity_id": opportunity.payload.get("public_id"),
-                },
+        # Conversion opportunity is best-effort — never block saving the CRM lead on schema drift.
+        opportunity = None
+        try:
+            with db.begin_nested():
+                opportunity = ensure_deployment_opportunity(db, account=row, owner_user_id=uid)
+        except Exception:
+            logger.warning(
+                "CRM ensure_deployment_opportunity failed for account %s — lead still saved",
+                getattr(row, "id", None),
+                exc_info=True,
             )
+            opportunity = None
+        if created:
+            try:
+                with db.begin_nested():
+                    record_sales_experience(
+                        db,
+                        event_type="crm_lead_saved",
+                        outcome="observed",
+                        team_id=row.team_id,
+                        user_id=uid,
+                        crm_account_id=row.id,
+                        sales_opportunity_id=opportunity.id if opportunity is not None else None,
+                        company_id=row.company_id,
+                        channel="crm",
+                        confidence=0.85,
+                        payload={
+                            "source": "crm_create_account",
+                            "deployment_opportunity_id": (
+                                opportunity.payload.get("public_id")
+                                if opportunity is not None
+                                and isinstance(getattr(opportunity, "payload", None), dict)
+                                else None
+                            ),
+                        },
+                    )
+            except Exception:
+                logger.warning(
+                    "CRM record_sales_experience failed for account %s — lead still saved",
+                    getattr(row, "id", None),
+                    exc_info=True,
+                )
         db.commit()
         db.refresh(row)
         # Best-effort named contact fill on save (Hunter → Apollo waterfall).
