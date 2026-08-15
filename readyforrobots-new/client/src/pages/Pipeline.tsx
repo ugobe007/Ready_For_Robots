@@ -60,6 +60,8 @@ import ActivationChecklist, { isActivationChecklistDismissed } from "@/component
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import PipelineSalesWorkflowRail from "@/components/pipeline/PipelineSalesWorkflowRail";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
+import PixelIcon from "@/components/PixelIcon";
+import { KARE_FACE } from "@/lib/kareIcons";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -600,29 +602,46 @@ const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: s
   "Monitoring":  { color: "#059669", dot: "#059669", desc: "Early signals SIGNAL is tracking", slotCap: PIPELINE_MONITOR_SLOTS },
 };
 
-/** Placeholder rows while URL match-url builds the 15-lead queue — avoids a blank workspace. */
+/** Placeholder while pipeline / match-url loads — face icon + countdown so the page never looks blank. */
 function MatchedPipelineSkeleton({
   hostname,
   target,
+  secondsLeft,
 }: {
   hostname?: string;
   target: number;
+  secondsLeft: number;
 }) {
   return (
-    <div className="mx-1 mb-2 space-y-2" aria-busy="true" aria-live="polite">
-      <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-stone-50 px-4 py-4">
-        <div className="flex items-center gap-2">
-          <RefreshCw className="h-4 w-4 animate-spin text-emerald-600" />
-          <p className="text-sm font-semibold text-emerald-950">
-            Building your {target} matched sales leads
-            {hostname ? ` for ${hostname}` : ""}…
-          </p>
+    <div className="mx-1 mb-2 space-y-3" aria-busy="true" aria-live="polite">
+      <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-stone-50 px-4 py-5">
+        <div className="flex items-center gap-4">
+          <div className="shrink-0 rounded-lg border border-emerald-200/80 bg-white p-2 shadow-sm">
+            <PixelIcon map={KARE_FACE} scale={4} fill="#3ecf8e" background="transparent" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <p className="text-base font-bold text-emerald-950 sm:text-lg">
+                Loading sales leads
+                {hostname ? ` for ${hostname}` : ""}…
+              </p>
+              <span
+                className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600 sm:text-3xl"
+                aria-label={`${secondsLeft} seconds remaining`}
+              >
+                {secondsLeft}s
+              </span>
+            </div>
+            <p className="mt-1 text-sm font-medium leading-snug text-emerald-900/85">
+              Matching up to {target} buyers to your robot profile. Hang tight — the queue paints as soon as it is ready.
+            </p>
+          </div>
         </div>
-        <p className="mt-1 text-[11px] leading-snug text-emerald-900/80">
-          Scoring your robot profile, matching buyer intent, and ranking the queue. This usually takes a few seconds.
-        </p>
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-emerald-100">
-          <div className="h-full w-2/5 animate-pulse rounded-full bg-emerald-500" />
+        <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-emerald-100">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-[width] duration-1000 ease-linear"
+            style={{ width: `${Math.max(8, Math.min(96, ((12 - secondsLeft) / 12) * 100))}%` }}
+          />
         </div>
       </div>
       {Array.from({ length: 8 }).map((_, i) => (
@@ -1710,9 +1729,12 @@ export default function Pipeline() {
     return isRobotWorkspaceProfileComplete(existing) ? existing!.icp : "";
   });
 
-  // Land on instructions — never restore scroll to the lead list (browse-and-leave trap).
+  const pipelineTopRef = useRef<HTMLDivElement | null>(null);
+
+  // Always land at the top of the pipeline page — never mid-page or restored scroll.
+  // Production previously scrolled to #pipeline-step3-guide; keep forcing top until layout settles.
   useEffect(() => {
-    if (!step3Intro || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
     try {
       if ("scrollRestoration" in window.history) {
         window.history.scrollRestoration = "manual";
@@ -1720,20 +1742,46 @@ export default function Pipeline() {
     } catch {
       /* ignore */
     }
-    const jump = () => {
+    // Named section hashes pull the viewport mid-page; keep numeric lead hashes (#123).
+    try {
+      const rawHash = window.location.hash.replace(/^#/, "").trim();
+      if (rawHash && !/^\d+$/.test(rawHash)) {
+        const clean = `${window.location.pathname}${window.location.search}`;
+        window.history.replaceState(window.history.state, "", clean);
+      }
+    } catch {
+      /* ignore */
+    }
+    const jumpTop = () => {
+      pipelineTopRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      document.getElementById("pipeline-step3-guide")?.scrollIntoView({ block: "start", behavior: "auto" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
     };
-    jump();
-    const t0 = window.setTimeout(jump, 50);
-    const t1 = window.setTimeout(jump, 250);
-    const t2 = window.setTimeout(jump, 800);
+    jumpTop();
+    const timers = [0, 50, 150, 400, 900, 1600].map((ms) => window.setTimeout(jumpTop, ms));
+    const onLoad = () => jumpTop();
+    window.addEventListener("load", onLoad);
     return () => {
-      window.clearTimeout(t0);
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
+      timers.forEach((t) => window.clearTimeout(t));
+      window.removeEventListener("load", onLoad);
     };
-  }, [step3Intro, loadingLeads]);
+  }, [search, step3Intro, build25Started]);
+
+  const pipelineLeadsLoading =
+    loadingLeads || serverSearchLoading || submittedUrlMatchLoading;
+  const [loadCountdown, setLoadCountdown] = useState(12);
+  useEffect(() => {
+    if (!pipelineLeadsLoading) {
+      setLoadCountdown(12);
+      return;
+    }
+    setLoadCountdown(12);
+    const id = window.setInterval(() => {
+      setLoadCountdown((s) => (s > 0 ? s - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [pipelineLeadsLoading, submittedUrl, matchIndustryKey]);
 
   const [showActivationChecklist, setShowActivationChecklist] = useState(false);
   const [draftCopiedForActivation, setDraftCopiedForActivation] = useState(false);
@@ -2947,7 +2995,7 @@ export default function Pipeline() {
     } catch {
       /* ignore */
     }
-    document.getElementById("pipeline-leads")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     toast.success(`Matched pipeline unlocked — save up to ${BUILD_PIPELINE_TARGET} leads scored against your URL.`);
   };
 
@@ -3671,7 +3719,7 @@ export default function Pipeline() {
     if (nextFirstThreeStep === "copy_draft") {
       if (canCopySelectedDraft) {
         copyDraft();
-        toast.success(`Draft copied for ${selected.company}. Next: send outreach.`);
+        toast.success("Draft copied. Next: send outreach.");
       }
       spotlightOutreachDraft();
       return;
@@ -3765,6 +3813,7 @@ export default function Pipeline() {
 
   return (
     <div className="pipeline-page-bg flex min-h-screen flex-col">
+      <div ref={pipelineTopRef} id="pipeline-page-top" aria-hidden="true" className="h-0 w-0 overflow-hidden" />
       <Header />
 
       <main className="flex-1 px-4 pb-6 pt-4 lg:px-6">
@@ -4004,8 +4053,14 @@ export default function Pipeline() {
                     </li>
                   ))}
                   {(displayedDeals.length > 0 ? displayedDeals : deals).length === 0 ? (
-                    <li className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-                      Loading matched opportunities…
+                    <li className="rounded-xl border border-dashed border-emerald-200 bg-emerald-50/60 px-4 py-8 text-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <PixelIcon map={KARE_FACE} scale={4} fill="#3ecf8e" background="transparent" />
+                        <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600">
+                          {loadCountdown}s
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm font-semibold text-emerald-900">Loading matched opportunities…</p>
                     </li>
                   ) : null}
                 </ul>
@@ -4447,16 +4502,17 @@ export default function Pipeline() {
                 <div className="col-span-2 text-right">Tier</div>
               </div>
               {(loadingLeads || serverSearchLoading || submittedUrlMatchLoading) && displayedDeals.length === 0 ? (
-                submittedUrlMatchLoading && scopeToSubmittedUrl ? (
-                  <MatchedPipelineSkeleton hostname={submittedHostname || undefined} target={BUILD_PIPELINE_TARGET} />
-                ) : (
-                <div className="mx-1 mb-2 rounded-xl border border-dashed border-stone-400 bg-stone-100/80 px-4 py-8 text-center">
-                  <RefreshCw className="mx-auto h-6 w-6 animate-spin text-emerald-600" />
-                  <p className="mt-3 text-sm font-medium text-stone-700">
-                    {serverSearchLoading ? `Searching for "${activeSearchQuery}"…` : "Loading sales pipeline…"}
-                  </p>
-                </div>
-                )
+                <MatchedPipelineSkeleton
+                  hostname={
+                    submittedUrlMatchLoading && scopeToSubmittedUrl
+                      ? submittedHostname || undefined
+                      : serverSearchLoading
+                        ? activeSearchQuery || undefined
+                        : undefined
+                  }
+                  target={BUILD_PIPELINE_TARGET}
+                  secondsLeft={loadCountdown}
+                />
               ) : showKanban ? (
               STAGES.map((stage) => {
                 const stageDeals = displayedDeals.filter((d) => d.stage === stage);
@@ -5589,9 +5645,14 @@ export default function Pipeline() {
                 </div>
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center bg-stone-50 p-8 text-center">
-                  {submittedUrlMatchLoading && scopeToSubmittedUrl ? (
+                  {(loadingLeads || serverSearchLoading || submittedUrlMatchLoading) && !selected ? (
                     <>
-                      <RefreshCw className="mb-3 h-8 w-8 animate-spin text-emerald-600" />
+                      <div className="mb-3 flex items-center gap-3">
+                        <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+                        <span className="font-mono text-3xl font-extrabold tabular-nums text-emerald-600">
+                          {loadCountdown}s
+                        </span>
+                      </div>
                       <p className="text-sm font-semibold text-stone-800">
                         Preparing lead workspace…
                       </p>
