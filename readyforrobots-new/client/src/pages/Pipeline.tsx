@@ -600,6 +600,49 @@ const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: s
   "Monitoring":  { color: "#059669", dot: "#059669", desc: "Early signals SIGNAL is tracking", slotCap: PIPELINE_MONITOR_SLOTS },
 };
 
+/** Placeholder rows while URL match-url builds the 15-lead queue — avoids a blank workspace. */
+function MatchedPipelineSkeleton({
+  hostname,
+  target,
+}: {
+  hostname?: string;
+  target: number;
+}) {
+  return (
+    <div className="mx-1 mb-2 space-y-2" aria-busy="true" aria-live="polite">
+      <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-stone-50 px-4 py-4">
+        <div className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin text-emerald-600" />
+          <p className="text-sm font-semibold text-emerald-950">
+            Building your {target} matched sales leads
+            {hostname ? ` for ${hostname}` : ""}…
+          </p>
+        </div>
+        <p className="mt-1 text-[11px] leading-snug text-emerald-900/80">
+          Scoring your robot profile, matching buyer intent, and ranking the queue. This usually takes a few seconds.
+        </p>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-emerald-100">
+          <div className="h-full w-2/5 animate-pulse rounded-full bg-emerald-500" />
+        </div>
+      </div>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div
+          key={`match-skel-${i}`}
+          className="flex items-center gap-2.5 rounded-md border border-stone-200/80 bg-white px-2.5 py-2.5"
+          style={{ opacity: 1 - i * 0.08 }}
+        >
+          <div className="h-8 w-8 shrink-0 animate-pulse rounded-md bg-stone-200" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="h-3 max-w-[55%] animate-pulse rounded bg-stone-200" />
+            <div className="h-2.5 max-w-[80%] animate-pulse rounded bg-stone-100" />
+          </div>
+          <div className="h-5 w-10 shrink-0 animate-pulse rounded bg-stone-100" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const userBucketForDeal = (deal: Pick<Deal, "score" | "priorityTier">): UserBucket => {
   const tier = (deal.priorityTier || "").toUpperCase();
   if (tier === "HOT") return "Hot Leads";
@@ -4166,7 +4209,7 @@ export default function Pipeline() {
                 </div>
               )}
             </div>
-            {(loadErr || (!loadingLeads && !loadErr && !hasActiveSearch && displayedDeals.length === 0)) && (
+            {(loadErr || (!loadingLeads && !submittedUrlMatchLoading && !loadErr && !hasActiveSearch && displayedDeals.length === 0)) && (
               <div className="space-y-1.5 border-b border-gray-200 px-3 py-2 sm:px-4">
                 {loadErr && (
                   <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
@@ -4182,7 +4225,7 @@ export default function Pipeline() {
                     </div>
                   </div>
                 )}
-                {!loadingLeads && !loadErr && !hasActiveSearch && displayedDeals.length === 0 && (
+                {!loadingLeads && !submittedUrlMatchLoading && !loadErr && !hasActiveSearch && displayedDeals.length === 0 && (
                   <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-emerald-900">
                     {scopedNoMatches ? (
                       <>
@@ -4317,13 +4360,17 @@ export default function Pipeline() {
                 <div className="col-span-1 text-center">Score</div>
                 <div className="col-span-2 text-right">Tier</div>
               </div>
-              {(loadingLeads || serverSearchLoading) && displayedDeals.length === 0 ? (
+              {(loadingLeads || serverSearchLoading || submittedUrlMatchLoading) && displayedDeals.length === 0 ? (
+                submittedUrlMatchLoading && scopeToSubmittedUrl ? (
+                  <MatchedPipelineSkeleton hostname={submittedHostname || undefined} target={BUILD_PIPELINE_TARGET} />
+                ) : (
                 <div className="mx-1 mb-2 rounded-xl border border-dashed border-stone-400 bg-stone-100/80 px-4 py-8 text-center">
                   <RefreshCw className="mx-auto h-6 w-6 animate-spin text-emerald-600" />
                   <p className="mt-3 text-sm font-medium text-stone-700">
                     {serverSearchLoading ? `Searching for "${activeSearchQuery}"…` : "Loading sales pipeline…"}
                   </p>
                 </div>
+                )
               ) : showKanban ? (
               STAGES.map((stage) => {
                 const stageDeals = displayedDeals.filter((d) => d.stage === stage);
@@ -5456,6 +5503,18 @@ export default function Pipeline() {
                 </div>
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center bg-stone-50 p-8 text-center">
+                  {submittedUrlMatchLoading && scopeToSubmittedUrl ? (
+                    <>
+                      <RefreshCw className="mb-3 h-8 w-8 animate-spin text-emerald-600" />
+                      <p className="text-sm font-semibold text-stone-800">
+                        Preparing lead workspace…
+                      </p>
+                      <p className="mt-1 max-w-xs text-[11px] leading-snug text-stone-500">
+                        Matched buyers will appear here with SIGNAL briefs as soon as the queue is ready.
+                      </p>
+                    </>
+                  ) : (
+                    <>
                   <Target className="mb-3 h-10 w-10 text-stone-400" />
                   <p className="text-sm font-medium text-stone-700">
                     {pendingDeepLink && deepLinkLoadFailed
@@ -5479,6 +5538,8 @@ export default function Pipeline() {
                       Retry loading lead
                     </button>
                   ) : null}
+                    </>
+                  )}
                 </div>
               )}
             </div>
