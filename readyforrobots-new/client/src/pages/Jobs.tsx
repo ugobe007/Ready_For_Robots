@@ -1,6 +1,5 @@
 /**
- * /jobs — customer acquisition surface (CAPABILITIES → FIND WORK).
- * Minimal chrome. Personalized via /jobs/{slug}?src=
+ * /jobs — Robot Employment Office (dark RFR brand).
  */
 import { useRoute } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
@@ -13,7 +12,7 @@ export default function Jobs() {
   return (
     <div className="jobs-page min-h-screen bg-[#081126] text-slate-100">
       <ExperimentHeader />
-      <main className="mx-auto max-w-3xl px-4 pb-24 pt-20 sm:px-6">
+      <main className="mx-auto max-w-[1200px] px-3 pb-10 pt-[52px] sm:px-4">
         <RobotJobsExperiment slug={slug} />
       </main>
     </div>

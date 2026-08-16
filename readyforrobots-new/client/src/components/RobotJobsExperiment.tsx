@@ -6,12 +6,22 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Check, ChevronRight } from "lucide-react";
+import { Check } from "lucide-react";
 import demo from "@/data/rdd_demo_jobs.json";
 import { trackRobotJobsFunnel, trackSignupStart } from "@/lib/siteAnalytics";
 import { mapUrlToEnvelope } from "@/lib/robotJobsEnvelopeMap";
 import PixelIcon from "@/components/PixelIcon";
-import { FACE_WHITE, KARE_FACE } from "@/lib/kareIcons";
+import {
+  FACE_EMERALD,
+  KARE_ARROW,
+  KARE_FACE,
+  KARE_INSPECT,
+  KARE_PALLET,
+  KARE_SCRUB,
+  KARE_TRANSPORT,
+  type PixelMap,
+} from "@/lib/kareIcons";
+import { MacWindow, macAccent, macInk, macMuted, macRule } from "@/components/jobs/MacChrome";
 import {
   demoProfilesForProof,
   jobsPathForProfile,
@@ -29,18 +39,81 @@ const PREVIEW_FREE = 5;
 const DISCOVER_MS = 1800;
 
 const ctaClass =
-  "inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex items-center justify-center gap-2 rounded-md bg-emerald-500 px-4 py-2.5 text-sm font-bold text-[#04100a] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40";
 const eyebrowClass =
-  "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400";
+  "font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const proofCardClass =
-  "group flex items-center justify-between rounded-xl border border-slate-600 bg-[#0b162f] px-4 py-3.5 text-left transition hover:border-emerald-400/60 hover:bg-[#0d1c38]";
-const panelClass =
-  "overflow-hidden rounded-xl border border-slate-700/80 bg-[#0b162f]";
+  "group flex items-center justify-between border border-slate-600 bg-[#0a1327] px-4 py-3 text-left transition hover:border-emerald-500/40";
+const panelClass = "overflow-hidden border border-slate-600 bg-[#0b162f]";
 const mutedClass = "text-sm text-slate-400";
 const titleClass = "font-display font-bold tracking-tight text-slate-100";
 const faceOnCta = (
-  <PixelIcon map={KARE_FACE} scale={2} fill={FACE_WHITE} background="transparent" />
+  <PixelIcon map={KARE_FACE} scale={2} fill="#04100a" background="transparent" />
 );
+
+type BoardJob = {
+  id: string;
+  title: string;
+  industry: string;
+  path: string;
+  classLabel: string;
+  icon: PixelMap;
+  status?: "OPEN" | "NEW";
+};
+
+const BOARD_JOBS: BoardJob[] = [
+  {
+    id: "01",
+    title: "Return empty totes",
+    industry: "Specialty pharma",
+    path: "PACK → OPERATING AREA",
+    classLabel: "TRANSPORT / AMR",
+    icon: KARE_TRANSPORT,
+    status: "OPEN",
+  },
+  {
+    id: "02",
+    title: "Deliver finished kits",
+    industry: "Aerospace",
+    path: "KITTING → PRODUCTION LINE",
+    classLabel: "TRANSPORT / AMR",
+    icon: KARE_TRANSPORT,
+    status: "OPEN",
+  },
+  {
+    id: "03",
+    title: "Move medication carts",
+    industry: "Healthcare",
+    path: "PHARMACY → PATIENT UNITS",
+    classLabel: "TRANSPORT / AMR",
+    icon: KARE_TRANSPORT,
+  },
+  {
+    id: "04",
+    title: "Stack finished cases",
+    industry: "Manufacturing",
+    path: "CONVEYOR → PALLET",
+    classLabel: "PALLETIZING",
+    icon: KARE_PALLET,
+  },
+  {
+    id: "05",
+    title: "Scrub terminal floors",
+    industry: "Airport · Overnight",
+    path: "CONCOURSE · OVERNIGHT",
+    classLabel: "CLEANING / SCRUB",
+    icon: KARE_SCRUB,
+    status: "NEW",
+  },
+  {
+    id: "06",
+    title: "Inspect equipment",
+    industry: "Industrial",
+    path: "ROUTE → EQUIPMENT",
+    classLabel: "INSPECTION",
+    icon: KARE_INSPECT,
+  },
+];
 
 function profileByKey(key: string): Profile | undefined {
   return demo.profiles.find((p) => p.profile_key === key);
@@ -81,33 +154,6 @@ export function robotNameFromUrl(raw: string): string | null {
   }
   return null;
 }
-
-const DISCOVERED_WORK = [
-  {
-    title: "Return empty totes",
-    context: "Specialty pharma · Pack → operating area",
-  },
-  {
-    title: "Deliver finished kits",
-    context: "Aerospace · Kitting → production line",
-  },
-  {
-    title: "Move medication carts",
-    context: "Healthcare · Pharmacy → patient units",
-  },
-  {
-    title: "Stack finished cases",
-    context: "Manufacturing · Conveyor → pallet",
-  },
-  {
-    title: "Scrub terminal floors",
-    context: "Airport · Overnight",
-  },
-  {
-    title: "Inspect equipment",
-    context: "Industrial · Recurring route",
-  },
-] as const;
 
 const QUALIFY_CHECKS = [
   "whether the work is still being done manually",
@@ -150,23 +196,18 @@ function srcFromQuery(): string | null {
 
 function ProofCards({ src }: { src: string | null }) {
   return (
-    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+    <div className="mt-3 grid gap-2 sm:grid-cols-2">
       {demoProfilesForProof().map((p) => (
-        <Link
-          key={p.profileKey}
-          href={jobsPathForSlug(p.slug, src)}
-          className={proofCardClass}
-        >
+        <Link key={p.profileKey} href={jobsPathForSlug(p.slug, src)} className={proofCardClass} style={{ borderColor: macRule }}>
           <span>
-            <span className="block text-sm font-semibold text-slate-100">{p.displayName}</span>
-            <span className="mt-0.5 block text-xs font-semibold text-emerald-300">
+            <span className="block text-sm font-bold" style={{ color: macInk }}>
+              {p.displayName}
+            </span>
+            <span className="mt-0.5 block text-xs font-bold" style={{ color: macAccent }}>
               {p.jobCount} jobs found
             </span>
           </span>
-          <ArrowRight
-            className="h-4 w-4 shrink-0 text-slate-500 transition group-hover:text-emerald-300"
-            aria-hidden
-          />
+          <PixelIcon map={KARE_ARROW} scale={2} fill={macInk} background="transparent" />
         </Link>
       ))}
     </div>
@@ -506,17 +547,24 @@ export default function RobotJobsExperiment({ slug }: Props) {
   return (
     <section className="flex min-h-[70vh] flex-col" aria-label="Find jobs for your robot">
       {step === "enter" && (
-        <div className="flex flex-1 flex-col">
-          <p className={`${eyebrowClass} text-emerald-300/90`}>ReadyForRobots</p>
-          <h1 className={`${titleClass} mt-3 text-3xl sm:text-4xl`}>Find jobs for your robot.</h1>
-          <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-            Tell us about your robot. We&apos;ll find jobs it can do.
-          </p>
+        <div className="grid min-h-[min(640px,calc(100vh-68px))] grid-cols-1 overflow-hidden rounded-lg border border-slate-600 bg-[#0b162f] lg:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)]">
+          {/* LEFT — FIND */}
+          <div className="flex flex-col border-b border-slate-600 p-5 sm:p-6 lg:border-b-0 lg:border-r lg:border-slate-600">
+            <h1 className={`${titleClass} text-[2.15rem] leading-[1.05] sm:text-[2.4rem]`}>
+              Find jobs
+              <br />
+              for your robot.
+            </h1>
+            <p className="mt-3 text-[15px] leading-snug text-slate-300">
+              Robots need jobs. We find the work.
+            </p>
 
-          <label className="mt-10 block text-sm font-semibold text-slate-200" htmlFor="robot-url">
-            Paste your robot product page
-          </label>
-          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            <label
+              className="mt-7 block font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400"
+              htmlFor="robot-url"
+            >
+              What robot needs a job?
+            </label>
             <input
               id="robot-url"
               type="url"
@@ -525,48 +573,83 @@ export default function RobotJobsExperiment({ slug }: Props) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") onContinueUrl();
               }}
-              placeholder="https://…"
-              className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-[#0a1327] px-3.5 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20"
+              placeholder="Paste product URL"
+              className="mt-1.5 w-full rounded-md border border-slate-600 bg-[#081126] px-3 py-2.5 font-mono text-[13px] text-slate-100 outline-none placeholder:text-slate-600 focus:border-emerald-400"
             />
             <button
               type="button"
               onClick={onContinueUrl}
               disabled={!url.trim()}
-              className={ctaClass}
+              className={`${ctaClass} mt-2 w-full`}
             >
               {faceOnCta}
-              Find Jobs
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              Find Jobs →
             </button>
-          </div>
-          <p className="mt-4 text-sm text-slate-500">Robots need jobs. We find the work.</p>
 
-          <p className={`mt-14 ${eyebrowClass}`}>Jobs we&apos;re finding</p>
-          <ul className={`mt-4 ${panelClass}`}>
-            {DISCOVERED_WORK.map((w, i) => (
-              <li
-                key={w.title}
-                className={`px-4 py-4 sm:px-5 ${i > 0 ? "border-t border-slate-700/80" : ""}`}
-              >
-                <div className="flex gap-3">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-100">{w.title}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">{w.context}</p>
+            <div className="mt-auto border-t border-slate-700 pt-4">
+              <p className={eyebrowClass}>How it works</p>
+              <ol className="mt-2 space-y-1 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                <li>
+                  <span className="text-emerald-400">[1]</span> Robot
+                </li>
+                <li>
+                  <span className="text-emerald-400">[2]</span> Capabilities
+                </li>
+                <li>
+                  <span className="text-emerald-400">[3]</span> Jobs
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          {/* RIGHT — JOB BOARD */}
+          <div className="flex min-h-0 flex-col bg-[#081126]">
+            <div className="flex items-center justify-between border-b border-slate-600 px-4 py-2">
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-200">
+                Robot Job Board
+              </p>
+              <p className="font-mono text-[11px] font-semibold text-slate-500">
+                {String(BOARD_JOBS.length).padStart(2, "0")}
+              </p>
+            </div>
+
+            <ul className="flex-1 divide-y divide-slate-700/90 overflow-auto">
+              {BOARD_JOBS.map((job) => (
+                <li key={job.id} className="flex items-start gap-3 px-4 py-3">
+                  <span className="mt-0.5 w-5 shrink-0 font-mono text-[11px] font-semibold text-slate-500">
+                    {job.id}
+                  </span>
+                  <span className="mt-0.5 shrink-0">
+                    <PixelIcon
+                      map={job.icon}
+                      scale={2}
+                      fill={FACE_EMERALD}
+                      background="transparent"
+                    />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-display text-[13px] font-bold uppercase leading-tight tracking-tight text-slate-100">
+                      {job.title}
+                    </h2>
+                    <p className="mt-0.5 text-[12px] text-slate-400">{job.industry}</p>
+                    <p className="mt-1 font-mono text-[10px] font-semibold tracking-[0.1em] text-slate-300">
+                      {job.path}
+                    </p>
                   </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
 
       {step === "unsupported" && (
-        <div className="flex flex-1 flex-col">
+        <MacWindow title="No Jobs Yet" className="mx-auto w-full max-w-3xl">
+          <div className="p-5 sm:p-6">
           {intro ? (
             <>
               <h1 className={`${titleClass} text-2xl sm:text-3xl`}>{intro.headline}</h1>
-              <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">{intro.subhead}</p>
+              <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>{intro.subhead}</p>
             </>
           ) : (
             <>
@@ -574,111 +657,127 @@ export default function RobotJobsExperiment({ slug }: Props) {
               <h2 className={`mt-2 ${titleClass} text-2xl sm:text-3xl`}>
                 We don&apos;t have jobs for this robot yet
               </h2>
-              <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
+              <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>
                 {unsupportedReason || "No matching job library for this robot yet"}. Right now we can
                 show real jobs for warehouse AMRs and floor-scrubbing robots.
               </p>
             </>
           )}
-          <p className={`mt-10 ${eyebrowClass}`}>See what we&apos;ve already found</p>
+          <p className={`mt-8 ${eyebrowClass}`}>See what we&apos;ve already found</p>
           <ProofCards src={src} />
           <Link
             href={src ? `/jobs?src=${encodeURIComponent(src)}` : "/jobs"}
-            className="mt-8 text-sm font-medium text-emerald-300 underline-offset-2 hover:underline"
+            className="mt-6 inline-block text-sm font-bold underline"
+            style={{ color: macAccent }}
           >
             Try another robot
           </Link>
-        </div>
+          </div>
+        </MacWindow>
       )}
 
       {step === "capabilities" && profile && (
-        <div className="flex flex-1 flex-col">
+        <MacWindow title={`Capabilities — ${robotName}`} className="mx-auto w-full max-w-3xl">
+          <div className="p-5 sm:p-6">
           <p className={mutedClass}>We analyzed {robotName}.</p>
           <h2 className={`mt-2 ${titleClass} text-2xl sm:text-3xl`}>It appears capable of:</h2>
-          <ul className={`mt-6 space-y-3 ${panelClass} p-4 sm:p-5`}>
+          <ul className={`mt-5 space-y-2 border-2 p-4`} style={{ borderColor: macRule }}>
             {profile.can_actions.map((action) => (
-              <li key={action} className="flex items-start gap-2.5 text-sm text-slate-200">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" aria-hidden />
+              <li key={action} className="flex items-start gap-2.5 text-sm" style={{ color: macInk }}>
+                <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: macAccent }} aria-hidden />
                 <span>{action}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-6 text-sm text-slate-400">Looks right?</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" onClick={onConfirmCapabilities} className={ctaClass}>
+          <p className={`mt-5 text-sm ${mutedClass}`}>Looks right?</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" onClick={onConfirmCapabilities} className={ctaClass} style={{ borderColor: macRule }}>
               {faceOnCta}
-              Find Jobs
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              Find Jobs →
             </button>
             <Link
               href={src ? `/jobs?src=${encodeURIComponent(src)}` : "/jobs"}
-              className="rounded-lg border border-slate-600 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:bg-slate-800/50"
+              className="border-2 bg-[#0a1327] px-4 py-2.5 text-sm font-bold"
+              style={{ borderColor: macRule, color: macInk }}
             >
               Back
             </Link>
           </div>
-        </div>
+          </div>
+        </MacWindow>
       )}
 
       {step === "discovering" && (
-        <div className="flex flex-1 flex-col items-center justify-center py-16 text-center" aria-live="polite">
-          <div className="rounded-2xl bg-emerald-600 p-4">
-            <PixelIcon map={KARE_FACE} scale={4} fill={FACE_WHITE} background="transparent" />
+        <MacWindow title="Searching…" className="mx-auto w-full max-w-lg">
+          <div className="flex flex-col items-center px-6 py-12 text-center" aria-live="polite">
+          <div className="border-2 p-3" style={{ borderColor: macRule, background: macAccent }}>
+            <PixelIcon map={KARE_FACE} scale={4} fill="#ffffff" background="transparent" />
           </div>
-          <p className="mt-6 text-lg font-semibold text-slate-100">
+          <p className={`mt-5 text-lg ${titleClass}`}>
             Searching for work {robotName} can do…
           </p>
-          <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
+          <p className={`mt-2 max-w-sm text-sm leading-relaxed ${mutedClass}`}>
             Matching its capabilities to localized jobs in the open economy.
           </p>
-        </div>
+          </div>
+        </MacWindow>
       )}
 
       {step === "jobs" && profile && job && (
-        <div className="flex flex-1 flex-col">
+        <MacWindow
+          title={`Jobs — ${robotName}`}
+          trailing={
+            <span className="font-mono text-[10px] font-bold" style={{ color: macMuted }}>
+              {jobIndex + 1}/{previewCount}
+            </span>
+          }
+          className="mx-auto w-full max-w-3xl"
+        >
+          <div className="p-5 sm:p-6">
           {intro ? (
             <>
               <h1 className={`${titleClass} text-2xl sm:text-3xl`}>{intro.headline}</h1>
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
-                {intro.subhead}
-              </p>
+              <p className={`mt-2 max-w-xl text-sm leading-relaxed ${mutedClass}`}>{intro.subhead}</p>
             </>
           ) : (
             <h1 className={`${titleClass} text-2xl sm:text-3xl`}>
               We found {totalJobs} jobs for {robotName}.
             </h1>
           )}
-          <p className="mt-4 text-xs font-medium text-slate-500">
-            Job {jobIndex + 1} of {previewCount}
-          </p>
 
-          <article className={`mt-4 flex-1 ${panelClass} p-5 sm:p-6`}>
-            <p className={eyebrowClass}>FIND</p>
-            <h2 className={`mt-2 ${titleClass} text-xl sm:text-2xl`}>{job.robot_compatible_task}</h2>
-            <p className="mt-2 text-sm font-medium text-slate-400">
+          <article className="mt-5 border-2 p-4 sm:p-5" style={{ borderColor: macRule }}>
+            <p className={eyebrowClass}>Find</p>
+            <h2 className={`mt-2 ${titleClass} text-xl uppercase sm:text-2xl`}>
+              {job.robot_compatible_task}
+            </h2>
+            <p className={`mt-2 text-sm ${mutedClass}`}>
               {job.company_name}
               {job.locality ? ` · ${placeLine(job)}` : ""}
             </p>
 
-            <dl className="mt-6 space-y-4 text-sm">
+            <dl className="mt-5 space-y-3 text-sm">
               <div>
                 <dt className={eyebrowClass}>The work</dt>
-                <dd className="mt-1.5 leading-relaxed text-slate-200">{job.observed_workflow}</dd>
+                <dd className="mt-1 leading-relaxed" style={{ color: macInk }}>
+                  {job.observed_workflow}
+                </dd>
               </div>
               <div>
                 <dt className={eyebrowClass}>Your robot could</dt>
-                <dd className="mt-1.5 leading-relaxed text-slate-200">
+                <dd className="mt-1 leading-relaxed" style={{ color: macInk }}>
                   {whyYourRobot(job, profile.capability_family)}
                 </dd>
               </div>
               <div>
                 <dt className={eyebrowClass}>Evidence</dt>
-                <dd className="mt-1.5 text-sm font-semibold text-emerald-300">{evidenceLabel(job)}</dd>
+                <dd className="mt-1 text-sm font-bold" style={{ color: macAccent }}>
+                  {evidenceLabel(job)}
+                </dd>
               </div>
               {job.unknowns?.length ? (
                 <div>
                   <dt className={eyebrowClass}>Still unknown</dt>
-                  <dd className="mt-1.5 leading-relaxed text-slate-200">{job.unknowns.join(" · ")}</dd>
+                  <dd className={`mt-1 leading-relaxed ${mutedClass}`}>{job.unknowns.join(" · ")}</dd>
                 </div>
               ) : null}
             </dl>
@@ -687,30 +786,34 @@ export default function RobotJobsExperiment({ slug }: Props) {
               <button
                 type="button"
                 onClick={onOpenQualify}
-                className={`${ctaClass} mt-8 w-full sm:w-auto`}
+                className={`${ctaClass} mt-6 w-full sm:w-auto`}
+                style={{ borderColor: macRule }}
               >
-                Qualify This Job
-                <ArrowRight className="h-4 w-4" aria-hidden />
+                Qualify This Job →
               </button>
             ) : (
-              <div className="mt-8 rounded-lg border border-slate-600 bg-[#0a1327] p-4 sm:p-5">
-                <h3 className="text-sm font-bold text-slate-100">Qualify this job</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              <div className="mt-6 border-2 p-4" style={{ borderColor: macRule }}>
+                <h3 className="text-sm font-bold" style={{ color: macInk }}>
+                  Qualify this job
+                </h3>
+                <p className={`mt-2 text-sm leading-relaxed ${mutedClass}`}>
                   We&apos;ll investigate whether this job deserves your sales team&apos;s time.
                 </p>
                 <p className={`mt-4 ${eyebrowClass}`}>We&apos;ll look for</p>
-                <ul className="mt-2 space-y-1.5">
+                <ul className="mt-2 space-y-1">
                   {QUALIFY_CHECKS.map((item) => (
-                    <li key={item} className="flex gap-2 text-sm text-slate-300">
-                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-400" aria-hidden />
+                    <li key={item} className="flex gap-2 text-sm" style={{ color: macInk }}>
+                      <span style={{ color: macAccent }}>[·]</span>
                       <span>{item}</span>
                     </li>
                   ))}
                 </ul>
                 {qualifyRequested ? (
-                  <div className="mt-5 rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-3.5 py-3">
-                    <p className="text-sm font-semibold text-emerald-200">Qualification requested</p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+                  <div className="mt-4 border-2 px-3 py-3" style={{ borderColor: macAccent }}>
+                    <p className="text-sm font-bold" style={{ color: macAccent }}>
+                      Qualification requested
+                    </p>
+                    <p className={`mt-1.5 text-sm leading-relaxed ${mutedClass}`}>
                       Next: a Pursuit Brief from desk research — whether to pursue, qualify further,
                       watch, or skip. Additional verification may be required before a final
                       recommendation.
@@ -720,7 +823,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
                   <button
                     type="button"
                     onClick={onRequestQualify}
-                    className={`${ctaClass} mt-5 w-full sm:w-auto`}
+                    className={`${ctaClass} mt-4 w-full sm:w-auto`}
+                    style={{ borderColor: macRule }}
                   >
                     {faceOnCta}
                     Request Qualification
@@ -733,30 +837,34 @@ export default function RobotJobsExperiment({ slug }: Props) {
           <button
             type="button"
             onClick={onNextJob}
-            className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-300 underline-offset-2 hover:underline"
+            className="mt-5 text-sm font-bold underline"
+            style={{ color: macAccent }}
           >
-            {jobIndex + 1 >= previewCount ? "See all jobs" : "See next job"}
-            <ChevronRight className="h-4 w-4" aria-hidden />
+            {jobIndex + 1 >= previewCount ? "See all jobs →" : "See next job →"}
           </button>
-        </div>
+          </div>
+        </MacWindow>
       )}
 
       {step === "gate" && profile && (
-        <div className="flex flex-1 flex-col items-start justify-center">
+        <MacWindow title="See All Jobs" className="mx-auto w-full max-w-3xl">
+          <div className="p-5 sm:p-6">
           <h2 className={`${titleClass} text-2xl sm:text-3xl`}>
             See all {totalJobs} jobs for {robotName}
           </h2>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
+          <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>
             You&apos;ve seen {previewCount} jobs matched to its capabilities. Create an account to unlock
             the rest.
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-emerald-600">
-              <PixelIcon map={KARE_FACE} scale={2} fill={FACE_WHITE} background="transparent" />
-            </span>
-            <Link href={signupHref} onClick={onSeeAll} className={ctaClass}>
-              See all {totalJobs} jobs
-              <ArrowRight className="h-4 w-4" aria-hidden />
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Link
+              href={signupHref}
+              onClick={onSeeAll}
+              className={ctaClass}
+              style={{ borderColor: macRule }}
+            >
+              {faceOnCta}
+              See all {totalJobs} jobs →
             </Link>
           </div>
           <button
@@ -768,17 +876,19 @@ export default function RobotJobsExperiment({ slug }: Props) {
               setStep("jobs");
               recordJobView(0);
             }}
-            className="mt-4 text-sm font-medium text-emerald-300 underline-offset-2 hover:underline"
+            className="mt-4 text-sm font-bold underline"
+            style={{ color: macAccent }}
           >
             Review jobs again
           </button>
           <Link
             href={src ? `/jobs?src=${encodeURIComponent(src)}` : "/jobs"}
-            className="mt-8 text-xs font-medium text-slate-500 transition hover:text-slate-300"
+            className={`mt-6 block text-xs font-bold ${mutedClass}`}
           >
             Try another robot
           </Link>
-        </div>
+          </div>
+        </MacWindow>
       )}
     </section>
   );

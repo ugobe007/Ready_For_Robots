@@ -148,6 +148,18 @@
   .font-mono, code, pre {
     font-family: var(--font-mono);
   }
+  .font-mac {
+    font-family: "Chicago", "Charcoal", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    -webkit-font-smoothing: none;
+    font-smooth: never;
+  }
+  .jobs-mac-desktop {
+    background-color: #c0c0c0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2'%3E%3Crect width='1' height='1' fill='%23111'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23111'/%3E%3Crect x='1' width='1' height='1' fill='%23e8e6e0'/%3E%3Crect y='1' width='1' height='1' fill='%23e8e6e0'/%3E%3C/svg%3E");
+    background-size: 2px 2px;
+    image-rendering: pixelated;
+  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),
@@ -282,6 +294,11 @@
 
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes jobsFadeUp {
+    from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
