@@ -42,7 +42,7 @@ type BoardMode = "market" | "status" | "personal";
 
 const PREVIEW_FREE = 5;
 /** Independent discovery counter seed — not tied to visible row count. */
-const MARKET_FOUND_BASE = 81;
+const MARKET_FOUND_BASE = 140;
 
 const ctaClass =
   "inline-flex items-center justify-center gap-2 bg-emerald-400 px-4 py-2.5 text-sm font-bold uppercase tracking-[0.06em] text-white transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45";
@@ -60,20 +60,23 @@ const HOW_IT_WORKS = [
   {
     n: "01",
     title: "Show us your robot",
-    body: "We identify what it can actually do.",
+    body: "We identify what it can do.",
     icon: KARE_FACE,
+    scale: 1.5,
   },
   {
     n: "02",
     title: "We find the work",
-    body: "We search for physical work that fits those capabilities.",
+    body: "We search for matching physical work.",
     icon: KARE_SEARCH,
+    scale: 2,
   },
   {
     n: "03",
     title: "You review the jobs",
-    body: "See the work, location, evidence, fit, and unknowns.",
+    body: "See evidence, fit and unknowns.",
     icon: KARE_JOB_CARD,
+    scale: 2,
   },
 ] as const;
 
@@ -543,7 +546,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
   return (
     <section className="flex min-h-0 flex-1 flex-col" aria-label="Find jobs for your robot">
       {step === "enter" && (
-        <div className="grid h-[calc(100vh-76px)] min-h-[520px] grid-cols-1 overflow-hidden border border-slate-600 bg-[#0b162f] lg:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)]">
+        <div className="grid h-[calc(100vh-76px)] min-h-[520px] grid-cols-1 overflow-hidden border border-slate-600 bg-[#0b162f] lg:grid-cols-[minmax(0,0.35fr)_minmax(0,0.65fr)]">
           {/* LEFT — FIND (still) */}
           <div className="flex flex-col border-b border-slate-600 p-5 sm:p-6 lg:border-b-0 lg:border-r lg:border-slate-600">
             <h1 className={`${titleClass} text-[2.15rem] leading-[1.05] sm:text-[2.4rem]`}>
@@ -574,13 +577,13 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 }}
                 placeholder="Paste robot product URL"
                 disabled={boardMode === "status"}
-                className="w-full border-0 border-b border-slate-500 bg-[#081126] px-3 py-3 font-mono text-[13px] text-slate-100 outline-none placeholder:text-slate-600 focus:bg-[#0a152c] disabled:opacity-60"
+                className="w-full border-0 border-b border-slate-500 bg-[#081126] px-3 py-2.5 font-mono text-[13px] text-slate-100 outline-none placeholder:text-slate-600 focus:bg-[#0a152c] disabled:opacity-60"
               />
               <button
                 type="button"
                 onClick={onContinueUrl}
                 disabled={!url.trim() || boardMode === "status"}
-                className="flex w-full items-center justify-between gap-3 bg-emerald-400 px-3 py-3.5 text-left font-mono text-[13px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-emerald-400/40 disabled:text-white/70"
+                className="flex w-full items-center justify-between gap-3 bg-emerald-400 px-3 py-2.5 text-left font-mono text-[13px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-emerald-400/40 disabled:text-white/70"
               >
                 <span className="inline-flex items-center gap-2.5">
                   {faceOnCta}
@@ -636,16 +639,16 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 </button>
               </div>
             ) : (
-              <div className="mt-auto space-y-4 border-t border-slate-700 pt-4">
+              <div className="mt-auto space-y-3.5 border-t border-slate-700 pt-4">
                 <div>
                   <p className={eyebrowClass}>How it works</p>
-                  <ul className="mt-2.5 space-y-2.5">
+                  <ul className="mt-3 space-y-3">
                     {HOW_IT_WORKS.map((step) => (
-                      <li key={step.n} className="flex items-start gap-2.5">
-                        <span className="mt-0.5 shrink-0">
+                      <li key={step.n} className="flex items-start gap-3">
+                        <span className="mt-0.5 flex w-6 shrink-0 justify-center">
                           <PixelIcon
                             map={step.icon}
-                            scale={step.icon === KARE_FACE ? 1 : 2}
+                            scale={step.scale}
                             fill={FACE_EMERALD}
                             background="transparent"
                           />
@@ -654,7 +657,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
                           <span className="block font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-200">
                             <span className="text-emerald-400">{step.n}</span> {step.title}
                           </span>
-                          <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">
+                          <span className="mt-0.5 block text-[12px] leading-snug text-slate-500">
                             {step.body}
                           </span>
                         </span>
@@ -664,17 +667,18 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 </div>
 
                 <div className="border-t border-slate-700 pt-3">
-                  <div className="flex items-start gap-2.5">
-                    <span className="mt-0.5 shrink-0">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex w-6 shrink-0 justify-center">
                       <PixelIcon map={KARE_QUALIFY} scale={2} fill={FACE_EMERALD} background="transparent" />
                     </span>
                     <div className="min-w-0">
                       <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-200">
                         Qualify a job
                       </p>
-                      <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
-                        Found one worth pursuing? We&apos;ll research the commercial unknowns and tell
-                        you whether it deserves your sales team&apos;s time.
+                      <p className="mt-0.5 text-[12px] leading-snug text-slate-500">
+                        Found one worth pursuing?
+                        <br />
+                        We&apos;ll research the commercial unknowns.
                       </p>
                     </div>
                   </div>
