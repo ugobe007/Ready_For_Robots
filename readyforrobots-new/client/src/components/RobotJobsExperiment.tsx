@@ -1,7 +1,8 @@
 /**
- * Robot → jobs conversion experiment.
+ * /jobs — robot → jobs conversion surface.
  * Fixture-backed. No CRM / filters / dashboards.
  * Funnel: submit → capabilities → discover → jobs → see all → signup
+ * Personalized: /jobs/{slug}?src= lands inside results.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
@@ -11,6 +12,14 @@ import { trackRobotJobsFunnel, trackSignupStart } from "@/lib/siteAnalytics";
 import { mapUrlToEnvelope } from "@/lib/robotJobsEnvelopeMap";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_WHITE, KARE_FACE } from "@/lib/kareIcons";
+import {
+  demoProfilesForProof,
+  jobsPathForProfile,
+  jobsPathForSlug,
+  PROFILE_KEY_TO_SLUG,
+  resolveJobsSlug,
+  type JobsSlugConfig,
+} from "@/lib/jobsSlugs";
 
 type Profile = (typeof demo.profiles)[number];
 type Job = (typeof demo.jobs)[keyof typeof demo.jobs][number];
@@ -19,7 +28,6 @@ type Step = "enter" | "unsupported" | "capabilities" | "discovering" | "jobs" | 
 const PREVIEW_FREE = 5;
 const DISCOVER_MS = 1800;
 
-/** Dark navy system — Home / Login / Signup (`#081126` / `#0b162f`). */
 const ctaClass =
   "inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40";
 const eyebrowClass =
@@ -30,11 +38,9 @@ const panelClass =
   "overflow-hidden rounded-xl border border-slate-700/80 bg-[#0b162f]";
 const mutedClass = "text-sm text-slate-400";
 const titleClass = "font-display font-bold tracking-tight text-slate-100";
-/** Face on emerald CTAs — white stroke / eyes / mouth. */
 const faceOnCta = (
   <PixelIcon map={KARE_FACE} scale={2} fill={FACE_WHITE} background="transparent" />
 );
-
 
 function profileByKey(key: string): Profile | undefined {
   return demo.profiles.find((p) => p.profile_key === key);
@@ -79,22 +85,22 @@ export function robotNameFromUrl(raw: string): string | null {
 const DISCOVERED_WORK = [
   {
     title: "Return empty totes",
-    context: "Specialty pharma · Newark, Delaware",
+    context: "Specialty pharma · Newark, DE",
     path: "Pack → operating area",
   },
   {
     title: "Deliver finished kits",
-    context: "Aerospace manufacturing · Foley, Alabama",
+    context: "Aerospace manufacturing · Foley, AL",
     path: "Kitting → production line",
   },
   {
     title: "Move medication carts",
-    context: "Hospital operations · Newark, Delaware",
+    context: "Hospital operations · Newark, DE",
     path: "Pharmacy → patient units",
   },
   {
     title: "Stack finished cases",
-    context: "Manufacturing · Kinston, North Carolina",
+    context: "Manufacturing · Kinston, NC",
     path: "Packaging line → pallet",
   },
 ] as const;
@@ -119,32 +125,49 @@ function worthLabel(job: Job): string {
   return "LOW";
 }
 
-const PERSONAS = new Set(["oem", "distributor", "integrator"]);
-
-/** Outreach tags: /experiment?persona=oem|distributor|integrator&src=… */
-function attributionFromQuery(): { persona: string | null; src: string | null } {
-  if (typeof window === "undefined") return { persona: null, src: null };
-  const params = new URLSearchParams(window.location.search);
-  const raw = (params.get("persona") || "").toLowerCase().trim();
-  const persona = PERSONAS.has(raw) ? raw : null;
-  const src = (params.get("src") || "").trim() || null;
-  return { persona, src };
-}
-
-function initialFromQuery(): { profileKey: string; robotName: string } | null {
+function srcFromQuery(): string | null {
   if (typeof window === "undefined") return null;
-  const params = new URLSearchParams(window.location.search);
-  const key = params.get("robot");
-  if (!key || !profileByKey(key)) return null;
-  const p = profileByKey(key)!;
-  return { profileKey: key, robotName: p.display_name };
+  return (new URLSearchParams(window.location.search).get("src") || "").trim() || null;
 }
 
-export default function RobotJobsExperiment() {
+function ProofCards({ src }: { src: string | null }) {
+  return (
+    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+      {demoProfilesForProof().map((p) => (
+        <Link
+          key={p.profileKey}
+          href={jobsPathForSlug(p.slug, src)}
+          className={proofCardClass}
+        >
+          <span>
+            <span className="block text-sm font-semibold text-slate-100">{p.displayName}</span>
+            <span className="mt-0.5 block text-xs font-semibold text-emerald-300">
+              {p.jobCount} jobs found
+            </span>
+          </span>
+          <ArrowRight
+            className="h-4 w-4 shrink-0 text-slate-500 transition group-hover:text-emerald-300"
+            aria-hidden
+          />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+type Props = {
+  /** /jobs/:slug — capability owner personalization */
+  slug?: string;
+};
+
+export default function RobotJobsExperiment({ slug }: Props) {
+  const slugConfig = useMemo(() => resolveJobsSlug(slug), [slug]);
   const [step, setStep] = useState<Step>("enter");
   const [url, setUrl] = useState("");
   const [profileKey, setProfileKey] = useState<string | null>(null);
   const [robotName, setRobotName] = useState("your robot");
+  const [intro, setIntro] = useState<{ headline: string; subhead: string } | null>(null);
+  const [jobCountOverride, setJobCountOverride] = useState<number | null>(null);
   const [unsupportedReason, setUnsupportedReason] = useState<string | null>(null);
   const [jobIndex, setJobIndex] = useState(0);
   const [jobsViewed, setJobsViewed] = useState(0);
@@ -153,40 +176,107 @@ export default function RobotJobsExperiment() {
       ? crypto.randomUUID()
       : `rdd_${Date.now()}`,
   );
-  const attribution = useRef(attributionFromQuery());
+  const srcRef = useRef(srcFromQuery());
+  const personaRef = useRef<string | null>(slugConfig?.persona ?? null);
+  const slugRef = useRef<string | null>(slugConfig?.slug ?? null);
   const fired3Plus = useRef(false);
   const discoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bootedSlug = useRef<string | null>(null);
 
   const funnelBase = () => ({
     session_id: sessionId.current,
-    ...(attribution.current.persona ? { persona: attribution.current.persona } : {}),
-    ...(attribution.current.src ? { src: attribution.current.src } : {}),
+    ...(personaRef.current ? { persona: personaRef.current } : {}),
+    ...(srcRef.current ? { src: srcRef.current } : {}),
+    ...(slugRef.current ? { slug: slugRef.current } : {}),
   });
 
-  useEffect(() => {
-    trackRobotJobsFunnel("experiment_view", funnelBase());
-    const boot = initialFromQuery();
-    if (!boot) return;
-    setProfileKey(boot.profileKey);
-    setRobotName(boot.robotName);
+  function applySlugConfig(config: JobsSlugConfig) {
+    personaRef.current = config.persona;
+    slugRef.current = config.slug;
+    setRobotName(config.displayName);
+    setIntro({ headline: config.headline, subhead: config.subhead });
+    setJobCountOverride(config.jobCount > 0 ? config.jobCount : null);
+    setUnsupportedReason(null);
     setJobIndex(0);
-    setStep("capabilities");
+    setJobsViewed(0);
+    fired3Plus.current = false;
+
+    if (!config.profileKey) {
+      setProfileKey(null);
+      setStep("unsupported");
+      setUnsupportedReason(config.subhead);
+      return;
+    }
+
+    setProfileKey(config.profileKey);
+    setStep("jobs");
+    setJobsViewed(1);
     trackRobotJobsFunnel("capabilities_viewed", {
       ...funnelBase(),
-      profile_key: boot.profileKey,
-      robot_name: boot.robotName,
-      source: "query",
+      profile_key: config.profileKey,
+      robot_name: config.displayName,
+      source: "slug",
     });
+    trackRobotJobsFunnel("discovery_complete", {
+      ...funnelBase(),
+      profile_key: config.profileKey,
+      robot_name: config.displayName,
+      job_count: config.jobCount,
+      source: "slug",
+    });
+    trackRobotJobsFunnel("first_job_viewed", {
+      ...funnelBase(),
+      profile_key: config.profileKey,
+      robot_name: config.displayName,
+      source: "slug",
+    });
+    const first = jobsFor(config.profileKey)[0];
+    trackRobotJobsFunnel("job_viewed", {
+      ...funnelBase(),
+      profile_key: config.profileKey,
+      job_index: 0,
+      job_key: first?.job_key ?? null,
+      company_name: first?.company_name ?? null,
+      locality: first?.locality ?? null,
+      source: "slug",
+    });
+  }
+
+  useEffect(() => {
+    srcRef.current = srcFromQuery();
+    if (slugConfig) {
+      personaRef.current = slugConfig.persona;
+      slugRef.current = slugConfig.slug;
+    } else {
+      personaRef.current = null;
+      slugRef.current = null;
+    }
+    trackRobotJobsFunnel("experiment_view", {
+      ...funnelBase(),
+      path: typeof window !== "undefined" ? window.location.pathname : "/jobs",
+    });
+
+    if (slugConfig) {
+      if (bootedSlug.current !== slugConfig.slug) {
+        bootedSlug.current = slugConfig.slug;
+        applySlugConfig(slugConfig);
+      }
+    } else {
+      bootedSlug.current = null;
+    }
+
     return () => {
       if (discoverTimer.current) clearTimeout(discoverTimer.current);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- boot once per slug
+  }, [slugConfig?.slug]);
 
   const profile = profileKey ? profileByKey(profileKey) : undefined;
   const jobs = useMemo(() => (profileKey ? jobsFor(profileKey) : []), [profileKey]);
   const job = jobs[jobIndex];
-  const totalJobs = profile?.job_count_total ?? jobs.length;
+  const totalJobs = jobCountOverride ?? profile?.job_count_total ?? jobs.length;
   const previewCount = Math.min(PREVIEW_FREE, jobs.length);
+  const src = srcRef.current;
 
   function beginWithMappedRobot(opts: {
     key: string;
@@ -195,12 +285,15 @@ export default function RobotJobsExperiment() {
     submittedUrl?: string;
   }) {
     setUnsupportedReason(null);
+    setIntro(null);
+    setJobCountOverride(null);
     setProfileKey(opts.key);
     setRobotName(opts.name);
     setJobIndex(0);
     setJobsViewed(0);
     fired3Plus.current = false;
     setStep("capabilities");
+    slugRef.current = PROFILE_KEY_TO_SLUG[opts.key] ?? null;
     trackRobotJobsFunnel("robot_submitted", {
       ...funnelBase(),
       profile_key: opts.key,
@@ -222,6 +315,7 @@ export default function RobotJobsExperiment() {
     if (match.status === "unsupported") {
       setRobotName(name);
       setProfileKey(null);
+      setIntro(null);
       setUnsupportedReason(match.reason);
       setStep("unsupported");
       trackRobotJobsFunnel("robot_submitted", {
@@ -246,12 +340,6 @@ export default function RobotJobsExperiment() {
       source: "url",
       submittedUrl: url.trim(),
     });
-  }
-
-  function onPickDemo(key: string) {
-    const p = profileByKey(key);
-    if (!p) return;
-    beginWithMappedRobot({ key, name: p.display_name, source: "demo" });
   }
 
   function onConfirmCapabilities() {
@@ -336,7 +424,7 @@ export default function RobotJobsExperiment() {
       job_count_total: totalJobs,
     });
     trackSignupStart({
-      source: "robot_jobs_experiment",
+      source: "robot_jobs",
       profile_key: profileKey,
       robot_name: robotName,
       ...funnelBase(),
@@ -344,14 +432,18 @@ export default function RobotJobsExperiment() {
   }
 
   const signupHref = (() => {
-    const nextParams = new URLSearchParams();
-    nextParams.set("robot", profileKey || "locus_origin");
-    if (attribution.current.persona) nextParams.set("persona", attribution.current.persona);
-    if (attribution.current.src) nextParams.set("src", attribution.current.src);
+    const next =
+      slugRef.current != null
+        ? jobsPathForSlug(slugRef.current, srcRef.current)
+        : profileKey
+          ? jobsPathForProfile(profileKey, srcRef.current)
+          : srcRef.current
+            ? `/jobs?src=${encodeURIComponent(srcRef.current)}`
+            : "/jobs";
     const signupParams = new URLSearchParams();
-    signupParams.set("next", `/experiment?${nextParams.toString()}`);
+    signupParams.set("next", next);
     signupParams.set("src", "robot_jobs");
-    if (attribution.current.persona) signupParams.set("persona", attribution.current.persona);
+    if (personaRef.current) signupParams.set("persona", personaRef.current);
     return `/signup?${signupParams.toString()}`;
   })();
 
@@ -392,29 +484,9 @@ export default function RobotJobsExperiment() {
           </div>
 
           <p className={`mt-12 ${eyebrowClass}`}>See what we&apos;ve already found</p>
-          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-            {demo.profiles.map((p) => (
-              <button
-                key={p.profile_key}
-                type="button"
-                onClick={() => onPickDemo(p.profile_key)}
-                className={proofCardClass}
-              >
-                <span>
-                  <span className="block text-sm font-semibold text-slate-100">{p.display_name}</span>
-                  <span className="mt-0.5 block text-xs font-semibold text-emerald-300">
-                    {p.job_count_total} jobs found
-                  </span>
-                </span>
-                <ArrowRight
-                  className="h-4 w-4 shrink-0 text-slate-500 transition group-hover:text-emerald-300"
-                  aria-hidden
-                />
-              </button>
-            ))}
-          </div>
+          <ProofCards src={src} />
 
-          <p className={`mt-14 ${eyebrowClass}`}>Jobs ReadyForRobots has discovered</p>
+          <p className={`mt-14 ${eyebrowClass}`}>Real work we&apos;ve discovered</p>
           <ul className={`mt-4 ${panelClass}`}>
             {DISCOVERED_WORK.map((w, i) => (
               <li
@@ -441,46 +513,31 @@ export default function RobotJobsExperiment() {
 
       {step === "unsupported" && (
         <div className="flex flex-1 flex-col">
-          <p className={mutedClass}>We analyzed {robotName}.</p>
-          <h2 className={`mt-2 ${titleClass} text-2xl sm:text-3xl`}>
-            We don&apos;t have jobs for this robot yet
-          </h2>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
-            {unsupportedReason || "No matching job library for this robot yet"}. Right now we can show
-            real jobs for warehouse AMRs and floor-scrubbing robots.
-          </p>
+          {intro ? (
+            <>
+              <h1 className={`${titleClass} text-2xl sm:text-3xl`}>{intro.headline}</h1>
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">{intro.subhead}</p>
+            </>
+          ) : (
+            <>
+              <p className={mutedClass}>We analyzed {robotName}.</p>
+              <h2 className={`mt-2 ${titleClass} text-2xl sm:text-3xl`}>
+                We don&apos;t have jobs for this robot yet
+              </h2>
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
+                {unsupportedReason || "No matching job library for this robot yet"}. Right now we can
+                show real jobs for warehouse AMRs and floor-scrubbing robots.
+              </p>
+            </>
+          )}
           <p className={`mt-10 ${eyebrowClass}`}>See what we&apos;ve already found</p>
-          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-            {demo.profiles.map((p) => (
-              <button
-                key={p.profile_key}
-                type="button"
-                onClick={() => onPickDemo(p.profile_key)}
-                className={proofCardClass}
-              >
-                <span>
-                  <span className="block text-sm font-semibold text-slate-100">{p.display_name}</span>
-                  <span className="mt-0.5 block text-xs font-semibold text-emerald-300">
-                    {p.job_count_total} jobs found
-                  </span>
-                </span>
-                <ArrowRight
-                  className="h-4 w-4 shrink-0 text-slate-500 transition group-hover:text-emerald-300"
-                  aria-hidden
-                />
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setStep("enter");
-              setUnsupportedReason(null);
-            }}
+          <ProofCards src={src} />
+          <Link
+            href={src ? `/jobs?src=${encodeURIComponent(src)}` : "/jobs"}
             className="mt-8 text-sm font-medium text-emerald-300 underline-offset-2 hover:underline"
           >
-            Try another URL
-          </button>
+            Try another robot
+          </Link>
         </div>
       )}
 
@@ -503,16 +560,12 @@ export default function RobotJobsExperiment() {
               Find Jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStep("enter");
-                setProfileKey(null);
-              }}
+            <Link
+              href={src ? `/jobs?src=${encodeURIComponent(src)}` : "/jobs"}
               className="rounded-lg border border-slate-600 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:bg-slate-800/50"
             >
               Back
-            </button>
+            </Link>
           </div>
         </div>
       )}
@@ -533,15 +586,24 @@ export default function RobotJobsExperiment() {
 
       {step === "jobs" && profile && job && (
         <div className="flex flex-1 flex-col">
-          <p className={mutedClass}>
-            We found <span className="font-semibold text-slate-100">{totalJobs}</span> jobs matching{" "}
-            {robotName}&apos;s capabilities.
-          </p>
-          <p className="mt-1 text-xs font-medium text-slate-500">
+          {intro ? (
+            <>
+              <h1 className={`${titleClass} text-2xl sm:text-3xl`}>{intro.headline}</h1>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
+                {intro.subhead}
+              </p>
+            </>
+          ) : (
+            <p className={mutedClass}>
+              We found <span className="font-semibold text-slate-100">{totalJobs}</span> jobs matching{" "}
+              {robotName}&apos;s capabilities.
+            </p>
+          )}
+          <p className="mt-4 text-xs font-medium text-slate-500">
             Job {jobIndex + 1} of {previewCount}
           </p>
 
-          <article className={`mt-6 flex-1 ${panelClass} p-5 sm:p-6`}>
+          <article className={`mt-4 flex-1 ${panelClass} p-5 sm:p-6`}>
             <h2 className={`${titleClass} text-xl sm:text-2xl`}>{job.robot_compatible_task}</h2>
             <p className="mt-2 text-sm font-medium text-slate-400">
               {job.company_name}
@@ -610,21 +672,14 @@ export default function RobotJobsExperiment() {
           >
             Review jobs again
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStep("enter");
-              setProfileKey(null);
-              setJobIndex(0);
-              setUrl("");
-            }}
+          <Link
+            href={src ? `/jobs?src=${encodeURIComponent(src)}` : "/jobs"}
             className="mt-8 text-xs font-medium text-slate-500 transition hover:text-slate-300"
           >
             Try another robot
-          </button>
+          </Link>
         </div>
       )}
     </section>
   );
 }
-

@@ -10,9 +10,11 @@ const DARK_HERO_PATHS = new Set([
   "/intelligence",
   "/compare",
   "/experiment",
+  "/jobs",
 ]);
 
 export function isDarkHeroRoute(pathname: string): boolean {
   const base = pathname.split("?")[0].split("#")[0];
-  return DARK_HERO_PATHS.has(base);
+  if (DARK_HERO_PATHS.has(base)) return true;
+  return base === "/jobs" || base.startsWith("/jobs/");
 }

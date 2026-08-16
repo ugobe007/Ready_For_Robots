@@ -57,7 +57,12 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const openChat = useCallback(() => setOpen(true), []);
   const onPipeline = location === "/pipeline" || location.startsWith("/admin/prospects");
-  const hideFab = location === "/experiment" || location.startsWith("/experiment?");
+  const hideFab =
+    location === "/jobs" ||
+    location.startsWith("/jobs/") ||
+    location.startsWith("/jobs?") ||
+    location === "/experiment" ||
+    location.startsWith("/experiment?");
 
   return (
     <ScoutChatContext.Provider value={{ openChat }}>

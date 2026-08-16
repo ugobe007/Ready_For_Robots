@@ -41,7 +41,8 @@ export function trackMarketingEvent(action: string, payload: Record<string, unkn
 }
 
 /**
- * Robot → jobs experiment funnel (/experiment).
+ * Robot → jobs funnel (/jobs, /jobs/{slug}).
+ * Legacy /experiment redirects here.
  * North-star unlock: see_all_clicked (See All CTR).
  *
  * robot_submitted → capabilities_viewed → discovery_* → first_job_viewed

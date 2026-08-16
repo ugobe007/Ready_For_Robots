@@ -37,7 +37,8 @@ import Admin from "./pages/Admin";
 import SpecialProjectsAdmin from "./pages/SpecialProjectsAdmin";
 import ProjectPortal from "./pages/ProjectPortal";
 import Social from "./pages/Social";
-import ExperimentIdeas from "./pages/ExperimentIdeas";
+import Jobs from "./pages/Jobs";
+import ExperimentRedirect from "./pages/ExperimentRedirect";
 import Preview from "./pages/Preview";
 import Privacy from "./pages/Privacy";
 import VendorDesignBuilder from "./pages/VendorDesignBuilder";
@@ -79,7 +80,9 @@ function Router() {
       <Route path="/pricing" component={Pricing} />
       <Route path="/billing/success" component={BillingSuccess} />
       <Route path="/social" component={Social} />
-      <Route path="/experiment" component={ExperimentIdeas} />
+      <Route path="/jobs/:slug" component={Jobs} />
+      <Route path="/jobs" component={Jobs} />
+      <Route path="/experiment" component={ExperimentRedirect} />
       <Route path="/icon-review" component={IconReview} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
