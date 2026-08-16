@@ -1,0 +1,1026 @@
+{
+  "version": 1,
+  "kind": "robot_job_match_corpus",
+  "jobs": [
+    {
+      "job_key": "origin_replacement_parts_little_rock",
+      "title": "Point-to-point tote transport between warehouse zones",
+      "industry": "auto parts warehouse",
+      "path": "zone\u2192zone",
+      "company_name": "Replacement Parts / Crow Burlingame",
+      "locality": "Little Rock, AR",
+      "families": [
+        "transport_amr"
+      ],
+      "actions": [
+        "transport"
+      ],
+      "text": "point-to-point tote transport between warehouse zones employees are explicitly assigned to collecting and distributing totes throughout the warehouse. associates collect, organize, and distribute shipping totes across the warehouse shipping_totes transport",
+      "source": "demo",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": [
+        "Tote weight",
+        "Aisle geometry",
+        "Current automation"
+      ]
+    },
+    {
+      "job_key": "origin_napa_duncansville",
+      "title": "Cart / order movement from pick areas to shipping",
+      "industry": "auto parts dc",
+      "path": "pick\u2192ship",
+      "company_name": "NAPA Auto Parts",
+      "locality": "Duncansville, PA",
+      "families": [
+        "transport_amr"
+      ],
+      "actions": [
+        "transport"
+      ],
+      "text": "cart / order movement from pick areas to shipping role text names cart push/pull and transporting orders to shipping. dc associates push/pull carts and transport orders to shipping locations over long distances orders_on_carts transport",
+      "source": "demo",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": [
+        "Cart load",
+        "Forklift-split tasks",
+        "WMS integration"
+      ]
+    },
+    {
+      "job_key": "origin_curascript_tempe",
+      "title": "Return empty totes and carts to pack stations / proper areas",
+      "industry": "specialty pharma dc",
+      "path": "pack\u2192return",
+      "company_name": "CuraScript SD",
+      "locality": "Tempe, AZ",
+      "families": [
+        "transport_amr"
+      ],
+      "actions": [
+        "return"
+      ],
+      "text": "return empty totes and carts to pack stations / proper areas explicit tote/cart return language in outbound warehouse role. warehouse associates restock pack stations and return totes and carts to proper areas totes_and_carts return",
+      "source": "demo",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": [
+        "Cold-chain zones",
+        "Cart vs tote mix"
+      ]
+    },
+    {
+      "job_key": "origin_sanmar_avondale",
+      "title": "Move completed totes from pack-mod slots to packing",
+      "industry": "apparel dc",
+      "path": "slot\u2192pack",
+      "company_name": "SanMar",
+      "locality": "Avondale, AZ",
+      "families": [
+        "transport_amr"
+      ],
+      "actions": [
+        "transport"
+      ],
+      "text": "move completed totes from pack-mod slots to packing named tote handoff from induction slot to pack. associates pick to cart/totes and take ready-to-pack totes from designated slots ready_to_pack_totes transport",
+      "source": "demo",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": [
+        "Conveyor adjacency",
+        "Peak season volume"
+      ]
+    },
+    {
+      "job_key": "origin_intuitive_smkt",
+      "title": "Point-of-use replenishment and packing-system cart/kit movement",
+      "industry": "med device manufacturing",
+      "path": "smkt\u2192line",
+      "company_name": "Intuitive Surgical",
+      "locality": "United States (med-device mfg)",
+      "families": [
+        "transport_amr"
+      ],
+      "actions": [
+        "replenish"
+      ],
+      "text": "point-of-use replenishment and packing-system cart/kit movement explicit tote putaway, pou replenishment, and packing carts/kits. material handlers put away totes, replenish production lines, pack system carts/frus/kits kits_totes_carts replenish",
+      "source": "demo",
+      "tape_family": "transport",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Cleanroom constraints",
+        "Exact site campus"
+      ]
+    },
+    {
+      "job_key": "neo_moa_bloomington",
+      "title": "Overnight scrub of mall common-area hard floors (concourse / food court)",
+      "industry": "mall",
+      "path": "scrub \u2192 hard_floors",
+      "company_name": "Mall of America",
+      "locality": "Bloomington, MN",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [
+        "scrub"
+      ],
+      "text": "overnight scrub of mall common-area hard floors (concourse / food court) role explicitly operates auto scrubbers on mall hard floors overnight. 3rd-shift housekeeping operates ride-on and walk-behind auto scrubbers on hard surfaces after close hard_floors scrub",
+      "source": "demo",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Exact sq footage",
+        "Incumbent machines",
+        "Crowd residual"
+      ]
+    },
+    {
+      "job_key": "neo_unifi_atl",
+      "title": "Overnight terminal floor scrubbing along high-traffic routes",
+      "industry": "airport",
+      "path": "scrub \u2192 terminal_floors",
+      "company_name": "Unifi (airport floor tech)",
+      "locality": "ATL \u2014 Atlanta, GA",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [
+        "scrub"
+      ],
+      "text": "overnight terminal floor scrubbing along high-traffic routes overnight shift + named scrubber operation in terminal environment. airport floor cleaning technicians operate scrubbers overnight on building floors terminal_floors scrub",
+      "source": "demo",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "SIDA access",
+        "Mixed carpet zones"
+      ]
+    },
+    {
+      "job_key": "neo_harris_lbj",
+      "title": "Night EVS hard-floor scrub routes (riding + walk-behind scrubbers)",
+      "industry": "hospital",
+      "path": "scrub \u2192 hospital_floors",
+      "company_name": "Harris Health \u2014 LBJ Hospital",
+      "locality": "Houston, TX",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [
+        "scrub"
+      ],
+      "text": "night evs hard-floor scrub routes (riding + walk-behind scrubbers) named riding/walk-behind scrubbers on night hospital shift. evs floor tech ii nights operate walk-behind and riding scrubbers for floor care maintenance hospital_floors scrub",
+      "source": "demo",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Infection-control SOPs",
+        "Patient-area exclusions"
+      ]
+    },
+    {
+      "job_key": "neo_jhu_baltimore",
+      "title": "Recurring auto-scrubber routes on campus hard floors",
+      "industry": "university",
+      "path": "scrub \u2192 campus_floors",
+      "company_name": "Johns Hopkins University",
+      "locality": "Baltimore, MD",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [
+        "scrub"
+      ],
+      "text": "recurring auto-scrubber routes on campus hard floors auto-scrubber is the primary duty \u2014 not generic custodial. custodian floor tech operates auto-scrubbers as a primary duty \u22653 days/week campus_floors scrub",
+      "source": "demo",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Building mix",
+        "Stairs/elevator redeploy"
+      ]
+    },
+    {
+      "job_key": "neo_surge_joliet",
+      "title": "Ride-on / walk-behind sweeper-scrubber routes on warehouse and production floors",
+      "industry": "warehouse",
+      "path": "scrub \u2192 warehouse_floors",
+      "company_name": "Industrial facility (via Surge Staffing)",
+      "locality": "Joliet, IL",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [
+        "scrub"
+      ],
+      "text": "ride-on / walk-behind sweeper-scrubber routes on warehouse and production floors role is the scrubber \u2014 explicit machine + industrial floors. sweeper scrubber operator cleans warehouse/production floors with industrial ride-on or walk-behind scrubber warehouse_floors scrub",
+      "source": "demo",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Forklift traffic windows",
+        "Soil type"
+      ]
+    },
+    {
+      "job_key": "curascript_totes",
+      "title": "Return empty pharma totes",
+      "industry": "Specialty pharma",
+      "path": "PACK \u2192 OPERATING AREA",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "return empty pharma totes specialty pharma pack \u2192 operating area",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "hospital_med_carts",
+      "title": "Deliver medication carts",
+      "industry": "Healthcare",
+      "path": "PHARMACY \u2192 PATIENT UNITS",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "deliver medication carts healthcare pharmacy \u2192 patient units",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "aerospace_kits",
+      "title": "Move aircraft production kits",
+      "industry": "Aerospace",
+      "path": "KITTING \u2192 PRODUCTION LINE",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move aircraft production kits aerospace kitting \u2192 production line",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "return_empty_carts",
+      "title": "Return empty carts to pack",
+      "industry": "Pharmacy DC",
+      "path": "SHIP \u2192 PACK",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "return empty carts to pack pharmacy dc ship \u2192 pack",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "par_carts",
+      "title": "Deliver hospital par carts",
+      "industry": "Hospital",
+      "path": "SUPPLY \u2192 PATIENT FLOOR",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "deliver hospital par carts hospital supply \u2192 patient floor",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "unifi_terminal",
+      "title": "Scrub airport concourses overnight",
+      "industry": "Airport",
+      "path": "CONCOURSE \u00b7 OVERNIGHT",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub airport concourses overnight airport concourse \u00b7 overnight",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "lbj_scrub",
+      "title": "Scrub hospital corridors",
+      "industry": "Healthcare",
+      "path": "EVS \u00b7 NIGHT ROUTES",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub hospital corridors healthcare evs \u00b7 night routes",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "intuitive_pou",
+      "title": "Replenish point-of-use",
+      "industry": "Med device",
+      "path": "STORES \u2192 PRODUCTION",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "replenish point-of-use med device stores \u2192 production",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "sanmar_pick_carts",
+      "title": "Move pick carts to pack",
+      "industry": "Apparel fulfillment",
+      "path": "PICK MODULE \u2192 PACK",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move pick carts to pack apparel fulfillment pick module \u2192 pack",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "moa_scrub",
+      "title": "Scrub mall common areas",
+      "industry": "Retail",
+      "path": "CONCOURSE \u00b7 OVERNIGHT",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub mall common areas retail concourse \u00b7 overnight",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "novolex_cases",
+      "title": "Stack finished cases",
+      "industry": "Manufacturing",
+      "path": "CONVEYOR \u2192 PALLET",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "stack finished cases manufacturing conveyor \u2192 pallet",
+      "source": "tape",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "cnc_load",
+      "title": "Load parts into CNC",
+      "industry": "Machine shop",
+      "path": "STAGING \u2192 SPINDLE",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "load parts into cnc machine shop staging \u2192 spindle",
+      "source": "tape",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "inspect_gauges",
+      "title": "Inspect gauges",
+      "industry": "Industrial",
+      "path": "ROUTE \u2192 EQUIPMENT",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "inspection_mobile"
+      ],
+      "actions": [],
+      "text": "inspect gauges industrial route \u2192 equipment",
+      "source": "tape",
+      "tape_family": "inspect",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "inspect_electrical",
+      "title": "Inspect electrical panels",
+      "industry": "Utilities",
+      "path": "PLANT \u2192 PANEL",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "inspection_mobile"
+      ],
+      "actions": [],
+      "text": "inspect electrical panels utilities plant \u2192 panel",
+      "source": "tape",
+      "tape_family": "inspect",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "cnc_unload",
+      "title": "Unload finished parts",
+      "industry": "Machine shop",
+      "path": "SPINDLE \u2192 BIN",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "unload finished parts machine shop spindle \u2192 bin",
+      "source": "tape",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "staging_orders",
+      "title": "Move orders to staging",
+      "industry": "Fulfillment",
+      "path": "PACK \u2192 STAGING",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move orders to staging fulfillment pack \u2192 staging",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "return_process_line",
+      "title": "Return empty totes",
+      "industry": "Manufacturing",
+      "path": "PROCESS LINE \u2192 SUPPLY",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "return empty totes manufacturing process line \u2192 supply",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "napa_orders",
+      "title": "Move completed orders",
+      "industry": "Auto parts DC",
+      "path": "PICK \u2192 SHIPPING",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move completed orders auto parts dc pick \u2192 shipping",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "replacement_parts_totes",
+      "title": "Move shipping totes",
+      "industry": "Auto parts",
+      "path": "ZONE \u2192 ZONE",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move shipping totes auto parts zone \u2192 zone",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "jhu_scrub",
+      "title": "Scrub campus floors",
+      "industry": "Education",
+      "path": "HARD FLOOR \u00b7 RECURRING",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub campus floors education hard floor \u00b7 recurring",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "industrial_scrub",
+      "title": "Scrub production floors",
+      "industry": "Industrial",
+      "path": "WAREHOUSE \u00b7 PRODUCTION",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub production floors industrial warehouse \u00b7 production",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "build_outbound",
+      "title": "Build outbound pallets",
+      "industry": "Fulfillment",
+      "path": "PACK \u2192 DOCK",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "build outbound pallets fulfillment pack \u2192 dock",
+      "source": "tape",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "plant_inspect",
+      "title": "Run plant inspection routes",
+      "industry": "Manufacturing",
+      "path": "RECURRING \u00b7 FACILITY",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "inspection_mobile"
+      ],
+      "actions": [],
+      "text": "run plant inspection routes manufacturing recurring \u00b7 facility",
+      "source": "tape",
+      "tape_family": "inspect",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "pack_mod_totes",
+      "title": "Move completed totes",
+      "industry": "Apparel",
+      "path": "PACK-MOD \u2192 PACKING",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move completed totes apparel pack-mod \u2192 packing",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "fru_kits",
+      "title": "Move system carts",
+      "industry": "Med device",
+      "path": "KITTING \u2192 LINE",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move system carts med device kitting \u2192 line",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "case_wrap_pull",
+      "title": "Stack cases onto pallets",
+      "industry": "Packaging plant",
+      "path": "CASE \u2192 PALLET",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "stack cases onto pallets packaging plant case \u2192 pallet",
+      "source": "tape",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "hospital_supply",
+      "title": "Move supply carts",
+      "industry": "Hospital",
+      "path": "CENTRAL SUPPLY \u2192 UNITS",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move supply carts hospital central supply \u2192 units",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "food_court_scrub",
+      "title": "Scrub food-court floors",
+      "industry": "Retail",
+      "path": "HARD SURFACE \u00b7 CLOSE",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub food-court floors retail hard surface \u00b7 close",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "terminal_routes",
+      "title": "Scrub high-traffic routes",
+      "industry": "Airport",
+      "path": "TERMINAL \u00b7 OVERNIGHT",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub high-traffic routes airport terminal \u00b7 overnight",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "gauge_rounds",
+      "title": "Inspect plant gauges",
+      "industry": "Process plant",
+      "path": "ROUND \u2192 READOUT",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "inspection_mobile"
+      ],
+      "actions": [],
+      "text": "inspect plant gauges process plant round \u2192 readout",
+      "source": "tape",
+      "tape_family": "inspect",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "kit_to_line",
+      "title": "Deliver kits to line",
+      "industry": "Aerospace",
+      "path": "KITTING \u2192 POINT OF USE",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "deliver kits to line aerospace kitting \u2192 point of use",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "pallet_wrap",
+      "title": "Build wrapped pallets",
+      "industry": "CPG",
+      "path": "LINE \u2192 WRAP",
+      "company_name": null,
+      "locality": null,
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "build wrapped pallets cpg line \u2192 wrap",
+      "source": "tape",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "manip_piedmont_candy_lexington_nc",
+      "title": "Stack and build cases onto outbound pallets from production",
+      "industry": "Lexington, NC",
+      "path": "PALLETIZING",
+      "company_name": "Piedmont Candy Company",
+      "locality": "Lexington, NC",
+      "families": [
+        "manipulator"
+      ],
+      "actions": [
+        "palletizing"
+      ],
+      "text": "stack and build cases onto outbound pallets from production role is palletizer & stacker \u2014 stack/build pallets and move product between production areas. palletizing {\"object\": \"case\", \"placement_target\": \"pallet\", \"grasp\": \"unknown\", \"weight\": \"up_to_50lb\", \"reach\": \"unknown\", \"cycle_time\": \"unknown\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Case dimensions",
+        "Pallet pattern",
+        "Current automation",
+        "Cycle rate"
+      ]
+    },
+    {
+      "job_key": "manip_novolex_kinston_nc",
+      "title": "Pick packed cases from conveyor and stack onto pallets per carton specifications",
+      "industry": "Kinston, NC",
+      "path": "PALLETIZING",
+      "company_name": "Novolex (Pactiv Evergreen)",
+      "locality": "Kinston, NC",
+      "families": [
+        "manipulator"
+      ],
+      "actions": [
+        "palletizing"
+      ],
+      "text": "pick packed cases from conveyor and stack onto pallets per carton specifications posting: unload cases from conveyors and stack onto pallets; wrap; pull skid. palletizing {\"object\": \"case\", \"placement_target\": \"pallet\", \"grasp\": \"unknown\", \"weight\": \"up_to_50lb\", \"reach\": \"unknown\", \"cycle_time\": \"unknown\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "SKU mix",
+        "Pattern changeover",
+        "Gripper",
+        "Line speed"
+      ]
+    },
+    {
+      "job_key": "manip_attindas_greenville_nc",
+      "title": "Stack cases of product onto pallets (manual residual beside palletizer cell)",
+      "industry": "Greenville, NC",
+      "path": "PALLETIZING",
+      "company_name": "Attindas Hygiene Partners",
+      "locality": "Greenville, NC",
+      "families": [
+        "manipulator"
+      ],
+      "actions": [
+        "palletizing"
+      ],
+      "text": "stack cases of product onto pallets (manual residual beside palletizer cell) palletizer technician: operate robotic palletizers and stack cases manually as needed. palletizing {\"object\": \"case\", \"placement_target\": \"pallet\", \"grasp\": \"unknown\", \"automation_state\": \"partial_robotic_cell\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Share of manual vs robotic",
+        "Which lines still manual"
+      ]
+    },
+    {
+      "job_key": "manip_ofi_lenoir_city_tn",
+      "title": "Remove finished-goods cases from packaging lines and stack in predetermined pallet configuration",
+      "industry": "Lenoir City, TN",
+      "path": "PALLETIZING",
+      "company_name": "OFI",
+      "locality": "Lenoir City, TN",
+      "families": [
+        "manipulator"
+      ],
+      "actions": [
+        "palletizing"
+      ],
+      "text": "remove finished-goods cases from packaging lines and stack in predetermined pallet configuration finished goods end of line palletizer \u2014 cases from packaging lines stacked to config. palletizing {\"object\": \"case\", \"placement_target\": \"pallet\", \"grasp\": \"unknown\", \"cycle_time\": \"unknown\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Case weight",
+        "Pattern",
+        "Line count"
+      ]
+    },
+    {
+      "job_key": "manip_mdi_hickory_nc",
+      "title": "Lift and stack cases; assist building pallets at automation interface",
+      "industry": "Hickory, NC",
+      "path": "PALLETIZING",
+      "company_name": "MDI Distribution (Alex Lee)",
+      "locality": "Hickory, NC",
+      "families": [
+        "manipulator"
+      ],
+      "actions": [
+        "palletizing"
+      ],
+      "text": "lift and stack cases; assist building pallets at automation interface amcap role: lift/stack cases 1\u201360 lb; assist building pallets directed through automation. palletizing {\"object\": \"case\", \"placement_target\": \"pallet\", \"weight\": \"1_to_60lb\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Depalletize vs palletize mix",
+        "Ergo tools in use"
+      ]
+    },
+    {
+      "job_key": "manip_siemens_energy_charlotte_nc",
+      "title": "Load and unload parts on CNC / process machines (material handling assist)",
+      "industry": "Charlotte, NC",
+      "path": "MACHINE \u2192 TENDING",
+      "company_name": "Siemens Energy",
+      "locality": "Charlotte, NC",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [
+        "machine_tending"
+      ],
+      "text": "load and unload parts on cnc / process machines (material handling assist) cnc/process operator: loads/unloads parts from machines using material handling devices. machine_tending {\"object\": \"part\", \"placement_target\": \"fixture\", \"machine\": \"cnc\", \"grasp\": \"unknown\", \"weight\": \"up_to_50lb\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Part geometry",
+        "Fixture design",
+        "Skill vs tend split",
+        "Crane dependency"
+      ]
+    },
+    {
+      "job_key": "manip_fulcrum_tualatin_or",
+      "title": "Load raw material and unload finished parts on CNC laser",
+      "industry": "Tualatin, OR",
+      "path": "MACHINE \u2192 TENDING",
+      "company_name": "Fulcrum Technologies",
+      "locality": "Tualatin, OR",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [
+        "machine_tending"
+      ],
+      "text": "load raw material and unload finished parts on cnc laser laser cutting operator explicitly loads/unloads raw and finished parts. machine_tending {\"object\": \"sheet_metal\", \"placement_target\": \"machine\", \"machine\": \"cnc_laser\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Sheet size",
+        "Gripper",
+        "Nesting"
+      ]
+    },
+    {
+      "job_key": "manip_ims_riverside_ca",
+      "title": "Load and unload finished parts from laser/plasma cutting machines",
+      "industry": "Riverside, CA",
+      "path": "MACHINE \u2192 TENDING",
+      "company_name": "Industrial Metal Supply",
+      "locality": "Riverside, CA",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [
+        "machine_tending"
+      ],
+      "text": "load and unload finished parts from laser/plasma cutting machines laser operator: load and unload finished parts from machine within training window. machine_tending {\"object\": \"part\", \"placement_target\": \"machine\", \"machine\": \"laser_plasma\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Part mix",
+        "Weight",
+        "EOAT"
+      ]
+    },
+    {
+      "job_key": "manip_transtech_charlotte_nc",
+      "title": "Move workpieces to/from CNC and manual machining cells",
+      "industry": "Charlotte, NC",
+      "path": "MACHINE \u2192 TENDING",
+      "company_name": "TransTech Group",
+      "locality": "Charlotte, NC",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [
+        "machine_tending"
+      ],
+      "text": "move workpieces to/from cnc and manual machining cells cnc quickmill operator \u2014 machine operation plus forklift/crane material handling for production. machine_tending {\"object\": \"part\", \"placement_target\": \"fixture\", \"machine\": \"cnc\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Repetitive tend vs skilled fab mix"
+      ]
+    },
+    {
+      "job_key": "manip_groninger_charlotte_nc",
+      "title": "Tend CNC mills/lathes \u2014 workpiece load/unload around cycle",
+      "industry": "Charlotte, NC",
+      "path": "MACHINE \u2192 TENDING",
+      "company_name": "groninger",
+      "locality": "Charlotte, NC",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [
+        "machine_tending"
+      ],
+      "text": "tend cnc mills/lathes \u2014 workpiece load/unload around cycle cnc machinist operates production cnc equipment; robot portion is repetitive load/unload (setup remains human). machine_tending {\"object\": \"part\", \"machine\": \"cnc_mill_lathe\", \"placement_target\": \"fixture\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "How much of role is tend vs program"
+      ]
+    }
+  ]
+}

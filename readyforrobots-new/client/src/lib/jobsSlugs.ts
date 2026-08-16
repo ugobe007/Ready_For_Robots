@@ -48,7 +48,7 @@ export const JOBS_SLUGS: Record<string, JobsSlugConfig> = {
     jobCount: 0,
     headline: "We don't have jobs for Spot yet.",
     subhead:
-      "Right now we can show real jobs for warehouse AMRs and floor-scrubbing robots. Try one below.",
+      "We couldn't confidently match Spot to our current job corpus yet. Try another robot URL, or tell us what it does.",
   },
   "rg-group": {
     slug: "rg-group",

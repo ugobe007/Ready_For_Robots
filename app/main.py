@@ -54,6 +54,7 @@ from app.api.integrations import router as integrations_router
 from app.api.integrations_hubspot import router as integrations_hubspot_router
 from app.api.integrations_google_calendar import router as integrations_google_calendar_router
 from app.api.vendor_design import router as vendor_design_router
+from app.api.robot_job_match import router as robot_job_match_router
 from app.api.v1 import router as v1_router
 from app.api.v1.errors import V1HTTPException, error_response
 from app.database import get_db
@@ -511,7 +512,10 @@ app.include_router(integrations_hubspot_router, prefix="/api", tags=["integratio
 app.include_router(integrations_google_calendar_router, prefix="/api", tags=["integrations"])
 app.include_router(robot_buyer_leads_router, prefix="/api/robot-buyer-leads", tags=["robot-buyer-leads"])
 app.include_router(vendor_design_router, prefix="/api/vendor-design", tags=["vendor-design"])
+app.include_router(robot_job_match_router, prefix="/api", tags=["robot-job-match"])
 app.include_router(v1_router, prefix="/api/v1", tags=["v1"])
+# Alias under /api/v1 for clients that prefer v1 namespace (no feature flag — same handler)
+app.include_router(robot_job_match_router, prefix="/api/v1", tags=["robot-job-match"])
 
 
 @app.exception_handler(V1HTTPException)

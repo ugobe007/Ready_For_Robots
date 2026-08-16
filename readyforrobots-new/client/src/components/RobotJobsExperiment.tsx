@@ -8,8 +8,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import demo from "@/data/rdd_demo_jobs.json";
 import { trackRobotJobsFunnel, trackSignupStart } from "@/lib/siteAnalytics";
-import { mapUrlToEnvelope } from "@/lib/robotJobsEnvelopeMap";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  fetchRobotJobMatch,
+  type MatchCapability,
+  type MatchJob,
+  type RecoveryChip,
+} from "@/lib/robotJobMatch";
 import PixelIcon from "@/components/PixelIcon";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import {
@@ -38,10 +43,58 @@ import {
 
 type Profile = (typeof demo.profiles)[number];
 type Job = (typeof demo.jobs)[keyof typeof demo.jobs][number];
-type Step = "enter" | "unsupported" | "gate";
+type Step = "enter" | "unsupported" | "gate" | "recover";
 type BoardMode = "market" | "status" | "reveal" | "personal";
 /** Left funnel process trace under the URL input. */
 type TracePhase = "idle" | "url" | "caps" | "search" | "done";
+
+const RECOVERY_CHIPS: { id: RecoveryChip; label: string }[] = [
+  { id: "moves_materials", label: "Moves materials" },
+  { id: "manipulates", label: "Manipulates objects" },
+  { id: "cleans", label: "Cleans" },
+  { id: "inspects", label: "Inspects" },
+  { id: "other", label: "Other" },
+];
+
+function tapeFamilyFromMatch(family?: string): TapeJob["family"] {
+  const f = (family || "transport").toLowerCase();
+  if (f === "cart" || f === "pallet" || f === "scrub" || f === "inspect" || f === "gripper") {
+    return f;
+  }
+  return "transport";
+}
+
+function matchJobsToTape(jobs: MatchJob[]): TapeJob[] {
+  return jobs.map((j) => ({
+    key: j.job_key,
+    title: j.title,
+    industry: j.industry || j.company_name || "Work",
+    path: j.path || "MATCH → WORK",
+    family: tapeFamilyFromMatch(j.tape_family),
+  }));
+}
+
+function matchJobsToDemoShape(jobs: MatchJob[]): Job[] {
+  return jobs.map((j) => ({
+    job_key: j.job_key,
+    company_name: j.company_name || j.industry || "Site",
+    locality: j.locality || "",
+    action: "match",
+    target: "work",
+    operating_context: j.industry || "",
+    robot_compatible_task: j.title,
+    observed_workflow: "",
+    why_job: "",
+    evidence_grade: "E2",
+    promotion_class: "DERIVED",
+    fit: "M",
+    investigate_status: "yes",
+    automation_state: "unknown",
+    commercial_availability: "unknown",
+    requirements: {},
+    unknowns: j.unknowns || [],
+  })) as Job[];
+}
 
 const PREVIEW_FREE = 5;
 /** Independent discovery counter seed — not tied to visible row count. */
@@ -234,6 +287,9 @@ export default function RobotJobsExperiment({ slug }: Props) {
   const [jobsViewed, setJobsViewed] = useState(0);
   const [qualifyOpen, setQualifyOpen] = useState(false);
   const [qualifyRequested, setQualifyRequested] = useState(false);
+  const [matchCapabilities, setMatchCapabilities] = useState<MatchCapability[]>([]);
+  const [matchedApiJobs, setMatchedApiJobs] = useState<MatchJob[]>([]);
+  const [matchThin, setMatchThin] = useState(false);
   const sessionId = useRef(
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()
@@ -244,7 +300,14 @@ export default function RobotJobsExperiment({ slug }: Props) {
   const slugRef = useRef<string | null>(slugConfig?.slug ?? null);
   const fired3Plus = useRef(false);
   const boardTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const revealTargetRef = useRef<{ key: string; name: string } | null>(null);
+  const revealTargetRef = useRef<{
+    key: string;
+    name: string;
+    apiJobs?: MatchJob[];
+    caps?: MatchCapability[];
+    jobCount?: number;
+    thin?: boolean;
+  } | null>(null);
   const bootedSlug = useRef<string | null>(null);
 
   const funnelBase = () => ({
@@ -363,11 +426,190 @@ export default function RobotJobsExperiment({ slug }: Props) {
     }, 1000);
   }
 
+  function enterPersonalFromMatch(
+    name: string,
+    apiJobs: MatchJob[],
+    caps: MatchCapability[],
+    jobCount: number,
+    thin: boolean,
+  ) {
+    const tape = matchJobsToTape(apiJobs);
+    setMatchedApiJobs(apiJobs);
+    setMatchCapabilities(caps);
+    setMatchThin(thin);
+    setProfileKey(null);
+    setRobotName(name);
+    setPersonalCorpus(tape.length ? tape : MARKET_TAPE_JOBS.slice(0, 8));
+    setJobCountOverride(Math.max(jobCount, apiJobs.length));
+    setBoardMode("personal");
+    setStatusLines([]);
+    setTracePhase("done");
+    setTraceJobCount(Math.max(jobCount, apiJobs.length));
+    setTapeRunning(true);
+    setStep("enter");
+    setJobIndex(0);
+    setJobsViewed(1);
+    setSelectedTapeKey(tape[0]?.key ?? apiJobs[0]?.job_key ?? null);
+    setQualifyOpen(false);
+    setQualifyRequested(false);
+    saveJobsDiscoverySession({
+      profileKey: `match:${name}`,
+      robotName: name,
+      slug: null,
+    });
+    trackRobotJobsFunnel("discovery_complete", {
+      ...funnelBase(),
+      robot_name: name,
+      job_count: Math.max(jobCount, apiJobs.length),
+      source: "capability_match",
+    });
+  }
+
+  /** Status → API match → reveal count-up → personal. */
+  async function runCapabilityDiscovery(submittedUrl: string, fallbackName: string) {
+    clearBoardTimers();
+    setStep("enter");
+    setBoardMode("status");
+    setTapeRunning(false);
+    setTracePhase("url");
+    setTraceJobCount(null);
+    setStatusLines(["Robot received ✓"]);
+    setMatchCapabilities([]);
+    setMatchedApiJobs([]);
+    setMatchThin(false);
+    setSelectedTapeKey(null);
+    setQualifyOpen(false);
+    setQualifyRequested(false);
+    setUnsupportedReason(null);
+
+    trackRobotJobsFunnel("discovery_started", {
+      ...funnelBase(),
+      robot_name: fallbackName,
+      url: submittedUrl,
+      source: "capability_match",
+    });
+
+    boardLater(() => {
+      setTracePhase("caps");
+      setStatusLines(["Robot received ✓", "Reading capabilities…"]);
+    }, 300);
+
+    try {
+      const result = await fetchRobotJobMatch({ url: submittedUrl, robotName: fallbackName });
+      setRobotName(result.robot_name || fallbackName);
+      setMatchCapabilities(result.capabilities || []);
+
+      if (result.state === "could_not_understand" || !(result.jobs || []).length) {
+        setBoardMode("market");
+        setTapeRunning(true);
+        setTracePhase("idle");
+        setStatusLines([]);
+        setStep("recover");
+        trackRobotJobsFunnel("unsupported_robot", {
+          ...funnelBase(),
+          robot_name: result.robot_name || fallbackName,
+          url: submittedUrl,
+          reason: "could_not_understand",
+        });
+        return;
+      }
+
+      const caps = result.capabilities || [];
+      const capLines = caps.slice(0, 6).map((c) => `${c.label} ✓`);
+      setStatusLines([
+        "Robot received ✓",
+        ...capLines,
+        "Searching work…",
+      ]);
+      setTracePhase("search");
+      setPersonalCorpus(matchJobsToTape(result.jobs));
+      setJobCountOverride(Math.max(result.job_count, result.jobs.length));
+      setMatchedApiJobs(result.jobs);
+      setMatchThin(result.state === "thin_corpus");
+
+      boardLater(() => {
+        setStatusLines([]);
+        setBoardMode("reveal");
+      }, 450);
+
+      revealTargetRef.current = {
+        key: `match:${result.robot_name}`,
+        name: result.robot_name || fallbackName,
+        apiJobs: result.jobs,
+        caps,
+        jobCount: Math.max(result.job_count, result.jobs.length),
+        thin: result.state === "thin_corpus",
+      };
+    } catch {
+      setBoardMode("market");
+      setTapeRunning(true);
+      setTracePhase("idle");
+      setStatusLines([]);
+      setStep("recover");
+      setRobotName(fallbackName);
+    }
+  }
+
   function onRevealComplete() {
     const target = revealTargetRef.current;
     if (!target) return;
     revealTargetRef.current = null;
+    if (target.apiJobs?.length) {
+      enterPersonalFromMatch(
+        target.name,
+        target.apiJobs,
+        target.caps || [],
+        target.jobCount || target.apiJobs.length,
+        Boolean(target.thin),
+      );
+      return;
+    }
+    if (target.key.startsWith("match:")) return;
     enterPersonalBoard(target.key, target.name);
+  }
+
+  function onContinueUrl() {
+    const name = robotNameFromUrl(url) || "your robot";
+    const submitted = url.trim();
+    if (!submitted) return;
+    trackRobotJobsFunnel("robot_submitted", {
+      ...funnelBase(),
+      robot_name: name,
+      source: "url",
+      url: submitted,
+    });
+    void runCapabilityDiscovery(submitted, name);
+  }
+
+  async function onRecoveryChip(chip: RecoveryChip) {
+    setStep("enter");
+    setBoardMode("status");
+    setStatusLines(["Capability selected ✓", "Searching work…"]);
+    try {
+      const result = await fetchRobotJobMatch({ chip, robotName: robotName });
+      if (!(result.jobs || []).length) {
+        setStep("recover");
+        setBoardMode("market");
+        return;
+      }
+      setPersonalCorpus(matchJobsToTape(result.jobs));
+      setJobCountOverride(Math.max(result.job_count, result.jobs.length));
+      revealTargetRef.current = {
+        key: `match:${result.robot_name}`,
+        name: result.robot_name || robotName,
+        apiJobs: result.jobs,
+        caps: result.capabilities,
+        jobCount: Math.max(result.job_count, result.jobs.length),
+        thin: result.state === "thin_corpus",
+      };
+      setMatchCapabilities(result.capabilities || []);
+      setMatchedApiJobs(result.jobs);
+      setStatusLines([]);
+      setBoardMode("reveal");
+    } catch {
+      setStep("recover");
+      setBoardMode("market");
+    }
   }
 
   function applySlugConfig(config: JobsSlugConfig) {
@@ -382,10 +624,12 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setQualifyOpen(false);
     setQualifyRequested(false);
     fired3Plus.current = false;
+    setMatchedApiJobs([]);
+    setMatchCapabilities([]);
 
     if (!config.profileKey) {
       setProfileKey(null);
-      setStep("unsupported");
+      setStep("recover");
       setUnsupportedReason(config.subhead);
       setBoardMode("market");
       setTracePhase("idle");
@@ -433,7 +677,11 @@ export default function RobotJobsExperiment({ slug }: Props) {
   }, [slugConfig?.slug]);
 
   const profile = profileKey ? profileByKey(profileKey) : undefined;
-  const jobs = useMemo(() => (profileKey ? jobsFor(profileKey) : []), [profileKey]);
+  const fixtureJobs = useMemo(() => (profileKey ? jobsFor(profileKey) : []), [profileKey]);
+  const jobs = useMemo(() => {
+    if (matchedApiJobs.length) return matchJobsToDemoShape(matchedApiJobs);
+    return fixtureJobs;
+  }, [matchedApiJobs, fixtureJobs]);
   const job = useMemo(() => {
     if (selectedTapeKey) {
       return jobs.find((j) => j.job_key === selectedTapeKey) ?? jobs[jobIndex];
@@ -486,42 +734,6 @@ export default function RobotJobsExperiment({ slug }: Props) {
       source: opts.source,
     });
     runBoardDiscovery(opts.key, opts.name);
-  }
-
-  function onContinueUrl() {
-    const name = robotNameFromUrl(url) || "your robot";
-    const match = mapUrlToEnvelope(url);
-    if (match.status === "unsupported") {
-      setRobotName(name);
-      setProfileKey(null);
-      setIntro(null);
-      setUnsupportedReason(match.reason);
-      setStep("unsupported");
-      setBoardMode("market");
-      setTracePhase("idle");
-      setTraceJobCount(null);
-      trackRobotJobsFunnel("robot_submitted", {
-        ...funnelBase(),
-        robot_name: name,
-        source: "url",
-        url: url.trim(),
-        matched: false,
-      });
-      trackRobotJobsFunnel("unsupported_robot", {
-        ...funnelBase(),
-        robot_name: name,
-        url: url.trim(),
-        reason: match.reason,
-        guessed_family: match.guessedFamily,
-      });
-      return;
-    }
-    beginWithMappedRobot({
-      key: match.profileKey,
-      name,
-      source: "url",
-      submittedUrl: url.trim(),
-    });
   }
 
   function onSelectTapeJob(tapeJob: TapeJob) {
@@ -678,7 +890,9 @@ export default function RobotJobsExperiment({ slug }: Props) {
             </h1>
             <p className="mt-3 text-[15px] leading-snug text-slate-300">
               {boardMode === "personal"
-                ? `We found ${totalJobs} jobs for ${robotName}.`
+                ? matchThin
+                  ? `We understand ${robotName}. Here are the strongest matches so far.`
+                  : `We found ${totalJobs} jobs for ${robotName}.`
                 : discovering
                   ? "Working on your robot."
                   : "Robots need jobs. We find the work."}
@@ -792,13 +1006,11 @@ export default function RobotJobsExperiment({ slug }: Props) {
                   </p>
                 </div>
                 <ul className="mt-4 space-y-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
-                  {(statusLines.length
-                    ? statusLines
-                    : [
-                        "Robot received ✓",
-                        "Capabilities found",
-                        "Searching work…",
-                      ]
+                  {(matchCapabilities.length
+                    ? matchCapabilities.map((c) => `${c.label} ✓`)
+                    : statusLines.length
+                      ? statusLines
+                      : ["Robot received ✓", "Reading capabilities…"]
                   ).map((line) => (
                     <li
                       key={line}
@@ -878,8 +1090,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
         </div>
       )}
 
-      {step === "unsupported" && (
-        <MacWindow title="No Jobs Yet" className="mx-auto w-full max-w-3xl">
+      {(step === "unsupported" || step === "recover") && (
+        <MacWindow title="Understand This Robot" className="mx-auto w-full max-w-3xl">
           <div className="p-5 sm:p-6">
           {intro ? (
             <>
@@ -888,17 +1100,30 @@ export default function RobotJobsExperiment({ slug }: Props) {
             </>
           ) : (
             <>
-              <p className={mutedClass}>We analyzed {robotName}.</p>
+              <p className={mutedClass}>We looked at {robotName}.</p>
               <h2 className={`mt-2 ${titleClass} text-2xl sm:text-3xl`}>
-                We don&apos;t have jobs for this robot yet
+                We couldn&apos;t confidently understand this robot from the page
               </h2>
               <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>
-                {unsupportedReason || "No matching job library for this robot yet"}. Right now we can
-                show real jobs for warehouse AMRs and floor-scrubbing robots.
+                {unsupportedReason ||
+                  "Tell us what it does and we'll search our job corpus for compatible work."}
               </p>
             </>
           )}
-          <p className={`mt-8 ${eyebrowClass}`}>See what we&apos;ve already found</p>
+          <p className={`mt-8 ${eyebrowClass}`}>Choose what it does</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {RECOVERY_CHIPS.map((chip) => (
+              <button
+                key={chip.id}
+                type="button"
+                onClick={() => void onRecoveryChip(chip.id)}
+                className="border border-slate-600 bg-[#081126] px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-200 transition hover:border-emerald-500/50 hover:text-emerald-400"
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+          <p className={`mt-8 ${eyebrowClass}`}>Or try a robot we already know well</p>
           <ProofCards src={src} />
           <Link
             href={src ? `/?src=${encodeURIComponent(src)}` : "/"}
@@ -911,7 +1136,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
         </MacWindow>
       )}
 
-      {step === "gate" && profile && (
+      {step === "gate" && jobs.length > 0 && (
         <MacWindow title="See All Jobs" className="mx-auto w-full max-w-3xl">
           <div className="p-5 sm:p-6">
           <h2 className={`${titleClass} text-2xl sm:text-3xl`}>
