@@ -1,6 +1,6 @@
 /**
  * Live job tape — discrete terminal arrivals, not a ticker.
- * Mechanical ~200ms row shift; emerald NEW flash; tiny icon frame blink.
+ * Dense 15-row board; mechanical ~200ms shift; 5–7s between arrivals.
  */
 import { useEffect, useRef, useState } from "react";
 import PixelIcon from "@/components/PixelIcon";
@@ -11,13 +11,13 @@ import {
   type TapeJob,
 } from "@/lib/jobsTapeCorpus";
 
-const VISIBLE = 8;
-const ROW_PX = 56;
+const VISIBLE = 15;
+const ROW_PX = 36;
 const SHIFT_MS = 200;
 const NEW_HOLD_MS = 2800;
 const HEADER_FLASH_MS = 900;
-const INTERVAL_MIN = 3200;
-const INTERVAL_MAX = 4800;
+const INTERVAL_MIN = 5000;
+const INTERVAL_MAX = 7000;
 
 type Row = TapeJob & {
   instanceId: string;
@@ -28,11 +28,9 @@ type Row = TapeJob & {
 type Props = {
   title: string;
   corpus: TapeJob[];
-  /** Starting found counter (e.g. 67). Increments on each arrival while running. */
+  /** Starting found counter. Increments on each arrival while running. */
   baseCount: number;
-  /** When false, tape freezes (status overlay still shown). */
   running?: boolean;
-  /** Status overlay instead of rows (analyzing / searching). */
   statusLines?: string[];
   onSelect?: (job: TapeJob) => void;
   selectedKey?: string | null;
@@ -153,11 +151,11 @@ export default function LiveJobTape({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#081126]">
-      <div className="flex h-8 shrink-0 items-center justify-between border-b border-slate-600 px-4">
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-200">
+      <div className="flex h-7 shrink-0 items-center justify-between border-b border-slate-600 px-3">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-200">
           {title}
         </p>
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
           {headerFlash ? (
             <span className="text-emerald-400">&gt; New Job Found</span>
           ) : (
@@ -191,36 +189,37 @@ export default function LiveJobTape({
               return (
                 <li
                   key={row.instanceId}
-                  className={`flex h-14 items-start border-b border-slate-700/90 px-4 py-2.5 ${
+                  className={`flex h-9 items-center border-b border-slate-800 px-3 ${
                     row.isNew ? "bg-emerald-500/15" : selected ? "bg-slate-800/50" : ""
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => onSelect?.(row)}
-                    className="group flex w-full items-start gap-2.5 text-left"
+                    className="group flex w-full items-center gap-2 text-left"
                   >
                     <span
-                      className={`mt-0.5 w-8 shrink-0 font-mono text-[10px] font-semibold ${
+                      className={`w-7 shrink-0 font-mono text-[9px] font-semibold ${
                         row.isNew ? "text-emerald-400" : "text-slate-500"
                       }`}
                     >
                       {row.isNew ? "NEW" : padCount(row.seq).slice(-3)}
                     </span>
-                    <span className="mt-0.5 shrink-0">
-                      <PixelIcon map={map} scale={2} fill={FACE_EMERALD} background="transparent" />
+                    <span className="shrink-0">
+                      <PixelIcon map={map} scale={1} fill={FACE_EMERALD} background="transparent" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block font-display text-[12px] font-bold uppercase leading-tight tracking-tight text-slate-100">
+                      <span className="block truncate font-display text-[11px] font-bold uppercase leading-tight tracking-tight text-slate-100">
                         {row.title}
                       </span>
-                      <span className="mt-0.5 block text-[11px] text-slate-400">{row.industry}</span>
-                      <span className="mt-0.5 block font-mono text-[9px] font-semibold tracking-[0.08em] text-slate-300">
+                      <span className="mt-0.5 block truncate font-mono text-[8px] font-semibold tracking-[0.06em] text-slate-400">
+                        {row.industry}
+                        <span className="text-slate-600"> · </span>
                         {row.path}
                       </span>
                     </span>
                     <span
-                      className="mt-1 shrink-0 font-mono text-[12px] text-slate-600 transition group-hover:text-emerald-400"
+                      className="shrink-0 font-mono text-[11px] text-slate-600 transition group-hover:text-emerald-400"
                       aria-hidden
                     >
                       →
