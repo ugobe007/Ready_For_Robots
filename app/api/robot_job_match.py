@@ -73,6 +73,7 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
     url = (body.url or "").strip()
     chip = body.chip
     name = body.robot_name or "your robot"
+    resolved_name = None if name == "your robot" else name
 
     if not url and not chip and not body.robot_capabilities:
         return _empty("could_not_understand", name)
@@ -84,7 +85,7 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
             result = match_robot_url(
                 url or "https://example.com/",
                 chip=chip,
-                robot_name=name,
+                robot_name=resolved_name,
                 product_name=body.product_name,
                 robot_capabilities=body.robot_capabilities,
                 page_text=body.page_text,
