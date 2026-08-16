@@ -132,11 +132,13 @@ def extract_robot_profile(
     if description:
         text_parts.append(description)
     text = "\n".join(p for p in text_parts if p).strip()
+    # Understanding research needs deeper pages; keep a generous sample.
+    sample_limit = 12000
     result = ExtractionResult(
         page_title=title,
         source_url=source_url,
         fetched_at=fetched_at or datetime.now(timezone.utc).isoformat(),
-        text_sample=text[:4000],
+        text_sample=text[:sample_limit],
         content_hash=hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest() if text else None,
     )
     if not text:

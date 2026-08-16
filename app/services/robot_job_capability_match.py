@@ -7,21 +7,16 @@ Integrity: never invent jobs or capabilities. Soft-rank economic mismatch
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
-
-from urllib.parse import urljoin, urlparse
 
 from app.services.robot_capability_profile import (
     CapabilityProfile,
     build_capability_profile,
 )
-from app.services.robot_profile_extract import (
-    extract_robot_profile,
-    fetch_product_page,
-)
-from app.services.robot_url_safety import UrlSafetyError, assert_public_http_url
+from app.services.robot_understanding import understand_robot_url
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEMO_PATH = REPO_ROOT / "readyforrobots-new" / "client" / "src" / "data" / "rdd_demo_jobs.json"
@@ -216,6 +211,12 @@ def score_job(profile: CapabilityProfile, job: dict[str, Any]) -> tuple[float, l
             unknowns = unknowns + ["Economic fit vs AMR"]
         job = {**job, "unknowns": unknowns}
 
+    # Do not promote CNC/machine-tending from arms/humanoid alone
+    text = (job.get("text") or "") + " " + (job.get("title") or "")
+    if re.search(r"\bcnc\b|machine\s+tend", text, re.I) and "machine_interaction" not in cap_keys:
+        score -= 2.0
+        notes.append("Machine tending not confirmed for this robot — needs stronger evidence.")
+
     return score, notes
 
 
@@ -282,78 +283,6 @@ def match_jobs_for_profile(
     }
 
 
-def _product_follow_urls(html: str, base_url: str, *, limit: int = 4) -> list[str]:
-    """Same-host product/detail links when the landing page is a thin marketing shell."""
-    import re
-
-    host = (urlparse(base_url).hostname or "").lower()
-    if not host or not html:
-        return []
-    out: list[str] = []
-    seen: set[str] = set()
-    for href in re.findall(r"""href=["']([^"']+)["']""", html, flags=re.I):
-        if href.startswith("#") or href.lower().startswith("mailto:"):
-            continue
-        full = urljoin(base_url, href)
-        parsed = urlparse(full)
-        if (parsed.hostname or "").lower() != host:
-            continue
-        path = (parsed.path or "").lower()
-        if not any(
-            tok in path
-            for tok in ("/product", "/products", "/robot", "/vega", "/hardware", "/platform", "/specs")
-        ):
-            continue
-        # Prefer deeper product paths over bare /product
-        key = full.split("#")[0].rstrip("/")
-        if key in seen or key.rstrip("/") == base_url.rstrip("/"):
-            continue
-        seen.add(key)
-        out.append(key)
-        if len(out) >= limit:
-            break
-    # Prefer paths that look like a specific SKU/page
-    out.sort(key=lambda u: (0 if re.search(r"/product/.+", urlparse(u).path or "") else 1, len(u)))
-    return out
-
-
-def _profile_from_page(
-    *,
-    html: str | None,
-    description: str | None,
-    source_url: str | None,
-    fetched_at: str | None,
-    chip: str | None,
-) -> tuple[CapabilityProfile, Any]:
-    extraction = extract_robot_profile(
-        html=html,
-        description=description,
-        source_url=source_url,
-        fetched_at=fetched_at,
-    )
-    text = extraction.text_sample or description or ""
-    if source_url:
-        text = f"{text}\n{source_url}"
-    profile = build_capability_profile(
-        text=text,
-        page_title=extraction.page_title,
-        manufacturer=extraction.manufacturer,
-        model=extraction.model,
-        chip=chip,
-    )
-    mfr = (extraction.manufacturer or "").strip()
-    model = (extraction.model or "").strip()
-    if mfr and model and mfr.lower() != model.lower():
-        profile.robot_name = f"{mfr} {model}"[:120]
-    elif model:
-        profile.robot_name = model[:120]
-    elif mfr:
-        profile.robot_name = mfr[:120]
-    elif extraction.page_title:
-        profile.robot_name = extraction.page_title.split("|")[0].split("-")[0].strip()[:120]
-    return profile, extraction
-
-
 def match_robot_url(
     url: str,
     *,
@@ -361,72 +290,75 @@ def match_robot_url(
     fetcher=None,
     html: str | None = None,
     description: str | None = None,
+    product_name: str | None = None,
 ) -> dict[str, Any]:
     """
-    Full path: URL → fetch → capability profile → corpus match.
-    `html` / `description` skip network (tests). `chip` is recovery prior.
-    When the landing page is thin, follow same-host product links once.
+    URL → robot identity → capability research → corpus match.
+
+    `html` / `description` skip network (tests). `chip` is Level-5 recovery prior.
     """
     if chip and not url and not html and not description:
         profile = build_capability_profile(text="", chip=chip, robot_name="your robot")
-        return match_jobs_for_profile(profile)
+        out = match_jobs_for_profile(profile)
+        out["research_stages"] = []
+        out["company_name"] = None
+        out["products"] = []
+        out["needs_product_choice"] = False
+        return out
 
-    source_url = None
-    page_html = html
-    fetched_at = None
-    if page_html is None and description is None and url:
-        safe = assert_public_http_url(url)
-        source_url = safe
-        page = fetch_product_page(safe, timeout=10.0, fetcher=fetcher)
-        page_html = page["html"]
-        source_url = page.get("url") or safe
-        fetched_at = page.get("fetched_at")
-    elif url:
-        try:
-            source_url = assert_public_http_url(url)
-        except UrlSafetyError:
-            source_url = url
-
-    profile, extraction = _profile_from_page(
-        html=page_html,
+    understanding = understand_robot_url(
+        url,
+        fetcher=fetcher,
+        html=html,
         description=description,
-        source_url=source_url,
-        fetched_at=fetched_at,
+        product_name=product_name,
         chip=chip,
     )
 
-    # Thin marketing homepage → follow in-page product URLs (generic; no OEM list)
-    if (
-        not profile.understood
-        and page_html
-        and source_url
-        and description is None
-        and html is None
-    ):
-        for follow in _product_follow_urls(page_html, source_url):
-            try:
-                page2 = fetch_product_page(follow, timeout=10.0, fetcher=fetcher)
-                profile2, extraction2 = _profile_from_page(
-                    html=page2.get("html"),
-                    description=None,
-                    source_url=page2.get("url") or follow,
-                    fetched_at=page2.get("fetched_at"),
-                    chip=chip,
-                )
-                if profile2.understood:
-                    profile = profile2
-                    extraction = extraction2
-                    source_url = page2.get("url") or follow
-                    break
-            except Exception:
-                continue
+    if understanding.needs_product_choice:
+        return {
+            "state": "select_product",
+            "robot_name": understanding.company_name or "your robot",
+            "company_name": understanding.company_name,
+            "capabilities": [],
+            "families": [],
+            "jobs": [],
+            "job_count": 0,
+            "products": [p.to_dict() for p in understanding.products],
+            "needs_product_choice": True,
+            "research_stages": [s.to_dict() for s in understanding.stages],
+            "source_url": understanding.source_url,
+            "content_hash": understanding.content_hash,
+            "evidence_urls": understanding.evidence_urls,
+        }
 
+    profile = understanding.profile or build_capability_profile(
+        text="",
+        robot_name="your robot",
+    )
     result = match_jobs_for_profile(profile)
-    result["source_url"] = source_url
-    result["content_hash"] = extraction.content_hash
+    # Mark match stage done
+    stages = [s.to_dict() for s in understanding.stages]
+    for s in stages:
+        if s["id"] == "match_jobs":
+            s["status"] = "done"
+            s["detail"] = f"{result.get('job_count') or 0} jobs"
+    result["research_stages"] = stages
+    result["company_name"] = understanding.company_name
+    result["products"] = [p.to_dict() for p in understanding.products]
+    result["needs_product_choice"] = False
+    result["source_url"] = understanding.source_url
+    result["content_hash"] = understanding.content_hash
+    result["evidence_urls"] = understanding.evidence_urls
+    result["robot_class"] = profile.robot_class
     return result
 
 
 def match_from_chip(chip: str, robot_name: str = "your robot") -> dict[str, Any]:
     profile = build_capability_profile(text="", chip=chip, robot_name=robot_name)
-    return match_jobs_for_profile(profile)
+    out = match_jobs_for_profile(profile)
+    out["research_stages"] = []
+    out["company_name"] = None
+    out["products"] = []
+    out["needs_product_choice"] = False
+    return out

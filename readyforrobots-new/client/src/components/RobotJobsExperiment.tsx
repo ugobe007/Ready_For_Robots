@@ -13,6 +13,7 @@ import {
   fetchRobotJobMatch,
   type MatchCapability,
   type MatchJob,
+  type MatchProduct,
   type RecoveryChip,
 } from "@/lib/robotJobMatch";
 import PixelIcon from "@/components/PixelIcon";
@@ -43,7 +44,7 @@ import {
 
 type Profile = (typeof demo.profiles)[number];
 type Job = (typeof demo.jobs)[keyof typeof demo.jobs][number];
-type Step = "enter" | "unsupported" | "gate" | "recover";
+type Step = "enter" | "unsupported" | "gate" | "recover" | "select_product";
 type BoardMode = "market" | "status" | "reveal" | "personal";
 /** Left funnel process trace under the URL input. */
 type TracePhase = "idle" | "url" | "caps" | "search" | "done";
@@ -55,6 +56,23 @@ const RECOVERY_CHIPS: { id: RecoveryChip; label: string }[] = [
   { id: "inspects", label: "Inspects" },
   { id: "other", label: "Other" },
 ];
+
+function stageStatusLines(
+  stages: { id: string; label: string; status: string; detail?: string | null }[] | undefined,
+  caps: MatchCapability[],
+): string[] {
+  const lines: string[] = [];
+  for (const s of stages || []) {
+    if (s.status === "skipped") continue;
+    const mark = s.status === "done" ? "✓" : "…";
+    lines.push(`${s.label}${s.detail ? ` — ${s.detail}` : ""} ${mark}`.replace("  ", " "));
+  }
+  const confirmed = caps.filter((c) => (c.truth_state || "confirmed") === "confirmed").slice(0, 6);
+  for (const c of confirmed) {
+    lines.push(`${c.label} ✓`);
+  }
+  return lines;
+}
 
 function tapeFamilyFromMatch(family?: string): TapeJob["family"] {
   const f = (family || "transport").toLowerCase();
@@ -288,6 +306,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
   const [qualifyOpen, setQualifyOpen] = useState(false);
   const [qualifyRequested, setQualifyRequested] = useState(false);
   const [matchCapabilities, setMatchCapabilities] = useState<MatchCapability[]>([]);
+  const [foundProducts, setFoundProducts] = useState<MatchProduct[]>([]);
+  const [pendingMatchUrl, setPendingMatchUrl] = useState<string | null>(null);
   const [matchedApiJobs, setMatchedApiJobs] = useState<MatchJob[]>([]);
   const [matchThin, setMatchThin] = useState(false);
   const sessionId = useRef(
@@ -465,15 +485,19 @@ export default function RobotJobsExperiment({ slug }: Props) {
     });
   }
 
-  /** Status → API match → reveal count-up → personal. */
-  async function runCapabilityDiscovery(submittedUrl: string, fallbackName: string) {
+  /** Identity → capability research → corpus match → reveal. */
+  async function runCapabilityDiscovery(
+    submittedUrl: string,
+    fallbackName: string,
+    productName?: string,
+  ) {
     clearBoardTimers();
     setStep("enter");
     setBoardMode("status");
     setTapeRunning(false);
     setTracePhase("url");
     setTraceJobCount(null);
-    setStatusLines(["Robot received ✓"]);
+    setStatusLines(["Identifying company…"]);
     setMatchCapabilities([]);
     setMatchedApiJobs([]);
     setMatchThin(false);
@@ -481,6 +505,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setQualifyOpen(false);
     setQualifyRequested(false);
     setUnsupportedReason(null);
+    setFoundProducts([]);
+    setPendingMatchUrl(submittedUrl);
 
     trackRobotJobsFunnel("discovery_started", {
       ...funnelBase(),
@@ -491,13 +517,33 @@ export default function RobotJobsExperiment({ slug }: Props) {
 
     boardLater(() => {
       setTracePhase("caps");
-      setStatusLines(["Robot received ✓", "Reading capabilities…"]);
-    }, 300);
+      setStatusLines(["Identifying company…", "Finding robots…", "Understanding capabilities…"]);
+    }, 400);
 
     try {
-      const result = await fetchRobotJobMatch({ url: submittedUrl, robotName: fallbackName });
+      const result = await fetchRobotJobMatch({
+        url: submittedUrl,
+        robotName: fallbackName,
+        productName,
+      });
       setRobotName(result.robot_name || fallbackName);
       setMatchCapabilities(result.capabilities || []);
+
+      if (result.state === "select_product" && (result.products || []).length > 1) {
+        setFoundProducts(result.products || []);
+        setBoardMode("market");
+        setTapeRunning(true);
+        setTracePhase("idle");
+        setStatusLines([]);
+        setStep("select_product");
+        setIntro({
+          headline: result.company_name
+            ? `Analyzing ${result.company_name}`
+            : "We found several robots",
+          subhead: "Which robot needs a job?",
+        });
+        return;
+      }
 
       if (result.state === "could_not_understand" || !(result.jobs || []).length) {
         setBoardMode("market");
@@ -505,6 +551,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
         setTracePhase("idle");
         setStatusLines([]);
         setStep("recover");
+        setIntro(null);
         trackRobotJobsFunnel("unsupported_robot", {
           ...funnelBase(),
           robot_name: result.robot_name || fallbackName,
@@ -514,29 +561,25 @@ export default function RobotJobsExperiment({ slug }: Props) {
         return;
       }
 
-      const caps = result.capabilities || [];
-      const capLines = caps.slice(0, 6).map((c) => `${c.label} ✓`);
-      setStatusLines([
-        "Robot received ✓",
-        ...capLines,
-        "Searching work…",
-      ]);
+      const lines = stageStatusLines(result.research_stages, result.capabilities || []);
+      setStatusLines([...lines, "Searching work…"]);
       setTracePhase("search");
       setPersonalCorpus(matchJobsToTape(result.jobs));
       setJobCountOverride(Math.max(result.job_count, result.jobs.length));
       setMatchedApiJobs(result.jobs);
       setMatchThin(result.state === "thin_corpus");
+      setIntro(null);
 
       boardLater(() => {
         setStatusLines([]);
         setBoardMode("reveal");
-      }, 450);
+      }, 550);
 
       revealTargetRef.current = {
         key: `match:${result.robot_name}`,
         name: result.robot_name || fallbackName,
         apiJobs: result.jobs,
-        caps,
+        caps: result.capabilities,
         jobCount: Math.max(result.job_count, result.jobs.length),
         thin: result.state === "thin_corpus",
       };
@@ -547,6 +590,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
       setStatusLines([]);
       setStep("recover");
       setRobotName(fallbackName);
+      setIntro(null);
     }
   }
 
@@ -1100,13 +1144,13 @@ export default function RobotJobsExperiment({ slug }: Props) {
             </>
           ) : (
             <>
-              <p className={mutedClass}>We looked at {robotName}.</p>
+              <p className={mutedClass}>We researched {robotName}.</p>
               <h2 className={`mt-2 ${titleClass} text-2xl sm:text-3xl`}>
-                We couldn&apos;t confidently understand this robot from the page
+                Still not enough evidence to build a capability profile
               </h2>
               <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>
                 {unsupportedReason ||
-                  "Tell us what it does and we'll search our job corpus for compatible work."}
+                  "After checking the page and related product pages, we still need a hint. Tell us what it does and we'll search our job corpus."}
               </p>
             </>
           )}
@@ -1132,6 +1176,38 @@ export default function RobotJobsExperiment({ slug }: Props) {
           >
             Try another robot
           </Link>
+          </div>
+        </MacWindow>
+      )}
+
+      {step === "select_product" && (
+        <MacWindow title="Select a Robot" className="mx-auto w-full max-w-3xl">
+          <div className="p-5 sm:p-6">
+            <h2 className={`${titleClass} text-2xl sm:text-3xl`}>
+              {intro?.headline || "We found several robots"}
+            </h2>
+            <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>
+              {intro?.subhead || "Which robot needs a job?"}
+            </p>
+            <div className="mt-6 flex flex-col gap-2">
+              {foundProducts.map((p) => (
+                <button
+                  key={p.name}
+                  type="button"
+                  onClick={() => {
+                    const submitted = pendingMatchUrl || url.trim();
+                    if (!submitted) return;
+                    void runCapabilityDiscovery(submitted, p.name, p.name);
+                  }}
+                  className="flex items-center justify-between border border-slate-600 bg-[#081126] px-4 py-3 text-left transition hover:border-emerald-500/50"
+                >
+                  <span className={`${titleClass} text-lg`}>{p.name}</span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400">
+                    {(p.robot_class || "robot").replace(/_/g, " ")}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </MacWindow>
       )}

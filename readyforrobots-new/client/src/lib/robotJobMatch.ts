@@ -1,5 +1,5 @@
 /**
- * POST /api/robot-job-match — capability profile → corpus jobs.
+ * POST /api/robot-job-match — identity → capability research → corpus jobs.
  */
 import { getPublicReadApiBase } from "@/lib/apiBase";
 
@@ -8,6 +8,21 @@ export type MatchCapability = {
   label: string;
   confidence: number;
   excerpt?: string | null;
+  truth_state?: "confirmed" | "inferred";
+};
+
+export type MatchProduct = {
+  name: string;
+  robot_class?: string | null;
+  evidence_url?: string | null;
+  confidence?: number;
+};
+
+export type ResearchStage = {
+  id: string;
+  label: string;
+  status: string;
+  detail?: string | null;
 };
 
 export type MatchJob = {
@@ -24,13 +39,19 @@ export type MatchJob = {
 };
 
 export type RobotJobMatchResult = {
-  state: "matches" | "thin_corpus" | "could_not_understand";
+  state: "matches" | "thin_corpus" | "could_not_understand" | "select_product";
   robot_name: string;
   capabilities: MatchCapability[];
   families: { id: string; confidence: number }[];
   jobs: MatchJob[];
   job_count: number;
   source_url?: string | null;
+  company_name?: string | null;
+  products?: MatchProduct[];
+  needs_product_choice?: boolean;
+  research_stages?: ResearchStage[];
+  robot_class?: string | null;
+  evidence_urls?: string[];
 };
 
 export type RecoveryChip = "moves_materials" | "manipulates" | "cleans" | "inspects" | "other";
@@ -39,6 +60,7 @@ export async function fetchRobotJobMatch(opts: {
   url?: string;
   chip?: RecoveryChip;
   robotName?: string;
+  productName?: string;
   signal?: AbortSignal;
 }): Promise<RobotJobMatchResult> {
   const base = getPublicReadApiBase();
@@ -49,6 +71,7 @@ export async function fetchRobotJobMatch(opts: {
       url: opts.url || null,
       chip: opts.chip || null,
       robot_name: opts.robotName || null,
+      product_name: opts.productName || null,
     }),
     signal: opts.signal,
   });
