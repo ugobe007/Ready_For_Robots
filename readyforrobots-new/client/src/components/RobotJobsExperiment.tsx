@@ -60,7 +60,7 @@ const HOW_IT_WORKS = [
   {
     n: "01",
     title: "Show us your robot",
-    body: "We identify what it can do.",
+    body: "We identify what it can actually do.",
     icon: KARE_FACE,
     scale: 1.5,
   },
@@ -577,13 +577,13 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 }}
                 placeholder="Paste robot product URL"
                 disabled={boardMode === "status"}
-                className="w-full border-0 border-b border-slate-500 bg-[#081126] px-3 py-2.5 font-mono text-[13px] text-slate-100 outline-none placeholder:text-slate-600 focus:bg-[#0a152c] disabled:opacity-60"
+                className="w-full border-0 border-b border-slate-500 bg-[#081126] px-3 py-2 font-mono text-[13px] text-slate-100 outline-none placeholder:text-slate-600 focus:bg-[#0a152c] disabled:opacity-60"
               />
               <button
                 type="button"
                 onClick={onContinueUrl}
                 disabled={!url.trim() || boardMode === "status"}
-                className="flex w-full items-center justify-between gap-3 bg-emerald-400 px-3 py-2.5 text-left font-mono text-[13px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-emerald-400/40 disabled:text-white/70"
+                className="flex w-full items-center justify-between gap-3 bg-emerald-400 px-3 py-2 text-left font-mono text-[13px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-emerald-400/40 disabled:text-white/70"
               >
                 <span className="inline-flex items-center gap-2.5">
                   {faceOnCta}
@@ -657,7 +657,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
                           <span className="block font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-200">
                             <span className="text-emerald-400">{step.n}</span> {step.title}
                           </span>
-                          <span className="mt-0.5 block text-[12px] leading-snug text-slate-500">
+                          <span className="mt-0.5 block text-[12px] leading-4 text-slate-500">
                             {step.body}
                           </span>
                         </span>
@@ -675,7 +675,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
                       <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-200">
                         Qualify a job
                       </p>
-                      <p className="mt-0.5 text-[12px] leading-snug text-slate-500">
+                      <p className="mt-0.5 text-[12px] leading-4 text-slate-500">
                         Found one worth pursuing?
                         <br />
                         We&apos;ll research the commercial unknowns.

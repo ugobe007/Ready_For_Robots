@@ -1,6 +1,6 @@
 /**
- * Live job tape — classified listings density, not telemetry.
- * ~11 visible rows; 15+ rotate behind; mechanical arrivals every 5–7s.
+ * Live job tape — fixed 58px classified rows; 10 visible; feed rotates behind.
+ * Exact row grid: 48 | 34 | 1fr | 24. No absolute text stacking.
  */
 import { useEffect, useRef, useState } from "react";
 import PixelIcon from "@/components/PixelIcon";
@@ -11,14 +11,16 @@ import {
   type TapeJob,
 } from "@/lib/jobsTapeCorpus";
 
-const VISIBLE = 11;
-const ROW_PX = 46;
+const VISIBLE = 10;
+/** Fixed row height — animation translates by this amount only. */
+const ROW_PX = 58;
 const SHIFT_MS = 200;
-const NEW_HOLD_MS = 2800;
+const NEW_HOLD_MS = 1500;
 const HEADER_FLASH_MS = 1100;
 const INTERVAL_MIN = 5000;
 const INTERVAL_MAX = 7000;
-const ICON_SCALE = 1.25; // 16×16 → ~20px
+/** 16×16 map → 24px (fits 34px icon column; stronger Kare presence) */
+const ICON_SCALE = 24 / 16;
 
 type Row = TapeJob & {
   instanceId: string;
@@ -42,6 +44,14 @@ function padCount(n: number): string {
 
 function nextInterval(): number {
   return INTERVAL_MIN + Math.floor(Math.random() * (INTERVAL_MAX - INTERVAL_MIN));
+}
+
+/** Title Case for human-readable job names (not mono/all-caps). */
+function toTitleCase(s: string): string {
+  return s
+    .trim()
+    .toLowerCase()
+    .replace(/\b([a-z])/g, (c) => c.toUpperCase());
 }
 
 export default function LiveJobTape({
@@ -151,7 +161,7 @@ export default function LiveJobTape({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#081126]">
-      <div className="shrink-0 border-b border-slate-600 px-4 py-2">
+      <div className="shrink-0 border-b border-slate-600 px-4 py-2.5">
         <div className="flex items-center justify-between gap-3">
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 sm:text-[12px]">
             {title}
@@ -194,23 +204,32 @@ export default function LiveJobTape({
               return (
                 <li
                   key={row.instanceId}
-                  className={`flex h-[46px] items-start border-b border-slate-800/90 px-4 py-1.5 ${
+                  className={`box-border border-b border-slate-800/90 ${
                     row.isNew ? "bg-emerald-500/15" : selected ? "bg-slate-800/50" : ""
                   }`}
+                  style={{ height: ROW_PX, minHeight: ROW_PX }}
                 >
                   <button
                     type="button"
                     onClick={() => onSelect?.(row)}
-                    className="group flex w-full items-start gap-2.5 text-left"
+                    className="group grid h-full w-full items-start px-3 text-left"
+                    style={{
+                      gridTemplateColumns: "48px 34px 1fr 24px",
+                      paddingTop: 6,
+                      paddingBottom: 6,
+                    }}
                   >
+                    {/* NUMBER — top-aligned with title */}
                     <span
-                      className={`mt-0.5 w-8 shrink-0 font-mono text-[10px] font-semibold tabular-nums ${
+                      className={`font-mono text-[10px] font-semibold leading-4 tabular-nums ${
                         row.isNew ? "text-emerald-400" : "text-slate-500"
                       }`}
                     >
                       {row.isNew ? "NEW" : padCount(row.seq).slice(-3)}
                     </span>
-                    <span className="mt-0.5 flex w-5 shrink-0 justify-center">
+
+                    {/* ICON — vertically centered in row */}
+                    <span className="flex h-[46px] items-center justify-center self-center">
                       <PixelIcon
                         map={map}
                         scale={ICON_SCALE}
@@ -218,19 +237,41 @@ export default function LiveJobTape({
                         background="transparent"
                       />
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-display text-[14px] font-bold uppercase leading-tight tracking-tight text-slate-50 sm:text-[15px]">
-                        {row.title}
+
+                    {/* JOB CONTENT — three normal-flow lines, no absolute */}
+                    <span className="min-w-0 overflow-hidden">
+                      <span
+                        className="block overflow-hidden text-ellipsis whitespace-nowrap font-sans text-[14px] font-bold text-white"
+                        style={{ lineHeight: "16px", letterSpacing: 0 }}
+                      >
+                        {toTitleCase(row.title)}
                       </span>
-                      <span className="mt-0.5 block truncate text-[11px] leading-tight text-slate-400 sm:text-[12px]">
+                      <span
+                        className="block overflow-hidden text-ellipsis whitespace-nowrap font-sans font-normal text-slate-400"
+                        style={{ fontSize: 11, lineHeight: "14px", marginTop: 2 }}
+                      >
                         {row.industry}
                       </span>
-                      <span className="mt-0.5 block truncate font-mono text-[10px] font-semibold tracking-[0.08em] text-emerald-400/85 sm:text-[11px]">
+                      <span
+                        className="block overflow-hidden text-ellipsis whitespace-nowrap font-mono uppercase text-emerald-400"
+                        style={{
+                          fontSize: 10,
+                          lineHeight: "12px",
+                          marginTop: 2,
+                          letterSpacing: "0.08em",
+                        }}
+                      >
                         {row.path}
                       </span>
                     </span>
+
+                    {/* ARROW — vertically centered */}
                     <span
-                      className="mt-1 shrink-0 font-mono text-[12px] text-slate-600 transition group-hover:text-emerald-400"
+                      className={`flex h-[46px] items-center justify-center self-center font-mono text-[11px] transition ${
+                        row.isNew
+                          ? "text-emerald-400"
+                          : "text-slate-600 group-hover:text-emerald-400"
+                      }`}
                       aria-hidden
                     >
                       →
