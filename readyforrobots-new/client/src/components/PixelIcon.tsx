@@ -1,7 +1,7 @@
-import type { PixelMap16 } from "@/lib/kareIcons";
+import type { PixelMap } from "@/lib/kareIcons";
 
 type Props = {
-  map: PixelMap16;
+  map: PixelMap;
   /** CSS pixels per source pixel */
   scale?: number;
   fill?: string;
@@ -11,7 +11,7 @@ type Props = {
   className?: string;
 };
 
-/** Crisp nearest-neighbor render of a 16×16 Kare bitmap. */
+/** Crisp nearest-neighbor render of an N×N Kare bitmap. */
 export default function PixelIcon({
   map,
   scale = 16,
@@ -21,7 +21,8 @@ export default function PixelIcon({
   label,
   className = "",
 }: Props) {
-  const size = 16 * scale;
+  const n = map.length;
+  const size = n * scale;
 
   return (
     <div className={className}>
@@ -43,8 +44,8 @@ export default function PixelIcon({
         <div
           className="grid h-full w-full"
           style={{
-            gridTemplateColumns: `repeat(16, ${scale}px)`,
-            gridTemplateRows: `repeat(16, ${scale}px)`,
+            gridTemplateColumns: `repeat(${n}, ${scale}px)`,
+            gridTemplateRows: `repeat(${n}, ${scale}px)`,
           }}
         >
           {map.flatMap((row, y) =>

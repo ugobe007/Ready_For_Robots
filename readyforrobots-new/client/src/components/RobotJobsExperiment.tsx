@@ -10,7 +10,7 @@ import demo from "@/data/rdd_demo_jobs.json";
 import { trackRobotJobsFunnel, trackSignupStart } from "@/lib/siteAnalytics";
 import { mapUrlToEnvelope } from "@/lib/robotJobsEnvelopeMap";
 import PixelIcon from "@/components/PixelIcon";
-import { KARE_FACE } from "@/lib/kareIcons";
+import { FACE_WHITE, KARE_FACE } from "@/lib/kareIcons";
 
 type Profile = (typeof demo.profiles)[number];
 type Job = (typeof demo.jobs)[keyof typeof demo.jobs][number];
@@ -30,9 +30,9 @@ const panelClass =
   "overflow-hidden rounded-xl border border-slate-700/80 bg-[#0b162f]";
 const mutedClass = "text-sm text-slate-400";
 const titleClass = "font-display font-bold tracking-tight text-slate-100";
-/** Face on emerald CTAs — white pixels only. */
+/** Face on emerald CTAs — white stroke / eyes / mouth. */
 const faceOnCta = (
-  <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+  <PixelIcon map={KARE_FACE} scale={2} fill={FACE_WHITE} background="transparent" />
 );
 
 
@@ -520,7 +520,7 @@ export default function RobotJobsExperiment() {
       {step === "discovering" && (
         <div className="flex flex-1 flex-col items-center justify-center py-16 text-center" aria-live="polite">
           <div className="rounded-2xl bg-emerald-600 p-4">
-            <PixelIcon map={KARE_FACE} scale={4} fill="#ffffff" background="transparent" />
+            <PixelIcon map={KARE_FACE} scale={4} fill={FACE_WHITE} background="transparent" />
           </div>
           <p className="mt-6 text-lg font-semibold text-slate-100">
             Searching for work {robotName} can do…
@@ -592,7 +592,7 @@ export default function RobotJobsExperiment() {
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-emerald-600">
-              <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+              <PixelIcon map={KARE_FACE} scale={2} fill={FACE_WHITE} background="transparent" />
             </span>
             <Link href={signupHref} onClick={onSeeAll} className={ctaClass}>
               See all {totalJobs} jobs

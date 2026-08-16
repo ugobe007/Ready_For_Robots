@@ -1,15 +1,16 @@
 /**
- * Local review board for Susan Kare–style 16×16 RFR icons.
+ * Local review board for Susan Kare–style RFR icons.
  * Visit: http://127.0.0.1:5173/icon-review
+ * Face = 15×15 from branding/face-icon-reference.png
  */
 import PixelIcon from "@/components/PixelIcon";
-import { KARE_FACE, KARE_GRIPPER } from "@/lib/kareIcons";
+import { FACE_EMERALD, FACE_WHITE, KARE_FACE, KARE_GRIPPER } from "@/lib/kareIcons";
 
 const SWATCHES = [
-  { name: "Ink", fill: "#0a0a0a", bg: "#ffffff" },
-  { name: "On navy", fill: "#f8fafc", bg: "#07111f" },
-  { name: "Amber action", fill: "#f59e0b", bg: "#07111f" },
-  { name: "Emerald signal", fill: "#3ecf8e", bg: "#07111f" },
+  { name: "Ink on paper", fill: "#0a0a0a", bg: "#ffffff" },
+  { name: "Emerald on navy (dark bg)", fill: FACE_EMERALD, bg: "#081126" },
+  { name: "White on navy (dark bg)", fill: FACE_WHITE, bg: "#081126" },
+  { name: "White on emerald CTA", fill: FACE_WHITE, bg: "#059669" },
 ] as const;
 
 export default function IconReview() {
@@ -67,8 +68,14 @@ export default function IconReview() {
             ))}
             {[1, 2, 3, 4].map((s) => (
               <div key={`f-${s}`} className="text-center">
-                <PixelIcon map={KARE_FACE} scale={s} fill="#3ecf8e" background="#07111f" />
-                <p className="mt-2 font-mono text-[10px] text-slate-600">face {16 * s}px</p>
+                <PixelIcon map={KARE_FACE} scale={s} fill={FACE_EMERALD} background="#07111f" />
+                <p className="mt-2 font-mono text-[10px] text-slate-600">face {15 * s}px</p>
+              </div>
+            ))}
+            {[1, 2, 3, 4].map((s) => (
+              <div key={`fw-${s}`} className="text-center">
+                <PixelIcon map={KARE_FACE} scale={s} fill={FACE_WHITE} background="#059669" />
+                <p className="mt-2 font-mono text-[10px] text-slate-600">white {15 * s}px</p>
               </div>
             ))}
           </div>
