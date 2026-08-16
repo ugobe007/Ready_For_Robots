@@ -21,7 +21,7 @@ const DISCOVER_MS = 1800;
 
 /** Dark navy system — Home / Login / Signup (`#081126` / `#0b162f`). */
 const ctaClass =
-  "inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-400 px-5 py-3 text-sm font-bold text-[#06261f] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40";
 const eyebrowClass =
   "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400";
 const proofCardClass =
@@ -30,6 +30,10 @@ const panelClass =
   "overflow-hidden rounded-xl border border-slate-700/80 bg-[#0b162f]";
 const mutedClass = "text-sm text-slate-400";
 const titleClass = "font-display font-bold tracking-tight text-slate-100";
+/** Face on emerald CTAs — white pixels only. */
+const faceOnCta = (
+  <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+);
 
 
 function profileByKey(key: string): Profile | undefined {
@@ -381,9 +385,7 @@ export default function RobotJobsExperiment() {
               disabled={!url.trim()}
               className={ctaClass}
             >
-              <span className="inline-flex rounded-md bg-[#06261f]/25 p-0.5">
-                <PixelIcon map={KARE_FACE} scale={2} fill="#06261f" background="transparent" />
-              </span>
+              {faceOnCta}
               Find Jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
@@ -497,9 +499,7 @@ export default function RobotJobsExperiment() {
           <p className="mt-6 text-sm text-slate-400">Looks right?</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={onConfirmCapabilities} className={ctaClass}>
-              <span className="inline-flex rounded-md bg-[#06261f]/25 p-0.5">
-                <PixelIcon map={KARE_FACE} scale={2} fill="#06261f" background="transparent" />
-              </span>
+              {faceOnCta}
               Find Jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
@@ -519,8 +519,8 @@ export default function RobotJobsExperiment() {
 
       {step === "discovering" && (
         <div className="flex flex-1 flex-col items-center justify-center py-16 text-center" aria-live="polite">
-          <div className="rounded-2xl bg-emerald-400 p-4 shadow-[0_20px_45px_-20px_rgba(52,211,153,0.7)]">
-            <PixelIcon map={KARE_FACE} scale={4} fill="#06261f" background="transparent" />
+          <div className="rounded-2xl bg-emerald-600 p-4">
+            <PixelIcon map={KARE_FACE} scale={4} fill="#ffffff" background="transparent" />
           </div>
           <p className="mt-6 text-lg font-semibold text-slate-100">
             Searching for work {robotName} can do…
@@ -591,8 +591,8 @@ export default function RobotJobsExperiment() {
             the rest.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-emerald-400">
-              <PixelIcon map={KARE_FACE} scale={2} fill="#06261f" background="transparent" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-emerald-600">
+              <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
             </span>
             <Link href={signupHref} onClick={onSeeAll} className={ctaClass}>
               See all {totalJobs} jobs
