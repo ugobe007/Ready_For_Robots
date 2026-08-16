@@ -19,15 +19,17 @@ type Step = "enter" | "unsupported" | "capabilities" | "discovering" | "jobs" | 
 const PREVIEW_FREE = 5;
 const DISCOVER_MS = 1800;
 
-/** Primary CTA — same emerald as site “Find leads”; never gray when empty. */
+/** Dark navy system — Home / Login / Signup (`#081126` / `#0b162f`). */
 const ctaClass =
-  "inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-55";
+  "inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-400 px-5 py-3 text-sm font-bold text-[#06261f] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40";
 const eyebrowClass =
-  "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
+  "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400";
 const proofCardClass =
-  "group flex items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-left shadow-sm transition hover:border-emerald-500 hover:bg-emerald-50/60";
+  "group flex items-center justify-between rounded-xl border border-slate-600 bg-[#0b162f] px-4 py-3.5 text-left transition hover:border-emerald-400/60 hover:bg-[#0d1c38]";
 const panelClass =
-  "overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm";
+  "overflow-hidden rounded-xl border border-slate-700/80 bg-[#0b162f]";
+const mutedClass = "text-sm text-slate-400";
+const titleClass = "font-display font-bold tracking-tight text-slate-100";
 
 
 function profileByKey(key: string): Profile | undefined {
@@ -353,14 +355,12 @@ export default function RobotJobsExperiment() {
     <section className="flex min-h-[70vh] flex-col" aria-label="Find jobs for your robot">
       {step === "enter" && (
         <div className="flex flex-1 flex-col">
-          <h1 className="font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Find jobs for your robot.
-          </h1>
-          <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+          <h1 className={`${titleClass} text-3xl sm:text-4xl`}>Find jobs for your robot.</h1>
+          <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
             Give us your robot. We&apos;ll search for real work that matches what it can do.
           </p>
 
-          <label className="mt-10 block text-xs font-semibold text-slate-700" htmlFor="robot-url">
+          <label className="mt-10 block text-xs font-semibold text-slate-300" htmlFor="robot-url">
             Paste robot product URL
           </label>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
@@ -373,7 +373,7 @@ export default function RobotJobsExperiment() {
                 if (e.key === "Enter") onContinueUrl();
               }}
               placeholder="https://yourrobot.com/product"
-              className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-600/20"
+              className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-[#0a1327] px-3.5 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20"
             />
             <button
               type="button"
@@ -381,8 +381,8 @@ export default function RobotJobsExperiment() {
               disabled={!url.trim()}
               className={ctaClass}
             >
-              <span className="inline-flex rounded-md bg-white/20 p-0.5">
-                <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+              <span className="inline-flex rounded-md bg-[#06261f]/25 p-0.5">
+                <PixelIcon map={KARE_FACE} scale={2} fill="#06261f" background="transparent" />
               </span>
               Find Jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
@@ -399,13 +399,13 @@ export default function RobotJobsExperiment() {
                 className={proofCardClass}
               >
                 <span>
-                  <span className="block text-sm font-semibold text-slate-900">{p.display_name}</span>
-                  <span className="mt-0.5 block text-xs font-semibold text-emerald-700">
+                  <span className="block text-sm font-semibold text-slate-100">{p.display_name}</span>
+                  <span className="mt-0.5 block text-xs font-semibold text-emerald-300">
                     {p.job_count_total} jobs found
                   </span>
                 </span>
                 <ArrowRight
-                  className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:text-emerald-600"
+                  className="h-4 w-4 shrink-0 text-slate-500 transition group-hover:text-emerald-300"
                   aria-hidden
                 />
               </button>
@@ -417,13 +417,13 @@ export default function RobotJobsExperiment() {
             {DISCOVERED_WORK.map((w, i) => (
               <li
                 key={w.title}
-                className={`px-4 py-4 sm:px-5 ${i > 0 ? "border-t border-slate-200" : ""}`}
+                className={`px-4 py-4 sm:px-5 ${i > 0 ? "border-t border-slate-700/80" : ""}`}
               >
                 <div className="flex gap-3">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600" aria-hidden />
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden />
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{w.title}</p>
-                    <p className="mt-1 text-sm text-slate-600">{w.context}</p>
+                    <p className="text-sm font-semibold text-slate-100">{w.title}</p>
+                    <p className="mt-1 text-sm text-slate-400">{w.context}</p>
                     <p className="mt-0.5 font-mono text-[11px] text-slate-500">{w.path}</p>
                   </div>
                 </div>
@@ -439,11 +439,11 @@ export default function RobotJobsExperiment() {
 
       {step === "unsupported" && (
         <div className="flex flex-1 flex-col">
-          <p className="text-sm text-slate-500">We analyzed {robotName}.</p>
-          <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <p className={mutedClass}>We analyzed {robotName}.</p>
+          <h2 className={`mt-2 ${titleClass} text-2xl sm:text-3xl`}>
             We don&apos;t have jobs for this robot yet
           </h2>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
             {unsupportedReason || "No matching job library for this robot yet"}. Right now we can show
             real jobs for warehouse AMRs and floor-scrubbing robots.
           </p>
@@ -457,13 +457,13 @@ export default function RobotJobsExperiment() {
                 className={proofCardClass}
               >
                 <span>
-                  <span className="block text-sm font-semibold text-slate-900">{p.display_name}</span>
-                  <span className="mt-0.5 block text-xs font-semibold text-emerald-700">
+                  <span className="block text-sm font-semibold text-slate-100">{p.display_name}</span>
+                  <span className="mt-0.5 block text-xs font-semibold text-emerald-300">
                     {p.job_count_total} jobs found
                   </span>
                 </span>
                 <ArrowRight
-                  className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:text-emerald-600"
+                  className="h-4 w-4 shrink-0 text-slate-500 transition group-hover:text-emerald-300"
                   aria-hidden
                 />
               </button>
@@ -475,7 +475,7 @@ export default function RobotJobsExperiment() {
               setStep("enter");
               setUnsupportedReason(null);
             }}
-            className="mt-8 text-sm font-medium text-emerald-700 underline-offset-2 hover:underline"
+            className="mt-8 text-sm font-medium text-emerald-300 underline-offset-2 hover:underline"
           >
             Try another URL
           </button>
@@ -484,23 +484,21 @@ export default function RobotJobsExperiment() {
 
       {step === "capabilities" && profile && (
         <div className="flex flex-1 flex-col">
-          <p className="text-sm text-slate-500">We analyzed {robotName}.</p>
-          <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            It appears capable of:
-          </h2>
+          <p className={mutedClass}>We analyzed {robotName}.</p>
+          <h2 className={`mt-2 ${titleClass} text-2xl sm:text-3xl`}>It appears capable of:</h2>
           <ul className={`mt-6 space-y-3 ${panelClass} p-4 sm:p-5`}>
             {profile.can_actions.map((action) => (
-              <li key={action} className="flex items-start gap-2.5 text-sm text-slate-800">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+              <li key={action} className="flex items-start gap-2.5 text-sm text-slate-200">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" aria-hidden />
                 <span>{action}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-6 text-sm text-slate-500">Looks right?</p>
+          <p className="mt-6 text-sm text-slate-400">Looks right?</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={onConfirmCapabilities} className={ctaClass}>
-              <span className="inline-flex rounded-md bg-white/20 p-0.5">
-                <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+              <span className="inline-flex rounded-md bg-[#06261f]/25 p-0.5">
+                <PixelIcon map={KARE_FACE} scale={2} fill="#06261f" background="transparent" />
               </span>
               Find Jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
@@ -511,7 +509,7 @@ export default function RobotJobsExperiment() {
                 setStep("enter");
                 setProfileKey(null);
               }}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="rounded-lg border border-slate-600 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:bg-slate-800/50"
             >
               Back
             </button>
@@ -521,13 +519,13 @@ export default function RobotJobsExperiment() {
 
       {step === "discovering" && (
         <div className="flex flex-1 flex-col items-center justify-center py-16 text-center" aria-live="polite">
-          <div className="rounded-2xl bg-emerald-600 p-4 shadow-md">
-            <PixelIcon map={KARE_FACE} scale={4} fill="#ffffff" background="transparent" />
+          <div className="rounded-2xl bg-emerald-400 p-4 shadow-[0_20px_45px_-20px_rgba(52,211,153,0.7)]">
+            <PixelIcon map={KARE_FACE} scale={4} fill="#06261f" background="transparent" />
           </div>
-          <p className="mt-6 text-lg font-semibold text-slate-900">
+          <p className="mt-6 text-lg font-semibold text-slate-100">
             Searching for work {robotName} can do…
           </p>
-          <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
+          <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
             Matching its capabilities to localized jobs in the open economy.
           </p>
         </div>
@@ -535,9 +533,8 @@ export default function RobotJobsExperiment() {
 
       {step === "jobs" && profile && job && (
         <div className="flex flex-1 flex-col">
-          <p className="text-sm text-slate-500">
-            We found{" "}
-            <span className="font-semibold text-slate-900">{totalJobs}</span> jobs matching{" "}
+          <p className={mutedClass}>
+            We found <span className="font-semibold text-slate-100">{totalJobs}</span> jobs matching{" "}
             {robotName}&apos;s capabilities.
           </p>
           <p className="mt-1 text-xs font-medium text-slate-500">
@@ -545,10 +542,8 @@ export default function RobotJobsExperiment() {
           </p>
 
           <article className={`mt-6 flex-1 ${panelClass} p-5 sm:p-6`}>
-            <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-              {job.robot_compatible_task}
-            </h2>
-            <p className="mt-2 text-sm font-medium text-slate-600">
+            <h2 className={`${titleClass} text-xl sm:text-2xl`}>{job.robot_compatible_task}</h2>
+            <p className="mt-2 text-sm font-medium text-slate-400">
               {job.company_name}
               {job.locality ? ` · ${job.locality}` : ""}
             </p>
@@ -556,23 +551,23 @@ export default function RobotJobsExperiment() {
             <dl className="mt-6 space-y-4 text-sm">
               <div>
                 <dt className={eyebrowClass}>Why we believe it exists</dt>
-                <dd className="mt-1.5 leading-relaxed text-slate-800">{job.why_job}</dd>
+                <dd className="mt-1.5 leading-relaxed text-slate-200">{job.why_job}</dd>
               </div>
               <div>
                 <dt className={eyebrowClass}>Why {robotName} could do it</dt>
-                <dd className="mt-1.5 leading-relaxed text-slate-800">
+                <dd className="mt-1.5 leading-relaxed text-slate-200">
                   {whyYourRobot(job, profile.capability_family)}
                 </dd>
               </div>
               {job.unknowns?.length ? (
                 <div>
                   <dt className={eyebrowClass}>What we don&apos;t know</dt>
-                  <dd className="mt-1.5 leading-relaxed text-slate-800">{job.unknowns.join(" · ")}</dd>
+                  <dd className="mt-1.5 leading-relaxed text-slate-200">{job.unknowns.join(" · ")}</dd>
                 </div>
               ) : null}
               <div>
                 <dt className={eyebrowClass}>Worth investigating</dt>
-                <dd className="mt-1.5 text-sm font-bold tracking-wide text-emerald-700">
+                <dd className="mt-1.5 text-sm font-bold tracking-wide text-emerald-300">
                   {worthLabel(job)}
                 </dd>
               </div>
@@ -588,16 +583,16 @@ export default function RobotJobsExperiment() {
 
       {step === "gate" && profile && (
         <div className="flex flex-1 flex-col items-start justify-center">
-          <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <h2 className={`${titleClass} text-2xl sm:text-3xl`}>
             See all {totalJobs} jobs for {robotName}
           </h2>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
             You&apos;ve seen {previewCount} jobs matched to its capabilities. Create an account to unlock
             the rest.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-emerald-600 shadow-sm">
-              <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-emerald-400">
+              <PixelIcon map={KARE_FACE} scale={2} fill="#06261f" background="transparent" />
             </span>
             <Link href={signupHref} onClick={onSeeAll} className={ctaClass}>
               See all {totalJobs} jobs
@@ -611,7 +606,7 @@ export default function RobotJobsExperiment() {
               setStep("jobs");
               recordJobView(0);
             }}
-            className="mt-4 text-sm font-medium text-emerald-700 underline-offset-2 hover:underline"
+            className="mt-4 text-sm font-medium text-emerald-300 underline-offset-2 hover:underline"
           >
             Review jobs again
           </button>
@@ -623,7 +618,7 @@ export default function RobotJobsExperiment() {
               setJobIndex(0);
               setUrl("");
             }}
-            className="mt-8 text-xs font-medium text-slate-400 transition hover:text-slate-600"
+            className="mt-8 text-xs font-medium text-slate-500 transition hover:text-slate-300"
           >
             Try another robot
           </button>
@@ -632,3 +627,4 @@ export default function RobotJobsExperiment() {
     </section>
   );
 }
+

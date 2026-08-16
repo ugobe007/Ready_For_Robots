@@ -9,6 +9,7 @@ const DARK_HERO_PATHS = new Set([
   "/results",
   "/intelligence",
   "/compare",
+  "/experiment",
 ]);
 
 export function isDarkHeroRoute(pathname: string): boolean {
