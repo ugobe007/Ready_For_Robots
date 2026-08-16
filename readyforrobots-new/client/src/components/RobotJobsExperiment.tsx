@@ -85,23 +85,27 @@ export function robotNameFromUrl(raw: string): string | null {
 const DISCOVERED_WORK = [
   {
     title: "Return empty totes",
-    context: "Specialty pharma · Newark, DE",
-    path: "Pack → operating area",
+    path: "Packing → picking",
   },
   {
-    title: "Deliver finished kits",
-    context: "Aerospace manufacturing · Foley, AL",
-    path: "Kitting → production line",
+    title: "Deliver production kits",
+    path: "Kitting → assembly line",
   },
   {
     title: "Move medication carts",
-    context: "Hospital operations · Newark, DE",
     path: "Pharmacy → patient units",
   },
   {
     title: "Stack finished cases",
-    context: "Manufacturing · Kinston, NC",
     path: "Packaging line → pallet",
+  },
+  {
+    title: "Scrub terminal floors",
+    path: "Concourse · overnight",
+  },
+  {
+    title: "Inspect equipment",
+    path: "Recurring inspection route",
   },
 ] as const;
 
@@ -453,11 +457,11 @@ export default function RobotJobsExperiment({ slug }: Props) {
         <div className="flex flex-1 flex-col">
           <h1 className={`${titleClass} text-3xl sm:text-4xl`}>Find jobs for your robot.</h1>
           <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-            Give us your robot. We&apos;ll search for real work that matches what it can do.
+            Show us your robot. We&apos;ll find jobs it can do.
           </p>
 
-          <label className="mt-10 block text-xs font-semibold text-slate-300" htmlFor="robot-url">
-            Paste robot product URL
+          <label className="mt-10 block text-sm font-semibold text-slate-200" htmlFor="robot-url">
+            What robot do you want to find jobs for?
           </label>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
             <input
@@ -468,7 +472,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") onContinueUrl();
               }}
-              placeholder="https://yourrobot.com/product"
+              placeholder="Paste a robot product page"
               className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-[#0a1327] px-3.5 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20"
             />
             <button
@@ -483,10 +487,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
             </button>
           </div>
 
-          <p className={`mt-12 ${eyebrowClass}`}>See what we&apos;ve already found</p>
-          <ProofCards src={src} />
-
-          <p className={`mt-14 ${eyebrowClass}`}>Real work we&apos;ve discovered</p>
+          <p className={`mt-14 ${eyebrowClass}`}>What does a robot job look like?</p>
           <ul className={`mt-4 ${panelClass}`}>
             {DISCOVERED_WORK.map((w, i) => (
               <li
@@ -497,7 +498,6 @@ export default function RobotJobsExperiment({ slug }: Props) {
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden />
                   <div>
                     <p className="text-sm font-semibold text-slate-100">{w.title}</p>
-                    <p className="mt-1 text-sm text-slate-400">{w.context}</p>
                     <p className="mt-0.5 font-mono text-[11px] text-slate-500">{w.path}</p>
                   </div>
                 </div>
@@ -506,7 +506,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
           </ul>
 
           <p className="mt-10 text-sm leading-relaxed text-slate-500">
-            We find the work first. Then determine whether your robot fits.
+            ReadyForRobots finds physical work and determines which robots can do it.
           </p>
         </div>
       )}
