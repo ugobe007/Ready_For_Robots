@@ -76,3 +76,22 @@ def test_no_dexmate_hostname_shortcut():
     keys = {c.key for c in profile.capabilities}
     assert "dual_arm" not in keys
     assert "dexterous" not in keys
+
+
+def test_follow_product_link_from_thin_homepage():
+    """Thin marketing shell → follow same-host /product/… page (no OEM allowlist)."""
+    thin = (
+        "<html><head><title>Example Robotics</title></head>"
+        '<body><a href="./product/vega">Product</a><p>Welcome home.</p></body></html>'
+    )
+
+    def fetcher(url: str):
+        if "/product/" in url:
+            return MOBILE_MANIP_HTML, url
+        return thin, url
+
+    result = match_robot_url("https://example.com/", fetcher=fetcher)
+    assert result["state"] in {"matches", "thin_corpus"}
+    assert len(result["jobs"]) > 0
+    fam_ids = {f["id"] for f in result["families"]}
+    assert fam_ids & {"mobile_manipulation", "manipulator"}
