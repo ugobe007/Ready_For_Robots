@@ -57,12 +57,13 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const openChat = useCallback(() => setOpen(true), []);
   const onPipeline = location === "/pipeline" || location.startsWith("/admin/prospects");
+  const hideFab = location === "/experiment" || location.startsWith("/experiment?");
 
   return (
     <ScoutChatContext.Provider value={{ openChat }}>
       {children}
       {open && <ScoutPanel onClose={() => setOpen(false)} />}
-      {!open && (
+      {!open && !hideFab && (
         <button
           type="button"
           onClick={() => setOpen(true)}

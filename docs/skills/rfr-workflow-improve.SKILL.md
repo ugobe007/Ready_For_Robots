@@ -18,6 +18,8 @@ Weekly meta-pass: inspect recent Hermes cron outputs + RFR market-graph status, 
 ## Operating priority (2026-08-15)
 
 Product lock: `CAPABILITIES → FIND WORK` · traffic on `/experiment` · See All CTR by persona.  
+**Traffic vs product:** Propose discovery-content drafts (from scored ledgers), outreach/instrumentation/reporting fixes. Do **not** propose product/channel/scoring changes because early CTR is soft. Do **not** draft generic robotics-trends posts. Low traffic → better discoveries + cohorts, not rewrite the experiment.
+
 **Do not propose:** OEM scrape 11–50, more distributors, Channel Match scoring, distributor/integrator UI, RDD Fly migrate, ontology/capability-layer expansion. Those are frozen until traffic evidence. Prefer proposals that improve **instrumentation, reliability of existing crons, or reading `/experiment` funnel events**.
 
 ## When to Use

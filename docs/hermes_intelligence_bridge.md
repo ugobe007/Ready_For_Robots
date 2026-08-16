@@ -3,11 +3,22 @@
 **Operating priority (2026-08-15):** Traffic experiment on `/experiment` beats research expansion.  
 Read [`CAPABILITY_MODEL.md`](./CAPABILITY_MODEL.md) · [`EXPERIMENT_MODE.md`](./EXPERIMENT_MODE.md) · [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md).
 
-Product hypothesis: `CAPABILITIES → FIND WORK` (OEM / distributor / integrator entry points — one engine).  
-Primary metric: **See All CTR** (`rdd_see_all_clicked`), segmented by `persona` then capability family.  
-**Frozen:** OEM 11–50, more distributors, Channel Match scoring, distributor UI, RDD Fly migrate, new ontology layers. Next decision from **behavior**, not another hypothesis.
+| | |
+|--|--|
+| Production | `/experiment` live |
+| Promise | Find Jobs for Robots |
+| Engine | `CAPABILITIES → FIND WORK` |
+| Audience | OEM · Distributor · Integrator |
+| Primary behavior | `rdd_see_all_clicked` |
+| Decision source | observed behavior |
 
-Full agent roster: find work, qualify, match vendors, find decision makers, ingest deployment evidence, track vendor/customer news, then improve the loop and signup UX — **without expanding product surface until traffic evidence lands**.
+**Traffic vs product:** Hermes may find prospects, draft **discovery content** from scored jobs (not promo spam), build outreach cohorts, monitor `rdd_*`, and report. Hermes must **not** respond to weak early numbers by changing the experiment (features, crawls, scoring). Soft traffic → better discoveries, not product rewrite. After enough behavior: *Who wants this most — and what kind of work makes them want more?*
+
+Acquisition: [`DISCOVERY_CONTENT.md`](./DISCOVERY_CONTENT.md) · first sprint [`CONTENT_SPRINT.md`](./CONTENT_SPRINT.md) — editorial = **work**; content = sensor; Content→Work funnel by `src`.
+
+**Frozen:** OEM 11–50, more distributors, Channel Match scoring, distributor UI, RDD Fly migrate, new ontology layers.
+
+Full agent roster: find work, qualify, match vendors, find decision makers, ingest deployment evidence, track vendor/customer news — and **operate traffic** — **without expanding product surface until traffic evidence lands**.
 
 ```
 Hermes skills (cron)                    ReadyForRobots (Fly)

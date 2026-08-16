@@ -9,6 +9,8 @@ import { ArrowRight, Check, ChevronRight } from "lucide-react";
 import demo from "@/data/rdd_demo_jobs.json";
 import { trackRobotJobsFunnel, trackSignupStart } from "@/lib/siteAnalytics";
 import { mapUrlToEnvelope } from "@/lib/robotJobsEnvelopeMap";
+import PixelIcon from "@/components/PixelIcon";
+import { KARE_FACE } from "@/lib/kareIcons";
 
 type Profile = (typeof demo.profiles)[number];
 type Job = (typeof demo.jobs)[keyof typeof demo.jobs][number];
@@ -56,6 +58,29 @@ export function robotNameFromUrl(raw: string): string | null {
   }
   return null;
 }
+
+const DISCOVERED_WORK = [
+  {
+    title: "Return empty totes",
+    context: "Specialty pharma · Newark, Delaware",
+    path: "Pack → operating area",
+  },
+  {
+    title: "Deliver finished kits",
+    context: "Aerospace manufacturing · Foley, Alabama",
+    path: "Kitting → production line",
+  },
+  {
+    title: "Move medication carts",
+    context: "Hospital operations · Newark, Delaware",
+    path: "Pharmacy → patient units",
+  },
+  {
+    title: "Stack finished cases",
+    context: "Manufacturing · Kinston, North Carolina",
+    path: "Packaging line → pallet",
+  },
+] as const;
 
 function whyYourRobot(job: Job, family: string): string {
   if (family === "floor_scrub") {
@@ -314,23 +339,20 @@ export default function RobotJobsExperiment() {
   })();
 
   return (
-    <section
-      className="flex min-h-[520px] flex-col rounded-2xl border border-gray-200 bg-white px-5 py-6 sm:px-7 sm:py-8"
-      aria-label="Find jobs for your robot"
-    >
+    <section className="flex min-h-[70vh] flex-col" aria-label="Find jobs for your robot">
       {step === "enter" && (
         <div className="flex flex-1 flex-col">
-          <h2 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
-            Find jobs for your robot
-          </h2>
-          <p className="mt-2 max-w-md text-sm text-gray-500">
-            Give us your robot. We&apos;ll find work it can do.
+          <h1 className="font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Find jobs for your robot.
+          </h1>
+          <p className="mt-3 max-w-xl text-base text-gray-600 sm:text-lg">
+            Give us your robot. We&apos;ll search for real work that matches what it can do.
           </p>
 
-          <label className="mt-8 block text-xs font-medium text-gray-600" htmlFor="robot-url">
-            Robot product URL
+          <label className="mt-10 block text-xs font-medium text-gray-600" htmlFor="robot-url">
+            Paste robot product URL
           </label>
-          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
             <input
               id="robot-url"
               type="url"
@@ -339,62 +361,96 @@ export default function RobotJobsExperiment() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") onContinueUrl();
               }}
-              placeholder="https://robotcompany.com/product"
-              className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none ring-emerald-600/30 placeholder:text-gray-400 focus:ring-2"
+              placeholder="https://yourrobot.com/product"
+              className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3.5 py-3 text-sm text-gray-900 outline-none ring-emerald-600/30 placeholder:text-gray-400 focus:ring-2"
             />
             <button
               type="button"
               onClick={onContinueUrl}
               disabled={!url.trim()}
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Continue
+              <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+              Find Jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
           </div>
 
-          <p className="mt-10 text-xs font-medium uppercase tracking-wide text-gray-400">
-            Or try a known robot
+          <p className="mt-12 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+            See what we&apos;ve already found
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {demo.profiles.map((p) => (
               <button
                 key={p.profile_key}
                 type="button"
                 onClick={() => onPickDemo(p.profile_key)}
-                className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-left text-sm text-gray-800 hover:border-emerald-300 hover:bg-emerald-50/60"
+                className="group flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-left transition hover:border-emerald-300 hover:bg-emerald-50/50"
               >
-                <span className="font-medium">{p.display_name}</span>
-                <span className="mt-0.5 block text-xs text-gray-500">{p.manufacturer}</span>
+                <span>
+                  <span className="block text-sm font-semibold text-gray-900">{p.display_name}</span>
+                  <span className="mt-0.5 block text-xs text-gray-500">
+                    {p.job_count_total} jobs found
+                  </span>
+                </span>
+                <ArrowRight
+                  className="h-4 w-4 shrink-0 text-gray-300 transition group-hover:text-emerald-600"
+                  aria-hidden
+                />
               </button>
             ))}
           </div>
+
+          <p className="mt-14 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+            Jobs ReadyForRobots has discovered
+          </p>
+          <ul className="mt-4 space-y-0 divide-y divide-gray-100 border-y border-gray-100">
+            {DISCOVERED_WORK.map((w) => (
+              <li key={w.title} className="py-4">
+                <p className="text-sm font-semibold uppercase tracking-wide text-gray-900">{w.title}</p>
+                <p className="mt-1 text-sm text-gray-600">{w.context}</p>
+                <p className="mt-0.5 text-xs text-gray-400">{w.path}</p>
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-10 text-sm text-gray-500">
+            We find the work first. Then determine whether your robot fits.
+          </p>
         </div>
       )}
 
       {step === "unsupported" && (
         <div className="flex flex-1 flex-col">
           <p className="text-sm text-gray-500">We analyzed {robotName}.</p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
+          <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
             We don&apos;t have jobs for this robot yet
           </h2>
           <p className="mt-3 max-w-md text-sm text-gray-500">
             {unsupportedReason || "No matching job library for this robot yet"}. Right now we can show
             real jobs for warehouse AMRs and floor-scrubbing robots.
           </p>
-          <p className="mt-8 text-xs font-medium uppercase tracking-wide text-gray-400">
-            Try one we support
+          <p className="mt-10 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+            See what we&apos;ve already found
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {demo.profiles.map((p) => (
               <button
                 key={p.profile_key}
                 type="button"
                 onClick={() => onPickDemo(p.profile_key)}
-                className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-left text-sm text-gray-800 hover:border-emerald-300 hover:bg-emerald-50/60"
+                className="group flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-left transition hover:border-emerald-300 hover:bg-emerald-50/50"
               >
-                <span className="font-medium">{p.display_name}</span>
-                <span className="mt-0.5 block text-xs text-gray-500">{p.manufacturer}</span>
+                <span>
+                  <span className="block text-sm font-semibold text-gray-900">{p.display_name}</span>
+                  <span className="mt-0.5 block text-xs text-gray-500">
+                    {p.job_count_total} jobs found
+                  </span>
+                </span>
+                <ArrowRight
+                  className="h-4 w-4 shrink-0 text-gray-300 transition group-hover:text-emerald-600"
+                  aria-hidden
+                />
               </button>
             ))}
           </div>
@@ -414,7 +470,7 @@ export default function RobotJobsExperiment() {
       {step === "capabilities" && profile && (
         <div className="flex flex-1 flex-col">
           <p className="text-sm text-gray-500">We analyzed {robotName}.</p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
+          <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
             It appears capable of:
           </h2>
           <ul className="mt-5 space-y-2.5">
@@ -430,9 +486,10 @@ export default function RobotJobsExperiment() {
             <button
               type="button"
               onClick={onConfirmCapabilities}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700"
             >
-              Find jobs for {robotName}
+              <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+              Find Jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
             <button
@@ -441,7 +498,7 @@ export default function RobotJobsExperiment() {
                 setStep("enter");
                 setProfileKey(null);
               }}
-              className="rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
+              className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 hover:bg-gray-50"
             >
               Back
             </button>
@@ -451,10 +508,9 @@ export default function RobotJobsExperiment() {
 
       {step === "discovering" && (
         <div className="flex flex-1 flex-col items-center justify-center py-16 text-center" aria-live="polite">
-          <div
-            className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-200 border-t-emerald-700"
-            aria-hidden
-          />
+          <div className="rounded-xl border border-emerald-200 bg-white p-3 shadow-sm">
+            <PixelIcon map={KARE_FACE} scale={4} fill="#059669" background="transparent" />
+          </div>
           <p className="mt-6 text-lg font-medium text-gray-900">
             Searching for work {robotName} can do…
           </p>
@@ -476,7 +532,7 @@ export default function RobotJobsExperiment() {
           </p>
 
           <article className="mt-6 flex-1">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 sm:text-xl">
+            <h2 className="font-display text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
               {job.robot_compatible_task}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
@@ -511,7 +567,7 @@ export default function RobotJobsExperiment() {
                 <dt className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                   Worth investigating
                 </dt>
-                <dd className="mt-1 font-semibold tracking-wide text-emerald-800">
+                <dd className="mt-1 font-semibold tracking-wide text-emerald-700">
                   {worthLabel(job)}
                 </dd>
               </div>
@@ -521,9 +577,9 @@ export default function RobotJobsExperiment() {
           <button
             type="button"
             onClick={onNextJob}
-            className="mt-8 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-700 px-4 py-3 text-sm font-medium text-white hover:bg-emerald-800 sm:w-auto"
+            className="mt-8 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 sm:w-auto"
           >
-            {jobIndex + 1 >= previewCount ? "Continue" : "See next job"}
+            {jobIndex + 1 >= previewCount ? "See all jobs" : "See next job"}
             <ChevronRight className="h-4 w-4" aria-hidden />
           </button>
         </div>
@@ -531,21 +587,24 @@ export default function RobotJobsExperiment() {
 
       {step === "gate" && profile && (
         <div className="flex flex-1 flex-col items-start justify-center">
-          <h2 className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
             See all {totalJobs} jobs for {robotName}
           </h2>
           <p className="mt-3 max-w-md text-sm text-gray-500">
             You&apos;ve seen {previewCount} jobs matched to its capabilities. Create an account to unlock
             the rest.
           </p>
-          <Link
-            href={signupHref}
-            onClick={onSeeAll}
-            className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-5 py-3 text-sm font-medium text-white hover:bg-emerald-800"
-          >
-            See all {totalJobs} jobs
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <PixelIcon map={KARE_FACE} scale={2} fill="#059669" background="transparent" className="shrink-0" />
+            <Link
+              href={signupHref}
+              onClick={onSeeAll}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700"
+            >
+              See all {totalJobs} jobs
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </div>
           <button
             type="button"
             onClick={() => {

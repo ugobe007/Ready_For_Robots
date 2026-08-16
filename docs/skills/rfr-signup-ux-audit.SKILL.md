@@ -23,6 +23,8 @@ Read `docs/EXPERIMENT_MODE.md` · `docs/TRAFFIC_SPRINT.md` · `docs/CAPABILITY_M
 Prioritize continuity: land → submit → capabilities → jobs → **See All** → signup (`src=robot_jobs`, preserve `persona` / `src`).  
 Do **not** recommend Cal/SIGNAL/CRM/distributor-UI expansions while the traffic sprint is the decision source. Next product decision comes from **behavior** (See All CTR by persona), not new hypotheses.
 
+**Traffic vs product:** If volume is low, recommend **outreach / cohort / link tagging** — not a redesign of `/experiment`. Soft early CTR with tiny N is not a product change signal.
+
 ## When to Use
 
 - Monday cron / "audit signup UX"

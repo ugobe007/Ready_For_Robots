@@ -121,10 +121,14 @@ Until Cohort 1–3: traffic, segmentation, behavior. **No more expansion.**
 |--------|--|
 | Product hypothesis | `CAPABILITIES → FIND WORK` |
 | Experiment | matched work → desire to see more |
-| Primary metric | See All CTR |
+| Primary metric | See All CTR (`rdd_see_all_clicked`) |
 | First segmentation | OEM vs distributor vs integrator |
 | Second segmentation | capability-family engagement within persona |
+| Operating activity | Get qualified people into `/experiment` · observe · accumulate |
+| First real question (after evidence) | Who wants this most — and what kind of work makes them want more? |
+
+**Traffic vs product:** generating traffic via **discovery content** / cohorts / funnel reports is allowed. Changing the experiment because early numbers look weak is not. See [`DISCOVERY_CONTENT.md`](./DISCOVERY_CONTENT.md).
 
 No additional product, channel, ontology, or discovery work until traffic gives evidence.
 
-See [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md) · [`EXPERIMENT_MODE.md`](./EXPERIMENT_MODE.md)
+See [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md) · [`EXPERIMENT_MODE.md`](./EXPERIMENT_MODE.md) · [`hermes_intelligence_bridge.md`](./hermes_intelligence_bridge.md)

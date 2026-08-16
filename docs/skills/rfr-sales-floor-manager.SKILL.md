@@ -64,7 +64,7 @@ Count HOT leads; sample how many expose `hermes_qualify` / `hermes_buying_window
 
 Read `reports/harness_snapshot_latest.json` → `conversion.signup_funnel_7d` (`signup_start`, `signup_complete`, `first_save`) when present. Do not fabricate.
 
-Also note `/experiment` funnel if visit events show `rdd_*` / `funnel: robot_jobs` — **See All CTR by persona** is the active product test (`docs/TRAFFIC_SPRINT.md`). Do not recommend channel/product expansion while that test is running.
+Also note `/experiment` funnel if visit events show `rdd_*` / `funnel: robot_jobs` — **See All CTR by persona** is the active product test (`docs/TRAFFIC_SPRINT.md`). Do not recommend channel/product expansion while that test is running. If traffic is thin: `ALERT` for outreach gap — never treat soft early CTR as a reason to change the product.
 
 5. **Prior hour**
 

@@ -62,6 +62,10 @@ Until traffic evidence: **no more capability layers · no channel expansion · n
 ## Stopping point (2026-08-15)
 
 Architecture frozen. Product frozen. Channel research **stopped** (fixtures kept). Instrumentation running.  
+**Phase:** operational — get qualified people into `/experiment` via **discovery content** (not promo), observe, accumulate behavior.  
+**Traffic vs product:** discovery posts / outreach / monitoring / reporting allowed; do not change the experiment from soft early numbers.  
+See [`DISCOVERY_CONTENT.md`](./DISCOVERY_CONTENT.md).  
+After enough behavior: *Who wants this most — and what kind of work makes them want more?*  
 **Next:** mixed-audience traffic sprint — [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md).  
 Integrity QA (10 URLs) must pass before Cohort 1 — [`product_sim/qa_robot_url_matrix.md`](./product_sim/qa_robot_url_matrix.md).
 

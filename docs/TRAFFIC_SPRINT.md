@@ -1,31 +1,72 @@
 # Traffic sprint — capability → find work
 
-**Status:** Primary product test · channel research **stopped**  
-**Surface:** `/experiment` (one UI)  
+**Status:** Primary product test · channel research **stopped** · **operational phase**  
+**Surface:** `/experiment` (one UI) · **live in production**  
 **Strategic model:** [`CAPABILITY_MODEL.md`](./CAPABILITY_MODEL.md)  
 **Unknown:** When we show someone work matched to what they sell or can solve, do they want more?
 
 Not a product sprint. Not another channel / ontology session.
 
+### Correct activity now
+
+Get qualified people into `/experiment`. Observe. Accumulate enough behavior to read the funnel.
+
+**How:** discovery **publishing loop** (content as sensor), not a promo calendar. See [`DISCOVERY_CONTENT.md`](./DISCOVERY_CONTENT.md) · first 10 pieces [`CONTENT_SPRINT.md`](./CONTENT_SPRINT.md).
+
+Create curiosity about **work** → land on `/experiment` with `persona=` + unique `src=` per story. Measure Content → Work: visits → submit → jobs → See All (not likes).
+
+After enough behavior, the first real question is **not** “What should we build next?”
+
+> Who wants this most — and what kind of work makes them want more?
+
+### Traffic vs product (Hermes + humans)
+
+| Allowed (operate) | Forbidden (while frozen) |
+|-------------------|--------------------------|
+| Publish Job / Found Work / Human→Robot from scored ledgers | Promo calendar · “Try ReadyForRobots” as every CTA |
+| Unique `src` per piece · Content→Work reporting | Generic robotics hot takes |
+| Find OEM / distributor / integrator prospects | New features because CTR is soft |
+| Monitor `rdd_*` by persona **and** `src` | New data sources / channel crawls / scoring |
+| Fix **literally broken** instrumentation | Automate publishing before 10 manual pieces |
+
+Weak early numbers → better work topics / sharper stories — not a product rewrite.
+
 ---
 
 ## Category vs CTA
 
-**Category:** Find Jobs for Robots.
+**Category:** Find Jobs for Robots.  
+**Editorial territory:** Robot Work (not robot news / funding / demos).
 
 Outreach personalizes (same landing page):
 
-| Persona | Outreach prompt | Still lands on |
-|---------|-----------------|----------------|
-| A — OEM | Find jobs for your robot. | `/experiment` |
-| B — Distributor | Find jobs for the robots you sell. | `/experiment` |
-| C — Integrator | Find automation jobs your company can solve. | `/experiment` |
+| Persona | Curiosity → CTA | Still lands on |
+|---------|------------------|----------------|
+| A — OEM | Could your robot do this? → Find jobs for your robot. | `/experiment` |
+| B — Distributor | Work for robots you already sell. | `/experiment` |
+| C — Integrator | Automation work your team can solve. | `/experiment` |
 
 Do **not** ship three UIs for Cohort 1–3. Track **persona + source** so we learn which segment pulls.
 
 ---
 
-## Message patterns (use these)
+## Message patterns (discovery-led)
+
+Prefer publishing a discovery, then the ask — not the reverse.
+
+### Pattern A — Job of the Day / unexpected jobs
+
+> We searched for jobs a warehouse AMR could do. Here are 7 we didn't expect.  
+> [examples]  
+> What jobs would it find for **your** robot?  
+> → `/experiment?persona=oem&src=job_of_day`
+
+### Pattern B — We Found Work for {robot}
+
+> We went looking for work for Spot. Here's what we found — and what didn't fit.  
+> → `/experiment?persona=oem&src=found_work_spot`
+
+### Pattern C — Persona direct (use sparingly · ~10% product layer)
 
 ### OEM
 
@@ -45,7 +86,9 @@ Do **not** ship three UIs for Cohort 1–3. Track **persona + source** so we lea
 > Find automation jobs your company can solve.  
 > [Try it → `/experiment?persona=integrator&src=…`]
 
-**Outreach principle:** Send them to `/experiment`. Don't ask for a meeting. Don't explain the research.
+**Outreach principle:** Lead with discovered work. Route curiosity to `/experiment`. Don't ask for a meeting. Don't explain the research. Don't become another “robotics trends” account.
+
+Content mix: **60% discovery · 30% intelligence · 10% product** — [`DISCOVERY_CONTENT.md`](./DISCOVERY_CONTENT.md).
 
 ---
 
