@@ -39,10 +39,35 @@ type Profile = (typeof demo.profiles)[number];
 type Job = (typeof demo.jobs)[keyof typeof demo.jobs][number];
 type Step = "enter" | "unsupported" | "gate";
 type BoardMode = "market" | "status" | "personal";
+/** Left funnel process trace under the URL input. */
+type TracePhase = "idle" | "url" | "caps" | "search" | "done";
 
 const PREVIEW_FREE = 5;
 /** Independent discovery counter seed — not tied to visible row count. */
 const MARKET_FOUND_BASE = 140;
+
+function FunnelTrace({ phase, jobCount }: { phase: TracePhase; jobCount: number | null }) {
+  const countLabel =
+    jobCount != null ? `${String(jobCount).padStart(2, "0")} JOBS FOUND` : "JOBS";
+  let label = "URL → CAPABILITIES → JOBS";
+  if (phase === "url") label = "URL ✓ → CAPABILITIES... → JOBS";
+  else if (phase === "caps") label = "URL ✓ → CAPABILITIES ✓ → JOBS...";
+  else if (phase === "search") label = "URL ✓ → CAPABILITIES ✓ → SEARCHING...";
+  else if (phase === "done") label = `URL ✓ → CAPABILITIES ✓ → ${countLabel}`;
+
+  return (
+    <p
+      className="mt-2 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-600"
+      aria-live="polite"
+    >
+      {phase === "done" || phase === "caps" || phase === "search" || phase === "url" ? (
+        <span className="text-emerald-500/90">{label}</span>
+      ) : (
+        label
+      )}
+    </p>
+  );
+}
 
 const ctaClass =
   "inline-flex items-center justify-center gap-2 bg-emerald-400 px-4 py-2.5 text-sm font-bold uppercase tracking-[0.06em] text-white transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45";
@@ -161,6 +186,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
   const [step, setStep] = useState<Step>("enter");
   const [boardMode, setBoardMode] = useState<BoardMode>("market");
   const [statusLines, setStatusLines] = useState<string[]>([]);
+  const [tracePhase, setTracePhase] = useState<TracePhase>("idle");
+  const [traceJobCount, setTraceJobCount] = useState<number | null>(null);
   const [personalCorpus, setPersonalCorpus] = useState<TapeJob[]>([]);
   const [tapeRunning, setTapeRunning] = useState(true);
   const [selectedTapeKey, setSelectedTapeKey] = useState<string | null>(null);
@@ -212,6 +239,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setJobCountOverride(total);
     setBoardMode("personal");
     setStatusLines([]);
+    setTracePhase("done");
+    setTraceJobCount(total);
     setTapeRunning(true);
     setStep("enter");
     setJobIndex(0);
@@ -248,7 +277,9 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setStep("enter");
     setBoardMode("status");
     setTapeRunning(false);
-    setStatusLines(["Analyzing robot…"]);
+    setTracePhase("url");
+    setTraceJobCount(null);
+    setStatusLines(["Analyzing your robot…"]);
     setSelectedTapeKey(null);
     setQualifyOpen(false);
     setQualifyRequested(false);
@@ -260,19 +291,17 @@ export default function RobotJobsExperiment({ slug }: Props) {
     });
 
     boardLater(() => {
-      setStatusLines(["Analyzing robot…", `Capabilities found: ${capCount}`]);
+      setTracePhase("caps");
+      setStatusLines(["Product found ✓", `Capabilities ${capCount}`]);
     }, 700);
     boardLater(() => {
-      setStatusLines([
-        "Analyzing robot…",
-        `Capabilities found: ${capCount}`,
-        "Searching work…",
-      ]);
+      setTracePhase("search");
+      setStatusLines(["Product found ✓", `Capabilities ${capCount}`, "Searching work…"]);
     }, 1400);
     boardLater(() => {
       setStatusLines([
-        "Analyzing robot…",
-        `Capabilities found: ${capCount}`,
+        "Product found ✓",
+        `Capabilities ${capCount}`,
         "Searching work…",
         "> Job found",
         "> Job found",
@@ -302,6 +331,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
       setStep("unsupported");
       setUnsupportedReason(config.subhead);
       setBoardMode("market");
+      setTracePhase("idle");
+      setTraceJobCount(null);
       return;
     }
 
@@ -404,6 +435,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
       setUnsupportedReason(match.reason);
       setStep("unsupported");
       setBoardMode("market");
+      setTracePhase("idle");
+      setTraceJobCount(null);
       trackRobotJobsFunnel("robot_submitted", {
         ...funnelBase(),
         robot_name: name,
@@ -592,6 +625,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 <PixelIcon map={KARE_ARROW} scale={2} fill={FACE_WHITE} background="transparent" />
               </button>
             </div>
+            <FunnelTrace phase={tracePhase} jobCount={traceJobCount} />
 
             {boardMode === "personal" && job ? (
               <div className="mt-auto border-t border-slate-700 pt-4">
@@ -638,6 +672,29 @@ export default function RobotJobsExperiment({ slug }: Props) {
                   {jobIndex + 1 >= previewCount ? "See all jobs →" : "Next job →"}
                 </button>
               </div>
+            ) : boardMode === "status" ? (
+              <div className="mt-auto border-t border-slate-700 pt-4">
+                <div className="flex items-center gap-3">
+                  <PixelIcon map={KARE_FACE} scale={2} fill={FACE_EMERALD} background="transparent" />
+                  <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
+                    Analyzing your robot
+                  </p>
+                </div>
+                <ul className="mt-4 space-y-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+                  {statusLines.map((line) => (
+                    <li
+                      key={line}
+                      className={
+                        line.startsWith(">") || line.includes("✓")
+                          ? "text-emerald-400"
+                          : undefined
+                      }
+                    >
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ) : (
               <div className="mt-auto space-y-3.5 border-t border-slate-700 pt-4">
                 <div>
@@ -667,21 +724,18 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 </div>
 
                 <div className="border-t border-slate-700 pt-3">
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex w-6 shrink-0 justify-center">
-                      <PixelIcon map={KARE_QUALIFY} scale={2} fill={FACE_EMERALD} background="transparent" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-200">
-                        Qualify a job
-                      </p>
-                      <p className="mt-0.5 text-[12px] leading-4 text-slate-500">
-                        Found one worth pursuing?
-                        <br />
-                        We&apos;ll research the commercial unknowns.
-                      </p>
-                    </div>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-200">
+                    Found one worth pursuing?
+                  </p>
+                  <div className="mt-2 flex items-center gap-2.5">
+                    <PixelIcon map={KARE_QUALIFY} scale={2} fill={FACE_EMERALD} background="transparent" />
+                    <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-400">
+                      Qualify the job
+                    </p>
                   </div>
+                  <p className="mt-1 text-[12px] leading-4 text-slate-500">
+                    We&apos;ll research the commercial unknowns.
+                  </p>
                 </div>
               </div>
             )}

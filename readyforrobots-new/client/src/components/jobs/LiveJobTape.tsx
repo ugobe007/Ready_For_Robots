@@ -1,5 +1,5 @@
 /**
- * Live job tape — fixed 58px classified rows; 10 visible; feed rotates behind.
+ * Live job tape — fixed 58px classified rows; 12 visible; feed rotates behind.
  * Exact row grid: 48 | 34 | 1fr | 24. No absolute text stacking.
  */
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +11,7 @@ import {
   type TapeJob,
 } from "@/lib/jobsTapeCorpus";
 
-const VISIBLE = 10;
+const VISIBLE = 12;
 /** Fixed row height — animation translates by this amount only. */
 const ROW_PX = 58;
 const SHIFT_MS = 200;
@@ -166,9 +166,9 @@ export default function LiveJobTape({
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 sm:text-[12px]">
             {title}
           </p>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+          <p className="font-mono text-[13px] font-bold uppercase tracking-[0.08em] tabular-nums text-emerald-400 sm:text-[14px]">
             {headerFlash ? (
-              <span className="text-emerald-400">● New Job</span>
+              <span>● New Job</span>
             ) : (
               <span>{padCount(foundCount)} Jobs Found</span>
             )}
