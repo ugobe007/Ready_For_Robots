@@ -85,48 +85,62 @@ export function robotNameFromUrl(raw: string): string | null {
 const DISCOVERED_WORK = [
   {
     title: "Return empty totes",
-    path: "Packing → picking",
+    context: "Specialty pharma · Pack → operating area",
   },
   {
-    title: "Deliver production kits",
-    path: "Kitting → assembly line",
+    title: "Deliver finished kits",
+    context: "Aerospace · Kitting → production line",
   },
   {
     title: "Move medication carts",
-    path: "Pharmacy → patient units",
+    context: "Healthcare · Pharmacy → patient units",
   },
   {
     title: "Stack finished cases",
-    path: "Packaging line → pallet",
+    context: "Manufacturing · Conveyor → pallet",
   },
   {
     title: "Scrub terminal floors",
-    path: "Concourse · overnight",
+    context: "Airport · Overnight",
   },
   {
     title: "Inspect equipment",
-    path: "Recurring inspection route",
+    context: "Industrial · Recurring route",
   },
+] as const;
+
+const QUALIFY_CHECKS = [
+  "whether the work is still being done manually",
+  "how much work exists",
+  "whether autonomous robots are already being used",
+  "who owns the automation decision",
+  "whether there is a reason to act now",
 ] as const;
 
 function whyYourRobot(job: Job, family: string): string {
   if (family === "floor_scrub") {
-    return "Hard-floor scrubbing on a repeatable route matches its autonomous scrub capabilities.";
+    return "Autonomously scrub repeatable hard-floor routes during off-peak hours.";
   }
   const iface = (job.requirements as { load_interface?: string } | undefined)?.load_interface;
   if (iface === "cart") {
-    return "Cart / order movement matches its mobility and load-handling capabilities.";
+    return "Move carts and orders along repeatable indoor routes.";
   }
   if (iface === "kit") {
-    return "Kit and tote replenishment matches its point-to-point transport capabilities.";
+    return "Carry kits and totes point-to-point between work areas.";
   }
-  return "Point-to-point tote transport matches its mobility and load-handling capabilities.";
+  return "Move totes point-to-point between work areas.";
 }
 
-function worthLabel(job: Job): string {
-  if (job.fit === "H" || job.investigate_status === "yes") return "HIGH";
-  if (job.fit === "M" || job.investigate_status === "weak") return "MEDIUM";
-  return "LOW";
+function evidenceLabel(job: Job): string {
+  if (job.evidence_grade === "E1" || job.promotion_class === "DIRECT") return "Strong";
+  if (job.evidence_grade === "E2") return "Moderate";
+  return "Emerging";
+}
+
+function placeLine(job: Job): string {
+  const loc = (job.locality || "").trim();
+  if (loc) return loc;
+  return job.company_name;
 }
 
 function srcFromQuery(): string | null {
@@ -175,6 +189,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
   const [unsupportedReason, setUnsupportedReason] = useState<string | null>(null);
   const [jobIndex, setJobIndex] = useState(0);
   const [jobsViewed, setJobsViewed] = useState(0);
+  const [qualifyOpen, setQualifyOpen] = useState(false);
+  const [qualifyRequested, setQualifyRequested] = useState(false);
   const sessionId = useRef(
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()
@@ -203,6 +219,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setUnsupportedReason(null);
     setJobIndex(0);
     setJobsViewed(0);
+    setQualifyOpen(false);
+    setQualifyRequested(false);
     fired3Plus.current = false;
 
     if (!config.profileKey) {
@@ -295,6 +313,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setRobotName(opts.name);
     setJobIndex(0);
     setJobsViewed(0);
+    setQualifyOpen(false);
+    setQualifyRequested(false);
     fired3Plus.current = false;
     setStep("capabilities");
     slugRef.current = PROFILE_KEY_TO_SLUG[opts.key] ?? null;
@@ -416,7 +436,39 @@ export default function RobotJobsExperiment({ slug }: Props) {
     }
     const next = jobIndex + 1;
     setJobIndex(next);
+    setQualifyOpen(false);
+    setQualifyRequested(false);
     recordJobView(next);
+  }
+
+  function onOpenQualify() {
+    setQualifyOpen(true);
+    trackRobotJobsFunnel("qualify_opened", {
+      ...funnelBase(),
+      profile_key: profileKey,
+      persona: personaRef.current,
+      src: srcRef.current,
+      robot_name: robotName,
+      capability_family: profile?.capability_family ?? null,
+      job_key: job?.job_key ?? null,
+      company_name: job?.company_name ?? null,
+      locality: job?.locality ?? null,
+    });
+  }
+
+  function onRequestQualify() {
+    setQualifyRequested(true);
+    trackRobotJobsFunnel("qualify_requested", {
+      ...funnelBase(),
+      profile_key: profileKey,
+      persona: personaRef.current,
+      src: srcRef.current,
+      robot_name: robotName,
+      capability_family: profile?.capability_family ?? null,
+      job_key: job?.job_key ?? null,
+      company_name: job?.company_name ?? null,
+      locality: job?.locality ?? null,
+    });
   }
 
   function onSeeAll() {
@@ -455,13 +507,14 @@ export default function RobotJobsExperiment({ slug }: Props) {
     <section className="flex min-h-[70vh] flex-col" aria-label="Find jobs for your robot">
       {step === "enter" && (
         <div className="flex flex-1 flex-col">
-          <h1 className={`${titleClass} text-3xl sm:text-4xl`}>Find jobs for your robot.</h1>
+          <p className={`${eyebrowClass} text-emerald-300/90`}>ReadyForRobots</p>
+          <h1 className={`${titleClass} mt-3 text-3xl sm:text-4xl`}>Find jobs for your robot.</h1>
           <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-            Show us your robot. We&apos;ll find jobs it can do.
+            Tell us about your robot. We&apos;ll find jobs it can do.
           </p>
 
           <label className="mt-10 block text-sm font-semibold text-slate-200" htmlFor="robot-url">
-            What robot do you want to find jobs for?
+            Paste your robot product page
           </label>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
             <input
@@ -472,7 +525,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") onContinueUrl();
               }}
-              placeholder="Paste a robot product page"
+              placeholder="https://…"
               className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-[#0a1327] px-3.5 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20"
             />
             <button
@@ -486,8 +539,9 @@ export default function RobotJobsExperiment({ slug }: Props) {
               <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
           </div>
+          <p className="mt-4 text-sm text-slate-500">Robots need jobs. We find the work.</p>
 
-          <p className={`mt-14 ${eyebrowClass}`}>What does a robot job look like?</p>
+          <p className={`mt-14 ${eyebrowClass}`}>Jobs we&apos;re finding</p>
           <ul className={`mt-4 ${panelClass}`}>
             {DISCOVERED_WORK.map((w, i) => (
               <li
@@ -498,16 +552,12 @@ export default function RobotJobsExperiment({ slug }: Props) {
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden />
                   <div>
                     <p className="text-sm font-semibold text-slate-100">{w.title}</p>
-                    <p className="mt-0.5 font-mono text-[11px] text-slate-500">{w.path}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{w.context}</p>
                   </div>
                 </div>
               </li>
             ))}
           </ul>
-
-          <p className="mt-10 text-sm leading-relaxed text-slate-500">
-            ReadyForRobots finds physical work and determines which robots can do it.
-          </p>
         </div>
       )}
 
@@ -594,49 +644,97 @@ export default function RobotJobsExperiment({ slug }: Props) {
               </p>
             </>
           ) : (
-            <p className={mutedClass}>
-              We found <span className="font-semibold text-slate-100">{totalJobs}</span> jobs matching{" "}
-              {robotName}&apos;s capabilities.
-            </p>
+            <h1 className={`${titleClass} text-2xl sm:text-3xl`}>
+              We found {totalJobs} jobs for {robotName}.
+            </h1>
           )}
           <p className="mt-4 text-xs font-medium text-slate-500">
             Job {jobIndex + 1} of {previewCount}
           </p>
 
           <article className={`mt-4 flex-1 ${panelClass} p-5 sm:p-6`}>
-            <h2 className={`${titleClass} text-xl sm:text-2xl`}>{job.robot_compatible_task}</h2>
+            <p className={eyebrowClass}>FIND</p>
+            <h2 className={`mt-2 ${titleClass} text-xl sm:text-2xl`}>{job.robot_compatible_task}</h2>
             <p className="mt-2 text-sm font-medium text-slate-400">
               {job.company_name}
-              {job.locality ? ` · ${job.locality}` : ""}
+              {job.locality ? ` · ${placeLine(job)}` : ""}
             </p>
 
             <dl className="mt-6 space-y-4 text-sm">
               <div>
-                <dt className={eyebrowClass}>Why we believe it exists</dt>
-                <dd className="mt-1.5 leading-relaxed text-slate-200">{job.why_job}</dd>
+                <dt className={eyebrowClass}>The work</dt>
+                <dd className="mt-1.5 leading-relaxed text-slate-200">{job.observed_workflow}</dd>
               </div>
               <div>
-                <dt className={eyebrowClass}>Why {robotName} could do it</dt>
+                <dt className={eyebrowClass}>Your robot could</dt>
                 <dd className="mt-1.5 leading-relaxed text-slate-200">
                   {whyYourRobot(job, profile.capability_family)}
                 </dd>
               </div>
+              <div>
+                <dt className={eyebrowClass}>Evidence</dt>
+                <dd className="mt-1.5 text-sm font-semibold text-emerald-300">{evidenceLabel(job)}</dd>
+              </div>
               {job.unknowns?.length ? (
                 <div>
-                  <dt className={eyebrowClass}>What we don&apos;t know</dt>
+                  <dt className={eyebrowClass}>Still unknown</dt>
                   <dd className="mt-1.5 leading-relaxed text-slate-200">{job.unknowns.join(" · ")}</dd>
                 </div>
               ) : null}
-              <div>
-                <dt className={eyebrowClass}>Worth investigating</dt>
-                <dd className="mt-1.5 text-sm font-bold tracking-wide text-emerald-300">
-                  {worthLabel(job)}
-                </dd>
-              </div>
             </dl>
+
+            {!qualifyOpen ? (
+              <button
+                type="button"
+                onClick={onOpenQualify}
+                className={`${ctaClass} mt-8 w-full sm:w-auto`}
+              >
+                Qualify This Job
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </button>
+            ) : (
+              <div className="mt-8 rounded-lg border border-slate-600 bg-[#0a1327] p-4 sm:p-5">
+                <h3 className="text-sm font-bold text-slate-100">Qualify this job</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  We&apos;ll investigate whether this job deserves your sales team&apos;s time.
+                </p>
+                <p className={`mt-4 ${eyebrowClass}`}>We&apos;ll look for</p>
+                <ul className="mt-2 space-y-1.5">
+                  {QUALIFY_CHECKS.map((item) => (
+                    <li key={item} className="flex gap-2 text-sm text-slate-300">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-400" aria-hidden />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                {qualifyRequested ? (
+                  <div className="mt-5 rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-3.5 py-3">
+                    <p className="text-sm font-semibold text-emerald-200">Qualification requested</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+                      Next: a Pursuit Brief from desk research — whether to pursue, qualify further,
+                      watch, or skip. Additional verification may be required before a final
+                      recommendation.
+                    </p>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onRequestQualify}
+                    className={`${ctaClass} mt-5 w-full sm:w-auto`}
+                  >
+                    {faceOnCta}
+                    Request Qualification
+                  </button>
+                )}
+              </div>
+            )}
           </article>
 
-          <button type="button" onClick={onNextJob} className={`${ctaClass} mt-8 w-full sm:w-auto`}>
+          <button
+            type="button"
+            onClick={onNextJob}
+            className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-300 underline-offset-2 hover:underline"
+          >
             {jobIndex + 1 >= previewCount ? "See all jobs" : "See next job"}
             <ChevronRight className="h-4 w-4" aria-hidden />
           </button>
@@ -665,6 +763,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
             type="button"
             onClick={() => {
               setJobIndex(0);
+              setQualifyOpen(false);
+              setQualifyRequested(false);
               setStep("jobs");
               recordJobView(0);
             }}
