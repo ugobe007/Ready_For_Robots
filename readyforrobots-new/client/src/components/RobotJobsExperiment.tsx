@@ -18,6 +18,17 @@ type Step = "enter" | "unsupported" | "capabilities" | "discovering" | "jobs" | 
 
 const PREVIEW_FREE = 5;
 const DISCOVER_MS = 1800;
+/** Site primary emerald (#059669) — same as Header “Find leads”. */
+const BRAND = "#059669";
+const BRAND_HOVER = "#047857";
+
+const ctaClass =
+  "inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-bold text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40";
+const eyebrowClass =
+  "text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700/80";
+const proofCardClass =
+  "group flex items-center justify-between rounded-xl border border-slate-200/90 bg-white/90 px-4 py-3.5 text-left shadow-[0_1px_0_rgba(15,23,42,0.04)] transition hover:border-emerald-300 hover:bg-emerald-50/70 hover:shadow-sm";
+
 
 function profileByKey(key: string): Profile | undefined {
   return demo.profiles.find((p) => p.profile_key === key);
@@ -342,14 +353,14 @@ export default function RobotJobsExperiment() {
     <section className="flex min-h-[70vh] flex-col" aria-label="Find jobs for your robot">
       {step === "enter" && (
         <div className="flex flex-1 flex-col">
-          <h1 className="font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
             Find jobs for your robot.
           </h1>
-          <p className="mt-3 max-w-xl text-base text-gray-600 sm:text-lg">
+          <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
             Give us your robot. We&apos;ll search for real work that matches what it can do.
           </p>
 
-          <label className="mt-10 block text-xs font-medium text-gray-600" htmlFor="robot-url">
+          <label className="mt-10 block text-xs font-semibold text-slate-600" htmlFor="robot-url">
             Paste robot product URL
           </label>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
@@ -362,59 +373,79 @@ export default function RobotJobsExperiment() {
                 if (e.key === "Enter") onContinueUrl();
               }}
               placeholder="https://yourrobot.com/product"
-              className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3.5 py-3 text-sm text-gray-900 outline-none ring-emerald-600/30 placeholder:text-gray-400 focus:ring-2"
+              className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-600/25"
             />
             <button
               type="button"
               onClick={onContinueUrl}
               disabled={!url.trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className={ctaClass}
+              style={{ background: url.trim() ? BRAND : "#cbd5e1" }}
+              onMouseEnter={(e) => {
+                if (url.trim()) e.currentTarget.style.background = BRAND_HOVER;
+              }}
+              onMouseLeave={(e) => {
+                if (url.trim()) e.currentTarget.style.background = BRAND;
+              }}
             >
-              <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+              <span
+                className={`inline-flex rounded-md p-0.5 ${url.trim() ? "bg-white/15" : "bg-slate-200"}`}
+              >
+                <PixelIcon
+                  map={KARE_FACE}
+                  scale={2}
+                  fill={url.trim() ? "#ffffff" : "#94a3b8"}
+                  background="transparent"
+                />
+              </span>
               Find Jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
           </div>
 
-          <p className="mt-12 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
-            See what we&apos;ve already found
-          </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <p className={`mt-12 ${eyebrowClass}`}>See what we&apos;ve already found</p>
+          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
             {demo.profiles.map((p) => (
               <button
                 key={p.profile_key}
                 type="button"
                 onClick={() => onPickDemo(p.profile_key)}
-                className="group flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-left transition hover:border-emerald-300 hover:bg-emerald-50/50"
+                className={proofCardClass}
               >
                 <span>
-                  <span className="block text-sm font-semibold text-gray-900">{p.display_name}</span>
-                  <span className="mt-0.5 block text-xs text-gray-500">
+                  <span className="block text-sm font-semibold text-slate-900">{p.display_name}</span>
+                  <span className="mt-0.5 block text-xs font-medium text-emerald-700">
                     {p.job_count_total} jobs found
                   </span>
                 </span>
                 <ArrowRight
-                  className="h-4 w-4 shrink-0 text-gray-300 transition group-hover:text-emerald-600"
+                  className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-emerald-600"
                   aria-hidden
                 />
               </button>
             ))}
           </div>
 
-          <p className="mt-14 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
-            Jobs ReadyForRobots has discovered
-          </p>
-          <ul className="mt-4 space-y-0 divide-y divide-gray-100 border-y border-gray-100">
-            {DISCOVERED_WORK.map((w) => (
-              <li key={w.title} className="py-4">
-                <p className="text-sm font-semibold uppercase tracking-wide text-gray-900">{w.title}</p>
-                <p className="mt-1 text-sm text-gray-600">{w.context}</p>
-                <p className="mt-0.5 text-xs text-gray-400">{w.path}</p>
+          <p className={`mt-14 ${eyebrowClass}`}>Jobs ReadyForRobots has discovered</p>
+          <ul className="mt-4 overflow-hidden rounded-xl border border-slate-200/90 bg-white/80 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
+            {DISCOVERED_WORK.map((w, i) => (
+              <li
+                key={w.title}
+                className={`px-4 py-4 sm:px-5 ${i > 0 ? "border-t border-slate-100" : ""}`}
+              >
+                <div className="flex gap-3">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+                  <div>
+                    <p className="text-sm font-semibold tracking-wide text-slate-900">{w.title}</p>
+                    <p className="mt-1 text-sm text-slate-600">{w.context}</p>
+                    <p className="mt-0.5 font-mono text-[11px] text-emerald-700/90">{w.path}</p>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
 
-          <p className="mt-10 text-sm text-gray-500">
+          <p className="mt-10 text-sm leading-relaxed text-slate-500">
             We find the work first. Then determine whether your robot fits.
           </p>
         </div>
@@ -422,33 +453,31 @@ export default function RobotJobsExperiment() {
 
       {step === "unsupported" && (
         <div className="flex flex-1 flex-col">
-          <p className="text-sm text-gray-500">We analyzed {robotName}.</p>
-          <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+          <p className="text-sm text-slate-500">We analyzed {robotName}.</p>
+          <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             We don&apos;t have jobs for this robot yet
           </h2>
-          <p className="mt-3 max-w-md text-sm text-gray-500">
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
             {unsupportedReason || "No matching job library for this robot yet"}. Right now we can show
             real jobs for warehouse AMRs and floor-scrubbing robots.
           </p>
-          <p className="mt-10 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
-            See what we&apos;ve already found
-          </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <p className={`mt-10 ${eyebrowClass}`}>See what we&apos;ve already found</p>
+          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
             {demo.profiles.map((p) => (
               <button
                 key={p.profile_key}
                 type="button"
                 onClick={() => onPickDemo(p.profile_key)}
-                className="group flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-left transition hover:border-emerald-300 hover:bg-emerald-50/50"
+                className={proofCardClass}
               >
                 <span>
-                  <span className="block text-sm font-semibold text-gray-900">{p.display_name}</span>
-                  <span className="mt-0.5 block text-xs text-gray-500">
+                  <span className="block text-sm font-semibold text-slate-900">{p.display_name}</span>
+                  <span className="mt-0.5 block text-xs font-medium text-emerald-700">
                     {p.job_count_total} jobs found
                   </span>
                 </span>
                 <ArrowRight
-                  className="h-4 w-4 shrink-0 text-gray-300 transition group-hover:text-emerald-600"
+                  className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-emerald-600"
                   aria-hidden
                 />
               </button>
@@ -460,7 +489,7 @@ export default function RobotJobsExperiment() {
               setStep("enter");
               setUnsupportedReason(null);
             }}
-            className="mt-8 text-sm text-gray-500 underline-offset-2 hover:underline"
+            className="mt-8 text-sm font-medium text-emerald-700 underline-offset-2 hover:underline"
           >
             Try another URL
           </button>
@@ -469,26 +498,35 @@ export default function RobotJobsExperiment() {
 
       {step === "capabilities" && profile && (
         <div className="flex flex-1 flex-col">
-          <p className="text-sm text-gray-500">We analyzed {robotName}.</p>
-          <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+          <p className="text-sm text-slate-500">We analyzed {robotName}.</p>
+          <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             It appears capable of:
           </h2>
-          <ul className="mt-5 space-y-2.5">
+          <ul className="mt-6 space-y-3 rounded-xl border border-slate-200/90 bg-white/90 p-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] sm:p-5">
             {profile.can_actions.map((action) => (
-              <li key={action} className="flex items-start gap-2.5 text-sm text-gray-800">
+              <li key={action} className="flex items-start gap-2.5 text-sm text-slate-800">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
                 <span>{action}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-6 text-sm text-gray-500">Looks right?</p>
+          <p className="mt-6 text-sm text-slate-500">Looks right?</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={onConfirmCapabilities}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700"
+              className={ctaClass}
+              style={{ background: BRAND }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = BRAND_HOVER;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = BRAND;
+              }}
             >
-              <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+              <span className="inline-flex rounded-md bg-white/15 p-0.5">
+                <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+              </span>
               Find Jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
@@ -498,7 +536,7 @@ export default function RobotJobsExperiment() {
                 setStep("enter");
                 setProfileKey(null);
               }}
-              className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 hover:bg-gray-50"
+              className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
             >
               Back
             </button>
@@ -508,13 +546,16 @@ export default function RobotJobsExperiment() {
 
       {step === "discovering" && (
         <div className="flex flex-1 flex-col items-center justify-center py-16 text-center" aria-live="polite">
-          <div className="rounded-xl border border-emerald-200 bg-white p-3 shadow-sm">
-            <PixelIcon map={KARE_FACE} scale={4} fill="#059669" background="transparent" />
+          <div
+            className="rounded-2xl p-4 shadow-md"
+            style={{ background: BRAND }}
+          >
+            <PixelIcon map={KARE_FACE} scale={4} fill="#ffffff" background="transparent" />
           </div>
-          <p className="mt-6 text-lg font-medium text-gray-900">
+          <p className="mt-6 text-lg font-semibold text-slate-900">
             Searching for work {robotName} can do…
           </p>
-          <p className="mt-2 max-w-sm text-sm text-gray-500">
+          <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
             Matching its capabilities to localized jobs in the open economy.
           </p>
         </div>
@@ -522,52 +563,44 @@ export default function RobotJobsExperiment() {
 
       {step === "jobs" && profile && job && (
         <div className="flex flex-1 flex-col">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-slate-500">
             We found{" "}
-            <span className="font-semibold text-gray-900">{totalJobs}</span> jobs matching{" "}
+            <span className="font-semibold text-slate-900">{totalJobs}</span> jobs matching{" "}
             {robotName}&apos;s capabilities.
           </p>
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs font-medium text-emerald-700/80">
             Job {jobIndex + 1} of {previewCount}
           </p>
 
-          <article className="mt-6 flex-1">
-            <h2 className="font-display text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
+          <article className="mt-6 flex-1 rounded-xl border border-slate-200/90 bg-white/90 p-5 shadow-[0_1px_0_rgba(15,23,42,0.04)] sm:p-6">
+            <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
               {job.robot_compatible_task}
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm font-medium text-slate-600">
               {job.company_name}
               {job.locality ? ` · ${job.locality}` : ""}
             </p>
 
             <dl className="mt-6 space-y-4 text-sm">
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                  Why we believe it exists
-                </dt>
-                <dd className="mt-1 text-gray-800">{job.why_job}</dd>
+                <dt className={eyebrowClass}>Why we believe it exists</dt>
+                <dd className="mt-1.5 leading-relaxed text-slate-800">{job.why_job}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                  Why {robotName} could do it
-                </dt>
-                <dd className="mt-1 text-gray-800">
+                <dt className={eyebrowClass}>Why {robotName} could do it</dt>
+                <dd className="mt-1.5 leading-relaxed text-slate-800">
                   {whyYourRobot(job, profile.capability_family)}
                 </dd>
               </div>
               {job.unknowns?.length ? (
                 <div>
-                  <dt className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    What we don&apos;t know
-                  </dt>
-                  <dd className="mt-1 text-gray-800">{job.unknowns.join(" · ")}</dd>
+                  <dt className={eyebrowClass}>What we don&apos;t know</dt>
+                  <dd className="mt-1.5 leading-relaxed text-slate-800">{job.unknowns.join(" · ")}</dd>
                 </div>
               ) : null}
               <div>
-                <dt className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                  Worth investigating
-                </dt>
-                <dd className="mt-1 font-semibold tracking-wide text-emerald-700">
+                <dt className={eyebrowClass}>Worth investigating</dt>
+                <dd className="mt-1.5 text-sm font-bold tracking-wide text-emerald-700">
                   {worthLabel(job)}
                 </dd>
               </div>
@@ -577,7 +610,14 @@ export default function RobotJobsExperiment() {
           <button
             type="button"
             onClick={onNextJob}
-            className="mt-8 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 sm:w-auto"
+            className={`${ctaClass} mt-8 w-full sm:w-auto`}
+            style={{ background: BRAND }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = BRAND_HOVER;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = BRAND;
+            }}
           >
             {jobIndex + 1 >= previewCount ? "See all jobs" : "See next job"}
             <ChevronRight className="h-4 w-4" aria-hidden />
@@ -587,19 +627,31 @@ export default function RobotJobsExperiment() {
 
       {step === "gate" && profile && (
         <div className="flex flex-1 flex-col items-start justify-center">
-          <h2 className="font-display text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             See all {totalJobs} jobs for {robotName}
           </h2>
-          <p className="mt-3 max-w-md text-sm text-gray-500">
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
             You&apos;ve seen {previewCount} jobs matched to its capabilities. Create an account to unlock
             the rest.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <PixelIcon map={KARE_FACE} scale={2} fill="#059669" background="transparent" className="shrink-0" />
+            <span
+              className="flex h-9 w-9 items-center justify-center rounded-[9px] shadow-sm"
+              style={{ background: BRAND }}
+            >
+              <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
+            </span>
             <Link
               href={signupHref}
               onClick={onSeeAll}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-700"
+              className={ctaClass}
+              style={{ background: BRAND }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = BRAND_HOVER;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = BRAND;
+              }}
             >
               See all {totalJobs} jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
@@ -612,7 +664,7 @@ export default function RobotJobsExperiment() {
               setStep("jobs");
               recordJobView(0);
             }}
-            className="mt-4 text-sm text-gray-500 underline-offset-2 hover:underline"
+            className="mt-4 text-sm font-medium text-emerald-700 underline-offset-2 hover:underline"
           >
             Review jobs again
           </button>
@@ -624,7 +676,7 @@ export default function RobotJobsExperiment() {
               setJobIndex(0);
               setUrl("");
             }}
-            className="mt-8 text-xs text-gray-400 hover:text-gray-600"
+            className="mt-8 text-xs font-medium text-slate-400 transition hover:text-slate-600"
           >
             Try another robot
           </button>
