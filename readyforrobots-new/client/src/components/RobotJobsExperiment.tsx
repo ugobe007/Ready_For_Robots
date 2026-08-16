@@ -18,16 +18,16 @@ type Step = "enter" | "unsupported" | "capabilities" | "discovering" | "jobs" | 
 
 const PREVIEW_FREE = 5;
 const DISCOVER_MS = 1800;
-/** Site primary emerald (#059669) — same as Header “Find leads”. */
-const BRAND = "#059669";
-const BRAND_HOVER = "#047857";
 
+/** Primary CTA — same emerald as site “Find leads”; never gray when empty. */
 const ctaClass =
-  "inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-bold text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-55";
 const eyebrowClass =
-  "text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700/80";
+  "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const proofCardClass =
-  "group flex items-center justify-between rounded-xl border border-slate-200/90 bg-white/90 px-4 py-3.5 text-left shadow-[0_1px_0_rgba(15,23,42,0.04)] transition hover:border-emerald-300 hover:bg-emerald-50/70 hover:shadow-sm";
+  "group flex items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-left shadow-sm transition hover:border-emerald-500 hover:bg-emerald-50/60";
+const panelClass =
+  "overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm";
 
 
 function profileByKey(key: string): Profile | undefined {
@@ -360,7 +360,7 @@ export default function RobotJobsExperiment() {
             Give us your robot. We&apos;ll search for real work that matches what it can do.
           </p>
 
-          <label className="mt-10 block text-xs font-semibold text-slate-600" htmlFor="robot-url">
+          <label className="mt-10 block text-xs font-semibold text-slate-700" htmlFor="robot-url">
             Paste robot product URL
           </label>
           <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
@@ -373,30 +373,16 @@ export default function RobotJobsExperiment() {
                 if (e.key === "Enter") onContinueUrl();
               }}
               placeholder="https://yourrobot.com/product"
-              className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-600/25"
+              className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-600/20"
             />
             <button
               type="button"
               onClick={onContinueUrl}
               disabled={!url.trim()}
               className={ctaClass}
-              style={{ background: url.trim() ? BRAND : "#cbd5e1" }}
-              onMouseEnter={(e) => {
-                if (url.trim()) e.currentTarget.style.background = BRAND_HOVER;
-              }}
-              onMouseLeave={(e) => {
-                if (url.trim()) e.currentTarget.style.background = BRAND;
-              }}
             >
-              <span
-                className={`inline-flex rounded-md p-0.5 ${url.trim() ? "bg-white/15" : "bg-slate-200"}`}
-              >
-                <PixelIcon
-                  map={KARE_FACE}
-                  scale={2}
-                  fill={url.trim() ? "#ffffff" : "#94a3b8"}
-                  background="transparent"
-                />
+              <span className="inline-flex rounded-md bg-white/20 p-0.5">
+                <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
               </span>
               Find Jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
@@ -414,12 +400,12 @@ export default function RobotJobsExperiment() {
               >
                 <span>
                   <span className="block text-sm font-semibold text-slate-900">{p.display_name}</span>
-                  <span className="mt-0.5 block text-xs font-medium text-emerald-700">
+                  <span className="mt-0.5 block text-xs font-semibold text-emerald-700">
                     {p.job_count_total} jobs found
                   </span>
                 </span>
                 <ArrowRight
-                  className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-emerald-600"
+                  className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:text-emerald-600"
                   aria-hidden
                 />
               </button>
@@ -427,18 +413,18 @@ export default function RobotJobsExperiment() {
           </div>
 
           <p className={`mt-14 ${eyebrowClass}`}>Jobs ReadyForRobots has discovered</p>
-          <ul className="mt-4 overflow-hidden rounded-xl border border-slate-200/90 bg-white/80 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
+          <ul className={`mt-4 ${panelClass}`}>
             {DISCOVERED_WORK.map((w, i) => (
               <li
                 key={w.title}
-                className={`px-4 py-4 sm:px-5 ${i > 0 ? "border-t border-slate-100" : ""}`}
+                className={`px-4 py-4 sm:px-5 ${i > 0 ? "border-t border-slate-200" : ""}`}
               >
                 <div className="flex gap-3">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600" aria-hidden />
                   <div>
-                    <p className="text-sm font-semibold tracking-wide text-slate-900">{w.title}</p>
+                    <p className="text-sm font-semibold text-slate-900">{w.title}</p>
                     <p className="mt-1 text-sm text-slate-600">{w.context}</p>
-                    <p className="mt-0.5 font-mono text-[11px] text-emerald-700/90">{w.path}</p>
+                    <p className="mt-0.5 font-mono text-[11px] text-slate-500">{w.path}</p>
                   </div>
                 </div>
               </li>
@@ -472,12 +458,12 @@ export default function RobotJobsExperiment() {
               >
                 <span>
                   <span className="block text-sm font-semibold text-slate-900">{p.display_name}</span>
-                  <span className="mt-0.5 block text-xs font-medium text-emerald-700">
+                  <span className="mt-0.5 block text-xs font-semibold text-emerald-700">
                     {p.job_count_total} jobs found
                   </span>
                 </span>
                 <ArrowRight
-                  className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-emerald-600"
+                  className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:text-emerald-600"
                   aria-hidden
                 />
               </button>
@@ -502,7 +488,7 @@ export default function RobotJobsExperiment() {
           <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             It appears capable of:
           </h2>
-          <ul className="mt-6 space-y-3 rounded-xl border border-slate-200/90 bg-white/90 p-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] sm:p-5">
+          <ul className={`mt-6 space-y-3 ${panelClass} p-4 sm:p-5`}>
             {profile.can_actions.map((action) => (
               <li key={action} className="flex items-start gap-2.5 text-sm text-slate-800">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
@@ -512,19 +498,8 @@ export default function RobotJobsExperiment() {
           </ul>
           <p className="mt-6 text-sm text-slate-500">Looks right?</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={onConfirmCapabilities}
-              className={ctaClass}
-              style={{ background: BRAND }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = BRAND_HOVER;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = BRAND;
-              }}
-            >
-              <span className="inline-flex rounded-md bg-white/15 p-0.5">
+            <button type="button" onClick={onConfirmCapabilities} className={ctaClass}>
+              <span className="inline-flex rounded-md bg-white/20 p-0.5">
                 <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
               </span>
               Find Jobs
@@ -536,7 +511,7 @@ export default function RobotJobsExperiment() {
                 setStep("enter");
                 setProfileKey(null);
               }}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               Back
             </button>
@@ -546,10 +521,7 @@ export default function RobotJobsExperiment() {
 
       {step === "discovering" && (
         <div className="flex flex-1 flex-col items-center justify-center py-16 text-center" aria-live="polite">
-          <div
-            className="rounded-2xl p-4 shadow-md"
-            style={{ background: BRAND }}
-          >
+          <div className="rounded-2xl bg-emerald-600 p-4 shadow-md">
             <PixelIcon map={KARE_FACE} scale={4} fill="#ffffff" background="transparent" />
           </div>
           <p className="mt-6 text-lg font-semibold text-slate-900">
@@ -568,11 +540,11 @@ export default function RobotJobsExperiment() {
             <span className="font-semibold text-slate-900">{totalJobs}</span> jobs matching{" "}
             {robotName}&apos;s capabilities.
           </p>
-          <p className="mt-1 text-xs font-medium text-emerald-700/80">
+          <p className="mt-1 text-xs font-medium text-slate-500">
             Job {jobIndex + 1} of {previewCount}
           </p>
 
-          <article className="mt-6 flex-1 rounded-xl border border-slate-200/90 bg-white/90 p-5 shadow-[0_1px_0_rgba(15,23,42,0.04)] sm:p-6">
+          <article className={`mt-6 flex-1 ${panelClass} p-5 sm:p-6`}>
             <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
               {job.robot_compatible_task}
             </h2>
@@ -607,18 +579,7 @@ export default function RobotJobsExperiment() {
             </dl>
           </article>
 
-          <button
-            type="button"
-            onClick={onNextJob}
-            className={`${ctaClass} mt-8 w-full sm:w-auto`}
-            style={{ background: BRAND }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = BRAND_HOVER;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = BRAND;
-            }}
-          >
+          <button type="button" onClick={onNextJob} className={`${ctaClass} mt-8 w-full sm:w-auto`}>
             {jobIndex + 1 >= previewCount ? "See all jobs" : "See next job"}
             <ChevronRight className="h-4 w-4" aria-hidden />
           </button>
@@ -635,24 +596,10 @@ export default function RobotJobsExperiment() {
             the rest.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span
-              className="flex h-9 w-9 items-center justify-center rounded-[9px] shadow-sm"
-              style={{ background: BRAND }}
-            >
+            <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-emerald-600 shadow-sm">
               <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
             </span>
-            <Link
-              href={signupHref}
-              onClick={onSeeAll}
-              className={ctaClass}
-              style={{ background: BRAND }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = BRAND_HOVER;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = BRAND;
-              }}
-            >
+            <Link href={signupHref} onClick={onSeeAll} className={ctaClass}>
               See all {totalJobs} jobs
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
