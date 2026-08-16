@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import demo from "@/data/rdd_demo_jobs.json";
 import { trackRobotJobsFunnel, trackSignupStart } from "@/lib/siteAnalytics";
 import { mapUrlToEnvelope } from "@/lib/robotJobsEnvelopeMap";
+import { useAuth } from "@/contexts/AuthContext";
 import PixelIcon from "@/components/PixelIcon";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import {
@@ -45,6 +46,36 @@ type TracePhase = "idle" | "url" | "caps" | "search" | "done";
 const PREVIEW_FREE = 5;
 /** Independent discovery counter seed — not tied to visible row count. */
 const MARKET_FOUND_BASE = 140;
+/** Persist discovery across signup so auth return restores personal jobs. */
+const JOBS_SESSION_KEY = "rfr_jobs_discovery";
+
+type JobsDiscoverySession = {
+  profileKey: string;
+  robotName: string;
+  slug: string | null;
+};
+
+function saveJobsDiscoverySession(data: JobsDiscoverySession) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(JOBS_SESSION_KEY, JSON.stringify(data));
+  } catch {
+    /* ignore */
+  }
+}
+
+function readJobsDiscoverySession(): JobsDiscoverySession | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(JOBS_SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as JobsDiscoverySession;
+    if (!parsed?.profileKey) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 function FunnelTrace({ phase, jobCount }: { phase: TracePhase; jobCount: number | null }) {
   const countLabel =
@@ -182,6 +213,8 @@ type Props = {
 };
 
 export default function RobotJobsExperiment({ slug }: Props) {
+  const { session } = useAuth();
+  const unlocked = Boolean(session);
   const slugConfig = useMemo(() => resolveJobsSlug(slug), [slug]);
   const [step, setStep] = useState<Step>("enter");
   const [boardMode, setBoardMode] = useState<BoardMode>("market");
@@ -235,6 +268,10 @@ export default function RobotJobsExperiment({ slug }: Props) {
     const list = jobsFor(key);
     const tape = demoJobsToTape(list, p?.capability_family ?? "transport_amr");
     const total = p?.job_count_total ?? list.length;
+    const ownerSlug = PROFILE_KEY_TO_SLUG[key] ?? slugRef.current;
+    slugRef.current = ownerSlug;
+    setProfileKey(key);
+    setRobotName(name);
     setPersonalCorpus(tape.length ? tape : MARKET_TAPE_JOBS.slice(0, 8));
     setJobCountOverride(total);
     setBoardMode("personal");
@@ -248,6 +285,11 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setSelectedTapeKey(tape[0]?.key ?? null);
     setQualifyOpen(false);
     setQualifyRequested(false);
+    saveJobsDiscoverySession({
+      profileKey: key,
+      robotName: name,
+      slug: ownerSlug,
+    });
     trackRobotJobsFunnel("discovery_complete", {
       ...funnelBase(),
       profile_key: key,
@@ -384,7 +426,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
     return jobs[jobIndex];
   }, [jobs, selectedTapeKey, jobIndex]);
   const totalJobs = jobCountOverride ?? profile?.job_count_total ?? jobs.length;
-  const previewCount = Math.min(PREVIEW_FREE, jobs.length);
+  const freePreviewCount = Math.min(PREVIEW_FREE, jobs.length);
+  const previewCount = unlocked ? jobs.length : freePreviewCount;
   const src = srcRef.current;
 
   const tapeCorpus = boardMode === "personal" ? personalCorpus : MARKET_TAPE_JOBS;
@@ -497,7 +540,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
   }
 
   function onNextJob() {
-    if (jobIndex + 1 >= previewCount) {
+    if (!unlocked && jobIndex + 1 >= freePreviewCount) {
       setStep("gate");
       trackRobotJobsFunnel("preview_complete", {
         ...funnelBase(),
@@ -506,7 +549,16 @@ export default function RobotJobsExperiment({ slug }: Props) {
       });
       return;
     }
+    if (unlocked && jobIndex + 1 >= jobs.length) {
+      setJobIndex(0);
+      setSelectedTapeKey(jobs[0]?.job_key ?? null);
+      setQualifyOpen(false);
+      setQualifyRequested(false);
+      recordJobView(0);
+      return;
+    }
     const next = jobIndex + 1;
+    if (next >= jobs.length) return;
     setJobIndex(next);
     setSelectedTapeKey(jobs[next]?.job_key ?? null);
     setQualifyOpen(false);
@@ -567,14 +619,31 @@ export default function RobotJobsExperiment({ slug }: Props) {
         : profileKey
           ? jobsPathForProfile(profileKey, srcRef.current)
           : srcRef.current
-            ? `/jobs?src=${encodeURIComponent(srcRef.current)}`
-            : "/jobs";
+            ? `/?src=${encodeURIComponent(srcRef.current)}`
+            : "/";
     const signupParams = new URLSearchParams();
     signupParams.set("next", next);
     signupParams.set("src", "robot_jobs");
     if (personaRef.current) signupParams.set("persona", personaRef.current);
     return `/signup?${signupParams.toString()}`;
   })();
+
+  // Auth unlock: skip gate; restore discovery if session returns without slug.
+  useEffect(() => {
+    if (!session) return;
+    if (step === "gate" && profileKey) {
+      setStep("enter");
+      setBoardMode("personal");
+      return;
+    }
+    if (slugConfig) return;
+    if (boardMode === "personal" && profileKey) return;
+    const saved = readJobsDiscoverySession();
+    if (saved?.profileKey) {
+      enterPersonalBoard(saved.profileKey, saved.robotName);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- unlock on session only
+  }, [session]);
 
   return (
     <section className="flex min-h-0 flex-1 flex-col" aria-label="Find jobs for your robot">
@@ -669,7 +738,13 @@ export default function RobotJobsExperiment({ slug }: Props) {
                   onClick={onNextJob}
                   className="mt-3 text-xs font-bold text-emerald-400 underline"
                 >
-                  {jobIndex + 1 >= previewCount ? "See all jobs →" : "Next job →"}
+                  {unlocked
+                    ? jobIndex + 1 >= jobs.length
+                      ? "Back to first job →"
+                      : "Next job →"
+                    : jobIndex + 1 >= freePreviewCount
+                      ? "See all jobs →"
+                      : "Next job →"}
                 </button>
               </div>
             ) : boardMode === "status" ? (
@@ -779,7 +854,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
           <p className={`mt-8 ${eyebrowClass}`}>See what we&apos;ve already found</p>
           <ProofCards src={src} />
           <Link
-            href={src ? `/jobs?src=${encodeURIComponent(src)}` : "/jobs"}
+            href={src ? `/?src=${encodeURIComponent(src)}` : "/"}
             className="mt-6 inline-block text-sm font-bold underline"
             style={{ color: macAccent }}
           >
@@ -796,7 +871,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
             See all {totalJobs} jobs for {robotName}
           </h2>
           <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>
-            You&apos;ve seen {previewCount} jobs matched to its capabilities. Create an account to unlock
+            You&apos;ve seen {freePreviewCount} jobs matched to its capabilities. Create an account to unlock
             the rest.
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -827,7 +902,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
             Review jobs again
           </button>
           <Link
-            href={src ? `/jobs?src=${encodeURIComponent(src)}` : "/jobs"}
+            href={src ? `/?src=${encodeURIComponent(src)}` : "/"}
             className={`mt-6 block text-xs font-bold ${mutedClass}`}
           >
             Try another robot

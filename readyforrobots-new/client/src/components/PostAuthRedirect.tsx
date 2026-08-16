@@ -1,10 +1,15 @@
 /**
- * After OAuth/magic-link, Supabase sometimes lands on `/` without `next`.
- * When a session appears on a neutral page, resume stored checkout/deep-link intent.
+ * After OAuth/magic-link, Supabase may land on `/` without `next`.
+ * Resume stored deep-link intent only — never invent a /pipeline bounce from the product home.
  */
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { peekPendingNext, postAuthRedirectTarget, navigateAfterAuth } from "@/lib/authNext";
+import {
+  clearPendingNext,
+  peekPendingNext,
+  navigateAfterAuth,
+} from "@/lib/authNext";
+import { normalizeJobsReturnPath, isJobsProductReturnPath } from "@/lib/signupWorkflowPath";
 
 const NEUTRAL_PATHS = new Set(["/", "/login", "/signup", "/auth/callback", "/pricing"]);
 
@@ -15,11 +20,25 @@ export default function PostAuthRedirect() {
   useEffect(() => {
     if (loading || !session || handled.current) return;
     const pending = peekPendingNext();
-    const dest = postAuthRedirectTarget("/pipeline");
-    const target = pending && pending !== "/" ? pending : dest !== "/" ? dest : null;
-    if (!target) return;
+    if (!pending) return;
+
     const path = window.location.pathname;
     if (!NEUTRAL_PATHS.has(path)) return;
+
+    let target = isJobsProductReturnPath(pending) ? normalizeJobsReturnPath(pending) : pending;
+    const current = `${window.location.pathname}${window.location.search}`;
+    if (current === target) {
+      clearPendingNext();
+      handled.current = true;
+      return;
+    }
+    // Already on product home with a home-shaped pending (e.g. / or /?src=) — stay if paths match.
+    if (path === "/" && target.split("?")[0] === "/" && !target.includes("?")) {
+      clearPendingNext();
+      handled.current = true;
+      return;
+    }
+
     handled.current = true;
     navigateAfterAuth(target);
   }, [loading, session]);

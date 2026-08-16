@@ -30,6 +30,7 @@ import { KARE_FACE } from "@/lib/kareIcons";
 import {
   resolveSignupWorkflowReturnPath,
   shouldHonorWorkflowResults,
+  isJobsProductReturnPath,
   type WorkflowPrefill,
 } from "@/lib/signupWorkflowPath";
 
@@ -142,6 +143,8 @@ export default function Signup() {
   const nextRaw = params.get("next") || "";
   const pipelineIntent = nextRaw.startsWith("/pipeline") || /[?&]lead=\d+/.test(nextRaw);
   const resultsIntent = nextRaw.startsWith("/results");
+  const robotJobsIntent =
+    params.get("src") === "robot_jobs" || isJobsProductReturnPath(nextRaw);
   // Specific buyer the anonymous user was acting on — carried through the signup wall
   // so we restate exactly what they unlock (value-first conversion continuity).
   const buyerCo = (params.get("co") || "").trim().slice(0, 80);
@@ -158,8 +161,9 @@ export default function Signup() {
   }, [params]);
 
   const matchedUnlockIntent =
-    params.get("src") === "pipeline_matched_unlock" ||
-    (pipelineIntent && Boolean(workflowPrefill.company_url || params.get("company_url")));
+    !robotJobsIntent &&
+    (params.get("src") === "pipeline_matched_unlock" ||
+      (pipelineIntent && Boolean(workflowPrefill.company_url || params.get("company_url"))));
 
   /** Keep URL-matched unlock on /pipeline?url=… — never fall back to bare /pipeline or Results. */
   const matchedPipelineReturnPath = useMemo(() => {
@@ -650,11 +654,19 @@ export default function Signup() {
           ) : (
             <div className="rounded-2xl border border-slate-700 p-6 shadow-sm">
               <h2 className="font-display text-xl font-bold text-slate-100">
-                {hubspotIntent ? "Sign up for HubSpot sync" : matchedUnlockIntent ? "Company details + free account" : "Start free"}
+                {hubspotIntent
+                  ? "Sign up for HubSpot sync"
+                  : robotJobsIntent
+                    ? "See all jobs for your robot"
+                    : matchedUnlockIntent
+                      ? "Company details + free account"
+                      : "Start free"}
               </h2>
               <p className="mt-2 text-sm text-slate-300">
                 {hubspotIntent
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
+                  : robotJobsIntent
+                    ? "Create an account to unlock the rest of the jobs we found for your robot."
                   : matchedUnlockIntent
                     ? "Confirm company name, robot category, and ICP — then create your account to unlock 15 matched sales leads."
                     : resultsIntent

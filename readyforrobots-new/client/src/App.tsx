@@ -4,7 +4,6 @@ import NotFound from "@/pages/NotFound";
 import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
 import Results from "./pages/Results";
 import RobotAnalysisReview from "./pages/RobotAnalysisReview";
 import RobotDetailReview from "./pages/RobotDetailReview";
@@ -49,16 +48,28 @@ import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
 import VisitTracker from "./components/VisitTracker";
 
+/** /jobs → / (preserve query). Personalized /jobs/:slug stays. */
+function JobsIndexRedirect() {
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  return <Redirect to={`/${search}`} />;
+}
+
+function JourneyHomeRedirect() {
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  return <Redirect to={`/${search}`} />;
+}
+
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      {/* Product front door = Find jobs for your robot */}
+      <Route path="/" component={Jobs} />
       <Route path="/robots/analysis/:analysisId" component={RobotAnalysisReview} />
       <Route path="/robots/:robotId/review" component={RobotDetailReview} />
-      <Route path="/journey/url" component={Home} />
-      <Route path="/journey/identity" component={Home} />
-      <Route path="/journey/preview" component={Home} />
-      <Route path="/journey/activate" component={Home} />
+      <Route path="/journey/url" component={JourneyHomeRedirect} />
+      <Route path="/journey/identity" component={JourneyHomeRedirect} />
+      <Route path="/journey/preview" component={JourneyHomeRedirect} />
+      <Route path="/journey/activate" component={JourneyHomeRedirect} />
       <Route path="/results" component={Results} />
       <Route path="/sales/samples" component={SalesSamples} />
       <Route path="/pipeline" component={Pipeline} />
@@ -81,7 +92,7 @@ function Router() {
       <Route path="/billing/success" component={BillingSuccess} />
       <Route path="/social" component={Social} />
       <Route path="/jobs/:slug" component={Jobs} />
-      <Route path="/jobs" component={Jobs} />
+      <Route path="/jobs" component={JobsIndexRedirect} />
       <Route path="/experiment" component={ExperimentRedirect} />
       <Route path="/icon-review" component={IconReview} />
       <Route path="/login" component={Login} />

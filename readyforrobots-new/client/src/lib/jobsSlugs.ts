@@ -90,18 +90,18 @@ export function jobsPathForSlug(slug: string, src?: string | null): string {
 
 export function jobsPathForProfile(profileKey: string, src?: string | null): string {
   const slug = PROFILE_KEY_TO_SLUG[profileKey];
-  if (!slug) return src ? `/jobs?src=${encodeURIComponent(src)}` : "/jobs";
+  if (!slug) return src ? `/?src=${encodeURIComponent(src)}` : "/";
   return jobsPathForSlug(slug, src);
 }
 
-/** Map legacy /experiment?robot=locus_origin → /jobs/locus-origin */
+/** Map legacy /experiment?robot=locus_origin → /jobs/locus-origin (or / with ?src=). */
 export function experimentQueryToJobsPath(search: string): string {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
   const robot = (params.get("robot") || "").trim();
   const src = (params.get("src") || "").trim() || null;
   const slug = PROFILE_KEY_TO_SLUG[robot] || null;
   if (slug) return jobsPathForSlug(slug, src);
-  return src ? `/jobs?src=${encodeURIComponent(src)}` : "/jobs";
+  return src ? `/?src=${encodeURIComponent(src)}` : "/";
 }
 
 export function demoProfilesForProof() {

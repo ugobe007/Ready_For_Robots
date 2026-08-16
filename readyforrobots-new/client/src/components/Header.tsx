@@ -287,7 +287,7 @@ export default function Header() {
                     Sign in
                   </Link>
                   <Link
-                    href="/signup"
+                    href="/signup?next=/&src=robot_jobs"
                     className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-all active:scale-[0.97]"
                   >
                     <Zap size={14} />
@@ -428,7 +428,7 @@ export default function Header() {
 
         <div className="px-4 pt-4 pb-2 space-y-2">
           <Link
-            href="/signup"
+            href="/signup?next=/&src=robot_jobs"
             onClick={closeDrawer}
             className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm"
           >
@@ -564,7 +564,7 @@ export default function Header() {
                 Sign in
               </Link>
               <Link
-                href="/signup?next=/pipeline"
+                href="/signup?next=/&src=robot_jobs"
                 onClick={closeDrawer}
                 className="block text-center py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-800"
               >

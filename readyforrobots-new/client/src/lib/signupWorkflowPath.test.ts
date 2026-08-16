@@ -44,4 +44,25 @@ describe("signupWorkflowPath", () => {
       }),
     ).toBe(next);
   });
+
+  it("returns jobs product paths to / or /jobs/:slug (not /pipeline)", () => {
+    expect(
+      resolveSignupWorkflowReturnPath({
+        nextRaw: "/",
+        prefill: { src: "robot_jobs" },
+      }),
+    ).toBe("/");
+    expect(
+      resolveSignupWorkflowReturnPath({
+        nextRaw: "/jobs?src=c1_job_mfg_kits",
+        prefill: { src: "robot_jobs" },
+      }),
+    ).toBe("/?src=c1_job_mfg_kits");
+    expect(
+      resolveSignupWorkflowReturnPath({
+        nextRaw: "/jobs/locus-origin?src=robot_jobs",
+        prefill: { src: "robot_jobs" },
+      }),
+    ).toBe("/jobs/locus-origin?src=robot_jobs");
+  });
 });

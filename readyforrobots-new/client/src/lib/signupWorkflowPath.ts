@@ -1,6 +1,7 @@
 /**
- * Post-signup destination for the URL → signup → 5 leads → info → 15 leads flow.
- * Explicit ?next=/results… must never be rewritten to bare /pipeline.
+ * Post-signup destination helpers.
+ * Jobs funnel (next=/ or /jobs…) must return to the product — never /pipeline.
+ * Legacy URL → /results → questionnaire → /pipeline remains for explicit /results next.
  */
 
 export type WorkflowPrefill = {
@@ -40,6 +41,21 @@ export function clearBuild15UnlockFlags(): void {
   }
 }
 
+/** True when signup next should land on the Jobs product (/, /jobs, /jobs/:slug). */
+export function isJobsProductReturnPath(nextRaw: string): boolean {
+  const path = (nextRaw || "").trim().split("?")[0] || "";
+  return path === "/" || path === "/jobs" || path.startsWith("/jobs/");
+}
+
+/** Normalize legacy /jobs index → /. */
+export function normalizeJobsReturnPath(nextRaw: string): string {
+  const raw = (nextRaw || "").trim();
+  if (!raw) return "/";
+  if (raw === "/jobs") return "/";
+  if (raw.startsWith("/jobs?")) return `/${raw.slice("/jobs".length)}`;
+  return raw;
+}
+
 /** Build /results?url=…&limit=5 for the five-lead review step. */
 export function workflowResultsPath(prefill: WorkflowPrefill, nextRaw = ""): string {
   const fromNext = urlFromResultsNext(nextRaw);
@@ -75,17 +91,19 @@ function srcFromResultsNext(nextRaw: string): string {
 
 export function shouldHonorWorkflowResults(nextRaw: string, prefill: WorkflowPrefill): boolean {
   if (nextRaw.startsWith("/results")) return true;
+  if (isJobsProductReturnPath(nextRaw)) return false;
   if (!(prefill.company_url || "").trim()) return false;
   if (nextRaw.startsWith("/pipeline") || nextRaw === "/" || nextRaw.startsWith("/pricing")) {
     return false;
   }
   if ((prefill.src || "").includes("home_header")) return false;
+  if ((prefill.src || "") === "robot_jobs") return false;
   return true;
 }
 
 /**
  * Resolve where signup/OAuth should land.
- * Priority: explicit /results → explicit /pipeline|/pricing → matched unlock → rebuild results → /pipeline.
+ * Priority: jobs product → /results → /pipeline|/pricing → matched unlock → rebuild results → /pipeline.
  */
 export function resolveSignupWorkflowReturnPath(args: {
   nextRaw: string;
@@ -93,10 +111,10 @@ export function resolveSignupWorkflowReturnPath(args: {
   matchedPipelineReturnPath?: string | null;
 }): string {
   const nextRaw = (args.nextRaw || "").trim();
+  if (isJobsProductReturnPath(nextRaw)) return normalizeJobsReturnPath(nextRaw);
   // Never skip the 5-lead Results step when signup was opened for it.
   if (nextRaw.startsWith("/results")) return nextRaw;
   if (nextRaw.startsWith("/pipeline") || nextRaw.startsWith("/pricing")) return nextRaw;
-  if (nextRaw === "/") return "/pipeline";
   if (args.matchedPipelineReturnPath) return args.matchedPipelineReturnPath;
   if (!shouldHonorWorkflowResults(nextRaw, args.prefill)) return "/pipeline";
   return workflowResultsPath(args.prefill, nextRaw);

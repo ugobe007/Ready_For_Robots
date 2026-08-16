@@ -1,5 +1,6 @@
 /**
- * /jobs — Robot Employment Office (dark RFR brand).
+ * Canonical product front door (also /jobs/:slug personalization).
+ * /jobs index redirects to /.
  */
 import { useRoute } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";

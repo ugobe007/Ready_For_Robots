@@ -58,6 +58,8 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
   const openChat = useCallback(() => setOpen(true), []);
   const onPipeline = location === "/pipeline" || location.startsWith("/admin/prospects");
   const hideFab =
+    location === "/" ||
+    location.startsWith("/?") ||
     location === "/jobs" ||
     location.startsWith("/jobs/") ||
     location.startsWith("/jobs?") ||
