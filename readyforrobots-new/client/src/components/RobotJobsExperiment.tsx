@@ -39,7 +39,7 @@ import {
 type Profile = (typeof demo.profiles)[number];
 type Job = (typeof demo.jobs)[keyof typeof demo.jobs][number];
 type Step = "enter" | "unsupported" | "gate";
-type BoardMode = "market" | "status" | "personal";
+type BoardMode = "market" | "status" | "reveal" | "personal";
 /** Left funnel process trace under the URL input. */
 type TracePhase = "idle" | "url" | "caps" | "search" | "done";
 
@@ -244,6 +244,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
   const slugRef = useRef<string | null>(slugConfig?.slug ?? null);
   const fired3Plus = useRef(false);
   const boardTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const revealTargetRef = useRef<{ key: string; name: string } | null>(null);
   const bootedSlug = useRef<string | null>(null);
 
   const funnelBase = () => ({
@@ -282,7 +283,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setStep("enter");
     setJobIndex(0);
     setJobsViewed(1);
-    setSelectedTapeKey(tape[0]?.key ?? null);
+    setSelectedTapeKey(tape[0]?.key ?? list[0]?.job_key ?? null);
     setQualifyOpen(false);
     setQualifyRequested(false);
     saveJobsDiscoverySession({
@@ -312,19 +313,30 @@ export default function RobotJobsExperiment({ slug }: Props) {
     });
   }
 
+  /** Status → reveal count-up → personal. ~3s total, no screen jump. */
   function runBoardDiscovery(key: string, name: string) {
     clearBoardTimers();
     const p = profileByKey(key);
+    const list = jobsFor(key);
+    const tape = demoJobsToTape(list, p?.capability_family ?? "transport_amr");
+    const total = p?.job_count_total ?? list.length;
     const capCount = String(p?.can_actions?.length ?? 5).padStart(2, "0");
+    const ownerSlug = PROFILE_KEY_TO_SLUG[key] ?? slugRef.current;
+    slugRef.current = ownerSlug;
+    setProfileKey(key);
+    setRobotName(name);
+    setPersonalCorpus(tape.length ? tape : MARKET_TAPE_JOBS.slice(0, 8));
+    setJobCountOverride(total);
     setStep("enter");
     setBoardMode("status");
     setTapeRunning(false);
     setTracePhase("url");
     setTraceJobCount(null);
-    setStatusLines(["Analyzing your robot…"]);
+    setStatusLines(["Robot received ✓"]);
     setSelectedTapeKey(null);
     setQualifyOpen(false);
     setQualifyRequested(false);
+    revealTargetRef.current = { key, name };
 
     trackRobotJobsFunnel("discovery_started", {
       ...funnelBase(),
@@ -334,25 +346,28 @@ export default function RobotJobsExperiment({ slug }: Props) {
 
     boardLater(() => {
       setTracePhase("caps");
-      setStatusLines(["Product found ✓", `Capabilities ${capCount}`]);
-    }, 700);
+      setStatusLines(["Robot received ✓", `Capabilities found ${capCount}`]);
+    }, 350);
     boardLater(() => {
       setTracePhase("search");
-      setStatusLines(["Product found ✓", `Capabilities ${capCount}`, "Searching work…"]);
-    }, 1400);
-    boardLater(() => {
       setStatusLines([
-        "Product found ✓",
-        `Capabilities ${capCount}`,
+        "Robot received ✓",
+        `Capabilities found ${capCount}`,
         "Searching work…",
-        "> Job found",
-        "> Job found",
-        "> Job found",
       ]);
-    }, 2200);
+    }, 700);
     boardLater(() => {
-      enterPersonalBoard(key, name);
-    }, 3200);
+      setStatusLines([]);
+      setBoardMode("reveal");
+      setTracePhase("search");
+    }, 1000);
+  }
+
+  function onRevealComplete() {
+    const target = revealTargetRef.current;
+    if (!target) return;
+    revealTargetRef.current = null;
+    enterPersonalBoard(target.key, target.name);
   }
 
   function applySlugConfig(config: JobsSlugConfig) {
@@ -430,10 +445,15 @@ export default function RobotJobsExperiment({ slug }: Props) {
   const previewCount = unlocked ? jobs.length : freePreviewCount;
   const src = srcRef.current;
 
-  const tapeCorpus = boardMode === "personal" ? personalCorpus : MARKET_TAPE_JOBS;
-  const tapeTitle = boardMode === "personal" ? "Jobs For Your Robot" : "Jobs We Found";
+  const tapeCorpus =
+    boardMode === "market" || boardMode === "status" ? MARKET_TAPE_JOBS : personalCorpus;
+  const tapeTitle =
+    boardMode === "personal" || boardMode === "reveal" ? "Jobs For Your Robot" : "Jobs We Found";
   const tapeBase = boardMode === "personal" ? totalJobs : MARKET_FOUND_BASE;
   const tapeStatus = boardMode === "status" ? statusLines : undefined;
+  const tapeRevealTarget = boardMode === "reveal" ? Math.max(totalJobs, 1) : null;
+  const moreJobsCount = Math.max(0, totalJobs - freePreviewCount);
+  const discovering = boardMode === "status" || boardMode === "reveal";
 
   function beginWithMappedRobot(opts: {
     key: string;
@@ -658,8 +678,10 @@ export default function RobotJobsExperiment({ slug }: Props) {
             </h1>
             <p className="mt-3 text-[15px] leading-snug text-slate-300">
               {boardMode === "personal"
-                ? `Work matched to ${robotName}.`
-                : "Robots need jobs. We find the work."}
+                ? `We found ${totalJobs} jobs for ${robotName}.`
+                : discovering
+                  ? "Working on your robot."
+                  : "Robots need jobs. We find the work."}
             </p>
 
             <label
@@ -678,13 +700,13 @@ export default function RobotJobsExperiment({ slug }: Props) {
                   if (e.key === "Enter") onContinueUrl();
                 }}
                 placeholder="Paste robot product URL"
-                disabled={boardMode === "status"}
+                disabled={discovering}
                 className="w-full border-0 border-b border-slate-500 bg-[#081126] px-3 py-2 font-mono text-[13px] text-slate-100 outline-none placeholder:text-slate-600 focus:bg-[#0a152c] disabled:opacity-60"
               />
               <button
                 type="button"
                 onClick={onContinueUrl}
-                disabled={!url.trim() || boardMode === "status"}
+                disabled={!url.trim() || discovering}
                 className="flex w-full items-center justify-between gap-3 bg-emerald-400 px-3 py-2 text-left font-mono text-[13px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-emerald-400/40 disabled:text-white/70"
               >
                 <span className="inline-flex items-center gap-2.5">
@@ -746,21 +768,42 @@ export default function RobotJobsExperiment({ slug }: Props) {
                       ? "See all jobs →"
                       : "Next job →"}
                 </button>
+                {!unlocked && moreJobsCount > 0 ? (
+                  <div className="mt-4 border-t border-slate-700 pt-3">
+                    <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                      +{moreJobsCount} more jobs
+                    </p>
+                    <Link
+                      href={signupHref}
+                      onClick={onSeeAll}
+                      className="mt-2 inline-flex font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-emerald-400"
+                    >
+                      See all jobs →
+                    </Link>
+                  </div>
+                ) : null}
               </div>
-            ) : boardMode === "status" ? (
+            ) : discovering ? (
               <div className="mt-auto border-t border-slate-700 pt-4">
                 <div className="flex items-center gap-3">
                   <PixelIcon map={KARE_FACE} scale={2} fill={FACE_EMERALD} background="transparent" />
                   <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
-                    Analyzing your robot
+                    {boardMode === "reveal" ? "Matching work" : "Analyzing your robot"}
                   </p>
                 </div>
                 <ul className="mt-4 space-y-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
-                  {statusLines.map((line) => (
+                  {(statusLines.length
+                    ? statusLines
+                    : [
+                        "Robot received ✓",
+                        "Capabilities found",
+                        "Searching work…",
+                      ]
+                  ).map((line) => (
                     <li
                       key={line}
                       className={
-                        line.startsWith(">") || line.includes("✓")
+                        line.includes("✓") || line.startsWith(">")
                           ? "text-emerald-400"
                           : undefined
                       }
@@ -822,8 +865,12 @@ export default function RobotJobsExperiment({ slug }: Props) {
               title={tapeTitle}
               corpus={tapeCorpus}
               baseCount={tapeBase}
-              running={tapeRunning && boardMode !== "status"}
+              running={
+                tapeRunning && (boardMode === "market" || boardMode === "personal")
+              }
               statusLines={tapeStatus}
+              revealTarget={tapeRevealTarget}
+              onRevealComplete={onRevealComplete}
               onSelect={onSelectTapeJob}
               selectedKey={selectedTapeKey}
             />

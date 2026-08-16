@@ -1,6 +1,6 @@
 /**
  * Live job tape — fixed 58px classified rows; 12 visible; feed rotates behind.
- * Exact row grid: 48 | 34 | 1fr | 24. No absolute text stacking.
+ * Exact row grid: 48 | 34 | 1fr | 24. Reveal mode: rapid 0001→N after robot submit.
  */
 import { useEffect, useRef, useState } from "react";
 import PixelIcon from "@/components/PixelIcon";
@@ -21,6 +21,10 @@ const INTERVAL_MIN = 5000;
 const INTERVAL_MAX = 7000;
 /** 16×16 map → 24px (fits 34px icon column; stronger Kare presence) */
 const ICON_SCALE = 24 / 16;
+/** Discovery reveal: keep whole theater under ~2.5s for the count-up leg. */
+const REVEAL_BUDGET_MS = 2200;
+const REVEAL_MIN_STEP_MS = 45;
+const REVEAL_MAX_STEP_MS = 120;
 
 type Row = TapeJob & {
   instanceId: string;
@@ -34,6 +38,9 @@ type Props = {
   baseCount: number;
   running?: boolean;
   statusLines?: string[];
+  /** When set, empty board then count 1→target with rapid row arrivals. */
+  revealTarget?: number | null;
+  onRevealComplete?: () => void;
   onSelect?: (job: TapeJob) => void;
   selectedKey?: string | null;
 };
@@ -42,8 +49,19 @@ function padCount(n: number): string {
   return String(Math.max(0, n)).padStart(4, "0");
 }
 
+function jobsFoundLabel(n: number): string {
+  if (n === 1) return `${padCount(1)} Job Found`;
+  return `${padCount(n)} Jobs Found`;
+}
+
 function nextInterval(): number {
   return INTERVAL_MIN + Math.floor(Math.random() * (INTERVAL_MAX - INTERVAL_MIN));
+}
+
+function revealStepMs(target: number): number {
+  if (target <= 1) return REVEAL_BUDGET_MS;
+  const raw = Math.floor(REVEAL_BUDGET_MS / target);
+  return Math.min(REVEAL_MAX_STEP_MS, Math.max(REVEAL_MIN_STEP_MS, raw));
 }
 
 /** Title Case for human-readable job names (not mono/all-caps). */
@@ -60,28 +78,44 @@ export default function LiveJobTape({
   baseCount,
   running = true,
   statusLines,
+  revealTarget = null,
+  onRevealComplete,
   onSelect,
   selectedKey,
 }: Props) {
-  const [rows, setRows] = useState<Row[]>(() => seedRows(corpus, baseCount));
-  const [foundCount, setFoundCount] = useState(baseCount);
+  const revealing = typeof revealTarget === "number" && revealTarget > 0;
+  const [rows, setRows] = useState<Row[]>(() => (revealing ? [] : seedRows(corpus, baseCount)));
+  const [foundCount, setFoundCount] = useState(revealing ? 0 : baseCount);
   const [offsetY, setOffsetY] = useState(0);
   const [animate, setAnimate] = useState(false);
   const [headerFlash, setHeaderFlash] = useState(false);
   const [iconActive, setIconActive] = useState(false);
-  const cursorRef = useRef(VISIBLE % Math.max(corpus.length, 1));
-  const seqRef = useRef(baseCount);
+  const cursorRef = useRef(0);
+  const seqRef = useRef(revealing ? 0 : baseCount);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const arriving = useRef(false);
+  const revealDone = useRef(false);
+  const onRevealCompleteRef = useRef(onRevealComplete);
+  onRevealCompleteRef.current = onRevealComplete;
 
   useEffect(() => {
+    if (revealing) {
+      setRows([]);
+      setFoundCount(0);
+      seqRef.current = 0;
+      cursorRef.current = 0;
+      revealDone.current = false;
+      setOffsetY(0);
+      setAnimate(false);
+      return;
+    }
     setRows(seedRows(corpus, baseCount));
     setFoundCount(baseCount);
     seqRef.current = baseCount;
     cursorRef.current = VISIBLE % Math.max(corpus.length, 1);
     setOffsetY(0);
     setAnimate(false);
-  }, [corpus, baseCount]);
+  }, [corpus, baseCount, revealing, revealTarget]);
 
   useEffect(() => {
     return () => {
@@ -89,8 +123,9 @@ export default function LiveJobTape({
     };
   }, []);
 
+  /** Market live feed — paused during status/reveal. */
   useEffect(() => {
-    if (!running || corpus.length === 0) return;
+    if (revealing || !running || corpus.length === 0) return;
 
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -98,7 +133,7 @@ export default function LiveJobTape({
     const schedule = () => {
       timeoutId = setTimeout(() => {
         if (cancelled) return;
-        arrive();
+        arrive(false);
         schedule();
       }, nextInterval());
     };
@@ -109,21 +144,52 @@ export default function LiveJobTape({
       clearTimeout(timeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, corpus]);
+  }, [running, corpus, revealing]);
+
+  /** Discovery reveal — rapid count-up. */
+  useEffect(() => {
+    if (!revealing || !revealTarget || corpus.length === 0) return;
+
+    let cancelled = false;
+    const step = revealStepMs(revealTarget);
+    let n = 0;
+
+    const tick = () => {
+      if (cancelled) return;
+      n += 1;
+      arrive(true, n);
+      if (n >= revealTarget) {
+        later(() => {
+          if (cancelled || revealDone.current) return;
+          revealDone.current = true;
+          onRevealCompleteRef.current?.();
+        }, SHIFT_MS + 80);
+        return;
+      }
+      later(tick, step);
+    };
+
+    later(tick, 40);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealing, revealTarget, corpus]);
 
   function later(fn: () => void, ms: number) {
     const id = setTimeout(fn, ms);
     timers.current.push(id);
   }
 
-  function arrive() {
-    if (corpus.length === 0 || arriving.current) return;
-    arriving.current = true;
+  function arrive(fromReveal: boolean, forcedSeq?: number) {
+    if (corpus.length === 0) return;
+    if (!fromReveal && arriving.current) return;
+    if (!fromReveal) arriving.current = true;
 
     const job = corpus[cursorRef.current % corpus.length];
     cursorRef.current = (cursorRef.current + 1) % corpus.length;
-    seqRef.current += 1;
-    const nextSeq = seqRef.current;
+    const nextSeq = forcedSeq ?? seqRef.current + 1;
+    seqRef.current = nextSeq;
     const instanceId = `${job.key}_${nextSeq}_${Date.now()}`;
 
     setHeaderFlash(true);
@@ -135,7 +201,7 @@ export default function LiveJobTape({
     setRows((prev) => {
       const cleared = prev.map((r) => ({ ...r, isNew: false }));
       const incoming: Row = { ...job, instanceId, seq: nextSeq, isNew: true };
-      return [incoming, ...cleared];
+      return [incoming, ...cleared].slice(0, VISIBLE + 1);
     });
 
     requestAnimationFrame(() => {
@@ -148,16 +214,18 @@ export default function LiveJobTape({
     later(() => {
       setAnimate(false);
       setRows((prev) => prev.slice(0, VISIBLE));
-      arriving.current = false;
-    }, SHIFT_MS);
-    later(() => setHeaderFlash(false), HEADER_FLASH_MS);
-    later(() => setIconActive(false), 420);
-    later(() => {
-      setRows((prev) => prev.map((r) => (r.instanceId === instanceId ? { ...r, isNew: false } : r)));
-    }, NEW_HOLD_MS);
+      if (!fromReveal) arriving.current = false;
+    }, fromReveal ? Math.min(SHIFT_MS, 90) : SHIFT_MS);
+    later(() => setHeaderFlash(false), fromReveal ? 200 : HEADER_FLASH_MS);
+    later(() => setIconActive(false), fromReveal ? 160 : 420);
+    if (!fromReveal) {
+      later(() => {
+        setRows((prev) => prev.map((r) => (r.instanceId === instanceId ? { ...r, isNew: false } : r)));
+      }, NEW_HOLD_MS);
+    }
   }
 
-  const showStatus = Boolean(statusLines?.length);
+  const showStatus = Boolean(statusLines?.length) && !revealing;
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#081126]">
@@ -167,22 +235,27 @@ export default function LiveJobTape({
             {title}
           </p>
           <p className="font-mono text-[13px] font-bold uppercase tracking-[0.08em] tabular-nums text-emerald-400 sm:text-[14px]">
-            {headerFlash ? (
+            {headerFlash && !revealing ? (
               <span>● New Job</span>
             ) : (
-              <span>{padCount(foundCount)} Jobs Found</span>
+              <span>{jobsFoundLabel(foundCount)}</span>
             )}
           </p>
         </div>
         <p className="mt-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-          Live robot work
+          {revealing ? "Matching work to your robot" : "Live robot work"}
         </p>
       </div>
 
       {showStatus ? (
         <div className="flex flex-1 flex-col justify-center gap-2 px-5 py-8 font-mono text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-400">
           {statusLines!.map((line) => (
-            <p key={line} className={line.startsWith(">") ? "text-emerald-400" : undefined}>
+            <p
+              key={line}
+              className={
+                line.includes("✓") || line.startsWith(">") ? "text-emerald-400" : undefined
+              }
+            >
               {line}
             </p>
           ))}
@@ -193,7 +266,9 @@ export default function LiveJobTape({
             className="absolute inset-x-0 top-0"
             style={{
               transform: `translateY(${offsetY}px)`,
-              transition: animate ? `transform ${SHIFT_MS}ms linear` : "none",
+              transition: animate
+                ? `transform ${revealing ? 90 : SHIFT_MS}ms linear`
+                : "none",
             }}
           >
             {rows.map((row) => {
@@ -219,7 +294,6 @@ export default function LiveJobTape({
                       paddingBottom: 6,
                     }}
                   >
-                    {/* NUMBER — top-aligned with title */}
                     <span
                       className={`font-mono text-[10px] font-semibold leading-4 tabular-nums ${
                         row.isNew ? "text-emerald-400" : "text-slate-500"
@@ -228,7 +302,6 @@ export default function LiveJobTape({
                       {row.isNew ? "NEW" : padCount(row.seq).slice(-3)}
                     </span>
 
-                    {/* ICON — vertically centered in row */}
                     <span className="flex h-[46px] items-center justify-center self-center">
                       <PixelIcon
                         map={map}
@@ -238,7 +311,6 @@ export default function LiveJobTape({
                       />
                     </span>
 
-                    {/* JOB CONTENT — three normal-flow lines, no absolute */}
                     <span className="min-w-0 overflow-hidden">
                       <span
                         className="block overflow-hidden text-ellipsis whitespace-nowrap font-sans text-[14px] font-bold text-white"
@@ -265,7 +337,6 @@ export default function LiveJobTape({
                       </span>
                     </span>
 
-                    {/* ARROW — vertically centered */}
                     <span
                       className={`flex h-[46px] items-center justify-center self-center font-mono text-[11px] transition ${
                         row.isNew
