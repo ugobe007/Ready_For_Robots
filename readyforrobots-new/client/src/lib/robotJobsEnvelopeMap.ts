@@ -1,6 +1,8 @@
 /**
- * V0 envelope map for /experiment fixtures.
- * Integrity rule: never invent matches. Unknown → unsupported.
+ * DEMO / QA ONLY — Origin & Neo fixture aliases for slug personalization tests.
+ *
+ * Production Find Jobs must NOT use this map as a gate.
+ * Production path: scrape_robot_page → analyze_robot_capabilities → job corpus.
  */
 
 export type EnvelopeMatch =

@@ -39,6 +39,10 @@ from app.models.score import Score
 from app.services.ontology import get_industry_prior
 from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.lead_signal_display import format_signal_for_sales, strip_extraction_artifacts
+from app.services.robot_ready_profile import (  # noqa: F401 — re-export for match-url callers
+    analyze_robot_capabilities,
+    scrape_robot_page,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -99,85 +103,7 @@ def _submitted_domain(raw_url: Optional[str]) -> str:
     return parsed.netloc.replace("www.", "")
 
 
-def scrape_robot_page(url: str) -> str:
-    """Scrape robot product page and extract text content"""
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (compatible; ReadyForRobotsCrawler/1.0)'
-        }
-        resp = requests.get(url, headers=headers, timeout=(3, 5))
-        resp.raise_for_status()
-        
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        
-        # Remove script and style elements
-        for script in soup(["script", "style"]):
-            script.decompose()
-        
-        # Get text
-        text = soup.get_text(separator=' ', strip=True)
-        
-        # Limit to first 5000 chars to avoid token overflow
-        return text[:5000]
-    except Exception as e:
-        return f"Error scraping {url}: {str(e)}"
-
-
-def analyze_robot_capabilities(robot_name: str, page_text: str) -> Dict:
-    """
-    Extract robot capabilities from scraped text.
-    In production, this would use LLM to analyze the page.
-    For now, using keyword matching.
-    """
-    text_lower = f"{robot_name or ''} {page_text or ''}".lower()
-    
-    # Determine robot type
-    robot_type = "Unknown"
-    if any(kw in text_lower for kw in ['delivery', 'transport', 'courier', 'cart']):
-        robot_type = "Delivery/Transport"
-    elif any(kw in text_lower for kw in ['disinfect', 'uv', 'sanitize', 'clean']):
-        robot_type = "Disinfection/Cleaning"
-    elif any(kw in text_lower for kw in ['service', 'serve', 'hospitality', 'restaurant']):
-        robot_type = "Service Robot"
-    elif any(kw in text_lower for kw in ['warehouse', 'amr', 'agv', 'logistics', 'picking']):
-        robot_type = "Warehouse/Logistics"
-    elif any(kw in text_lower for kw in ['surgery', 'patient', 'medical', 'healthcare']):
-        robot_type = "Medical/Healthcare"
-    
-    # Determine use case
-    use_case = "General Automation"
-    if 'hotel' in text_lower or 'hospitality' in text_lower:
-        use_case = "Hospitality Services"
-    elif re.search(r"\bhospitals?\b|\bhealthcare\b|\bmedical\b|\bclinic\b|\bpatient\b", text_lower):
-        use_case = "Healthcare Operations"
-    elif 'warehouse' in text_lower or 'distribution' in text_lower:
-        use_case = "Warehouse Logistics"
-    elif 'restaurant' in text_lower or 'food service' in text_lower:
-        use_case = "Food Service"
-    
-    # Extract capabilities (simple keyword matching)
-    capabilities = []
-    capability_keywords = {
-        'autonomous navigation': ['autonomous', 'navigation', 'lidar', 'mapping'],
-        'payload delivery': ['payload', 'delivery', 'transport', 'carry'],
-        'UV disinfection': ['uv', 'disinfect', 'sanitize'],
-        'temperature control': ['temperature', 'refrigerat', 'heated'],
-        'multi-floor': ['elevator', 'multi-floor', 'multiple floors'],
-        'human interaction': ['touchscreen', 'voice', 'interface', 'interact'],
-        'cloud connected': ['cloud', 'fleet', 'dashboard', 'analytics'],
-        'HIPAA compliant': ['hipaa', 'compliant', 'secure'],
-    }
-    
-    for cap, keywords in capability_keywords.items():
-        if any(kw in text_lower for kw in keywords):
-            capabilities.append(cap)
-    
-    return {
-        "type": robot_type,
-        "use_case": use_case,
-        "capabilities": capabilities,
-        "profile_score": min(100, 35 + (15 if robot_type != "Unknown" else 0) + (10 if use_case != "General Automation" else 0) + min(40, len(capabilities) * 8)),
-    }
+# scrape_robot_page / analyze_robot_capabilities live in app.services.robot_ready_profile
 
 
 def _signal_label(signal_type: str) -> str:

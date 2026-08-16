@@ -2,9 +2,10 @@
 Public robot → jobs capability match (homepage / jobs front door).
 
 POST /api/robot-job-match
-  { "url": "https://…", "chip": "manipulates" | null, "product_name": "Digit" | null }
+  { "url": "https://…", "chip": …, "robot_capabilities": {…} }
 
-No V1 feature flag — this is the product front-door path.
+Understanding = existing match-url path (scrape + analyze_robot_capabilities).
+Downstream = Robot Job corpus matcher (not buyer leads).
 """
 from __future__ import annotations
 
@@ -27,6 +28,8 @@ class RobotJobMatchIn(BaseModel):
     chip: Optional[ChipLiteral] = None
     robot_name: Optional[str] = Field(default=None, max_length=120)
     product_name: Optional[str] = Field(default=None, max_length=120)
+    robot_capabilities: Optional[dict[str, Any]] = None
+    page_text: Optional[str] = Field(default=None, max_length=20000)
 
 
 class RobotJobMatchOut(BaseModel):
@@ -43,6 +46,7 @@ class RobotJobMatchOut(BaseModel):
     research_stages: list[dict[str, Any]] = []
     robot_class: Optional[str] = None
     evidence_urls: list[str] = []
+    robot_capabilities: Optional[dict[str, Any]] = None
 
 
 def _empty(state: StateLiteral, name: str, url: str | None = None) -> dict[str, Any]:
@@ -60,6 +64,7 @@ def _empty(state: StateLiteral, name: str, url: str | None = None) -> dict[str, 
         "research_stages": [],
         "robot_class": None,
         "evidence_urls": [],
+        "robot_capabilities": None,
     }
 
 
@@ -69,14 +74,21 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
     chip = body.chip
     name = body.robot_name or "your robot"
 
-    if not url and not chip:
+    if not url and not chip and not body.robot_capabilities:
         return _empty("could_not_understand", name)
 
     try:
-        if chip and not url:
+        if chip and not url and not body.robot_capabilities:
             result = match_from_chip(chip, robot_name=name)
         else:
-            result = match_robot_url(url, chip=chip, product_name=body.product_name)
+            result = match_robot_url(
+                url or "https://example.com/",
+                chip=chip,
+                robot_name=name,
+                product_name=body.product_name,
+                robot_capabilities=body.robot_capabilities,
+                page_text=body.page_text,
+            )
     except UrlSafetyError:
         return _empty("could_not_understand", name, url or None)
     except Exception:
@@ -92,11 +104,12 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
         "families": result.get("families") or [],
         "jobs": result.get("jobs") or [],
         "job_count": int(result.get("job_count") or 0),
-        "source_url": result.get("source_url"),
+        "source_url": result.get("source_url") or (url or None),
         "company_name": result.get("company_name"),
         "products": result.get("products") or [],
         "needs_product_choice": bool(result.get("needs_product_choice")),
         "research_stages": result.get("research_stages") or [],
         "robot_class": result.get("robot_class"),
         "evidence_urls": result.get("evidence_urls") or [],
+        "robot_capabilities": result.get("robot_capabilities"),
     }

@@ -1,6 +1,10 @@
 """
 Score existing Robot Jobs against a capability profile.
 
+Production URL path (surgical restore):
+  scrape_robot_page → analyze_robot_capabilities (robot_ready / match-url)
+  → map to CapabilityProfile → job corpus
+
 Integrity: never invent jobs or capabilities. Soft-rank economic mismatch
 (can do ≠ should do) instead of hard-excluding.
 """
@@ -10,13 +14,15 @@ import json
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
+from urllib.parse import urlparse
 
 from app.services.robot_capability_profile import (
     CapabilityProfile,
+    CapabilitySignal,
     build_capability_profile,
 )
-from app.services.robot_understanding import understand_robot_url
+from app.services.robot_url_safety import UrlSafetyError, assert_public_http_url
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEMO_PATH = REPO_ROOT / "readyforrobots-new" / "client" / "src" / "data" / "rdd_demo_jobs.json"
@@ -34,8 +40,32 @@ TAPE_FAMILY_MAP: dict[str, list[str]] = {
     "gripper": ["manipulator", "mobile_manipulation"],
 }
 
+# match-url / robot_ready type → job families
+READY_TYPE_FAMILIES: dict[str, list[str]] = {
+    "warehouse/logistics": ["transport_amr", "mobile_manipulation"],
+    "delivery/transport": ["transport_amr", "mobile_manipulation"],
+    "disinfection/cleaning": ["floor_scrub"],
+    "service robot": ["mobile_manipulation", "transport_amr"],
+    "medical/healthcare": ["transport_amr", "mobile_manipulation"],
+    "unknown": [],
+}
+
+READY_CAP_TO_SIGNAL: dict[str, tuple[str, str]] = {
+    "autonomous navigation": ("mobile", "Autonomous navigation"),
+    "payload delivery": ("carry", "Payload delivery"),
+    "uv disinfection": ("scrub", "UV disinfection"),
+    "temperature control": ("material_transport", "Temperature-controlled transport"),
+    "multi-floor": ("mobile", "Multi-floor operation"),
+    "human interaction": ("mobile", "Human-shared environments"),
+    "cloud connected": ("industrial_runtime", "Cloud / fleet connected"),
+    "hipaa compliant": ("inspect", "Healthcare compliance context"),
+}
+
 SCORE_THRESHOLD = 3.0
 MATCHES_MIN = 3
+
+ScrapeFn = Callable[[str], str]
+AnalyzeFn = Callable[[str, str], dict[str, Any]]
 
 
 @lru_cache(maxsize=1)
@@ -283,74 +313,307 @@ def match_jobs_for_profile(
     }
 
 
+def _domain_from_url(url: str | None) -> str:
+    host = (urlparse(url or "").hostname or "").lower().removeprefix("www.")
+    return host or "robot"
+
+
+def _company_label(domain: str) -> str:
+    slug = (domain or "").split(".")[0]
+    if not slug:
+        return "your robot"
+    if slug.endswith("robotics") and len(slug) > len("robotics"):
+        stem = slug[: -len("robotics")]
+        return f"{stem.replace('-', ' ').title()} Robotics"
+    return slug.replace("-", " ").title()
+
+
+def is_weak_robot_ready_profile(robot_caps: dict[str, Any] | None) -> bool:
+    """Same gate as GET /api/leads/match-url."""
+    caps = robot_caps or {}
+    robot_type = str(caps.get("type") or "").strip().lower()
+    use_case = str(caps.get("use_case") or "").strip().lower()
+    capabilities = caps.get("capabilities") if isinstance(caps.get("capabilities"), list) else []
+    profile_score = float(caps.get("profile_score") or 0)
+    return (
+        robot_type in {"", "unknown"}
+        and use_case in {"", "general automation"}
+        and len(capabilities) == 0
+        and profile_score < 50
+    )
+
+
+def profile_from_robot_ready_caps(
+    robot_caps: dict[str, Any],
+    *,
+    robot_name: str | None = None,
+    page_text: str = "",
+    submitted_domain: str | None = None,
+) -> CapabilityProfile:
+    """
+    Map match-url / robot_ready capability dict → job-matcher CapabilityProfile.
+    This is the single understanding bridge — no parallel research engine.
+    """
+    domain = submitted_domain or ""
+    name = (robot_name or _company_label(domain) or "your robot").strip()[:120]
+    rtype = str(robot_caps.get("type") or "Unknown").strip()
+    use_case = str(robot_caps.get("use_case") or "").strip()
+    ready_caps = robot_caps.get("capabilities") if isinstance(robot_caps.get("capabilities"), list) else []
+    profile_score = float(robot_caps.get("profile_score") or 0)
+
+    profile = CapabilityProfile(robot_name=name, robot_class=rtype.lower().replace(" ", "_") or None)
+    seen: set[str] = set()
+
+    def add(key: str, label: str, excerpt: str | None, conf: float = 0.8) -> None:
+        if key in seen:
+            return
+        seen.add(key)
+        profile.capabilities.append(
+            CapabilitySignal(
+                key=key,
+                label=label,
+                confidence=conf,
+                excerpt=(excerpt or "")[:160] or None,
+                truth_state="confirmed",
+            )
+        )
+
+    # Type → primary signals
+    tl = rtype.lower()
+    if "clean" in tl or "disinfect" in tl:
+        add("scrub", "Floor cleaning / disinfection", rtype)
+        add("mobile", "Mobile / autonomous movement", rtype)
+    elif "warehouse" in tl or "logistics" in tl or "delivery" in tl or "transport" in tl:
+        add("mobile", "Mobile / autonomous movement", rtype)
+        add("material_transport", "Material transport", rtype)
+    elif "service" in tl:
+        add("mobile", "Mobile / autonomous movement", rtype)
+    elif "medical" in tl or "healthcare" in tl:
+        add("mobile", "Mobile / autonomous movement", rtype)
+        add("material_transport", "Material transport", use_case or rtype)
+
+    if "warehouse" in use_case.lower() or "logistics" in use_case.lower():
+        add("material_transport", "Material transport", use_case)
+        add("mobile", "Mobile / autonomous movement", use_case)
+
+    for cap in ready_caps:
+        label = str(cap).strip()
+        mapped = READY_CAP_TO_SIGNAL.get(label.lower())
+        if mapped:
+            add(mapped[0], mapped[1], label)
+        else:
+            # Keep unknown ready-caps as generic mobile evidence when score is decent
+            if profile_score >= 50:
+                add("mobile", label or "Capability signal", label, conf=0.55)
+
+    # Light page-text assist only for humanoid / scrub / arm words already on the page
+    # (does not invent — requires explicit language in scraped text from the same resolver)
+    blob = (page_text or "").lower()
+    if blob:
+        if re.search(r"\bhumanoid\b|\bdigit\b", blob):
+            add("humanoid", "Humanoid form", "humanoid")
+            add("mobile", "Mobile / autonomous movement", "humanoid")
+        if re.search(r"\bdual[- ]arm\b|\bdexterous\b", blob):
+            add("dual_arm", "Dual-arm manipulation", "dual-arm")
+            add("dexterous", "Dexterous hands / end effectors", "dexterous")
+        if re.search(r"\btotes?\b", blob):
+            add("tote_handling", "Tote handling", "tote")
+        if re.search(r"\b(floor\s+scrub|scrubber)\b", blob):
+            add("scrub", "Floor cleaning", "scrub")
+
+    # Families from ready type + capability keys
+    fam_scores: dict[str, float] = {}
+    for fam in READY_TYPE_FAMILIES.get(tl, []) or READY_TYPE_FAMILIES.get(
+        tl.replace(" ", "/"), []
+    ):
+        fam_scores[fam] = fam_scores.get(fam, 0) + 2.5
+    # normalize type key
+    for key, fams in READY_TYPE_FAMILIES.items():
+        if key in tl or tl in key:
+            for fam in fams:
+                fam_scores[fam] = fam_scores.get(fam, 0) + 2.0
+
+    keys = {c.key for c in profile.capabilities}
+    if "scrub" in keys:
+        fam_scores["floor_scrub"] = fam_scores.get("floor_scrub", 0) + 3.0
+    if "inspect" in keys:
+        fam_scores["inspection_mobile"] = fam_scores.get("inspection_mobile", 0) + 2.5
+    if "dual_arm" in keys or "dexterous" in keys or "humanoid" in keys:
+        fam_scores["mobile_manipulation"] = fam_scores.get("mobile_manipulation", 0) + 3.0
+        fam_scores["manipulator"] = fam_scores.get("manipulator", 0) + 2.0
+    if "mobile" in keys or "material_transport" in keys or "tote_handling" in keys or "carry" in keys:
+        fam_scores["transport_amr"] = fam_scores.get("transport_amr", 0) + 2.0
+        fam_scores["mobile_manipulation"] = fam_scores.get("mobile_manipulation", 0) + 1.5
+
+    profile.families = [
+        {"id": fam, "confidence": min(0.95, round(raw / 4.0, 2))}
+        for fam, raw in sorted(fam_scores.items(), key=lambda kv: kv[1], reverse=True)
+        if raw >= 1.5
+    ][:5]
+
+    profile.evidence_count = len(profile.capabilities)
+    profile.understood = (not is_weak_robot_ready_profile(robot_caps)) and (
+        profile.evidence_count >= 1 or bool(profile.families)
+    )
+    if profile.understood and not profile.families:
+        # Fallback family so corpus can score
+        profile.families = [{"id": "transport_amr", "confidence": 0.55}]
+    return profile
+
+
+def resolve_robot_ready_profile(
+    url: str,
+    *,
+    page_text: str | None = None,
+    robot_capabilities: dict[str, Any] | None = None,
+    scraper: ScrapeFn | None = None,
+    analyzer: AnalyzeFn | None = None,
+) -> tuple[dict[str, Any], str, str]:
+    """
+    Run the match-url understanding path.
+    Returns (robot_caps, page_text, submitted_domain).
+    """
+    # Pre-resolved caps (tests / client handoff) — no network, no robot_ready import
+    if robot_capabilities is not None:
+        domain = _domain_from_url(url)
+        return robot_capabilities, page_text or "", domain
+
+    from app.services.robot_ready_profile import analyze_robot_capabilities, scrape_robot_page
+
+    safe = assert_public_http_url(url)
+    domain = _domain_from_url(safe)
+
+    if page_text is not None:
+        text = page_text
+    else:
+        scrape = scraper or scrape_robot_page
+        text = scrape(safe)
+        if (text or "").lower().startswith("error scraping"):
+            text = f"{domain} robotics automation solution from {domain}".strip()
+
+    analyze = analyzer or analyze_robot_capabilities
+    caps = analyze(domain, text)
+    return caps, text, domain
+
+
 def match_robot_url(
     url: str,
     *,
     chip: str | None = None,
-    fetcher=None,
+    robot_capabilities: dict[str, Any] | None = None,
+    page_text: str | None = None,
+    robot_name: str | None = None,
     html: str | None = None,
     description: str | None = None,
-    product_name: str | None = None,
+    scraper: ScrapeFn | None = None,
+    analyzer: AnalyzeFn | None = None,
+    product_name: str | None = None,  # kept for API compat; unused (no parallel product picker)
+    fetcher=None,  # legacy test hook — unused on restored path
 ) -> dict[str, Any]:
     """
-    URL → robot identity → capability research → corpus match.
+    URL → scrape_robot_page → analyze_robot_capabilities → job corpus.
 
-    `html` / `description` skip network (tests). `chip` is Level-5 recovery prior.
+    `robot_capabilities` / `page_text` skip network (tests / pre-resolved).
+    `html` / `description` are treated as page_text for tests.
+    `chip` is recovery prior when understanding fails.
     """
-    if chip and not url and not html and not description:
-        profile = build_capability_profile(text="", chip=chip, robot_name="your robot")
+    _ = product_name, fetcher  # API compat only
+
+    if chip and not url and robot_capabilities is None and page_text is None and not html and not description:
+        profile = build_capability_profile(text="", chip=chip, robot_name=robot_name or "your robot")
         out = match_jobs_for_profile(profile)
         out["research_stages"] = []
         out["company_name"] = None
         out["products"] = []
         out["needs_product_choice"] = False
+        out["robot_capabilities"] = None
         return out
 
-    understanding = understand_robot_url(
-        url,
-        fetcher=fetcher,
-        html=html,
-        description=description,
-        product_name=product_name,
-        chip=chip,
-    )
+    # Test helpers: html/description become page text for the old analyzer
+    if page_text is None and (html or description):
+        from app.services.robot_profile_extract import _html_to_text
 
-    if understanding.needs_product_choice:
+        page_text = description or (_html_to_text(html) if html else "")
+
+    stages = [
+        {"id": "identify_company", "label": "Identifying company", "status": "pending", "detail": None},
+        {"id": "research_capabilities", "label": "Understanding capabilities", "status": "pending", "detail": None},
+        {"id": "match_jobs", "label": "Searching jobs", "status": "pending", "detail": None},
+    ]
+
+    try:
+        caps, text, domain = resolve_robot_ready_profile(
+            url,
+            page_text=page_text,
+            robot_capabilities=robot_capabilities,
+            scraper=scraper,
+            analyzer=analyzer,
+        )
+    except UrlSafetyError:
+        raise
+    except Exception:
+        if chip:
+            return match_from_chip(chip, robot_name=robot_name or "your robot")
         return {
-            "state": "select_product",
-            "robot_name": understanding.company_name or "your robot",
-            "company_name": understanding.company_name,
+            "state": "could_not_understand",
+            "robot_name": robot_name or "your robot",
             "capabilities": [],
             "families": [],
             "jobs": [],
             "job_count": 0,
-            "products": [p.to_dict() for p in understanding.products],
-            "needs_product_choice": True,
-            "research_stages": [s.to_dict() for s in understanding.stages],
-            "source_url": understanding.source_url,
-            "content_hash": understanding.content_hash,
-            "evidence_urls": understanding.evidence_urls,
+            "company_name": None,
+            "products": [],
+            "needs_product_choice": False,
+            "research_stages": stages,
+            "source_url": url,
+            "robot_capabilities": None,
         }
 
-    profile = understanding.profile or build_capability_profile(
-        text="",
-        robot_name="your robot",
+    company = _company_label(domain)
+    stages[0]["status"] = "done"
+    stages[0]["detail"] = company
+
+    if is_weak_robot_ready_profile(caps):
+        if chip:
+            return match_from_chip(chip, robot_name=robot_name or company)
+        stages[1]["status"] = "done"
+        stages[1]["detail"] = "Insufficient profile"
+        return {
+            "state": "could_not_understand",
+            "robot_name": robot_name or company,
+            "company_name": company,
+            "capabilities": [],
+            "families": [],
+            "jobs": [],
+            "job_count": 0,
+            "products": [],
+            "needs_product_choice": False,
+            "research_stages": stages,
+            "source_url": url,
+            "robot_capabilities": caps,
+            "evidence_urls": [url],
+        }
+
+    profile = profile_from_robot_ready_caps(
+        caps,
+        robot_name=robot_name or company,
+        page_text=text,
+        submitted_domain=domain,
     )
+    stages[1]["status"] = "done"
+    stages[1]["detail"] = caps.get("type") or f"{len(profile.capabilities)} signals"
+
     result = match_jobs_for_profile(profile)
-    # Mark match stage done
-    stages = [s.to_dict() for s in understanding.stages]
-    for s in stages:
-        if s["id"] == "match_jobs":
-            s["status"] = "done"
-            s["detail"] = f"{result.get('job_count') or 0} jobs"
+    stages[2]["status"] = "done"
+    stages[2]["detail"] = f"{result.get('job_count') or 0} jobs"
     result["research_stages"] = stages
-    result["company_name"] = understanding.company_name
-    result["products"] = [p.to_dict() for p in understanding.products]
+    result["company_name"] = company
+    result["products"] = []
     result["needs_product_choice"] = False
-    result["source_url"] = understanding.source_url
-    result["content_hash"] = understanding.content_hash
-    result["evidence_urls"] = understanding.evidence_urls
+    result["source_url"] = url
+    result["evidence_urls"] = [url]
     result["robot_class"] = profile.robot_class
+    result["robot_capabilities"] = caps
     return result
 
 
@@ -361,4 +624,5 @@ def match_from_chip(chip: str, robot_name: str = "your robot") -> dict[str, Any]
     out["company_name"] = None
     out["products"] = []
     out["needs_product_choice"] = False
+    out["robot_capabilities"] = None
     return out

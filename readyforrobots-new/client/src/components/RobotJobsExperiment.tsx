@@ -1150,7 +1150,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
               </h2>
               <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>
                 {unsupportedReason ||
-                  "After checking the page and related product pages, we still need a hint. Tell us what it does and we'll search our job corpus."}
+                  "We couldn't extract a usable robot profile from that URL yet. Tell us what it does and we'll search our job corpus."}
               </p>
             </>
           )}
