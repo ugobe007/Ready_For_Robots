@@ -10,9 +10,9 @@ export default function Jobs() {
   const slug = params?.slug;
 
   return (
-    <div className="jobs-page min-h-screen bg-[#081126] text-slate-100">
+    <div className="jobs-page flex min-h-screen flex-col bg-[#081126] text-slate-100">
       <ExperimentHeader />
-      <main className="mx-auto max-w-[1200px] px-3 pb-10 pt-[52px] sm:px-4">
+      <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col px-3 pb-6 pt-[52px] sm:px-4">
         <RobotJobsExperiment slug={slug} />
       </main>
     </div>
