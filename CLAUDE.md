@@ -5,6 +5,7 @@ Read **AGENTS.md** for the full harness constitution. This file is loaded on eve
 ## Summary for every turn
 
 0. **PMF focus:** read `docs/product_market_fit.md`. We are the **automated sales pipeline for robot companies** — signup → automate funnel → native CRM or HubSpot. Every change should drive activated robot-company workspaces, not generic robotics content.
+0a. **EXPERIMENT MODE:** `docs/EXPERIMENT_MODE.md` — freeze old assumptions; build job-discovery branch (`docs/product_sim/`). Tiny loop: robot URL → jobs. Self-benchmark without waiting on meetings.
 0b. **Competitive frame:** read `docs/competitive_positioning.md`. Users compare us to Explee/Apollo-style data tools — win on **robot buyer intent + pipeline motion**, not company count.
 0c. **Value first:** read `docs/value_first_principle.md`. Prove value (live lead + pitch + outreach draft) **before** signup or upgrade asks.
 1. **North star order:** names/events → scores → rank → robot specs. Fix junk before ranking tweaks (infrastructure for PMF, not the product itself).

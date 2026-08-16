@@ -14,6 +14,8 @@ The harness operates **autonomously**: commit, push, deploy, and apply scripts w
 
 Read `docs/product_market_fit.md` and **`docs/value_first_principle.md`** before every mission. **Users do not buy unless they see value** — prove outcomes (live leads, pitch actions, outreach drafts) before signup or upgrade asks.
 
+**EXPERIMENT MODE:** Read `docs/EXPERIMENT_MODE.md`. Freeze **old assumptions** (SIGNAL/CRM/Cal-as-core), not all building. Experimental branch = **job discovery** (`docs/product_sim/`). Self-audit 10×25; tiny loop robot URL→jobs. Interviews falsify, they don’t grant permission to work.
+
 **All agents optimize toward this outcome:**
 
 > ReadyForRobots is the **automated sales pipeline for robot companies**. Customers sign up to **automate their sales funnel** (SIGNAL-ranked leads, outreach, deal advance). They run in the **native CRM** (`/pipeline`, `/crm`) or **sync to HubSpot**.

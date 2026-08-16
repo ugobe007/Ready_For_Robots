@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "kind": "channel_graph_golden",
+  "wedge": "foreign_oem_us",
+  "oem": {
+    "oem_key": "agibot",
+    "display_name": "AGIBOT",
+    "legal_name": "AGIBOT Innovation (Shanghai) Technology Co., Ltd.",
+    "hq_country": "CN",
+    "website": "https://www.agibot.com/",
+    "us_market_intent": true,
+    "product_lines": [
+      {"sku": "A2", "category": "humanoid"},
+      {"sku": "X2", "category": "humanoid"},
+      {"sku": "X2 Ultra", "category": "humanoid"},
+      {"sku": "D1", "category": "quadruped"},
+      {"sku": "G2", "category": "wheeled_industrial_humanoid"},
+      {"sku": "C5", "category": "autonomous_cleaning"}
+    ],
+    "notes": "Overseas warranty / agent cooperation language on OEM site supports channel model; US entry via partners."
+  },
+  "partners": [
+    {
+      "partner_key": "robotshop",
+      "partner_name": "RobotShop",
+      "website": "https://www.robotshop.com/",
+      "country": "CA",
+      "hq": "Mirabel, Quebec",
+      "partner_types": ["vad", "distributor"],
+      "sales_territory": ["US", "CA"],
+      "service_capabilities": [
+        "solution_scoping",
+        "integration_planning",
+        "onboarding",
+        "deployment_support",
+        "training",
+        "operational_support"
+      ],
+      "integration_capabilities": ["integration_planning"],
+      "robot_brands_observed": ["agibot"]
+    },
+    {
+      "partner_key": "useabot",
+      "partner_name": "Useabot",
+      "website": "https://useabot.com/",
+      "country": "US",
+      "hq": "Minneapolis, MN",
+      "partner_types": ["vad", "distributor"],
+      "sales_territory": ["US"],
+      "service_capabilities": [
+        "sales",
+        "deployment",
+        "integration",
+        "training",
+        "support"
+      ],
+      "integration_capabilities": ["deployment", "integration"],
+      "robot_brands_observed": ["agibot"]
+    }
+  ],
+  "relationships": [
+    {
+      "relationship_key": "agibot__robotshop__na_vad",
+      "oem_key": "agibot",
+      "partner_key": "robotshop",
+      "relationship_types": ["vad", "distributor"],
+      "territory": ["US", "CA"],
+      "product_lines": ["A2", "X2", "D1", "G2", "C5"],
+      "authorized_status": "authorized",
+      "confidence_grade": "C3",
+      "evidence_source": "https://www.businesswire.com/news/home/20260414539694/en/RobotShop-Becomes-AGIBOTs-Value-Added-Distribution-Partner-in-North-America",
+      "evidence_date": "2026-04-14",
+      "evidence_summary": "Joint Business Wire announcement: RobotShop becomes AGIBOT Value Added Distribution Partner for United States and Canada; discovery→deployment services named.",
+      "notes": "Also partner-claimed on RobotShop LinkedIn (C2 support)."
+    },
+    {
+      "relationship_key": "agibot__useabot__us_distributor",
+      "oem_key": "agibot",
+      "partner_key": "useabot",
+      "relationship_types": ["vad", "distributor"],
+      "territory": ["US"],
+      "product_lines": ["X2", "X2 Ultra"],
+      "authorized_status": "authorized",
+      "confidence_grade": "C1",
+      "evidence_source": "https://www.linkedin.com/posts/agibot-usa_agibot-useabot-embodiedai-activity-7457066596667138049-KuLd",
+      "evidence_date": "2026-05-04",
+      "evidence_summary": "AGIBOT USA welcomes Useabot as Authorized U.S. Distributor Partner; local distribution, deployment, integration, service.",
+      "notes": "C2 also present via Useabot / founder posts claiming authorized U.S. VAD."
+    }
+  ],
+  "routing_example": {
+    "description": "If RDD finds US jobs for AGIBOT C5 / X2, route by territory+line — do not only notify OEM HQ.",
+    "examples": [
+      {
+        "job_locality": "Phoenix, AZ",
+        "product_line": "C5",
+        "candidate_routes": ["robotshop", "useabot"]
+      },
+      {
+        "job_locality": "Toronto, ON",
+        "product_line": "A2",
+        "candidate_routes": ["robotshop"]
+      }
+    ]
+  }
+}

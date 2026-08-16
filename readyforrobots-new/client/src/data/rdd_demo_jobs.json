@@ -1,0 +1,276 @@
+{
+  "version": 1,
+  "kind": "ui_fixture",
+  "note": "UI presentation seed only. Not the production RDD import format. Real chains: Evidence→Claim→Interpretation→Job→Match via seed_rdd_experiment.py + experiment ledgers.",
+  "product_line": "Find jobs for your robot.",
+  "product_promise": "Give us your robot. We'll find work it can do.",
+  "profiles": [
+    {
+      "profile_key": "locus_origin",
+      "display_name": "Locus Origin",
+      "manufacturer": "Locus Robotics",
+      "product_url": "https://locusrobotics.com/products/origin/",
+      "capability_family": "transport_amr",
+      "can_actions": [
+        "Move totes between locations",
+        "Move carts / order containers",
+        "Transport completed picks pick→pack",
+        "Replenishment / putaway movement",
+        "Operate around people in warehouses"
+      ],
+      "job_count_total": 67,
+      "jobs_preview": 5
+    },
+    {
+      "profile_key": "avidbots_neo",
+      "display_name": "Avidbots Neo",
+      "manufacturer": "Avidbots",
+      "product_url": "https://www.avidbots.com/",
+      "capability_family": "floor_scrub",
+      "can_actions": [
+        "Autonomous hard-floor scrubbing",
+        "Large indoor floor area coverage",
+        "Repeatable overnight cleaning routes",
+        "Human-shared commercial spaces"
+      ],
+      "job_count_total": 16,
+      "jobs_preview": 5
+    }
+  ],
+  "jobs": {
+    "locus_origin": [
+      {
+        "job_key": "origin_replacement_parts_little_rock",
+        "company_name": "Replacement Parts / Crow Burlingame",
+        "locality": "Little Rock, AR",
+        "action": "transport",
+        "target": "shipping_totes",
+        "operating_context": "auto_parts_warehouse",
+        "robot_compatible_task": "Point-to-point tote transport between warehouse zones",
+        "observed_workflow": "Associates collect, organize, and distribute shipping totes across the warehouse",
+        "why_job": "Employees are explicitly assigned to collecting and distributing totes throughout the warehouse.",
+        "evidence_grade": "E1",
+        "promotion_class": "DIRECT",
+        "fit": "H",
+        "investigate_status": "yes",
+        "automation_state": "unknown",
+        "commercial_availability": "unknown",
+        "requirements": {
+          "load_interface": "tote",
+          "path": "zone→zone",
+          "payload": "unknown"
+        },
+        "unknowns": ["Tote weight", "Aisle geometry", "Current automation"]
+      },
+      {
+        "job_key": "origin_napa_duncansville",
+        "company_name": "NAPA Auto Parts",
+        "locality": "Duncansville, PA",
+        "action": "transport",
+        "target": "orders_on_carts",
+        "operating_context": "auto_parts_dc",
+        "robot_compatible_task": "Cart / order movement from pick areas to shipping",
+        "observed_workflow": "DC associates push/pull carts and transport orders to shipping locations over long distances",
+        "why_job": "Role text names cart push/pull and transporting orders to shipping.",
+        "evidence_grade": "E1",
+        "promotion_class": "DIRECT",
+        "fit": "H",
+        "investigate_status": "yes",
+        "automation_state": "unknown",
+        "commercial_availability": "unknown",
+        "requirements": {
+          "load_interface": "cart",
+          "path": "pick→ship",
+          "payload": "unknown"
+        },
+        "unknowns": ["Cart load", "Forklift-split tasks", "WMS integration"]
+      },
+      {
+        "job_key": "origin_curascript_tempe",
+        "company_name": "CuraScript SD",
+        "locality": "Tempe, AZ",
+        "action": "return",
+        "target": "totes_and_carts",
+        "operating_context": "specialty_pharma_dc",
+        "robot_compatible_task": "Return empty totes and carts to pack stations / proper areas",
+        "observed_workflow": "Warehouse associates restock pack stations and return totes and carts to proper areas",
+        "why_job": "Explicit tote/cart return language in outbound warehouse role.",
+        "evidence_grade": "E1",
+        "promotion_class": "DIRECT",
+        "fit": "H",
+        "investigate_status": "yes",
+        "automation_state": "unknown",
+        "commercial_availability": "unknown",
+        "requirements": {
+          "load_interface": "tote",
+          "path": "pack→return",
+          "payload": "empty"
+        },
+        "unknowns": ["Cold-chain zones", "Cart vs tote mix"]
+      },
+      {
+        "job_key": "origin_sanmar_avondale",
+        "company_name": "SanMar",
+        "locality": "Avondale, AZ",
+        "action": "transport",
+        "target": "ready_to_pack_totes",
+        "operating_context": "apparel_dc",
+        "robot_compatible_task": "Move completed totes from pack-mod slots to packing",
+        "observed_workflow": "Associates pick to cart/totes and take ready-to-pack totes from designated slots",
+        "why_job": "Named tote handoff from induction slot to pack.",
+        "evidence_grade": "E1",
+        "promotion_class": "DIRECT",
+        "fit": "H",
+        "investigate_status": "yes",
+        "automation_state": "unknown",
+        "commercial_availability": "unknown",
+        "requirements": {
+          "load_interface": "tote",
+          "path": "slot→pack",
+          "payload": "unknown"
+        },
+        "unknowns": ["Conveyor adjacency", "Peak season volume"]
+      },
+      {
+        "job_key": "origin_intuitive_smkt",
+        "company_name": "Intuitive Surgical",
+        "locality": "United States (med-device mfg)",
+        "action": "replenish",
+        "target": "kits_totes_carts",
+        "operating_context": "med_device_manufacturing",
+        "robot_compatible_task": "Point-of-use replenishment and packing-system cart/kit movement",
+        "observed_workflow": "Material handlers put away totes, replenish production lines, pack system carts/FRUs/kits",
+        "why_job": "Explicit tote putaway, POU replenishment, and packing carts/kits.",
+        "evidence_grade": "E1",
+        "promotion_class": "DIRECT",
+        "fit": "H",
+        "investigate_status": "yes",
+        "automation_state": "unknown",
+        "commercial_availability": "unknown",
+        "requirements": {
+          "load_interface": "kit",
+          "path": "smkt→line",
+          "payload": "unknown"
+        },
+        "unknowns": ["Cleanroom constraints", "Exact site campus"]
+      }
+    ],
+    "avidbots_neo": [
+      {
+        "job_key": "neo_moa_bloomington",
+        "company_name": "Mall of America",
+        "locality": "Bloomington, MN",
+        "action": "scrub",
+        "target": "hard_floors",
+        "operating_context": "mall",
+        "robot_compatible_task": "Overnight scrub of mall common-area hard floors (concourse / food court)",
+        "observed_workflow": "3rd-shift housekeeping operates ride-on and walk-behind auto scrubbers on hard surfaces after close",
+        "why_job": "Role explicitly operates auto scrubbers on mall hard floors overnight.",
+        "evidence_grade": "E1",
+        "promotion_class": "DIRECT",
+        "fit": "H",
+        "investigate_status": "yes",
+        "automation_state": "unknown",
+        "commercial_availability": "unknown",
+        "requirements": {
+          "floor_surface": "hard_floor",
+          "spatial_unit": "concourse",
+          "condition": "overnight"
+        },
+        "unknowns": ["Exact sq footage", "Incumbent machines", "Crowd residual"]
+      },
+      {
+        "job_key": "neo_unifi_atl",
+        "company_name": "Unifi (airport floor tech)",
+        "locality": "ATL — Atlanta, GA",
+        "action": "scrub",
+        "target": "terminal_floors",
+        "operating_context": "airport",
+        "robot_compatible_task": "Overnight terminal floor scrubbing along high-traffic routes",
+        "observed_workflow": "Airport floor cleaning technicians operate scrubbers overnight on building floors",
+        "why_job": "Overnight shift + named scrubber operation in terminal environment.",
+        "evidence_grade": "E1",
+        "promotion_class": "DIRECT",
+        "fit": "H",
+        "investigate_status": "yes",
+        "automation_state": "unknown",
+        "commercial_availability": "unknown",
+        "requirements": {
+          "floor_surface": "hard_floor",
+          "spatial_unit": "concourse",
+          "condition": "overnight"
+        },
+        "unknowns": ["SIDA access", "Mixed carpet zones"]
+      },
+      {
+        "job_key": "neo_harris_lbj",
+        "company_name": "Harris Health — LBJ Hospital",
+        "locality": "Houston, TX",
+        "action": "scrub",
+        "target": "hospital_floors",
+        "operating_context": "hospital",
+        "robot_compatible_task": "Night EVS hard-floor scrub routes (riding + walk-behind scrubbers)",
+        "observed_workflow": "EVS Floor Tech II nights operate walk-behind and riding scrubbers for floor care maintenance",
+        "why_job": "Named riding/walk-behind scrubbers on night hospital shift.",
+        "evidence_grade": "E1",
+        "promotion_class": "DIRECT",
+        "fit": "H",
+        "investigate_status": "yes",
+        "automation_state": "unknown",
+        "commercial_availability": "unknown",
+        "requirements": {
+          "floor_surface": "hard_floor",
+          "spatial_unit": "corridor",
+          "condition": "overnight"
+        },
+        "unknowns": ["Infection-control SOPs", "Patient-area exclusions"]
+      },
+      {
+        "job_key": "neo_jhu_baltimore",
+        "company_name": "Johns Hopkins University",
+        "locality": "Baltimore, MD",
+        "action": "scrub",
+        "target": "campus_floors",
+        "operating_context": "university",
+        "robot_compatible_task": "Recurring auto-scrubber routes on campus hard floors",
+        "observed_workflow": "Custodian Floor Tech operates auto-scrubbers as a primary duty ≥3 days/week",
+        "why_job": "Auto-scrubber is the primary duty — not generic custodial.",
+        "evidence_grade": "E1",
+        "promotion_class": "DIRECT",
+        "fit": "H",
+        "investigate_status": "yes",
+        "automation_state": "unknown",
+        "commercial_availability": "unknown",
+        "requirements": {
+          "floor_surface": "hard_floor",
+          "spatial_unit": "corridor",
+          "condition": "scheduled_recurring"
+        },
+        "unknowns": ["Building mix", "Stairs/elevator redeploy"]
+      },
+      {
+        "job_key": "neo_surge_joliet",
+        "company_name": "Industrial facility (via Surge Staffing)",
+        "locality": "Joliet, IL",
+        "action": "scrub",
+        "target": "warehouse_floors",
+        "operating_context": "warehouse",
+        "robot_compatible_task": "Ride-on / walk-behind sweeper-scrubber routes on warehouse and production floors",
+        "observed_workflow": "Sweeper Scrubber Operator cleans warehouse/production floors with industrial ride-on or walk-behind scrubber",
+        "why_job": "Role is the scrubber — explicit machine + industrial floors.",
+        "evidence_grade": "E1",
+        "promotion_class": "DIRECT",
+        "fit": "H",
+        "investigate_status": "yes",
+        "automation_state": "unknown",
+        "commercial_availability": "unknown",
+        "requirements": {
+          "floor_surface": "concrete",
+          "spatial_unit": "aisle",
+          "condition": "shift_floor_care"
+        },
+        "unknowns": ["Forklift traffic windows", "Soil type"]
+      }
+    ]
+  }
+}

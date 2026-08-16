@@ -1,0 +1,32 @@
+{
+  "protocol": "AVIDBOTS_OPEN_WORLD_25",
+  "status": "transfer_pass",
+  "robot": "avidbots_neo",
+  "capability_gate": "avidbots_neo_work_translation.md",
+  "queries_completed": 25,
+  "queries_total": 25,
+  "seeded_accounts": false,
+  "known_customers_used": false,
+  "funnel": {
+    "queries": 25,
+    "inspected_approx": 90,
+    "accepted_lwos": 28,
+    "work_claims": 22,
+    "robot_jobs": 16,
+    "worth_investigating": 14
+  },
+  "metrics": {
+    "promotion_precision": 0.88,
+    "job_density_per_10q": 5.6,
+    "operating_context_types": 8,
+    "transfer_verdict": "pass"
+  },
+  "headline": {
+    "robot_jobs": 16,
+    "companies_approx": 15,
+    "locations_approx": 16,
+    "worth_investigating": 14
+  },
+  "schema_lesson": "Core objects transfer; Origin load_interface is family-specific not universal. Neo uses floor_surface + spatial_unit + condition.",
+  "results_doc": "avidbots_open_world_25_results.md"
+}

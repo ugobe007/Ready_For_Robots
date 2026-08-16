@@ -1,0 +1,27 @@
+{
+  "batch": 4,
+  "name": "Durability / pattern breadth",
+  "queries": "39-58",
+  "results": {
+    "promotion_precision": 0.86,
+    "robot_jobs": 14,
+    "investigate_yes": 12,
+    "job_density_per_10": 6.0,
+    "direct_e1_per_10": 4.0,
+    "work_claims": 34,
+    "claim_maturations": [
+      "Charlie's Produce Seattle",
+      "Lineage Fullerton/Riverside",
+      "CuraScript Tempe"
+    ],
+    "object_mix": {
+      "tote": 5,
+      "cart": 3,
+      "kit": 2,
+      "carton": 2,
+      "pallet": 2
+    },
+    "new_patterns": true,
+    "decision": "continue_59_100_dual_arm"
+  }
+}

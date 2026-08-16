@@ -16,6 +16,14 @@ from app.models.source import Source
 from app.models.facility import Facility
 from app.models.primitive import Primitive
 from app.models.work_graph import WorkMatchRecord, WorkUnitRecord
+from app.models.robot_directed_discovery import (
+    AutomationInterpretation,
+    JobEvidence,
+    RobotCapabilityProfile,
+    RobotJob,
+    RobotJobMatch,
+    WorkClaim,
+)
 from app.models.deployment_evidence import (
     DeploymentEvent,
     DeploymentEvidence,

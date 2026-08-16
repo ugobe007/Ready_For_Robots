@@ -1,0 +1,36 @@
+{
+  "company": "Burris Logistics",
+  "accepted": [
+    {
+      "worksite_id": "job_postings:orlando-fl",
+      "name": "Orlando Distribution Center",
+      "site_type": "food_distribution_center",
+      "city": "Orlando",
+      "state": "FL",
+      "resolution": "prose_extract",
+      "confidence": 0.7,
+      "source": "job_postings",
+      "not_hq": true,
+      "gate": {
+        "accepted": true,
+        "place_confidence": 0.9,
+        "company_association": 0.88,
+        "function_confidence": 0.85,
+        "function": "food_distribution_center",
+        "function_known": true,
+        "reject_reasons": [],
+        "scores_ok": {
+          "place": true,
+          "association": true,
+          "function_known": true
+        }
+      },
+      "accepted": true
+    }
+  ],
+  "rejected": [],
+  "work_units": [],
+  "notes": [
+    "greenhouse:burrislogistics"
+  ]
+}

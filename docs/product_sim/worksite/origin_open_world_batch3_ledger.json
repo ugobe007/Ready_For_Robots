@@ -1,0 +1,145 @@
+{
+  "batch": 3,
+  "name": "Gate Validation",
+  "queries": [
+    {
+      "id": 19,
+      "arm": "exploit",
+      "query": "warehouse return totes carts pack station hiring",
+      "status": "done"
+    },
+    {
+      "id": 20,
+      "arm": "exploit",
+      "query": "DC associate move carts between pick zones",
+      "status": "done"
+    },
+    {
+      "id": 21,
+      "arm": "exploit",
+      "query": "stage completed orders shipping dock warehouse job",
+      "status": "done"
+    },
+    {
+      "id": 22,
+      "arm": "exploit",
+      "query": "warehouse associate deliver materials drop zone EPJ",
+      "status": "done"
+    },
+    {
+      "id": 23,
+      "arm": "exploit",
+      "query": "water spider tote delivery warehouse manufacturing hiring",
+      "status": "done"
+    },
+    {
+      "id": 24,
+      "arm": "exploit",
+      "query": "putaway transport pallet jack distribution center job",
+      "status": "done"
+    },
+    {
+      "id": 25,
+      "arm": "exploit",
+      "query": "move completed orders staging distribution center",
+      "status": "done"
+    },
+    {
+      "id": 26,
+      "arm": "exploit",
+      "query": "order consolidation staging dock warehouse associate",
+      "status": "done"
+    },
+    {
+      "id": 27,
+      "arm": "exploit",
+      "query": "replenishment transport carts totes pick face hiring",
+      "status": "done"
+    },
+    {
+      "id": 28,
+      "arm": "exploit",
+      "query": "3PL warehouse move totes between zones associate",
+      "status": "done"
+    },
+    {
+      "id": 29,
+      "arm": "explore",
+      "query": "order selector distribution center job posting",
+      "status": "done"
+    },
+    {
+      "id": 30,
+      "arm": "explore",
+      "query": "case picker grocery warehouse DC hiring",
+      "status": "done"
+    },
+    {
+      "id": 31,
+      "arm": "explore",
+      "query": "batch picker distribution center hiring",
+      "status": "done"
+    },
+    {
+      "id": 32,
+      "arm": "explore",
+      "query": "pick pack replenish DC associate",
+      "status": "done"
+    },
+    {
+      "id": 33,
+      "arm": "explore",
+      "query": "warehouse associate material handler distribution center",
+      "status": "done"
+    },
+    {
+      "id": 34,
+      "arm": "explore",
+      "query": "discrete order picker warehouse job",
+      "status": "done"
+    },
+    {
+      "id": 35,
+      "arm": "explore",
+      "query": "wholesale distributor order selector hiring",
+      "status": "done"
+    },
+    {
+      "id": 36,
+      "arm": "explore",
+      "query": "produce order selector warehouse distribution",
+      "status": "done"
+    },
+    {
+      "id": 37,
+      "arm": "explore",
+      "query": "e-commerce fulfillment picker travel hiring",
+      "status": "done"
+    },
+    {
+      "id": 38,
+      "arm": "explore",
+      "query": "night shift grocery DC selector hiring",
+      "status": "done"
+    }
+  ],
+  "results": {
+    "promotion_precision": 0.88,
+    "baseline_precision": 0.46,
+    "robot_jobs": 17,
+    "investigate_yes": 15,
+    "work_claims": 45,
+    "claim_to_job": 0.38,
+    "exploit": {
+      "jobs": 9,
+      "precision": 0.89,
+      "claims": 14
+    },
+    "explore": {
+      "jobs": 8,
+      "precision": 0.88,
+      "claims": 31
+    },
+    "decision": "continue_39_100_dual_arm"
+  }
+}

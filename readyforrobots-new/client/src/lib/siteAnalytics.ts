@@ -41,6 +41,30 @@ export function trackMarketingEvent(action: string, payload: Record<string, unkn
 }
 
 /**
+ * Robot → jobs experiment funnel (/experiment).
+ * North-star unlock: see_all_clicked (See All CTR).
+ *
+ * robot_submitted → capabilities_viewed → discovery_* → first_job_viewed
+ * → job_viewed → jobs_3plus_viewed → see_all_clicked → signup_start
+ */
+export type RobotJobsFunnelStep =
+  | "experiment_view"
+  | "robot_submitted"
+  | "unsupported_robot"
+  | "capabilities_viewed"
+  | "discovery_started"
+  | "discovery_complete"
+  | "first_job_viewed"
+  | "job_viewed"
+  | "jobs_3plus_viewed"
+  | "preview_complete"
+  | "see_all_clicked";
+
+export function trackRobotJobsFunnel(step: RobotJobsFunnelStep, payload: Record<string, unknown> = {}) {
+  trackMarketingEvent(`rdd_${step}`, { funnel: "robot_jobs", step, ...payload });
+}
+
+/**
  * Buyer signup funnel (conversion board #20): browse → signup → activate.
  * signup_start (intent) → signup_complete (account) → first_save (activated).
  */

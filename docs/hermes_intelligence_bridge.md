@@ -1,6 +1,13 @@
 # Hermes ↔ ReadyForRobots Intelligence Bridge
 
-Full agent roster: find work, qualify, match vendors, find decision makers, ingest deployment evidence, track vendor/customer news, then improve the loop and signup UX.
+**Operating priority (2026-08-15):** Traffic experiment on `/experiment` beats research expansion.  
+Read [`CAPABILITY_MODEL.md`](./CAPABILITY_MODEL.md) · [`EXPERIMENT_MODE.md`](./EXPERIMENT_MODE.md) · [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md).
+
+Product hypothesis: `CAPABILITIES → FIND WORK` (OEM / distributor / integrator entry points — one engine).  
+Primary metric: **See All CTR** (`rdd_see_all_clicked`), segmented by `persona` then capability family.  
+**Frozen:** OEM 11–50, more distributors, Channel Match scoring, distributor UI, RDD Fly migrate, new ontology layers. Next decision from **behavior**, not another hypothesis.
+
+Full agent roster: find work, qualify, match vendors, find decision makers, ingest deployment evidence, track vendor/customer news, then improve the loop and signup UX — **without expanding product surface until traffic evidence lands**.
 
 ```
 Hermes skills (cron)                    ReadyForRobots (Fly)
@@ -12,6 +19,7 @@ rfr-qualify-match        ──POST──►  /qualify-overlay
 rfr-decision-makers      ──POST──►  /contacts/ingest
 rfr-vendor-customer-news ──POST──►  /vendor-news/ingest
                          ──POST──►  /deployment-evidence/ingest (escalations)
+rfr-customer-video-evidence ──POST──► /video-evidence/ingest
 rfr-buying-windows       ──POST──►  /buying-window-overlay
 rfr-workflow-improve     ──write──► docs/agent_improvement_log.md
 rfr-signup-ux-audit      ──write──► docs/ux_signup_audit.md
@@ -48,6 +56,9 @@ Hermes env:
 | 6 | Deployment metrics/methods | (deployment skill digest) | same as #1 |
 | 7 | Vendor + customer news | `rfr-vendor-customer-news` | `POST .../vendor-news/ingest` |
 | 8 | Buying windows | `rfr-buying-windows` | `POST .../buying-window-overlay` → `hermes_buying_window` |
+| 9 | Customer use-case videos | `rfr-customer-video-evidence` | `POST .../video-evidence/ingest` → `hermes_video_evidence` |
+| 10 | Vendor demo / field videos | `rfr-vendor-video-evidence` | `POST .../vendor-video-evidence/ingest` → vendor profiles |
+| — | Video seed targets | (both video skills) | `GET .../video-evidence/seed-targets` |
 | — | Workflow improve | `rfr-workflow-improve` | `docs/agent_improvement_log.md` |
 | — | Signup UX audit | `rfr-signup-ux-audit` | `docs/ux_signup_audit.md` (recs only) |
 | — | Sales floor manager | `rfr-sales-floor-manager` | Hourly Cal/OEM coach → `docs/cal_floor_manager_log.md` |
@@ -66,6 +77,8 @@ Pin every job: `--provider ai-gateway --model anthropic/claude-sonnet-4.6`, `del
 | `0 9 * * *` | `research/rfr-buying-windows` |
 | `0 10 * * *` | `research/rfr-decision-makers` |
 | `0 11 * * *` | `research/rfr-vendor-customer-news` |
+| `0 12 * * *` | `research/rfr-customer-video-evidence` (seed many buyer profiles) |
+| `0 13 * * *` | `research/rfr-vendor-video-evidence` (OEM demos / field) |
 | `20 * * * *` | `research/rfr-sales-floor-manager` (hourly coach) |
 | `0 9 * * 0` | `research/rfr-workflow-improve` |
 | `0 9 * * 1` | `research/rfr-signup-ux-audit` |
@@ -179,6 +192,59 @@ curl -s -X POST "$RFR_API_BASE/api/v1/market-graph/vendor-news/ingest" \
 
 `news_type`: `capability` | `pricing` | `foundation_model` | `product` | `customer_signal`.
 
+### Customer use-case videos
+
+```bash
+curl -s -X POST "$RFR_API_BASE/api/v1/market-graph/video-evidence/ingest" \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Key: $RFR_ADMIN_KEY" \
+  -d '{
+    "dry_run": true,
+    "videos": [{
+      "company_name": "HelloFresh",
+      "source_url": "https://www.youtube.com/watch?v=example",
+      "platform": "youtube",
+      "evidence_kind": "facility_tour",
+      "title": "Inside a HelloFresh fulfillment center",
+      "excerpt": "Associates and AMRs moving meal kits through pack stations.",
+      "workflow_hint": "pack-out / meal kit assembly",
+      "robot_visible": "AMR",
+      "confidence": 0.72
+    }]
+  }'
+```
+
+Persists under `company.crm_metadata.hermes_video_evidence` (URL-deduped, last 25). Surfaces on Pipeline Hermes panel. Skill: `docs/skills/rfr-customer-video-evidence.SKILL.md`.
+
+### Vendor demo / field videos
+
+```bash
+curl -s -X POST "$RFR_API_BASE/api/v1/market-graph/vendor-video-evidence/ingest" \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Key: $RFR_ADMIN_KEY" \
+  -d '{
+    "dry_run": true,
+    "videos": [{
+      "vendor_name": "Agility Robotics",
+      "source_url": "https://www.youtube.com/watch?v=example",
+      "platform": "youtube",
+      "evidence_kind": "oem_demo",
+      "title": "Digit tote handling demo",
+      "robot_model": "Digit",
+      "confidence": 0.8
+    }]
+  }'
+```
+
+Writes to `robot_companies.market_intelligence.hermes_video_evidence` and matching `manufacturers.external_refs.hermes_video_evidence`.
+
+Seed targets (customers and/or vendors still missing videos):
+
+```bash
+curl -s "$RFR_API_BASE/api/v1/market-graph/video-evidence/seed-targets?kind=both&only_missing=true&limit=40" \
+  -H "X-Admin-Key: $RFR_ADMIN_KEY"
+```
+
 ### Deployment evidence
 
 See [hermes_deployment_bridge.md](hermes_deployment_bridge.md).
@@ -189,6 +255,8 @@ See [hermes_deployment_bridge.md](hermes_deployment_bridge.md).
 |-------|-----------|
 | deployment | `~/.hermes/rfr-deployment-watches/` |
 | job-orders | `~/.hermes/rfr-job-order-watches/` |
+| customer-video | `~/.hermes/rfr-customer-video-watches/` |
+| vendor-video | `~/.hermes/rfr-vendor-video-watches/` |
 | qualify-match | `~/.hermes/rfr-qualify-watches/` |
 | buying-windows | `~/.hermes/rfr-buying-window-watches/` |
 | decision-makers | `~/.hermes/rfr-dm-watches/` |
