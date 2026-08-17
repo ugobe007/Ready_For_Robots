@@ -3,7 +3,7 @@
 **Status:** Canonical strategy (updated 2026-08-17)  
 **Not:** Three products. One engine. Three entry points.  
 **Surface:** `/` is the Jobs terminal. `/experiment` is obsolete.  
-**Finite milestones (M1–M4):** [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) · **MATCH TRUTH logic PASS / production verification pending** · submit workflow merged / production smoke PASS · traffic paused
+**Finite milestones (M1–M4):** [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) · **MATCH TRUTH — PRODUCTION PASS** · M2 frozen · submit workflow merged / production smoke PASS · traffic paused
 
 ---
 
@@ -207,7 +207,7 @@ Segment by `persona` (oem / distributor / integrator) and by robot product / fam
 
 ### CONTINUE NOW
 
-**M2 — Match:** requirement matching **logic PASS** against frozen Understanding. **Production MATCH TRUTH gate is still pending** (ranking not verified live). No further matcher research unless that verify exposes a truth/ranking defect.
+**M2 — Match:** **FROZEN** after **MATCH TRUTH — PRODUCTION PASS** (2026-08-17, #15 live). No fifth robot, no ranking tweaks, no new scoring ideas.
 
 Phases 1–3 remain **frozen** at v1.0 calibration ([`robot_understanding_v1.md`](./robot_understanding_v1.md)). Production `/` uses `POST /api/robot-job-search` (profile + match in one transaction; P0-A profile path still exists).
 
@@ -215,7 +215,7 @@ Phases 1–3 remain **frozen** at v1.0 calibration ([`robot_understanding_v1.md`
 
 Traffic / C04 stay **paused** ([`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md)):
 
-- **MATCH TRUTH** — logic PASS / production verification pending
+- **MATCH TRUTH** — **PRODUCTION PASS**
 - **SUBMIT WORKFLOW** — merged / production smoke PASS
 - **TRAFFIC** — paused
 
