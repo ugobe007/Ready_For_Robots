@@ -21,7 +21,7 @@ Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 | 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS; auth return still BLOCKED |
 | 4 | **TELEMETRY** — events + src/persona + shadow | **PARTIAL** — src/events mostly PASS; profile-path events newly available; persona BLOCKED |
 
-**Until auth return and telemetry are proven: keep traffic paused. Do not publish C04 / invite external traffic.** MATCH TRUTH (matcher) is **PASS**. Next: auth continuity, then telemetry. No further matcher research unless those tests fail.
+**Until submit-workflow smoke (#13) and auth return are proven: keep traffic paused. Do not publish C04 / invite external traffic.** MATCH TRUTH (matcher) is **PASS**. Sequence: #13 live smoke → then this ranking → auth continuity → telemetry.
 
 ---
 
@@ -165,7 +165,8 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 ### P0 — still blocking traffic
 
 1. ~~Deploy Jobs frontend that calls `/api/robot-profile`~~ **DONE (P0-A)**  
-2. ~~**MATCH TRUTH / M2**~~ **PASS (matcher)** — requirement satisfaction + distinctive-capability utilization ranking. No further matcher research unless funnel tests fail.  
+2. ~~**MATCH TRUTH / M2**~~ **PASS (matcher)** — requirement satisfaction + distinctive-capability utilization ranking. Live ranking evaluation waits until submit workflow (#13) smoke. No further matcher research unless funnel tests fail.  
+2a. **Submit workflow** — atomic reveal, stable layout, profile cache. **#13 merged to main**; live smoke (Fly `/api/robot-job-search` + current Vercel bundle) before this ranking ships. Do not invite traffic while Find Jobs jitters.  
 3. ~~Multi-product OEM ask on live UI~~ **DONE (P0-A)**  
 4. Dexmate → Vega (may stay honest recover until Understanding reopen rule trips)
 
@@ -189,7 +190,7 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 | Invite external traffic | **NO** |
 | Understanding Phase 4 extractors / Blind retune | **DO NOT OPEN** |
 | **M2 matcher prototyping** | **DONE** for MATCH TRUTH — freeze unless funnel tests fail |
-| Next step | Auth continuity → telemetry → re-run pre-traffic gate. Then C04. |
+| Next step | Submit workflow (#13) smoke → this ranking live → auth continuity → telemetry → pre-traffic gate |
 
 ---
 

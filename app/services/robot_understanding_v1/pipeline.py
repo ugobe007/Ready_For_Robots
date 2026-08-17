@@ -1,6 +1,8 @@
 """Assemble Phases 1–3 into an auditable Robot Profile."""
 from __future__ import annotations
 
+import os
+import time
 from typing import Any
 
 from app.services.robot_understanding_v1.coverage import (
@@ -21,12 +23,25 @@ from app.services.robot_understanding_v1.sources import collect_source_pack
 from app.services.robot_url_safety import assert_public_http_url
 
 
+def _source_budget_sec() -> float | None:
+    """Optional fetch deadline. 0/empty = no cap (do not starve source quality)."""
+    raw = (os.getenv("ROBOT_PROFILE_SOURCE_BUDGET_MS") or "12000").strip()
+    try:
+        ms = int(raw)
+    except ValueError:
+        ms = 12000
+    if ms <= 0:
+        return None
+    return max(1.0, ms / 1000.0)
+
+
 def build_robot_profile(
     url: str,
     *,
     product_name: str | None = None,
     max_sources: int = 6,
     auto_select_single: bool = True,
+    timings: dict[str, Any] | None = None,
 ) -> RobotProfile:
     """
     URL → company/product → typed sources → facts → Robot Profile.
@@ -37,10 +52,16 @@ def build_robot_profile(
 
     When product_name is supplied (CLI/API), it ALWAYS becomes selected_product
     even if homepage resolve missed the string — company-level research is fallback only.
+
+    timings, if provided, is filled with resolve_ms and profile_ms.
     """
+    t0 = time.perf_counter()
     safe = assert_public_http_url(url)
     home = fetch_page(safe)
     resolved = resolve_identity(safe, home, product_hint=product_name)
+    resolve_ms = int((time.perf_counter() - t0) * 1000)
+    if timings is not None:
+        timings["resolve_ms"] = resolve_ms
 
     selected = None
     notes_extra: list[str] = []
@@ -69,6 +90,8 @@ def build_robot_profile(
             profile_ready=False,
             needs_choice=True,
         )
+        if timings is not None:
+            timings["profile_ms"] = 0
         return RobotProfile(
             submitted_url=safe,
             company=resolved.company,
@@ -91,10 +114,13 @@ def build_robot_profile(
         selected = resolved.selected_product
 
     subject = selected.name if selected else resolved.company.name
+    t_profile = time.perf_counter()
+    budget = _source_budget_sec()
     collected = collect_source_pack(
         home,
         product_name=selected.name if selected else product_name,
         max_sources=max_sources,
+        deadline_monotonic=(time.monotonic() + budget) if budget is not None else None,
     )
     if selected:
         for c in collected:
@@ -181,7 +207,7 @@ def build_robot_profile(
         tier=tier,
     )
 
-    return RobotProfile(
+    profile = RobotProfile(
         submitted_url=safe,
         company=resolved.company,
         products=resolved.products,
@@ -200,6 +226,9 @@ def build_robot_profile(
         needs_product_choice=False,
         research_stages=stages,
     )
+    if timings is not None:
+        timings["profile_ms"] = int((time.perf_counter() - t_profile) * 1000)
+    return profile
 
 
 def _stages(
