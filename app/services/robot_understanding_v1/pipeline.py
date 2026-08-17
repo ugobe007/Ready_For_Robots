@@ -23,11 +23,15 @@ from app.services.robot_understanding_v1.sources import collect_source_pack
 from app.services.robot_url_safety import assert_public_http_url
 
 
-def _source_budget_sec() -> float:
+def _source_budget_sec() -> float | None:
+    """Optional fetch deadline. 0/empty = no cap (do not starve source quality)."""
+    raw = (os.getenv("ROBOT_PROFILE_SOURCE_BUDGET_MS") or "12000").strip()
     try:
-        ms = int(os.getenv("ROBOT_PROFILE_SOURCE_BUDGET_MS", "5500"))
+        ms = int(raw)
     except ValueError:
-        ms = 5500
+        ms = 12000
+    if ms <= 0:
+        return None
     return max(1.0, ms / 1000.0)
 
 
@@ -111,11 +115,12 @@ def build_robot_profile(
 
     subject = selected.name if selected else resolved.company.name
     t_profile = time.perf_counter()
+    budget = _source_budget_sec()
     collected = collect_source_pack(
         home,
         product_name=selected.name if selected else product_name,
         max_sources=max_sources,
-        deadline_monotonic=time.monotonic() + _source_budget_sec(),
+        deadline_monotonic=(time.monotonic() + budget) if budget is not None else None,
     )
     if selected:
         for c in collected:

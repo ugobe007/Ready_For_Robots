@@ -15,16 +15,16 @@ The Jobs submit path must feel like one coherent transaction. Research privately
 
 ## Acceptance
 
-- [ ] One explicit UI state machine: `IDLE → RESEARCHING → PRODUCT_SELECTION? → COMPOSING_RESULTS → RESULTS`
-- [ ] Zero partial-job rendering (no profile → empty jobs → partial jobs → reordered jobs)
-- [ ] Atomic `SEARCHING → RESULTS READY` reveal of profile + first jobs together
-- [ ] Stable panel dimensions (same outer geometry on submit → research → results)
-- [ ] Public job tape keeps scrolling during research; it is not the personalized board yet
-- [ ] Multi-product URLs resolve to a picker before deep research
-- [ ] Cached Robot Profiles skip a full rebuild
-- [ ] Instrument `resolve_ms`, `profile_ms`, `match_ms`, `total_ms`
-- [ ] Target: <8s uncached first useful result, <2–3s cached
-- [ ] No matcher ranking changes in this mission
+- [x] One explicit UI state machine: `IDLE → RESEARCHING → PRODUCT_SELECTION? → COMPOSING_RESULTS → RESULTS`
+- [x] Zero partial-job rendering (no profile → empty jobs → partial jobs → reordered jobs)
+- [x] Atomic `SEARCHING → RESULTS READY` reveal of profile + first jobs together
+- [x] Stable panel dimensions (same outer geometry on submit → research → results)
+- [x] Public job tape keeps scrolling during research; it is not the personalized board yet
+- [x] Multi-product URLs resolve to a picker before deep research
+- [x] Cached Robot Profiles skip a full rebuild
+- [x] Instrument `resolve_ms`, `profile_ms`, `match_ms`, `total_ms`
+- [ ] Live smoke after deploy (six cases + cached/uncached timings)
+- [x] No matcher ranking changes in this mission
 
 ## Non-goals
 
