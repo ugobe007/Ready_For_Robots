@@ -619,7 +619,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
         setUnsupportedReason(
           result.profile
             ? `We built a ${result.profile.profile_confidence}-tier profile for ${displayName}, but the job corpus has no strong matches yet.`
-            : undefined,
+            : null,
         );
         return;
       }
