@@ -62,7 +62,7 @@ const ctaClass =
 /* Session persistence (signup continuity)                             */
 /* ------------------------------------------------------------------ */
 
-type WorkspaceSession = { url: string; products: string[] };
+type WorkspaceSession = { url: string; products: string[]; stage?: Stage };
 
 function saveWorkspaceSession(data: WorkspaceSession) {
   if (typeof window === "undefined") return;
@@ -200,7 +200,7 @@ export default function RobotJobsWorkspace() {
     const saved = readWorkspaceSession();
     if (saved?.url) {
       restoredRef.current = true;
-      void runSearch(saved.url, saved.products);
+      void runSearch(saved.url, saved.products, saved.stage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
@@ -209,7 +209,7 @@ export default function RobotJobsWorkspace() {
   /* Core: research one or more robots                               */
   /* -------------------------------------------------------------- */
 
-  async function runSearch(submitUrl: string, productNames: string[]) {
+  async function runSearch(submitUrl: string, productNames: string[], restoredStage?: Stage) {
     setError(null);
     setStage("research");
     trackRobotJobsFunnel("robot_submitted", { ...funnelBase(), url: submitUrl, source: "url" });
@@ -229,7 +229,7 @@ export default function RobotJobsWorkspace() {
           setStage("select");
           return;
         }
-        finalizePortfolio([toAnalysis(res)], submitUrl);
+        finalizePortfolio([toAnalysis(res)], submitUrl, restoredStage);
         return;
       }
 
@@ -245,20 +245,32 @@ export default function RobotJobsWorkspace() {
         setStage("find");
         return;
       }
-      finalizePortfolio(analyses, submitUrl);
+      finalizePortfolio(analyses, submitUrl, restoredStage);
     } catch {
       setError("Research failed. Check the URL and try again.");
       setStage("find");
     }
   }
 
-  function finalizePortfolio(analyses: RobotAnalysis[], submitUrl: string) {
+  function finalizePortfolio(analyses: RobotAnalysis[], submitUrl: string, restoredStage?: Stage) {
     setPortfolio(analyses);
     setActiveIdx(0);
     setExpandedJob(null);
     viewedRef.current = new Set();
     fired3Plus.current = false;
-    saveWorkspaceSession({ url: submitUrl, products: analyses.map((a) => a.productName) });
+    
+    let targetStage: Stage;
+    if (restoredStage === "jobs") {
+      targetStage = "jobs";
+      setRailTab("jobs");
+    } else if (analyses.length > 1) {
+      targetStage = "portfolio";
+    } else {
+      targetStage = "review";
+      setRailTab("profile");
+    }
+    
+    saveWorkspaceSession({ url: submitUrl, products: analyses.map((a) => a.productName), stage: targetStage });
     trackRobotJobsFunnel("capabilities_viewed", {
       ...funnelBase(),
       robot_name: analyses[0]?.productName,
@@ -266,12 +278,7 @@ export default function RobotJobsWorkspace() {
       profile_tier: analyses[0]?.tier,
       robots_analyzed: analyses.length,
     });
-    if (analyses.length > 1) {
-      setStage("portfolio");
-    } else {
-      setRailTab("profile");
-      setStage("review");
-    }
+    setStage(targetStage);
   }
 
   /* -------------------------------------------------------------- */
@@ -307,6 +314,10 @@ export default function RobotJobsWorkspace() {
   function findJobsForActive() {
     setRailTab("jobs");
     setStage("jobs");
+    const saved = readWorkspaceSession();
+    if (saved?.url) {
+      saveWorkspaceSession({ ...saved, stage: "jobs" });
+    }
     trackRobotJobsFunnel("discovery_complete", {
       ...funnelBase(),
       robot_name: active?.productName,
@@ -404,6 +415,7 @@ export default function RobotJobsWorkspace() {
             onSubmit={onSubmitFind}
             companyName={companyName}
             error={error}
+            onCancel={stage === "select" ? newRobot : undefined}
           />
         ) : stage === "portfolio" ? (
           <PortfolioRail
@@ -513,6 +525,7 @@ function FindRail({
   onSubmit,
   companyName,
   error,
+  onCancel,
 }: {
   stage: Stage;
   url: string;
@@ -520,19 +533,21 @@ function FindRail({
   onSubmit: (e: React.FormEvent) => void;
   companyName: string;
   error: string | null;
+  onCancel?: () => void;
 }) {
-  const busy = stage === "research" || stage === "select";
+  const busy = stage === "research";
+  const selecting = stage === "select";
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <p className={eyebrow}>{busy ? "Your robot" : "Find jobs"}</p>
+      <p className={eyebrow}>{busy || selecting ? "Your robot" : "Find jobs"}</p>
       <h1 className="mt-1 font-display text-3xl font-bold leading-tight tracking-tight text-slate-100">
-        {busy ? companyName || "Researching…" : (
+        {busy || selecting ? companyName || "Researching…" : (
           <>
             Find <span className="text-emerald-400">jobs</span> for your robot.
           </>
         )}
       </h1>
-      {!busy && (
+      {!busy && !selecting && (
         <p className="mt-3 text-sm text-slate-400">Robots need jobs. We find the work.</p>
       )}
 
@@ -546,11 +561,11 @@ function FindRail({
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="Paste robot product URL"
-          disabled={busy}
+          disabled={busy || selecting}
           className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 font-mono text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500 disabled:opacity-50"
         />
-        <button type="submit" disabled={busy || !url.trim()} className={`${ctaClass} mt-3 w-full`}>
-          {busy ? "Researching…" : "Find Jobs →"}
+        <button type="submit" disabled={busy || selecting || !url.trim()} className={`${ctaClass} mt-3 w-full`}>
+          {busy ? "Researching…" : selecting ? "Select robot →" : "Find Jobs →"}
         </button>
       </form>
 
@@ -558,6 +573,18 @@ function FindRail({
         <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
           {error}
         </p>
+      )}
+
+      {selecting && onCancel && (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-full border border-slate-600 px-3 py-2 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-slate-400"
+          >
+            ← Start over
+          </button>
+        </div>
       )}
 
       <div className="mt-auto pt-6">
