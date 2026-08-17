@@ -30,7 +30,7 @@ ROBOT URL
 | **FIND WORK** | Substantially proven |
 | **QUALIFY** | First pattern proven |
 | **ROBOT UNDERSTANDING** | Trustworthy but incomplete (v1.0 freeze) |
-| **CAPABILITY → JOB MATCHING** | Not yet rebuilt professionally |
+| **CAPABILITY → JOB MATCHING** | M2 requirement matcher prototyped (Novolex + 4-physics gold + corpus templates) |
 | **CHANNEL / PLACE** | Later — after FIND + QUALIFY demand evidence |
 
 Homepage stays simple:
@@ -115,7 +115,7 @@ Keep Understanding frozen
 
 | Priority | Work | Notes |
 |----------|------|-------|
-| **Now (engineering)** | **M2 Match** — requirements matching; Novolex-shaped example; Why / Still unknown | Next mission — not heuristic fake-differentiation |
+| **Now (engineering)** | **M2 Match** — requirement satisfaction (MATCHED / UNMET / UNKNOWN / LIKELY); Novolex + four-physics gold | In progress this mission |
 | Paused | Content / C04 / invite traffic | Until MATCH TRUTH clears — see [`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md) |
 | Ongoing | Review shadow rows as they arrive | Observations only until 20; does not block M2 |
 

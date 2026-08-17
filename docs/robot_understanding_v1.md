@@ -306,7 +306,7 @@ Smoke after Agility: Dexmate → Locus → Avidbots → then blind 20.
 **M2 / Phase 4–5 matcher:** **ALLOWED to prototype** against grounded Tier A/B/C profiles; must propagate unknowns. Do **not** wait on 20-shadow for permission — that gate is Understanding-only ([`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md)).  
 **Still forbidden:** Blind 20 retune; open-ended Understanding polish; new capability families; channel research; OEM scrape scale; more corpora; heuristic patches that fake match differentiation.
 
-**Production:** Live `/` uses `POST /api/robot-profile` then job match (P0-A). Shadow accrues on profile submits. Heuristic keyword matcher remains until M2 replaces it — do not retune Understanding to compensate.
+**Production:** Live `/` uses `POST /api/robot-profile` then job match (P0-A). Shadow accrues on profile submits. **M2 requirement matcher** (`requirement_v1`) runs when the Jobs UI passes the frozen profile into `POST /api/robot-job-match`. Chip recovery still uses the legacy keyword matcher. Do not retune Understanding to compensate.
 
 ---
 
@@ -382,7 +382,7 @@ If Blind 5 shows a **general** failure → one generalized fix → **rerun the s
 
 See [`docs/calibration/understanding_blind_20/`](./calibration/understanding_blind_20/README.md).
 
-20 fresh robots (locked physics mix). Implementation frozen. Human GT authored independently. Aggregate + by-class metrics. No job matching. No QUALIFY influence. **Gate FAIL left open — do not retune to clear 80%.** Phase 4 remains CLOSED.
+20 fresh robots (locked physics mix). Implementation frozen. Human GT authored independently. Aggregate + by-class metrics. No job matching. No QUALIFY influence. **Gate FAIL left open — do not retune to clear 80%.** Understanding extractors remain closed; M2 Phase 4–5 matcher prototyping is allowed against frozen profiles.
 
 ```bash
 python3 scripts/run_understanding_blind20.py

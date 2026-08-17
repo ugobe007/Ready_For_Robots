@@ -1,7 +1,9 @@
 /**
  * POST /api/robot-job-match — identity → capability research → corpus jobs.
+ * Research-first: pass the Understanding profile so matching inspects requirements.
  */
 import { getPublicReadApiBase } from "@/lib/apiBase";
+import type { RobotProfileResult } from "@/lib/robotProfile";
 
 export type MatchCapability = {
   key: string;
@@ -33,9 +35,12 @@ export type MatchJob = {
   company_name?: string | null;
   locality?: string | null;
   tape_family?: string;
-  score?: number;
   unknowns?: string[];
   source?: string;
+  verdict?: "POSSIBLE_MATCH" | "NOT_A_MATCH" | "INSUFFICIENT";
+  why?: string[];
+  still_unknown?: string[];
+  blockers?: string[];
 };
 
 export type RobotJobMatchResult = {
@@ -52,6 +57,7 @@ export type RobotJobMatchResult = {
   research_stages?: ResearchStage[];
   robot_class?: string | null;
   evidence_urls?: string[];
+  matcher?: string | null;
 };
 
 export type RecoveryChip = "moves_materials" | "manipulates" | "cleans" | "inspects" | "other";
@@ -61,6 +67,7 @@ export async function fetchRobotJobMatch(opts: {
   chip?: RecoveryChip;
   robotName?: string;
   productName?: string;
+  profile?: RobotProfileResult | null;
   signal?: AbortSignal;
 }): Promise<RobotJobMatchResult> {
   const base = getPublicReadApiBase();
@@ -72,6 +79,7 @@ export async function fetchRobotJobMatch(opts: {
       chip: opts.chip || null,
       robot_name: opts.robotName || null,
       product_name: opts.productName || null,
+      profile: opts.profile || null,
     }),
     signal: opts.signal,
   });

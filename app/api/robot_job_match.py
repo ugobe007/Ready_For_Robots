@@ -2,10 +2,10 @@
 Public robot → jobs capability match (homepage / jobs front door).
 
 POST /api/robot-job-match
-  { "url": "https://…", "chip": …, "robot_capabilities": {…} }
+  { "url": "https://…", "chip": …, "profile": {…Understanding v1…} }
 
-Understanding = existing match-url path (scrape + analyze_robot_capabilities).
-Downstream = Robot Job corpus matcher (not buyer leads).
+When `profile` is present (research-first path), M2 requirement matching
+runs against frozen facts. Chip recovery still uses the legacy corpus matcher.
 """
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from app.services.robot_job_capability_match import match_from_chip, match_robot_url
+from app.services.robot_requirement_match import match_jobs_from_profile
 from app.services.robot_url_safety import UrlSafetyError
 
 router = APIRouter(tags=["robot-job-match"])
@@ -30,6 +31,7 @@ class RobotJobMatchIn(BaseModel):
     product_name: Optional[str] = Field(default=None, max_length=120)
     robot_capabilities: Optional[dict[str, Any]] = None
     page_text: Optional[str] = Field(default=None, max_length=20000)
+    profile: Optional[dict[str, Any]] = None
 
 
 class RobotJobMatchOut(BaseModel):
@@ -47,6 +49,7 @@ class RobotJobMatchOut(BaseModel):
     robot_class: Optional[str] = None
     evidence_urls: list[str] = []
     robot_capabilities: Optional[dict[str, Any]] = None
+    matcher: Optional[str] = None
 
 
 def _empty(state: StateLiteral, name: str, url: str | None = None) -> dict[str, Any]:
@@ -65,6 +68,7 @@ def _empty(state: StateLiteral, name: str, url: str | None = None) -> dict[str, 
         "robot_class": None,
         "evidence_urls": [],
         "robot_capabilities": None,
+        "matcher": None,
     }
 
 
@@ -74,12 +78,15 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
     chip = body.chip
     name = body.robot_name or "your robot"
     resolved_name = None if name == "your robot" else name
+    profile = body.profile
 
-    if not url and not chip and not body.robot_capabilities:
+    if not url and not chip and not body.robot_capabilities and not profile:
         return _empty("could_not_understand", name)
 
     try:
-        if chip and not url and not body.robot_capabilities:
+        if profile and (profile.get("facts") or profile.get("selected_product")):
+            result = match_jobs_from_profile(profile)
+        elif chip and not url and not body.robot_capabilities:
             result = match_from_chip(chip, robot_name=name)
         else:
             result = match_robot_url(
@@ -113,4 +120,5 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
         "robot_class": result.get("robot_class"),
         "evidence_urls": result.get("evidence_urls") or [],
         "robot_capabilities": result.get("robot_capabilities"),
+        "matcher": result.get("matcher"),
     }

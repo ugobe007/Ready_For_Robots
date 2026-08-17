@@ -17,7 +17,7 @@ Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 | # | Gate | Status |
 |---|------|--------|
 | 1 | **PROFILE PATH** — production uses `/api/robot-profile` + multi-product selection | **PASS** (P0-A 2026-08-17) |
-| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **OPEN** — M2 next mission (not this pass) |
+| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **PROTOTYPED** locally (M2 2026-08-17) — not production-cleared until Fly+Vercel ship `requirement_v1` and a human reviewer agrees ~8/10 |
 | 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS; auth return still BLOCKED |
 | 4 | **TELEMETRY** — events + src/persona + shadow | **PARTIAL** — src/events mostly PASS; profile-path events newly available; persona BLOCKED |
 

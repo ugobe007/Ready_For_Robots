@@ -112,8 +112,66 @@ function matchJobsToDemoShape(jobs: MatchJob[]): Job[] {
     automation_state: "unknown",
     commercial_availability: "unknown",
     requirements: {},
-    unknowns: j.unknowns || [],
+    unknowns: j.still_unknown || j.unknowns || [],
   })) as Job[];
+}
+
+function MatchExplanation({ match }: { match?: MatchJob | null }) {
+  if (!match?.verdict) return null;
+  const possible = match.verdict === "POSSIBLE_MATCH";
+  return (
+    <div className="mt-3 border-t border-slate-700 pt-3">
+      <p
+        className={`font-mono text-[10px] font-bold uppercase tracking-[0.12em] ${
+          possible ? "text-emerald-400" : "text-rose-400"
+        }`}
+      >
+        {possible ? "Possible match" : "Not a match"}
+      </p>
+      {match.why?.length ? (
+        <div className="mt-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-slate-500">Why</p>
+          <ul className="mt-1 space-y-0.5">
+            {match.why.map((w) => (
+              <li key={w} className="text-[11px] leading-snug text-slate-300">
+                ✓ {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {match.still_unknown?.length ? (
+        <div className="mt-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-slate-500">
+            Still unknown
+          </p>
+          <ul className="mt-1 space-y-0.5">
+            {match.still_unknown.map((w) => (
+              <li key={w} className="text-[11px] leading-snug text-slate-400">
+                {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {match.blockers?.length ? (
+        <div className="mt-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-rose-400/80">
+            Blocker
+          </p>
+          <ul className="mt-1 space-y-0.5">
+            {match.blockers.map((w) => (
+              <li key={w} className="text-[11px] leading-snug text-slate-300">
+                {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : possible ? (
+        <p className="mt-2 text-[11px] text-slate-500">No confirmed blocker</p>
+      ) : null}
+    </div>
+  );
 }
 
 const PREVIEW_FREE = 5;
@@ -585,6 +643,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
         url: submittedUrl,
         robotName: displayName,
         productName: product || productName,
+        profile,
       });
       setMatchCapabilities(result.capabilities || []);
 
@@ -779,6 +838,10 @@ export default function RobotJobsExperiment({ slug }: Props) {
     }
     return jobs[jobIndex];
   }, [jobs, selectedTapeKey, jobIndex]);
+  const selectedMatch = useMemo(
+    () => matchedApiJobs.find((j) => j.job_key === job?.job_key) ?? null,
+    [matchedApiJobs, job?.job_key],
+  );
   const totalJobs = jobCountOverride ?? profile?.job_count_total ?? jobs.length;
   const freePreviewCount = Math.min(PREVIEW_FREE, jobs.length);
   const previewCount = unlocked ? jobs.length : freePreviewCount;
@@ -1004,6 +1067,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
                         {job.company_name}
                         {job.locality ? ` · ${placeLine(job)}` : ""}
                       </p>
+                      <MatchExplanation match={selectedMatch} />
                       {!qualifyOpen ? (
                         <button
                           type="button"
@@ -1153,6 +1217,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
                   {job.company_name}
                   {job.locality ? ` · ${placeLine(job)}` : ""}
                 </p>
+                <MatchExplanation match={selectedMatch} />
                 {!qualifyOpen ? (
                   <button
                     type="button"
