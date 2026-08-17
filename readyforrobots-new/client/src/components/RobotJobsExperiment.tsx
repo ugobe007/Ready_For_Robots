@@ -466,6 +466,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setPersonalCorpus(tape.length ? tape : MARKET_TAPE_JOBS.slice(0, 8));
     setJobCountOverride(total);
     setStep("enter");
+    setSubmitPhase("idle");
     setBoardMode("status");
     setTapeRunning(false);
     setTracePhase("url");
@@ -560,6 +561,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setMatchedApiJobs([]);
     setMatchThin(false);
     setRobotProfile(null);
+    setJobCountOverride(null);
     setPersonalCorpus([]);
     setSelectedTapeKey(null);
     setQualifyOpen(false);
@@ -722,6 +724,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
 
   async function onRecoveryChip(chip: RecoveryChip) {
     setStep("enter");
+    setSubmitPhase("idle");
     setBoardMode("status");
     setStatusLines(["Capability selected ✓", "Searching work…"]);
     try {

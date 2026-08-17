@@ -48,7 +48,7 @@ def normalize_profile_url(url: str) -> str:
     netloc = host
     if parts.port and parts.port not in {80, 443}:
         netloc = f"{host}:{parts.port}"
-    return urlunsplit((parts.scheme.lower() or "https", netloc, path, "", ""))
+    return urlunsplit((parts.scheme.lower() or "https", netloc, path, parts.query, ""))
 
 
 def profile_cache_key(url: str, product: str | None = None) -> str:
