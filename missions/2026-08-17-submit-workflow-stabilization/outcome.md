@@ -31,27 +31,31 @@ No overlapping `isLoadingProfile` / `hasProfile` / `isMatching` / `jobs.length` 
 
 `python3 -m pytest tests/test_robot_job_search.py tests/test_understanding_shadow.py -q`
 
-## Follow-up
+## Release checkpoint (do not add product work)
 
-**Locked sequence (do not churn architecture):**
+**Merge order:** #13 first, then six-case smoke, then #12. Do not merge ranking until submit workflow is proven, so a production issue can be attributed to workflow state or ranking — not both.
 
-1. Deploy PR #13 (this) — Fly API + Vercel Jobs UI
-2. Smoke six cases: Dexmate, Agility, Locus, Avidbots, Boston Dynamics, bad URL
-3. Verify cached vs uncached timings (`timings.cached`, `total_ms`) — logged, not shown as percents
-4. Deploy/check PR #12 ranking if not already live
-5. Auth continuity
-6. Telemetry
-7. Final pre-traffic gate
+**#13 go-live bar:** PR merged → Fly `/api/robot-job-search` present → Vercel bundle current → six-case smoke PASS.
 
-Traffic / C04 stay **paused** until that gate passes.
+If #13 fails visually, fix only the submit transaction. If it passes, freeze it and move on.
 
-**Live verify (no more UX before this):**
+**Contract check after deploy:** Vercel Jobs UI and Fly API must both speak `/api/robot-job-search`. A new frontend against a stale Fly route recreates half-state.
 
-- Generic tape stays stable during research
-- Left frame height does not jump across IDLE / RESEARCHING / PRODUCT_SELECTION / RESULTS
-- Boston Dynamics picker runs before deep research; one profile request per selection
-- Second cached submit is visibly faster and returns the same profile/job state
-- Timings are in the payload / funnel events, not fake progress %
-- Timeout or bad URL → deliberate recover/error, not a half-rendered results page
+**Timing bar:** uncached 8–12s is a pass if the state is stable. Cached repeat must be materially faster **and** return the same product identity, profile tier/facts, and top jobs.
 
-This environment cannot Fly-deploy (no `FLY_API_TOKEN`). Merge to `main` triggers `.github/workflows/deploy.yml`. Prefer `--skip-release-command` if Alembic times out (no migrations in this PR). `/api/robot-job-search` is **not** on Fly until that deploy.
+### Six-case smoke sheet
+
+For each case record: uncached_ms, cached_ms, profile_request_count, search_request_count, state transitions, panel geometry moved? (Y/N), jobs flashed before reveal? (Y/N), final state. A 200 is not a pass.
+
+| Case | Expected pass shape |
+|------|---------------------|
+| Dexmate | one stable research sequence → Vega + manipulation-heavy jobs |
+| Agility | stable research → Digit + mixed manipulation/transport board |
+| Locus | stable research → Origin + transport-only board |
+| Avidbots | stable research → Neo + scrub-only board |
+| Boston Dynamics | quick picker first → **one** selected-product deep research call → results |
+| Bad URL | stable research → deliberate recover, **never** partial results |
+
+Traffic / C04 stay **paused** until #13 smoke PASS, then #12, then auth continuity + telemetry, then the final pre-traffic gate.
+
+This environment cannot merge or Fly-deploy (`gh` write and `FLY_API_TOKEN` unavailable). Merge #13 to `main` to run `.github/workflows/deploy.yml`. No migrations; `--skip-release-command` if Alembic times out. #12 remains open and must not ship first.
