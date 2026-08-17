@@ -1,12 +1,18 @@
-# EXPERIMENT MODE — Active
+# Product mode — Jobs terminal
 
-**Updated:** 2026-08-15 (traffic = the product test · channel research stopped)
+**Updated:** 2026-08-17  
+**Canonical strategy:** [`CAPABILITY_MODEL.md`](./CAPABILITY_MODEL.md)  
+**Product spine / milestones:** [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) (M1→M4, then sell/test)  
+**While waiting for M1 (20 shadow reviews):** operating loop = acquisition/content only — do not open M2 early ([`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md#current-operating-loop-while-waiting-for-m1)).  
+**Understanding foundation:** [`robot_understanding_v1.md`](./robot_understanding_v1.md)
 
-## Category
+> Historical name: “EXPERIMENT MODE.” The experiment **became the product**. The live surface is **`/`** (Jobs terminal). `/experiment` is obsolete — treat remaining links/events as legacy aliases until cleaned up.
+
+---
+
+## Category & entries
 
 > **Find Jobs for Robots.**
-
-Entry prompts (same engine — see [`CAPABILITY_MODEL.md`](./CAPABILITY_MODEL.md)):
 
 | Who | CTA |
 |-----|-----|
@@ -14,91 +20,93 @@ Entry prompts (same engine — see [`CAPABILITY_MODEL.md`](./CAPABILITY_MODEL.md
 | Distributor | Find jobs for the robots you sell. |
 | Integrator | Find automation jobs your company can solve. |
 
-Not leads. Not SIGNAL. Not sales intelligence. Not three products.
+Not leads. Not SIGNAL. Not three products. One engine: **FIND → QUALIFY → PLACE later**.
 
-## Schema: FROZEN
+---
 
-Architecture stays alone. Fixtures support `/experiment`. **No Fly migration yet.**
-
-See [`product_sim/RDD_UNIVERSAL_CORE.md`](./product_sim/RDD_UNIVERSAL_CORE.md).
-
-## The test
-
-> When we show someone work matched to what they sell or can solve, do they want more?
+## The test (current)
 
 ```
-submit robot
-  → see capabilities
-  → see jobs
-  → inspect multiple cards
-  → click See All
-  → start signup
+submit robot URL on /
+  → see understood capabilities (must be credible)
+  → see Robot Jobs
+  → inspect cards
+  → discovery pull: See All Jobs
+  → and/or commercial pull: Qualify This Job
+  → signup / pursuit when ready
 ```
 
-- **Before See All** = product (does the job create pull?)  
-- **After See All** = conversion mechanics (CTA / auth / onboarding)
+**Product question:**
 
-Primary metric: **See All CTR** — **segment by `persona`** (oem / distributor / integrator) and by robot family / `profile_key` within persona.
+> Does RFR understand their robot well enough to show credible work — and does that work create enough value that they want more (`rdd_see_all_clicked`) or ask us to qualify it (`rdd_qualify_requested`)?
 
-First useful read = **which audience pulls** and **which capability families engage** — that picks the first customer segment, not a tagline. See [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md).
+| Pull | Metric |
+|------|--------|
+| Discovery | See All CTR · `rdd_see_all_clicked` |
+| Commercial | Qualify requested · `rdd_qualify_requested` (stronger when present) |
 
-Until traffic evidence: **no more capability layers · no channel expansion · no UI forks.**
+Segment by `persona` and robot product / family.
 
-## Funnel interpretation (do not tweak from tiny traffic)
+---
+
+## What is allowed vs frozen
+
+| Allowed now | Frozen / do not expand |
+|-------------|-------------------------|
+| Robot Understanding v1 Phases 1–3 frozen at v1.0 calibration; shadow through **first 20 reviewed** for M1 | Product-hypothesis expansion; open-ended Understanding polish |
+| Production shadow / honest profile UI (decision instrument — then move on) | Phase 4–5 until M1 clears (CLOSED — do not retune Blind 20) |
+| Traffic / discovery content / funnel reports | Channel Match scoring, OEM scrape scale |
+| Integrity fixes that make FIND trustworthy | New UI products, more corpora, capability-family churn |
+
+**Rule:** Do not expand the product hypothesis while traffic runs. Product-integrity work required for `CAPABILITIES → FIND WORK` is allowed. Keyword-heuristic patches are not that work — see Understanding v1. Shadow answers M1 once; then Phase 4 / M2 — not Understanding forever.
+
+Legacy matcher stays live until Understanding v1 wins blind eval. No Fly migrate of RDD schema until Understanding spine needs it.
+
+---
+
+## Funnel interpretation
 
 | Pattern | Likely cause |
 |---------|----------------|
-| Low submit → capabilities | Input / trust problem |
-| High capabilities, low job engagement | Weak or implausible matching |
-| High card engagement, low See All CTR | Insufficient perceived value, or too many free results |
-| High See All CTR, low signup start | Gating / CTA friction |
-| High signup start, low completion | Auth / onboarding friction |
-| One persona >> others on See All | GTM wedge (still one engine) |
+| Low submit → capabilities | Input / trust |
+| Capabilities shown, jobs feel wrong | **Understanding integrity** (fix Phases 1–3) |
+| High job views, low See All | Weak discovery pull |
+| High See All, low qualify | Curious but not commercially hooked |
+| Qualify requested | Strong commercial pull on that job |
+| High unlock, low signup | Auth / gating friction |
+| One persona dominates | GTM wedge (still one engine) |
 
-**Also watch:** which `job_key` / company appears in `rdd_job_viewed`.
+Do not rewrite UX or expand channels from tiny traffic noise. Do fix understanding when Agility/Dexmate-class failures show the promise is false.
 
-**Rule:** Let a meaningful traffic batch accumulate. Judge the funnel as a whole. Do not optimize from noise. Do not add architecture, scoring, scraping, ontology, channel scoring, or UI variables before that.
-
-## Stopping point (2026-08-15)
-
-Architecture frozen. Product frozen. Channel research **stopped** (fixtures kept). Instrumentation running.  
-**Phase:** operational — get qualified people into `/experiment` via **discovery content** (not promo), observe, accumulate behavior.  
-**Traffic vs product:** discovery posts / outreach / monitoring / reporting allowed; do not change the experiment from soft early numbers.  
-See [`DISCOVERY_CONTENT.md`](./DISCOVERY_CONTENT.md).  
-After enough behavior: *Who wants this most — and what kind of work makes them want more?*  
-**Next:** mixed-audience traffic sprint — [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md).  
-Integrity QA (10 URLs) must pass before Cohort 1 — [`product_sim/qa_robot_url_matrix.md`](./product_sim/qa_robot_url_matrix.md).
+---
 
 ## Instrumentation
 
 `trackRobotJobsFunnel` → `/event/rdd_*`
 
-Outreach links: `/experiment?persona=oem|distributor|integrator&src=…`
+Prefer outreach to `/` (or current Jobs entry) with `?persona=oem|distributor|integrator&src=…`. Legacy `/experiment?…` may still fire events — migrate links to `/`.
 
 | Step | Event |
 |------|--------|
-| Land | `rdd_experiment_view` (+ persona, src) |
+| Land | `rdd_experiment_view` (legacy name) · prefer land-on-`/` |
 | Submit | `rdd_robot_submitted` |
 | Capabilities | `rdd_capabilities_viewed` |
 | Search beat | `rdd_discovery_started` / `rdd_discovery_complete` |
-| Jobs | `rdd_first_job_viewed` · `rdd_job_viewed` (+ `job_key`, company) · `rdd_jobs_3plus_viewed` |
-| Unlock | `rdd_see_all_clicked` |
+| Jobs | `rdd_first_job_viewed` · `rdd_job_viewed` · `rdd_jobs_3plus_viewed` |
+| Discovery unlock | `rdd_see_all_clicked` |
+| Commercial pull | `rdd_qualify_requested` |
 | Signup | `signup_start` / `signup_complete` (`src=robot_jobs`) |
 
-## Capability entry points (research done · no UI yet)
+---
 
-```
-CAPABILITIES → FIND WORK
-```
+## Schema note
 
-| Level | Prompt | Status |
-|-------|--------|--------|
-| Robot | Find jobs for your robot | `/experiment` traffic |
-| Portfolio | Find jobs for the robots you sell | Fixtures · **no UI** |
-| Solution | Find automation jobs your company can solve | Cross 0→~19 · fixture only |
+RDD fixtures / universal core: [`product_sim/RDD_UNIVERSAL_CORE.md`](./product_sim/RDD_UNIVERSAL_CORE.md). No Fly migration until Understanding v1 persistence needs it.
 
-Channel Graph fixtures: [`channel_graph/`](./channel_graph/). Do not expand OEM 11–50, more distributors, or Channel Match scoring.
+Channel Graph fixtures: [`channel_graph/`](./channel_graph/) — do not expand.
 
-## Frozen
+---
 
-Schema churn (RDD) · Fly migrate · homepage · Cal · CRM · SIGNAL · premature UX optimization · distributor/integrator UI · channel research expansion · OEM scrape scale
+## Frozen (non-integrity)
+
+Homepage redesigns · Cal · CRM · SIGNAL · premature UX optimization · distributor/integrator UI products · channel research expansion · OEM scrape 11–50 · Phase 4–5 Understanding · new capability families as “quality”

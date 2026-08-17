@@ -1,0 +1,64 @@
+{
+  "id": "b20-20",
+  "authored_independently": true,
+  "authored_at": "2026-08-17T01:15:00Z",
+  "researcher_method": "Dusty Robotics public site; authored before agent run.",
+  "primary_sources_reviewed": [
+    "https://www.dustyrobotics.com/"
+  ],
+  "identity": {
+    "company_any": [
+      "Dusty Robotics",
+      "Dusty"
+    ],
+    "product_any": [
+      "FieldPrinter",
+      "Field Printer",
+      "FieldPrinter 2"
+    ],
+    "display_class_any": [
+      "construction_robot",
+      "amr",
+      "mobile_robot",
+      "unusual"
+    ]
+  },
+  "material_facts": [
+    {
+      "id": "f1",
+      "predicate": "product_class",
+      "value_any": [
+        "construction_robot",
+        "amr",
+        "mobile_robot",
+        "printer_robot"
+      ],
+      "importance": "critical",
+      "evidence": "construction layout printing robot"
+    },
+    {
+      "id": "f2",
+      "predicate": "operating_environment",
+      "value_any": [
+        "construction",
+        "jobsite",
+        "concrete",
+        "indoor"
+      ],
+      "importance": "high",
+      "evidence": "prints BIM layout on concrete floors"
+    },
+    {
+      "id": "f3",
+      "predicate": "autonomous_navigation",
+      "value_any": [
+        true
+      ],
+      "importance": "medium",
+      "evidence": "autonomous mobile layout printer"
+    }
+  ],
+  "human_tier_judgment": "C",
+  "human_tier_rationale": "Unusual construction printer; public site identity-strong, industrial constraint sheet may be thin.",
+  "notes": "Not Canvas. Unusual vs warehouse corpus."
+}

@@ -1,0 +1,168 @@
+/**
+ * POST /api/robot-profile — Understanding v1 Phases 1–3 research agent.
+ * Identity → sources → facts → Robot Profile (no jobs).
+ */
+import { getPublicReadApiBase } from "@/lib/apiBase";
+
+export type ProfileSourceType =
+  | "product"
+  | "specifications"
+  | "solutions"
+  | "documentation"
+  | "case_study"
+  | "press_release"
+  | "support"
+  | "homepage"
+  | "other";
+
+export type ResearchStage = {
+  id: string;
+  label: string;
+  status: string;
+  detail?: string | null;
+};
+
+export type RobotProfileFact = {
+  id: string;
+  subject: string;
+  predicate: string;
+  value: string | number | boolean;
+  units?: string | null;
+  epistemic: string;
+  confidence: number;
+  evidence_span?: string | null;
+  source_id: string;
+};
+
+export type RobotProfileSource = {
+  id: string;
+  url: string;
+  source_type: ProfileSourceType;
+  title?: string | null;
+  publisher_role: string;
+  confidence: number;
+  fetched_at?: string;
+  document_date?: string | null;
+};
+
+export type RobotProfileProduct = {
+  id: string;
+  name: string;
+  generation?: string | null;
+  display_class?: string | null;
+};
+
+export type RobotProfileResult = {
+  submitted_url: string;
+  built_at: string;
+  profile_confidence: "A" | "B" | "C";
+  source_grounding_rate: number;
+  coverage_rate?: number;
+  coverage_level?: "high" | "medium" | "low";
+  source_quality_rate?: number;
+  source_quality_level?: "high" | "medium" | "low";
+  research_morphology?: string | null;
+  needs_product_choice: boolean;
+  notes: string[];
+  research_stages: ResearchStage[];
+  company: {
+    id: string;
+    name: string;
+    primary_domain: string;
+    aliases?: string[];
+  };
+  products: RobotProfileProduct[];
+  selected_product: RobotProfileProduct | null;
+  sources: RobotProfileSource[];
+  facts: RobotProfileFact[];
+};
+
+export async function fetchRobotProfile(opts: {
+  url: string;
+  product?: string;
+  maxSources?: number;
+  signal?: AbortSignal;
+}): Promise<RobotProfileResult> {
+  const base = getPublicReadApiBase();
+  const res = await fetch(`${base}/api/robot-profile`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({
+      url: opts.url,
+      product: opts.product || null,
+      max_sources: opts.maxSources ?? 6,
+    }),
+    signal: opts.signal,
+  });
+  if (!res.ok) {
+    throw new Error(`robot-profile ${res.status}`);
+  }
+  return (await res.json()) as RobotProfileResult;
+}
+
+/** User-facing labels for confirmed fact predicates. */
+export function formatFactLine(f: RobotProfileFact): string {
+  const units = f.units ? ` ${f.units}` : "";
+  const val =
+    typeof f.value === "boolean" ? (f.value ? "yes" : "no") : `${f.value}${units}`;
+  const labels: Record<string, string> = {
+    carrying_capacity: "Carrying capacity",
+    battery_runtime: "Battery / runtime",
+    product_class: "Robot class",
+    supports_tote_handling: "Tote / material handling",
+    warehouse_or_factory_deployment: "Warehouse / factory environments",
+    supports_hard_floor_scrubbing: "Hard-floor scrubbing",
+    arm_count: "Arm count",
+    has_mobile_base: "Mobile base",
+    autonomous_navigation: "Autonomous navigation",
+    claims_load_unload: "Load / unload (claimed)",
+    claims_warehouse_transport: "Warehouse transport (claimed)",
+    reach_or_workspace: "Reach / workspace",
+    end_effector: "End effector",
+    has_dexterous_hands: "Dexterous hands",
+    mobility_architecture: "Mobility architecture",
+    operating_environment: "Operating environment",
+    autonomy_or_control: "Autonomy / control",
+    payload: "Payload / carry capacity",
+    runtime: "Runtime / power",
+    mobility: "Mobility architecture",
+    environment: "Operating environment",
+    workflows: "Demonstrated workflows",
+    scrubbing: "Hard-floor scrubbing",
+    autonomy: "Autonomy / control",
+  };
+  const name = labels[f.predicate] || f.predicate.replace(/_/g, " ");
+  if (f.epistemic === "unknown" || f.value === "UNKNOWN") {
+    return `${name}: UNKNOWN`;
+  }
+  if (f.epistemic === "contradicted") {
+    return `${name}: ${val} (CONFLICTED)`;
+  }
+  return `${name}: ${val}`;
+}
+
+export function sourceTypeLabel(t: string): string {
+  const map: Record<string, string> = {
+    product: "Product page",
+    specifications: "Specifications",
+    solutions: "Solutions / use cases",
+    documentation: "Documentation",
+    case_study: "Case study",
+    press_release: "Press",
+    support: "Support / manual",
+    homepage: "Homepage",
+    other: "Other",
+  };
+  return map[t] || t;
+}
+
+/** Honest incompleteness copy for profile confidence tiers (Understanding v1.0). */
+export function profileConfidenceCopy(tier: "A" | "B" | "C"): string {
+  if (tier === "A") {
+    return "Strong identity and good research coverage of key facts — treat as a solid starting profile.";
+  }
+  if (tier === "B") {
+    return "We confirmed the robot identity and key facts, but some technical constraints are still unknown.";
+  }
+  return "Research coverage is incomplete — treat this profile cautiously; many constraints remain unknown.";
+}

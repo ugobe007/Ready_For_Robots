@@ -14,7 +14,7 @@ The harness operates **autonomously**: commit, push, deploy, and apply scripts w
 
 Read `docs/product_market_fit.md` and **`docs/value_first_principle.md`** before every mission. **Users do not buy unless they see value** — prove outcomes (live leads, pitch actions, outreach drafts) before signup or upgrade asks.
 
-**EXPERIMENT MODE:** Read `docs/EXPERIMENT_MODE.md`. Freeze **old assumptions** (SIGNAL/CRM/Cal-as-core), not all building. Experimental branch = **job discovery** (`docs/product_sim/`). Self-audit 10×25; tiny loop robot URL→jobs. Interviews falsify, they don’t grant permission to work.
+**EXPERIMENT MODE:** Read `docs/EXPERIMENT_MODE.md` and **`docs/CAPABILITY_MODEL.md`**. The experiment is now the product: **`/` = Jobs terminal** (FIND → QUALIFY → PLACE later). Freeze SIGNAL/CRM/Cal-as-core and hypothesis expansion — but **Robot Understanding v1 Phases 1–3** (`docs/robot_understanding_v1.md`) is allowed product-integrity work. Tiny loop: robot URL → credible jobs. Interviews falsify; they don’t grant permission to expand.
 
 **All agents optimize toward this outcome:**
 

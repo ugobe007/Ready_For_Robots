@@ -1,0 +1,77 @@
+{
+  "id": "b20-10",
+  "authored_independently": true,
+  "authored_at": "2026-08-17T01:15:00Z",
+  "researcher_method": "Tennant T7AMR product page + brochure specs; authored before agent run.",
+  "primary_sources_reviewed": [
+    "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t7amr.robotic-floor-scrubber.2000056.html"
+  ],
+  "identity": {
+    "company_any": [
+      "Tennant"
+    ],
+    "product_any": [
+      "T7AMR",
+      "T7 AMR",
+      "T7"
+    ],
+    "display_class_any": [
+      "cleaning_robot",
+      "scrubber",
+      "mobile_robot"
+    ]
+  },
+  "material_facts": [
+    {
+      "id": "f1",
+      "predicate": "product_class",
+      "value_any": [
+        "cleaning_robot",
+        "scrubber",
+        "mobile_robot"
+      ],
+      "importance": "critical",
+      "evidence": "robotic floor scrubber"
+    },
+    {
+      "id": "f2",
+      "predicate": "battery_runtime",
+      "value_num": 6.5,
+      "units_any": [
+        "hr"
+      ],
+      "importance": "high",
+      "evidence": "Up to 6.5 hours high-capacity lithium-ion"
+    },
+    {
+      "id": "f3",
+      "predicate": "autonomous_navigation",
+      "value_any": [
+        true
+      ],
+      "importance": "high",
+      "evidence": "BrainOS autonomous scrubber"
+    },
+    {
+      "id": "f4",
+      "predicate": "operating_environment",
+      "value_any": [
+        "indoor",
+        "commercial",
+        "retail"
+      ],
+      "importance": "medium",
+      "evidence": "indoor commercial cleaning"
+    }
+  ],
+  "alt_acceptable": {
+    "battery_runtime_any": [
+      4,
+      6,
+      6.5
+    ]
+  },
+  "human_tier_judgment": "A",
+  "human_tier_rationale": "Specs block includes runtime, path width, tanks.",
+  "notes": "Accept FLA ~4h or Li-ion ~6\u20136.5h."
+}

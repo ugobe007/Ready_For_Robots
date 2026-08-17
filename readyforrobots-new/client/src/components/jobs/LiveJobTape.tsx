@@ -34,6 +34,8 @@ type Row = TapeJob & {
 
 type Props = {
   title: string;
+  /** Optional customer-facing note under the title (e.g. corpus match disclaimer). */
+  subtitle?: string | null;
   corpus: TapeJob[];
   baseCount: number;
   running?: boolean;
@@ -74,6 +76,7 @@ function toTitleCase(s: string): string {
 
 export default function LiveJobTape({
   title,
+  subtitle = null,
   corpus,
   baseCount,
   running = true,
@@ -245,6 +248,11 @@ export default function LiveJobTape({
         <p className="mt-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-600">
           {revealing ? "Matching work to your robot" : "Live robot work"}
         </p>
+        {subtitle ? (
+          <p className="mt-1.5 max-w-xl text-[11px] leading-snug normal-case tracking-normal text-slate-500">
+            {subtitle}
+          </p>
+        ) : null}
       </div>
 
       {showStatus ? (

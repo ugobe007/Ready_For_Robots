@@ -16,6 +16,8 @@ import {
   type MatchProduct,
   type RecoveryChip,
 } from "@/lib/robotJobMatch";
+import { fetchRobotProfile, type RobotProfileResult } from "@/lib/robotProfile";
+import RobotProfileCard from "@/components/RobotProfileCard";
 import PixelIcon from "@/components/PixelIcon";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import {
@@ -151,11 +153,11 @@ function readJobsDiscoverySession(): JobsDiscoverySession | null {
 function FunnelTrace({ phase, jobCount }: { phase: TracePhase; jobCount: number | null }) {
   const countLabel =
     jobCount != null ? `${String(jobCount).padStart(2, "0")} JOBS FOUND` : "JOBS";
-  let label = "URL → CAPABILITIES → JOBS";
-  if (phase === "url") label = "URL ✓ → CAPABILITIES... → JOBS";
-  else if (phase === "caps") label = "URL ✓ → CAPABILITIES ✓ → JOBS...";
-  else if (phase === "search") label = "URL ✓ → CAPABILITIES ✓ → SEARCHING...";
-  else if (phase === "done") label = `URL ✓ → CAPABILITIES ✓ → ${countLabel}`;
+  let label = "URL → RESEARCH → PROFILE → JOBS";
+  if (phase === "url") label = "URL ✓ → RESEARCH... → PROFILE → JOBS";
+  else if (phase === "caps") label = "URL ✓ → RESEARCH ✓ → PROFILE... → JOBS";
+  else if (phase === "search") label = "URL ✓ → RESEARCH ✓ → PROFILE ✓ → JOBS...";
+  else if (phase === "done") label = `URL ✓ → PROFILE ✓ → ${countLabel}`;
 
   return (
     <p
@@ -187,21 +189,21 @@ const HOW_IT_WORKS = [
   {
     n: "01",
     title: "Show us your robot",
-    body: "We identify what it can actually do.",
+    body: "We research the company and product.",
     icon: KARE_FACE,
     scale: 1.5,
   },
   {
     n: "02",
-    title: "We find the work",
-    body: "We search for matching physical work.",
+    title: "We build a robot profile",
+    body: "Grounded facts from manufacturer sources.",
     icon: KARE_SEARCH,
     scale: 2,
   },
   {
     n: "03",
-    title: "You review the jobs",
-    body: "See evidence, fit and unknowns.",
+    title: "Then we find the work",
+    body: "Jobs matched to what we confirmed.",
     icon: KARE_JOB_CARD,
     scale: 2,
   },
@@ -310,6 +312,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
   const [pendingMatchUrl, setPendingMatchUrl] = useState<string | null>(null);
   const [matchedApiJobs, setMatchedApiJobs] = useState<MatchJob[]>([]);
   const [matchThin, setMatchThin] = useState(false);
+  const [robotProfile, setRobotProfile] = useState<RobotProfileResult | null>(null);
   const sessionId = useRef(
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()
@@ -485,7 +488,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
     });
   }
 
-  /** Identity → capability research → corpus match → reveal. */
+  /** Research agent → Robot Profile → then job corpus (profile first). */
   async function runCapabilityDiscovery(
     submittedUrl: string,
     fallbackName: string,
@@ -501,6 +504,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
     setMatchCapabilities([]);
     setMatchedApiJobs([]);
     setMatchThin(false);
+    setRobotProfile(null);
     setSelectedTapeKey(null);
     setQualifyOpen(false);
     setQualifyRequested(false);
@@ -512,58 +516,100 @@ export default function RobotJobsExperiment({ slug }: Props) {
       ...funnelBase(),
       robot_name: fallbackName,
       url: submittedUrl,
-      source: "capability_match",
+      source: "research_agent",
     });
 
     boardLater(() => {
+      setStatusLines(["Identifying company… ✓", "Finding robot products…"]);
+    }, 350);
+    boardLater(() => {
       setTracePhase("caps");
-      setStatusLines(["Identifying company…", "Finding robots…", "Understanding capabilities…"]);
-    }, 400);
+      setStatusLines([
+        "Identifying company… ✓",
+        "Finding robot products… ✓",
+        "Reviewing product sources…",
+      ]);
+    }, 700);
 
     try {
-      const result = await fetchRobotJobMatch({
+      const profile = await fetchRobotProfile({
         url: submittedUrl,
-        robotName: fallbackName,
-        productName,
+        product: productName,
       });
-      setRobotName(result.robot_name || fallbackName);
-      setMatchCapabilities(result.capabilities || []);
+      setRobotProfile(profile);
+      const company = profile.company?.name || fallbackName;
+      const product = profile.selected_product?.name;
 
-      if (result.state === "select_product" && (result.products || []).length > 1) {
-        setFoundProducts(result.products || []);
+      if (profile.needs_product_choice && (profile.products || []).length > 1) {
+        setFoundProducts(
+          (profile.products || []).map((p) => ({
+            name: p.name,
+            robot_class: p.display_class || null,
+            confidence: 0.8,
+          })),
+        );
+        setRobotName(company);
         setBoardMode("market");
         setTapeRunning(true);
         setTracePhase("idle");
         setStatusLines([]);
         setStep("select_product");
         setIntro({
-          headline: result.company_name
-            ? `Analyzing ${result.company_name}`
-            : "We found several robots",
-          subhead: "Which robot needs a job?",
+          headline: `We researched ${company}`,
+          subhead: `We found ${profile.products.length} robots from this company. Which one needs jobs?`,
         });
         return;
       }
+
+      const displayName = product || company || fallbackName;
+      setRobotName(displayName);
+      setStatusLines([
+        "Identifying company… ✓",
+        "Finding robot products… ✓",
+        `Sources found ${String(profile.sources.length).padStart(2, "0")} ✓`,
+        "Building robot profile… ✓",
+        "Robot profile ready ✓",
+        "Searching work…",
+      ]);
+      setTracePhase("search");
+
+      trackRobotJobsFunnel("capabilities_viewed", {
+        ...funnelBase(),
+        robot_name: displayName,
+        company_name: company,
+        profile_tier: profile.profile_confidence,
+        source: "research_agent",
+      });
+
+      const result = await fetchRobotJobMatch({
+        url: submittedUrl,
+        robotName: displayName,
+        productName: product || productName,
+      });
+      setMatchCapabilities(result.capabilities || []);
 
       if (result.state === "could_not_understand" || !(result.jobs || []).length) {
-        setBoardMode("market");
+        // Profile succeeded — still show personal board with profile; empty jobs → recover chips
+        setBoardMode("personal");
         setTapeRunning(true);
-        setTracePhase("idle");
+        setTracePhase("done");
+        setTraceJobCount(0);
         setStatusLines([]);
-        setStep("recover");
+        setStep("enter");
+        setMatchedApiJobs([]);
+        setPersonalCorpus([]);
+        setJobCountOverride(0);
         setIntro(null);
-        trackRobotJobsFunnel("unsupported_robot", {
-          ...funnelBase(),
-          robot_name: result.robot_name || fallbackName,
-          url: submittedUrl,
-          reason: "could_not_understand",
-        });
+        if (!(result.jobs || []).length) {
+          setStep("recover");
+          setBoardMode("market");
+          setUnsupportedReason(
+            `We built a ${profile.profile_confidence}-tier profile for ${displayName}, but the job corpus has no strong matches yet.`,
+          );
+        }
         return;
       }
 
-      const lines = stageStatusLines(result.research_stages, result.capabilities || []);
-      setStatusLines([...lines, "Searching work…"]);
-      setTracePhase("search");
       setPersonalCorpus(matchJobsToTape(result.jobs));
       setJobCountOverride(Math.max(result.job_count, result.jobs.length));
       setMatchedApiJobs(result.jobs);
@@ -573,11 +619,11 @@ export default function RobotJobsExperiment({ slug }: Props) {
       boardLater(() => {
         setStatusLines([]);
         setBoardMode("reveal");
-      }, 550);
+      }, 450);
 
       revealTargetRef.current = {
-        key: `match:${result.robot_name}`,
-        name: result.robot_name || fallbackName,
+        key: `match:${displayName}`,
+        name: displayName,
         apiJobs: result.jobs,
         caps: result.capabilities,
         jobCount: Math.max(result.job_count, result.jobs.length),
@@ -590,6 +636,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
       setStatusLines([]);
       setStep("recover");
       setRobotName(fallbackName);
+      setRobotProfile(null);
       setIntro(null);
     }
   }
@@ -924,9 +971,127 @@ export default function RobotJobsExperiment({ slug }: Props) {
   return (
     <section className="flex min-h-0 flex-1 flex-col" aria-label="Find jobs for your robot">
       {step === "enter" && (
-        <div className="grid h-[calc(100vh-76px)] min-h-[520px] grid-cols-1 overflow-hidden border border-slate-600 bg-[#0b162f] lg:grid-cols-[minmax(0,0.35fr)_minmax(0,0.65fr)]">
-          {/* LEFT — FIND (still) */}
+        <div
+          className={
+            boardMode === "personal" && robotProfile
+              ? "grid h-[calc(100vh-76px)] min-h-[520px] grid-cols-1 overflow-hidden border border-slate-600 bg-[#0b162f] lg:grid-cols-[minmax(0,0.46fr)_minmax(0,0.54fr)]"
+              : "grid h-[calc(100vh-76px)] min-h-[520px] grid-cols-1 overflow-hidden border border-slate-600 bg-[#0b162f] lg:grid-cols-[minmax(0,0.35fr)_minmax(0,0.65fr)]"
+          }
+        >
+          {/* LEFT — research / profile (prominence when profile ready) */}
           <div className="flex flex-col border-b border-slate-600 p-5 sm:p-6 lg:border-b-0 lg:border-r lg:border-slate-600">
+            {boardMode === "personal" && robotProfile ? (
+              <>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400/90">
+                  We understood your robot
+                </p>
+                <h1 className={`${titleClass} mt-1 text-[1.65rem] leading-[1.1] sm:text-[1.85rem]`}>
+                  Then we found work.
+                </h1>
+                <p className="mt-2 text-[13px] leading-snug text-slate-400">
+                  Profile first — auditable facts from manufacturer sources. Jobs follow from the
+                  current ReadyForRobots corpus.
+                </p>
+                <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
+                  <RobotProfileCard profile={robotProfile} compact />
+                  {job ? (
+                    <div className="mt-4 border border-slate-700 p-3">
+                      <p className={eyebrowClass}>Selected job</p>
+                      <p className="mt-1 font-display text-sm font-bold uppercase text-slate-100">
+                        {job.robot_compatible_task}
+                      </p>
+                      <p className={`mt-1 text-xs ${mutedClass}`}>
+                        {job.company_name}
+                        {job.locality ? ` · ${placeLine(job)}` : ""}
+                      </p>
+                      {!qualifyOpen ? (
+                        <button
+                          type="button"
+                          onClick={onOpenQualify}
+                          className={`${ctaClass} mt-3 w-full`}
+                        >
+                          Qualify This Job →
+                        </button>
+                      ) : (
+                        <div className="mt-3 border border-slate-600 p-3">
+                          <p className="text-xs leading-relaxed text-slate-400">
+                            We&apos;ll investigate whether this job deserves your sales team&apos;s
+                            time.
+                          </p>
+                          {qualifyRequested ? (
+                            <p className="mt-2 text-xs font-bold text-emerald-400">
+                              Qualification requested
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={onRequestQualify}
+                              className={`${ctaClass} mt-3 w-full text-xs`}
+                            >
+                              {faceOnCta}
+                              Request Qualification
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={onNextJob}
+                        className="mt-3 text-xs font-bold text-emerald-400 underline"
+                      >
+                        {unlocked
+                          ? jobIndex + 1 >= jobs.length
+                            ? "Back to first job →"
+                            : "Next job →"
+                          : jobIndex + 1 >= freePreviewCount
+                            ? "See all jobs →"
+                            : "Next job →"}
+                      </button>
+                      {!unlocked && moreJobsCount > 0 ? (
+                        <div className="mt-3 border-t border-slate-700 pt-3">
+                          <Link
+                            href={signupHref}
+                            onClick={onSeeAll}
+                            className="inline-flex font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-emerald-400"
+                          >
+                            See all jobs →
+                          </Link>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+                <label
+                  className="mt-4 block font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500"
+                  htmlFor="robot-url"
+                >
+                  Research another robot
+                </label>
+                <div className="mt-1 overflow-hidden border border-slate-600">
+                  <input
+                    id="robot-url"
+                    type="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") onContinueUrl();
+                    }}
+                    placeholder="Paste robot product URL"
+                    disabled={discovering}
+                    className="w-full border-0 border-b border-slate-600 bg-[#081126] px-3 py-2 font-mono text-[12px] text-slate-100 outline-none placeholder:text-slate-600 disabled:opacity-60"
+                  />
+                  <button
+                    type="button"
+                    onClick={onContinueUrl}
+                    disabled={!url.trim() || discovering}
+                    className="w-full bg-emerald-400/90 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white hover:bg-emerald-300 disabled:opacity-40"
+                  >
+                    Research
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
             <h1 className={`${titleClass} text-[2.15rem] leading-[1.05] sm:text-[2.4rem]`}>
               Find <span className="text-emerald-400">jobs</span>
               <br />
@@ -934,12 +1099,12 @@ export default function RobotJobsExperiment({ slug }: Props) {
             </h1>
             <p className="mt-3 text-[15px] leading-snug text-slate-300">
               {boardMode === "personal"
-                ? matchThin
-                  ? `We understand ${robotName}. Here are the strongest matches so far.`
-                  : `We found ${totalJobs} jobs for ${robotName}.`
-                : discovering
-                  ? "Working on your robot."
-                  : "Robots need jobs. We find the work."}
+                  ? matchThin
+                    ? `We understand ${robotName}. Here are the strongest matches so far.`
+                    : `We found ${totalJobs} jobs for ${robotName}.`
+                  : discovering
+                    ? "Researching your robot."
+                    : "Robots need jobs. We find the work."}
             </p>
 
             <label
@@ -975,8 +1140,10 @@ export default function RobotJobsExperiment({ slug }: Props) {
               </button>
             </div>
             <FunnelTrace phase={tracePhase} jobCount={traceJobCount} />
+              </>
+            )}
 
-            {boardMode === "personal" && job ? (
+            {boardMode === "personal" && robotProfile ? null : boardMode === "personal" && job ? (
               <div className="mt-auto border-t border-slate-700 pt-4">
                 <p className={eyebrowClass}>Selected job</p>
                 <p className="mt-1 font-display text-sm font-bold uppercase text-slate-100">
@@ -1046,15 +1213,17 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 <div className="flex items-center gap-3">
                   <PixelIcon map={KARE_FACE} scale={2} fill={FACE_EMERALD} background="transparent" />
                   <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
-                    {boardMode === "reveal" ? "Matching work" : "Analyzing your robot"}
+                    {boardMode === "reveal"
+                      ? "Matching work"
+                      : robotProfile
+                        ? "Robot profile ready"
+                        : "Research agent"}
                   </p>
                 </div>
                 <ul className="mt-4 space-y-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
-                  {(matchCapabilities.length
-                    ? matchCapabilities.map((c) => `${c.label} ✓`)
-                    : statusLines.length
-                      ? statusLines
-                      : ["Robot received ✓", "Reading capabilities…"]
+                  {(statusLines.length
+                    ? statusLines
+                    : ["Identifying company…", "Finding robot products…"]
                   ).map((line) => (
                     <li
                       key={line}
@@ -1118,7 +1287,18 @@ export default function RobotJobsExperiment({ slug }: Props) {
           {/* RIGHT — LIVE TAPE */}
           <div className="min-h-0 flex-1">
             <LiveJobTape
-              title={tapeTitle}
+              title={
+                boardMode === "personal" || boardMode === "reveal"
+                  ? robotProfile?.selected_product
+                    ? `Jobs For ${robotProfile.selected_product.name}`
+                    : "Jobs For Your Robot"
+                  : "Jobs We Found"
+              }
+              subtitle={
+                boardMode === "personal" && robotProfile
+                  ? "Matched from the current ReadyForRobots job corpus. Match confidence will improve as Robot Understanding advances."
+                  : null
+              }
               corpus={tapeCorpus}
               baseCount={tapeBase}
               running={
