@@ -1,27 +1,32 @@
 /**
  * RobotJobsWorkspace — the ReadyForRobots work terminal (front door `/`).
  *
- * The large panel is the workspace; the narrow rail is navigation/context.
- * One deliberate state at a time (submit-stability principle):
+ * Left = robot / context / navigation. Right = work. One deliberate state at
+ * a time (submit-stability principle):
  *
  *   FIND → RESEARCH → SELECT → REVIEW PROFILE → JOBS
  *
- * SELECT supports one robot, several, or all (OEM → portfolio → distributor)
- * without changing the underlying product. Job match evidence (Why / Still
- * unknown / Blocker) lives in the large panel next to each job — the evidence
- * is the product, not the job title.
+ * Three separated objects:
+ *   ROBOT  — what did we understand?      (REVIEW PROFILE, pre-match)
+ *   MATCH  — what work looks compatible?  (JOBS, produced only when asked)
+ *   JOB    — should we pursue this one?   (QUALIFY)
  *
- * Data: /api/robot-job-search (one transaction: profile + jobs). Matcher and
- * scoring are frozen (M2) — this component only presents their output.
+ * Product-integrity contract (every displayed number must be true):
+ *   - The profile screen is a pre-match checkpoint: no job count until the
+ *     robot has actually been matched.
+ *   - SELECT supports one robot, several, or all. A portfolio only shows a
+ *     per-robot count when counts are genuinely differentiated; otherwise it
+ *     shows the capability summary + "View matches →" (no suspicious number).
+ *
+ * Matcher / Understanding are frozen (M2) — this only presents their output.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackRobotJobsFunnel, trackSignupStart } from "@/lib/siteAnalytics";
-import {
-  fetchRobotJobSearch,
-  type RobotJobSearchResult,
-} from "@/lib/robotJobSearch";
+import { fetchRobotJobSearch, type RobotJobSearchResult } from "@/lib/robotJobSearch";
+import { fetchRobotProfile } from "@/lib/robotProfile";
+import { fetchRobotJobMatch } from "@/lib/robotJobMatch";
 import {
   formatFactLine,
   profileConfidenceCopy,
@@ -39,26 +44,27 @@ import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 type Stage = "find" | "research" | "select" | "portfolio" | "review" | "jobs";
 type RailTab = "profile" | "jobs" | "qualified";
 
-/** One fully-analyzed robot (single transaction result). */
+/** One robot in the workspace. `matched` gates every count we display. */
 type RobotAnalysis = {
   productName: string;
   companyName: string;
   tier: "A" | "B" | "C";
   profile: RobotProfileResult | null;
+  matched: boolean;
   capabilities: MatchCapability[];
   jobs: MatchJob[];
   jobCount: number;
 };
 
 type ProductChoice = { name: string; displayClass?: string | null };
+type RestoreView = "review" | "jobs" | "portfolio";
 
 const PREVIEW_FREE = 5;
 const TOP_SHOWN = 12;
 const MARKET_FOUND_BASE = 140;
 const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
-const eyebrow =
-  "font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500";
+const eyebrow = "font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const ctaClass =
   "inline-flex items-center justify-center gap-2 bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45";
 
@@ -66,12 +72,7 @@ const ctaClass =
 /* Session persistence (signup continuity)                             */
 /* ------------------------------------------------------------------ */
 
-type WorkspaceSession = {
-  url: string;
-  products: string[];
-  stage?: Stage;
-  activeIdx?: number;
-};
+type WorkspaceSession = { url: string; products: string[]; view: RestoreView; activeIdx?: number };
 
 function saveWorkspaceSession(data: WorkspaceSession) {
   if (typeof window === "undefined") return;
@@ -95,33 +96,48 @@ function readWorkspaceSession(): WorkspaceSession | null {
   }
 }
 
+function clearWorkspaceSession() {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(WORKSPACE_SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 function srcFromQuery(): string | null {
   if (typeof window === "undefined") return null;
-  return (
-    (new URLSearchParams(window.location.search).get("src") || "").trim() ||
-    null
-  );
+  return (new URLSearchParams(window.location.search).get("src") || "").trim() || null;
 }
 
 /* ------------------------------------------------------------------ */
 /* Pure helpers                                                        */
 /* ------------------------------------------------------------------ */
 
-function toAnalysis(res: RobotJobSearchResult): RobotAnalysis {
-  const profile = (res.profile as RobotProfileResult | null) ?? null;
-  const productName =
-    profile?.selected_product?.name ||
-    res.robot_name ||
-    res.company_name ||
-    "Your robot";
-  const companyName =
-    profile?.company?.name || res.company_name || res.robot_name || "";
-  const tier = (profile?.profile_confidence as "A" | "B" | "C") || "C";
+/** Profile-only analysis — matching has not happened yet. */
+function profileToAnalysis(profile: RobotProfileResult): RobotAnalysis {
   return {
-    productName,
-    companyName,
-    tier,
+    productName: profile.selected_product?.name || profile.company?.name || "Your robot",
+    companyName: profile.company?.name || "",
+    tier: (profile.profile_confidence as "A" | "B" | "C") || "C",
     profile,
+    matched: false,
+    capabilities: [],
+    jobs: [],
+    jobCount: 0,
+  };
+}
+
+/** Full analysis from a matched robot-job-search transaction. */
+function searchToAnalysis(res: RobotJobSearchResult): RobotAnalysis {
+  const profile = (res.profile as RobotProfileResult | null) ?? null;
+  return {
+    productName:
+      profile?.selected_product?.name || res.robot_name || res.company_name || "Your robot",
+    companyName: profile?.company?.name || res.company_name || res.robot_name || "",
+    tier: (profile?.profile_confidence as "A" | "B" | "C") || "C",
+    profile,
+    matched: true,
     capabilities: res.capabilities || [],
     jobs: res.jobs || [],
     jobCount: res.job_count || (res.jobs || []).length,
@@ -131,44 +147,49 @@ function toAnalysis(res: RobotJobSearchResult): RobotAnalysis {
 function confirmedFacts(profile: RobotProfileResult | null) {
   if (!profile) return [];
   const confirmed = profile.facts.filter(
-    f => f.epistemic === "explicit" || f.epistemic === "strongly_inferred"
+    (f) => f.epistemic === "explicit" || f.epistemic === "strongly_inferred",
   );
   const byPred = new Map<string, (typeof confirmed)[number]>();
   for (const f of confirmed) {
     const prev = byPred.get(f.predicate);
     if (!prev || f.confidence > prev.confidence) byPred.set(f.predicate, f);
   }
-  return [...byPred.values()]
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, 10);
+  return [...byPred.values()].sort((a, b) => b.confidence - a.confidence).slice(0, 10);
 }
 
 function unknownFacts(profile: RobotProfileResult | null) {
   if (!profile) return [];
-  return profile.facts.filter(f => f.epistemic === "unknown").slice(0, 8);
+  return profile.facts.filter((f) => f.epistemic === "unknown").slice(0, 8);
 }
 
 function conflictFacts(profile: RobotProfileResult | null) {
   if (!profile) return [];
-  return profile.facts.filter(f => f.epistemic === "contradicted").slice(0, 4);
+  return profile.facts.filter((f) => f.epistemic === "contradicted").slice(0, 4);
 }
 
-/** Short capability summary line for a portfolio card. */
 function capabilitySummary(a: RobotAnalysis): string {
-  const labels = a.capabilities.filter(c => c.label).map(c => c.label);
+  const labels = a.capabilities.filter((c) => c.label).map((c) => c.label);
   if (labels.length) return labels.slice(0, 3).join(" · ");
-  const fams = [
-    ...new Set(a.jobs.map(j => j.tape_family).filter(Boolean)),
-  ] as string[];
-  return (
-    fams.slice(0, 3).join(" · ") || "Work matched to confirmed capabilities"
-  );
+  const fams = [...new Set(a.jobs.map((j) => j.tape_family).filter(Boolean))] as string[];
+  return fams.slice(0, 3).join(" · ") || "Work matched to confirmed capabilities";
 }
 
 function tierColor(tier: "A" | "B" | "C"): string {
   if (tier === "A") return "text-emerald-400";
   if (tier === "B") return "text-amber-300";
   return "text-slate-400";
+}
+
+/**
+ * Whether a robot's job count is trustworthy enough to display.
+ * A single robot's own matched count is fine. Across a portfolio we only
+ * assert a count when the robots actually differ — never three identical
+ * numbers that would undermine the promise.
+ */
+function differentiatedCounts(portfolio: RobotAnalysis[]): boolean {
+  const matched = portfolio.filter((a) => a.matched);
+  if (matched.length <= 1) return true;
+  return new Set(matched.map((a) => a.jobCount)).size > 1;
 }
 
 /* ------------------------------------------------------------------ */
@@ -182,6 +203,7 @@ export default function RobotJobsWorkspace() {
   const [stage, setStage] = useState<Stage>("find");
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [matching, setMatching] = useState(false);
 
   // SELECT
   const [companyName, setCompanyName] = useState("");
@@ -192,15 +214,14 @@ export default function RobotJobsWorkspace() {
   const [portfolio, setPortfolio] = useState<RobotAnalysis[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [railTab, setRailTab] = useState<RailTab>("jobs");
-  const [qualified, setQualified] = useState<Record<string, string[]>>({}); // productName -> job_keys
+  const [qualified, setQualified] = useState<Record<string, string[]>>({});
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
   const sessionId = useRef(
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : `rdd_${Date.now()}`
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `rdd_${Date.now()}`,
   );
   const srcRef = useRef(srcFromQuery());
+  const submittedUrlRef = useRef("");
   const viewedRef = useRef<Set<string>>(new Set());
   const fired3Plus = useRef(false);
   const restoredRef = useRef(false);
@@ -211,12 +232,11 @@ export default function RobotJobsWorkspace() {
   });
 
   const active = portfolio[activeIdx] || null;
+  const countsTrusted = differentiatedCounts(portfolio);
+  const showActiveCount = Boolean(active?.matched && countsTrusted);
 
   useEffect(() => {
-    trackRobotJobsFunnel("experiment_view", {
-      ...funnelBase(),
-      surface: "workspace",
-    });
+    trackRobotJobsFunnel("experiment_view", { ...funnelBase(), surface: "workspace" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -227,124 +247,246 @@ export default function RobotJobsWorkspace() {
     const saved = readWorkspaceSession();
     if (saved?.url) {
       restoredRef.current = true;
-      void runSearch(saved.url, saved.products, saved.stage);
+      void restore(saved);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   /* -------------------------------------------------------------- */
-  /* Core: research one or more robots                               */
+  /* Data flow                                                       */
   /* -------------------------------------------------------------- */
 
-  async function runSearch(
-    submitUrl: string,
-    productNames: string[],
-    restoredStage?: Stage
-  ) {
+  /** FIND submit — research identity first (no jobs yet). */
+  async function submitFind(submitUrl: string) {
     setError(null);
+    submittedUrlRef.current = submitUrl;
     setStage("research");
-    trackRobotJobsFunnel("robot_submitted", {
-      ...funnelBase(),
-      url: submitUrl,
-      source: "url",
-    });
-    trackRobotJobsFunnel("discovery_started", {
-      ...funnelBase(),
-      url: submitUrl,
-    });
-    saveWorkspaceSession({ url: submitUrl, products: productNames });
-
+    trackRobotJobsFunnel("robot_submitted", { ...funnelBase(), url: submitUrl, source: "url" });
+    trackRobotJobsFunnel("discovery_started", { ...funnelBase(), url: submitUrl });
     try {
-      if (productNames.length === 0) {
-        // First pass — may need product selection.
-        const res = await fetchRobotJobSearch({ url: submitUrl });
-        setCompanyName(res.company_name || res.robot_name || "");
-        if (res.state === "select_product" && (res.products || []).length > 1) {
-          setProducts(
-            (res.products || []).map(p => ({
-              name: p.name,
-              displayClass: p.display_class,
-            }))
-          );
-          setSelected([]);
-          setStage("select");
-          return;
-        }
-        finalizePortfolio([toAnalysis(res)], submitUrl, restoredStage);
+      const profile = await fetchRobotProfile({ url: submitUrl });
+      setCompanyName(profile.company?.name || "");
+      if (profile.needs_product_choice && (profile.products || []).length > 1) {
+        setProducts(
+          (profile.products || []).map((p) => ({ name: p.name, displayClass: p.display_class })),
+        );
+        setSelected([]);
+        setStage("select");
         return;
       }
-
-      // Specific product(s) chosen — one transaction each.
-      const results = await Promise.all(
-        productNames.map(name =>
-          fetchRobotJobSearch({ url: submitUrl, product: name }).catch(
-            () => null
-          )
-        )
-      );
-      const analyses = results
-        .filter((r): r is RobotJobSearchResult => Boolean(r))
-        .map(toAnalysis);
-      if (analyses.length === 0) {
-        setError("We could not research those robots. Try another URL.");
-        setStage("find");
-        return;
-      }
-      finalizePortfolio(analyses, submitUrl, restoredStage);
+      enterReview(profileToAnalysis(profile), submitUrl, [profile.selected_product?.name || ""]);
     } catch {
       setError("Research failed. Check the URL and try again.");
       setStage("find");
     }
   }
 
-  function finalizePortfolio(
-    analyses: RobotAnalysis[],
-    submitUrl: string,
-    restoredStage?: Stage
-  ) {
-    setPortfolio(analyses);
+  /** SELECT — one robot goes to a profile checkpoint; several/all matches up front. */
+  async function confirmSelection(which: string[] | "all") {
+    const names = (which === "all" ? products.map((p) => p.name) : which).filter(Boolean);
+    if (names.length === 0) return;
+    const submitUrl = submittedUrlRef.current || url;
 
-    const saved = readWorkspaceSession();
-    const restoredIdx =
-      saved?.activeIdx !== undefined && saved.activeIdx < analyses.length
-        ? saved.activeIdx
-        : 0;
-    const useRestoredIdx =
-      restoredStage === "jobs" &&
-      analyses.length > 1 &&
-      saved?.activeIdx !== undefined;
-    const finalIdx = useRestoredIdx ? restoredIdx : 0;
+    if (names.length === 1) {
+      setStage("research");
+      try {
+        const profile = await fetchRobotProfile({ url: submitUrl, product: names[0] });
+        enterReview(profileToAnalysis(profile), submitUrl, names);
+      } catch {
+        setError("Research failed for that robot.");
+        setStage("select");
+      }
+      return;
+    }
 
-    setActiveIdx(finalIdx);
+    // Portfolio — each robot independently requirement-matched before we show it.
+    setStage("research");
+    try {
+      const results = await Promise.all(
+        names.map((name) =>
+          fetchRobotJobSearch({ url: submitUrl, product: name }).catch(() => null),
+        ),
+      );
+      const analyses = results
+        .filter((r): r is RobotJobSearchResult => Boolean(r))
+        .map(searchToAnalysis);
+      if (analyses.length === 0) {
+        setError("We could not research those robots.");
+        setStage("select");
+        return;
+      }
+      if (analyses.length === 1) {
+        enterReviewMatched(analyses[0], submitUrl);
+        return;
+      }
+      setPortfolio(analyses);
+      setActiveIdx(0);
+      saveWorkspaceSession({
+        url: submitUrl,
+        products: analyses.map((a) => a.productName),
+        view: "portfolio",
+        activeIdx: 0,
+      });
+      trackRobotJobsFunnel("capabilities_viewed", {
+        ...funnelBase(),
+        robots_analyzed: analyses.length,
+        company_name: analyses[0]?.companyName,
+      });
+      setStage("portfolio");
+    } catch {
+      setError("Portfolio research failed.");
+      setStage("select");
+    }
+  }
+
+  /** Enter the profile checkpoint (matching deferred). */
+  function enterReview(analysis: RobotAnalysis, submitUrl: string, productNames: string[]) {
+    setPortfolio([analysis]);
+    setActiveIdx(0);
+    setRailTab("profile");
     setExpandedJob(null);
     viewedRef.current = new Set();
     fired3Plus.current = false;
-
-    let targetStage: Stage;
-    if (restoredStage === "jobs") {
-      targetStage = "jobs";
-      setRailTab("jobs");
-    } else if (analyses.length > 1) {
-      targetStage = "portfolio";
-    } else {
-      targetStage = "review";
-      setRailTab("profile");
-    }
-
-    saveWorkspaceSession({
-      url: submitUrl,
-      products: analyses.map(a => a.productName),
-      stage: targetStage,
-      activeIdx: finalIdx,
-    });
+    saveWorkspaceSession({ url: submitUrl, products: productNames.filter(Boolean), view: "review", activeIdx: 0 });
     trackRobotJobsFunnel("capabilities_viewed", {
       ...funnelBase(),
-      robot_name: analyses[finalIdx]?.productName,
-      company_name: analyses[finalIdx]?.companyName,
-      profile_tier: analyses[finalIdx]?.tier,
-      robots_analyzed: analyses.length,
+      robot_name: analysis.productName,
+      company_name: analysis.companyName,
+      profile_tier: analysis.tier,
     });
-    setStage(targetStage);
+    setStage("review");
+  }
+
+  /** Enter review for an already-matched robot (e.g. portfolio of one). */
+  function enterReviewMatched(analysis: RobotAnalysis, submitUrl: string) {
+    setPortfolio([analysis]);
+    setActiveIdx(0);
+    setRailTab("profile");
+    saveWorkspaceSession({ url: submitUrl, products: [analysis.productName], view: "review", activeIdx: 0 });
+    trackRobotJobsFunnel("capabilities_viewed", {
+      ...funnelBase(),
+      robot_name: analysis.productName,
+      profile_tier: analysis.tier,
+    });
+    setStage("review");
+  }
+
+  /** REVIEW → run matching for the active robot, then reveal jobs. */
+  async function findJobsForActive() {
+    const a = portfolio[activeIdx];
+    if (!a) return;
+    if (a.matched) {
+      goToJobs(activeIdx);
+      return;
+    }
+    setMatching(true);
+    try {
+      const res = await fetchRobotJobMatch({
+        url: submittedUrlRef.current,
+        productName: a.productName,
+        profile: a.profile,
+      });
+      const merged: RobotAnalysis = {
+        ...a,
+        matched: true,
+        capabilities: res.capabilities || [],
+        jobs: res.jobs || [],
+        jobCount: res.job_count || (res.jobs || []).length,
+      };
+      setPortfolio((prev) => prev.map((p, i) => (i === activeIdx ? merged : p)));
+      saveWorkspaceSession({
+        url: submittedUrlRef.current,
+        products: portfolio.length > 1 ? portfolio.map((p) => p.productName) : [a.productName],
+        view: "jobs",
+        activeIdx,
+      });
+      revealJobs(merged);
+    } catch {
+      setError("Matching failed. Try again.");
+    } finally {
+      setMatching(false);
+    }
+  }
+
+  function revealJobs(a: RobotAnalysis) {
+    setRailTab("jobs");
+    setExpandedJob(a.jobs[0]?.job_key ?? null);
+    setStage("jobs");
+    trackRobotJobsFunnel("discovery_complete", {
+      ...funnelBase(),
+      robot_name: a.productName,
+      job_count: a.jobCount,
+    });
+  }
+
+  function goToJobs(idx: number) {
+    setActiveIdx(idx);
+    const a = portfolio[idx];
+    setRailTab("jobs");
+    setExpandedJob(a?.jobs[0]?.job_key ?? null);
+    setStage("jobs");
+    saveWorkspaceSession({
+      url: submittedUrlRef.current,
+      products: portfolio.map((p) => p.productName),
+      view: "jobs",
+      activeIdx: idx,
+    });
+    trackRobotJobsFunnel("discovery_complete", {
+      ...funnelBase(),
+      robot_name: a?.productName,
+      job_count: a?.jobCount,
+    });
+  }
+
+  async function restore(saved: WorkspaceSession) {
+    submittedUrlRef.current = saved.url;
+    const savedIdx = typeof saved.activeIdx === "number" ? saved.activeIdx : 0;
+    try {
+      // Multi-robot portfolio — rebuild every robot and return to the exact one
+      // the user was on before signup (not always robot 0).
+      if (saved.products.length > 1) {
+        const results = await Promise.all(
+          saved.products.map((name) =>
+            fetchRobotJobSearch({ url: saved.url, product: name }).catch(() => null),
+          ),
+        );
+        const analyses = results
+          .filter((r): r is RobotJobSearchResult => Boolean(r))
+          .map(searchToAnalysis);
+        if (analyses.length > 1) {
+          const idx = savedIdx >= 0 && savedIdx < analyses.length ? savedIdx : 0;
+          setPortfolio(analyses);
+          setCompanyName(analyses[0].companyName);
+          setActiveIdx(idx);
+          if (saved.view === "jobs") {
+            setRailTab("jobs");
+            setExpandedJob(analyses[idx].jobs[0]?.job_key ?? null);
+            setStage("jobs");
+          } else if (saved.view === "review") {
+            setRailTab("profile");
+            setStage("review");
+          } else {
+            setStage("portfolio");
+          }
+          return;
+        }
+      }
+      const product = saved.products[0] || undefined;
+      if (saved.view === "jobs") {
+        const res = await fetchRobotJobSearch({ url: saved.url, product });
+        const a = searchToAnalysis(res);
+        setPortfolio([a]);
+        setActiveIdx(0);
+        setRailTab("jobs");
+        setExpandedJob(a.jobs[0]?.job_key ?? null);
+        setStage("jobs");
+        return;
+      }
+      const profile = await fetchRobotProfile({ url: saved.url, product });
+      enterReview(profileToAnalysis(profile), saved.url, saved.products);
+    } catch {
+      setStage("find");
+    }
   }
 
   /* -------------------------------------------------------------- */
@@ -355,43 +497,22 @@ export default function RobotJobsWorkspace() {
     e.preventDefault();
     const u = url.trim();
     if (!u) return;
-    void runSearch(u, []);
+    void submitFind(u);
   }
 
   function toggleProduct(name: string) {
-    setSelected(prev =>
-      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
-    );
-  }
-
-  function confirmSelection(which: string[] | "all") {
-    const names = which === "all" ? products.map(p => p.name) : which;
-    if (names.length === 0) return;
-    const saved = readWorkspaceSession();
-    void runSearch(saved?.url || url, names);
+    setSelected((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
   }
 
   function openReviewFor(idx: number) {
     setActiveIdx(idx);
     setRailTab("profile");
     setStage("review");
-    const saved = readWorkspaceSession();
-    if (saved?.url) {
-      saveWorkspaceSession({ ...saved, activeIdx: idx });
-    }
-  }
-
-  function findJobsForActive() {
-    setRailTab("jobs");
-    setStage("jobs");
-    const saved = readWorkspaceSession();
-    if (saved?.url) {
-      saveWorkspaceSession({ ...saved, stage: "jobs", activeIdx });
-    }
-    trackRobotJobsFunnel("discovery_complete", {
-      ...funnelBase(),
-      robot_name: active?.productName,
-      job_count: active?.jobCount,
+    saveWorkspaceSession({
+      url: submittedUrlRef.current,
+      products: portfolio.map((p) => p.productName),
+      view: "review",
+      activeIdx: idx,
     });
   }
 
@@ -406,30 +527,24 @@ export default function RobotJobsWorkspace() {
     });
     if (!fired3Plus.current && viewedRef.current.size >= 3) {
       fired3Plus.current = true;
-      trackRobotJobsFunnel("jobs_3plus_viewed", {
-        ...funnelBase(),
-        robot_name: active?.productName,
-      });
+      trackRobotJobsFunnel("jobs_3plus_viewed", { ...funnelBase(), robot_name: active?.productName });
     }
   }
 
   function toggleExpand(job: MatchJob) {
-    setExpandedJob(prev => (prev === job.job_key ? null : job.job_key));
+    setExpandedJob((prev) => (prev === job.job_key ? null : job.job_key));
     recordJobView(job);
   }
 
   function onQualify(job: MatchJob) {
     if (!active) return;
-    trackRobotJobsFunnel("qualify_opened", {
-      ...funnelBase(),
-      job_key: job.job_key,
-    });
+    trackRobotJobsFunnel("qualify_opened", { ...funnelBase(), job_key: job.job_key });
     trackRobotJobsFunnel("qualify_requested", {
       ...funnelBase(),
       job_key: job.job_key,
       robot_name: active.productName,
     });
-    setQualified(prev => {
+    setQualified((prev) => {
       const cur = prev[active.productName] || [];
       if (cur.includes(job.job_key)) return prev;
       return { ...prev, [active.productName]: [...cur, job.job_key] };
@@ -440,6 +555,7 @@ export default function RobotJobsWorkspace() {
     setStage("find");
     setUrl("");
     setError(null);
+    setMatching(false);
     setPortfolio([]);
     setProducts([]);
     setSelected([]);
@@ -448,19 +564,14 @@ export default function RobotJobsWorkspace() {
     setExpandedJob(null);
     viewedRef.current = new Set();
     fired3Plus.current = false;
-    restoredRef.current = true; // do not auto-restore over an explicit reset
-    try {
-      window.sessionStorage.removeItem(WORKSPACE_SESSION_KEY);
-    } catch {
-      /* ignore */
-    }
+    restoredRef.current = true;
+    submittedUrlRef.current = "";
+    clearWorkspaceSession();
   }
 
   const signupHref = useMemo(() => {
     const params = new URLSearchParams();
-    const next = srcRef.current
-      ? `/?src=${encodeURIComponent(srcRef.current)}`
-      : "/";
+    const next = srcRef.current ? `/?src=${encodeURIComponent(srcRef.current)}` : "/";
     params.set("next", next);
     params.set("src", "robot_jobs");
     return `/signup?${params.toString()}`;
@@ -472,18 +583,12 @@ export default function RobotJobsWorkspace() {
       robot_name: active?.productName,
       job_count_total: active?.jobCount,
     });
-    trackSignupStart({
-      source: "robot_jobs",
-      robot_name: active?.productName,
-      ...funnelBase(),
-    });
+    trackSignupStart({ source: "robot_jobs", robot_name: active?.productName, ...funnelBase() });
   }
 
   /* -------------------------------------------------------------- */
   /* Render                                                          */
   /* -------------------------------------------------------------- */
-
-  const showLeftJobsNav = stage === "review" || stage === "jobs";
 
   return (
     <div className="grid h-[calc(100vh-76px)] min-h-[560px] grid-cols-1 overflow-hidden border border-slate-600 bg-[#0b162f] lg:grid-cols-[minmax(0,0.34fr)_minmax(0,0.66fr)]">
@@ -510,20 +615,24 @@ export default function RobotJobsWorkspace() {
             company={active?.companyName || companyName}
             product={active?.productName || ""}
             tier={active?.tier || "C"}
+            matched={Boolean(active?.matched)}
+            showCount={showActiveCount}
             jobCount={active?.jobCount || 0}
             portfolioCount={portfolio.length}
             railTab={railTab}
-            showNav={showLeftJobsNav}
-            qualifiedCount={
-              active ? qualified[active.productName]?.length || 0 : 0
-            }
-            onTab={t => {
+            qualifiedCount={active ? qualified[active.productName]?.length || 0 : 0}
+            onTab={(t) => {
               setRailTab(t);
-              setStage(t === "profile" ? "review" : "jobs");
+              const nextStage = t === "profile" ? "review" : "jobs";
+              setStage(nextStage);
+              saveWorkspaceSession({
+                url: submittedUrlRef.current,
+                products: portfolio.map((p) => p.productName),
+                view: nextStage === "review" ? "review" : "jobs",
+                activeIdx,
+              });
             }}
-            onBackToPortfolio={
-              portfolio.length > 1 ? () => setStage("portfolio") : undefined
-            }
+            onBackToPortfolio={portfolio.length > 1 ? () => setStage("portfolio") : undefined}
             onNewRobot={newRobot}
           />
         )}
@@ -532,20 +641,18 @@ export default function RobotJobsWorkspace() {
       {/* ---------------- LARGE WORKSPACE ---------------- */}
       <section className="min-h-0 overflow-y-auto">
         {stage === "find" && (
-          <div className="h-full">
-            <LiveJobTape
-              title="Live Robot Jobs"
-              subtitle={null}
-              corpus={MARKET_TAPE_JOBS}
-              baseCount={MARKET_FOUND_BASE}
-              running
-              statusLines={[]}
-              revealTarget={null}
-              onRevealComplete={() => undefined}
-              onSelect={() => undefined}
-              selectedKey={null}
-            />
-          </div>
+          <LiveJobTape
+            title="Live Robot Jobs"
+            subtitle={null}
+            corpus={MARKET_TAPE_JOBS}
+            baseCount={MARKET_FOUND_BASE}
+            running
+            statusLines={[]}
+            revealTarget={null}
+            onRevealComplete={() => undefined}
+            onSelect={() => undefined}
+            selectedKey={null}
+          />
         )}
 
         {stage === "research" && <ResearchPanel company={companyName} />}
@@ -564,36 +671,21 @@ export default function RobotJobsWorkspace() {
           <PortfolioPanel
             company={companyName || portfolio[0]?.companyName || ""}
             robots={portfolio}
-            onView={idx => {
-              setActiveIdx(idx);
-              setRailTab("jobs");
-              setStage("jobs");
-              const saved = readWorkspaceSession();
-              if (saved?.url) {
-                saveWorkspaceSession({
-                  ...saved,
-                  stage: "jobs",
-                  activeIdx: idx,
-                });
-              }
-              trackRobotJobsFunnel("discovery_complete", {
-                ...funnelBase(),
-                robot_name: portfolio[idx]?.productName,
-                job_count: portfolio[idx]?.jobCount,
-              });
-            }}
+            showCounts={countsTrusted}
+            onView={goToJobs}
             onReview={openReviewFor}
           />
         )}
 
         {stage === "review" && active && (
-          <ReviewPanel analysis={active} onFindJobs={findJobsForActive} />
+          <ReviewPanel analysis={active} matching={matching} onFindJobs={() => void findJobsForActive()} />
         )}
 
         {stage === "jobs" && active && (
           <JobsPanel
             analysis={active}
             unlocked={unlocked}
+            showCount={showActiveCount}
             railTab={railTab}
             qualifiedKeys={qualified[active.productName] || []}
             expandedJob={expandedJob}
@@ -629,27 +721,18 @@ function FindRail({
   error: string | null;
   onCancel?: () => void;
 }) {
-  const busy = stage === "research";
-  const selecting = stage === "select";
+  const busy = stage === "research" || stage === "select";
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <p className={eyebrow}>
-        {busy || selecting ? "Your robot" : "Find jobs"}
-      </p>
+      <p className={eyebrow}>{busy ? "Your robot" : "Find jobs"}</p>
       <h1 className="mt-1 font-display text-3xl font-bold leading-tight tracking-tight text-slate-100">
-        {busy || selecting ? (
-          companyName || "Researching…"
-        ) : (
+        {busy ? companyName || "Researching…" : (
           <>
             Find <span className="text-emerald-400">jobs</span> for your robot.
           </>
         )}
       </h1>
-      {!busy && !selecting && (
-        <p className="mt-3 text-sm text-slate-400">
-          Robots need jobs. We find the work.
-        </p>
-      )}
+      {!busy && <p className="mt-3 text-sm text-slate-400">Robots need jobs. We find the work.</p>}
 
       <form onSubmit={onSubmit} className="mt-6">
         <label className={eyebrow} htmlFor="robot-url">
@@ -659,52 +742,35 @@ function FindRail({
           id="robot-url"
           type="text"
           value={url}
-          onChange={e => setUrl(e.target.value)}
+          onChange={(e) => setUrl(e.target.value)}
           placeholder="Paste robot product URL"
-          disabled={busy || selecting}
+          disabled={busy}
           className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 font-mono text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500 disabled:opacity-50"
         />
-        <button
-          type="submit"
-          disabled={busy || selecting || !url.trim()}
-          className={`${ctaClass} mt-3 w-full`}
-        >
-          {busy ? "Researching…" : selecting ? "Select robot →" : "Find Jobs →"}
+        <button type="submit" disabled={busy || !url.trim()} className={`${ctaClass} mt-3 w-full`}>
+          {busy ? "Researching…" : "Find Jobs →"}
         </button>
       </form>
 
       {error && (
-        <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
-          {error}
-        </p>
+        <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">{error}</p>
       )}
 
-      {selecting && onCancel && (
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full border border-slate-600 px-3 py-2 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-slate-400"
-          >
-            ← Start over
-          </button>
-        </div>
+      {stage === "select" && onCancel && (
+        <button
+          type="button"
+          onClick={onCancel}
+          className="mt-4 w-full border border-slate-600 px-3 py-2 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-slate-400"
+        >
+          ← Start over
+        </button>
       )}
 
       <div className="mt-auto pt-6">
         <ol className="space-y-3 text-xs text-slate-400">
-          <li>
-            <span className="font-mono text-emerald-400">01</span> Show us your
-            robot — we research the company and product.
-          </li>
-          <li>
-            <span className="font-mono text-emerald-400">02</span> We build a
-            robot profile — grounded facts from sources.
-          </li>
-          <li>
-            <span className="font-mono text-emerald-400">03</span> Then we find
-            the work — jobs matched to what we confirmed.
-          </li>
+          <li><span className="font-mono text-emerald-400">01</span> Show us your robot — we research the company and product.</li>
+          <li><span className="font-mono text-emerald-400">02</span> We show what we understood — you confirm it.</li>
+          <li><span className="font-mono text-emerald-400">03</span> Then we find the work — jobs matched to confirmed capabilities.</li>
         </ol>
       </div>
     </div>
@@ -712,7 +778,7 @@ function FindRail({
 }
 
 /* ================================================================== */
-/* Left rail — PORTFOLIO overview context                              */
+/* Left rail — PORTFOLIO overview                                      */
 /* ================================================================== */
 
 function PortfolioRail({
@@ -727,15 +793,13 @@ function PortfolioRail({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <p className={eyebrow}>Portfolio</p>
-      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">
-        {company}
-      </h2>
+      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">{company}</h2>
       <p className="mt-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
         {count} robots analyzed
       </p>
       <p className="mt-3 text-[12px] leading-snug text-slate-400">
-        Pick a robot to review its profile and jobs. Each robot keeps its own
-        confirmed capabilities and matched work.
+        Pick a robot to review its profile and matched work. Each robot keeps its own confirmed
+        capabilities.
       </p>
       <div className="mt-auto pt-6">
         <button
@@ -758,10 +822,11 @@ function ContextRail({
   company,
   product,
   tier,
+  matched,
+  showCount,
   jobCount,
   portfolioCount,
   railTab,
-  showNav,
   qualifiedCount,
   onTab,
   onBackToPortfolio,
@@ -770,10 +835,11 @@ function ContextRail({
   company: string;
   product: string;
   tier: "A" | "B" | "C";
+  matched: boolean;
+  showCount: boolean;
   jobCount: number;
   portfolioCount: number;
   railTab: RailTab;
-  showNav: boolean;
   qualifiedCount: number;
   onTab: (t: RailTab) => void;
   onBackToPortfolio?: () => void;
@@ -797,24 +863,22 @@ function ContextRail({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <p className={eyebrow}>Your robot</p>
-      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">
-        {product}
-      </h2>
+      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">{product}</h2>
       <p className="mt-0.5 text-sm text-slate-400">{company}</p>
       <div className="mt-3 flex items-center gap-2">
         <span className={eyebrow}>Profile</span>
-        <span className={`font-mono text-base font-bold ${tierColor(tier)}`}>
-          {tier}
-        </span>
-        <span className="ml-2 font-mono text-[11px] font-bold text-emerald-300">
-          {jobCount} JOBS
-        </span>
+        <span className={`font-mono text-base font-bold ${tierColor(tier)}`}>{tier}</span>
+        {/* Count only appears once the robot is actually matched AND trustworthy. */}
+        {matched && showCount ? (
+          <span className="ml-2 font-mono text-[11px] font-bold text-emerald-300">{jobCount} JOBS</span>
+        ) : null}
       </div>
 
-      {showNav && (
+      {/* Job / Qualified nav only exists after matching (the profile is a pre-match checkpoint). */}
+      {matched && (
         <nav className="mt-6 space-y-1">
           {navItem("profile", "Profile")}
-          {navItem("jobs", "Jobs", `${jobCount}`)}
+          {navItem("jobs", "Jobs", showCount ? `${jobCount}` : undefined)}
           {navItem("qualified", "Qualified", `${qualifiedCount}`)}
         </nav>
       )}
@@ -858,15 +922,11 @@ function ResearchPanel({ company }: { company: string }) {
         {company || "Understanding your robot…"}
       </h2>
       <ul className="mt-8 space-y-4">
-        {steps.map(s => (
+        {steps.map((s) => (
           <li key={s.n} className="flex items-center gap-3">
             <span className="font-mono text-sm text-slate-500">{s.n}</span>
-            <span className="flex-1 font-mono text-sm uppercase tracking-[0.08em] text-slate-200">
-              {s.label}
-            </span>
-            <span
-              className={`font-mono text-sm ${s.done ? "text-emerald-400" : "text-amber-300"}`}
-            >
+            <span className="flex-1 font-mono text-sm uppercase tracking-[0.08em] text-slate-200">{s.label}</span>
+            <span className={`font-mono text-sm ${s.done ? "text-emerald-400" : "text-amber-300"}`}>
               {s.done ? "✓" : "→"}
             </span>
           </li>
@@ -881,7 +941,7 @@ function ResearchPanel({ company }: { company: string }) {
 }
 
 /* ================================================================== */
-/* Workspace — SELECT (one / several / all)                            */
+/* Workspace — SELECT                                                  */
 /* ================================================================== */
 
 function SelectPanel({
@@ -904,12 +964,11 @@ function SelectPanel({
         We found {products.length} robots
       </h2>
       <p className="mt-2 text-sm text-slate-400">
-        Which robots should we find jobs for? Choose one, several, or all —{" "}
-        {company || "this maker"} has {products.length}.
+        Which robots should we find jobs for? Choose one, several, or all — {company || "this maker"} has {products.length}.
       </p>
 
       <div className="mt-6 grid gap-2 sm:grid-cols-2">
-        {products.map(p => {
+        {products.map((p) => {
           const on = selected.includes(p.name);
           return (
             <button
@@ -917,24 +976,18 @@ function SelectPanel({
               type="button"
               onClick={() => onToggle(p.name)}
               className={`flex items-center justify-between border px-4 py-3 text-left transition ${
-                on
-                  ? "border-emerald-400 bg-emerald-400/10"
-                  : "border-slate-600 bg-[#081126] hover:border-emerald-500/40"
+                on ? "border-emerald-400 bg-emerald-400/10" : "border-slate-600 bg-[#081126] hover:border-emerald-500/40"
               }`}
             >
               <span>
-                <span className="block text-sm font-bold text-slate-100">
-                  {p.name}
-                </span>
+                <span className="block text-sm font-bold text-slate-100">{p.name}</span>
                 {p.displayClass ? (
                   <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-slate-500">
                     {p.displayClass.replace(/_/g, " ")}
                   </span>
                 ) : null}
               </span>
-              <span
-                className={`font-mono text-sm ${on ? "text-emerald-400" : "text-slate-600"}`}
-              >
+              <span className={`font-mono text-sm ${on ? "text-emerald-400" : "text-slate-600"}`}>
                 {on ? "✓" : "+"}
               </span>
             </button>
@@ -943,15 +996,8 @@ function SelectPanel({
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <button
-          type="button"
-          disabled={selected.length === 0}
-          onClick={() => onConfirm(selected)}
-          className={ctaClass}
-        >
-          {selected.length <= 1
-            ? `Find jobs for ${selected[0] || "selected"} →`
-            : `Find jobs for ${selected.length} robots →`}
+        <button type="button" disabled={selected.length === 0} onClick={() => onConfirm(selected)} className={ctaClass}>
+          {selected.length <= 1 ? `Find jobs for ${selected[0] || "selected"} →` : `Find jobs for ${selected.length} robots →`}
         </button>
         <button
           type="button"
@@ -966,44 +1012,38 @@ function SelectPanel({
 }
 
 /* ================================================================== */
-/* Workspace — PORTFOLIO (multiple robots)                             */
+/* Workspace — PORTFOLIO                                               */
 /* ================================================================== */
 
 function PortfolioPanel({
   company,
   robots,
+  showCounts,
   onView,
   onReview,
 }: {
   company: string;
   robots: RobotAnalysis[];
+  showCounts: boolean;
   onView: (idx: number) => void;
   onReview: (idx: number) => void;
 }) {
   return (
     <div className="p-6 sm:p-8">
       <p className={eyebrow}>{company}</p>
-      <h2 className="mt-1 font-display text-2xl font-bold text-slate-100">
-        {robots.length} robots analyzed
-      </h2>
+      <h2 className="mt-1 font-display text-2xl font-bold text-slate-100">{robots.length} robots analyzed</h2>
       <div className="mt-6 space-y-3">
         {robots.map((a, idx) => (
-          <div
-            key={a.productName}
-            className="border border-slate-600 bg-[#081126] p-4"
-          >
+          <div key={a.productName} className="border border-slate-600 bg-[#081126] p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
-                <h3 className="font-display text-lg font-bold text-slate-100">
-                  {a.productName}
-                </h3>
-                <p className="mt-0.5 text-xs text-slate-400">
-                  {capabilitySummary(a)}
-                </p>
+                <h3 className="font-display text-lg font-bold text-slate-100">{a.productName}</h3>
+                <p className="mt-0.5 text-xs text-slate-400">{capabilitySummary(a)}</p>
               </div>
-              <span className="font-mono text-sm font-bold text-emerald-300">
-                {a.jobCount} jobs
-              </span>
+              {/* Only assert a count when the portfolio's counts are genuinely differentiated. */}
+              {showCounts ? (
+                <span className="font-mono text-sm font-bold text-emerald-300">{a.jobCount} matching jobs</span>
+              ) : null}
             </div>
             <div className="mt-3 flex gap-3">
               <button
@@ -1011,7 +1051,7 @@ function PortfolioPanel({
                 onClick={() => onView(idx)}
                 className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300 hover:text-emerald-200"
               >
-                View jobs →
+                View matches →
               </button>
               <button
                 type="button"
@@ -1029,39 +1069,40 @@ function PortfolioPanel({
 }
 
 /* ================================================================== */
-/* Workspace — REVIEW PROFILE (checkpoint)                             */
+/* Workspace — REVIEW PROFILE (understanding checkpoint, pre-match)    */
 /* ================================================================== */
 
 function ReviewPanel({
   analysis,
+  matching,
   onFindJobs,
 }: {
   analysis: RobotAnalysis;
+  matching: boolean;
   onFindJobs: () => void;
 }) {
   const [showSources, setShowSources] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const profile = analysis.profile;
   const confirmed = confirmedFacts(profile);
   const unknowns = unknownFacts(profile);
   const conflicts = conflictFacts(profile);
   const sources = profile?.sources || [];
 
+  const groundingPct = Math.round((profile?.source_grounding_rate ?? 0) * 100);
+  const coveragePct = Math.round((profile?.coverage_rate ?? 0) * 100);
+  const qualityPct = Math.round((profile?.source_quality_rate ?? 0) * 100);
+
   return (
     <div className="p-6 sm:p-8">
       <p className={eyebrow}>Here's what we understood</p>
       <div className="mt-1 flex flex-wrap items-baseline gap-x-3">
-        <h2 className="font-display text-3xl font-bold tracking-tight text-slate-100">
-          {analysis.productName}
-        </h2>
+        <h2 className="font-display text-3xl font-bold tracking-tight text-slate-100">{analysis.productName}</h2>
         <span className="text-lg text-slate-400">{analysis.companyName}</span>
       </div>
       <div className="mt-3 flex items-center gap-2">
         <span className={eyebrow}>Profile</span>
-        <span
-          className={`font-mono text-lg font-bold ${tierColor(analysis.tier)}`}
-        >
-          {analysis.tier}
-        </span>
+        <span className={`font-mono text-lg font-bold ${tierColor(analysis.tier)}`}>{analysis.tier}</span>
       </div>
       <p className="mt-1 max-w-2xl text-[13px] leading-snug text-slate-400">
         {profileConfidenceCopy(analysis.tier)}
@@ -1069,50 +1110,33 @@ function ReviewPanel({
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <div>
-          <p className={eyebrow}>We confirmed</p>
+          <p className={eyebrow}>Confirmed</p>
           {confirmed.length ? (
             <ul className="mt-2 space-y-1.5">
-              {confirmed.map(f => (
-                <li
-                  key={f.id}
-                  className="text-[13px] leading-snug text-slate-200"
-                >
-                  <span className="text-emerald-400">✓</span>{" "}
-                  {formatFactLine(f)}
+              {confirmed.map((f) => (
+                <li key={f.id} className="text-[13px] leading-snug text-slate-200">
+                  <span className="text-emerald-400">✓</span> {formatFactLine(f)}
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-[13px] text-slate-500">
-              Identity resolved; no hard constraints extracted yet.
-            </p>
+            <p className="mt-2 text-[13px] text-slate-500">Identity resolved; no hard constraints extracted yet.</p>
           )}
         </div>
         <div>
           <p className={eyebrow}>Still unknown</p>
           {conflicts.length || unknowns.length ? (
             <ul className="mt-2 space-y-1.5">
-              {conflicts.map(f => (
-                <li
-                  key={f.id}
-                  className="text-[13px] leading-snug text-amber-200/90"
-                >
-                  CONFLICTED — {formatFactLine(f)}
-                </li>
+              {conflicts.map((f) => (
+                <li key={f.id} className="text-[13px] leading-snug text-amber-200/90">CONFLICTED — {formatFactLine(f)}</li>
               ))}
-              {unknowns.map(f => (
-                <li
-                  key={f.id}
-                  className="text-[13px] leading-snug text-amber-200/80"
-                >
-                  ? {formatFactLine(f)}
-                </li>
+              {unknowns.map((f) => (
+                <li key={f.id} className="text-[13px] leading-snug text-amber-200/80">? {formatFactLine(f)}</li>
               ))}
             </ul>
           ) : (
             <p className="mt-2 text-[13px] leading-snug text-amber-200/80">
-              Some constraints may still be unknown even when not listed —
-              verify before relying on this profile.
+              Some constraints may still be unknown even when not listed — verify before relying on this profile.
             </p>
           )}
         </div>
@@ -1120,26 +1144,37 @@ function ReviewPanel({
 
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-700 pt-4">
         <span className={eyebrow}>Sources</span>
-        <span className="text-[12px] text-slate-400">
-          {sources.length.toString().padStart(2, "0")} reviewed
-        </span>
+        <span className="text-[12px] text-slate-400">{sources.length.toString().padStart(2, "0")} reviewed</span>
         {sources.length ? (
           <button
             type="button"
-            onClick={() => setShowSources(v => !v)}
+            onClick={() => setShowSources((v) => !v)}
             className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-400"
           >
             {showSources ? "Hide ←" : `View ${sources.length} →`}
           </button>
         ) : null}
+        <button
+          type="button"
+          onClick={() => setShowDetails((v) => !v)}
+          className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500 hover:text-slate-300"
+        >
+          {showDetails ? "Hide profile details" : "Profile details"}
+        </button>
       </div>
+
+      {showDetails && (
+        <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.08em] text-slate-500">
+          Grounding {groundingPct}% · Coverage {profile?.coverage_level || "—"} ({coveragePct}%) · Sources{" "}
+          {profile?.source_quality_level || "—"} ({qualityPct}%)
+        </p>
+      )}
+
       {showSources && (
         <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto border border-slate-700 p-2">
-          {sources.map(s => (
+          {sources.map((s) => (
             <li key={s.id} className="text-[11px] leading-snug">
-              <span className="font-mono uppercase tracking-[0.08em] text-slate-500">
-                {sourceTypeLabel(s.source_type)}
-              </span>
+              <span className="font-mono uppercase tracking-[0.08em] text-slate-500">{sourceTypeLabel(s.source_type)}</span>
               <a
                 href={s.url}
                 target="_blank"
@@ -1154,12 +1189,11 @@ function ReviewPanel({
       )}
 
       <div className="mt-8">
-        <button type="button" onClick={onFindJobs} className={ctaClass}>
-          Find jobs for {analysis.productName} →
+        <button type="button" onClick={onFindJobs} disabled={matching} className={ctaClass}>
+          {matching ? "Matching…" : `Find jobs for ${analysis.productName} →`}
         </button>
         <p className="mt-2 text-[11px] text-slate-500">
-          Confirm we understood your robot — then we match {analysis.jobCount}{" "}
-          jobs against these capabilities.
+          Confirm we understood {analysis.productName} — then we match jobs against these capabilities.
         </p>
       </div>
     </div>
@@ -1167,12 +1201,13 @@ function ReviewPanel({
 }
 
 /* ================================================================== */
-/* Workspace — JOBS (evidence is the product)                          */
+/* Workspace — JOBS (matching output)                                  */
 /* ================================================================== */
 
 function JobsPanel({
   analysis,
   unlocked,
+  showCount,
   railTab,
   qualifiedKeys,
   expandedJob,
@@ -1183,6 +1218,7 @@ function JobsPanel({
 }: {
   analysis: RobotAnalysis;
   unlocked: boolean;
+  showCount: boolean;
   railTab: RailTab;
   qualifiedKeys: string[];
   expandedJob: string | null;
@@ -1193,9 +1229,7 @@ function JobsPanel({
 }) {
   const showQualifiedOnly = railTab === "qualified";
   const allJobs = analysis.jobs;
-  const baseJobs = showQualifiedOnly
-    ? allJobs.filter(j => qualifiedKeys.includes(j.job_key))
-    : allJobs;
+  const baseJobs = showQualifiedOnly ? allJobs.filter((j) => qualifiedKeys.includes(j.job_key)) : allJobs;
   const visible = unlocked ? baseJobs : baseJobs.slice(0, PREVIEW_FREE);
   const hiddenCount = Math.max(0, analysis.jobCount - visible.length);
   const shownOfTop = Math.min(TOP_SHOWN, allJobs.length);
@@ -1204,20 +1238,19 @@ function JobsPanel({
     <div className="p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-2xl font-bold text-slate-100">
-          {showQualifiedOnly
-            ? "Qualified jobs"
-            : `Jobs for ${analysis.productName}`}
+          {showQualifiedOnly ? "Qualified jobs" : `Jobs for ${analysis.productName}`}
         </h2>
         <span className="font-mono text-sm font-bold text-emerald-300">
           {showQualifiedOnly
             ? `${baseJobs.length} qualified`
-            : `${analysis.jobCount} JOBS FOR ${analysis.productName.toUpperCase()}`}
+            : showCount
+              ? `${analysis.jobCount} JOBS FOR ${analysis.productName.toUpperCase()}`
+              : `MATCHES FOR ${analysis.productName.toUpperCase()}`}
         </span>
       </div>
       {!showQualifiedOnly && (
         <p className="mt-1 text-[12px] text-slate-400">
-          We matched these jobs against {analysis.productName}'s confirmed
-          capabilities · {shownOfTop} strongest matches shown
+          We matched these jobs against {analysis.productName}'s confirmed capabilities · {shownOfTop} strongest matches shown
         </p>
       )}
 
@@ -1247,18 +1280,13 @@ function JobsPanel({
       {!unlocked && !showQualifiedOnly && hiddenCount > 0 && (
         <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5 text-center">
           <p className="font-display text-lg font-bold text-slate-100">
-            {hiddenCount} more jobs for {analysis.productName}
+            More matches for {analysis.productName}
           </p>
           <p className="mt-1 text-[12px] text-slate-400">
-            Create a free account to see every match, its evidence, and qualify
-            the ones worth pursuing.
+            Create a free account to see every match, its evidence, and qualify the ones worth pursuing.
           </p>
-          <Link
-            href={signupHref}
-            onClick={onSeeAll}
-            className={`${ctaClass} mt-4`}
-          >
-            See all {analysis.jobCount} jobs →
+          <Link href={signupHref} onClick={onSeeAll} className={`${ctaClass} mt-4`}>
+            {showCount ? `See all ${analysis.jobCount} matches →` : "See all matches →"}
           </Link>
         </div>
       )}
@@ -1287,32 +1315,24 @@ function JobCard({
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
   return (
     <li className="border border-slate-600 bg-[#081126]">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-start gap-3 p-4 text-left"
-      >
-        <span className="mt-0.5 font-mono text-xs text-slate-500">
-          {String(index).padStart(2, "0")}
-        </span>
+      <button type="button" onClick={onToggle} className="flex w-full items-start gap-3 p-4 text-left">
         <span className="flex-1">
-          <span
-            className={`font-mono text-[10px] font-bold uppercase tracking-[0.12em] ${
-              possible ? "text-emerald-400" : "text-rose-400"
-            }`}
-          >
-            {possible ? "Possible match" : "Not a match"}
+          <span className="flex items-center gap-2">
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Job {String(index).padStart(2, "0")}
+            </span>
+            <span
+              className={`font-mono text-[10px] font-bold uppercase tracking-[0.12em] ${
+                possible ? "text-emerald-400" : "text-rose-400"
+              }`}
+            >
+              {possible ? "Possible match" : "Not a match"}
+            </span>
           </span>
-          <span className="mt-1 block font-display text-base font-bold leading-snug text-slate-100">
-            {job.title}
-          </span>
-          {place ? (
-            <span className="mt-0.5 block text-xs text-slate-400">{place}</span>
-          ) : null}
+          <span className="mt-1 block font-display text-base font-bold leading-snug text-slate-100">{job.title}</span>
+          {place ? <span className="mt-0.5 block text-xs text-slate-400">{place}</span> : null}
         </span>
-        <span className="font-mono text-xs text-slate-500">
-          {expanded ? "−" : "+"}
-        </span>
+        <span className="font-mono text-xs text-slate-500">{expanded ? "−" : "+"}</span>
       </button>
 
       {expanded && (
@@ -1321,11 +1341,8 @@ function JobCard({
             <div>
               <p className={eyebrow}>Why {robotName}</p>
               <ul className="mt-1 space-y-0.5">
-                {job.why.map(w => (
-                  <li
-                    key={w}
-                    className="text-[13px] leading-snug text-slate-200"
-                  >
+                {job.why.map((w) => (
+                  <li key={w} className="text-[13px] leading-snug text-slate-200">
                     <span className="text-emerald-400">✓</span> {w}
                   </li>
                 ))}
@@ -1337,13 +1354,8 @@ function JobCard({
             <div className="mt-3">
               <p className={eyebrow}>Still unknown</p>
               <ul className="mt-1 space-y-0.5">
-                {job.still_unknown.map(w => (
-                  <li
-                    key={w}
-                    className="text-[13px] leading-snug text-amber-200/80"
-                  >
-                    ? {w}
-                  </li>
+                {job.still_unknown.map((w) => (
+                  <li key={w} className="text-[13px] leading-snug text-amber-200/80">? {w}</li>
                 ))}
               </ul>
             </div>
@@ -1351,32 +1363,18 @@ function JobCard({
 
           {job.blockers?.length ? (
             <div className="mt-3">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-rose-400/80">
-                Blocker
-              </p>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-rose-400/80">Blocker</p>
               <ul className="mt-1 space-y-0.5">
-                {job.blockers.map(w => (
-                  <li
-                    key={w}
-                    className="text-[13px] leading-snug text-slate-300"
-                  >
-                    {w}
-                  </li>
+                {job.blockers.map((w) => (
+                  <li key={w} className="text-[13px] leading-snug text-slate-300">{w}</li>
                 ))}
               </ul>
             </div>
           ) : possible ? (
-            <p className="mt-3 text-[12px] text-slate-500">
-              No confirmed blocker
-            </p>
+            <p className="mt-3 text-[12px] text-slate-500">No confirmed blocker</p>
           ) : null}
 
-          <button
-            type="button"
-            onClick={onQualify}
-            disabled={qualified}
-            className={`${ctaClass} mt-4`}
-          >
+          <button type="button" onClick={onQualify} disabled={qualified} className={`${ctaClass} mt-4`}>
             {qualified ? "Qualification requested ✓" : "Qualify this job →"}
           </button>
         </div>
