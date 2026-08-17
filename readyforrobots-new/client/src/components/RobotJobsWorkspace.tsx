@@ -405,6 +405,12 @@ export default function RobotJobsWorkspace() {
             companyName={companyName}
             error={error}
           />
+        ) : stage === "portfolio" ? (
+          <PortfolioRail
+            company={companyName || portfolio[0]?.companyName || ""}
+            count={portfolio.length}
+            onNewRobot={newRobot}
+          />
         ) : (
           <ContextRail
             company={active?.companyName || companyName}
@@ -560,6 +566,43 @@ function FindRail({
           <li><span className="font-mono text-emerald-400">02</span> We build a robot profile — grounded facts from sources.</li>
           <li><span className="font-mono text-emerald-400">03</span> Then we find the work — jobs matched to what we confirmed.</li>
         </ol>
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/* Left rail — PORTFOLIO overview context                              */
+/* ================================================================== */
+
+function PortfolioRail({
+  company,
+  count,
+  onNewRobot,
+}: {
+  company: string;
+  count: number;
+  onNewRobot: () => void;
+}) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <p className={eyebrow}>Portfolio</p>
+      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">{company}</h2>
+      <p className="mt-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
+        {count} robots analyzed
+      </p>
+      <p className="mt-3 text-[12px] leading-snug text-slate-400">
+        Pick a robot to review its profile and jobs. Each robot keeps its own confirmed
+        capabilities and matched work.
+      </p>
+      <div className="mt-auto pt-6">
+        <button
+          type="button"
+          onClick={onNewRobot}
+          className="w-full border border-emerald-500/50 px-3 py-2 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300 transition hover:border-emerald-400"
+        >
+          + New robot
+        </button>
       </div>
     </div>
   );
