@@ -29,7 +29,7 @@ Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 | 1 | **PROFILE PATH** — production uses `/api/robot-profile` + multi-product selection | **PASS** (P0-A 2026-08-17) |
 | 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **logic PASS** (requirement_v1 + utilization ranking on branch). **Production verification pending** — ranking is not the live gate until it is re-landed after this submit-workflow smoke and the four robot boards are re-run on Fly. |
 | 2a | **SUBMIT WORKFLOW** — atomic reveal, stable layout, `/api/robot-job-search` | **merged** / **production smoke PASS** — Vercel bundle calls `/api/robot-job-search`; uncached Stretch ~14s researching UI then one reveal; picker keeps public market tape (not a personal board); bad URL recovers with zero matched jobs. |
-| 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS; auth return still BLOCKED |
+| 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS. **Auth infra verified live** (2026-08-17): GoTrue `v2.195.0`, signup enabled, providers **email + Google + GitHub**, `/signup` `/login` `/auth/callback` `/pipeline` all SPA 200, return-path + `resume=save` plumbing unit-tested (10/10). **Remaining:** the actual authenticated round trip (A6/A7) is BLOCKED on a controlled account — `mailer_autoconfirm` is **off**, so email needs a real inbox; unblock with a controlled inbox/OAuth or a Supabase service-role key (admin-create a confirmed user). |
 | 4 | **TELEMETRY** — events + src/persona + shadow | **PARTIAL** — src/events mostly PASS; profile-path events newly available; persona BLOCKED |
 
 **Release sequence (gate, not a suggestion):** #13 smoke (done) → re-land ranking (#12) → four-board production verify → freeze M2 → auth continuity → telemetry → pre-traffic gate. Do not publish C04 / invite external traffic.
@@ -127,8 +127,8 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 | A3 | Submit URL → research → jobs | **PASS** | Profile path in network |
 | A4 | Open job / Qualify This Job | **PASS** | Prior pass |
 | A5 | See All → signup | **PASS** (to signup page) | Prior |
-| A6 | Signup → return to same robot/jobs | **BLOCKED** | Needs controlled email/OAuth |
-| A7 | Returning user continuity | **BLOCKED** | Same as A6 |
+| A6 | Signup → return to same robot/jobs | **BLOCKED** (infra verified) | Return-path logic + `resume=save` unit-tested; providers live. Needs controlled email/OAuth or service-role key to complete the round trip. |
+| A7 | Returning user continuity | **BLOCKED** (infra verified) | Same unblock as A6 |
 | A8 | `/jobs` index | **PASS** | Prior |
 | A9 | Legacy `/experiment` | **PASS** | Prior |
 | A10 | Bad URL | **PASS** | P0-A spine |
@@ -166,8 +166,33 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 
 | Workflow | Outcome |
 |----------|---------|
-| Auth return after signup | **BLOCKED** (still needs controlled account before traffic) |
+| Auth return after signup | **BLOCKED** (infra verified live; needs controlled account or service-role key before traffic) |
 | Qualify request confirmation | **PASS** |
+
+#### Auth continuity — infra verification (2026-08-17)
+
+Everything except the live authenticated round trip is verified. Reproduce:
+
+```bash
+SB=https://lmoyydlhlgdyqbxkmkuz.supabase.co
+ANON=<VITE_PUBLIC_SUPABASE_ANON_KEY from fly.toml>
+curl -sS "$SB/auth/v1/health" -H "apikey: $ANON"          # GoTrue v2.195.0
+curl -sS "$SB/auth/v1/settings" -H "apikey: $ANON"        # email+google+github true; disable_signup false
+for p in /signup /login /auth/callback /pipeline; do
+  curl -s -o /dev/null -w "$p %{http_code}\n" "https://readyforrobots.com$p"   # 200
+done
+```
+
+| Check | Result |
+|-------|--------|
+| GoTrue reachable | **PASS** — `v2.195.0` |
+| Providers enabled | **PASS** — `email`, `google`, `github` (signup enabled) |
+| `mailer_autoconfirm` | **off** — email path needs a real inbox to click the link |
+| SPA auth routes serve app | **PASS** — `/signup` `/login` `/auth/callback` `/pipeline` = 200 |
+| Post-auth return-path resolver | **PASS** — `signupWorkflowPath` + `authNext` + `resume=save` unit-tested (10/10 vitest) |
+| Live A6/A7 round trip | **BLOCKED** — needs controlled inbox/OAuth or `SUPABASE_SERVICE_ROLE_KEY` (admin-create a confirmed user, mint a session, then verify land-back + returning continuity) |
+
+**Fastest agent-driven unblock:** add `SUPABASE_SERVICE_ROLE_KEY` — then `POST /auth/v1/admin/users` (`email_confirm: true`) + `POST /auth/v1/admin/generate_link`, drive `/auth/callback?next=/pipeline?lead=…&resume=save`, and assert save completes and a re-visit lands on the same workspace/robot. Alternative: complete a Google/magic-link login in the Desktop pane.
 
 ---
 
@@ -185,7 +210,7 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 
 5–8. Class / bleed / product_name alignment — largely M2  
 9. ~~Replace SIGNAL document title~~ **DONE**  
-10. Prove auth return with controlled account  
+10. Prove auth return with controlled account — **infra verified live; blocked only on a controlled inbox/OAuth or `SUPABASE_SERVICE_ROLE_KEY`** (see Auth continuity — infra verification)  
 
 ### P2
 
