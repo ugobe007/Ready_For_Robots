@@ -165,7 +165,8 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 ### P0 — still blocking traffic
 
 1. ~~Deploy Jobs frontend that calls `/api/robot-profile`~~ **DONE (P0-A)**  
-2. **MATCH TRUTH / M2** — differentiated, explainable jobs (requirements matching; Novolex-shaped example). **Next mission — do not patch old heuristic to fake differentiation.**  
+2. **MATCH TRUTH / M2** — differentiated, explainable jobs (requirements matching; Novolex-shaped example). Ranking evaluation waits until submit workflow is stable.  
+2a. **Submit workflow** — atomic reveal, stable layout, profile cache (this mission). Pre-traffic: do not invite traffic while Find Jobs jitters.  
 3. ~~Multi-product OEM ask on live UI~~ **DONE (P0-A)**  
 4. Dexmate → Vega (may stay honest recover until Understanding reopen rule trips)
 
