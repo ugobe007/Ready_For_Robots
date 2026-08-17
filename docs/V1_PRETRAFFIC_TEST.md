@@ -12,16 +12,27 @@
 
 # **NOT READY for traffic**
 
+Do **not** blur matcher-in-isolation with the production MATCH TRUTH gate.
+
+| Release line | Status |
+|--------------|--------|
+| **MATCH TRUTH** | **logic PASS** / **production verification pending** |
+| **SUBMIT WORKFLOW** | **merged** (#13) / **production smoke PASS** (visual 2026-08-17) |
+| **TRAFFIC** | **paused** |
+
+Architecture is unchanged: grounded profile first, then capability → workflow → requirements matching; unknowns stay unknown rather than inferred away.
+
 Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 
 | # | Gate | Status |
 |---|------|--------|
 | 1 | **PROFILE PATH** — production uses `/api/robot-profile` + multi-product selection | **PASS** (P0-A 2026-08-17) |
-| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **LIVE on Fly** (`requirement_v1`, `33fdc69`) — Novolex/cross-physics PASS; **Digit top-10 still looks AMR-heavy** (8/10 tote/cart). Do not retune matcher until human Digit review. Traffic paused. |
+| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **logic PASS** (requirement_v1 + utilization ranking on branch). **Production verification pending** — ranking is not the live gate until it is re-landed after this submit-workflow smoke and the four robot boards are re-run on Fly. |
+| 2a | **SUBMIT WORKFLOW** — atomic reveal, stable layout, `/api/robot-job-search` | **merged** / **production smoke PASS** — Vercel bundle calls `/api/robot-job-search`; uncached Stretch ~14s researching UI then one reveal; picker keeps public market tape (not a personal board); bad URL recovers with zero matched jobs. |
 | 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS; auth return still BLOCKED |
 | 4 | **TELEMETRY** — events + src/persona + shadow | **PARTIAL** — src/events mostly PASS; profile-path events newly available; persona BLOCKED |
 
-**Until MATCH TRUTH clears (and auth return is proven): keep traffic paused. Do not publish C04 / invite external traffic.**
+**Release sequence (gate, not a suggestion):** #13 smoke (done) → re-land ranking (#12) → four-board production verify → freeze M2 → auth continuity → telemetry → pre-traffic gate. Do not publish C04 / invite external traffic.
 
 ---
 
@@ -165,8 +176,8 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 ### P0 — still blocking traffic
 
 1. ~~Deploy Jobs frontend that calls `/api/robot-profile`~~ **DONE (P0-A)**  
-2. **MATCH TRUTH / M2** — differentiated, explainable jobs (requirements matching; Novolex-shaped example). Ranking evaluation waits until submit workflow is stable.  
-2a. **Submit workflow** — atomic reveal, stable layout, profile cache (this mission). Pre-traffic: do not invite traffic while Find Jobs jitters.  
+2. **MATCH TRUTH / M2** — **logic PASS** (requirements + distinctive-capability utilization ranking on the ranking branch). **Production verification pending.** Do not treat logic PASS as the production MATCH TRUTH gate.  
+2a. ~~**Submit workflow**~~ **merged / production smoke PASS** — atomic reveal, stable layout, profile cache. Public market tape during research/picker is intended; personal boards reveal once.  
 3. ~~Multi-product OEM ask on live UI~~ **DONE (P0-A)**  
 4. Dexmate → Vega (may stay honest recover until Understanding reopen rule trips)
 
@@ -189,8 +200,8 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 | Content / LinkedIn publishing (incl. C04) | **STOP** |
 | Invite external traffic | **NO** |
 | Understanding Phase 4 extractors / Blind retune | **DO NOT OPEN** |
-| **M2 matcher prototyping** | **ALLOWED** against grounded A/B/C profiles (propagate unknowns) — see milestones |
-| Next step | M2 MATCH TRUTH mission → re-run gates → then consider traffic |
+| **M2 matcher prototyping** | **logic PASS** — freeze further matcher research unless production ranking verify exposes a truth/ranking defect |
+| Next step | Re-land utilization ranking → four-board production verify → freeze M2 → auth continuity → telemetry → pre-traffic gate |
 
 ---
 

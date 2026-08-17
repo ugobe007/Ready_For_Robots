@@ -3,7 +3,7 @@
 **Status:** Canonical strategy (updated 2026-08-17)  
 **Not:** Three products. One engine. Three entry points.  
 **Surface:** `/` is the Jobs terminal. `/experiment` is obsolete.  
-**Finite milestones (M1–M4):** [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) · **M2 unlocked** against frozen Understanding (A/B/C profiles); 20-shadow is M1 calibration only — not an M2 blocker · traffic still paused until MATCH TRUTH
+**Finite milestones (M1–M4):** [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) · **MATCH TRUTH logic PASS / production verification pending** · submit workflow merged / production smoke PASS · traffic paused
 
 ---
 
@@ -207,13 +207,17 @@ Segment by `persona` (oem / distributor / integrator) and by robot product / fam
 
 ### CONTINUE NOW
 
-**M2 — Match** (next mission): capability → requirement matching on grounded Tier A/B/C profiles; propagate unknowns; explainable Why / Still unknown (e.g. Novolex-shaped). See [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md).
+**M2 — Match:** requirement matching **logic PASS** against frozen Understanding. **Production MATCH TRUTH gate is still pending** (ranking not verified live). No further matcher research unless that verify exposes a truth/ranking defect.
 
-Phases 1–3 remain **frozen** at v1.0 calibration ([`robot_understanding_v1.md`](./robot_understanding_v1.md)). Production `/` uses `POST /api/robot-profile` then job match (P0-A).
+Phases 1–3 remain **frozen** at v1.0 calibration ([`robot_understanding_v1.md`](./robot_understanding_v1.md)). Production `/` uses `POST /api/robot-job-search` (profile + match in one transaction; P0-A profile path still exists).
 
-**M1 shadow** (first **20 real reviewed** profiles → one Understanding decision) continues in parallel as a **calibration instrument** — it does **not** block M2 prototyping.
+**M1 shadow** (first **20 real reviewed** profiles → one Understanding decision) continues in parallel as a **calibration instrument**.
 
-Traffic / C04 stay **paused** until MATCH TRUTH clears ([`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md)).
+Traffic / C04 stay **paused** ([`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md)):
+
+- **MATCH TRUTH** — logic PASS / production verification pending
+- **SUBMIT WORKFLOW** — merged / production smoke PASS
+- **TRAFFIC** — paused
 
 ### DO NOT CONTINUE YET
 
@@ -221,7 +225,7 @@ Traffic / C04 stay **paused** until MATCH TRUTH clears ([`V1_PRETRAFFIC_TEST.md`
 - Patching the old heuristic matcher to fake differentiation  
 - New capability families / channel research / OEM scrape scale  
 - More UI concepts / distributor–integrator product surfaces  
-- Expanding the product hypothesis / inviting traffic before MATCH TRUTH  
+- Expanding the product hypothesis / inviting traffic before the pre-traffic gate  
 
 ### Operating rule (replaces the Aug 15 freeze)
 
