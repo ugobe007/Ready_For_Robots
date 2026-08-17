@@ -209,3 +209,26 @@ Legacy `frontend/nextjs/` — avoid new product work unless explicitly requested
 - [docs/lead_quality_north_star.md](docs/lead_quality_north_star.md)
 - [docs/pipeline_process_and_scripts.md](docs/pipeline_process_and_scripts.md)
 - [docs/agent-spec.md](docs/agent-spec.md) — CRM copilot (separate from harness Orchestrator)
+
+## Cursor Cloud specific instructions
+
+This section captures non-obvious, durable setup/run notes for cloud agents. The update
+script already installs dependencies (Python `venv` + `pip install -r requirements.txt`
+and `npm run install:web`), so start services rather than re-installing.
+
+### Services
+
+| Service | Dir | Run (dev) | Notes |
+|---------|-----|-----------|-------|
+| Backend API (FastAPI) | `app/` | `source venv/bin/activate && python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload` | 364 routes; `/health` and `/` return 200 even with no DB. |
+| Frontend (Vite) | `readyforrobots-new/` | `npm run dev` (serves on `:3000`) | In dev, the client auto-targets `http://127.0.0.1:8000` (see `client/src/lib/apiBase.ts`), so run the backend on port 8000. |
+| Worker (Celery) | `worker/` | see README | Needs Redis (`redis-server` is NOT installed by default). Optional for core dev; start scripts skip Celery when no broker is set. |
+
+### Non-obvious gotchas
+
+- **Local DB = SQLite fallback.** With no valid `DATABASE_URL`, `app/database.py` falls back to `sqlite:///./ready_for_robots.db`. Real dev/prod uses Supabase Postgres.
+- **Alembic does NOT work on SQLite.** `migrations/env.py` hardcodes `connect_args={"connect_timeout": 10}`, which SQLite rejects. For local SQLite, create the schema the way the tests do: import `app.main` (loads all models) then `Base.metadata.create_all(bind=engine)`. `alembic upgrade head` only works against Postgres.
+- **`pipeline_cache_store` is Postgres-only.** It uses `JSONB`/`TIMESTAMPTZ`; on SQLite the cache warm/read logs errors but the app degrades gracefully (the public `/api/leads/pipeline` feed is just empty). Core endpoints work offline — e.g. `POST /api/robot-job-search` (robot URL → matched jobs) runs entirely on the local corpus with no external API keys.
+- **`npm run check` (tsc) has a pre-existing type error** in `client/src/components/RobotJobsExperiment.tsx` (unrelated to env setup). The Vite dev server does not typecheck, so it runs fine regardless.
+- **Test suite (`pytest`)**: the large majority pass. ~25 failures are environmental, not code regressions: network-egress checks (DNS/HTTPS/Wikidata reachability in `test_company_validator`, Resend email sends in `test_sales_agent`) and a few tests that assume a fully-migrated Postgres schema (`no such table: ...` on SQLite). Prefer targeted runs like `pytest tests/test_lead_filter_junk.py`.
+- **Python linters** (`black`, `flake8`, `isort`, `mypy`) are listed under `[dev-dependencies]` in `pyproject.toml` but are not in `requirements.txt`; install them separately if you need to lint Python.
