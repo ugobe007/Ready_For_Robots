@@ -45,6 +45,7 @@ from app.api.robot_buyer_leads import router as robot_buyer_leads_router
 from app.api.admin_purge import router as admin_purge_router
 from app.api.admin_lead_ops import router as admin_lead_ops_router
 from app.api.admin_humanoid_ops import router as admin_humanoid_ops_router
+from app.api.admin_understanding_shadow import router as admin_understanding_shadow_router
 from app.api.admin_partners import router as admin_partners_router
 from app.api.special_projects import admin_router as special_projects_admin_router
 from app.api.special_projects import public_router as special_projects_public_router
@@ -55,6 +56,7 @@ from app.api.integrations_hubspot import router as integrations_hubspot_router
 from app.api.integrations_google_calendar import router as integrations_google_calendar_router
 from app.api.vendor_design import router as vendor_design_router
 from app.api.robot_job_match import router as robot_job_match_router
+from app.api.robot_profile import router as robot_profile_router
 from app.api.v1 import router as v1_router
 from app.api.v1.errors import V1HTTPException, error_response
 from app.database import get_db
@@ -481,6 +483,7 @@ app.include_router(admin_users_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_purge_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_lead_ops_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_humanoid_ops_router, prefix="/api/admin", tags=["admin"])
+app.include_router(admin_understanding_shadow_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_partners_router, prefix="/api/admin", tags=["admin-partners"])
 app.include_router(special_projects_admin_router, prefix="/api/admin", tags=["special-projects"])
 app.include_router(special_projects_public_router, prefix="/api", tags=["special-projects"])
@@ -513,9 +516,11 @@ app.include_router(integrations_google_calendar_router, prefix="/api", tags=["in
 app.include_router(robot_buyer_leads_router, prefix="/api/robot-buyer-leads", tags=["robot-buyer-leads"])
 app.include_router(vendor_design_router, prefix="/api/vendor-design", tags=["vendor-design"])
 app.include_router(robot_job_match_router, prefix="/api", tags=["robot-job-match"])
+app.include_router(robot_profile_router, prefix="/api", tags=["robot-profile"])
 app.include_router(v1_router, prefix="/api/v1", tags=["v1"])
 # Alias under /api/v1 for clients that prefer v1 namespace (no feature flag — same handler)
 app.include_router(robot_job_match_router, prefix="/api/v1", tags=["robot-job-match"])
+app.include_router(robot_profile_router, prefix="/api/v1", tags=["robot-profile"])
 
 
 @app.exception_handler(V1HTTPException)

@@ -1,0 +1,280 @@
+"""Assemble Phases 1–3 into an auditable Robot Profile."""
+from __future__ import annotations
+
+from typing import Any
+
+from app.services.robot_understanding_v1.coverage import (
+    apply_research_gaps,
+    derive_profile_tier,
+    material_facts,
+    score_source_quality,
+)
+from app.services.robot_understanding_v1.facts import (
+    extract_facts_from_sources,
+    filter_facts_to_subject,
+    mark_contradictions,
+)
+from app.services.robot_understanding_v1.fetch import fetch_page
+from app.services.robot_understanding_v1.models import ProfileTier, RobotProduct, RobotProfile
+from app.services.robot_understanding_v1.resolve import resolve_identity
+from app.services.robot_understanding_v1.sources import collect_source_pack
+from app.services.robot_url_safety import assert_public_http_url
+
+
+def build_robot_profile(
+    url: str,
+    *,
+    product_name: str | None = None,
+    max_sources: int = 6,
+    auto_select_single: bool = True,
+) -> RobotProfile:
+    """
+    URL → company/product → typed sources → facts → Robot Profile.
+
+    Stops before capabilities/workflows/jobs.
+    If multiple products and no product_name, returns needs_product_choice=True
+    without fetching the full source pack (identity only).
+
+    When product_name is supplied (CLI/API), it ALWAYS becomes selected_product
+    even if homepage resolve missed the string — company-level research is fallback only.
+    """
+    safe = assert_public_http_url(url)
+    home = fetch_page(safe)
+    resolved = resolve_identity(safe, home, product_hint=product_name)
+
+    selected = None
+    notes_extra: list[str] = []
+    if getattr(home, "fetch_degraded", False):
+        notes_extra.extend(getattr(home, "fetch_notes", None) or [])
+        notes_extra.append(
+            "Source acquisition degraded — canonical company/product identity preserved; "
+            "do not redefine company from acquirer fallback hosts."
+        )
+    if product_name:
+        selected = _bind_requested_product(resolved.company.id, resolved.products, product_name)
+        if selected.id not in {p.id for p in resolved.products}:
+            resolved.products.append(selected)
+            notes_extra.append(
+                f"Bound requested product `{selected.name}` (not found on homepage resolve)."
+            )
+        elif selected.name.lower() != product_name.strip().lower():
+            notes_extra.append(f"Bound requested product via alias match → `{selected.name}`.")
+    elif len(resolved.products) == 1 and auto_select_single:
+        selected = resolved.products[0]
+    elif len(resolved.products) > 1 and not product_name:
+        stages = _stages(
+            company=resolved.company.name,
+            products=[p.name for p in resolved.products],
+            sources_n=0,
+            profile_ready=False,
+            needs_choice=True,
+        )
+        return RobotProfile(
+            submitted_url=safe,
+            company=resolved.company,
+            products=resolved.products,
+            selected_product=None,
+            sources=[],
+            facts=[],
+            profile_confidence="C",
+            source_grounding_rate=1.0,
+            coverage_rate=0.0,
+            coverage_level="low",
+            source_quality_rate=0.0,
+            source_quality_level="low",
+            notes=list(resolved.notes)
+            + ["Multiple products found — select one to research."],
+            needs_product_choice=True,
+            research_stages=stages,
+        )
+    elif resolved.selected_product and auto_select_single:
+        selected = resolved.selected_product
+
+    subject = selected.name if selected else resolved.company.name
+    collected = collect_source_pack(
+        home,
+        product_name=selected.name if selected else product_name,
+        max_sources=max_sources,
+    )
+    if selected:
+        for c in collected:
+            c.source.product_id = selected.id
+
+    facts = extract_facts_from_sources(collected, subject=subject)
+    # Sibling contamination gate: drop material facts whose evidence is about another SKU
+    if selected:
+        facts, dropped_sib = filter_facts_to_subject(facts, collected, subject=selected.name)
+        if dropped_sib:
+            notes_extra.append(
+                f"Dropped {dropped_sib} sibling/off-subject fact(s) to prevent SKU contamination."
+            )
+    facts = mark_contradictions(facts)
+
+    # Set display_class from strongest product_class claim (descriptive only)
+    if selected:
+        class_facts = [
+            f
+            for f in facts
+            if f.predicate == "product_class" and f.epistemic not in ("unknown", "contradicted")
+        ]
+        if class_facts:
+            best = max(class_facts, key=lambda f: f.confidence)
+            selected.display_class = str(best.value)
+
+    facts, morphology, coverage_rate, coverage_level = apply_research_gaps(
+        facts,
+        subject=subject,
+        display_class=selected.display_class if selected else None,
+    )
+
+    source_ids = {c.source.id for c in collected}
+    claim_facts = material_facts(facts)
+    ungrounded = [
+        f.id
+        for f in claim_facts
+        if f.source_id not in source_ids and f.source_id != "research_checklist"
+    ]
+    grounded = len(claim_facts) - len(ungrounded)
+    grounding = 1.0 if not claim_facts else grounded / len(claim_facts)
+
+    auth_sources = [
+        c.source
+        for c in collected
+        if c.source.source_type
+        in {"product", "specifications", "documentation", "solutions", "case_study", "support"}
+    ]
+    avg_auth = (
+        sum(s.confidence for s in auth_sources) / len(auth_sources) if auth_sources else 0.0
+    )
+    sq_rate, sq_level = score_source_quality(
+        {c.source.source_type for c in collected},
+        avg_auth,
+    )
+
+    tier: ProfileTier = derive_profile_tier(  # type: ignore[assignment]
+        has_product=bool(selected),
+        grounding=grounding,
+        coverage=coverage_rate,
+        source_quality=sq_rate,
+    )
+
+    notes = list(resolved.notes) + notes_extra
+    if grounding < 1.0:
+        notes.append(
+            f"Source grounding rate {grounding:.0%} — ungrounded facts must not be presented as factual."
+        )
+    if not claim_facts:
+        notes.append("No concrete claims extracted; profile is identity + sources only.")
+    notes.extend(_contradiction_notes(facts))
+    unknown_n = sum(1 for f in facts if f.epistemic == "unknown")
+    if unknown_n:
+        notes.append(
+            f"{unknown_n} research checklist slot(s) remain UNKNOWN — profile is incomplete until filled."
+        )
+
+    stages = _stages(
+        company=resolved.company.name,
+        products=[p.name for p in resolved.products],
+        sources_n=len(collected),
+        profile_ready=True,
+        needs_choice=False,
+        tier=tier,
+    )
+
+    return RobotProfile(
+        submitted_url=safe,
+        company=resolved.company,
+        products=resolved.products,
+        selected_product=selected,
+        sources=[c.source for c in collected],
+        facts=facts,
+        profile_confidence=tier,
+        source_grounding_rate=grounding,
+        coverage_rate=coverage_rate,
+        coverage_level=coverage_level,
+        source_quality_rate=sq_rate,
+        source_quality_level=sq_level,
+        research_morphology=morphology,
+        ungrounded_fact_ids=ungrounded,
+        notes=notes,
+        needs_product_choice=False,
+        research_stages=stages,
+    )
+
+
+def _stages(
+    *,
+    company: str,
+    products: list[str],
+    sources_n: int,
+    profile_ready: bool,
+    needs_choice: bool,
+    tier: str | None = None,
+) -> list[dict[str, Any]]:
+    prod_detail = ", ".join(products) if products else "none found"
+    return [
+        {
+            "id": "identify_company",
+            "label": "Identifying company",
+            "status": "done",
+            "detail": company,
+        },
+        {
+            "id": "find_products",
+            "label": "Finding robot products",
+            "status": "done",
+            "detail": prod_detail,
+        },
+        {
+            "id": "review_sources",
+            "label": "Reviewing product sources",
+            "status": "done" if sources_n or needs_choice else "pending",
+            "detail": None if needs_choice else f"{sources_n:02d} sources",
+        },
+        {
+            "id": "build_profile",
+            "label": "Building robot profile",
+            "status": "done" if profile_ready else ("skipped" if needs_choice else "pending"),
+            "detail": f"Profile {tier}" if profile_ready and tier else None,
+        },
+    ]
+
+
+def _contradiction_notes(facts) -> list[str]:
+    contradicted = [f for f in facts if f.epistemic == "contradicted"]
+    if not contradicted:
+        return []
+    preds = sorted({f.predicate for f in contradicted})
+    return [
+        f"CONFLICTED across manufacturer sources: {', '.join(preds)}. "
+        "Both values retained — do not collapse."
+    ]
+
+
+def _norm_product_key(name: str) -> str:
+    return "".join(ch for ch in name.lower() if ch.isalnum())
+
+
+def _bind_requested_product(
+    company_id: str,
+    products: list[RobotProduct],
+    product_name: str,
+) -> RobotProduct:
+    """
+    Always materialize the caller-requested product as selected_product.
+
+    Exact / fuzzy match against resolved list; otherwise create a new RobotProduct.
+    No OEM-specific branches — name matching only.
+    """
+    wanted = product_name.strip()
+    if not wanted:
+        return RobotProduct.create(company_id, "Unknown")
+    key = _norm_product_key(wanted)
+    for p in products:
+        if _norm_product_key(p.name) == key:
+            return p
+    for p in products:
+        pk = _norm_product_key(p.name)
+        if key in pk or pk in key:
+            return p
+    return RobotProduct.create(company_id, wanted)

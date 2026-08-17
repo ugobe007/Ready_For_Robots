@@ -66,3 +66,4 @@ from app.models.special_project import (
     SpecialProjectTarget,
     SpecialProjectUpdate,
 )
+from app.models.understanding_shadow import UnderstandingShadowObservation
