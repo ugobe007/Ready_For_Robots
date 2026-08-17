@@ -1,0 +1,123 @@
+{
+  "submitted_url": "https://www.agilityrobotics.com/",
+  "profile_confidence": "B",
+  "research_morphology": "humanoid",
+  "company": {
+    "name": "Agility Robotics",
+    "primary_domain": "agilityrobotics.com"
+  },
+  "selected_product": {
+    "name": "Digit",
+    "display_class": "humanoid"
+  },
+  "facts": [
+    {
+      "predicate": "product_class",
+      "value": "humanoid",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.7941176470588236,
+      "evidence_span": "humanoid robot",
+      "source_id": "src_6b23999b7742"
+    },
+    {
+      "predicate": "product_class",
+      "value": "mobile_manipulator",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.7941176470588236,
+      "evidence_span": "mobile manipulation",
+      "source_id": "src_6b23999b7742"
+    },
+    {
+      "predicate": "supports_tote_handling",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.7941176470588236,
+      "evidence_span": "managing tote based",
+      "source_id": "src_6b23999b7742"
+    },
+    {
+      "predicate": "warehouse_or_factory_deployment",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.75,
+      "evidence_span": "commercially deployed",
+      "source_id": "src_6b23999b7742"
+    },
+    {
+      "predicate": "claims_load_unload",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.75,
+      "evidence_span": "loading and unloading containers",
+      "source_id": "src_6b23999b7742"
+    },
+    {
+      "predicate": "claims_warehouse_transport",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.75,
+      "evidence_span": "goods-to-person",
+      "source_id": "src_d528d3672980"
+    },
+    {
+      "predicate": "arm_count",
+      "value": 2,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.7941176470588236,
+      "evidence_span": "two arms",
+      "source_id": "src_d528d3672980"
+    },
+    {
+      "predicate": "autonomous_navigation",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.7764705882352941,
+      "evidence_span": "autonomous navigation",
+      "source_id": "src_d528d3672980"
+    },
+    {
+      "predicate": "carrying_capacity",
+      "value": 35,
+      "units": "lb",
+      "epistemic": "explicit",
+      "confidence": 0.98,
+      "evidence_span": "35 pound carrying capacity",
+      "source_id": "src_6706b7db8726"
+    },
+    {
+      "predicate": "battery_runtime",
+      "value": 4,
+      "units": "hr",
+      "epistemic": "explicit",
+      "confidence": 0.98,
+      "evidence_span": "4 hour battery life",
+      "source_id": "src_6706b7db8726"
+    },
+    {
+      "predicate": "has_dexterous_hands",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9524705882352942,
+      "evidence_span": "end effectors",
+      "source_id": "src_6706b7db8726"
+    },
+    {
+      "predicate": "end_effector",
+      "value": "dexterous_hand",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.92,
+      "evidence_span": "end effectors",
+      "source_id": "src_6706b7db8726"
+    }
+  ]
+}

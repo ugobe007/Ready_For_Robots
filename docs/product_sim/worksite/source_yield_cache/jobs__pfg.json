@@ -1,0 +1,17 @@
+{
+  "company": "PFG",
+  "accepted": [],
+  "rejected": [],
+  "work_units": [
+    {
+      "work_unit_id": "pick_cases",
+      "status": "EVIDENCED",
+      "evidence_hits": [
+        "selector",
+        "order selector"
+      ],
+      "origin_relevant": true
+    }
+  ],
+  "notes": []
+}

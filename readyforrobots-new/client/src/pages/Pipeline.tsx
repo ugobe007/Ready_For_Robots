@@ -36,23 +36,32 @@ import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { signupHrefForLead } from "@/lib/signupHref";
-import { trackFirstSave, trackMarketingEvent } from "@/lib/siteAnalytics";
 import {
-  isFreshSignup,
-  markFirstSaveGuideSeen,
-  shouldShowFirstSaveGuide,
-} from "@/lib/firstSaveGuide";
+  clearBuild15UnlockFlags,
+  hasReviewedFiveLeads,
+  workflowResultsPath,
+} from "@/lib/signupWorkflowPath";
+import {
+  icpIndustryTokens,
+  isRobotWorkspaceProfileComplete,
+  readRobotWorkspaceProfile,
+  writeRobotWorkspaceProfile,
+  type RobotWorkspaceProfile,
+} from "@/lib/robotWorkspaceProfile";
+import { trackFirstSave, trackMarketingEvent } from "@/lib/siteAnalytics";
 import LeadShareBar from "@/components/LeadShareBar";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
 import FirstSaveNudge from "@/components/pipeline/FirstSaveNudge";
-import FirstSaveGuideModal from "@/components/pipeline/FirstSaveGuideModal";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import CalLeadDrop, { dealToCalDrop } from "@/components/pipeline/CalLeadDrop";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
-import ActivationChecklist from "@/components/pipeline/ActivationChecklist";
+import ActivationChecklist, { isActivationChecklistDismissed } from "@/components/pipeline/ActivationChecklist";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import PipelineSalesWorkflowRail from "@/components/pipeline/PipelineSalesWorkflowRail";
+import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
+import PixelIcon from "@/components/PixelIcon";
+import { KARE_FACE } from "@/lib/kareIcons";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,7 +73,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type Stage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
+type Stage = "New Signal" | "Discovered" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 type QualityBandFilter = "all" | "high" | "medium" | "low";
 type QualitySort =
   | "default"
@@ -107,6 +116,13 @@ interface Deal {
     person_title?: string;
   };
   contactTitle?: string;
+  sellerBrief?: {
+    headline?: string;
+    whyNow?: string;
+    pitch?: string;
+    robotFit?: string;
+    nextStep?: string;
+  };
   outreachSubject?: string;
   outreachBody?: string;
   notes?: string;
@@ -126,8 +142,62 @@ interface Deal {
   };
   confidenceBand?: string;
   evidenceTrace?: Array<{ dimension?: string; score?: number; evidence?: string }>;
+  humanoidPilotTier?: string;
+  humanoidPilotScore?: number;
+  humanoidPilotLabel?: string;
+  humanoidPilotAction?: string;
+  humanoidOriginStatus?: string;
+  humanoidNonUsVendorFlag?: boolean;
+  humanoidNonUsVendorCount?: number;
+  humanoidNonUsVendorModels?: string[];
   priorityTier?: string;
   robotTypesNeeded?: string[];
+  workUnitId?: string;
+  workflowFamily?: string;
+  workTask?: string;
+  workMatch?: number;
+  workMatchLabel?: string;
+  workMatchScore?: number;
+  workMatchManufacturer?: string;
+  workHardBlockers?: string[];
+  comparableDeployment?: {
+    deployment_id?: string;
+    robot?: string | null;
+    customer?: string | null;
+    facility?: string | null;
+    work_type?: string | null;
+    deployment_stage?: string | null;
+    evidence_level?: string | null;
+    confidence?: number | null;
+  };
+  hermesQualify?: {
+    automation_fit?: number | null;
+    labor_intensity?: string | null;
+    facility_clarity?: string | null;
+    blockers?: string[];
+    rationale?: string | null;
+    vendor_shortlist?: Array<{ vendor?: string | null; model?: string | null; why?: string | null }>;
+    truth_state?: string | null;
+    updated_at?: string | null;
+  };
+  hermesJobTitles?: string[];
+  hermesDecisionMakers?: Array<{
+    name?: string;
+    title?: string | null;
+    source_url?: string | null;
+    confidence?: number | null;
+  }>;
+  hermesVideoEvidence?: Array<{
+    title?: string | null;
+    source_url?: string;
+    platform?: string | null;
+    evidence_kind?: string | null;
+    workflow_hint?: string | null;
+    robot_visible?: string | null;
+    facility_hint?: string | null;
+    confidence?: number | null;
+    published_at?: string | null;
+  }>;
   researchUpdates?: Array<{
     id: number;
     update_type?: string;
@@ -378,10 +448,11 @@ interface MarketSnippet {
   color: string;
 }
 
-const STAGES: Stage[] = ["New Signal", "Draft Ready", "Outreach Sent", "Qualified", "Meeting Set"];
+const STAGES: Stage[] = ["New Signal", "Discovered", "Draft Ready", "Outreach Sent", "Qualified", "Meeting Set"];
 
 const STAGE_META: Record<Stage, { color: string; dot: string; label: string; desc: string }> = {
   "New Signal":    { color: "#10b981", dot: "#10b981", label: "New Signal",    desc: "Just detected" },
+  "Discovered":    { color: "#14b8a6", dot: "#14b8a6", label: "Discovered",    desc: "Saved for review" },
   "Draft Ready":   { color: "#60a5fa", dot: "#60a5fa", label: "Draft Ready",   desc: "Outreach drafted" },
   "Outreach Sent": { color: "#FFB000", dot: "#FFB000", label: "Outreach Sent", desc: "Awaiting reply" },
   "Qualified":     { color: "#34d399", dot: "#34d399", label: "Qualified",     desc: "Engaged buyer" },
@@ -390,9 +461,10 @@ const STAGE_META: Record<Stage, { color: string; dot: string; label: string; des
 
 type UserBucket = "Hot Leads" | "Warm Leads" | "Monitoring";
 
-const PIPELINE_HOT_SLOTS = 15;
-const PIPELINE_WARM_SLOTS = 20;
-const PIPELINE_MONITOR_SLOTS = 15;
+const PIPELINE_HOT_SLOTS = 40;
+const PIPELINE_WARM_SLOTS = 30;
+const PIPELINE_MONITOR_SLOTS = 20;
+const PIPELINE_FEED_TOTAL = PIPELINE_HOT_SLOTS + PIPELINE_WARM_SLOTS + PIPELINE_MONITOR_SLOTS;
 
 const USER_BUCKETS: UserBucket[] = ["Hot Leads", "Warm Leads", "Monitoring"];
 
@@ -525,10 +597,115 @@ function FirstThreeActionsProgress({
 }
 
 const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string; slotCap: number }> = {
-  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-confidence robot-ready opportunities", slotCap: PIPELINE_HOT_SLOTS },
-  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Strong signals — qualify and track", slotCap: PIPELINE_WARM_SLOTS },
+  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-alignment opportunities ready for MSD", slotCap: PIPELINE_HOT_SLOTS },
+  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Qualified signals pending deeper alignment", slotCap: PIPELINE_WARM_SLOTS },
   "Monitoring":  { color: "#059669", dot: "#059669", desc: "Early signals SIGNAL is tracking", slotCap: PIPELINE_MONITOR_SLOTS },
 };
+
+/** Placeholder while pipeline / match-url loads — face icon + countdown so the page never looks blank. */
+function MatchedPipelineSkeleton({
+  hostname,
+  target,
+  secondsLeft,
+}: {
+  hostname?: string;
+  target: number;
+  secondsLeft: number;
+}) {
+  return (
+    <div className="mx-1 mb-2 space-y-3" aria-busy="true" aria-live="polite">
+      <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-stone-50 px-4 py-5">
+        <div className="flex items-center gap-4">
+          <div className="shrink-0 rounded-lg border border-emerald-200/80 bg-white p-2 shadow-sm">
+            <PixelIcon map={KARE_FACE} scale={4} fill="#3ecf8e" background="transparent" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <p className="text-base font-bold text-emerald-950 sm:text-lg">
+                Loading sales leads
+                {hostname ? ` for ${hostname}` : ""}…
+              </p>
+              <span
+                className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600 sm:text-3xl"
+                aria-label={`${secondsLeft} seconds remaining`}
+              >
+                {secondsLeft}s
+              </span>
+            </div>
+            <p className="mt-1 text-sm font-medium leading-snug text-emerald-900/85">
+              Matching up to {target} buyers to your robot profile. Hang tight — the queue paints as soon as it is ready.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-emerald-100">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-[width] duration-1000 ease-linear"
+            style={{ width: `${Math.max(8, Math.min(96, ((12 - secondsLeft) / 12) * 100))}%` }}
+          />
+        </div>
+      </div>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div
+          key={`match-skel-${i}`}
+          className="flex items-center gap-2.5 rounded-md border border-stone-200/80 bg-white px-2.5 py-2.5"
+          style={{ opacity: 1 - i * 0.08 }}
+        >
+          <div className="h-8 w-8 shrink-0 animate-pulse rounded-md bg-stone-200" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="h-3 max-w-[55%] animate-pulse rounded bg-stone-200" />
+            <div className="h-2.5 max-w-[80%] animate-pulse rounded bg-stone-100" />
+          </div>
+          <div className="h-5 w-10 shrink-0 animate-pulse rounded bg-stone-100" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Compact face + countdown strip — always visible while leads hydrate. */
+function PipelineLeadsLoadingStrip({ secondsLeft }: { secondsLeft: number }) {
+  return (
+    <div
+      className="mx-1 mb-2 flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-3"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <div className="shrink-0 rounded-md border border-emerald-200 bg-white p-1.5">
+        <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
+      </div>
+      <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950">Loading sales leads…</p>
+      <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600" aria-label={`${secondsLeft} seconds remaining`}>
+        {secondsLeft}s
+      </span>
+    </div>
+  );
+}
+
+function UpgradeProPriorityBanner({ src }: { src: string }) {
+  return (
+    <div className="rounded-xl border border-slate-500/55 bg-[#0b162f] px-4 py-3 shadow-[0_14px_28px_-16px_rgba(15,23,42,0.9)]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-400">
+            Priority
+          </p>
+          <p className="mt-1 text-base font-extrabold text-white">
+            Upgrade to Pro and automate your sales campaign.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2.5">
+          <PixelIcon map={KARE_FACE} scale={2} fill="#3ecf8e" background="transparent" className="shrink-0" />
+          <Link
+            href={`/pricing?upgrade=pro&src=${src}`}
+            className="inline-flex items-center justify-center rounded-lg border border-emerald-400/60 bg-emerald-500 px-4 py-2.5 text-sm font-extrabold text-slate-950 shadow-sm transition hover:bg-emerald-400"
+          >
+            Upgrade to Pro
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const userBucketForDeal = (deal: Pick<Deal, "score" | "priorityTier">): UserBucket => {
   const tier = (deal.priorityTier || "").toUpperCase();
@@ -654,11 +831,13 @@ type PipelineEntitlements = {
   };
 };
 
-const PIPELINE_LIMIT_FREE = 10;
-const PIPELINE_LIMIT_PAID = 50;
+const PIPELINE_LIMIT_FREE = PIPELINE_FEED_TOTAL;
+const PIPELINE_LIMIT_PAID = PIPELINE_FEED_TOTAL;
+/** Target curated working list after Results → Pipeline onboarding. */
+const BUILD_PIPELINE_TARGET = 15;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
 const PIPELINE_LEAD_READ_MS = 7_000;
-const PIPELINE_SESSION_KEY = "pipeline_feed_v4";
+const PIPELINE_SESSION_KEY = "pipeline_feed_v6";
 const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 /** Stale paint while API revalidates — avoids blank page when Fly is slow. */
 const PIPELINE_STALE_PAINT_MS = 7 * 24 * 60 * 60 * 1000;
@@ -687,6 +866,24 @@ function resolvePipelineLeadId(search: string): number | null {
 }
 const PIPELINE_FRESH_MS = 90 * 1000;
 const PIPELINE_TIMEOUT = 8_000;
+const PIPELINE_SUBMIT_CONTEXT_KEY = "rfr_pipeline_submit_context";
+const PIPELINE_SUBMIT_CONTEXT_TTL_MS = 2 * 60 * 60 * 1000;
+
+function getSubmittedUrlFromStorage(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    const raw = window.sessionStorage.getItem(PIPELINE_SUBMIT_CONTEXT_KEY);
+    if (!raw) return "";
+    const parsed = JSON.parse(raw) as { url?: string; ts?: number };
+    const url = (parsed.url || "").trim();
+    const ts = Number(parsed.ts || 0);
+    if (!url) return "";
+    if (Date.now() - ts > PIPELINE_SUBMIT_CONTEXT_TTL_MS) return "";
+    return url;
+  } catch {
+    return "";
+  }
+}
 const BY_ID_TIMEOUT_MS = 8_000;
 const BY_ID_DEEPLINK_TIMEOUT_MS = 12_000;
 const BY_ID_FAIL_COOLDOWN_MS = 90 * 1000;
@@ -699,6 +896,14 @@ type PipelineFeedPayload = {
   leads?: ApiLead[];
   entitlements?: PipelineEntitlements;
   cache_pending?: boolean;
+};
+type SubmittedUrlMatchPayload = {
+  submitted_url?: string;
+  submitted_domain?: string;
+  matching_mode?: "matched" | "no_match" | "no_profile";
+  robot_capabilities?: { type?: string; use_case?: string; capabilities?: string[]; profile_score?: number };
+  match_count?: number;
+  leads?: ApiLead[];
 };
 
 async function fetchPipelineLeadsFallback(base: string, headers?: HeadersInit): Promise<ApiLead[]> {
@@ -966,6 +1171,63 @@ function PipelineScoreBadge({
   );
 }
 
+function workflowFamilyLabel(family?: string): string {
+  if (!family || family === "unknown") return "";
+  return family.replace(/_/g, " ");
+}
+
+function WorkMatchBadge({
+  deal,
+  size = "sm",
+}: {
+  deal: Pick<
+    Deal,
+    | "workMatch"
+    | "workMatchLabel"
+    | "workMatchManufacturer"
+    | "workflowFamily"
+    | "workHardBlockers"
+    | "comparableDeployment"
+    | "hermesQualify"
+  >;
+  size?: "sm" | "lg";
+}) {
+  const wm = deal.workMatch;
+  const blockers = deal.workHardBlockers || [];
+  const family = workflowFamilyLabel(deal.workflowFamily);
+  if (wm == null && !family) return null;
+  const blocked = blockers.length > 0;
+  const label =
+    wm != null
+      ? `WM ${Math.round(wm)}`
+      : family
+        ? `Work`
+        : null;
+  if (!label) return null;
+  const titleParts = [
+    wm != null ? `Work Match ${Math.round(wm)}%${deal.workMatchLabel ? ` (${deal.workMatchLabel})` : ""}` : null,
+    family ? `Workflow: ${family}` : null,
+    deal.workMatchManufacturer ? `Best robot: ${deal.workMatchManufacturer}` : null,
+    deal.hermesQualify?.automation_fit != null
+      ? `Hermes automation fit ${Math.round(Number(deal.hermesQualify.automation_fit))}`
+      : null,
+    blocked ? `Blockers: ${blockers.join(", ")}` : null,
+    deal.comparableDeployment?.robot
+      ? `Evidence: ${deal.comparableDeployment.robot} @ ${deal.comparableDeployment.customer || "site"}`
+      : null,
+  ].filter(Boolean);
+  const color = blocked ? "#b45309" : wm != null && wm >= 70 ? "#047857" : wm != null && wm >= 50 ? "#0369a1" : "#57534e";
+  return (
+    <div
+      className={size === "lg" ? "pipeline-score-badge pipeline-score-badge-lg" : "pipeline-score-badge"}
+      style={{ borderColor: color, color, minWidth: size === "lg" ? undefined : "2.75rem" }}
+      title={titleParts.join(" · ")}
+    >
+      <span className="text-[10px] font-bold tracking-tight">{label}</span>
+    </div>
+  );
+}
+
 function dealToShareLead(deal: Deal) {
   return {
     id: deal.id,
@@ -1087,8 +1349,10 @@ function PipelineRobotPriorityPanel({ deal }: { deal: Deal }) {
   const hasHumanoid =
     deal.humanoidPilotTier &&
     ["ACTIVE_PILOT", "PILOT_INTENT"].includes(String(deal.humanoidPilotTier));
+  const nonUsCount = Number(deal.humanoidNonUsVendorCount || 0);
+  const nonUsModels = (deal.humanoidNonUsVendorModels || []).filter(Boolean);
 
-  if (!priorityLine && robotTypes.length === 0 && !hasHumanoid) return null;
+  if (!priorityLine && robotTypes.length === 0 && !hasHumanoid && !deal.humanoidNonUsVendorFlag) return null;
 
   const priorityPrefix = priorityLine?.split(":")[0]?.trim();
   const priorityBody =
@@ -1126,6 +1390,13 @@ function PipelineRobotPriorityPanel({ deal }: { deal: Deal }) {
         <p className="mt-2 text-[11px] text-emerald-800">
           <span className="font-semibold">Humanoid signal:</span>{" "}
           {cleanAndClampText(deal.humanoidPilotLabel || "Active pilot intent", 120)}
+        </p>
+      )}
+      {deal.humanoidNonUsVendorFlag && (
+        <p className="mt-2 text-[11px] text-amber-800">
+          <span className="font-semibold">Origin risk:</span>{" "}
+          {nonUsCount > 0 ? `${nonUsCount} non-US humanoid vendor model${nonUsCount === 1 ? "" : "s"} detected` : "Non-US humanoid vendor detected"}
+          {nonUsModels.length > 0 ? ` (${cleanAndClampText(nonUsModels.slice(0, 3).join(", "), 140)})` : ""}
         </p>
       )}
     </div>
@@ -1285,7 +1556,7 @@ function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
                   Open profile
                 </a>
                 <p className="mt-1 text-[10px] text-slate-600">
-                  {cleanAndClampText(linkedinBest.person || linkedinBest.title || "Best match", 80)}
+                  {cleanAndClampText(linkedinBest.person || linkedinBest.person_title || "Best match", 80)}
                 </p>
               </>
             ) : (
@@ -1353,7 +1624,77 @@ export default function Pipeline() {
   const { session } = useAuth();
   const [, setLocation] = useLocation();
   const search = useSearch();
+  const [storageSubmittedUrl, setStorageSubmittedUrl] = useState("");
+  const submittedUrlFromQuery = useMemo(() => {
+    const params = new URLSearchParams(search);
+    return (params.get("url") || "").trim();
+  }, [search]);
+  const submittedSrcFromQuery = useMemo(() => {
+    const params = new URLSearchParams(search);
+    return (params.get("src") || "").trim();
+  }, [search]);
+  const viewFromQuery = useMemo(() => {
+    const params = new URLSearchParams(search);
+    return (params.get("view") || "").trim().toLowerCase();
+  }, [search]);
+  const activationIdFromQuery = useMemo(() => {
+    const value = Number(new URLSearchParams(search).get("activation"));
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }, [search]);
+  const arrivedFromSignalActivation = submittedSrcFromQuery === "signal_activation";
+  const arrivedFromResultsScan =
+    submittedSrcFromQuery === "results_scan" || submittedSrcFromQuery === "results_next_step";
+  /** URL submit searches stay on matched prospects — never default to the global market queue. */
+  const preferUrlMatchedPipeline = Boolean(submittedUrlFromQuery || arrivedFromResultsScan);
+
+  // Recovery: signup/OAuth sometimes landed on Pipeline Step 5 without the 5-lead Results review.
+  useEffect(() => {
+    if (!arrivedFromResultsScan) return;
+    if (!submittedUrlFromQuery) return;
+    if (hasReviewedFiveLeads()) return;
+    clearBuild15UnlockFlags();
+    const dest = workflowResultsPath(
+      { company_url: submittedUrlFromQuery, src: "pipeline_needs_5_review" },
+      `/results?url=${encodeURIComponent(submittedUrlFromQuery)}&limit=5`,
+    );
+    window.location.replace(dest);
+  }, [arrivedFromResultsScan, submittedUrlFromQuery]);
+
+  useEffect(() => {
+    if (submittedUrlFromQuery) {
+      setStorageSubmittedUrl("");
+      return;
+    }
+    setStorageSubmittedUrl(getSubmittedUrlFromStorage());
+  }, [submittedUrlFromQuery]);
+
   const deepLinkLeadId = useMemo(() => resolvePipelineLeadId(search), [search]);
+  const submittedUrl = submittedUrlFromQuery || storageSubmittedUrl;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (submittedUrlFromQuery || !storageSubmittedUrl) return;
+    const params = new URLSearchParams(search);
+    params.set("url", storageSubmittedUrl);
+    if (!submittedSrcFromQuery) params.set("src", "home_url_submit_recovered");
+    const next = `/pipeline?${params.toString()}`;
+    window.history.replaceState({}, "", next);
+    setLocation(next);
+  }, [search, setLocation, storageSubmittedUrl, submittedSrcFromQuery, submittedUrlFromQuery]);
+  const submittedHostname = useMemo(() => {
+    if (!submittedUrl) return "";
+    try {
+      const normalized = submittedUrl.includes("://") ? submittedUrl : `https://${submittedUrl}`;
+      return new URL(normalized).hostname.toLowerCase().replace(/^www\./, "");
+    } catch {
+      return submittedUrl.toLowerCase().replace(/^www\./, "").split("/")[0].split("?")[0].trim();
+    }
+  }, [submittedUrl]);
+  const [scopeToSubmittedUrl, setScopeToSubmittedUrl] = useState(false);
+  const [submittedUrlMatches, setSubmittedUrlMatches] = useState<ApiLead[]>([]);
+  const [submittedUrlMatchLoading, setSubmittedUrlMatchLoading] = useState(() => Boolean(submittedUrl));
+  const [submittedUrlMatchError, setSubmittedUrlMatchError] = useState(false);
+  const [submittedUrlWeakProfile, setSubmittedUrlWeakProfile] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [rotationPool, setRotationPool] = useState<Deal[]>([]);
@@ -1406,7 +1747,97 @@ export default function Pipeline() {
   const [crmStageByCompanyId, setCrmStageByCompanyId] = useState<Record<number, string>>({});
   const [crmAccountIdByCompanyId, setCrmAccountIdByCompanyId] = useState<Record<number, string>>({});
   const [savedLeadCount, setSavedLeadCount] = useState(0);
-  const [firstSaveGuideOpen, setFirstSaveGuideOpen] = useState(false);
+  /** After Results: show instructions first; CTA unlocks the 15-lead URL-matched pipeline. */
+  const [build25Started, setBuild25Started] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      // Stale unlock flags must not skip Step 3 (5 sales leads) / Step 4.
+      if (!hasReviewedFiveLeads()) return false;
+      return sessionStorage.getItem("rfr_build15_started") === "1" || sessionStorage.getItem("rfr_build25_started") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const step3Intro = arrivedFromResultsScan && !build25Started;
+  const [workspaceProfile, setWorkspaceProfile] = useState<RobotWorkspaceProfile>(() => {
+    const existing = readRobotWorkspaceProfile();
+    return {
+      company_name: existing?.company_name || "",
+      category: existing?.category || "",
+      icp: existing?.icp || "",
+      company_url: existing?.company_url || undefined,
+    };
+  });
+  const workspaceProfileComplete = isRobotWorkspaceProfileComplete(workspaceProfile);
+  const [matchIndustryKey, setMatchIndustryKey] = useState(() => {
+    const existing = readRobotWorkspaceProfile();
+    return isRobotWorkspaceProfileComplete(existing) ? existing!.icp : "";
+  });
+
+  const pipelineTopRef = useRef<HTMLDivElement | null>(null);
+
+  // Always land at the top of the pipeline page — never mid-page or restored scroll.
+  // Production previously scrolled to #pipeline-step3-guide; keep forcing top until layout settles.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
+    } catch {
+      /* ignore */
+    }
+    // Named section hashes pull the viewport mid-page; keep numeric lead hashes (#123).
+    try {
+      const rawHash = window.location.hash.replace(/^#/, "").trim();
+      if (rawHash && !/^\d+$/.test(rawHash)) {
+        const clean = `${window.location.pathname}${window.location.search}`;
+        window.history.replaceState(window.history.state, "", clean);
+      }
+    } catch {
+      /* ignore */
+    }
+    const jumpTop = () => {
+      pipelineTopRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+    jumpTop();
+    const timers = [0, 50, 150, 400, 900, 1600].map((ms) => window.setTimeout(jumpTop, ms));
+    const onLoad = () => jumpTop();
+    window.addEventListener("load", onLoad);
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      window.removeEventListener("load", onLoad);
+    };
+  }, [search, step3Intro, build25Started]);
+
+  const pipelineLeadsLoading =
+    loadingLeads || serverSearchLoading || submittedUrlMatchLoading;
+  const [loadCountdown, setLoadCountdown] = useState(12);
+  const [loadUiVisible, setLoadUiVisible] = useState(true);
+  const loadStartedAtRef = useRef(Date.now());
+  useEffect(() => {
+    const MIN_VISIBLE_MS = 3500;
+    if (pipelineLeadsLoading) {
+      loadStartedAtRef.current = Date.now();
+      setLoadUiVisible(true);
+      setLoadCountdown(12);
+      const id = window.setInterval(() => {
+        setLoadCountdown((s) => (s > 0 ? s - 1 : 0));
+      }, 1000);
+      return () => window.clearInterval(id);
+    }
+    const elapsed = Date.now() - loadStartedAtRef.current;
+    const remain = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    const t = window.setTimeout(() => {
+      setLoadUiVisible(false);
+      setLoadCountdown(12);
+    }, remain);
+    return () => window.clearTimeout(t);
+  }, [pipelineLeadsLoading, submittedUrl, matchIndustryKey]);
+
   const [showActivationChecklist, setShowActivationChecklist] = useState(false);
   const [draftCopiedForActivation, setDraftCopiedForActivation] = useState(false);
   const [firstThreeActions, setFirstThreeActions] = useState<FirstThreeActionsState>(() => readFirstThreeActions());
@@ -1432,6 +1863,85 @@ export default function Pipeline() {
   const byIdBreakerOpenUntilRef = useRef(0);
   const outreachDraftRef = useRef<HTMLDivElement | null>(null);
   const firstThreePrevRef = useRef<FirstThreeActionsState>(firstThreeActions);
+
+  useEffect(() => {
+    if (!arrivedFromSignalActivation) return;
+    setFirstThreeActions((prev) => ({
+      ...prev,
+      started: true,
+      saved: true,
+      dismissed: false,
+    }));
+  }, [arrivedFromSignalActivation]);
+
+  useEffect(() => {
+    if (!activationIdFromQuery || !activations.some((activation) => activation.id === activationIdFromQuery)) return;
+    setSelectedActivationId(activationIdFromQuery);
+  }, [activationIdFromQuery, activations]);
+
+  useEffect(() => {
+    // URL submit → matched prospects only (not the global market queue).
+    if (submittedHostname || preferUrlMatchedPipeline) {
+      setScopeToSubmittedUrl(true);
+    }
+  }, [preferUrlMatchedPipeline, submittedHostname]);
+  useEffect(() => {
+    if (!submittedUrl) {
+      setSubmittedUrlMatches([]);
+      setSubmittedUrlMatchLoading(false);
+      setSubmittedUrlMatchError(false);
+      setSubmittedUrlWeakProfile(false);
+      return;
+    }
+    let cancelled = false;
+    const base = getPublicReadApiBase();
+    setSubmittedUrlMatchError(false);
+    setSubmittedUrlMatchLoading(true);
+    const industries = icpIndustryTokens(matchIndustryKey);
+    const industryQs = industries.length
+      ? `&industries=${encodeURIComponent(industries.join(","))}`
+      : "";
+    void fetchWithTimeoutRetry(
+      `${base}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=${BUILD_PIPELINE_TARGET}${industryQs}`,
+      publicFetchInit(),
+      PIPELINE_TIMEOUT,
+      { retries: 1, retryDelayMs: 800 },
+    )
+      .then(async (res) => {
+        if (cancelled) return;
+        if (!res.ok) {
+          setSubmittedUrlMatchError(true);
+          return;
+        }
+        const payload = (await res.json()) as SubmittedUrlMatchPayload;
+        if (cancelled) return;
+        const capabilityType = String(payload.robot_capabilities?.type || "").toLowerCase();
+        const capabilityCount = Array.isArray(payload.robot_capabilities?.capabilities)
+          ? payload.robot_capabilities!.capabilities!.length
+          : 0;
+        const profileScore = Number(payload.robot_capabilities?.profile_score ?? 0);
+        const weakProfile =
+          payload.matching_mode === "no_profile" ||
+          ((capabilityType === "" || capabilityType === "unknown") && capabilityCount === 0 && profileScore < 50);
+
+        setSubmittedUrlMatchError(false);
+        setSubmittedUrlWeakProfile(weakProfile);
+        setSubmittedUrlMatches(weakProfile ? [] : Array.isArray(payload.leads) ? payload.leads : []);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          // Keep last successful scoped result set if present; transient network aborts
+          // during dev-server reload should not be shown as "no match".
+          setSubmittedUrlMatchError(true);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSubmittedUrlMatchLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [submittedUrl, matchIndustryKey]);
   const firstThreeEnteredRef = useRef<FirstThreeStep | null>(null);
   const firstThreeAbandonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstThreeAbandonSignaturesRef = useRef<Set<string>>(new Set());
@@ -2094,7 +2604,19 @@ export default function Pipeline() {
   const activeSearchQuery = industryQuery.trim() || (filter !== "All" ? filter : "");
   const hasActiveSearch = Boolean(activeSearchQuery);
   const pipelineSource = rotationPool.length > deals.length ? rotationPool : deals;
-  const previewLimit = entitlements?.pipeline_limit ?? 12;
+  const previewLimit = entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE;
+  const freeLeadCap = Math.min(entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE, PIPELINE_LIMIT_FREE);
+  const freeVisibleLeads = Math.min(entitlements?.visible_count ?? deals.length, freeLeadCap);
+  const freeLeadsRemaining = Math.max(0, freeLeadCap - freeVisibleLeads);
+  const freeUpgradeMessage =
+    freeLeadsRemaining <= 2
+      ? `You have viewed ${freeVisibleLeads}/${freeLeadCap} leads. Upgrade to Pro to unlock more buyers and automate your sales pipeline.`
+      : `Ready to scale beyond ${freeLeadCap} leads? Upgrade to Pro to unlock more buyers and automate your sales pipeline.`;
+  const sessionDisplayName =
+    session?.user?.user_metadata?.full_name
+    || session?.user?.user_metadata?.name
+    || session?.user?.email?.split("@")[0]
+    || "there";
   const rotationSource = useMemo(() => {
     if (hasActiveSearch || qualityControlsActive || showKanban) return pipelineSource;
     if (panelPlan === "anonymous" && pipelineSource.length > previewLimit) {
@@ -2105,9 +2627,18 @@ export default function Pipeline() {
   const rotatedDeals = useMemo(() => {
     // Bypass the rotation window while a deep-link lead is active so the full
     // deals array is used as listDeals and the CRM panel stays stable.
-    if (hasActiveSearch || qualityControlsActive || showKanban || deepLinkLeadId != null) return null;
+    // Signed-in / trial panels also skip the anonymous rotation window.
+    if (
+      hasActiveSearch ||
+      qualityControlsActive ||
+      showKanban ||
+      deepLinkLeadId != null ||
+      panelPlan !== "anonymous"
+    ) {
+      return null;
+    }
     return buildRotatedPipelineDeals(rotationSource, rotateOffset);
-  }, [hasActiveSearch, qualityControlsActive, showKanban, deepLinkLeadId, rotationSource, rotateOffset]);
+  }, [hasActiveSearch, qualityControlsActive, showKanban, deepLinkLeadId, panelPlan, rotationSource, rotateOffset]);
   const listDeals = rotatedDeals ?? deals;
   const dealQualityScore = (deal: Deal) => Number(deal.leadQuality?.overall_score ?? 0);
   const dealBand = (deal: Deal) => String(deal.confidenceBand || deal.leadQuality?.confidence_band || "").toLowerCase();
@@ -2136,6 +2667,9 @@ export default function Pipeline() {
       });
     }
 
+    if (panelPlan === "free" && next.length > PIPELINE_LIMIT_FREE) {
+      return next.slice(0, PIPELINE_LIMIT_FREE);
+    }
     return next;
   }, [
     listDeals,
@@ -2144,12 +2678,33 @@ export default function Pipeline() {
     clientSearchMatches,
     qualityBandFilter,
     qualitySort,
+    panelPlan,
   ]);
+
+  const matchedScopedDeals = useMemo(
+    () => mapPipelineRows(submittedUrlMatches, crmStageByCompanyId).slice(0, BUILD_PIPELINE_TARGET),
+    [submittedUrlMatches, crmStageByCompanyId],
+  );
+  const scopeMatchesCount = matchedScopedDeals.length;
+  const scopedNoMatches = scopeToSubmittedUrl && !submittedUrlMatchLoading && !submittedUrlMatchError && scopeMatchesCount === 0;
+  const displayedDeals = useMemo(
+    () => (scopeToSubmittedUrl ? matchedScopedDeals : filtered),
+    [filtered, matchedScopedDeals, scopeToSubmittedUrl],
+  );
 
   useEffect(() => {
     // Pause the rotation offset while a deep-link lead is being displayed so
     // the rotation window doesn't shift under the CRM panel.
-    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused || deepLinkLeadId != null) return;
+    if (
+      hasActiveSearch ||
+      qualityControlsActive ||
+      showKanban ||
+      rotationPaused ||
+      deepLinkLeadId != null ||
+      step3Intro
+    ) {
+      return;
+    }
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
@@ -2159,39 +2714,176 @@ export default function Pipeline() {
       PIPELINE_LEAD_READ_MS,
     );
     return () => window.clearInterval(timer);
-  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationPaused, deepLinkLeadId, rotationSource, pipelineSource.length, panelPlan, previewLimit]);
+  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationPaused, deepLinkLeadId, rotationSource, pipelineSource.length, panelPlan, previewLimit, step3Intro]);
 
   // Keep CRM detail panel in sync with the rotating spotlight lead.
   useEffect(() => {
-    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused || deepLinkLeadId != null) return;
+    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused || deepLinkLeadId != null || step3Intro) return;
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
-    if (!canRotate || filtered.length === 0) return;
-    setSelectedId(filtered[0].id);
+    if (!canRotate || displayedDeals.length === 0) return;
+    setSelectedId(displayedDeals[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- advance panel only on rotation tick
-  }, [rotateOffset]);
-
-  useEffect(() => {
-    if (!session?.access_token || savedLeadCount !== 0 || loadingLeads) return;
-    if (!shouldShowFirstSaveGuide()) return;
-    const leadId = selectedId ?? filtered[0]?.id;
-    if (leadId == null || !filtered.some((d) => d.id === leadId)) return;
-    const delay = isFreshSignup() ? 400 : 1200;
-    const timer = window.setTimeout(() => setFirstSaveGuideOpen(true), delay);
-    return () => window.clearTimeout(timer);
-  }, [session?.access_token, savedLeadCount, loadingLeads, filtered, selectedId]);
+  }, [rotateOffset, step3Intro]);
 
   const pendingDeepLink =
     selectedId != null &&
     deepLinkLeadId === selectedId &&
-    !filtered.some((d) => d.id === selectedId);
+    !displayedDeals.some((d) => d.id === selectedId);
   const effectiveSelectedId =
-    selectedId != null && (filtered.some((d) => d.id === selectedId) || pendingDeepLink)
+    selectedId != null && (displayedDeals.some((d) => d.id === selectedId) || pendingDeepLink)
       ? selectedId
-      : (filtered[0]?.id ?? null);
-  const selected = filtered.find((d) => d.id === effectiveSelectedId) ?? null;
+      : (displayedDeals[0]?.id ?? null);
+  const selected =
+    displayedDeals.find((d) => d.id === effectiveSelectedId)
+    ?? (pendingDeepLink && effectiveSelectedId != null
+      ? deals.find((d) => d.id === effectiveSelectedId) ?? null
+      : null);
   const selectedActivation = activations.find((a) => a.id === selectedActivationId) ?? activations[0] ?? null;
+  const isSignedIn = Boolean(session?.access_token);
+  const isFirstWorkspaceRun = isSignedIn && savedLeadCount === 0;
+  const hasSavedLead = savedLeadCount > 0;
+  const build25Progress = Math.min(savedLeadCount, BUILD_PIPELINE_TARGET);
+  const nextStepsTitle = arrivedFromResultsScan
+    ? !build25Started
+      ? "Step 4 · Provide customer name and information"
+      : "Step 5 of 5 · 15 sales leads"
+    : "Next step";
+  const nextStepsHeadline = arrivedFromResultsScan
+    ? !build25Started
+      ? "Provide customer name and information to unlock 15 sales leads"
+      : "Curate sales leads & run outreach"
+    : "Pick a lead → save it → copy draft → send";
+  const nextStepsItems = arrivedFromResultsScan
+    ? !build25Started
+      ? [
+          "Submit URL → sign up → review 5 sales leads (done).",
+          "Provide customer name and information (company, category, ICP).",
+          `Unlock ${BUILD_PIPELINE_TARGET} matched sales leads — not the global market queue.`,
+        ]
+      : [
+          `1. Save strong fits (${build25Progress}/${BUILD_PIPELINE_TARGET}).`,
+          "2. Copy Cal’s outreach draft.",
+          "3. Send, then continue shortlisting.",
+        ]
+    : submittedHostname
+    ? scopedNoMatches
+      ? [
+          `Widen the search: try the homepage URL for ${submittedHostname}.`,
+          "Switch to full pipeline results and pick the strongest HOT lead.",
+          isSignedIn
+            ? "Save that lead, copy the outreach draft, and send."
+            : "Start a free workspace, save that lead, then copy and send the draft.",
+        ]
+      : isFirstWorkspaceRun
+        ? [
+            `Pick the best buyer related to ${submittedHostname} from the list (left).`,
+            "Click Save to put them in your working pipeline.",
+            "Copy the outreach draft in the detail panel, then send.",
+          ]
+        : isSignedIn && hasSavedLead
+          ? [
+              `Keep the strongest ${submittedHostname} matches in scope.`,
+              "Advance your saved lead or save one more high-fit account.",
+              "Copy the draft from the detail panel and send your next touch.",
+            ]
+        : [
+            `Review matches for ${submittedHostname} and pick one HOT lead.`,
+            "Save it to your workspace (or start free to unlock save).",
+            "Copy the outreach draft and keep moving in the panel on the right.",
+          ]
+    : isFirstWorkspaceRun
+      ? [
+          "Select the highest-fit HOT lead in the list.",
+          "Save it — that opens your working pipeline.",
+          "Copy the outreach draft and send your first message.",
+        ]
+      : isSignedIn && hasSavedLead
+        ? [
+            "Open your saved lead first, then add the next best account.",
+            "Copy the outreach draft from the details panel.",
+            "Send, then track replies in Inbox.",
+          ]
+      : [
+          "Select the highest-fit HOT lead in the list.",
+          "Save it (or start free workspace to unlock save + drafts).",
+          "Copy the outreach draft and send from the detail panel.",
+        ];
+  const canSaveSelected = Boolean(selected) && (!isSignedIn || !crmAccountIdByCompanyId[selected!.id]);
+  const canCopySelectedDraft = Boolean(selected?.outreachBody || selected?.sellerBrief);
+  const canOpenSelectedDraft = Boolean(selected?.outreachBody || selected?.sellerBrief) && showKanban && Boolean(session?.access_token);
+  /** Next unmatched lead in the Step 5 queue — keep Save · n/15 alive until the goal is hit. */
+  const nextUnsavedDeal = useMemo(() => {
+    if (!arrivedFromResultsScan || !build25Started || !isSignedIn) return null;
+    if (build25Progress >= BUILD_PIPELINE_TARGET) return null;
+    return displayedDeals.find((d) => !crmAccountIdByCompanyId[d.id]) ?? null;
+  }, [
+    arrivedFromResultsScan,
+    build25Started,
+    isSignedIn,
+    build25Progress,
+    displayedDeals,
+    crmAccountIdByCompanyId,
+  ]);
+  const step5SaveTarget = (canSaveSelected && selected ? selected : nextUnsavedDeal) ?? null;
+  // Step 5 state machine: save → copy → send → save next (until 15), never dead-end on a vague CRM scroll.
+  const step5Phase: "unlock" | "save" | "copy" | "send" | "done" = !arrivedFromResultsScan
+    ? "done"
+    : !build25Started
+      ? "unlock"
+      : firstThreeActions.saved && !firstThreeActions.copied
+        ? "copy"
+        : firstThreeActions.copied && !firstThreeActions.sent
+          ? "send"
+          : step5SaveTarget
+            ? "save"
+            : "done";
+  const nextStepPrimaryLabel = arrivedFromResultsScan
+    ? step5Phase === "unlock"
+      ? !workspaceProfileComplete
+        ? "Save customer name & information"
+        : isSignedIn
+          ? `Open your ${BUILD_PIPELINE_TARGET} sales leads`
+          : `Create free account · unlock ${BUILD_PIPELINE_TARGET} sales leads`
+      : step5Phase === "copy"
+        ? "Copy outreach draft"
+        : step5Phase === "send"
+          ? selected?.contact
+            ? "Send outreach"
+            : "Add contact email, then send"
+          : step5Phase === "save" && step5SaveTarget
+            ? `Save lead · ${build25Progress}/${BUILD_PIPELINE_TARGET}`
+            : canCopySelectedDraft
+              ? "Copy outreach draft"
+              : selected
+                ? "Open lead brief on the right"
+                : "Pick a lead to curate"
+    : !isSignedIn
+    ? "Next step: Start free workspace"
+    : canSaveSelected
+      ? "Next step: Save selected lead"
+      : canCopySelectedDraft
+        ? "Next step: Copy outreach draft"
+        : canOpenSelectedDraft
+          ? "Next step: Open selected lead"
+          : selected
+            ? "Next step: Review selected lead"
+            : "Next step: Pick a HOT lead";
+
+  const nextStepCoachText = arrivedFromResultsScan && build25Started
+    ? step5Phase === "copy"
+      ? "Lead saved. Next: pick a lead, copy the outreach draft, paste into your email, and send."
+      : step5Phase === "send"
+        ? selected?.contact
+          ? `Draft ready. Next: send outreach, then keep saving until you hit ${BUILD_PIPELINE_TARGET}.`
+          : "Draft ready. Add a contact email in the right panel, send, then keep saving leads."
+        : step5Phase === "save" && step5SaveTarget
+          ? `Next: save a lead (${build25Progress + 1}/${BUILD_PIPELINE_TARGET}), then copy the draft and send.`
+          : build25Progress >= BUILD_PIPELINE_TARGET
+            ? "All 15 slots filled. Keep sending from saved leads, or open CRM to track replies."
+            : "Pick a lead on the left, then use the yellow button for the next action."
+    : null;
 
   // Manual lead click = engagement. Pin the selection and stop auto-rotation so the
   // visitor can finish reading the outreach draft before we ask them to sign up.
@@ -2235,8 +2927,26 @@ export default function Pipeline() {
   };
 
   const copyDraft = () => {
-    if (!selected?.outreachBody) return;
-    navigator.clipboard.writeText(`Subject: ${selected.outreachSubject}\n\n${selected.outreachBody}`);
+    if (!selected) return;
+    const brief = selected.sellerBrief;
+    const briefText = brief
+      ? [
+          brief.headline || "",
+          brief.whyNow ? `Why now: ${brief.whyNow}` : "",
+          brief.pitch ? `Pitch: ${brief.pitch}` : "",
+          brief.robotFit ? `Robot fit: ${brief.robotFit}` : "",
+          brief.nextStep ? `Next: ${brief.nextStep}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : "";
+    const emailText =
+      selected.outreachBody
+        ? `Subject: ${selected.outreachSubject || ""}\n\n${selected.outreachBody}`
+        : "";
+    const payload = briefText || emailText;
+    if (!payload) return;
+    navigator.clipboard.writeText(payload);
     setCopied(true);
     setDraftCopiedForActivation(true);
     setFirstThreeActions((prev) => ({ ...prev, started: true, copied: true, dismissed: false }));
@@ -2244,15 +2954,30 @@ export default function Pipeline() {
       lead_id: selected.id,
       company: selected.company,
       stage: selected.stage,
+      artifact: briefText ? "seller_brief" : "buyer_email",
     });
-    toast.success("Draft copied to clipboard");
+    toast.success(briefText ? "Seller brief copied" : "Draft copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
   };
 
   const spotlightOutreachDraft = () => {
+    const panel = outreachDraftRef.current;
+    if (!panel) return;
     setOutreachDraftSpotlight(true);
-    outreachDraftRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.setTimeout(() => setOutreachDraftSpotlight(false), 1800);
+    panel.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => {
+      panel.scrollIntoView({ behavior: "smooth", block: "center" });
+      panel.focus({ preventScroll: true });
+      panel.animate(
+        [
+          { transform: "scale(1)", boxShadow: "0 0 0 rgba(16, 185, 129, 0)" },
+          { transform: "scale(1.015)", boxShadow: "0 0 0 8px rgba(16, 185, 129, 0.18)" },
+          { transform: "scale(1)", boxShadow: "0 0 0 0 rgba(16, 185, 129, 0)" },
+        ],
+        { duration: 900, easing: "ease-out" },
+      );
+    }, 140);
+    window.setTimeout(() => setOutreachDraftSpotlight(false), 2400);
   };
 
   const generateProposalForDeal = async (deal: Deal) => {
@@ -2321,7 +3046,10 @@ export default function Pipeline() {
         }
         throw new Error(errText);
       }
-      setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Qualified", updatedAt: "just now" } : d)));
+      const account = (await createResponse.json()) as { id: string; outreach_stage?: string | null };
+      setCrmAccountIdByCompanyId((prev) => ({ ...prev, [deal.id]: account.id }));
+      setCrmStageByCompanyId((prev) => ({ ...prev, [deal.id]: account.outreach_stage || "new" }));
+      setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Discovered", updatedAt: "just now" } : d)));
       // Funnel #20: activation — first saved lead (fires once per browser).
       trackFirstSave({ company: deal.company, industry: deal.industry || null });
       trackMarketingEvent("pipeline_save_success", {
@@ -2330,16 +3058,151 @@ export default function Pipeline() {
         industry: deal.industry || null,
         stage_before: deal.stage,
       });
-      setFirstThreeActions((prev) => ({ ...prev, started: true, saved: true, dismissed: false }));
+      setFirstThreeActions((prev) => ({
+        ...prev,
+        started: true,
+        saved: true,
+        // Reset copy/send so each newly saved lead gets a full save → copy → send loop.
+        copied: false,
+        sent: false,
+        dismissed: false,
+      }));
       setSavedLeadCount((count) => count + 1);
       setShowActivationChecklist(true);
-      toast.success("Lead saved — develop with SIGNAL and send from the panel on the right.");
+      setDraftCopiedForActivation(false);
+      const nextHint = deal.outreachBody || deal.sellerBrief
+        ? "Next: pick a lead, copy the outreach draft, paste into your email, and send."
+        : "Next: pick a lead on the right, review the brief, then copy and send.";
+      toast.success(`Lead saved. ${nextHint}`);
+      // Keep motion going — don't leave the user staring at a finished CTA.
+      window.setTimeout(() => {
+        spotlightOutreachDraft();
+        document.getElementById("pipeline-outreach-next")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 120);
       return true;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save lead with SIGNAL");
       return false;
     } finally {
       setAdvancingLeadId(null);
+    }
+  };
+
+  const startBuild25Pipeline = () => {
+    setBuild25Started(true);
+    try {
+      sessionStorage.setItem("rfr_build15_started", "1");
+    } catch {
+      /* ignore */
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    toast.success(`Matched pipeline unlocked — save up to ${BUILD_PIPELINE_TARGET} leads scored against your URL.`);
+  };
+
+  const persistWorkspaceProfile = (): boolean => {
+    if (!isRobotWorkspaceProfileComplete(workspaceProfile)) {
+      toast.error("Add company name, robot category, and ICP before unlocking.");
+      return false;
+    }
+    const saved = writeRobotWorkspaceProfile({
+      ...workspaceProfile,
+      company_url: submittedUrl || workspaceProfile.company_url,
+    });
+    setWorkspaceProfile(saved);
+    setMatchIndustryKey(saved.icp);
+    return true;
+  };
+
+  const matchedPipelineSignupHref = (() => {
+    const params = new URLSearchParams();
+    params.set("src", "results_scan");
+    if (submittedUrl) params.set("url", submittedUrl);
+    if (selected?.id != null) params.set("lead", String(selected.id));
+    return `/signup?next=${encodeURIComponent(`/pipeline?${params.toString()}`)}&src=pipeline_matched_unlock&company_url=${encodeURIComponent(submittedUrl || "")}`;
+  })();
+
+  const startFreeWorkspaceHref = (() => {
+    if (selected?.id != null) {
+      const nextParams: Record<string, string> = {};
+      if (submittedUrl) nextParams.url = submittedUrl;
+      if (arrivedFromResultsScan) nextParams.src = "results_scan";
+      return signupHrefForLead(selected.id, selected.company, {
+        src: "pipeline_next_step",
+        nextParams,
+      });
+    }
+    const params = new URLSearchParams();
+    params.set("src", arrivedFromResultsScan ? "results_scan" : "pipeline_next_step");
+    if (submittedUrl) params.set("url", submittedUrl);
+    return `/signup?next=${encodeURIComponent(`/pipeline?${params.toString()}`)}&src=pipeline_next_step`;
+  })();
+
+  const runNextStepPrimary = () => {
+    if (arrivedFromResultsScan && !build25Started) {
+      if (!persistWorkspaceProfile()) return;
+      if (!isSignedIn) {
+        window.location.href = matchedPipelineSignupHref;
+        return;
+      }
+      startBuild25Pipeline();
+      return;
+    }
+    if (arrivedFromResultsScan && build25Started) {
+      if (step5Phase === "copy" && selected) {
+        if (canCopySelectedDraft) {
+          copyDraft();
+          toast.success("Draft copied. Next: paste into your email and send.");
+        }
+        spotlightOutreachDraft();
+        return;
+      }
+      if (step5Phase === "send" && selected) {
+        if (selected.contact && selected.outreachBody && selected.stage !== "Outreach Sent") {
+          void sendOneLead(selected);
+          return;
+        }
+        spotlightOutreachDraft();
+        toast.message(
+          selected.contact
+            ? "Open the right panel and click Send outreach."
+            : "Add a contact email in the right panel, then send.",
+        );
+        return;
+      }
+      if (step5Phase === "save" && step5SaveTarget) {
+        if (selected?.id !== step5SaveTarget.id) {
+          selectLead(step5SaveTarget.id);
+        }
+        void handleSaveLead(step5SaveTarget);
+        return;
+      }
+      if (!selected) {
+        document.getElementById("pipeline-leads")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      if (canCopySelectedDraft) {
+        copyDraft();
+        spotlightOutreachDraft();
+        return;
+      }
+      spotlightOutreachDraft();
+      return;
+    }
+    if (!isSignedIn) {
+      // Navigation-only — do not call URL-submit / scan handlers from this CTA.
+      window.location.href = startFreeWorkspaceHref;
+      return;
+    }
+    if (canSaveSelected && selected) {
+      void handleSaveLead(selected);
+      return;
+    }
+    if (canCopySelectedDraft) {
+      copyDraft();
+      return;
+    }
+    if (canOpenSelectedDraft) {
+      spotlightOutreachDraft();
     }
   };
 
@@ -2693,20 +3556,42 @@ export default function Pipeline() {
     }
   };
 
-  const dbTotal = summary?.companies_in_database ?? summary?.total ?? (loadingSummary ? undefined : filtered.length);
-  const hotDeals = summary?.hot ?? (loadingSummary ? undefined : filtered.filter((d) => userBucketForDeal(d) === "Hot Leads").length);
-  const warmDeals = summary?.warm ?? (loadingSummary ? undefined : filtered.filter((d) => userBucketForDeal(d) === "Warm Leads").length);
-  const visibleDeals = filtered.length;
-  const filteredHot = filtered.filter((d) => userBucketForDeal(d) === "Hot Leads").length;
-  const filteredWarm = filtered.filter((d) => userBucketForDeal(d) === "Warm Leads").length;
+  // Market totals always come from /api/leads/summary (or pipeline.summary) — never the URL-matched slice.
+  const dbTotal = summary?.companies_in_database ?? summary?.total;
+  const hotDeals = summary?.hot;
+  const warmDeals = summary?.warm;
+  const visibleDeals = displayedDeals.length;
+  const filteredHot = displayedDeals.filter((d) => userBucketForDeal(d) === "Hot Leads").length;
+  const filteredWarm = displayedDeals.filter((d) => userBucketForDeal(d) === "Warm Leads").length;
   const queuedActivations = activations.filter((a) => ["queued", "evaluating", "drafted", "awaiting_approval"].includes(a.status)).length;
+  const sliceHot = scopeToSubmittedUrl ? filteredHot : hotDeals;
+  const sliceWarm = scopeToSubmittedUrl ? filteredWarm : warmDeals;
 
   useEffect(() => {
-    if (!session?.access_token) return;
     if (savedLeadCount > 0) {
       setFirstThreeActions((prev) => ({ ...prev, started: true, saved: true }));
     }
   }, [session?.access_token, savedLeadCount]);
+
+  // Always hydrate market totals from the public summary endpoint (independent of the matched slice).
+  useEffect(() => {
+    let cancelled = false;
+    const base = getPublicReadApiBase();
+    setLoadingSummary(true);
+    void fetchPipelineSummaryFallback(base)
+      .then((payload) => {
+        if (cancelled || !payload) return;
+        if ((payload.total ?? 0) > 0 || (payload.hot ?? 0) > 0 || (payload.companies_in_database ?? 0) > 0) {
+          setSummary(payload);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSummary(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     writeFirstThreeActions(firstThreeActions);
@@ -2811,12 +3696,8 @@ export default function Pipeline() {
     alreadySent: Boolean(selected?.stage === "Outreach Sent"),
   };
   const first3SaveCtaVariant = selected && selected.id % 2 === 0 ? "a" : "b";
-  const first3SaveCtaLabel = first3SaveCtaVariant === "a"
-    ? "Save this lead"
-    : "Save lead and open your CRM workspace";
-  const first3SaveHelperText = first3SaveCtaVariant === "a"
-    ? "Save now to open your CRM workspace with draft, send, and reply tracking for this lead."
-    : "One click opens your CRM workspace for this lead with draft and send tracking ready to run.";
+  const first3SaveCtaLabel = "Save this lead";
+  const first3SaveHelperText = "Step 1: save this buyer, then copy the draft and send — that is the full motion.";
   const sendChecklistAssignedVariant = selected && selected.id % 2 === 0 ? "a" : "b";
   const sendChecklistVariant = checklistVariantOverride || sendChecklistAssignedVariant;
   const sendChecklistVariantLabel = sendChecklistVariant === "a" ? "Variant A" : "Variant B";
@@ -2901,25 +3782,25 @@ export default function Pipeline() {
   const firstThreePrimaryActionLabel = nextFirstThreeStep === "save_lead"
     ? first3SaveCtaLabel
     : nextFirstThreeStep === "copy_draft"
-      ? "Go to outreach draft"
+      ? "Copy outreach draft"
       : nextFirstThreeStep === "send_outreach"
-        ? (canSendSelectedOutreach ? "Send outreach now" : "Review send requirements")
+        ? (canSendSelectedOutreach ? "Send outreach now" : "Add contact, then send")
         : "Continue";
   const firstThreePrimaryActionDisabled = nextFirstThreeStep === "save_lead"
     ? Boolean(!selected || advancingLeadId === selected.id)
     : nextFirstThreeStep === "copy_draft"
-      ? false
+      ? Boolean(!selected)
       : nextFirstThreeStep === "send_outreach"
         ? Boolean(!selected || sendingLeadId === selected.id)
         : true;
   const firstThreeHelperText = nextFirstThreeStep === "save_lead"
-    ? first3SaveHelperText
+    ? "Step 1: save this buyer into your working list."
     : nextFirstThreeStep === "copy_draft"
-      ? "Step 2 is fastest from the Outreach draft panel. We will highlight it now."
+      ? "Step 2: copy the outreach draft, then paste it into your email client."
       : nextFirstThreeStep === "send_outreach"
         ? (canSendSelectedOutreach
-          ? "Step 3 closes the loop. Send one live email to move this lead into outreach tracking."
-          : `Send is blocked by: ${selectedSendBlockers.length ? selectedSendBlockers.join(", ") : "missing requirements"}. We will jump you to the draft area.`)
+          ? "Step 3: send one live email to move this lead into outreach tracking."
+          : `Send is blocked by: ${selectedSendBlockers.length ? selectedSendBlockers.join(", ") : "missing requirements"}. Fix that in the right panel, then send.`)
         : "All first actions complete.";
 
   const runFirstThreePrimaryAction = () => {
@@ -2936,6 +3817,10 @@ export default function Pipeline() {
       return;
     }
     if (nextFirstThreeStep === "copy_draft") {
+      if (canCopySelectedDraft) {
+        copyDraft();
+        toast.success("Draft copied. Next: send outreach.");
+      }
       spotlightOutreachDraft();
       return;
     }
@@ -3028,69 +3913,403 @@ export default function Pipeline() {
 
   return (
     <div className="pipeline-page-bg flex min-h-screen flex-col">
+      <div ref={pipelineTopRef} id="pipeline-page-top" aria-hidden="true" className="h-0 w-0 overflow-hidden" />
       <Header />
 
       <main className="flex-1 px-4 pb-6 pt-4 lg:px-6">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
-          <PageHeroDark
-            maxWidthClass="max-w-[1500px]"
-            badge={
-              <div className="page-hero-badge">
-                {typeof dbTotal === "number" ? dbTotal.toLocaleString() : "—"} active opportunities · updated live
+        {loadUiVisible ? (
+          <div className="sticky top-16 z-40 -mx-4 mb-3 border-b border-emerald-300 bg-emerald-50 px-4 py-3 sm:-mx-6 sm:px-6">
+            <div className="mx-auto flex max-w-[1500px] items-center gap-3">
+              <div className="shrink-0 rounded-md border border-emerald-200 bg-white p-1.5">
+                <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
               </div>
-            }
-            eyebrow="SIGNAL · Sales intelligence"
-            title={isAdmin ? "Active Signals → Live Pipeline" : "Live Pipeline"}
-            description={
-              session?.access_token
-                ? "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Pick a lead on the left → develop with SIGNAL → send from the panel on the right. Replies land in Inbox."
-                : "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
-            }
-            stats={[
-              { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "—", tone: "white" },
-              { label: "Hot", value: typeof hotDeals === "number" ? hotDeals : "—", tone: "amber" },
-              { label: "Warm", value: typeof warmDeals === "number" ? warmDeals : "—", tone: "amber" },
-              { label: "Visible", value: visibleDeals, tone: "emerald" },
-            ]}
-            innerClassName="pb-6 pt-20"
-          />
+              <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950 sm:text-base">
+                Loading sales leads…
+              </p>
+              <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600 sm:text-3xl">
+                {loadCountdown}s
+              </span>
+            </div>
+          </div>
+        ) : null}
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
+          {!step3Intro ? (
+            <PageHeroDark
+              maxWidthClass="max-w-[1500px]"
+              showGrid={false}
+              badge={
+                <div className="page-hero-badge">
+                  {typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading"} active opportunities · updated live
+                </div>
+              }
+              eyebrow="SIGNAL · Sales intelligence"
+              title={isAdmin ? "Active Signals → Live Pipeline" : "Live Pipeline"}
+              description={
+                session?.access_token
+                  ? "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Pick a lead on the left → develop with SIGNAL → send from the panel on the right. Replies land in Inbox."
+                  : "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
+              }
+              stats={[
+                { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading", tone: "white" },
+                { label: "Hot", value: typeof hotDeals === "number" ? hotDeals : "Loading", tone: "amber" },
+                { label: "Warm", value: typeof warmDeals === "number" ? warmDeals : "Loading", tone: "amber" },
+                { label: "Visible", value: visibleDeals, tone: "emerald" },
+              ]}
+              innerClassName="pb-6 pt-20"
+            />
+          ) : (
+            <div className="flex items-center justify-between gap-3 pt-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              <span>ReadyForRobots · Workspace</span>
+              {session?.access_token ? (
+                <span className="normal-case tracking-normal text-emerald-300/90">Signed in · {sessionDisplayName}</span>
+              ) : null}
+            </div>
+          )}
 
-          <div className="pipeline-command-rail flex flex-col gap-3">
-            {session?.access_token && <AdminNav variant="dark" />}
+          {!step3Intro ? (
+            <div className="pipeline-command-rail flex flex-col gap-3">
+              {session?.access_token && <AdminNav variant="dark" />}
 
-            {session?.access_token && (
-              <>
-                <PipelineSalesWorkflowRail
-                  hasSession={Boolean(session?.access_token)}
-                  hasSavedLeads={savedLeadCount > 0}
-                  hasSelection={Boolean(selected)}
-                  hasDraft={Boolean(selected?.outreachBody)}
-                  hasContact={Boolean(selected?.contact)}
-                  sent={selected?.stage === "Outreach Sent"}
-                  variant="dark"
-                />
+              <PipelineSalesWorkflowRail
+                hasSession={Boolean(session?.access_token)}
+                hasSavedLeads={savedLeadCount > 0}
+                hasSelection={Boolean(selected)}
+                hasDraft={Boolean(selected?.outreachBody)}
+                hasContact={Boolean(selected?.contact)}
+                sent={selected?.stage === "Outreach Sent"}
+                variant="dark"
+                browseFirst={arrivedFromResultsScan}
+              />
+              {session?.access_token && (
                 <WorkspaceQuickLinks
                   savedCount={savedLeadCount}
                   hubspotConnected={hubspotIntegration?.connected}
                   queuedActions={queuedActivations}
                   variant="dark"
                 />
-              </>
-            )}
-          </div>
+              )}
+            </div>
+          ) : null}
 
+          {arrivedFromResultsScan && !arrivedFromSignalActivation && (
+            <section
+              id="pipeline-step3-guide"
+              className={`scroll-mt-4 overflow-hidden rounded-2xl border shadow-[0_24px_60px_-28px_rgba(15,23,42,0.85)] ${
+                build25Started
+                  ? "border-slate-500/45 bg-[#0b162f]"
+                  : "border-slate-500/50 bg-gradient-to-br from-[#0b162f] via-[#111827] to-[#1e293b]"
+              }`}
+            >
+              {!build25Started ? (
+                <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300/90 sm:text-sm">
+                    Step 4 of 5 · Provide customer name and information
+                  </p>
+                  <h2 className="mt-3 max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-[2.65rem]">
+                    Provide customer name and information
+                  </h2>
+                  <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-300 sm:text-lg sm:leading-8">
+                    You reviewed 5 sales leads. Add your company name, robot category, and ideal customer so we can unlock{" "}
+                    {BUILD_PIPELINE_TARGET} matched sales leads
+                    {submittedHostname ? (
+                      <>
+                        {" "}
+                        for{" "}
+                        <span className="font-semibold text-white">{submittedHostname}</span>
+                      </>
+                    ) : null}
+                    .
+                  </p>
+
+                  <div className="mt-6 rounded-2xl border border-slate-500/40 bg-[#081126]/70 p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-300">Customer details</p>
+                    <p className="mt-1 text-sm text-slate-400">
+                      Required before unlocking your {BUILD_PIPELINE_TARGET} sales leads.
+                    </p>
+                    <div className="mt-4">
+                      <RobotWorkspaceProfileFields
+                        value={workspaceProfile}
+                        onChange={setWorkspaceProfile}
+                        submittedHostname={submittedHostname || undefined}
+                        tone="dark"
+                        idPrefix="pipeline-step3"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <button
+                      type="button"
+                      onClick={runNextStepPrimary}
+                      className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-7 py-4 text-base font-extrabold text-slate-950 transition hover:bg-amber-300 sm:w-auto sm:min-w-[280px] sm:text-lg"
+                    >
+                      {nextStepPrimaryLabel}
+                      <ArrowRight className="h-5 w-5" />
+                    </button>
+                    <p className="text-sm text-slate-400 sm:max-w-xs">
+                      {workspaceProfileComplete
+                        ? isSignedIn
+                          ? "Opens your 15 URL-matched sales leads — not the global market feed."
+                          : "Details saved — next create your free account to unlock 15 sales leads."
+                        : "Fill the three fields above, then unlock 15 sales leads."}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid w-full gap-4 px-5 py-5 sm:px-7 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300/90">
+                      Step 5 of 5 · {BUILD_PIPELINE_TARGET} sales leads
+                    </p>
+                    <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
+                      Curate sales leads &amp; run outreach
+                    </h2>
+                    <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
+                      {build25Progress > 0 && !firstThreeActions.copied
+                        ? `Saved ${build25Progress}/${BUILD_PIPELINE_TARGET}. Next: pick a lead, copy the outreach draft, then send.`
+                        : build25Progress > 0 && firstThreeActions.copied && !firstThreeActions.sent
+                          ? "Draft copied. Next: send outreach, then keep shortlisting."
+                          : `Save the best companies into your working list (goal: ${BUILD_PIPELINE_TARGET}). Open each lead for why-now signals, copy Cal’s note, and send.`}
+                    </p>
+                    <div
+                      id="pipeline-outreach-next"
+                      className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-slate-300 sm:text-sm"
+                    >
+                      <span className={build25Progress > 0 ? "text-sky-300" : "text-amber-200"}>
+                        1. Save leads ({build25Progress}/{BUILD_PIPELINE_TARGET})
+                      </span>
+                      <span className={firstThreeActions.copied ? "text-sky-300" : build25Progress > 0 ? "text-amber-200" : ""}>
+                        2. Copy outreach draft
+                      </span>
+                      <span className={firstThreeActions.sent ? "text-sky-300" : firstThreeActions.copied ? "text-amber-200" : ""}>
+                        3. Send &amp; continue
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex w-full flex-col gap-2 lg:w-auto lg:items-end">
+                    <button
+                      type="button"
+                      onClick={runNextStepPrimary}
+                      className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 lg:w-auto"
+                    >
+                      {nextStepPrimaryLabel}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                    {nextStepCoachText ? (
+                      <p className="max-w-md text-left text-sm font-semibold leading-snug text-emerald-400 sm:text-base lg:text-right">
+                        {nextStepCoachText}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {arrivedFromSignalActivation && (
+            <section className="overflow-hidden rounded-xl border border-emerald-400/40 bg-[#071a19] shadow-[0_18px_45px_-30px_rgba(16,185,129,0.85)]">
+              <div className="grid gap-4 px-4 py-4 sm:px-5 lg:grid-cols-[1fr_auto] lg:items-center">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">
+                      SIGNAL activated
+                    </span>
+                    {activationIdFromQuery && (
+                      <span className="text-[11px] font-medium text-slate-400">Queue #{activationIdFromQuery}</span>
+                    )}
+                  </div>
+                  <h2 className="mt-2 text-xl font-bold text-white sm:text-2xl">
+                    {selected ? `${selected.company} is ready for your review.` : "Your buyer pipeline is being prepared."}
+                  </h2>
+                  <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-300">
+                    SIGNAL saved the selected buyers to CRM and is preparing account-specific outreach. Review the why-now evidence, then copy the draft and send your first message.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[11px] font-semibold text-slate-300">
+                    <span className="text-emerald-300">1. Buyers saved</span>
+                    <span className={firstThreeActions.copied ? "text-emerald-300" : ""}>2. Review and copy draft</span>
+                    <span className={firstThreeActions.sent ? "text-emerald-300" : ""}>3. Send outreach</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={runFirstThreePrimaryAction}
+                  disabled={!selected || firstThreePrimaryActionDisabled}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
+                >
+                  {selected?.outreachBody ? "Review prepared outreach" : "Review selected buyer"}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </section>
+          )}
+
+          {step3Intro ? (
+            <div className="pipeline-workspace overflow-hidden rounded-2xl border border-amber-400/40 bg-gradient-to-b from-slate-50 to-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.45)]">
+              <div className="border-b border-amber-200/80 bg-amber-50/80 px-5 py-4 sm:px-8">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-800">URL-matched queue · locked</p>
+                <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
+                  {scopeMatchesCount > 0
+                    ? `${Math.min(scopeMatchesCount, BUILD_PIPELINE_TARGET)} buyers matched to your robot profile`
+                    : `${BUILD_PIPELINE_TARGET} matched sales leads waiting`}
+                </p>
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+                  Step 5 unlocks these {BUILD_PIPELINE_TARGET} sales leads after you provide customer name and information above.
+                </p>
+              </div>
+              <div className="relative px-5 py-6 sm:px-8 sm:py-8">
+                <ul className="pointer-events-none select-none space-y-2 opacity-45 blur-[1.5px]">
+                  {(displayedDeals.length > 0 ? displayedDeals : deals).slice(0, 5).map((deal) => (
+                    <li
+                      key={deal.id}
+                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3"
+                    >
+                      <span className="truncate text-sm font-semibold text-slate-800">{deal.company}</span>
+                      <span className="text-xs font-bold uppercase tracking-wide text-slate-500">{deal.priorityTier || deal.stage}</span>
+                    </li>
+                  ))}
+                  {(displayedDeals.length > 0 ? displayedDeals : deals).length === 0 ? (
+                    <li className="rounded-xl border border-dashed border-emerald-200 bg-emerald-50/60 px-4 py-8 text-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <PixelIcon map={KARE_FACE} scale={4} fill="#3ecf8e" background="transparent" />
+                        <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600">
+                          {loadCountdown}s
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm font-semibold text-emerald-900">Loading matched opportunities…</p>
+                    </li>
+                  ) : loadUiVisible ? (
+                    <li className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                      <div className="flex items-center justify-center gap-3">
+                        <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
+                        <span className="text-sm font-bold text-emerald-950">Loading sales leads…</span>
+                        <span className="font-mono text-xl font-extrabold tabular-nums text-emerald-600">
+                          {loadCountdown}s
+                        </span>
+                      </div>
+                    </li>
+                  ) : null}
+                </ul>
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-white via-white/85 to-white/40 px-4">
+                  <div className="w-full max-w-md rounded-2xl border border-amber-400/60 bg-white/95 p-5 text-center shadow-xl sm:p-6">
+                    <p className="text-sm font-semibold text-slate-800 sm:text-base">
+                      {workspaceProfileComplete
+                        ? isSignedIn
+                          ? `Your ${BUILD_PIPELINE_TARGET} sales leads unlock after you save customer details above.`
+                          : `Free account unlocks ${BUILD_PIPELINE_TARGET} sales leads after customer details above.`
+                        : "Provide customer name and information in the form above."}
+                    </p>
+                    <p className="mt-3 text-xs font-medium text-slate-500">
+                      Use the yellow button in the Step 4 panel above — one action only.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
           <div className="pipeline-workspace">
             {/* ── Workspace toolbar ── */}
             <div className="pipeline-page-header">
-              <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <div className="min-w-0">
+                  <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div className="min-w-0 flex-1">
                   <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-900">
                     Search pipeline
                   </span>
                   <p className="mt-1 text-sm font-semibold text-slate-900">Find buyers by industry, company, or signal.</p>
+                  {session?.access_token && (
+                    <p className="mt-1 text-[12px] font-medium text-emerald-900">
+                      Welcome back, {sessionDisplayName}. Your sales workspace is active.
+                    </p>
+                  )}
+                  {submittedHostname && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center rounded-full border border-emerald-700 bg-emerald-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-950">
+                        URL matched · {BUILD_PIPELINE_TARGET} max
+                      </span>
+                      <span className="inline-flex items-center rounded-full border border-slate-500 bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-900">
+                        Submitted URL: {submittedHostname}
+                      </span>
+                      <p className="w-full text-[11px] font-medium text-slate-800">
+                        {submittedUrlMatchLoading
+                          ? `Looking up ${submittedHostname}, scoring the robot company, matching opportunities…`
+                          : submittedUrlMatchError
+                          ? `Temporarily unable to refresh matches for ${submittedHostname}. Showing latest available matched results.`
+                          : scopeMatchesCount === 0
+                          ? submittedUrlWeakProfile
+                            ? `No matches for ${submittedHostname}. We could not score enough robot profile detail from that URL yet.`
+                            : `No equal-score matches for ${submittedHostname} yet. Try the company homepage URL.`
+                          : `Showing ${scopeMatchesCount} buyers matched to ${submittedHostname} (equally scored opportunities).`}
+                      </p>
+                      {!preferUrlMatchedPipeline && !submittedUrlMatchLoading ? (
+                        <button
+                          type="button"
+                          onClick={() => setScopeToSubmittedUrl((v) => !v)}
+                          className="rounded-md border border-slate-600 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-900 hover:border-slate-800 hover:bg-slate-100"
+                        >
+                          {scopeToSubmittedUrl ? "Show all results" : "Show submitted URL scope"}
+                        </button>
+                      ) : null}
+                    </div>
+                  )}
+                  {/* One instruction rail lives in the Step 5 banner above — don't duplicate it here. */}
+                  {!(arrivedFromResultsScan && build25Started) ? (
+                  <div className="mt-2 w-full rounded-xl border border-emerald-700/80 bg-[#0b162f] px-4 py-4 text-[13px] text-slate-100 shadow-sm sm:px-5 sm:py-5 sm:text-sm">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-300 sm:text-xs">{nextStepsTitle}</p>
+                    <p className="mt-2 text-base font-semibold text-white sm:text-lg">
+                      {nextStepsHeadline}
+                    </p>
+                    <ol className="mt-3 space-y-2 pl-5 text-slate-300 sm:text-[15px]">
+                      {nextStepsItems.map((item, index) => (
+                        <li key={`${index}-${item.slice(0, 24)}`} className="list-decimal leading-relaxed">
+                          {item}
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {!isSignedIn && !arrivedFromResultsScan ? (
+                        <Link
+                          href={startFreeWorkspaceHref}
+                          className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-[11px] font-bold text-slate-950 hover:bg-amber-300"
+                        >
+                          {nextStepPrimaryLabel}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={runNextStepPrimary}
+                          disabled={
+                            arrivedFromResultsScan && (!build25Started || !selected)
+                              ? false
+                              : isSignedIn && !selected && !canCopySelectedDraft
+                          }
+                          className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-[11px] font-bold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {nextStepPrimaryLabel}
+                        </button>
+                      )}
+                      {isSignedIn && canCopySelectedDraft && canSaveSelected ? (
+                        <button
+                          type="button"
+                          onClick={copyDraft}
+                          className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10"
+                        >
+                          {copied ? "Copied draft" : "Copy draft"}
+                        </button>
+                      ) : null}
+                      {canOpenSelectedDraft ? (
+                        <button
+                          type="button"
+                          onClick={spotlightOutreachDraft}
+                          className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10"
+                        >
+                          Open selected lead
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  ) : null}
                 </div>
 
-                <div className="relative w-full sm:w-[340px]">
+                <div className={`relative w-full ${arrivedFromResultsScan && build25Started ? "sm:w-full lg:max-w-md" : "sm:w-[340px]"}`}>
                   <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600" />
                   <input
                     value={industryQuery}
@@ -3175,6 +4394,9 @@ export default function Pipeline() {
             </div>
 
             <div className="px-3 sm:px-4 pt-2">
+              <div className="sticky top-2 z-30 mb-2">
+                <UpgradeProPriorityBanner src="pipeline_top_banner" />
+              </div>
               {panelPlan === "anonymous" && (
                 <AnonymousValueStrip
                   leadCount={deals.length}
@@ -3204,12 +4426,12 @@ export default function Pipeline() {
                   />
                 </div>
               )}
-              {session?.access_token && (showActivationChecklist || savedLeadCount === 1) && (
+              {session?.access_token && (showActivationChecklist || savedLeadCount >= 1) && !isActivationChecklistDismissed() && (
                 <div className="mt-2">
                   <ActivationChecklist
                     company={selected?.company}
-                    draftCopied={draftCopiedForActivation}
-                    hasDraft={Boolean(selected?.outreachBody)}
+                    draftCopied={draftCopiedForActivation || firstThreeActions.copied}
+                    hasDraft={Boolean(selected?.outreachBody || selected?.sellerBrief)}
                     onCopyDraft={copyDraft}
                   />
                 </div>
@@ -3221,25 +4443,71 @@ export default function Pipeline() {
                   savedCount={savedLeadCount}
                 />
               </div>
+              {session?.access_token && panelPlan === "free" && (
+                <div className="mt-2 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white px-4 py-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm font-semibold text-emerald-900">
+                      {freeUpgradeMessage}
+                    </p>
+                    <Link
+                      href="/pricing?upgrade=pro"
+                      className="inline-flex items-center justify-center rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:border-emerald-400"
+                    >
+                      Upgrade to Pro
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
-            {(loadErr || (!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0)) && (
+            {(loadErr || (!loadingLeads && !submittedUrlMatchLoading && !loadErr && !hasActiveSearch && displayedDeals.length === 0)) && (
               <div className="space-y-1.5 border-b border-gray-200 px-3 py-2 sm:px-4">
                 {loadErr && (
                   <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
-                    {loadErr}
+                    <div className="flex items-center justify-between gap-2">
+                      <span>{loadErr}</span>
+                      <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        className="shrink-0 rounded-md border border-amber-300 bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-900 hover:bg-amber-100"
+                      >
+                        Retry
+                      </button>
+                    </div>
                   </div>
                 )}
-                {!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0 && (
+                {!loadingLeads && !submittedUrlMatchLoading && !loadErr && !hasActiveSearch && displayedDeals.length === 0 && (
                   <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-emerald-900">
-                    <p className="text-xs font-semibold">
-                      Live pipeline is rebuilding — your buyers are still here.
-                    </p>
-                    <p className="mt-1 text-[11px] leading-snug text-emerald-800">
-                      {typeof hotDeals === "number" || typeof warmDeals === "number"
-                        ? `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm robot buyers scored across ${formatMetric(dbTotal)} tracked accounts. The ranked feed paints in seconds — keep moving while it syncs.`
-                        : "The ranked buyer feed paints in a few seconds. Keep moving while it syncs."}
-                    </p>
+                    {scopedNoMatches ? (
+                      <>
+                        <p className="text-xs font-semibold">
+                          No direct buyer matches yet for {submittedHostname}.
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-emerald-800">
+                          SIGNAL did not find a direct URL match in this pass. Switch to full pipeline results now, or try the company root domain to widen matching.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs font-semibold">
+                          Live pipeline is rebuilding — your buyers are still here.
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-emerald-800">
+                          {typeof hotDeals === "number" || typeof warmDeals === "number"
+                            ? `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm robot buyers scored across ${formatMetric(dbTotal)} tracked accounts. The ranked feed paints in seconds — keep moving while it syncs.`
+                            : "The ranked buyer feed paints in a few seconds. Keep moving while it syncs."}
+                        </p>
+                      </>
+                    )}
                     <div className="mt-2 flex flex-wrap gap-2">
+                      {scopedNoMatches ? (
+                        <button
+                          type="button"
+                          onClick={() => setScopeToSubmittedUrl(false)}
+                          className="inline-flex items-center rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-700"
+                        >
+                          Show full pipeline results
+                        </button>
+                      ) : null}
                       <Link
                         href="/signals"
                         className="inline-flex items-center rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-700"
@@ -3262,7 +4530,7 @@ export default function Pipeline() {
             <PipelineMetric
               label={isAdmin ? "Database total" : "Market watchlist"}
               value={formatMetric(dbTotal)}
-              sub={loadingSummary
+              sub={loadingSummary || dbTotal == null
                 ? "Refreshing market totals..."
                 : `${formatMetric(summary?.signals_in_database ?? summary?.total_signals)} scored buying signals`}
               color="#111827"
@@ -3280,13 +4548,15 @@ export default function Pipeline() {
               color="#FFB000"
             />
             <PipelineMetric
-              label={isAdmin ? "Working slice" : "In this view"}
+              label={isAdmin ? "Working slice" : scopeToSubmittedUrl ? "Matched view" : "In this view"}
               value={formatMetric(visibleDeals)}
               sub={isAdmin
                 ? `${formatMetric(queuedActivations)} SIGNAL activations queued`
                 : hasActiveSearch
                   ? `${formatMetric(filteredHot)} hot · ${formatMetric(filteredWarm)} warm matching search`
-                  : `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm leads loaded`}
+                  : scopeToSubmittedUrl
+                    ? `${formatMetric(sliceHot)} hot · ${formatMetric(sliceWarm)} warm in this matched set`
+                    : `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm in market`}
               color="#10b981"
             />
           </section>
@@ -3316,40 +4586,46 @@ export default function Pipeline() {
           {/* Confirm modals for bulk actions (admin only) */}
           {isAdmin && scoutConfirm === "draft" && (
             <div className="rounded-xl border border-blue-400/30 bg-blue-400/8 px-4 py-3 flex items-center gap-3">
-              <p className="text-[11px] text-blue-900 flex-1">SIGNAL will draft outreach emails for all HOT and WARM prospects that don't have one yet. Continue?</p>
+              <p className="text-[11px] text-blue-900 flex-1">SIGNAL will draft MSD outreach for all HOT and WARM prospects that do not have one yet. Continue?</p>
               <button onClick={() => void runScoutDraftAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-50 border border-blue-400/40 text-blue-800">Run</button>
               <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500">Cancel</button>
             </div>
           )}
           {isAdmin && scoutConfirm === "send" && (
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/8 px-4 py-3 flex items-center gap-3">
-              <p className="text-[11px] text-emerald-900 flex-1">SIGNAL will send all drafted outreach emails. This triggers live sends via Resend. Continue?</p>
+              <p className="text-[11px] text-emerald-900 flex-1">SIGNAL will activate all drafted outreach now. This triggers live sends via Resend. Continue?</p>
               <button onClick={() => void runScoutSendAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-50 border border-emerald-400/40 text-emerald-800">Send</button>
               <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500">Cancel</button>
             </div>
           )}
 
           {/* ── Two-panel layout ── */}
-          <div className="pipeline-deals-layout flex min-h-0 gap-2 p-2 sm:p-3" style={{ minHeight: "calc(100vh - 200px)" }}>
+          <div id="pipeline-leads" className="pipeline-deals-layout flex min-h-0 flex-col gap-2 p-2 sm:p-3 lg:min-h-[calc(100vh-200px)] lg:flex-row">
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="pipeline-list-shell flex min-w-0 flex-1 flex-col gap-1 overflow-y-auto">
+              {loadUiVisible ? <PipelineLeadsLoadingStrip secondsLeft={loadCountdown} /> : null}
               <div className="pipeline-list-columns">
                 <div className="col-span-5">Company</div>
                 <div className="col-span-4 hidden md:block">Signal</div>
                 <div className="col-span-1 text-center">Score</div>
                 <div className="col-span-2 text-right">Tier</div>
               </div>
-              {(loadingLeads || serverSearchLoading) && filtered.length === 0 ? (
-                <div className="mx-1 mb-2 rounded-xl border border-dashed border-stone-400 bg-stone-100/80 px-4 py-8 text-center">
-                  <RefreshCw className="mx-auto h-6 w-6 animate-spin text-emerald-600" />
-                  <p className="mt-3 text-sm font-medium text-stone-700">
-                    {serverSearchLoading ? `Searching for "${activeSearchQuery}"…` : "Loading sales pipeline…"}
-                  </p>
-                </div>
+              {(loadUiVisible || loadingLeads || serverSearchLoading || submittedUrlMatchLoading) && displayedDeals.length === 0 ? (
+                <MatchedPipelineSkeleton
+                  hostname={
+                    (submittedUrlMatchLoading || Boolean(submittedUrl)) && scopeToSubmittedUrl
+                      ? submittedHostname || undefined
+                      : serverSearchLoading
+                        ? activeSearchQuery || undefined
+                        : undefined
+                  }
+                  target={BUILD_PIPELINE_TARGET}
+                  secondsLeft={loadCountdown}
+                />
               ) : showKanban ? (
               STAGES.map((stage) => {
-                const stageDeals = filtered.filter((d) => d.stage === stage);
+                const stageDeals = displayedDeals.filter((d) => d.stage === stage);
                 const meta = STAGE_META[stage];
                 return (
                   <div key={stage}>
@@ -3378,13 +4654,22 @@ export default function Pipeline() {
                           const missingCount = missingEvidenceCountForDeal(deal);
                           const chip = gapChipStyle(missingCount);
                           return (
-                            <button
+                            <div
                               key={deal.id}
+                              role="button"
+                              tabIndex={0}
                               onClick={() => selectLead(deal.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  selectLead(deal.id);
+                                }
+                              }}
                               className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${dealRowSurface(isSelected)}`}
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
                               <PipelineScoreBadge score={deal.score} deal={deal} />
+                              <WorkMatchBadge deal={deal} />
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -3416,6 +4701,14 @@ export default function Pipeline() {
                                       Humanoid
                                     </span>
                                   )}
+                                  {deal.humanoidNonUsVendorFlag && (
+                                    <span
+                                      className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
+                                      style={{ color: "#b45309", background: "rgba(245,158,11,0.14)", border: "1px solid rgba(245,158,11,0.28)" }}
+                                    >
+                                      Non-US
+                                    </span>
+                                  )}
                                 </div>
                                 <PipelineLeadActionMeta lead={deal} variant="compact" />
                               </div>
@@ -3435,7 +4728,7 @@ export default function Pipeline() {
                                   className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-600" : "text-gray-300 group-hover:text-emerald-500"}`}
                                 />
                               </div>
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -3445,7 +4738,7 @@ export default function Pipeline() {
               })
               ) : (
               USER_BUCKETS.map((bucket) => {
-                const bucketDeals = filtered.filter((d) => userBucketForDeal(d) === bucket);
+                const bucketDeals = displayedDeals.filter((d) => userBucketForDeal(d) === bucket);
                 const meta = USER_BUCKET_META[bucket];
                 return (
                   <div key={bucket}>
@@ -3458,7 +4751,7 @@ export default function Pipeline() {
                         style={{ color: meta.color, background: `${meta.color}15`, fontFamily: "'JetBrains Mono', monospace" }}
                       >
                         {bucketDeals.length}
-                        {!hasActiveSearch && bucketDeals.length < meta.slotCap ? (
+                        {panelPlan === "anonymous" && !hasActiveSearch && bucketDeals.length < meta.slotCap ? (
                           <span className="text-gray-400 font-normal"> / {meta.slotCap}</span>
                         ) : null}
                       </span>
@@ -3476,14 +4769,22 @@ export default function Pipeline() {
                           const missingCount = missingEvidenceCountForDeal(deal);
                           const chip = gapChipStyle(missingCount);
                           return (
-                            <button
+                            <div
                               key={deal.id}
-                              type="button"
+                              role="button"
+                              tabIndex={0}
                               onClick={() => selectLead(deal.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  selectLead(deal.id);
+                                }
+                              }}
                               className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${dealRowSurface(isSelected)}`}
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
                               <PipelineScoreBadge score={deal.score} deal={deal} />
+                              <WorkMatchBadge deal={deal} />
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -3513,6 +4814,14 @@ export default function Pipeline() {
                                       Humanoid
                                     </span>
                                   )}
+                                  {deal.humanoidNonUsVendorFlag && (
+                                    <span
+                                      className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
+                                      style={{ color: "#b45309", background: "rgba(245,158,11,0.14)", border: "1px solid rgba(245,158,11,0.28)" }}
+                                    >
+                                      Non-US
+                                    </span>
+                                  )}
                                 </div>
                                 <PipelineLeadActionMeta lead={deal} variant="compact" />
                               </div>
@@ -3529,7 +4838,7 @@ export default function Pipeline() {
                                   className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-600" : "text-gray-300 group-hover:text-emerald-500"}`}
                                 />
                               </div>
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -3542,7 +4851,7 @@ export default function Pipeline() {
 
             {/* RIGHT: selected lead detail */}
             <div
-              className="pipeline-detail-shell flex h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] w-full shrink-0 flex-col overflow-hidden lg:w-[380px] xl:w-[400px] lg:sticky lg:top-20"
+              className="pipeline-detail-shell flex h-auto max-h-none w-full shrink-0 flex-col overflow-hidden lg:sticky lg:top-20 lg:h-[calc(100vh-100px)] lg:max-h-[calc(100vh-100px)] lg:w-[380px] xl:w-[400px]"
             >
               {selected ? (
                 <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -3564,6 +4873,24 @@ export default function Pipeline() {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <PipelineScoreBadge score={selected.score} deal={selected} size="lg" />
+                        <WorkMatchBadge deal={selected} size="lg" />
+                        {selected.workMatch != null && (
+                          <p className="max-w-[11rem] text-right text-[10px] leading-snug text-stone-500">
+                            Work Match {Math.round(selected.workMatch)}%
+                            {selected.workMatchManufacturer ? ` · ${selected.workMatchManufacturer}` : ""}
+                            {selected.comparableDeployment?.robot
+                              ? ` · Evidence: ${selected.comparableDeployment.robot}`
+                              : ""}
+                          </p>
+                        )}
+                        {selected.hermesQualify?.automation_fit != null && (
+                          <p className="max-w-[11rem] text-right text-[10px] leading-snug text-sky-700">
+                            Hermes fit {Math.round(Number(selected.hermesQualify.automation_fit))}
+                            {selected.hermesQualify.vendor_shortlist?.[0]?.vendor
+                              ? ` · ${selected.hermesQualify.vendor_shortlist[0].vendor}`
+                              : ""}
+                          </p>
+                        )}
                         {isAdmin && (
                           <button
                             type="button"
@@ -3606,6 +4933,97 @@ export default function Pipeline() {
                     </div>
                     </div>
                   </div>
+
+                  {(selected.hermesQualify ||
+                    (selected.hermesJobTitles && selected.hermesJobTitles.length > 0) ||
+                    (selected.hermesDecisionMakers && selected.hermesDecisionMakers.length > 0) ||
+                    (selected.hermesVideoEvidence && selected.hermesVideoEvidence.length > 0)) && (
+                    <div className="border-b border-slate-100 bg-sky-50/60 px-5 py-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-sky-900">
+                        Hermes intelligence
+                        {selected.hermesQualify?.truth_state ? (
+                          <span className="ml-1.5 font-semibold normal-case tracking-normal text-sky-700/80">
+                            · overlay (not CRM truth)
+                          </span>
+                        ) : null}
+                      </p>
+                      {selected.hermesQualify?.automation_fit != null && (
+                        <p className="mt-1 text-[12px] leading-snug text-slate-800">
+                          Automation fit{" "}
+                          <span className="font-semibold">{Math.round(Number(selected.hermesQualify.automation_fit))}</span>
+                          {selected.hermesQualify.labor_intensity
+                            ? ` · labor ${selected.hermesQualify.labor_intensity}`
+                            : ""}
+                          {selected.hermesQualify.facility_clarity
+                            ? ` · facility ${selected.hermesQualify.facility_clarity}`
+                            : ""}
+                        </p>
+                      )}
+                      {selected.hermesQualify?.rationale && (
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
+                          {selected.hermesQualify.rationale}
+                        </p>
+                      )}
+                      {(selected.hermesQualify?.vendor_shortlist || []).length > 0 && (
+                        <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-700">
+                          {(selected.hermesQualify?.vendor_shortlist || []).slice(0, 3).map((v, i) => (
+                            <li key={`${v.vendor || "v"}-${i}`}>
+                              <span className="font-medium">{v.vendor}</span>
+                              {v.model ? ` · ${v.model}` : ""}
+                              {v.why ? ` — ${v.why}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {(selected.hermesQualify?.blockers || []).length > 0 && (
+                        <p className="mt-1 text-[11px] text-amber-800">
+                          Blockers: {(selected.hermesQualify?.blockers || []).join("; ")}
+                        </p>
+                      )}
+                      {(selected.hermesJobTitles || []).length > 0 && (
+                        <p className="mt-1.5 text-[11px] text-slate-700">
+                          <span className="font-semibold text-slate-800">Open roles: </span>
+                          {(selected.hermesJobTitles || []).slice(0, 3).join(" · ")}
+                        </p>
+                      )}
+                      {(selected.hermesDecisionMakers || []).length > 0 && (
+                        <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-700">
+                          {(selected.hermesDecisionMakers || []).slice(0, 4).map((dm, i) => (
+                            <li key={`${dm.name || "dm"}-${i}`}>
+                              <span className="font-medium">{dm.name}</span>
+                              {dm.title ? ` · ${dm.title}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {(selected.hermesVideoEvidence || []).length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-800">
+                            Customer use-case videos
+                          </p>
+                          <ul className="mt-1 space-y-1 text-[11px] text-slate-700">
+                            {(selected.hermesVideoEvidence || []).slice(0, 4).map((vid, i) => (
+                              <li key={`${vid.source_url}-${i}`} className="leading-snug">
+                                <a
+                                  href={vid.source_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="font-medium text-sky-800 underline-offset-2 hover:underline"
+                                >
+                                  {vid.title || vid.source_url}
+                                </a>
+                                <span className="text-slate-500">
+                                  {vid.platform ? ` · ${vid.platform}` : ""}
+                                  {vid.workflow_hint ? ` · ${vid.workflow_hint}` : ""}
+                                  {vid.robot_visible ? ` · ${vid.robot_visible}` : ""}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col">
                   {showFirstThreeActionsProgress && (
@@ -3872,7 +5290,7 @@ export default function Pipeline() {
                           )}
                           {panelPlan === "anonymous" && (
                             <p className="text-[10px] leading-relaxed text-emerald-700">
-                              Free workspace unlocks full research, save up to 5 leads, and copy outreach drafts.
+                              Free workspace unlocks up to 15 leads, save up to 5 leads, and copy outreach drafts. Upgrade to Pro to unlock more leads and automate your sales pipeline.
                             </p>
                           )}
                         </div>
@@ -4024,7 +5442,7 @@ export default function Pipeline() {
                         <div className="relative mt-3 space-y-2">
                           <p className={panelSectionLabel}>Evidence stack</p>
                           <p className="text-[11px] leading-relaxed text-gray-600">
-                            Pro unlocks cited evidence on HOT and WARM leads — budget, timing, source links, and recommended actions refreshed automatically.
+                            Pro unlocks cited evidence on HOT and WARM leads so reps can verify alignment quickly — budget, timing, source links, and recommended actions refreshed automatically.
                           </p>
                           <Link
                             href="/pricing?reason=research"
@@ -4043,8 +5461,14 @@ export default function Pipeline() {
                   {showKanban && session?.access_token && (
                   <div
                     ref={outreachDraftRef}
-                    className={`shrink-0 px-5 py-3 transition-all duration-500 ${outreachDraftSpotlight ? "rounded-xl bg-emerald-50/70 ring-2 ring-emerald-300/80" : ""}`}
+                    tabIndex={-1}
+                    className={`shrink-0 scroll-mt-24 px-5 py-3 outline-none transition-all duration-500 ${outreachDraftSpotlight ? "rounded-2xl bg-emerald-100/90 ring-4 ring-emerald-400 shadow-[0_0_0_10px_rgba(16,185,129,0.18)]" : ""}`}
                   >
+                    {outreachDraftSpotlight && (
+                      <div className="mb-2 inline-flex items-center rounded-full border border-emerald-300 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-900 shadow-sm">
+                        Draft ready below
+                      </div>
+                    )}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <Mail className="h-3.5 w-3.5" style={{ color: "#059669" }} />
@@ -4331,13 +5755,30 @@ export default function Pipeline() {
                 </div>
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center bg-stone-50 p-8 text-center">
+                  {(loadUiVisible || loadingLeads || serverSearchLoading || submittedUrlMatchLoading) && !selected ? (
+                    <>
+                      <div className="mb-3 flex items-center gap-3">
+                        <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+                        <span className="font-mono text-3xl font-extrabold tabular-nums text-emerald-600">
+                          {loadCountdown}s
+                        </span>
+                      </div>
+                      <p className="text-sm font-semibold text-stone-800">
+                        Preparing lead workspace…
+                      </p>
+                      <p className="mt-1 max-w-xs text-[11px] leading-snug text-stone-500">
+                        Matched buyers will appear here with SIGNAL briefs as soon as the queue is ready.
+                      </p>
+                    </>
+                  ) : (
+                    <>
                   <Target className="mb-3 h-10 w-10 text-stone-400" />
                   <p className="text-sm font-medium text-stone-700">
                     {pendingDeepLink && deepLinkLoadFailed
                       ? "Network interrupted while loading this lead."
                       : pendingDeepLink
                       ? "Loading linked lead…"
-                      : hasActiveSearch && filtered.length === 0 && !serverSearchLoading
+                      : hasActiveSearch && displayedDeals.length === 0 && !serverSearchLoading
                       ? `No leads match "${activeSearchQuery}". Try food service, hospitality, logistics, or a company name.`
                       : isAdmin
                         ? isAdmin
@@ -4354,11 +5795,17 @@ export default function Pipeline() {
                       Retry loading lead
                     </button>
                   ) : null}
+                    </>
+                  )}
                 </div>
               )}
             </div>
           </div>
+          <div className="border-t border-slate-200 px-3 py-3 sm:px-4">
+            <UpgradeProPriorityBanner src="pipeline_bottom_banner" />
           </div>
+          </div>
+          )}
         </div>
       </main>
 
@@ -4450,24 +5897,6 @@ export default function Pipeline() {
           }
         />
       )}
-      <FirstSaveGuideModal
-        open={firstSaveGuideOpen}
-        onOpenChange={setFirstSaveGuideOpen}
-        deal={selected}
-        saving={Boolean(selected && advancingLeadId === selected.id)}
-        onDismiss={() => {
-          markFirstSaveGuideSeen();
-          setFirstSaveGuideOpen(false);
-        }}
-        onSave={() => {
-          if (!selected) return;
-          void handleSaveLead(selected).then((saved) => {
-            if (!saved) return;
-            markFirstSaveGuideSeen();
-            setFirstSaveGuideOpen(false);
-          });
-        }}
-      />
       <AlertDialog open={saveLimitOpen} onOpenChange={setSaveLimitOpen}>
         <AlertDialogContent className="border-emerald-500/30 bg-[#12082a] text-cream">
           <AlertDialogHeader>

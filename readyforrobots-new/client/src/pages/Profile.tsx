@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
 import { clearPendingNext } from "@/lib/authNext";
+import type { AutonomyMode } from "@/types/readyForRobots";
 
 const PERSONA_TRAITS = [
   { id: "insightful", label: "Insightful comments" },

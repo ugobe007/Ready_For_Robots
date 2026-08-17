@@ -1,0 +1,24 @@
+{
+  "company": "Kenco",
+  "accepted": [],
+  "rejected": [],
+  "work_units": [
+    {
+      "work_unit_id": "pick_cases",
+      "status": "EVIDENCED",
+      "evidence_hits": [
+        "picker"
+      ],
+      "origin_relevant": true
+    },
+    {
+      "work_unit_id": "load_outbound",
+      "status": "EVIDENCED",
+      "evidence_hits": [
+        "loader"
+      ],
+      "origin_relevant": true
+    }
+  ],
+  "notes": []
+}

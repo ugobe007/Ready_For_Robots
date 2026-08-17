@@ -34,7 +34,7 @@ const summaryItems = [
   },
   {
     key: "companiesQualified" as const,
-    label: "Companies qualified",
+    label: "Companies aligned",
     icon: CheckCircle2,
     color: "text-emerald-600",
     bg: "bg-emerald-50",
@@ -48,7 +48,7 @@ const summaryItems = [
   },
   {
     key: "followupsSent" as const,
-    label: "Follow-ups sent",
+    label: "Follow-ups activated",
     icon: Send,
     color: "text-purple-600",
     bg: "bg-purple-50",

@@ -19,7 +19,9 @@ import random
 import re
 import threading
 import time
+from types import SimpleNamespace
 from datetime import datetime, timezone, date
+from copy import deepcopy
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
@@ -70,6 +72,7 @@ from app.services.gtm_readiness import compute_gtm_readiness
 from app.services.lead_primary_link import enrich_lead_link_fields
 from app.services.lead_signal_display import format_signal_for_sales, strip_extraction_artifacts
 from app.services.lead_sales_copy import humanize_robot_types
+from app.services.humanoid_vendor_catalog import catalog_entries
 from app.services.lead_quality_engine import (
     BASE_QUALITY_WEIGHTS,
     compute_lead_quality_profile,
@@ -92,8 +95,139 @@ from app.services.homepage_rotation import (
     homepage_spotlight_mix_meta,
     homepage_spotlight_seeds,
 )
+from app.api.robot_ready import (
+    _submitted_domain as robot_ready_submitted_domain,
+    analyze_robot_capabilities,
+    match_companies,
+    scrape_robot_page,
+)
 
 router = APIRouter()
+
+
+def _submitted_url_match_input(raw_url: str) -> tuple[str, str]:
+    submitted_url = (raw_url or "").strip()
+    if not submitted_url:
+        return "", ""
+    submitted_domain = robot_ready_submitted_domain(submitted_url)
+    if not submitted_url.startswith(("http://", "https://")):
+        submitted_url = f"https://{submitted_url}"
+    return submitted_url, submitted_domain
+
+
+@router.get("/match-url")
+def leads_match_submitted_url(
+    url: str = Query(..., min_length=3, description="Robot company URL to match against buyer demand"),
+    limit: int = Query(15, ge=1, le=90),
+    industries: Optional[str] = Query(
+        None,
+        description="Optional comma-separated ICP industries to bias matching",
+    ),
+    db: Session = Depends(get_db),
+):
+    """
+    Lookup URL → score robot company → match equally scored buyer opportunities.
+    Returns at most `limit` rows (product default: 15) in pipeline-card shape.
+    """
+    from app.api.robot_ready import URL_MATCHED_PIPELINE_LIMIT
+
+    submitted_url, submitted_domain = _submitted_url_match_input(url)
+    if not submitted_url or not submitted_domain:
+        raise HTTPException(status_code=400, detail="Valid URL is required")
+
+    page_text = scrape_robot_page(submitted_url)
+    if page_text.lower().startswith("error scraping"):
+        page_text = f"{submitted_domain} robotics automation solution from {submitted_domain}".strip()
+
+    robot_caps = analyze_robot_capabilities(submitted_domain, page_text)
+
+    robot_type = str(robot_caps.get("type") or "").strip().lower()
+    use_case = str(robot_caps.get("use_case") or "").strip().lower()
+    capabilities = robot_caps.get("capabilities") if isinstance(robot_caps.get("capabilities"), list) else []
+    profile_score = float(robot_caps.get("profile_score") or 0)
+    weak_profile = (
+        robot_type in {"", "unknown"}
+        and use_case in {"", "general automation"}
+        and len(capabilities) == 0
+        and profile_score < 50
+    )
+    if weak_profile:
+        return {
+            "submitted_url": submitted_url,
+            "submitted_domain": submitted_domain,
+            "robot_capabilities": robot_caps,
+            "matching_mode": "no_profile",
+            "match_count": 0,
+            "leads": [],
+            "pipeline_limit": URL_MATCHED_PIPELINE_LIMIT,
+        }
+
+    industry_list = [
+        part.strip()
+        for part in str(industries or "").split(",")
+        if part and part.strip()
+    ][:8]
+    matched_all = match_companies(
+        robot_caps,
+        db,
+        target_industries=industry_list or None,
+    )
+    # If ICP industries were too narrow, fall back to open match so unlock still works.
+    if industry_list and not matched_all:
+        matched_all = match_companies(robot_caps, db)
+    matched = matched_all[: min(limit, URL_MATCHED_PIPELINE_LIMIT)]
+    matched_ids = [int(m.get("id")) for m in matched if m.get("id") is not None]
+    if not matched_ids:
+        return {
+            "submitted_url": submitted_url,
+            "submitted_domain": submitted_domain,
+            "robot_capabilities": robot_caps,
+            "matching_mode": "no_match",
+            "match_count": 0,
+            "leads": [],
+            "pipeline_limit": URL_MATCHED_PIPELINE_LIMIT,
+        }
+
+    companies = (
+        db.query(Company)
+        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .filter(Company.id.in_(matched_ids))
+        .all()
+    )
+    company_by_id = {int(c.id): c for c in companies}
+
+    rows: list[dict] = []
+    for match in matched:
+        company_id = int(match.get("id") or 0)
+        company = company_by_id.get(company_id)
+        if not company:
+            continue
+        junk, junk_reason, pri = classify_lead(company, company.scores, company.signals)
+        if junk:
+            continue
+        row = _fmt_pipeline_card(company, junk, junk_reason, pri)
+        row["url_match_score"] = match.get("match_score")
+        row["score_parity_gap"] = match.get("score_parity_gap")
+        row["robot_profile_score"] = match.get("robot_profile_score")
+        row["submitted_domain"] = submitted_domain
+        row["submitted_url"] = submitted_url
+        if match.get("recommended_action") and not row.get("pipeline_action"):
+            row["pipeline_action"] = match.get("recommended_action")
+        if match.get("share_summary") and not row.get("share_summary"):
+            row["share_summary"] = match.get("share_summary")
+        if isinstance(row.get("score"), dict) and match.get("match_score") is not None:
+            row["score"]["lead_value_score"] = match.get("match_score")
+        rows.append(row)
+
+    return {
+        "submitted_url": submitted_url,
+        "submitted_domain": submitted_domain,
+        "robot_capabilities": robot_caps,
+        "matching_mode": "matched",
+        "match_count": len(rows),
+        "leads": rows,
+        "pipeline_limit": URL_MATCHED_PIPELINE_LIMIT,
+    }
 
 
 class ReportDownloadIn(BaseModel):
@@ -355,9 +489,9 @@ LEADS_SQL_POOL_CAP = 200
 LEADS_INDUSTRY_SEARCH_POOL_CAP = 400
 
 LEADS_ROTATION_SEC = PIPELINE_LEADS_ROTATION_SEC
-PIPELINE_HOT_SLOTS = int(os.getenv("PIPELINE_HOT_SLOTS", "15"))
-PIPELINE_WARM_SLOTS = int(os.getenv("PIPELINE_WARM_SLOTS", "20"))
-PIPELINE_MONITOR_SLOTS = int(os.getenv("PIPELINE_MONITOR_SLOTS", "15"))
+PIPELINE_HOT_SLOTS = int(os.getenv("PIPELINE_HOT_SLOTS", "40"))
+PIPELINE_WARM_SLOTS = int(os.getenv("PIPELINE_WARM_SLOTS", "30"))
+PIPELINE_MONITOR_SLOTS = int(os.getenv("PIPELINE_MONITOR_SLOTS", "20"))
 PIPELINE_FEED_LIMIT = PIPELINE_HOT_SLOTS + PIPELINE_WARM_SLOTS + PIPELINE_MONITOR_SLOTS
 MISSING_EVIDENCE_RESEARCH_COOLDOWN_SEC = int(os.getenv("MISSING_EVIDENCE_RESEARCH_COOLDOWN_SEC", "21600"))
 
@@ -771,6 +905,93 @@ def _dedup_top_signals(sigs: list, n: int = LEAD_RESPONSE_MAX_SIGNALS) -> list:
     return deduped
 
 
+_US_COUNTRY_ALIASES = {
+    "us",
+    "u.s.",
+    "usa",
+    "u.s.a",
+    "united states",
+    "united states of america",
+}
+
+
+def _country_is_non_us(country: Optional[str]) -> bool:
+    token = (country or "").strip().lower()
+    return bool(token) and token not in _US_COUNTRY_ALIASES
+
+
+def _build_humanoid_origin_index() -> list[dict]:
+    index: list[dict] = []
+    for entry in catalog_entries():
+        aliases: set[str] = set()
+        for raw in [entry.get("name"), entry.get("model_slug"), entry.get("robot_aliases")]:
+            if not raw:
+                continue
+            if isinstance(raw, str):
+                parts = raw.split("|") if "|" in raw else [raw]
+                for part in parts:
+                    norm = re.sub(r"\s+", " ", part.strip().lower())
+                    if len(norm) >= 3:
+                        aliases.add(norm)
+        if not aliases:
+            continue
+        index.append(
+            {
+                "model_slug": entry.get("model_slug"),
+                "name": entry.get("name"),
+                "vendor": entry.get("vendor"),
+                "country": entry.get("country"),
+                "is_non_us": _country_is_non_us(entry.get("country")),
+                "aliases": sorted(aliases, key=len, reverse=True),
+            }
+        )
+    return index
+
+
+_HUMANOID_ORIGIN_INDEX = _build_humanoid_origin_index()
+
+
+def _humanoid_origin_tags(sigs: list, robot_types_needed: list[str]) -> dict:
+    signal_blob = " ".join(
+        strip_extraction_artifacts(getattr(s, "signal_text", None) or "")
+        for s in (sigs or [])[:12]
+    ).lower()
+    robot_blob = " ".join((robot_types_needed or [])).lower()
+    haystack = f"{signal_blob} {robot_blob}".strip()
+
+    matched: list[dict] = []
+    seen: set[str] = set()
+    for row in _HUMANOID_ORIGIN_INDEX:
+        slug = row.get("model_slug") or ""
+        if not slug or slug in seen:
+            continue
+        if any(alias in haystack for alias in row.get("aliases") or []):
+            seen.add(slug)
+            matched.append(
+                {
+                    "model_slug": slug,
+                    "name": row.get("name"),
+                    "vendor": row.get("vendor"),
+                    "country": row.get("country"),
+                    "origin": "non_us" if row.get("is_non_us") else "us_or_unknown",
+                }
+            )
+
+    non_us = [m for m in matched if m.get("origin") == "non_us"]
+    generic_humanoid = "humanoid" in robot_blob
+    return {
+        "humanoid_vendor_matches": matched,
+        "humanoid_non_us_vendor_models": [m.get("name") for m in non_us if m.get("name")],
+        "humanoid_non_us_vendor_count": len(non_us),
+        "humanoid_non_us_vendor_flag": bool(non_us),
+        "humanoid_origin_status": (
+            "non_us_detected"
+            if non_us
+            else ("humanoid_unspecified_origin" if generic_humanoid else "no_humanoid_signal")
+        ),
+    }
+
+
 # Industry-to-automation-context map (mirrors newsletter_service logic)
 _INDUSTRY_AUTOMATION_CTX: dict[str, tuple[str, str]] = {
     "logistics": ("autonomous mobile robots and warehouse automation", "labor-intensive picking and last-mile delivery"),
@@ -923,6 +1144,7 @@ def _fmt_pipeline_card(
             for s in (sigs or [])[:8]
         ),
     )
+    humanoid_origin = _humanoid_origin_tags(sigs, robot_types_needed)
     crm_meta = c.crm_metadata if isinstance(getattr(c, "crm_metadata", None), dict) else {}
     inf = crm_meta.get("lead_inference") if isinstance(crm_meta.get("lead_inference"), dict) else {}
     contact_intelligence = (
@@ -930,9 +1152,15 @@ def _fmt_pipeline_card(
         if isinstance(crm_meta.get("contact_intelligence"), dict)
         else None
     )
+    phone_block = (
+        contact_intelligence.get("phone")
+        if isinstance(contact_intelligence, dict) and isinstance(contact_intelligence.get("phone"), dict)
+        else {}
+    )
+    phone_best = phone_block.get("best") if isinstance(phone_block.get("best"), dict) else {}
     best_phone = (
-        (contact_intelligence.get("phone") or {}).get("best", {}).get("phone")
-        if isinstance(contact_intelligence, dict)
+        phone_best.get("phone")
+        if isinstance(phone_best, dict)
         else None
     )
     best_linkedin = (
@@ -957,14 +1185,22 @@ def _fmt_pipeline_card(
         if isinstance(item, dict)
     ]
 
+    from app.services.company_name_fixes import canonical_display_name
+
     payload = {
         "id": c.id,
-        "company_name": c.name,
+        "company_name": canonical_display_name(c.name) or c.name,
+        "website": c.website,
+        "company_url": c.website,
         "industry": industry_display,
         "location_city": c.location_city,
         "location_state": c.location_state,
+        "location_country": c.location_country,
+        "company_country": c.location_country,
         "priority_tier": pri.tier,
+        "lead_tier": pri.tier,
         "priority_score": round(pri.score, 1),
+        "signal_strength": float(getattr(sig, "signal_strength", 0) or 0) if sig else None,
         "is_junk": junk,
         "junk_reason": junk_reason,
         "score": {"overall_score": overall},
@@ -972,6 +1208,7 @@ def _fmt_pipeline_card(
         "share_blurb": share_blurb or None,
         "pipeline_action": pipeline_action or None,
         "robot_types_needed": robot_types_needed,
+        **humanoid_origin,
         "lead_highlights": {
             "specific_problem": (inf or {}).get("specific_problem"),
             "why_lead": (inf or {}).get("why_lead") or [],
@@ -989,6 +1226,17 @@ def _fmt_pipeline_card(
             research_updates=research_updates_preview,
         ),
         "pipeline_slim": True,
+        # Work Match overlay (filled by build_public_pipeline_feed batch attach)
+        "work_unit_id": None,
+        "workflow_family": None,
+        "work_task": None,
+        "work_match": None,
+        "work_match_label": None,
+        "work_match_score": None,
+        "work_match_manufacturer": None,
+        "work_hard_blockers": [],
+        "comparable_deployment": None,
+        **_hermes_pipeline_fields(crm_meta),
         **hp.as_dict(),
     }
     slim_quality = compute_lead_quality_profile(
@@ -1016,6 +1264,26 @@ def _fmt_pipeline_card(
                 "display_text": format_signal_for_sales(sig.signal_text),
             }
         ]
+    hermes_jobs = payload.get("hermes_job_titles") or []
+    hermes_job = ""
+    if isinstance(hermes_jobs, list) and hermes_jobs:
+        hermes_job = str(hermes_jobs[0] or "").strip()
+    try:
+        from app.services.cal_seller_brief import build_cal_seller_brief
+
+        payload["cal_seller_brief"] = build_cal_seller_brief(
+            company_name=str(payload.get("company_name") or c.name or ""),
+            industry=str(industry_display or ""),
+            signal_text=format_signal_for_sales(sig.signal_text) if sig else "",
+            signal_type=str(getattr(sig, "signal_type", "") or "") if sig else "",
+            pipeline_action=str(pipeline_action or ""),
+            robot_types=list(robot_types_needed or []),
+            share_summary=str(share_summary or ""),
+            hermes_job_title=hermes_job,
+        )
+    except Exception:
+        # Never break match-url / pipeline cards if seller-brief assembly fails.
+        payload["cal_seller_brief"] = None
     return payload
 
 
@@ -1099,9 +1367,15 @@ def _fmt_company(
         if isinstance(crm_meta.get("contact_intelligence"), dict)
         else None
     )
+    phone_block = (
+        contact_intelligence.get("phone")
+        if isinstance(contact_intelligence, dict) and isinstance(contact_intelligence.get("phone"), dict)
+        else {}
+    )
+    phone_best = phone_block.get("best") if isinstance(phone_block.get("best"), dict) else {}
     best_phone = (
-        (contact_intelligence.get("phone") or {}).get("best", {}).get("phone")
-        if isinstance(contact_intelligence, dict)
+        phone_best.get("phone")
+        if isinstance(phone_best, dict)
         else None
     )
     best_linkedin = (
@@ -1142,18 +1416,35 @@ def _fmt_company(
 
     hp = assess_humanoid_pilot_language(sigs, industry=industry_display)
 
+    robot_types_needed = humanize_robot_types(
+        automation_profile,
+        industry=industry_display,
+        signal_blob=" ".join(
+            strip_extraction_artifacts(getattr(sig, "signal_text", None))
+            for sig in (sigs or [])[:8]
+        ),
+    )
+    humanoid_origin = _humanoid_origin_tags(sigs, robot_types_needed)
+
+    from app.services.company_name_fixes import canonical_display_name
+
     payload = {
         "id":             c.id,
-        "company_name":   c.name,
+        "company_name":   canonical_display_name(c.name) or c.name,
         "website":        c.website,
+        "company_url":    c.website,
         "industry":       industry_display,
         "location_city":  c.location_city,
         "location_state": c.location_state,
+        "location_country": c.location_country,
+        "company_country": c.location_country,
         "employee_estimate": c.employee_estimate,
         "source":         c.source,
         # priority classification
         "priority_tier":    pri.tier,
+        "lead_tier":        pri.tier,
         "priority_score":   round(pri.score, 1),
+        "signal_strength":  float(getattr(sigs_for_response[0], "signal_strength", 0) or 0) if sigs_for_response else None,
         "priority_reasons": pri.reasons,
         "is_junk":          junk,
         "junk_reason":      junk_reason,
@@ -1188,14 +1479,8 @@ def _fmt_company(
         ],
         "share_blurb": share_blurb,
         "share_summary": share_summary,
-        "robot_types_needed": humanize_robot_types(
-            automation_profile,
-            industry=industry_display,
-            signal_blob=" ".join(
-                strip_extraction_artifacts(getattr(sig, "signal_text", None))
-                for sig in (sigs or [])[:8]
-            ),
-        ),
+        "robot_types_needed": robot_types_needed,
+        **humanoid_origin,
         "automation_profile": automation_profile,
         "gtm": gtm,
         "lead_inference": inf or (crm_meta.get("lead_inference") if isinstance(crm_meta, dict) else None),
@@ -1220,19 +1505,43 @@ def _fmt_company(
             crm_meta=crm_meta,
             lead_inference=inf or {},
             project_timing=project_timing,
-            robot_types_needed=humanize_robot_types(
-                automation_profile,
-                industry=industry_display,
-                signal_blob=" ".join(
-                    strip_extraction_artifacts(getattr(sig, "signal_text", None))
-                    for sig in (sigs or [])[:8]
-                ),
-            ),
+            robot_types_needed=robot_types_needed,
             research_updates=research_updates,
         ),
+        **_hermes_pipeline_fields(crm_meta),
         **hp.as_dict(),
         **link_extras,
     }
+
+    hermes_jobs = payload.get("hermes_job_titles") or []
+    hermes_job = ""
+    if isinstance(hermes_jobs, list) and hermes_jobs:
+        hermes_job = str(hermes_jobs[0] or "").strip()
+    first_sig = sigs_for_response[0] if sigs_for_response else None
+    pitch_src = ""
+    if isinstance(gtm, dict):
+        pitch_src = str(gtm.get("suggested_motion") or "").strip()
+    if not pitch_src and isinstance(inf, dict):
+        why_lead = inf.get("why_lead")
+        if isinstance(why_lead, list) and why_lead:
+            pitch_src = str(why_lead[0] or "").strip()
+        elif isinstance(inf.get("specific_problem"), str):
+            pitch_src = str(inf.get("specific_problem") or "").strip()
+    try:
+        from app.services.cal_seller_brief import build_cal_seller_brief
+
+        payload["cal_seller_brief"] = build_cal_seller_brief(
+            company_name=str(payload.get("company_name") or c.name or ""),
+            industry=str(payload.get("industry") or ""),
+            signal_text=format_signal_for_sales(first_sig.signal_text) if first_sig else "",
+            signal_type=str(getattr(first_sig, "signal_type", "") or "") if first_sig else "",
+            pipeline_action=pitch_src,
+            robot_types=list(robot_types_needed or []),
+            share_summary=str(share_summary or ""),
+            hermes_job_title=hermes_job,
+        )
+    except Exception:
+        payload["cal_seller_brief"] = None
 
     quality_profile = compute_lead_quality_profile(
         priority_tier=pri.tier,
@@ -1291,6 +1600,141 @@ def _research_update_row(row: LeadResearchUpdate) -> dict:
     }
 
 
+def _hermes_pipeline_fields(crm_meta: Optional[dict]) -> dict:
+    """Public pipeline fields from Hermes overlays on company.crm_metadata."""
+    meta = crm_meta if isinstance(crm_meta, dict) else {}
+    qualify = meta.get("hermes_qualify") if isinstance(meta.get("hermes_qualify"), dict) else None
+    buying = meta.get("hermes_buying_window") if isinstance(meta.get("hermes_buying_window"), dict) else None
+    jobs = meta.get("hermes_job_orders") if isinstance(meta.get("hermes_job_orders"), list) else []
+    dms = meta.get("hermes_decision_makers") if isinstance(meta.get("hermes_decision_makers"), list) else []
+    vendor_shortlist = []
+    if qualify:
+        raw = qualify.get("vendor_shortlist")
+        if isinstance(raw, list):
+            for item in raw[:5]:
+                if isinstance(item, dict):
+                    vendor_shortlist.append(
+                        {
+                            "vendor": item.get("vendor") or item.get("manufacturer_name"),
+                            "model": item.get("model") or item.get("robot_model"),
+                            "why": item.get("why"),
+                        }
+                    )
+                elif isinstance(item, str) and item.strip():
+                    vendor_shortlist.append({"vendor": item.strip(), "model": None, "why": None})
+    job_titles = []
+    for j in jobs[-5:]:
+        if isinstance(j, dict) and j.get("job_title"):
+            job_titles.append(str(j.get("job_title"))[:160])
+    dm_preview = []
+    for d in dms[-6:]:
+        if not isinstance(d, dict):
+            continue
+        name = (d.get("name") or "").strip()
+        if not name:
+            continue
+        dm_preview.append(
+            {
+                "name": name[:120],
+                "title": (d.get("title") or None),
+                "source_url": d.get("source_url"),
+                "confidence": d.get("confidence"),
+            }
+        )
+    videos_raw = meta.get("hermes_video_evidence") if isinstance(meta.get("hermes_video_evidence"), list) else []
+    video_preview = []
+    for v in videos_raw[-8:]:
+        if not isinstance(v, dict):
+            continue
+        url = (v.get("source_url") or "").strip()
+        if not url:
+            continue
+        video_preview.append(
+            {
+                "title": (v.get("title") or None),
+                "source_url": url[:500],
+                "platform": v.get("platform"),
+                "evidence_kind": v.get("evidence_kind"),
+                "workflow_hint": (v.get("workflow_hint") or None),
+                "robot_visible": (v.get("robot_visible") or None),
+                "facility_hint": (v.get("facility_hint") or None),
+                "confidence": v.get("confidence"),
+                "published_at": v.get("published_at"),
+            }
+        )
+    factor_preview = []
+    if buying:
+        for f in list(buying.get("factors") or [])[:6]:
+            if isinstance(f, dict):
+                factor_preview.append(
+                    {
+                        "type": f.get("type"),
+                        "name": f.get("name") or f.get("peer"),
+                        "phase": f.get("phase"),
+                        "days_until": f.get("days_until") or f.get("recency_days"),
+                    }
+                )
+    return {
+        "hermes_qualify": (
+            {
+                "automation_fit": qualify.get("automation_fit"),
+                "labor_intensity": qualify.get("labor_intensity"),
+                "facility_clarity": qualify.get("facility_clarity"),
+                "blockers": list(qualify.get("blockers") or [])[:8],
+                "rationale": (qualify.get("rationale") or "")[:500] or None,
+                "vendor_shortlist": vendor_shortlist,
+                "truth_state": qualify.get("truth_state") or "HERMES_OVERLAY",
+                "updated_at": qualify.get("updated_at"),
+            }
+            if qualify
+            else None
+        ),
+        "hermes_buying_window": (
+            {
+                "urgency_0_100": buying.get("urgency_0_100"),
+                "window_label": (buying.get("window_label") or None),
+                "cal_hint": (buying.get("cal_hint") or "")[:280] or None,
+                "confidence": buying.get("confidence"),
+                "factors": factor_preview,
+                "truth_state": buying.get("truth_state") or "HERMES_OVERLAY",
+                "updated_at": buying.get("updated_at"),
+            }
+            if buying
+            else None
+        ),
+        "hermes_job_titles": job_titles,
+        "hermes_decision_makers": dm_preview,
+        "hermes_video_evidence": video_preview or None,
+    }
+
+
+def _merge_hermes_decision_makers(crm_dms: list, hermes_dms: list) -> list:
+    """Prefer named CRM DMs; append Hermes public DMs without duplicate names."""
+    out: list = []
+    seen: set[str] = set()
+    for src in (crm_dms or []) + (hermes_dms or []):
+        if not isinstance(src, dict):
+            continue
+        name = (src.get("name") or "").strip()
+        if not name:
+            continue
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(
+            {
+                "name": name[:120],
+                "title": src.get("title"),
+                "source_url": src.get("source_url"),
+                "confidence": src.get("confidence"),
+            }
+        )
+        if len(out) >= 6:
+            break
+    return out
+
+
 def _crm_evidence_summary(
     *,
     crm_meta: dict,
@@ -1302,6 +1746,12 @@ def _crm_evidence_summary(
     budget_meta = crm_meta.get("budget") if isinstance(crm_meta.get("budget"), dict) else {}
     timing_meta = crm_meta.get("timing") if isinstance(crm_meta.get("timing"), dict) else {}
     decision_makers = crm_meta.get("decision_makers") if isinstance(crm_meta.get("decision_makers"), list) else []
+    hermes_dms = (
+        crm_meta.get("hermes_decision_makers")
+        if isinstance(crm_meta.get("hermes_decision_makers"), list)
+        else []
+    )
+    decision_makers = _merge_hermes_decision_makers(decision_makers, hermes_dms)
     automation_requirements = crm_meta.get("automation_requirements") if isinstance(crm_meta.get("automation_requirements"), list) else []
     inferred_robot_fit = crm_meta.get("inferred_robot_fit") if isinstance(crm_meta.get("inferred_robot_fit"), list) else []
     application_areas = lead_inference.get("application_areas") if isinstance(lead_inference.get("application_areas"), list) else []
@@ -2192,6 +2642,32 @@ def _staged_tuples_to_feed_rows(staged: list, *, slim: bool = False) -> list:
     ]
 
 
+def _attach_work_match_overlays(db: Session, rows: list) -> list:
+    """Batch-attach persisted WORK / Work Match fields onto pipeline card dicts."""
+    if not rows:
+        return rows
+    try:
+        from app.services.work_unit_store import best_work_overlays_for_companies
+    except Exception:
+        return rows
+    ids = [int(r["id"]) for r in rows if r.get("id") is not None]
+    overlays = best_work_overlays_for_companies(db, ids)
+    for r in rows:
+        ov = overlays.get(int(r["id"])) if r.get("id") is not None else None
+        if not ov:
+            continue
+        r["work_unit_id"] = ov.get("work_unit_id")
+        r["workflow_family"] = ov.get("workflow_family")
+        r["work_task"] = ov.get("work_task")
+        r["work_match"] = ov.get("work_match")
+        r["work_match_label"] = ov.get("work_match_label")
+        r["work_match_score"] = ov.get("match_score")
+        r["work_match_manufacturer"] = ov.get("manufacturer_name")
+        r["work_hard_blockers"] = ov.get("hard_blockers") or []
+        r["comparable_deployment"] = ov.get("comparable_deployment")
+    return rows
+
+
 def build_public_pipeline_feed(db: Session, *, limit: int = PIPELINE_FEED_LIMIT) -> list:
     """
     Tiered pipeline slice: HOT + WARM + monitoring (COLD) slots for /pipeline UI.
@@ -2204,12 +2680,15 @@ def build_public_pipeline_feed(db: Session, *, limit: int = PIPELINE_FEED_LIMIT)
     exclude: set = set()
     hot_staged = _fetch_staged_by_tier(db, "HOT", limit=hot_n, exclude_ids=exclude)
     exclude.update(c.id for c, *_ in hot_staged)
-    warm_staged = _fetch_staged_by_tier(db, "WARM", limit=warm_n, exclude_ids=exclude)
+    # Pull extra warm candidates so monitoring can be backfilled when COLD is sparse.
+    warm_pool_n = min(_PIPELINE_SUMMARY_ROW_CAP, max(warm_n, warm_n + cold_n))
+    warm_staged = _fetch_staged_by_tier(db, "WARM", limit=warm_pool_n, exclude_ids=exclude)
     exclude.update(c.id for c, *_ in warm_staged)
     cold_staged = _fetch_staged_by_tier(db, "COLD", limit=cold_n, exclude_ids=exclude)
 
     hot_rows = _staged_tuples_to_feed_rows(hot_staged, slim=True)
-    warm_rows = _staged_tuples_to_feed_rows(warm_staged, slim=True)
+    warm_primary = warm_staged[:warm_n]
+    warm_rows = _staged_tuples_to_feed_rows(warm_primary, slim=True)
 
     def _has_vertical(leads: list, vertical: str) -> bool:
         return any(
@@ -2239,7 +2718,23 @@ def build_public_pipeline_feed(db: Session, *, limit: int = PIPELINE_FEED_LIMIT)
         warm_rows = (inject_rows + warm_rows)[:warm_n]
 
     cold_rows = _staged_tuples_to_feed_rows(cold_staged, slim=True)
-    return hot_rows[:hot_n] + warm_rows[:warm_n] + cold_rows[:cold_n]
+
+    # Synthetic monitoring: when true COLD inventory is sparse, use warm tail as
+    # monitoring candidates so the monitor column does not collapse to zero.
+    if len(cold_rows) < cold_n:
+        warm_tail = warm_staged[warm_n:]
+        synth_needed = max(0, cold_n - len(cold_rows))
+        synth_rows: list[dict] = []
+        for c, junk, junk_reason, pri in warm_tail[:synth_needed]:
+            monitor_pri = SimpleNamespace(tier="COLD", score=float(getattr(pri, "score", 0.0) or 0.0))
+            row = _fmt_pipeline_card(c, junk, junk_reason, monitor_pri)
+            row["monitoring_source"] = "synthetic_warm_tail"
+            row["monitoring_original_tier"] = getattr(pri, "tier", None)
+            synth_rows.append(row)
+        cold_rows = cold_rows + synth_rows
+
+    feed = hot_rows[:hot_n] + warm_rows[:warm_n] + cold_rows[:cold_n]
+    return _attach_work_match_overlays(db, feed)
 
 
 def hydrate_pipeline_feed_cache(feed: dict) -> None:
@@ -2346,7 +2841,10 @@ def get_leads(
 
     industry_filter = (search or industry or "").strip() or None
 
-    from app.services.public_surface_cache import maybe_schedule_public_cache_refresh
+    from app.services.public_surface_cache import (
+        PUBLIC_CACHE_REVALIDATE_SEC,
+        maybe_schedule_public_cache_refresh,
+    )
 
     maybe_schedule_public_cache_refresh()
 
@@ -2357,7 +2855,9 @@ def get_leads(
     _cached = _LEADS_LIST_CACHE.get(_cache_key)
     if _cached is not None:
         _ts, _data = _cached
-        return _data
+        if time.monotonic() - _ts < PUBLIC_CACHE_REVALIDATE_SEC:
+            return _data
+        _LEADS_LIST_CACHE.pop(_cache_key, None)
 
     public_key = _public_leads_durable_key(
         min_score, max_score, tier, industry_filter, signal_type, exclude_junk, limit, sort, rotation_slot
@@ -2722,6 +3222,10 @@ def get_lead_by_id(company_id: int, response: Response, db: Session = Depends(ge
             include_research=True,
             db=db,
         )
+        try:
+            _attach_work_match_overlays(db, [payload])
+        except Exception:
+            pass
         _maybe_schedule_missing_evidence_research(
             company=c,
             priority_tier=pri.tier,
@@ -3278,10 +3782,113 @@ def _pipeline_feed_from_surface_caches() -> Optional[dict]:
     }
 
 
+def _repair_pipeline_lead_compat_fields(payload: dict, db: Session) -> dict:
+    """
+    Backfill legacy compatibility fields for cached pipeline rows.
+
+    Some stale cache generations omitted `lead_tier`, `company_url`,
+    `company_country`, and `signal_strength`. Repair them at read time so
+    clients and health checks remain stable until the next full cache rebuild.
+    """
+    from app.services.company_name_fixes import canonical_display_name
+
+    leads = payload.get("leads") if isinstance(payload, dict) else None
+    if not isinstance(leads, list) or not leads:
+        return payload
+
+    needs_company_lookup: set[int] = set()
+
+    for lead in leads:
+        if not isinstance(lead, dict):
+            continue
+
+        fixed_name = canonical_display_name(lead.get("company_name"))
+        if fixed_name and fixed_name != lead.get("company_name"):
+            lead["company_name"] = fixed_name
+
+        priority_tier = (lead.get("priority_tier") or "").strip().upper()
+        if not lead.get("lead_tier") and priority_tier:
+            lead["lead_tier"] = priority_tier
+
+        company_url = lead.get("company_url") or lead.get("website") or lead.get("primary_link_url")
+        if company_url and not lead.get("company_url"):
+            lead["company_url"] = company_url
+        if company_url and not lead.get("website"):
+            lead["website"] = company_url
+
+        company_country = lead.get("company_country") or lead.get("location_country")
+        if company_country and not lead.get("company_country"):
+            lead["company_country"] = company_country
+        if company_country and not lead.get("location_country"):
+            lead["location_country"] = company_country
+
+        if lead.get("signal_strength") is None:
+            strength = None
+            sigs = lead.get("signals")
+            if isinstance(sigs, list) and sigs and isinstance(sigs[0], dict):
+                raw = sigs[0].get("strength")
+                if raw is not None:
+                    try:
+                        strength = float(raw)
+                    except (TypeError, ValueError):
+                        strength = None
+            if strength is None:
+                score = lead.get("score") if isinstance(lead.get("score"), dict) else {}
+                overall = score.get("overall_score") if isinstance(score, dict) else None
+                if overall is not None:
+                    try:
+                        strength = max(0.0, min(float(overall) / 100.0, 1.0))
+                    except (TypeError, ValueError):
+                        strength = None
+            if strength is not None:
+                lead["signal_strength"] = round(float(strength), 3)
+
+        if (not lead.get("company_url") or not lead.get("company_country")) and lead.get("id") is not None:
+            try:
+                needs_company_lookup.add(int(lead.get("id")))
+            except (TypeError, ValueError):
+                pass
+
+    if needs_company_lookup:
+        rows = (
+            db.query(Company.id, Company.website, Company.location_country)
+            .filter(Company.id.in_(list(needs_company_lookup)))
+            .all()
+        )
+        by_id = {
+            int(cid): {
+                "website": website,
+                "location_country": country,
+            }
+            for cid, website, country in rows
+        }
+        for lead in leads:
+            if not isinstance(lead, dict):
+                continue
+            try:
+                cid = int(lead.get("id"))
+            except (TypeError, ValueError):
+                continue
+            rec = by_id.get(cid) or {}
+            site = rec.get("website")
+            country = rec.get("location_country")
+            if site and not lead.get("company_url"):
+                lead["company_url"] = site
+            if site and not lead.get("website"):
+                lead["website"] = site
+            if country and not lead.get("company_country"):
+                lead["company_country"] = country
+            if country and not lead.get("location_country"):
+                lead["location_country"] = country
+
+    return payload
+
+
 @router.get("/pipeline")
 def leads_pipeline_feed(
     response: Response,
     user: Optional[dict] = Depends(optional_user),
+    db: Session = Depends(get_db),
 ):
     """
     Single batched read for /pipeline UI — summary + rotated top leads.
@@ -3296,6 +3903,7 @@ def leads_pipeline_feed(
     from app.services.plan_entitlements import apply_pipeline_entitlements, resolve_plan_tier
     from app.services.public_surface_cache import (
         PUBLIC_CACHE_REFRESH_INTERVAL_SEC,
+        PUBLIC_CACHE_REVALIDATE_SEC,
         maybe_schedule_public_cache_refresh,
         pipeline_feed_is_stale,
         read_public_cache,
@@ -3311,9 +3919,14 @@ def leads_pipeline_feed(
     plan = resolve_plan_tier(user)
 
     def _finish(payload: dict) -> dict:
-        return apply_pipeline_entitlements(payload, plan)
+        repaired = _repair_pipeline_lead_compat_fields(deepcopy(payload), db)
+        return apply_pipeline_entitlements(repaired, plan)
 
     mem = _PIPELINE_FEED_MEM.get("v1")
+    if mem is not None:
+        if time.monotonic() - float(mem.get("ts") or 0.0) >= PUBLIC_CACHE_REVALIDATE_SEC:
+            _PIPELINE_FEED_MEM.pop("v1", None)
+            mem = None
     if mem is not None:
         data = mem["data"]
         if isinstance(data, dict) and (data.get("leads") or []) and not pipeline_feed_is_stale(data):
@@ -3492,6 +4105,129 @@ def leads_summary(
 
     schedule_public_cache_refresh(force=True, pipeline_only=True, reason="summary_miss")
     return _empty_summary_payload()
+
+
+_MARKET_PULSE_CACHE: dict[str, object] = {"ts": 0.0, "data": None}
+_MARKET_PULSE_TTL_SEC = 120.0
+# Hero "deployments" = public deployment evidence claims (not only live/commercial).
+# Include announced/agreement/pilot+/eval; named-customer UNKNOWN still counts (not F junk).
+_PULSE_DEPLOYMENT_STAGES = (
+    "ANNOUNCED",
+    "AGREEMENT",
+    "EVALUATION",
+    "PROOF_OF_CONCEPT",
+    "PILOT",
+    "LIVE_DEPLOYMENT",
+    "COMMERCIAL_DEPLOYMENT",
+    "MULTI_SITE",
+    "EXPANSION",
+)
+_PULSE_EVIDENCE_LEVELS = ("A", "B", "C", "D", "E")
+
+
+def _build_market_pulse(db: Session) -> dict:
+    """Homepage hero totals — buyers, vendors, public deployment evidence."""
+    from app.models.deployment_evidence import DeploymentEvent
+    from app.models.robot_catalog import Manufacturer
+    from app.models.robot_company import RobotCompany
+
+    # Prefer warm summary cache so we don't re-scan companies on every hero hit.
+    summary: dict = {}
+    try:
+        from app.services.public_surface_cache import KEY_SUMMARY_EXCLUDE_JUNK, read_public_cache
+
+        cached = read_public_cache(KEY_SUMMARY_EXCLUDE_JUNK, stale_ok=True)
+        if isinstance(cached, dict):
+            summary = cached
+    except Exception:
+        summary = {}
+
+    if not summary:
+        try:
+            summary = _compute_pipeline_summary_fast(db)
+        except Exception:
+            summary = _empty_summary_payload()
+
+    hot = int(summary.get("hot") or 0)
+    warm = int(summary.get("warm") or 0)
+    signals = int(summary.get("total_signals") or summary.get("signals_in_database") or 0)
+
+    robot_vendors = 0
+    try:
+        rc = int(db.query(func.count(RobotCompany.id)).scalar() or 0)
+        mf = int(db.query(func.count(Manufacturer.id)).scalar() or 0)
+        robot_vendors = max(rc, mf)
+    except Exception as exc:
+        logger.warning("market-pulse vendor count failed: %s", exc)
+
+    active_deployments = 0
+    try:
+        # Prefer unique vendor||customer pairs so duplicate claim rows don't inflate the hero.
+        pair_key = func.lower(
+            func.concat(
+                func.coalesce(DeploymentEvent.vendor_name, ""),
+                "|",
+                func.coalesce(DeploymentEvent.customer_name, ""),
+            )
+        )
+        named_customer = and_(
+            DeploymentEvent.customer_name.isnot(None),
+            func.length(func.trim(DeploymentEvent.customer_name)) > 0,
+            DeploymentEvent.evidence_level.in_(_PULSE_EVIDENCE_LEVELS),
+        )
+        staged = DeploymentEvent.deployment_stage.in_(_PULSE_DEPLOYMENT_STAGES)
+        active_deployments = int(
+            db.query(func.count(func.distinct(pair_key)))
+            .filter(or_(staged, named_customer))
+            .filter(pair_key != "|")  # drop rows with neither vendor nor customer
+            .scalar()
+            or 0
+        )
+        if active_deployments <= 0:
+            active_deployments = int(db.query(func.count(DeploymentEvent.id)).scalar() or 0)
+    except Exception as exc:
+        logger.warning("market-pulse deployment count failed: %s", exc)
+
+    return {
+        "buyer_opportunities": hot + warm,
+        "hot_windows": hot,
+        "robot_vendors": robot_vendors,
+        "active_deployments": active_deployments,
+        "buying_signals": signals,
+        "built_at": datetime.now(timezone.utc).isoformat(),
+        "doc": "Hero market pulse for homepage tension (non-CTA).",
+    }
+
+
+@router.get("/market-pulse")
+def market_pulse(
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    """Public hero metrics: buyer opportunities, vendors, active deployments."""
+    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=600"
+    now = time.monotonic()
+    cached = _MARKET_PULSE_CACHE.get("data")
+    ts = float(_MARKET_PULSE_CACHE.get("ts") or 0)
+    if cached is not None and now - ts < _MARKET_PULSE_TTL_SEC:
+        return cached
+    try:
+        payload = _build_market_pulse(db)
+    except Exception as exc:
+        logger.warning("market-pulse build failed: %s", exc)
+        if cached is not None:
+            return cached
+        return {
+            "buyer_opportunities": 0,
+            "hot_windows": 0,
+            "robot_vendors": 0,
+            "active_deployments": 0,
+            "buying_signals": 0,
+            "error": str(exc)[:200],
+        }
+    _MARKET_PULSE_CACHE["ts"] = now
+    _MARKET_PULSE_CACHE["data"] = payload
+    return payload
 
 
 @router.post("/reclassify-unknown")

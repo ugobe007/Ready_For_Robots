@@ -11,6 +11,8 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAuth } from "@/contexts/AuthContext";
 import { signupHrefForCheckout } from "@/lib/authNext";
 import { fetchBillingConfig, startCheckout, type BillingConfig } from "@/lib/billing";
+import PixelIcon from "@/components/PixelIcon";
+import { KARE_FACE } from "@/lib/kareIcons";
 
 const tiers = [
   {
@@ -25,7 +27,7 @@ const tiers = [
     features: [
       "URL scan and buyer matching",
       "15 live pipeline leads before signup (HOT / WARM / monitor mix)",
-      "10 ranked leads in free workspace after signup",
+      "15 ranked leads in free workspace after signup",
       "Lead score and why-now context",
       "Save up to 5 leads to your workspace",
       "Outreach draft previews",
@@ -105,7 +107,7 @@ const faqs = [
   },
   {
     q: "Which plan should I start with?",
-    a: "Start on Free — scan URLs, browse 10 live pipeline leads, and save your first 5 accounts. Upgrade to Pro when you need cited SIGNAL research and HubSpot auto-sync.",
+    a: "Start on Free — scan URLs, browse 15 live pipeline leads, and save your first 5 accounts. Upgrade to Pro when you need cited SIGNAL research and HubSpot auto-sync.",
   },
   {
     q: "How do you define a 'matched prospect'?",
@@ -129,7 +131,7 @@ const faqs = [
   },
   {
     q: "How is this different from Explee, Apollo, or other company search tools?",
-    a: "Those tools help you find accounts and export contacts—we help robot sales teams run the full funnel. ReadyForRobots surfaces buyers showing live robot intent (capex, labor, deployment signals), ranks HOT/WARM timing, tells you which robot categories to pitch, and advances deals in our pipeline or HubSpot. You are not buying another stale list; you are automating a sales pipeline built for robotics. See our full comparison at /compare.",
+    a: "Those tools help you find accounts and export contacts. ReadyForRobots runs Full Stack Sales for robotics: capture qualified buyers with live robot intent, assess alignment to your capabilities, then activate motion through MSD across outreach and CRM. You are not buying another stale list; you are running an ISA platform built for robotics revenue. See our full comparison at /compare.",
   },
   {
     q: "Do you help with robot deployment services?",
@@ -254,16 +256,21 @@ export default function Pricing() {
       <PageHeroDark
         maxWidthClass="max-w-5xl"
         eyebrow="Pricing"
-        title="Simple pricing for robot sales teams"
+        title="Full Stack Sales pricing for robot teams"
         description={
-          <>
-            <span className="font-bold uppercase tracking-widest text-emerald-400">Signal</span>
-            {" — robotics prospecting, qualifying, and outreach synced to "}
-            <span className="font-bold text-amber-400">HubSpot</span>
-            {" or your CRM. Free workspace to start — Pro and Premium checkout when billing is enabled."}
-          </>
+          <div className="flex items-center justify-center gap-6">
+            <p className="min-w-0 max-w-2xl flex-1 text-left sm:text-center">
+              <span className="font-bold uppercase tracking-widest text-emerald-400">Signal</span>
+              {" — ISA qualification + alignment scoring, then MSD sales activation synced to "}
+              <span className="font-bold text-amber-400">HubSpot</span>
+              {" or your CRM. Free workspace to start — Pro and Premium checkout when billing is enabled."}
+            </p>
+            <div className="shrink-0" aria-hidden="true">
+              <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+            </div>
+          </div>
         }
-        innerClassName="pb-8 text-center [&_.page-hero-title]:mx-auto [&_.page-hero-description]:mx-auto"
+        innerClassName="pb-8 text-center [&_.page-hero-title]:mx-auto [&_.page-hero-description]:mx-auto [&_.page-hero-description]:max-w-3xl"
       />
       <div className="page-hero-fade" aria-hidden />
 

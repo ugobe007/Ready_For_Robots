@@ -250,6 +250,7 @@ def run_humanoid_discovery(
                 assessment = agent_assess_humanoid(
                     entry["name"],
                     entry["vendor"],
+                    model_slug=slug,
                     country=entry.get("country") or "",
                     status=entry.get("status") or "research",
                     product_url=entry.get("product_url") or "",

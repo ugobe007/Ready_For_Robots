@@ -369,7 +369,7 @@ export default function Social() {
 
   const studioAuthHeaders = useMemo((): Record<string, string> => {
     if (session?.access_token && isAdmin) {
-      return authHeader(session.access_token);
+      return Object.fromEntries(new Headers(authHeader(session.access_token)).entries());
     }
     const key = resolveAdminKey();
     if (key) return { "X-Admin-Key": key };
@@ -817,7 +817,7 @@ export default function Social() {
         {error && !loading && !refreshing && !posts?.length && (
           <div className="border border-red-200 bg-red-50 rounded-xl p-6 text-center">
             <p className="text-red-700 text-sm mb-3">Failed to load posts: {error}</p>
-            <button type="button" onClick={fetchPosts} className="text-xs border border-gray-300 px-3 py-1.5 rounded bg-white text-gray-700 hover:bg-gray-50">
+            <button type="button" onClick={() => void fetchPosts()} className="text-xs border border-gray-300 px-3 py-1.5 rounded bg-white text-gray-700 hover:bg-gray-50">
               Try again
             </button>
           </div>

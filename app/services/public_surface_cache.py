@@ -32,6 +32,8 @@ from app.services.pipeline_cache_policy import (
     PUBLIC_CACHE_TTL_MINUTES,
 )
 
+PIPELINE_FEED_MIN_LEADS = int(os.getenv("PIPELINE_FEED_MIN_LEADS", "24"))
+
 from app.services.content_surfaces import (
     KEY_HOMEPAGE,
     KEY_HUMANOID_BENCHMARK_REPORT,
@@ -154,6 +156,37 @@ def refresh_pipeline_surface_caches(db: Session, *, include_humanoid_report: boo
     try:
         pipeline_leads = build_public_pipeline_feed(db, limit=PIPELINE_FEED_LIMIT)
         stats["pipeline_feed_source"] = "fresh"
+
+        min_target = min(max(int(PIPELINE_FEED_MIN_LEADS), 0), PIPELINE_FEED_LIMIT)
+        if len(pipeline_leads) < min_target:
+            fallback = (
+                leads_cache.get((50, "all"))
+                or leads_cache.get((18, "all"))
+                or leads_cache.get((12, "HOT"))
+                or []
+            )
+            existing_ids = {
+                int(row.get("id"))
+                for row in pipeline_leads
+                if isinstance(row, dict) and row.get("id") is not None
+            }
+            for row in fallback:
+                if not isinstance(row, dict):
+                    continue
+                rid = row.get("id")
+                if rid is None:
+                    continue
+                try:
+                    rid_i = int(rid)
+                except (TypeError, ValueError):
+                    continue
+                if rid_i in existing_ids:
+                    continue
+                pipeline_leads.append(row)
+                existing_ids.add(rid_i)
+                if len(pipeline_leads) >= min_target:
+                    break
+            stats["pipeline_feed_backfilled_to"] = len(pipeline_leads)
     except Exception as exc:
         logger.warning("Pipeline feed build failed; using warmed lead-list fallback: %s", exc)
         fallback = (

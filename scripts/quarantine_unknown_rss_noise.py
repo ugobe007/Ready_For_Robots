@@ -92,6 +92,7 @@ def main() -> None:
                 sigs,
                 from_is_junk=junk_pair,
                 from_classify=classify_pair,
+                company=company,
             )
             if ok:
                 rows.append((company.id, name, bucket, reason, is_quarantined(company)))

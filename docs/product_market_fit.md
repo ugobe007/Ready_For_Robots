@@ -2,15 +2,19 @@
 
 **Canonical PMF statement for all harness agents, Cursor sessions, and mission briefs.**
 
-**Last updated:** 2026-06-16
+**Last updated:** 2026-08-13
 
 ---
 
 ## What we are
 
-**ReadyForRobots is the automated sales pipeline for robot companies.**
+**ReadyForRobots is the commercial intelligence layer for robot companies** — the automated sales pipeline *and* the judgment layer that makes those companies ready for real customers.
 
 Robot OEMs, integrators, and distributors sign up to **automate their sales funnel** — from verified buyer intent through outreach and deal advance — without building their own lead-ops stack.
+
+**Deeper thesis:** Robot technology is advancing faster than robot companies are learning how to commercialize it. Matching supply and demand is secondary to closing the **commercial maturity** gap. See [commercial_maturity_models.md](./commercial_maturity_models.md).
+
+**Brand dual meaning:** Is the customer ready for robots? Is the robot company ready for the customer?
 
 ---
 

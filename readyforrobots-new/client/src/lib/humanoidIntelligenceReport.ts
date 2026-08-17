@@ -18,10 +18,28 @@ export type TopRobot = {
   rank: number;
   name: string;
   vendor: string;
+  country?: string;
   score_total: number;
   heif_total: number;
   deployment_tier_label: string;
   why_top_rank: string;
+  recent_activity_60d?: {
+    window_days?: number;
+    signal_kind?: string;
+    launch_headlines?: number;
+    deployment_headlines?: number;
+    trial_headlines?: number;
+    freshest_signal_at?: string | null;
+    recency_score?: number;
+  };
+  policy_positioning?: {
+    country?: string;
+    policy_tag?: string;
+    us_market_access_risk?: string;
+    us_demand_shift_score?: number;
+    policy_score?: number;
+    rationale?: string;
+  };
   score_rationale: Record<string, DimRationale>;
   trials_and_pocs: {
     news_trial_headlines: number;
@@ -122,6 +140,65 @@ export type HumanoidIntelligenceReportData = {
   month_over_month?: MonthOverMonth;
   adoption_metrics: Record<string, unknown>;
   comparisons?: ReportComparisons;
+  recent_market_entries_60d?: {
+    rank: number;
+    name: string;
+    vendor: string;
+    country?: string;
+    recency_score: number;
+    signal_kind: string;
+    freshest_signal_at?: string | null;
+    launch_headlines: number;
+    deployment_headlines: number;
+    trial_headlines: number;
+    score_total?: number;
+    heif_total?: number;
+  }[];
+  policy_intelligence?: {
+    policy_window?: string;
+    notes?: string[];
+    policy_tag_breakdown_top_slice?: Record<string, number>;
+    average_policy_score_top_slice?: number;
+    non_us_suppliers?: {
+      rank: number;
+      name: string;
+      vendor: string;
+      country?: string;
+      policy_tag?: string;
+      policy_score?: number;
+    }[];
+    china_restriction_update?: {
+      headline?: string;
+      affected_supplier_count_top_slice?: number;
+      affected_suppliers_top_slice?: {
+        rank: number;
+        name: string;
+        vendor: string;
+        country?: string;
+        policy_score?: number;
+        policy_tag?: string;
+      }[];
+      recommended_actions?: string[];
+      last_updated?: string;
+    };
+    demand_shift_beneficiaries?: {
+      rank: number;
+      name: string;
+      vendor: string;
+      country?: string;
+      policy_score: number;
+      demand_shift_score: number;
+      policy_tag?: string;
+    }[];
+    higher_access_risk_suppliers?: {
+      rank: number;
+      name: string;
+      vendor: string;
+      country?: string;
+      policy_score: number;
+      policy_tag?: string;
+    }[];
+  };
   customer_landscape: {
     customer: string;
     robots: string[];

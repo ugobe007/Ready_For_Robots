@@ -625,7 +625,7 @@ export default function Signals() {
   useEffect(() => {
     let cancelled = false;
     const base = getPublicReadApiBase();
-    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+    let refreshTimer: number | null = null;
 
     const maybeOpenBreaker = () => {
       if (

@@ -13,6 +13,11 @@ from app.models.company import Company
 from app.models.crm import CrmAccount
 from app.models.score import Score
 from app.services.crm_engagement_sync import sync_account_stage_to_engagement
+from app.services.deployment_conversion import (
+    CONVERSION_STAGES,
+    ensure_deployment_opportunity,
+    record_conversion_transition,
+)
 from app.services.hubspot_oauth import HubSpotError
 from app.services.integration_connections import PROVIDER_HUBSPOT, _find_connection
 
@@ -120,14 +125,35 @@ def sync_hubspot_deals_to_crm(db: Session, *, team_id: UUID, token: str) -> dict
         )
         if not account:
             continue
-        if account.outreach_stage == stage:
-            continue
-        account.outreach_stage = stage
-        sync_account_stage_to_engagement(db, account)
-        db.add(account)
-        updated += 1
+        changed = account.outreach_stage != stage
+        if changed:
+            account.outreach_stage = stage
+            sync_account_stage_to_engagement(db, account)
+            db.add(account)
+            updated += 1
+        opportunity = ensure_deployment_opportunity(db, account=account)
+        current_stage = (opportunity.current_stage or "new").lower()
+        if current_stage != "lost" and (
+            current_stage == "new"
+            or current_stage not in CONVERSION_STAGES
+            or CONVERSION_STAGES.index(current_stage) < CONVERSION_STAGES.index("contacted")
+        ):
+            record_conversion_transition(
+                db,
+                opportunity=opportunity,
+                to_stage="contacted",
+                actor="hubspot_sync",
+                occurred_at=datetime.now(timezone.utc).isoformat(),
+                evidence_level="e1_observed",
+                contact_result="connected",
+                evidence=[{
+                    "type": "hubspot_deal_stage",
+                    "deal_id": str(deal_id),
+                    "dealstage": props.get("dealstage"),
+                }],
+            )
 
-    if updated:
+    if checked:
         db.commit()
     return {"updated": updated, "checked": checked}
 

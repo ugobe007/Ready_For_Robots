@@ -24,6 +24,7 @@ _TERMINAL = {
     "delivered": "delivered",
     "bounced": "bounced",
     "complained": "complained",
+    "suppressed": "suppressed",
 }
 
 

@@ -1,0 +1,614 @@
+{
+  "protocol": "ORIGIN_OPEN_WORLD_100",
+  "budget": {
+    "queries": 100,
+    "max_docs_per_query": 5
+  },
+  "input": {
+    "robot": "Locus Origin",
+    "company_list": null
+  },
+  "capability_gate": "docs/product_sim/envelopes/locus_origin_work_translation.md",
+  "queries": [
+    {
+      "id": 1,
+      "lens": "direct",
+      "query": "warehouse tote transport job distribution center",
+      "status": "done_batch1"
+    },
+    {
+      "id": 2,
+      "lens": "direct",
+      "query": "DC associate move totes carts fulfillment center",
+      "status": "pending"
+    },
+    {
+      "id": 3,
+      "lens": "direct",
+      "query": "warehouse cart movement order consolidation",
+      "status": "pending"
+    },
+    {
+      "id": 4,
+      "lens": "direct",
+      "query": "pick to pack material movement warehouse job",
+      "status": "done_batch1"
+    },
+    {
+      "id": 5,
+      "lens": "direct",
+      "query": "replenishment transport warehouse associate",
+      "status": "pending"
+    },
+    {
+      "id": 6,
+      "lens": "direct",
+      "query": "putaway transport distribution center job",
+      "status": "pending"
+    },
+    {
+      "id": 7,
+      "lens": "direct",
+      "query": "move completed orders staging warehouse",
+      "status": "pending"
+    },
+    {
+      "id": 8,
+      "lens": "direct",
+      "query": "order consolidation movement DC associate",
+      "status": "pending"
+    },
+    {
+      "id": 9,
+      "lens": "direct",
+      "query": "point to point tote movement fulfillment",
+      "status": "pending"
+    },
+    {
+      "id": 10,
+      "lens": "direct",
+      "query": "carton transport warehouse picker assistant",
+      "status": "pending"
+    },
+    {
+      "id": 11,
+      "lens": "direct",
+      "query": "grocery DC tote cart travel reduction",
+      "status": "pending"
+    },
+    {
+      "id": 12,
+      "lens": "direct",
+      "query": "3PL warehouse move totes between zones",
+      "status": "pending"
+    },
+    {
+      "id": 13,
+      "lens": "direct",
+      "query": "cold storage tote transport associate",
+      "status": "pending"
+    },
+    {
+      "id": 14,
+      "lens": "direct",
+      "query": "pharmaceutical DC tote movement job",
+      "status": "done_batch2"
+    },
+    {
+      "id": 15,
+      "lens": "direct",
+      "query": "auto parts DC carton transport associate",
+      "status": "done_batch1"
+    },
+    {
+      "id": 16,
+      "lens": "enabled",
+      "query": "order selector distribution center job posting",
+      "status": "pending"
+    },
+    {
+      "id": 17,
+      "lens": "enabled",
+      "query": "case picker grocery warehouse DC",
+      "status": "pending"
+    },
+    {
+      "id": 18,
+      "lens": "enabled",
+      "query": "case selection warehouse associate hiring",
+      "status": "pending"
+    },
+    {
+      "id": 19,
+      "lens": "enabled",
+      "query": "freezer order selector distribution center",
+      "status": "done_batch2"
+    },
+    {
+      "id": 20,
+      "lens": "enabled",
+      "query": "discrete order picker warehouse job",
+      "status": "pending"
+    },
+    {
+      "id": 21,
+      "lens": "enabled",
+      "query": "batch picker distribution center hiring",
+      "status": "pending"
+    },
+    {
+      "id": 22,
+      "lens": "enabled",
+      "query": "replenisher warehouse distribution center job",
+      "status": "done_batch1"
+    },
+    {
+      "id": 23,
+      "lens": "enabled",
+      "query": "pick pack replenish DC associate",
+      "status": "pending"
+    },
+    {
+      "id": 24,
+      "lens": "enabled",
+      "query": "high travel picker warehouse labor",
+      "status": "pending"
+    },
+    {
+      "id": 25,
+      "lens": "enabled",
+      "query": "order filler grocery distribution center",
+      "status": "pending"
+    },
+    {
+      "id": 26,
+      "lens": "enabled",
+      "query": "selector night shift grocery DC",
+      "status": "pending"
+    },
+    {
+      "id": 27,
+      "lens": "enabled",
+      "query": "produce order selector warehouse",
+      "status": "pending"
+    },
+    {
+      "id": 28,
+      "lens": "enabled",
+      "query": "meat dairy case selector DC",
+      "status": "pending"
+    },
+    {
+      "id": 29,
+      "lens": "enabled",
+      "query": "e-commerce fulfillment picker travel",
+      "status": "pending"
+    },
+    {
+      "id": 30,
+      "lens": "enabled",
+      "query": "wholesale distributor order selector",
+      "status": "pending"
+    },
+    {
+      "id": 31,
+      "lens": "problem",
+      "query": "warehouse reduce picker walking time",
+      "status": "pending"
+    },
+    {
+      "id": 32,
+      "lens": "problem",
+      "query": "distribution center picker travel time problem",
+      "status": "pending"
+    },
+    {
+      "id": 33,
+      "lens": "problem",
+      "query": "DC labor shortage order selectors hiring",
+      "status": "done_batch2"
+    },
+    {
+      "id": 34,
+      "lens": "problem",
+      "query": "fulfillment center throughput picker travel",
+      "status": "pending"
+    },
+    {
+      "id": 35,
+      "lens": "problem",
+      "query": "warehouse associates push carts long distances",
+      "status": "pending"
+    },
+    {
+      "id": 36,
+      "lens": "problem",
+      "query": "order picking fatigue travel warehouse",
+      "status": "pending"
+    },
+    {
+      "id": 37,
+      "lens": "problem",
+      "query": "grocery DC hiring selectors overtime",
+      "status": "pending"
+    },
+    {
+      "id": 38,
+      "lens": "problem",
+      "query": "3PL warehouse picker productivity travel",
+      "status": "pending"
+    },
+    {
+      "id": 39,
+      "lens": "problem",
+      "query": "reduce non value added walking warehouse pick",
+      "status": "pending"
+    },
+    {
+      "id": 40,
+      "lens": "problem",
+      "query": "warehouse cart pushing injury picker",
+      "status": "pending"
+    },
+    {
+      "id": 41,
+      "lens": "workflow",
+      "query": "reserve to pick warehouse workflow job",
+      "status": "pending"
+    },
+    {
+      "id": 42,
+      "lens": "workflow",
+      "query": "pick to pack workflow distribution center hiring",
+      "status": "pending"
+    },
+    {
+      "id": 43,
+      "lens": "workflow",
+      "query": "induction station pick assist warehouse",
+      "status": "pending"
+    },
+    {
+      "id": 44,
+      "lens": "workflow",
+      "query": "slot replenishment putaway warehouse associate",
+      "status": "done_batch1"
+    },
+    {
+      "id": 45,
+      "lens": "workflow",
+      "query": "staging to shipping order movement DC",
+      "status": "done_batch2"
+    },
+    {
+      "id": 46,
+      "lens": "workflow",
+      "query": "zone picking cart exchange warehouse",
+      "status": "pending"
+    },
+    {
+      "id": 47,
+      "lens": "workflow",
+      "query": "batch pick consolidation staging job",
+      "status": "pending"
+    },
+    {
+      "id": 48,
+      "lens": "workflow",
+      "query": "wave picking travel warehouse DC",
+      "status": "pending"
+    },
+    {
+      "id": 49,
+      "lens": "workflow",
+      "query": "piece pick tote return warehouse",
+      "status": "pending"
+    },
+    {
+      "id": 50,
+      "lens": "workflow",
+      "query": "case pick pallet jack travel DC",
+      "status": "pending"
+    },
+    {
+      "id": 51,
+      "lens": "geo",
+      "query": "order selector distribution center Texas hiring",
+      "status": "done_batch1"
+    },
+    {
+      "id": 52,
+      "lens": "geo",
+      "query": "order selector distribution center Ohio hiring",
+      "status": "done_batch1"
+    },
+    {
+      "id": 53,
+      "lens": "geo",
+      "query": "order selector distribution center Pennsylvania hiring",
+      "status": "pending"
+    },
+    {
+      "id": 54,
+      "lens": "geo",
+      "query": "order selector distribution center California hiring",
+      "status": "done_batch1"
+    },
+    {
+      "id": 55,
+      "lens": "geo",
+      "query": "order selector distribution center Georgia hiring",
+      "status": "done_batch1"
+    },
+    {
+      "id": 56,
+      "lens": "geo",
+      "query": "case picker warehouse Florida DC hiring",
+      "status": "pending"
+    },
+    {
+      "id": 57,
+      "lens": "geo",
+      "query": "case picker warehouse Illinois DC hiring",
+      "status": "pending"
+    },
+    {
+      "id": 58,
+      "lens": "geo",
+      "query": "replenisher distribution center North Carolina",
+      "status": "pending"
+    },
+    {
+      "id": 59,
+      "lens": "geo",
+      "query": "order selector warehouse New Jersey DC",
+      "status": "pending"
+    },
+    {
+      "id": 60,
+      "lens": "geo",
+      "query": "order selector warehouse Arizona DC hiring",
+      "status": "pending"
+    },
+    {
+      "id": 61,
+      "lens": "geo",
+      "query": "grocery distribution center selector Indiana",
+      "status": "done_batch2"
+    },
+    {
+      "id": 62,
+      "lens": "geo",
+      "query": "grocery distribution center selector Michigan",
+      "status": "done_batch2"
+    },
+    {
+      "id": 63,
+      "lens": "geo",
+      "query": "wholesale DC order selector Missouri hiring",
+      "status": "pending"
+    },
+    {
+      "id": 64,
+      "lens": "geo",
+      "query": "auto parts distribution picker Tennessee",
+      "status": "pending"
+    },
+    {
+      "id": 65,
+      "lens": "geo",
+      "query": "pharma distribution center picker New York",
+      "status": "pending"
+    },
+    {
+      "id": 66,
+      "lens": "geo",
+      "query": "cold chain warehouse selector Wisconsin",
+      "status": "pending"
+    },
+    {
+      "id": 67,
+      "lens": "geo",
+      "query": "3PL fulfillment picker Nevada hiring",
+      "status": "pending"
+    },
+    {
+      "id": 68,
+      "lens": "geo",
+      "query": "foodservice DC selector Colorado hiring",
+      "status": "pending"
+    },
+    {
+      "id": 69,
+      "lens": "geo",
+      "query": "beverage distribution selector Virginia hiring",
+      "status": "pending"
+    },
+    {
+      "id": 70,
+      "lens": "geo",
+      "query": "retail DC order filler Minnesota hiring",
+      "status": "pending"
+    },
+    {
+      "id": 71,
+      "lens": "extra",
+      "query": "material handler move carts between pick zones",
+      "status": "pending"
+    },
+    {
+      "id": 72,
+      "lens": "extra",
+      "query": "warehouse runner tote delivery pick stations",
+      "status": "pending"
+    },
+    {
+      "id": 73,
+      "lens": "extra",
+      "query": "order staging associate move totes shipping",
+      "status": "pending"
+    },
+    {
+      "id": 74,
+      "lens": "extra",
+      "query": "fulfillment associate push cage carts",
+      "status": "pending"
+    },
+    {
+      "id": 75,
+      "lens": "extra",
+      "query": "DC logistics associate internal transport",
+      "status": "pending"
+    },
+    {
+      "id": 76,
+      "lens": "extra",
+      "query": "warehouse water spider replenishment",
+      "status": "done_batch1"
+    },
+    {
+      "id": 77,
+      "lens": "extra",
+      "query": "material mover between pick and pack",
+      "status": "pending"
+    },
+    {
+      "id": 78,
+      "lens": "extra",
+      "query": "cross dock tote movement associate",
+      "status": "pending"
+    },
+    {
+      "id": 79,
+      "lens": "extra",
+      "query": "returns putaway transport warehouse job",
+      "status": "pending"
+    },
+    {
+      "id": 80,
+      "lens": "extra",
+      "query": "outbound staging cart movement DC",
+      "status": "pending"
+    },
+    {
+      "id": 81,
+      "lens": "extra",
+      "query": "inbound putaway cartons to slots",
+      "status": "pending"
+    },
+    {
+      "id": 82,
+      "lens": "extra",
+      "query": "forward pick replenishment from reserve",
+      "status": "pending"
+    },
+    {
+      "id": 83,
+      "lens": "extra",
+      "query": "manual case picking grocery DC hiring",
+      "status": "pending"
+    },
+    {
+      "id": 84,
+      "lens": "extra",
+      "query": "pallet jack order selector grocery warehouse",
+      "status": "done_batch1"
+    },
+    {
+      "id": 85,
+      "lens": "extra",
+      "query": "electric pallet jack picker travel DC",
+      "status": "pending"
+    },
+    {
+      "id": 86,
+      "lens": "extra",
+      "query": "voice picking order selector push cart",
+      "status": "done_batch1"
+    },
+    {
+      "id": 87,
+      "lens": "extra",
+      "query": "RF scanner order selector travel miles",
+      "status": "pending"
+    },
+    {
+      "id": 88,
+      "lens": "extra",
+      "query": "warehouse associate walk miles picking DC",
+      "status": "pending"
+    },
+    {
+      "id": 89,
+      "lens": "extra",
+      "query": "distribution center selector mileage travel",
+      "status": "pending"
+    },
+    {
+      "id": 90,
+      "lens": "extra",
+      "query": "night order selector refrigerated warehouse",
+      "status": "pending"
+    },
+    {
+      "id": 91,
+      "lens": "extra",
+      "query": "dry grocery order selector hiring DC",
+      "status": "pending"
+    },
+    {
+      "id": 92,
+      "lens": "extra",
+      "query": "produce cooler order selector distribution",
+      "status": "pending"
+    },
+    {
+      "id": 93,
+      "lens": "extra",
+      "query": "bakery dairy selector grocery warehouse",
+      "status": "pending"
+    },
+    {
+      "id": 94,
+      "lens": "extra",
+      "query": "convenience store DC case selector hiring",
+      "status": "pending"
+    },
+    {
+      "id": 95,
+      "lens": "extra",
+      "query": "club store distribution order filler",
+      "status": "pending"
+    },
+    {
+      "id": 96,
+      "lens": "extra",
+      "query": "beverage distributor warehouse selector Texas",
+      "status": "pending"
+    },
+    {
+      "id": 97,
+      "lens": "extra",
+      "query": "food distributor order selector warehouse hiring",
+      "status": "pending"
+    },
+    {
+      "id": 98,
+      "lens": "extra",
+      "query": "regional grocery chain DC selector hiring",
+      "status": "pending"
+    },
+    {
+      "id": 99,
+      "lens": "extra",
+      "query": "independent grocery wholesaler selector job",
+      "status": "pending"
+    },
+    {
+      "id": 100,
+      "lens": "extra",
+      "query": "hardware distributor DC picker replenisher",
+      "status": "pending"
+    }
+  ]
+}

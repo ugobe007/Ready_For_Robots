@@ -30,7 +30,7 @@ DEFAULT_BUYER_SEQUENCE = {
             "subject_template": "a deployment note for {company_name}",
             "body_template": (
                 "Hi {company_name},\n\n"
-                "I'm Cal with Ready For Robots.\n\n"
+                "Hi, I am Cal. I work at ReadyForRobots as a deployment advisor. I focus on robot deployments and their metrics, to help companies improve ROI.\n\n"
                 "I spend my time studying robot deployments — not the demos, the ones still "
                 "running months later.\n\n"
                 "One thing shows up over and over: deployments fail less from hardware limits "
@@ -50,7 +50,8 @@ DEFAULT_BUYER_SEQUENCE = {
             "delay_days": 6,
             "subject_template": "the workflow most teams automate last — {company_name}",
             "body_template": (
-                "Hi,\n\n"
+                "Hi {company_name}, this is Cal again.\n\n"
+                "One practical note, then one question.\n\n"
                 "One pattern I see everywhere: the projects with the fastest payback rarely start "
                 "with the most visible task. They start with the quiet process upstream that backs "
                 "everything else up.\n\n"
@@ -66,7 +67,8 @@ DEFAULT_BUYER_SEQUENCE = {
             "delay_days": 14,
             "subject_template": "why \"evaluating five robots\" is usually the wrong question — {company_name}",
             "body_template": (
-                "Hi,\n\n"
+                "Hi {company_name}, this is Cal again.\n\n"
+                "One practical note, then one question.\n\n"
                 "A team lines up five vendors, runs a bake-off, picks the fastest — and six months "
                 "later it's parked. The robots that survive aren't the fastest; they're matched to "
                 "one specific bottleneck, with integration and software actually resourced.\n\n"
@@ -82,7 +84,8 @@ DEFAULT_BUYER_SEQUENCE = {
             "delay_days": 24,
             "subject_template": "one question about {company_name}",
             "body_template": (
-                "Hi,\n\n"
+                "Hi {company_name}, this is Cal again.\n\n"
+                "One practical note, then one question.\n\n"
                 "No agenda here — one question tells me more than a whole discovery call.\n\n"
                 "If you automated one workflow tomorrow, which would it be? Most teams name the "
                 "busiest one. The one that actually pays back is usually the process quietly "
@@ -441,6 +444,23 @@ def process_due_enrollments(db: Session, *, limit: int = 50) -> dict[str, Any]:
         if not step:
             enrollment.status = "completed"
             continue
+
+        # Keep follow-up attribution intact even for legacy enrollments that
+        # predate variant tagging in enrollment payload.
+        meta = dict(enrollment.payload or {})
+        variant_id = (meta.get("variant_id") or "").strip()
+        if not variant_id and account.company_id:
+            from app.models.company import Company
+            from app.services.agent_messaging import BUYER_VARIANTS, resolve_buyer_variant
+
+            company = db.query(Company).filter(Company.id == account.company_id).first()
+            if company is not None:
+                resolved = resolve_buyer_variant(company, account)
+                if resolved in BUYER_VARIANTS:
+                    variant_id = resolved
+                    meta["variant_id"] = variant_id
+                    enrollment.payload = meta
+
         if enrollment.sequence_id not in slug_cache:
             seq_row = (
                 db.query(OutreachSequence.slug)
@@ -481,11 +501,7 @@ def process_due_enrollments(db: Session, *, limit: int = 50) -> dict[str, Any]:
             payload={
                 "sequence_enrollment_id": str(enrollment.id),
                 "step": enrollment.current_step,
-                **(
-                    {"variant_id": (enrollment.payload or {}).get("variant_id")}
-                    if (enrollment.payload or {}).get("variant_id")
-                    else {}
-                ),
+                **({"variant_id": variant_id} if variant_id else {}),
             },
             sent_at=now,
         )

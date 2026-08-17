@@ -41,6 +41,38 @@ export function trackMarketingEvent(action: string, payload: Record<string, unkn
 }
 
 /**
+ * Robot → jobs funnel (/jobs, /jobs/{slug}).
+ * Legacy /experiment redirects here.
+ *
+ * Two pull expressions after jobs are shown (not a single linear funnel):
+ * - Access pull: job_viewed → see_all_clicked → signup_start
+ * - Commercial pull: qualify_opened (curiosity) → qualify_requested (intent)
+ *
+ * qualify_requested is commercial intent: user asked RFR to investigate a
+ * specific deployment opportunity. Do not force it behind signup.
+ *
+ * Qualify payloads should include job_key, profile_key, persona, src.
+ */
+export type RobotJobsFunnelStep =
+  | "experiment_view"
+  | "robot_submitted"
+  | "unsupported_robot"
+  | "capabilities_viewed"
+  | "discovery_started"
+  | "discovery_complete"
+  | "first_job_viewed"
+  | "job_viewed"
+  | "jobs_3plus_viewed"
+  | "preview_complete"
+  | "qualify_opened"
+  | "qualify_requested"
+  | "see_all_clicked";
+
+export function trackRobotJobsFunnel(step: RobotJobsFunnelStep, payload: Record<string, unknown> = {}) {
+  trackMarketingEvent(`rdd_${step}`, { funnel: "robot_jobs", step, ...payload });
+}
+
+/**
  * Buyer signup funnel (conversion board #20): browse → signup → activate.
  * signup_start (intent) → signup_complete (account) → first_save (activated).
  */

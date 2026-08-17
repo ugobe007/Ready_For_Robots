@@ -1726,6 +1726,17 @@ SELLER_OR_PUBLISHER_CONTEXT_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Divestiture stories are usually exit signals, not active buyer intent.
+NON_BUYER_DIVESTITURE_RE = re.compile(
+    r"\b(?:sold|sells?|divest(?:ed|iture|ing)?|spun?\s+off|spin(?:ning)?\s+off|"
+    r"disposed?\s+of|exited)\b.{0,90}\b(?:automation|robotics?|warehouse\s+automation|"
+    r"automation\s+unit|robotics?\s+unit|automation\s+business|robotics?\s+business|"
+    r"automation\s+division|robotics?\s+division)\b"
+    r"|\b(?:automation|robotics?|warehouse\s+automation)\b.{0,90}\b(?:unit|business|division)\b"
+    r".{0,50}\b(?:sold|divest(?:ed|iture|ing)?|spun?\s+off|disposed?\s+of|exited)\b",
+    re.IGNORECASE,
+)
+
 # ─── Priority scoring knobs (Hot / Warm / Emerging) — also surfaced on /api/leads/scoring-system ───
 # Tuned looser (Mar 2026 v2): lower composite floors, higher boosts, broader HOT signal set.
 PRIORITY_COMPOSITE_CAP = 100.0
@@ -1741,15 +1752,16 @@ PRIORITY_ENTERPRISE_BOOST = 6.0           # was 5.0
 PRIORITY_MIDMARKET_MIN_EMPLOYEES = 1000
 PRIORITY_MIDMARKET_BOOST = 3.0            # was 2.0
 # Tier cutoffs on composite = min(PRIORITY_COMPOSITE_CAP, ml_base + boosts)
-PRIORITY_HOT_COMPOSITE_MIN = 70.0         # was 78.0
-PRIORITY_HOT_COMPOSITE_WITH_HOT_SIGNALS = 62.0  # was 72.0
-PRIORITY_WARM_COMPOSITE_MIN = 42.0        # was 47.0
-PRIORITY_WARM_BASE_WITH_INDUSTRY = 35.0   # was 40.0
+# Slightly eased (2026-08) so strong near-HOT WARMs promote — more HOT surface for sellers.
+PRIORITY_HOT_COMPOSITE_MIN = 65.0         # was 70.0
+PRIORITY_HOT_COMPOSITE_WITH_HOT_SIGNALS = 58.0  # was 62.0
+PRIORITY_WARM_COMPOSITE_MIN = 40.0        # was 42.0
+PRIORITY_WARM_BASE_WITH_INDUSTRY = 33.0   # was 35.0
 # "hot_enough" gates: a single distinct hot type is sufficient
 PRIORITY_HOT_DISTINCT_TYPES_MIN = 1       # was 2 — one real buying signal is enough
-PRIORITY_HOT_BASE_WITH_TWO_HITS = 45.0   # was 55.0
-PRIORITY_HOT_BASE_WITH_ONE_HIT = 52.0    # was 62.0
-PRIORITY_HOT_BASE_WITH_DEPLOYMENT = 38.0  # was 45.0
+PRIORITY_HOT_BASE_WITH_TWO_HITS = 42.0   # was 45.0
+PRIORITY_HOT_BASE_WITH_ONE_HIT = 48.0    # was 52.0
+PRIORITY_HOT_BASE_WITH_DEPLOYMENT = 35.0  # was 38.0
 # Sublinear hot/warm boost caps (see _hot_signal_boost / _warm_signal_boost)
 HOT_SIGNAL_BOOST_CAP = 24.0              # was 18.0
 WARM_SIGNAL_BOOST_CAP = 12.0             # was 9.0
@@ -1918,6 +1930,9 @@ def _buyer_opportunity_gate(
 
     sig_types = [getattr(s, "signal_type", None) or "" for s in sigs]
     blob = _signal_text_blob(sigs)
+
+    if NON_BUYER_DIVESTITURE_RE.search(blob):
+        return False, "divestiture story (sold/spun-off automation business) — not an active buyer opportunity"
 
     if name and is_allowlisted_company_name(name):
         return True, ""

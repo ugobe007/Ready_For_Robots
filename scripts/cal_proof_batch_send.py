@@ -65,6 +65,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Send Cal new-voice proof batch")
     ap.add_argument("--limit", type=int, default=25)
     ap.add_argument("--apply", action="store_true", help="actually send (default: dry-run)")
+    ap.add_argument("--use-apollo", action="store_true", help="Opt in to Apollo lookup during resolution.")
     args = ap.parse_args()
 
     from app.models.company import Company
@@ -117,7 +118,11 @@ def main() -> int:
         sent = failed = skipped = 0
         now = datetime.now(timezone.utc)
         for a, c in batch:
-            to_email, source, _t = resolve_outreach_email(c, a, use_apollo=True)
+            to_email, source, _t = resolve_outreach_email(
+                c,
+                a,
+                use_apollo=args.use_apollo,
+            )
             if not to_email:
                 skipped += 1; print(f"  SKIP {a.name}: no email"); continue
             trusted, why = outreach_recipient_trusted(c, a, to_email, source)

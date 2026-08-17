@@ -64,7 +64,12 @@ class Robot(Base):
     is_preferred = Column(Boolean, default=True, index=True)  # Prioritize in recommendations
     min_order_quantity = Column(Integer, default=1)  # Minimum units per order
     lead_time_weeks = Column(Integer, nullable=True)  # Delivery time
-    
+
+    # ── Catalog hierarchy FKs (nullable during migration) ──────────────────
+    manufacturer_id = Column(String(36), nullable=True, index=True)
+    robot_model_id = Column(String(36), nullable=True, index=True)
+    robot_configuration_id = Column(String(36), nullable=True, index=True)
+
     # ── Metadata ───────────────────────────────────────────────────────────
     notes = Column(Text, nullable=True)  # Internal notes
     created_at = Column(DateTime(timezone=True), server_default=func.now())

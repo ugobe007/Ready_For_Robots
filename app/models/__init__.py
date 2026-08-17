@@ -5,6 +5,32 @@ from app.models.contact import Contact
 from app.models.signal import Signal
 from app.models.score import Score
 from app.models.robot import Robot
+from app.models.robot_catalog import Manufacturer, RobotConfiguration, RobotFamily, RobotModel
+from app.models.robot_intelligence import (
+    EvidenceClaim,
+    RobotAnalysis,
+    RobotCapability,
+    RobotProfileVersion,
+)
+from app.models.source import Source
+from app.models.facility import Facility
+from app.models.primitive import Primitive
+from app.models.work_graph import WorkMatchRecord, WorkUnitRecord
+from app.models.robot_directed_discovery import (
+    AutomationInterpretation,
+    JobEvidence,
+    RobotCapabilityProfile,
+    RobotJob,
+    RobotJobMatch,
+    WorkClaim,
+)
+from app.models.deployment_evidence import (
+    DeploymentEvent,
+    DeploymentEvidence,
+    DeploymentMetric,
+    DeploymentSource,
+)
+from app.models.vendor_news import VendorNewsItem
 from app.models.robot_company import RobotCompany
 from app.models.crm import Team, TeamMember, CrmAccount, CrmEngagement
 from app.models.lead_rep_feedback import LeadRepFeedback
@@ -40,3 +66,4 @@ from app.models.special_project import (
     SpecialProjectTarget,
     SpecialProjectUpdate,
 )
+from app.models.understanding_shadow import UnderstandingShadowObservation

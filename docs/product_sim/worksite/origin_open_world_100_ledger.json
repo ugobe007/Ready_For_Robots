@@ -1,0 +1,250 @@
+{
+  "protocol": "ORIGIN_OPEN_WORLD_100",
+  "status": "origin_100_complete",
+  "queries_completed": 100,
+  "queries_total": 100,
+  "capability_gate": "locus_origin_work_translation.md",
+  "funnel": {
+    "queries": 100,
+    "candidate_docs": 500,
+    "inspected": 400,
+    "accepted_lwos": 160,
+    "work_claims": 125,
+    "robot_jobs": 67,
+    "worth_investigating": 59
+  },
+  "success_counts": {
+    "companies": 55,
+    "locations_approx": 75,
+    "transport_tasks": 67
+  },
+  "robot_jobs": [
+    {
+      "rank": 1,
+      "company": "Kroger",
+      "locality": "Delaware, OH",
+      "task": "move_completed_picks / cart_movement through order selection",
+      "transf": "H",
+      "fit": "H",
+      "novel": true
+    },
+    {
+      "rank": 2,
+      "company": "Replacement Parts / Crow Burlingame",
+      "locality": "Little Rock, AR",
+      "task": "transport_totes",
+      "transf": "H",
+      "fit": "H",
+      "novel": true
+    },
+    {
+      "rank": 3,
+      "company": "NAPA Auto Parts",
+      "locality": "Duncansville, PA",
+      "task": "cart_movement + pick_to_pack + replenishment_transport",
+      "transf": "H",
+      "fit": "H",
+      "novel": true
+    },
+    {
+      "rank": 4,
+      "company": "Albertsons / Tom Thumb",
+      "locality": "Roanoke, TX",
+      "task": "travel absorption / stage completed picks (pallet gate)",
+      "transf": "M",
+      "fit": "M-H",
+      "novel": true
+    },
+    {
+      "rank": 5,
+      "company": "Whole Foods Market",
+      "locality": "Richmond, CA",
+      "task": "selection-route transport (cold gate)",
+      "transf": "M",
+      "fit": "M",
+      "novel": true
+    },
+    {
+      "rank": 6,
+      "company": "KeHE Distributors",
+      "locality": "Dallas, TX",
+      "task": "move_completed_picks to staging",
+      "transf": "H",
+      "fit": "H",
+      "novel": true
+    },
+    {
+      "rank": 7,
+      "company": "Coastal Pacific Food Distributors",
+      "locality": "Ontario, CA",
+      "task": "order container movement through voice selection",
+      "transf": "M-H",
+      "fit": "M-H",
+      "novel": true
+    },
+    {
+      "rank": 8,
+      "company": "The Container Store",
+      "locality": "Aberdeen, MD",
+      "task": "putaway_transport / replenishment_transport",
+      "transf": "H",
+      "fit": "M",
+      "novel": true,
+      "automation_state": "partially_automated"
+    },
+    {
+      "rank": 9,
+      "company": "SpartanNash",
+      "locality": "Midland, GA",
+      "task": "move accumulated picks / staging",
+      "transf": "M",
+      "fit": "M-H",
+      "novel": true
+    },
+    {
+      "rank": 10,
+      "company": "McLane",
+      "locality": "Forest Park, GA",
+      "task": "internal transport subset (not reach truck)",
+      "transf": "M",
+      "fit": "M",
+      "novel": true
+    },
+    {
+      "rank": 11,
+      "company": "Advance Auto Parts",
+      "locality": "Kutztown, PA",
+      "task": "carton movement + pick\u2192stage",
+      "transf": "M-H",
+      "fit": "M-H",
+      "novel": true
+    },
+    {
+      "rank": 12,
+      "company": "LKQ / Keystone Automotive",
+      "locality": "Exeter, PA",
+      "task": "stage / move completed picks",
+      "transf": "M",
+      "fit": "M",
+      "novel": true
+    },
+    {
+      "rank": 13,
+      "company": "L&F Distributors",
+      "locality": "El Paso, TX",
+      "task": "replenishment_transport + order movement",
+      "transf": "M",
+      "fit": "M",
+      "novel": true
+    },
+    {
+      "rank": 14,
+      "company": "Schneider Electric",
+      "locality": "West Chester, OH",
+      "task": "point_to_point / tote & empty-container transport (waterspider)",
+      "transf": "H",
+      "fit": "M",
+      "novel": true
+    },
+    {
+      "rank": 15,
+      "company": "Kraft Heinz",
+      "locality": "Cedar Rapids, IA",
+      "task": "transport_totes / empty tote return",
+      "transf": "H",
+      "fit": "M",
+      "novel": true
+    },
+    {
+      "rank": 16,
+      "company": "Vallarta / Roxford Produce",
+      "locality": "Sylmar, CA",
+      "task": "move/stage completed selections",
+      "transf": "M",
+      "fit": "M",
+      "novel": true
+    }
+  ],
+  "audit": {
+    "doc": "origin_open_world_18_audit.md",
+    "surfaced_robot_jobs": 24,
+    "direct": 10,
+    "strong_derived": 2,
+    "speculative": 12,
+    "investigate_yes": 11,
+    "investigate_weak": 9,
+    "investigate_no_or_demote": 4,
+    "kept_as_robot_jobs": [
+      "Replacement Parts / Little Rock",
+      "NAPA / Duncansville",
+      "KeHE / Dallas",
+      "Container Store / Aberdeen-Coppell",
+      "Advance Auto / Kutztown",
+      "Schneider Electric / West Chester",
+      "Kraft Heinz / Cedar Rapids",
+      "Zenith-Kroger / Indianapolis",
+      "National DCP / Greensboro",
+      "CuraScript / Grove City-Newark",
+      "Carter's / Stockbridge"
+    ],
+    "resume": "queries 19-100 after promotion gate"
+  },
+  "batch3": {
+    "promotion_precision": 0.88,
+    "baseline_precision": 0.46,
+    "robot_jobs": 17,
+    "investigate_yes": 15,
+    "work_claims": 45,
+    "claim_to_job": 0.38,
+    "exploit": {
+      "jobs": 9,
+      "precision": 0.89,
+      "claims": 14
+    },
+    "explore": {
+      "jobs": 8,
+      "precision": 0.88,
+      "claims": 31
+    },
+    "decision": "continue_39_100_dual_arm",
+    "doc": "origin_open_world_batch3_gate_validation.md"
+  },
+  "batch4": {
+    "promotion_precision": 0.86,
+    "robot_jobs": 14,
+    "investigate_yes": 12,
+    "job_density_per_10": 6.0,
+    "direct_e1_per_10": 4.0,
+    "work_claims": 34,
+    "claim_maturations": [
+      "Charlie's Produce Seattle",
+      "Lineage Fullerton/Riverside",
+      "CuraScript Tempe"
+    ],
+    "object_mix": {
+      "tote": 5,
+      "cart": 3,
+      "kit": 2,
+      "carton": 2,
+      "pallet": 2
+    },
+    "new_patterns": true,
+    "decision": "continue_59_100_dual_arm",
+    "doc": "origin_open_world_batch4_durability.md"
+  },
+  "batches": {
+    "audit_q1_18": "complete",
+    "batch3_q19_38": "complete",
+    "batch4_q39_58": "complete",
+    "batch5_q59_78": "complete_stop_pass",
+    "batch6_q79_100": "complete"
+  },
+  "final_scoreboard": "ORIGIN_OPEN_WORLD_100_SCOREBOARD.md",
+  "headline": {
+    "robot_jobs_approx": 67,
+    "companies_approx": 55,
+    "locations_approx": 75,
+    "worth_investigating_approx": 59,
+    "post_gate_precision_approx": 0.85
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "submitted_url": "https://bostondynamics.com/products/spot",
+  "profile_confidence": "B",
+  "research_morphology": "quadruped",
+  "company": {
+    "name": "Boston Dynamics",
+    "primary_domain": "bostondynamics.com"
+  },
+  "selected_product": {
+    "name": "Spot",
+    "display_class": "quadruped"
+  },
+  "facts": [
+    {
+      "predicate": "product_class",
+      "value": "quadruped",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.95,
+      "evidence_span": "quadruped robot",
+      "source_id": "src_spot"
+    },
+    {
+      "predicate": "has_mobile_base",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9,
+      "evidence_span": "mobile robot",
+      "source_id": "src_spot"
+    },
+    {
+      "predicate": "autonomous_navigation",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9,
+      "evidence_span": "autonomous navigation",
+      "source_id": "src_spot"
+    }
+  ],
+  "notes": [
+    "Fixture uses frozen-extractor predicates only; inspection is derived in M2, not extracted."
+  ]
+}

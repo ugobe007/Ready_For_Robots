@@ -1,0 +1,50 @@
+{
+  "ran_at": "2026-08-16T00:46:18Z",
+  "panel": "origin_18_no_worksite_known",
+  "panel_size": 18,
+  "source": "scripts/source_yield_benchmark.py full four-family run (terminal 979528)",
+  "question": "Can we economically reconstruct where companies perform physical work and what work happens there from publicly observable evidence?",
+  "families": [
+    {
+      "family": "company",
+      "companies_resolved": 2,
+      "companies_in_panel": 18,
+      "companies_resolved_rate": 0.111,
+      "worksites_accepted": 6,
+      "work_units_evidenced": 4,
+      "acquisition": {"wall_seconds_per_worksite": 87.64}
+    },
+    {
+      "family": "jobs",
+      "companies_resolved": 1,
+      "companies_in_panel": 18,
+      "companies_resolved_rate": 0.056,
+      "worksites_accepted": 1,
+      "work_units_evidenced": 15,
+      "acquisition": {"wall_seconds_per_worksite": 240.38},
+      "note": "Highest evidenced-work yield; weak Worksite acceptance — WORK without WHERE under current channels"
+    },
+    {
+      "family": "news",
+      "companies_resolved": 0,
+      "companies_in_panel": 18,
+      "worksites_accepted": 0,
+      "work_units_evidenced": 1
+    },
+    {
+      "family": "registry",
+      "companies_resolved": 0,
+      "companies_in_panel": 18,
+      "worksites_accepted": 0,
+      "work_units_evidenced": 0
+    }
+  ],
+  "ranked_by_resolution_then_evidence": ["company", "jobs", "news", "registry"],
+  "decision_note": "Inconclusive winner. Company edges on accepted Worksites (2/18, 6 sites); jobs lead evidenced work (15 units) with almost no accepted places. Next: better job/facility acquisition channels — not ingestion or resolvers yet. Audit any accepted sites for WPR.",
+  "probe_limitations_v0": [
+    "JS careers/locations shells understate yield",
+    "ATS slug guessing mostly misses",
+    "EPA ECHO weak for logistics DCs",
+    "Pipeline news is not a place corpus"
+  ]
+}

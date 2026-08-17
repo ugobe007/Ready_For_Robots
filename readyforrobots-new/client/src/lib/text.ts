@@ -35,7 +35,7 @@ export function cleanAndClampText(raw: string | null | undefined, maxLength: num
   const slice = text.slice(0, maxLength - 1);
   const lastSpace = slice.lastIndexOf(" ");
   const cut = lastSpace > 40 ? slice.slice(0, lastSpace) : slice;
-  return `${cut.trimEnd().replace(/[,;:]$/u, "")}…`;
+  return `${cut.trimEnd().replace(/[,;:]$/, "")}…`;
 }
 
 /** One or two complete sentences for card previews — never mid-word. */

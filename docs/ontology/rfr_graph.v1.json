@@ -1,0 +1,203 @@
+{
+  "ontology_id": "rfr_graph_v1",
+  "version": "1.0.0",
+  "description": "ReadyForRobots WORK-centric knowledge + truth graph. Graph = structure; Loop = learning. See docs/rfr_intelligence_architecture.md.",
+  "center": "WORK",
+  "product_mantra": [
+    "Find the Work.",
+    "Match the Robot.",
+    "Test the Truth.",
+    "Learn from Every Deployment."
+  ],
+  "layers": {
+    "knowledge_graph": "Current beliefs: robots, companies, jobs, tasks, facilities, people, capabilities, workflows",
+    "truth_graph": "Validated or disproved: customer-confirmed workflow, site facts, actual payload, robot used, throughput, uptime, pilot outcome, reason lost"
+  },
+  "node_families": [
+    {
+      "id": "ROBOT",
+      "fields": [
+        "manufacturer",
+        "model",
+        "configuration",
+        "capability",
+        "payload",
+        "mobility",
+        "manipulation",
+        "environment",
+        "commercial_maturity"
+      ]
+    },
+    {
+      "id": "WORK",
+      "fields": [
+        "task",
+        "action",
+        "object",
+        "origin",
+        "destination",
+        "frequency",
+        "volume",
+        "performance_requirement"
+      ],
+      "primitives_ref": "docs/ontology/primitives.v1.json"
+    },
+    {
+      "id": "LABOR",
+      "fields": [
+        "job",
+        "wage",
+        "shift",
+        "overtime",
+        "openings",
+        "persistence",
+        "temp_labor",
+        "turnover_indicators"
+      ]
+    },
+    {
+      "id": "FACILITY",
+      "types": [
+        "plant",
+        "warehouse",
+        "hospital",
+        "hotel",
+        "restaurant",
+        "distribution_center"
+      ],
+      "topology": [
+        "receiving",
+        "storage",
+        "production",
+        "staging",
+        "shipping"
+      ]
+    },
+    {
+      "id": "COMPANY",
+      "fields": [
+        "industry",
+        "scale",
+        "growth",
+        "automation_maturity",
+        "facilities"
+      ]
+    },
+    {
+      "id": "PEOPLE",
+      "roles": [
+        "plant_manager",
+        "operations_leader",
+        "warehouse_manager",
+        "automation_engineer",
+        "economic_buyer"
+      ]
+    },
+    {
+      "id": "OPPORTUNITY",
+      "derived": true,
+      "composed_of": ["ROBOT", "WORK", "FACILITY", "TIMING"],
+      "commercial_dimensions": [
+        "labor_pressure",
+        "operational_exposure",
+        "automation_driver",
+        "robot_match",
+        "buyability",
+        "deployability"
+      ]
+    },
+    {
+      "id": "DEPLOYMENT_EVIDENCE",
+      "note": "Public-source deployment intelligence — not live telemetry. See docs/deployment_evidence_engine.md",
+      "fields": [
+        "vendor",
+        "robot",
+        "customer",
+        "facility",
+        "work_type",
+        "workflow",
+        "deployment_stage",
+        "metrics",
+        "evidence_level",
+        "performed_primitives",
+        "source_type"
+      ]
+    }
+  ],
+  "edge_predicates": [
+    {"predicate": "OWNS", "subject": "COMPANY", "object": "FACILITY"},
+    {"predicate": "EMPLOYS", "subject": "FACILITY", "object": "JOB"},
+    {"predicate": "PERFORMS", "subject": "JOB", "object": "WORK"},
+    {"predicate": "REQUIRES", "subject": "WORK", "object": "PRIMITIVE"},
+    {"predicate": "SUPPORTS", "subject": "ROBOT", "object": "PRIMITIVE"},
+    {"predicate": "MATCHES", "subject": "ROBOT", "object": "WORK"},
+    {"predicate": "CAN_PERFORM", "subject": "ROBOT", "object": "WORK", "note": "Spec / OEM claim"},
+    {"predicate": "SUCCESSFULLY_PERFORMED", "subject": "ROBOT", "object": "WORK", "note": "Deployment-verified; not the same as CAN_PERFORM"},
+    {"predicate": "CAUSES", "subject": "WORK", "object": "LABOR_PRESSURE"},
+    {"predicate": "IMPACTS", "subject": "WORK", "object": "PRODUCTION"},
+    {"predicate": "OWNS_WORKFLOW", "subject": "PERSON", "object": "WORK"},
+    {"predicate": "INVOLVES", "subject": "OPPORTUNITY", "object": "ROBOT"},
+    {"predicate": "TARGETS", "subject": "OPPORTUNITY", "object": "FACILITY"},
+    {"predicate": "RESOLVED_AS", "subject": "OPPORTUNITY", "object": "DEPLOYMENT"},
+    {"predicate": "SIMILAR_TO", "subject": "FACILITY", "object": "FACILITY"},
+    {"predicate": "SIMILAR_WORK", "subject": "WORK", "object": "WORK"}
+  ],
+  "edge_properties": {
+    "required": ["confidence", "truth_state", "source"],
+    "optional": ["valid_from", "valid_to", "facility_type", "payload_kg", "uptime", "notes"],
+    "truth_state_enum": [
+      "INFERRED",
+      "OEM_VERIFIED",
+      "SIGNAL_INFERRED",
+      "CUSTOMER_CONFIRMED",
+      "SITE_VERIFIED",
+      "DEPLOYMENT_VERIFIED",
+      "DISPROVED"
+    ],
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+  },
+  "traversals": {
+    "robot_to_job": [
+      "ROBOT",
+      "CAPABILITY",
+      "PRIMITIVE",
+      "WORK",
+      "FACILITY",
+      "LABOR_PRESSURE",
+      "JOB"
+    ],
+    "job_to_robot": [
+      "JOB",
+      "TASK",
+      "WORK",
+      "PRIMITIVE",
+      "ROBOTABILITY",
+      "ROBOT_CATEGORY",
+      "ROBOT_MODEL",
+      "VENDOR"
+    ]
+  },
+  "loops": {
+    "core": [
+      "OBSERVE_LABOR",
+      "FIND_WORK",
+      "MATCH_ROBOT",
+      "OBSERVE_DEPLOYMENTS",
+      "STRENGTHEN_OR_WEAKEN_MATCH",
+      "RANK",
+      "KEEP_WATCHING"
+    ],
+    "parallel": {
+      "labor": "JOB_POSTINGS → TASKS → WORK → ROBOTABILITY → OPPORTUNITY → CUSTOMER_VALIDATION → BETTER_TASK_EXTRACTION",
+      "robot": "SPECS → CAPABILITIES → WORK_MATCH → DEPLOYMENT → ACTUAL_PERFORMANCE → BETTER_CAPABILITY_MODEL",
+      "sales": "OPPORTUNITY → CALL_PRIORITY → ACTION → RESPONSE → QUALIFY → WIN_LOSS → BETTER_BUYABILITY",
+      "deployment": "WORK → ROBOT → PILOT → PERFORMANCE → FAILURES → ECONOMICS → EXPANSION"
+    }
+  },
+  "fundamental_questions": [
+    "Where should my robot work?",
+    "Which of my jobs should become robot jobs?",
+    "What should we build next?",
+    "Which robots address the largest pools of unmet work?"
+  ]
+}

@@ -34,9 +34,9 @@ _INSIGHTS: list[_Insight] = [
     _Insight(
         id="poc_to_paid",
         text=(
-            "Most PoCs stall on integration and support, not hardware specs. "
-            "Buyers decide on who shows up when the robot misbehaves on their floor — "
-            "not who had the slickest demo video."
+            "Most robotics startups don't die from bad technology. They die from good pilots. "
+            "The robot works for 90 days, the customer says the metrics look interesting, and then nothing happens because the pilot answered the startup's question instead of the customer's. "
+            "The companies that scale show up with an integration plan, a maintenance SLA, and a cost model that holds up across 40 sites — not just a demo that worked once."
         ),
         vendor_only=True,
     ),

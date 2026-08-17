@@ -1,19 +1,56 @@
 /**
- * Sign up — account creation entry point using Supabase auth (Precision Intelligence light theme).
+ * Sign up — account creation entry point using Supabase auth (dark workflow theme).
  */
 import { useEffect, useMemo, useState } from "react";
+import { Github } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getPublicReadApiBase } from "@/lib/apiBase";
 import { readSupplyAttribution, trackSupplyConversion, trackSignupStart } from "@/lib/siteAnalytics";
-import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
+import { clearSupabaseOAuthParams, readSupabaseOAuthError } from "@/lib/authCallback";
 import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlanParam, storeCheckoutIntent, navigateAfterAuth } from "@/lib/authNext";
+import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
+import {
+  isRobotWorkspaceProfileComplete,
+  readRobotWorkspaceProfile,
+  writeRobotWorkspaceProfile,
+  type RobotWorkspaceProfile,
+} from "@/lib/robotWorkspaceProfile";
+import {
+  OEM_CAL_SIGNUP_BULLETS_RESULTS,
+  OEM_CAL_SIGNUP_H1_DEFAULT,
+  OEM_CAL_SIGNUP_H1_RESULTS,
+  OEM_CAL_SIGNUP_SUB_DEFAULT,
+  OEM_CAL_SIGNUP_SUB_RESULTS,
+} from "@/lib/oemCalCopy";
+import PixelIcon from "@/components/PixelIcon";
+import { KARE_FACE } from "@/lib/kareIcons";
+import {
+  resolveSignupWorkflowReturnPath,
+  shouldHonorWorkflowResults,
+  isJobsProductReturnPath,
+  type WorkflowPrefill,
+} from "@/lib/signupWorkflowPath";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
+const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
 
 type InboxLink = { label: string; url: string };
+
+function GoogleGlyph() {
+  return (
+    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-4 w-4" focusable="false">
+        <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-1.4 3.5-5.5 3.5-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 6.8 2 2.6 6.2 2.6 11.4S6.8 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"/>
+        <path fill="#34A853" d="M3.7 7.3l3.2 2.3c.9-1.8 2.8-3 5.1-3 1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 8.1 2 4.8 4.2 3.2 7.3Z"/>
+        <path fill="#4285F4" d="M12 20.8c2.5 0 4.7-.8 6.3-2.3l-2.9-2.4c-.8.6-1.8 1-3.4 1-4.1 0-5.3-2.8-5.5-3.5l-3.3 2.5c1.6 3.1 4.9 4.7 8.8 4.7Z"/>
+        <path fill="#FBBC05" d="M3.2 16.1l3.3-2.5c-.1-.4-.2-.9-.2-1.4s.1-1 .2-1.4L3.2 8.3c-.4 1-.6 2-.6 3.1s.2 2.1.6 3.1Z"/>
+      </svg>
+    </span>
+  );
+}
 
 /**
  * Map an email address to its webmail inbox(es) so a user on the "check your
@@ -52,6 +89,29 @@ function emailInboxLinks(email: string): InboxLink[] {
   ];
 }
 
+function readWorkflowSessionContext(): WorkflowPrefill {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.sessionStorage.getItem(WORKFLOW_CONTEXT_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as WorkflowPrefill;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function appendWorkflowPrefill(path: string, prefill: WorkflowPrefill): string {
+  const [base, query = ""] = path.split("?", 2);
+  const nextParams = new URLSearchParams(query);
+  if (prefill.wf) nextParams.set("wf", prefill.wf);
+  if (prefill.intent_focus) nextParams.set("intent_focus", prefill.intent_focus);
+  if (prefill.company_url) nextParams.set("company_url", prefill.company_url);
+  if (prefill.src) nextParams.set("src", prefill.src);
+  const serialized = nextParams.toString();
+  return serialized ? `${base}?${serialized}` : base;
+}
+
 export default function Signup() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
@@ -60,12 +120,22 @@ export default function Signup() {
   const [errMsg, setErrMsg] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendNote, setResendNote] = useState("");
+  const [oauthPending, setOauthPending] = useState<null | "google" | "github" | "azure">(null);
   const [liveProof, setLiveProof] = useState<{ hot?: number; companies?: number } | null>(null);
   // A real named HOT buyer from the live pipeline — turns abstract counts into a
   // concrete win the user can picture acting on (value-first proof at the decision point).
   const [liveBuyer, setLiveBuyer] = useState<
     { company: string; industry?: string; tier?: string; blurb?: string; robots: string[] } | null
   >(null);
+  const [workspaceProfile, setWorkspaceProfile] = useState<RobotWorkspaceProfile>(() => {
+    const existing = readRobotWorkspaceProfile();
+    return {
+      company_name: existing?.company_name || "",
+      category: existing?.category || "",
+      icp: existing?.icp || "",
+      company_url: existing?.company_url || undefined,
+    };
+  });
 
   const search = typeof window !== "undefined" ? window.location.search : "";
   const params = useMemo(() => new URLSearchParams(search), [search]);
@@ -73,11 +143,65 @@ export default function Signup() {
   const nextRaw = params.get("next") || "";
   const pipelineIntent = nextRaw.startsWith("/pipeline") || /[?&]lead=\d+/.test(nextRaw);
   const resultsIntent = nextRaw.startsWith("/results");
+  const robotJobsIntent =
+    params.get("src") === "robot_jobs" || isJobsProductReturnPath(nextRaw);
   // Specific buyer the anonymous user was acting on — carried through the signup wall
   // so we restate exactly what they unlock (value-first conversion continuity).
   const buyerCo = (params.get("co") || "").trim().slice(0, 80);
 
-  const nextPath = () => resolvePostAuthPath("/pipeline");
+  const workflowPrefill = useMemo<WorkflowPrefill>(() => {
+    const fromQuery: WorkflowPrefill = {
+      wf: (params.get("wf") as WorkflowPrefill["wf"]) || undefined,
+      intent_focus: params.get("intent_focus") || undefined,
+      company_url: params.get("company_url") || undefined,
+      src: params.get("src") || undefined,
+    };
+    if (fromQuery.wf || fromQuery.intent_focus || fromQuery.company_url) return fromQuery;
+    return readWorkflowSessionContext();
+  }, [params]);
+
+  const matchedUnlockIntent =
+    !robotJobsIntent &&
+    (params.get("src") === "pipeline_matched_unlock" ||
+      (pipelineIntent && Boolean(workflowPrefill.company_url || params.get("company_url"))));
+
+  /** Keep URL-matched unlock on /pipeline?url=… — never fall back to bare /pipeline or Results. */
+  const matchedPipelineReturnPath = useMemo(() => {
+    const companyUrl = (workflowPrefill.company_url || params.get("company_url") || "").trim();
+    if (!matchedUnlockIntent || !companyUrl) return null;
+    const p = new URLSearchParams();
+    p.set("src", "results_scan");
+    p.set("url", companyUrl);
+    const leadMatch = nextRaw.match(/[?&]lead=(\d+)/);
+    if (leadMatch) p.set("lead", leadMatch[1]);
+    return `/pipeline?${p.toString()}`;
+  }, [matchedUnlockIntent, workflowPrefill.company_url, params, nextRaw]);
+
+  const workflowReturnPath = useMemo(() => {
+    return resolveSignupWorkflowReturnPath({
+      nextRaw,
+      prefill: workflowPrefill,
+      matchedPipelineReturnPath,
+    });
+  }, [nextRaw, workflowPrefill, matchedPipelineReturnPath]);
+
+  const intendedPostAuthPath = useMemo(
+    () => {
+      const base = shouldHonorWorkflowResults(nextRaw, workflowPrefill)
+        ? appendWorkflowPrefill(postAuthRedirectTarget(workflowReturnPath), workflowPrefill)
+        : postAuthRedirectTarget(workflowReturnPath);
+      return base;
+    },
+    [workflowPrefill, workflowReturnPath, nextRaw],
+  );
+  const nextPath = () => {
+    const resolved = resolvePostAuthPath(workflowReturnPath);
+    // Never re-attach a stale company_url onto an explicit pipeline/home return.
+    if (!shouldHonorWorkflowResults(nextRaw, workflowPrefill) && !resolved.startsWith("/results")) {
+      return resolved;
+    }
+    return appendWorkflowPrefill(resolved, workflowPrefill);
+  };
 
   useEffect(() => {
     const plan = readPlanParam(search);
@@ -88,6 +212,28 @@ export default function Signup() {
     const next = params.get("next");
     if (next && next.startsWith("/")) storePendingNext(next);
   }, [params, search]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!workflowPrefill.wf && !workflowPrefill.intent_focus && !workflowPrefill.company_url) return;
+    window.sessionStorage.setItem(WORKFLOW_CONTEXT_KEY, JSON.stringify(workflowPrefill));
+  }, [workflowPrefill]);
+
+  useEffect(() => {
+    if (!matchedUnlockIntent || !workflowPrefill.company_url) return;
+    setWorkspaceProfile((prev) => {
+      if (prev.company_url === workflowPrefill.company_url && prev.company_name) return prev;
+      const host = workflowPrefill.company_url!
+        .replace(/^https?:\/\//, "")
+        .replace(/^www\./, "")
+        .split("/")[0];
+      return {
+        ...prev,
+        company_url: workflowPrefill.company_url,
+        company_name: prev.company_name || host || "",
+      };
+    });
+  }, [matchedUnlockIntent, workflowPrefill.company_url]);
 
   // Funnel #20: record signup intent (denominator). Fires once per page view.
   useEffect(() => {
@@ -219,17 +365,32 @@ export default function Signup() {
       setErrMsg("Enter your full name so SIGNAL can authenticate your HubSpot workspace.");
       return;
     }
+    if (matchedUnlockIntent && !isRobotWorkspaceProfileComplete(workspaceProfile)) {
+      setStatus("error");
+      setErrMsg("Add company name, robot category, and ICP before creating your account.");
+      return;
+    }
+    if (matchedUnlockIntent) {
+      writeRobotWorkspaceProfile({
+        ...workspaceProfile,
+        company_url: workflowPrefill.company_url || workspaceProfile.company_url,
+      });
+    }
     persistFullName();
     setErrMsg("");
+    setStatus("idle");
+    setOauthPending(provider);
+    storePendingNext(intendedPostAuthPath);
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: supabaseOAuthRedirect(postAuthRedirectTarget("/pipeline")) },
+      options: { redirectTo: supabaseOAuthRedirect(intendedPostAuthPath) },
     });
     if (error) {
+      setOauthPending(null);
       setStatus("error");
       setErrMsg(
         provider === "azure" && /provider is not enabled/i.test(error.message)
-          ? "Microsoft sign-in is not enabled yet in Supabase Auth (Azure provider). Use Google or a magic link, or enable Azure in the Supabase dashboard."
+          ? "This OAuth provider is not enabled yet in Supabase Auth. Use Google or GitHub, or enable the provider in Supabase."
           : error.message,
       );
     }
@@ -244,7 +405,8 @@ export default function Signup() {
 
   async function sendMagicLink(): Promise<boolean> {
     if (!email.trim() || !supabase) return false;
-    const redirectTo = supabaseOAuthRedirect(postAuthRedirectTarget("/pipeline"));
+    storePendingNext(intendedPostAuthPath);
+    const redirectTo = supabaseOAuthRedirect(intendedPostAuthPath);
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: redirectTo },
@@ -264,6 +426,17 @@ export default function Signup() {
       setStatus("error");
       setErrMsg("Enter your full name so SIGNAL can authenticate your HubSpot workspace.");
       return;
+    }
+    if (matchedUnlockIntent && !isRobotWorkspaceProfileComplete(workspaceProfile)) {
+      setStatus("error");
+      setErrMsg("Add company name, robot category, and ICP before creating your account.");
+      return;
+    }
+    if (matchedUnlockIntent) {
+      writeRobotWorkspaceProfile({
+        ...workspaceProfile,
+        company_url: workflowPrefill.company_url || workspaceProfile.company_url,
+      });
     }
     persistFullName();
     setStatus("sending");
@@ -291,7 +464,7 @@ export default function Signup() {
   const loginHref = `/login${search}`;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-[#081126] text-slate-100">
       <Header />
       <main className="flex-1 px-4 pt-24 pb-16">
         <div className="mx-auto grid w-full max-w-5xl items-start gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
@@ -299,18 +472,18 @@ export default function Signup() {
             <p className="section-eyebrow mb-3">
               {hubspotIntent ? "HubSpot + SIGNAL workspace" : "Robot OEMs & integrators"}
             </p>
-            <h1 className="max-w-xl font-display text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
+            <h1 className="max-w-xl font-display text-4xl font-bold leading-tight text-slate-100 md:text-5xl">
               {hubspotIntent
                 ? "Sign up, then SIGNAL links HubSpot automatically."
                 : pipelineIntent
                   ? buyerCo
                     ? `Save ${buyerCo}. Copy the draft. Run your pipeline.`
-                    : "Save the lead. Copy the draft. Run your pipeline."
+                    : <><span className="text-emerald-300">Save the Lead.</span> Copy the draft. Run your pipeline.</>
                   : resultsIntent
-                    ? "Unlock your matched buyers in one workspace."
-                    : "Automate your robot sales funnel."}
+                    ? OEM_CAL_SIGNUP_H1_RESULTS
+                    : OEM_CAL_SIGNUP_H1_DEFAULT}
             </h1>
-            <p className="mt-5 max-w-lg text-sm leading-relaxed text-gray-600">
+            <p className="mt-5 max-w-lg text-sm leading-relaxed text-slate-300">
               {hubspotIntent
                 ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
                 : pipelineIntent
@@ -318,52 +491,74 @@ export default function Signup() {
                     ? `Free workspace: land back on ${buyerCo}, save it in one click, copy the outreach draft SIGNAL wrote for them, and sync to HubSpot when you are ready.`
                     : "Free workspace: land on your matched lead, save it in one click, copy the outreach draft, and sync to HubSpot when you are ready."
                   : resultsIntent
-                    ? "Sign up to unlock every URL scan match, save leads to CRM, and copy signal-matched outreach drafts."
-                    : "For robot OEMs and integrators — SIGNAL ranks buyer intent, drafts outreach, and advances deals in native CRM or HubSpot."}
+                    ? OEM_CAL_SIGNUP_SUB_RESULTS
+                    : OEM_CAL_SIGNUP_SUB_DEFAULT}
             </p>
+            {(workflowPrefill.wf || workflowPrefill.intent_focus) && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {workflowPrefill.wf && (
+                  <span className="rounded-full border border-slate-600 bg-slate-900 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                    Workflow: {workflowPrefill.wf === "robot_company" ? "Robot company" : "Potential customer"}
+                  </span>
+                )}
+                {workflowPrefill.intent_focus && (
+                  <span className="rounded-full border border-emerald-800 bg-emerald-950/40 px-3 py-1 text-[11px] font-semibold text-emerald-300">
+                    Focus: {workflowPrefill.intent_focus}
+                  </span>
+                )}
+              </div>
+            )}
             {liveProof && (liveProof.hot || liveProof.companies) && (
-              <p className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-900">
+              <p className="mt-3 inline-flex rounded-full border border-emerald-800 bg-emerald-950/40 px-3 py-1 text-[11px] font-semibold text-emerald-300">
                 Live now ·{" "}
                 {liveProof.hot ? `${liveProof.hot.toLocaleString()} hot buyers` : "buyer signals scored"}
                 {liveProof.companies ? ` · ${liveProof.companies.toLocaleString()} companies tracked` : ""}
               </p>
             )}
             {!hubspotIntent && !pipelineIntent && !resultsIntent && (
-              <ul className="mt-4 space-y-2 text-xs text-gray-600">
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  Native pipeline + kanban — or connect HubSpot in one click
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  HOT/WARM buyers with pitch actions and robot categories
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  Free to start · no credit card
-                </li>
-              </ul>
+              <div className="mt-4 flex max-w-xl items-center gap-5">
+                <ul className="min-w-0 flex-1 space-y-2 text-xs text-slate-300">
+                  <li className="flex gap-2">
+                    <span className="font-bold text-emerald-700">✓</span>
+                    Native pipeline + kanban — or connect HubSpot in one click
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-emerald-700">✓</span>
+                    HOT/WARM buyers with pitch actions and Cal&apos;s short OEM notes
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-emerald-700">✓</span>
+                    Free to start · no credit card
+                  </li>
+                </ul>
+                <div className="shrink-0" aria-hidden="true">
+                  <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+                </div>
+              </div>
             )}
             {(pipelineIntent || resultsIntent) && !hubspotIntent && (
-              <ul className="mt-4 space-y-2 text-xs text-gray-600">
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  {buyerCo
-                    ? `Pick up right where you left off on ${buyerCo} — draft waiting in pipeline`
-                    : "Pick up on the same lead after signup — draft waiting in pipeline"}
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  Copy signal-matched outreach drafts in one click
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-bold text-emerald-700">✓</span>
-                  Live pipeline leads · pitch actions · robot categories
-                </li>
-              </ul>
+              <div className="mt-4 flex max-w-xl items-center gap-5">
+                <ul className="min-w-0 flex-1 space-y-2 text-xs text-slate-300">
+                  {(resultsIntent ? OEM_CAL_SIGNUP_BULLETS_RESULTS : [
+                    buyerCo
+                      ? `Pick up right where you left off on ${buyerCo} — draft waiting in pipeline`
+                      : "Pick up on the same lead after signup — draft waiting in pipeline",
+                    "Copy signal-matched outreach drafts in one click",
+                    "Live pipeline leads · pitch actions · robot categories",
+                  ]).map((line) => (
+                    <li key={line} className="flex gap-2">
+                      <span className="font-bold text-emerald-700">✓</span>
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+                <div className="shrink-0" aria-hidden="true">
+                  <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+                </div>
+              </div>
             )}
             {liveBuyer && (
-              <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="mt-6 rounded-2xl border border-slate-700 p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
                   <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -371,38 +566,38 @@ export default function Signup() {
                   </span>
                   Live {liveBuyer.tier || "HOT"} buyer in the pipeline right now
                 </div>
-                <p className="mt-2 font-display text-base font-bold text-gray-900">
+                <p className="mt-2 font-display text-base font-bold text-slate-100">
                   {liveBuyer.company}
                   {liveBuyer.industry ? (
-                    <span className="ml-2 text-xs font-medium text-gray-500">{liveBuyer.industry}</span>
+                    <span className="ml-2 text-xs font-medium text-slate-400">{liveBuyer.industry}</span>
                   ) : null}
                 </p>
                 {liveBuyer.blurb && (
-                  <p className="mt-1 text-xs leading-relaxed text-gray-600">{liveBuyer.blurb}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-300">{liveBuyer.blurb}</p>
                 )}
                 {liveBuyer.robots.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {liveBuyer.robots.map((r) => (
                       <span
                         key={r}
-                        className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800"
+                        className="rounded-full border border-emerald-500 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
                       >
                         {r}
                       </span>
                     ))}
                   </div>
                 )}
-                <p className="mt-3 text-[11px] font-medium text-gray-500">
-                  Sign up free to save this buyer and copy the outreach draft SIGNAL wrote for them.
+                <p className="mt-3 text-[11px] font-medium text-slate-400">
+                  Sign up to save these matched leads. Upgrade to unlock full lead coverage, CRM sync, and automated sales process.
                 </p>
               </div>
             )}
           </div>
 
           {status === "sent" ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-8 text-center">
-              <h2 className="text-xl font-bold text-gray-900">Check your email</h2>
-              <p className="mt-3 text-sm text-gray-600">
+            <div className="rounded-2xl border border-emerald-800 px-6 py-8 text-center">
+              <h2 className="text-xl font-bold text-slate-100">Check your email</h2>
+              <p className="mt-3 text-sm text-slate-300">
                 We sent a one-tap sign-in link to <span className="font-semibold text-emerald-700">{email}</span>.
                 Open it and you'll land{" "}
                 {pipelineIntent && buyerCo
@@ -422,8 +617,8 @@ export default function Signup() {
                         rel="noopener noreferrer"
                         className={
                           i === 0
-                            ? "inline-block w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700"
-                            : "inline-block w-full rounded-xl border border-emerald-300 bg-white px-4 py-3 text-sm font-semibold text-emerald-800 transition-all hover:bg-emerald-50"
+                            ? "inline-block w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400"
+                            : "inline-block w-full rounded-xl border border-emerald-700 px-4 py-3 text-sm font-semibold text-emerald-300 transition-all hover:border-emerald-500"
                         }
                       >
                         {inbox.label} →
@@ -432,13 +627,13 @@ export default function Signup() {
                   </div>
                 );
               })()}
-              <div className="mt-5 flex flex-col items-center gap-2 text-xs text-gray-600">
+              <div className="mt-5 flex flex-col items-center gap-2 text-xs text-slate-300">
                 <p>Didn't get it? Check spam, or resend.</p>
                 <button
                   type="button"
                   onClick={() => void resendMagicLink()}
                   disabled={resendCooldown > 0}
-                  className="font-semibold text-emerald-700 hover:text-emerald-800 disabled:text-gray-400"
+                    className="font-semibold text-emerald-300 hover:text-emerald-200 disabled:text-slate-500"
                 >
                   {resendCooldown > 0 ? `Resend link in ${resendCooldown}s` : "Resend link"}
                 </button>
@@ -451,25 +646,58 @@ export default function Signup() {
                   setResendCooldown(0);
                   setResendNote("");
                 }}
-                className="mt-6 text-xs text-gray-500 hover:text-gray-800"
+                className="mt-6 text-xs text-slate-400 hover:text-slate-200"
               >
                 Use a different email
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="font-display text-xl font-bold text-gray-900">
-                {hubspotIntent ? "Sign up for HubSpot sync" : "Start free"}
+            <div className="rounded-2xl border border-slate-700 p-6 shadow-sm">
+              <h2 className="font-display text-xl font-bold text-slate-100">
+                {hubspotIntent
+                  ? "Sign up for HubSpot sync"
+                  : robotJobsIntent
+                    ? "See all jobs for your robot"
+                    : matchedUnlockIntent
+                      ? "Company details + free account"
+                      : "Start free"}
               </h2>
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-slate-300">
                 {hubspotIntent
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
-                  : params.get("next")
-                    ? "Continue with Google or Microsoft — or use a magic link below."
-                    : "Create an account with Google, Microsoft, GitHub, or a magic link."}
+                  : robotJobsIntent
+                    ? "Create an account to unlock the rest of the jobs we found for your robot."
+                  : matchedUnlockIntent
+                    ? "Confirm company name, robot category, and ICP — then create your account to unlock 15 matched sales leads."
+                    : resultsIntent
+                    ? "One-tap signup keeps Cal's matched buyers in your workspace — then customer info unlocks 15 sales leads."
+                    : params.get("next")
+                    ? "Use one-tap OAuth and we create your account instantly, then your matched leads are saved."
+                    : "Use one-tap OAuth to create your account instantly, then upgrade to unlock full pipeline coverage and CRM automation."}
               </p>
+              {matchedUnlockIntent && (
+                <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-300">
+                    Required for matched pipeline
+                  </p>
+                  <div className="mt-3">
+                    <RobotWorkspaceProfileFields
+                      value={workspaceProfile}
+                      onChange={setWorkspaceProfile}
+                      submittedHostname={
+                        (workflowPrefill.company_url || "")
+                          .replace(/^https?:\/\//, "")
+                          .replace(/^www\./, "")
+                          .split("/")[0] || undefined
+                      }
+                      tone="dark"
+                      idPrefix="signup-matched"
+                    />
+                  </div>
+                </div>
+              )}
               {liveProof && (liveProof.hot || liveProof.companies) && (
-                <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-900">
+                <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-800 px-3 py-2 text-[11px] font-semibold text-emerald-300">
                   <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
@@ -487,38 +715,43 @@ export default function Signup() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Full name"
-                  className="mt-4 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500"
+                  className="mt-4 w-full rounded-xl border border-slate-600 bg-transparent px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
                 />
               )}
               <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-2`}>
                 <button
                   type="button"
                   onClick={() => void oauth("google")}
-                  disabled={!supabase}
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-40"
+                  disabled={!supabase || oauthPending !== null}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
                 >
-                  Continue with Google — one tap
+                  <GoogleGlyph />
+                  {oauthPending === "google" ? "Redirecting to Google..." : "Continue with Google — one tap"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => void oauth("azure")}
-                  disabled={!supabase}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-800 transition-all hover:bg-gray-50 disabled:opacity-40"
+                  onClick={() => void oauth("github")}
+                  disabled={!supabase || oauthPending !== null}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600 px-4 py-3 text-sm font-bold text-slate-100 transition-all hover:border-slate-400 disabled:opacity-40"
                 >
-                  Continue with Microsoft 365
+                  <Github className="h-4 w-4" aria-hidden="true" />
+                  {oauthPending === "github" ? "Redirecting to GitHub..." : "Continue with GitHub — one tap"}
                 </button>
                 {!hubspotIntent && (
-                  <p className="text-center text-[11px] font-medium text-gray-400">
-                    No password · no credit card · about 15 seconds
+                  <p className="text-center text-[11px] font-medium text-slate-400">
+                    Google OAuth + GitHub are live · account created automatically · no password required
                   </p>
                 )}
               </div>
+              <div className="mt-4 rounded-xl border border-cyan-700 px-4 py-3 text-xs text-cyan-300">
+                Microsoft sign in coming soon.
+              </div>
               <div className="my-5 flex items-center gap-3">
-                <span className="h-px flex-1 bg-gray-200" />
-                <span className="text-[10px] uppercase tracking-widest text-gray-400">
+                <span className="h-px flex-1 bg-slate-700" />
+                <span className="text-[10px] uppercase tracking-widest text-slate-400">
                   {hubspotIntent ? "or" : "or use your work email"}
                 </span>
-                <span className="h-px flex-1 bg-gray-200" />
+                <span className="h-px flex-1 bg-slate-700" />
               </div>
               <form onSubmit={(e) => void magicLink(e)} className="space-y-3">
                 <input
@@ -528,39 +761,33 @@ export default function Signup() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@robotcompany.com"
                   disabled={status === "sending"}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500"
+                  className="w-full rounded-xl border border-slate-600 bg-transparent px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
                 />
                 {status === "error" && (
-                  <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">{errMsg}</p>
+                  <p className="rounded-lg border border-red-700 px-3 py-2 text-xs text-red-300">{errMsg}</p>
                 )}
                 <button
                   type="submit"
                   disabled={status === "sending" || !email.trim()}
                   className={
                     hubspotIntent
-                      ? "w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-40"
-                      : "w-full rounded-xl border border-emerald-600 px-4 py-3 text-sm font-bold text-emerald-700 transition-all hover:bg-emerald-50 disabled:opacity-40"
+                      ? "w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
+                      : "w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
                   }
                 >
                   {status === "sending" ? "Sending..." : hubspotIntent ? "Sign up & connect HubSpot" : "Email me a sign-in link"}
                 </button>
               </form>
               {!hubspotIntent && (
-                <p className="mt-4 text-center text-[11px] text-gray-400">
-                  Prefer GitHub?{" "}
-                  <button
-                    type="button"
-                    onClick={() => void oauth("github")}
-                    disabled={!supabase}
-                    className="font-semibold text-gray-500 underline-offset-2 hover:text-emerald-700 hover:underline disabled:opacity-40"
-                  >
-                    Sign up with GitHub
+                <div className="mt-4 text-center text-[11px] text-slate-400">
+                  <button type="button" disabled className="font-semibold text-slate-500 underline-offset-2 opacity-60">
+                    Microsoft sign in coming soon.
                   </button>
-                </p>
+                </div>
               )}
-              <p className="mt-5 text-center text-xs text-gray-500">
+              <p className="mt-5 text-center text-xs text-slate-400">
                 Already have an account?{" "}
-                <Link href={loginHref} className="font-semibold text-emerald-600 hover:text-emerald-700">
+                <Link href={loginHref} className="font-semibold text-emerald-300 hover:text-emerald-200">
                   Sign in
                 </Link>
               </p>

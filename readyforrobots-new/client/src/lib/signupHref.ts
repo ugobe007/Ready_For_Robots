@@ -16,10 +16,18 @@
 export function signupHrefForLead(
   leadId: number | string,
   company?: string | null,
-  opts?: { src?: string },
+  opts?: { src?: string; nextParams?: Record<string, string> },
 ): string {
-  const next = `/pipeline?lead=${leadId}&resume=save`;
-  let href = `/signup?next=${encodeURIComponent(next)}`;
+  const nextParams = new URLSearchParams();
+  nextParams.set("lead", String(leadId));
+  nextParams.set("resume", "save");
+  if (opts?.nextParams) {
+    for (const [key, value] of Object.entries(opts.nextParams)) {
+      const v = (value || "").trim();
+      if (v) nextParams.set(key, v);
+    }
+  }
+  let href = `/signup?next=${encodeURIComponent(`/pipeline?${nextParams.toString()}`)}`;
   const co = (company || "").trim();
   if (co) href += `&co=${encodeURIComponent(co)}`;
   const src = (opts?.src || "").trim();

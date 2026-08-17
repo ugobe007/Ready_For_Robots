@@ -69,18 +69,33 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
             OutreachMessage.sent_at.isnot(None),
             OutreachMessage.sent_at >= since,
             OutreachMessage.sent_at <= now,
+            OutreachMessage.send_identity == "cal",
             variant_expr.isnot(None),
         )
         .all()
     )
 
-    # Health denominator: all sent outreach in-window (tagged + untagged).
+    # Health denominator: intro sends only (same population as this report's angle analysis).
     all_sent_n = (
         db.query(func.count(OutreachMessage.id))
         .filter(
             OutreachMessage.sent_at.isnot(None),
             OutreachMessage.sent_at >= since,
             OutreachMessage.sent_at <= now,
+            OutreachMessage.send_identity == "cal",
+        )
+        .scalar()
+        or 0
+    )
+
+    # Context only: follow-up volume in-window (scout sequence sends).
+    followup_sent_n = (
+        db.query(func.count(OutreachMessage.id))
+        .filter(
+            OutreachMessage.sent_at.isnot(None),
+            OutreachMessage.sent_at >= since,
+            OutreachMessage.sent_at <= now,
+            OutreachMessage.send_identity == "scout",
         )
         .scalar()
         or 0
@@ -111,6 +126,8 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
             "sent": 0,
             "delivered": 0,
             "opened": 0,
+            "bounced": 0,
+            "suppressed": 0,
             "replied": 0,
             "positive": 0,
             "negative": 0,
@@ -132,6 +149,10 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
             bucket["sent"] += 1
             if status in ("delivered", "opened", "clicked", "replied"):
                 bucket["delivered"] += 1
+            if status == "bounced":
+                bucket["bounced"] += 1
+            if status == "suppressed":
+                bucket["suppressed"] += 1
             # A click or reply implies the email was opened — count them so the
             # "seen" funnel isn't understated once later states land on a message.
             if status in ("opened", "clicked", "replied"):
@@ -161,6 +182,8 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
                 "sent": agg["sent"],
                 "delivered": agg["delivered"],
                 "opened": agg["opened"],
+                "bounced": agg["bounced"],
+                "suppressed": agg["suppressed"],
                 "replied": agg["replied"],
                 "positive": agg["positive"],
                 "negative": agg["negative"],
@@ -178,9 +201,17 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
     health_notes: list[str] = []
     if total_sent == 0:
         health_notes.append("No tagged intro sends in this window.")
+        if followup_sent_n > 0:
+            health_notes.append(
+                f"Follow-up-only window: {followup_sent_n} scout sends landed, but no new Cal intro sends were sent."
+            )
     if total_sent > 0 and totals["opened"] == 0:
         health_notes.append(
             "No opens recorded. This is likely a deliverability or open-tracking issue before it is a copy issue."
+        )
+    if total_sent > 0 and (totals["bounced"] > 0 or totals["suppressed"] > 0):
+        health_notes.append(
+            f"Intro non-delivery mix: {totals['bounced']} bounced, {totals['suppressed']} suppressed."
         )
     if total_sent > 0 and delivered_rate < _MIN_DELIVERY_RATE_FOR_RANKING:
         health_notes.append(
@@ -231,6 +262,8 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
             "sent": totals["sent"],
             "delivered": totals["delivered"],
             "opened": totals["opened"],
+            "bounced": totals["bounced"],
+            "suppressed": totals["suppressed"],
             "replied": totals["replied"],
             "positive": totals["positive"],
             "negative": totals["negative"],
@@ -246,6 +279,7 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
             "tagged_sent": total_sent,
             "tagged_coverage": tagged_coverage,
             "delivered_rate": delivered_rate,
+            "followup_sent": int(followup_sent_n),
             "ranking_enabled": ranking_ok,
             "ranking_gate_reasons": ranking_gate_reasons,
             "notes": health_notes,
@@ -273,12 +307,15 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
         f"  • Intro sends (tagged): {sent_n}",
         f"  • Delivered: {t.get('delivered', 0)}  ({_pct(t.get('delivered', 0), sent_n)}% of sends)",
         f"  • Opened: {t.get('opened', 0)}  ({_pct(t.get('opened', 0), sent_n)}% of sends)",
+        f"  • Bounced: {t.get('bounced', 0)}  ({_pct(t.get('bounced', 0), sent_n)}% of sends)",
+        f"  • Suppressed: {t.get('suppressed', 0)}  ({_pct(t.get('suppressed', 0), sent_n)}% of sends)",
         f"  • Replied: {t.get('replied', 0)}  ({t.get('reply_rate', 0)}% of sends)",
         f"  • Positive replies: {t.get('positive', 0)}  ({t.get('positive_rate', 0)}% of sends)",
         f"  • Negative / opt-out: {t.get('negative', 0)}",
         "",
         "Tracking health",
-        f"  • Tagged coverage: {h.get('tagged_sent', 0)}/{h.get('all_sent', 0)} sends ({h.get('tagged_coverage', 0)}%)",
+        f"  • Tagged coverage (intro sends): {h.get('tagged_sent', 0)}/{h.get('all_sent', 0)} sends ({h.get('tagged_coverage', 0)}%)",
+        f"  • Follow-up sends (scout): {h.get('followup_sent', 0)}",
         f"  • Delivered rate: {h.get('delivered_rate', 0)}%",
     ]
 
@@ -302,7 +339,7 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
                 continue
             lines.append(
                 f"  • {v['variant_id']}: sent {v['sent']}, opened {v['opened']} "
-                f"({_pct(v['opened'], v['sent'])}%), replied {v['replied']} "
+                f"({_pct(v['opened'], v['sent'])}%), bounced {v['bounced']}, suppressed {v['suppressed']}, replied {v['replied']} "
                 f"({v['reply_rate']}%), positive {v['positive']} ({v['positive_rate']}%)"
             )
             if v.get("subject_sample"):

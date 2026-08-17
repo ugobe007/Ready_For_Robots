@@ -20,6 +20,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--names", required=True, help="Comma-separated name substrings.")
     ap.add_argument("--apply", action="store_true", help="Actually send.")
+    ap.add_argument("--use-apollo", action="store_true", help="Opt in to Apollo lookup during resolution.")
     args = ap.parse_args()
 
     from app.database import SessionLocal
@@ -73,7 +74,11 @@ def main() -> int:
             if not elig:
                 rows.append((company.name, f"ineligible:{r}", "-", "skip"))
                 continue
-            to_email, source, _t = resolve_outreach_email(company, acct, use_apollo=True)
+            to_email, source, _t = resolve_outreach_email(
+                company,
+                acct,
+                use_apollo=args.use_apollo,
+            )
             if not to_email:
                 rows.append((company.name, "no-email", "-", "skip"))
                 continue

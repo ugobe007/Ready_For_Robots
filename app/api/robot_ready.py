@@ -22,8 +22,9 @@ Returns:
 """
 from fastapi import APIRouter, Depends
 import re
+import logging
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List, Dict
@@ -38,12 +39,18 @@ from app.models.score import Score
 from app.services.ontology import get_industry_prior
 from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.lead_signal_display import format_signal_for_sales, strip_extraction_artifacts
+from app.services.robot_ready_profile import (  # noqa: F401 — re-export for match-url callers
+    analyze_robot_capabilities,
+    scrape_robot_page,
+)
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 # Cache only the lead-candidate index. Final matches are recomputed for every submitted URL.
 LEAD_CANDIDATE_CACHE_TTL = 180
 LEAD_CANDIDATE_INDEX_LIMIT = 350
+LEAD_CANDIDATE_INDEX_FALLBACK_LIMIT = 120
 LEAD_CANDIDATE_FINAL_LIMIT = 25
 _lead_candidate_cache: dict = {}
 _lead_candidate_lock = threading.Lock()
@@ -96,85 +103,7 @@ def _submitted_domain(raw_url: Optional[str]) -> str:
     return parsed.netloc.replace("www.", "")
 
 
-def scrape_robot_page(url: str) -> str:
-    """Scrape robot product page and extract text content"""
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (compatible; ReadyForRobotsCrawler/1.0)'
-        }
-        resp = requests.get(url, headers=headers, timeout=(3, 5))
-        resp.raise_for_status()
-        
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        
-        # Remove script and style elements
-        for script in soup(["script", "style"]):
-            script.decompose()
-        
-        # Get text
-        text = soup.get_text(separator=' ', strip=True)
-        
-        # Limit to first 5000 chars to avoid token overflow
-        return text[:5000]
-    except Exception as e:
-        return f"Error scraping {url}: {str(e)}"
-
-
-def analyze_robot_capabilities(robot_name: str, page_text: str) -> Dict:
-    """
-    Extract robot capabilities from scraped text.
-    In production, this would use LLM to analyze the page.
-    For now, using keyword matching.
-    """
-    text_lower = f"{robot_name or ''} {page_text or ''}".lower()
-    
-    # Determine robot type
-    robot_type = "Unknown"
-    if any(kw in text_lower for kw in ['delivery', 'transport', 'courier', 'cart']):
-        robot_type = "Delivery/Transport"
-    elif any(kw in text_lower for kw in ['disinfect', 'uv', 'sanitize', 'clean']):
-        robot_type = "Disinfection/Cleaning"
-    elif any(kw in text_lower for kw in ['service', 'serve', 'hospitality', 'restaurant']):
-        robot_type = "Service Robot"
-    elif any(kw in text_lower for kw in ['warehouse', 'amr', 'agv', 'logistics', 'picking']):
-        robot_type = "Warehouse/Logistics"
-    elif any(kw in text_lower for kw in ['surgery', 'patient', 'medical', 'healthcare']):
-        robot_type = "Medical/Healthcare"
-    
-    # Determine use case
-    use_case = "General Automation"
-    if 'hotel' in text_lower or 'hospitality' in text_lower:
-        use_case = "Hospitality Services"
-    elif re.search(r"\bhospitals?\b|\bhealthcare\b|\bmedical\b|\bclinic\b|\bpatient\b", text_lower):
-        use_case = "Healthcare Operations"
-    elif 'warehouse' in text_lower or 'distribution' in text_lower:
-        use_case = "Warehouse Logistics"
-    elif 'restaurant' in text_lower or 'food service' in text_lower:
-        use_case = "Food Service"
-    
-    # Extract capabilities (simple keyword matching)
-    capabilities = []
-    capability_keywords = {
-        'autonomous navigation': ['autonomous', 'navigation', 'lidar', 'mapping'],
-        'payload delivery': ['payload', 'delivery', 'transport', 'carry'],
-        'UV disinfection': ['uv', 'disinfect', 'sanitize'],
-        'temperature control': ['temperature', 'refrigerat', 'heated'],
-        'multi-floor': ['elevator', 'multi-floor', 'multiple floors'],
-        'human interaction': ['touchscreen', 'voice', 'interface', 'interact'],
-        'cloud connected': ['cloud', 'fleet', 'dashboard', 'analytics'],
-        'HIPAA compliant': ['hipaa', 'compliant', 'secure'],
-    }
-    
-    for cap, keywords in capability_keywords.items():
-        if any(kw in text_lower for kw in keywords):
-            capabilities.append(cap)
-    
-    return {
-        "type": robot_type,
-        "use_case": use_case,
-        "capabilities": capabilities,
-        "profile_score": min(100, 35 + (15 if robot_type != "Unknown" else 0) + (10 if use_case != "General Automation" else 0) + min(40, len(capabilities) * 8)),
-    }
+# scrape_robot_page / analyze_robot_capabilities live in app.services.robot_ready_profile
 
 
 def _signal_label(signal_type: str) -> str:
@@ -211,7 +140,7 @@ def _extract_key_signals(signals: List) -> List[Dict]:
     return picked
 
 
-def _build_lead_candidate_index(db: Session) -> List[Dict]:
+def _build_lead_candidate_index(db: Session, limit: int = LEAD_CANDIDATE_INDEX_LIMIT) -> List[Dict]:
     latest_score = (
         db.query(
             Score.company_id.label("company_id"),
@@ -223,9 +152,9 @@ def _build_lead_candidate_index(db: Session) -> List[Dict]:
     rows = (
         db.query(Company)
         .join(latest_score, latest_score.c.company_id == Company.id)
-        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .options(selectinload(Company.scores), selectinload(Company.signals))
         .order_by(latest_score.c.best_score.desc())
-        .limit(LEAD_CANDIDATE_INDEX_LIMIT)
+        .limit(limit)
         .all()
     )
 
@@ -266,7 +195,20 @@ def _get_fresh_lead_candidate_index(db: Session) -> List[Dict]:
         if entry and now - entry["ts"] <= LEAD_CANDIDATE_CACHE_TTL:
             return entry["data"]
 
-    candidates = _build_lead_candidate_index(db)
+    try:
+        candidates = _build_lead_candidate_index(db, LEAD_CANDIDATE_INDEX_LIMIT)
+    except Exception:
+        logger.exception("robot-ready candidate index build failed at primary limit=%s", LEAD_CANDIDATE_INDEX_LIMIT)
+        try:
+            candidates = _build_lead_candidate_index(db, LEAD_CANDIDATE_INDEX_FALLBACK_LIMIT)
+        except Exception:
+            logger.exception("robot-ready candidate index build failed at fallback limit=%s", LEAD_CANDIDATE_INDEX_FALLBACK_LIMIT)
+            with _lead_candidate_lock:
+                stale = _lead_candidate_cache.get("v1")
+            if stale and isinstance(stale.get("data"), list):
+                return stale["data"]
+            return []
+
     with _lead_candidate_lock:
         _lead_candidate_cache["v1"] = {"ts": time.monotonic(), "data": candidates}
     return candidates
@@ -326,15 +268,22 @@ def _capability_signal_bonus(robot_caps: Dict, signals: List[Dict]) -> int:
     return min(24, bonus)
 
 
+# URL search → lookup → score OEM → match equally scored buyer opportunities.
+URL_MATCHED_PIPELINE_LIMIT = 15
+
+
 def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] = None, target_regions: List[str] = None) -> List[Dict]:
     """
-    Match robot capabilities with companies in the database.
-    Returns top matches with scores and customized pitches.
-    Filters by target industries and regions if specified.
+    Match a scored robot-company profile to equally scored buyer opportunities.
+
+    Ranking prefers: industry/capability fit, then buyers whose intent score is
+    near the OEM profile_score (score parity), then HOT/WARM tier.
+    Returns at most URL_MATCHED_PIPELINE_LIMIT rows.
     """
     candidates = _get_fresh_lead_candidate_index(db)
     matches = []
-    
+    robot_profile_score = float(robot_caps.get("profile_score") or 50)
+
     # Region mapping for filtering
     REGION_STATES = {
         'Northeast US': ['NY', 'NJ', 'PA', 'MA', 'CT', 'RI', 'VT', 'NH', 'ME'],
@@ -347,14 +296,14 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
         'Europe': ['UK', 'GB', 'DE', 'FR', 'IT', 'ES'],
         'Global': [],  # Accept all
     }
-    
+
     for candidate in candidates:
         # Filter by industry if specified
         if target_industries:
             company_industry = candidate.get("industry") or ""
             if not any(target_ind.lower() in company_industry.lower() for target_ind in target_industries):
                 continue
-        
+
         # Filter by region if specified
         if target_regions and 'Global' not in target_regions:
             company_state = candidate.get("location_state") or ""
@@ -369,38 +318,39 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
                     break
             if not matches_region:
                 continue
-        
+
         # Calculate match score based on:
         # 1. Industry fit
-        # 2. Overall intent score
-        # 3. Specific signals
-        
+        # 2. Score parity vs OEM profile_score
+        # 3. Intent + signals + capability overlap
         match_score = 0.0
         industry = candidate.get("industry") or ""
         signals = candidate.get("signals") or []
-        
-        # Industry matching
+        intent = float(candidate.get("overall_intent_score") or 0)
+
         robot_use_case = robot_caps.get("use_case", "")
         industry_match = _industry_match_score(robot_use_case, industry)
         match_score += industry_match
-        
-        # Intent score (0-100 scale, weight 30%)
-        match_score += (candidate.get("overall_intent_score") or 0) * 0.3
-        
-        # Signal boost
-        signal_boost = min(20, (candidate.get("signal_count") or len(signals)) * 2)  # up to 20 points
+
+        # Equally scored opportunities: reward buyers near the OEM profile score.
+        parity_gap = abs(intent - robot_profile_score)
+        parity_bonus = max(0.0, 22.0 - (parity_gap * 0.45))
+        match_score += parity_bonus
+
+        # Intent contributes less once parity is explicit (avoid double-counting).
+        match_score += intent * 0.18
+
+        signal_boost = min(20, (candidate.get("signal_count") or len(signals)) * 2)
         match_score += signal_boost
         match_score += _capability_signal_bonus(robot_caps, signals)
-        
+
         match_score = min(100, int(match_score))
-        
-        if match_score < 30:  # Skip low matches
+
+        if match_score < 30:
             continue
-        
-        # Generate value proposition
+
         value_prop = generate_value_prop(candidate, robot_caps, signals)
-        
-        # Recommended action
+
         action = "Reach out with personalized demo offer"
         signal_types = {s.get("signal_type") for s in signals}
         if 'strategic_hire' in signal_types:
@@ -411,7 +361,7 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
             action = "Propose as part of new facility build-out"
         elif _capability_signal_bonus(robot_caps, signals) >= 12:
             action = "Lead with the capability-fit use case from the scanned URL"
-        
+
         matches.append({
             "id": candidate.get("id"),
             "company_name": candidate.get("company_name"),
@@ -423,6 +373,8 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
             "priority_score": candidate.get("priority_score"),
             "priority_reasons": candidate.get("priority_reasons", []),
             "match_score": match_score,
+            "score_parity_gap": round(parity_gap, 1),
+            "robot_profile_score": robot_profile_score,
             "value_proposition": value_prop,
             "key_signals": [s.get("display_text") for s in signals[:3]],
             "signals": signals[:5],
@@ -439,11 +391,17 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
                 "suggested_motion": action,
             },
         })
-    
-    # Sort by match score
-    matches.sort(key=lambda x: x['match_score'], reverse=True)
-    
-    return matches[:25]  # Return top 25
+
+    # Prefer score-parity fit, then HOT/WARM, then raw match_score.
+    def _match_rank(row: Dict) -> tuple:
+        tier = (row.get("priority_tier") or "").strip().upper()
+        tier_rank = 0 if tier == "HOT" else 1 if tier == "WARM" else 2
+        parity = float(row.get("score_parity_gap") or 99)
+        return (parity, tier_rank, -(row.get("match_score") or 0))
+
+    matches.sort(key=_match_rank)
+
+    return matches[:URL_MATCHED_PIPELINE_LIMIT]
 
 
 def generate_value_prop(company, robot_caps: Dict, signals: List) -> str:

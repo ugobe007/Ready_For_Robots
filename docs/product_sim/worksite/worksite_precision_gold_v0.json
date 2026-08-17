@@ -1,0 +1,51 @@
+{
+  "version": "0.1",
+  "purpose": "Origin laboratory precision judgments for WPR. Label resolver outputs — not a seed list for discovery.",
+  "judgments": [
+    {
+      "id": "junk-automation-engineering-warehouse",
+      "name_pattern": "(?i)automation\\s+engineering\\s+warehouse",
+      "label": "illegitimate",
+      "reason": "Job-title false place; fails ENTITY"
+    },
+    {
+      "id": "junk-leadership-hire-warehouse",
+      "name_pattern": "(?i)leadership\\s+hire\\s+warehouse",
+      "label": "illegitimate",
+      "reason": "Signal-label false place"
+    },
+    {
+      "id": "junk-life-sciences-dc",
+      "name_pattern": "(?i)life\\s+sciences\\s+distribution",
+      "label": "illegitimate",
+      "reason": "Vertical adjective ≠ place entity"
+    },
+    {
+      "id": "hq-hint",
+      "name_pattern": "(?i)hq.hint|corporate_hq|headquarters",
+      "resolution": "hq_hint_only",
+      "label": "illegitimate",
+      "reason": "HQ ≠ operating Worksite"
+    },
+    {
+      "id": "network-unresolved",
+      "resolution": "network_unresolved",
+      "label": "illegitimate",
+      "reason": "Network count is not a Worksite"
+    },
+    {
+      "id": "pipeline-city-alone",
+      "resolution": "pipeline_location_non_hq",
+      "label": "illegitimate",
+      "reason": "Company-row city without site noun is not an accepted Worksite"
+    },
+    {
+      "id": "good-named-dc",
+      "name_pattern": "(?i)\\b[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)?\\s+Distribution\\s+Cent(?:er|re)\\b",
+      "label": "legitimate",
+      "reason": "Named DC pattern — still needs ownership proof in live data",
+      "requires_gate_accepted": true
+    }
+  ],
+  "notes": "WPR = legitimate / (legitimate + illegitimate) among accepted Worksites that match a judgment. Unjudged accepted sites are reported separately — do not inflate WPR."
+}

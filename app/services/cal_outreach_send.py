@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 from app.models.crm import CrmAccount
 from app.models.company import Company
 from app.models.outreach import OutreachMessage
+from app.services.email_address import normalize_recipient_email
+from app.services.lead_enrichment import is_generic_role_inbox, source_is_provider_verified
 from app.services.resend_email import ResendEmailError
 from app.services.cal_email_send import send_cal_email_via_resend
 
@@ -72,12 +74,29 @@ def send_cal_intro_email(
     include_demo: bool = True,
     variant_id: str | None = None,
     canary: bool = False,
+    email_source: str | None = None,
 ) -> OutreachMessage:
     """Send intro email with reply routing and persist OutreachMessage for inbound webhook.
 
     `variant_id` records which trust-first angle produced this send so the weekly
     learning report can attribute replies back to a specific angle.
     """
+    effective_source = (email_source or "").strip().lower()
+    if not effective_source and company is not None:
+        meta = getattr(company, "crm_metadata", None)
+        if isinstance(meta, dict):
+            normalized_to = normalize_recipient_email(to_email) or ""
+            recorded_to = normalize_recipient_email(meta.get("outreach_email")) or ""
+            if normalized_to and normalized_to == recorded_to:
+                effective_source = (meta.get("outreach_email_source") or "").strip().lower()
+
+    if is_generic_role_inbox(to_email) and not source_is_provider_verified(effective_source):
+        src = effective_source or "unknown"
+        raise ResendEmailError(
+            f"Blocked generic role inbox by default ({to_email}; source={src}). "
+            "Use a provider-verified contact source before sending Cal intro."
+        )
+
     reply_token = secrets.token_urlsafe(18)
     reply_to = cal_reply_address(reply_token)
     inbound_missing = False

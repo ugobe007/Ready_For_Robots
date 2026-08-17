@@ -1,0 +1,144 @@
+{
+  "version": "0.1",
+  "description": "Site type → expected physical work units (not robots). Probabilistic templates for Worksite inference.",
+  "patterns": {
+    "food_distribution_center": {
+      "label": "Foodservice / grocery distribution center",
+      "aliases": ["food_dc", "grocery_dc", "sysco_dc", "cold_food_dc"],
+      "work_units": [
+        {"id": "receiving", "name": "Receiving", "embodied": true},
+        {"id": "unload", "name": "Unload inbound", "embodied": true},
+        {"id": "inspect_inbound", "name": "Inspect inbound", "embodied": true},
+        {"id": "move_pallets", "name": "Move pallets", "embodied": true},
+        {"id": "putaway", "name": "Putaway", "embodied": true},
+        {"id": "replenish", "name": "Replenish pick faces", "embodied": true},
+        {"id": "pick_cases", "name": "Pick cases", "embodied": true},
+        {"id": "move_orders", "name": "Move staged orders", "embodied": true},
+        {"id": "stage_outbound", "name": "Stage outbound", "embodied": true},
+        {"id": "load_outbound", "name": "Load outbound", "embodied": true}
+      ],
+      "origin_relevant": ["move_pallets", "putaway", "replenish", "pick_cases", "move_orders", "stage_outbound"]
+    },
+    "cold_storage_warehouse": {
+      "label": "Cold / frozen storage warehouse",
+      "aliases": ["cold_dc", "freezer_warehouse", "lineage_facility"],
+      "work_units": [
+        {"id": "receiving", "name": "Receiving", "embodied": true},
+        {"id": "unload", "name": "Unload inbound", "embodied": true},
+        {"id": "move_pallets", "name": "Move pallets (cold)", "embodied": true},
+        {"id": "putaway", "name": "Putaway", "embodied": true},
+        {"id": "replenish", "name": "Replenish", "embodied": true},
+        {"id": "pick_cases", "name": "Pick cases / pallets", "embodied": true},
+        {"id": "stage_outbound", "name": "Stage outbound", "embodied": true},
+        {"id": "load_outbound", "name": "Load outbound", "embodied": true}
+      ],
+      "origin_relevant": ["move_pallets", "putaway", "replenish", "pick_cases", "stage_outbound"]
+    },
+    "parcel_sortation_hub": {
+      "label": "Parcel / package sortation hub",
+      "aliases": ["sort_center", "parcel_hub", "fedex_ground_hub"],
+      "work_units": [
+        {"id": "unload", "name": "Unload packages", "embodied": true},
+        {"id": "induct", "name": "Induct to sort", "embodied": true},
+        {"id": "sort_packages", "name": "Sort packages", "embodied": true},
+        {"id": "move_containers", "name": "Move containers / gaylords", "embodied": true},
+        {"id": "stage_outbound", "name": "Stage outbound", "embodied": true},
+        {"id": "load_outbound", "name": "Load outbound", "embodied": true}
+      ],
+      "origin_relevant": ["move_containers", "stage_outbound", "induct"]
+    },
+    "3pl_fulfillment_center": {
+      "label": "3PL / e-commerce fulfillment center",
+      "aliases": ["fulfillment_center", "3pl_fc", "gxo_fc", "kenco_fc"],
+      "work_units": [
+        {"id": "receiving", "name": "Receiving", "embodied": true},
+        {"id": "unload", "name": "Unload", "embodied": true},
+        {"id": "putaway", "name": "Putaway", "embodied": true},
+        {"id": "replenish", "name": "Replenish", "embodied": true},
+        {"id": "pick_each", "name": "Each / piece pick", "embodied": true},
+        {"id": "pick_cases", "name": "Case pick", "embodied": true},
+        {"id": "pack", "name": "Pack", "embodied": true},
+        {"id": "move_totes", "name": "Move totes / carts", "embodied": true},
+        {"id": "stage_outbound", "name": "Stage outbound", "embodied": true},
+        {"id": "load_outbound", "name": "Load outbound", "embodied": true}
+      ],
+      "origin_relevant": ["putaway", "replenish", "pick_cases", "move_totes", "stage_outbound"]
+    },
+    "meal_kit_fulfillment": {
+      "label": "Meal-kit / grocery e-fulfillment",
+      "aliases": ["hellofresh_fc", "meal_kit_dc"],
+      "work_units": [
+        {"id": "receiving", "name": "Receiving", "embodied": true},
+        {"id": "cold_putaway", "name": "Cold putaway", "embodied": true},
+        {"id": "kitting", "name": "Kitting / assembly", "embodied": true},
+        {"id": "move_totes", "name": "Move totes between stations", "embodied": true},
+        {"id": "pack", "name": "Pack outbound boxes", "embodied": true},
+        {"id": "stage_outbound", "name": "Stage outbound", "embodied": true},
+        {"id": "load_outbound", "name": "Load outbound", "embodied": true}
+      ],
+      "origin_relevant": ["cold_putaway", "move_totes", "stage_outbound"]
+    },
+    "manufacturing_plant": {
+      "label": "Manufacturing plant",
+      "aliases": ["factory", "production_plant"],
+      "work_units": [
+        {"id": "material_receiving", "name": "Material receiving", "embodied": true},
+        {"id": "line_feeding", "name": "Line feeding", "embodied": true},
+        {"id": "machine_tending", "name": "Machine tending", "embodied": true},
+        {"id": "assembly", "name": "Assembly", "embodied": true},
+        {"id": "inspection", "name": "Inspection", "embodied": true},
+        {"id": "palletizing", "name": "Palletizing", "embodied": true},
+        {"id": "fg_movement", "name": "Finished-goods movement", "embodied": true},
+        {"id": "waste_handling", "name": "Waste handling", "embodied": true}
+      ],
+      "origin_relevant": ["line_feeding", "palletizing", "fg_movement"]
+    },
+    "hospital_campus": {
+      "label": "Hospital / medical campus",
+      "aliases": ["hospital", "medical_center"],
+      "work_units": [
+        {"id": "env_cleaning", "name": "Environmental cleaning", "embodied": true},
+        {"id": "supply_transport", "name": "Supply transport", "embodied": true},
+        {"id": "meal_delivery", "name": "Meal delivery", "embodied": true},
+        {"id": "med_movement", "name": "Medication movement", "embodied": true},
+        {"id": "waste_transport", "name": "Waste transport", "embodied": true},
+        {"id": "inventory_movement", "name": "Inventory movement", "embodied": true},
+        {"id": "inspection_rounds", "name": "Inspection rounds", "embodied": true},
+        {"id": "security_rounds", "name": "Security rounds", "embodied": true}
+      ],
+      "origin_relevant": ["supply_transport", "inventory_movement", "meal_delivery"]
+    },
+    "airport_terminal": {
+      "label": "Airport terminal / airside ops",
+      "aliases": ["airport", "terminal"],
+      "work_units": [
+        {"id": "baggage_move", "name": "Baggage movement", "embodied": true},
+        {"id": "cargo_move", "name": "Cargo / freight movement", "embodied": true},
+        {"id": "cleaning", "name": "Terminal cleaning", "embodied": true},
+        {"id": "security_patrol", "name": "Security patrol", "embodied": true}
+      ],
+      "origin_relevant": ["cargo_move", "baggage_move"]
+    },
+    "corporate_hq": {
+      "label": "Corporate HQ (usually NOT a robot worksite)",
+      "aliases": ["hq", "headquarters"],
+      "work_units": [],
+      "origin_relevant": [],
+      "notes": "City/state on company row is often HQ. Do not treat as food_distribution_center without site evidence."
+    }
+  },
+  "evidence_keywords": {
+    "move_pallets": ["forklift", "pallet", "pallet jack", "reach truck", "material handler"],
+    "pick_cases": ["selector", "order selector", "case pick", "picker", "selecting"],
+    "putaway": ["putaway", "put-away", "slotting"],
+    "replenish": ["replenish", "replenishment"],
+    "unload": ["unload", "unloading", "dock worker"],
+    "load_outbound": ["loader", "loading dock", "outbound"],
+    "move_totes": ["tote", "amr", "cart", "conveyor"],
+    "cold_putaway": ["freezer", "cold storage", "refrigerat", "frozen"],
+    "kitting": ["kitting", "meal kit", "assembly station"],
+    "line_feeding": ["line feed", "line-side", "kanban"],
+    "palletizing": ["palletiz", "end of line"],
+    "supply_transport": ["supply tech", "central supply", "materials management"]
+  }
+}

@@ -512,6 +512,20 @@ def test_classify_lead_blocks_seller_story_without_buyer_intent():
     assert "buyer opportunity" in reason.lower()
 
 
+def test_classify_lead_blocks_divested_automation_unit_story():
+    c = SimpleNamespace(name="Waukesha", industry="Logistics", employee_estimate=None)
+    sigs = [
+        SimpleNamespace(
+            signal_type="automation_interest",
+            signal_text="Waukesha sold its warehouse automation unit after a strategic portfolio review.",
+        )
+    ]
+    junk, reason, pri = classify_lead(c, None, sigs)
+    assert junk is True
+    assert pri.tier == "COLD"
+    assert "divestiture" in reason.lower() or "buyer opportunity" in reason.lower()
+
+
 def test_classify_lead_blocks_imos_pizza_store_opening():
     c = SimpleNamespace(name="Imo's Pizza", industry="Manufacturing", employee_estimate=None)
     sigs = [

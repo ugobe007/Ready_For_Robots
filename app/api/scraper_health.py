@@ -28,11 +28,28 @@ router = APIRouter()
 
 
 @router.get("/scraper-health")
-def scraper_health():
+def scraper_health(db: Session = Depends(get_db)):
     """Full watchdog health report — run history, circuit breakers, active runs."""
     watchdog = get_watchdog()
     watchdog.reload_from_disk()
     data = watchdog.status()
+    latest_company_at = db.query(func.max(Company.created_at)).scalar()
+    latest_signal_at = db.query(func.max(Signal.created_at)).scalar()
+    companies_last_24h = (
+        db.query(func.count(Company.id))
+        .filter(
+            Company.created_at >= datetime.utcnow() - timedelta(hours=24),
+            Company.source != "stagegate_oem",
+        )
+        .scalar()
+        or 0
+    )
+    signals_last_24h = (
+        db.query(func.count(Signal.id))
+        .filter(Signal.created_at >= datetime.utcnow() - timedelta(hours=24))
+        .scalar()
+        or 0
+    )
     # Summarise for quick dashboard widget
     total_urls    = len(data["url_health"])
     open_circuits = len(data["circuit_open_urls"])
@@ -44,6 +61,13 @@ def scraper_health():
         "last_run_status":      recent["status"] if recent else "no runs yet",
         "last_run_scraper":     recent["scraper_name"] if recent else None,
         "last_run_finished_at": recent["finished_at"] if recent else None,
+    }
+    data["db_activity"] = {
+        "companies_last_24h": int(companies_last_24h),
+        "signals_last_24h": int(signals_last_24h),
+        "latest_company_at": latest_company_at.isoformat() if latest_company_at else None,
+        "latest_signal_at": latest_signal_at.isoformat() if latest_signal_at else None,
+        "note": "DB activity tracks real ingestion regardless of watchdog reset on redeploy.",
     }
     return data
 

@@ -12,6 +12,7 @@ import RobotAvatar from "@/components/RobotAvatar";
 import { HEIR_REPORTS } from "@/content/heir2026";
 import {
   fetchWithTimeout,
+  getApiBase,
   getPublicReadApiBase,
   publicFetchInit,
   readSurfaceCache,
@@ -29,6 +30,8 @@ type RobotRow = {
   product_url?: string;
   image_url?: string | null;
   status: "available" | "pilot" | "research" | "discontinued";
+  country?: string;
+  created_at?: string;
   specs: Record<string, unknown>;
   score_mobility: number;
   score_manipulation: number;
@@ -119,6 +122,25 @@ const INDEX_COLORS = HEIF_COLORS;
 const TEAL = "#059669";
 const ROBOTS_SURFACE_KEY = "humanoid_robots_v2";
 const ROBOTS_SURFACE_TTL_MS = 3 * 60 * 60 * 1000;
+
+function isWithinDays(iso: string | undefined, days: number): boolean {
+  if (!iso) return false;
+  const ts = Date.parse(iso);
+  if (!Number.isFinite(ts)) return false;
+  const delta = Date.now() - ts;
+  return delta >= 0 && delta <= days * 24 * 60 * 60 * 1000;
+}
+
+function policyTone(country?: string): { label: string; color: string; bg: string } {
+  const key = (country || "").trim().toLowerCase();
+  if (key === "china") {
+    return { label: "Higher US risk", color: "#b45309", bg: "rgba(245,158,11,0.16)" };
+  }
+  if (key === "usa" || key === "united states" || key === "us") {
+    return { label: "US-favored", color: "#047857", bg: "rgba(16,185,129,0.16)" };
+  }
+  return { label: "Policy-neutral", color: "#1d4ed8", bg: "rgba(59,130,246,0.14)" };
+}
 
 function heifValue(robot: RobotRow, dim: (typeof HEIF_DIMS)[number]): number {
   const key = `heif_${dim}` as keyof RobotRow;
@@ -321,6 +343,8 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
   const heifTotal = robot.heif_total ?? robot.score_total / 25;
   const specs = robot.specs;
   const aiStack = resolveAiStack(robot);
+  const recentTracked = isWithinDays(robot.created_at, 60) || isWithinDays(robot.last_scraped_at, 60);
+  const policy = policyTone(robot.country);
   const provenance = detail?.spec_provenance ?? robot.spec_provenance ?? {};
   const enriched: RobotRow = detail ? { ...robot, ...detail } : robot;
 
@@ -373,6 +397,14 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
           <div className="flex items-center gap-2 flex-wrap">
             <RobotNameLink name={robot.name} url={robot.product_url} />
             <StatusBadge status={robot.status} />
+            <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider" style={{ color: policy.color, background: policy.bg }}>
+              {policy.label}
+            </span>
+            {recentTracked ? (
+              <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider" style={{ color: "#0369a1", background: "rgba(56,189,248,0.16)" }}>
+                New ≤60d
+              </span>
+            ) : null}
             {specs?.total_dof != null ? (
               <span
                 title={specs.dof_note != null ? String(specs.dof_note) : undefined}

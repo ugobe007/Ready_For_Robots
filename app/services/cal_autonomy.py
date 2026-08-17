@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from typing import Any, Optional
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -303,8 +304,61 @@ def cal_buyer_outreach_body(company: Any, *, fresh: bool = False, variant_id: st
     name = (getattr(company, "name", None) or "your team").strip()
     industry = (getattr(company, "industry", None) or "your industry").strip()
     vid = variant_id or pick_buyer_variant(getattr(company, "id", None))
-    reason = build_context_reason(name, _company_signal_blob(company))
+    # Default OFF: extracted headline snippets can sound fabricated or noisy in
+    # autonomous outbound. Operators can explicitly re-enable if they want the
+    # grounded-event hook style.
+    include_reason = (os.getenv("CAL_INCLUDE_SIGNAL_REASON") or "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    include_hermes = (os.getenv("CAL_INCLUDE_HERMES_REASON") or "1").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    reason = None
+    if include_reason:
+        reason = build_context_reason(name, _company_signal_blob(company))
+    elif include_hermes:
+        reason = _hermes_context_reason(company)
     return build_buyer_variant_body(name, industry, vid, reason=reason)
+
+
+def _hermes_context_reason(company: Any) -> Optional[str]:
+    """Short grounded opener from Hermes overlays only (no noisy HTML signals)."""
+    meta = getattr(company, "crm_metadata", None) or {}
+    if not isinstance(meta, dict):
+        return None
+    hq = meta.get("hermes_qualify") if isinstance(meta.get("hermes_qualify"), dict) else {}
+    try:
+        fit = float(hq.get("automation_fit")) if hq.get("automation_fit") is not None else -1.0
+    except (TypeError, ValueError):
+        fit = -1.0
+    jobs = meta.get("hermes_job_orders") if isinstance(meta.get("hermes_job_orders"), list) else []
+    titles = [
+        str(j.get("job_title")).strip()
+        for j in jobs[-3:]
+        if isinstance(j, dict) and (j.get("job_title") or "").strip()
+    ]
+    if fit < 60 and not titles:
+        return None
+    name = (getattr(company, "name", None) or "your team").strip()
+    if titles:
+        return f"noticed {name} is hiring for {titles[0]} — that timing caught my eye"
+    rationale = (hq.get("rationale") or "").strip()
+    if rationale and len(rationale) > 24:
+        # Keep one short clause — never paste a full research digest into outbound.
+        clip = rationale.split(".")[0].strip()
+        if 20 <= len(clip) <= 120:
+            clause = clip[0].lower() + clip[1:] if clip[0].isupper() else clip
+            return f"caught this on {name}: {clause}"
+    if _cal_include_buying_window():
+        bw = meta.get("hermes_buying_window") if isinstance(meta.get("hermes_buying_window"), dict) else {}
+        hint = (bw.get("cal_hint") or "").strip()
+        if 20 <= len(hint) <= 140:
+            return hint[0].lower() + hint[1:] if hint[0].isupper() else hint
+    return None
 
 
 def _company_signal_blob(company: Any) -> str:
@@ -313,6 +367,9 @@ def _company_signal_blob(company: Any) -> str:
     Returns "" (no reason cited) if signals aren't loaded/attached, so a detached
     instance or a company with no signals simply falls back to the clean industry
     opener — Cal never fabricates a reason.
+
+    Also folds Hermes overlays (job titles + qualify rationale) when present so
+    Cal can ground on the same intelligence Hermes already ingested.
     """
     try:
         from app.services.lead_signal_display import strip_extraction_artifacts
@@ -321,7 +378,22 @@ def _company_signal_blob(company: Any) -> str:
         parts = [
             strip_extraction_artifacts(getattr(s, "signal_text", None)) for s in sigs
         ]
-        return " ".join(p for p in parts if p).strip()
+        blob = " ".join(p for p in parts if p).strip()
+        meta = getattr(company, "crm_metadata", None) or {}
+        if isinstance(meta, dict):
+            hq = meta.get("hermes_qualify") if isinstance(meta.get("hermes_qualify"), dict) else {}
+            rationale = (hq.get("rationale") or "").strip()
+            if rationale:
+                blob = f"{blob} {rationale}".strip()
+            jobs = meta.get("hermes_job_orders") if isinstance(meta.get("hermes_job_orders"), list) else []
+            titles = [
+                str(j.get("job_title")).strip()
+                for j in jobs[-5:]
+                if isinstance(j, dict) and j.get("job_title")
+            ]
+            if titles:
+                blob = f"{blob} Open roles: {'; '.join(titles)}".strip()
+        return blob
     except Exception:  # noqa: BLE001 — grounding is optional; never break drafting
         return ""
 
@@ -621,6 +693,71 @@ def prioritize_unsent(companies: list, accounts_by_company_id: dict) -> list:
     return sorted(companies, key=_already_contacted)
 
 
+def _hermes_automation_fit(company: Any) -> float:
+    """Hermes qualify overlay score (0–100), or -1 if absent."""
+    meta = getattr(company, "crm_metadata", None) or {}
+    if not isinstance(meta, dict):
+        return -1.0
+    hq = meta.get("hermes_qualify")
+    if not isinstance(hq, dict):
+        return -1.0
+    try:
+        return float(hq.get("automation_fit"))
+    except (TypeError, ValueError):
+        return -1.0
+
+
+def prioritize_hermes_qualified(companies: list, *, min_fit: float = 60.0) -> list:
+    """Within score/unsent order, prefer companies Hermes already qualified.
+
+    Hermes writes ``crm_metadata.hermes_qualify`` via market-graph ingest.
+    Cal still sends only through its own gates — this only reorders the pool.
+    """
+    def _rank(entry) -> tuple:
+        fit = _hermes_automation_fit(entry[0])
+        has = 0 if fit >= min_fit else 1
+        # Higher fit first among Hermes-qualified
+        return (has, -fit if fit >= 0 else 0.0)
+
+    return sorted(companies, key=_rank)
+
+
+def _cal_include_buying_window() -> bool:
+    return (os.getenv("CAL_INCLUDE_BUYING_WINDOW") or "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+
+
+def _hermes_buying_urgency(company: Any) -> float:
+    """Hermes buying-window urgency (0–100), or -1 if absent."""
+    meta = getattr(company, "crm_metadata", None) or {}
+    if not isinstance(meta, dict):
+        return -1.0
+    bw = meta.get("hermes_buying_window")
+    if not isinstance(bw, dict):
+        return -1.0
+    try:
+        return float(bw.get("urgency_0_100"))
+    except (TypeError, ValueError):
+        return -1.0
+
+
+def prioritize_buying_window(companies: list, *, min_urgency: float = 50.0) -> list:
+    """Within existing order, prefer high Hermes buying-window urgency.
+
+    Only used when ``CAL_INCLUDE_BUYING_WINDOW`` is on. Timing ≠ fit — this
+    reorders after Hermes qualify priority; Cal send gates unchanged.
+    """
+    def _rank(entry) -> tuple:
+        urg = _hermes_buying_urgency(entry[0])
+        has = 0 if urg >= min_urgency else 1
+        return (has, -urg if urg >= 0 else 0.0)
+
+    return sorted(companies, key=_rank)
+
+
 def run_cal_autonomy_cycle(
     db: Session,
     *,
@@ -649,6 +786,7 @@ def run_cal_autonomy_cycle(
     )
     from app.services.lead_enrichment import (
         address_previously_bounced,
+        company_website_domain,
         outreach_recipient_trusted,
         recent_bounce_rate,
         resolve_outreach_email,
@@ -658,6 +796,8 @@ def run_cal_autonomy_cycle(
     from app.services.outreach_email_inference import infer_cc_outreach_emails
     from app.services.resend_email import ResendEmailError, send_email_via_resend
     from app.models.crm import CrmAccount
+
+    use_apollo = (os.getenv("CAL_USE_APOLLO") or "0").strip().lower() in ("1", "true", "yes")
 
     draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
     send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
@@ -691,6 +831,11 @@ def run_cal_autonomy_cycle(
     # Prioritise never-sent buyers so the draft batch and send loop reach
     # actionable runway first (incl. accounts reset after a bounce-era send).
     companies = prioritize_unsent(companies, existing)
+    # Then prefer Hermes-qualified buyers (automation_fit overlays from ingest).
+    companies = prioritize_hermes_qualified(companies)
+    # Optional: prefer timing urgency (FY / shows / peer proof) when flagged.
+    if _cal_include_buying_window():
+        companies = prioritize_buying_window(companies)
 
     drafted = 0
     refreshed = 0
@@ -811,7 +956,7 @@ def run_cal_autonomy_cycle(
 
         # Always resolve so we know the email SOURCE — a pre-stored acct.contact_email
         # may be a laundered name-guess from a prior cycle.
-        to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=True)
+        to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=use_apollo)
         if not to_email:
             errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
             continue
@@ -825,6 +970,47 @@ def run_cal_autonomy_cycle(
         # Hard-gate: never send to guessed domains. Verified provider OR the
         # email must sit on the company's real website domain.
         trusted, trust_reason = outreach_recipient_trusted(company, acct, to_email, email_source)
+        if not trusted and email_source == "crm_contact":
+            # Legacy rows can carry guessed/stale crm_contact addresses that never
+            # passed provider verification. Clear and re-run the resolver waterfall
+            # so Hunter/Apollo/domain verification gets a chance before we skip.
+            acct.contact_email = None
+            retry_email, retry_source, _retry_title = resolve_outreach_email(
+                company,
+                acct,
+                use_apollo=use_apollo,
+            )
+            if retry_email:
+                to_email = retry_email
+                email_source = retry_source
+                if address_previously_bounced(db, to_email):
+                    skipped_suppressed += 1
+                    continue
+                trusted, trust_reason = outreach_recipient_trusted(company, acct, to_email, email_source)
+        if not trusted and email_source in ("domain_inferred", "person_inferred", "crm_contact"):
+            # Controlled fallback: when Apollo/Hunter cannot verify contacts, allow
+            # inference only if it is on the real website domain and looks like a
+            # conservative role inbox. Deliverability is still checked below.
+            fallback_on = (os.getenv("CAL_INFERRED_FALLBACK_ENABLED", "1") or "1").strip().lower() in (
+                "1",
+                "true",
+                "yes",
+            )
+            if fallback_on and to_email and "@" in to_email:
+                inferred_local, inferred_domain = to_email.rsplit("@", 1)
+                web_domain = company_website_domain(company, acct)
+                role_local_ok = inferred_local.strip().lower() in {
+                    "info",
+                    "contact",
+                    "hello",
+                    "team",
+                    "sales",
+                    "operations",
+                    "partnerships",
+                }
+                if web_domain and inferred_domain.strip().lower() == web_domain and role_local_ok:
+                    trusted = True
+                    trust_reason = f"inferred_fallback:{email_source}"
         if not trusted:
             skipped_unverified += 1
             errors.append({
@@ -929,6 +1115,7 @@ def run_cal_autonomy_cycle(
                 send_identity="cal",
                 variant_id=variant_id,
                 canary=deliverability_paused,
+                email_source=email_source,
             )
             sent += 1
             if deliverability_paused:

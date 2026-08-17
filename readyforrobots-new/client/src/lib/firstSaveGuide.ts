@@ -39,5 +39,6 @@ export function markFirstSaveGuideSeen(): void {
 }
 
 export function shouldShowFirstSaveGuide(): boolean {
-  return !hasSeenFirstSaveGuide();
+  // Disabled: popup blocked Step 4 customer-info flow. Keep helpers for future guided tours.
+  return false;
 }

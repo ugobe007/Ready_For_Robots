@@ -80,6 +80,35 @@ def main() -> int:
         print(f"    needs regeneration:         {sum(guard_fail.values())}")
         for reason, n in guard_fail.most_common():
             print(f"        - {n:>3}  {reason}")
+
+        # 1b — Stage 1 voice rubric (sample of guard-ok drafts)
+        from app.services.cal_voice_rubric import score_cal_draft
+
+        rubric_sample = []
+        for a in unsent:
+            needs, _ = draft_needs_regeneration(
+                a.outreach_draft, account_type=(a.account_type or "buyer")
+            )
+            if needs:
+                continue
+            rubric_sample.append(a)
+            if len(rubric_sample) >= 25:
+                break
+        rubric_pass = 0
+        rubric_fail = 0
+        for a in rubric_sample:
+            # CrmAccount may use company via relationship — fall back to name fields.
+            company_hint = getattr(a, "name", None) or ""
+            r = score_cal_draft(a.outreach_draft, company_hint=str(company_hint))
+            if r.approved:
+                rubric_pass += 1
+            else:
+                rubric_fail += 1
+        print(f"\n[1b] Voice rubric (Stage 1) — sampled {len(rubric_sample)} guard-ok drafts")
+        print(f"    ≥24/30 + accuracy: {rubric_pass}")
+        print(f"    below gate:        {rubric_fail}")
+        print("    (advisory — Stage 2 will hard-block; use scripts/cal_score_draft.py)")
+
         print(f"\n[2] Sendability — unsent drafts with recipient email: {with_email}/{len(unsent)}")
         print(f"\n[3] Junk hygiene — drafts suppressed as junk: {suppressed}")
 

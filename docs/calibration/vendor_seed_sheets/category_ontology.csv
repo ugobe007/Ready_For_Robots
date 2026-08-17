@@ -1,0 +1,16 @@
+category_id,label,seed_target,includes,match_use
+amr_agv_material_transport,Amr Agv Material Transport,80,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+autonomous_forklift_pallet,Autonomous Forklift Pallet,40,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+industrial_robot_arms,Industrial Robot Arms,55,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+cobots,Cobots,40,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+picking_manipulation_palletizing,Picking Manipulation Palletizing,40,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+humanoids_general_purpose,Humanoids General Purpose,50,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+cleaning_robots,Cleaning Robots,30,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+hospitality_foodservice_delivery,Hospitality Foodservice Delivery,35,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+inspection_security_quadrupeds,Inspection Security Quadrupeds,25,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+agriculture,Agriculture,35,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+construction,Construction,25,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+healthcare_hospital_service,Healthcare Hospital Service,20,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+last_mile_outdoor_delivery,Last Mile Outdoor Delivery,15,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+specialty_commercial,Specialty Commercial,10,Robot sellers (OEM/brand/RaaS). Exclude pure SI/component/AI-lab unless noted.,WHAT ROBOT CLASS CAN DO THIS WORK
+_excluded_ecosystem,Excluded from vendor seed,0,"Pure system integrators without robots, component-only, AI-software-only, research labs without product robots — track separately later",Do not mix into OEM match graph

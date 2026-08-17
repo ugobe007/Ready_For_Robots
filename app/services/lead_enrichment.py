@@ -249,10 +249,16 @@ def resolve_outreach_email(
             # Don't null a stored address over a momentary resolver blip — retry next cycle.
             return None, "url_unverified_temporary", None
 
+    # Respect explicit operator/data-policy quarantine: once a contact is marked
+    # quarantined, do not re-infer guessed role/person addresses in this path.
+    base = getattr(company, "crm_metadata", None)
+    meta = base if isinstance(base, dict) else {}
+    if (meta.get("outreach_email_status") or "").strip().lower() == "quarantined":
+        q_reason = (meta.get("outreach_quarantine_reason") or "quarantined").strip()
+        return None, f"quarantined:{q_reason}", None
+
     if acct and (acct.contact_email or "").strip():
         stored = acct.contact_email.strip()
-        base = getattr(company, "crm_metadata", None)
-        meta = base if isinstance(base, dict) else {}
         if (meta.get("outreach_email") or "").strip().lower() == stored.lower():
             # Return the true recorded source so verified emails stay trusted and
             # guessed emails (laundered onto contact_email) do not pass as real.
@@ -363,8 +369,16 @@ def verify_email_deliverable(email: str) -> tuple[bool, str]:
         # twice for the same address. A mailbox's deliverability is stable over weeks.
         cached = _zb_cache_get(email)
         if cached is not None:
+            if not cached[0]:
+                override = _deliverability_override_result(email, cached[1])
+                if override is not None:
+                    return override
             return cached
         result = _verify_zerobounce(email, zb_key)
+        if not result[0]:
+            override = _deliverability_override_result(email, result[1])
+            if override is not None:
+                result = override
         if not result[1].endswith("error_fallback"):  # don't cache transient API failures
             _zb_cache_set(email, result)
         return result
@@ -372,6 +386,39 @@ def verify_email_deliverable(email: str) -> tuple[bool, str]:
     if not _domain_resolves(domain):
         return False, "domain_no_dns"
     return True, "syntax_dns_ok"
+
+
+def _deliverability_override_result(email: str, reason: str) -> tuple[bool, str] | None:
+    """Optional operator-only override for strict ZeroBounce block reasons.
+
+    Disabled by default. When enabled, only reasons explicitly listed in
+    ``CAL_DELIVERABILITY_OVERRIDE_REASONS`` are allowed through.
+    """
+    enabled = (os.getenv("CAL_DELIVERABILITY_OVERRIDE_ENABLED") or "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    if not enabled:
+        return None
+
+    configured = {
+        r.strip().lower()
+        for r in (os.getenv("CAL_DELIVERABILITY_OVERRIDE_REASONS") or "zerobounce_catch_all,zerobounce_do_not_mail").split(",")
+        if r.strip()
+    }
+    lowered_reason = (reason or "").strip().lower()
+    if lowered_reason.endswith(":cached"):
+        lowered_reason = lowered_reason[: -len(":cached")]
+    if lowered_reason not in configured:
+        return None
+
+    logger.warning(
+        "Deliverability override allowed %s due to reason=%s (CAL_DELIVERABILITY_OVERRIDE_ENABLED=1)",
+        email,
+        reason,
+    )
+    return True, f"override:{lowered_reason}"
 
 
 def _zb_redis():
@@ -556,6 +603,37 @@ _VERIFIED_EMAIL_SOURCES = frozenset(
     {"apollo", "hunter", "hunter_domain", "website_mailto", "signal_email"}
 )
 
+_GENERIC_ROLE_INBOX_LOCALS = frozenset(
+    {
+        "info",
+        "contact",
+        "hello",
+        "team",
+        "sales",
+        "support",
+        "admin",
+        "office",
+        "operations",
+        "partnerships",
+        "enquiries",
+        "enquiry",
+    }
+)
+
+
+def source_is_provider_verified(source: str | None) -> bool:
+    """True when an email source came from verified provider/observation data."""
+    return (source or "").strip().lower() in _VERIFIED_EMAIL_SOURCES
+
+
+def is_generic_role_inbox(email: str | None) -> bool:
+    """True for generic role addresses (for example info@, contact@, sales@)."""
+    normalized = normalize_recipient_email(email)
+    if not normalized or "@" not in normalized:
+        return False
+    local = normalized.rsplit("@", 1)[0].strip().lower()
+    return local in _GENERIC_ROLE_INBOX_LOCALS
+
 
 def company_website_domain(company: Company, acct: CrmAccount | None = None) -> str | None:
     """
@@ -599,7 +677,7 @@ def outreach_recipient_trusted(
     if edom.startswith("www."):
         edom = edom[4:]
 
-    if (source or "") in _VERIFIED_EMAIL_SOURCES:
+    if source_is_provider_verified(source):
         return True, source
 
     web = company_website_domain(company, acct)

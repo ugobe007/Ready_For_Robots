@@ -14,6 +14,8 @@ The harness operates **autonomously**: commit, push, deploy, and apply scripts w
 
 Read `docs/product_market_fit.md` and **`docs/value_first_principle.md`** before every mission. **Users do not buy unless they see value** — prove outcomes (live leads, pitch actions, outreach drafts) before signup or upgrade asks.
 
+**EXPERIMENT MODE:** Read `docs/EXPERIMENT_MODE.md` and **`docs/CAPABILITY_MODEL.md`**. The experiment is now the product: **`/` = Jobs terminal** (FIND → QUALIFY → PLACE later). Freeze SIGNAL/CRM/Cal-as-core and hypothesis expansion — but **Robot Understanding v1 Phases 1–3** (`docs/robot_understanding_v1.md`) is allowed product-integrity work. Tiny loop: robot URL → credible jobs. Interviews falsify; they don’t grant permission to expand.
+
 **All agents optimize toward this outcome:**
 
 > ReadyForRobots is the **automated sales pipeline for robot companies**. Customers sign up to **automate their sales funnel** (SIGNAL-ranked leads, outreach, deal advance). They run in the **native CRM** (`/pipeline`, `/crm`) or **sync to HubSpot**.
@@ -41,12 +43,20 @@ From `docs/lead_quality_north_star.md` — optimize in this order:
 
 ## Market intelligence
 
+**Product architecture (WORK graph + learning loop):** `docs/rfr_intelligence_architecture.md`  
+Ontology: `docs/ontology/rfr_graph.v1.json` · Spine: `docs/work_unit_reconstruction.md` · Deployment Evidence: `docs/deployment_evidence_engine.md` · Worker: `docs/market_graph_loop.md`
+
+- **Graph** = structure (what connects robot ↔ job). Center is **WORK**, not company or robot.
+- **Loop** = OBSERVE LABOR → MATCH ROBOT → OBSERVE DEPLOYMENTS → STRENGTHEN/WEAKEN → KEEP WATCHING.
+- **Knowledge** generates predictions; **Deployment Evidence** (public sources) strengthens/weakens them — live telemetry is optional later.
+
 Read `docs/market_thesis.md` before choosing missions. The intelligence loop feeds the execution loop:
 
 | Loop | Cadence | Output |
 |------|---------|--------|
 | **Intelligence** | Weekly (or first cycle of week) | Updated thesis, ranked backlog |
 | **Execution** | Daily | Code, deploy, metrics delta |
+| **Market graph** | Worker (~12h) | Tension + match edges → cache (`/api/v1/market-graph/*`) |
 
 Snapshot `intelligence` slice (junk reasons, gap frequency, industry deltas) drives FrictionMiner and mission selection.
 

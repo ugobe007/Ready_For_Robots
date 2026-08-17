@@ -304,6 +304,47 @@ class ScraperWatchdog:
         ts = self._heartbeat_ts.get(scraper_name)
         return (time.time() - ts) if ts else None
 
+    def record_external_run(
+        self,
+        scraper_name: str,
+        *,
+        status: str,
+        urls_attempted: int = 0,
+        urls_succeeded: int = 0,
+        urls_skipped_circuit: int = 0,
+        restarts: int = 0,
+        errors: Optional[List[str]] = None,
+    ) -> None:
+        """
+        Append a completed run record for scraper paths that do not use BaseScraper.run().
+
+        This keeps /api/scraper-health representative for in-process and Celery tasks
+        that ingest via custom scrapers (for example IntelligenceNewsScraper).
+        """
+        with self._lock:
+            now = self._now()
+            self._run_history.append(
+                ScraperRunRecord(
+                    scraper_name=scraper_name,
+                    started_at=now,
+                    finished_at=now,
+                    status=status,
+                    urls_attempted=max(0, int(urls_attempted)),
+                    urls_succeeded=max(0, int(urls_succeeded)),
+                    urls_skipped_circuit=max(0, int(urls_skipped_circuit)),
+                    restarts=max(0, int(restarts)),
+                    errors=(errors or [])[:20],
+                )
+            )
+            self._save_state()
+        logger.info(
+            "[WATCHDOG] External run recorded: %s status=%s attempted=%d succeeded=%d",
+            scraper_name,
+            status,
+            urls_attempted,
+            urls_succeeded,
+        )
+
     def is_stuck(self, scraper_name: str, threshold_secs: float = URL_TIMEOUT * 2) -> bool:
         """True if a scraper's last heartbeat is older than threshold_secs."""
         age = self.last_heartbeat_age(scraper_name)

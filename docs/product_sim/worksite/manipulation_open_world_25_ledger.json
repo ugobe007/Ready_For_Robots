@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "kind": "manipulation_open_world_25_ledger",
+  "protocol": "MANIPULATION_OPEN_WORLD_25",
+  "queries_planned": {"palletizing": 12, "machine_tending": 13},
+  "summary": {
+    "robot_jobs": 19,
+    "palletizing": 11,
+    "machine_tending": 8,
+    "investigate_yes_approx": 15,
+    "cross_se_routable_candidates": 10
+  },
+  "jobs": [
+    {
+      "job_key": "manip_piedmont_candy_lexington_nc",
+      "workflow": "palletizing",
+      "company_name": "Piedmont Candy Company",
+      "locality": "Lexington, NC",
+      "robot_compatible_task": "Stack and build cases onto outbound pallets from production",
+      "why_job": "Role is Palletizer & Stacker — stack/build pallets and move product between production areas.",
+      "promotion_class": "DIRECT",
+      "evidence_grade": "E1",
+      "investigate_status": "yes",
+      "fit_platforms": ["doosan", "universal_robots", "fanuc"],
+      "cross_territory": true,
+      "requirements": {
+        "object": "case",
+        "placement_target": "pallet",
+        "grasp": "unknown",
+        "weight": "up_to_50lb",
+        "reach": "unknown",
+        "cycle_time": "unknown"
+      },
+      "unknowns": ["Case dimensions", "Pallet pattern", "Current automation", "Cycle rate"]
+    },
+    {
+      "job_key": "manip_novolex_kinston_nc",
+      "workflow": "palletizing",
+      "company_name": "Novolex (Pactiv Evergreen)",
+      "locality": "Kinston, NC",
+      "robot_compatible_task": "Pick packed cases from conveyor and stack onto pallets per carton specifications",
+      "why_job": "Posting: unload cases from conveyors and stack onto pallets; wrap; pull skid.",
+      "promotion_class": "DIRECT",
+      "evidence_grade": "E1",
+      "investigate_status": "yes",
+      "fit_platforms": ["doosan", "universal_robots", "fanuc"],
+      "cross_territory": true,
+      "requirements": {
+        "object": "case",
+        "placement_target": "pallet",
+        "grasp": "unknown",
+        "weight": "up_to_50lb",
+        "reach": "unknown",
+        "cycle_time": "unknown"
+      },
+      "unknowns": ["SKU mix", "Pattern changeover", "Gripper", "Line speed"]
+    },
+    {
+      "job_key": "manip_attindas_greenville_nc",
+      "workflow": "palletizing",
+      "company_name": "Attindas Hygiene Partners",
+      "locality": "Greenville, NC",
+      "robot_compatible_task": "Stack cases of product onto pallets (manual residual beside palletizer cell)",
+      "why_job": "Palletizer Technician: operate robotic palletizers and stack cases manually as needed.",
+      "promotion_class": "DIRECT",
+      "evidence_grade": "E1",
+      "investigate_status": "weak",
+      "fit_platforms": ["doosan", "universal_robots", "fanuc"],
+      "cross_territory": true,
+      "requirements": {
+        "object": "case",
+        "placement_target": "pallet",
+        "grasp": "unknown",
+        "automation_state": "partial_robotic_cell"
+      },
+      "unknowns": ["Share of manual vs robotic", "Which lines still manual"]
+    },
+    {
+      "job_key": "manip_ofi_lenoir_city_tn",
+      "workflow": "palletizing",
+      "company_name": "OFI",
+      "locality": "Lenoir City, TN",
+      "robot_compatible_task": "Remove finished-goods cases from packaging lines and stack in predetermined pallet configuration",
+      "why_job": "Finished Goods End of Line Palletizer — cases from packaging lines stacked to config.",
+      "promotion_class": "DIRECT",
+      "evidence_grade": "E1",
+      "investigate_status": "yes",
+      "fit_platforms": ["doosan", "universal_robots", "fanuc"],
+      "cross_territory": true,
+      "requirements": {
+        "object": "case",
+        "placement_target": "pallet",
+        "grasp": "unknown",
+        "cycle_time": "unknown"
+      },
+      "unknowns": ["Case weight", "Pattern", "Line count"]
+    },
+    {
+      "job_key": "manip_mdi_hickory_nc",
+      "workflow": "palletizing",
+      "company_name": "MDI Distribution (Alex Lee)",
+      "locality": "Hickory, NC",
+      "robot_compatible_task": "Lift and stack cases; assist building pallets at automation interface",
+      "why_job": "AMCAP role: lift/stack cases 1–60 lb; assist building pallets directed through automation.",
+      "promotion_class": "DERIVED",
+      "evidence_grade": "E2",
+      "investigate_status": "yes",
+      "fit_platforms": ["doosan", "universal_robots", "fanuc"],
+      "cross_territory": true,
+      "requirements": {
+        "object": "case",
+        "placement_target": "pallet",
+        "weight": "1_to_60lb"
+      },
+      "unknowns": ["Depalletize vs palletize mix", "Ergo tools in use"]
+    },
+    {
+      "job_key": "manip_siemens_energy_charlotte_nc",
+      "workflow": "machine_tending",
+      "company_name": "Siemens Energy",
+      "locality": "Charlotte, NC",
+      "robot_compatible_task": "Load and unload parts on CNC / process machines (material handling assist)",
+      "why_job": "CNC/Process Operator: loads/unloads parts from machines using material handling devices.",
+      "promotion_class": "DERIVED",
+      "evidence_grade": "E2",
+      "investigate_status": "yes",
+      "fit_platforms": ["fanuc", "doosan", "universal_robots"],
+      "cross_territory": true,
+      "requirements": {
+        "object": "part",
+        "placement_target": "fixture",
+        "machine": "CNC",
+        "grasp": "unknown",
+        "weight": "up_to_50lb"
+      },
+      "unknowns": ["Part geometry", "Fixture design", "Skill vs tend split", "Crane dependency"]
+    },
+    {
+      "job_key": "manip_fulcrum_tualatin_or",
+      "workflow": "machine_tending",
+      "company_name": "Fulcrum Technologies",
+      "locality": "Tualatin, OR",
+      "robot_compatible_task": "Load raw material and unload finished parts on CNC laser",
+      "why_job": "Laser Cutting Operator explicitly loads/unloads raw and finished parts.",
+      "promotion_class": "DIRECT",
+      "evidence_grade": "E1",
+      "investigate_status": "yes",
+      "fit_platforms": ["fanuc", "universal_robots", "doosan"],
+      "cross_territory": false,
+      "requirements": {
+        "object": "sheet_metal",
+        "placement_target": "machine",
+        "machine": "CNC_laser"
+      },
+      "unknowns": ["Sheet size", "Gripper", "Nesting"]
+    },
+    {
+      "job_key": "manip_ims_riverside_ca",
+      "workflow": "machine_tending",
+      "company_name": "Industrial Metal Supply",
+      "locality": "Riverside, CA",
+      "robot_compatible_task": "Load and unload finished parts from laser/plasma cutting machines",
+      "why_job": "Laser Operator: load and unload finished parts from machine within training window.",
+      "promotion_class": "DIRECT",
+      "evidence_grade": "E1",
+      "investigate_status": "yes",
+      "fit_platforms": ["fanuc", "universal_robots", "doosan"],
+      "cross_territory": false,
+      "requirements": {
+        "object": "part",
+        "placement_target": "machine",
+        "machine": "laser_plasma"
+      },
+      "unknowns": ["Part mix", "Weight", "EOAT"]
+    },
+    {
+      "job_key": "manip_transtech_charlotte_nc",
+      "workflow": "machine_tending",
+      "company_name": "TransTech Group",
+      "locality": "Charlotte, NC",
+      "robot_compatible_task": "Move workpieces to/from CNC and manual machining cells",
+      "why_job": "CNC Quickmill Operator — machine operation plus forklift/crane material handling for production.",
+      "promotion_class": "DERIVED",
+      "evidence_grade": "E2",
+      "investigate_status": "weak",
+      "fit_platforms": ["fanuc", "doosan"],
+      "cross_territory": true,
+      "requirements": {
+        "object": "part",
+        "placement_target": "fixture",
+        "machine": "CNC"
+      },
+      "unknowns": ["Repetitive tend vs skilled fab mix"]
+    },
+    {
+      "job_key": "manip_groninger_charlotte_nc",
+      "workflow": "machine_tending",
+      "company_name": "groninger",
+      "locality": "Charlotte, NC",
+      "robot_compatible_task": "Tend CNC mills/lathes — workpiece load/unload around cycle",
+      "why_job": "CNC Machinist operates production CNC equipment; robot portion is repetitive load/unload (setup remains human).",
+      "promotion_class": "DERIVED",
+      "evidence_grade": "E2",
+      "investigate_status": "weak",
+      "fit_platforms": ["fanuc", "doosan", "universal_robots"],
+      "cross_territory": true,
+      "requirements": {
+        "object": "part",
+        "machine": "CNC_mill_lathe",
+        "placement_target": "fixture"
+      },
+      "unknowns": ["How much of role is tend vs program"]
+    }
+  ],
+  "cross_product": {
+    "partner_key": "cross_company",
+    "headline": "We found ~19 automation jobs your company can solve.",
+    "breakdown": {"palletizing": 11, "machine_tending": 8},
+    "platforms": ["Doosan Robotics", "Universal Robots", "FANUC"],
+    "se_routable_candidates": 10,
+    "gates_remaining": ["per-job territory refine", "channel_capability confirm", "Routable Job object"]
+  }
+}

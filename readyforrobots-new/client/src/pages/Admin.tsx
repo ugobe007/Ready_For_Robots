@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Activity, AlertTriangle, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
+import { Activity, AlertTriangle, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, FileText, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import DailyBriefPanel, { type DailyBriefData } from "@/components/DailyBriefPanel";
 import CalEmailPreview from "@/components/admin/CalEmailPreview";
@@ -732,6 +732,24 @@ function sourceLabel(source?: string) {
   return (source || "workflow").replace(/_/g, " ");
 }
 
+function workflowReviewReason(item: WorkflowAction): string {
+  if (item.description && item.description.trim()) return item.description.trim();
+  const state = (item.state || "").toLowerCase();
+  if (state === "needs_approval") {
+    return "Waiting for operator review before the next action can run.";
+  }
+  if (item.requires_approval) {
+    return "Marked review-first: approve this action before agent send or publish.";
+  }
+  if (state === "queued") {
+    return "Queued in agent workflow; no manual approval needed yet.";
+  }
+  if (state === "failed") {
+    return "Failed in automation. Open to inspect error details and retry.";
+  }
+  return "Open this item to inspect context and decide the next step.";
+}
+
 export default function Admin() {
   const api = getApiBase();
   const [, setLocation] = useLocation();
@@ -758,7 +776,7 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
-  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "cal-save" | "cal-run" | "cal-autopilot" | "supply-draft" | "supply-send" | "scout-activate" | "scout-send" | "cleanup" | "">("");
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-redraft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "cal-save" | "cal-rfq" | "cal-run" | "cal-autopilot" | "supply-draft" | "supply-send" | "scout-activate" | "scout-send" | "cleanup" | "">("");
   const [sendConfirm, setSendConfirm] = useState<false | "bulk" | "scout-send" | string>(false);
   const [scoutStatus, setScoutStatus] = useState<ScoutStatus | null>(
     initialApplied.scoutStatus as ScoutStatus | null,
@@ -772,6 +790,7 @@ export default function Admin() {
   const [calWorkflowStep, setCalWorkflowStep] = useState<CalWorkflowStepId | null>(null);
   const [calStatusError, setCalStatusError] = useState("");
   const [calStatusLoading, setCalStatusLoading] = useState(false);
+  const [calWorkflowNotice, setCalWorkflowNotice] = useState("");
   const [bulkSendSkipVerify, setBulkSendSkipVerify] = useState(false);
   // Reply notification settings
   const [replyForwardEmail, setReplyForwardEmail] = useState("");
@@ -783,6 +802,9 @@ export default function Admin() {
   const [draftBodyLoading, setDraftBodyLoading] = useState<string | null>(null);
   const [draftLoadErrors, setDraftLoadErrors] = useState<Record<string, string>>({});
   const [draftContactEmails, setDraftContactEmails] = useState<Record<string, string>>({});
+  const [rfqTimeline, setRfqTimeline] = useState("");
+  const [rfqBudgetBand, setRfqBudgetBand] = useState("");
+  const [rfqSpecNotes, setRfqSpecNotes] = useState("");
   const [calVariantPreviewByCompany, setCalVariantPreviewByCompany] = useState<Record<number, CalVariantPreviewResponse>>({});
   const [calVariantPreviewLoadingId, setCalVariantPreviewLoadingId] = useState<number | null>(null);
   const [calVariantPreviewError, setCalVariantPreviewError] = useState("");
@@ -938,6 +960,16 @@ export default function Admin() {
   );
 
   const adminLoadedForToken = useRef<string | null>(null);
+
+  const loadLeadQualityMetrics = useCallback(async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await adminFetch("/api/admin/lead-quality-metrics?lookback_days=14");
+      if (res.ok) setLeadQualityMetrics(await res.json());
+    } catch {
+      setLeadQualityMetrics(null);
+    }
+  }, [adminFetch, session?.access_token]);
 
   const loadAdmin = useCallback(async () => {
     if (!session?.access_token) {
@@ -1240,22 +1272,57 @@ export default function Admin() {
     }
   }, [adminFetch, draftBodies, draftContactEmails, refreshOperatorView]);
 
+  const markRfqHandoff = useCallback(async (selected: CalProspect | null) => {
+    if (!selected?.crm_account_id) {
+      setError("Select a CRM lead first.");
+      return;
+    }
+    setActionBusy("cal-rfq");
+    setError("");
+    try {
+      const robotHint = selected.account_type === "vendor"
+        ? "Robot vendor lead"
+        : "Buyer lead";
+      const noteBody = [
+        "RFQ/spec handoff request (Cal -> Robert)",
+        `Company: ${selected.company_name || "Unknown"}`,
+        `Website: ${selected.website || "Unknown"}`,
+        `Lead type: ${robotHint}`,
+        `Priority: ${selected.tier || "Unknown"}`,
+        `Timeline target: ${rfqTimeline.trim() || "Not provided"}`,
+        `Budget band: ${rfqBudgetBand.trim() || "Not provided"}`,
+        `Spec notes: ${rfqSpecNotes.trim() || "Waiting on buyer RFQ/spec list"}`,
+        "",
+        "Action: Ask buyer for RFQ/spec list and route follow-up directly to Robert.",
+      ].join("\n");
+
+      const noteRes = await adminFetch(`/api/crm/accounts/${selected.crm_account_id}/notes`, {
+        method: "POST",
+        body: JSON.stringify({ body: noteBody }),
+      });
+      if (!noteRes.ok) throw new Error(await noteRes.text());
+
+      const stageRes = await adminFetch(`/api/crm/accounts/${selected.crm_account_id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ outreach_stage: "rfq_handoff_pending" }),
+      });
+      if (!stageRes.ok) throw new Error(await stageRes.text());
+
+      setMessage("RFQ/spec handoff logged. Stage set to rfq_handoff_pending.");
+      void refreshOperatorView();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not log RFQ/spec handoff.");
+    } finally {
+      setActionBusy("");
+    }
+  }, [adminFetch, refreshOperatorView, rfqBudgetBand, rfqSpecNotes, rfqTimeline]);
+
   const loadSupplyAutonomyStatus = useCallback(async () => {
     if (!session?.access_token) return;
     try {
       const res = await adminFetch("/api/admin/supply/autonomy-status");
       if (res.ok) setSupplyAutonomy(await res.json());
     } catch { /* advisory */ }
-  }, [adminFetch, session?.access_token]);
-
-  const loadLeadQualityMetrics = useCallback(async () => {
-    if (!session?.access_token) return;
-    try {
-      const res = await adminFetch("/api/admin/lead-quality-metrics?lookback_days=14");
-      if (res.ok) setLeadQualityMetrics(await res.json());
-    } catch {
-      setLeadQualityMetrics(null);
-    }
   }, [adminFetch, session?.access_token]);
 
   const runCalAutonomy = async (dryRun: boolean) => {
@@ -1483,7 +1550,8 @@ export default function Admin() {
   async function runCalBulkDraft(regenerate = false, companyIds?: number[]) {
     setMessage("");
     setError("");
-    setActionBusy("cal-draft");
+    setCalWorkflowNotice("");
+    setActionBusy(regenerate ? "cal-redraft" : "cal-draft");
     try {
       const res = await adminFetch("/api/admin/cal/bulk-draft", {
         method: "POST",
@@ -1491,7 +1559,14 @@ export default function Admin() {
       });
       const data = await res.json().catch(() => ({})) as { drafted?: number; skipped?: number; errors?: unknown[] };
       if (!res.ok) throw new Error((data as { detail?: string }).detail || "Bulk draft failed.");
-      setMessage(`Cal drafted ${data.drafted ?? 0} emails · ${data.skipped ?? 0} already had drafts · ${data.errors?.length ?? 0} errors.`);
+      const drafted = data.drafted ?? 0;
+      const skipped = data.skipped ?? 0;
+      const errors = data.errors?.length ?? 0;
+      const notice = regenerate
+        ? `Redrafted ${drafted} unsent draft${drafted === 1 ? "" : "s"}.`
+        : `Drafted ${drafted} email${drafted === 1 ? "" : "s"}.`;
+      setMessage(`Cal drafted ${drafted} emails · ${skipped} already had drafts · ${errors} errors.`);
+      setCalWorkflowNotice(`${notice} ${skipped ? `${skipped} already had drafts.` : ""}`.trim());
       await refreshOperatorView();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bulk draft failed.");
@@ -1528,6 +1603,7 @@ export default function Admin() {
       await refreshOperatorView();
       if (crmAccountId) await loadDraftBody(crmAccountId, undefined, true);
       setMessage(`Redrafted with Cal's current voice (${data.drafted ?? 0} updated).`);
+      setCalWorkflowNotice(`Redrafted ${data.drafted ?? 0} draft${(data.drafted ?? 0) === 1 ? "" : "s"} with Cal's current voice.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Regenerate failed.");
     } finally {
@@ -1845,6 +1921,12 @@ export default function Admin() {
       if (p?.crm_account_id && p.has_draft) void loadDraftBody(p.crm_account_id, p.draft_preview);
     }
   }, [calFilteredProspects, calSelectedIdx, loadDraftBody]);
+
+  useEffect(() => {
+    setRfqTimeline("");
+    setRfqBudgetBand("");
+    setRfqSpecNotes("");
+  }, [calSelectedProspect?.crm_account_id]);
 
   const hasCachedUi = !!(localSnapshot?.sections && Object.keys(localSnapshot.sections).length > 0);
 
@@ -2285,6 +2367,28 @@ export default function Admin() {
           </span>
         </Link>
 
+        <Link
+          href="/sales/samples"
+          className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 transition hover:bg-emerald-100"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-sm font-extrabold text-white">
+              S
+            </span>
+            <div>
+              <div className="text-sm font-extrabold text-emerald-900">
+                Sales Samples · 15-company demo links
+              </div>
+              <div className="text-[11px] text-emerald-700">
+                Build private sample pipelines you can send to robot-company prospects.
+              </div>
+            </div>
+          </div>
+          <span className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white">
+            Open →
+          </span>
+        </Link>
+
         <DailyBriefPanel
           data={dailyBrief}
           loading={dailyBriefLoading}
@@ -2311,6 +2415,7 @@ export default function Admin() {
               setSendConfirm("bulk");
             },
             draftBusy: actionBusy === "cal-draft",
+            redraftBusy: actionBusy === "cal-redraft",
             sendBusy: actionBusy === "cal-send",
           }}
         />
@@ -2387,7 +2492,41 @@ export default function Admin() {
             onOpenReplies={() => setLocation("/inbox")}
             onTestDelivery={() => void runCalDiagnostic()}
             onStepFocus={focusCalWorkflowStep}
+            draftBusy={actionBusy === "cal-draft"}
+            redraftBusy={actionBusy === "cal-redraft"}
           />
+
+          {calWorkflowNotice ? (
+            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-900">
+              {calWorkflowNotice}
+            </div>
+          ) : null}
+
+          {(Number(calMetrics.pending_draft ?? 0) > 0 || Number(calMetrics.needs_approval ?? 0) > 0) && (
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-amber-900">Why Cal looks stuck</p>
+              <p className="mt-1 text-[11px] text-amber-900/90">
+                {Number(calMetrics.pending_draft ?? 0) > 0
+                  ? `${formatNumber(calMetrics.pending_draft)} lead(s) still need first drafts before send can progress.`
+                  : `${formatNumber(calMetrics.needs_approval)} item(s) are waiting for review or approval before send can progress.`}
+              </p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
+                {Number(calMetrics.pending_draft ?? 0) > 0 ? (
+                  <SupabaseInlineLink tone="amber" onClick={() => void runCalBulkDraft(false)} busy={actionBusy === "cal-draft"}>
+                    Draft pending leads now
+                  </SupabaseInlineLink>
+                ) : (
+                  <SupabaseInlineLink tone="amber" onClick={() => focusCalWorkflowStep("review")}>
+                    Open review queue
+                  </SupabaseInlineLink>
+                )}
+                <span className="text-amber-900/60">·</span>
+                <SupabaseInlineLink tone="gray" onClick={() => void refreshOperatorView()} busy={calStatusLoading}>
+                  Refresh queue
+                </SupabaseInlineLink>
+              </div>
+            </div>
+          )}
 
           {calZeroOpenAlert ? (
             <div className="mb-4 rounded-xl border border-rose-300 bg-rose-50/85 px-3 py-2.5">
@@ -2472,7 +2611,7 @@ export default function Admin() {
                     </span>
                   </div>
                   <p className="mt-1 truncate text-[11px] text-sky-900/90">{item.from_email || "unknown sender"}</p>
-                  <p className="mt-1 text-[10px] text-sky-800/80">{formatDate(item.received_at)}</p>
+                  <p className="mt-1 text-[10px] text-sky-800/80">{formatDate(item.received_at ?? undefined)}</p>
                   <p className="mt-1 line-clamp-2 text-[10px] text-sky-800/80">{item.subject || item.body_text || "No message preview"}</p>
                   <div className="mt-1.5 flex items-center gap-2 text-[10px]">
                     <Link href="/inbox" className="font-semibold text-sky-800 underline underline-offset-2">
@@ -2625,6 +2764,50 @@ export default function Admin() {
                     {calSelectedProspect.semantic_summary ? (
                       <p className="mt-2 text-xs text-gray-600 leading-relaxed">{calSelectedProspect.semantic_summary}</p>
                     ) : null}
+
+                    <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3">
+                      <div className="mb-2 flex items-center gap-2">
+                        <FileText className="h-3.5 w-3.5 text-emerald-700" />
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-900">RFQ + project spec handoff</p>
+                      </div>
+                      <p className="text-[11px] text-emerald-900/90">
+                        Capture buyer RFQ/spec context, then hand this lead to Robert for direct follow-up.
+                      </p>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        <input
+                          value={rfqTimeline}
+                          onChange={(e) => setRfqTimeline(e.target.value)}
+                          placeholder="Timeline (e.g. pilot in Q4)"
+                          className="rounded-lg border border-emerald-200 bg-white px-2.5 py-2 text-[11px] text-gray-800"
+                        />
+                        <input
+                          value={rfqBudgetBand}
+                          onChange={(e) => setRfqBudgetBand(e.target.value)}
+                          placeholder="Budget band (e.g. $150k-$300k)"
+                          className="rounded-lg border border-emerald-200 bg-white px-2.5 py-2 text-[11px] text-gray-800"
+                        />
+                      </div>
+                      <textarea
+                        value={rfqSpecNotes}
+                        onChange={(e) => setRfqSpecNotes(e.target.value)}
+                        rows={3}
+                        placeholder="Spec notes: robot type, payload, throughput, site constraints, integration needs"
+                        className="mt-2 w-full rounded-lg border border-emerald-200 bg-white px-2.5 py-2 text-[11px] text-gray-800"
+                      />
+                      <div className="mt-2 text-[11px]">
+                        <SupabaseInlineLink
+                          tone="emerald"
+                          onClick={() => void markRfqHandoff(calSelectedProspect)}
+                          disabled={!calSelectedProspect.crm_account_id || actionBusy === "cal-rfq"}
+                          busy={actionBusy === "cal-rfq"}
+                        >
+                          Log RFQ/spec handoff to Robert
+                        </SupabaseInlineLink>
+                        {!calSelectedProspect.crm_account_id ? (
+                          <span className="ml-2 text-amber-700">No CRM account linked yet.</span>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
                   {calSelectedProspect.has_draft ? (
                     <>
@@ -2776,6 +2959,7 @@ export default function Admin() {
           <div className="mt-3 max-h-[240px] space-y-2 overflow-y-auto">
             {(workflow?.items?.length ? workflow.items : []).slice(0, 15).map((item) => {
               const style = stateStyle(item.state);
+              const reason = workflowReviewReason(item);
               return (
                 <div key={`${item.source}-${item.id}`} className="rounded-lg border border-gray-100 px-3 py-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -2788,6 +2972,7 @@ export default function Admin() {
                       </Link>
                     ) : null}
                   </div>
+                  <p className="mt-1 text-[11px] text-gray-600">Review reason: {reason}</p>
                 </div>
               );
             })}

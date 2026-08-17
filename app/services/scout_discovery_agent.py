@@ -551,7 +551,7 @@ def scan_for_results(
 
     page_text = scrape_robot_page(url) if url.startswith("http") else ""
     caps = analyze_robot_capabilities(robot_name or urlparse(url).hostname or "Robot", page_text)
-    matches = match_companies(caps, db)[: max(limit, 25)]
+    matches = match_companies(caps, db)[: max(limit, 15)]
 
     prospects: List[Dict[str, Any]] = []
     for m in matches[:limit]:

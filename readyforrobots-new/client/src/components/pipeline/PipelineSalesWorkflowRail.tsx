@@ -14,6 +14,8 @@ type Props = {
   hasContact: boolean;
   sent: boolean;
   variant?: "dark" | "light";
+  /** After Results preview — curate list first, then outreach. */
+  browseFirst?: boolean;
 };
 
 function stepState(current: Stage, step: Stage): "done" | "active" | "upcoming" {
@@ -30,22 +32,31 @@ function resolveCurrent(props: Props): Stage {
   if (props.hasDraft && props.hasContact) return "send";
   if (props.hasDraft || (props.hasSelection && props.hasSavedLeads)) return "draft";
   if (props.hasSession && props.hasSavedLeads) return "save";
+  if (props.browseFirst && !props.hasSelection) return "browse";
   if (props.hasSession) return "save";
   return "browse";
 }
 
 export default function PipelineSalesWorkflowRail(props: Props) {
-  const { hasSession, variant = "light" } = props;
+  const { hasSession, browseFirst = false, variant = "light" } = props;
   const dark = variant === "dark";
   const current = resolveCurrent(props);
 
-  const steps: { id: Stage; label: string; hint: string; icon: typeof Target }[] = [
-    { id: "browse", label: "Pick lead", hint: "Select a HOT/WARM row", icon: Target },
-    { id: "save", label: "Save", hint: "Add to your workspace", icon: Zap },
-    { id: "draft", label: "Draft", hint: "Develop with SIGNAL", icon: Mail },
-    { id: "send", label: "Send", hint: "One click from the panel", icon: Mail },
-    { id: "track", label: "Replies", hint: "Inbox & activity feed", icon: ArrowRight },
-  ];
+  const steps: { id: Stage; label: string; hint: string; icon: typeof Target }[] = browseFirst
+    ? [
+        { id: "browse", label: "1. Browse", hint: "Explore the full live pipeline", icon: Target },
+        { id: "save", label: "2. Curate", hint: "Save best-fit companies to your list", icon: Zap },
+        { id: "draft", label: "3. Draft", hint: "Copy outreach for the company", icon: Mail },
+        { id: "send", label: "4. Send", hint: "Send from the detail panel", icon: Mail },
+        { id: "track", label: "5. Replies", hint: "Track in Inbox", icon: ArrowRight },
+      ]
+    : [
+        { id: "browse", label: "1. Pick", hint: "Select the highest-fit HOT lead", icon: Target },
+        { id: "save", label: "2. Save", hint: "Add to your workspace", icon: Zap },
+        { id: "draft", label: "3. Draft", hint: "Copy SIGNAL outreach", icon: Mail },
+        { id: "send", label: "4. Send", hint: "Send from the detail panel", icon: Mail },
+        { id: "track", label: "5. Replies", hint: "Track in Inbox", icon: ArrowRight },
+      ];
 
   return (
     <div
@@ -57,7 +68,7 @@ export default function PipelineSalesWorkflowRail(props: Props) {
     >
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${dark ? "text-emerald-300" : "text-emerald-800"}`}>
-          Sales pipeline workflow
+          {browseFirst ? "Curate · Outreach" : "Sales pipeline workflow"}
         </p>
         {hasSession && (
           <div className="flex flex-wrap gap-1.5 text-[10px]">
@@ -114,11 +125,25 @@ export default function PipelineSalesWorkflowRail(props: Props) {
           );
         })}
       </ol>
-      {!hasSession && (
-        <p className={`mt-2 text-[11px] ${dark ? "text-slate-400" : "text-gray-500"}`}>
-          Sign in to save leads, draft outreach, and send from this page — no separate CRM required.
-        </p>
-      )}
+      <p className={`mt-2 text-[11px] ${dark ? "text-slate-300" : "text-gray-600"}`}>
+        {browseFirst
+          ? current === "browse" || current === "save"
+            ? "After instructions: Build your 25-lead pipeline, then Save fits and copy outreach."
+            : current === "draft"
+              ? "Outreach: copy the draft in the detail panel, then send."
+              : current === "send"
+                ? "Send the message, then return to the list to curate the next account."
+                : "Track replies in Inbox and keep curating toward your 25-lead list."
+          : hasSession
+            ? current === "browse" || current === "save"
+              ? "Next step: select a HOT lead, then Save it to open your working pipeline."
+              : current === "draft"
+                ? "Next step: copy the outreach draft in the detail panel."
+                : current === "send"
+                  ? "Next step: send the draft, then watch Inbox for replies."
+                  : "Next step: check Inbox and advance the opportunity."
+            : "Next step: browse a HOT lead, then start a free workspace to save, draft, and send."}
+      </p>
     </div>
   );
 }

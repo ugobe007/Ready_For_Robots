@@ -45,6 +45,7 @@ from app.api.robot_buyer_leads import router as robot_buyer_leads_router
 from app.api.admin_purge import router as admin_purge_router
 from app.api.admin_lead_ops import router as admin_lead_ops_router
 from app.api.admin_humanoid_ops import router as admin_humanoid_ops_router
+from app.api.admin_understanding_shadow import router as admin_understanding_shadow_router
 from app.api.admin_partners import router as admin_partners_router
 from app.api.special_projects import admin_router as special_projects_admin_router
 from app.api.special_projects import public_router as special_projects_public_router
@@ -54,6 +55,11 @@ from app.api.integrations import router as integrations_router
 from app.api.integrations_hubspot import router as integrations_hubspot_router
 from app.api.integrations_google_calendar import router as integrations_google_calendar_router
 from app.api.vendor_design import router as vendor_design_router
+from app.api.robot_job_match import router as robot_job_match_router
+from app.api.robot_profile import router as robot_profile_router
+from app.api.robot_job_search import router as robot_job_search_router
+from app.api.v1 import router as v1_router
+from app.api.v1.errors import V1HTTPException, error_response
 from app.database import get_db
 import app.models
 import app.models.shared_calculation
@@ -298,6 +304,7 @@ def _run_worker_startup() -> None:
     _start_scheduled_communication_learning()
     _start_scheduled_supply_autonomy()
     _start_scheduled_newsletter_publish()
+    _start_scheduled_market_graph_loop()
     _sync_buyer_sequence_steps()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
@@ -477,6 +484,7 @@ app.include_router(admin_users_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_purge_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_lead_ops_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_humanoid_ops_router, prefix="/api/admin", tags=["admin"])
+app.include_router(admin_understanding_shadow_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_partners_router, prefix="/api/admin", tags=["admin-partners"])
 app.include_router(special_projects_admin_router, prefix="/api/admin", tags=["special-projects"])
 app.include_router(special_projects_public_router, prefix="/api", tags=["special-projects"])
@@ -508,6 +516,28 @@ app.include_router(integrations_hubspot_router, prefix="/api", tags=["integratio
 app.include_router(integrations_google_calendar_router, prefix="/api", tags=["integrations"])
 app.include_router(robot_buyer_leads_router, prefix="/api/robot-buyer-leads", tags=["robot-buyer-leads"])
 app.include_router(vendor_design_router, prefix="/api/vendor-design", tags=["vendor-design"])
+app.include_router(robot_job_match_router, prefix="/api", tags=["robot-job-match"])
+app.include_router(robot_profile_router, prefix="/api", tags=["robot-profile"])
+app.include_router(robot_job_search_router, prefix="/api", tags=["robot-job-search"])
+app.include_router(v1_router, prefix="/api/v1", tags=["v1"])
+# Alias under /api/v1 for clients that prefer v1 namespace (no feature flag — same handler)
+app.include_router(robot_job_match_router, prefix="/api/v1", tags=["robot-job-match"])
+app.include_router(robot_profile_router, prefix="/api/v1", tags=["robot-profile"])
+app.include_router(robot_job_search_router, prefix="/api/v1", tags=["robot-job-search"])
+
+
+@app.exception_handler(V1HTTPException)
+async def v1_http_exception_handler(request: Request, exc: V1HTTPException):
+    """Preserve OpenAPI ErrorEnvelope shape for /api/v1 (detail is already the body)."""
+    detail = exc.detail if isinstance(exc.detail, dict) else None
+    if detail and "schema_version" in detail and "error" in detail:
+        return JSONResponse(status_code=exc.status_code, content=detail)
+    return error_response(
+        exc.status_code,
+        code="v1_error",
+        message=str(exc.detail),
+        retryable=False,
+    )
 
 if _mcp_asgi is not None:
     app.mount("/mcp", _mcp_asgi, name="mcp")
@@ -1124,6 +1154,66 @@ def _start_scheduled_supply_autonomy():
     logger.info(
         "In-app supply autonomy thread started (every %s hours)",
         os.getenv("SUPPLY_AUTONOMY_EVERY_HOURS", "6"),
+    )
+
+
+def _scheduled_market_graph_loop():
+    """Self-running demand↔supply graph: tension, matches, customer refresh queue."""
+    from app.services.market_graph_loop import run_market_graph_loop
+
+    first_delay_min = int(os.getenv("MARKET_GRAPH_FIRST_RUN_DELAY_MINUTES", "45"))
+    interval_hours = float(os.getenv("MARKET_GRAPH_EVERY_HOURS", "12"))
+    if interval_hours <= 0:
+        return
+    print(
+        f"[market-graph-loop] scheduler armed first_run_min={first_delay_min} "
+        f"interval_hours={interval_hours}",
+        flush=True,
+    )
+    time.sleep(max(60, first_delay_min * 60))
+    while True:
+        try:
+            result = run_market_graph_loop()
+            logger.info(
+                "Market graph loop finished status=%s tensions=%s matches=%s",
+                result.get("status"),
+                result.get("tension_count"),
+                result.get("match_count"),
+            )
+        except Exception as exc:
+            logger.exception("Market graph loop failed: %s", exc)
+        time.sleep(max(1800, int(interval_hours * 3600)))
+
+
+def _start_scheduled_market_graph_loop():
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app market graph loop skipped on web process")
+        return
+    if os.getenv("ENABLE_SCHEDULED_MARKET_GRAPH_LOOP", "1").strip().lower() in (
+        "0", "false", "no"
+    ):
+        logger.info("In-app market graph loop disabled")
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_MARKET_GRAPH_LOOP", "").lower() in ("1", "true", "yes")
+        or os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
+    )
+    if not enabled:
+        return
+    t = threading.Thread(
+        target=_scheduled_market_graph_loop,
+        daemon=True,
+        name="market-graph-loop",
+    )
+    t.start()
+    print("[market-graph-loop] scheduler thread started", flush=True)
+    logger.info(
+        "In-app market graph loop thread started (every %s hours, first run in %s min)",
+        os.getenv("MARKET_GRAPH_EVERY_HOURS", "12"),
+        os.getenv("MARKET_GRAPH_FIRST_RUN_DELAY_MINUTES", "45"),
     )
 
 

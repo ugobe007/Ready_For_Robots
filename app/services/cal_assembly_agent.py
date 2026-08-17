@@ -309,6 +309,20 @@ def assemble_supply_outreach(
     return rule
 
 
+def _body_has_buyer_anchor(company_name: str, body: str) -> bool:
+    """True if body names the buyer (full legal name or known short label)."""
+    name = (company_name or "").strip()
+    if not name:
+        return False
+    low = (body or "").lower()
+    if name.lower() in low:
+        return True
+    from app.services.agent_messaging import _KNOWN_TEAM_SHORT, _short_label
+
+    short = _KNOWN_TEAM_SHORT.get(name.lower()) or _short_label(name)
+    return bool(short) and short.lower() in low
+
+
 def assemble_buyer_outreach(
     *,
     company_name: str,
@@ -319,7 +333,7 @@ def assemble_buyer_outreach(
     issues: list[str] = []
     if not (company_name or "").strip():
         issues.append("Missing buyer company name")
-    if company_name and company_name.lower() not in (body or "").lower():
+    if company_name and not _body_has_buyer_anchor(company_name, body or ""):
         issues.append("Body missing buyer company name")
 
     body_low = (body or "").lower()

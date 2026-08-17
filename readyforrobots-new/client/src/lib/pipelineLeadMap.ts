@@ -1,10 +1,9 @@
 /** Map FastAPI /api/leads row → Pipeline UI deal shape (stages are local until CRM sync exists). */
 
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
-import { outreachInsightForIndustry } from "@/lib/industryContext";
-import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
+import { CAL_SIGNATURE } from "@/lib/agentMessaging";
 
-export type PipelineStage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
+export type PipelineStage = "New Signal" | "Discovered" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
 export interface ApiLead {
   id: number;
@@ -95,6 +94,14 @@ export interface ApiLead {
   share_summary?: string | null;
   share_blurb?: string | null;
   pipeline_action?: string | null;
+  cal_seller_brief?: {
+    headline?: string;
+    why_now?: string;
+    pitch?: string;
+    robot_fit?: string;
+    next_step?: string;
+    for_whom?: string;
+  } | null;
   lead_quality?: {
     schema?: string;
     overall_score?: number;
@@ -112,7 +119,57 @@ export interface ApiLead {
   humanoid_pilot_score?: number | null;
   humanoid_pilot_label?: string | null;
   humanoid_pilot_action?: string | null;
+  humanoid_origin_status?: string | null;
+  humanoid_non_us_vendor_flag?: boolean;
+  humanoid_non_us_vendor_count?: number;
+  humanoid_non_us_vendor_models?: string[];
   robot_types_needed?: string[];
+  work_unit_id?: string | null;
+  workflow_family?: string | null;
+  work_task?: string | null;
+  work_match?: number | null;
+  work_match_label?: string | null;
+  work_match_score?: number | null;
+  work_match_manufacturer?: string | null;
+  work_hard_blockers?: string[];
+  comparable_deployment?: {
+    deployment_id?: string;
+    robot?: string | null;
+    customer?: string | null;
+    facility?: string | null;
+    work_type?: string | null;
+    deployment_stage?: string | null;
+    evidence_level?: string | null;
+    confidence?: number | null;
+  } | null;
+  hermes_qualify?: {
+    automation_fit?: number | null;
+    labor_intensity?: string | null;
+    facility_clarity?: string | null;
+    blockers?: string[];
+    rationale?: string | null;
+    vendor_shortlist?: Array<{ vendor?: string | null; model?: string | null; why?: string | null }>;
+    truth_state?: string | null;
+    updated_at?: string | null;
+  } | null;
+  hermes_job_titles?: string[];
+  hermes_decision_makers?: Array<{
+    name?: string;
+    title?: string | null;
+    source_url?: string | null;
+    confidence?: number | null;
+  }>;
+  hermes_video_evidence?: Array<{
+    title?: string | null;
+    source_url?: string;
+    platform?: string | null;
+    evidence_kind?: string | null;
+    workflow_hint?: string | null;
+    robot_visible?: string | null;
+    facility_hint?: string | null;
+    confidence?: number | null;
+    published_at?: string | null;
+  }> | null;
   signals?: Array<{
     signal_type?: string;
     signal_label?: string;
@@ -239,64 +296,63 @@ function topSignal(lead: ApiLead): { type: string; text: string; color: string }
   return { type: label, text, color };
 }
 
-function industryInsight(industry?: string | null): string {
-  return outreachInsightForIndustry(industry);
-}
-
-function signalOpening(signalType: string, signalText: string): string {
-  const lowerType = signalType.toLowerCase();
-  if (lowerType.includes("labor") || lowerType.includes("job")) {
-    return `I saw the labor and hiring signal around your team: ${signalText}`;
-  }
-  if (lowerType.includes("expansion") || lowerType.includes("capacity")) {
-    return `I saw the expansion signal around your operation: ${signalText}`;
-  }
-  if (lowerType.includes("capex") || lowerType.includes("funding")) {
-    return `I saw the budget or investment signal around your organization: ${signalText}`;
-  }
-  if (lowerType.includes("automation") || lowerType.includes("robot")) {
-    return `I saw the automation signal around your team: ${signalText}`;
-  }
-  return `I saw this market signal connected to your organization: ${signalText}`;
-}
-
 function outreachSubject(companyName?: string, signalType?: string): string {
-  const company = companyName || "your team";
   const typ = (signalType || "").toLowerCase();
-  if (typ.includes("labor") || typ.includes("job")) return `labor question for ${company}`;
-  if (typ.includes("expansion") || typ.includes("capex") || typ.includes("funding")) return `automation signal we picked up on ${company}`;
-  if (typ.includes("hospitality") || typ.includes("hotel")) return `automation angle at ${company}?`;
-  return `quick question about ${company}`;
+  if (typ.includes("labor") || typ.includes("job")) return "hiring signal and task fit";
+  if (typ.includes("expansion") || typ.includes("capex") || typ.includes("funding")) {
+    return "expansion signal — start with the workflow";
+  }
+  if (typ.includes("hospitality") || typ.includes("hotel")) return "where the hours go on property";
+  return "start with the task, not the robot";
 }
 
 function outreachBody(lead: ApiLead, signalType: string, signalText: string): string {
   const company = lead.company_name || "your team";
+  const short =
+    company.toLowerCase() === "performance food group"
+      ? "PFG"
+      : company.split(/\s+/).length >= 3
+        ? company.split(/\s+/)[0]
+        : company;
   const lowerType = signalType.toLowerCase();
-  const industry = (lead.industry || "your industry").toLowerCase();
-  const action = (lead.pipeline_action || "").trim();
+  const industry = (lead.industry || "operations").split(" / ")[0].trim();
+  const hermesJob = (lead.hermes_job_titles || []).find((t) => (t || "").trim())?.trim();
+  const clip = cleanAndClampText(signalText, 140).replace(/\s+/g, " ").trim();
 
-  let hook: string;
-  if (action) {
-    const actionBody = action.includes(":") ? action.slice(action.indexOf(":") + 1).trim() : action;
-    const normalized =
-      actionBody.length > 0
-        ? `${actionBody.charAt(0).toLowerCase()}${actionBody.slice(1)}`
-        : actionBody;
-    hook = `I've been following ${company} — ${normalized}`;
+  let notice: string;
+  if (hermesJob) {
+    notice = `I've been looking at hiring around ${company}, and I keep noticing something I wanted to check with you. A role for ${hermesJob} often shows up when operational load is rising.`;
+  } else if (clip && clip.length > 24) {
+    notice = `I've been looking at ${company}, and I keep noticing something I wanted to check with you: ${clip}${clip.endsWith(".") ? "" : "."}`;
   } else if (lowerType.includes("labor") || lowerType.includes("job")) {
-    hook = `I've been watching staffing pressure at ${company} in ${industry} — that's usually when teams start looking at automation on the floor.`;
+    notice = `I've been looking at ${industry}, and I keep noticing something I wanted to check with you. Hiring spikes often show up before anyone names the repetitive work absorbing the hours.`;
   } else if (lowerType.includes("expansion") || lowerType.includes("capex") || lowerType.includes("funding")) {
-    hook = `I noticed expansion and CapEx activity around ${company}. In ${industry}, that's often when one workflow automation project makes the case for itself.`;
+    notice = `I've been looking at expansion activity around ${company}, and I keep noticing something I wanted to check with you. Material movement and labor demand often rise before anyone has locked a robot specification.`;
   } else {
-    hook = `I've had ${company} on my radar in ${industry} — there may be an automation angle worth a quick look on your side.`;
+    notice = `I've been looking at ${industry}, and I keep noticing something I wanted to check with you. The visible task gets most of the attention, but a lot of the day-to-day pressure seems to happen elsewhere.`;
   }
 
-  return ["Hey,", "", hook, "", OUTREACH_CTA, "", OUTREACH_SIGNATURE].join("\n");
+  const question = `I'm curious if that's true at ${short}. Where do you see the biggest opportunity to automate today?`;
+
+  return [
+    `Hi ${short} team,`,
+    "",
+    "I'm Cal with ReadyForRobots. I research how companies are using robotics and help identify jobs where automation could actually make a difference.",
+    "",
+    notice,
+    "",
+    question,
+    "",
+    "I'd be interested in your perspective.",
+    "",
+    CAL_SIGNATURE,
+  ].join("\n");
 }
 
 export function pipelineStageFromCrmOutreach(stage?: string | null): PipelineStage | null {
   const s = (stage || "").toLowerCase();
   if (!s) return null;
+  if (s === "new") return "Discovered";
   if (["draft_ready", "review_required", "draft_approved"].includes(s)) return "Draft Ready";
   if (["intro_sent", "sequence_step_sent", "sent"].includes(s)) return "Outreach Sent";
   if (["replied", "qualified", "nurture", "discovery"].includes(s)) return "Qualified";
@@ -307,6 +363,7 @@ export function pipelineStageFromCrmOutreach(stage?: string | null): PipelineSta
 export function crmOutreachStageFromPipelineStage(stage: PipelineStage): string {
   const map: Record<PipelineStage, string> = {
     "New Signal": "new",
+    "Discovered": "new",
     "Draft Ready": "draft_ready",
     "Outreach Sent": "intro_sent",
     "Qualified": "qualified",
@@ -315,14 +372,48 @@ export function crmOutreachStageFromPipelineStage(stage: PipelineStage): string 
   return map[stage];
 }
 
+function buildSellerBrief(lead: ApiLead, companyName: string, signalType: string, signalText: string) {
+  const fromApi = lead.cal_seller_brief;
+  if (fromApi?.headline && fromApi?.why_now) {
+    return {
+      headline: fromApi.headline,
+      whyNow: fromApi.why_now,
+      pitch: fromApi.pitch || lead.pipeline_action || "",
+      robotFit: fromApi.robot_fit || (lead.robot_types_needed || []).slice(0, 3).join(", "),
+      nextStep: fromApi.next_step || `Save ${companyName} → copy Cal's note → start the conversation`,
+    };
+  }
+  const robots = (lead.robot_types_needed || []).map((r) => String(r).trim()).filter(Boolean).slice(0, 3);
+  const robotFit = robots.join(", ") || "the robot class you sell";
+  const hermesJob = (lead.hermes_job_titles || []).find((t) => (t || "").trim())?.trim();
+  const why =
+    hermesJob
+      ? `${companyName} is hiring for ${hermesJob} — timing that usually means operational load is already rising.`
+      : cleanAndClampText(lead.share_summary || signalText, 180) ||
+        `Active ${(signalType || "buying").toLowerCase()} signal in ${(lead.industry || "their operations").split(" / ")[0]}.`;
+  return {
+    headline: `Why ${companyName} is a fit for your robot`,
+    whyNow: why,
+    pitch: cleanScrapedText(lead.pipeline_action || "") || `Lead with how ${robotFit} removes a concrete workflow bottleneck — not a generic automation pitch.`,
+    robotFit,
+    nextStep: `Save ${companyName} → copy Cal's outreach note → start the conversation`,
+  };
+}
+
 export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null) {
   const loc = [lead.location_city, lead.location_state].filter(Boolean).join(", ") || "—";
   const { type, text, color } = topSignal(lead);
   const score = numericScore(lead);
   const crmStage = pipelineStageFromCrmOutreach(crmOutreachStage);
+  const companyName = (() => {
+    const raw = (lead.company_name || "").trim();
+    if (raw.toLowerCase() === "cheese") return "Santori Cheese";
+    return raw || `Company #${lead.id}`;
+  })();
+  const sellerBrief = buildSellerBrief(lead, companyName, type, text);
   return {
     id: lead.id,
-    company: lead.company_name || `Company #${lead.id}`,
+    company: companyName,
     location: loc,
     industry: lead.industry || "—",
     score,
@@ -338,7 +429,8 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     contactTitle: lead.inferred_contact_role
       ? `${lead.inferred_contact_role.replace(/_/g, " ")} (inferred)`
       : undefined,
-    outreachSubject: outreachSubject(lead.company_name, type),
+    sellerBrief,
+    outreachSubject: outreachSubject(companyName, type),
     outreachBody: outreachBody(lead, type, text),
     notes: cleanScrapedText(lead.pipeline_action || lead.share_summary) || undefined,
     shareSummary: lead.share_summary || undefined,
@@ -351,8 +443,25 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     humanoidPilotScore: lead.humanoid_pilot_score ?? undefined,
     humanoidPilotLabel: lead.humanoid_pilot_label || undefined,
     humanoidPilotAction: lead.humanoid_pilot_action || undefined,
+    humanoidOriginStatus: lead.humanoid_origin_status || undefined,
+    humanoidNonUsVendorFlag: Boolean(lead.humanoid_non_us_vendor_flag),
+    humanoidNonUsVendorCount: lead.humanoid_non_us_vendor_count ?? undefined,
+    humanoidNonUsVendorModels: lead.humanoid_non_us_vendor_models || [],
     priorityTier: lead.priority_tier || undefined,
     robotTypesNeeded: lead.robot_types_needed || [],
+    workUnitId: lead.work_unit_id || undefined,
+    workflowFamily: lead.workflow_family || undefined,
+    workTask: lead.work_task || undefined,
+    workMatch: lead.work_match ?? undefined,
+    workMatchLabel: lead.work_match_label || undefined,
+    workMatchScore: lead.work_match_score ?? undefined,
+    workMatchManufacturer: lead.work_match_manufacturer || undefined,
+    workHardBlockers: lead.work_hard_blockers || [],
+    comparableDeployment: lead.comparable_deployment || undefined,
+    hermesQualify: lead.hermes_qualify || undefined,
+    hermesJobTitles: lead.hermes_job_titles || [],
+    hermesDecisionMakers: lead.hermes_decision_makers || [],
+    hermesVideoEvidence: lead.hermes_video_evidence || [],
     researchUpdates: lead.research_updates,
     lastResearchedAt: lead.last_researched_at || null,
     latestMaterialUpdate: lead.latest_material_update || null,

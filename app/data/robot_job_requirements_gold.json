@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "kind": "robot_job_requirement_gold",
+  "jobs": [
+    {
+      "job_key": "manip_novolex_kinston_nc",
+      "title": "Case conveyor → outbound pallet",
+      "company_name": "Novolex (Pactiv Evergreen)",
+      "locality": "Kinston, NC",
+      "physics": "case_palletize",
+      "requirements": [
+        {
+          "id": "manipulate_physical_case",
+          "label": "manipulate physical case",
+          "necessity": "required"
+        },
+        {
+          "id": "acquire_case_from_conveyor",
+          "label": "acquire case from conveyor",
+          "necessity": "required"
+        },
+        {
+          "id": "place_case_into_pallet",
+          "label": "place case into pallet pattern",
+          "necessity": "required"
+        },
+        {
+          "id": "payload_vs_object_weight",
+          "label": "payload ≥ case weight",
+          "necessity": "required",
+          "job_value": null,
+          "unknown_reason": "case weight"
+        },
+        {
+          "id": "reach_envelope",
+          "label": "reach/work envelope adequate",
+          "necessity": "required",
+          "job_value": null,
+          "unknown_reason": "conveyor pickup geometry"
+        },
+        {
+          "id": "compatible_grasp",
+          "label": "compatible grasp/end effector",
+          "necessity": "required",
+          "job_value": null,
+          "unknown_reason": "gripper suitability"
+        },
+        {
+          "id": "throughput_vs_line_rate",
+          "label": "throughput ≥ line rate",
+          "necessity": "required",
+          "job_value": null,
+          "unknown_reason": "required cycle time"
+        },
+        {
+          "id": "fixed_cell_ok",
+          "label": "fixed-cell operation acceptable",
+          "necessity": "likely_ok"
+        },
+        {
+          "id": "mobility",
+          "label": "mobility",
+          "necessity": "not_required"
+        }
+      ]
+    },
+    {
+      "job_key": "origin_curascript_tempe",
+      "title": "Return empty totes from packing to operating area",
+      "company_name": "CuraScript SD",
+      "locality": "Tempe, AZ",
+      "physics": "tote_return",
+      "requirements": [
+        {
+          "id": "relocate_totes_or_carts",
+          "label": "relocate totes or carts between areas",
+          "necessity": "required"
+        },
+        {
+          "id": "indoor_navigation",
+          "label": "indoor warehouse navigation",
+          "necessity": "required"
+        },
+        {
+          "id": "mobility",
+          "label": "mobility between work areas",
+          "necessity": "required"
+        },
+        {
+          "id": "payload_vs_object_weight",
+          "label": "payload ≥ tote/cart weight",
+          "necessity": "required",
+          "job_value": null,
+          "unknown_reason": "tote and cart weight"
+        },
+        {
+          "id": "manipulate_physical_case",
+          "label": "manipulate physical case",
+          "necessity": "not_required"
+        },
+        {
+          "id": "hard_floor_scrub",
+          "label": "hard-floor scrubbing",
+          "necessity": "not_required"
+        }
+      ]
+    },
+    {
+      "job_key": "neo_unifi_atl",
+      "title": "Overnight terminal floor scrubbing along high-traffic routes",
+      "company_name": "Unifi (airport floor tech)",
+      "locality": "ATL — Atlanta, GA",
+      "physics": "hard_floor_scrub",
+      "requirements": [
+        {
+          "id": "hard_floor_scrub",
+          "label": "autonomous hard-floor scrubbing",
+          "necessity": "required"
+        },
+        {
+          "id": "indoor_navigation",
+          "label": "indoor cleaning-route navigation",
+          "necessity": "required"
+        },
+        {
+          "id": "mobility",
+          "label": "mobility along concourse routes",
+          "necessity": "required"
+        },
+        {
+          "id": "manipulate_physical_case",
+          "label": "manipulate physical case",
+          "necessity": "not_required"
+        },
+        {
+          "id": "relocate_totes_or_carts",
+          "label": "relocate totes or carts",
+          "necessity": "not_required"
+        }
+      ]
+    },
+    {
+      "job_key": "plant_inspect",
+      "title": "Run plant inspection routes",
+      "company_name": null,
+      "locality": null,
+      "physics": "inspection_route",
+      "requirements": [
+        {
+          "id": "inspect_route_mobility",
+          "label": "mobile inspection route",
+          "necessity": "required"
+        },
+        {
+          "id": "indoor_navigation",
+          "label": "traverse facility routes",
+          "necessity": "required"
+        },
+        {
+          "id": "manipulate_physical_case",
+          "label": "manipulate physical case",
+          "necessity": "not_required"
+        },
+        {
+          "id": "relocate_totes_or_carts",
+          "label": "relocate totes or carts",
+          "necessity": "not_required"
+        },
+        {
+          "id": "hard_floor_scrub",
+          "label": "hard-floor scrubbing",
+          "necessity": "not_required"
+        }
+      ]
+    }
+  ]
+}

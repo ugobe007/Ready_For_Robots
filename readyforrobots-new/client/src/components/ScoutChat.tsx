@@ -33,10 +33,10 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
         </div>
         <div className="p-5 text-sm text-gray-600 leading-relaxed">
           <p className="mb-3">
-            SIGNAL scans your URL, matches prospective sales leads, and queues follow-up plans from the results page.
+            SIGNAL scans your URL, captures qualified buyer leads, scores alignment, and queues activation plans from the results page.
           </p>
           <Link
-            href="/results?url="
+            href="/signup"
             onClick={onClose}
             className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
           >
@@ -44,7 +44,7 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
             Activate SIGNAL
           </Link>
           <p className="mt-4 text-xs text-gray-400">
-            Follow-up automation starts after you activate matched leads or select individual leads on the pipeline.
+            Follow-up automation starts after you activate aligned leads or select individual leads on the pipeline.
           </p>
         </div>
       </div>
@@ -57,12 +57,20 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const openChat = useCallback(() => setOpen(true), []);
   const onPipeline = location === "/pipeline" || location.startsWith("/admin/prospects");
+  const hideFab =
+    location === "/" ||
+    location.startsWith("/?") ||
+    location === "/jobs" ||
+    location.startsWith("/jobs/") ||
+    location.startsWith("/jobs?") ||
+    location === "/experiment" ||
+    location.startsWith("/experiment?");
 
   return (
     <ScoutChatContext.Provider value={{ openChat }}>
       {children}
       {open && <ScoutPanel onClose={() => setOpen(false)} />}
-      {!open && (
+      {!open && !hideFab && (
         <button
           type="button"
           onClick={() => setOpen(true)}

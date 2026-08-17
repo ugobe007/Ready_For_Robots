@@ -127,6 +127,7 @@ def run_intelligence_scraper_task(
 
     try:
         from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
+        from app.scrapers.scraper_watchdog import get_watchdog
 
         db = get_db()
         try:
@@ -149,8 +150,25 @@ def run_intelligence_scraper_task(
                 stats.get("companies_enriched", 0),
                 stats.get("signals_created", 0),
             )
+            try:
+                get_watchdog().record_external_run(
+                    "intelligence_celery",
+                    status="success",
+                    urls_attempted=int(stats.get("companies_discovered", 0) or 0),
+                    urls_succeeded=int(stats.get("companies_discovered", 0) or 0),
+                )
+            except Exception as wd_exc:
+                logger.warning("Watchdog external run record failed: %s", wd_exc)
             return stats
         except Exception as exc:
+            try:
+                get_watchdog().record_external_run(
+                    "intelligence_celery",
+                    status="failed",
+                    errors=[str(exc)],
+                )
+            except Exception:
+                pass
             logger.error("Intelligence scraper failed: %s", exc)
             raise self.retry(exc=exc)
         finally:

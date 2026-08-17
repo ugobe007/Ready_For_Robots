@@ -104,6 +104,7 @@ def main() -> None:
                 company.industry,
                 company.signals or [],
                 from_is_junk=junk_pair,
+                company=company,
             )
             if not ok:
                 continue

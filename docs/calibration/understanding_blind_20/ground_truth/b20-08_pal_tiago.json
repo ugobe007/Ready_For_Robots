@@ -1,0 +1,79 @@
+{
+  "id": "b20-08",
+  "authored_independently": true,
+  "authored_at": "2026-08-17T01:15:00Z",
+  "researcher_method": "PAL Robotics TIAGo product page specs table; authored before agent run.",
+  "primary_sources_reviewed": [
+    "https://pal-robotics.com/robots/tiago/"
+  ],
+  "identity": {
+    "company_any": [
+      "PAL Robotics",
+      "PAL"
+    ],
+    "product_any": [
+      "TIAGo",
+      "Tiago"
+    ],
+    "display_class_any": [
+      "mobile_manipulator",
+      "humanoid"
+    ]
+  },
+  "material_facts": [
+    {
+      "id": "f1",
+      "predicate": "product_class",
+      "value_any": [
+        "mobile_manipulator",
+        "humanoid",
+        "mobile_robot"
+      ],
+      "importance": "critical",
+      "evidence": "mobile manipulator robot"
+    },
+    {
+      "id": "f2",
+      "predicate": "carrying_capacity",
+      "value_num": 3,
+      "units_any": [
+        "kg"
+      ],
+      "importance": "critical",
+      "evidence": "Arm Payload 3 Kg (without end-effector)"
+    },
+    {
+      "id": "f3",
+      "predicate": "battery_runtime",
+      "value_num": 4,
+      "units_any": [
+        "hr"
+      ],
+      "importance": "high",
+      "evidence": "Battery autonomy 4-5h (1 battery)"
+    },
+    {
+      "id": "f4",
+      "predicate": "has_mobile_base",
+      "value_any": [
+        true
+      ],
+      "importance": "high",
+      "evidence": "differential/omnidirectional mobile base"
+    }
+  ],
+  "alt_acceptable": {
+    "carrying_capacity_value_any": [
+      3
+    ],
+    "battery_runtime_any": [
+      4,
+      5,
+      8,
+      10
+    ]
+  },
+  "human_tier_judgment": "A",
+  "human_tier_rationale": "Explicit specs table on product page.",
+  "notes": "Accept 4\u20135h or dual-battery 8\u201310h for runtime."
+}

@@ -76,7 +76,7 @@ export default function AdminCalWorkflowPanel({
       <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
         <p className="text-sm font-bold text-gray-950">Cal buyer queue (admin-cal-outreach)</p>
         <p className="mt-1 text-sm text-gray-700">
-          This tab is the operator send list — not the public pipeline page. Cal emails HOT/WARM scored buyers
+          This tab is the operator activation queue — not the public pipeline page. Cal works HOT/WARM scored buyers
           ({hot} hot · {warm} warm) who have CRM drafts on your admin team.
         </p>
         <p className="mt-2 text-xs text-gray-600">
@@ -96,7 +96,7 @@ export default function AdminCalWorkflowPanel({
           <p className="text-lg font-black text-blue-950">{unsentDrafted}</p>
         </div>
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs">
-          <span className="text-emerald-800">Sendable now</span>
+          <span className="text-emerald-800">Ready to activate</span>
           <p className="text-lg font-black text-emerald-950">{sendable}</p>
         </div>
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs">
@@ -113,7 +113,7 @@ export default function AdminCalWorkflowPanel({
           title="Generate drafts"
           description={
             pending > 0
-              ? `${pending} HOT/WARM lead(s) have no Cal draft yet. Draft them before preview or send.`
+              ? `${pending} HOT/WARM lead(s) have no Cal draft yet. Draft them before preview or activation.`
               : "All leads in the Cal universe have drafts. Skip to preview unless you want to regenerate."
           }
         >
@@ -138,7 +138,7 @@ export default function AdminCalWorkflowPanel({
         <StepCard
           step="2"
           title="Preview & edit"
-          description={`Expand a row in the queue below (filter: drafted). ${sendable} sendable · ${noEmail} missing contact email.`}
+          description={`Expand a row in the queue below (filter: drafted). ${sendable} ready to activate · ${noEmail} missing contact email.`}
         >
           <button
             type="button"
@@ -174,8 +174,8 @@ export default function AdminCalWorkflowPanel({
 
         <StepCard
           step={manualApproval ? "4" : "3"}
-          title="Send (pick one path)"
-          description="Run Cal now = draft + assembly-gated send + follow-ups. Send all ready = only sends existing sendable drafts (skips assembly)."
+          title="Activate (pick one path)"
+          description="Run Cal now = draft + assembly-gated activation + follow-ups. Send all ready = only sends existing ready drafts (skips assembly)."
         >
           <button
             type="button"

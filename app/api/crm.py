@@ -61,6 +61,11 @@ from app.services.cal_insights import pick_cal_insight
 from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import crm_workflow_intelligence, record_sales_experience
+from app.services.deployment_conversion import (
+    CONVERSION_STAGES,
+    ensure_deployment_opportunity,
+    record_conversion_transition,
+)
 from app.services.crm_engagement_sync import (
     serialize_engagement,
     sync_account_stage_to_engagement,
@@ -185,6 +190,16 @@ class DraftOutreachIn(BaseModel):
     style_instruction: Optional[str] = None
 
 
+class DeploymentTransitionIn(BaseModel):
+    to_stage: str
+    evidence_level: str
+    contact_result: Optional[str] = None
+    reason: Optional[str] = None
+    evidence: Optional[list[dict[str, Any]]] = None
+    facts_learned: Optional[dict[str, Any]] = None
+    prediction_snapshot: Optional[dict[str, Any]] = None
+
+
 def _serialize_team_row(team: Team, role: str) -> dict[str, Any]:
     return {
         "id": str(team.id),
@@ -206,9 +221,32 @@ def _raise_crm_db_error(exc: Exception) -> None:
     if isinstance(exc, OperationalError):
         raise HTTPException(status_code=503, detail=CRM_CONNECTION_HINT) from exc
     if isinstance(exc, ProgrammingError):
-        orig = str(getattr(exc, "orig", None) or exc).lower()
-        if "does not exist" in orig or "no such table" in orig:
-            raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from exc
+        orig = str(getattr(exc, "orig", None) or exc)
+        low = orig.lower()
+        # Don't blame `teams` for every missing relation/column — surface the real object.
+        if "undefinedcolumn" in low or ("column" in low and "does not exist" in low):
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    f"CRM schema mismatch (missing column). {orig[:220]} "
+                    "Run pending Alembic migrations on Fly's DATABASE_URL, then retry."
+                ),
+            ) from exc
+        if "undefinedtable" in low or ("relation" in low and "does not exist" in low) or "no such table" in low:
+            if "teams" in low:
+                raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from exc
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    f"CRM schema mismatch (missing table). {orig[:220]} "
+                    "Confirm Fly DATABASE_URL and run migrations. See GET /api/crm/db-status."
+                ),
+            ) from exc
+        if "does not exist" in low:
+            raise HTTPException(
+                status_code=503,
+                detail=f"CRM schema mismatch: {orig[:240]}",
+            ) from exc
         raise HTTPException(
             status_code=503,
             detail=f"SQL error: {str(getattr(exc, 'orig', exc))[:220]}",
@@ -390,38 +428,111 @@ def _draft_subject(acct: CrmAccount, variant_id: str | None = None) -> str:
 
 def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:
     """Email from robot sales rep to buyer ops — first person, no platform branding."""
-    industry = (acct.industry or "your industry").strip()
-    name = (acct.name or "your team").strip()
-    industry_lower = industry.lower()
+    def _display_account_name(raw: str | None) -> str:
+        name = (raw or "your team").strip()
+        # Some upstream flows can accidentally append recommended-action text to
+        # account names (for example: "Americold -- contact new executive...").
+        # Keep the buyer-facing draft anchored to the clean company name.
+        for sep in (" -- ", " — ", " - "):
+            if sep in name:
+                head, tail = name.split(sep, 1)
+                low_tail = tail.strip().lower()
+                if any(
+                    token in low_tail
+                    for token in (
+                        "contact ",
+                        "pitch",
+                        "budget",
+                        "build-out",
+                        "reach out",
+                        "new executive",
+                    )
+                ):
+                    name = head.strip() or name
+                    break
+        return name
 
-    lines: list[str] = ["Hey,", ""]
+    industry = (acct.industry or "your industry").strip()
+    name = _display_account_name(acct.name)
+    industry_lower = industry.lower()
+    closing_line = f"If helpful, I'll send a short, vendor-neutral recommendation for {name} before we discuss anything live."
+
+    lines: list[str] = [f"Hi {name},", ""]
 
     if industry_lower in ("logistics", "warehousing"):
         lines.append(
-            f"I've been following what's happening at {name} in logistics — "
-            f"teams in that space often have at least one workflow where floor automation pays for itself."
+            "I work with logistics teams on one thing: picking the first workflow where automation "
+            "actually pays back in live operations."
+        )
+        lines.extend(
+            [
+                "",
+                "The best first project is usually receiving, replenishment, or exception handling "
+                "rather than the most visible robot demo.",
+            ]
         )
     elif industry_lower in ("hospitality", "hotels", "casinos & gaming"):
+        closing_line = (
+            f"If helpful, I'll send a short, vendor-neutral housekeeping and turnover workflow "
+            f"recommendation for {name} before we discuss anything live."
+        )
         lines.append(
-            f"I've been watching labor and overnight coverage pressure at {name} — "
-            f"that's usually when hospitality teams start evaluating service and cleaning automation."
+            "I work with hospitality teams on one thing: choosing service and cleaning workflows "
+            "that still perform under real weekend occupancy."
+        )
+        lines.extend(
+            [
+                "",
+                "The win is usually one constrained workflow with clear housekeeping turnover or overnight "
+                "coverage gaps, not a broad rollout.",
+            ]
         )
     elif industry_lower in ("healthcare", "medical technology"):
+        closing_line = (
+            f"If helpful, I'll send a short, vendor-neutral EVS and transport workflow "
+            f"recommendation for {name} before we discuss anything live."
+        )
         lines.append(
-            f"I've had {name} on my radar in healthcare — "
-            f"there's often an AMR or logistics automation angle when clinical ops scale."
+            "I work with healthcare ops teams on one thing: selecting transport and internal logistics "
+            "workflows where AMRs reduce staff miles without adding operational friction."
+        )
+        lines.extend(
+            [
+                "",
+                "The highest-payback cases tend to be repetitive EVS, meds/supplies, and lab movement "
+                "routes with clean handoffs and elevator access.",
+            ]
         )
     elif industry_lower in ("food service", "food processing & manufacturing"):
+        closing_line = (
+            f"If helpful, I'll send a short, vendor-neutral changeover and OEE-focused workflow "
+            f"recommendation for {name} before we discuss anything live."
+        )
         lines.append(
-            f"I noticed operational signals around {name} in food service — "
-            f"back-of-house and line automation tend to come up when throughput is tight."
+            "I work with food teams on one thing: picking back-of-house and line workflows where automation "
+            "relieves throughput pressure without creating changeover headaches."
+        )
+        lines.extend(
+            [
+                "",
+                "The projects that last usually start with one repeatable bottleneck, with changeover time "
+                "and OEE tracked before expanding.",
+            ]
         )
     else:
         lines.append(
-            f"I've had {name} on my radar in {industry} — "
-            f"there may be an automation angle worth a quick look on your side."
+            "I help operations teams scope where automation is likely to pay back quickly and where "
+            "it is better to wait."
+        )
+        lines.extend(
+            [
+                "",
+                f"If useful, I can send a brief view of which workflow at {name} is most likely to deliver early ROI.",
+            ]
         )
 
+    lines.append("")
+    lines.append(closing_line)
     lines.append("")
     lines.append(REP_OUTREACH_CTA)
 
@@ -781,6 +892,7 @@ def create_account(
             raise HTTPException(status_code=400, detail="name is required when company_id is omitted")
 
         existing = None
+        created = False
         if body.company_id is not None:
             existing = (
                 db.query(CrmAccount)
@@ -821,21 +933,52 @@ def create_account(
             )
             db.add(row)
             db.flush()
+            created = True
             sync_account_stage_to_engagement(db, row)
-            db.commit()
-            db.refresh(row)
-            record_sales_experience(
-                db,
-                event_type="crm_lead_saved",
-                outcome="qualified",
-                team_id=row.team_id,
-                user_id=uid,
-                crm_account_id=row.id,
-                company_id=row.company_id,
-                channel="crm",
-                confidence=0.85,
-                payload={"source": "crm_create_account"},
+        # Conversion opportunity is best-effort — never block saving the CRM lead on schema drift.
+        opportunity = None
+        try:
+            with db.begin_nested():
+                opportunity = ensure_deployment_opportunity(db, account=row, owner_user_id=uid)
+        except Exception:
+            logger.warning(
+                "CRM ensure_deployment_opportunity failed for account %s — lead still saved",
+                getattr(row, "id", None),
+                exc_info=True,
             )
+            opportunity = None
+        if created:
+            try:
+                with db.begin_nested():
+                    record_sales_experience(
+                        db,
+                        event_type="crm_lead_saved",
+                        outcome="observed",
+                        team_id=row.team_id,
+                        user_id=uid,
+                        crm_account_id=row.id,
+                        sales_opportunity_id=opportunity.id if opportunity is not None else None,
+                        company_id=row.company_id,
+                        channel="crm",
+                        confidence=0.85,
+                        payload={
+                            "source": "crm_create_account",
+                            "deployment_opportunity_id": (
+                                opportunity.payload.get("public_id")
+                                if opportunity is not None
+                                and isinstance(getattr(opportunity, "payload", None), dict)
+                                else None
+                            ),
+                        },
+                    )
+            except Exception:
+                logger.warning(
+                    "CRM record_sales_experience failed for account %s — lead still saved",
+                    getattr(row, "id", None),
+                    exc_info=True,
+                )
+        db.commit()
+        db.refresh(row)
         # Best-effort named contact fill on save (Hunter → Apollo waterfall).
         if row.company_id and not (row.contact_email or "").strip():
             try:
@@ -892,6 +1035,52 @@ def create_account(
         ) from e
     except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
         _raise_crm_db_error(e)
+
+
+@router.post("/accounts/{account_id}/deployment-transition")
+def transition_account_deployment(
+    account_id: str,
+    body: DeploymentTransitionIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        aid = uuid.UUID(account_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid account id") from None
+    acct = _crm_account_for_user(db, uid, aid)
+    if not acct:
+        raise HTTPException(status_code=404, detail="Account not found or access denied")
+    try:
+        opportunity = ensure_deployment_opportunity(db, account=acct, owner_user_id=uid)
+        event = record_conversion_transition(
+            db,
+            opportunity=opportunity,
+            to_stage=body.to_stage,
+            actor="seller",
+            occurred_at=datetime.now(timezone.utc).isoformat(),
+            evidence_level=body.evidence_level,
+            prediction_snapshot=body.prediction_snapshot,
+            contact_result=body.contact_result,
+            reason=body.reason,
+            evidence=body.evidence,
+            facts_learned=body.facts_learned,
+        )
+        db.commit()
+        return {
+            "opportunity_id": opportunity.payload.get("public_id"),
+            "stage": opportunity.current_stage,
+            "disposition": getattr(opportunity, "disposition", None)
+            or (opportunity.payload or {}).get("disposition", "active"),
+            "event_id": str(event.id),
+        }
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as exc:
+        db.rollback()
+        _raise_crm_db_error(exc)
 
 
 @router.patch("/accounts/{account_id}", response_model=CrmAccountOut)
@@ -1387,6 +1576,7 @@ def send_account_outreach(
         from app.services.sequence_runner import enroll_account
 
         enroll_account(db, team_id=acct.team_id, crm_account_id=acct.id)
+        opportunity = ensure_deployment_opportunity(db, account=acct, owner_user_id=uid)
         record_sales_experience(
             db,
             event_type="crm_outreach_sent",
@@ -1404,6 +1594,22 @@ def send_account_outreach(
                 "bcc": bcc,
             },
         )
+        current_stage = (opportunity.current_stage or "new").lower()
+        if current_stage != "lost" and (
+            current_stage == "new"
+            or current_stage not in CONVERSION_STAGES
+            or CONVERSION_STAGES.index(current_stage) < CONVERSION_STAGES.index("contacted")
+        ):
+            record_conversion_transition(
+                db,
+                opportunity=opportunity,
+                to_stage="contacted",
+                actor="seller",
+                occurred_at=now.isoformat(),
+                evidence_level="e1_observed",
+                contact_result="no_response",
+                evidence=[{"type": "outreach_message", "id": str(msg.id)}],
+            )
         db.commit()
 
         effective_reply_to = None if _inbound_missing else reply_to

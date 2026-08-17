@@ -1,0 +1,239 @@
+{
+  "version": 1,
+  "kind": "partner_portfolio_reverse",
+  "experiment": "Can Channel Graph + Robot Job Graph create a distributor product?",
+  "partners": [
+    {
+      "partner_key": "robotshop",
+      "partner_name": "RobotShop",
+      "distributor_kind": "catalog_vad",
+      "need": "Find demand across my portfolio",
+      "territory": ["US", "CA"],
+      "portfolio_breadth_oems": 1,
+      "notes": "Large catalog platform; AGIBOT is the named VAD relationship with full capability depth. Other robot brands sold as catalog SKUs — treat separately as C4 until authorized claims found.",
+      "oems": [
+        {
+          "oem_key": "agibot",
+          "products": ["A2", "X2", "D1", "G2", "C5"],
+          "capability_families": ["humanoid", "quadruped_inspection", "wheeled_industrial", "floor_scrub"],
+          "matrix": {
+            "sell": true,
+            "integrate": true,
+            "deploy": true,
+            "service": true,
+            "train": true
+          },
+          "confidence_grade": "C3"
+        }
+      ],
+      "capability_envelope": [
+        "humanoid interaction / research",
+        "legged inspection / patrol",
+        "autonomous hard-floor cleaning",
+        "deployment support",
+        "training"
+      ],
+      "commercial_depth": "deep_on_agibot_vad"
+    },
+    {
+      "partner_key": "cross_company",
+      "partner_name": "Cross Company",
+      "distributor_kind": "solution_integrator",
+      "need": "Find automation work my team can actually solve",
+      "territory": ["NC", "SC", "VA", "TN", "GA", "FL", "MS", "KY", "AL"],
+      "portfolio_breadth_oems": 3,
+      "oems": [
+        {
+          "oem_key": "doosan_robotics",
+          "products": ["Doosan cobot lineup"],
+          "capability_families": ["cobot", "palletizing", "machine_tending"],
+          "matrix": {
+            "sell": true,
+            "integrate": true,
+            "deploy": true,
+            "service": true,
+            "train": true
+          },
+          "confidence_grade": "C3",
+          "notes": "Distributor + nationally certified integrator + factory service center"
+        },
+        {
+          "oem_key": "universal_robots",
+          "products": ["UR cobots"],
+          "capability_families": ["cobot", "palletizing", "machine_tending"],
+          "matrix": {
+            "sell": "?",
+            "integrate": true,
+            "deploy": true,
+            "service": true,
+            "train": true
+          },
+          "confidence_grade": "C2",
+          "notes": "Certified system integrator page — sell vs integrate distinction open"
+        },
+        {
+          "oem_key": "fanuc",
+          "products": ["FANUC industrial / cobot lines"],
+          "capability_families": ["industrial_manipulator", "palletizing", "packaging", "machine_tending"],
+          "matrix": {
+            "sell": "?",
+            "integrate": true,
+            "deploy": true,
+            "service": true,
+            "train": true
+          },
+          "confidence_grade": "C2",
+          "notes": "FANUC Systems Integrator"
+        }
+      ],
+      "capability_envelope": [
+        "collaborative manipulation",
+        "industrial robot cells",
+        "palletizing",
+        "machine tending",
+        "case packing",
+        "integration",
+        "field service",
+        "training"
+      ],
+      "commercial_depth": "deep_solution"
+    },
+    {
+      "partner_key": "rg_group",
+      "partner_name": "RG Group",
+      "distributor_kind": "solution_integrator",
+      "need": "Find automation work my team can actually solve",
+      "territory": ["PA", "Mid-Atlantic", "US projects"],
+      "portfolio_breadth_oems": 3,
+      "oems": [
+        {
+          "oem_key": "mir",
+          "products": ["MiR100", "MiR250", "MiR600", "MiR1350"],
+          "capability_families": ["transport_amr"],
+          "matrix": {
+            "sell": true,
+            "integrate": true,
+            "deploy": true,
+            "service": true,
+            "train": "?"
+          },
+          "confidence_grade": "C2"
+        },
+        {
+          "oem_key": "seegrid",
+          "products": ["Seegrid AMRs"],
+          "capability_families": ["transport_amr"],
+          "matrix": {
+            "sell": true,
+            "integrate": true,
+            "deploy": true,
+            "service": "?",
+            "train": "?"
+          },
+          "confidence_grade": "C2",
+          "notes": "Named on material-handling robotics page"
+        },
+        {
+          "oem_key": "vision_nav",
+          "products": ["VisionNav AMRs"],
+          "capability_families": ["transport_amr"],
+          "matrix": {
+            "sell": true,
+            "integrate": true,
+            "deploy": "?",
+            "service": "?",
+            "train": "?"
+          },
+          "confidence_grade": "C2"
+        },
+        {
+          "oem_key": "roeq",
+          "products": ["MiR top modules / carts / rollers"],
+          "capability_families": ["amr_payload_modules"],
+          "matrix": {
+            "sell": true,
+            "integrate": true,
+            "deploy": true,
+            "service": "?",
+            "train": "?"
+          },
+          "confidence_grade": "C2",
+          "notes": "Enables tote/cart transport on MiR — critical for Origin-class jobs"
+        }
+      ],
+      "capability_envelope": [
+        "mobile transport",
+        "tote / cart / pallet AMR workflows",
+        "warehouse / plant material flow",
+        "system integration",
+        "fleet / process software",
+        "deployment"
+      ],
+      "commercial_depth": "deep_amr_solution"
+    },
+    {
+      "partner_key": "accu_tech_usa",
+      "partner_name": "Accu Tech USA",
+      "distributor_kind": "catalog_var",
+      "need": "Find demand across my portfolio",
+      "territory": ["US select states", "NC base"],
+      "portfolio_breadth_oems": 1,
+      "oems": [
+        {
+          "oem_key": "techman",
+          "products": ["TM5", "TM12", "TM14", "TM16", "TM20"],
+          "capability_families": ["cobot", "vision_cobot"],
+          "matrix": {
+            "sell": true,
+            "integrate": "?",
+            "deploy": "?",
+            "service": "?",
+            "train": "?"
+          },
+          "confidence_grade": "C3"
+        }
+      ],
+      "adjacent_components": ["Robotiq", "SCHUNK", "ATI"],
+      "capability_envelope": [
+        "collaborative arm work",
+        "vision-guided cobot tasks",
+        "EOAT / gripping"
+      ],
+      "commercial_depth": "sell_plus_components",
+      "notes": "13 brands tracked on 3E — mostly motion/EOAT; robot OEM depth is Techman-centric"
+    },
+    {
+      "partner_key": "xcube",
+      "partner_name": "XCube Robotics",
+      "distributor_kind": "catalog_vad",
+      "need": "Find demand across my portfolio",
+      "territory": ["US"],
+      "portfolio_breadth_oems": 1,
+      "oems": [
+        {
+          "oem_key": "pudu",
+          "products": ["CC1 Pro", "MT1", "T150", "T300", "T600", "BellaBot", "KettyBot", "PuduBot"],
+          "capability_families": ["floor_scrub", "floor_sweep", "service_delivery", "hospitality_delivery"],
+          "matrix": {
+            "sell": true,
+            "integrate": "?",
+            "deploy": true,
+            "service": true,
+            "train": true
+          },
+          "confidence_grade": "C2",
+          "notes": "Warranty / parts / nationwide deployment coordination claimed"
+        }
+      ],
+      "capability_envelope": [
+        "autonomous hard-floor cleaning",
+        "industrial floor sweeping",
+        "indoor delivery / material transport",
+        "hospitality / healthcare delivery",
+        "deployment coordination",
+        "warranty / parts"
+      ],
+      "commercial_depth": "distribution_plus_lifecycle"
+    }
+  ]
+}

@@ -20,6 +20,24 @@ from app.services.industry_inference import known_industry_for_company_name
 from app.services.known_brands import is_allowlisted_company_name
 
 
+def _company_quality_flags(company: object) -> dict:
+    meta = getattr(company, "crm_metadata", None)
+    if not isinstance(meta, dict):
+        return {}
+    flags = meta.get("quality_flags")
+    return flags if isinstance(flags, dict) else {}
+
+
+def is_vendor_intelligence_retained(company: object) -> bool:
+    """Company is retained for vendor intelligence workflows (never delete/quarantine)."""
+    flags = _company_quality_flags(company)
+    return bool(
+        flags.get("vendor_intelligence_only")
+        or flags.get("preserve_vendor_intelligence")
+        or flags.get("vendor_only")
+    )
+
+
 def is_quarantined(company: object) -> bool:
     """Rectifier sets is_internal=False — soft-hide, not a delete signal."""
     return getattr(company, "is_internal", True) is False
@@ -35,6 +53,9 @@ def hard_delete_allowed(
     ``signals`` is accepted for API symmetry but is not used for delete decisions.
     """
     _ = signals
+
+    if is_vendor_intelligence_retained(company):
+        return False, "", ""
 
     if is_quarantined(company):
         return False, "", ""
@@ -59,6 +80,7 @@ def unknown_industry_delete_allowed(
     signals: Sequence[object] | None = None,
     *,
     from_is_junk: tuple[bool, str] | None = None,
+    company: object | None = None,
 ) -> tuple[bool, str, str]:
     """
     Narrow delete gate for Unknown-industry cleanup scripts.
@@ -72,6 +94,9 @@ def unknown_industry_delete_allowed(
         is_unknown_industry,
         signals_are_market_research_noise,
     )
+
+    if company is not None and is_vendor_intelligence_retained(company):
+        return False, "", ""
 
     name = (company_name or "").strip()
     if not is_unknown_industry(industry):
@@ -105,6 +130,7 @@ def unknown_rss_noise_quarantine_allowed(
     *,
     from_is_junk: tuple[bool, str] | None = None,
     from_classify: tuple[bool, str, Any] | None = None,
+    company: object | None = None,
 ) -> tuple[bool, str, str]:
     """
     Soft-hide gate for Unknown-industry RSS / report spam (rectifier quarantine).
@@ -120,6 +146,9 @@ def unknown_rss_noise_quarantine_allowed(
         signals_are_market_research_noise,
         signals_predominantly_rss_html,
     )
+
+    if company is not None and is_vendor_intelligence_retained(company):
+        return False, "", ""
 
     name = (company_name or "").strip()
     if not is_unknown_industry(industry):

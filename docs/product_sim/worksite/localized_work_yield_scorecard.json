@@ -1,0 +1,210 @@
+{
+  "ran_at": "2026-08-16T01:08:29Z",
+  "live": true,
+  "question": "What is the cheapest repeatable way to acquire company + physical work + locality? Is employment data the highest-yield path, or are we prematurely optimizing?",
+  "join_algorithm": "FROZEN",
+  "primary_metric": "Localized Work Yield (LWY)",
+  "strategies": [
+    {
+      "strategy": "S1_structured_jobs",
+      "proposed_lwos": 1,
+      "accepted_lwos": 1,
+      "precision": 1.0,
+      "companies_covered": 1,
+      "companies_covered_list": [
+        "Burris Logistics"
+      ],
+      "unique_work_units": [
+        "pick_cases"
+      ],
+      "LWY": 0.056,
+      "LWY_per_100_companies": 5.6,
+      "acquisition": {
+        "requests": 36,
+        "wall_seconds": 3.11,
+        "errors": 36,
+        "seconds_per_accepted_lwo": 3.11,
+        "requests_per_accepted_lwo": 36.0
+      }
+    },
+    {
+      "strategy": "S2_search_indexed",
+      "proposed_lwos": 0,
+      "accepted_lwos": 0,
+      "precision": null,
+      "companies_covered": 0,
+      "companies_covered_list": [],
+      "unique_work_units": [],
+      "LWY": 0.0,
+      "LWY_per_100_companies": 0.0,
+      "acquisition": {
+        "requests": 18,
+        "wall_seconds": 2.27,
+        "errors": 18,
+        "seconds_per_accepted_lwo": null,
+        "requests_per_accepted_lwo": null
+      }
+    },
+    {
+      "strategy": "S3_facility_crossover",
+      "proposed_lwos": 0,
+      "accepted_lwos": 0,
+      "precision": null,
+      "companies_covered": 0,
+      "companies_covered_list": [],
+      "unique_work_units": [],
+      "LWY": 0.0,
+      "LWY_per_100_companies": 0.0,
+      "acquisition": {
+        "requests": 36,
+        "wall_seconds": 4.47,
+        "errors": 36,
+        "seconds_per_accepted_lwo": null,
+        "requests_per_accepted_lwo": null
+      }
+    },
+    {
+      "strategy": "S4_local_ops_evidence",
+      "proposed_lwos": 0,
+      "accepted_lwos": 0,
+      "precision": null,
+      "companies_covered": 0,
+      "companies_covered_list": [],
+      "unique_work_units": [],
+      "LWY": 0.0,
+      "LWY_per_100_companies": 0.0,
+      "acquisition": {
+        "requests": 0,
+        "wall_seconds": 0.0,
+        "errors": 0,
+        "seconds_per_accepted_lwo": null,
+        "requests_per_accepted_lwo": null
+      }
+    }
+  ],
+  "combined": {
+    "strategy": "COMBINED_S1_S4",
+    "accepted_lwos": 1,
+    "companies_covered": 1,
+    "unique_work_units": [
+      "pick_cases"
+    ],
+    "LWY": 0.056,
+    "LWY_per_100_companies": 5.6,
+    "precision_note": "Union of strategy-accepted LWOs (each already gated)"
+  },
+  "ranked": [
+    "S1_structured_jobs",
+    "S2_search_indexed",
+    "S3_facility_crossover",
+    "S4_local_ops_evidence"
+  ],
+  "decision_note": "Pick acquisition stream(s) by LWY \u00d7 precision \u00d7 coverage \u00d7 cost \u2014 not by join PWRR on tiny n. Build ingestion only after a winner (or combo) is clear.",
+  "detail": {
+    "S1_structured_jobs": {
+      "score": {
+        "strategy": "S1_structured_jobs",
+        "proposed_lwos": 1,
+        "accepted_lwos": 1,
+        "precision": 1.0,
+        "companies_covered": 1,
+        "companies_covered_list": [
+          "Burris Logistics"
+        ],
+        "unique_work_units": [
+          "pick_cases"
+        ],
+        "LWY": 0.056,
+        "LWY_per_100_companies": 5.6,
+        "acquisition": {
+          "requests": 36,
+          "wall_seconds": 3.11,
+          "errors": 36,
+          "seconds_per_accepted_lwo": 3.11,
+          "requests_per_accepted_lwo": 36.0
+        }
+      },
+      "per_company": {
+        "Burris Logistics": [
+          {
+            "company": "Burris Logistics",
+            "locality_city": "Orlando",
+            "locality_state": "FL",
+            "work_unit_id": "pick_cases",
+            "worksite_function": "distribution",
+            "evidence": "Orlando Distribution Center @ Orlando, FL",
+            "source_strategy": "S1_structured_jobs",
+            "confidence": 0.82,
+            "accepted": true,
+            "reject_reason": null,
+            "date_hint": null,
+            "locality_key": "orlando|fl"
+          }
+        ]
+      }
+    },
+    "S2_search_indexed": {
+      "score": {
+        "strategy": "S2_search_indexed",
+        "proposed_lwos": 0,
+        "accepted_lwos": 0,
+        "precision": null,
+        "companies_covered": 0,
+        "companies_covered_list": [],
+        "unique_work_units": [],
+        "LWY": 0.0,
+        "LWY_per_100_companies": 0.0,
+        "acquisition": {
+          "requests": 18,
+          "wall_seconds": 2.27,
+          "errors": 18,
+          "seconds_per_accepted_lwo": null,
+          "requests_per_accepted_lwo": null
+        }
+      },
+      "per_company": {}
+    },
+    "S3_facility_crossover": {
+      "score": {
+        "strategy": "S3_facility_crossover",
+        "proposed_lwos": 0,
+        "accepted_lwos": 0,
+        "precision": null,
+        "companies_covered": 0,
+        "companies_covered_list": [],
+        "unique_work_units": [],
+        "LWY": 0.0,
+        "LWY_per_100_companies": 0.0,
+        "acquisition": {
+          "requests": 36,
+          "wall_seconds": 4.47,
+          "errors": 36,
+          "seconds_per_accepted_lwo": null,
+          "requests_per_accepted_lwo": null
+        }
+      },
+      "per_company": {}
+    },
+    "S4_local_ops_evidence": {
+      "score": {
+        "strategy": "S4_local_ops_evidence",
+        "proposed_lwos": 0,
+        "accepted_lwos": 0,
+        "precision": null,
+        "companies_covered": 0,
+        "companies_covered_list": [],
+        "unique_work_units": [],
+        "LWY": 0.0,
+        "LWY_per_100_companies": 0.0,
+        "acquisition": {
+          "requests": 0,
+          "wall_seconds": 0.0,
+          "errors": 0,
+          "seconds_per_accepted_lwo": null,
+          "requests_per_accepted_lwo": null
+        }
+      },
+      "per_company": {}
+    }
+  }
+}

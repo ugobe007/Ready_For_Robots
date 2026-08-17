@@ -98,9 +98,9 @@ export function clearPendingNext(): void {
 /** Read intended post-auth path without clearing stored intent. */
 export function postAuthRedirectTarget(defaultPath = "/pipeline"): string {
   const fromUrl = readNextParam();
-  if (fromUrl && fromUrl !== "/") return fromUrl;
+  if (fromUrl) return fromUrl;
   const pending = peekPendingNext();
-  if (pending && pending !== "/") return pending;
+  if (pending) return pending;
   return defaultPath;
 }
 
@@ -119,9 +119,9 @@ export function loginHref(returnTo?: string): string {
     returnTo ??
     (typeof window !== "undefined"
       ? `${window.location.pathname}${window.location.search}`
-      : "/pipeline");
+      : "/");
   const pathOnly = target.split("?")[0] || "/";
-  if (!isSafePath(pathOnly) || pathOnly === "/") {
+  if (!isSafePath(pathOnly)) {
     return "/login";
   }
   if (target.startsWith("/login") || target.startsWith("/signup")) {

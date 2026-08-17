@@ -1,0 +1,16 @@
+{
+  "ran_at": "2026-08-16",
+  "experiment": "robot_directed_discovery_origin_manual_websearch",
+  "robot": "locus_origin_compatible",
+  "work_units": ["pick_cases", "replenish", "move_totes"],
+  "retrievals": 7,
+  "accepted_lwos": 14,
+  "borderline": 4,
+  "RJDY_per_100_retrievals": 200,
+  "baseline_ats_slug_RJDY_per_100": 1.9,
+  "baseline_company_directed_lwy_accepted": 1,
+  "verdict": "Robot-directed search materially outperforms company-directed reconstruction for producing LWOs on this lab.",
+  "implication": "Look for jobs; build the operating map as a byproduct — do not map companies first then hunt jobs.",
+  "join_algorithm": "FROZEN",
+  "company_directed_lwy_benchmark": "STOPPED"
+}

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "kind": "integrator_demo_fixture",
+  "product_line": "Find automation jobs your company can solve.",
+  "note": "Fixture only — do not ship UI until traffic sprint allows. Routable Job gates not fully applied.",
+  "demos": [
+    {
+      "demo_key": "cross_company_manipulation",
+      "partner_key": "cross_company",
+      "partner_name": "Cross Company",
+      "distributor_kind": "solution_integrator",
+      "headline": "We found 19 automation jobs your company can solve.",
+      "job_count_total": 19,
+      "jobs_preview": 5,
+      "portfolio_lines": ["Doosan Robotics", "Universal Robots", "FANUC"],
+      "capability_families": ["palletizing", "machine_tending"],
+      "breakdown": [
+        {"label": "Palletizing", "count": 11},
+        {"label": "Machine tending", "count": 8}
+      ],
+      "se_routable_candidates": 10,
+      "source_corpus": "manipulation_open_world_25",
+      "sample_job_keys": [
+        "manip_piedmont_candy_lexington_nc",
+        "manip_novolex_kinston_nc",
+        "manip_ofi_lenoir_city_tn",
+        "manip_siemens_energy_charlotte_nc",
+        "manip_attindas_greenville_nc"
+      ],
+      "before_after": {
+        "compatible_jobs_before": 0,
+        "compatible_jobs_after": 19
+      }
+    }
+  ]
+}

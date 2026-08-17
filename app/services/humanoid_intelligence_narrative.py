@@ -214,6 +214,22 @@ def build_report_narrative(
             ),
         })
 
+    policy_risk = [
+        p for p in profiles
+        if (p.get("policy_positioning") or {}).get("policy_tag") == "high_restriction_risk"
+    ]
+    if policy_risk:
+        examples = ", ".join(p.get("name", "") for p in policy_risk[:4] if p.get("name"))
+        extra = f" and {len(policy_risk) - 4} others" if len(policy_risk) > 4 else ""
+        key_findings.append({
+            "title": "China-origin policy risk update",
+            "body": (
+                f"{len(policy_risk)} top-slice suppliers are tagged high-restriction-risk under current "
+                f"US China-origin procurement controls, including {examples}{extra}. "
+                "For US accounts, run dual-track proposals with domestic/allied alternatives before legal/procurement review."
+            ),
+        })
+
     dep_weighted = comparisons.get("deployment_weighted_top10") or []
     if dep_weighted and dep_weighted[0].get("model_slug") != leader.get("model_slug"):
         dw = dep_weighted[0]

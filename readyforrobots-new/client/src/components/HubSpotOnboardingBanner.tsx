@@ -1,2 +1,2 @@
 /** @deprecated Use CrmPathFork — kept for existing imports. */
-export { default } from "./CrmPathFork";
+export { default } from "./pipeline/CrmPathFork";

@@ -4,20 +4,14 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
   ArrowRight,
-  Bell,
-  Bot,
-  CalendarCheck,
   CheckCircle2,
+  Copy,
   FileText,
   LockKeyhole,
   MapPin,
-  MousePointer2,
-  Presentation,
-  Send,
-  Sparkles,
-  TrendingUp,
-  UploadCloud,
+  Shield,
   Users,
   Zap,
 } from "lucide-react";
@@ -28,16 +22,22 @@ import PageHeroDark from "@/components/layout/PageHeroDark";
 import { useAuth } from "@/contexts/AuthContext";
 import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 import { normalizeUrl } from "@/lib/normalizeUrl";
-import { getApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
+import { getApiBase, getDirectApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
 import { trackUrlScan, readSupplyAttribution, trackSupplyConversion } from "@/lib/siteAnalytics";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
-import { authHeader } from "@/lib/supabase";
+import { authHeader, getFreshAccessToken } from "@/lib/supabase";
 import { cleanScrapedText } from "@/lib/text";
 import { toast } from "sonner";
 import LeadShareBar from "@/components/LeadShareBar";
-import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import ResultsValueStrip from "@/components/results/ResultsValueStrip";
-import ResultsFomoBanner, { RESULTS_ANONYMOUS_UNLOCK } from "@/components/results/ResultsFomoBanner";
+import { RESULTS_ANONYMOUS_UNLOCK } from "@/components/results/ResultsFomoBanner";
+import ResultsNextStepCta from "@/components/results/ResultsNextStepCta";
+import {
+  OEM_CAL_RESULTS_HEAD_ANON,
+  OEM_CAL_RESULTS_HEAD_SIGNED,
+  oemCalResultsAnonLine,
+} from "@/lib/oemCalCopy";
+import { markReviewedFiveLeads } from "@/lib/signupWorkflowPath";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -81,6 +81,15 @@ type ApiLead = {
   recommended_action?: string;
   key_signals?: string[];
   created_at?: string | null;
+  hermes_job_titles?: string[];
+  pipeline_action?: string | null;
+  cal_seller_brief?: {
+    headline?: string;
+    why_now?: string;
+    pitch?: string;
+    robot_fit?: string;
+    next_step?: string;
+  } | null;
 };
 
 type RobotReadyResponse = {
@@ -97,6 +106,14 @@ type RobotReadyResponse = {
   estimated_deal_value?: number;
   top_industry?: string;
   total_leads?: number;
+};
+
+type SellerBrief = {
+  headline: string;
+  whyNow: string;
+  pitch: string;
+  robotFit: string;
+  nextStep: string;
 };
 
 type Prospect = {
@@ -116,6 +133,7 @@ type Prospect = {
   draft: string;
   outreachSubject: string;
   outreachBody: string;
+  sellerBrief: SellerBrief;
   stage: string;
   leadId?: number;
   shareSummary?: string;
@@ -123,53 +141,6 @@ type Prospect = {
   robotTypes?: string[];
   signalAge?: string;
 };
-
-type MaterialChoice = "upload" | "suggest" | "skip";
-type ScopeChoice = "all" | "selected" | "top";
-type ModeChoice = "manual" | "assisted" | "autopilot";
-
-const MATERIAL_OPTIONS: Array<{
-  id: MaterialChoice;
-  title: string;
-  desc: string;
-  icon: typeof UploadCloud;
-}> = [
-  {
-    id: "upload",
-    title: "Upload sales deck",
-    desc: "Give SIGNAL your current presentation so follow-up uses your actual positioning.",
-    icon: UploadCloud,
-  },
-  {
-    id: "suggest",
-    title: "Suggest deck strategy",
-    desc: "SIGNAL proposes a deck format, proof points, and ROI story for you to implement.",
-    icon: Presentation,
-  },
-  {
-    id: "skip",
-    title: "Skip materials",
-    desc: "Start with lead evaluation, sales strategy, activity schedule, and draft outreach.",
-    icon: Sparkles,
-  },
-];
-
-const SCOPE_OPTIONS: Array<{ id: ScopeChoice; title: string; desc: string }> = [
-  { id: "all", title: "Activate all leads", desc: "SIGNAL works every matched lead in this results set." },
-  { id: "selected", title: "Use selected leads", desc: "Only the leads you checked below move into SIGNAL activation." },
-  { id: "top", title: "Let SIGNAL prioritize", desc: "SIGNAL starts with the strongest three leads by score and signal quality." },
-];
-
-const MODE_OPTIONS: Array<{
-  id: ModeChoice;
-  title: string;
-  desc: string;
-  gated: boolean;
-}> = [
-  { id: "manual", title: "Manual", desc: "SIGNAL evaluates leads and prepares strategy plus draft outreach for your review.", gated: false },
-  { id: "assisted", title: "Assisted", desc: "SIGNAL drafts outreach, asks before sending, then tracks replies.", gated: true },
-  { id: "autopilot", title: "Autopilot", desc: "SIGNAL sends approved messages, follows up, and escalates technical questions when needed.", gated: true },
-];
 
 function scoreColor(score: number): string {
   return score >= 90 ? "#34d399" : score >= 75 ? "#10b981" : "#FFB000";
@@ -190,6 +161,65 @@ function buildOutreachFields(p: Pick<Prospect, "company" | "signal" | "relevance
   const outreachBody = `Hey,\n\n${hook}\n\n${OUTREACH_CTA}\n\n${OUTREACH_SIGNATURE}`;
   const draft = `Subject: ${outreachSubject}\n\n${outreachBody}`;
   return { outreachSubject, outreachBody, draft };
+}
+
+function buildSellerBrief(
+  company: string,
+  opts: {
+    fromApi?: ApiLead["cal_seller_brief"];
+    relevance: string;
+    action: string;
+    signal: string;
+    robotTypes?: string[];
+    hermesJobs?: string[];
+  },
+): SellerBrief {
+  const api = opts.fromApi;
+  const robots = (opts.robotTypes || []).map((r) => String(r).trim()).filter(Boolean).slice(0, 3);
+  const robotFit = api?.robot_fit || robots.join(", ") || "the robot class you sell";
+  if (api?.headline && api?.why_now) {
+    return {
+      headline: api.headline,
+      whyNow: api.why_now,
+      pitch: api.pitch || opts.action,
+      robotFit,
+      nextStep: api.next_step || `Save ${company} → copy Cal's brief → start the conversation`,
+    };
+  }
+  const hermesJob = (opts.hermesJobs || []).find((t) => (t || "").trim())?.trim();
+  const whyNow = hermesJob
+    ? `${company} is hiring for ${hermesJob} — timing that usually means operational load is already rising.`
+    : opts.relevance || opts.signal;
+  return {
+    headline: `Why ${company} is a fit for your robot`,
+    whyNow,
+    pitch: opts.action || `Lead with how ${robotFit} removes a concrete workflow bottleneck — not a generic automation pitch.`,
+    robotFit,
+    nextStep: `Save ${company} → copy Cal's brief → start the conversation`,
+  };
+}
+
+function buildRfqSpecPacket(p: Pick<Prospect, "company" | "industry" | "action" | "signal">) {
+  const subject = `RFQ or bid-project request for ${p.company}`;
+  const body = [
+    "Hi,",
+    "",
+    `I'm reaching out because ${p.company} surfaced with an active automation signal in ${p.industry}.`,
+    `Context: ${p.signal}`,
+    "",
+    "Are you currently preparing RFQs or bid projects for the robot workflows you are evaluating?",
+    "If yes, could you share the requirements (robot type, throughput, payload, site constraints, integration requirements, timeline, and budget band)?",
+    "",
+    "If it helps, I can send a short RFQ and bid-project checklist your team can edit quickly.",
+    "",
+    "Best,",
+    "[Your name]",
+    "",
+    "---",
+    `Internal handoff note: Route this lead to Robert after RFQ/bid-project details are received. Suggested next step: ${p.action}`,
+  ].join("\n");
+
+  return `Subject: ${subject}\n\n${body}`;
 }
 
 function formatEmployees(value: number | null | undefined): string {
@@ -222,6 +252,12 @@ function formatSignalAge(iso?: string | null): string | undefined {
   return `Signal ${Math.floor(days / 30)}mo ago`;
 }
 
+function clampResultsLimit(raw: string | null): number {
+  const parsed = Number(raw || "");
+  if (!Number.isFinite(parsed)) return 8;
+  return Math.max(3, Math.min(30, Math.round(parsed)));
+}
+
 function mapApiLead(lead: ApiLead, index: number): Prospect {
   const score = Math.round(
     lead.match_score ??
@@ -233,7 +269,11 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
   const firstSignal = lead.signals?.[0];
   const signal = cleanScrapedText(firstSignal?.display_text || firstSignal?.raw_text || lead.key_signals?.[0] || lead.share_summary || "") || "SIGNAL found a sales-fit pattern worth reviewing.";
   const signalType = firstSignal?.signal_label || titleize(firstSignal?.signal_type || "buying_signal");
-  const company = lead.company_name || `Matched Lead ${index + 1}`;
+  const companyRaw = (lead.company_name || "").trim();
+  const company =
+    companyRaw.toLowerCase() === "cheese"
+      ? "Santori Cheese"
+      : companyRaw || `Matched Lead ${index + 1}`;
   const stage = lead.priority_tier ? `${lead.priority_tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal";
   const whyNow = lead.gtm?.why_now?.filter(Boolean) || [];
   const relevance =
@@ -257,12 +297,19 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
     signalType,
     signalColor: scoreColor(score),
     timing: lead.gtm?.readiness_label ? `Stage: ${lead.gtm.readiness_label}` : timingFromScore(score),
-    action: lead.recommended_action || lead.gtm?.suggested_motion || "Reach out with a personalized automation use case",
+    action: lead.pipeline_action || lead.recommended_action || lead.gtm?.suggested_motion || "Reach out with a personalized automation use case",
     relevance,
     scoreReason,
     draft: "",
     outreachSubject: "",
     outreachBody: "",
+    sellerBrief: {
+      headline: "",
+      whyNow: "",
+      pitch: "",
+      robotFit: "",
+      nextStep: "",
+    },
     stage,
     leadId: typeof lead.id === "number" ? lead.id : undefined,
     shareSummary: lead.share_summary || undefined,
@@ -270,6 +317,14 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
     robotTypes: lead.robot_types_needed,
     signalAge: formatSignalAge(lead.created_at),
   };
+  prospect.sellerBrief = buildSellerBrief(company, {
+    fromApi: lead.cal_seller_brief,
+    relevance: prospect.relevance,
+    action: prospect.action,
+    signal: prospect.signal,
+    robotTypes: lead.robot_types_needed,
+    hermesJobs: lead.hermes_job_titles,
+  });
   const outreach = buildOutreachFields(prospect);
   prospect.outreachSubject = outreach.outreachSubject;
   prospect.outreachBody = outreach.outreachBody;
@@ -318,10 +373,22 @@ function mapScoutProspect(row: ScoutProspectRow, index: number): Prospect {
     draft: "",
     outreachSubject: "",
     outreachBody: "",
+    sellerBrief: {
+      headline: "",
+      whyNow: "",
+      pitch: "",
+      robotFit: "",
+      nextStep: "",
+    },
     stage: row.tier ? `${row.tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal",
     leadId: row.id && /^\d+$/.test(String(row.id)) ? Number(row.id) : undefined,
     priorityTier: row.tier,
   };
+  prospect.sellerBrief = buildSellerBrief(company, {
+    relevance: prospect.relevance,
+    action: prospect.action,
+    signal: prospect.signal,
+  });
   const outreach = buildOutreachFields(prospect);
   prospect.outreachSubject = outreach.outreachSubject;
   prospect.outreachBody = outreach.outreachBody;
@@ -389,14 +456,37 @@ const fallbackProspects: Prospect[] = [
   },
 ].map((p) => {
   const outreach = buildOutreachFields(p);
-  return { ...p, ...outreach };
+  const sellerBrief = buildSellerBrief(p.company, {
+    relevance: p.relevance,
+    action: p.action,
+    signal: p.signal,
+  });
+  return { ...p, ...outreach, sellerBrief };
 });
+
+function fallbackProspectsForLimit(limit: number): Prospect[] {
+  if (limit <= fallbackProspects.length) return fallbackProspects.slice(0, limit);
+  return Array.from({ length: limit }, (_, index) => {
+    const base = fallbackProspects[index % fallbackProspects.length];
+    const pass = Math.floor(index / fallbackProspects.length);
+    if (pass === 0) return base;
+    return {
+      ...base,
+      id: `${base.id}-sample-${pass + 1}`,
+      company: `${base.company} ${pass + 1}`,
+      stage: base.stage.includes("Lead") ? base.stage : `${base.stage} Lead`,
+    };
+  });
+}
 
 export default function Results() {
   const search = useSearch();
   const params = new URLSearchParams(search);
   const initialUrl = params.get("url")?.trim() || "";
-  const { session } = useAuth();
+  const requestedLimit = clampResultsLimit(params.get("limit"));
+  const sampleMode = params.get("sample") === "1";
+  const sampleName = (params.get("sample_name") || "").trim();
+  const { session, loading: authLoading } = useAuth();
 
   useEffect(() => {
     const attribution = readSupplyAttribution(search);
@@ -416,19 +506,54 @@ export default function Results() {
   const [scanning, setScanning] = useState(Boolean(initialUrl));
   const [loading, setLoading] = useState(Boolean(initialUrl));
   const [prospects, setProspects] = useState<Prospect[]>([]);
-  const [copiedProspectId, setCopiedProspectId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [choosingScout, setChoosingScout] = useState(false);
   const [activatedIds, setActivatedIds] = useState<Set<string>>(new Set());
   const [usingFallback, setUsingFallback] = useState(false);
-  const [materialChoice, setMaterialChoice] = useState<MaterialChoice>("suggest");
-  const [scopeChoice, setScopeChoice] = useState<ScopeChoice>("top");
-  const [modeChoice, setModeChoice] = useState<ModeChoice>("manual");
-  const [deckFileName, setDeckFileName] = useState("");
   const [activationId, setActivationId] = useState<number | null>(null);
-  const [activatingScout, setActivatingScout] = useState(false);
+  const [sampleAccessLoading, setSampleAccessLoading] = useState(sampleMode);
+  const [sampleAccessAllowed, setSampleAccessAllowed] = useState(!sampleMode);
+  const [sampleAccessEmail, setSampleAccessEmail] = useState("");
 
-  const selectedCount = selectedIds.size;
+  useEffect(() => {
+    let cancelled = false;
+    async function verifySampleAccess() {
+      if (!sampleMode) {
+        if (!cancelled) {
+          setSampleAccessAllowed(true);
+          setSampleAccessLoading(false);
+        }
+        return;
+      }
+      if (authLoading) return;
+      if (!session?.access_token) {
+        if (!cancelled) {
+          setSampleAccessAllowed(false);
+          setSampleAccessLoading(false);
+        }
+        return;
+      }
+      setSampleAccessLoading(true);
+      try {
+        const token = await getFreshAccessToken(session.access_token);
+        const meRes = await fetch(`${getApiBase()}/api/user/me`, liveFetchInit({ headers: authHeader(token) }));
+        if (!meRes.ok) throw new Error(`user/me ${meRes.status}`);
+        const me = await meRes.json() as { email?: string; is_admin?: boolean };
+        if (!cancelled) {
+          setSampleAccessEmail(me.email || "");
+          setSampleAccessAllowed(Boolean(me.is_admin));
+        }
+      } catch {
+        if (!cancelled) setSampleAccessAllowed(false);
+      } finally {
+        if (!cancelled) setSampleAccessLoading(false);
+      }
+    }
+    void verifySampleAccess();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, sampleMode, session?.access_token]);
+
   const activatedCount = activatedIds.size;
   const isSignedIn = Boolean(session);
   const sortedProspects = useMemo(
@@ -438,20 +563,43 @@ export default function Results() {
   const anonymousUnlockedCount = Math.min(RESULTS_ANONYMOUS_UNLOCK, sortedProspects.length);
   const topLeadId = sortedProspects[0]?.leadId;
 
-  const resultsSignupNext = topLeadId
-    ? `/pipeline?lead=${topLeadId}`
-    : "/pipeline";
+  const resultsPageHref = useMemo(() => {
+    const next = new URLSearchParams();
+    if (submittedUrl) next.set("url", submittedUrl);
+    next.set("limit", String(requestedLimit));
+    next.set("src", "signup_return_results");
+    return `/results?${next.toString()}`;
+  }, [requestedLimit, submittedUrl]);
 
-  const copyProspectDraft = (prospect: Prospect) => {
-    const text = `Subject: ${prospect.outreachSubject}\n\n${prospect.outreachBody}`;
-    void navigator.clipboard.writeText(text).then(() => {
-      setCopiedProspectId(prospect.id);
-      toast.success("Draft copied to clipboard");
-      window.setTimeout(() => setCopiedProspectId(null), 2000);
+  const fullPipelineHref = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("src", "results_scan");
+    if (submittedUrl) params.set("url", submittedUrl);
+    if (topLeadId != null) params.set("lead", String(topLeadId));
+    return `/pipeline?${params.toString()}`;
+  }, [submittedUrl, topLeadId]);
+
+  // After signup from Results, land back on the 5-lead preview — then Pipeline is step 3.
+  const resultsSignupNext = resultsPageHref;
+  const resultsSignupHref = `/signup?next=${encodeURIComponent(resultsSignupNext)}&src=results_gate`;
+
+  // Workflow: URL → signup (new) → Results → Pipeline. Keep unsigned users on the signup step.
+  useEffect(() => {
+    if (sampleMode || authLoading) return;
+    if (session?.access_token) return;
+    if (!submittedUrl) return;
+    window.location.replace(resultsSignupHref);
+  }, [authLoading, resultsSignupHref, sampleMode, session?.access_token, submittedUrl]);
+
+  const copyRfqPacket = (prospect: Prospect) => {
+    const packet = buildRfqSpecPacket(prospect);
+    void navigator.clipboard.writeText(packet).then(() => {
+      toast.success("RFQ/bid-project request packet copied");
     });
   };
 
   useEffect(() => {
+    if (sampleMode && (sampleAccessLoading || !sampleAccessAllowed)) return;
     if (!submittedUrl) return;
     trackUrlScan(submittedUrl, "results");
     setScanStep(1);
@@ -460,22 +608,57 @@ export default function Results() {
     setProspects([]);
     setSelectedIds(new Set());
     setActivatedIds(new Set());
-    setChoosingScout(false);
-    setMaterialChoice("suggest");
-    setScopeChoice("top");
-    setModeChoice("manual");
-    setDeckFileName("");
     setActivationId(null);
-    setActivatingScout(false);
     setUsingFallback(false);
 
     let cancelled = false;
+    let finished = false;
+    let hardDeadline = 0;
     const stepTimer = window.setInterval(() => {
       setScanStep((current) => Math.min(current + 1, SCAN_STEPS.length - 1));
     }, 650);
 
+    const finishScan = (mapped: Prospect[], usedFallback: boolean) => {
+      if (cancelled || finished) return;
+      finished = true;
+      window.clearInterval(stepTimer);
+      if (hardDeadline) window.clearTimeout(hardDeadline);
+      setScanStep(SCAN_STEPS.length - 1);
+      setProspects(mapped);
+      setUsingFallback(usedFallback);
+      // Gate Pipeline step 4/5 — signup must not jump past this 5-lead review.
+      markReviewedFiveLeads();
+      if (usedFallback) {
+        toast.info("SIGNAL could not reach the matcher in time — showing sample leads while the API recovers.");
+      }
+      window.setTimeout(() => {
+        if (!cancelled) {
+          setLoading(false);
+          setScanning(false);
+        }
+      }, 350);
+    };
+
     async function runScan() {
+      const apiBase = getDirectApiBase();
       try {
+        // Fast path: same matcher Pipeline uses (avoids slow scout/robot-ready scrape).
+        const matchRes = await fetchWithTimeoutRetry(
+          `${apiBase}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=${requestedLimit}`,
+          liveFetchInit(),
+          12_000,
+          { retries: 0 },
+        );
+        if (matchRes.ok) {
+          const matchData = (await matchRes.json()) as { leads?: ApiLead[] };
+          const rows = Array.isArray(matchData.leads) ? matchData.leads : [];
+          const mapped = rows.slice(0, requestedLimit).map(mapApiLead);
+          if (mapped.length) {
+            finishScan(mapped, false);
+            return;
+          }
+        }
+
         const host = (() => {
           try {
             return new URL(submittedUrl).hostname.replace(/^www\./, "");
@@ -484,7 +667,7 @@ export default function Results() {
           }
         })();
         const scoutRes = await fetchWithTimeoutRetry(
-          `${getApiBase()}/api/scout/scan-for-results`,
+          `${apiBase}/api/scout/scan-for-results`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -492,67 +675,40 @@ export default function Results() {
               company_url: submittedUrl,
               fingerprint: scoutFingerprint(),
               robot_name: host,
-              limit: 8,
+              limit: requestedLimit,
             }),
           },
-          25_000,
-          { retries: 1, retryDelayMs: 800 },
+          10_000,
+          { retries: 0 },
         );
         if (scoutRes.ok) {
-          const scoutData = await scoutRes.json() as { prospects?: ScoutProspectRow[] };
+          const scoutData = (await scoutRes.json()) as { prospects?: ScoutProspectRow[] };
           const rows = Array.isArray(scoutData.prospects) ? scoutData.prospects : [];
           const mapped = rows.map(mapScoutProspect);
           if (mapped.length) {
-            if (!cancelled) setProspects(mapped);
+            finishScan(mapped, false);
             return;
           }
         }
-        const response = await fetchWithTimeoutRetry(
-          `${getApiBase()}/api/robot-ready/submit`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              robot_name: host,
-              url: submittedUrl,
-            }),
-          },
-          25_000,
-          { retries: 1, retryDelayMs: 800 },
-        );
-        if (!response.ok) throw new Error(`Scan failed with ${response.status}`);
-        const data = await response.json() as RobotReadyResponse;
-        const matches = Array.isArray(data.matched_companies) ? data.matched_companies : [];
-        const mapped = matches.slice(0, 8).map(mapApiLead);
-        if (!mapped.length) throw new Error("No URL-specific matches returned");
-        if (!cancelled) setProspects(mapped);
+        throw new Error(`Scan failed with ${scoutRes.status}`);
       } catch (error) {
         console.error(error);
-        if (!cancelled) {
-          setUsingFallback(true);
-          setProspects(fallbackProspects);
-          toast.info("SIGNAL could not reach the matcher in time — showing sample leads while the API recovers.");
-        }
-      } finally {
-        if (!cancelled) {
-          window.clearInterval(stepTimer);
-          setScanStep(SCAN_STEPS.length - 1);
-          window.setTimeout(() => {
-            if (!cancelled) {
-              setLoading(false);
-              setScanning(false);
-            }
-          }, 450);
-        }
+        finishScan(fallbackProspectsForLimit(requestedLimit), true);
       }
     }
 
-    runScan();
+    // Hard wall-clock: never leave the scan spinner spinning.
+    hardDeadline = window.setTimeout(() => {
+      finishScan(fallbackProspectsForLimit(requestedLimit), true);
+    }, 16_000);
+
+    void runScan();
     return () => {
       cancelled = true;
       window.clearInterval(stepTimer);
+      if (hardDeadline) window.clearTimeout(hardDeadline);
     };
-  }, [submittedUrl]);
+  }, [requestedLimit, sampleAccessAllowed, sampleAccessLoading, sampleMode, submittedUrl]);
 
   useEffect(() => {
     setSelectedIds(new Set(prospects.map((p) => p.id)));
@@ -578,79 +734,79 @@ export default function Results() {
     });
   }
 
-  function activationIdsForScope(scope = scopeChoice): string[] {
-    if (scope === "all") return prospects.map((p) => p.id);
-    if (scope === "selected") return Array.from(selectedIds);
-    return [...prospects]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3)
-      .map((p) => p.id);
+  if (sampleMode && (authLoading || sampleAccessLoading)) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
+        <main className="mx-auto max-w-4xl px-6 pt-28 text-center text-gray-500">Checking admin access...</main>
+      </div>
+    );
   }
 
-  async function activateScout(overrides: { scope?: ScopeChoice; mode?: ModeChoice; material?: MaterialChoice } = {}) {
-    if (!session?.access_token) {
-      const top = [...prospects].sort((a, b) => b.score - a.score)[0];
-      const next = top?.leadId ? `/pipeline?lead=${top.leadId}` : resultsSignupNext;
-      toast.info("Sign up free to save this lead, copy the draft, and run it in your pipeline.");
-      window.location.href = `/signup?next=${encodeURIComponent(next)}`;
-      return;
-    }
-    const scope = overrides.scope ?? scopeChoice;
-    const mode = overrides.mode ?? modeChoice;
-    const material = overrides.material ?? materialChoice;
-    const ids = activationIdsForScope(scope);
-    if (!ids.length) {
-      toast.error("Select at least one lead for SIGNAL.");
-      return;
-    }
-    setScopeChoice(scope);
-    setModeChoice(mode);
-    setMaterialChoice(material);
-    setActivatingScout(true);
-    try {
-      const selectedLeads = prospects
-        .filter((p) => ids.includes(p.id))
-        .map((p) => ({
-          id: p.id,
-          company: p.company,
-          score: p.score,
-          signal: p.signal,
-          signalType: p.signalType,
-          action: p.action,
-          timing: p.timing,
-          relevance: p.relevance,
-        }));
-      const response = await fetch(`${getApiBase()}/api/scout/activations`, liveFetchInit({
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authHeader(session?.access_token),
-        },
-        body: JSON.stringify({
-          fingerprint: scoutFingerprint(),
-          sourceUrl: submittedUrl,
-          materialChoice: material,
-          materialFilename: deckFileName || undefined,
-          scopeChoice: scope,
-          modeChoice: mode,
-          leads: selectedLeads,
-        }),
-      }));
-      if (!response.ok) throw new Error(await response.text());
-      const activation = await response.json();
-      setActivationId(Number(activation.id) || null);
-      setActivatedIds(new Set(ids));
-      setChoosingScout(false);
-      toast.success(`SIGNAL review queue #${activation.id} created. Leads are saved to CRM and waiting for your approval.`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not activate SIGNAL.");
-    } finally {
-      setActivatingScout(false);
-    }
+  if (sampleMode && !session) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
+        <main className="mx-auto max-w-xl px-6 pt-28 text-center">
+          <Shield className="mx-auto mb-4 h-7 w-7 text-amber-500" />
+          <h1 className="text-2xl font-bold text-gray-900">Admin sign in required</h1>
+          <p className="mt-3 text-sm text-gray-600">Sample pipeline links are private to admin accounts.</p>
+          <Link href={`/login?next=${encodeURIComponent(`/results?${params.toString()}`)}`} className="mt-6 inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600">
+            Sign in
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
+  if (sampleMode && !sampleAccessAllowed) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        <Header />
+        <main className="mx-auto max-w-xl px-6 pt-28 text-center">
+          <AlertTriangle className="mx-auto mb-4 h-7 w-7 text-red-400" />
+          <h1 className="text-2xl font-bold text-gray-900">Admin access required</h1>
+          <p className="mt-3 text-sm text-gray-600">
+            {sampleAccessEmail || "This account"} is signed in but not in ADMIN_EMAILS.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/admin" className="inline-flex rounded-xl border border-gray-300 px-5 py-3 text-sm font-bold text-gray-700">
+              Open admin
+            </Link>
+            <Link href="/pipeline" className="inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600">
+              Back to pipeline
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Workflow gate: new users sign up before the 5-lead Results page.
+  if (!sampleMode && submittedUrl && (authLoading || !session?.access_token)) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#081126]">
+        <Header />
+        <main className="mx-auto max-w-xl px-6 pt-28 text-center text-slate-300">
+          <p className="text-sm font-semibold text-white">
+            {authLoading ? "Checking your workspace…" : "Sign up to see your matched sales leads…"}
+          </p>
+          {!authLoading && (
+            <Link
+              href={resultsSignupHref}
+              className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950"
+            >
+              Continue to sign up
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          )}
+        </main>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-[#081126]">
       <Header />
 
       {!submittedUrl ? (
@@ -670,10 +826,12 @@ export default function Results() {
             maxWidthClass="max-w-4xl"
             badge={<div className="page-hero-badge">Scan complete · matched buyers ready</div>}
             eyebrow="SIGNAL results"
-            title={scanning ? "Scanning for matched buyers…" : "Your matched buyers"}
+            title={scanning ? "Scanning for aligned buyers…" : sampleMode ? `Your ${requestedLimit}-company sample pipeline` : "Your qualified, aligned buyers"}
             description={
               submittedUrl
-                ? `Results for ${submittedUrl} — save leads, copy outreach drafts, and run them in your pipeline.`
+                ? sampleMode
+                  ? `Sample pipeline for ${sampleName || submittedUrl} · ${requestedLimit} companies you can share with prospects.`
+                  : `Results for ${submittedUrl} — review qualified buyers, prepare outreach, and move the strongest matches into your pipeline.`
                 : undefined
             }
             innerClassName="pb-8"
@@ -682,23 +840,23 @@ export default function Results() {
         </>
       )}
 
-      <main className="flex-1 pb-16 sm:pb-20 px-4 sm:px-6">
+      <main className="flex-1 pb-16 sm:pb-20 px-4 sm:px-6 text-slate-100">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 text-xs text-gray-600 mb-6 sm:mb-8">
-            <Link href="/" className="hover:text-gray-600 transition-colors">Home</Link>
+          <div className="flex items-center gap-2 text-xs text-slate-400 mb-6 sm:mb-8">
+            <Link href="/" className="hover:text-slate-200 transition-colors">Home</Link>
             <span>/</span>
-            <span className="text-gray-500">{submittedUrl ? `Results for ${submittedUrl}` : "Activate SIGNAL"}</span>
+            <span className="text-slate-500">{submittedUrl ? `Results for ${submittedUrl}` : "Activate SIGNAL"}</span>
           </div>
 
           {!submittedUrl && (
             <section className="py-4 sm:py-8">
-              <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-10 shadow-sm">
+              <div className="rounded-3xl border border-white/10 bg-[#0b162f] p-6 sm:p-10 shadow-[0_20px_45px_-30px_rgba(0,0,0,0.8)]">
                 <form onSubmit={submitUrl} className="flex flex-col sm:flex-row gap-3">
                   <input
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     placeholder="https://your-robot-company.com/product"
-                    className="min-w-0 flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-base sm:text-sm text-gray-900 outline-none placeholder:text-gray-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                    className="min-w-0 flex-1 rounded-xl border border-white/15 bg-[#081126] px-4 py-3 text-base sm:text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
                   />
                   <button
                     type="submit"
@@ -728,12 +886,12 @@ export default function Results() {
                   return (
                   <div key={step} className="flex items-center gap-3 text-sm">
                     {done ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
                     ) : (
-                      <div className={`h-3.5 w-3.5 rounded-full border shrink-0 ${active ? "border-amber-500 animate-pulse" : "border-gray-300"}`} />
+                      <div className={`h-3.5 w-3.5 rounded-full border shrink-0 ${active ? "border-amber-400 animate-pulse" : "border-slate-600"}`} />
                     )}
                     <span
-                      className={`font-mono text-xs font-medium ${active ? "text-amber-700" : done ? "text-emerald-700" : "text-gray-600"}`}
+                      className={`font-mono text-xs font-medium ${active ? "text-amber-300" : done ? "text-emerald-300" : "text-slate-500"}`}
                       style={{ fontFamily: "'JetBrains Mono', monospace" }}
                     >
                       {step}
@@ -747,30 +905,61 @@ export default function Results() {
 
           {submittedUrl && !loading && !scanning && (
             <>
-              <ResultsFomoBanner
-                prospects={sortedProspects}
-                isSignedIn={isSignedIn}
-                scanUrl={submittedUrl}
-              />
-
-              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  {usingFallback && (
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2 text-gray-500">
-                      Sample mode · connect live pipeline for real matches
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-700">
-                    Based on <span className="text-gray-900 font-medium break-all">{submittedUrl}</span>. Select the leads you want SIGNAL to develop.
+              {sampleMode && typeof window !== "undefined" && (
+                <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100 sm:flex-row sm:items-center sm:justify-between">
+                  <p>
+                    Share-ready sample pipeline: <span className="font-semibold">{requestedLimit} companies</span>
+                    {sampleName ? <span> for <span className="font-semibold">{sampleName}</span></span> : null}
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(window.location.href).then(() => {
+                        toast.success("Sample pipeline link copied");
+                      });
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-400/40 bg-[#081126]/60 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/15"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy link
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setChoosingScout((current) => !current)}
-                  className="inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl border-2 border-amber-500 bg-amber-500 px-6 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-amber-400 sm:shrink-0"
-                >
-                  <Bot className="h-4 w-4" /> Activate SIGNAL
-                </button>
+              )}
+
+              <div className="mb-3 border border-amber-400/50 bg-transparent px-2.5 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">
+                  {isSignedIn ? "Step 3 of 5 · 5 sales leads" : "Step 2 of 5 · Sign up for 5 sales leads"}
+                  {sortedProspects.length > 0 ? (
+                    <>
+                      {" · "}
+                      <span className="text-emerald-300">
+                        {sortedProspects.length} buyers
+                        {sortedProspects.filter((p) => p.priorityTier === "HOT" || (p.stage || "").toUpperCase().includes("HOT")).length > 0
+                          ? ` · ${sortedProspects.filter((p) => p.priorityTier === "HOT" || (p.stage || "").toUpperCase().includes("HOT")).length} HOT`
+                          : ""}
+                      </span>
+                    </>
+                  ) : null}
+                </p>
+                <p className="mt-0.5 text-sm font-semibold text-white">
+                  {isSignedIn ? OEM_CAL_RESULTS_HEAD_SIGNED : OEM_CAL_RESULTS_HEAD_ANON}
+                </p>
+                <p className="mt-0.5 text-[11px] text-emerald-200/90">
+                  {isSignedIn
+                    ? "Cal matched these buyers to your robot URL — add company details next to unlock 15."
+                    : oemCalResultsAnonLine(sortedProspects.length)}
+                </p>
+                <p className="mt-0.5 text-[11px] text-slate-400">
+                  <span className="break-all text-slate-300">{submittedUrl}</span>
+                  {usingFallback ? " · sample mode" : ""}
+                  {" · "}
+                  Use Cal · OEM next step below when ready.
+                </p>
+                {!isSignedIn && (
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Free signup keeps these matches in your workspace, then Pipeline.
+                  </p>
+                )}
               </div>
 
               {!isSignedIn && (
@@ -781,189 +970,17 @@ export default function Results() {
                 />
               )}
 
-              {choosingScout && (
-                <div className="mb-6 rounded-2xl border border-gray-200 bg-white px-5 py-4">
-                  <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex items-start gap-3">
-                      <Bot className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#FFB000" }} />
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          Activate SIGNAL sales motion
-                        </p>
-                        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-500">
-                          Choose materials, lead scope, and operating mode. SIGNAL will save leads to CRM and prepare the workflow before any outbound messages or follow-ups.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-800">
-                        <CheckCircle2 className="h-3 w-3" /> {activationIdsForScope().length} leads selected for review
-                      </span>
-                      {!isSignedIn && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-900">
-                          <LockKeyhole className="h-3 w-3" /> Account required to send
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid gap-4">
-                    <div className="border-b border-gray-100 pb-4">
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[10px] font-normal" style={{ color: "#047857" }}>01</span>
-                        <p className="text-[10px] font-normal uppercase tracking-widest" style={{ color: "#047857" }}>Sales materials</p>
-                      </div>
-                      <div className="grid gap-2 md:grid-cols-3">
-                        {MATERIAL_OPTIONS.map((option) => {
-                          const Icon = option.icon;
-                          const active = materialChoice === option.id;
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => setMaterialChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
-                              style={active
-                                ? { borderColor: "rgba(5,150,105,0.45)", background: "rgba(5,150,105,0.08)" }
-                                : { borderColor: "#e5e7eb", background: "#ffffff" }}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="flex min-w-0 items-center gap-2">
-                                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: active ? "#047857" : "#9ca3af" }} />
-                                  <span className="truncate text-xs font-bold text-gray-900">{option.title}</span>
-                                </span>
-                                {active && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-                              </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{option.desc}</p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {materialChoice === "upload" && (
-                        <label className="mt-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-500 hover:border-emerald-300">
-                          <span>{deckFileName || "Choose a PDF, PPT, or deck file"}</span>
-                          <span className="font-normal text-emerald-700">Browse</span>
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept=".pdf,.ppt,.pptx"
-                            onChange={(e) => setDeckFileName(e.target.files?.[0]?.name || "")}
-                          />
-                        </label>
-                      )}
-                    </div>
-
-                    <div className="border-b border-gray-100 pb-4">
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-normal text-emerald-700">02</span>
-                          <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-700">Lead scope</p>
-                        </div>
-                        <p className="text-[11px] text-gray-600">
-                          {selectedCount} selected
-                        </p>
-                      </div>
-                      <div className="grid gap-2 md:grid-cols-3">
-                        {SCOPE_OPTIONS.map((option) => {
-                          const active = scopeChoice === option.id;
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => setScopeChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
-                              style={active
-                                ? { borderColor: "rgba(5,150,105,0.42)", background: "rgba(5,150,105,0.08)" }
-                                : { borderColor: "#e5e7eb", background: "#ffffff" }}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-gray-900">{option.title}</p>
-                                {active && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-                              </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{option.desc}</p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="border-b border-gray-100 pb-4">
-                      <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[10px] font-normal text-emerald-700">03</span>
-                        <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-700">Automation mode</p>
-                      </div>
-                      <div className="grid gap-2 md:grid-cols-3">
-                        {MODE_OPTIONS.map((option) => {
-                          const active = modeChoice === option.id;
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => setModeChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
-                              style={active
-                                ? { borderColor: "rgba(5,150,105,0.42)", background: "rgba(5,150,105,0.08)" }
-                                : { borderColor: "#e5e7eb", background: "#ffffff" }}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-gray-900">{option.title}</p>
-                                {active ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-gray-400" />}
-                              </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{option.desc}</p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-emerald-800">SIGNAL starts with</p>
-                      <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-gray-700 md:grid-cols-4">
-                        <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-emerald-600" /> Lead evaluation</span>
-                        <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5 text-emerald-600" /> Sales strategy</span>
-                        <span className="flex items-center gap-1.5"><CalendarCheck className="h-3.5 w-3.5 text-emerald-600" /> Activity schedule</span>
-                        <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5 text-emerald-600" /> Reply alerts</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:items-center">
-                      <button
-                        type="button"
-                        onClick={() => activateScout()}
-                        disabled={activatingScout}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-amber-500 bg-amber-500 px-4 py-2.5 text-xs font-bold text-gray-900 transition-all hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {activatingScout ? "Creating activation..." : "Start SIGNAL activation"} <Send className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          activateScout({ mode: "manual", material: "skip", scope: "top" });
-                        }}
-                        disabled={activatingScout}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-gray-50 px-5 py-3 text-xs font-bold text-gray-800 transition-all hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        Skip setup and draft only <MousePointer2 className="h-3.5 w-3.5" />
-                      </button>
-                      <p className="text-[11px] text-gray-600 sm:ml-auto">
-                        Auth first. CRM capture first. Sending stays gated by your review.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {activatedCount > 0 && (
-                <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-                  <p className="text-sm font-bold text-emerald-900 mb-1">SIGNAL review queue created</p>
-                  <p className="text-xs text-gray-700">
+                <div className="mb-5 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-5">
+                  <p className="text-sm font-bold text-emerald-100 mb-1">SIGNAL review queue created</p>
+                  <p className="text-xs text-slate-300">
                     {activationId ? `Activation #${activationId}: ` : ""}
                     Leads were saved to CRM. Review SIGNAL&apos;s workflow, draft outreach, timing, and cadence before any outbound action begins.
                   </p>
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {sortedProspects.map((p, index) => {
                   const isSelected = selectedIds.has(p.id);
                   const isActive = activatedIds.has(p.id);
@@ -971,169 +988,190 @@ export default function Results() {
                   return (
                     <div
                       key={p.id}
-                      className={`rounded-2xl border bg-white shadow-sm overflow-hidden transition-colors ${
-                        isLocked ? "border-blue-200 hover:border-blue-300" : "border-gray-200 hover:border-emerald-300"
+                      className={`rounded-lg border bg-transparent overflow-hidden transition-colors ${
+                        isLocked ? "border-sky-400/40 hover:border-sky-400/60" : "border-white/20 hover:border-emerald-400/50"
                       }`}
                     >
-                      <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 flex flex-col sm:flex-row sm:items-start gap-4">
-                        <label className="flex items-center gap-2 text-xs text-gray-700 sm:pt-4">
+                      <div className="px-2.5 py-1.5 flex flex-col sm:flex-row sm:items-start gap-2">
+                        <label className="flex items-center gap-1.5 text-[10px] text-slate-400 sm:pt-0.5">
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleSelected(p.id)}
-                            className="h-4 w-4 accent-emerald-600"
+                            className="h-3.5 w-3.5 accent-emerald-600"
                           />
                           Select
                         </label>
-                        <div className="shrink-0 flex flex-col items-center gap-1">
-                          <div className="h-14 w-14 rounded-full border-2 flex items-center justify-center" style={{ borderColor: scoreColor(p.score), background: `${scoreColor(p.score)}12` }}>
-                            <span className="font-mono text-lg font-bold" style={{ color: scoreColor(p.score), fontFamily: "'JetBrains Mono', monospace" }}>
+                        <div className="shrink-0 flex items-center gap-1.5 sm:flex-col sm:gap-0">
+                          <div
+                            className="h-7 w-7 rounded-full border flex items-center justify-center bg-transparent"
+                            style={{ borderColor: scoreColor(p.score) }}
+                          >
+                            <span
+                              className="font-mono text-xs font-bold"
+                              style={{ color: scoreColor(p.score), fontFamily: "'JetBrains Mono', monospace" }}
+                            >
                               {p.score}
                             </span>
                           </div>
-                          <span className="text-[9px] text-gray-600 uppercase tracking-widest">score</span>
+                          <span className="text-[7px] text-slate-500 uppercase tracking-widest">score</span>
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h2 className={`text-base font-bold ${isLocked ? "text-gray-500" : "text-gray-900"}`}>
+                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                            <h2 className={`text-sm font-bold leading-tight ${isLocked ? "text-slate-500" : "text-slate-50"}`}>
                               {isLocked ? `Locked lead · ${p.industry}` : p.company}
                             </h2>
                             {!isLocked && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: isActive ? "#34d399" : "#10b981", background: isActive ? "rgba(52,211,153,0.12)" : "rgba(5,150,105,0.15)", border: isActive ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(5,150,105,0.3)" }}>
+                              <span
+                                className="text-[10px] font-semibold"
+                                style={{ color: isActive ? "#34d399" : "#6ee7b7" }}
+                              >
                                 {isActive ? "Review Queued" : p.stage}
                               </span>
                             )}
                             {isLocked && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-blue-900 bg-blue-50 border border-blue-200">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-sky-300">
                                 <LockKeyhole className="h-3 w-3" /> Sign up to unlock
                               </span>
                             )}
                             {p.signalAge && !isLocked && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-amber-900 bg-amber-50 border border-amber-200">
-                                {p.signalAge}
-                              </span>
+                              <span className="text-[10px] font-medium text-amber-300/90">{p.signalAge}</span>
                             )}
                           </div>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 mb-3">
+                          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0 text-[11px] text-slate-400">
                             {!isLocked && (
                               <>
-                                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{p.location}</span>
-                                <span className="flex items-center gap-1"><Users className="h-3 w-3" />{p.employees} employees</span>
+                                <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" />{p.location}</span>
+                                <span className="inline-flex items-center gap-0.5"><Users className="h-3 w-3" />{p.employees}</span>
                               </>
                             )}
                             <span>{p.industry}</span>
                             {isLocked && p.priorityTier && (
-                              <span className="font-semibold text-amber-800">{p.priorityTier}</span>
+                              <span className="font-semibold text-amber-300">{p.priorityTier}</span>
                             )}
-                          </div>
+                          </p>
 
                           {isLocked ? (
-                            <div className="flex min-w-0 items-start gap-2.5 overflow-hidden p-3 rounded-xl border border-blue-200 bg-blue-50/70">
-                              <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-800" />
-                              <p className="text-xs leading-relaxed text-blue-950">
-                                {p.priorityTier ? `${p.priorityTier} · ` : ""}
-                                {p.industry} buyer with robot-fit signal — sign up to read the full evidence and outreach draft.
-                              </p>
-                            </div>
+                            <p className="mt-1.5 border-l border-sky-400/50 pl-2 text-[11px] leading-snug text-sky-100/90">
+                              {p.priorityTier ? `${p.priorityTier} · ` : ""}
+                              {p.industry} buyer with robot-fit signal — sign up for full evidence.
+                            </p>
                           ) : (
-                            <div className="flex min-w-0 items-start gap-2.5 overflow-hidden p-3 rounded-xl" style={{ background: `${p.signalColor}0d`, border: `1px solid ${p.signalColor}25` }}>
-                              <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: p.signalColor }} />
-                              <div className="min-w-0">
-                                <span className="text-[10px] font-bold uppercase tracking-widest mr-2" style={{ color: p.signalColor }}>{p.signalType}</span>
-                                <span className="mt-1 block break-words text-xs font-normal leading-relaxed" style={{ color: "#FFB000", overflowWrap: "anywhere" }}>{p.signal}</span>
-                              </div>
-                            </div>
+                            <p className="mt-1.5 border-l pl-2 text-[11px] leading-snug" style={{ borderColor: `${p.signalColor}80` }}>
+                              <span className="font-semibold uppercase tracking-wide mr-1.5" style={{ color: p.signalColor }}>{p.signalType}</span>
+                              <span className="text-amber-200/90">{p.signal}</span>
+                            </p>
                           )}
                         </div>
                       </div>
 
                       {!isLocked && (p.shareSummary || (p.robotTypes && p.robotTypes.length > 0)) && (
-                        <div className="px-4 sm:px-6 pb-2">
-                          <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-800 mb-1">Intelligence</p>
-                            {p.shareSummary && (
-                              <p className="text-xs text-gray-700 leading-relaxed">{p.shareSummary}</p>
-                            )}
-                            {p.robotTypes && p.robotTypes.length > 0 && (
-                              <p className="mt-2 text-[11px] text-gray-700">
-                                <span className="font-semibold text-gray-900">Robots: </span>
-                                {p.robotTypes.join(" · ")}
-                              </p>
-                            )}
-                            {p.leadId != null && (
-                              <div className="mt-3">
-                                <LeadShareBar
-                                  lead={{
-                                    id: p.leadId,
-                                    company_name: p.company,
-                                    priority_tier: p.priorityTier,
-                                    share_summary: p.shareSummary,
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </div>
+                        <div className="mx-3 mb-1.5 border-l border-cyan-400/50 pl-2">
+                          <p className="text-[10px] leading-snug text-cyan-100/90">
+                            <span className="font-semibold uppercase tracking-wide text-cyan-300">Intelligence · </span>
+                            {p.shareSummary || ""}
+                            {p.robotTypes && p.robotTypes.length > 0 ? (
+                              <span className="text-slate-400"> · Robots: {p.robotTypes.join(" · ")}</span>
+                            ) : null}
+                          </p>
+                          {p.leadId != null && (
+                            <div className="mt-1">
+                              <LeadShareBar
+                                variant="dark"
+                                lead={{
+                                  id: p.leadId,
+                                  company_name: p.company,
+                                  priority_tier: p.priorityTier,
+                                  share_summary: p.shareSummary,
+                                }}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
 
                       {!isLocked && (
-                        <div className="px-4 sm:px-6 pb-4 grid gap-3 sm:grid-cols-2">
-                          <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-800">Why relevant</p>
-                            <p className="mb-3 block break-words rounded-lg border-l-2 border-amber-500 bg-amber-50 px-3 py-2 text-sm font-medium leading-relaxed text-amber-900" style={{ overflowWrap: "anywhere" }}>
-                              “{p.signal}”
-                            </p>
-                            <p className="break-words text-xs text-gray-700 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
-                          </div>
-                          <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-800">Score rationale</p>
-                            <p className="text-xs text-gray-700 leading-relaxed">{p.scoreReason}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {!isLocked && (
-                        <div className="px-4 sm:px-6 pb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                          <div className="flex items-center gap-2 flex-1">
-                            <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                            <span className="text-sm text-gray-800">{p.action}</span>
-                          </div>
-                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 text-emerald-800 bg-emerald-50 border border-emerald-200">
-                            {p.timing}
-                          </span>
-                        </div>
-                      )}
-
-                      {isActive && (
-                        <div className="mx-4 sm:mx-6 mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-900 mb-1">SIGNAL follow-up plan</p>
-                          <p className="text-xs text-gray-700 leading-relaxed">
-                            Draft signal-specific outreach, send first touch after approval, follow up in 3 business days, track response, and escalate technical questions when needed.
+                        <div className="mx-3 mb-1.5 border-l border-emerald-400/50 pl-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+                            Cal → you · seller brief
+                          </p>
+                          <p className="mt-0.5 text-[11px] font-semibold text-slate-100">{p.sellerBrief.headline}</p>
+                          <p className="mt-1 text-[10px] leading-snug text-slate-300">
+                            <span className="font-semibold text-amber-200">Why now · </span>
+                            {p.sellerBrief.whyNow}
+                          </p>
+                          <p className="mt-0.5 text-[10px] leading-snug text-slate-300">
+                            <span className="font-semibold text-amber-200">Pitch · </span>
+                            {p.sellerBrief.pitch}
+                          </p>
+                          <p className="mt-0.5 text-[10px] leading-snug text-slate-400">
+                            <span className="font-semibold text-cyan-300">Robot fit · </span>
+                            {p.sellerBrief.robotFit}
+                            <span className="text-slate-500"> · {p.scoreReason}</span>
                           </p>
                         </div>
                       )}
 
-                      <div className="px-4 sm:px-6 pb-5 border-t border-gray-100">
-                        <PipelineOutreachValuePanel
-                          deal={{
-                            id: p.leadId ?? 0,
-                            company: p.company,
-                            outreachSubject: p.outreachSubject,
-                            outreachBody: p.outreachBody,
-                          }}
-                          hasSession={isSignedIn}
-                          copied={copiedProspectId === p.id}
-                          onCopy={() => copyProspectDraft(p)}
-                          signupNext={resultsSignupNext}
-                          variant="compact"
-                          locked={isLocked}
-                        />
+                      {!isLocked && (
+                        <div className="mx-3 mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px]">
+                          <span className="inline-flex items-center gap-1 text-emerald-200">
+                            <ArrowRight className="h-3 w-3 text-emerald-300" />
+                            {p.sellerBrief.nextStep}
+                          </span>
+                          <span className="font-semibold text-emerald-300">{p.timing}</span>
+                          <button
+                            type="button"
+                            onClick={() => copyRfqPacket(p)}
+                            className="inline-flex items-center gap-1 border border-cyan-400/40 bg-transparent px-1.5 py-0.5 text-[10px] font-semibold text-cyan-100 hover:border-cyan-300"
+                          >
+                            <FileText className="h-3 w-3" />
+                            Copy RFQ note
+                          </button>
+                        </div>
+                      )}
+
+                      {isActive && (
+                        <p className="mx-3 mb-1.5 border-l border-emerald-400/50 pl-2 text-[10px] leading-snug text-emerald-100/90">
+                          <span className="font-semibold uppercase tracking-wide text-emerald-300">SIGNAL plan · </span>
+                          Draft outreach, send after approval, follow up in 3 days, track response.
+                        </p>
+                      )}
+
+                      <div className="mx-3 mb-2 flex flex-wrap items-center gap-2 border-t border-white/10 pt-1.5">
+                        {isLocked ? (
+                          <Link
+                            href={resultsSignupHref}
+                            className="inline-flex items-center gap-1.5 border border-amber-400/50 bg-transparent px-2.5 py-1 text-[11px] font-bold text-amber-100 hover:border-amber-300"
+                          >
+                            Sign up to unlock
+                            <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        ) : (
+                          <Link
+                            href={
+                              p.leadId != null
+                                ? `/pipeline?src=results_scan&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
+                                : fullPipelineHref
+                            }
+                            className="inline-flex items-center gap-1.5 border border-amber-400/50 bg-transparent px-2.5 py-1 text-[11px] font-bold text-amber-100 hover:border-amber-300"
+                          >
+                            Open in Pipeline
+                            <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              <ResultsNextStepCta
+                matchCount={sortedProspects.length}
+                pipelineHref={fullPipelineHref}
+                isSignedIn={isSignedIn}
+                signupHref={resultsSignupHref}
+              />
             </>
           )}
         </div>

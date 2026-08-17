@@ -164,19 +164,13 @@ export default function Signals() {
   const [tierLegend, setTierLegend] = useState(null);
   const [scoringSystem, setScoringSystem] = useState(null);
 
-  // ── Hero feed rotation ────────────────────────────────────────────────────
-  const FEED_VISIBLE  = 5;   // rows shown at once
-  const FEED_INTERVAL = 3200; // ms between rotations
-  const [feedOffset, setFeedOffset]       = useState(0);
-  const [feedExiting, setFeedExiting]     = useState(false); // top row fading out
-  const [feedEntering, setFeedEntering]   = useState(false); // bottom row fading in
-
   // Expanded deal for inline details
   const [expandedDealId, setExpandedDealId] = useState(null);
   // Which hot lead card has share menu open (for social share dropdown)
   const [shareMenuLeadId, setShareMenuLeadId] = useState(null);
   const [pipelineModalOpen, setPipelineModalOpen] = useState(false);
   const [pipelineModalInput, setPipelineModalInput] = useState('');
+  const [heroCompanyUrl, setHeroCompanyUrl] = useState('');
 
   /** Rotating company + opportunity lines per tier; from /api/leads + spotlight fallback */
   const [crmPreviewLists, setCrmPreviewLists] = useState({ active: [], hot: [], warm: [] });
@@ -408,29 +402,19 @@ export default function Signals() {
     };
   }, [homepageRetryTick]);
 
-  // ── Feed rotation effect ─────────────────────────────────────────────────
-  useEffect(() => {
-    const pool = dedupeHomepageLeads(hotLeads);
-    if (pool.length <= FEED_VISIBLE) return;
-    const timer = setInterval(() => {
-      // Fade out → advance offset → fade in
-      setFeedExiting(true);
-      setTimeout(() => {
-        setFeedOffset(prev => (prev + 1) % pool.length);
-        setFeedExiting(false);
-        setFeedEntering(true);
-        setTimeout(() => setFeedEntering(false), 400);
-      }, 300);
-    }, FEED_INTERVAL);
-    return () => clearInterval(timer);
-    // FEED_VISIBLE / FEED_INTERVAL are module-level constants
-  }, [hotLeads]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Use summary for counts (no full leads fetch)
   const hotCount = statsData.hotDeals ?? 0;
   const hottestSignal = hotLeads
     .flatMap(lead => (lead.signals || []).map(s => ({ ...s, company: lead.company_name })))
     .sort((a, b) => (b.signal_strength || 0) - (a.signal_strength || 0))[0];
+  const liveSignalLine = useMemo(() => {
+    const company = String(hottestSignal?.company || '').trim();
+    const rawSignal = String(hottestSignal?.signal_label || hottestSignal?.signal_type || '').trim();
+    const signal = rawSignal.replace(/_/g, ' ').toLowerCase();
+    if (company && signal) return `${company} - ${signal}`;
+    if (company) return `${company} - automation readiness signal detected`;
+    return 'Boeing Charleston - inspection robotics initiative';
+  }, [hottestSignal]);
 
   // Daily spotlight: API may still return same name twice if DB has duplicate companies; collapse here too.
   const topHotDeals = useMemo(() => dedupeHomepageLeads(hotLeads), [hotLeads]);
@@ -670,178 +654,69 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* Hero — headline left, compact quote + inline stats right (md+) */}
-        <div className="rr-hero">
-          <div className="rr-hero-inner">
-            <div className="rr-hero-headline-row">
-              <div className="rr-hero-headline-block">
-                <p className="rr-hero-signal-source-tag">
-                  14 signal types · 150+ sources
-                </p>
-                <h1 className="rr-hero-title-main rr-hero-title-bridge">
-                  <span className="rr-hero-title-part">Companies</span>
-                  <span className="rr-hero-title-arrow" aria-hidden="true">
-                    →
-                  </span>
-                  <span className="rr-hero-title-part">
-                    Ready <span className="rr-hero-title-em">For Robots</span>
-                  </span>
-                </h1>
-                <p className="rr-hero-subhead">
-                  Robot Automation Projects with Signal Intelligence.
-                </p>
-                <p className="rr-hero-lead">
-                  We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires. Each lead comes with signals you can act on.
-                </p>
-                <p className="rr-hero-lead-accent">
-                  Explore the pipeline and CRM to turn signals into qualified conversations.
-                </p>
-                <div className="rr-hero-cta">
-                  <button
-                    type="button"
-                    className="rr-btn-hero-primary rr-btn-hero-btn-wide"
-                    onClick={() => {
-                      setPipelineModalInput('');
-                      setPipelineModalOpen(true);
-                    }}
-                  >
-                    Preview pipeline
-                  </button>
-                  <Link href="/search" className="rr-btn-hero-secondary rr-btn-hero-secondary-emerald rr-btn-hero-btn-wide inline-block text-center">
-                    Search Leads
-                  </Link>
-                </div>
-                <p className="rr-hero-cta-hint">
-                  <strong>Preview pipeline</strong>: your company → matches.{' '}
-                  <strong>Search Leads</strong>: full database.
-                </p>
-              </div>
-              {/* ── Hero right panel: Supabase-inspired live pipeline card */}
-              <aside
-                className="rr-hero-ticker-panel rr-hero-ticker-panel--live rr-hero-ticker-panel--supabase rr-hero-ticker-panel--crm-names flex flex-col"
-                aria-label="Live signal feed"
-              >
-                <span className="rr-hero-ticker-accent" aria-hidden="true" />
-                <div className="rr-hero-ticker-header">
-                  <div className="rr-hero-ticker-header-left">
-                    <span className="rr-hero-ticker-sb-mark" aria-hidden="true" />
-                    <span className="rr-hero-ticker-header-title">Live pipeline</span>
-                  </div>
-                  <span className="rr-hero-ticker-live-pill">
-                    <span className="rr-hero-ticker-live-dot" aria-hidden="true" />
-                    Live
-                  </span>
-                </div>
-                <div className="rr-hero-ticker-metrics shrink-0 mb-3">
-                  <div className="rr-hero-ticker-metric">
-                    <span className="rr-hero-ticker-metric-label">Active</span>
-                    <span className="rr-hero-ticker-metric-value">{formatHeroCount(statsData.activeLeads, statsLoaded)}</span>
-                  </div>
-                  <div className="rr-hero-ticker-metric rr-hero-ticker-metric--hot">
-                    <span className="rr-hero-ticker-metric-label">Hot</span>
-                    <span className="rr-hero-ticker-metric-value">{formatHeroCount(statsData.hotDeals, statsLoaded)}</span>
-                  </div>
-                  <div className="rr-hero-ticker-metric rr-hero-ticker-metric--signals">
-                    <span className="rr-hero-ticker-metric-label">Signals</span>
-                    <span className="rr-hero-ticker-metric-value">{formatHeroCount(statsData.liveSignals, statsLoaded)}</span>
-                  </div>
-                </div>
+        {/* Hero — outcome first */}
+        <div className="max-w-5xl mx-auto px-6 pb-8 pt-6 md:pt-10 text-center">
+          <h1 className="text-[clamp(2.7rem,9vw,7rem)] font-extrabold leading-[0.9] tracking-[-0.04em] text-white">
+            <span className="block">Sell More</span>
+            <span className="block text-emerald-400">Robots.</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-4xl text-[clamp(1.02rem,2.1vw,1.9rem)] leading-[1.6] text-neutral-300">
+            Find companies that are ready for automation before your competitors do. We show you who they are, why they&apos;re ready, and how to start the conversation.
+          </p>
+          <p className="mt-7 inline-flex items-center gap-2 text-[clamp(0.95rem,1.6vw,1.4rem)] font-medium text-emerald-300">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+            {liveSignalLine}
+          </p>
 
-                <div className="rr-hero-ticker-divider shrink-0" />
+          <form
+            className="mx-auto mt-8 max-w-3xl"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const raw = heroCompanyUrl.trim();
+              if (!raw) return;
+              router.push(`/pipeline-results?url=${encodeURIComponent(raw)}`);
+            }}
+          >
+            <p className="text-[clamp(1rem,1.7vw,1.45rem)] text-neutral-300">Enter your website.</p>
+            <div className="mx-auto mt-4 max-w-2xl border-b border-neutral-700 pb-3 text-left">
+              <input
+                type="text"
+                autoComplete="url"
+                placeholder="Enter your company URL"
+                value={heroCompanyUrl}
+                onChange={(e) => setHeroCompanyUrl(e.target.value)}
+                className="w-full bg-transparent text-[clamp(1rem,2.8vw,2rem)] leading-tight text-white outline-none placeholder:text-neutral-500"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!heroCompanyUrl.trim()}
+              className="mt-6 inline-flex w-full max-w-sm items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-emerald-400 to-emerald-300 px-8 py-3.5 text-[clamp(1rem,2.3vw,1.75rem)] font-semibold text-neutral-950 transition hover:brightness-105 disabled:opacity-50"
+            >
+              Find Customers
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
 
-                {/* Rotating signal feed */}
-                <div
-                  className="flex-1 overflow-hidden"
-                  style={{
-                    transition: 'opacity 300ms ease',
-                    opacity: feedExiting ? 0 : 1,
-                  }}
-                >
-                  {loading ? (
-                    <div className="py-8 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#3ecf8e] animate-pulse" />
-                      <span className="text-xs text-neutral-500 font-mono">Loading rows…</span>
-                    </div>
-                  ) : topHotDeals.length === 0 ? (
-                    <p className="text-xs text-neutral-600 py-6">No signals yet — check back soon</p>
-                  ) : (
-                    <div>
-                      {Array.from({ length: Math.min(FEED_VISIBLE, topHotDeals.length) }, (_, i) => {
-                        const lead      = topHotDeals[(feedOffset + i) % topHotDeals.length];
-                        const tier      = lead.priority_tier || 'COLD';
-                        const isHot     = tier === 'HOT';
-                        const isWarm    = tier === 'WARM';
-                        const topSig    = (lead.signals || [])[0];
-                        const sigLabel  = (topSig?.signal_label || (topSig?.signal_type || '').replace(/_/g, ' ')).toLowerCase();
-                        const tierLabel = isHot ? 'HOT' : isWarm ? 'WARM' : 'EMRG';
-                        const tierColor = isHot ? '#34d399' : isWarm ? '#2dd4bf' : '#94a3b8';
-                        const extUrl = companyExternalHref(lead);
-                        return (
-                          <div
-                            key={`${feedOffset}-${i}`}
-                            role="link"
-                            tabIndex={0}
-                            onClick={() => router.push('/dashboard')}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                router.push('/dashboard');
-                              }
-                            }}
-                            className="rr-hero-ticker-row group flex items-start gap-3 py-3 px-1 -mx-1 rounded-md border-b border-white/[0.06] transition-colors last:border-b-0 cursor-pointer"
-                          >
-                            <span
-                              className="shrink-0 mt-1 w-0.5 self-stretch rounded-full"
-                              style={{ background: isHot ? '#34d399' : isWarm ? '#2dd4bf' : '#475569' }}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-baseline gap-2">
-                                <span
-                                  className="shrink-0 text-[9px] font-bold tracking-[0.14em] uppercase"
-                                  style={{ color: tierColor, minWidth: '2.6rem' }}
-                                >
-                                  {tierLabel}
-                                </span>
-                                <a
-                                  href={extUrl || '#'}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className={`${COMPANY_NAME_LINK_CLASS} text-sm font-semibold truncate`}
-                                >
-                                  {lead.company_name}
-                                </a>
-                              </div>
-                              <p className="text-[11px] text-neutral-500 truncate mt-0.5 leading-snug pl-[2.6rem]">
-                                {sigLabel && <span className="text-neutral-400">{sigLabel}</span>}
-                                {sigLabel && lead.industry && <span className="mx-1 text-neutral-700">·</span>}
-                                {lead.industry && <span>{lead.industry}</span>}
-                              </p>
-                            </div>
-                            <span className="rr-hero-ticker-row-arrow shrink-0 text-neutral-600 group-hover:text-[#3ecf8e] text-xs mt-1 transition-colors">→</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+          <p className="mx-auto mt-8 max-w-2xl border-t border-neutral-800 pt-4 text-sm text-neutral-400">
+            Already active?{' '}
+            <Link href="/login" className="font-semibold text-emerald-300 hover:text-emerald-200">
+              Sign in
+            </Link>
+          </p>
 
-                {/* Footer: live pulse + CTA + warm count */}
-                <div className="rr-hero-ticker-footer mt-3 pt-3 shrink-0 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#3ecf8e] animate-pulse shrink-0" />
-                    <Link
-                      href="/dashboard"
-                      className="rr-hero-ticker-footer-link text-[11px] font-semibold font-mono truncate"
-                    >
-                      View all {formatHeroCount(statsData.hotDeals, statsLoaded)} HOT →
-                    </Link>
-                  </div>
-                  <span className="text-[10px] text-neutral-500 tabular-nums font-mono shrink-0">
-                    {formatHeroCount(statsData.warmPipeline, statsLoaded)} warm
-                  </span>
-                </div>
-              </aside>
+          <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-4 border-t border-neutral-800 pt-8 sm:grid-cols-3">
+            <div>
+              <p className="text-[clamp(1.8rem,3.2vw,3rem)] font-bold text-white">{formatHeroCount(statsData.activeLeads, statsLoaded)}+</p>
+              <p className="mt-1 text-sm text-neutral-400">Robot-Ready Companies</p>
+            </div>
+            <div>
+              <p className="text-[clamp(1.8rem,3.2vw,3rem)] font-bold text-white">{formatHeroCount(statsData.liveSignals, statsLoaded)}+</p>
+              <p className="mt-1 text-sm text-neutral-400">Buying Signals Tracked Daily</p>
+            </div>
+            <div>
+              <p className="text-[clamp(1.8rem,3.2vw,3rem)] font-bold text-white">3.4x</p>
+              <p className="mt-1 text-sm text-neutral-400">More Meetings Booked</p>
             </div>
           </div>
         </div>

@@ -68,7 +68,7 @@ function escapeRegex(value: string): string {
 
 function highlightTerms(text: string, extraTerms: string[] = []) {
   if (!text) return null;
-  const terms = [...new Set([...SIGNAL_KEYWORDS, ...extraTerms].filter((t) => t && t.length > 1))].sort(
+  const terms = Array.from(new Set([...SIGNAL_KEYWORDS, ...extraTerms].filter((t) => t && t.length > 1))).sort(
     (a, b) => b.length - a.length,
   );
   if (!terms.length) return text;
@@ -166,7 +166,7 @@ function driversLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
   const labels = (lead.signals || [])
     .map((s) => s.signal_label?.trim())
     .filter((label): label is string => Boolean(label));
-  const unique = [...new Set(labels)].slice(0, 4);
+  const unique = Array.from(new Set(labels)).slice(0, 4);
   if (unique.length) return unique.join(" · ");
   const reasons = (lead.priority_reasons || [])
     .map((r) => humanizeReason(String(r)))

@@ -4,8 +4,10 @@ import NotFound from "@/pages/NotFound";
 import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
 import Results from "./pages/Results";
+import RobotAnalysisReview from "./pages/RobotAnalysisReview";
+import RobotDetailReview from "./pages/RobotDetailReview";
+import SalesSamples from "./pages/SalesSamples";
 import Pipeline from "./pages/Pipeline";
 import Compare from "./pages/Compare";
 import Signals from "./pages/Signals";
@@ -34,21 +36,42 @@ import Admin from "./pages/Admin";
 import SpecialProjectsAdmin from "./pages/SpecialProjectsAdmin";
 import ProjectPortal from "./pages/ProjectPortal";
 import Social from "./pages/Social";
-import ExperimentIdeas from "./pages/ExperimentIdeas";
+import Jobs from "./pages/Jobs";
+import ExperimentRedirect from "./pages/ExperimentRedirect";
 import Preview from "./pages/Preview";
 import Privacy from "./pages/Privacy";
 import VendorDesignBuilder from "./pages/VendorDesignBuilder";
 import DesignShare from "./pages/DesignShare";
+import IconReview from "./pages/IconReview";
 import { AuthProvider } from "./contexts/AuthContext";
 import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
 import VisitTracker from "./components/VisitTracker";
 
+/** /jobs → / (preserve query). Personalized /jobs/:slug stays. */
+function JobsIndexRedirect() {
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  return <Redirect to={`/${search}`} />;
+}
+
+function JourneyHomeRedirect() {
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  return <Redirect to={`/${search}`} />;
+}
+
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      {/* Product front door = Find jobs for your robot */}
+      <Route path="/" component={Jobs} />
+      <Route path="/robots/analysis/:analysisId" component={RobotAnalysisReview} />
+      <Route path="/robots/:robotId/review" component={RobotDetailReview} />
+      <Route path="/journey/url" component={JourneyHomeRedirect} />
+      <Route path="/journey/identity" component={JourneyHomeRedirect} />
+      <Route path="/journey/preview" component={JourneyHomeRedirect} />
+      <Route path="/journey/activate" component={JourneyHomeRedirect} />
       <Route path="/results" component={Results} />
+      <Route path="/sales/samples" component={SalesSamples} />
       <Route path="/pipeline" component={Pipeline} />
       <Route path="/compare" component={Compare} />
       <Route path="/signals" component={Signals} />
@@ -68,7 +91,10 @@ function Router() {
       <Route path="/pricing" component={Pricing} />
       <Route path="/billing/success" component={BillingSuccess} />
       <Route path="/social" component={Social} />
-      <Route path="/experiment" component={ExperimentIdeas} />
+      <Route path="/jobs/:slug" component={Jobs} />
+      <Route path="/jobs" component={JobsIndexRedirect} />
+      <Route path="/experiment" component={ExperimentRedirect} />
+      <Route path="/icon-review" component={IconReview} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/auth/callback" component={AuthCallback} />
@@ -86,6 +112,9 @@ function Router() {
         <Redirect to="/pipeline" />
       </Route>
       <Route path="/admin/special-projects" component={SpecialProjectsAdmin} />
+      <Route path="/admin/sales-samples">
+        <Redirect to="/sales/samples" />
+      </Route>
       <Route path="/admin" component={Admin} />
       <Route path="/p/:token" component={ProjectPortal} />
       <Route path="/readyforrobots/admin/prospects">

@@ -12,8 +12,8 @@ export function useTypewriter(text: string, speed = 28, startDelay = 200) {
     setDone(false);
     if (!text) return undefined;
     let i = 0;
-    let interval: ReturnType<typeof setInterval> | undefined;
-    const delay = window.setTimeout(() => {
+    let interval: number | undefined;
+    const delay: number = window.setTimeout(() => {
       interval = window.setInterval(() => {
         i += 1;
         setDisplayed(text.slice(0, i));
@@ -55,7 +55,7 @@ export function useSequentialTypewriter(
 
   useEffect(() => {
     if (!done || segmentIdx >= segments.length - 1) return undefined;
-    const t = window.setTimeout(() => setSegmentIdx((i) => i + 1), gapMs);
+    const t: number = window.setTimeout(() => setSegmentIdx((i) => i + 1), gapMs);
     return () => window.clearTimeout(t);
   }, [done, segmentIdx, segments.length, gapMs]);
 

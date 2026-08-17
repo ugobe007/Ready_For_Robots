@@ -1,0 +1,42 @@
+{
+  "submitted_url": "https://locusrobotics.com/",
+  "profile_confidence": "C",
+  "research_morphology": "amr",
+  "company": {
+    "name": "Locus Robotics",
+    "primary_domain": "locusrobotics.com"
+  },
+  "selected_product": {
+    "name": "Origin",
+    "display_class": "amr"
+  },
+  "facts": [
+    {
+      "predicate": "product_class",
+      "value": "amr",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.7941176470588236,
+      "evidence_span": "collaborative robots warehouse",
+      "source_id": "src_ec6f9c421442"
+    },
+    {
+      "predicate": "supports_tote_handling",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9529411764705883,
+      "evidence_span": "containers, including tote",
+      "source_id": "src_ec6f9c421442"
+    },
+    {
+      "predicate": "claims_warehouse_transport",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9,
+      "evidence_span": "Person-to-Goods",
+      "source_id": "src_ec6f9c421442"
+    }
+  ]
+}

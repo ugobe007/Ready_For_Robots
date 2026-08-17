@@ -107,7 +107,7 @@ export default function Privacy() {
       <PageHeroDark
         eyebrow="Legal"
         title="Privacy Policy"
-        subtitle="How ReadyForRobots collects, uses, and protects your information."
+        description="How ReadyForRobots collects, uses, and protects your information."
       />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 pb-16 -mt-4 relative z-10">
