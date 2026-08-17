@@ -5,6 +5,14 @@ States: MATCHED | UNMET | UNKNOWN | LIKELY
 LIKELY only when a named derivation in LIKELY_DERIVATIONS applies.
 
 No match percentage. No robot-type → family → jobs shortcut.
+
+Ranking (among POSSIBLE_MATCH only — the requirements gate already ran):
+1. No hard blocker / required capabilities satisfied (filter, not a score)
+2. Greater distinctive-capability utilization (this robot's grounded work
+   primitives the job actually uses — not generic mobility)
+3. Fewer critical unknowns
+4. Stronger job evidence (named site / gold spec)
+This is relevance ranking, not a Digit rule and not a family quota.
 """
 from __future__ import annotations
 
@@ -28,6 +36,36 @@ LIKELY = "LIKELY"
 VERDICT_POSSIBLE = "POSSIBLE_MATCH"
 VERDICT_NOT = "NOT_A_MATCH"
 VERDICT_INSUFFICIENT = "INSUFFICIENT"
+
+# Generic locomotion is a gate, not a differentiator.
+GENERIC_CAPABILITIES = frozenset({"mobile"})
+DISTINCTIVE_CAPABILITIES = frozenset(
+    {
+        "manipulate",
+        "dual_arm",
+        "tote_transport",
+        "hard_floor_scrub",
+        "inspect_route",
+        "load_unload",
+        "reach",
+    }
+)
+# Requirement id → robot primitives exercised when MATCHED or LIKELY.
+REQUIREMENT_EXERCISES = {
+    "manipulate_physical_case": frozenset({"manipulate"}),
+    "manipulate_part": frozenset({"manipulate"}),
+    "acquire_case_from_conveyor": frozenset({"manipulate", "load_unload"}),
+    "place_case_into_pallet": frozenset({"manipulate", "load_unload"}),
+    "relocate_totes_or_carts": frozenset({"tote_transport"}),
+    "hard_floor_scrub": frozenset({"hard_floor_scrub"}),
+    "inspect_route_mobility": frozenset({"inspect_route"}),
+    "reach_envelope": frozenset({"reach"}),
+    "mobility": frozenset({"mobile"}),
+    "indoor_navigation": frozenset({"mobile"}),
+}
+# Manipulation work also uses the robot's dual-arm / reach / load-unload stack
+# when those primitives are grounded. Tote-only work does not.
+MANIPULATION_STACK = frozenset({"dual_arm", "reach", "load_unload"})
 
 LIKELY_DERIVATIONS = {
     "fixed_cell_ok": "Job likely accepts a fixed cell; mobility is not required for this work.",
@@ -476,6 +514,50 @@ def match_job_spec(profile: dict[str, Any], job_key: str) -> JobMatchCard:
     return evaluate_job(profile, gold, corpus_row=row)
 
 
+def _present_distinctive_capabilities(caps: dict[str, DerivedCapability]) -> set[str]:
+    return {
+        key
+        for key, cap in caps.items()
+        if cap.present and key in DISTINCTIVE_CAPABILITIES
+    }
+
+
+def distinctive_utilization(
+    caps: dict[str, DerivedCapability],
+    card: JobMatchCard,
+) -> int:
+    """How many of this robot's distinctive grounded primitives the job uses.
+
+    Count is internal ranking only — never a match percentage in the API.
+    """
+    robot_distinctive = _present_distinctive_capabilities(caps)
+    exercised: set[str] = set()
+    for req in card.requirements:
+        if req.necessity not in {"required", "likely_ok"}:
+            continue
+        if req.state not in {MATCHED, LIKELY}:
+            continue
+        exercised |= REQUIREMENT_EXERCISES.get(req.id, frozenset())
+    if "manipulate" in exercised:
+        exercised |= MANIPULATION_STACK
+    exercised -= GENERIC_CAPABILITIES
+    return len(exercised & robot_distinctive)
+
+
+def _critical_unknown_count(card: JobMatchCard) -> int:
+    return sum(
+        1
+        for r in card.requirements
+        if r.necessity == "required" and r.state == UNKNOWN
+    )
+
+
+def _evidence_rank(card: JobMatchCard, gold_keys: set[str]) -> tuple[int, int]:
+    gold = 0 if card.job_key in gold_keys else 1
+    named = 0 if (card.company_name and card.locality) else 1
+    return gold, named
+
+
 def match_jobs_from_profile(
     profile: dict[str, Any],
     *,
@@ -513,25 +595,15 @@ def match_jobs_from_profile(
         cards.append(evaluate_job(profile, spec, corpus_row=row))
 
     possible = [c for c in cards if c.verdict == VERDICT_POSSIBLE]
-    distinctive = {
-        "manipulate_physical_case",
-        "manipulate_part",
-        "acquire_case_from_conveyor",
-        "place_case_into_pallet",
-        "relocate_totes_or_carts",
-        "hard_floor_scrub",
-        "inspect_route_mobility",
-    }
-
     gold_keys = set(load_gold_jobs())
 
     def rank_key(c: JobMatchCard) -> tuple:
-        reqs = [r for r in c.requirements if r.necessity == "required"]
-        dist_matched = sum(1 for r in reqs if r.id in distinctive and r.state == MATCHED)
-        dist_likely = sum(1 for r in reqs if r.id in distinctive and r.state == LIKELY)
-        dist_unknown = sum(1 for r in reqs if r.id in distinctive and r.state == UNKNOWN)
-        gold_rank = 0 if c.job_key in gold_keys else 1
-        return (-dist_matched, -dist_likely, dist_unknown, gold_rank, c.job_key)
+        return (
+            -distinctive_utilization(caps, c),
+            _critical_unknown_count(c),
+            *_evidence_rank(c, gold_keys),
+            c.job_key,
+        )
 
     possible.sort(key=rank_key)
     top = possible[:limit]
