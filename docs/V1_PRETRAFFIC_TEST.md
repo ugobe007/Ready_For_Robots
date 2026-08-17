@@ -30,7 +30,7 @@ Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 | 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **logic PASS** (requirement_v1 + utilization ranking on branch). **Production verification pending** — ranking is not the live gate until it is re-landed after this submit-workflow smoke and the four robot boards are re-run on Fly. |
 | 2a | **SUBMIT WORKFLOW** — atomic reveal, stable layout, `/api/robot-job-search` | **merged** / **production smoke PASS** — Vercel bundle calls `/api/robot-job-search`; uncached Stretch ~14s researching UI then one reveal; picker keeps public market tape (not a personal board); bad URL recovers with zero matched jobs. |
 | 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS; auth return still BLOCKED |
-| 4 | **TELEMETRY** — events + src/persona + shadow | **PARTIAL** — src/events mostly PASS; profile-path events newly available; persona BLOCKED |
+| 4 | **TELEMETRY** — events + src/persona + shadow | **PASS** — verified 2026-08-17: `rdd_capabilities_viewed` emits (RobotJobsExperiment:627) → `/api/track/visit` ingests + stores; `persona` (via `funnelBase()`) survives ingest and is queryable; signup funnel `signup_start→complete→first_save` aggregates with rates; unknown funnel stage rejected 400. Note: `marketing_conversion_snapshot` uses Postgres `->>` (runs live via `/api/analytics`); SQLite can't round-trip that JSON operator (same limit as `pipeline_cache_store`). |
 
 **Release sequence (gate, not a suggestion):** #13 smoke (done) → re-land ranking (#12) → four-board production verify → freeze M2 → auth continuity → telemetry → pre-traffic gate. Do not publish C04 / invite external traffic.
 
@@ -157,10 +157,24 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 | ID | Event / check | Outcome | Evidence |
 |----|---------------|---------|----------|
 | C1–C3, C6–C8, C10 | Core funnel + src | **PASS** | Prior |
-| C4 | `rdd_capabilities_viewed` | **READY TO VERIFY** | Profile path live; re-check on next funnel pass |
-| C9 | `persona` survival | **BLOCKED** | Needs persona slug session |
+| C4 | `rdd_capabilities_viewed` | **PASS** | Emit wired (RobotJobsExperiment:627 → `trackMarketingEvent` → `/api/track/visit`); ingest + storage verified (event stored as `visit`, `payload.path=/event/rdd_capabilities_viewed`) |
+| C9 | `persona` survival | **PASS** | `funnelBase()` attaches `persona` on `/jobs/:slug`; verified persisted + queryable in event payload (`integrator`, `oem`) across visit + funnel events |
 | C11 | Shadow logging fail-open | **PASS** (code) | Jobs UI now calls profile → can feed shadow |
 | C12 | Qualify copy | **PASS** | Prior |
+
+#### Telemetry — ingest verification (2026-08-17)
+
+Verified end-to-end against the local API (no writes to production analytics):
+
+| Check | Result |
+|-------|--------|
+| `POST /api/track/visit` `path=/event/rdd_capabilities_viewed` | **PASS** — `{status: tracked}`, row stored as `visit` |
+| `persona` in payload survives ingest | **PASS** — queryable: `integrator`, `oem` |
+| `POST /api/track/funnel` `signup_start` / `signup_complete` / `first_save` | **PASS** — each stored; `signup_funnel_metrics` aggregates with rates |
+| Unknown funnel stage | **PASS** — rejected `400 Unknown funnel stage` |
+| Emit wiring | **PASS** — `capabilities_viewed` (RobotJobsExperiment:627) + `funnelBase()` persona (line 387) |
+
+Reproduce: `POST /api/track/visit {"path":"/event/rdd_capabilities_viewed","persona":"oem","step":"capabilities_viewed"}` then read `site_analytics_events`. `marketing_conversion_snapshot` (Postgres `->>`) is exercised live via `GET /api/analytics`.
 
 ### Auth / qualify
 
@@ -189,7 +203,7 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 
 ### P2
 
-11–15. Health probe, capabilities_viewed verification, persona, shadow accrual confirm, keep Playwright script  
+11–15. Health probe; ~~capabilities_viewed verification~~ **DONE**; ~~persona~~ **DONE**; shadow accrual confirm (needs traffic); keep Playwright script  
 
 ---
 
