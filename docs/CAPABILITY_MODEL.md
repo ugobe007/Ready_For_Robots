@@ -3,7 +3,7 @@
 **Status:** Canonical strategy (updated 2026-08-17)  
 **Not:** Three products. One engine. Three entry points.  
 **Surface:** `/` is the Jobs terminal. `/experiment` is obsolete.  
-**Finite milestones (M1–M4):** [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) · **M2 MATCH TRUTH matcher PASS** against frozen Understanding; 20-shadow is M1 calibration only · traffic still paused until auth continuity + telemetry
+**Finite milestones (M1–M4):** [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) · **M2 unlocked** against frozen Understanding (A/B/C profiles); 20-shadow is M1 calibration only — not an M2 blocker · traffic still paused until MATCH TRUTH
 
 ---
 
@@ -213,7 +213,7 @@ Phases 1–3 remain **frozen** at v1.0 calibration ([`robot_understanding_v1.md`
 
 **M1 shadow** (first **20 real reviewed** profiles → one Understanding decision) continues in parallel as a **calibration instrument** — it does **not** block M2 prototyping.
 
-Traffic / C04 stay **paused** until auth continuity + telemetry ([`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md)). MATCH TRUTH matcher is **PASS**.
+Traffic / C04 stay **paused** until MATCH TRUTH clears ([`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md)).
 
 ### DO NOT CONTINUE YET
 
@@ -221,7 +221,7 @@ Traffic / C04 stay **paused** until auth continuity + telemetry ([`V1_PRETRAFFIC
 - Patching the old heuristic matcher to fake differentiation  
 - New capability families / channel research / OEM scrape scale  
 - More UI concepts / distributor–integrator product surfaces  
-- Expanding the product hypothesis / inviting traffic before auth continuity + telemetry  
+- Expanding the product hypothesis / inviting traffic before MATCH TRUTH  
 
 ### Operating rule (replaces the Aug 15 freeze)
 

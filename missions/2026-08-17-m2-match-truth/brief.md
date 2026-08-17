@@ -49,9 +49,9 @@ Requirement states only: **MATCHED · UNMET · UNKNOWN · LIKELY** (LIKELY only 
 
 ## Acceptance
 
-- [x] Same job → different verdicts for physically different robots
-- [x] Every positive match explains matched requirements / grounded why
-- [x] Every hard rejection names the unmet requirement
-- [x] Unknowns remain unknown
-- [x] No robot-type → family → jobs shortcut
-- [x] Corpus boards differentiate Agility, Locus, Avidbots, and a manipulation robot
+- [ ] Same job → different verdicts for physically different robots
+- [ ] Every positive match explains matched requirements / grounded why
+- [ ] Every hard rejection names the unmet requirement
+- [ ] Unknowns remain unknown
+- [ ] No robot-type → family → jobs shortcut
+- [ ] Corpus boards differentiate Agility, Locus, Avidbots, and a manipulation robot

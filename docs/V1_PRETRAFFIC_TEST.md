@@ -17,11 +17,11 @@ Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 | # | Gate | Status |
 |---|------|--------|
 | 1 | **PROFILE PATH** — production uses `/api/robot-profile` + multi-product selection | **PASS** (P0-A 2026-08-17) |
-| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **PASS** (matcher) — Novolex/cross-physics + utilization ranking. Digit top-10 is CNC/pallet first; tote/cart remain valid lower. Fly ranking ships with the utilization commit. Traffic still paused for funnel + telemetry. |
+| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **LIVE on Fly** (`requirement_v1`, `33fdc69`) — Novolex/cross-physics PASS; **Digit top-10 still looks AMR-heavy** (8/10 tote/cart). Do not retune matcher until human Digit review. Traffic paused. |
 | 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS; auth return still BLOCKED |
 | 4 | **TELEMETRY** — events + src/persona + shadow | **PARTIAL** — src/events mostly PASS; profile-path events newly available; persona BLOCKED |
 
-**Until submit-workflow smoke (#13) and auth return are proven: keep traffic paused. Do not publish C04 / invite external traffic.** MATCH TRUTH (matcher) is **PASS**. Sequence: #13 live smoke → then this ranking → auth continuity → telemetry.
+**Until MATCH TRUTH clears (and auth return is proven): keep traffic paused. Do not publish C04 / invite external traffic.**
 
 ---
 
@@ -165,8 +165,8 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 ### P0 — still blocking traffic
 
 1. ~~Deploy Jobs frontend that calls `/api/robot-profile`~~ **DONE (P0-A)**  
-2. ~~**MATCH TRUTH / M2**~~ **PASS (matcher)** — requirement satisfaction + distinctive-capability utilization ranking. Live ranking evaluation waits until submit workflow (#13) smoke. No further matcher research unless funnel tests fail.  
-2a. **Submit workflow** — atomic reveal, stable layout, profile cache. **#13 merged to main**; live smoke (Fly `/api/robot-job-search` + current Vercel bundle) before this ranking ships. Do not invite traffic while Find Jobs jitters.  
+2. **MATCH TRUTH / M2** — differentiated, explainable jobs (requirements matching; Novolex-shaped example). Ranking evaluation waits until submit workflow is stable.  
+2a. **Submit workflow** — atomic reveal, stable layout, profile cache (this mission). Pre-traffic: do not invite traffic while Find Jobs jitters.  
 3. ~~Multi-product OEM ask on live UI~~ **DONE (P0-A)**  
 4. Dexmate → Vega (may stay honest recover until Understanding reopen rule trips)
 
@@ -174,7 +174,7 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 
 5–8. Class / bleed / product_name alignment — largely M2  
 9. ~~Replace SIGNAL document title~~ **DONE**  
-10. **Prove auth return with controlled account** — **next**
+10. Prove auth return with controlled account  
 
 ### P2
 
@@ -189,8 +189,8 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 | Content / LinkedIn publishing (incl. C04) | **STOP** |
 | Invite external traffic | **NO** |
 | Understanding Phase 4 extractors / Blind retune | **DO NOT OPEN** |
-| **M2 matcher prototyping** | **DONE** for MATCH TRUTH — freeze unless funnel tests fail |
-| Next step | Submit workflow (#13) smoke → this ranking live → auth continuity → telemetry → pre-traffic gate |
+| **M2 matcher prototyping** | **ALLOWED** against grounded A/B/C profiles (propagate unknowns) — see milestones |
+| Next step | M2 MATCH TRUTH mission → re-run gates → then consider traffic |
 
 ---
 
