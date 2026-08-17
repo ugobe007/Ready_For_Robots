@@ -17,7 +17,7 @@ Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 | # | Gate | Status |
 |---|------|--------|
 | 1 | **PROFILE PATH** — production uses `/api/robot-profile` + multi-product selection | **PASS** (P0-A 2026-08-17) |
-| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **PROTOTYPED** locally (M2 2026-08-17) — not production-cleared until Fly+Vercel ship `requirement_v1` and a human reviewer agrees ~8/10 |
+| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **LIVE on Fly** (`requirement_v1`, `33fdc69`) — Novolex/cross-physics PASS; **Digit top-10 still looks AMR-heavy** (8/10 tote/cart). Do not retune matcher until human Digit review. Traffic paused. |
 | 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS; auth return still BLOCKED |
 | 4 | **TELEMETRY** — events + src/persona + shadow | **PARTIAL** — src/events mostly PASS; profile-path events newly available; persona BLOCKED |
 

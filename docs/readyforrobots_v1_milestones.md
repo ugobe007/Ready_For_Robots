@@ -116,7 +116,7 @@ Keep Understanding frozen
 | Priority | Work | Notes |
 |----------|------|-------|
 | **Now (engineering)** | **M2 Match** — requirement satisfaction (MATCHED / UNMET / UNKNOWN / LIKELY); Novolex + four-physics gold | In progress this mission |
-| Paused | Content / C04 / invite traffic | Until MATCH TRUTH clears — see [`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md) |
+| Paused | Content / C04 / invite traffic | Until MATCH TRUTH clears Digit distinctive review — see [`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md) |
 | Ongoing | Review shadow rows as they arrive | Observations only until 20; does not block M2 |
 
 Canonical content slate (when traffic resumes): [`CONTENT_SPRINT.md`](./CONTENT_SPRINT.md) · [`DISCOVERY_CONTENT.md`](./DISCOVERY_CONTENT.md) · [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md).
