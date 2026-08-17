@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.services.robot_url_safety import UrlSafetyError
+from app.services.robot_profile_cache import get_cached_profile, set_cached_profile
 from app.services.robot_understanding_v1 import build_robot_profile
 from app.services.understanding_shadow import record_shadow_observation
 
@@ -43,27 +44,42 @@ def post_robot_profile(
 ) -> dict[str, Any]:
     correlation = (body.correlation_id or x_correlation_id or "").strip() or str(uuid.uuid4())
     t0 = time.perf_counter()
+    timings: dict[str, Any] = {"resolve_ms": 0, "profile_ms": 0, "match_ms": 0, "cached": False}
     try:
-        profile = build_robot_profile(
-            body.url,
-            product_name=body.product,
-            max_sources=body.max_sources,
-        )
+        cached = get_cached_profile(body.url, body.product)
+        if cached:
+            timings["cached"] = True
+            payload = dict(cached)
+        else:
+            profile = build_robot_profile(
+                body.url,
+                product_name=body.product,
+                max_sources=body.max_sources,
+                timings=timings,
+            )
+            payload = profile.to_dict()
+            set_cached_profile(body.url, body.product, payload)
+            duration_ms = int((time.perf_counter() - t0) * 1000)
+            try:
+                record_shadow_observation(
+                    db,
+                    profile,
+                    research_duration_ms=duration_ms,
+                    correlation_id=correlation,
+                )
+            except Exception:
+                logger.exception("understanding_shadow_hook_failed")
     except UrlSafetyError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"profile_build_failed: {e}") from e
 
-    duration_ms = int((time.perf_counter() - t0) * 1000)
-    # Fail-open shadow write — never change or withhold the profile response.
-    try:
-        record_shadow_observation(
-            db,
-            profile,
-            research_duration_ms=duration_ms,
-            correlation_id=correlation,
-        )
-    except Exception:
-        logger.exception("understanding_shadow_hook_failed")
-
-    return profile.to_dict()
+    timings["total_ms"] = int((time.perf_counter() - t0) * 1000)
+    payload["timings"] = {
+        "resolve_ms": int(timings.get("resolve_ms") or 0),
+        "profile_ms": int(timings.get("profile_ms") or 0),
+        "match_ms": 0,
+        "total_ms": timings["total_ms"],
+        "cached": bool(timings.get("cached")),
+    }
+    return payload

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass
 from typing import Optional
 from urllib.parse import urlparse
@@ -174,12 +175,17 @@ def collect_source_pack(
     *,
     product_name: str | None = None,
     max_sources: int = 6,
+    deadline_monotonic: float | None = None,
 ) -> list[CollectedSource]:
     """
     Build a small typed pack: best same-domain evidence pages.
 
     When product_name is set, prefer pages that support that subject and demote
     sibling SKUs, accessories, and marketplaces.
+
+    deadline_monotonic: stop fetching additional pages after this clock so the
+    submit path can match on a grounded-enough pack instead of waiting for
+    every candidate. Extractors are unchanged.
     """
     origin = f"{urlparse(home.final_url).scheme}://{urlparse(home.final_url).netloc}"
     candidates: list[tuple[float, str, SourceType, float, str]] = []
@@ -284,7 +290,12 @@ def collect_source_pack(
     def _norm(u: str) -> str:
         return u.rstrip("/").lower().split("?")[0]
 
+    def _past_deadline() -> bool:
+        return deadline_monotonic is not None and time.monotonic() >= deadline_monotonic
+
     def _try_fetch(url: str, stype: SourceType, conf: float, hint: str) -> Optional[CollectedSource]:
+        if _past_deadline() and _norm(url) != _norm(home.final_url):
+            return None
         try:
             if _norm(url) == _norm(home.final_url):
                 page = home
@@ -338,6 +349,8 @@ def collect_source_pack(
         return CollectedSource(source=src, page=page)
 
     for _score, url, stype, conf, hint in candidates:
+        if _past_deadline() and out:
+            break
         key = _norm(url)
         if key in seen:
             continue
@@ -399,6 +412,8 @@ def collect_source_pack(
             hop_cands.sort(key=lambda t: (-t[0], t[1]))
             for _score, url, stype, conf, hint in hop_cands:
                 if len(out) >= max_sources:
+                    break
+                if _past_deadline():
                     break
                 key = _norm(url)
                 if key in seen:
