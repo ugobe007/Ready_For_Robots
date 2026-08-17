@@ -25,7 +25,7 @@ Requirement matching against frozen Understanding profiles produces different, e
 | Airport hard-floor scrub | Neo possible vs Vega/Digit/Origin rejected |
 | Inspection route | Spot possible vs Origin/Vega/Neo rejected |
 
-Corpus top boards split by work physics (Vega pallet/gripper, Origin transport, Neo scrub). Digit keeps tote/cart as valid possible matches but ranks distinctive manipulation / mobile-manipulation work first.
+Corpus top boards split by work physics (Vega pallet/gripper, Origin transport, Neo scrub, Digit tote+manip mix).
 
 ## Tests
 
@@ -46,20 +46,7 @@ Live smoke (`POST /api/robot-profile` then `/api/robot-job-match` with that prof
 
 Zero cross-physics bleed: Vega has no tote/scrub; Origin has no pallet/scrub; Neo has no pallet/tote.
 
-### MATCH TRUTH bar (production boards — after utilization ranking)
-
-Human review of the first live boards: Dexmate **PASS**, Locus **PASS**, Avidbots **PASS**, Digit match correctness **PASS**, Digit top-10 relevance **needed one general ranking fix** (not a Digit rule).
-
-Truth was working; ranking was not. Among jobs that already pass the requirements gate, rank higher the jobs that exercise more of **this robot’s distinctive grounded capabilities**. No family quota.
-
-Re-rank of the same four live production profiles (Understanding frozen; ranking only):
-
-| Robot | Tier | Top-10 physics | Novolex |
-|-------|------|----------------|---------|
-| Dexmate Vega | B | gripper 7 + pallet 3 | POSSIBLE MATCH — in top 10 |
-| Agility Digit | B | gripper 7 + pallet 3 | POSSIBLE MATCH — tote/cart remain possible, first tote at rank 17 (`origin_curascript_tempe`) |
-| Locus Origin | C | transport 7 + cart 3 | NOT A MATCH — unmet manipulation named |
-| Avidbots Neo | A | scrub 10 | NOT A MATCH — unmet manipulation named |
+### MATCH TRUTH bar (production boards — no matcher edits)
 
 | Clause | Result |
 |--------|--------|
@@ -68,10 +55,10 @@ Re-rank of the same four live production profiles (Understanding frozen; ranking
 | Every hard rejection names unmet requirement | **PASS** (Origin/Neo Novolex) |
 | Unknowns stay unknown | **PASS** |
 | Zero obvious cross-physics violations | **PASS** |
-| Vega board looks like Vega | **PASS** — CNC/palletize |
-| Neo / Origin boards look like those robots | **PASS** — Origin tote #1 is an excellent Origin match |
-| Digit board uses more of Digit first | **PASS** — CNC / machine load-unload, then pallet; legitimate tote/cart lower |
+| Vega board looks like Vega | **PASS** — CNC/palletize, not an AMR list |
+| Neo / Origin boards look like those robots | **PASS** |
+| **Digit board looks like Digit, not an AMR list with two manip cards** | **WATCH / not yet** — 8/10 top jobs overlap Origin tote/cart work; only `cnc_load` / `cnc_unload` are Digit-only in the top 10 |
 
-**MATCH TRUTH (matcher):** **PASS** on this ranking. Fly still serves `33fdc69` until this commit deploys. Traffic / C04 stay paused until **auth continuity + telemetry**. No further matcher research unless those tests reveal an actual failure.
+**Do not retune ranking until a human reviewer scores the Digit top-10.** Traffic / C04 still paused. Auth continuity and telemetry are next **after** that Digit distinctive call.
 
-Evidence (do not commit): `reports/m2_prod_smoke_20260817/` · `reports/m2_rank_rerun_20260817/`
+Evidence (do not commit): `reports/m2_prod_smoke_20260817/`

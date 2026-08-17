@@ -139,11 +139,9 @@ def test_corpus_boards_are_materially_differentiated():
     assert "neo_unifi_atl" in neo_keys
     assert neo_f.isdisjoint({"pallet", "gripper", "transport", "cart"})
 
-    # Digit top of board is distinctive work, not an AMR tote list.
-    # Tote/cart jobs remain possible (see utilization ranking test) but sit
-    # below manipulation/mobile-manipulation in the default window.
-    assert digit_f <= {"gripper", "pallet"}
+    assert digit_f & {"transport", "cart", "gripper", "pallet"}
     assert "scrub" not in digit_f
+    assert "origin_curascript_tempe" in digit_keys
 
     assert vega_keys != origin_keys
     assert origin_keys != neo_keys
@@ -154,38 +152,6 @@ def test_corpus_boards_are_materially_differentiated():
         assert job["verdict"] == VERDICT_POSSIBLE
         assert job["why"]
         assert "score" not in job
-
-
-def test_ranking_prefers_distinctive_capability_utilization():
-    """Among jobs that pass the gate, rank by how much of this robot is used.
-
-    Digit + tote is valid. Digit + machine load uses more of Digit, so it
-    ranks first. Origin + tote remains an excellent Origin match. No quota.
-    """
-    digit = match_jobs_from_profile(_profile("digit"), limit=40)
-    origin = match_jobs_from_profile(_profile("origin"), limit=12)
-
-    digit_jobs = digit["jobs"]
-    families = [j["tape_family"] for j in digit_jobs]
-    keys = [j["job_key"] for j in digit_jobs]
-    first_tote = next(
-        i for i, family in enumerate(families) if family in {"transport", "cart"}
-    )
-    assert first_tote > 0
-    assert all(family in {"gripper", "pallet"} for family in families[:first_tote])
-    assert "cnc_load" in keys
-    assert "cnc_unload" in keys
-    assert "hospital_med_carts" in keys
-    assert "origin_curascript_tempe" in keys
-    assert keys.index("cnc_load") < keys.index("hospital_med_carts")
-    assert keys.index("cnc_unload") < keys.index("origin_curascript_tempe")
-
-    origin_families = {j["tape_family"] for j in origin["jobs"]}
-    origin_keys = {j["job_key"] for j in origin["jobs"]}
-    assert origin_families <= {"transport", "cart"}
-    assert "origin_curascript_tempe" in origin_keys
-    assert origin["jobs"][0]["tape_family"] in {"transport", "cart"}
-    assert all("score" not in j for j in digit_jobs + origin["jobs"])
 
 
 def test_api_uses_requirement_matcher_when_profile_present():

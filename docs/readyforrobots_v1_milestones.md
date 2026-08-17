@@ -1,6 +1,6 @@
 # ReadyForRobots v1 — Product spine & finite milestones
 
-**Status:** Canonical product path (2026-08-17) — profile path live (P0-A); **MATCH TRUTH matcher PASS**; traffic paused until auth continuity + telemetry  
+**Status:** Canonical product path (2026-08-17) — profile path live (P0-A); **MATCH TRUTH logic PASS / production verification pending**; submit workflow merged / production smoke PASS; traffic paused  
 **Not:** Open-ended Understanding research. Not Blind retune.  
 **Related:** [`CAPABILITY_MODEL.md`](./CAPABILITY_MODEL.md) · [`EXPERIMENT_MODE.md`](./EXPERIMENT_MODE.md) · [`robot_understanding_v1.md`](./robot_understanding_v1.md) · shadow [`calibration/understanding_shadow_v1.md`](./calibration/understanding_shadow_v1.md) · pre-traffic [`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md)
 
@@ -98,14 +98,18 @@ Shadow is a **decision instrument for Understanding reopen / M1 accept**, not a 
 |-------|--------|
 | Understanding extractors / Blind retune | **FROZEN** |
 | Production profile path (`/api/robot-profile`) | **LIVE** (P0-A) |
-| M2 requirements matcher | **PASS** — requirement_v1 + distinctive-capability utilization ranking |
-| Traffic / C04 publish | **Still paused** until auth continuity + telemetry |
+| Submit workflow (`/api/robot-job-search`) | **LIVE** — production smoke PASS |
+| M2 requirements matcher | **logic PASS** / **production verification pending** |
+| Traffic / C04 publish | **paused** |
 
 ### Current operating loop
 
 ```
 Keep Understanding frozen
-  → MATCH TRUTH matcher PASS (requirement_v1 + utilization ranking)
+  → MATCH TRUTH logic PASS (requirement_v1 + utilization ranking on branch)
+  → Submit workflow production smoke PASS
+  → Re-land ranking and verify four boards on Fly
+  → Freeze M2 unless a real truth/ranking defect shows
   → Auth continuity + telemetry
   → Then invite traffic / content (shadow accrues organically)
   → At 20 reviewed shadows: one M1 Understanding decision (narrow reopen or accept)
@@ -115,9 +119,10 @@ Keep Understanding frozen
 
 | Priority | Work | Notes |
 |----------|------|-------|
-| **Now (engineering)** | **Auth continuity + telemetry** | MATCH TRUTH matcher PASS. No further matcher research unless funnel tests fail. |
-| Paused | Content / C04 / invite traffic | Until funnel + telemetry — see [`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md) |
-| Ongoing | Review shadow rows as they arrive | Observations only until 20; does not block M2 |
+| **Now (engineering)** | Re-land utilization ranking → four-board production verify | Logic PASS is not the production MATCH TRUTH gate |
+| Next | Auth continuity + telemetry | After ranking is live-verified |
+| Paused | Content / C04 / invite traffic | See [`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md) |
+| Ongoing | Review shadow rows as they arrive | Observations only until 20 |
 
 Canonical content slate (when traffic resumes): [`CONTENT_SPRINT.md`](./CONTENT_SPRINT.md) · [`DISCOVERY_CONTENT.md`](./DISCOVERY_CONTENT.md) · [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md).
 
@@ -151,7 +156,7 @@ Spec depth: [`robot_understanding_v1.md`](./robot_understanding_v1.md) Phase 4 s
 | Keep Understanding frozen; prototype M2 against A/B/C profiles | Treat Blind 20 or 20-shadow as a blocker on M2 |
 | Use shadow for a finite M1 Understanding decision | Chase Understanding perfection / Blind retune |
 | Propagate unknowns in match explanations | Patch old keyword matcher to fake board differentiation |
-| Pause traffic until MATCH TRUTH | Publish C04 / invite traffic on profile-path alone |
+| Pause traffic until the pre-traffic gate (submit smoke + ranking live-verify + auth + telemetry) | Treat MATCH TRUTH **logic PASS** as permission to publish C04 |
 | Accept honest B/C profiles as M2 inputs | Expand Channel / PLACE before FIND+QUALIFY demand |
 
 Freeze line for Understanding code: [`calibration/understanding_blind_20/V1_0_FREEZE.md`](./calibration/understanding_blind_20/V1_0_FREEZE.md).

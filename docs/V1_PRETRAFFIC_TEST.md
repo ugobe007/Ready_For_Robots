@@ -12,16 +12,27 @@
 
 # **NOT READY for traffic**
 
+Do **not** blur matcher-in-isolation with the production MATCH TRUTH gate.
+
+| Release line | Status |
+|--------------|--------|
+| **MATCH TRUTH** | **logic PASS** / **production verification pending** |
+| **SUBMIT WORKFLOW** | **merged** (#13) / **production smoke PASS** (visual 2026-08-17) |
+| **TRAFFIC** | **paused** |
+
+Architecture is unchanged: grounded profile first, then capability → workflow → requirements matching; unknowns stay unknown rather than inferred away.
+
 Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 
 | # | Gate | Status |
 |---|------|--------|
 | 1 | **PROFILE PATH** — production uses `/api/robot-profile` + multi-product selection | **PASS** (P0-A 2026-08-17) |
-| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **PASS** (matcher) — Novolex/cross-physics + utilization ranking. Digit top-10 is CNC/pallet first; tote/cart remain valid lower. Fly ranking ships with the utilization commit. Traffic still paused for funnel + telemetry. |
+| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **logic PASS** (requirement_v1 + utilization ranking on branch). **Production verification pending** — ranking is not the live gate until it is re-landed after this submit-workflow smoke and the four robot boards are re-run on Fly. |
+| 2a | **SUBMIT WORKFLOW** — atomic reveal, stable layout, `/api/robot-job-search` | **merged** / **production smoke PASS** — Vercel bundle calls `/api/robot-job-search`; uncached Stretch ~14s researching UI then one reveal; picker keeps public market tape (not a personal board); bad URL recovers with zero matched jobs. |
 | 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS; auth return still BLOCKED |
 | 4 | **TELEMETRY** — events + src/persona + shadow | **PARTIAL** — src/events mostly PASS; profile-path events newly available; persona BLOCKED |
 
-**Until submit-workflow smoke (#13) and auth return are proven: keep traffic paused. Do not publish C04 / invite external traffic.** MATCH TRUTH (matcher) is **PASS**. Sequence: #13 live smoke → then this ranking → auth continuity → telemetry.
+**Release sequence (gate, not a suggestion):** #13 smoke (done) → re-land ranking (#12) → four-board production verify → freeze M2 → auth continuity → telemetry → pre-traffic gate. Do not publish C04 / invite external traffic.
 
 ---
 
@@ -165,8 +176,8 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 ### P0 — still blocking traffic
 
 1. ~~Deploy Jobs frontend that calls `/api/robot-profile`~~ **DONE (P0-A)**  
-2. ~~**MATCH TRUTH / M2**~~ **PASS (matcher)** — requirement satisfaction + distinctive-capability utilization ranking. Live ranking evaluation waits until submit workflow (#13) smoke. No further matcher research unless funnel tests fail.  
-2a. **Submit workflow** — atomic reveal, stable layout, profile cache. **#13 merged to main**; live smoke (Fly `/api/robot-job-search` + current Vercel bundle) before this ranking ships. Do not invite traffic while Find Jobs jitters.  
+2. **MATCH TRUTH / M2** — **logic PASS** (requirements + distinctive-capability utilization ranking on the ranking branch). **Production verification pending.** Do not treat logic PASS as the production MATCH TRUTH gate.  
+2a. ~~**Submit workflow**~~ **merged / production smoke PASS** — atomic reveal, stable layout, profile cache. Public market tape during research/picker is intended; personal boards reveal once.  
 3. ~~Multi-product OEM ask on live UI~~ **DONE (P0-A)**  
 4. Dexmate → Vega (may stay honest recover until Understanding reopen rule trips)
 
@@ -174,7 +185,7 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 
 5–8. Class / bleed / product_name alignment — largely M2  
 9. ~~Replace SIGNAL document title~~ **DONE**  
-10. **Prove auth return with controlled account** — **next**
+10. Prove auth return with controlled account  
 
 ### P2
 
@@ -189,8 +200,8 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 | Content / LinkedIn publishing (incl. C04) | **STOP** |
 | Invite external traffic | **NO** |
 | Understanding Phase 4 extractors / Blind retune | **DO NOT OPEN** |
-| **M2 matcher prototyping** | **DONE** for MATCH TRUTH — freeze unless funnel tests fail |
-| Next step | Submit workflow (#13) smoke → this ranking live → auth continuity → telemetry → pre-traffic gate |
+| **M2 matcher prototyping** | **logic PASS** — freeze further matcher research unless production ranking verify exposes a truth/ranking defect |
+| Next step | Re-land utilization ranking → four-board production verify → freeze M2 → auth continuity → telemetry → pre-traffic gate |
 
 ---
 
