@@ -1,6 +1,6 @@
 # ReadyForRobots v1 — Product spine & finite milestones
 
-**Status:** Canonical product path (2026-08-17) — profile path live (P0-A); **M2 unlocked** against frozen Understanding; traffic paused until MATCH TRUTH  
+**Status:** Canonical product path (2026-08-17) — profile path live (P0-A); **MATCH TRUTH matcher PASS**; traffic paused until auth continuity + telemetry  
 **Not:** Open-ended Understanding research. Not Blind retune.  
 **Related:** [`CAPABILITY_MODEL.md`](./CAPABILITY_MODEL.md) · [`EXPERIMENT_MODE.md`](./EXPERIMENT_MODE.md) · [`robot_understanding_v1.md`](./robot_understanding_v1.md) · shadow [`calibration/understanding_shadow_v1.md`](./calibration/understanding_shadow_v1.md) · pre-traffic [`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md)
 
@@ -98,15 +98,15 @@ Shadow is a **decision instrument for Understanding reopen / M1 accept**, not a 
 |-------|--------|
 | Understanding extractors / Blind retune | **FROZEN** |
 | Production profile path (`/api/robot-profile`) | **LIVE** (P0-A) |
-| M2 requirements matcher | **ALLOWED to prototype** (next mission) |
-| Traffic / C04 publish | **Still paused** until MATCH TRUTH + funnel gates |
+| M2 requirements matcher | **PASS** — requirement_v1 + distinctive-capability utilization ranking |
+| Traffic / C04 publish | **Still paused** until auth continuity + telemetry |
 
 ### Current operating loop
 
 ```
 Keep Understanding frozen
-  → M2: capability → requirement match on A/B/C profiles (propagate unknowns)
-  → Clear MATCH TRUTH pre-traffic gate
+  → MATCH TRUTH matcher PASS (requirement_v1 + utilization ranking)
+  → Auth continuity + telemetry
   → Then invite traffic / content (shadow accrues organically)
   → At 20 reviewed shadows: one M1 Understanding decision (narrow reopen or accept)
 ```
@@ -115,8 +115,8 @@ Keep Understanding frozen
 
 | Priority | Work | Notes |
 |----------|------|-------|
-| **Now (engineering)** | **M2 Match** — requirement satisfaction (MATCHED / UNMET / UNKNOWN / LIKELY); Novolex + four-physics gold | In progress this mission |
-| Paused | Content / C04 / invite traffic | Until MATCH TRUTH clears Digit distinctive review — see [`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md) |
+| **Now (engineering)** | **Auth continuity + telemetry** | MATCH TRUTH matcher PASS. No further matcher research unless funnel tests fail. |
+| Paused | Content / C04 / invite traffic | Until funnel + telemetry — see [`V1_PRETRAFFIC_TEST.md`](./V1_PRETRAFFIC_TEST.md) |
 | Ongoing | Review shadow rows as they arrive | Observations only until 20; does not block M2 |
 
 Canonical content slate (when traffic resumes): [`CONTENT_SPRINT.md`](./CONTENT_SPRINT.md) · [`DISCOVERY_CONTENT.md`](./DISCOVERY_CONTENT.md) · [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md).
