@@ -18,7 +18,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackRobotJobsFunnel, trackSignupStart } from "@/lib/siteAnalytics";
-import { fetchRobotJobSearch, type RobotJobSearchResult } from "@/lib/robotJobSearch";
+import {
+  fetchRobotJobSearch,
+  type RobotJobSearchResult,
+} from "@/lib/robotJobSearch";
 import {
   formatFactLine,
   profileConfidenceCopy,
@@ -54,7 +57,8 @@ const TOP_SHOWN = 12;
 const MARKET_FOUND_BASE = 140;
 const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
-const eyebrow = "font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500";
+const eyebrow =
+  "font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const ctaClass =
   "inline-flex items-center justify-center gap-2 bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45";
 
@@ -62,7 +66,12 @@ const ctaClass =
 /* Session persistence (signup continuity)                             */
 /* ------------------------------------------------------------------ */
 
-type WorkspaceSession = { url: string; products: string[]; stage?: Stage };
+type WorkspaceSession = {
+  url: string;
+  products: string[];
+  stage?: Stage;
+  activeIdx?: number;
+};
 
 function saveWorkspaceSession(data: WorkspaceSession) {
   if (typeof window === "undefined") return;
@@ -88,7 +97,10 @@ function readWorkspaceSession(): WorkspaceSession | null {
 
 function srcFromQuery(): string | null {
   if (typeof window === "undefined") return null;
-  return (new URLSearchParams(window.location.search).get("src") || "").trim() || null;
+  return (
+    (new URLSearchParams(window.location.search).get("src") || "").trim() ||
+    null
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -98,8 +110,12 @@ function srcFromQuery(): string | null {
 function toAnalysis(res: RobotJobSearchResult): RobotAnalysis {
   const profile = (res.profile as RobotProfileResult | null) ?? null;
   const productName =
-    profile?.selected_product?.name || res.robot_name || res.company_name || "Your robot";
-  const companyName = profile?.company?.name || res.company_name || res.robot_name || "";
+    profile?.selected_product?.name ||
+    res.robot_name ||
+    res.company_name ||
+    "Your robot";
+  const companyName =
+    profile?.company?.name || res.company_name || res.robot_name || "";
   const tier = (profile?.profile_confidence as "A" | "B" | "C") || "C";
   return {
     productName,
@@ -115,32 +131,38 @@ function toAnalysis(res: RobotJobSearchResult): RobotAnalysis {
 function confirmedFacts(profile: RobotProfileResult | null) {
   if (!profile) return [];
   const confirmed = profile.facts.filter(
-    (f) => f.epistemic === "explicit" || f.epistemic === "strongly_inferred",
+    f => f.epistemic === "explicit" || f.epistemic === "strongly_inferred"
   );
   const byPred = new Map<string, (typeof confirmed)[number]>();
   for (const f of confirmed) {
     const prev = byPred.get(f.predicate);
     if (!prev || f.confidence > prev.confidence) byPred.set(f.predicate, f);
   }
-  return [...byPred.values()].sort((a, b) => b.confidence - a.confidence).slice(0, 10);
+  return [...byPred.values()]
+    .sort((a, b) => b.confidence - a.confidence)
+    .slice(0, 10);
 }
 
 function unknownFacts(profile: RobotProfileResult | null) {
   if (!profile) return [];
-  return profile.facts.filter((f) => f.epistemic === "unknown").slice(0, 8);
+  return profile.facts.filter(f => f.epistemic === "unknown").slice(0, 8);
 }
 
 function conflictFacts(profile: RobotProfileResult | null) {
   if (!profile) return [];
-  return profile.facts.filter((f) => f.epistemic === "contradicted").slice(0, 4);
+  return profile.facts.filter(f => f.epistemic === "contradicted").slice(0, 4);
 }
 
 /** Short capability summary line for a portfolio card. */
 function capabilitySummary(a: RobotAnalysis): string {
-  const labels = a.capabilities.filter((c) => c.label).map((c) => c.label);
+  const labels = a.capabilities.filter(c => c.label).map(c => c.label);
   if (labels.length) return labels.slice(0, 3).join(" · ");
-  const fams = [...new Set(a.jobs.map((j) => j.tape_family).filter(Boolean))] as string[];
-  return fams.slice(0, 3).join(" · ") || "Work matched to confirmed capabilities";
+  const fams = [
+    ...new Set(a.jobs.map(j => j.tape_family).filter(Boolean)),
+  ] as string[];
+  return (
+    fams.slice(0, 3).join(" · ") || "Work matched to confirmed capabilities"
+  );
 }
 
 function tierColor(tier: "A" | "B" | "C"): string {
@@ -174,7 +196,9 @@ export default function RobotJobsWorkspace() {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
   const sessionId = useRef(
-    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `rdd_${Date.now()}`,
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `rdd_${Date.now()}`
   );
   const srcRef = useRef(srcFromQuery());
   const viewedRef = useRef<Set<string>>(new Set());
@@ -189,7 +213,10 @@ export default function RobotJobsWorkspace() {
   const active = portfolio[activeIdx] || null;
 
   useEffect(() => {
-    trackRobotJobsFunnel("experiment_view", { ...funnelBase(), surface: "workspace" });
+    trackRobotJobsFunnel("experiment_view", {
+      ...funnelBase(),
+      surface: "workspace",
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -209,11 +236,22 @@ export default function RobotJobsWorkspace() {
   /* Core: research one or more robots                               */
   /* -------------------------------------------------------------- */
 
-  async function runSearch(submitUrl: string, productNames: string[], restoredStage?: Stage) {
+  async function runSearch(
+    submitUrl: string,
+    productNames: string[],
+    restoredStage?: Stage
+  ) {
     setError(null);
     setStage("research");
-    trackRobotJobsFunnel("robot_submitted", { ...funnelBase(), url: submitUrl, source: "url" });
-    trackRobotJobsFunnel("discovery_started", { ...funnelBase(), url: submitUrl });
+    trackRobotJobsFunnel("robot_submitted", {
+      ...funnelBase(),
+      url: submitUrl,
+      source: "url",
+    });
+    trackRobotJobsFunnel("discovery_started", {
+      ...funnelBase(),
+      url: submitUrl,
+    });
     saveWorkspaceSession({ url: submitUrl, products: productNames });
 
     try {
@@ -223,7 +261,10 @@ export default function RobotJobsWorkspace() {
         setCompanyName(res.company_name || res.robot_name || "");
         if (res.state === "select_product" && (res.products || []).length > 1) {
           setProducts(
-            (res.products || []).map((p) => ({ name: p.name, displayClass: p.display_class })),
+            (res.products || []).map(p => ({
+              name: p.name,
+              displayClass: p.display_class,
+            }))
           );
           setSelected([]);
           setStage("select");
@@ -235,11 +276,15 @@ export default function RobotJobsWorkspace() {
 
       // Specific product(s) chosen — one transaction each.
       const results = await Promise.all(
-        productNames.map((name) =>
-          fetchRobotJobSearch({ url: submitUrl, product: name }).catch(() => null),
-        ),
+        productNames.map(name =>
+          fetchRobotJobSearch({ url: submitUrl, product: name }).catch(
+            () => null
+          )
+        )
       );
-      const analyses = results.filter((r): r is RobotJobSearchResult => Boolean(r)).map(toAnalysis);
+      const analyses = results
+        .filter((r): r is RobotJobSearchResult => Boolean(r))
+        .map(toAnalysis);
       if (analyses.length === 0) {
         setError("We could not research those robots. Try another URL.");
         setStage("find");
@@ -252,13 +297,29 @@ export default function RobotJobsWorkspace() {
     }
   }
 
-  function finalizePortfolio(analyses: RobotAnalysis[], submitUrl: string, restoredStage?: Stage) {
+  function finalizePortfolio(
+    analyses: RobotAnalysis[],
+    submitUrl: string,
+    restoredStage?: Stage
+  ) {
     setPortfolio(analyses);
-    setActiveIdx(0);
+
+    const saved = readWorkspaceSession();
+    const restoredIdx =
+      saved?.activeIdx !== undefined && saved.activeIdx < analyses.length
+        ? saved.activeIdx
+        : 0;
+    const useRestoredIdx =
+      restoredStage === "jobs" &&
+      analyses.length > 1 &&
+      saved?.activeIdx !== undefined;
+    const finalIdx = useRestoredIdx ? restoredIdx : 0;
+
+    setActiveIdx(finalIdx);
     setExpandedJob(null);
     viewedRef.current = new Set();
     fired3Plus.current = false;
-    
+
     let targetStage: Stage;
     if (restoredStage === "jobs") {
       targetStage = "jobs";
@@ -269,13 +330,18 @@ export default function RobotJobsWorkspace() {
       targetStage = "review";
       setRailTab("profile");
     }
-    
-    saveWorkspaceSession({ url: submitUrl, products: analyses.map((a) => a.productName), stage: targetStage });
+
+    saveWorkspaceSession({
+      url: submitUrl,
+      products: analyses.map(a => a.productName),
+      stage: targetStage,
+      activeIdx: finalIdx,
+    });
     trackRobotJobsFunnel("capabilities_viewed", {
       ...funnelBase(),
-      robot_name: analyses[0]?.productName,
-      company_name: analyses[0]?.companyName,
-      profile_tier: analyses[0]?.tier,
+      robot_name: analyses[finalIdx]?.productName,
+      company_name: analyses[finalIdx]?.companyName,
+      profile_tier: analyses[finalIdx]?.tier,
       robots_analyzed: analyses.length,
     });
     setStage(targetStage);
@@ -293,13 +359,13 @@ export default function RobotJobsWorkspace() {
   }
 
   function toggleProduct(name: string) {
-    setSelected((prev) =>
-      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
+    setSelected(prev =>
+      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
     );
   }
 
   function confirmSelection(which: string[] | "all") {
-    const names = which === "all" ? products.map((p) => p.name) : which;
+    const names = which === "all" ? products.map(p => p.name) : which;
     if (names.length === 0) return;
     const saved = readWorkspaceSession();
     void runSearch(saved?.url || url, names);
@@ -309,6 +375,10 @@ export default function RobotJobsWorkspace() {
     setActiveIdx(idx);
     setRailTab("profile");
     setStage("review");
+    const saved = readWorkspaceSession();
+    if (saved?.url) {
+      saveWorkspaceSession({ ...saved, activeIdx: idx });
+    }
   }
 
   function findJobsForActive() {
@@ -316,7 +386,7 @@ export default function RobotJobsWorkspace() {
     setStage("jobs");
     const saved = readWorkspaceSession();
     if (saved?.url) {
-      saveWorkspaceSession({ ...saved, stage: "jobs" });
+      saveWorkspaceSession({ ...saved, stage: "jobs", activeIdx });
     }
     trackRobotJobsFunnel("discovery_complete", {
       ...funnelBase(),
@@ -336,24 +406,30 @@ export default function RobotJobsWorkspace() {
     });
     if (!fired3Plus.current && viewedRef.current.size >= 3) {
       fired3Plus.current = true;
-      trackRobotJobsFunnel("jobs_3plus_viewed", { ...funnelBase(), robot_name: active?.productName });
+      trackRobotJobsFunnel("jobs_3plus_viewed", {
+        ...funnelBase(),
+        robot_name: active?.productName,
+      });
     }
   }
 
   function toggleExpand(job: MatchJob) {
-    setExpandedJob((prev) => (prev === job.job_key ? null : job.job_key));
+    setExpandedJob(prev => (prev === job.job_key ? null : job.job_key));
     recordJobView(job);
   }
 
   function onQualify(job: MatchJob) {
     if (!active) return;
-    trackRobotJobsFunnel("qualify_opened", { ...funnelBase(), job_key: job.job_key });
+    trackRobotJobsFunnel("qualify_opened", {
+      ...funnelBase(),
+      job_key: job.job_key,
+    });
     trackRobotJobsFunnel("qualify_requested", {
       ...funnelBase(),
       job_key: job.job_key,
       robot_name: active.productName,
     });
-    setQualified((prev) => {
+    setQualified(prev => {
       const cur = prev[active.productName] || [];
       if (cur.includes(job.job_key)) return prev;
       return { ...prev, [active.productName]: [...cur, job.job_key] };
@@ -382,7 +458,9 @@ export default function RobotJobsWorkspace() {
 
   const signupHref = useMemo(() => {
     const params = new URLSearchParams();
-    const next = srcRef.current ? `/?src=${encodeURIComponent(srcRef.current)}` : "/";
+    const next = srcRef.current
+      ? `/?src=${encodeURIComponent(srcRef.current)}`
+      : "/";
     params.set("next", next);
     params.set("src", "robot_jobs");
     return `/signup?${params.toString()}`;
@@ -394,7 +472,11 @@ export default function RobotJobsWorkspace() {
       robot_name: active?.productName,
       job_count_total: active?.jobCount,
     });
-    trackSignupStart({ source: "robot_jobs", robot_name: active?.productName, ...funnelBase() });
+    trackSignupStart({
+      source: "robot_jobs",
+      robot_name: active?.productName,
+      ...funnelBase(),
+    });
   }
 
   /* -------------------------------------------------------------- */
@@ -432,12 +514,16 @@ export default function RobotJobsWorkspace() {
             portfolioCount={portfolio.length}
             railTab={railTab}
             showNav={showLeftJobsNav}
-            qualifiedCount={active ? (qualified[active.productName]?.length || 0) : 0}
-            onTab={(t) => {
+            qualifiedCount={
+              active ? qualified[active.productName]?.length || 0 : 0
+            }
+            onTab={t => {
               setRailTab(t);
               setStage(t === "profile" ? "review" : "jobs");
             }}
-            onBackToPortfolio={portfolio.length > 1 ? () => setStage("portfolio") : undefined}
+            onBackToPortfolio={
+              portfolio.length > 1 ? () => setStage("portfolio") : undefined
+            }
             onNewRobot={newRobot}
           />
         )}
@@ -478,10 +564,18 @@ export default function RobotJobsWorkspace() {
           <PortfolioPanel
             company={companyName || portfolio[0]?.companyName || ""}
             robots={portfolio}
-            onView={(idx) => {
+            onView={idx => {
               setActiveIdx(idx);
               setRailTab("jobs");
               setStage("jobs");
+              const saved = readWorkspaceSession();
+              if (saved?.url) {
+                saveWorkspaceSession({
+                  ...saved,
+                  stage: "jobs",
+                  activeIdx: idx,
+                });
+              }
               trackRobotJobsFunnel("discovery_complete", {
                 ...funnelBase(),
                 robot_name: portfolio[idx]?.productName,
@@ -539,16 +633,22 @@ function FindRail({
   const selecting = stage === "select";
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <p className={eyebrow}>{busy || selecting ? "Your robot" : "Find jobs"}</p>
+      <p className={eyebrow}>
+        {busy || selecting ? "Your robot" : "Find jobs"}
+      </p>
       <h1 className="mt-1 font-display text-3xl font-bold leading-tight tracking-tight text-slate-100">
-        {busy || selecting ? companyName || "Researching…" : (
+        {busy || selecting ? (
+          companyName || "Researching…"
+        ) : (
           <>
             Find <span className="text-emerald-400">jobs</span> for your robot.
           </>
         )}
       </h1>
       {!busy && !selecting && (
-        <p className="mt-3 text-sm text-slate-400">Robots need jobs. We find the work.</p>
+        <p className="mt-3 text-sm text-slate-400">
+          Robots need jobs. We find the work.
+        </p>
       )}
 
       <form onSubmit={onSubmit} className="mt-6">
@@ -559,12 +659,16 @@ function FindRail({
           id="robot-url"
           type="text"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={e => setUrl(e.target.value)}
           placeholder="Paste robot product URL"
           disabled={busy || selecting}
           className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 font-mono text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500 disabled:opacity-50"
         />
-        <button type="submit" disabled={busy || selecting || !url.trim()} className={`${ctaClass} mt-3 w-full`}>
+        <button
+          type="submit"
+          disabled={busy || selecting || !url.trim()}
+          className={`${ctaClass} mt-3 w-full`}
+        >
           {busy ? "Researching…" : selecting ? "Select robot →" : "Find Jobs →"}
         </button>
       </form>
@@ -589,9 +693,18 @@ function FindRail({
 
       <div className="mt-auto pt-6">
         <ol className="space-y-3 text-xs text-slate-400">
-          <li><span className="font-mono text-emerald-400">01</span> Show us your robot — we research the company and product.</li>
-          <li><span className="font-mono text-emerald-400">02</span> We build a robot profile — grounded facts from sources.</li>
-          <li><span className="font-mono text-emerald-400">03</span> Then we find the work — jobs matched to what we confirmed.</li>
+          <li>
+            <span className="font-mono text-emerald-400">01</span> Show us your
+            robot — we research the company and product.
+          </li>
+          <li>
+            <span className="font-mono text-emerald-400">02</span> We build a
+            robot profile — grounded facts from sources.
+          </li>
+          <li>
+            <span className="font-mono text-emerald-400">03</span> Then we find
+            the work — jobs matched to what we confirmed.
+          </li>
         </ol>
       </div>
     </div>
@@ -614,13 +727,15 @@ function PortfolioRail({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <p className={eyebrow}>Portfolio</p>
-      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">{company}</h2>
+      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">
+        {company}
+      </h2>
       <p className="mt-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
         {count} robots analyzed
       </p>
       <p className="mt-3 text-[12px] leading-snug text-slate-400">
-        Pick a robot to review its profile and jobs. Each robot keeps its own confirmed
-        capabilities and matched work.
+        Pick a robot to review its profile and jobs. Each robot keeps its own
+        confirmed capabilities and matched work.
       </p>
       <div className="mt-auto pt-6">
         <button
@@ -682,11 +797,15 @@ function ContextRail({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <p className={eyebrow}>Your robot</p>
-      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">{product}</h2>
+      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">
+        {product}
+      </h2>
       <p className="mt-0.5 text-sm text-slate-400">{company}</p>
       <div className="mt-3 flex items-center gap-2">
         <span className={eyebrow}>Profile</span>
-        <span className={`font-mono text-base font-bold ${tierColor(tier)}`}>{tier}</span>
+        <span className={`font-mono text-base font-bold ${tierColor(tier)}`}>
+          {tier}
+        </span>
         <span className="ml-2 font-mono text-[11px] font-bold text-emerald-300">
           {jobCount} JOBS
         </span>
@@ -739,13 +858,15 @@ function ResearchPanel({ company }: { company: string }) {
         {company || "Understanding your robot…"}
       </h2>
       <ul className="mt-8 space-y-4">
-        {steps.map((s) => (
+        {steps.map(s => (
           <li key={s.n} className="flex items-center gap-3">
             <span className="font-mono text-sm text-slate-500">{s.n}</span>
             <span className="flex-1 font-mono text-sm uppercase tracking-[0.08em] text-slate-200">
               {s.label}
             </span>
-            <span className={`font-mono text-sm ${s.done ? "text-emerald-400" : "text-amber-300"}`}>
+            <span
+              className={`font-mono text-sm ${s.done ? "text-emerald-400" : "text-amber-300"}`}
+            >
               {s.done ? "✓" : "→"}
             </span>
           </li>
@@ -783,11 +904,12 @@ function SelectPanel({
         We found {products.length} robots
       </h2>
       <p className="mt-2 text-sm text-slate-400">
-        Which robots should we find jobs for? Choose one, several, or all — {company || "this maker"} has {products.length}.
+        Which robots should we find jobs for? Choose one, several, or all —{" "}
+        {company || "this maker"} has {products.length}.
       </p>
 
       <div className="mt-6 grid gap-2 sm:grid-cols-2">
-        {products.map((p) => {
+        {products.map(p => {
           const on = selected.includes(p.name);
           return (
             <button
@@ -801,14 +923,18 @@ function SelectPanel({
               }`}
             >
               <span>
-                <span className="block text-sm font-bold text-slate-100">{p.name}</span>
+                <span className="block text-sm font-bold text-slate-100">
+                  {p.name}
+                </span>
                 {p.displayClass ? (
                   <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-slate-500">
                     {p.displayClass.replace(/_/g, " ")}
                   </span>
                 ) : null}
               </span>
-              <span className={`font-mono text-sm ${on ? "text-emerald-400" : "text-slate-600"}`}>
+              <span
+                className={`font-mono text-sm ${on ? "text-emerald-400" : "text-slate-600"}`}
+              >
                 {on ? "✓" : "+"}
               </span>
             </button>
@@ -862,11 +988,18 @@ function PortfolioPanel({
       </h2>
       <div className="mt-6 space-y-3">
         {robots.map((a, idx) => (
-          <div key={a.productName} className="border border-slate-600 bg-[#081126] p-4">
+          <div
+            key={a.productName}
+            className="border border-slate-600 bg-[#081126] p-4"
+          >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
-                <h3 className="font-display text-lg font-bold text-slate-100">{a.productName}</h3>
-                <p className="mt-0.5 text-xs text-slate-400">{capabilitySummary(a)}</p>
+                <h3 className="font-display text-lg font-bold text-slate-100">
+                  {a.productName}
+                </h3>
+                <p className="mt-0.5 text-xs text-slate-400">
+                  {capabilitySummary(a)}
+                </p>
               </div>
               <span className="font-mono text-sm font-bold text-emerald-300">
                 {a.jobCount} jobs
@@ -924,7 +1057,9 @@ function ReviewPanel({
       </div>
       <div className="mt-3 flex items-center gap-2">
         <span className={eyebrow}>Profile</span>
-        <span className={`font-mono text-lg font-bold ${tierColor(analysis.tier)}`}>
+        <span
+          className={`font-mono text-lg font-bold ${tierColor(analysis.tier)}`}
+        >
           {analysis.tier}
         </span>
       </div>
@@ -937,9 +1072,13 @@ function ReviewPanel({
           <p className={eyebrow}>We confirmed</p>
           {confirmed.length ? (
             <ul className="mt-2 space-y-1.5">
-              {confirmed.map((f) => (
-                <li key={f.id} className="text-[13px] leading-snug text-slate-200">
-                  <span className="text-emerald-400">✓</span> {formatFactLine(f)}
+              {confirmed.map(f => (
+                <li
+                  key={f.id}
+                  className="text-[13px] leading-snug text-slate-200"
+                >
+                  <span className="text-emerald-400">✓</span>{" "}
+                  {formatFactLine(f)}
                 </li>
               ))}
             </ul>
@@ -953,20 +1092,27 @@ function ReviewPanel({
           <p className={eyebrow}>Still unknown</p>
           {conflicts.length || unknowns.length ? (
             <ul className="mt-2 space-y-1.5">
-              {conflicts.map((f) => (
-                <li key={f.id} className="text-[13px] leading-snug text-amber-200/90">
+              {conflicts.map(f => (
+                <li
+                  key={f.id}
+                  className="text-[13px] leading-snug text-amber-200/90"
+                >
                   CONFLICTED — {formatFactLine(f)}
                 </li>
               ))}
-              {unknowns.map((f) => (
-                <li key={f.id} className="text-[13px] leading-snug text-amber-200/80">
+              {unknowns.map(f => (
+                <li
+                  key={f.id}
+                  className="text-[13px] leading-snug text-amber-200/80"
+                >
                   ? {formatFactLine(f)}
                 </li>
               ))}
             </ul>
           ) : (
             <p className="mt-2 text-[13px] leading-snug text-amber-200/80">
-              Some constraints may still be unknown even when not listed — verify before relying on this profile.
+              Some constraints may still be unknown even when not listed —
+              verify before relying on this profile.
             </p>
           )}
         </div>
@@ -980,7 +1126,7 @@ function ReviewPanel({
         {sources.length ? (
           <button
             type="button"
-            onClick={() => setShowSources((v) => !v)}
+            onClick={() => setShowSources(v => !v)}
             className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-400"
           >
             {showSources ? "Hide ←" : `View ${sources.length} →`}
@@ -989,7 +1135,7 @@ function ReviewPanel({
       </div>
       {showSources && (
         <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto border border-slate-700 p-2">
-          {sources.map((s) => (
+          {sources.map(s => (
             <li key={s.id} className="text-[11px] leading-snug">
               <span className="font-mono uppercase tracking-[0.08em] text-slate-500">
                 {sourceTypeLabel(s.source_type)}
@@ -1012,7 +1158,8 @@ function ReviewPanel({
           Find jobs for {analysis.productName} →
         </button>
         <p className="mt-2 text-[11px] text-slate-500">
-          Confirm we understood your robot — then we match {analysis.jobCount} jobs against these capabilities.
+          Confirm we understood your robot — then we match {analysis.jobCount}{" "}
+          jobs against these capabilities.
         </p>
       </div>
     </div>
@@ -1047,7 +1194,7 @@ function JobsPanel({
   const showQualifiedOnly = railTab === "qualified";
   const allJobs = analysis.jobs;
   const baseJobs = showQualifiedOnly
-    ? allJobs.filter((j) => qualifiedKeys.includes(j.job_key))
+    ? allJobs.filter(j => qualifiedKeys.includes(j.job_key))
     : allJobs;
   const visible = unlocked ? baseJobs : baseJobs.slice(0, PREVIEW_FREE);
   const hiddenCount = Math.max(0, analysis.jobCount - visible.length);
@@ -1057,15 +1204,20 @@ function JobsPanel({
     <div className="p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-2xl font-bold text-slate-100">
-          {showQualifiedOnly ? "Qualified jobs" : `Jobs for ${analysis.productName}`}
+          {showQualifiedOnly
+            ? "Qualified jobs"
+            : `Jobs for ${analysis.productName}`}
         </h2>
         <span className="font-mono text-sm font-bold text-emerald-300">
-          {showQualifiedOnly ? `${baseJobs.length} qualified` : `${analysis.jobCount} JOBS FOR ${analysis.productName.toUpperCase()}`}
+          {showQualifiedOnly
+            ? `${baseJobs.length} qualified`
+            : `${analysis.jobCount} JOBS FOR ${analysis.productName.toUpperCase()}`}
         </span>
       </div>
       {!showQualifiedOnly && (
         <p className="mt-1 text-[12px] text-slate-400">
-          We matched these jobs against {analysis.productName}'s confirmed capabilities · {shownOfTop} strongest matches shown
+          We matched these jobs against {analysis.productName}'s confirmed
+          capabilities · {shownOfTop} strongest matches shown
         </p>
       )}
 
@@ -1098,9 +1250,14 @@ function JobsPanel({
             {hiddenCount} more jobs for {analysis.productName}
           </p>
           <p className="mt-1 text-[12px] text-slate-400">
-            Create a free account to see every match, its evidence, and qualify the ones worth pursuing.
+            Create a free account to see every match, its evidence, and qualify
+            the ones worth pursuing.
           </p>
-          <Link href={signupHref} onClick={onSeeAll} className={`${ctaClass} mt-4`}>
+          <Link
+            href={signupHref}
+            onClick={onSeeAll}
+            className={`${ctaClass} mt-4`}
+          >
             See all {analysis.jobCount} jobs →
           </Link>
         </div>
@@ -1130,7 +1287,11 @@ function JobCard({
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
   return (
     <li className="border border-slate-600 bg-[#081126]">
-      <button type="button" onClick={onToggle} className="flex w-full items-start gap-3 p-4 text-left">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-start gap-3 p-4 text-left"
+      >
         <span className="mt-0.5 font-mono text-xs text-slate-500">
           {String(index).padStart(2, "0")}
         </span>
@@ -1145,9 +1306,13 @@ function JobCard({
           <span className="mt-1 block font-display text-base font-bold leading-snug text-slate-100">
             {job.title}
           </span>
-          {place ? <span className="mt-0.5 block text-xs text-slate-400">{place}</span> : null}
+          {place ? (
+            <span className="mt-0.5 block text-xs text-slate-400">{place}</span>
+          ) : null}
         </span>
-        <span className="font-mono text-xs text-slate-500">{expanded ? "−" : "+"}</span>
+        <span className="font-mono text-xs text-slate-500">
+          {expanded ? "−" : "+"}
+        </span>
       </button>
 
       {expanded && (
@@ -1156,8 +1321,11 @@ function JobCard({
             <div>
               <p className={eyebrow}>Why {robotName}</p>
               <ul className="mt-1 space-y-0.5">
-                {job.why.map((w) => (
-                  <li key={w} className="text-[13px] leading-snug text-slate-200">
+                {job.why.map(w => (
+                  <li
+                    key={w}
+                    className="text-[13px] leading-snug text-slate-200"
+                  >
                     <span className="text-emerald-400">✓</span> {w}
                   </li>
                 ))}
@@ -1169,8 +1337,13 @@ function JobCard({
             <div className="mt-3">
               <p className={eyebrow}>Still unknown</p>
               <ul className="mt-1 space-y-0.5">
-                {job.still_unknown.map((w) => (
-                  <li key={w} className="text-[13px] leading-snug text-amber-200/80">? {w}</li>
+                {job.still_unknown.map(w => (
+                  <li
+                    key={w}
+                    className="text-[13px] leading-snug text-amber-200/80"
+                  >
+                    ? {w}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -1182,13 +1355,20 @@ function JobCard({
                 Blocker
               </p>
               <ul className="mt-1 space-y-0.5">
-                {job.blockers.map((w) => (
-                  <li key={w} className="text-[13px] leading-snug text-slate-300">{w}</li>
+                {job.blockers.map(w => (
+                  <li
+                    key={w}
+                    className="text-[13px] leading-snug text-slate-300"
+                  >
+                    {w}
+                  </li>
                 ))}
               </ul>
             </div>
           ) : possible ? (
-            <p className="mt-3 text-[12px] text-slate-500">No confirmed blocker</p>
+            <p className="mt-3 text-[12px] text-slate-500">
+              No confirmed blocker
+            </p>
           ) : null}
 
           <button
