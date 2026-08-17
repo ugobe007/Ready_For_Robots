@@ -600,8 +600,8 @@ def match_jobs_from_profile(
     def rank_key(c: JobMatchCard) -> tuple:
         return (
             -distinctive_utilization(caps, c),
-            *_evidence_rank(c, gold_keys),
             _critical_unknown_count(c),
+            *_evidence_rank(c, gold_keys),
             c.job_key,
         )
 
