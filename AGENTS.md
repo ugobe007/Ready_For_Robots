@@ -46,6 +46,8 @@ From `docs/lead_quality_north_star.md` — optimize in this order:
 **Product architecture (WORK graph + learning loop):** `docs/rfr_intelligence_architecture.md`  
 Ontology: `docs/ontology/rfr_graph.v1.json` · Spine: `docs/work_unit_reconstruction.md` · Deployment Evidence: `docs/deployment_evidence_engine.md` · Worker: `docs/market_graph_loop.md`
 
+**Ontology library (copilot source of truth):** [`docs/ontology/README.md`](docs/ontology/README.md) — five linked ontologies (Entity · Hardware · Capability · Workflow · Job) + [`ROBOT_INFERENCE_RULES.md`](docs/ontology/ROBOT_INFERENCE_RULES.md). Core rule: `COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES → WORKFLOWS → JOB REQUIREMENTS → MATCH`; never `company → category → jobs`. Capabilities are grounded in hardware on the selected configuration and carry a confidence state (`EXPLICIT`/`DERIVED`/`LIKELY`/`UNKNOWN`/`CONFLICTED`).
+
 - **Graph** = structure (what connects robot ↔ job). Center is **WORK**, not company or robot.
 - **Loop** = OBSERVE LABOR → MATCH ROBOT → OBSERVE DEPLOYMENTS → STRENGTHEN/WEAKEN → KEEP WATCHING.
 - **Knowledge** generates predictions; **Deployment Evidence** (public sources) strengthens/weakens them — live telemetry is optional later.
