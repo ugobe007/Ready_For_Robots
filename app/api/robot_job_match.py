@@ -50,6 +50,8 @@ class RobotJobMatchOut(BaseModel):
     evidence_urls: list[str] = []
     robot_capabilities: Optional[dict[str, Any]] = None
     matcher: Optional[str] = None
+    # Truthful zero-state explainer (only set when no jobs matched).
+    zero_reason: Optional[str] = None
 
 
 def _empty(state: StateLiteral, name: str, url: str | None = None) -> dict[str, Any]:
@@ -105,13 +107,21 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
         else:
             return _empty("could_not_understand", name, url or None)
 
+    jobs_out = result.get("jobs") or []
+    job_count = int(result.get("job_count") or 0)
+    zero_reason = None
+    if not jobs_out and job_count == 0 and result.get("state") not in ("select_product",):
+        from app.services.zero_state import classify_zero_state, corpus_family_set
+
+        zero_reason = classify_zero_state(result.get("capabilities") or [], corpus_family_set())
+
     return {
         "state": result["state"],
         "robot_name": result.get("robot_name") or name,
         "capabilities": result.get("capabilities") or [],
         "families": result.get("families") or [],
-        "jobs": result.get("jobs") or [],
-        "job_count": int(result.get("job_count") or 0),
+        "jobs": jobs_out,
+        "job_count": job_count,
         "source_url": result.get("source_url") or (url or None),
         "company_name": result.get("company_name"),
         "products": result.get("products") or [],
@@ -121,4 +131,5 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
         "evidence_urls": result.get("evidence_urls") or [],
         "robot_capabilities": result.get("robot_capabilities"),
         "matcher": result.get("matcher"),
+        "zero_reason": zero_reason,
     }

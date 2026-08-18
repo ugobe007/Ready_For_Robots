@@ -58,6 +58,8 @@ export type RobotJobMatchResult = {
   robot_class?: string | null;
   evidence_urls?: string[];
   matcher?: string | null;
+  /** Truthful zero-state explainer (set only when job_count === 0). */
+  zero_reason?: "insufficient_profile_evidence" | "no_compatible_jobs" | "corpus_gap" | null;
 };
 
 export type RecoveryChip = "moves_materials" | "manipulates" | "cleans" | "inspects" | "other";
