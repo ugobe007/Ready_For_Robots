@@ -1025,7 +1025,7 @@ def _extract_from_page(
     # Require robot/parcel context — bare "sortation" is a warehouse function word
     # (Locus markets sortation workflows without being a sortation robot).
     for m in re.finditer(
-        r"\b(?:sortation\s+robots?|robotic\s+sortation|automated\s+sortation|"
+        r"\b(?:sortation\s+robots?|robotic\s+sort\w*|automated\s+sortation|"
         r"parcel\s+sort\w+|sort(?:s|ing)?\s+(?:parcels?|packages?)|put[-\s]to[-\s]wall)\b",
         text,
         re.I,
