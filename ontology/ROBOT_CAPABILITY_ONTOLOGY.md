@@ -30,6 +30,7 @@ tool_use`
 | `payload` | Documented carry weight | `carrying_capacity` |
 | `hard_floor_scrub` | Hard-floor scrubbing | `supports_hard_floor_scrubbing` \| scrubber class |
 | `surface_clean` | Restroom/fixture/carpet cleaning | `claims_surface_cleaning` |
+| `shelf_scan` | Retail shelf / inventory scanning | `claims_shelf_scan` |
 | `food_prep` | Food preparation / cooking | `claims_food_prep` |
 | `beverage_prep` | Drink / beverage preparation | `claims_beverage_prep` |
 | `inspect_route` | Mobile inspection route | quadruped class (named derivation) |

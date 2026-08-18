@@ -27,6 +27,7 @@ category leakage.
 | `serve` | `transport` (item delivery) | Run food/drinks to tables, room-service delivery |
 | `food_prep` | `food_prep` | Operate fry station, assemble bowls, grill line |
 | `beverage` | `beverage_prep` | Espresso bar, cocktail bar |
+| `shelf_scan` | `shelf_scan` | Retail inventory scanning — out-of-stocks, pricing, planogram (Simbe Tally) |
 | `clinical_delivery` | `transport` (item delivery) | Deliver meds pharmacy→units, specimens→lab, supply/meal/linen delivery |
 | `resident_services` | `transport` (item delivery) | Eldercare meals/linens/amenities to resident rooms |
 | `restroom` | `surface_clean` | Clean restrooms (toilets, urinals, floors) |

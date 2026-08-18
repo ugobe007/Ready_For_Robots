@@ -283,6 +283,18 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
         evidence=(surface_clean or {}).get("evidence_span") if surface_clean else None,
     )
 
+    # Retail shelf / inventory scanning (autonomous inventory robots, e.g. Simbe
+    # Tally). A distinct perception capability — scan, not manipulate/transport.
+    shelf_scan = _truthy(facts, "claims_shelf_scan")
+    caps["shelf_scan"] = DerivedCapability(
+        key="shelf_scan",
+        label="shelf / inventory scanning",
+        present=bool(shelf_scan),
+        derivation="explicit",
+        derived_from=["claims_shelf_scan"],
+        evidence=(shelf_scan or {}).get("evidence_span") if shelf_scan else None,
+    )
+
     scrub = _truthy(facts, "supports_hard_floor_scrubbing")
     if scrub:
         caps["hard_floor_scrub"] = DerivedCapability(

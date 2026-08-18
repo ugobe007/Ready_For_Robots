@@ -1323,6 +1323,124 @@
         "Cart weight",
         "Access control"
       ]
+    },
+    {
+      "job_key": "shelf_scan_grocery_oos",
+      "title": "Scan grocery aisles for out-of-stocks and pricing",
+      "industry": "Grocery",
+      "path": "STORE AISLES",
+      "company_name": "Harvest Market Foods",
+      "locality": "Springfield, MO",
+      "families": [],
+      "actions": [],
+      "text": "autonomous shelf scanning of grocery aisles for out-of-stocks pricing and planogram compliance",
+      "source": "vertical_seed",
+      "tape_family": "shelf_scan",
+      "unknowns": [
+        "Aisle geometry",
+        "Scan frequency"
+      ]
+    },
+    {
+      "job_key": "shelf_scan_bigbox_inventory",
+      "title": "Scan big-box store shelves for inventory accuracy",
+      "industry": "Home improvement retail",
+      "path": "STORE AISLES",
+      "company_name": "BuildRight Home Centers",
+      "locality": "Grand Rapids, MI",
+      "families": [],
+      "actions": [],
+      "text": "scan shelves for inventory accuracy and planogram gaps across a large-format store",
+      "source": "vertical_seed",
+      "tape_family": "shelf_scan",
+      "unknowns": [
+        "Store size",
+        "Upper-shelf coverage"
+      ]
+    },
+    {
+      "job_key": "shelf_scan_pharmacy_retail",
+      "title": "Scan retail pharmacy shelves for stock and price accuracy",
+      "industry": "Retail pharmacy",
+      "path": "STORE AISLES",
+      "company_name": "WellPath Pharmacy",
+      "locality": "Akron, OH",
+      "families": [],
+      "actions": [],
+      "text": "scan aisles for out-of-stock detection and price accuracy in retail pharmacy",
+      "source": "vertical_seed",
+      "tape_family": "shelf_scan",
+      "unknowns": [
+        "Scan cadence"
+      ]
+    },
+    {
+      "job_key": "airport_terminal_scrub",
+      "title": "Overnight scrub of terminal concourse floors",
+      "industry": "Airport",
+      "path": "CONCOURSE",
+      "company_name": "Metro International Airport",
+      "locality": "Charlotte, NC",
+      "families": [],
+      "actions": [],
+      "text": "overnight hard-floor scrubbing of airport terminal concourse floors",
+      "source": "vertical_seed",
+      "tape_family": "scrub",
+      "unknowns": [
+        "Concourse area",
+        "Traffic window"
+      ]
+    },
+    {
+      "job_key": "airport_gate_delivery",
+      "title": "Deliver supplies and amenities between gates and lounges",
+      "industry": "Airport",
+      "path": "SUPPLY → GATES",
+      "company_name": "Skyline Airport Services",
+      "locality": "Denver, CO",
+      "families": [],
+      "actions": [],
+      "text": "deliver supplies and amenities point to point between airport gates and lounges",
+      "source": "vertical_seed",
+      "tape_family": "transport",
+      "unknowns": [
+        "Load weight",
+        "Secure areas"
+      ]
+    },
+    {
+      "job_key": "clinical_meds_delivery_2",
+      "title": "Deliver medications and IV supplies to nursing floors",
+      "industry": "Hospital",
+      "path": "PHARMACY → FLOORS",
+      "company_name": "Summit Health Medical Center",
+      "locality": "Reno, NV",
+      "families": [],
+      "actions": [],
+      "text": "deliver medications and IV supplies from pharmacy to nursing floors",
+      "source": "vertical_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Elevator access"
+      ]
+    },
+    {
+      "job_key": "resident_meal_delivery_2",
+      "title": "Deliver meals and snacks to memory-care residents",
+      "industry": "Memory care",
+      "path": "KITCHEN → RESIDENT ROOMS",
+      "company_name": "Willow Bend Memory Care",
+      "locality": "Frisco, TX",
+      "families": [],
+      "actions": [],
+      "text": "deliver meals snacks and beverages to memory care resident rooms",
+      "source": "vertical_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Dining schedule",
+        "Access control"
+      ]
     }
   ]
 }
