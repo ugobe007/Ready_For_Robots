@@ -5,7 +5,7 @@
 
 > Find the Work. Match the Robot. Test the Truth. Learn from Every Deployment.
 
-This is the canonical product architecture. Implementation lands incrementally on top of existing catalog, primitives (`docs/ontology/primitives.v1.json`), robotability (`docs/robotability_schema_v1.json`), and the worker market-graph loop (`docs/market_graph_loop.md`).
+This is the canonical product architecture. Implementation lands incrementally on top of existing catalog, primitives (`ontology/primitives.v1.json`), robotability (`docs/robotability_schema_v1.json`), and the worker market-graph loop (`docs/market_graph_loop.md`).
 
 ---
 
@@ -96,8 +96,8 @@ One graph supports both sides of the marketplace without requiring a marketplace
 
 **DEPLOYMENT is crucial** — it closes the loop from prediction to truth.
 
-Canonical schema: `docs/ontology/rfr_graph.v1.json`  
-Work primitives: `docs/ontology/primitives.v1.json`  
+Canonical schema: `ontology/rfr_graph.v1.json`  
+Work primitives: `ontology/primitives.v1.json`  
 Robotability records: `docs/robotability_schema_v1.json`
 
 ---

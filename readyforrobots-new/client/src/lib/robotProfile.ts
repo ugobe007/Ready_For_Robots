@@ -164,5 +164,5 @@ export function profileConfidenceCopy(tier: "A" | "B" | "C"): string {
   if (tier === "B") {
     return "We confirmed the robot identity and key facts, but some technical constraints are still unknown.";
   }
-  return "Research coverage is incomplete — treat this profile cautiously; many constraints remain unknown.";
+  return "We confirmed the robot's identity and what it does, but research coverage is still limited — treat detailed specifications as unconfirmed.";
 }

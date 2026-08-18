@@ -188,6 +188,85 @@ def test_ranking_prefers_distinctive_capability_utilization():
     assert all("score" not in j for j in digit_jobs + origin["jobs"])
 
 
+def test_hospitality_delivery_robot_matches_transport_work():
+    """A hospitality/healthcare delivery robot (Relay) is a transport robot.
+
+    Regression: it used to derive only `mobile` and match 0 jobs because the
+    ontology had no slot for autonomous item delivery/transport (only warehouse
+    tote handling). It must now match transport/cart work — and only that.
+    """
+    from app.services.robot_capability_derive import derive_capabilities
+
+    profile = _profile("relay")
+    caps = derive_capabilities(profile)
+    assert caps["transport"].present  # delivery/transport grounded
+    assert not caps["manipulate"].present  # a delivery cart does not manipulate
+    assert caps["mobile"].present
+
+    result = match_jobs_from_profile(profile, limit=40)
+    assert result["job_count"] > 0  # no longer 0 jobs
+    families = {j["tape_family"] for j in result["jobs"]}
+    # Delivery/transport work only (incl. hospitality serving/room-service) — never
+    # manipulation, food/beverage prep, scrubbing, or inspection.
+    assert families <= {"transport", "cart", "serve"}
+    assert families & {"transport", "cart"}
+    assert families.isdisjoint({"pallet", "gripper", "scrub", "inspect", "food_prep", "beverage", "restroom"})
+    for job in result["jobs"]:
+        assert job["verdict"] == VERDICT_POSSIBLE
+        assert job["why"]
+        assert any("transport" in w.lower() or "delivery" in w.lower() or "mobile" in w.lower() for w in job["why"])
+    assert any(c["key"] == "transport" for c in result["capabilities"])
+
+
+def test_delivery_robot_does_not_match_manipulation_or_scrub():
+    """Truthful gating: a delivery robot must still be rejected from manipulation
+    and scrubbing work it cannot do."""
+    assert match_job_spec(_profile("relay"), "manip_novolex_kinston_nc").verdict == VERDICT_NOT
+    assert match_job_spec(_profile("relay"), "neo_unifi_atl").verdict == VERDICT_NOT
+
+
+def test_hospitality_ontology_serve_food_beverage_restroom():
+    """Hospitality is cross-cutting: serving, food prep, beverage prep, and
+    restroom cleaning are now first-class capabilities that map to their own work
+    families — and only those (no false industrial/scrub/manipulation matches)."""
+    from app.services.robot_capability_derive import derive_capabilities
+
+    def fams(name):
+        return {j["tape_family"] for j in match_jobs_from_profile(_profile(name), limit=60)["jobs"]}
+
+    # Serving robot (Bear Servi): item delivery → serve/transport work.
+    servi_caps = derive_capabilities(_profile("servi"))
+    assert servi_caps["transport"].present and servi_caps["mobile"].present
+    servi_fams = fams("servi")
+    assert "serve" in servi_fams
+    assert servi_fams <= {"serve", "transport", "cart"}
+    assert servi_fams.isdisjoint({"food_prep", "beverage", "restroom", "scrub", "pallet", "gripper", "inspect"})
+
+    # Food-prep robot (Miso Flippy): food_prep only — never industrial manipulation.
+    flippy_caps = derive_capabilities(_profile("flippy"))
+    assert flippy_caps["food_prep"].present
+    assert not flippy_caps["manipulate"].present  # distinct from CNC/case manipulation
+    assert fams("flippy") == {"food_prep"}
+
+    # Beverage robot (Richtech ADAM): beverage_prep work (dual-arm is incidental).
+    adam_fams = fams("adam")
+    assert "beverage" in adam_fams
+    assert adam_fams.isdisjoint({"scrub", "restroom", "transport", "serve"})
+
+    # Restroom cleaning robot (Somatic): restroom work, not hard-floor scrub jobs.
+    somatic_caps = derive_capabilities(_profile("somatic"))
+    assert somatic_caps["surface_clean"].present and somatic_caps["mobile"].present
+    assert fams("somatic") == {"restroom"}
+
+
+def test_frozen_robots_do_not_leak_into_hospitality_families():
+    """The new hospitality families require their specific capabilities, so the
+    frozen canonical robots (which lack them) never match hospitality work."""
+    for name in ("vega", "digit", "origin", "neo", "spot"):
+        fams = {j["tape_family"] for j in match_jobs_from_profile(_profile(name), limit=60)["jobs"]}
+        assert fams.isdisjoint({"food_prep", "beverage", "restroom"}), (name, fams)
+
+
 def test_api_uses_requirement_matcher_when_profile_present():
     from app.api.robot_job_match import RobotJobMatchIn, post_robot_job_match
 

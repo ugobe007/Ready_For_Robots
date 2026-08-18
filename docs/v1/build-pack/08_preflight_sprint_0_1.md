@@ -48,7 +48,7 @@ Hunter email enrichment, if ever used, stays behind post-V1 or admin-only tools 
 
 ## Repository structure
 
-Continue existing monorepo (see prior §1). Ontology lives in `docs/ontology/` + DB tables.
+Continue existing monorepo (see prior §1). Ontology lives in `ontology/` + DB tables.
 
 ## Migration plan (executing)
 

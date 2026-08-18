@@ -50,7 +50,7 @@ COPY app/        ./app/
 COPY worker/     ./worker/
 COPY migrations  ./migrations/
 COPY scripts/    ./scripts/
-COPY docs/ontology ./docs/ontology/
+COPY ontology ./ontology/
 COPY docs/calibration ./docs/calibration/
 COPY alembic.ini .
 COPY ["Robot Automation Signal Ontology.md", "./"]

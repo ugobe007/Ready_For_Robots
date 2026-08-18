@@ -239,7 +239,12 @@ export default function RobotJobsWorkspace() {
   const { session } = useAuth();
   const unlocked = Boolean(session);
 
-  const [stage, setStage] = useState<Stage>("find");
+  // On reload / auth return, start in the research state when a workspace session
+  // exists — restore() (mount effect) rebuilds it. Avoids a flash of the FIND +
+  // live-tape screen before the researched robot is restored.
+  const [stage, setStage] = useState<Stage>(() =>
+    readWorkspaceSession()?.url ? "research" : "find"
+  );
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [matching, setMatching] = useState(false);
@@ -288,17 +293,18 @@ export default function RobotJobsWorkspace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Restore discovery after auth return (signup continuity). */
+  /* Restore the researched robot on reload OR auth return (signup continuity).
+     Runs once on mount for everyone — not just logged-in users — so a page
+     reload no longer drops the user back to an empty FIND screen. */
   useEffect(() => {
-    if (!session || restoredRef.current) return;
-    if (stage !== "find") return;
+    if (restoredRef.current) return;
+    restoredRef.current = true;
     const saved = readWorkspaceSession();
     if (saved?.url) {
-      restoredRef.current = true;
       void restore(saved);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
+  }, []);
 
   /* -------------------------------------------------------------- */
   /* Data flow                                                       */
@@ -1019,7 +1025,9 @@ function ContextRail({
       <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">
         {product}
       </h2>
-      <p className="mt-0.5 text-sm text-slate-400">{company}</p>
+      {company && company !== product ? (
+        <p className="mt-0.5 text-sm text-slate-400">{company}</p>
+      ) : null}
       {!identityVerified ? (
         <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-amber-300/80">
           Company identity not fully verified
@@ -1295,7 +1303,12 @@ function ReviewPanel({
         <h2 className="font-display text-3xl font-bold tracking-tight text-slate-100">
           {analysis.productName}
         </h2>
-        <span className="text-lg text-slate-400">{companyIdentity(analysis).label}</span>
+        {companyIdentity(analysis).label &&
+        companyIdentity(analysis).label !== analysis.productName ? (
+          <span className="text-lg text-slate-400">
+            {companyIdentity(analysis).label}
+          </span>
+        ) : null}
       </div>
       {!companyIdentity(analysis).verified ? (
         <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-amber-300/80">

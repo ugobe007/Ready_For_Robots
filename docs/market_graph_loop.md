@@ -3,7 +3,7 @@
 Self-running **OBSERVE → LEARN** cycle for ReadyForRobots.
 
 Canonical product architecture: [`docs/rfr_intelligence_architecture.md`](rfr_intelligence_architecture.md)  
-Graph ontology: [`docs/ontology/rfr_graph.v1.json`](ontology/rfr_graph.v1.json)
+Graph ontology: [`ontology/rfr_graph.v1.json`](../ontology/rfr_graph.v1.json)
 
 **Graph** = what connects a robot to a job. **Loop** = what we learn after we act.
 
