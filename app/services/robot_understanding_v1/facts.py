@@ -105,6 +105,21 @@ def _page_product_slug(url: str) -> str:
         return ""
 
 
+def _page_leaf_slug(url: str) -> str:
+    """Normalized leaf (last) path segment, used to determine if the page itself
+    is generic regardless of parent segments."""
+    from urllib.parse import urlparse
+
+    try:
+        path = (urlparse(url).path or "").rstrip("/")
+        segments = [s for s in path.split("/") if s]
+        if not segments:
+            return ""
+        return re.sub(r"[^a-z0-9]", "", segments[-1].lower())
+    except Exception:
+        return ""
+
+
 def _page_is_prefix_sibling(page_slug: str, subj_key: str) -> bool:
     """True if the page is a dedicated page for a DIFFERENT product in the same
     prefix family (e.g. subject 'servi' vs page 'serviclean'/'serviplus'/'serviq').
@@ -204,7 +219,10 @@ def filter_facts_to_subject(
                 continue
             # (b) Generic/listing/company pages: require the subject to be named
             #     near the evidence, or the claim belongs to some other product.
-            if page_slug in _GENERIC_PAGE_SLUGS and not _subject_in_window(
+            #     Use the leaf segment to determine genericity so i18n/version
+            #     prefixes like /en-us/products or /v2/solutions stay gated.
+            page_leaf = _page_leaf_slug(page.final_url or item.source.url or "")
+            if page_leaf in _GENERIC_PAGE_SLUGS and not _subject_in_window(
                 prox_window, subj_key, tokens
             ):
                 dropped += 1
