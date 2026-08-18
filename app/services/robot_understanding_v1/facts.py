@@ -38,16 +38,98 @@ def extract_facts_from_sources(
     return facts
 
 
+# Capability/class claims that define what the *selected* product does. On a
+# multi-product company these must be attributed by evidence proximity, not by a
+# page-level subject match — a shared nav/footer that lists "Servi" makes every
+# sibling page (e.g. a floor-scrubber page) "support" Servi, which is how a
+# serving robot wrongly inherited scrubbing. Numeric constraints are always gated.
+_CONSTRAINT_PREDS = {
+    "carrying_capacity",
+    "battery_runtime",
+    "reach_or_workspace",
+    "max_speed",
+    "arm_count",
+    "degrees_of_freedom",
+    "ingress_protection",
+    "product_class",
+}
+_SCOPED_CAPABILITY_PREDS = {
+    "product_class",
+    "claims_surface_cleaning",
+    "supports_hard_floor_scrubbing",
+    "claims_food_prep",
+    "claims_beverage_prep",
+    "supports_tote_handling",
+    "claims_warehouse_transport",
+    "claims_item_delivery",
+    "claims_load_unload",
+    "has_dexterous_hands",
+    "end_effector",
+}
+# Proximity window: the subject name must appear within this many characters of
+# the capability evidence for the claim to attach to the selected product.
+_SUBJECT_PROXIMITY_CHARS = 240
+
+
+_GENERIC_PAGE_SLUGS = {
+    "", "faq", "about", "contact", "products", "product", "platform", "home",
+    "index", "restaurants", "restaurant", "pricing", "blog", "news", "support",
+    "solutions", "company", "technology", "hospitality", "healthcare", "warehouse",
+    "logistics", "industries", "resources", "en",
+}
+
+
+def _page_product_slug(url: str) -> str:
+    """Normalized last path segment — a page's product identity hint."""
+    from urllib.parse import urlparse
+
+    try:
+        seg = (urlparse(url).path or "").rstrip("/").split("/")[-1]
+    except Exception:
+        seg = ""
+    return re.sub(r"[^a-z0-9]", "", seg.lower())
+
+
+def _page_is_prefix_sibling(page_slug: str, subj_key: str) -> bool:
+    """True if the page is a dedicated page for a DIFFERENT product in the same
+    prefix family (e.g. subject 'servi' vs page 'serviclean'/'serviplus'/'serviq').
+    This is the case a bare word/proximity match cannot separate."""
+    if not page_slug or not subj_key or page_slug == subj_key:
+        return False
+    if page_slug in _GENERIC_PAGE_SLUGS:
+        return False
+    # Same family, more/less specific → a sibling variant page.
+    return page_slug.startswith(subj_key) or subj_key.startswith(page_slug)
+
+
+def _subject_in_window(window: str, subj_key: str, tokens: set[str]) -> bool:
+    """True if the selected product is named (as a whole word) in the window.
+    Word-bounded so "Servi" does not spuriously match "service"/"serving"."""
+    low = (window or "").lower()
+    for t in tokens:
+        t = (t or "").strip()
+        if len(t) < 3:
+            continue
+        if re.search(rf"(?<![a-z0-9]){re.escape(t)}(?![a-z0-9])", low):
+            return True
+    return False
+
+
 def filter_facts_to_subject(
     facts: list[RobotFact],
     collected: list[CollectedSource],
     *,
     subject: str,
+    multi_product: bool = False,
 ) -> tuple[list[RobotFact], int]:
     """
     Drop material facts whose evidence is about a sibling SKU / off-subject page.
 
     Gate: selected-product profiles must not present another model's payload etc.
+    When ``multi_product`` is set (the company sells several robots), capability
+    and product-class claims must be *subject-proximate* — a claim whose evidence
+    does not mention the selected product nearby belongs to a sibling product and
+    is dropped. Single-product companies keep the permissive page-level behaviour.
     """
     from app.services.robot_understanding_v1.sources import page_supports_subject, subject_tokens
 
@@ -56,16 +138,6 @@ def filter_facts_to_subject(
     tokens = subject_tokens(subject)
     kept: list[RobotFact] = []
     dropped = 0
-    constraint_preds = {
-        "carrying_capacity",
-        "battery_runtime",
-        "reach_or_workspace",
-        "max_speed",
-        "arm_count",
-        "degrees_of_freedom",
-        "ingress_protection",
-        "product_class",
-    }
 
     for f in facts:
         if f.epistemic == "unknown":
@@ -84,21 +156,45 @@ def filter_facts_to_subject(
         )
         span = f.evidence_span or ""
         window = span
+        prox_window = span
         if span and page.text:
             idx = page.text.find(span[: min(40, len(span))])
             if idx >= 0:
                 window = page.text[max(0, idx - 100) : idx + len(span) + 100]
+                prox_window = page.text[
+                    max(0, idx - _SUBJECT_PROXIMITY_CHARS)
+                    : idx + len(span) + _SUBJECT_PROXIMITY_CHARS
+                ]
 
-        if f.predicate in constraint_preds and not supports:
+        if f.predicate in _CONSTRAINT_PREDS and not supports:
             # Off-subject product/spec page — do not inherit constraints
             dropped += 1
             continue
 
-        if f.predicate in constraint_preds and _evidence_names_sibling_sku(
+        if f.predicate in _CONSTRAINT_PREDS and _evidence_names_sibling_sku(
             window, subj_key=subj_key, tokens=tokens
         ):
             dropped += 1
             continue
+
+        # Multi-product subject scoping for capability/class claims.
+        if multi_product and subj_key and f.predicate in _SCOPED_CAPABILITY_PREDS:
+            page_slug = _page_product_slug(page.final_url or item.source.url or "")
+            # (a) Dedicated page for a prefix-sibling product (e.g. /servi-clean
+            #     while researching Servi) — its capabilities are that product's,
+            #     not the subject's. A bare word/proximity match can't separate
+            #     these because the sibling name contains the subject name.
+            if _page_is_prefix_sibling(page_slug, subj_key):
+                dropped += 1
+                continue
+            # (b) Generic/listing/company pages: require the subject to be named
+            #     near the evidence, or the claim belongs to some other product.
+            if page_slug in _GENERIC_PAGE_SLUGS and not _subject_in_window(
+                prox_window, subj_key, tokens
+            ):
+                dropped += 1
+                continue
+
         kept.append(f)
     return kept, dropped
 
