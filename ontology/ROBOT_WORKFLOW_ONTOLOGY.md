@@ -28,6 +28,15 @@ category leakage.
 | `food_prep` | `food_prep` | Operate fry station, assemble bowls, grill line |
 | `beverage` | `beverage_prep` | Espresso bar, cocktail bar |
 | `shelf_scan` | `shelf_scan` | Retail inventory scanning — out-of-stocks, pricing, planogram (Simbe Tally) |
+| `pallet_move` | `pallet_move` | Pallet putaway, dock→storage, line feed (autonomous forklift — Fox, Third Wave) |
+| `trailer_unload` | `trailer_unload` | Unload cases from trailers/containers (Stretch, Pickle) |
+| `pick_pack` | `pick_pack` | Piece/each picking into orders (Ambi, Plus One, RightHand) |
+| `sortation` | `sortation` | Parcel sortation to destinations (put-to-wall) |
+| `disinfection` | `disinfect` | UV/surface disinfection of rooms (Xenex, UVD) |
+| `asrs` | `goods_to_person` | Store/retrieve goods to a picker (Exotec, AutoStore, Hai) |
+| `agriculture` | `agriculture_task` | Weeding/harvest/spray (Carbon Robotics, FarmWise) |
+| `construction` | `construction_task` | Layout/drywall/rebar/earthmoving (Dusty, Built) |
+| `mining` | `mining_task` | Haulage/drilling/loading |
 | `clinical_delivery` | `transport` (item delivery) | Deliver meds pharmacy→units, specimens→lab, supply/meal/linen delivery |
 | `resident_services` | `transport` (item delivery) | Eldercare meals/linens/amenities to resident rooms |
 | `restroom` | `surface_clean` | Clean restrooms (toilets, urinals, floors) |

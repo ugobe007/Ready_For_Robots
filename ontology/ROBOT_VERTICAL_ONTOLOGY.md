@@ -24,9 +24,9 @@ Loaded by `app/services/robot_ontology.py`; emitted by
 | `commercial` | Offices / reception / facilities | ✅ | reception & delivery robots |
 | `utilities` | Utilities / infrastructure inspection | ✅ | quadrupeds (Spot, DEEP) |
 | `indoor` | Generic indoor | ✅ | — |
-| `construction` | Construction / jobsite | ⬜ recognized, jobs out of scope | Dusty, Canvas |
-| `mining` | Mining / quarry | ⬜ recognized, jobs out of scope | — |
-| `agriculture` | Agriculture / farm | ⬜ recognized, jobs out of scope | Carbon Robotics, FarmWise |
+| `construction` | Construction / jobsite | ✅ | Dusty, Canvas, Built |
+| `mining` | Mining / quarry | ✅ | autonomous haulage/drilling |
+| `agriculture` | Agriculture / farm | ✅ | Carbon Robotics, FarmWise |
 
 ## Rules
 - The vertical is **descriptive context**, not a capability and not a job

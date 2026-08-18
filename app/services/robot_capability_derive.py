@@ -158,8 +158,18 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
     mobile_base = _truthy(facts, "has_mobile_base")
     nav = _truthy(facts, "autonomous_navigation")
     mobility_arch = _values(facts, "mobility_architecture")
-    mobile_class = bool(classes & (TRANSPORT_CLASSES | INSPECT_CLASSES | SCRUB_CLASSES | {"mobile_manipulator", "humanoid"}))
-    mobile = bool(mobile_base or nav or mobility_arch or mobile_class)
+    mobile_class = bool(classes & (TRANSPORT_CLASSES | INSPECT_CLASSES | SCRUB_CLASSES | {"mobile_manipulator", "humanoid", "autonomous_forklift"}))
+    # These Tier 1–3 domain functions are inherently mobile — a forklift, field,
+    # jobsite, mining, room-disinfection, or ASRS robot traverses its worksite.
+    # (Only the NEW capabilities — never in frozen fixtures — so boards are safe.)
+    domain_mobile = any(
+        _truthy(facts, p)
+        for p in (
+            "claims_pallet_handling", "claims_agriculture", "claims_construction",
+            "claims_mining", "claims_disinfection", "claims_goods_to_person",
+        )
+    )
+    mobile = bool(mobile_base or nav or mobility_arch or mobile_class or domain_mobile)
     if mobile:
         derived_from = []
         evidence_bits = []
@@ -294,6 +304,29 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
         derived_from=["claims_shelf_scan"],
         evidence=(shelf_scan or {}).get("evidence_span") if shelf_scan else None,
     )
+
+    # Tier 1–3 distinct capabilities (each grounded from its own claim, never
+    # generic manipulate — keeps a forklift/sorter/UV robot out of unrelated work).
+    for _key, _pred, _label in (
+        ("pallet_move", "claims_pallet_handling", "pallet handling / forklift"),
+        ("trailer_unload", "claims_trailer_unload", "trailer / container unloading"),
+        ("pick_pack", "claims_piece_pick", "piece picking / pack"),
+        ("sortation", "claims_sortation", "parcel sortation"),
+        ("disinfect", "claims_disinfection", "UV / surface disinfection"),
+        ("goods_to_person", "claims_goods_to_person", "ASRS goods-to-person"),
+        ("agriculture_task", "claims_agriculture", "agricultural field work"),
+        ("construction_task", "claims_construction", "construction site work"),
+        ("mining_task", "claims_mining", "mining / haulage"),
+    ):
+        _fact = _truthy(facts, _pred)
+        caps[_key] = DerivedCapability(
+            key=_key,
+            label=_label,
+            present=bool(_fact),
+            derivation="explicit",
+            derived_from=[_pred],
+            evidence=(_fact or {}).get("evidence_span") if _fact else None,
+        )
 
     scrub = _truthy(facts, "supports_hard_floor_scrubbing")
     if scrub:

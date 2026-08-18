@@ -56,6 +56,15 @@ REQUIREMENT_EXERCISES = {
     "prepare_beverage": frozenset({"beverage_prep"}),
     "clean_surfaces": frozenset({"surface_clean"}),
     "scan_shelves": frozenset({"shelf_scan"}),
+    "move_pallets": frozenset({"pallet_move"}),
+    "unload_trailer": frozenset({"trailer_unload"}),
+    "pick_and_pack": frozenset({"pick_pack"}),
+    "sort_parcels": frozenset({"sortation"}),
+    "disinfect_surfaces": frozenset({"disinfect"}),
+    "goods_to_person": frozenset({"goods_to_person"}),
+    "agriculture_task": frozenset({"agriculture_task"}),
+    "construction_task": frozenset({"construction_task"}),
+    "mining_task": frozenset({"mining_task"}),
     "hard_floor_scrub": frozenset({"hard_floor_scrub"}),
     "inspect_route_mobility": frozenset({"inspect_route"}),
     "reach_envelope": frozenset({"reach"}),
@@ -65,6 +74,21 @@ REQUIREMENT_EXERCISES = {
 # Manipulation work also uses the robot's dual-arm / reach / load-unload stack
 # when those primitives are grounded. Tote-only work does not.
 MANIPULATION_STACK = frozenset({"dual_arm", "reach", "load_unload"})
+
+# Requirements satisfied simply by one grounded distinctive capability being
+# present (rid -> (capability_key, unmet_reason)). Each is a distinct capability,
+# so a robot only matches the family when it genuinely has that capability.
+_SIMPLE_CAP_REQ = {
+    "move_pallets": ("pallet_move", "no grounded pallet-handling capability"),
+    "unload_trailer": ("trailer_unload", "no grounded trailer/container-unloading capability"),
+    "pick_and_pack": ("pick_pack", "no grounded piece-picking / pack capability"),
+    "sort_parcels": ("sortation", "no grounded sortation capability"),
+    "disinfect_surfaces": ("disinfect", "no grounded disinfection capability"),
+    "goods_to_person": ("goods_to_person", "no grounded ASRS goods-to-person capability"),
+    "agriculture_task": ("agriculture_task", "no grounded agricultural capability"),
+    "construction_task": ("construction_task", "no grounded construction capability"),
+    "mining_task": ("mining_task", "no grounded mining capability"),
+}
 
 LIKELY_DERIVATIONS = {
     "fixed_cell_ok": "Job likely accepts a fixed cell; mobility is not required for this work.",
@@ -174,6 +198,14 @@ def _eval_requirement(
     scrub = _cap(caps, "hard_floor_scrub")
     inspect = _cap(caps, "inspect_route")
     reach = _cap(caps, "reach")
+
+    # Distinct single-capability requirements (Tier 1–3 work families).
+    simple = _SIMPLE_CAP_REQ.get(rid)
+    if simple:
+        cap = _cap(caps, simple[0])
+        if cap.present:
+            return RequirementResult(rid, label, necessity, MATCHED, cap.evidence or cap.label)
+        return RequirementResult(rid, label, necessity, UNMET, simple[1])
 
     if rid == "manipulate_physical_case":
         if manip.present:
@@ -453,6 +485,15 @@ def _why_lines(
         add(_cap(caps, "shelf_scan").label)
         if _cap(caps, "mobile").present:
             add(_cap(caps, "mobile").label)
+    for _rid, _capkey in (
+        ("move_pallets", "pallet_move"), ("unload_trailer", "trailer_unload"),
+        ("pick_and_pack", "pick_pack"), ("sort_parcels", "sortation"),
+        ("disinfect_surfaces", "disinfect"), ("goods_to_person", "goods_to_person"),
+        ("agriculture_task", "agriculture_task"), ("construction_task", "construction_task"),
+        ("mining_task", "mining_task"),
+    ):
+        if _rid in needed:
+            add(_cap(caps, _capkey).label)
     if needed & {"hard_floor_scrub"}:
         add(_cap(caps, "hard_floor_scrub").label)
     if needed & {"inspect_route_mobility"}:
@@ -592,6 +633,54 @@ _RESTROOM_REQS = [
     {"id": "mobility", "label": "mobility between restrooms", "necessity": "required"},
     {"id": "hard_floor_scrub", "label": "hard-floor scrubbing", "necessity": "not_required"},
 ]
+# Tier 1 — warehouse: pallet handling, trailer unloading, piece pick/pack, sortation.
+_PALLET_MOVE_REQS = [
+    {"id": "move_pallets", "label": "move / handle pallets", "necessity": "required"},
+    {"id": "indoor_navigation", "label": "navigate the warehouse", "necessity": "required"},
+    {"id": "mobility", "label": "mobility between dock and storage", "necessity": "required"},
+    {"id": "payload_vs_object_weight", "label": "payload \u2265 pallet weight", "necessity": "required", "job_value": None, "unknown_reason": "pallet weight"},
+]
+_TRAILER_UNLOAD_REQS = [
+    {"id": "unload_trailer", "label": "unload cases from trailers/containers", "necessity": "required"},
+    {"id": "payload_vs_object_weight", "label": "payload \u2265 case weight", "necessity": "required", "job_value": None, "unknown_reason": "case weight"},
+    {"id": "throughput_vs_line_rate", "label": "throughput \u2265 unload rate", "necessity": "required", "job_value": None, "unknown_reason": "unload rate"},
+    {"id": "fixed_cell_ok", "label": "dock-fixed or mobile acceptable", "necessity": "likely_ok"},
+]
+_PICK_PACK_REQS = [
+    {"id": "pick_and_pack", "label": "piece/each picking and packing", "necessity": "required"},
+    {"id": "throughput_vs_line_rate", "label": "throughput \u2265 pick rate", "necessity": "required", "job_value": None, "unknown_reason": "pick rate"},
+    {"id": "compatible_grasp", "label": "compatible grasp/end effector", "necessity": "required", "job_value": None, "unknown_reason": "gripper suitability"},
+    {"id": "fixed_cell_ok", "label": "fixed pick cell acceptable", "necessity": "likely_ok"},
+]
+_SORTATION_REQS = [
+    {"id": "sort_parcels", "label": "sort parcels/packages to destinations", "necessity": "required"},
+    {"id": "throughput_vs_line_rate", "label": "throughput \u2265 sort rate", "necessity": "required", "job_value": None, "unknown_reason": "sort rate"},
+    {"id": "fixed_cell_ok", "label": "fixed sortation cell acceptable", "necessity": "likely_ok"},
+]
+# Tier 2 — disinfection + ASRS goods-to-person.
+_DISINFECT_REQS = [
+    {"id": "disinfect_surfaces", "label": "disinfect rooms / surfaces", "necessity": "required"},
+    {"id": "indoor_navigation", "label": "navigate the facility", "necessity": "required"},
+    {"id": "mobility", "label": "mobility between rooms", "necessity": "required"},
+]
+_ASRS_REQS = [
+    {"id": "goods_to_person", "label": "store and retrieve goods to a picker", "necessity": "required"},
+    {"id": "throughput_vs_line_rate", "label": "throughput \u2265 order rate", "necessity": "required", "job_value": None, "unknown_reason": "order rate"},
+]
+# Tier 3 — construction / mining / agriculture (recognized verticals, now matchable).
+_AGRICULTURE_REQS = [
+    {"id": "agriculture_task", "label": "field task (weed/harvest/spray/seed)", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the field", "necessity": "required"},
+]
+_CONSTRUCTION_REQS = [
+    {"id": "construction_task", "label": "jobsite task (layout/drywall/rebar/earthmoving)", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the jobsite", "necessity": "required"},
+]
+_MINING_REQS = [
+    {"id": "mining_task", "label": "mining task (haulage/drilling/loading)", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the site", "necessity": "required"},
+]
+
 # Retail — autonomous shelf / inventory scanning (Simbe Tally-class).
 _SHELF_SCAN_REQS = [
     {"id": "scan_shelves", "label": "scan shelves for inventory / out-of-stocks / planogram", "necessity": "required"},
@@ -637,6 +726,24 @@ def requirements_for_corpus_job(row: dict[str, Any]) -> list[dict[str, Any]]:
         return list(_BEVERAGE_REQS)
     if tape == "shelf_scan":
         return list(_SHELF_SCAN_REQS)
+    if tape == "pallet_move":
+        return list(_PALLET_MOVE_REQS)
+    if tape == "trailer_unload":
+        return list(_TRAILER_UNLOAD_REQS)
+    if tape == "pick_pack":
+        return list(_PICK_PACK_REQS)
+    if tape == "sortation":
+        return list(_SORTATION_REQS)
+    if tape == "disinfection":
+        return list(_DISINFECT_REQS)
+    if tape == "asrs":
+        return list(_ASRS_REQS)
+    if tape == "agriculture":
+        return list(_AGRICULTURE_REQS)
+    if tape == "construction":
+        return list(_CONSTRUCTION_REQS)
+    if tape == "mining":
+        return list(_MINING_REQS)
     if tape == "clinical_delivery":
         return list(_CLINICAL_REQS)
     if tape == "resident_services":
@@ -755,7 +862,11 @@ def match_jobs_from_profile(
         jobs_out.extend(c.to_api_job() for c in cards if c.verdict == VERDICT_NOT)
 
     cap_out = []
-    for key in ("dual_arm", "manipulate", "mobile", "reach", "tote_transport", "transport", "food_prep", "beverage_prep", "surface_clean", "shelf_scan", "hard_floor_scrub", "inspect_route"):
+    for key in ("dual_arm", "manipulate", "mobile", "reach", "tote_transport", "transport",
+                "food_prep", "beverage_prep", "surface_clean", "shelf_scan", "pallet_move",
+                "trailer_unload", "pick_pack", "sortation", "disinfect", "goods_to_person",
+                "agriculture_task", "construction_task", "mining_task",
+                "hard_floor_scrub", "inspect_route"):
         c = caps.get(key)
         if c and c.present:
             cap_out.append(
