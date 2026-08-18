@@ -27,7 +27,17 @@ category leakage.
 | `serve` | `transport` (item delivery) | Run food/drinks to tables, room-service delivery |
 | `food_prep` | `food_prep` | Operate fry station, assemble bowls, grill line |
 | `beverage` | `beverage_prep` | Espresso bar, cocktail bar |
+| `shelf_scan` | `shelf_scan` | Retail inventory scanning — out-of-stocks, pricing, planogram (Simbe Tally) |
+| `clinical_delivery` | `transport` (item delivery) | Deliver meds pharmacy→units, specimens→lab, supply/meal/linen delivery |
+| `resident_services` | `transport` (item delivery) | Eldercare meals/linens/amenities to resident rooms |
 | `restroom` | `surface_clean` | Clean restrooms (toilets, urinals, floors) |
+
+> Healthcare (`clinical_delivery`) and eldercare (`resident_services`) require the
+> autonomous item-delivery `transport` capability — **not** warehouse
+> `tote_transport` — so a hospital/eldercare delivery robot (Aethon, Relay) matches
+> them while a warehouse tote-AMR (Origin) does not. The `healthcare`/`eldercare`
+> vertical ([`ROBOT_VERTICAL_ONTOLOGY.md`](ROBOT_VERTICAL_ONTOLOGY.md)) labels
+> *where*; these families are the *work*.
 
 > Broader target workflows — trailer unloading, kitting, pick/pack (robot-side),
 > line replenishment as a distinct family, hospital delivery as a distinct family

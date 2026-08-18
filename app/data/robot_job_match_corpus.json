@@ -1204,6 +1204,243 @@
       "unknowns": [
         "Traffic level"
       ]
+    },
+    {
+      "job_key": "clinical_meds_delivery",
+      "title": "Deliver medications from pharmacy to patient units",
+      "industry": "Hospital",
+      "path": "PHARMACY → PATIENT UNITS",
+      "company_name": "Mercy General Hospital",
+      "locality": "Columbus, OH",
+      "families": [],
+      "actions": [],
+      "text": "deliver medications from central pharmacy to nursing units hospital clinical delivery",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Elevator access",
+        "Secure handoff"
+      ]
+    },
+    {
+      "job_key": "clinical_specimen_runs",
+      "title": "Transport lab specimens to the laboratory",
+      "industry": "Hospital",
+      "path": "UNITS → LABORATORY",
+      "company_name": "Riverside Health System",
+      "locality": "Newport News, VA",
+      "families": [],
+      "actions": [],
+      "text": "transport lab specimens and samples to the laboratory across the hospital",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Specimen handling",
+        "Turnaround time"
+      ]
+    },
+    {
+      "job_key": "clinical_supply_replenishment",
+      "title": "Replenish supply carts to nursing units",
+      "industry": "Hospital",
+      "path": "SUPPLY → UNITS",
+      "company_name": "St. Anne Medical Center",
+      "locality": "Toledo, OH",
+      "families": [],
+      "actions": [],
+      "text": "replenish par-level supplies and materials to nursing units clinical supply delivery",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Cart weight",
+        "Restock frequency"
+      ]
+    },
+    {
+      "job_key": "clinical_meal_linen",
+      "title": "Deliver meal trays and linens to patient floors",
+      "industry": "Hospital",
+      "path": "KITCHEN/LAUNDRY → FLOORS",
+      "company_name": "Lakeside Regional Hospital",
+      "locality": "Kenosha, WI",
+      "families": [],
+      "actions": [],
+      "text": "deliver meal trays and clean linens to patient floors and remove soiled linens",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Temperature hold"
+      ]
+    },
+    {
+      "job_key": "resident_meal_delivery",
+      "title": "Deliver meals to resident rooms",
+      "industry": "Senior living",
+      "path": "KITCHEN → RESIDENT ROOMS",
+      "company_name": "Brookhaven Senior Living",
+      "locality": "Naperville, IL",
+      "families": [],
+      "actions": [],
+      "text": "deliver meals and beverages to resident rooms senior living dining delivery",
+      "source": "healthcare_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Load weight",
+        "Dining schedule"
+      ]
+    },
+    {
+      "job_key": "resident_linen_amenities",
+      "title": "Deliver linens and amenities to resident rooms",
+      "industry": "Assisted living",
+      "path": "SUPPLY → RESIDENT ROOMS",
+      "company_name": "Maple Grove Assisted Living",
+      "locality": "Rochester, MN",
+      "families": [],
+      "actions": [],
+      "text": "deliver fresh linens towels and amenities to resident rooms assisted living",
+      "source": "healthcare_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Load weight"
+      ]
+    },
+    {
+      "job_key": "resident_med_pass_support",
+      "title": "Move medication and supply carts between care wings",
+      "industry": "Skilled nursing",
+      "path": "SUPPLY → CARE WINGS",
+      "company_name": "Cedar Ridge Care Center",
+      "locality": "Boise, ID",
+      "families": [],
+      "actions": [],
+      "text": "move medication and supply carts between care wings skilled nursing resident services",
+      "source": "healthcare_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Cart weight",
+        "Access control"
+      ]
+    },
+    {
+      "job_key": "shelf_scan_grocery_oos",
+      "title": "Scan grocery aisles for out-of-stocks and pricing",
+      "industry": "Grocery",
+      "path": "STORE AISLES",
+      "company_name": "Harvest Market Foods",
+      "locality": "Springfield, MO",
+      "families": [],
+      "actions": [],
+      "text": "autonomous shelf scanning of grocery aisles for out-of-stocks pricing and planogram compliance",
+      "source": "vertical_seed",
+      "tape_family": "shelf_scan",
+      "unknowns": [
+        "Aisle geometry",
+        "Scan frequency"
+      ]
+    },
+    {
+      "job_key": "shelf_scan_bigbox_inventory",
+      "title": "Scan big-box store shelves for inventory accuracy",
+      "industry": "Home improvement retail",
+      "path": "STORE AISLES",
+      "company_name": "BuildRight Home Centers",
+      "locality": "Grand Rapids, MI",
+      "families": [],
+      "actions": [],
+      "text": "scan shelves for inventory accuracy and planogram gaps across a large-format store",
+      "source": "vertical_seed",
+      "tape_family": "shelf_scan",
+      "unknowns": [
+        "Store size",
+        "Upper-shelf coverage"
+      ]
+    },
+    {
+      "job_key": "shelf_scan_pharmacy_retail",
+      "title": "Scan retail pharmacy shelves for stock and price accuracy",
+      "industry": "Retail pharmacy",
+      "path": "STORE AISLES",
+      "company_name": "WellPath Pharmacy",
+      "locality": "Akron, OH",
+      "families": [],
+      "actions": [],
+      "text": "scan aisles for out-of-stock detection and price accuracy in retail pharmacy",
+      "source": "vertical_seed",
+      "tape_family": "shelf_scan",
+      "unknowns": [
+        "Scan cadence"
+      ]
+    },
+    {
+      "job_key": "airport_terminal_scrub",
+      "title": "Overnight scrub of terminal concourse floors",
+      "industry": "Airport",
+      "path": "CONCOURSE",
+      "company_name": "Metro International Airport",
+      "locality": "Charlotte, NC",
+      "families": [],
+      "actions": [],
+      "text": "overnight hard-floor scrubbing of airport terminal concourse floors",
+      "source": "vertical_seed",
+      "tape_family": "scrub",
+      "unknowns": [
+        "Concourse area",
+        "Traffic window"
+      ]
+    },
+    {
+      "job_key": "airport_gate_delivery",
+      "title": "Deliver supplies and amenities between gates and lounges",
+      "industry": "Airport",
+      "path": "SUPPLY → GATES",
+      "company_name": "Skyline Airport Services",
+      "locality": "Denver, CO",
+      "families": [],
+      "actions": [],
+      "text": "deliver supplies and amenities point to point between airport gates and lounges",
+      "source": "vertical_seed",
+      "tape_family": "transport",
+      "unknowns": [
+        "Load weight",
+        "Secure areas"
+      ]
+    },
+    {
+      "job_key": "clinical_meds_delivery_2",
+      "title": "Deliver medications and IV supplies to nursing floors",
+      "industry": "Hospital",
+      "path": "PHARMACY → FLOORS",
+      "company_name": "Summit Health Medical Center",
+      "locality": "Reno, NV",
+      "families": [],
+      "actions": [],
+      "text": "deliver medications and IV supplies from pharmacy to nursing floors",
+      "source": "vertical_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Elevator access"
+      ]
+    },
+    {
+      "job_key": "resident_meal_delivery_2",
+      "title": "Deliver meals and snacks to memory-care residents",
+      "industry": "Memory care",
+      "path": "KITCHEN → RESIDENT ROOMS",
+      "company_name": "Willow Bend Memory Care",
+      "locality": "Frisco, TX",
+      "families": [],
+      "actions": [],
+      "text": "deliver meals snacks and beverages to memory care resident rooms",
+      "source": "vertical_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Dining schedule",
+        "Access control"
+      ]
     }
   ]
 }

@@ -13,6 +13,9 @@
     "serve":     {"required_any": ["transport"],                    "label": "food/drink running (hospitality serving)"},
     "food_prep": {"required_any": ["food_prep"],                    "label": "food preparation / cooking"},
     "beverage":  {"required_any": ["beverage_prep"],                "label": "beverage / drink preparation"},
+    "shelf_scan": {"required_any": ["shelf_scan"],                 "label": "retail shelf / inventory scanning"},
+    "clinical_delivery": {"required_any": ["transport"],           "label": "hospital clinical delivery (meds, specimens, supplies)"},
+    "resident_services": {"required_any": ["transport"],           "label": "eldercare resident services (meals, linens, amenities)"},
     "restroom":  {"required_any": ["surface_clean"],               "label": "restroom / surface cleaning"}
   },
   "generic_gate": "mobile",

@@ -25,6 +25,7 @@
     {"predicate": "claims_load_unload", "category": "load_interface", "type": "bool"},
     {"predicate": "supports_hard_floor_scrubbing", "category": "cleaning", "type": "bool"},
     {"predicate": "claims_surface_cleaning", "category": "cleaning", "type": "bool"},
+    {"predicate": "claims_shelf_scan", "category": "perception", "type": "bool"},
     {"predicate": "claims_food_prep", "category": "food", "type": "bool"},
     {"predicate": "claims_beverage_prep", "category": "food", "type": "bool"},
     {"predicate": "warehouse_or_factory_deployment", "category": "deployment", "type": "bool"}

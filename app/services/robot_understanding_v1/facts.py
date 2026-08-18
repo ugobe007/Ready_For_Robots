@@ -65,6 +65,7 @@ _SCOPED_CAPABILITY_PREDS = {
     "claims_load_unload",
     "has_dexterous_hands",
     "end_effector",
+    "claims_shelf_scan",
 }
 # Proximity window: the subject name must appear within this many characters of
 # the capability evidence for the claim to attach to the selected product.
@@ -220,9 +221,12 @@ def filter_facts_to_subject(
             if _page_is_prefix_sibling(page_slug, subj_key):
                 dropped += 1
                 continue
-            # (b) Generic/listing/company pages: require the subject to be named
-            #     near the evidence, or the claim belongs to some other product.
-            if page_slug in _GENERIC_PAGE_SLUGS and not _subject_in_window(
+            # (b) Any page that is NOT the subject's own product page (listings,
+            #     company/overview pages, or a different product) must name the
+            #     subject near the evidence — otherwise the claim belongs to some
+            #     other product. Only the subject's dedicated page (slug == subject)
+            #     is trusted unconditionally.
+            elif page_slug != subj_key and not _subject_in_window(
                 prox_window, subj_key, tokens
             ):
                 dropped += 1
@@ -904,8 +908,9 @@ def _extract_from_page(
         r"\b(?:"
         r"fry(?:ing)?\s+station|fry\s+cook|fried\s+menu|cooking\s+robot|"
         r"ai[- ]controlled\s+cooking|automated\s+cooking|robotic\s+kitchen|kitchen\s+automation|"
-        r"food\s+prep(?:aration)?|prepar\w+\s+(?:food|meals?|salads?|bowls?|dishes|entr[e\u00e9]es?|ingredients?)|"
-        r"assembl\w+\s+(?:meals?|bowls?|salads?|dishes|entr[e\u00e9]es?|tacos?|burritos?|sandwich\w*|pizzas?)|"
+        r"food\s+prep(?:aration)?|"
+        r"prepar(?:e|es|ing)\s+(?:[\w-]+\s+){0,2}?(?:food|meals?|salads?|bowls?|dishes|entr[e\u00e9]es?|ingredients?)|"
+        r"assembl(?:e|es|ing)\s+(?:[\w-]+\s+){0,2}?(?:meals?|bowls?|salads?|dishes|entr[e\u00e9]es?|tacos?|burritos?|sandwich\w*|pizzas?)|"
         r"grill\w+\s+(?:food|burgers?|patties|meat)|cook\w*\s+(?:food|meals?|fries|burgers?|the\s+\w+\s+menu)|"
         r"(?:chop|slice|dice|peel)\w*\s+(?:vegetables?|produce|ingredients?|food)"
         r")\b",
@@ -949,6 +954,24 @@ def _extract_from_page(
         if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
             continue
         add("claims_surface_cleaning", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- retail shelf / inventory scanning (autonomous inventory robots) ---
+    # Simbe Tally-class: computer-vision robots that scan aisles/shelves for
+    # out-of-stocks, pricing, and planogram compliance. A perception capability,
+    # distinct from manipulation/transport/cleaning.
+    for m in re.finditer(
+        r"\b(?:"
+        r"shelf[-\s]scann\w+|inventory\s+robots?|autonomous\s+inventory|"
+        r"scan(?:s|ning)?\s+(?:the\s+)?(?:aisles?|shelves|shelf|store\s+shelves)|"
+        r"out[-\s]of[-\s]stock\s+(?:detection|alerts?|monitoring)|planogram\w*|"
+        r"on[-\s]shelf\s+availability|shelf\s+(?:intelligence|conditions)"
+        r")\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_shelf_scan", True, span=m.group(0)[:120], confidence=0.85)
 
     # --- warehouse / factory deployment claims ---
     for m in re.finditer(
@@ -1002,6 +1025,7 @@ def _extract_from_page(
         r"AI[- ]?(?:powered\s+)?navigation|indoor\s+(?:GPS|navigation)|FlyAware|"
         r"obstacle\s+avoidance|autonomous(?:ly)?\s+(?:navigat\w+|map\w+|patrol\w+)|"
         r"navigat\w+\s+(?:your|the|its)\s+(?:building|facility|facilities|floors?|space|environment|way)|"
+        r"navigat\w+\s+(?:[\w.,-]+\s+){0,3}?(?:stores?|aisles?|warehouses?|facilit\w+)|"
         r"mov(?:e|es)\s+(?:autonomously|on\s+its\s+own)|drives?\s+itself|self[- ]driving|self[- ]navigat\w+)\b",
         text,
         re.I,

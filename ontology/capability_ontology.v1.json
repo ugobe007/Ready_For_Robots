@@ -31,6 +31,8 @@
      "grounded_by": ["claims_beverage_prep"]},
     {"key": "surface_clean", "label": "surface / restroom cleaning", "generic": false, "distinctive": true,
      "grounded_by": ["claims_surface_cleaning"]},
+    {"key": "shelf_scan", "label": "shelf / inventory scanning", "generic": false, "distinctive": true,
+     "grounded_by": ["claims_shelf_scan"]},
     {"key": "hard_floor_scrub", "label": "hard-floor scrubbing", "generic": false, "distinctive": true,
      "grounded_by": ["supports_hard_floor_scrubbing"], "classes": ["autonomous_scrubber", "scrubber"]},
     {"key": "inspect_route", "label": "mobile inspection route", "generic": false, "distinctive": true,

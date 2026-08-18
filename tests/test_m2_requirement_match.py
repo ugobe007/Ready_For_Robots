@@ -203,12 +203,13 @@ def test_hospitality_delivery_robot_matches_transport_work():
     assert not caps["manipulate"].present  # a delivery cart does not manipulate
     assert caps["mobile"].present
 
-    result = match_jobs_from_profile(profile, limit=40)
+    result = match_jobs_from_profile(profile, limit=60)
     assert result["job_count"] > 0  # no longer 0 jobs
     families = {j["tape_family"] for j in result["jobs"]}
-    # Delivery/transport work only (incl. hospitality serving/room-service) — never
-    # manipulation, food/beverage prep, scrubbing, or inspection.
-    assert families <= {"transport", "cart", "serve"}
+    # Delivery/transport work only (incl. hospitality serving, hospital clinical
+    # delivery, eldercare resident services) — never manipulation, food/beverage
+    # prep, scrubbing, or inspection.
+    assert families <= {"transport", "cart", "serve", "clinical_delivery", "resident_services"}
     assert families & {"transport", "cart"}
     assert families.isdisjoint({"pallet", "gripper", "scrub", "inspect", "food_prep", "beverage", "restroom"})
     for job in result["jobs"]:
@@ -239,7 +240,9 @@ def test_hospitality_ontology_serve_food_beverage_restroom():
     assert servi_caps["transport"].present and servi_caps["mobile"].present
     servi_fams = fams("servi")
     assert "serve" in servi_fams
-    assert servi_fams <= {"serve", "transport", "cart"}
+    # A delivery/transport robot serves all delivery families (incl. hospital
+    # clinical + eldercare resident delivery), never manipulation/cleaning work.
+    assert servi_fams <= {"serve", "transport", "cart", "clinical_delivery", "resident_services"}
     assert servi_fams.isdisjoint({"food_prep", "beverage", "restroom", "scrub", "pallet", "gripper", "inspect"})
 
     # Food-prep robot (Miso Flippy): food_prep only — never industrial manipulation.
@@ -265,6 +268,20 @@ def test_frozen_robots_do_not_leak_into_hospitality_families():
     for name in ("vega", "digit", "origin", "neo", "spot"):
         fams = {j["tape_family"] for j in match_jobs_from_profile(_profile(name), limit=60)["jobs"]}
         assert fams.isdisjoint({"food_prep", "beverage", "restroom"}), (name, fams)
+
+
+def test_healthcare_eldercare_delivery_matches_transport_robots():
+    """Hospital clinical delivery + eldercare resident services require the
+    autonomous item-delivery (transport) capability. A delivery robot (Relay)
+    matches them; a warehouse tote-AMR (Origin, tote_transport only) does not —
+    so the frozen Origin board is unchanged."""
+    relay_fams = {j["tape_family"] for j in match_jobs_from_profile(_profile("relay"), limit=60)["jobs"]}
+    assert {"clinical_delivery", "resident_services"} <= relay_fams
+
+    # A warehouse tote-AMR (tote_transport, no item-delivery `transport`) is not a
+    # clinical/resident delivery robot — deliver_items requires `transport`.
+    origin_fams = {j["tape_family"] for j in match_jobs_from_profile(_profile("origin"), limit=60)["jobs"]}
+    assert origin_fams.isdisjoint({"clinical_delivery", "resident_services"})
 
 
 def test_api_uses_requirement_matcher_when_profile_present():

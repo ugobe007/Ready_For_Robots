@@ -37,6 +37,7 @@ def _all_capabilities_profile() -> dict:
             f("claims_food_prep", True),                # food_prep
             f("claims_beverage_prep", True),            # beverage_prep
             f("claims_surface_cleaning", True),         # surface_clean
+            f("claims_shelf_scan", True),               # shelf_scan
             f("supports_hard_floor_scrubbing", True),   # hard_floor_scrub
             f("reach_or_workspace", 2.0, "m"),          # reach
             f("carrying_capacity", 50, "kg"),           # payload
