@@ -1,0 +1,14 @@
+{
+  "submitted_url": "https://www.bearrobotics.ai/servi",
+  "profile_confidence": "C",
+  "research_morphology": "service_robot",
+  "company": {"name": "Bear Robotics", "primary_domain": "bearrobotics.ai"},
+  "selected_product": {"name": "Servi", "display_class": "service_robot"},
+  "facts": [
+    {"predicate": "product_class", "value": "service_robot", "units": null, "epistemic": "explicit", "confidence": 0.88, "evidence_span": "restaurant robot server", "source_id": "s0"},
+    {"predicate": "autonomous_navigation", "value": true, "units": null, "epistemic": "explicit", "confidence": 0.86, "evidence_span": "all-floor navigation", "source_id": "s0"},
+    {"predicate": "has_mobile_base", "value": true, "units": null, "epistemic": "strongly_inferred", "confidence": 0.85, "evidence_span": "autonomous navigation", "source_id": "s0"},
+    {"predicate": "claims_item_delivery", "value": true, "units": null, "epistemic": "explicit", "confidence": 0.82, "evidence_span": "serve food and drinks to tables", "source_id": "s0"},
+    {"predicate": "carrying_capacity", "value": 88, "units": "lb", "epistemic": "explicit", "confidence": 0.9, "evidence_span": "carries up to 88 lbs", "source_id": "s0"}
+  ]
+}

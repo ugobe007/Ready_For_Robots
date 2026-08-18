@@ -55,7 +55,7 @@ celerybeat-schedule
 !README.md
 !Robot Automation Signal Ontology.md
 reports/
-# Keep docs/ontology + docs/calibration in the image (enums + vendor seed)
+# Keep ontology + docs/calibration in the image (enums + vendor seed)
 frontend/
 NEW_READYFORROBOTS_WEB/
 readyforrobots-purple/

@@ -1,0 +1,11 @@
+{
+  "submitted_url": "https://www.misorobotics.com/flippy",
+  "profile_confidence": "C",
+  "research_morphology": "service_robot",
+  "company": {"name": "Miso Robotics", "primary_domain": "misorobotics.com"},
+  "selected_product": {"name": "Flippy", "display_class": "service_robot"},
+  "facts": [
+    {"predicate": "claims_food_prep", "value": true, "units": null, "epistemic": "explicit", "confidence": 0.85, "evidence_span": "handles your fry station; AI-controlled cooking", "source_id": "s0"},
+    {"predicate": "operating_environment", "value": "restaurant", "units": null, "epistemic": "explicit", "confidence": 0.84, "evidence_span": "restaurant kitchen", "source_id": "s0"}
+  ]
+}

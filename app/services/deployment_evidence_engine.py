@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 logger = logging.getLogger(__name__)
 
 _ROOT = Path(__file__).resolve().parents[2]
-_ONT_PATH = _ROOT / "docs" / "ontology" / "deployment_stages.v1.json"
+_ONT_PATH = _ROOT / "ontology" / "deployment_stages.v1.json"
 
 # Phrase → deployment_stage
 _STAGE_PATTERNS: Tuple[Tuple[str, re.Pattern[str]], ...] = (

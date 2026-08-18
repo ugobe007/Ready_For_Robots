@@ -1,0 +1,14 @@
+{
+  "submitted_url": "https://relayrobotics.com/",
+  "profile_confidence": "C",
+  "research_morphology": "service_robot",
+  "company": {"name": "Relay Robotics", "primary_domain": "relayrobotics.com"},
+  "selected_product": {"name": "Relay", "display_class": "service_robot"},
+  "facts": [
+    {"predicate": "product_class", "value": "service_robot", "units": null, "epistemic": "explicit", "confidence": 0.88, "evidence_span": "Delivery Robots", "source_id": "s0"},
+    {"predicate": "autonomous_navigation", "value": true, "units": null, "epistemic": "explicit", "confidence": 0.86, "evidence_span": "navigate crowded hallways fully autonomously", "source_id": "s0"},
+    {"predicate": "has_mobile_base", "value": true, "units": null, "epistemic": "strongly_inferred", "confidence": 0.85, "evidence_span": "autonomously navigate", "source_id": "s0"},
+    {"predicate": "claims_item_delivery", "value": true, "units": null, "epistemic": "explicit", "confidence": 0.85, "evidence_span": "transport items—medications, lab samples, guest amenities", "source_id": "s0"},
+    {"predicate": "operating_environment", "value": "commercial", "units": null, "epistemic": "explicit", "confidence": 0.84, "evidence_span": "hospitals and hotels", "source_id": "s0"}
+  ]
+}

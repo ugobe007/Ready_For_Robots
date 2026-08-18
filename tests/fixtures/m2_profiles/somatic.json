@@ -1,0 +1,12 @@
+{
+  "submitted_url": "https://getsomatic.com/",
+  "profile_confidence": "C",
+  "research_morphology": "cleaning_robot",
+  "company": {"name": "Somatic", "primary_domain": "getsomatic.com"},
+  "selected_product": {"name": "BCR", "display_class": "cleaning_robot"},
+  "facts": [
+    {"predicate": "claims_surface_cleaning", "value": true, "units": null, "epistemic": "explicit", "confidence": 0.85, "evidence_span": "bathroom cleaning; cleans toilets, urinals, floors", "source_id": "s0"},
+    {"predicate": "autonomous_navigation", "value": true, "units": null, "epistemic": "explicit", "confidence": 0.86, "evidence_span": "navigates your building on its own", "source_id": "s0"},
+    {"predicate": "has_mobile_base", "value": true, "units": null, "epistemic": "strongly_inferred", "confidence": 0.85, "evidence_span": "autonomous navigation", "source_id": "s0"}
+  ]
+}

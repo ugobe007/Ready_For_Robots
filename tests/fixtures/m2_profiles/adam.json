@@ -1,0 +1,11 @@
+{
+  "submitted_url": "https://richtechrobotics.com/adam",
+  "profile_confidence": "C",
+  "research_morphology": "service_robot",
+  "company": {"name": "Richtech Robotics", "primary_domain": "richtechrobotics.com"},
+  "selected_product": {"name": "ADAM", "display_class": "service_robot"},
+  "facts": [
+    {"predicate": "claims_beverage_prep", "value": true, "units": null, "epistemic": "explicit", "confidence": 0.82, "evidence_span": "robot bartender makes cocktails and coffee", "source_id": "s0"},
+    {"predicate": "arm_count", "value": 2, "units": null, "epistemic": "explicit", "confidence": 0.9, "evidence_span": "dual-arm", "source_id": "s0"}
+  ]
+}

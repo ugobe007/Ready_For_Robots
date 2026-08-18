@@ -44,7 +44,7 @@ Do not create scoring structures before underlying truth objects.
 
 | Step | Action |
 | --- | --- |
-| S0 | No destructive schema — enums/ontology as versioned JSON under `packages/ontology` or `docs/ontology` |
+| S0 | No destructive schema — enums/ontology as versioned JSON under `packages/ontology` or `ontology` |
 | S1-a | `facilities` |
 | S1-b | `sources` **if** approved; else document claim-level provenance as sufficient |
 | S1-c | `primitives` table **or** load-only JSON with immutable IDs |

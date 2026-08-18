@@ -1,4 +1,4 @@
-"""Frozen V1 domain enums — load from docs/ontology/enums.v1.json."""
+"""Frozen V1 domain enums — load from ontology/enums.v1.json."""
 from __future__ import annotations
 
 import json
@@ -6,9 +6,9 @@ from functools import lru_cache
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[2]
-_ENUMS_PATH = _ROOT / "docs" / "ontology" / "enums.v1.json"
-_LOSS_PATH = _ROOT / "docs" / "ontology" / "loss_reasons.v1.json"
-_PRIM_PATH = _ROOT / "docs" / "ontology" / "primitives.v1.json"
+_ENUMS_PATH = _ROOT / "ontology" / "enums.v1.json"
+_LOSS_PATH = _ROOT / "ontology" / "loss_reasons.v1.json"
+_PRIM_PATH = _ROOT / "ontology" / "primitives.v1.json"
 
 
 @lru_cache(maxsize=1)

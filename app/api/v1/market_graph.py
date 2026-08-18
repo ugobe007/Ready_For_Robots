@@ -192,7 +192,7 @@ def market_graph_work_units(
     return {
         "generated_at": snap.get("generated_at"),
         "count": len(units),
-        "spine": "docs/ontology/primitives.v1.json",
+        "spine": "ontology/primitives.v1.json",
         "work_units": units,
     }
 
@@ -217,7 +217,7 @@ def market_graph_reconstruct(body: ReconstructBody) -> dict[str, Any]:
     )
     return {
         "traversal": "job_to_robot",
-        "spine": "docs/ontology/primitives.v1.json",
+        "spine": "ontology/primitives.v1.json",
         "work": work_unit_summary(work),
         "robot_capability": caps,
         "match": {

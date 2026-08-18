@@ -134,6 +134,40 @@ def build_robot_profile(
             notes_extra.append(
                 f"Dropped {dropped_sib} sibling/off-subject fact(s) to prevent SKU contamination."
             )
+
+    # Robot Inference Engine (M1 narrow reopen): deterministic phased inference
+    # over the SAME evidence pack. Seeds explicit facts from evidence signals, then
+    # forward-chains structural/capability inference — each conclusion carries its
+    # evidence + basis + confidence. Emits facts v1's narrow regex missed. Fails
+    # open to v1. Source of truth: evidence → inference → capability (not an LLM).
+    inference: dict[str, Any] | None = None
+    try:
+        from app.services.robot_inference_engine import infer_facts as _infer_facts
+        from app.services.robot_understanding_v1.sources import page_supports_subject
+
+        # Pass filtered evidence to avoid sibling-SKU contamination
+        inference_pack = collected
+        if selected:
+            # When a product is selected, filter evidence to subject-relevant pages
+            inference_pack = [
+                c for c in collected
+                if page_supports_subject(
+                    url=c.page.final_url,
+                    title=c.page.title or "",
+                    text=c.page.text or "",
+                    product_name=selected.name,
+                )
+            ]
+        extra_facts, inference = _infer_facts(inference_pack, subject=subject, existing_facts=facts)
+        if extra_facts:
+            facts.extend(extra_facts)
+            notes_extra.append(
+                f"Inference engine grounded {len(extra_facts)} additional capability fact(s) "
+                "from manufacturer evidence (evidence → inference → capability)."
+            )
+    except Exception:
+        inference = None
+
     facts = mark_contradictions(facts)
 
     # Set display_class from strongest product_class claim (descriptive only)
@@ -225,6 +259,7 @@ def build_robot_profile(
         notes=notes,
         needs_product_choice=False,
         research_stages=stages,
+        inference=inference,
     )
     if timings is not None:
         timings["profile_ms"] = int((time.perf_counter() - t_profile) * 1000)
