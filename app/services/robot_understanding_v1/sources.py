@@ -7,8 +7,22 @@ from dataclasses import dataclass
 from typing import Optional
 from urllib.parse import urlparse
 
-from app.services.robot_understanding_v1.fetch import FetchedPage, fetch_page
+from app.services.robot_understanding_v1.fetch import FetchedPage, fetch_page, fetch_text
 from app.services.robot_understanding_v1.models import RobotSource, SourceType
+
+# Sitemap discovery is a bounded fallback for thin/JS homepages whose product
+# pages are still server-rendered and listed in sitemap.xml. All caps are hard.
+_SITEMAP_MAX_CHILD_MAPS = 3
+_SITEMAP_MAX_LOCS = 400
+_SITEMAP_MAX_CANDIDATES = 20
+_THIN_HOMEPAGE_LINKS = 6  # homepages with fewer same-domain links look like SPA shells
+_LOC_RE = re.compile(r"<loc>\s*([^<\s]+)\s*</loc>", re.I)
+# Product-ish sitemap paths worth adding as candidates
+_SITEMAP_PRODUCT_PATH = re.compile(
+    r"/(product|products|robot|robots|platform|hardware|solution|solutions|"
+    r"use[-_]?case|application|spec|specs|specification|datasheet)",
+    re.I,
+)
 
 # (path substring or keyword, source_type, base confidence)
 _TYPE_RULES: list[tuple[re.Pattern[str], SourceType, float]] = [
@@ -170,6 +184,61 @@ def is_accessory_or_marketplace(url: str) -> bool:
     return bool(_ACCESSORY_PATH.search(path))
 
 
+def discover_from_sitemap(origin: str, *, product_name: str | None = None) -> list[tuple[str, str]]:
+    """Best-effort product URLs from sitemap.xml — bounded and fail-open.
+
+    Reads /sitemap.xml (and up to a few child sitemaps if it is an index), keeps
+    same-origin product-ish URLs, and prefers ones that name the subject. Returns
+    (url, anchor) pairs (anchor always ""). Any error → []. Never raises.
+    """
+    try:
+        host = (urlparse(origin).hostname or "").lower()
+        if not host:
+            return []
+        locs: list[str] = []
+        for sm in ("/sitemap.xml", "/sitemap_index.xml"):
+            status, body = fetch_text(origin + sm)
+            if status and body:
+                locs.extend(_LOC_RE.findall(body))
+            if locs:
+                break
+        if not locs:
+            return []
+
+        # Expand a sitemap index (entries are themselves .xml sitemaps).
+        child_maps = [u for u in locs if u.lower().rstrip("/").endswith(".xml")][:_SITEMAP_MAX_CHILD_MAPS]
+        page_locs = [u for u in locs if not u.lower().rstrip("/").endswith(".xml")]
+        for cm in child_maps:
+            if len(page_locs) >= _SITEMAP_MAX_LOCS:
+                break
+            status, body = fetch_text(cm)
+            if status and body:
+                page_locs.extend(u for u in _LOC_RE.findall(body) if not u.lower().rstrip("/").endswith(".xml"))
+
+        out: list[tuple[str, str]] = []
+        seen: set[str] = set()
+        subject_first: list[tuple[str, str]] = []
+        for u in page_locs[:_SITEMAP_MAX_LOCS]:
+            if (urlparse(u).hostname or "").lower() != host:
+                continue
+            if should_reject_url(u):
+                continue
+            if not _SITEMAP_PRODUCT_PATH.search(urlparse(u).path or ""):
+                continue
+            key = u.split("#")[0].rstrip("/").lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            if product_name and page_supports_subject(url=u, product_name=product_name):
+                subject_first.append((u, ""))
+            else:
+                out.append((u, ""))
+        # Subject-supporting URLs first, then the rest, capped hard.
+        return (subject_first + out)[:_SITEMAP_MAX_CANDIDATES]
+    except Exception:
+        return []
+
+
 def collect_source_pack(
     home: FetchedPage,
     *,
@@ -242,6 +311,26 @@ def collect_source_pack(
         path = urlparse(url).path or ""
         score += min(8, path.count("/"))
         _add(url, score, stype, conf, anchor)
+
+    # Thin/JS homepage fallback: if the homepage exposed few same-domain links
+    # (a likely SPA shell), try sitemap.xml to discover server-rendered product
+    # pages. Bounded + fail-open; adds candidates that flow through the same
+    # subject/type gates below. Skipped when the homepage already links plenty.
+    same_domain_links = len(home.links)
+    _deadline_ok = deadline_monotonic is None or time.monotonic() < deadline_monotonic
+    if same_domain_links < _THIN_HOMEPAGE_LINKS and _deadline_ok:
+        for sm_url, sm_anchor in discover_from_sitemap(origin, product_name=product_name):
+            if should_reject_url(sm_url):
+                continue
+            stype, conf = classify_source_type(sm_url, sm_anchor)
+            if stype == "other" and not sm_url.lower().endswith(".pdf"):
+                continue
+            score = float(_HUB_BONUS.get(stype, 0))
+            if stype == "specifications":
+                score += 40
+            if product_name and page_supports_subject(url=sm_url, product_name=product_name):
+                score += 50
+            _add(sm_url, score, stype, conf, sm_anchor)
 
     if slug:
         for path, stype, conf in (
