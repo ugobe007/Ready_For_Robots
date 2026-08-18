@@ -22,6 +22,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
+from app.services import robot_ontology
 from app.services.robot_capability_derive import DerivedCapability, derive_capabilities
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -37,23 +38,11 @@ VERDICT_POSSIBLE = "POSSIBLE_MATCH"
 VERDICT_NOT = "NOT_A_MATCH"
 VERDICT_INSUFFICIENT = "INSUFFICIENT"
 
-# Generic locomotion is a gate, not a differentiator.
-GENERIC_CAPABILITIES = frozenset({"mobile"})
-DISTINCTIVE_CAPABILITIES = frozenset(
-    {
-        "manipulate",
-        "dual_arm",
-        "tote_transport",
-        "transport",
-        "food_prep",
-        "beverage_prep",
-        "surface_clean",
-        "hard_floor_scrub",
-        "inspect_route",
-        "load_unload",
-        "reach",
-    }
-)
+# Generic locomotion is a gate, not a differentiator. Sourced from the machine-
+# readable capability ontology (ontology/capability_ontology.v1.json) so the
+# matcher is driven by the ontology; fails open to the canonical baked-in sets.
+GENERIC_CAPABILITIES = robot_ontology.generic_capabilities()
+DISTINCTIVE_CAPABILITIES = robot_ontology.distinctive_capabilities()
 # Requirement id → robot primitives exercised when MATCHED or LIKELY.
 REQUIREMENT_EXERCISES = {
     "manipulate_physical_case": frozenset({"manipulate"}),

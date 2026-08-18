@@ -1,0 +1,20 @@
+{
+  "ontology_id": "rfr_workflow_ontology_v1",
+  "version": "1.0.0",
+  "frozen": false,
+  "note": "Machine-readable companion to ROBOT_WORKFLOW_ONTOLOGY.md. Each work family requires a SPECIFIC capability so category leakage cannot occur. Loaded by app/services/robot_ontology.py; kept in sync with app/services/robot_requirement_match.py (tests/test_robot_ontology.py).",
+  "families": {
+    "pallet":    {"required_any": ["manipulate"],                    "label": "case palletizing"},
+    "gripper":   {"required_any": ["manipulate"],                    "label": "machine tending / part handling"},
+    "transport": {"required_any": ["tote_transport", "transport"],  "label": "point-to-point transport"},
+    "cart":      {"required_any": ["tote_transport", "transport"],  "label": "cart delivery"},
+    "scrub":     {"required_any": ["hard_floor_scrub"],             "label": "hard-floor scrubbing"},
+    "inspect":   {"required_any": ["inspect_route"],                "label": "inspection route"},
+    "serve":     {"required_any": ["transport"],                    "label": "food/drink running (hospitality serving)"},
+    "food_prep": {"required_any": ["food_prep"],                    "label": "food preparation / cooking"},
+    "beverage":  {"required_any": ["beverage_prep"],                "label": "beverage / drink preparation"},
+    "restroom":  {"required_any": ["surface_clean"],               "label": "restroom / surface cleaning"}
+  },
+  "generic_gate": "mobile",
+  "note_generic": "mobility is a gate, not a differentiator; ranking uses distinctive-capability utilization, never a category quota"
+}

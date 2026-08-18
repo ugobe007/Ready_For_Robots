@@ -46,11 +46,27 @@ Every fact, capability, and match carries a state from this closed set:
 `EXPLICIT` and `DERIVED` are **GROUNDED** (matcher-visible). `LIKELY` is only
 allowed via a named derivation. `UNKNOWN`/`CONFLICTED` never assert a capability.
 
-## Machine-readable companions (already in this folder)
+## Machine-readable companions (loaded by the pipeline)
 
+The Markdown files above are the human/copilot spec; these JSONs are the
+**loadable, enforced** form used by the scraping/parsing → derive → match
+workflow via `app/services/robot_ontology.py`:
+
+- [`capability_ontology.v1.json`](capability_ontology.v1.json) — capabilities, their grounding predicates, distinctive/generic flags, confidence vocab, manipulation hierarchy. **The matcher sources its `DISTINCTIVE_CAPABILITIES` / `GENERIC_CAPABILITIES` from here.**
+- [`workflow_ontology.v1.json`](workflow_ontology.v1.json) — work families → required capability.
+- [`hardware_ontology.v1.json`](hardware_ontology.v1.json) — fact/hardware predicates the parser may ground.
+- [`inference_rules.v1.json`](inference_rules.v1.json) — structured R1–R21 with status.
+
+Pre-existing companions:
 - [`primitives.v1.json`](primitives.v1.json) — frozen WORK primitive codes (IDs never renamed).
-- [`enums.v1.json`](enums.v1.json) — truth states, maturity, source types, vendor roles.
+- [`enums.v1.json`](enums.v1.json) — truth states, maturity, source types, vendor roles (loaded by `app/domain/enums.py`).
 - [`rfr_graph.v1.json`](rfr_graph.v1.json) — WORK-centric knowledge + truth graph.
+
+**Loader:** `app/services/robot_ontology.py` (fail-open — a missing/invalid file
+falls back to baked-in defaults that mirror the code). **Sync gate:**
+`tests/test_robot_ontology.py` fails if the ontology JSON drifts from the live
+derive capabilities, matcher families/sets, confidence states, or predicates —
+so updating the ontology is meaningful and safe.
 
 ## Where the ontology lives in code
 

@@ -1,0 +1,55 @@
+{
+  "ontology_id": "rfr_capability_ontology_v1",
+  "version": "1.0.0",
+  "frozen": false,
+  "note": "Machine-readable companion to ROBOT_CAPABILITY_ONTOLOGY.md. Loaded by app/services/robot_ontology.py and used by the parse -> derive -> match workflow. Keep in sync with app/services/robot_capability_derive.py (enforced by tests/test_robot_ontology.py).",
+  "confidence_states": ["EXPLICIT", "DERIVED", "LIKELY", "UNKNOWN", "CONFLICTED"],
+  "confidence_code_map": {
+    "EXPLICIT": "explicit",
+    "DERIVED": "strongly_inferred",
+    "LIKELY": "likely",
+    "UNKNOWN": "unknown",
+    "CONFLICTED": "contradicted"
+  },
+  "grounded_states": ["explicit", "strongly_inferred"],
+  "capabilities": [
+    {"key": "mobile", "label": "mobile platform", "generic": true, "distinctive": false,
+     "grounded_by": ["has_mobile_base", "autonomous_navigation", "mobility_architecture"],
+     "classes": ["amr", "quadruped", "autonomous_scrubber", "mobile_manipulator", "humanoid"]},
+    {"key": "manipulate", "label": "manipulation", "generic": false, "distinctive": true,
+     "grounded_by": ["arm_count", "has_dexterous_hands", "end_effector"],
+     "classes": ["mobile_manipulator", "humanoid", "cobot", "manipulator", "arm"]},
+    {"key": "dual_arm", "label": "dual-arm manipulation", "generic": false, "distinctive": true,
+     "grounded_by": ["arm_count"]},
+    {"key": "transport", "label": "autonomous item transport / delivery", "generic": false, "distinctive": true,
+     "grounded_by": ["claims_item_delivery"]},
+    {"key": "tote_transport", "label": "tote / warehouse transport", "generic": false, "distinctive": true,
+     "grounded_by": ["supports_tote_handling", "claims_warehouse_transport"]},
+    {"key": "food_prep", "label": "food preparation / cooking", "generic": false, "distinctive": true,
+     "grounded_by": ["claims_food_prep"]},
+    {"key": "beverage_prep", "label": "beverage / drink preparation", "generic": false, "distinctive": true,
+     "grounded_by": ["claims_beverage_prep"]},
+    {"key": "surface_clean", "label": "surface / restroom cleaning", "generic": false, "distinctive": true,
+     "grounded_by": ["claims_surface_cleaning"]},
+    {"key": "hard_floor_scrub", "label": "hard-floor scrubbing", "generic": false, "distinctive": true,
+     "grounded_by": ["supports_hard_floor_scrubbing"], "classes": ["autonomous_scrubber", "scrubber"]},
+    {"key": "inspect_route", "label": "mobile inspection route", "generic": false, "distinctive": true,
+     "grounded_by": [], "classes": ["quadruped"]},
+    {"key": "reach", "label": "working reach", "generic": false, "distinctive": true,
+     "grounded_by": ["reach_or_workspace"]},
+    {"key": "load_unload", "label": "load / unload", "generic": false, "distinctive": true,
+     "grounded_by": ["claims_load_unload"]},
+    {"key": "payload", "label": "payload", "generic": false, "distinctive": false,
+     "grounded_by": ["carrying_capacity"]}
+  ],
+  "manipulation_hierarchy": {
+    "root": "manipulate",
+    "children": [
+      "arm_present", "dual_arm",
+      {"end_effector": ["gripper", "hand", "suction", "clamp", "tool"]},
+      "grasp", "pick", "place", "carry", "push", "pull", "rotate", "insert",
+      "handoff", "load", "unload", "tool_use"
+    ],
+    "rule": "hardware evidence on the selected configuration determines which children can be inferred"
+  }
+}
