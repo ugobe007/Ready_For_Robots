@@ -165,7 +165,7 @@ def _evidence_supported(evidence: str, pack_norm: str) -> bool:
 _CLAIM_KEYWORDS: dict[str, tuple[str, ...]] = {
     "arm_count": ("arm", "arms", "manipulator", "limb"),
     "has_dexterous_hands": ("hand", "hands", "finger", "dexter", "dof", "degrees of freedom", "grip"),
-    "end_effector": ("gripper", "hand", "end effector", "suction", "vacuum", "finger", "claw", "grasp"),
+    "end_effector": ("gripper", "hand", "end effector", "suction", "vacuum", "finger", "claw", "grasp", "arm", "manipulat", "dexter"),
     "carrying_capacity": ("lb", "lbs", "pound", "kg", "kilogram", "payload", "capacity", "carry", "carrying", "lift"),
     "reach_or_workspace": ("reach", "workspace", "span", "arm length"),
     "battery_runtime": ("hour", "hours", "hr", "runtime", "battery", "operation", "operating"),
@@ -222,7 +222,7 @@ def _claim_supported(predicate: str, value: Any, evidence: str) -> bool:
         return False
     tokens = ev.split()
     # Specific numeric specs must actually be quoted (prevents fabricated values).
-    if predicate in ("carrying_capacity", "reach_or_workspace", "battery_runtime"):
+    if predicate in ("arm_count", "carrying_capacity", "reach_or_workspace", "battery_runtime"):
         num = _num(value)
         if num is None:
             return False
@@ -230,7 +230,8 @@ def _claim_supported(predicate: str, value: Any, evidence: str) -> bool:
         if num == int(num):
             cands.add(str(int(num)))
         cands.add(str(num))
-        if not any(c and c in ev for c in cands):
+        # Use word-boundary matching to prevent substring false positives (5 in 55).
+        if not any(c and (f" {c} " in f" {ev} " or ev.startswith(f"{c} ") or ev.endswith(f" {c}")) for c in cands):
             return False
     if predicate == "product_class":
         kws = _CLASS_KEYWORDS.get(str(value).lower(), ())
@@ -387,8 +388,9 @@ def _facts_from_extraction(
         morph_word = morph.replace("_", " ")
         morph_ev = ""
         morph_src: Any = 0
-        # Prefer the morphology word itself when it appears verbatim in the pages.
-        if morph_word in pack_norm and _claim_supported("product_class", cls, morph_word):
+        # Prefer the morphology word itself when it appears verbatim in the pages
+        # AND passes the length check (>= 4 chars normalized).
+        if morph_word in pack_norm and len(_norm(morph_word)) >= 4 and _claim_supported("product_class", cls, morph_word):
             morph_ev = morph_word
         else:
             for c in caps:
