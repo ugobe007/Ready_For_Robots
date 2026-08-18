@@ -1486,12 +1486,15 @@ function JobsPanel({
         <span className="font-mono text-sm font-bold text-emerald-300">
           {showQualifiedOnly
             ? `${baseJobs.length} qualified`
-            : showCount
-              ? `${analysis.jobCount} JOBS FOR ${analysis.productName.toUpperCase()}`
-              : `MATCHES FOR ${analysis.productName.toUpperCase()}`}
+            : baseJobs.length === 0
+              ? ""
+              : showCount
+                ? `${analysis.jobCount} JOBS FOR ${analysis.productName.toUpperCase()}`
+                : `MATCHES FOR ${analysis.productName.toUpperCase()}`}
         </span>
       </div>
-      {!showQualifiedOnly && (
+      {/* Only claim we matched against confirmed capabilities when there are matches. */}
+      {!showQualifiedOnly && baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
           We matched these jobs against {analysis.productName}'s confirmed
           capabilities · {shownOfTop} strongest matches shown
