@@ -108,6 +108,11 @@ def compose_robot_job_search(
     top_jobs = jobs[:TOP_JOBS]
     total_ms = int((time.perf_counter() - t0) * 1000)
     state = match.get("state") or ("matches" if jobs else "could_not_understand")
+    zero_reason = None
+    if not jobs:
+        from app.services.zero_state import classify_zero_state, corpus_family_set
+
+        zero_reason = classify_zero_state(match.get("capabilities") or [], corpus_family_set())
     return {
         "state": state,
         "robot_name": match.get("robot_name") or robot_name,
@@ -121,6 +126,7 @@ def compose_robot_job_search(
         "products": products,
         "needs_product_choice": False,
         "matcher": match.get("matcher"),
+        "zero_reason": zero_reason,
         "robot_class": match.get("robot_class") or selected.get("display_class"),
         "source_url": safe,
         "timings": _timings(
