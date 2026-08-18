@@ -707,7 +707,7 @@ def _extract_from_page(
 
     for m in re.finditer(
         r"\b(agricultural\s+robot|farm(?:ing)?\s+robot|ag(?:ricultural)?\s*bot|"
-        r"field\s+robot|crop\s+(?:scouting|weeding)\s+robot|orchard\s+robot|"
+        r"crop\s+(?:scouting|weeding)\s+robot|orchard\s+robot|"
         r"autonomous\s+(?:tractor|harvester|weeder|sprayer))\b",
         text,
         re.I,
