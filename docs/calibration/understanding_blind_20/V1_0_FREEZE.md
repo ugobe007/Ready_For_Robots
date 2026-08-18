@@ -28,3 +28,38 @@ Any change under `app/services/robot_understanding_v1/` after this freeze must c
 If shadow shows scattered failures and most profiles are professionally useful: **accept B/C unknowns** — do not keep polishing Understanding. **M2 may proceed regardless** of whether the 20-review checkpoint has fired. Blind 20 retune stays closed unless the narrow reopen bar is met and documented.
 
 Full decision: [`outcome.md`](./outcome.md) § v1.0 freeze. Prior Blind 20 window rules: [`FREEZE.md`](./FREEZE.md).
+
+---
+
+## Narrow reopen — 2026-08-18 (Robot Research Agent v2)
+
+**Authorized by:** Bob (operator).
+
+**Reopen reason (generalized production failure):**
+
+> Manufacturer capability narrative + structured product data present → material robot capabilities absent.
+
+**Triggering case:** `https://www.1x.tech/` (1X NEO). The page publishes explicit,
+abundant capability evidence (humanoid, bipedal, autonomous navigation, dexterous
+22–25 DoF hands, 7-DoF arms, 55 lb carry) yet v1's regex/table extractors produced
+`product_class/mobility/autonomy = UNKNOWN` and `capabilities = []` → 0 jobs. This is
+not an unknowable robot; it is an **architectural extraction failure** (regex cannot
+convert capability narrative into a robot model), so it meets the narrow-reopen bar —
+not a single-cohort polish and not a per-vendor rule.
+
+**Change (this reopen):** add an **AI research/extraction pass** — `app/services/robot_research_v2.py`
+— over the SAME fetched evidence pack. The model reasons like a robotics analyst and
+returns a typed, provenance-carrying product model; deterministic code then validates
+every claim against the fetched page text (quote must exist AND pertain to the claim —
+e.g. "enhances productivity by more than 2X" may **not** become `arm_count=2`) before
+converting it into the **existing** RobotFact predicate schema. `derive_capabilities`
+and the M2 matcher are unchanged. **AI discovers meaning; code enforces truth.**
+
+**Scope guardrails (still frozen):** no per-vendor branches (`if 1x` / `if humanoid`),
+no new regex heuristics, no Blind 20 retune, no corpus expansion, no matcher change.
+Gated by `ROBOT_RESEARCH_V2=1`; fails open to the deterministic v1 profile.
+
+**Validated:** NEO → grounded `manipulate/dual_arm/mobile` and matches manipulation
+work; Locus Origin (AMR) and Avidbots Neo (scrubber) are **not** over-attributed
+manipulation (evidence-truth guard rejects mismatched quotes). See
+`tests/test_robot_research_v2.py`.

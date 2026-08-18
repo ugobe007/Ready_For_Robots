@@ -176,6 +176,9 @@ class RobotProfile:
     source_quality_rate: float = 0.0
     source_quality_level: str = "low"
     research_morphology: Optional[str] = None
+    # Robot Research Agent v2 summary (categories / rich capabilities / workflows /
+    # unknowns) — additive display metadata; matcher consumes facts, not this.
+    research_v2: Optional[dict[str, Any]] = None
     built_at: str = field(default_factory=_utcnow)
 
     def to_dict(self) -> dict[str, Any]:
@@ -189,6 +192,7 @@ class RobotProfile:
             "source_quality_rate": round(self.source_quality_rate, 4),
             "source_quality_level": self.source_quality_level,
             "research_morphology": self.research_morphology,
+            "research_v2": self.research_v2,
             "ungrounded_fact_ids": list(self.ungrounded_fact_ids),
             "notes": list(self.notes),
             "needs_product_choice": self.needs_product_choice,

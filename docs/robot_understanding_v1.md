@@ -1,7 +1,7 @@
 # Robot Understanding v1
 
-**Status:** Phase 1–3 **frozen at v1.0 calibration** — Blind 20 gate **not passed** (critical recall 78%); Understanding extractors **CLOSED**. **M2 matcher prototyping allowed** against frozen A/B/C profiles (propagate unknowns) — 20-shadow is not an M2 blocker.  
-**Updated:** 2026-08-17 (v1.0 freeze + M2 unlock vs shadow)  
+**Status:** Phase 1–3 v1.0 calibration — regex extractors CLOSED, but a **narrow reopen (2026-08-18)** adds an evidence-validated **AI extraction pass** (Robot Research Agent v2) alongside them. Reopen reason: *manufacturer capability narrative + structured product data present → material robot capabilities absent* (1X NEO returned `capabilities=[]`). See [`V1_0_FREEZE.md` § Narrow reopen](./calibration/understanding_blind_20/V1_0_FREEZE.md) and `app/services/robot_research_v2.py`. Regex retune / Blind 20 remain closed; matcher unchanged. **M2 matcher prototyping allowed** against frozen A/B/C profiles.  
+**Updated:** 2026-08-18 (Robot Research Agent v2 — narrow M1 reopen)  
 **Calibration outcome:** [`docs/calibration/understanding_blind_20/outcome.md`](./calibration/understanding_blind_20/outcome.md) · freeze note [`V1_0_FREEZE.md`](./calibration/understanding_blind_20/V1_0_FREEZE.md)  
 **Product spine / finite milestones:** [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) — Understanding is M1 infrastructure, not an open-ended research loop.  
 **Next ops path:** **M2 Match** next mission; production shadow remains **M1 Understanding decision instrument** (first **20 real reviewed** → accept / narrow-reopen) — not Blind 20 retune, not forever polish. Spec: [`calibration/understanding_shadow_v1.md`](./calibration/understanding_shadow_v1.md).  

@@ -134,6 +134,30 @@ def build_robot_profile(
             notes_extra.append(
                 f"Dropped {dropped_sib} sibling/off-subject fact(s) to prevent SKU contamination."
             )
+
+    # Robot Research Agent v2 (M1 narrow reopen): AI reads the same evidence pack
+    # and grounds capability facts v1's regex missed. Evidence is validated against
+    # the fetched pages before any fact is accepted. Fails open to v1.
+    research_v2: dict[str, Any] | None = None
+    try:
+        from app.services.robot_research_v2 import enrich_facts as _rv2_enrich
+
+        extra_facts, research_v2 = _rv2_enrich(
+            collected,
+            subject=subject,
+            company=resolved.company.name,
+            product=selected.name if selected else "",
+            existing_facts=facts,
+        )
+        if extra_facts:
+            facts.extend(extra_facts)
+            notes_extra.append(
+                f"Research Agent v2 grounded {len(extra_facts)} additional capability fact(s) "
+                "from manufacturer evidence."
+            )
+    except Exception:
+        research_v2 = None
+
     facts = mark_contradictions(facts)
 
     # Set display_class from strongest product_class claim (descriptive only)
@@ -225,6 +249,7 @@ def build_robot_profile(
         notes=notes,
         needs_product_choice=False,
         research_stages=stages,
+        research_v2=research_v2,
     )
     if timings is not None:
         timings["profile_ms"] = int((time.perf_counter() - t_profile) * 1000)
