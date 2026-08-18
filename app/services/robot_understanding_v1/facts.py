@@ -65,6 +65,7 @@ _SCOPED_CAPABILITY_PREDS = {
     "claims_load_unload",
     "has_dexterous_hands",
     "end_effector",
+    "claims_shelf_scan",
 }
 # Proximity window: the subject name must appear within this many characters of
 # the capability evidence for the claim to attach to the selected product.
