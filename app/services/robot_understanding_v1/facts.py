@@ -75,19 +75,34 @@ _GENERIC_PAGE_SLUGS = {
     "", "faq", "about", "contact", "products", "product", "platform", "home",
     "index", "restaurants", "restaurant", "pricing", "blog", "news", "support",
     "solutions", "company", "technology", "hospitality", "healthcare", "warehouse",
-    "logistics", "industries", "resources", "en",
+    "logistics", "industries", "resources", "en", "eldercare", "airport", "retail",
+    "manufacturing", "commercial", "utilities", "specs", "specifications", "features",
+    "overview", "details", "datasheet", "documentation", "docs", "applications", "indoor",
 }
 
 
 def _page_product_slug(url: str) -> str:
-    """Normalized last path segment — a page's product identity hint."""
+    """Normalized last path segment — a page's product identity hint.
+    
+    For nested paths (e.g. /servi-clean/specs), returns the deepest non-generic
+    segment that looks like a product. This prevents capability leaks from sibling
+    product pages with nested URLs like /product-a/overview or /product-a/specs."""
     from urllib.parse import urlparse
 
     try:
-        seg = (urlparse(url).path or "").rstrip("/").split("/")[-1]
+        path = (urlparse(url).path or "").rstrip("/")
+        segments = [s for s in path.split("/") if s]
+        if not segments:
+            return ""
+        # Walk backwards to find the first (deepest) segment that's not generic
+        for seg in reversed(segments):
+            normalized = re.sub(r"[^a-z0-9]", "", seg.lower())
+            if normalized and normalized not in _GENERIC_PAGE_SLUGS:
+                return normalized
+        # All segments are generic; return the last one
+        return re.sub(r"[^a-z0-9]", "", segments[-1].lower()) if segments else ""
     except Exception:
-        seg = ""
-    return re.sub(r"[^a-z0-9]", "", seg.lower())
+        return ""
 
 
 def _page_is_prefix_sibling(page_slug: str, subj_key: str) -> bool:
@@ -975,6 +990,7 @@ def _extract_from_page(
     ):
         add("autonomous_navigation", True, span=m.group(0), confidence=0.86)
 
+    # --- operating environment / vertical (using ontology keys only) ---
     for m in re.finditer(
         r"\b((?:indoor|outdoor)\s+(?:industrial\s+)?(?:spaces?|environments?|facilities?)|"
         r"confined\s+(?:spaces?|industrial)|"
@@ -989,6 +1005,8 @@ def _extract_from_page(
     ):
         raw = m.group(0).lower()
         # Vertical/environment ontology — see ontology/vertical_ontology.v1.json
+        # Every emitted value must be a known vertical key.
+        val = None
         if re.search(
             r"nursing\s+home|senior\s+living|assisted\s+living|memory\s+care|"
             r"skilled\s+nursing|long[-\s]term\s+care|rehabilitation|physical\s+therapy",
@@ -1013,13 +1031,16 @@ def _extract_from_page(
             val = "commercial"
         elif re.search(r"construction|jobsite", raw):
             val = "construction"
-        elif re.search(r"confined|indoor", raw):
-            val = "indoor"
         elif re.search(r"warehouse|factory", raw):
             val = "warehouse"
-        else:
-            val = raw.split()[0]
-        add("operating_environment", val, span=m.group(0)[:120], confidence=0.84)
+        elif re.search(r"confined", raw):
+            val = "indoor"
+        elif re.search(r"^indoor\s+", raw):
+            val = "indoor"
+        # Outdoor spaces/environments not yet mapped to a vertical — skip
+        # rather than emit an unknown key.
+        if val is not None:
+            add("operating_environment", val, span=m.group(0)[:120], confidence=0.84)
 
     # --- load/unload as explicit claim (fact about claim, not capability inference) ---
     for m in re.finditer(
