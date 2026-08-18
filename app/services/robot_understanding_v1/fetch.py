@@ -149,6 +149,27 @@ def fetch_page(url: str, *, timeout: tuple[float, float] = (3.0, 12.0)) -> Fetch
     )
 
 
+def fetch_text(url: str, *, timeout: tuple[float, float] = (3.0, 8.0)) -> tuple[int, str]:
+    """Fetch raw response text (e.g. an XML sitemap) — fail-open.
+
+    Returns (status_code, text). On any error returns (0, ""). Goes through the
+    same SSRF guard as fetch_page; does not parse HTML. Used only for lightweight
+    sitemap discovery, so it never raises into the pipeline.
+    """
+    try:
+        safe = assert_public_http_url(url)
+        resp = _get(safe, timeout=timeout)
+        ctype = (resp.headers.get("Content-Type") or "").lower()
+        # Guard against huge/binary payloads sneaking in as "sitemaps".
+        if "html" in ctype and "xml" not in ctype:
+            # Some hosts serve a soft-404 HTML page for missing sitemaps.
+            return resp.status_code, ""
+        text = resp.text or ""
+        return resp.status_code, text[:2_000_000]
+    except Exception:
+        return 0, ""
+
+
 def _get(url: str, *, timeout: tuple[float, float]) -> requests.Response:
     session = requests.Session()
     try:
