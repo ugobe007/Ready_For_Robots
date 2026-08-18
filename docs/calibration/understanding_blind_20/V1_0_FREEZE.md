@@ -68,6 +68,17 @@ truth are inference, not generation).
 no Blind 20 retune, no corpus expansion, no matcher change. Gated by
 `ROBOT_INFERENCE_ENGINE=1`; fails conservatively to the deterministic v1 profile.
 
+**Subject scoping (capabilities belong to the product/configuration, not the company
+or morphology):** Phase-1 detection is bound to the SELECTED product — off-subject
+pages contribute no capability facts, and any signal whose sentence-level evidence
+window names a different SKU/module is dropped (`page_supports_subject` +
+sibling-SKU gate). This is the correct model for the real world where a company sells
+multiple robots and AMR / mobile-manipulator / cobot / accessory-module boundaries
+overlap: e.g. an AMR page that also mentions a separate pick/pack arm will not
+attribute that arm to the AMR. `derive_capabilities` consumes only facts bound to the
+selected robot.
+
 **Validated (deterministic, repeatable):** NEO → grounded `manipulate/dual_arm/mobile`
-and matches manipulation work; Locus Origin (AMR) → transport/tote only; Avidbots Neo
-(scrubber) → scrub only — no over-attribution. See `tests/test_robot_inference_engine.py`.
+and matches manipulation work; Locus Origin (AMR) → transport/tote only (no false
+manipulation even when sibling-arm text is present); Avidbots Neo (scrubber) → scrub
+only. See `tests/test_robot_inference_engine.py`.

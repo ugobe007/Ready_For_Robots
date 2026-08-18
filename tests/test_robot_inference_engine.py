@@ -59,7 +59,7 @@ def test_phase1_detectors_ground_neo_like_signals():
         "NEO is a humanoid robot. Degrees of Freedom Hands 22x2 Arms 7x2. "
         "Fully mobile. Uses AI for autonomous navigation. Payload 18 lb."
     )
-    obs = _phase1_detect(pack)
+    obs = _phase1_detect(pack, "NEO")
     preds = {o.predicate: o.value for o in obs}
     assert preds.get("product_class") == "humanoid"
     assert preds.get("has_dexterous_hands") is True
@@ -75,12 +75,34 @@ def test_phase1_does_not_over_attribute_amr():
         "Locus Origin is a collaborative mobile robot that enhances productivity by more than 2X. "
         "Person-to-Goods. Incorporating LiDAR and navigation. Handles totes and containers."
     )
-    obs = _phase1_detect(pack)
+    obs = _phase1_detect(pack, "Origin")
     preds = {o.predicate for o in obs}
     assert "arm_count" not in preds  # "2X" is not arms
     assert "has_dexterous_hands" not in preds  # "handles" is not a hand
     assert "autonomous_navigation" in preds  # LiDAR / navigation
     assert "supports_tote_handling" in preds  # totes / person-to-goods
+
+
+def test_phase1_subject_scoping_blocks_sibling_sku_manipulation():
+    # Capabilities belong to the SELECTED product/config — a sibling SKU's arm on
+    # the same page must not be attributed to the AMR being researched.
+    pack = _pack(
+        "Origin is an autonomous mobile robot that moves totes. "
+        "The RoboArm-500 module has two arms and dexterous hands for pick and place."
+    )
+    obs = _phase1_detect(pack, "Origin")
+    preds = {o.predicate for o in obs}
+    # The arm/hand evidence names RoboArm-500 (a different SKU) → not Origin's.
+    assert "arm_count" not in preds
+    assert "has_dexterous_hands" not in preds
+    # Origin's own mobility/transport still grounds.
+    assert "supports_tote_handling" in preds
+
+
+def test_phase1_off_subject_page_contributes_nothing():
+    pack = _pack("The Atlas humanoid has two arms and dexterous 22x2 hands.")
+    # Researching "Origin", but the page is entirely about Atlas → no facts leak in.
+    assert _phase1_detect(pack, "Origin") == []
 
 
 # ── Structural / capability inference (forward chaining) ──────────────────────

@@ -80,20 +80,27 @@ _BOOL_DETECTORS: list[tuple[re.Pattern, str, Any, Optional[str], float]] = [
      "autonomous_navigation", True, None, CONF["HIGH"]),
     (_rx(r"\b(?:gripper|end[-\s]effector|vacuum\s+gripper|suction\s+cup|parallel[-\s]jaw|two[-\s]finger)\b"),
      "end_effector", "gripper", None, CONF["MEDIUM"]),
-    (_rx(r"\b(?:goods[-\s]to[-\s]person|person[-\s]to[-\s]goods|"
-         r"move\s+(?:totes|carts|bins)|(?:tote|cart|bin)\s+(?:transport|movement|handling)|"
-         r"(?:transport|move|handle|handling)\s+(?:totes|carts|bins))\b"),
+    (_rx(r"\btotes?\b|\bgoods[-\s]to[-\s]person\b|\bperson[-\s]to[-\s]goods\b|\border\s+picking\b|"
+         r"\bmove\s+(?:totes?|carts?|bins?)\b|\b(?:tote|cart|bin)\s+(?:transport|movement|handling)\b"),
      "supports_tote_handling", True, None, CONF["MEDIUM"]),
     (_rx(r"\b(?:load\s+and\s+unload|loading\s+and\s+unloading|machine\s+tending|load/unload)\b"),
      "claims_load_unload", True, None, CONF["MEDIUM"]),
-    (_rx(r"\b(?:hard[-\s]floor\s+scrub\w*|scrub\w*\s+(?:hard[-\s])?floors?|floor\s+scrubbing)\b"),
+    (_rx(r"\b(?:hard[-\s]floor\s+scrub\w*|scrub\w*\s+floors?|cleans?\s+floors?)\b"),
      "supports_hard_floor_scrubbing", True, None, CONF["HIGH"]),
 ]
 
 
-def _window(text: str, start: int, end: int, pad: int = 50) -> str:
-    a = max(0, start - pad)
-    b = min(len(text), end + pad)
+def _window(text: str, start: int, end: int, max_pad: int = 200) -> str:
+    """Sentence-bounded evidence window. Staying within the sentence keeps a
+    signal's evidence about ITS subject — a sibling SKU mentioned in the next
+    sentence must not bleed into (or falsely contaminate) this fact."""
+    left = max(
+        text.rfind(".", 0, start), text.rfind("\n", 0, start),
+        text.rfind("!", 0, start), text.rfind("?", 0, start),
+    )
+    a = max(left + 1 if left != -1 else 0, start - max_pad)
+    rights = [i for i in (text.find(".", end), text.find("\n", end), text.find("!", end), text.find("?", end)) if i != -1]
+    b = min((min(rights) + 1) if rights else len(text), end + max_pad)
     return re.sub(r"\s+", " ", text[a:b]).strip()
 
 
@@ -124,7 +131,23 @@ def _detect_hand_dof(text: str) -> Optional[tuple[int, str]]:
     return None
 
 
-def _phase1_detect(collected: list) -> list[Observation]:
+def _phase1_detect(collected: list, subject: str = "") -> list[Observation]:
+    """Detect explicit facts — SUBJECT-SCOPED. Capabilities belong to the selected
+    product/configuration, not the company or a morphology label. We only detect on
+    pages that name the subject, and drop any signal whose evidence window cites a
+    different SKU (a sibling product or an optional module).
+    """
+    import re as _re
+
+    from app.services.robot_understanding_v1.facts import _evidence_names_sibling_sku
+    from app.services.robot_understanding_v1.sources import page_supports_subject, subject_tokens
+
+    subj_key = _re.sub(r"[^a-z0-9]", "", (subject or "").lower())
+    tokens = subject_tokens(subject) if subject else set()
+
+    def _off_subject(window: str) -> bool:
+        return bool(subject) and _evidence_names_sibling_sku(window, subj_key=subj_key, tokens=tokens)
+
     obs: list[Observation] = []
     for c in collected:
         page = getattr(c, "page", None)
@@ -133,16 +156,26 @@ def _phase1_detect(collected: list) -> list[Observation]:
         text = getattr(page, "text", "") or ""
         if not text.strip():
             continue
+        # Page-level subject gate: an off-subject page contributes no capability facts.
+        if subject and not page_supports_subject(
+            url=getattr(page, "final_url", "") or getattr(src, "url", "") or "",
+            title=getattr(page, "title", "") or getattr(src, "title", "") or "",
+            text=text,
+            product_name=subject,
+        ):
+            continue
         for rx, predicate, value, units, conf in _BOOL_DETECTORS:
             m = rx.search(text)
             if m:
-                obs.append(Observation(predicate, value, units, _window(text, m.start(), m.end()),
-                                       sid, conf, "explicit"))
+                window = _window(text, m.start(), m.end())
+                if _off_subject(window):
+                    continue  # evidence names another SKU/module — not this product
+                obs.append(Observation(predicate, value, units, window, sid, conf, "explicit"))
         arm = _detect_arm_count(text)
-        if arm:
+        if arm and not _off_subject(arm[1]):
             obs.append(Observation("arm_count", arm[0], None, arm[1], sid, CONF["HIGH"], "explicit"))
         hd = _detect_hand_dof(text)
-        if hd:
+        if hd and not _off_subject(hd[1]):
             obs.append(Observation("hand_dof", hd[0], None, hd[1], sid, CONF["HIGH"], "explicit"))
             obs.append(Observation("has_dexterous_hands", True, None, hd[1], sid, CONF["HIGH"], "explicit"))
     return obs
@@ -296,8 +329,9 @@ def infer_facts(
                     Observation(f.predicate, f.value, f.units, f.evidence_span or "", f.source_id, f.confidence, "explicit"),
                 )
 
-        # PHASE 1 — detect additional explicit facts from the evidence pack.
-        detected = _phase1_detect(collected)
+        # PHASE 1 — detect additional explicit facts from the evidence pack,
+        # scoped to the selected product/configuration (no cross-SKU leakage).
+        detected = _phase1_detect(collected, subject)
         for o in detected:
             grounded.setdefault(o.predicate, o)
 
