@@ -143,8 +143,22 @@ def build_robot_profile(
     inference: dict[str, Any] | None = None
     try:
         from app.services.robot_inference_engine import infer_facts as _infer_facts
+        from app.services.robot_understanding_v1.sources import page_supports_subject
 
-        extra_facts, inference = _infer_facts(collected, subject=subject, existing_facts=facts)
+        # Pass filtered evidence to avoid sibling-SKU contamination
+        inference_pack = collected
+        if selected:
+            # When a product is selected, filter evidence to subject-relevant pages
+            inference_pack = [
+                c for c in collected
+                if page_supports_subject(
+                    url=c.page.final_url,
+                    title=c.page.title or "",
+                    text=c.page.text or "",
+                    product_name=selected.name,
+                )
+            ]
+        extra_facts, inference = _infer_facts(inference_pack, subject=subject, existing_facts=facts)
         if extra_facts:
             facts.extend(extra_facts)
             notes_extra.append(

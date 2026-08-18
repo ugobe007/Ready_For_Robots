@@ -80,12 +80,13 @@ _BOOL_DETECTORS: list[tuple[re.Pattern, str, Any, Optional[str], float]] = [
      "autonomous_navigation", True, None, CONF["HIGH"]),
     (_rx(r"\b(?:gripper|end[-\s]effector|vacuum\s+gripper|suction\s+cup|parallel[-\s]jaw|two[-\s]finger)\b"),
      "end_effector", "gripper", None, CONF["MEDIUM"]),
-    (_rx(r"\b(?:tote|goods[-\s]to[-\s]person|person[-\s]to[-\s]goods|order\s+picking|"
-         r"move\s+(?:totes|carts|bins)|(?:tote|cart|bin)\s+(?:transport|movement|handling))\b"),
+    (_rx(r"\b(?:goods[-\s]to[-\s]person|person[-\s]to[-\s]goods|"
+         r"move\s+(?:totes|carts|bins)|(?:tote|cart|bin)\s+(?:transport|movement|handling)|"
+         r"(?:transport|move|handle|handling)\s+(?:totes|carts|bins))\b"),
      "supports_tote_handling", True, None, CONF["MEDIUM"]),
     (_rx(r"\b(?:load\s+and\s+unload|loading\s+and\s+unloading|machine\s+tending|load/unload)\b"),
      "claims_load_unload", True, None, CONF["MEDIUM"]),
-    (_rx(r"\b(?:hard[-\s]floor\s+scrub\w*|scrub\w*\s+floors?|cleans?\s+floors?)\b"),
+    (_rx(r"\b(?:hard[-\s]floor\s+scrub\w*|scrub\w*\s+(?:hard[-\s])?floors?|floor\s+scrubbing)\b"),
      "supports_hard_floor_scrubbing", True, None, CONF["HIGH"]),
 ]
 
