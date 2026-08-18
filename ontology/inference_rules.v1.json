@@ -1,0 +1,31 @@
+{
+  "ontology_id": "rfr_inference_rules_v1",
+  "version": "1.0.0",
+  "frozen": false,
+  "note": "Structured companion to ROBOT_INFERENCE_RULES.md. Human-readable rules that govern the parse -> derive -> match workflow. Status: implemented | partial | planned.",
+  "core_traversal": ["COMPANY", "PRODUCT", "CONFIGURATION", "HARDWARE", "CAPABILITIES", "WORKFLOWS", "JOB_REQUIREMENTS", "MATCH"],
+  "forbidden_traversal": ["COMPANY_NAME", "ROBOT_CATEGORY", "JOBS"],
+  "rules": [
+    {"id": "R1", "status": "implemented", "if": ["arm_count>=1", "end_effector grounded"], "then": "manipulate=supported", "confidence": "DERIVED"},
+    {"id": "R2", "status": "implemented", "if": ["arm_count=2", "hand/effector evidence"], "then": "dual_arm"},
+    {"id": "R3", "status": "implemented", "if": ["has_dexterous_hands|hand_dof"], "then": "manipulate + dexterous"},
+    {"id": "R4", "status": "implemented", "if": ["product_class in {humanoid,mobile_manipulator,cobot,manipulator,arm}"], "then": "manipulation-morphology evidence (does not override sibling/off-subject gate)"},
+    {"id": "R5", "status": "implemented", "if": ["claims_food_prep|claims_beverage_prep"], "then": "food_prep|beverage_prep (distinct from generic manipulate)"},
+    {"id": "R6", "status": "implemented", "if": ["has_mobile_base|autonomous_navigation|mobility_architecture|mobile class"], "then": "mobile"},
+    {"id": "R7", "status": "implemented", "rule": "do not infer transport from mobility; transport requires claims_item_delivery; tote_transport requires warehouse tote/cart evidence"},
+    {"id": "R8", "status": "implemented", "rule": "human-in-the-loop picking (person-to-goods / workers pick) grounds transport, never manipulate"},
+    {"id": "R9", "status": "implemented", "if": ["product_class=humanoid"], "then": "bipedal + mobile_base; arm_count=2 when hand/effector present"},
+    {"id": "R10", "status": "implemented", "if": ["product_class=mobile_manipulator"], "then": "mobile + manipulation"},
+    {"id": "R11", "status": "implemented", "if": ["autonomous_navigation|mobility_architecture"], "then": "has_mobile_base"},
+    {"id": "R12", "status": "implemented", "if": ["product_class=autonomous_scrubber"], "then": "hard_floor_scrub"},
+    {"id": "R13", "status": "partial", "rule": "2 arms + 2 hands + vision + mobile body => likely mobile-manipulation platform, but payload/reach/autonomy each need their own evidence"},
+    {"id": "R14", "status": "implemented", "rule": "AMR != cannot manipulate; grounds manipulate/tote_transport only from its own configuration evidence"},
+    {"id": "R15", "status": "implemented", "rule": "humanoid does not auto-grant palletize; needs manipulation + payload/throughput evidence"},
+    {"id": "R16", "status": "implemented", "rule": "facts from sibling products may not flow into the selected product"},
+    {"id": "R17", "status": "implemented", "rule": "do not infer a capability from company-level copy when the selected product has no supporting hardware"},
+    {"id": "R18", "status": "partial", "rule": "optional modules must be represented as configurations, not universal product capabilities"},
+    {"id": "R19", "status": "implemented", "rule": "a job requirement is MATCHED only if the specific required capability is grounded; generic mobile is a gate"},
+    {"id": "R20", "status": "implemented", "rule": "LIKELY requires a named derivation (LIKELY_DERIVATIONS)"},
+    {"id": "R21", "status": "implemented", "rule": "any required UNMET => NOT_A_MATCH; unknowns preserved, never guessed; no match percentage"}
+  ]
+}

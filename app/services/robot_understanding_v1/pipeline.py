@@ -127,9 +127,14 @@ def build_robot_profile(
             c.source.product_id = selected.id
 
     facts = extract_facts_from_sources(collected, subject=subject)
-    # Sibling contamination gate: drop material facts whose evidence is about another SKU
+    # Sibling contamination gate: drop material facts whose evidence is about another SKU.
+    # On multi-product companies, capability/class claims must be subject-proximate so a
+    # shared nav cannot leak a sibling product's capability onto the selected product.
     if selected:
-        facts, dropped_sib = filter_facts_to_subject(facts, collected, subject=selected.name)
+        multi_product = len(resolved.products) > 1
+        facts, dropped_sib = filter_facts_to_subject(
+            facts, collected, subject=selected.name, multi_product=multi_product
+        )
         if dropped_sib:
             notes_extra.append(
                 f"Dropped {dropped_sib} sibling/off-subject fact(s) to prevent SKU contamination."
