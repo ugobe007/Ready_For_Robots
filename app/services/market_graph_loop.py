@@ -2,7 +2,7 @@
 Market graph loop — WORK-centric OBSERVE→LEARN cycle (v1 implementation).
 
 Canonical architecture: docs/rfr_intelligence_architecture.md
-Ontology: docs/ontology/rfr_graph.v1.json
+Ontology: ontology/rfr_graph.v1.json
 
 Graph = intelligence structure (what connects robot ↔ job).
 Loop  = learning behavior (what we learned after we acted).
@@ -468,7 +468,7 @@ def build_knowledge_truth_layers(
         "knowledge": {
             "node_families_touched": ["COMPANY", "LABOR", "WORK", "ROBOT", "OPPORTUNITY"],
             "center": "WORK",
-            "spine": "docs/ontology/primitives.v1.json",
+            "spine": "ontology/primitives.v1.json",
             "note": (
                 "WORK units inferred from signal/job text; robot capabilities from "
                 "catalog categories — both on primitives.v1"
@@ -568,7 +568,7 @@ def run_market_graph_loop(
             "generated_at": _utc_now(),
             "architecture": {
                 "doc": "docs/rfr_intelligence_architecture.md",
-                "ontology": "docs/ontology/rfr_graph.v1.json",
+                "ontology": "ontology/rfr_graph.v1.json",
                 "center": "WORK",
                 "mantra": [
                     "Find the Work.",

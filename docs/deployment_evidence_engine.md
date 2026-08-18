@@ -42,7 +42,7 @@ Deployment news maps onto **primitives.v1** (`PERFORMED` / performed_primitives)
 
 ## Stages (hype filter)
 
-`docs/ontology/deployment_stages.v1.json`
+`ontology/deployment_stages.v1.json`
 
 ANNOUNCED → AGREEMENT → EVALUATION → PROOF_OF_CONCEPT → PILOT → LIVE_DEPLOYMENT → COMMERCIAL_DEPLOYMENT → MULTI_SITE → EXPANSION → COMPLETED / CANCELLED / UNKNOWN
 

@@ -1,7 +1,7 @@
 """
 Reconstruct WORK units from job / labor signal text onto primitives.v1.
 
-Spine: docs/ontology/primitives.v1.json
+Spine: ontology/primitives.v1.json
 Architecture: docs/rfr_intelligence_architecture.md
 
 Job text → tasks / objects / origin–destination → ordered primitive codes.
