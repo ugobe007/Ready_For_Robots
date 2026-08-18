@@ -184,7 +184,9 @@ def is_accessory_or_marketplace(url: str) -> bool:
     return bool(_ACCESSORY_PATH.search(path))
 
 
-def discover_from_sitemap(origin: str, *, product_name: str | None = None) -> list[tuple[str, str]]:
+def discover_from_sitemap(
+    origin: str, *, product_name: str | None = None, deadline_monotonic: float | None = None
+) -> list[tuple[str, str]]:
     """Best-effort product URLs from sitemap.xml — bounded and fail-open.
 
     Reads /sitemap.xml (and up to a few child sitemaps if it is an index), keeps
@@ -197,6 +199,8 @@ def discover_from_sitemap(origin: str, *, product_name: str | None = None) -> li
             return []
         locs: list[str] = []
         for sm in ("/sitemap.xml", "/sitemap_index.xml"):
+            if deadline_monotonic is not None and time.monotonic() >= deadline_monotonic:
+                break
             status, body = fetch_text(origin + sm)
             if status and body:
                 locs.extend(_LOC_RE.findall(body))
@@ -210,6 +214,8 @@ def discover_from_sitemap(origin: str, *, product_name: str | None = None) -> li
         page_locs = [u for u in locs if not u.lower().rstrip("/").endswith(".xml")]
         for cm in child_maps:
             if len(page_locs) >= _SITEMAP_MAX_LOCS:
+                break
+            if deadline_monotonic is not None and time.monotonic() >= deadline_monotonic:
                 break
             status, body = fetch_text(cm)
             if status and body:
@@ -319,7 +325,7 @@ def collect_source_pack(
     same_domain_links = len(home.links)
     _deadline_ok = deadline_monotonic is None or time.monotonic() < deadline_monotonic
     if same_domain_links < _THIN_HOMEPAGE_LINKS and _deadline_ok:
-        for sm_url, sm_anchor in discover_from_sitemap(origin, product_name=product_name):
+        for sm_url, sm_anchor in discover_from_sitemap(origin, product_name=product_name, deadline_monotonic=deadline_monotonic):
             if should_reject_url(sm_url):
                 continue
             stype, conf = classify_source_type(sm_url, sm_anchor)
