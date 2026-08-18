@@ -220,9 +220,12 @@ def filter_facts_to_subject(
             if _page_is_prefix_sibling(page_slug, subj_key):
                 dropped += 1
                 continue
-            # (b) Generic/listing/company pages: require the subject to be named
-            #     near the evidence, or the claim belongs to some other product.
-            if page_slug in _GENERIC_PAGE_SLUGS and not _subject_in_window(
+            # (b) Any page that is NOT the subject's own product page (listings,
+            #     company/overview pages, or a different product) must name the
+            #     subject near the evidence — otherwise the claim belongs to some
+            #     other product. Only the subject's dedicated page (slug == subject)
+            #     is trusted unconditionally.
+            elif page_slug != subj_key and not _subject_in_window(
                 prox_window, subj_key, tokens
             ):
                 dropped += 1
