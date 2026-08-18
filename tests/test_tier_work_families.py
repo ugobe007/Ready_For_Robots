@@ -65,3 +65,30 @@ def test_frozen_robots_do_not_leak_into_any_new_family():
     for name in ("vega", "digit", "origin", "neo", "spot"):
         fams = _fams(_fx(name))
         assert fams.isdisjoint(NEW_FAMILIES), (name, fams & NEW_FAMILIES)
+
+
+def _extract(text: str) -> set[str]:
+    from app.services.robot_understanding_v1 import facts as F
+    from app.services.robot_understanding_v1.models import RobotSource
+    src = RobotSource(id="s", url="https://x.ai/robot", source_type="product",
+                      fetched_at="t", title="R", confidence=0.85)
+    facts = F._extract_from_page(src, text, subject="", page_url="https://x.ai/robot", page_title="R")
+    return {f.predicate for f in facts if f.epistemic != "unknown"}
+
+
+def test_sortation_requires_robot_or_parcel_context():
+    # Bare "sortation" as a warehouse function (Locus) must not ground it.
+    assert "claims_sortation" not in _extract(
+        "Our AMR supports goods-to-person picking, replenishment, and sortation workflows in the warehouse."
+    )
+    # A real sortation robot does ground it.
+    assert "claims_sortation" in _extract("This robotic sortation system sorts parcels to destination chutes.")
+
+
+def test_disinfection_requires_uv_or_clinical_room():
+    # "surface disinfection" as a floor-scrubber cleaning benefit (Avidbots) must not ground it.
+    assert "claims_disinfection" not in _extract(
+        "The autonomous floor scrubber cleans and provides surface disinfection across hard floors."
+    )
+    # A UV disinfection robot does ground it.
+    assert "claims_disinfection" in _extract("This UV-C disinfection robot disinfects patient rooms between occupancies.")

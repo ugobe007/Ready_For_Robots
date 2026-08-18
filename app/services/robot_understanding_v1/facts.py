@@ -1022,9 +1022,11 @@ def _extract_from_page(
         add("claims_piece_pick", True, span=m.group(0)[:120], confidence=0.85)
 
     # --- Tier 1: parcel sortation ---
+    # Require robot/parcel context — bare "sortation" is a warehouse function word
+    # (Locus markets sortation workflows without being a sortation robot).
     for m in re.finditer(
-        r"\b(?:sortation|parcel\s+sort\w*|sort\w*\s+(?:parcels?|packages?)|"
-        r"put[-\s]to[-\s]wall|robotic\s+sort\w*|automated\s+sortation)\b",
+        r"\b(?:sortation\s+robots?|robotic\s+sortation|automated\s+sortation|"
+        r"parcel\s+sort\w+|sort(?:s|ing)?\s+(?:parcels?|packages?)|put[-\s]to[-\s]wall)\b",
         text,
         re.I,
     ):
@@ -1032,11 +1034,13 @@ def _extract_from_page(
             continue
         add("claims_sortation", True, span=m.group(0)[:120], confidence=0.85)
 
-    # --- Tier 2: UV / surface disinfection ---
+    # --- Tier 2: UV / room disinfection ---
+    # Require UV/ultraviolet, a disinfection robot, or clinical-room disinfection —
+    # NOT generic "surface disinfection" (floor scrubbers like Avidbots claim that
+    # as a cleaning benefit; it is not a dedicated disinfection capability).
     for m in re.finditer(
         r"\b(?:uv[-\s]?c?\s+disinfect\w*|ultraviolet\s+disinfect\w*|disinfection\s+robots?|"
-        r"disinfect\w*\s+(?:surfaces?|rooms?|patient\s+rooms?|spaces?)|germ[-\s]?zapping|"
-        r"surface\s+disinfect\w*)\b",
+        r"germ[-\s]?zapping|disinfect\w*\s+(?:patient\s+rooms?|operating\s+rooms?|hospital\s+rooms?))\b",
         text,
         re.I,
     ):
