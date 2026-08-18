@@ -31,6 +31,15 @@ tool_use`
 | `hard_floor_scrub` | Hard-floor scrubbing | `supports_hard_floor_scrubbing` \| scrubber class |
 | `surface_clean` | Restroom/fixture/carpet cleaning | `claims_surface_cleaning` |
 | `shelf_scan` | Retail shelf / inventory scanning | `claims_shelf_scan` |
+| `pallet_move` | Pallet handling / autonomous forklift | `claims_pallet_handling` |
+| `trailer_unload` | Trailer / container unloading | `claims_trailer_unload` |
+| `pick_pack` | Piece/each picking + pack | `claims_piece_pick` |
+| `sortation` | Parcel sortation | `claims_sortation` |
+| `disinfect` | UV / surface disinfection | `claims_disinfection` |
+| `goods_to_person` | ASRS goods-to-person | `claims_goods_to_person` |
+| `agriculture_task` | Agricultural field work | `claims_agriculture` |
+| `construction_task` | Construction site work | `claims_construction` |
+| `mining_task` | Mining / haulage | `claims_mining` |
 | `food_prep` | Food preparation / cooking | `claims_food_prep` |
 | `beverage_prep` | Drink / beverage preparation | `claims_beverage_prep` |
 | `inspect_route` | Mobile inspection route | quadruped class (named derivation) |

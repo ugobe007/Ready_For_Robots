@@ -1441,6 +1441,318 @@
         "Dining schedule",
         "Access control"
       ]
+    },
+    {
+      "job_key": "pallet_dock_to_storage",
+      "title": "Move inbound pallets from dock to storage",
+      "industry": "Warehouse",
+      "path": "DOCK → STORAGE",
+      "company_name": "Cardinal Distribution",
+      "locality": "Memphis, TN",
+      "families": [],
+      "actions": [],
+      "text": "autonomous forklift moves pallets from receiving dock to rack storage",
+      "source": "tier_seed",
+      "tape_family": "pallet_move",
+      "unknowns": [
+        "Pallet weight",
+        "Rack height"
+      ]
+    },
+    {
+      "job_key": "pallet_line_feed",
+      "title": "Feed pallets of raw material to production lines",
+      "industry": "Manufacturing",
+      "path": "WAREHOUSE → LINE",
+      "company_name": "Delmar Manufacturing",
+      "locality": "Toledo, OH",
+      "families": [],
+      "actions": [],
+      "text": "pallet jack transports pallets of raw material to production line-side",
+      "source": "tier_seed",
+      "tape_family": "pallet_move",
+      "unknowns": [
+        "Pallet weight"
+      ]
+    },
+    {
+      "job_key": "pallet_putaway",
+      "title": "Put away pallets into racking",
+      "industry": "3PL warehouse",
+      "path": "RECEIVING → RACK",
+      "company_name": "Vanguard Logistics",
+      "locality": "Ontario, CA",
+      "families": [],
+      "actions": [],
+      "text": "autonomous forklift pallet putaway into high racking",
+      "source": "tier_seed",
+      "tape_family": "pallet_move",
+      "unknowns": [
+        "Rack height"
+      ]
+    },
+    {
+      "job_key": "trailer_unload_floor",
+      "title": "Unload floor-loaded cases from trailers",
+      "industry": "Distribution center",
+      "path": "TRAILER → CONVEYOR",
+      "company_name": "Summit Grocery DC",
+      "locality": "Kansas City, MO",
+      "families": [],
+      "actions": [],
+      "text": "robot unloads floor-loaded cases from trailers onto the conveyor",
+      "source": "tier_seed",
+      "tape_family": "trailer_unload",
+      "unknowns": [
+        "Case weight",
+        "Unload rate"
+      ]
+    },
+    {
+      "job_key": "trailer_unload_container",
+      "title": "Unload cases from import containers",
+      "industry": "Port warehouse",
+      "path": "CONTAINER → DOCK",
+      "company_name": "Harbor Freight Terminal",
+      "locality": "Savannah, GA",
+      "families": [],
+      "actions": [],
+      "text": "autonomous container unloading of cases at the dock",
+      "source": "tier_seed",
+      "tape_family": "trailer_unload",
+      "unknowns": [
+        "Case weight"
+      ]
+    },
+    {
+      "job_key": "pickpack_ecom",
+      "title": "Piece-pick items into e-commerce orders",
+      "industry": "E-commerce fulfillment",
+      "path": "PICK CELL",
+      "company_name": "Rapid Ship Fulfillment",
+      "locality": "Columbus, OH",
+      "families": [],
+      "actions": [],
+      "text": "robotic piece picking and pack of e-commerce order items",
+      "source": "tier_seed",
+      "tape_family": "pick_pack",
+      "unknowns": [
+        "Pick rate",
+        "Item variety"
+      ]
+    },
+    {
+      "job_key": "pickpack_pharma",
+      "title": "Each-pick pharmacy items for orders",
+      "industry": "Pharmacy DC",
+      "path": "PICK CELL",
+      "company_name": "MedSupply Distribution",
+      "locality": "Memphis, TN",
+      "families": [],
+      "actions": [],
+      "text": "each picking and pack of pharmacy items into orders",
+      "source": "tier_seed",
+      "tape_family": "pick_pack",
+      "unknowns": [
+        "Pick rate"
+      ]
+    },
+    {
+      "job_key": "sortation_parcel",
+      "title": "Sort parcels to destination chutes",
+      "industry": "Parcel hub",
+      "path": "INDUCTION → CHUTES",
+      "company_name": "ExpressPost Hub",
+      "locality": "Louisville, KY",
+      "families": [],
+      "actions": [],
+      "text": "robotic sortation of parcels to destination chutes",
+      "source": "tier_seed",
+      "tape_family": "sortation",
+      "unknowns": [
+        "Sort rate"
+      ]
+    },
+    {
+      "job_key": "sortation_returns",
+      "title": "Sort returned packages by disposition",
+      "industry": "Returns center",
+      "path": "INDUCTION → PUT-WALL",
+      "company_name": "ReCommerce Returns",
+      "locality": "Grove City, OH",
+      "families": [],
+      "actions": [],
+      "text": "sort returned packages to put-to-wall by disposition",
+      "source": "tier_seed",
+      "tape_family": "sortation",
+      "unknowns": [
+        "Sort rate"
+      ]
+    },
+    {
+      "job_key": "disinfect_patient_rooms",
+      "title": "UV-disinfect patient rooms between occupancies",
+      "industry": "Hospital",
+      "path": "PATIENT ROOMS",
+      "company_name": "Mercy General Hospital",
+      "locality": "Columbus, OH",
+      "families": [],
+      "actions": [],
+      "text": "uv disinfection of patient rooms and surfaces between occupancies",
+      "source": "tier_seed",
+      "tape_family": "disinfection",
+      "unknowns": [
+        "Cycle time",
+        "Room layout"
+      ]
+    },
+    {
+      "job_key": "disinfect_operating_rooms",
+      "title": "Disinfect operating rooms after procedures",
+      "industry": "Surgery center",
+      "path": "OPERATING ROOMS",
+      "company_name": "Lakeside Surgical Center",
+      "locality": "Kenosha, WI",
+      "families": [],
+      "actions": [],
+      "text": "uv-c disinfect operating rooms and surfaces after procedures",
+      "source": "tier_seed",
+      "tape_family": "disinfection",
+      "unknowns": [
+        "Cycle time"
+      ]
+    },
+    {
+      "job_key": "asrs_goods_to_person",
+      "title": "Store and retrieve totes to pick stations",
+      "industry": "E-grocery fulfillment",
+      "path": "GRID → PICK STATIONS",
+      "company_name": "FreshCart E-Grocery",
+      "locality": "Newark, NJ",
+      "families": [],
+      "actions": [],
+      "text": "automated storage and retrieval goods-to-person to pick stations",
+      "source": "tier_seed",
+      "tape_family": "asrs",
+      "unknowns": [
+        "Order rate",
+        "Grid size"
+      ]
+    },
+    {
+      "job_key": "asrs_case_handling",
+      "title": "Retrieve and present cases to packers",
+      "industry": "Retail DC",
+      "path": "ASRS → PACK",
+      "company_name": "BJ Wholesale DC",
+      "locality": "Burlington, NJ",
+      "families": [],
+      "actions": [],
+      "text": "autonomous case-handling asrs presents cases to packers",
+      "source": "tier_seed",
+      "tape_family": "asrs",
+      "unknowns": [
+        "Order rate"
+      ]
+    },
+    {
+      "job_key": "ag_laser_weeding",
+      "title": "Weed vegetable rows autonomously",
+      "industry": "Agriculture",
+      "path": "FIELD ROWS",
+      "company_name": "Green Valley Farms",
+      "locality": "Salinas, CA",
+      "families": [],
+      "actions": [],
+      "text": "autonomous laser weeding of vegetable crop rows in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Field size",
+        "Crop type"
+      ]
+    },
+    {
+      "job_key": "ag_harvest",
+      "title": "Harvest produce in the field",
+      "industry": "Agriculture",
+      "path": "FIELD",
+      "company_name": "Sunrise Orchards",
+      "locality": "Yakima, WA",
+      "families": [],
+      "actions": [],
+      "text": "robot harvests produce crops in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Crop type",
+        "Season"
+      ]
+    },
+    {
+      "job_key": "construction_layout",
+      "title": "Print floor layout on the jobsite",
+      "industry": "Construction",
+      "path": "JOBSITE FLOOR",
+      "company_name": "BuildTech Contractors",
+      "locality": "Austin, TX",
+      "families": [],
+      "actions": [],
+      "text": "layout printer robot marks construction floor layout on the jobsite",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Site conditions"
+      ]
+    },
+    {
+      "job_key": "construction_drywall",
+      "title": "Finish drywall on the jobsite",
+      "industry": "Construction",
+      "path": "JOBSITE",
+      "company_name": "Skyline Builders",
+      "locality": "Denver, CO",
+      "families": [],
+      "actions": [],
+      "text": "drywall finishing robot on the construction jobsite",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Site access"
+      ]
+    },
+    {
+      "job_key": "mining_haulage",
+      "title": "Haul ore autonomously in the pit",
+      "industry": "Mining",
+      "path": "PIT → CRUSHER",
+      "company_name": "IronRidge Mining",
+      "locality": "Hibbing, MN",
+      "families": [],
+      "actions": [],
+      "text": "autonomous haulage of ore from the pit to the crusher",
+      "source": "tier_seed",
+      "tape_family": "mining",
+      "unknowns": [
+        "Haul distance",
+        "Terrain"
+      ]
+    },
+    {
+      "job_key": "mining_drilling",
+      "title": "Autonomously drill blast holes",
+      "industry": "Mining",
+      "path": "BENCH",
+      "company_name": "Copper Basin Mining",
+      "locality": "Morenci, AZ",
+      "families": [],
+      "actions": [],
+      "text": "autonomous drilling of blast holes on the mining bench",
+      "source": "tier_seed",
+      "tape_family": "mining",
+      "unknowns": [
+        "Rock type"
+      ]
     }
   ]
 }

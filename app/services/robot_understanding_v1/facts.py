@@ -66,6 +66,15 @@ _SCOPED_CAPABILITY_PREDS = {
     "has_dexterous_hands",
     "end_effector",
     "claims_shelf_scan",
+    "claims_pallet_handling",
+    "claims_trailer_unload",
+    "claims_piece_pick",
+    "claims_sortation",
+    "claims_disinfection",
+    "claims_goods_to_person",
+    "claims_agriculture",
+    "claims_construction",
+    "claims_mining",
 }
 # Proximity window: the subject name must appear within this many characters of
 # the capability evidence for the claim to attach to the selected product.
@@ -972,6 +981,115 @@ def _extract_from_page(
         if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
             continue
         add("claims_shelf_scan", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Tier 1: pallet handling / autonomous forklift ---
+    for m in re.finditer(
+        r"\b(?:autonomous\s+forklifts?|robotic\s+forklifts?|automated\s+forklifts?|"
+        r"pallet\s+jacks?|pallet\s+movers?|pallet[-\s]moving|reach\s+trucks?|"
+        r"(?:lift|move|transport|handle)s?\s+pallets?|pallet\s+(?:handling|putaway|transport)|"
+        r"load(?:s|ing)?\s+and\s+unload(?:s|ing)?\s+pallets?)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_pallet_handling", True, span=m.group(0)[:120], confidence=0.85)
+        if re.search(r"forklift|pallet\s+jack|reach\s+truck", m.group(0), re.I):
+            add("product_class", "autonomous_forklift", span=m.group(0)[:120], confidence=0.85)
+
+    # --- Tier 1: trailer / container unloading ---
+    for m in re.finditer(
+        r"\b(?:trailer\s+unload\w*|truck\s+unload\w*|container\s+unload\w*|"
+        r"unload\w*\s+(?:trailers?|trucks?|containers?)|(?:floor|hand)[-\s]?load\w*\s+trailers?|"
+        r"unstuff\w*\s+containers?)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_trailer_unload", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Tier 1: piece / each picking + pack (robot-side order picking) ---
+    for m in re.finditer(
+        r"\b(?:piece[-\s]pick\w*|each[-\s]pick\w*|pick[-\s]and[-\s]pack\w*|"
+        r"order[-\s]picking\s+robots?|robotic\s+(?:piece|each|item|order)\s+pick\w*|"
+        r"induction\s+pick\w*)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_piece_pick", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Tier 1: parcel sortation ---
+    for m in re.finditer(
+        r"\b(?:sortation|parcel\s+sort\w*|sort\w*\s+(?:parcels?|packages?)|"
+        r"put[-\s]to[-\s]wall|robotic\s+sort\w*|automated\s+sortation)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_sortation", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Tier 2: UV / surface disinfection ---
+    for m in re.finditer(
+        r"\b(?:uv[-\s]?c?\s+disinfect\w*|ultraviolet\s+disinfect\w*|disinfection\s+robots?|"
+        r"disinfect\w*\s+(?:surfaces?|rooms?|patient\s+rooms?|spaces?)|germ[-\s]?zapping|"
+        r"surface\s+disinfect\w*)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_disinfection", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Tier 2: ASRS / goods-to-person (automated storage & retrieval) ---
+    for m in re.finditer(
+        r"\b(?:automated\s+storage\s+and\s+retrieval|\bAS/?RS\b|"
+        r"case[-\s]handling\s+robots?|autonomous\s+case[-\s]handling|cube\s+storage|"
+        r"bin[-\s]to[-\s]person|goods[-\s]to[-\s]person\s+system)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_goods_to_person", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Tier 3: agriculture (recognized vertical; job matching now in scope) ---
+    for m in re.finditer(
+        r"\b(?:agricultural\s+robots?|farm\s+robots?|autonomous\s+tractors?|laser\s+weed\w*|"
+        r"(?:weed\w*|harvest\w*|spray\w*|prune\w*|thin\w*|seed\w*)\s+"
+        r"(?:crops?|plants?|fields?|rows?|orchards?|produce|vineyards?))\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_agriculture", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Tier 3: construction ---
+    for m in re.finditer(
+        r"\b(?:construction\s+robots?|drywall\s+(?:finish\w*|install\w*|robots?)|"
+        r"layout\s+(?:robot|printer)|brick[-\s]?lay\w*|rebar\s+(?:tying|robots?)|"
+        r"autonomous\s+(?:excavat\w*|dozers?|graders?)|jobsite\s+robots?)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_construction", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Tier 3: mining ---
+    for m in re.finditer(
+        r"\b(?:mining\s+robots?|autonomous\s+(?:haul\w*|haulers?|drill\w*|loaders?|dump\s+trucks?)|"
+        r"underground\s+mining|(?:ore|rock)\s+haul\w*|autonomous\s+drilling\s+rigs?)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_mining", True, span=m.group(0)[:120], confidence=0.85)
 
     # --- warehouse / factory deployment claims ---
     for m in re.finditer(

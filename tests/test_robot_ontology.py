@@ -38,6 +38,15 @@ def _all_capabilities_profile() -> dict:
             f("claims_beverage_prep", True),            # beverage_prep
             f("claims_surface_cleaning", True),         # surface_clean
             f("claims_shelf_scan", True),               # shelf_scan
+            f("claims_pallet_handling", True),          # pallet_move
+            f("claims_trailer_unload", True),           # trailer_unload
+            f("claims_piece_pick", True),               # pick_pack
+            f("claims_sortation", True),                # sortation
+            f("claims_disinfection", True),             # disinfect
+            f("claims_goods_to_person", True),          # goods_to_person
+            f("claims_agriculture", True),              # agriculture_task
+            f("claims_construction", True),             # construction_task
+            f("claims_mining", True),                   # mining_task
             f("supports_hard_floor_scrubbing", True),   # hard_floor_scrub
             f("reach_or_workspace", 2.0, "m"),          # reach
             f("carrying_capacity", 50, "kg"),           # payload
