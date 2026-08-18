@@ -93,3 +93,22 @@ warehouse" moves totes of food, it does not prepare it), and marketing metrics
 an AMR that grabs items off shelves → `manipulate`; a food-prep robot → `manipulate`;
 Locus Origin (person-to-goods page) → transport/tote only (no false manipulation);
 Avidbots Neo (scrubber) → scrub only. See `tests/test_robot_inference_engine.py`.
+
+**Blind competitor set (2026-08-18, Bob-supplied):** this is a big, overlapping
+space — the engine was re-validated against two more real manufacturer sites:
+
+- **Brightpick** (`brightpick.ai`) — same job class as Locus, but the *robot* picks:
+  "mobile robotic picking", "mobile manipulators pick directly inside the storage
+  area". Grounds `manipulate` + `mobile` + `tote_transport`. The robot-attributed
+  picking signal (`robotic picking` / `manipulators pick`) is what separates it from
+  a person-to-goods AMR — the distinction is the *actor*, not the category.
+- **Nimo** (`nimotechs.com`) — mobile-base humanoid-like food-prep robot whose entire
+  pitch is "highly dexterous bimanual manipulation" / "two-handed tasks". There is no
+  noun "hands", so v1 grounded nothing. `bimanual` / `dexterous manipulation` /
+  `two-handed manipulation` now ground `manipulate` + `dexterous_manipulation` +
+  `dual_arm` (word-bounded so "handles" ≠ "hands"/"handed").
+
+Detector additions (still category-agnostic, evidence-first, no per-vendor branch):
+plural "mobile manipulators"; `mobile_manipulator` class → mobile + manipulation;
+robot-attributed picking (`robotic picking`, `manipulators pick`); and bimanual /
+two-handed / dexterous-manipulation dexterity language.

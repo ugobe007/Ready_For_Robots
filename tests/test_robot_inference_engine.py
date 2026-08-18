@@ -145,6 +145,47 @@ def test_mobile_manipulator_class_detected():
     assert obs.get("product_class") == "mobile_manipulator"
 
 
+def test_mobile_manipulator_plural_and_grounds_manipulation():
+    # "Mobile manipulators" (plural) must still detect the class, and a mobile
+    # manipulator — by definition — is mobile AND manipulates.
+    grounded = _grounded(_phase1_detect(_pack("Our mobile manipulators pick directly inside the storage area."), ""))
+    assert grounded.get("product_class") and grounded["product_class"].value == "mobile_manipulator"
+    inferred = {o.predicate for o in _phase23_infer(grounded)}
+    assert "has_mobile_base" in inferred
+
+
+def test_brightpick_like_amr_grounds_robotic_picking(monkeypatch):
+    # Brightpick: an AMR whose OWN robots pick (mobile manipulators pick, robotic
+    # picking) — this is robot manipulation, unlike person-to-goods where a worker picks.
+    monkeypatch.setenv("ROBOT_INFERENCE_ENGINE", "1")
+    pack = _pack(
+        "Our AI robots automate every step of warehouse order fulfillment with mobile robotic picking. "
+        "Mobile manipulators pick directly inside the storage area. "
+        "Flexible Goods-to-Person workflows support batch picking. Standard shelving and totes."
+    )
+    _, summary = infer_facts(pack, subject="", existing_facts=[])
+    caps = {c["capability"] for c in summary["capabilities"]}
+    assert "manipulate" in caps  # the robot itself picks → manipulation grounded
+    assert "mobile" in caps
+    assert "tote_transport" in caps
+
+
+def test_bimanual_dexterity_grounds_manipulation(monkeypatch):
+    # Nimo: entire pitch is "highly dexterous bimanual manipulation" / "two-handed
+    # tasks" — no noun "hands", but this is explicit dexterity → grounded.
+    monkeypatch.setenv("ROBOT_INFERENCE_ENGINE", "1")
+    pack = _pack(
+        "General-purpose robotic systems. Our architecture centers on highly dexterous bimanual "
+        "manipulation, allowing our systems to perform complex, two-handed tasks."
+    )
+    _, summary = infer_facts(pack, subject="", existing_facts=[])
+    caps = {c["capability"] for c in summary["capabilities"]}
+    assert {"manipulate", "dexterous_manipulation", "dual_arm"} <= caps
+    # "handles the complex tasks" must NOT be the trigger — dexterity is.
+    obs = {o.predicate for o in _phase1_detect(_pack("The system handles complex tasks."), "")}
+    assert "has_dexterous_hands" not in obs
+
+
 # ── Structural / capability inference (forward chaining) ──────────────────────
 
 def test_humanoid_infers_mobility_and_dual_arm():

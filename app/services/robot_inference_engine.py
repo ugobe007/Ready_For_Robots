@@ -69,9 +69,15 @@ _BOOL_DETECTORS: list[tuple[re.Pattern, str, Any, Optional[str], float]] = [
     (_rx(r"\bquadruped\b|\bfour[-\s]legged\b"), "product_class", "quadruped", None, CONF["HIGH"]),
     (_rx(r"\b(?:auto[-\s]?scrubber|floor\s+scrubb?er|scrubber\b|floor\s+scrubbing)\b"),
      "product_class", "autonomous_scrubber", None, CONF["HIGH"]),
-    (_rx(r"\bmobile\s+manipulator\b"), "product_class", "mobile_manipulator", None, CONF["HIGH"]),
+    (_rx(r"\bmobile\s+manipulators?\b"), "product_class", "mobile_manipulator", None, CONF["HIGH"]),
     (_rx(r"\bautonomous\s+mobile\s+robot\b|\bamr\b"), "product_class", "amr", None, CONF["MEDIUM"]),
     (_rx(r"\bdexterous\b(?:\s+\w+){0,3}?\s+hands?\b|\bhands?\b(?:\s+\w+){0,3}?\s+dexter"),
+     "has_dexterous_hands", True, None, CONF["HIGH"]),
+    # Bimanual / two-handed / dexterous manipulation are explicit dexterity claims
+    # even without the noun "hands" — humanoids and general-purpose manipulators
+    # (e.g. Nimo) describe capability this way. Word-bounded; "handles" ≠ "handed".
+    (_rx(r"\bbimanual\b|\bdexterous\s+manipulat\w+|"
+         r"\btwo[-\s]handed\s+(?:manipulat\w+|dexterity|tasks?|grasp\w*|grip\w*)\b"),
      "has_dexterous_hands", True, None, CONF["HIGH"]),
     (_rx(r"\b(?:robot(?:ic)?\s+arm|manipulator\s+arm|articulated\s+arm)\b"),
      "end_effector", "gripper", None, CONF["MEDIUM"]),
@@ -116,6 +122,10 @@ def _detect_arm_count(text: str) -> Optional[tuple[int, str]]:
     m = re.search(r"\b(two|dual|double)[-\s]?arm", text, re.I)
     if m:
         return 2, _window(text, m.start(), m.end())
+    # Bimanual / two-handed manipulation ⇒ two arms.
+    m = re.search(r"\bbimanual\b|\btwo[-\s]handed\s+(?:manipulat\w+|dexterity|tasks?|grasp\w*|grip\w*)", text, re.I)
+    if m:
+        return 2, _window(text, m.start(), m.end())
     m = re.search(r"\b(\d+)\s*arms?\b", text, re.I)
     if m:
         n = int(m.group(1))
@@ -151,6 +161,15 @@ _MANIP_ACTION = re.compile(
     re.I,
 )
 _MANIP_OBJECT = re.compile(r"\b(?:item|items|object|objects|product|products|part|parts|package|packages|box|boxes|goods|shelf|shelves|rack|racks)\b", re.I)
+# The ROBOT itself performing autonomous picking/grasping/placing — robot-attributed
+# manipulation, not a human picker. Distinguishes Brightpick ("mobile manipulators
+# pick", "robotic picking") from person-to-goods AMRs where a worker picks.
+_ROBOTIC_MANIP = re.compile(
+    r"\b(?:robotic\s+(?:pick\w*|grasp\w*|manipulat\w+)|"
+    r"(?:mobile\s+manipulators?|robots?|robotic\s+arms?)\s+(?:pick\w*|grasp\w*|grab\w*|place\w*|load\w*)|"
+    r"automate\w*\s+(?:picking|palletiz\w+))\b",
+    re.I,
+)
 # Food preparation = dexterous manipulation. Chopping/slicing/dicing/etc. are
 # dexterous on their own; prepare/cook/assemble need a real FOOD object. Verbs and
 # nouns are chosen NOT to collide with warehouse copy ("mixed orders", "makes
@@ -187,6 +206,9 @@ def _detect_manipulation(text: str) -> list[tuple[str, Any, str]]:
         window = re.sub(r"\s+", " ", s)[:240]
         # Robot manipulation action on objects (grab/pick items off shelf, telescoping retrieve).
         if _MANIP_ACTION.search(s) and _MANIP_OBJECT.search(s):
+            out.append(("end_effector", "gripper", window))
+        # Robot-attributed picking/grasping (robotic picking; manipulators pick).
+        elif _ROBOTIC_MANIP.search(s):
             out.append(("end_effector", "gripper", window))
         # Food prep is dexterous manipulation.
         if _FOOD_DEXTEROUS.search(s) or _FOOD_PREP.search(s) or _FOOD_CONTEXT.search(s):
@@ -287,6 +309,12 @@ def _phase23_infer(grounded: dict[str, Observation]) -> list[Observation]:
         # Humanoids are dual-arm when any arm/hand evidence exists.
         if (_has(grounded, "has_dexterous_hands") or _has(grounded, "end_effector")) and "arm_count" not in grounded:
             add("arm_count", 2, None, ["product_class=humanoid", "has_dexterous_hands"], CONF["MEDIUM"], "has_dexterous_hands")
+
+    # A mobile manipulator, by definition, is mobile AND manipulates.
+    if _has(grounded, "product_class", "mobile_manipulator"):
+        add("has_mobile_base", True, None, ["product_class=mobile_manipulator"], CONF["HIGH"], "product_class")
+        if "end_effector" not in grounded and not _has(grounded, "has_dexterous_hands") and "arm_count" not in grounded:
+            add("end_effector", "gripper", None, ["product_class=mobile_manipulator"], CONF["MEDIUM"], "product_class")
 
     # Navigation or a mobility architecture implies a mobile base.
     if _has(grounded, "autonomous_navigation") and "has_mobile_base" not in grounded:
