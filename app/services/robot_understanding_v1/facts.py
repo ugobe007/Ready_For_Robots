@@ -730,6 +730,27 @@ def _extract_from_page(
             continue
         add("claims_warehouse_transport", True, span=m.group(0), confidence=0.85)
 
+    # --- autonomous item delivery / transport (service & delivery robots) ---
+    # A robot that itself carries and delivers items point-to-point (meals,
+    # medications, lab samples, guest amenities, room service, packages). This is
+    # a transport capability that is NOT warehouse tote handling — hospitality and
+    # healthcare delivery robots (Relay, Keenon, Pudu) are transport robots too.
+    for m in re.finditer(
+        r"\b(?:"
+        r"delivery\s+robots?|autonomous\s+delivery|"
+        r"(?:deliver|transport|carr(?:y|ies|ying)|bring)\w*\s+(?:[\w-]+\s+){0,4}?"
+        r"(?:items?|goods|medications?|medicines?|supplies|samples?|specimens?|"
+        r"amenities|meals?|food|drinks?|beverages?|packages?|parcels?|documents?|"
+        r"linens?|laundry|room[- ]service)|"
+        r"room[- ]service\s+(?:delivery|deliveries|items?)|guest\s+amenities"
+        r")\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_item_delivery", True, span=m.group(0)[:120], confidence=0.85)
+
     # --- warehouse / factory deployment claims ---
     for m in re.finditer(
         r"\b(commercially\s+deployed|commercial\s+deployment|deployed\s+in\s+"

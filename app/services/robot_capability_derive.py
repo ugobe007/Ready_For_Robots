@@ -225,6 +225,28 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
             derived_from=["supports_tote_handling", "claims_warehouse_transport"],
         )
 
+    # Autonomous item delivery / transport (service & delivery robots). Distinct
+    # from warehouse tote handling: a hospitality/healthcare delivery robot carries
+    # and delivers items point-to-point. Grounded from an explicit delivery claim.
+    delivery = _truthy(facts, "claims_item_delivery")
+    if delivery:
+        caps["transport"] = DerivedCapability(
+            key="transport",
+            label="autonomous item transport / delivery",
+            present=True,
+            derivation="explicit",
+            derived_from=["claims_item_delivery"],
+            evidence=delivery.get("evidence_span") or "item delivery / transport",
+        )
+    else:
+        caps["transport"] = DerivedCapability(
+            key="transport",
+            label="autonomous item transport / delivery",
+            present=False,
+            derivation="explicit",
+            derived_from=["claims_item_delivery"],
+        )
+
     scrub = _truthy(facts, "supports_hard_floor_scrubbing")
     if scrub:
         caps["hard_floor_scrub"] = DerivedCapability(

@@ -188,6 +188,40 @@ def test_ranking_prefers_distinctive_capability_utilization():
     assert all("score" not in j for j in digit_jobs + origin["jobs"])
 
 
+def test_hospitality_delivery_robot_matches_transport_work():
+    """A hospitality/healthcare delivery robot (Relay) is a transport robot.
+
+    Regression: it used to derive only `mobile` and match 0 jobs because the
+    ontology had no slot for autonomous item delivery/transport (only warehouse
+    tote handling). It must now match transport/cart work — and only that.
+    """
+    from app.services.robot_capability_derive import derive_capabilities
+
+    profile = _profile("relay")
+    caps = derive_capabilities(profile)
+    assert caps["transport"].present  # delivery/transport grounded
+    assert not caps["manipulate"].present  # a delivery cart does not manipulate
+    assert caps["mobile"].present
+
+    result = match_jobs_from_profile(profile, limit=40)
+    assert result["job_count"] > 0  # no longer 0 jobs
+    families = {j["tape_family"] for j in result["jobs"]}
+    assert families <= {"transport", "cart"}  # transport work, not manipulation/scrub/inspect
+    assert families & {"transport", "cart"}
+    for job in result["jobs"]:
+        assert job["verdict"] == VERDICT_POSSIBLE
+        assert job["why"]
+        assert any("transport" in w.lower() or "delivery" in w.lower() or "mobile" in w.lower() for w in job["why"])
+    assert any(c["key"] == "transport" for c in result["capabilities"])
+
+
+def test_delivery_robot_does_not_match_manipulation_or_scrub():
+    """Truthful gating: a delivery robot must still be rejected from manipulation
+    and scrubbing work it cannot do."""
+    assert match_job_spec(_profile("relay"), "manip_novolex_kinston_nc").verdict == VERDICT_NOT
+    assert match_job_spec(_profile("relay"), "neo_unifi_atl").verdict == VERDICT_NOT
+
+
 def test_api_uses_requirement_matcher_when_profile_present():
     from app.api.robot_job_match import RobotJobMatchIn, post_robot_job_match
 

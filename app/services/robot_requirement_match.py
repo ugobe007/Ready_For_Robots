@@ -44,6 +44,7 @@ DISTINCTIVE_CAPABILITIES = frozenset(
         "manipulate",
         "dual_arm",
         "tote_transport",
+        "transport",
         "hard_floor_scrub",
         "inspect_route",
         "load_unload",
@@ -56,7 +57,7 @@ REQUIREMENT_EXERCISES = {
     "manipulate_part": frozenset({"manipulate"}),
     "acquire_case_from_conveyor": frozenset({"manipulate", "load_unload"}),
     "place_case_into_pallet": frozenset({"manipulate", "load_unload"}),
-    "relocate_totes_or_carts": frozenset({"tote_transport"}),
+    "relocate_totes_or_carts": frozenset({"tote_transport", "transport"}),
     "hard_floor_scrub": frozenset({"hard_floor_scrub"}),
     "inspect_route_mobility": frozenset({"inspect_route"}),
     "reach_envelope": frozenset({"reach"}),
@@ -167,6 +168,7 @@ def _eval_requirement(
     manip = _cap(caps, "manipulate")
     mobile = _cap(caps, "mobile")
     tote = _cap(caps, "tote_transport")
+    transport = _cap(caps, "transport")
     scrub = _cap(caps, "hard_floor_scrub")
     inspect = _cap(caps, "inspect_route")
     reach = _cap(caps, "reach")
@@ -266,6 +268,9 @@ def _eval_requirement(
     if rid == "relocate_totes_or_carts":
         if tote.present:
             return RequirementResult(rid, label, necessity, MATCHED, tote.evidence or tote.label)
+        if transport.present:
+            # A delivery/transport robot carries and relocates items and carts.
+            return RequirementResult(rid, label, necessity, MATCHED, transport.evidence or transport.label)
         if mobile.present and manip.present:
             return RequirementResult(
                 rid, label, necessity, LIKELY,
@@ -370,7 +375,14 @@ def _why_lines(
         if _cap(caps, "mobile").present:
             add(_cap(caps, "mobile").label)
     if needed & {"relocate_totes_or_carts"}:
-        add(_cap(caps, "tote_transport").label if _cap(caps, "tote_transport").present else "can relocate objects")
+        tote = _cap(caps, "tote_transport")
+        transport = _cap(caps, "transport")
+        if tote.present:
+            add(tote.label)
+        elif transport.present:
+            add(transport.label)
+        else:
+            add("can relocate objects")
     if needed & {"hard_floor_scrub"}:
         add(_cap(caps, "hard_floor_scrub").label)
     if needed & {"inspect_route_mobility"}:
@@ -612,7 +624,7 @@ def match_jobs_from_profile(
         jobs_out.extend(c.to_api_job() for c in cards if c.verdict == VERDICT_NOT)
 
     cap_out = []
-    for key in ("dual_arm", "manipulate", "mobile", "reach", "tote_transport", "hard_floor_scrub", "inspect_route"):
+    for key in ("dual_arm", "manipulate", "mobile", "reach", "tote_transport", "transport", "hard_floor_scrub", "inspect_route"):
         c = caps.get(key)
         if c and c.present:
             cap_out.append(
