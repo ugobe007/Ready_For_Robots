@@ -1032,10 +1032,12 @@ def _extract_from_page(
         ):
             val = "eldercare"
         elif re.search(
-            r"hospital|healthcare|clinic|surgery\s+cent|surgical\s+cent|"
-            r"pharmac|laborator|medical\s+cent",
+            r"\bhospitals?\b|\bhealthcare\b|\bclinics?\b|surgery\s+cent|surgical\s+cent|"
+            r"\bpharmac(?:y|ies)\b|\blaborator(?:y|ies)\b|medical\s+cent",
             raw,
         ):
+            # Word-bounded: "hospital" must not match "hospitality" (a substring),
+            # which belongs to the hospitality vertical below.
             val = "healthcare"
         elif re.search(r"hotel|hospitality", raw):
             val = "hospitality"
