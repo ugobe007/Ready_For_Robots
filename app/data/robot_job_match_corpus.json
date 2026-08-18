@@ -1204,6 +1204,125 @@
       "unknowns": [
         "Traffic level"
       ]
+    },
+    {
+      "job_key": "clinical_meds_delivery",
+      "title": "Deliver medications from pharmacy to patient units",
+      "industry": "Hospital",
+      "path": "PHARMACY → PATIENT UNITS",
+      "company_name": "Mercy General Hospital",
+      "locality": "Columbus, OH",
+      "families": [],
+      "actions": [],
+      "text": "deliver medications from central pharmacy to nursing units hospital clinical delivery",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Elevator access",
+        "Secure handoff"
+      ]
+    },
+    {
+      "job_key": "clinical_specimen_runs",
+      "title": "Transport lab specimens to the laboratory",
+      "industry": "Hospital",
+      "path": "UNITS → LABORATORY",
+      "company_name": "Riverside Health System",
+      "locality": "Newport News, VA",
+      "families": [],
+      "actions": [],
+      "text": "transport lab specimens and samples to the laboratory across the hospital",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Specimen handling",
+        "Turnaround time"
+      ]
+    },
+    {
+      "job_key": "clinical_supply_replenishment",
+      "title": "Replenish supply carts to nursing units",
+      "industry": "Hospital",
+      "path": "SUPPLY → UNITS",
+      "company_name": "St. Anne Medical Center",
+      "locality": "Toledo, OH",
+      "families": [],
+      "actions": [],
+      "text": "replenish par-level supplies and materials to nursing units clinical supply delivery",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Cart weight",
+        "Restock frequency"
+      ]
+    },
+    {
+      "job_key": "clinical_meal_linen",
+      "title": "Deliver meal trays and linens to patient floors",
+      "industry": "Hospital",
+      "path": "KITCHEN/LAUNDRY → FLOORS",
+      "company_name": "Lakeside Regional Hospital",
+      "locality": "Kenosha, WI",
+      "families": [],
+      "actions": [],
+      "text": "deliver meal trays and clean linens to patient floors and remove soiled linens",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Temperature hold"
+      ]
+    },
+    {
+      "job_key": "resident_meal_delivery",
+      "title": "Deliver meals to resident rooms",
+      "industry": "Senior living",
+      "path": "KITCHEN → RESIDENT ROOMS",
+      "company_name": "Brookhaven Senior Living",
+      "locality": "Naperville, IL",
+      "families": [],
+      "actions": [],
+      "text": "deliver meals and beverages to resident rooms senior living dining delivery",
+      "source": "healthcare_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Load weight",
+        "Dining schedule"
+      ]
+    },
+    {
+      "job_key": "resident_linen_amenities",
+      "title": "Deliver linens and amenities to resident rooms",
+      "industry": "Assisted living",
+      "path": "SUPPLY → RESIDENT ROOMS",
+      "company_name": "Maple Grove Assisted Living",
+      "locality": "Rochester, MN",
+      "families": [],
+      "actions": [],
+      "text": "deliver fresh linens towels and amenities to resident rooms assisted living",
+      "source": "healthcare_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Load weight"
+      ]
+    },
+    {
+      "job_key": "resident_med_pass_support",
+      "title": "Move medication and supply carts between care wings",
+      "industry": "Skilled nursing",
+      "path": "SUPPLY → CARE WINGS",
+      "company_name": "Cedar Ridge Care Center",
+      "locality": "Boise, ID",
+      "families": [],
+      "actions": [],
+      "text": "move medication and supply carts between care wings skilled nursing resident services",
+      "source": "healthcare_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Cart weight",
+        "Access control"
+      ]
     }
   ]
 }

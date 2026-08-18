@@ -51,6 +51,7 @@ REQUIREMENT_EXERCISES = {
     "place_case_into_pallet": frozenset({"manipulate", "load_unload"}),
     "relocate_totes_or_carts": frozenset({"tote_transport", "transport"}),
     "serve_food_drink": frozenset({"transport"}),
+    "deliver_items": frozenset({"transport"}),
     "prepare_food": frozenset({"food_prep"}),
     "prepare_beverage": frozenset({"beverage_prep"}),
     "clean_surfaces": frozenset({"surface_clean"}),
@@ -321,6 +322,16 @@ def _eval_requirement(
             "no grounded item delivery/serving capability",
         )
 
+    if rid == "deliver_items":
+        # Point-to-point delivery of clinical/resident items — the robot's own
+        # autonomous item-transport capability (not warehouse tote handling).
+        if transport.present:
+            return RequirementResult(rid, label, necessity, MATCHED, transport.evidence or transport.label)
+        return RequirementResult(
+            rid, label, necessity, UNMET,
+            "no grounded autonomous item-delivery capability",
+        )
+
     if rid == "prepare_food":
         if food_prep.present:
             return RequirementResult(rid, label, necessity, MATCHED, food_prep.evidence or food_prep.label)
@@ -417,7 +428,7 @@ def _why_lines(
             add(transport.label)
         else:
             add("can relocate objects")
-    if needed & {"serve_food_drink"}:
+    if needed & {"serve_food_drink", "deliver_items"}:
         t = _cap(caps, "transport")
         add(t.label if t.present else _cap(caps, "tote_transport").label)
         if _cap(caps, "mobile").present:
@@ -567,6 +578,20 @@ _RESTROOM_REQS = [
     {"id": "mobility", "label": "mobility between restrooms", "necessity": "required"},
     {"id": "hard_floor_scrub", "label": "hard-floor scrubbing", "necessity": "not_required"},
 ]
+# Healthcare — hospital clinical delivery (meds, specimens, supplies, meals, linens).
+_CLINICAL_REQS = [
+    {"id": "deliver_items", "label": "deliver clinical items (meds/specimens/supplies)", "necessity": "required"},
+    {"id": "indoor_navigation", "label": "navigate the hospital (elevators, secure doors)", "necessity": "required"},
+    {"id": "mobility", "label": "mobility between departments", "necessity": "required"},
+    {"id": "payload_vs_object_weight", "label": "payload \u2265 load weight", "necessity": "required", "job_value": None, "unknown_reason": "load weight"},
+]
+# Eldercare — resident services (meals, linens, amenities, supplies to rooms).
+_RESIDENT_REQS = [
+    {"id": "deliver_items", "label": "deliver resident items (meals/linens/amenities)", "necessity": "required"},
+    {"id": "indoor_navigation", "label": "navigate the community", "necessity": "required"},
+    {"id": "mobility", "label": "mobility between resident rooms", "necessity": "required"},
+    {"id": "payload_vs_object_weight", "label": "payload \u2265 load weight", "necessity": "required", "job_value": None, "unknown_reason": "load weight"},
+]
 
 
 def requirements_for_corpus_job(row: dict[str, Any]) -> list[dict[str, Any]]:
@@ -590,6 +615,10 @@ def requirements_for_corpus_job(row: dict[str, Any]) -> list[dict[str, Any]]:
         return list(_FOOD_PREP_REQS)
     if tape == "beverage":
         return list(_BEVERAGE_REQS)
+    if tape == "clinical_delivery":
+        return list(_CLINICAL_REQS)
+    if tape == "resident_services":
+        return list(_RESIDENT_REQS)
     if tape == "restroom":
         return list(_RESTROOM_REQS)
     if tape in {"transport", "cart"}:
