@@ -81,16 +81,27 @@ _GENERIC_PAGE_SLUGS = {
 }
 
 
-# Path segments that are NOT product identities: locale/country codes (en, en-us),
+# Path segments that are NOT product identities: locale/country codes (en-us, fr-ca),
 # versions (v1, v2), and category/listing words. If a nested path is made up only
 # of these plus generic leaves, it is a listing page (no specific product), so the
 # slug is "" and the subject-proximity gate applies.
-_LOCALE_SEGMENT_RE = re.compile(r"^[a-z]{2}([-_][a-z]{2,3})?$")  # en, en-us, en_gb, fr
+_LOCALE_CODES = {
+    "en-us", "en-gb", "en-ca", "en-au", "en-nz", "en-ie", "en-za",
+    "fr-fr", "fr-ca", "fr-be", "fr-ch",
+    "de-de", "de-at", "de-ch",
+    "es-es", "es-mx", "es-ar", "es-co",
+    "it-it", "pt-pt", "pt-br",
+    "nl-nl", "nl-be",
+    "zh-cn", "zh-tw", "zh-hk",
+    "ja-jp", "ko-kr",
+    "ru-ru", "pl-pl", "sv-se", "da-dk", "no-no", "fi-fi",
+}
 _VERSION_SEGMENT_RE = re.compile(r"^v\d+(?:[._]\d+)*$")           # v1, v2, v2.1
 _NON_PRODUCT_SLUGS = {
     "robots", "robot", "models", "model", "catalog", "catalogue", "category",
     "categories", "lineup", "portfolio", "series", "range", "fleet",
     "us", "usa", "uk", "eu", "global", "intl", "international",
+    "fr", "de", "es", "it", "pt", "nl", "zh", "ja", "ko", "ru", "pl", "sv", "da", "no", "fi",
 }
 
 
@@ -114,7 +125,7 @@ def _page_product_slug(url: str) -> str:
                 continue
             if normalized in _GENERIC_PAGE_SLUGS or normalized in _NON_PRODUCT_SLUGS:
                 continue
-            if _LOCALE_SEGMENT_RE.match(low) or _VERSION_SEGMENT_RE.match(low):
+            if low in _LOCALE_CODES or _VERSION_SEGMENT_RE.match(low):
                 continue
             return normalized
         # No product-specific segment — a listing/locale/version path.
