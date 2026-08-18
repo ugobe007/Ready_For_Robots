@@ -16,7 +16,7 @@ Do **not** blur matcher-in-isolation with the production MATCH TRUTH gate.
 
 | Release line | Status |
 |--------------|--------|
-| **MATCH TRUTH** | **logic PASS** / **production verification pending** |
+| **MATCH TRUTH** | **PRODUCTION PASS** |
 | **SUBMIT WORKFLOW** | **merged** (#13) / **production smoke PASS** (visual 2026-08-17) |
 | **TRAFFIC** | **paused** |
 
@@ -27,12 +27,12 @@ Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 | # | Gate | Status |
 |---|------|--------|
 | 1 | **PROFILE PATH** — production uses `/api/robot-profile` + multi-product selection | **PASS** (P0-A 2026-08-17) |
-| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **logic PASS** (requirement_v1 + utilization ranking on branch). **Production verification pending** — ranking is not the live gate until it is re-landed after this submit-workflow smoke and the four robot boards are re-run on Fly. |
+| 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **PRODUCTION PASS** (2026-08-17) — #15 merged and live on Fly. Four-board verify: Vega manipulation/palletize + Novolex #8; Digit machine-load first, tote remains at rank 17; Origin transport/tote only; Neo scrub only. Every positive match has Why; unknowns kept; Origin/Neo Novolex name the unmet manipulation blocker. **M2 frozen.** |
 | 2a | **SUBMIT WORKFLOW** — atomic reveal, stable layout, `/api/robot-job-search` | **merged** / **production smoke PASS** — Vercel bundle calls `/api/robot-job-search`; uncached Stretch ~14s researching UI then one reveal; picker keeps public market tape (not a personal board); bad URL recovers with zero matched jobs. |
 | 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS. **Auth infra verified live** (2026-08-17): GoTrue `v2.195.0`, signup enabled, providers **email + Google + GitHub**, `/signup` `/login` `/auth/callback` `/pipeline` all SPA 200, return-path + `resume=save` plumbing unit-tested (10/10). **Remaining:** the actual authenticated round trip (A6/A7) is BLOCKED on a controlled account — `mailer_autoconfirm` is **off**, so email needs a real inbox; unblock with a controlled inbox/OAuth or a Supabase service-role key (admin-create a confirmed user). |
-| 4 | **TELEMETRY** — events + src/persona + shadow | **PARTIAL** — src/events mostly PASS; profile-path events newly available; persona BLOCKED |
+| 4 | **TELEMETRY** — events + src/persona + shadow | **PASS** — verified 2026-08-17: `rdd_capabilities_viewed` emits (RobotJobsExperiment:627) → `/api/track/visit` ingests + stores; `persona` (via `funnelBase()`) survives ingest and is queryable; signup funnel `signup_start→complete→first_save` aggregates with rates; unknown funnel stage rejected 400. Note: `marketing_conversion_snapshot` uses Postgres `->>` (runs live via `/api/analytics`); SQLite can't round-trip that JSON operator (same limit as `pipeline_cache_store`). |
 
-**Release sequence (gate, not a suggestion):** #13 smoke (done) → re-land ranking (#12) → four-board production verify → freeze M2 → auth continuity → telemetry → pre-traffic gate. Do not publish C04 / invite external traffic.
+**Release sequence (gate, not a suggestion):** #13 smoke (done) → re-land ranking (#15 merged) → four-board production verify (**PRODUCTION PASS**) → **M2 frozen** → auth continuity → telemetry → pre-traffic gate. Do not publish C04 / invite external traffic.
 
 ---
 
@@ -84,7 +84,7 @@ Evidence: `reports/v1_p0a_spine_20260817/spine_results.json` + screenshots.
 
 ## Executive summary (full matrix — prior pass + P0-A delta)
 
-Smoke works. **PROFILE PATH is now live** (was the critical UI/API split). **MATCH TRUTH remains open:** heuristic job boards can still look alike across robots — do not invite traffic on profile wiring alone. Auth return still needs a controlled account. M2 (requirements matching, e.g. Novolex) is the **next mission**, unlocked for prototyping against grounded Tier A/B/C profiles — Understanding extractors stay frozen.
+Smoke works. **PROFILE PATH is live.** **MATCH TRUTH is PRODUCTION PASS** — four live boards are physically different and explainable. Auth return still needs a controlled account. **M2 is frozen.** Understanding extractors stay frozen. Traffic stays paused until auth continuity + telemetry + final pre-traffic smoke.
 
 ---
 
@@ -97,7 +97,7 @@ Smoke works. **PROFILE PATH is now live** (was the critical UI/API split). **MAT
 | C Funnel | Network capture of `rdd_*` + `signup_start` (`src=v1_pretraffic` / `src=p0a_spine`) |
 | Shadow fail-open | Code review + unit tests; prod Jobs now hits profile → shadow can accrue |
 
-**Not done:** full email signup / return-to-jobs (BLOCKED — no operator-controlled inbox). MATCH TRUTH / Phase 4 matcher rebuild (deferred to M2 mission).
+**Not done:** full email signup / return-to-jobs (BLOCKED — no operator-controlled inbox). MATCH TRUTH production verify is done; M2 frozen.
 
 ---
 
@@ -105,10 +105,10 @@ Smoke works. **PROFILE PATH is now live** (was the critical UI/API split). **MAT
 
 | Workflow | Must happen | Outcome | Notes |
 |----------|-------------|---------|-------|
-| **Agility homepage** | Resolve Agility → Digit → grounded profile → jobs | **PASS** (spine) / MATCH TRUTH open | P0-A: profile path + Digit UI. Job quality still heuristic. |
-| **Dexmate homepage** | Resolve Vega → manipulation-weighted jobs | **FAIL** (prior) | Not re-run in P0-A spine; Understanding frozen — M2/honest recover |
-| **Locus** | Origin → transport jobs, no bleed | **MISLEADING** (prior match) | Profile path now available; matcher still open |
-| **Avidbots** | Neo → cleaning jobs | **MISLEADING** (prior match) | Profile API was strong; UI now can show it |
+| **Agility homepage** | Resolve Agility → Digit → grounded profile → jobs | **PASS** | Profile path + MATCH TRUTH: machine-load/palletize dominate; legitimate tote work remains (first tote rank 17). |
+| **Dexmate homepage** | Resolve Vega → manipulation-weighted jobs | **PASS** | CNC/palletize board; Novolex-class work at rank 8. Historical FAIL was pre-M2. |
+| **Locus** | Origin → transport jobs, no bleed | **PASS** | Transport/tote/cart only; Novolex rejected with named manipulation blocker. Historical MISLEADING was pre-M2. |
+| **Avidbots** | Neo → cleaning jobs | **PASS** | Scrub-only board; transport/manipulation rejected. Historical MISLEADING was pre-M2. |
 | **Multi-product OEM** | Discover products → ask which robot | **PASS** (P0-A UI) | BD: Spot/Stretch/Atlas picker |
 | **Bad/thin URL** | Honest B/C or unable-to-verify | **PASS** | example.com recover / C-tier |
 
@@ -144,12 +144,12 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 | ID | Case | Outcome | Evidence |
 |----|------|---------|----------|
 | B1 | Agility → Digit grounded | **PASS** (UI+API) | P0-A profile card / Digit |
-| B2 | Agility jobs plausible for Digit | **OPEN** (MATCH TRUTH) | Not claimed by P0-A |
-| B3 | Dexmate → Vega + manipulation jobs | **FAIL** | Prior; frozen Understanding |
-| B4–B6 | Locus / Avidbots / bleed / boards | **OPEN** / prior MISLEADING | Matcher mission |
+| B2 | Agility jobs plausible for Digit | **PASS** | Production 2026-08-17: gripper/pallet top-12; tote available at rank 17 |
+| B3 | Dexmate → Vega + manipulation jobs | **PASS** | Production 2026-08-17: gripper 7 + pallet 5; Novolex #8 |
+| B4–B6 | Locus / Avidbots / bleed / boards | **PASS** | Origin transport/cart only; Neo scrub only; Novolex blocked for both |
 | B6 | Multi-product ask-which-robot | **PASS** | P0-A BD UI |
 | B7 | Thin URL honest uncertainty | **PASS** | P0-A |
-| B12 | Job boards materially different | **FAIL** / OPEN | MATCH TRUTH — M2 |
+| B12 | Job boards materially different | **PASS** | Four-board production verify 2026-08-17 |
 | B13 | Prod UI uses Understanding profile | **PASS** | Bundle + network `robot-profile` |
 
 ### C. Funnel / instrumentation
@@ -157,10 +157,24 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 | ID | Event / check | Outcome | Evidence |
 |----|---------------|---------|----------|
 | C1–C3, C6–C8, C10 | Core funnel + src | **PASS** | Prior |
-| C4 | `rdd_capabilities_viewed` | **READY TO VERIFY** | Profile path live; re-check on next funnel pass |
-| C9 | `persona` survival | **BLOCKED** | Needs persona slug session |
+| C4 | `rdd_capabilities_viewed` | **PASS** | Emit wired (RobotJobsExperiment:627 → `trackMarketingEvent` → `/api/track/visit`); ingest + storage verified (event stored as `visit`, `payload.path=/event/rdd_capabilities_viewed`) |
+| C9 | `persona` survival | **PASS** | `funnelBase()` attaches `persona` on `/jobs/:slug`; verified persisted + queryable in event payload (`integrator`, `oem`) across visit + funnel events |
 | C11 | Shadow logging fail-open | **PASS** (code) | Jobs UI now calls profile → can feed shadow |
 | C12 | Qualify copy | **PASS** | Prior |
+
+#### Telemetry — ingest verification (2026-08-17)
+
+Verified end-to-end against the local API (no writes to production analytics):
+
+| Check | Result |
+|-------|--------|
+| `POST /api/track/visit` `path=/event/rdd_capabilities_viewed` | **PASS** — `{status: tracked}`, row stored as `visit` |
+| `persona` in payload survives ingest | **PASS** — queryable: `integrator`, `oem` |
+| `POST /api/track/funnel` `signup_start` / `signup_complete` / `first_save` | **PASS** — each stored; `signup_funnel_metrics` aggregates with rates |
+| Unknown funnel stage | **PASS** — rejected `400 Unknown funnel stage` |
+| Emit wiring | **PASS** — `capabilities_viewed` (RobotJobsExperiment:627) + `funnelBase()` persona (line 387) |
+
+Reproduce: `POST /api/track/visit {"path":"/event/rdd_capabilities_viewed","persona":"oem","step":"capabilities_viewed"}` then read `site_analytics_events`. `marketing_conversion_snapshot` (Postgres `->>`) is exercised live via `GET /api/analytics`.
 
 ### Auth / qualify
 
@@ -201,20 +215,20 @@ done
 ### P0 — still blocking traffic
 
 1. ~~Deploy Jobs frontend that calls `/api/robot-profile`~~ **DONE (P0-A)**  
-2. **MATCH TRUTH / M2** — **logic PASS** (requirements + distinctive-capability utilization ranking on the ranking branch). **Production verification pending.** Do not treat logic PASS as the production MATCH TRUTH gate.  
+2. ~~**MATCH TRUTH / M2**~~ **PRODUCTION PASS** — #15 live; four boards verified; **M2 frozen**. No fifth robot, no ranking tweaks, no new scoring ideas.
 2a. ~~**Submit workflow**~~ **merged / production smoke PASS** — atomic reveal, stable layout, profile cache. Public market tape during research/picker is intended; personal boards reveal once.  
 3. ~~Multi-product OEM ask on live UI~~ **DONE (P0-A)**  
-4. Dexmate → Vega (may stay honest recover until Understanding reopen rule trips)
+4. ~~Dexmate → Vega~~ **PASS** (production MATCH TRUTH)
 
 ### P1
 
-5–8. Class / bleed / product_name alignment — largely M2  
+5–8. ~~Class / bleed / product_name alignment~~ **PASS** on the four production boards (M2 frozen)
 9. ~~Replace SIGNAL document title~~ **DONE**  
 10. Prove auth return with controlled account — **infra verified live; blocked only on a controlled inbox/OAuth or `SUPABASE_SERVICE_ROLE_KEY`** (see Auth continuity — infra verification)  
 
 ### P2
 
-11–15. Health probe, capabilities_viewed verification, persona, shadow accrual confirm, keep Playwright script  
+11–15. Health probe; ~~capabilities_viewed verification~~ **DONE**; ~~persona~~ **DONE**; shadow accrual confirm (needs traffic); keep Playwright script  
 
 ---
 
@@ -225,8 +239,8 @@ done
 | Content / LinkedIn publishing (incl. C04) | **STOP** |
 | Invite external traffic | **NO** |
 | Understanding Phase 4 extractors / Blind retune | **DO NOT OPEN** |
-| **M2 matcher prototyping** | **logic PASS** — freeze further matcher research unless production ranking verify exposes a truth/ranking defect |
-| Next step | Re-land utilization ranking → four-board production verify → freeze M2 → auth continuity → telemetry → pre-traffic gate |
+| **M2 matcher** | **FROZEN** after **MATCH TRUTH — PRODUCTION PASS** |
+| Next step | Auth continuity → telemetry → final pre-traffic smoke → GO/NO-GO |
 
 ---
 

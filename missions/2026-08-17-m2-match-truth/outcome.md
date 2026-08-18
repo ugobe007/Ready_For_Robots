@@ -72,6 +72,30 @@ Re-rank of the same four live production profiles (Understanding frozen; ranking
 | Neo / Origin boards look like those robots | **PASS** — Origin tote #1 is an excellent Origin match |
 | Digit board uses more of Digit first | **PASS** — CNC / machine load-unload, then pallet; legitimate tote/cart lower |
 
-**MATCH TRUTH (matcher):** **PASS** on this ranking. Fly still serves `33fdc69` until this commit deploys. Traffic / C04 stay paused until **auth continuity + telemetry**. No further matcher research unless those tests reveal an actual failure.
+**MATCH TRUTH (matcher):** **PASS** on this ranking (logic). Production gate closed below.
 
 Evidence (do not commit): `reports/m2_prod_smoke_20260817/` · `reports/m2_rank_rerun_20260817/`
+
+## MATCH TRUTH — PRODUCTION PASS
+
+**Date:** 2026-08-17  
+**Merge:** #15 (`8342b7ff`) landed on `main`.  
+**Live API:** `https://ready-2-robot.fly.dev` (`matcher=requirement_v1`)  
+**Method:** `POST /api/robot-profile` then `POST /api/robot-job-match` with that profile (same path as the Jobs UI compose).
+
+GitHub Actions `Deploy` step failed on Alembic `release_command` timeout (no new migrations in #15). Post-deploy `Ensure all machines are started` and `/health` succeeded. Live boards changed from the pre-merge snapshot (Digit tote-first → machine-load-first), so the ranking image is serving.
+
+| Robot | Must demonstrate | Production result |
+|-------|------------------|-------------------|
+| Dexmate Vega | Manipulation/palletizing dominates; Novolex-class work appears prominently | **PASS** — top-12 gripper 7 + pallet 5; Novolex #8. Why + job-side unknowns kept; no blockers on positives. |
+| Agility Digit | Mobile-manipulation dominates over generic transport; legitimate tote work remains | **PASS** — top-12 gripper 7 + pallet 5 (was transport/cart-first before #15). First tote at rank 17 (`origin_curascript_tempe`); 20 tote/cart jobs still possible. |
+| Locus Origin | Transport/tote/cart dominates; manipulation rejected | **PASS** — top-12 transport 9 + cart 3. Novolex **NOT A MATCH** — named blocker: case acquisition / pallet placement; no grounded manipulation. |
+| Avidbots Neo | Cleaning/scrubbing dominates; transport/manipulation rejected | **PASS** — top-12 scrub 12. Novolex **NOT A MATCH** — same named manipulation blocker. No tote/transport jobs. |
+
+Every positive result explains why, preserves unknowns, and carries no hard blocker. Hard rejections name the unmet requirement.
+
+**M2 frozen.** No fifth robot, no ranking tweaks, no new scoring ideas.
+
+**Next (not matcher work):** auth continuity → telemetry → final pre-traffic smoke → GO/NO-GO. Traffic / C04 stay paused.
+
+Evidence (do not commit): `reports/m2_prod_verify_20260817/`

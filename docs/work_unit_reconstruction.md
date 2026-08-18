@@ -2,7 +2,7 @@
 
 Reconstruct physical **WORK** from job / labor signal text onto the shared `primitives.v1` spine.
 
-**Spine:** [`docs/ontology/primitives.v1.json`](ontology/primitives.v1.json)  
+**Spine:** [`ontology/primitives.v1.json`](../ontology/primitives.v1.json)  
 **Architecture:** [`docs/rfr_intelligence_architecture.md`](rfr_intelligence_architecture.md)
 
 ```

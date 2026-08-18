@@ -40,7 +40,7 @@
         "volume",
         "performance_requirement"
       ],
-      "primitives_ref": "docs/ontology/primitives.v1.json"
+      "primitives_ref": "ontology/primitives.v1.json"
     },
     {
       "id": "LABOR",
