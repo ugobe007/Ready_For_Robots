@@ -3,7 +3,7 @@
 **Date:** 2026-08-17  
 **Type:** build  
 **Agents:** Orchestrator  
-**Status:** in progress
+**Status:** done — MATCH TRUTH — PRODUCTION PASS; M2 frozen
 
 ## Goal
 
