@@ -106,9 +106,9 @@ def test_thin_homepage_triggers_sitemap(monkeypatch):
     called = {"n": 0}
     real = S.discover_from_sitemap
 
-    def spy(origin, *, product_name=None):
+    def spy(origin, *, product_name=None, deadline_monotonic=None):
         called["n"] += 1
-        return real(origin, product_name=product_name)
+        return real(origin, product_name=product_name, deadline_monotonic=deadline_monotonic)
 
     monkeypatch.setattr(S, "discover_from_sitemap", spy)
     # Fetch of discovered pages fails (network) → pack may be homepage-only, but
@@ -121,7 +121,7 @@ def test_thin_homepage_triggers_sitemap(monkeypatch):
 def test_rich_homepage_skips_sitemap(monkeypatch):
     called = {"n": 0}
 
-    def spy(origin, *, product_name=None):
+    def spy(origin, *, product_name=None, deadline_monotonic=None):
         called["n"] += 1
         return []
 
