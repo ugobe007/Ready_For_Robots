@@ -69,9 +69,12 @@ _BOOL_DETECTORS: list[tuple[re.Pattern, str, Any, Optional[str], float]] = [
     (_rx(r"\bquadruped\b|\bfour[-\s]legged\b"), "product_class", "quadruped", None, CONF["HIGH"]),
     (_rx(r"\b(?:auto[-\s]?scrubber|floor\s+scrubb?er|scrubber\b|floor\s+scrubbing)\b"),
      "product_class", "autonomous_scrubber", None, CONF["HIGH"]),
+    (_rx(r"\bmobile\s+manipulator\b"), "product_class", "mobile_manipulator", None, CONF["HIGH"]),
     (_rx(r"\bautonomous\s+mobile\s+robot\b|\bamr\b"), "product_class", "amr", None, CONF["MEDIUM"]),
     (_rx(r"\bdexterous\b(?:\s+\w+){0,3}?\s+hands?\b|\bhands?\b(?:\s+\w+){0,3}?\s+dexter"),
      "has_dexterous_hands", True, None, CONF["HIGH"]),
+    (_rx(r"\b(?:robot(?:ic)?\s+arm|manipulator\s+arm|articulated\s+arm)\b"),
+     "end_effector", "gripper", None, CONF["MEDIUM"]),
     (_rx(r"\b(?:mobile\s+base|fully\s+mobile|omnidirectional|mecanum|holonomic|wheeled\s+base)\b"),
      "has_mobile_base", True, None, CONF["HIGH"]),
     (_rx(r"\b(?:bipedal|biped|two\s+legs|legged\s+locomotion)\b"),
@@ -131,6 +134,66 @@ def _detect_hand_dof(text: str) -> Optional[tuple[int, str]]:
     return None
 
 
+# Manipulation is a CAPABILITY, not a category. Humanoids inherently manipulate;
+# AMRs increasingly manipulate (telescoping grab-off-shelf, mounted arms); food
+# prep is dexterous manipulation. Ground it from the robot's OWN manipulation
+# actions/hardware — but not from human-in-the-loop pick language (person-to-goods,
+# where the worker picks) or marketing metrics.
+_HUMAN_IN_LOOP = re.compile(
+    r"\b(?:person[-\s]to[-\s]goods|goods[-\s]to[-\s]person|workers?\s+pick|associates?\s+pick|"
+    r"pickers?|picking\s+and\s+putaway|put[-\s]to[-\s]light|pick[-\s]to[-\s]light|pick[-\s]?assist)\b",
+    re.I,
+)
+# The robot itself acquiring/handling objects.
+_MANIP_ACTION = re.compile(
+    r"\b(?:grasp\w*|grab\w*|pick(?:s|ing)?\s+up|pick[-\s]and[-\s]place|"
+    r"telescop\w+|retriev\w+|(?:pick|grab|remove|retriev\w+)\s+\w*\s*(?:items?|products?|objects?|parts?|boxes?)\s+(?:off|from))\b",
+    re.I,
+)
+_MANIP_OBJECT = re.compile(r"\b(?:item|items|object|objects|product|products|part|parts|package|packages|box|boxes|goods|shelf|shelves|rack|racks)\b", re.I)
+# Food preparation = dexterous manipulation. Chopping/slicing/dicing/etc. are
+# dexterous on their own; prepare/cook/assemble need a real FOOD object. Verbs and
+# nouns are chosen NOT to collide with warehouse copy ("mixed orders", "makes
+# operations efficient") — no "mix", no "order", no bare "make".
+_FOOD_DEXTEROUS = re.compile(r"\b(?:chop\w*|slic\w+|dic\w+|peel\w*|julienne\w*|debon\w+|fillet\w*|knead\w*|garnish\w*)\b", re.I)
+_FOOD_NOUN = (
+    r"food|meal|meals|salad\w*|bowl\w*|taco\w*|burrito\w*|pizza\w*|sandwich\w*|entree\w*|"
+    r"ingredient\w*|recipe\w*|coffee|beverage\w*|dough|batter|produce|vegetable\w*|noodle\w*|"
+    r"pasta|sushi|meat|protein\w*"
+)
+_FOOD_PREP = re.compile(
+    r"\b(?:prepar\w+|assembl\w+|plat\w+|cook\w*|fry|fries|frying|grill\w*|saut\w+)\b"
+    r"[^.\n]{0,40}?\b(?:" + _FOOD_NOUN + r")\b",
+    re.I,
+)
+# NOTE: "foodservice" is a distribution vertical (moving totes of food), NOT food
+# preparation — deliberately excluded so food-distribution AMRs aren't mislabeled
+# as manipulators. Food-prep manipulation must come from prep verbs/nouns or an
+# explicit prep context.
+_FOOD_CONTEXT = re.compile(r"\b(?:food\s+prep\w*|food\s+preparation|culinary|kitchen\s+robot|meal\s+assembly)\b", re.I)
+
+
+def _split_sentences(text: str) -> list[str]:
+    return [s.strip() for s in re.split(r"[.!?\n]+", text) if s.strip()]
+
+
+def _detect_manipulation(text: str) -> list[tuple[str, Any, str]]:
+    """Return (predicate, value, evidence) manipulation groundings from robot actions
+    or food prep. Skips human-in-the-loop pick sentences. Sentence-scoped."""
+    out: list[tuple[str, Any, str]] = []
+    for s in _split_sentences(text):
+        if _HUMAN_IN_LOOP.search(s):
+            continue  # the worker picks, not the robot
+        window = re.sub(r"\s+", " ", s)[:240]
+        # Robot manipulation action on objects (grab/pick items off shelf, telescoping retrieve).
+        if _MANIP_ACTION.search(s) and _MANIP_OBJECT.search(s):
+            out.append(("end_effector", "gripper", window))
+        # Food prep is dexterous manipulation.
+        if _FOOD_DEXTEROUS.search(s) or _FOOD_PREP.search(s) or _FOOD_CONTEXT.search(s):
+            out.append(("has_dexterous_hands", True, window))
+    return out
+
+
 def _phase1_detect(collected: list, subject: str = "") -> list[Observation]:
     """Detect explicit facts — SUBJECT-SCOPED. Capabilities belong to the selected
     product/configuration, not the company or a morphology label. We only detect on
@@ -178,6 +241,11 @@ def _phase1_detect(collected: list, subject: str = "") -> list[Observation]:
         if hd and not _off_subject(hd[1]):
             obs.append(Observation("hand_dof", hd[0], None, hd[1], sid, CONF["HIGH"], "explicit"))
             obs.append(Observation("has_dexterous_hands", True, None, hd[1], sid, CONF["HIGH"], "explicit"))
+        # Manipulation from the robot's own actions / food prep (category-agnostic:
+        # AMRs and food robots manipulate too — not just humanoids/cobots).
+        for predicate, value, window in _detect_manipulation(text):
+            if not _off_subject(window):
+                obs.append(Observation(predicate, value, None, window, sid, CONF["MEDIUM"], "explicit"))
     return obs
 
 

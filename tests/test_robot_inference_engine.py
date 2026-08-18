@@ -105,6 +105,46 @@ def test_phase1_off_subject_page_contributes_nothing():
     assert _phase1_detect(pack, "Origin") == []
 
 
+# ── Manipulation is a capability, not a category (Bob's domain correction) ────
+
+def test_amr_with_grab_off_shelf_grounds_manipulation():
+    # An AMR that itself grabs items off shelves DOES manipulate — not excluded by label.
+    pack = _pack(
+        "Origin is an autonomous mobile robot. Its telescoping mast retrieves items "
+        "off shelves and places products into the onboard tote."
+    )
+    obs = {o.predicate for o in _phase1_detect(pack, "Origin")}
+    assert "end_effector" in obs  # manipulation grounded from the robot's own action
+    assert "supports_tote_handling" in obs
+
+
+def test_food_prep_is_manipulation():
+    for text in [
+        "The kitchen robot chops celery and dices onions for each order.",
+        "This robot prepares fresh salads and assembles bowls to order.",
+        "A foodservice robot with dexterous hands for food preparation.",
+    ]:
+        obs = {o.predicate for o in _phase1_detect(_pack(text), "")}
+        assert "has_dexterous_hands" in obs, text
+
+
+def test_human_in_the_loop_pick_is_not_robot_manipulation():
+    # Person-to-goods: the WORKER picks. The robot transports; it does not manipulate.
+    pack = _pack(
+        "Locus Origin is a person-to-goods AMR. Workers pick items from the tote; "
+        "it supports picking and putaway tasks."
+    )
+    obs = {o.predicate for o in _phase1_detect(pack, "Origin")}
+    assert "end_effector" not in obs
+    assert "has_dexterous_hands" not in obs
+    assert "supports_tote_handling" in obs
+
+
+def test_mobile_manipulator_class_detected():
+    obs = {o.predicate: o.value for o in _phase1_detect(_pack("Reflex is a mobile manipulator platform."), "Reflex")}
+    assert obs.get("product_class") == "mobile_manipulator"
+
+
 # ── Structural / capability inference (forward chaining) ──────────────────────
 
 def test_humanoid_infers_mobility_and_dual_arm():

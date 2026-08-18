@@ -78,7 +78,18 @@ overlap: e.g. an AMR page that also mentions a separate pick/pack arm will not
 attribute that arm to the AMR. `derive_capabilities` consumes only facts bound to the
 selected robot.
 
-**Validated (deterministic, repeatable):** NEO → grounded `manipulate/dual_arm/mobile`
-and matches manipulation work; Locus Origin (AMR) → transport/tote only (no false
-manipulation even when sibling-arm text is present); Avidbots Neo (scrubber) → scrub
-only. See `tests/test_robot_inference_engine.py`.
+**Manipulation is a capability, not a category (domain correction, Bob):**
+Manipulation is grounded from *evidence*, never excluded by a category label.
+Humanoids inherently manipulate (hands/end-effectors → `product_class=humanoid`);
+AMRs manipulate when equipped (telescoping grab-off-shelf, mounted arms, mobile
+manipulators — grounded from the robot's own grab/pick/retrieve actions); **food
+prep is dexterous manipulation** (chop/slice/dice, prepare/assemble meals). What is
+NOT manipulation: human-in-the-loop picking (person-to-goods / "workers pick" — the
+worker manipulates, the robot transports), distribution verticals ("foodservice
+warehouse" moves totes of food, it does not prepare it), and marketing metrics
+("2X productivity"). These distinctions are evidence/sentence-level, not label-level.
+
+**Validated (deterministic, repeatable):** NEO / Atlas (humanoids) → `manipulate`;
+an AMR that grabs items off shelves → `manipulate`; a food-prep robot → `manipulate`;
+Locus Origin (person-to-goods page) → transport/tote only (no false manipulation);
+Avidbots Neo (scrubber) → scrub only. See `tests/test_robot_inference_engine.py`.
