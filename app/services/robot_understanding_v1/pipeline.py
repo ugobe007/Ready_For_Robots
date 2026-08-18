@@ -135,28 +135,24 @@ def build_robot_profile(
                 f"Dropped {dropped_sib} sibling/off-subject fact(s) to prevent SKU contamination."
             )
 
-    # Robot Research Agent v2 (M1 narrow reopen): AI reads the same evidence pack
-    # and grounds capability facts v1's regex missed. Evidence is validated against
-    # the fetched pages before any fact is accepted. Fails open to v1.
-    research_v2: dict[str, Any] | None = None
+    # Robot Inference Engine (M1 narrow reopen): deterministic phased inference
+    # over the SAME evidence pack. Seeds explicit facts from evidence signals, then
+    # forward-chains structural/capability inference — each conclusion carries its
+    # evidence + basis + confidence. Emits facts v1's narrow regex missed. Fails
+    # open to v1. Source of truth: evidence → inference → capability (not an LLM).
+    inference: dict[str, Any] | None = None
     try:
-        from app.services.robot_research_v2 import enrich_facts as _rv2_enrich
+        from app.services.robot_inference_engine import infer_facts as _infer_facts
 
-        extra_facts, research_v2 = _rv2_enrich(
-            collected,
-            subject=subject,
-            company=resolved.company.name,
-            product=selected.name if selected else "",
-            existing_facts=facts,
-        )
+        extra_facts, inference = _infer_facts(collected, subject=subject, existing_facts=facts)
         if extra_facts:
             facts.extend(extra_facts)
             notes_extra.append(
-                f"Research Agent v2 grounded {len(extra_facts)} additional capability fact(s) "
-                "from manufacturer evidence."
+                f"Inference engine grounded {len(extra_facts)} additional capability fact(s) "
+                "from manufacturer evidence (evidence → inference → capability)."
             )
     except Exception:
-        research_v2 = None
+        inference = None
 
     facts = mark_contradictions(facts)
 
@@ -249,7 +245,7 @@ def build_robot_profile(
         notes=notes,
         needs_product_choice=False,
         research_stages=stages,
-        research_v2=research_v2,
+        inference=inference,
     )
     if timings is not None:
         timings["profile_ms"] = int((time.perf_counter() - t_profile) * 1000)

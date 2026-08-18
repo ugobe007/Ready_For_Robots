@@ -1,0 +1,133 @@
+"""Robot Inference Engine — deterministic phased-inference tests (no network/LLM).
+
+Contract: evidence → inference → capability. Explicit signals are detected from
+the evidence pack; structural/capability inference forward-chains with provenance.
+Conclusions require capability-appropriate evidence — "2X productivity" is never
+arm_count=2, "handles" is never a hand.
+"""
+from types import SimpleNamespace
+
+from app.services.robot_inference_engine import (
+    _detect_arm_count,
+    _detect_hand_dof,
+    _phase1_detect,
+    _phase23_infer,
+    infer_facts,
+    Observation,
+)
+from app.services.robot_understanding_v1.models import RobotFact
+
+
+def _pack(*texts: str):
+    """Build a fake collected pack: list of objects with .page.text and .source.id."""
+    out = []
+    for i, t in enumerate(texts):
+        out.append(
+            SimpleNamespace(
+                page=SimpleNamespace(text=t),
+                source=SimpleNamespace(id=f"s{i}"),
+            )
+        )
+    return out
+
+
+def _grounded(obs_list):
+    g = {}
+    for o in obs_list:
+        g.setdefault(o.predicate, o)
+    return g
+
+
+# ── Signal detection ─────────────────────────────────────────────────────────
+
+def test_arm_count_detects_real_arms_not_2x():
+    assert _detect_arm_count("Degrees of Freedom Hands 22x2 Arms 7x2")[0] == 2
+    assert _detect_arm_count("NEO has two arms")[0] == 2
+    # Marketing "2X" must NOT be read as arm_count.
+    assert _detect_arm_count("enhances productivity by more than 2X") is None
+    assert _detect_arm_count("keeps the room warm") is None
+
+
+def test_hand_dof_detection():
+    assert _detect_hand_dof("Degrees of Freedom Hands 22x2")[0] == 22
+    assert _detect_hand_dof("25 DoF hands")[0] == 25
+    assert _detect_hand_dof("handles dynamic tasks") is None  # "handles" is not a hand
+
+
+def test_phase1_detectors_ground_neo_like_signals():
+    pack = _pack(
+        "NEO is a humanoid robot. Degrees of Freedom Hands 22x2 Arms 7x2. "
+        "Fully mobile. Uses AI for autonomous navigation. Payload 18 lb."
+    )
+    obs = _phase1_detect(pack)
+    preds = {o.predicate: o.value for o in obs}
+    assert preds.get("product_class") == "humanoid"
+    assert preds.get("has_dexterous_hands") is True
+    assert preds.get("arm_count") == 2
+    assert preds.get("has_mobile_base") is True
+    assert preds.get("autonomous_navigation") is True
+    # Every observation carries evidence + a source id.
+    assert all(o.evidence and o.source_id for o in obs)
+
+
+def test_phase1_does_not_over_attribute_amr():
+    pack = _pack(
+        "Locus Origin is a collaborative mobile robot that enhances productivity by more than 2X. "
+        "Person-to-Goods. Incorporating LiDAR and navigation. Handles totes and containers."
+    )
+    obs = _phase1_detect(pack)
+    preds = {o.predicate for o in obs}
+    assert "arm_count" not in preds  # "2X" is not arms
+    assert "has_dexterous_hands" not in preds  # "handles" is not a hand
+    assert "autonomous_navigation" in preds  # LiDAR / navigation
+    assert "supports_tote_handling" in preds  # totes / person-to-goods
+
+
+# ── Structural / capability inference (forward chaining) ──────────────────────
+
+def test_humanoid_infers_mobility_and_dual_arm():
+    grounded = _grounded([
+        Observation("product_class", "humanoid", None, "humanoid robot", "s0", 0.9, "explicit"),
+        Observation("has_dexterous_hands", True, None, "22 DoF hands", "s0", 0.9, "explicit"),
+    ])
+    inferred = _phase23_infer(grounded)
+    ip = {o.predicate: o for o in inferred}
+    assert "has_mobile_base" in ip and ip["has_mobile_base"].mode == "strongly_inferred"
+    assert ip["has_mobile_base"].basis  # cites its basis
+    assert ip.get("arm_count") and int(ip["arm_count"].value) == 2
+
+
+def test_navigation_infers_mobile_base():
+    grounded = _grounded([
+        Observation("autonomous_navigation", True, None, "autonomous navigation", "s0", 0.9, "explicit"),
+    ])
+    inferred = {o.predicate for o in _phase23_infer(grounded)}
+    assert "has_mobile_base" in inferred
+
+
+# ── End-to-end (flagged) via infer_facts, monkeypatching the enable flag ──────
+
+def test_infer_facts_neo_end_to_end(monkeypatch):
+    monkeypatch.setenv("ROBOT_INFERENCE_ENGINE", "1")
+    pack = _pack(
+        "NEO humanoid robot. Degrees of Freedom Hands 22x2 Arms 7x2. "
+        "Fully mobile, autonomous navigation. Payload 18 lb."
+    )
+    existing = [RobotFact.create("NEO", "carrying_capacity", 18, source_id="s0", units="lb", evidence_span="Payload 18 lb")]
+    extra, summary = infer_facts(pack, subject="NEO", existing_facts=existing)
+    preds = {f.predicate: f for f in extra}
+    assert "product_class" in preds and preds["product_class"].value == "humanoid"
+    assert "has_dexterous_hands" in preds
+    assert "arm_count" in preds
+    assert "has_mobile_base" in preds
+    # Inferred facts are GROUNDED (explicit or strongly_inferred) → matcher-visible.
+    assert all(f.epistemic in ("explicit", "strongly_inferred") for f in extra)
+    assert summary and summary["capabilities"]
+    caps = {c["capability"] for c in summary["capabilities"]}
+    assert {"manipulate", "dual_arm", "mobile"} <= caps
+
+
+def test_infer_facts_disabled_is_noop():
+    # Flag off → no work, no change (frozen v1 path).
+    extra, summary = infer_facts(_pack("humanoid robot with 22 DoF hands"), subject="X", existing_facts=[])
+    assert extra == [] and summary is None

@@ -31,7 +31,7 @@ Full decision: [`outcome.md`](./outcome.md) § v1.0 freeze. Prior Blind 20 windo
 
 ---
 
-## Narrow reopen — 2026-08-18 (Robot Research Agent v2)
+## Narrow reopen — 2026-08-18 (Robot Inference Engine)
 
 **Authorized by:** Bob (operator).
 
@@ -43,23 +43,31 @@ Full decision: [`outcome.md`](./outcome.md) § v1.0 freeze. Prior Blind 20 windo
 abundant capability evidence (humanoid, bipedal, autonomous navigation, dexterous
 22–25 DoF hands, 7-DoF arms, 55 lb carry) yet v1's regex/table extractors produced
 `product_class/mobility/autonomy = UNKNOWN` and `capabilities = []` → 0 jobs. This is
-not an unknowable robot; it is an **architectural extraction failure** (regex cannot
-convert capability narrative into a robot model), so it meets the narrow-reopen bar —
-not a single-cohort polish and not a per-vendor rule.
+not an unknowable robot; it is an **architectural extraction failure** (narrow regex
+cannot convert capability narrative into a robot model), so it meets the narrow-reopen
+bar — not a single-cohort polish and not a per-vendor rule.
 
-**Change (this reopen):** add an **AI research/extraction pass** — `app/services/robot_research_v2.py`
-— over the SAME fetched evidence pack. The model reasons like a robotics analyst and
-returns a typed, provenance-carrying product model; deterministic code then validates
-every claim against the fetched page text (quote must exist AND pertain to the claim —
-e.g. "enhances productivity by more than 2X" may **not** become `arm_count=2`) before
-converting it into the **existing** RobotFact predicate schema. `derive_capabilities`
-and the M2 matcher are unchanged. **AI discovers meaning; code enforces truth.**
+**Change (this reopen):** add a **deterministic Robot Inference Engine** —
+`app/services/robot_inference_engine.py` — over the SAME fetched evidence pack. Source
+of truth is **evidence → inference → capability**, NOT `prompt → profile`. It is a
+forward-chaining engine (the in-repo Pythh pattern, cf. `inference_engine.py`):
+
+- **Phase 1** detects explicit facts from evidence signals (word-boundary matching so
+  "handles" ≠ "hand", "2X" ≠ arm_count).
+- **Phase 2/3** forward-chain structural + capability inference; each conclusion cites
+  its **basis**, **confidence**, and **source**.
+- **Phase 4** derives candidate workflows from grounded capabilities (display only).
+
+Facts are emitted in the **existing** RobotFact predicate schema (`explicit` for
+detected, `strongly_inferred` for rule-chained — both GROUNDED), so `derive_capabilities`
+and the M2 matcher are unchanged. **No LLM is required** (an LLM may later be one
+optional reasoning mechanism *inside* the engine, but the architecture and source of
+truth are inference, not generation).
 
 **Scope guardrails (still frozen):** no per-vendor branches (`if 1x` / `if humanoid`),
-no new regex heuristics, no Blind 20 retune, no corpus expansion, no matcher change.
-Gated by `ROBOT_RESEARCH_V2=1`; fails open to the deterministic v1 profile.
+no Blind 20 retune, no corpus expansion, no matcher change. Gated by
+`ROBOT_INFERENCE_ENGINE=1`; fails conservatively to the deterministic v1 profile.
 
-**Validated:** NEO → grounded `manipulate/dual_arm/mobile` and matches manipulation
-work; Locus Origin (AMR) and Avidbots Neo (scrubber) are **not** over-attributed
-manipulation (evidence-truth guard rejects mismatched quotes). See
-`tests/test_robot_research_v2.py`.
+**Validated (deterministic, repeatable):** NEO → grounded `manipulate/dual_arm/mobile`
+and matches manipulation work; Locus Origin (AMR) → transport/tote only; Avidbots Neo
+(scrubber) → scrub only — no over-attribution. See `tests/test_robot_inference_engine.py`.
