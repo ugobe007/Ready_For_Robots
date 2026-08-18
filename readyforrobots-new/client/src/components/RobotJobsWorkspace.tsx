@@ -277,7 +277,7 @@ export default function RobotJobsWorkspace() {
   const active = portfolio[activeIdx] || null;
   const countsTrusted = differentiatedCounts(portfolio);
   const showActiveCount = Boolean(
-    active?.matched && (portfolio.length === 1 || countsTrusted)
+    active?.matched && active.jobCount > 0 && (portfolio.length === 1 || countsTrusted)
   );
 
   useEffect(() => {
