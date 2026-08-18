@@ -94,3 +94,28 @@ def test_grounding_predicates_exist_in_hardware_ontology():
     for c in ont.capability_ontology()["capabilities"]:
         for pred in c.get("grounded_by") or []:
             assert pred in hw, f"capability {c['key']} grounded_by unknown predicate {pred}"
+
+
+def test_vertical_ontology_loads():
+    assert ont.vertical_ontology().get("verticals")
+    assert ont.verticals()  # non-empty
+    assert ont.in_scope_verticals() <= ont.verticals()
+    # Healthcare + eldercare are first-class (Aethon/Relay/hospital robots).
+    assert {"healthcare", "eldercare", "hospitality"} <= ont.verticals()
+
+
+def test_extractor_environment_values_are_known_verticals():
+    """Every operating_environment value the parser can emit must be a known
+    vertical, so the front door labels any robot URL instead of flattening it."""
+    import re
+    from pathlib import Path
+
+    facts_src = (Path(__file__).resolve().parents[1]
+                 / "app" / "services" / "robot_understanding_v1" / "facts.py").read_text()
+    # The environment block assigns `val = "<vertical>"`; collect those literals.
+    block = facts_src[facts_src.index("Vertical/environment ontology"):]
+    block = block[: block.index("add(\"operating_environment\"")]
+    emitted = set(re.findall(r'val\s*=\s*"([a-z_]+)"', block))
+    assert emitted, "no operating_environment literals found"
+    unknown = emitted - set(ont.verticals())
+    assert not unknown, f"extractor emits verticals not in vertical_ontology: {unknown}"

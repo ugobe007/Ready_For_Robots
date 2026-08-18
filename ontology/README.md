@@ -29,6 +29,7 @@ A robot's capabilities belong to a **specific product/configuration** grounded i
 | [`ROBOT_CAPABILITY_ONTOLOGY.md`](ROBOT_CAPABILITY_ONTOLOGY.md) | Capability | What actions can it perform? (incl. manipulation hierarchy) |
 | [`ROBOT_WORKFLOW_ONTOLOGY.md`](ROBOT_WORKFLOW_ONTOLOGY.md) | Workflow | What real jobs-of-work does it do? |
 | [`ROBOT_JOB_ONTOLOGY.md`](ROBOT_JOB_ONTOLOGY.md) | Job | Company + worksite + workflow + requirements + evidence |
+| [`ROBOT_VERTICAL_ONTOLOGY.md`](ROBOT_VERTICAL_ONTOLOGY.md) | Vertical | Operating environments (warehouse, healthcare, eldercare, hospitality, …) |
 | [`ROBOT_INFERENCE_RULES.md`](ROBOT_INFERENCE_RULES.md) | **Rules** | How to infer capabilities from hardware — rules, not vibes |
 
 ## Confidence vocabulary (flows end-to-end)
@@ -55,6 +56,7 @@ workflow via `app/services/robot_ontology.py`:
 - [`capability_ontology.v1.json`](capability_ontology.v1.json) — capabilities, their grounding predicates, distinctive/generic flags, confidence vocab, manipulation hierarchy. **The matcher sources its `DISTINCTIVE_CAPABILITIES` / `GENERIC_CAPABILITIES` from here.**
 - [`workflow_ontology.v1.json`](workflow_ontology.v1.json) — work families → required capability.
 - [`hardware_ontology.v1.json`](hardware_ontology.v1.json) — fact/hardware predicates the parser may ground.
+- [`vertical_ontology.v1.json`](vertical_ontology.v1.json) — operating environments / verticals (healthcare, eldercare, hospitality, …). The extractor emits `operating_environment` = a vertical key.
 - [`inference_rules.v1.json`](inference_rules.v1.json) — structured R1–R21 with status.
 
 Pre-existing companions:

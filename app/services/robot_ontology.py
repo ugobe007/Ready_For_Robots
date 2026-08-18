@@ -72,6 +72,11 @@ def inference_rules() -> dict[str, Any]:
     return _load("inference_rules.v1.json")
 
 
+@lru_cache(maxsize=1)
+def vertical_ontology() -> dict[str, Any]:
+    return _load("vertical_ontology.v1.json")
+
+
 # ── Accessors used by the pipeline (each fails open to the baked-in default) ──
 
 def confidence_states() -> tuple[str, ...]:
@@ -115,3 +120,25 @@ def workflow_required_capabilities(family: str) -> list[str]:
     if fam and fam.get("required_any"):
         return list(fam["required_any"])
     return list(_DEFAULT_FAMILIES.get(family, []))
+
+
+_DEFAULT_VERTICALS = frozenset(
+    {
+        "warehouse", "manufacturing", "retail", "hospitality", "restaurant",
+        "healthcare", "eldercare", "airport", "commercial", "utilities",
+        "indoor", "construction", "mining", "agriculture",
+    }
+)
+
+
+def _verticals() -> list[dict[str, Any]]:
+    return vertical_ontology().get("verticals") or []
+
+
+def verticals() -> frozenset[str]:
+    keys = {v["key"] for v in _verticals() if v.get("key")}
+    return frozenset(keys) if keys else _DEFAULT_VERTICALS
+
+
+def in_scope_verticals() -> frozenset[str]:
+    return frozenset(v["key"] for v in _verticals() if v.get("in_scope"))

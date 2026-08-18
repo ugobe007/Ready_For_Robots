@@ -550,7 +550,7 @@ def _extract_from_page(
         add("product_class", "humanoid", span=m.group(0), confidence=0.9)
 
     for m in re.finditer(
-        r"\b(autonomous\s+mobile\s+robot|\bAMR\b|autonomous\s+guided\s+vehicle|\bAGV\b)\b",
+        r"\b(autonomous\s+mobile\s+robots?|\bAMR\b|autonomous\s+guided\s+vehicles?|\bAGV\b)\b",
         text,
         re.I,
     ):
@@ -978,16 +978,39 @@ def _extract_from_page(
     for m in re.finditer(
         r"\b((?:indoor|outdoor)\s+(?:industrial\s+)?(?:spaces?|environments?|facilities?)|"
         r"confined\s+(?:spaces?|industrial)|"
+        r"nursing\s+homes?|senior\s+living|assisted\s+living|memory\s+care|"
+        r"skilled\s+nursing|long[-\s]term\s+care|rehabilitation|physical\s+therapy|"
+        r"surgery\s+cent(?:er|re)s?|surgical\s+cent(?:er|re)s?|clinics?|"
+        r"pharmac(?:y|ies)|laborator(?:y|ies)|medical\s+cent(?:er|re)s?|"
         r"(?:hotels?|airports?|hospitals?|healthcare|retail|restaurants?|hospitality|"
         r"reception|warehouses?|factories?|jobsites?|construction\s+sites?))\b",
         text,
         re.I,
     ):
         raw = m.group(0).lower()
-        if re.search(r"hotel|airport|hospital|healthcare|workplace|facility|retail|reception", raw):
-            val = "commercial"
-        elif re.search(r"restaurant|hospitality", raw):
+        # Vertical/environment ontology — see ontology/vertical_ontology.v1.json
+        if re.search(
+            r"nursing\s+home|senior\s+living|assisted\s+living|memory\s+care|"
+            r"skilled\s+nursing|long[-\s]term\s+care|rehabilitation|physical\s+therapy",
+            raw,
+        ):
+            val = "eldercare"
+        elif re.search(
+            r"hospital|healthcare|clinic|surgery\s+cent|surgical\s+cent|"
+            r"pharmac|laborator|medical\s+cent",
+            raw,
+        ):
+            val = "healthcare"
+        elif re.search(r"hotel|hospitality", raw):
+            val = "hospitality"
+        elif re.search(r"restaurant", raw):
             val = "restaurant"
+        elif re.search(r"airport", raw):
+            val = "airport"
+        elif re.search(r"retail", raw):
+            val = "retail"
+        elif re.search(r"workplace|facility|reception", raw):
+            val = "commercial"
         elif re.search(r"construction|jobsite", raw):
             val = "construction"
         elif re.search(r"confined|indoor", raw):
