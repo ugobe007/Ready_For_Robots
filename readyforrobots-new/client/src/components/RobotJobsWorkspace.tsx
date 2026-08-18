@@ -730,7 +730,8 @@ export default function RobotJobsWorkspace() {
           />
         ) : stage === "portfolio" ? (
           <PortfolioRail
-            company={companyName || portfolio[0]?.companyName || ""}
+            company={portfolio[0] ? companyIdentity(portfolio[0]).label : companyName}
+            identityVerified={portfolio[0] ? companyIdentity(portfolio[0]).verified : true}
             count={portfolio.length}
             onNewRobot={newRobot}
           />
@@ -938,10 +939,12 @@ function FindRail({
 
 function PortfolioRail({
   company,
+  identityVerified,
   count,
   onNewRobot,
 }: {
   company: string;
+  identityVerified: boolean;
   count: number;
   onNewRobot: () => void;
 }) {
@@ -951,6 +954,11 @@ function PortfolioRail({
       <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">
         {company}
       </h2>
+      {!identityVerified ? (
+        <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-amber-300/80">
+          Company identity not fully verified
+        </p>
+      ) : null}
       <p className="mt-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
         {count} robots analyzed
       </p>
