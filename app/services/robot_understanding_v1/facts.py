@@ -81,26 +81,44 @@ _GENERIC_PAGE_SLUGS = {
 }
 
 
+# Path segments that are NOT product identities: locale/country codes (en, en-us),
+# versions (v1, v2), and category/listing words. If a nested path is made up only
+# of these plus generic leaves, it is a listing page (no specific product), so the
+# slug is "" and the subject-proximity gate applies.
+_LOCALE_SEGMENT_RE = re.compile(r"^[a-z]{2}([-_][a-z]{2,3})?$")  # en, en-us, en_gb, fr
+_VERSION_SEGMENT_RE = re.compile(r"^v\d+(?:[._]\d+)*$")           # v1, v2, v2.1
+_NON_PRODUCT_SLUGS = {
+    "robots", "robot", "models", "model", "catalog", "catalogue", "category",
+    "categories", "lineup", "portfolio", "series", "range", "fleet",
+    "us", "usa", "uk", "eu", "global", "intl", "international",
+}
+
+
 def _page_product_slug(url: str) -> str:
-    """Normalized last path segment — a page's product identity hint.
-    
-    For nested paths (e.g. /servi-clean/specs), returns the deepest non-generic
-    segment that looks like a product. This prevents capability leaks from sibling
-    product pages with nested URLs like /product-a/overview or /product-a/specs."""
+    """Deepest path segment that names a specific product — or "" for a listing.
+
+    For nested paths (e.g. /servi-clean/specs) returns the product slug
+    ("serviclean"). Locale/country/version/category prefixes (en-us, v2, robots,
+    us) are NOT product identities and are skipped; a path with only such segments
+    plus generic leaves returns "" so it is treated as a generic listing page and
+    the subject-proximity gate still runs (prevents sibling capability leakage)."""
     from urllib.parse import urlparse
 
     try:
         path = (urlparse(url).path or "").rstrip("/")
         segments = [s for s in path.split("/") if s]
-        if not segments:
-            return ""
-        # Walk backwards to find the first (deepest) segment that's not generic
         for seg in reversed(segments):
-            normalized = re.sub(r"[^a-z0-9]", "", seg.lower())
-            if normalized and normalized not in _GENERIC_PAGE_SLUGS:
-                return normalized
-        # All segments are generic; return the last one
-        return re.sub(r"[^a-z0-9]", "", segments[-1].lower()) if segments else ""
+            low = seg.lower()
+            normalized = re.sub(r"[^a-z0-9]", "", low)
+            if not normalized:
+                continue
+            if normalized in _GENERIC_PAGE_SLUGS or normalized in _NON_PRODUCT_SLUGS:
+                continue
+            if _LOCALE_SEGMENT_RE.match(low) or _VERSION_SEGMENT_RE.match(low):
+                continue
+            return normalized
+        # No product-specific segment — a listing/locale/version path.
+        return ""
     except Exception:
         return ""
 

@@ -62,6 +62,43 @@ def test_multi_product_drops_sibling_capabilities():
     assert dropped >= 3
 
 
+def test_page_product_slug_ignores_locale_version_category_prefixes():
+    from app.services.robot_understanding_v1.facts import _page_product_slug
+
+    # Real product pages → the product slug (incl. nested spec/overview pages).
+    assert _page_product_slug("https://x.ai/servi-clean") == "serviclean"
+    assert _page_product_slug("https://x.ai/servi-clean/specs") == "serviclean"
+    assert _page_product_slug("https://x.ai/en-us/servi-clean") == "serviclean"
+    assert _page_product_slug("https://x.ai/products/servi-clean/overview") == "serviclean"
+    # Listing / locale / version / category paths → "" (treated as generic, so the
+    # subject-proximity gate still runs and sibling leakage is prevented).
+    assert _page_product_slug("https://x.ai/en-us/products") == ""
+    assert _page_product_slug("https://x.ai/v2/robots") == ""
+    assert _page_product_slug("https://x.ai/robots/products") == ""
+    assert _page_product_slug("https://x.ai/en/solutions") == ""
+    assert _page_product_slug("https://x.ai/") == ""
+
+
+def test_nested_locale_listing_page_still_gated():
+    """A sibling capability on a nested locale/listing page must still be dropped:
+    the page resolves to a generic slug, so the subject-proximity gate applies."""
+    pack = [
+        _src("s_servi", "https://www.bearrobotics.ai/servi",
+             "Servi is a restaurant robot server. Servi runs food and drinks to tables."),
+        _src("s_list", "https://www.bearrobotics.ai/en-us/products",
+             "Our lineup includes floor cleaning robots with floor scrubbing and mopping "
+             "for commercial facilities."),
+    ]
+    facts = [
+        _fact("claims_item_delivery", True, "s_servi", "runs food and drinks to tables"),
+        _fact("supports_hard_floor_scrubbing", True, "s_list", "floor scrubbing"),
+    ]
+    kept, _ = filter_facts_to_subject(facts, pack, subject="Servi", multi_product=True)
+    preds = {f.predicate for f in kept}
+    assert "claims_item_delivery" in preds
+    assert "supports_hard_floor_scrubbing" not in preds  # gated on the listing page
+
+
 def test_single_product_company_keeps_permissive_behaviour():
     # multi_product=False → no proximity/sibling-page gating (single-product sites
     # often state capabilities without repeating the product name).
