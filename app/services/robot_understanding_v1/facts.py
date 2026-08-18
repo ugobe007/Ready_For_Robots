@@ -706,6 +706,27 @@ def _extract_from_page(
         add("product_class", "construction_robot", span=m.group(0), confidence=0.88)
 
     for m in re.finditer(
+        r"\b(agricultural\s+robot|farm(?:ing)?\s+robot|ag(?:ricultural)?\s*bot|"
+        r"field\s+robot|crop\s+(?:scouting|weeding)\s+robot|orchard\s+robot|"
+        r"autonomous\s+(?:tractor|harvester|weeder|sprayer))\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("product_class", "agricultural_robot", span=m.group(0), confidence=0.88)
+
+    for m in re.finditer(
+        r"\b(mining\s+robot|underground\s+mining\s+robot|autonomous\s+(?:haul(?:age)?\s+truck|"
+        r"hauler|loader|drill)|mine\s+inspection\s+robot)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("product_class", "mining_robot", span=m.group(0), confidence=0.88)
+
+    for m in re.finditer(
         r"\b(service\s+robot|hospitality\s+robot|restaurant\s+(?:delivery\s+)?robot|"
         r"social\s+robot|delivery\s+robot)\b",
         text,

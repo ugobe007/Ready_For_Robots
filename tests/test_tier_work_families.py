@@ -92,3 +92,26 @@ def test_disinfection_requires_uv_or_clinical_room():
     )
     # A UV disinfection robot does ground it.
     assert "claims_disinfection" in _extract("This UV-C disinfection robot disinfects patient rooms between occupancies.")
+
+
+def _product_class_and_morph(text: str):
+    from app.services.robot_understanding_v1 import facts as F
+    from app.services.robot_understanding_v1.models import RobotSource
+    from app.services.robot_understanding_v1.coverage import infer_morphology
+    src = RobotSource(id="s", url="https://x.ai/robot", source_type="product",
+                      fetched_at="t", title="R", confidence=0.85)
+    fs = F._extract_from_page(src, text, subject="", page_url="https://x.ai/robot", page_title="R")
+    known = [f for f in fs if f.epistemic != "unknown"]
+    pcs = {str(f.value) for f in known if f.predicate == "product_class"}
+    return pcs, infer_morphology(known)
+
+
+def test_new_product_classes_and_morphology():
+    for text, cls in (
+        ("The LaserWeeder is an autonomous agricultural robot that weeds crops in fields.", "agricultural_robot"),
+        ("Our autonomous haul truck operates as a mining robot in underground mining sites.", "mining_robot"),
+        ("This autonomous forklift moves pallets across the warehouse.", "autonomous_forklift"),
+    ):
+        pcs, morph = _product_class_and_morph(text)
+        assert cls in pcs, (cls, pcs)
+        assert morph == cls, (cls, morph)
