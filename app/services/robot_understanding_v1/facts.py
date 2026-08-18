@@ -498,7 +498,7 @@ def _extract_from_page(
 
     for m in re.finditer(
         r"\b((?:autonomous|commercial|robotic)\s+vacuum(?:\s+cleaner)?|"
-        r"robot\s+vacuum|vacuum\s+cleaning\s+robot|cleaning\s+robot)\b",
+        r"robot\s+vacuum|vacuum\s+cleaning\s+robots?|cleaning\s+robots?)\b",
         text,
         re.I,
     ):
@@ -751,6 +751,76 @@ def _extract_from_page(
             continue
         add("claims_item_delivery", True, span=m.group(0)[:120], confidence=0.85)
 
+    # Serving (restaurant food/drink running to tables) and luggage/bellhop are
+    # delivery variants — the robot carries and delivers to a destination.
+    for m in re.finditer(
+        r"\b(?:"
+        r"food[- ]runn\w+|food\s+runner|bus(?:s|es|sing|ses)\s+tables?|table\s+service|"
+        r"robot\s+server|server\s+robot|serv(?:e|es|ing)\s+(?:[\w-]+\s+){0,3}?"
+        r"(?:food|drinks?|meals?|entr[e\u00e9]es?|dishes|beverages?|guests?|tables?|customers?|diners?)|"
+        r"bell[- ]?hop|luggage|baggage"
+        r")\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_item_delivery", True, span=m.group(0)[:120], confidence=0.82)
+
+    # --- food preparation / cooking (kitchen & food-prep robots) ---
+    # Dexterous food manipulation: frying, grilling, cooking, chopping, and
+    # assembling meals. Kept a distinct capability (food_prep) — it must NOT leak
+    # into generic industrial manipulation (a fry robot is not a CNC-tender).
+    for m in re.finditer(
+        r"\b(?:"
+        r"fry(?:ing)?\s+station|fry\s+cook|fried\s+menu|cooking\s+robot|"
+        r"ai[- ]controlled\s+cooking|automated\s+cooking|robotic\s+kitchen|kitchen\s+automation|"
+        r"food\s+prep(?:aration)?|prepar\w+\s+(?:food|meals?|salads?|bowls?|dishes|entr[e\u00e9]es?|ingredients?)|"
+        r"assembl\w+\s+(?:meals?|bowls?|salads?|dishes|entr[e\u00e9]es?|tacos?|burritos?|sandwich\w*|pizzas?)|"
+        r"grill\w+\s+(?:food|burgers?|patties|meat)|cook\w*\s+(?:food|meals?|fries|burgers?|the\s+\w+\s+menu)|"
+        r"(?:chop|slice|dice|peel)\w*\s+(?:vegetables?|produce|ingredients?|food)"
+        r")\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_food_prep", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- beverage / drink preparation (barista & bartender robots) ---
+    for m in re.finditer(
+        r"\b(?:"
+        r"barista(?:\s+robot)?|robot\s+barista|bartend\w*|robot\s+bartender|"
+        r"(?:make|makes|making|prepar\w+|craft\w+|brew\w+|mix\w+)\s+(?:[\w-]+\s+){0,3}?"
+        r"(?:coffee|espresso|latte\w*|cappuccino\w*|cocktails?|drinks?|beverages?|smoothies?|boba|bubble\s+tea)|"
+        r"(?:coffee|espresso|cocktail|drink|beverage)\s+(?:making|preparation|robot|station)"
+        r")\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_beverage_prep", True, span=m.group(0)[:120], confidence=0.82)
+
+    # --- surface / restroom cleaning (broader than hard-floor scrubbing) ---
+    # Restroom/bathroom cleaning, fixtures (toilets, urinals, sinks), carpet and
+    # vacuum cleaning. Distinct from hard_floor_scrub so it maps to the right work.
+    for m in re.finditer(
+        r"\b(?:"
+        r"bathroom\s+cleaning|restroom\s+cleaning|clean\w*\s+(?:bathrooms?|restrooms?)|"
+        r"clean\w*\s+(?:toilets?|urinals?|sinks?|fixtures?|mirrors?)|"
+        r"(?:toilets?|urinals?)\s*,?\s+(?:and\s+)?(?:floors?|sinks?|fixtures?)|"
+        r"carpet\s+(?:clean\w*|extract\w*|shampoo\w*)|"
+        r"vacuum\w*\s+(?:carpets?|floors?|robot)|robotic\s+vacuum|"
+        r"commercial\s+cleaning\s+robot"
+        r")\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_surface_cleaning", True, span=m.group(0)[:120], confidence=0.85)
+
     # --- warehouse / factory deployment claims ---
     for m in re.finditer(
         r"\b(commercially\s+deployed|commercial\s+deployment|deployed\s+in\s+"
@@ -801,7 +871,9 @@ def _extract_from_page(
     for m in re.finditer(
         r"\b(LiDAR\s+navigation|SLAM|programmed\s+routes?|autonomous\s+(?:driving|routing|mapping)|"
         r"AI[- ]?(?:powered\s+)?navigation|indoor\s+(?:GPS|navigation)|FlyAware|"
-        r"obstacle\s+avoidance|autonomous(?:ly)?\s+(?:navigat\w+|map\w+|patrol\w+))\b",
+        r"obstacle\s+avoidance|autonomous(?:ly)?\s+(?:navigat\w+|map\w+|patrol\w+)|"
+        r"navigat\w+\s+(?:your|the|its)\s+(?:building|facility|facilities|floors?|space|environment|way)|"
+        r"mov(?:e|es)\s+(?:autonomously|on\s+its\s+own)|drives?\s+itself|self[- ]driving|self[- ]navigat\w+)\b",
         text,
         re.I,
     ):

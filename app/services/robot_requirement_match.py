@@ -45,6 +45,9 @@ DISTINCTIVE_CAPABILITIES = frozenset(
         "dual_arm",
         "tote_transport",
         "transport",
+        "food_prep",
+        "beverage_prep",
+        "surface_clean",
         "hard_floor_scrub",
         "inspect_route",
         "load_unload",
@@ -58,6 +61,10 @@ REQUIREMENT_EXERCISES = {
     "acquire_case_from_conveyor": frozenset({"manipulate", "load_unload"}),
     "place_case_into_pallet": frozenset({"manipulate", "load_unload"}),
     "relocate_totes_or_carts": frozenset({"tote_transport", "transport"}),
+    "serve_food_drink": frozenset({"transport"}),
+    "prepare_food": frozenset({"food_prep"}),
+    "prepare_beverage": frozenset({"beverage_prep"}),
+    "clean_surfaces": frozenset({"surface_clean"}),
     "hard_floor_scrub": frozenset({"hard_floor_scrub"}),
     "inspect_route_mobility": frozenset({"inspect_route"}),
     "reach_envelope": frozenset({"reach"}),
@@ -169,6 +176,9 @@ def _eval_requirement(
     mobile = _cap(caps, "mobile")
     tote = _cap(caps, "tote_transport")
     transport = _cap(caps, "transport")
+    food_prep = _cap(caps, "food_prep")
+    beverage_prep = _cap(caps, "beverage_prep")
+    surface_clean = _cap(caps, "surface_clean")
     scrub = _cap(caps, "hard_floor_scrub")
     inspect = _cap(caps, "inspect_route")
     reach = _cap(caps, "reach")
@@ -311,6 +321,41 @@ def _eval_requirement(
             "no grounded indoor navigation / mobility",
         )
 
+    if rid == "serve_food_drink":
+        # Running food/drinks to tables is an item-delivery (transport) task.
+        if transport.present:
+            return RequirementResult(rid, label, necessity, MATCHED, transport.evidence or transport.label)
+        if tote.present:
+            return RequirementResult(rid, label, necessity, MATCHED, tote.evidence or tote.label)
+        return RequirementResult(
+            rid, label, necessity, UNMET,
+            "no grounded item delivery/serving capability",
+        )
+
+    if rid == "prepare_food":
+        if food_prep.present:
+            return RequirementResult(rid, label, necessity, MATCHED, food_prep.evidence or food_prep.label)
+        return RequirementResult(
+            rid, label, necessity, UNMET,
+            "no grounded food-preparation capability",
+        )
+
+    if rid == "prepare_beverage":
+        if beverage_prep.present:
+            return RequirementResult(rid, label, necessity, MATCHED, beverage_prep.evidence or beverage_prep.label)
+        return RequirementResult(
+            rid, label, necessity, UNMET,
+            "no grounded beverage-preparation capability",
+        )
+
+    if rid == "clean_surfaces":
+        if surface_clean.present:
+            return RequirementResult(rid, label, necessity, MATCHED, surface_clean.evidence or surface_clean.label)
+        return RequirementResult(
+            rid, label, necessity, UNMET,
+            "no grounded restroom/surface-cleaning capability",
+        )
+
     if rid == "hard_floor_scrub":
         if scrub.present:
             return RequirementResult(rid, label, necessity, MATCHED, scrub.evidence or scrub.label)
@@ -383,6 +428,17 @@ def _why_lines(
             add(transport.label)
         else:
             add("can relocate objects")
+    if needed & {"serve_food_drink"}:
+        t = _cap(caps, "transport")
+        add(t.label if t.present else _cap(caps, "tote_transport").label)
+        if _cap(caps, "mobile").present:
+            add(_cap(caps, "mobile").label)
+    if needed & {"prepare_food"}:
+        add(_cap(caps, "food_prep").label)
+    if needed & {"prepare_beverage"}:
+        add(_cap(caps, "beverage_prep").label)
+    if needed & {"clean_surfaces"}:
+        add(_cap(caps, "surface_clean").label)
     if needed & {"hard_floor_scrub"}:
         add(_cap(caps, "hard_floor_scrub").label)
     if needed & {"inspect_route_mobility"}:
@@ -495,6 +551,33 @@ _INSPECT_REQS = [
     {"id": "relocate_totes_or_carts", "label": "relocate totes or carts", "necessity": "not_required"},
     {"id": "hard_floor_scrub", "label": "hard-floor scrubbing", "necessity": "not_required"},
 ]
+# Hospitality work — a cross-cutting domain (serving, food prep, beverages,
+# restroom cleaning) that overlaps transport, manipulation and cleaning.
+_SERVE_REQS = [
+    {"id": "serve_food_drink", "label": "run food/drinks to tables", "necessity": "required"},
+    {"id": "indoor_navigation", "label": "navigate the dining floor", "necessity": "required"},
+    {"id": "mobility", "label": "mobility between tables", "necessity": "required"},
+    {"id": "payload_vs_object_weight", "label": "payload \u2265 tray/load weight", "necessity": "required", "job_value": None, "unknown_reason": "tray/load weight"},
+    {"id": "manipulate_physical_case", "label": "manipulate physical case", "necessity": "not_required"},
+]
+_FOOD_PREP_REQS = [
+    {"id": "prepare_food", "label": "prepare/cook food at station", "necessity": "required"},
+    {"id": "throughput_vs_line_rate", "label": "throughput \u2265 station rate", "necessity": "required", "job_value": None, "unknown_reason": "required station rate"},
+    {"id": "fixed_cell_ok", "label": "fixed station acceptable", "necessity": "likely_ok"},
+    {"id": "mobility", "label": "mobility", "necessity": "not_required"},
+]
+_BEVERAGE_REQS = [
+    {"id": "prepare_beverage", "label": "prepare/serve drinks", "necessity": "required"},
+    {"id": "throughput_vs_line_rate", "label": "throughput \u2265 order rate", "necessity": "required", "job_value": None, "unknown_reason": "required order rate"},
+    {"id": "fixed_cell_ok", "label": "fixed bar/station acceptable", "necessity": "likely_ok"},
+    {"id": "mobility", "label": "mobility", "necessity": "not_required"},
+]
+_RESTROOM_REQS = [
+    {"id": "clean_surfaces", "label": "clean restroom fixtures and floors", "necessity": "required"},
+    {"id": "indoor_navigation", "label": "navigate facility to restrooms", "necessity": "required"},
+    {"id": "mobility", "label": "mobility between restrooms", "necessity": "required"},
+    {"id": "hard_floor_scrub", "label": "hard-floor scrubbing", "necessity": "not_required"},
+]
 
 
 def requirements_for_corpus_job(row: dict[str, Any]) -> list[dict[str, Any]]:
@@ -512,6 +595,14 @@ def requirements_for_corpus_job(row: dict[str, Any]) -> list[dict[str, Any]]:
         return list(_SCRUB_REQS)
     if tape == "inspect":
         return list(_INSPECT_REQS)
+    if tape == "serve":
+        return list(_SERVE_REQS)
+    if tape == "food_prep":
+        return list(_FOOD_PREP_REQS)
+    if tape == "beverage":
+        return list(_BEVERAGE_REQS)
+    if tape == "restroom":
+        return list(_RESTROOM_REQS)
     if tape in {"transport", "cart"}:
         return list(_TOTE_REQS)
     # Unknown work physics — do not guess a family.
@@ -624,7 +715,7 @@ def match_jobs_from_profile(
         jobs_out.extend(c.to_api_job() for c in cards if c.verdict == VERDICT_NOT)
 
     cap_out = []
-    for key in ("dual_arm", "manipulate", "mobile", "reach", "tote_transport", "transport", "hard_floor_scrub", "inspect_route"):
+    for key in ("dual_arm", "manipulate", "mobile", "reach", "tote_transport", "transport", "food_prep", "beverage_prep", "surface_clean", "hard_floor_scrub", "inspect_route"):
         c = caps.get(key)
         if c and c.present:
             cap_out.append(

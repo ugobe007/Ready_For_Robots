@@ -247,6 +247,42 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
             derived_from=["claims_item_delivery"],
         )
 
+    # Food preparation / cooking (kitchen robots). Distinct dexterous capability —
+    # deliberately NOT generic `manipulate`, so a fry/assembly robot maps to food
+    # work rather than falsely matching industrial CNC/case handling.
+    food_prep = _truthy(facts, "claims_food_prep")
+    caps["food_prep"] = DerivedCapability(
+        key="food_prep",
+        label="food preparation / cooking",
+        present=bool(food_prep),
+        derivation="explicit",
+        derived_from=["claims_food_prep"],
+        evidence=(food_prep or {}).get("evidence_span") if food_prep else None,
+    )
+
+    # Beverage / drink preparation (barista & bartender robots).
+    beverage = _truthy(facts, "claims_beverage_prep")
+    caps["beverage_prep"] = DerivedCapability(
+        key="beverage_prep",
+        label="beverage / drink preparation",
+        present=bool(beverage),
+        derivation="explicit",
+        derived_from=["claims_beverage_prep"],
+        evidence=(beverage or {}).get("evidence_span") if beverage else None,
+    )
+
+    # Surface / restroom cleaning (fixtures, restrooms, carpet/vacuum) — broader
+    # than hard-floor scrubbing, which stays its own capability.
+    surface_clean = _truthy(facts, "claims_surface_cleaning")
+    caps["surface_clean"] = DerivedCapability(
+        key="surface_clean",
+        label="surface / restroom cleaning",
+        present=bool(surface_clean),
+        derivation="explicit",
+        derived_from=["claims_surface_cleaning"],
+        evidence=(surface_clean or {}).get("evidence_span") if surface_clean else None,
+    )
+
     scrub = _truthy(facts, "supports_hard_floor_scrubbing")
     if scrub:
         caps["hard_floor_scrub"] = DerivedCapability(
