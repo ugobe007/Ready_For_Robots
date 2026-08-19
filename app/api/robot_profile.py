@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.services.robot_url_safety import UrlSafetyError
 from app.services.robot_profile_cache import get_cached_profile, set_cached_profile
+from app.services.robot_submission_service import record_robot_submission
 from app.services.robot_understanding_v1 import build_robot_profile
 from app.services.understanding_shadow import record_shadow_observation
 
@@ -73,6 +74,21 @@ def post_robot_profile(
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"profile_build_failed: {e}") from e
+
+    # Durable submitter ledger: every researched robot becomes an ID'd,
+    # timestamped, domain-deduped record (fires for cached + fresh). Fail-open.
+    try:
+        selected = payload.get("selected_product") or {}
+        record_robot_submission(
+            db,
+            url=body.url,
+            company_name=(payload.get("company") or {}).get("name"),
+            product_name=selected.get("name"),
+            robot_class=selected.get("display_class") or payload.get("research_morphology"),
+            profile_tier=payload.get("profile_confidence"),
+        )
+    except Exception:
+        logger.exception("robot_submission_hook_failed")
 
     timings["total_ms"] = int((time.perf_counter() - t0) * 1000)
     payload["timings"] = {

@@ -219,6 +219,21 @@ def leads_match_submitted_url(
             row["score"]["lead_value_score"] = match.get("match_score")
         rows.append(row)
 
+    # Link the submitted robot → the real buyers it matched (durable, fail-open).
+    try:
+        from app.services.robot_submission_service import record_submission_match
+
+        record_submission_match(
+            db,
+            url=submitted_url,
+            capabilities=capabilities,
+            matched_company_ids=[r.get("id") for r in rows if r.get("id") is not None],
+            match_count=len(rows),
+            source="match_url",
+        )
+    except Exception:
+        logger.exception("robot_submission_match_hook_failed")
+
     return {
         "submitted_url": submitted_url,
         "submitted_domain": submitted_domain,

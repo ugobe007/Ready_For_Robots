@@ -895,5 +895,49 @@ def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTa
     }
 
 
+@router.get("/robot-submissions")
+def list_robot_submissions(
+    limit: int = Query(100, ge=1, le=500),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Durable ledger of robots submitted through the front door (deduped by domain).
+
+    Traceability: submitter (id) → capabilities → matched real buyers
+    (company_ids) → over time (first/last seen, submission count).
+    """
+    from app.models.robot_submission import RobotSubmission
+
+    rows = (
+        db.query(RobotSubmission)
+        .order_by(desc(RobotSubmission.last_seen_at))
+        .limit(limit)
+        .all()
+    )
+    return {
+        "count": len(rows),
+        "submissions": [
+            {
+                "id": r.id,
+                "website_domain": r.website_domain,
+                "submitted_url": r.submitted_url,
+                "company_name": r.company_name,
+                "product_name": r.product_name,
+                "robot_class": r.robot_class,
+                "profile_tier": r.profile_tier,
+                "capabilities": r.capabilities or [],
+                "matched_company_ids": r.matched_company_ids or [],
+                "last_job_count": r.last_job_count,
+                "last_match_count": r.last_match_count,
+                "submission_count": r.submission_count,
+                "source": r.source,
+                "first_seen_at": r.first_seen_at.isoformat() if r.first_seen_at else None,
+                "last_seen_at": r.last_seen_at.isoformat() if r.last_seen_at else None,
+                "last_matched_at": r.last_matched_at.isoformat() if r.last_matched_at else None,
+            }
+            for r in rows
+        ],
+    }
+
+
 # purge_router is registered separately in main.py (no require_admin global dep)
 # so it can do its own flexible auth via X-Admin-Key or admin JWT.
