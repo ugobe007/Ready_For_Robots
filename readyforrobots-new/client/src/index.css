@@ -1479,6 +1479,38 @@
     @apply rounded-2xl border border-white/10 bg-[#0f172a] p-4;
   }
 
+  /* Signals page — dark terminal library. Dark navy end-to-end (matches Jobs
+     front door #081126); the live radar section is already dark. */
+  .signals-page {
+    @apply text-slate-100;
+    background: #081126;
+    color-scheme: dark;
+  }
+  .signals-body {
+    background: transparent;
+  }
+  /* Shared surface-card → dark panel, scoped to this page only. */
+  .signals-page .surface-card {
+    @apply border-slate-700 bg-[#0b162f] shadow-[0_14px_40px_-24px_rgba(0,0,0,0.7)];
+  }
+  .signals-page .sb-input {
+    @apply border-slate-600 bg-[#0b162f] text-slate-100 placeholder:text-slate-500;
+  }
+  /* Dark-terminal override net for inline LIGHT utilities in the JSX
+     (same rationale as pipeline: !important to beat the utilities layer; dark
+     translucents like bg-white/5 preserved). */
+  .signals-page :where(.bg-white, .bg-white\/80, .bg-white\/85, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
+  .signals-page :where(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50, .bg-emerald-50\/50, .bg-emerald-50\/70, .bg-emerald-50\/80, .bg-emerald-100) { background-color: #0d1a33 !important; }
+  .signals-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
+  .signals-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
+  .signals-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300, .border-emerald-200) { border-color: #334155 !important; }
+  .signals-page :where(.hover\:bg-gray-50):hover { background-color: #1e293b !important; }
+  .signals-page :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  /* Preserve the emerald "active" affordance on filter chips (net would flatten it). */
+  .signals-page .border-emerald-500 { border-color: #10b981 !important; }
+  .signals-page button.border-emerald-500 { background-color: rgba(16, 185, 129, 0.12) !important; }
+  .signals-page button.border-emerald-500.text-emerald-800 { color: #6ee7b7 !important; }
+
   .newsletter-hero-dark {
     @apply mb-6 overflow-hidden rounded-xl border border-white/10 bg-[#111827] shadow-lg;
   }
