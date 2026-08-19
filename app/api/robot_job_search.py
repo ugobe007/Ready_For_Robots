@@ -47,12 +47,40 @@ def post_robot_job_search(
         )
 
     try:
-        return compose_robot_job_search(
+        result = compose_robot_job_search(
             body.url,
             product=body.product,
             max_sources=body.max_sources,
             record_shadow=_shadow,
         )
+        # Durable submitter ledger + funnel attribution (fail-open).
+        try:
+            from app.services.robot_submission_service import (
+                record_robot_submission,
+                record_submission_match,
+            )
+
+            profile_dict = result.get("profile") or {}
+            row = record_robot_submission(
+                db,
+                url=body.url,
+                company_name=result.get("company_name"),
+                product_name=result.get("robot_name"),
+                robot_class=result.get("robot_class"),
+                profile_tier=profile_dict.get("profile_confidence"),
+            )
+            if row is not None:
+                result["robot_submission_id"] = row.id
+                record_submission_match(
+                    db,
+                    url=body.url,
+                    capabilities=result.get("capabilities"),
+                    job_count=result.get("job_count"),
+                    source="robot_job_search",
+                )
+        except Exception:
+            logger.exception("robot_submission_hook_failed")
+        return result
     except UrlSafetyError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:

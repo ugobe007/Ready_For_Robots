@@ -79,7 +79,7 @@ def post_robot_profile(
     # timestamped, domain-deduped record (fires for cached + fresh). Fail-open.
     try:
         selected = payload.get("selected_product") or {}
-        record_robot_submission(
+        _submission = record_robot_submission(
             db,
             url=body.url,
             company_name=(payload.get("company") or {}).get("name"),
@@ -87,6 +87,10 @@ def post_robot_profile(
             robot_class=selected.get("display_class") or payload.get("research_morphology"),
             profile_tier=payload.get("profile_confidence"),
         )
+        if _submission is not None:
+            # Stamp the durable submitter id so every funnel event can carry it
+            # → submitter → outcome becomes a single join on site_analytics_events.
+            payload["robot_submission_id"] = _submission.id
     except Exception:
         logger.exception("robot_submission_hook_failed")
 
