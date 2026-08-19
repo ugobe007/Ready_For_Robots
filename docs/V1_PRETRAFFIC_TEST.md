@@ -29,10 +29,10 @@ Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 | 1 | **PROFILE PATH** — production uses `/api/robot-profile` + multi-product selection | **PASS** (P0-A 2026-08-17) |
 | 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **PRODUCTION PASS** (2026-08-17) — #15 merged and live on Fly. Four-board verify: Vega manipulation/palletize + Novolex #8; Digit machine-load first, tote remains at rank 17; Origin transport/tote only; Neo scrub only. Every positive match has Why; unknowns kept; Origin/Neo Novolex name the unmet manipulation blocker. **M2 frozen.** |
 | 2a | **SUBMIT WORKFLOW** — atomic reveal, stable layout, `/api/robot-job-search` | **merged** / **production smoke PASS** — Vercel bundle calls `/api/robot-job-search`; uncached Stretch ~14s researching UI then one reveal; picker keeps public market tape (not a personal board); bad URL recovers with zero matched jobs. |
-| 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PARTIAL** — See All → signup PASS. **Auth infra verified live** (2026-08-17): GoTrue `v2.195.0`, signup enabled, providers **email + Google + GitHub**, `/signup` `/login` `/auth/callback` `/pipeline` all SPA 200, return-path + `resume=save` plumbing unit-tested (10/10). **Remaining:** the actual authenticated round trip (A6/A7) is BLOCKED on a controlled account — `mailer_autoconfirm` is **off**, so email needs a real inbox; unblock with a controlled inbox/OAuth or a Supabase service-role key (admin-create a confirmed user). |
+| 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PASS** (2026-08-18) — See All → signup PASS; **auth continuity now verified** with a service-role-provisioned account. Single-product (Relay): research → JOBS → "See All" signup CTA → `/signup?next=/…` → return to `/` restores the exact same jobs workspace; a real session shows the signed-in state on that same workspace. Multi-product (Boston Dynamics → Stretch): SELECT persists and the Stretch workspace (42 jobs) restores across a full reload while signed in. Auth infra verified live (2026-08-17): providers **email + Google + GitHub**, `/signup` `/login` `/auth/callback` `/pipeline` all SPA 200, return-path plumbing unit-tested (10/10). **Caveat:** the third-party OAuth *consent* hop + PKCE `?code=` exchange is provider-side and was substituted by a service-role-established session (admin links can't complete a browser PKCE flow); the account + token issuance are verified server-side. A fully-live provider consent can be run via the Desktop pane if desired. |
 | 4 | **TELEMETRY** — events + src/persona + shadow | **PASS** — verified 2026-08-17: `rdd_capabilities_viewed` emits (RobotJobsExperiment:627) → `/api/track/visit` ingests + stores; `persona` (via `funnelBase()`) survives ingest and is queryable; signup funnel `signup_start→complete→first_save` aggregates with rates; unknown funnel stage rejected 400. Note: `marketing_conversion_snapshot` uses Postgres `->>` (runs live via `/api/analytics`); SQLite can't round-trip that JSON operator (same limit as `pipeline_cache_store`). |
 
-**Release sequence (gate, not a suggestion):** #13 smoke (done) → re-land ranking (#15 merged) → four-board production verify (**PRODUCTION PASS**) → **M2 frozen** → auth continuity → telemetry → pre-traffic gate. Do not publish C04 / invite external traffic.
+**Release sequence (gate, not a suggestion):** #13 smoke (done) → re-land ranking (#15 merged) → four-board production verify (**PRODUCTION PASS**) → **M2 frozen** → auth continuity (**PASS** 2026-08-18) → telemetry re-confirm → pre-traffic gate. Do not publish C04 / invite external traffic.
 
 ---
 
@@ -84,7 +84,7 @@ Evidence: `reports/v1_p0a_spine_20260817/spine_results.json` + screenshots.
 
 ## Executive summary (full matrix — prior pass + P0-A delta)
 
-Smoke works. **PROFILE PATH is live.** **MATCH TRUTH is PRODUCTION PASS** — four live boards are physically different and explainable. Auth return still needs a controlled account. **M2 is frozen.** Understanding extractors stay frozen. Traffic stays paused until auth continuity + telemetry + final pre-traffic smoke.
+Smoke works. **PROFILE PATH is live.** **MATCH TRUTH is PRODUCTION PASS** — four live boards are physically different and explainable. **AUTH CONTINUITY is PASS** (2026-08-18, service-role account: single + multi-product land-back). **M2 is frozen.** Understanding extractors stay frozen. Traffic stays paused until telemetry re-confirm + final pre-traffic smoke.
 
 ---
 
@@ -97,7 +97,7 @@ Smoke works. **PROFILE PATH is live.** **MATCH TRUTH is PRODUCTION PASS** — fo
 | C Funnel | Network capture of `rdd_*` + `signup_start` (`src=v1_pretraffic` / `src=p0a_spine`) |
 | Shadow fail-open | Code review + unit tests; prod Jobs now hits profile → shadow can accrue |
 
-**Not done:** full email signup / return-to-jobs (BLOCKED — no operator-controlled inbox). MATCH TRUTH production verify is done; M2 frozen.
+**Done (2026-08-18):** auth continuity — signup → return-to-same-jobs (single-product Relay) + multi-product restore (Boston Dynamics → Stretch) verified with a service-role-provisioned account. MATCH TRUTH production verify is done; M2 frozen.
 
 ---
 
@@ -127,8 +127,8 @@ Outcomes: **PASS** · **FAIL** · **MISLEADING** · **BLOCKED**
 | A3 | Submit URL → research → jobs | **PASS** | Profile path in network |
 | A4 | Open job / Qualify This Job | **PASS** | Prior pass |
 | A5 | See All → signup | **PASS** (to signup page) | Prior |
-| A6 | Signup → return to same robot/jobs | **BLOCKED** (infra verified) | Return-path logic + `resume=save` unit-tested; providers live. Needs controlled email/OAuth or service-role key to complete the round trip. |
-| A7 | Returning user continuity | **BLOCKED** (infra verified) | Same unblock as A6 |
+| A6 | Signup → return to same robot/jobs | **PASS** (2026-08-18) | Single-product (Relay): anon research → JOBS → "See All 34 matches" signup CTA → `/signup?next=/…` → return to `/` restored the exact same Relay Robotics jobs workspace (34 jobs). With a real session established, "SIGN IN" is gone on that same workspace. |
+| A7 | Returning user continuity | **PASS** (2026-08-18) | Multi-product (Boston Dynamics → SELECT Stretch → 42 jobs): full page reload restored the exact Stretch workspace (42 jobs), still signed in — same restoration mechanism as post-auth landing. |
 | A8 | `/jobs` index | **PASS** | Prior |
 | A9 | Legacy `/experiment` | **PASS** | Prior |
 | A10 | Bad URL | **PASS** | P0-A spine |
@@ -180,7 +180,7 @@ Reproduce: `POST /api/track/visit {"path":"/event/rdd_capabilities_viewed","pers
 
 | Workflow | Outcome |
 |----------|---------|
-| Auth return after signup | **BLOCKED** (infra verified live; needs controlled account or service-role key before traffic) |
+| Auth return after signup | **PASS** (2026-08-18; service-role account) — single + multi-product land-back verified; provider consent hop substituted by service-role session |
 | Qualify request confirmation | **PASS** |
 
 #### Auth continuity — infra verification (2026-08-17)
@@ -204,7 +204,7 @@ done
 | `mailer_autoconfirm` | **off** — email path needs a real inbox to click the link |
 | SPA auth routes serve app | **PASS** — `/signup` `/login` `/auth/callback` `/pipeline` = 200 |
 | Post-auth return-path resolver | **PASS** — `signupWorkflowPath` + `authNext` + `resume=save` unit-tested (10/10 vitest) |
-| Live A6/A7 round trip | **BLOCKED** — needs controlled inbox/OAuth or `SUPABASE_SERVICE_ROLE_KEY` (admin-create a confirmed user, mint a session, then verify land-back + returning continuity) |
+| Live A6/A7 round trip | **PASS** (2026-08-18) — service-role account: admin-created a confirmed user, minted a session, verified single-product land-back (Relay, 34 jobs) + multi-product restore (Boston Dynamics → Stretch, 42 jobs) across reload, signed-in. Provider *consent* hop is provider-side (substituted by service-role session; run live via Desktop if a 100% end-to-end provider trace is required). |
 
 **Fastest agent-driven unblock:** add `SUPABASE_SERVICE_ROLE_KEY` — then `POST /auth/v1/admin/users` (`email_confirm: true`) + `POST /auth/v1/admin/generate_link`, drive `/auth/callback?next=/pipeline?lead=…&resume=save`, and assert save completes and a re-visit lands on the same workspace/robot. Alternative: complete a Google/magic-link login in the Desktop pane.
 
@@ -224,7 +224,7 @@ done
 
 5–8. ~~Class / bleed / product_name alignment~~ **PASS** on the four production boards (M2 frozen)
 9. ~~Replace SIGNAL document title~~ **DONE**  
-10. Prove auth return with controlled account — **infra verified live; blocked only on a controlled inbox/OAuth or `SUPABASE_SERVICE_ROLE_KEY`** (see Auth continuity — infra verification)  
+10. ~~Prove auth return with controlled account~~ **PASS** (2026-08-18) — service-role account: single-product (Relay) land-back + multi-product (Boston Dynamics → Stretch) restore verified signed-in (see Auth continuity — infra verification)  
 
 ### P2
 
@@ -240,7 +240,7 @@ done
 | Invite external traffic | **NO** |
 | Understanding Phase 4 extractors / Blind retune | **DO NOT OPEN** |
 | **M2 matcher** | **FROZEN** after **MATCH TRUTH — PRODUCTION PASS** |
-| Next step | Auth continuity → telemetry → final pre-traffic smoke → GO/NO-GO |
+| Next step | ~~Auth continuity~~ **PASS** → telemetry re-confirm → final pre-traffic smoke → GO/NO-GO |
 
 ---
 
