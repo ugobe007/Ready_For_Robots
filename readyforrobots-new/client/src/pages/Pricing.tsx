@@ -422,7 +422,7 @@ export default function Pricing() {
                 <button
                   type="submit"
                   disabled={foundingBusy}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 shadow-md shadow-emerald-200/50 disabled:opacity-60"
                 >
                   {foundingBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Request founding access
