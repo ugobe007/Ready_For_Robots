@@ -71,13 +71,17 @@ def post_robot_job_search(
             )
             if row is not None:
                 result["robot_submission_id"] = row.id
-                record_submission_match(
-                    db,
-                    url=body.url,
-                    capabilities=result.get("capabilities"),
-                    job_count=result.get("job_count"),
-                    source="robot_job_search",
-                )
+                # Only update match data when real match results exist (not on product picker).
+                caps = result.get("capabilities")
+                job_count = result.get("job_count")
+                if caps or (job_count and job_count > 0):
+                    record_submission_match(
+                        db,
+                        url=body.url,
+                        capabilities=caps,
+                        job_count=job_count,
+                        source="robot_job_search",
+                    )
         except Exception:
             logger.exception("robot_submission_hook_failed")
         return result

@@ -331,19 +331,20 @@ export default function RobotJobsWorkspace() {
   async function submitFind(submitUrl: string) {
     setError(null);
     submittedUrlRef.current = submitUrl;
+    submissionIdRef.current = null;
     setStage("research");
-    trackRobotJobsFunnel("robot_submitted", {
-      ...funnelBase(),
-      url: submitUrl,
-      source: "url",
-    });
-    trackRobotJobsFunnel("discovery_started", {
-      ...funnelBase(),
-      url: submitUrl,
-    });
     try {
       const profile = await fetchRobotProfile({ url: submitUrl });
       submissionIdRef.current = profile.robot_submission_id ?? submissionIdRef.current;
+      trackRobotJobsFunnel("robot_submitted", {
+        ...funnelBase(),
+        url: submitUrl,
+        source: "url",
+      });
+      trackRobotJobsFunnel("discovery_started", {
+        ...funnelBase(),
+        url: submitUrl,
+      });
       setCompanyName(profile.company?.name || "");
       if (profile.needs_product_choice && (profile.products || []).length > 1) {
         setProducts(
