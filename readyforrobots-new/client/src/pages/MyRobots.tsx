@@ -52,13 +52,14 @@ export default function MyRobots() {
       try {
         const res = await fetch(
           `${getApiBase()}/api/crm/robots`,
-          liveFetchInit({ headers: authHeader(session.access_token) }),
+          liveFetchInit({ headers: authHeader(session.access_token) })
         );
         if (!res.ok) throw new Error(`robots ${res.status}`);
         const data = (await res.json()) as { robots: RobotGroup[] };
         if (!cancelled) setGroups(data.robots || []);
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
+        if (!cancelled)
+          setError(e instanceof Error ? e.message : "Failed to load");
       }
     })();
     return () => {
@@ -77,8 +78,8 @@ export default function MyRobots() {
           Robots &amp; the buyers you're collecting
         </h1>
         <p className="mt-2 text-sm text-slate-400">
-          Each robot you research and pursue collects real buyer leads here. Open a
-          lead to draft outreach and advance it in your pipeline.
+          Each robot you research and pursue collects real buyer leads here.
+          Open a lead to draft outreach and advance it in your pipeline.
         </p>
 
         {!session?.access_token ? (
@@ -94,15 +95,17 @@ export default function MyRobots() {
             </Link>
           </div>
         ) : error ? (
-          <p className="mt-10 text-sm text-red-300">Could not load your robots ({error}).</p>
+          <p className="mt-10 text-sm text-red-300">
+            Could not load your robots ({error}).
+          </p>
         ) : groups === null ? (
           <p className="mt-10 text-sm text-slate-400">Loading…</p>
         ) : groups.length === 0 ? (
           <div className="mt-10 rounded-2xl border border-slate-700/70 bg-[#0b162f]/85 p-8 text-center">
             <p className="text-sm text-slate-300">
-              No collected leads yet. Research a robot, find buyers hiring for its
-              work, and save the ones worth pursuing — they'll show up here grouped
-              by robot.
+              No collected leads yet. Research a robot, find buyers hiring for
+              its work, and save the ones worth pursuing — they'll show up here
+              grouped by robot.
             </p>
             <Link
               href="/"
@@ -125,14 +128,19 @@ export default function MyRobots() {
 
 function RobotCard({ group }: { group: RobotGroup }) {
   const r = group.robot;
-  const title = r?.product_name || r?.company_name || r?.website_domain || "Robot";
+  const title =
+    r?.product_name || r?.company_name || r?.website_domain || "Robot";
   const subtitle =
-    r?.company_name && r.company_name !== title ? r.company_name : r?.website_domain;
+    r?.company_name && r.company_name !== title
+      ? r.company_name
+      : r?.website_domain;
   return (
     <section className="rounded-2xl border border-slate-700/70 bg-[#0b162f]/85 p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="font-display text-xl font-bold text-slate-100">{title}</h2>
+          <h2 className="font-display text-xl font-bold text-slate-100">
+            {title}
+          </h2>
           {subtitle ? (
             <p className="text-xs text-slate-400">{subtitle}</p>
           ) : null}
@@ -160,9 +168,14 @@ function RobotCard({ group }: { group: RobotGroup }) {
 
       <ul className="mt-4 divide-y divide-slate-700/70 border-t border-slate-700/70">
         {group.leads.map(l => (
-          <li key={l.id} className="flex items-center justify-between gap-3 py-2.5">
+          <li
+            key={l.id}
+            className="flex items-center justify-between gap-3 py-2.5"
+          >
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-slate-100">{l.name}</p>
+              <p className="truncate text-sm font-semibold text-slate-100">
+                {l.name}
+              </p>
               {l.industry ? (
                 <p className="truncate text-xs text-slate-500">{l.industry}</p>
               ) : null}
@@ -173,7 +186,7 @@ function RobotCard({ group }: { group: RobotGroup }) {
               </span>
               {l.company_id ? (
                 <Link
-                  href={`/pipeline?company=${l.company_id}`}
+                  href={`/pipeline?lead=${l.company_id}`}
                   className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300 hover:text-emerald-200"
                 >
                   Open →
