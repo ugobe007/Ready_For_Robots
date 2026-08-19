@@ -1548,13 +1548,25 @@
      Note: several sections use bg-gray-100 gaps with bg-white cells for hairline
      separators — the net maps those to two close navies so the seams survive. */
   .intelligence-page {
+    @apply text-slate-100;
+    background: #081126;
+    color-scheme: dark;
+  }
   /* Humanoid Index (/robots) — dark terminal navy end-to-end. The hero, leader
      cards, summary intro, and report sections are already dark (shared RR theme
      is dark); this flips the page shell and the live ranked-index list. */
   .robots-page {
+    @apply text-slate-100;
+    background: #081126;
+    color-scheme: dark;
+  }
   /* Pricing page — dark terminal navy. Self-contained page; the hero is already
      dark, this flips the shell, tier cards, founding form, support grid, FAQ. */
   .pricing-page {
+    @apply text-slate-100;
+    background: #081126;
+    color-scheme: dark;
+  }
   /* Signals page — dark terminal library. Dark navy end-to-end (matches Jobs
      front door #081126); the live radar section is already dark. */
   .signals-page {
