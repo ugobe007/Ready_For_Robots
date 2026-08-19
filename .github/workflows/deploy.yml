@@ -26,10 +26,16 @@ jobs:
 
       - name: Deploy
         # Machines go healthy in ~1 min, but `fly deploy` (strategy=immediate) can
-        # hang for the full wait window before returning. Keep the wait short and
-        # let the post-deploy "Ensure all machines are started" + /health steps be
-        # the source of truth — turns 20-min deploys back into ~2-3 min ones.
-        run: flyctl deploy --remote-only --wait-timeout 5m --release-command-timeout 15m
+        # hang for the full wait window before returning; the post-deploy "Ensure
+        # all machines are started" + /health steps are the real source of truth
+        # for the app being up.
+        # `--wait-timeout` ALSO bounds how long we wait for the release_command
+        # (Alembic migration) machine to reach `stopped`. A slow-but-successful
+        # migration was reporting a false deploy failure at 5m ("never reached the
+        # state stopped") even though the migration applied — so keep this at 10m
+        # to give migrations headroom while post-deploy checks stay the source of
+        # truth. (`--release-command-timeout` bounds the command itself.)
+        run: flyctl deploy --remote-only --wait-timeout 10m --release-command-timeout 15m
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
