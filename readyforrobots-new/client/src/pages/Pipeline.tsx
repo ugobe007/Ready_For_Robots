@@ -1646,6 +1646,12 @@ export default function Pipeline() {
       ? raw.split(",").map(s => s.trim()).filter(Boolean)
       : [];
   }, [search]);
+  // Durable robot id from the Jobs → buyers handoff — saved leads get grouped
+  // under this robot in the CRM hub.
+  const submissionIdFromQuery = useMemo(() => {
+    const raw = Number(new URLSearchParams(search).get("submission"));
+    return Number.isFinite(raw) && raw > 0 ? raw : null;
+  }, [search]);
   const activationIdFromQuery = useMemo(() => {
     const value = Number(new URLSearchParams(search).get("activation"));
     return Number.isFinite(value) && value > 0 ? value : null;
@@ -3046,6 +3052,9 @@ export default function Pipeline() {
             company_id: deal.id,
             name: deal.company,
             industry: deal.industry,
+            ...(submissionIdFromQuery
+              ? { robot_submission_id: submissionIdFromQuery }
+              : {}),
           }),
         }),
       );
@@ -3273,6 +3282,9 @@ export default function Pipeline() {
             company_id: deal.id,
             name: deal.company,
             industry: deal.industry,
+            ...(submissionIdFromQuery
+              ? { robot_submission_id: submissionIdFromQuery }
+              : {}),
           }),
         }),
       );
@@ -3447,7 +3459,7 @@ export default function Pipeline() {
       // First create/ensure CRM account
       const createRes = await fetch(`${base}/api/crm/accounts`, liveFetchInit({
         method: "POST", headers,
-        body: JSON.stringify({ company_id: deal.id, name: deal.company, industry: deal.industry }),
+        body: JSON.stringify({ company_id: deal.id, name: deal.company, industry: deal.industry, ...(submissionIdFromQuery ? { robot_submission_id: submissionIdFromQuery } : {}) }),
       }));
       if (!createRes.ok) throw new Error(await createRes.text());
       const acct = (await createRes.json()) as { id: string };

@@ -20,6 +20,7 @@ import Signup from "./pages/Signup";
 import AuthCallback from "./pages/AuthCallback";
 import Profile from "./pages/Profile";
 import Crm from "./pages/Crm";
+import MyRobots from "./pages/MyRobots";
 import Inbox from "./pages/Inbox";
 import CalendarPage from "./pages/Calendar";
 import SalesConsole from "./pages/SalesConsole";
@@ -99,6 +100,7 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/profile" component={Profile} />
+      <Route path="/my-robots" component={MyRobots} />
       <Route path="/crm" component={Crm} />
       <Route path="/inbox" component={Inbox} />
       <Route path="/calendar" component={CalendarPage} />

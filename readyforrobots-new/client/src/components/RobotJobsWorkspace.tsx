@@ -713,6 +713,11 @@ export default function RobotJobsWorkspace() {
     if (robotUrl) params.set("url", robotUrl);
     const ind = (industry || "").trim();
     if (ind) params.set("industries", ind);
+    // Carry the durable robot id so saved buyer leads are grouped under this
+    // robot in the CRM hub ("this robot → its collected buyers").
+    if (submissionIdRef.current) {
+      params.set("submission", String(submissionIdRef.current));
+    }
     params.set("src", "robot_jobs_qualify");
     return `/pipeline?${params.toString()}`;
   }
@@ -819,6 +824,7 @@ export default function RobotJobsWorkspace() {
               portfolio.length > 1 ? () => setStage("portfolio") : undefined
             }
             onNewRobot={newRobot}
+            signedIn={unlocked}
           />
         )}
       </aside>
@@ -1050,6 +1056,7 @@ function ContextRail({
   onTab,
   onBackToPortfolio,
   onNewRobot,
+  signedIn,
 }: {
   company: string;
   identityVerified: boolean;
@@ -1063,6 +1070,7 @@ function ContextRail({
   onTab: (t: RailTab) => void;
   onBackToPortfolio?: () => void;
   onNewRobot: () => void;
+  signedIn: boolean;
 }) {
   const navItem = (t: RailTab, label: string, badge?: string) => (
     <button
@@ -1132,6 +1140,14 @@ function ContextRail({
         >
           + New robot
         </button>
+        {signedIn ? (
+          <Link
+            href="/my-robots"
+            className="block w-full border border-slate-600 px-3 py-2 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-slate-400"
+          >
+            Your robots &amp; leads →
+          </Link>
+        ) : null}
       </div>
     </div>
   );

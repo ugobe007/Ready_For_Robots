@@ -37,6 +37,11 @@ class CrmAccount(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True)
     company_id = Column(Integer, ForeignKey("companies.id", ondelete="SET NULL"), nullable=True, index=True)
+    # The robot (submitter) this buyer lead was collected for — powers the
+    # robot-centric CRM hub ("this robot → its collected buyers/deals").
+    robot_submission_id = Column(
+        Integer, ForeignKey("robot_submissions.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     name = Column(String, nullable=False)
     website = Column(String, nullable=True)
     industry = Column(String, nullable=True)
