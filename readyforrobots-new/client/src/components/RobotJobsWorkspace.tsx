@@ -60,7 +60,10 @@ type RobotAnalysis = {
   zeroReason?: string | null;
 };
 
-type ZeroReason = "insufficient_profile_evidence" | "no_compatible_jobs" | "corpus_gap";
+type ZeroReason =
+  | "insufficient_profile_evidence"
+  | "no_compatible_jobs"
+  | "corpus_gap";
 
 type ProductChoice = { name: string; displayClass?: string | null };
 type RestoreView = "review" | "jobs" | "portfolio";
@@ -167,13 +170,21 @@ function searchToAnalysis(res: RobotJobSearchResult): RobotAnalysis {
 
 /** Weak identity: low-confidence profile whose company name may be tagline-derived. */
 function weakIdentity(profile: RobotProfileResult | null): boolean {
-  return Boolean(profile && profile.profile_confidence === "C" && profile.coverage_level === "low");
+  return Boolean(
+    profile &&
+      profile.profile_confidence === "C" &&
+      profile.coverage_level === "low"
+  );
 }
 
 /** Honest company line: prefer the verified name; fall back to the domain when weak. */
-function companyIdentity(a: RobotAnalysis): { label: string; verified: boolean } {
+function companyIdentity(a: RobotAnalysis): {
+  label: string;
+  verified: boolean;
+} {
   const domain = a.profile?.company?.primary_domain || "";
-  if (weakIdentity(a.profile) && domain) return { label: domain, verified: false };
+  if (weakIdentity(a.profile) && domain)
+    return { label: domain, verified: false };
   return { label: a.companyName || domain || "", verified: true };
 }
 
@@ -281,7 +292,9 @@ export default function RobotJobsWorkspace() {
   const active = portfolio[activeIdx] || null;
   const countsTrusted = differentiatedCounts(portfolio);
   const showActiveCount = Boolean(
-    active?.matched && active.jobCount > 0 && (portfolio.length === 1 || countsTrusted)
+    active?.matched &&
+      active.jobCount > 0 &&
+      (portfolio.length === 1 || countsTrusted)
   );
 
   useEffect(() => {
@@ -748,8 +761,12 @@ export default function RobotJobsWorkspace() {
           />
         ) : stage === "portfolio" ? (
           <PortfolioRail
-            company={portfolio[0] ? companyIdentity(portfolio[0]).label : companyName}
-            identityVerified={portfolio[0] ? companyIdentity(portfolio[0]).verified : true}
+            company={
+              portfolio[0] ? companyIdentity(portfolio[0]).label : companyName
+            }
+            identityVerified={
+              portfolio[0] ? companyIdentity(portfolio[0]).verified : true
+            }
             count={portfolio.length}
             onNewRobot={newRobot}
           />
@@ -1521,15 +1538,18 @@ function JobsPanel({
         <p className="mt-1 text-[12px] text-slate-400">
           Example work {analysis.productName} can do, matched to its confirmed
           capabilities
-          {showCount && analysis.jobCount > shownOfTop
-            ? ` · showing the ${shownOfTop} strongest of ${analysis.jobCount}`
-            : ` · ${shownOfTop} shown`}
+          {showCount && analysis.jobCount > visible.length
+            ? ` · showing the ${visible.length} strongest of ${analysis.jobCount}`
+            : ` · ${visible.length} shown`}
           . Pick one to find real companies hiring for it.
         </p>
       )}
 
       {baseJobs.length === 0 ? (
-        <ZeroState robotName={analysis.productName} reason={analysis.zeroReason} />
+        <ZeroState
+          robotName={analysis.productName}
+          reason={analysis.zeroReason}
+        />
       ) : (
         <ol className="mt-6 space-y-3">
           {visible.map((job, i) => (
@@ -1592,7 +1612,13 @@ function JobsPanel({
  * robot, understand it but find no compatible work, or simply lack corpus
  * coverage for its domain? These are radically different states.
  */
-function ZeroState({ robotName, reason }: { robotName: string; reason?: string | null }) {
+function ZeroState({
+  robotName,
+  reason,
+}: {
+  robotName: string;
+  reason?: string | null;
+}) {
   const r = (reason || "") as ZeroReason | "";
   if (r === "insufficient_profile_evidence") {
     return (
@@ -1601,11 +1627,13 @@ function ZeroState({ robotName, reason }: { robotName: string; reason?: string |
           Insufficient robot evidence
         </p>
         <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
-          We found {robotName}, but couldn't establish enough capability evidence to match it confidently.
+          We found {robotName}, but couldn't establish enough capability
+          evidence to match it confidently.
         </h3>
         <p className="mt-2 text-[13px] leading-snug text-slate-300">
-          We confirmed some product facts, but key information about mobility, manipulation, autonomy,
-          and operating capabilities is still missing — so we won't claim matches we can't ground.
+          We confirmed some product facts, but key information about mobility,
+          manipulation, autonomy, and operating capabilities is still missing —
+          so we won't claim matches we can't ground.
         </p>
         <p className="mt-4 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
           What happens next
@@ -1625,11 +1653,12 @@ function ZeroState({ robotName, reason }: { robotName: string; reason?: string |
           Corpus gap
         </p>
         <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
-          We understand {robotName}, but we don't have work represented for its capabilities yet.
+          We understand {robotName}, but we don't have work represented for its
+          capabilities yet.
         </h3>
         <p className="mt-2 text-[13px] leading-snug text-slate-300">
-          The current job corpus is thin for this robot's capability domain. This is a coverage gap on
-          our side, not a limitation of the robot.
+          The current job corpus is thin for this robot's capability domain.
+          This is a coverage gap on our side, not a limitation of the robot.
         </p>
       </div>
     );
@@ -1641,11 +1670,12 @@ function ZeroState({ robotName, reason }: { robotName: string; reason?: string |
           No compatible jobs
         </p>
         <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
-          We understand {robotName}, but the current jobs don't meet its requirements.
+          We understand {robotName}, but the current jobs don't meet its
+          requirements.
         </h3>
         <p className="mt-2 text-[13px] leading-snug text-slate-300">
-          Each candidate job has an unmet hard requirement for this robot. Unknowns were kept unknown —
-          nothing was promoted into a false match.
+          Each candidate job has an unmet hard requirement for this robot.
+          Unknowns were kept unknown — nothing was promoted into a false match.
         </p>
       </div>
     );
@@ -1774,8 +1804,8 @@ function JobCard({
                 Find buyers hiring for this →
               </Link>
               <p className="mt-2 text-[12px] text-slate-500">
-                Real companies hiring for this kind of work that fit {robotName}
-                {" "}— save the ones worth pursuing and draft outreach.
+                Real companies hiring for this kind of work that fit {robotName}{" "}
+                — save the ones worth pursuing and draft outreach.
               </p>
             </div>
           ) : null}
