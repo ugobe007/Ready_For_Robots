@@ -45,7 +45,7 @@ import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 /* ------------------------------------------------------------------ */
 
 type Stage = "find" | "research" | "select" | "portfolio" | "review" | "jobs";
-type RailTab = "profile" | "jobs" | "qualified";
+type RailTab = "profile" | "jobs";
 
 /** One robot in the workspace. `matched` gates every count we display. */
 type RobotAnalysis = {
@@ -259,7 +259,6 @@ export default function RobotJobsWorkspace() {
   const [portfolio, setPortfolio] = useState<RobotAnalysis[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [railTab, setRailTab] = useState<RailTab>("jobs");
-  const [qualified, setQualified] = useState<Record<string, string[]>>({});
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
   const sessionId = useRef(
@@ -658,7 +657,9 @@ export default function RobotJobsWorkspace() {
     recordJobView(job);
   }
 
-  function onQualify(job: MatchJob) {
+  /** Pursue this work → bridge to the real matched-buyer pipeline (fires funnel
+   *  intent then the Link navigates to /pipeline?url=<robot>). */
+  function onPursue(job: MatchJob) {
     if (!active) return;
     trackRobotJobsFunnel("qualify_opened", {
       ...funnelBase(),
@@ -668,12 +669,17 @@ export default function RobotJobsWorkspace() {
       ...funnelBase(),
       job_key: job.job_key,
       robot_name: active.productName,
+      next: "pipeline_buyers",
     });
-    setQualified(prev => {
-      const cur = prev[active.productName] || [];
-      if (cur.includes(job.job_key)) return prev;
-      return { ...prev, [active.productName]: [...cur, job.job_key] };
-    });
+  }
+
+  /** /pipeline scoped to real buyers matched to the researched robot. */
+  function buyersHref(): string {
+    const robotUrl = submittedUrlRef.current || url;
+    const params = new URLSearchParams();
+    if (robotUrl) params.set("url", robotUrl);
+    params.set("src", "robot_jobs_qualify");
+    return `/pipeline?${params.toString()}`;
   }
 
   function newRobot() {
@@ -758,9 +764,6 @@ export default function RobotJobsWorkspace() {
             jobCount={active?.jobCount || 0}
             portfolioCount={portfolio.length}
             railTab={railTab}
-            qualifiedCount={
-              active ? qualified[active.productName]?.length || 0 : 0
-            }
             onTab={t => {
               setRailTab(t);
               const nextStage = t === "profile" ? "review" : "jobs";
@@ -833,11 +836,10 @@ export default function RobotJobsWorkspace() {
             analysis={active}
             unlocked={unlocked}
             showCount={showActiveCount}
-            railTab={railTab}
-            qualifiedKeys={qualified[active.productName] || []}
             expandedJob={expandedJob}
             onToggle={toggleExpand}
-            onQualify={onQualify}
+            onPursue={onPursue}
+            buyersHref={buyersHref()}
             signupHref={signupHref}
             onSeeAll={onSeeAll}
           />
@@ -1005,7 +1007,6 @@ function ContextRail({
   jobCount,
   portfolioCount,
   railTab,
-  qualifiedCount,
   onTab,
   onBackToPortfolio,
   onNewRobot,
@@ -1019,7 +1020,6 @@ function ContextRail({
   jobCount: number;
   portfolioCount: number;
   railTab: RailTab;
-  qualifiedCount: number;
   onTab: (t: RailTab) => void;
   onBackToPortfolio?: () => void;
   onNewRobot: () => void;
@@ -1066,12 +1066,12 @@ function ContextRail({
         ) : null}
       </div>
 
-      {/* Job / Qualified nav only exists after matching (the profile is a pre-match checkpoint). */}
+      {/* Profile / Jobs nav only exists after matching (the profile is a pre-match checkpoint).
+          Pursuing an opportunity hands off to the pipeline (real buyers + CRM stages). */}
       {matched && (
         <nav className="mt-6 space-y-1">
           {navItem("profile", "Profile")}
           {navItem("jobs", "Jobs", showCount ? `${jobCount}` : undefined)}
-          {navItem("qualified", "Qualified", `${qualifiedCount}`)}
         </nav>
       )}
 
@@ -1480,68 +1480,56 @@ function JobsPanel({
   analysis,
   unlocked,
   showCount,
-  railTab,
-  qualifiedKeys,
   expandedJob,
   onToggle,
-  onQualify,
+  onPursue,
+  buyersHref,
   signupHref,
   onSeeAll,
 }: {
   analysis: RobotAnalysis;
   unlocked: boolean;
   showCount: boolean;
-  railTab: RailTab;
-  qualifiedKeys: string[];
   expandedJob: string | null;
   onToggle: (job: MatchJob) => void;
-  onQualify: (job: MatchJob) => void;
+  onPursue: (job: MatchJob) => void;
+  buyersHref: string;
   signupHref: string;
   onSeeAll: () => void;
 }) {
-  const showQualifiedOnly = railTab === "qualified";
-  const allJobs = analysis.jobs;
-  const baseJobs = showQualifiedOnly
-    ? allJobs.filter(j => qualifiedKeys.includes(j.job_key))
-    : allJobs;
+  const baseJobs = analysis.jobs;
   const visible = unlocked ? baseJobs : baseJobs.slice(0, PREVIEW_FREE);
   const hiddenCount = Math.max(0, analysis.jobCount - visible.length);
-  const shownOfTop = Math.min(TOP_SHOWN, allJobs.length);
+  const shownOfTop = Math.min(TOP_SHOWN, baseJobs.length);
 
   return (
     <div className="p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-2xl font-bold text-slate-100">
-          {showQualifiedOnly
-            ? "Qualified jobs"
-            : `Jobs for ${analysis.productName}`}
+          Jobs for {analysis.productName}
         </h2>
         <span className="font-mono text-sm font-bold text-emerald-300">
-          {showQualifiedOnly
-            ? `${baseJobs.length} qualified`
-            : baseJobs.length === 0
-              ? ""
-              : showCount
-                ? `${analysis.jobCount} JOBS FOR ${analysis.productName.toUpperCase()}`
-                : `MATCHES FOR ${analysis.productName.toUpperCase()}`}
+          {baseJobs.length === 0
+            ? ""
+            : showCount
+              ? `${analysis.jobCount} JOBS FOR ${analysis.productName.toUpperCase()}`
+              : `MATCHES FOR ${analysis.productName.toUpperCase()}`}
         </span>
       </div>
-      {/* Only claim we matched against confirmed capabilities when there are matches. */}
-      {!showQualifiedOnly && baseJobs.length > 0 && (
+      {/* These are example roles that prove fit — the next step is real buyers. */}
+      {baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
-          We matched these jobs against {analysis.productName}'s confirmed
-          capabilities · {shownOfTop} strongest matches shown
+          Example work {analysis.productName} can do, matched to its confirmed
+          capabilities
+          {showCount && analysis.jobCount > shownOfTop
+            ? ` · showing the ${shownOfTop} strongest of ${analysis.jobCount}`
+            : ` · ${shownOfTop} shown`}
+          . Pick one to find real companies hiring for it.
         </p>
       )}
 
       {baseJobs.length === 0 ? (
-        showQualifiedOnly ? (
-          <p className="mt-8 text-sm text-slate-400">
-            No qualified jobs yet — open a job and Qualify it.
-          </p>
-        ) : (
-          <ZeroState robotName={analysis.productName} reason={analysis.zeroReason} />
-        )
+        <ZeroState robotName={analysis.productName} reason={analysis.zeroReason} />
       ) : (
         <ol className="mt-6 space-y-3">
           {visible.map((job, i) => (
@@ -1551,22 +1539,22 @@ function JobsPanel({
               job={job}
               robotName={analysis.productName}
               expanded={expandedJob === job.job_key}
-              qualified={qualifiedKeys.includes(job.job_key)}
+              buyersHref={buyersHref}
               onToggle={() => onToggle(job)}
-              onQualify={() => onQualify(job)}
+              onPursue={() => onPursue(job)}
             />
           ))}
         </ol>
       )}
 
-      {!unlocked && !showQualifiedOnly && hiddenCount > 0 && (
+      {!unlocked && hiddenCount > 0 && (
         <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5 text-center">
           <p className="font-display text-lg font-bold text-slate-100">
             More matches for {analysis.productName}
           </p>
           <p className="mt-1 text-[12px] text-slate-400">
-            Create a free account to see every match, its evidence, and qualify
-            the ones worth pursuing.
+            Create a free account to see every match and its evidence, then take
+            the ones worth pursuing to real buyers.
           </p>
           <Link
             href={signupHref}
@@ -1576,6 +1564,22 @@ function JobsPanel({
             {showCount
               ? `See all ${analysis.jobCount} matches →`
               : "See all matches →"}
+          </Link>
+        </div>
+      )}
+
+      {/* List-level next step — real buyers for this robot in the pipeline. */}
+      {unlocked && baseJobs.length > 0 && (
+        <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5 text-center">
+          <p className="font-display text-lg font-bold text-slate-100">
+            Ready to pursue this work?
+          </p>
+          <p className="mt-1 text-[12px] text-slate-400">
+            We'll show real companies hiring for {analysis.productName}'s work —
+            save the ones worth pursuing and draft outreach in your pipeline.
+          </p>
+          <Link href={buyersHref} className={`${ctaClass} mt-4`}>
+            Find buyers hiring for {analysis.productName}'s work →
           </Link>
         </div>
       )}
@@ -1658,17 +1662,17 @@ function JobCard({
   job,
   robotName,
   expanded,
-  qualified,
+  buyersHref,
   onToggle,
-  onQualify,
+  onPursue,
 }: {
   index: number;
   job: MatchJob;
   robotName: string;
   expanded: boolean;
-  qualified: boolean;
+  buyersHref: string;
   onToggle: () => void;
-  onQualify: () => void;
+  onPursue: () => void;
 }) {
   const possible = job.verdict !== "NOT_A_MATCH";
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
@@ -1760,14 +1764,21 @@ function JobCard({
             </p>
           ) : null}
 
-          <button
-            type="button"
-            onClick={onQualify}
-            disabled={qualified}
-            className={`${ctaClass} mt-4`}
-          >
-            {qualified ? "Qualification requested ✓" : "Qualify this job →"}
-          </button>
+          {possible ? (
+            <div className="mt-4">
+              <Link
+                href={buyersHref}
+                onClick={onPursue}
+                className={`${ctaClass} w-full`}
+              >
+                Find buyers hiring for this →
+              </Link>
+              <p className="mt-2 text-[12px] text-slate-500">
+                Real companies hiring for this kind of work that fit {robotName}
+                {" "}— save the ones worth pursuing and draft outreach.
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
     </li>
