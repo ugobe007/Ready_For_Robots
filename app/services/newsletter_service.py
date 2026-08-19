@@ -281,6 +281,9 @@ def _editorial_headline(
     Extracts dollar figures and percentages from signal text when available.
     """
     clean = _clean_signal_text(top_signal_text or "", max_len=160)
+    # Signal text often leads with the company name; strip it so "{name} — {clean}"
+    # templates below don't render "Name — Name ...".
+    clean = _strip_leading_company(clean, name)
     automation_type, pain_point = _industry_automation_context(industry)
 
     # Dollar amount extraction for context suffix
@@ -334,6 +337,24 @@ def _editorial_headline(
             return f"{name} — {first[:120]}"
 
     return f"{name}: {_sig_label(sig_type)} signal active in {_industry_display(industry)}"
+
+
+def _strip_leading_company(text: str, name: str) -> str:
+    """Remove one or more leading '<Company>[ :\\-—]' mentions from a headline.
+
+    Signal text frequently begins with the company name, so composing
+    "{name} — {signal}" then "{name}: {...}" produced duplicated names (e.g.
+    "CLLIX: CLLIX — CLLIX ..."). This collapses those repeats.
+    """
+    t = (text or "").strip()
+    n = (name or "").strip()
+    if not t or not n:
+        return t
+    pattern = re.compile(
+        r"^(?:" + re.escape(n) + r"(?:\s+[:\-–—]*\s*|[:\-–—]+\s*))+",
+        re.IGNORECASE
+    )
+    return pattern.sub("", t).strip()
 
 
 def _truncate(text: str, max_len: int) -> str:
@@ -604,7 +625,12 @@ def generate_edition(db: Session, limit: int = 8, *, skip_openai_brief: bool = F
 
     if stories:
         top = stories[0]
-        main_headline = f"{top['company']}: {_truncate(top.get('headline', '').replace(top['company'] + ': ', ''), 60)}"
+        _inner = _strip_leading_company(top.get("headline", ""), top["company"])
+        main_headline = (
+            f"{top['company']}: {_truncate(_inner, 60)}"
+            if _inner
+            else _truncate(top["company"], 80)
+        )
         subheadline = f"{len(stories)} hot leads with actionable signals — {top.get('category', '')} leading"
     else:
         main_headline = "Automation Sales Leads with Actionable Signals"
