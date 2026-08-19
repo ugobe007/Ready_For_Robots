@@ -1479,6 +1479,49 @@
     @apply rounded-2xl border border-white/10 bg-[#0f172a] p-4;
   }
 
+  /* Content Studio (/social) — dark terminal navy. Hero + the LinkedIn setup
+     panel are already dark; this flips the shell, post cards, editor tabs, and
+     batch/footer bars. The page is heavily color-coded by post type
+     (red / amber / sky / violet / emerald) — the net BRIGHTENS each accent for
+     dark instead of flattening it, so category coding survives. */
+  .social-page {
+    @apply text-slate-100;
+    background: #081126;
+    color-scheme: dark;
+  }
+  .social-page .page-hero-fade {
+    background-image: linear-gradient(to bottom, #111827, #081126) !important;
+  }
+  .social-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
+  .social-page :where(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, .bg-stone-50) { background-color: #0d1a33 !important; }
+  .social-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black) { color: #e2e8f0 !important; }
+  .social-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500) { color: #94a3b8 !important; }
+  .social-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300) { border-color: #334155 !important; }
+  /* Post-type accents — tinted backgrounds, brightened text/borders. */
+  .social-page :where(.bg-red-50) { background-color: rgba(248, 113, 113, 0.10) !important; }
+  .social-page :where(.bg-amber-50) { background-color: rgba(251, 191, 36, 0.10) !important; }
+  .social-page :where(.bg-sky-50) { background-color: rgba(56, 189, 248, 0.10) !important; }
+  .social-page :where(.bg-blue-50) { background-color: rgba(96, 165, 250, 0.10) !important; }
+  .social-page :where(.bg-violet-50) { background-color: rgba(167, 139, 250, 0.12) !important; }
+  .social-page :where(.bg-emerald-50) { background-color: rgba(16, 185, 129, 0.10) !important; }
+  .social-page :where(.text-red-700, .text-red-600) { color: #f87171 !important; }
+  .social-page :where(.text-amber-800, .text-amber-700) { color: #fbbf24 !important; }
+  .social-page :where(.text-sky-800, .text-sky-700, .text-sky-900) { color: #7dd3fc !important; }
+  .social-page :where(.text-blue-700, .text-blue-100) { color: #93c5fd !important; }
+  .social-page :where(.text-violet-800, .text-violet-700) { color: #c4b5fd !important; }
+  .social-page :where(.text-emerald-800, .text-emerald-700, .text-emerald-900) { color: #6ee7b7 !important; }
+  .social-page :where(.border-red-200) { border-color: rgba(248, 113, 113, 0.30) !important; }
+  .social-page :where(.border-amber-200) { border-color: rgba(251, 191, 36, 0.30) !important; }
+  .social-page :where(.border-sky-200) { border-color: rgba(56, 189, 248, 0.30) !important; }
+  .social-page :where(.border-blue-200, .border-blue-400\/40) { border-color: rgba(96, 165, 250, 0.35) !important; }
+  .social-page :where(.border-violet-200) { border-color: rgba(167, 139, 250, 0.30) !important; }
+  .social-page :where(.border-emerald-200) { border-color: rgba(16, 185, 129, 0.30) !important; }
+  .social-page :where(.hover\:bg-gray-50):hover { background-color: #1e293b !important; }
+  .social-page :where(.hover\:bg-emerald-50):hover { background-color: rgba(16, 185, 129, 0.14) !important; }
+  .social-page :where(.hover\:bg-violet-50):hover { background-color: rgba(167, 139, 250, 0.16) !important; }
+  .social-page :where(.hover\:bg-sky-50):hover { background-color: rgba(56, 189, 248, 0.14) !important; }
+  .social-page :where(.hover\:bg-blue-50):hover { background-color: rgba(96, 165, 250, 0.14) !important; }
+
   .newsletter-hero-dark {
     @apply mb-6 overflow-hidden rounded-xl border border-white/10 bg-[#111827] shadow-lg;
   }
