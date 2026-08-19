@@ -131,7 +131,7 @@ const capabilityRows = [
 
 export default function Compare() {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="compare-page min-h-screen flex flex-col">
       <Header />
 
       <PageHeroDark

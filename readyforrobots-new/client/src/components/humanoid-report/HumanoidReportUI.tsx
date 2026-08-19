@@ -54,9 +54,9 @@ export function ReportPanel({ children, accent = "purple", className = "" }: Pan
           : "3px solid transparent";
   const background =
     accent === "emerald"
-      ? "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 55%, #ecfdf5 100%)"
+      ? "linear-gradient(135deg, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0.08) 55%, rgba(16,185,129,0.14) 100%)"
       : RR.bgElevated;
-  const borderColor = accent === "emerald" ? "#a7f3d0" : RR.border;
+  const borderColor = accent === "emerald" ? "rgba(16,185,129,0.35)" : RR.border;
   return (
     <div
       className={`rounded-lg border px-4 py-3.5 ${className}`}
@@ -180,8 +180,8 @@ export function ReportLink({
     <a
       href={href}
       {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      className="font-medium underline underline-offset-4 decoration-gray-300 hover:decoration-emerald-500/50"
-      style={{ color: "#047857" }}
+      className="font-medium underline underline-offset-4 decoration-white/20 hover:decoration-emerald-400/60"
+      style={{ color: "#34d399" }}
     >
       {children}
     </a>
