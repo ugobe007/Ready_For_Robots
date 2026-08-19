@@ -99,8 +99,8 @@
   --sidebar-border: oklch(0.91 0.005 240);
   --sidebar-ring: oklch(0.527 0.154 162);
 
-  /* Pipeline workspace panels — visible light grey (slate-100 was too close to white) */
-  --pipeline-panel-bg: #d8dee8;
+  /* Pipeline workspace panels — dark terminal navy (matches the Jobs front door). */
+  --pipeline-panel-bg: #0b162f;
 }
 
 .dark {
@@ -984,7 +984,8 @@
   /* Sales Pipeline page — command rail + light workspace for readable CRM detail */
   .pipeline-page-bg {
     @apply min-h-screen;
-    background: linear-gradient(180deg, #090f1f 0%, #0b1121 420px, #bcc7d8 420px, #d2dbe7 100%);
+    /* Dark terminal navy end-to-end — matches the Jobs front door (#081126). */
+    background: #081126;
   }
 
   .pipeline-command-rail {
@@ -996,46 +997,39 @@
   }
 
   .pipeline-workspace {
-    @apply overflow-hidden rounded-2xl border border-slate-400 bg-white antialiased shadow-[0_14px_40px_-20px_rgba(15,23,42,0.35)];
-    color-scheme: light;
+    @apply overflow-hidden rounded-2xl border border-slate-700 bg-[#081126] text-slate-100 antialiased shadow-[0_14px_40px_-20px_rgba(0,0,0,0.7)];
+    color-scheme: dark;
   }
 
-  /* Readable body copy — bump muted Tailwind grays one step darker */
-  .pipeline-workspace :where(.text-gray-400) {
-    @apply text-gray-600;
-  }
-
-  .pipeline-workspace :where(.text-gray-500) {
-    @apply text-gray-700;
-  }
-
-  .pipeline-workspace :where(.text-stone-400) {
-    @apply text-stone-600;
-  }
-
-  .pipeline-workspace :where(.text-stone-500) {
-    @apply text-stone-700;
-  }
+  /* Dark-terminal override net for inline Tailwind LIGHT utilities inside the
+     workspace. Uses !important to beat Tailwind's utilities layer, and excludes
+     dark translucents (bg-white/5, border-white/10, etc.) so overlays keep working.
+     The .pipeline-* classes below are flipped directly; this catches the many
+     one-off inline utilities in the JSX (banners, skeletons, detail panels). */
+  .pipeline-page-bg :where(.bg-white, .bg-white\/80, .bg-white\/85, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
+  .pipeline-page-bg :where(.bg-slate-50, .bg-slate-50\/70, .bg-slate-50\/85, .bg-slate-100, .bg-slate-100\/80, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50, .bg-emerald-50\/50, .bg-emerald-50\/60, .bg-emerald-50\/70) { background-color: #0d1a33 !important; }
+  .pipeline-page-bg :where(.bg-stone-200, .bg-stone-100) { background-color: #1e293b !important; }
+  .pipeline-page-bg :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-stone-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
+  .pipeline-page-bg :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-stone-700, .text-stone-600, .text-stone-500, .text-stone-400, .text-emerald-700, .text-amber-900) { color: #94a3b8 !important; }
+  .pipeline-page-bg :where(.border-slate-200, .border-slate-300, .border-slate-400, .border-gray-200, .border-gray-300, .border-emerald-200, .border-emerald-300, .border-stone-200, .border-amber-300) { border-color: #334155 !important; }
+  /* Light gradients → solid dark (use ~= to match whole tokens, not from-emerald-500). */
+  .pipeline-page-bg :where([class~="from-emerald-50"], [class~="from-slate-50"], [class~="from-slate-100"], [class~="from-white"], [class~="via-white"], [class~="via-emerald-50"], [class~="to-white"], [class~="to-stone-50"], [class~="to-emerald-50"], [class~="to-slate-200"]) { background-image: none !important; background-color: #0b162f !important; }
 
   .pipeline-workspace .sb-input {
-    @apply border-slate-300 bg-white placeholder:text-slate-500;
+    @apply border-slate-600 bg-[#0b162f] text-slate-100 placeholder:text-slate-500;
   }
 
   .pipeline-workspace .sb-kicker {
-    @apply text-slate-800;
-  }
-
-  .pipeline-first-save-nudge {
-    @apply rounded-xl border border-emerald-300 bg-gradient-to-r from-emerald-50 via-emerald-50/50 to-white px-4 py-3 shadow-sm sm:px-5;
+    @apply text-slate-300;
   }
 
   .pipeline-page-header {
-    @apply relative overflow-hidden border-b border-slate-300 bg-gradient-to-b from-slate-100 to-slate-200/85 px-4 py-5 sm:px-5;
+    @apply relative overflow-hidden border-b border-slate-700 bg-[#0b162f] px-4 py-5 sm:px-5;
   }
 
   .pipeline-page-header::before {
     content: "";
-    @apply absolute inset-y-0 left-0 w-1 bg-emerald-500;
+    @apply absolute inset-y-0 left-0 w-1 bg-emerald-400;
   }
 
   .pipeline-page-header-inner {
@@ -1043,43 +1037,43 @@
   }
 
   .pipeline-page-header .sb-kicker {
-    @apply font-bold text-slate-800;
+    @apply font-bold text-slate-300;
   }
 
   .pipeline-page-header .pipeline-filter-hint {
-    @apply text-xs font-medium leading-snug text-slate-700;
+    @apply text-xs font-medium leading-snug text-slate-400;
   }
 
   .pipeline-metric-label {
-    @apply text-[10px] font-bold uppercase tracking-[0.14em] text-slate-700;
+    @apply text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400;
   }
 
   .pipeline-metric-value {
-    @apply font-mono text-xl font-semibold leading-tight text-slate-900;
+    @apply font-mono text-xl font-semibold leading-tight text-slate-100;
   }
 
   .pipeline-metric-sub {
-    @apply text-[11px] leading-snug text-slate-600;
+    @apply text-[11px] leading-snug text-slate-400;
   }
 
   .pipeline-value-strip-title {
-    @apply text-xs font-bold text-slate-900;
+    @apply text-xs font-bold text-slate-100;
   }
 
   .pipeline-value-strip-body {
-    @apply mt-0.5 text-[11px] leading-relaxed text-slate-700;
+    @apply mt-0.5 text-[11px] leading-relaxed text-slate-400;
   }
 
   .pipeline-market-kicker {
-    @apply text-slate-800;
+    @apply text-slate-300;
   }
 
   .pipeline-page-header h1 {
-    @apply text-gray-900 leading-tight tracking-tight;
+    @apply text-slate-100 leading-tight tracking-tight;
   }
 
   .pipeline-page-header p {
-    @apply text-gray-600 leading-relaxed;
+    @apply text-slate-400 leading-relaxed;
   }
 
   .pipeline-metrics-grid {
@@ -1088,7 +1082,7 @@
   }
 
   .pipeline-metric-card {
-    @apply relative overflow-hidden rounded-lg border border-slate-300 bg-white px-3 py-2.5 shadow-[0_8px_18px_-14px_rgba(15,23,42,0.45)];
+    @apply relative overflow-hidden rounded-lg border border-slate-700 bg-[#0b162f] px-3 py-2.5 shadow-[0_8px_18px_-14px_rgba(0,0,0,0.6)];
   }
 
   .pipeline-metric-card::before {
@@ -1098,53 +1092,53 @@
   }
 
   .pipeline-tier-header {
-    @apply sticky top-0 z-10 mb-1.5 flex items-center gap-2 rounded-md border border-slate-300 bg-slate-50 px-2.5 py-2 text-slate-700;
+    @apply sticky top-0 z-10 mb-1.5 flex items-center gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-2.5 py-2 text-slate-300;
   }
 
   .pipeline-tier-title {
-    @apply text-xs font-bold tracking-tight text-slate-800;
+    @apply text-xs font-bold tracking-tight text-slate-200;
   }
 
   .pipeline-deals-layout {
-    @apply border-t border-gray-300;
+    @apply border-t border-slate-700;
     background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-list-columns {
-    @apply mb-1.5 hidden grid-cols-12 gap-2 rounded-md border border-slate-300 bg-slate-50 px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600 sm:grid;
+    @apply mb-1.5 hidden grid-cols-12 gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 sm:grid;
     background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-deal-row {
-    @apply rounded-md border border-slate-300 bg-white shadow-[0_10px_20px_-18px_rgba(15,23,42,0.55)] transition-all duration-300;
+    @apply rounded-md border border-slate-700 bg-[#0b162f] shadow-[0_10px_20px_-18px_rgba(0,0,0,0.7)] transition-all duration-300;
     border-left-width: 3px;
     animation: fadeInUp 0.4s cubic-bezier(0.23, 1, 0.32, 1) both;
   }
 
   .pipeline-deal-row-selected {
-    @apply border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500/25;
+    @apply border-emerald-400 bg-emerald-400/10 ring-1 ring-emerald-400/30;
   }
 
   .pipeline-deal-row-hover {
-    @apply hover:border-slate-400 hover:bg-slate-50 hover:shadow-[0_12px_22px_-16px_rgba(15,23,42,0.45)];
+    @apply hover:border-slate-500 hover:bg-white/5 hover:shadow-[0_12px_22px_-16px_rgba(0,0,0,0.6)];
   }
 
   .pipeline-list-shell {
-    @apply rounded-md border border-slate-300 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)];
+    @apply rounded-md border border-slate-700 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)];
     background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-detail-shell {
-    @apply shrink-0 overflow-hidden rounded-md border border-slate-300 bg-white shadow-[0_16px_30px_-22px_rgba(15,23,42,0.6)];
+    @apply shrink-0 overflow-hidden rounded-md border border-slate-700 bg-[#0b162f] shadow-[0_16px_30px_-22px_rgba(0,0,0,0.7)];
   }
 
   .pipeline-detail-header {
-    @apply relative shrink-0 overflow-hidden border-b border-slate-300 bg-gradient-to-b from-emerald-50/55 to-white px-4 py-3;
+    @apply relative shrink-0 overflow-hidden border-b border-slate-700 bg-[#0d1a33] px-4 py-3;
   }
 
   .pipeline-detail-header::before {
     content: "";
-    @apply absolute inset-y-0 left-0 w-1 bg-emerald-500;
+    @apply absolute inset-y-0 left-0 w-1 bg-emerald-400;
   }
 
   .pipeline-detail-header-inner {
@@ -1153,19 +1147,19 @@
 
   .pipeline-detail-header h2 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
-    @apply text-gray-900 leading-tight tracking-tight;
+    @apply text-slate-100 leading-tight tracking-tight;
   }
 
   .pipeline-detail-header p {
-    @apply text-gray-600 leading-relaxed;
+    @apply text-slate-400 leading-relaxed;
   }
 
   .pipeline-score-badge {
-    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-emerald-200 bg-white shadow-sm;
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-emerald-400/40 bg-[#081126] shadow-sm;
   }
 
   .pipeline-score-badge span {
-    @apply font-mono text-xs font-black tabular-nums text-emerald-700;
+    @apply font-mono text-xs font-black tabular-nums text-emerald-300;
   }
 
   .pipeline-score-badge-lg {
@@ -1177,32 +1171,36 @@
   }
 
   .pipeline-detail-section {
-    @apply shrink-0 border-b border-slate-200 bg-white px-4 py-2.5 text-slate-800;
+    @apply shrink-0 border-b border-slate-700 bg-[#0b162f] px-4 py-2.5 text-slate-200;
   }
 
   .pipeline-detail-section-muted {
-    @apply shrink-0 border-b border-slate-200 bg-slate-50/85 px-4 py-2.5 text-slate-700;
+    @apply shrink-0 border-b border-slate-700 bg-[#0d1a33] px-4 py-2.5 text-slate-400;
   }
 
   .pipeline-detail-actions {
-    @apply shrink-0 flex flex-wrap items-center gap-1.5 border-t border-slate-300 bg-slate-100/80 px-4 py-2.5;
+    @apply shrink-0 flex flex-wrap items-center gap-1.5 border-t border-slate-700 bg-[#0d1a33] px-4 py-2.5;
   }
 
   .pipeline-detail-share {
-    @apply rounded-md border border-emerald-200 bg-emerald-50 px-3 py-3 text-gray-800;
+    @apply rounded-md border border-emerald-400/30 bg-emerald-400/10 px-3 py-3 text-slate-200;
   }
 
   .pipeline-robot-type-chip {
-    @apply inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800;
+    @apply inline-flex rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300;
   }
 
   .pipeline-value-strip {
-    @apply rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3 shadow-sm;
+    @apply rounded-xl border border-emerald-400/30 bg-emerald-400/[0.08] px-4 py-3 shadow-sm;
   }
 
   .pipeline-market-snippet {
-    @apply mx-3 mb-2 rounded-lg border border-slate-300 px-3 py-2.5 shadow-[0_6px_16px_-14px_rgba(15,23,42,0.45)] sm:mx-4;
+    @apply mx-3 mb-2 rounded-lg border border-slate-700 px-3 py-2.5 shadow-[0_6px_16px_-14px_rgba(0,0,0,0.6)] sm:mx-4;
     background-color: var(--pipeline-panel-bg);
+  }
+
+  .pipeline-first-save-nudge {
+    @apply rounded-xl border border-emerald-400/40 bg-emerald-400/[0.08] px-4 py-3 shadow-sm sm:px-5;
   }
 
   /* Signals — dark intelligence panel on white page */
