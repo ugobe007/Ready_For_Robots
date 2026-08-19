@@ -37,7 +37,20 @@ export default function ExperimentHeader() {
           <a href="/#about" className="text-slate-400 transition hover:text-slate-200">
             About
           </a>
-          {session ? null : (
+          {session ? (
+            // Signed-in users need a persistent path to their CRM/leads from the
+            // Jobs terminal — without it the buyers → pipeline handoff dead-ends.
+            <Link
+              href="/pipeline"
+              className={
+                location.startsWith("/pipeline")
+                  ? "border-b border-emerald-400 pb-0.5 text-emerald-400"
+                  : "text-slate-400 transition hover:text-slate-200"
+              }
+            >
+              Pipeline
+            </Link>
+          ) : (
             <Link href={loginHref("/")} className="text-slate-400 transition hover:text-slate-200">
               Sign In
             </Link>
