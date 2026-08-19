@@ -1637,6 +1637,15 @@ export default function Pipeline() {
     const params = new URLSearchParams(search);
     return (params.get("view") || "").trim().toLowerCase();
   }, [search]);
+  // Work-type relevance: when the Jobs workspace links here for a specific job,
+  // it passes `industries=` so buyers are biased toward that vertical. Backend
+  // falls back to an open match if the filter is too narrow.
+  const industriesFromQuery = useMemo(() => {
+    const raw = (new URLSearchParams(search).get("industries") || "").trim();
+    return raw
+      ? raw.split(",").map(s => s.trim()).filter(Boolean)
+      : [];
+  }, [search]);
   const activationIdFromQuery = useMemo(() => {
     const value = Number(new URLSearchParams(search).get("activation"));
     return Number.isFinite(value) && value > 0 ? value : null;
@@ -1897,7 +1906,11 @@ export default function Pipeline() {
     const base = getPublicReadApiBase();
     setSubmittedUrlMatchError(false);
     setSubmittedUrlMatchLoading(true);
-    const industries = icpIndustryTokens(matchIndustryKey);
+    // Prefer an explicit work-type industry from the URL (Jobs → buyers deep link)
+    // over the saved workspace ICP.
+    const industries = industriesFromQuery.length
+      ? industriesFromQuery
+      : icpIndustryTokens(matchIndustryKey);
     const industryQs = industries.length
       ? `&industries=${encodeURIComponent(industries.join(","))}`
       : "";
@@ -1941,7 +1954,7 @@ export default function Pipeline() {
     return () => {
       cancelled = true;
     };
-  }, [submittedUrl, matchIndustryKey]);
+  }, [submittedUrl, matchIndustryKey, industriesFromQuery]);
   const firstThreeEnteredRef = useRef<FirstThreeStep | null>(null);
   const firstThreeAbandonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstThreeAbandonSignaturesRef = useRef<Set<string>>(new Set());

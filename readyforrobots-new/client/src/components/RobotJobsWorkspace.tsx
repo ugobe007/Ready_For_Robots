@@ -686,11 +686,16 @@ export default function RobotJobsWorkspace() {
     });
   }
 
-  /** /pipeline scoped to real buyers matched to the researched robot. */
-  function buyersHref(): string {
+  /** /pipeline scoped to real buyers matched to the researched robot. When an
+   *  industry is passed (from a specific job's work type), it biases matching
+   *  toward buyers in that vertical — the backend falls back to an open match if
+   *  the filter is too narrow, so this never empties the pipeline. */
+  function buyersHref(industry?: string): string {
     const robotUrl = submittedUrlRef.current || url;
     const params = new URLSearchParams();
     if (robotUrl) params.set("url", robotUrl);
+    const ind = (industry || "").trim();
+    if (ind) params.set("industries", ind);
     params.set("src", "robot_jobs_qualify");
     return `/pipeline?${params.toString()}`;
   }
@@ -856,7 +861,7 @@ export default function RobotJobsWorkspace() {
             expandedJob={expandedJob}
             onToggle={toggleExpand}
             onPursue={onPursue}
-            buyersHref={buyersHref()}
+            buyersHref={buyersHref}
             signupHref={signupHref}
             onSeeAll={onSeeAll}
           />
@@ -1510,7 +1515,7 @@ function JobsPanel({
   expandedJob: string | null;
   onToggle: (job: MatchJob) => void;
   onPursue: (job: MatchJob) => void;
-  buyersHref: string;
+  buyersHref: (industry?: string) => string;
   signupHref: string;
   onSeeAll: () => void;
 }) {
@@ -1598,7 +1603,7 @@ function JobsPanel({
             We'll show real companies hiring for {analysis.productName}'s work —
             save the ones worth pursuing and draft outreach in your pipeline.
           </p>
-          <Link href={buyersHref} className={`${ctaClass} mt-4`}>
+          <Link href={buyersHref()} className={`${ctaClass} mt-4`}>
             Find buyers hiring for {analysis.productName}'s work →
           </Link>
         </div>
@@ -1687,6 +1692,61 @@ function ZeroState({
   );
 }
 
+/**
+ * Work-type → buyer vertical (substring-matched against Company.industry by the
+ * backend, so tokens must be substrings of real industry names — e.g. "logistics"
+ * not "warehouse", "healthcare" not "eldercare"). Specific tape families map
+ * directly; generic families (transport/cart/gripper/scrub/inspect) fall back to
+ * keywords found in the job's free-text industry (so e.g. an airport transport job
+ * still biases toward airport buyers). Returns "" when unknown — the pipeline then
+ * shows the full robot-matched set, and the backend soft-falls-back regardless.
+ */
+const FAMILY_VERTICAL: Record<string, string> = {
+  clinical_delivery: "healthcare",
+  disinfection: "healthcare",
+  resident_services: "healthcare",
+  serve: "hospitality",
+  food_prep: "hospitality",
+  beverage: "hospitality",
+  restroom: "hospitality",
+  shelf_scan: "retail",
+  asrs: "logistics",
+  pick_pack: "logistics",
+  sortation: "logistics",
+  trailer_unload: "logistics",
+  pallet_move: "logistics",
+  pallet: "logistics",
+  agriculture: "agriculture",
+  construction: "construction",
+  mining: "mining",
+};
+
+const INDUSTRY_KEYWORD_VERTICAL: [string, string][] = [
+  ["hospital", "healthcare"], ["surgery", "healthcare"], ["clinic", "healthcare"],
+  ["pharmac", "healthcare"], ["senior", "healthcare"], ["assisted", "healthcare"],
+  ["nursing", "healthcare"], ["memory care", "healthcare"], ["med device", "healthcare"],
+  ["airport", "airport"],
+  ["hotel", "hospitality"], ["restaurant", "hospitality"], ["cafe", "hospitality"], ["bar", "hospitality"],
+  ["grocery", "retail"], ["retail", "retail"], ["mall", "retail"], ["home improvement", "retail"],
+  ["warehouse", "logistics"], ["fulfillment", "logistics"], ["distribution", "logistics"],
+  ["3pl", "logistics"], ["parcel", "logistics"], ["returns", "logistics"], ["port", "logistics"],
+  ["manufacturing", "manufacturing"], ["machine shop", "manufacturing"], ["aerospace", "manufacturing"],
+  ["packaging", "manufacturing"], ["process plant", "manufacturing"], ["industrial", "manufacturing"],
+  ["university", "education"], ["education", "education"],
+  ["utilities", "utilities"],
+  ["agriculture", "agriculture"], ["construction", "construction"], ["mining", "mining"],
+];
+
+function verticalForJob(job: MatchJob): string {
+  const fam = (job.tape_family || "").toLowerCase().trim();
+  if (FAMILY_VERTICAL[fam]) return FAMILY_VERTICAL[fam];
+  const ind = (job.industry || "").toLowerCase();
+  for (const [kw, vert] of INDUSTRY_KEYWORD_VERTICAL) {
+    if (ind.includes(kw)) return vert;
+  }
+  return "";
+}
+
 function JobCard({
   index,
   job,
@@ -1700,7 +1760,7 @@ function JobCard({
   job: MatchJob;
   robotName: string;
   expanded: boolean;
-  buyersHref: string;
+  buyersHref: (industry?: string) => string;
   onToggle: () => void;
   onPursue: () => void;
 }) {
@@ -1797,7 +1857,7 @@ function JobCard({
           {possible ? (
             <div className="mt-4">
               <Link
-                href={buyersHref}
+                href={buyersHref(verticalForJob(job))}
                 onClick={onPursue}
                 className={`${ctaClass} w-full`}
               >
