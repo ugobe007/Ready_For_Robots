@@ -55,6 +55,7 @@ export type RobotProfileProduct = {
 export type RobotProfileResult = {
   submitted_url: string;
   built_at: string;
+  robot_submission_id?: number | null;
   profile_confidence: "A" | "B" | "C";
   source_grounding_rate: number;
   coverage_rate?: number;

@@ -279,6 +279,7 @@ export default function RobotJobsWorkspace() {
   );
   const srcRef = useRef(srcFromQuery());
   const submittedUrlRef = useRef("");
+  const submissionIdRef = useRef<number | null>(null);
   const viewedRef = useRef<Set<string>>(new Set());
   const fired3Plus = useRef(false);
   const restoredRef = useRef(false);
@@ -287,6 +288,10 @@ export default function RobotJobsWorkspace() {
   const funnelBase = () => ({
     session_id: sessionId.current,
     ...(srcRef.current ? { src: srcRef.current } : {}),
+    // Durable submitter id → submitter → funnel outcome is a single join.
+    ...(submissionIdRef.current
+      ? { robot_submission_id: submissionIdRef.current }
+      : {}),
   });
 
   const active = portfolio[activeIdx] || null;
@@ -338,6 +343,7 @@ export default function RobotJobsWorkspace() {
     });
     try {
       const profile = await fetchRobotProfile({ url: submitUrl });
+      submissionIdRef.current = profile.robot_submission_id ?? submissionIdRef.current;
       setCompanyName(profile.company?.name || "");
       if (profile.needs_product_choice && (profile.products || []).length > 1) {
         setProducts(
@@ -374,6 +380,7 @@ export default function RobotJobsWorkspace() {
           url: submitUrl,
           product: names[0],
         });
+        submissionIdRef.current = profile.robot_submission_id ?? submissionIdRef.current;
         enterReview(profileToAnalysis(profile), submitUrl, names);
       } catch {
         setError("Research failed for that robot.");
@@ -392,9 +399,13 @@ export default function RobotJobsWorkspace() {
           )
         )
       );
-      const analyses = results
-        .filter((r): r is RobotJobSearchResult => Boolean(r))
-        .map(searchToAnalysis);
+      const validResults = results.filter(
+        (r): r is RobotJobSearchResult => Boolean(r)
+      );
+      submissionIdRef.current =
+        validResults.find(r => r.robot_submission_id)?.robot_submission_id ??
+        submissionIdRef.current;
+      const analyses = validResults.map(searchToAnalysis);
       if (analyses.length === 0) {
         setError("We could not research those robots.");
         setStage("select");
@@ -575,9 +586,13 @@ export default function RobotJobsWorkspace() {
             )
           )
         );
-        const analyses = results
-          .filter((r): r is RobotJobSearchResult => Boolean(r))
-          .map(searchToAnalysis);
+        const validResults = results.filter(
+          (r): r is RobotJobSearchResult => Boolean(r)
+        );
+        submissionIdRef.current =
+          validResults.find(r => r.robot_submission_id)?.robot_submission_id ??
+          submissionIdRef.current;
+        const analyses = validResults.map(searchToAnalysis);
         if (analyses.length > 1) {
           const idx =
             savedIdx >= 0 && savedIdx < analyses.length ? savedIdx : 0;
@@ -600,6 +615,7 @@ export default function RobotJobsWorkspace() {
       const product = saved.products[0] || undefined;
       if (saved.view === "jobs") {
         const res = await fetchRobotJobSearch({ url: saved.url, product });
+        submissionIdRef.current = res.robot_submission_id ?? submissionIdRef.current;
         const a = searchToAnalysis(res);
         setPortfolio([a]);
         setActiveIdx(0);
@@ -609,6 +625,7 @@ export default function RobotJobsWorkspace() {
         return;
       }
       const profile = await fetchRobotProfile({ url: saved.url, product });
+      submissionIdRef.current = profile.robot_submission_id ?? submissionIdRef.current;
       // Silent: restoring on reload / auth-return must not re-fire the funnel.
       enterReview(profileToAnalysis(profile), saved.url, saved.products, {
         track: false,
@@ -720,6 +737,7 @@ export default function RobotJobsWorkspace() {
     fired3Plus.current = false;
     restoredRef.current = true;
     submittedUrlRef.current = "";
+    submissionIdRef.current = null;
     clearWorkspaceSession();
   }
 
