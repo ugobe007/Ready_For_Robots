@@ -1524,7 +1524,8 @@
       .text-slate-800,
       .text-black,
       .text-emerald-900,
-      .text-emerald-800
+      .text-emerald-800,
+      .text-amber-950
     ):not(.bg-emerald-500 *, .bg-emerald-600 *) {
     color: #e2e8f0 !important;
   }
