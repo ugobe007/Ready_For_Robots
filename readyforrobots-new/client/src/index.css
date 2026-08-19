@@ -1484,6 +1484,10 @@
      shared workspace-surface-card + admin-workspace inputs, both flipped dark
      here (scoped) and the form controls forced dark to beat admin-workspace. */
   .marketplace-page {
+    @apply text-slate-100;
+    background: #081126;
+    color-scheme: dark;
+  }
   /* Content Studio (/social) — dark terminal navy. Hero + the LinkedIn setup
      panel are already dark; this flips the shell, post cards, editor tabs, and
      batch/footer bars. The page is heavily color-coded by post type
@@ -1543,6 +1547,10 @@
      that marks the "ReadyForRobots wins" column is preserved (mapped to a sky
      tint / bright sky text) rather than flattened, so the emphasis survives. */
   .compare-page {
+    @apply text-slate-100;
+    background: #081126;
+    color-scheme: dark;
+  }
   /* Intelligence page — dark terminal navy. Hero already dark; this flips the
      shell, the scoring-model panel, report/brief sections, and the process grid.
      Note: several sections use bg-gray-100 gaps with bg-white cells for hairline
