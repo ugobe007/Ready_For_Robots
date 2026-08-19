@@ -84,7 +84,7 @@ def record_robot_submission(
         db.refresh(row)
         return row
     except SQLAlchemyError:
-        # Likely a race on the unique domain — roll back, re-read, retry the bump once.
+        # Likely a race on the unique domain — roll back, re-read, retry once.
         db.rollback()
         try:
             row = (
@@ -93,7 +93,18 @@ def record_robot_submission(
                 .one_or_none()
             )
             if row is not None:
+                row.submitted_url = (url or row.submitted_url)[:2000]
                 row.submission_count = int(row.submission_count or 0) + 1
+                if company_name:
+                    row.company_name = str(company_name)[:240]
+                if product_name:
+                    row.product_name = str(product_name)[:240]
+                if robot_class:
+                    row.robot_class = str(robot_class)[:64]
+                if profile_tier:
+                    row.profile_tier = str(profile_tier)[:8]
+                if source and not row.source:
+                    row.source = str(source)[:120]
                 db.commit()
                 db.refresh(row)
                 return row
@@ -147,6 +158,37 @@ def record_submission_match(
         db.commit()
         db.refresh(row)
         return row
+    except SQLAlchemyError:
+        # Likely a race on the unique domain — roll back, re-read, retry once.
+        db.rollback()
+        try:
+            row = (
+                db.query(RobotSubmission)
+                .filter(RobotSubmission.website_domain == domain)
+                .one_or_none()
+            )
+            if row is not None:
+                if capabilities is not None:
+                    row.capabilities = _compact_caps(capabilities)
+                if matched_company_ids is not None:
+                    ids = [int(x) for x in matched_company_ids if _is_int(x)][:100]
+                    row.matched_company_ids = ids
+                    row.last_match_count = len(ids) if match_count is None else int(match_count)
+                    row.last_matched_at = datetime.now(timezone.utc)
+                elif match_count is not None:
+                    row.last_match_count = int(match_count)
+                    row.last_matched_at = datetime.now(timezone.utc)
+                if job_count is not None:
+                    row.last_job_count = int(job_count)
+                if source and not row.source:
+                    row.source = str(source)[:120]
+                db.commit()
+                db.refresh(row)
+                return row
+        except Exception:
+            db.rollback()
+        logger.exception("record_submission_match_failed domain=%s", domain)
+        return None
     except Exception:
         db.rollback()
         logger.exception("record_submission_match_failed domain=%s", domain)
