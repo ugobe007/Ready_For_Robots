@@ -350,7 +350,10 @@ def _strip_leading_company(text: str, name: str) -> str:
     n = (name or "").strip()
     if not t or not n:
         return t
-    pattern = re.compile(r"^(?:" + re.escape(n) + r"\s*[:\-–—]*\s*)+", re.IGNORECASE)
+    pattern = re.compile(
+        r"^(?:" + re.escape(n) + r"(?:\s+[:\-–—]*\s*|[:\-–—]+\s*))+",
+        re.IGNORECASE
+    )
     return pattern.sub("", t).strip()
 
 
