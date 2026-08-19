@@ -17,6 +17,7 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
   {
     label: "Sell",
     links: [
+      { label: "Your robots", href: "/my-robots", shortLabel: "Robots → the buyers you've collected" },
       { label: "Live pipeline", href: "/pipeline", shortLabel: "Pick leads · draft · send" },
       { label: "Activity feed", href: "/sales-workflow", shortLabel: "What happened while you were away" },
       { label: "Inbox", href: "/inbox", shortLabel: "Replies & threads" },

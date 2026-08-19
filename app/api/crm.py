@@ -138,6 +138,7 @@ class CrmAccountOut(BaseModel):
     id: str
     team_id: str
     company_id: Optional[int] = None
+    robot_submission_id: Optional[int] = None
     name: str
     website: Optional[str] = None
     industry: Optional[str] = None
@@ -163,6 +164,8 @@ class CreateAccountIn(BaseModel):
     name: Optional[str] = None
     website: Optional[str] = None
     industry: Optional[str] = None
+    # Robot (submitter) this lead was collected for — groups leads in the CRM hub.
+    robot_submission_id: Optional[int] = None
 
 
 class PatchCrmAccountIn(BaseModel):
@@ -273,6 +276,7 @@ def _serialize_account(a: CrmAccount) -> dict[str, Any]:
         "id": str(a.id),
         "team_id": str(a.team_id),
         "company_id": a.company_id,
+        "robot_submission_id": getattr(a, "robot_submission_id", None),
         "name": a.name,
         "website": a.website,
         "industry": a.industry,
@@ -862,6 +866,101 @@ def list_accounts(
         _raise_crm_db_error(e)
 
 
+@router.get("/robots")
+def list_robot_crm(
+    team_id: Optional[uuid.UUID] = Query(None, description="Defaults to your first team"),
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    """Robot-centric CRM hub: saved buyer leads grouped by the robot that sourced them.
+
+    Powers "your robots → the buyers/deals collected for each". Only robots with at
+    least one saved lead appear (that's the CRM view).
+    """
+    try:
+        uid = _uid_uuid(user)
+        default = _ensure_default_team(db, uid, user.get("email") or "")
+        tid = team_id or default.id
+        _require_team_member(db, uid, tid)
+
+        accounts = (
+            db.query(CrmAccount)
+            .filter(
+                CrmAccount.team_id == tid,
+                CrmAccount.robot_submission_id.isnot(None),
+            )
+            .order_by(CrmAccount.created_at.desc())
+            .all()
+        )
+
+        from app.models.robot_submission import RobotSubmission
+
+        sub_ids = list({a.robot_submission_id for a in accounts if a.robot_submission_id})
+        subs: dict[int, RobotSubmission] = {}
+        if sub_ids:
+            for s in db.query(RobotSubmission).filter(RobotSubmission.id.in_(sub_ids)).all():
+                subs[s.id] = s
+
+        groups: dict[int, list[CrmAccount]] = {}
+        for a in accounts:
+            groups.setdefault(a.robot_submission_id, []).append(a)
+
+        robots: list[dict[str, Any]] = []
+        for sid, leads in groups.items():
+            s = subs.get(sid)
+            stages: dict[str, int] = {}
+            lead_rows: list[dict[str, Any]] = []
+            for a in leads:
+                stage = a.outreach_stage or "new"
+                stages[stage] = stages.get(stage, 0) + 1
+                lead_rows.append(
+                    {
+                        "id": str(a.id),
+                        "name": a.name,
+                        "company_id": a.company_id,
+                        "industry": a.industry,
+                        "outreach_stage": stage,
+                        "outreach_sent_at": a.outreach_sent_at.isoformat()
+                        if a.outreach_sent_at
+                        else None,
+                        "created_at": a.created_at.isoformat() if a.created_at else None,
+                    }
+                )
+            robots.append(
+                {
+                    "robot_submission_id": sid,
+                    "robot": {
+                        "id": s.id,
+                        "company_name": s.company_name,
+                        "product_name": s.product_name,
+                        "website_domain": s.website_domain,
+                        "submitted_url": s.submitted_url,
+                        "robot_class": s.robot_class,
+                        "profile_tier": s.profile_tier,
+                        "capabilities": s.capabilities or [],
+                        "submission_count": s.submission_count,
+                        "last_seen_at": s.last_seen_at.isoformat() if s.last_seen_at else None,
+                    }
+                    if s
+                    else None,
+                    "lead_count": len(leads),
+                    "stage_counts": stages,
+                    "leads": lead_rows,
+                }
+            )
+
+        # Most recently active robot first.
+        robots.sort(
+            key=lambda r: (r["leads"][0]["created_at"] or "") if r["leads"] else "",
+            reverse=True,
+        )
+        return {"team_id": str(tid), "robot_count": len(robots), "robots": robots}
+    except HTTPException:
+        raise
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
+        _raise_crm_db_error(e)
+
+
 @router.post("/accounts", response_model=CrmAccountOut)
 def create_account(
     body: CreateAccountIn,
@@ -907,6 +1006,8 @@ def create_account(
             if industry is not None:
                 existing.industry = industry
             existing.owner_user_id = existing.owner_user_id or uid
+            if body.robot_submission_id and not existing.robot_submission_id:
+                existing.robot_submission_id = body.robot_submission_id
             if not existing.outreach_stage:
                 existing.outreach_stage = "new"
             sync_account_stage_to_engagement(db, existing)
@@ -925,6 +1026,7 @@ def create_account(
             row = CrmAccount(
             team_id=tid,
             company_id=body.company_id,
+            robot_submission_id=body.robot_submission_id,
             name=name,
             website=website,
             industry=industry,
