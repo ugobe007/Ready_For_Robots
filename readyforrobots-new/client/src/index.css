@@ -1486,8 +1486,8 @@
      dark instead of flattening it, so category coding survives. */
   .social-page {
     @apply text-slate-100;
-    background: #081126;
-    color-scheme: dark;
+    background: #081126 !important;
+    color-scheme: dark !important;
   }
   .social-page .page-hero-fade {
     background-image: linear-gradient(to bottom, #111827, #081126) !important;
@@ -1521,6 +1521,9 @@
   .social-page :where(.hover\:bg-violet-50):hover { background-color: rgba(167, 139, 250, 0.16) !important; }
   .social-page :where(.hover\:bg-sky-50):hover { background-color: rgba(56, 189, 248, 0.14) !important; }
   .social-page :where(.hover\:bg-blue-50):hover { background-color: rgba(96, 165, 250, 0.14) !important; }
+  .social-page :where(.hover\:text-gray-900, .hover\:text-gray-800):hover { color: #e2e8f0 !important; }
+  .social-page :where(.hover\:text-emerald-900):hover { color: #6ee7b7 !important; }
+  .social-page :where(.hover\:text-sky-900):hover { color: #7dd3fc !important; }
 
   .newsletter-hero-dark {
     @apply mb-6 overflow-hidden rounded-xl border border-white/10 bg-[#111827] shadow-lg;
