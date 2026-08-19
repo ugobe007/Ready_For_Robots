@@ -11,6 +11,7 @@ const DARK_HERO_PATHS = new Set([
   "/compare",
   "/experiment",
   "/jobs",
+  "/newsletter",
 ]);
 
 export function isDarkHeroRoute(pathname: string): boolean {
