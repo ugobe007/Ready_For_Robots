@@ -638,7 +638,7 @@ export default function Social() {
   const totalLeadPosts = (posts || []).filter((p) => p.company_id != null).length;
 
   return (
-    <div className="admin-workspace min-h-screen bg-slate-50 text-gray-900">
+    <div className="admin-workspace social-page min-h-screen">
       <Header />
       <PageHeroDark
         maxWidthClass="max-w-4xl"
