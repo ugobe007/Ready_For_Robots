@@ -10,7 +10,11 @@
 
 ## Gate verdict
 
-# **NOT READY for traffic**
+# **GO — all pre-traffic gates GREEN (2026-08-19)**
+
+All technical pre-traffic gates are green (MATCH TRUTH, auth continuity, telemetry,
+final pre-traffic smoke; production health OK). Opening external traffic / publishing
+C04 is the operator's business decision.
 
 Do **not** blur matcher-in-isolation with the production MATCH TRUTH gate.
 
@@ -18,7 +22,10 @@ Do **not** blur matcher-in-isolation with the production MATCH TRUTH gate.
 |--------------|--------|
 | **MATCH TRUTH** | **PRODUCTION PASS** |
 | **SUBMIT WORKFLOW** | **merged** (#13) / **production smoke PASS** (visual 2026-08-17) |
-| **TRAFFIC** | **paused** |
+| **AUTH CONTINUITY** | **PASS** (2026-08-18) |
+| **TELEMETRY** | **PASS** (2026-08-19) |
+| **FINAL PRE-TRAFFIC SMOKE** | **PASS** (2026-08-19) |
+| **TRAFFIC** | **operator GO/NO-GO** (gates clear) |
 
 Architecture is unchanged: grounded profile first, then capability → workflow → requirements matching; unknowns stay unknown rather than inferred away.
 
@@ -30,9 +37,10 @@ Pre-traffic gates (simplified 2026-08-17 post–P0-A):
 | 2 | **MATCH TRUTH** — different robots, explainable requirement-level reasons | **PRODUCTION PASS** (2026-08-17) — #15 merged and live on Fly. Four-board verify: Vega manipulation/palletize + Novolex #8; Digit machine-load first, tote remains at rank 17; Origin transport/tote only; Neo scrub only. Every positive match has Why; unknowns kept; Origin/Neo Novolex name the unmet manipulation blocker. **M2 frozen.** |
 | 2a | **SUBMIT WORKFLOW** — atomic reveal, stable layout, `/api/robot-job-search` | **merged** / **production smoke PASS** — Vercel bundle calls `/api/robot-job-search`; uncached Stretch ~14s researching UI then one reveal; picker keeps public market tape (not a personal board); bad URL recovers with zero matched jobs. |
 | 3 | **FUNNEL** — See All → signup → same jobs; Qualify | **PASS** (2026-08-18) — See All → signup PASS; **auth continuity now verified** with a service-role-provisioned account. Single-product (Relay): research → JOBS → "See All" signup CTA → `/signup?next=/…` → return to `/` restores the exact same jobs workspace; a real session shows the signed-in state on that same workspace. Multi-product (Boston Dynamics → Stretch): SELECT persists and the Stretch workspace (42 jobs) restores across a full reload while signed in. Auth infra verified live (2026-08-17): providers **email + Google + GitHub**, `/signup` `/login` `/auth/callback` `/pipeline` all SPA 200, return-path plumbing unit-tested (10/10). **Caveat:** the third-party OAuth *consent* hop + PKCE `?code=` exchange is provider-side and was substituted by a service-role-established session (admin links can't complete a browser PKCE flow); the account + token issuance are verified server-side. A fully-live provider consent can be run via the Desktop pane if desired. |
-| 4 | **TELEMETRY** — events + src/persona + shadow | **PASS** — verified 2026-08-17: `rdd_capabilities_viewed` emits (RobotJobsExperiment:627) → `/api/track/visit` ingests + stores; `persona` (via `funnelBase()`) survives ingest and is queryable; signup funnel `signup_start→complete→first_save` aggregates with rates; unknown funnel stage rejected 400. Note: `marketing_conversion_snapshot` uses Postgres `->>` (runs live via `/api/analytics`); SQLite can't round-trip that JSON operator (same limit as `pipeline_cache_store`). |
+| 4 | **TELEMETRY** — events + src/persona + shadow | **PASS** — verified 2026-08-17: `rdd_capabilities_viewed` emits (RobotJobsExperiment:627) → `/api/track/visit` ingests + stores; `persona` (via `funnelBase()`) survives ingest and is queryable; signup funnel `signup_start→complete→first_save` aggregates with rates; unknown funnel stage rejected 400. Note: `marketing_conversion_snapshot` uses Postgres `->>` (runs live via `/api/analytics`); SQLite can't round-trip that JSON operator (same limit as `pipeline_cache_store`). **Re-confirmed 2026-08-19 for the new workspace:** persona still travels on `/jobs/:slug` (legacy surface); the new `/` workspace has no slug → persona null (correct). Fixed one duplicate — `RobotJobsWorkspace.restore()` re-fired `rdd_capabilities_viewed` on reload/auth-return (single-product review state); now silent (PR #30). Verified live: research fires each funnel step once; reload fires only `experiment_view`, no repeat `capabilities_viewed`. |
+| 5 | **FINAL PRE-TRAFFIC SMOKE** — prod health + core journey + deployed intelligence | **PASS** (2026-08-19) — frontend + backend `/health` 200; pipeline cache fresh (built_at current, 90 leads); deployed ontology live via real `/api/robot-job-search`: Carbon Robotics → `mobile`+`agriculture_task` + agriculture jobs (Tier-3), Relay → 34 transport jobs, Boston Dynamics → Stretch 42 jobs. Prod UI journey (single click after normal typing): FIND → research → PROFILE (evidence) → 34 JOBS → expanded job Why/Unknown → **QUALIFY** → QUALIFIED 0→1. No console errors. Note: automated type-then-instant-click can appear to need two clicks (controlled input + `disabled`-until-value button); a normal human cadence is single-click. |
 
-**Release sequence (gate, not a suggestion):** #13 smoke (done) → re-land ranking (#15 merged) → four-board production verify (**PRODUCTION PASS**) → **M2 frozen** → auth continuity (**PASS** 2026-08-18) → telemetry re-confirm → pre-traffic gate. Do not publish C04 / invite external traffic.
+**Release sequence (gate, not a suggestion):** #13 smoke (done) → re-land ranking (#15 merged) → four-board production verify (**PRODUCTION PASS**) → **M2 frozen** → auth continuity (**PASS** 2026-08-18) → telemetry (**PASS** 2026-08-19) → final pre-traffic smoke (**PASS** 2026-08-19) → **pre-traffic gate GREEN**. Publishing C04 / inviting external traffic is now the operator's GO/NO-GO call.
 
 ---
 
@@ -84,7 +92,7 @@ Evidence: `reports/v1_p0a_spine_20260817/spine_results.json` + screenshots.
 
 ## Executive summary (full matrix — prior pass + P0-A delta)
 
-Smoke works. **PROFILE PATH is live.** **MATCH TRUTH is PRODUCTION PASS** — four live boards are physically different and explainable. **AUTH CONTINUITY is PASS** (2026-08-18, service-role account: single + multi-product land-back). **M2 is frozen.** Understanding extractors stay frozen. Traffic stays paused until telemetry re-confirm + final pre-traffic smoke.
+Smoke works. **PROFILE PATH is live.** **MATCH TRUTH is PRODUCTION PASS** — four live boards are physically different and explainable. **AUTH CONTINUITY is PASS** (2026-08-18, service-role account: single + multi-product land-back). **TELEMETRY is PASS** (2026-08-19: persona intact; restore no longer re-fires `capabilities_viewed`, PR #30). **FINAL PRE-TRAFFIC SMOKE is PASS** (2026-08-19: prod health OK; deployed ontology live incl. Tier-3; core journey + Qualify works). **M2 is frozen.** Understanding extractors stay frozen. **All pre-traffic gates are GREEN — opening traffic / publishing C04 is the operator's GO/NO-GO call.**
 
 ---
 
@@ -240,7 +248,7 @@ done
 | Invite external traffic | **NO** |
 | Understanding Phase 4 extractors / Blind retune | **DO NOT OPEN** |
 | **M2 matcher** | **FROZEN** after **MATCH TRUTH — PRODUCTION PASS** |
-| Next step | ~~Auth continuity~~ **PASS** → telemetry re-confirm → final pre-traffic smoke → GO/NO-GO |
+| Next step | ~~Auth continuity~~ **PASS** → ~~telemetry~~ **PASS** → ~~final pre-traffic smoke~~ **PASS** → **operator GO/NO-GO to open traffic / publish C04** |
 
 ---
 
