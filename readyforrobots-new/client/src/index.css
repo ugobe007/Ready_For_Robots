@@ -1524,6 +1524,14 @@
   .social-page :where(.hover\:text-gray-900, .hover\:text-gray-800):hover { color: #e2e8f0 !important; }
   .social-page :where(.hover\:text-emerald-900):hover { color: #6ee7b7 !important; }
   .social-page :where(.hover\:text-sky-900):hover { color: #7dd3fc !important; }
+  /* Post editors (textarea/inputs) — beat the .admin-workspace form-control
+     theming (bg-white text-gray-900) so the editing surface reads dark. */
+  .social-page :where(input, select, textarea) {
+    background-color: #0b162f !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+  }
+  .social-page :where(input, select, textarea)::placeholder { color: #64748b !important; }
 
   .newsletter-hero-dark {
     @apply mb-6 overflow-hidden rounded-xl border border-white/10 bg-[#111827] shadow-lg;
