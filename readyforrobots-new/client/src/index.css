@@ -1479,6 +1479,11 @@
     @apply rounded-2xl border border-white/10 bg-[#0f172a] p-4;
   }
 
+  /* Marketplace (/marketplace) — dark terminal navy. Covers the teaser
+     (signed-out), the signed-in console, and the shell/loading states. Uses the
+     shared workspace-surface-card + admin-workspace inputs, both flipped dark
+     here (scoped) and the form controls forced dark to beat admin-workspace. */
+  .marketplace-page {
   /* Content Studio (/social) — dark terminal navy. Hero + the LinkedIn setup
      panel are already dark; this flips the shell, post cards, editor tabs, and
      batch/footer bars. The page is heavily color-coded by post type
@@ -1557,6 +1562,33 @@
     background: #081126;
     color-scheme: dark;
   }
+  .admin-workspace.marketplace-page,
+  .marketplace-page .admin-workspace { color-scheme: dark; }
+  .marketplace-page .page-hero-fade {
+    background-image: linear-gradient(to bottom, #111827, #081126) !important;
+  }
+  .marketplace-page .workspace-surface-card {
+    @apply border-slate-700 border-l-emerald-500 bg-[#0b162f];
+  }
+  .marketplace-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
+  .marketplace-page :where(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50) { background-color: #0d1a33 !important; }
+  .marketplace-page :where(.bg-amber-50) { background-color: rgba(251, 191, 36, 0.10) !important; }
+  .marketplace-page :where(.bg-red-50) { background-color: rgba(248, 113, 113, 0.10) !important; }
+  .marketplace-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
+  .marketplace-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
+  .marketplace-page :where(.text-amber-900, .text-amber-800) { color: #fbbf24 !important; }
+  .marketplace-page :where(.text-red-900, .text-red-700) { color: #f87171 !important; }
+  .marketplace-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300, .border-emerald-200) { border-color: #334155 !important; }
+  .marketplace-page :where(.border-amber-300, .border-amber-400\/35) { border-color: rgba(251, 191, 36, 0.35) !important; }
+  .marketplace-page :where(.border-red-300) { border-color: rgba(248, 113, 113, 0.35) !important; }
+  .marketplace-page :where([class~="from-amber-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="from-emerald-50"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  /* Force dark form controls (beats .admin-workspace input theming). */
+  .marketplace-page :where(input, select, textarea) {
+    background-color: #0b162f !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+  }
+  .marketplace-page :where(input, select, textarea)::placeholder { color: #64748b !important; }
   .compare-page .page-hero-fade {
     background-image: linear-gradient(to bottom, #111827, #081126) !important;
   }
