@@ -1479,6 +1479,33 @@
     @apply rounded-2xl border border-white/10 bg-[#0f172a] p-4;
   }
 
+  /* Compare page — dark terminal navy. Hero already dark; this flips the shell,
+     the two-column contrast panel, "same query" cards, the FSS engine steps, the
+     CRM-generations grid, and the big capability comparison table. The sky accent
+     that marks the "ReadyForRobots wins" column is preserved (mapped to a sky
+     tint / bright sky text) rather than flattened, so the emphasis survives. */
+  .compare-page {
+    @apply text-slate-100;
+    background: #081126;
+    color-scheme: dark;
+  }
+  .compare-page .page-hero-fade {
+    background-image: linear-gradient(to bottom, #111827, #081126) !important;
+  }
+  .compare-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
+  .compare-page :where(.bg-slate-50, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50) { background-color: #0d1a33 !important; }
+  .compare-page :where(.bg-slate-100, .bg-slate-200) { background-color: #1e293b !important; }
+  /* Preserve the sky "RFR wins" emphasis as a tint, not a flat navy. */
+  .compare-page :where(.bg-sky-50, .bg-sky-50\/70) { background-color: rgba(56, 189, 248, 0.10) !important; }
+  .compare-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
+  .compare-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
+  .compare-page :where(.text-sky-950, .text-sky-900, .text-sky-800, .text-sky-700) { color: #7dd3fc !important; }
+  .compare-page :where(.text-amber-800, .text-amber-700) { color: #fbbf24 !important; }
+  .compare-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-100, .border-slate-200, .border-slate-300, .border-slate-400, .border-emerald-200, .border-amber-300) { border-color: #334155 !important; }
+  .compare-page :where(.border-sky-100, .border-sky-200, .border-sky-300) { border-color: rgba(56, 189, 248, 0.35) !important; }
+  .compare-page :where(.hover\:bg-gray-50, .hover\:bg-amber-50):hover { background-color: #1e293b !important; }
+  .compare-page :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+
   .newsletter-hero-dark {
     @apply mb-6 overflow-hidden rounded-xl border border-white/10 bg-[#111827] shadow-lg;
   }
