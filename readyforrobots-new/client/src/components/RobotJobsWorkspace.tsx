@@ -412,12 +412,19 @@ export default function RobotJobsWorkspace() {
     }
   }
 
-  /** Enter the profile checkpoint (matching deferred). */
+  /** Enter the profile checkpoint (matching deferred).
+   *
+   * `track` defaults to true (a genuine new research view). Restoring the same
+   * state on reload / auth-return passes `track: false` so a page reload never
+   * re-fires `capabilities_viewed` and inflates the funnel — the same
+   * once-per-journey discipline the signup funnel events use. */
   function enterReview(
     analysis: RobotAnalysis,
     submitUrl: string,
-    productNames: string[]
+    productNames: string[],
+    opts: { track?: boolean } = {}
   ) {
+    const { track = true } = opts;
     setPortfolio([analysis]);
     setActiveIdx(0);
     setRailTab("profile");
@@ -430,12 +437,14 @@ export default function RobotJobsWorkspace() {
       view: "review",
       activeIdx: 0,
     });
-    trackRobotJobsFunnel("capabilities_viewed", {
-      ...funnelBase(),
-      robot_name: analysis.productName,
-      company_name: analysis.companyName,
-      profile_tier: analysis.tier,
-    });
+    if (track) {
+      trackRobotJobsFunnel("capabilities_viewed", {
+        ...funnelBase(),
+        robot_name: analysis.productName,
+        company_name: analysis.companyName,
+        profile_tier: analysis.tier,
+      });
+    }
     setStage("review");
   }
 
@@ -588,7 +597,10 @@ export default function RobotJobsWorkspace() {
         return;
       }
       const profile = await fetchRobotProfile({ url: saved.url, product });
-      enterReview(profileToAnalysis(profile), saved.url, saved.products);
+      // Silent: restoring on reload / auth-return must not re-fire the funnel.
+      enterReview(profileToAnalysis(profile), saved.url, saved.products, {
+        track: false,
+      });
     } catch {
       setStage("find");
     }
