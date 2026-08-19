@@ -1484,6 +1484,10 @@
      shared workspace-surface-card + admin-workspace inputs, both flipped dark
      here (scoped) and the form controls forced dark to beat admin-workspace. */
   .marketplace-page {
+    @apply text-slate-100;
+    background: #081126;
+    color-scheme: dark;
+  }
   /* Content Studio (/social) — dark terminal navy. Hero + the LinkedIn setup
      panel are already dark; this flips the shell, post cards, editor tabs, and
      batch/footer bars. The page is heavily color-coded by post type
