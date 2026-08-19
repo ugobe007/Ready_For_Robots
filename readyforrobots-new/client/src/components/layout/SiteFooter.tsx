@@ -28,7 +28,7 @@ const LINKS = {
     { label: "FAQ", href: "/pricing#faq" },
   ],
   Company: [
-    { label: "About", href: "/#about" },
+    { label: "About", href: "/intelligence" },
     { label: "Case Studies", href: "/#case-studies" },
     { label: "Find Robots", href: "/find-robots" },
     { label: "Deployment design", href: "/vendor/design" },
