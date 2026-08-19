@@ -417,7 +417,7 @@ export default function Marketplace() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="marketplace-page min-h-screen flex flex-col">
       <Header />
       <PageHeroDark
         maxWidthClass="max-w-6xl"
@@ -533,7 +533,7 @@ export default function Marketplace() {
 
 function MarketplaceTeaser() {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="marketplace-page min-h-screen flex flex-col">
       <Header />
       <PageHeroDark
         maxWidthClass="max-w-6xl"
@@ -616,7 +616,7 @@ function MarketplaceTeaser() {
 
 function ShellMessage({ message }: { message: string }) {
   return (
-    <div className="min-h-screen px-4 pt-24 text-center text-gray-500 bg-slate-50">
+    <div className="marketplace-page min-h-screen px-4 pt-24 text-center text-gray-500">
       <Header />
       {message}
     </div>
