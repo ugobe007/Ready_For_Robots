@@ -108,7 +108,7 @@ export default function Intelligence() {
     "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-emerald-500";
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="intelligence-page min-h-screen flex flex-col">
       <Header />
       <PageHeroDark
         maxWidthClass="max-w-6xl"
