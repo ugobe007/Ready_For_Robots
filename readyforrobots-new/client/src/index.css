@@ -1484,6 +1484,16 @@
      Note: several sections use bg-gray-100 gaps with bg-white cells for hairline
      separators — the net maps those to two close navies so the seams survive. */
   .intelligence-page {
+  /* Humanoid Index (/robots) — dark terminal navy end-to-end. The hero, leader
+     cards, summary intro, and report sections are already dark (shared RR theme
+     is dark); this flips the page shell and the live ranked-index list. */
+  .robots-page {
+  /* Pricing page — dark terminal navy. Self-contained page; the hero is already
+     dark, this flips the shell, tier cards, founding form, support grid, FAQ. */
+  .pricing-page {
+  /* Signals page — dark terminal library. Dark navy end-to-end (matches Jobs
+     front door #081126); the live radar section is already dark. */
+  .signals-page {
     @apply text-slate-100;
     background: #081126;
     color-scheme: dark;
@@ -1497,6 +1507,134 @@
   .intelligence-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
   .intelligence-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300, .border-emerald-200) { border-color: #334155 !important; }
   .intelligence-page :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  /* Hero → page fade should land on the dark page bg, not light slate. */
+  .robots-page .page-hero-fade {
+    background-image: linear-gradient(to bottom, #111827, #081126) !important;
+  }
+  /* Dark-terminal override net for inline LIGHT utilities in the JSX
+     (!important to beat the utilities layer; dark translucents preserved). */
+  .robots-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
+  .robots-page :where(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50, .bg-emerald-100) { background-color: #0d1a33 !important; }
+  .robots-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
+  .robots-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
+  .robots-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300, .border-emerald-200) { border-color: #334155 !important; }
+  .robots-page :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  .pricing-page .page-hero-fade {
+    background-image: linear-gradient(to bottom, #111827, #081126) !important;
+  }
+  /* Dark-terminal override net (!important to beat the utilities layer; dark
+     translucents preserved). */
+  .pricing-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
+  .pricing-page :where(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50, .bg-emerald-50\/50, .bg-amber-50, .bg-amber-50\/50, .bg-emerald-100) { background-color: #0d1a33 !important; }
+  .pricing-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
+  .pricing-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
+  .pricing-page :where(.text-amber-800, .text-amber-700, .text-amber-600) { color: #fbbf24 !important; }
+  .pricing-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300, .border-emerald-100, .border-emerald-200, .border-amber-100, .border-amber-200) { border-color: #334155 !important; }
+  .pricing-page :where(.hover\:bg-gray-100):hover { background-color: #1e293b !important; }
+  .pricing-page :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  .signals-body {
+    background: transparent;
+  }
+  /* Shared surface-card → dark panel, scoped to this page only. */
+  .signals-page .surface-card {
+    @apply border-slate-700 bg-[#0b162f] shadow-[0_14px_40px_-24px_rgba(0,0,0,0.7)];
+  }
+  .signals-page .sb-input {
+    @apply border-slate-600 bg-[#0b162f] text-slate-100 placeholder:text-slate-500;
+  }
+  /* Dark-terminal override net for inline LIGHT utilities in the JSX
+     (same rationale as pipeline: !important to beat the utilities layer; dark
+     translucents like bg-white/5 preserved). */
+  .signals-page
+    :where(
+      .bg-white,
+      .bg-white\/80,
+      .bg-white\/85,
+      .bg-white\/90,
+      .bg-white\/95
+    ):not(.signal-radar-dark *, .signal-radar-dark) {
+    background-color: #0b162f !important;
+  }
+  .signals-page
+    :where(
+      .bg-slate-50,
+      .bg-slate-100,
+      .bg-gray-50,
+      .bg-gray-100,
+      .bg-stone-50,
+      .bg-emerald-50,
+      .bg-emerald-50\/50,
+      .bg-emerald-50\/70,
+      .bg-emerald-50\/80,
+      .bg-emerald-100
+    ):not(.signal-radar-dark *, .signal-radar-dark) {
+    background-color: #0d1a33 !important;
+  }
+  .signals-page
+    :where(
+      .text-gray-950,
+      .text-gray-900,
+      .text-gray-800,
+      .text-slate-900,
+      .text-slate-800,
+      .text-black,
+      .text-emerald-900,
+      .text-emerald-800
+    ):not(.signal-radar-dark *, .signal-radar-dark) {
+    color: #e2e8f0 !important;
+  }
+  .signals-page
+    :where(
+      .text-gray-700,
+      .text-gray-600,
+      .text-gray-500,
+      .text-gray-400,
+      .text-slate-700,
+      .text-slate-600,
+      .text-slate-500,
+      .text-emerald-700
+    ):not(.signal-radar-dark *, .signal-radar-dark) {
+    color: #94a3b8 !important;
+  }
+  .signals-page
+    :where(
+      .border-gray-100,
+      .border-gray-200,
+      .border-gray-300,
+      .border-slate-200,
+      .border-slate-300,
+      .border-emerald-200
+    ):not(.signal-radar-dark *, .signal-radar-dark) {
+    border-color: #334155 !important;
+  }
+  .signals-page
+    :where(.hover\:bg-gray-50):hover:not(
+      .signal-radar-dark *,
+      .signal-radar-dark
+    ) {
+    background-color: #1e293b !important;
+  }
+  .signals-page
+    :where(
+      [class~="from-emerald-50"],
+      [class~="from-white"],
+      [class~="via-white"],
+      [class~="to-white"],
+      [class~="to-emerald-50"]
+    ):not(.signal-radar-dark *, .signal-radar-dark) {
+    background-image: none !important;
+    background-color: #0b162f !important;
+  }
+  /* Preserve the emerald "active" affordance on filter chips (net would flatten it). */
+  .signals-page .border-emerald-500 {
+    border-color: #10b981 !important;
+  }
+  .signals-page button.border-emerald-500 {
+    background-color: rgba(16, 185, 129, 0.12) !important;
+  }
+  .signals-page button.border-emerald-500.text-emerald-800 {
+    color: #6ee7b7 !important;
+  }
 
   .newsletter-hero-dark {
     @apply mb-6 overflow-hidden rounded-xl border border-white/10 bg-[#111827] shadow-lg;
@@ -1504,60 +1642,141 @@
 
   /* Newsletter page — high-contrast editorial layout */
   .newsletter-page {
-    @apply bg-slate-50 text-gray-900;
+    @apply bg-[#081126] text-slate-100;
+  }
+
+  /* Dark-terminal override net for inline LIGHT utilities in the newsletter JSX
+     (same rationale as pipeline: !important to beat the utilities layer; dark
+     translucents like bg-white/5 preserved). */
+  .newsletter-page
+    :where(
+      .bg-white,
+      .bg-white\/80,
+      .bg-white\/85,
+      .bg-white\/90,
+      .bg-white\/95
+    ) {
+    background-color: #0b162f !important;
+  }
+  .newsletter-page
+    :where(
+      .bg-slate-50,
+      .bg-slate-100,
+      .bg-gray-50,
+      .bg-gray-100,
+      .bg-stone-50,
+      .bg-emerald-50,
+      .bg-emerald-50\/50,
+      .bg-emerald-50\/70,
+      .bg-amber-50
+    ) {
+    background-color: #0d1a33 !important;
+  }
+  .newsletter-page
+    :where(
+      .text-gray-950,
+      .text-gray-900,
+      .text-gray-800,
+      .text-slate-900,
+      .text-slate-800,
+      .text-black,
+      .text-emerald-900,
+      .text-emerald-800,
+      .text-amber-950
+    ):not(.bg-emerald-500 *, .bg-emerald-600 *) {
+    color: #e2e8f0 !important;
+  }
+  .newsletter-page
+    :where(
+      .text-gray-700,
+      .text-gray-600,
+      .text-gray-500,
+      .text-gray-400,
+      .text-slate-700,
+      .text-slate-600,
+      .text-slate-500,
+      .text-emerald-700
+    ) {
+    color: #94a3b8 !important;
+  }
+  .newsletter-page
+    :where(
+      .border-gray-100,
+      .border-gray-200,
+      .border-gray-300,
+      .border-slate-200,
+      .border-slate-300,
+      .border-emerald-200,
+      .border-amber-200
+    ) {
+    border-color: #334155 !important;
+  }
+  .newsletter-page :where(.hover\:bg-slate-50):hover {
+    background-color: #1e293b !important;
+  }
+  .newsletter-page
+    :where(
+      [class~="from-emerald-50"],
+      [class~="from-white"],
+      [class~="via-white"],
+      [class~="to-white"],
+      [class~="to-emerald-50"]
+    ) {
+    background-image: none !important;
+    background-color: #0b162f !important;
   }
 
   .newsletter-section {
-    @apply mb-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm;
+    @apply mb-8 overflow-hidden rounded-2xl border border-slate-700 bg-[#0b162f] shadow-[0_14px_40px_-24px_rgba(0,0,0,0.7)];
   }
 
   .newsletter-section-head {
-    @apply flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 px-5 py-4;
+    @apply flex flex-wrap items-start justify-between gap-3 border-b border-slate-700 px-5 py-4;
   }
 
   .newsletter-kicker {
-    @apply text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-700;
+    @apply text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-400;
     font-family: "Inter", sans-serif;
   }
 
   .newsletter-section-title {
-    @apply mt-1 text-lg font-bold tracking-tight text-gray-950 sm:text-xl;
+    @apply mt-1 text-lg font-bold tracking-tight text-slate-100 sm:text-xl;
     font-family: "Space Grotesk", system-ui, sans-serif;
   }
 
   .newsletter-body {
-    @apply text-[15px] leading-relaxed text-gray-800;
+    @apply text-[15px] leading-relaxed text-slate-300;
     font-family: "Inter", sans-serif;
   }
 
   .newsletter-meta {
-    @apply text-xs font-medium text-gray-500;
+    @apply text-xs font-medium text-slate-400;
   }
 
   .newsletter-featured {
-    @apply relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-md sm:p-8;
-    border-left: 4px solid #059669;
+    @apply relative overflow-hidden rounded-2xl border border-slate-700 bg-[#0b162f] p-6 shadow-[0_16px_44px_-26px_rgba(0,0,0,0.75)] sm:p-8;
+    border-left: 4px solid #10b981;
   }
 
   .newsletter-story-card {
-    @apply flex h-full flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-emerald-300 hover:shadow-md;
+    @apply flex h-full flex-col rounded-xl border border-slate-700 bg-[#0b162f] p-4 shadow-sm transition-all hover:border-emerald-400/50 hover:shadow-md;
   }
 
   .newsletter-story-title {
-    @apply text-base font-bold leading-snug text-gray-950;
+    @apply text-base font-bold leading-snug text-slate-100;
     font-family: "Space Grotesk", system-ui, sans-serif;
   }
 
   .newsletter-story-copy {
-    @apply mt-2 flex-1 text-sm leading-relaxed text-gray-700;
+    @apply mt-2 flex-1 text-sm leading-relaxed text-slate-400;
   }
 
   .newsletter-tier-hot {
-    @apply bg-amber-100 text-amber-900 border-amber-200;
+    @apply bg-amber-400/15 text-amber-300 border-amber-400/30;
   }
 
   .newsletter-tier-warm {
-    @apply bg-emerald-100 text-emerald-900 border-emerald-200;
+    @apply bg-emerald-400/15 text-emerald-300 border-emerald-400/30;
   }
 
   .newsletter-subscribe-input {

@@ -784,7 +784,7 @@ export default function Signals() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="signals-page min-h-screen flex flex-col">
       <Header />
 
       <PageHeroDark
@@ -810,7 +810,7 @@ export default function Signals() {
         innerClassName="pb-4"
       />
 
-      <section className="bg-white pb-12 pt-4">
+      <section className="signals-body pb-12 pt-4">
         <div className="container max-w-6xl pb-8">
           <div className="mb-8 flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-gray-800">
