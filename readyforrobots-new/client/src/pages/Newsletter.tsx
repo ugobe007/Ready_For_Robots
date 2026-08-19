@@ -558,21 +558,21 @@ export default function Newsletter() {
           </SectionShell>
         )}
 
-        <section className="mt-10 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:grid-cols-3">
-          <Link href="/results?url=" className="group rounded-xl border border-amber-200 bg-amber-50 p-4 transition hover:border-amber-300">
-            <Zap className="h-5 w-5 text-amber-600" />
-            <p className="mt-2 font-display text-base font-bold text-gray-950 group-hover:text-amber-900">Scan your market</p>
-            <p className="mt-1 text-sm text-gray-700">Paste a vendor URL and get matched buyer signals.</p>
+        <section className="mt-10 grid gap-4 rounded-2xl border border-slate-700 bg-[#0b162f] p-5 shadow-sm sm:grid-cols-3">
+          <Link href="/results?url=" className="group rounded-xl border border-slate-700 bg-[#0d1a33] p-4 transition hover:border-amber-400/50">
+            <Zap className="h-5 w-5 text-amber-400" />
+            <p className="mt-2 font-display text-base font-bold text-slate-100 group-hover:text-amber-300">Scan your market</p>
+            <p className="mt-1 text-sm text-slate-400">Paste a vendor URL and get matched buyer signals.</p>
           </Link>
-          <Link href="/signals" className="group rounded-xl border border-emerald-200 bg-emerald-50 p-4 transition hover:border-emerald-300">
-            <BarChart3 className="h-5 w-5 text-emerald-700" />
-            <p className="mt-2 font-display text-base font-bold text-gray-950 group-hover:text-emerald-900">Live signals</p>
-            <p className="mt-1 text-sm text-gray-700">Browse every signal type SIGNAL monitors.</p>
+          <Link href="/signals" className="group rounded-xl border border-slate-700 bg-[#0d1a33] p-4 transition hover:border-emerald-400/50">
+            <BarChart3 className="h-5 w-5 text-emerald-400" />
+            <p className="mt-2 font-display text-base font-bold text-slate-100 group-hover:text-emerald-300">Live signals</p>
+            <p className="mt-1 text-sm text-slate-400">Browse every signal type SIGNAL monitors.</p>
           </Link>
-          <Link href="/intelligence" className="group rounded-xl border border-violet-200 bg-violet-50 p-4 transition hover:border-violet-300">
-            <Sparkles className="h-5 w-5 text-violet-700" />
-            <p className="mt-2 font-display text-base font-bold text-gray-950 group-hover:text-violet-900">Intelligence report</p>
-            <p className="mt-1 text-sm text-gray-700">How we score intent and robot fit.</p>
+          <Link href="/intelligence" className="group rounded-xl border border-slate-700 bg-[#0d1a33] p-4 transition hover:border-violet-400/50">
+            <Sparkles className="h-5 w-5 text-violet-300" />
+            <p className="mt-2 font-display text-base font-bold text-slate-100 group-hover:text-violet-200">Intelligence report</p>
+            <p className="mt-1 text-sm text-slate-400">How we score intent and robot fit.</p>
           </Link>
         </section>
 
