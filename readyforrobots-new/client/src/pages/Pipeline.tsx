@@ -614,30 +614,30 @@ function MatchedPipelineSkeleton({
 }) {
   return (
     <div className="mx-1 mb-2 space-y-3" aria-busy="true" aria-live="polite">
-      <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-stone-50 px-4 py-5">
+      <div className="rounded-xl border border-slate-700 bg-[#0b162f] px-4 py-5">
         <div className="flex items-center gap-4">
-          <div className="shrink-0 rounded-lg border border-emerald-200/80 bg-white p-2 shadow-sm">
+          <div className="shrink-0 rounded-lg border border-emerald-400/30 bg-[#081126] p-2 shadow-sm">
             <PixelIcon map={KARE_FACE} scale={4} fill="#3ecf8e" background="transparent" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <p className="text-base font-bold text-emerald-950 sm:text-lg">
+              <p className="text-base font-bold text-slate-100 sm:text-lg">
                 Loading sales leads
                 {hostname ? ` for ${hostname}` : ""}…
               </p>
               <span
-                className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600 sm:text-3xl"
+                className="font-mono text-2xl font-extrabold tabular-nums text-emerald-300 sm:text-3xl"
                 aria-label={`${secondsLeft} seconds remaining`}
               >
                 {secondsLeft}s
               </span>
             </div>
-            <p className="mt-1 text-sm font-medium leading-snug text-emerald-900/85">
+            <p className="mt-1 text-sm font-medium leading-snug text-slate-400">
               Matching up to {target} buyers to your robot profile. Hang tight — the queue paints as soon as it is ready.
             </p>
           </div>
         </div>
-        <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-emerald-100">
+        <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
           <div
             className="h-full rounded-full bg-emerald-500 transition-[width] duration-1000 ease-linear"
             style={{ width: `${Math.max(8, Math.min(96, ((12 - secondsLeft) / 12) * 100))}%` }}
@@ -647,15 +647,15 @@ function MatchedPipelineSkeleton({
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={`match-skel-${i}`}
-          className="flex items-center gap-2.5 rounded-md border border-stone-200/80 bg-white px-2.5 py-2.5"
+          className="flex items-center gap-2.5 rounded-md border border-slate-700 bg-[#0b162f] px-2.5 py-2.5"
           style={{ opacity: 1 - i * 0.08 }}
         >
-          <div className="h-8 w-8 shrink-0 animate-pulse rounded-md bg-stone-200" />
+          <div className="h-8 w-8 shrink-0 animate-pulse rounded-md bg-slate-700" />
           <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="h-3 max-w-[55%] animate-pulse rounded bg-stone-200" />
-            <div className="h-2.5 max-w-[80%] animate-pulse rounded bg-stone-100" />
+            <div className="h-3 max-w-[55%] animate-pulse rounded bg-slate-700" />
+            <div className="h-2.5 max-w-[80%] animate-pulse rounded bg-slate-800" />
           </div>
-          <div className="h-5 w-10 shrink-0 animate-pulse rounded bg-stone-100" />
+          <div className="h-5 w-10 shrink-0 animate-pulse rounded bg-slate-800" />
         </div>
       ))}
     </div>
@@ -3943,15 +3943,15 @@ export default function Pipeline() {
 
       <main className="flex-1 px-4 pb-6 pt-4 lg:px-6">
         {loadUiVisible ? (
-          <div className="sticky top-16 z-40 -mx-4 mb-3 border-b border-emerald-300 bg-emerald-50 px-4 py-3 sm:-mx-6 sm:px-6">
+          <div className="sticky top-16 z-40 -mx-4 mb-3 border-b border-slate-700 bg-[#0b162f] px-4 py-3 sm:-mx-6 sm:px-6">
             <div className="mx-auto flex max-w-[1500px] items-center gap-3">
-              <div className="shrink-0 rounded-md border border-emerald-200 bg-white p-1.5">
+              <div className="shrink-0 rounded-md border border-emerald-400/30 bg-[#081126] p-1.5">
                 <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
               </div>
-              <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950 sm:text-base">
+              <p className="min-w-0 flex-1 text-sm font-bold text-slate-100 sm:text-base">
                 Loading sales leads…
               </p>
-              <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600 sm:text-3xl">
+              <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-300 sm:text-3xl">
                 {loadCountdown}s
               </span>
             </div>
@@ -4783,8 +4783,8 @@ export default function Pipeline() {
                     </div>
 
                     {bucketDeals.length === 0 ? (
-                      <div className="mx-1 mb-2 rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-4 py-3">
-                        <p className="text-[11px] text-gray-400 italic">No leads in this tier right now</p>
+                      <div className="mx-1 mb-2 rounded-xl border border-dashed border-slate-700 bg-[#0b162f] px-4 py-3">
+                        <p className="text-[11px] text-slate-500 italic">No leads in this tier right now</p>
                       </div>
                     ) : (
                       <div className="flex flex-col gap-1.5 mb-3">
