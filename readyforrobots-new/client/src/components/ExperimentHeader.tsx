@@ -34,9 +34,9 @@ export default function ExperimentHeader() {
           >
             Jobs
           </Link>
-          <a href="/#about" className="text-slate-400 transition hover:text-slate-200">
+          <Link href="/intelligence" className="text-slate-400 transition hover:text-slate-200">
             About
-          </a>
+          </Link>
           {session ? (
             // Signed-in users need a persistent path to their CRM/leads from the
             // Jobs terminal — without it the buyers → pipeline handoff dead-ends.
