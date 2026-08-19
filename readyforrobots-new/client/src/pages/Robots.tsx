@@ -175,7 +175,7 @@ function HeifBar({ value, dim }: { value: number; dim: (typeof HEIF_DIMS)[number
   const pct = (value / 4) * 100;
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
       </div>
       <span className="text-[10px] font-mono text-gray-500 w-8 text-right">{value.toFixed(1)}</span>
@@ -187,7 +187,7 @@ function ScoreBar({ value, dim }: { value: number; dim: (typeof INDEX_DIMS)[numb
   const color = INDEX_COLORS[dim];
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${value}%`, background: color }} />
       </div>
       <span className="text-[10px] font-mono text-gray-500 w-7 text-right">{Math.round(value)}</span>
@@ -367,15 +367,15 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
     };
   }, [open, detail, robot.model_slug]);
 
-  const cardBg = rank <= 3 ? "#f0fdf4" : rank % 2 === 0 ? "#f8fafc" : "#ffffff";
-  const cardBorder = open ? "rgba(5,150,105,0.35)" : rank <= 3 ? "#bbf7d0" : "#d1d5db";
+  const cardBg = rank <= 3 ? "rgba(16,185,129,0.07)" : rank % 2 === 0 ? "#0d1a33" : "#0b162f";
+  const cardBorder = open ? "rgba(16,185,129,0.45)" : rank <= 3 ? "rgba(16,185,129,0.30)" : "#334155";
 
   return (
     <div
       className="rounded-xl border overflow-hidden transition-colors shadow-sm"
       style={{
         borderColor: cardBorder,
-        background: open ? "rgba(5,150,105,0.04)" : cardBg,
+        background: open ? "rgba(16,185,129,0.10)" : cardBg,
       }}
     >
       <button
@@ -521,7 +521,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
                 .map(([label, value, key]) => {
                   const prov = provenance[key];
                   return (
-                    <div key={label} className="rounded-lg px-2.5 py-1.5 bg-white border border-gray-100">
+                    <div key={label} className="rounded-lg px-2.5 py-1.5 bg-white/[0.03] border border-white/10">
                       <div className="flex items-center justify-between gap-1 mb-0.5">
                         <p className="text-[9px] text-gray-400">{label}</p>
                         {prov ? <ProvBadge entry={prov} /> : null}
@@ -627,7 +627,7 @@ export default function Robots() {
     : null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-gray-900">
+    <div className="robots-page min-h-screen flex flex-col">
       <Header />
 
       <PageHeroDark
@@ -704,7 +704,7 @@ export default function Robots() {
                   onClick={() => setFilter(f)}
                   className={`px-3 py-1 rounded-md text-[11px] font-bold capitalize transition-colors ${
                     filter === f
-                      ? "bg-emerald-50 text-emerald-800"
+                      ? "bg-emerald-500/15 text-emerald-300"
                       : "text-gray-600 hover:text-emerald-700"
                   }`}
                 >

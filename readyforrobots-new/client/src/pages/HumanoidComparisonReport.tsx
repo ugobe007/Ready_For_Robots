@@ -56,7 +56,7 @@ function heifCell(v: number | undefined) {
   const pct = (v / 4) * 100;
   return (
     <div className="min-w-[72px]">
-      <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: RR.teal }} />
       </div>
       <span className="mt-0.5 block font-mono text-[10px] tabular-nums" style={{ color: RR.textDim }}>
@@ -95,7 +95,7 @@ export default function HumanoidComparisonReport() {
     : undefined;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#081126]">
       <Header />
       <PageHeroDark
         maxWidthClass="max-w-5xl"
@@ -366,7 +366,7 @@ export default function HumanoidComparisonReport() {
                 </Link>
                 <Link
                   href="/pipeline"
-                  className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-[13px] font-semibold transition-colors hover:bg-white"
+                  className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-[13px] font-semibold transition-colors hover:bg-white/10"
                   style={{ borderColor: RR.border, color: RR.text }}
                 >
                   Browse live pipeline
@@ -374,7 +374,7 @@ export default function HumanoidComparisonReport() {
                 <button
                   type="button"
                   onClick={() => void copyShareLink()}
-                  className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-[13px] font-semibold transition-colors hover:bg-white"
+                  className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-[13px] font-semibold transition-colors hover:bg-white/10"
                   style={{ borderColor: RR.border, color: RR.text }}
                 >
                   {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
