@@ -72,6 +72,13 @@ register_db_events()
 # Schema is managed by Alembic migrations (run in release or background).
 
 
+# Git-connected Vercel branch previews (truncated host, team suffix).
+_VERCEL_PREVIEW_ORIGIN = re.compile(
+    r"^https://ready-for-robots[a-z0-9-]*\.vercel\.app$",
+    re.I,
+)
+
+
 def _cors_allowed_origins() -> list[str]:
     """
     Browsers reject allow_origins=['*'] together with allow_credentials=True (Fetch + CORS spec).
@@ -98,12 +105,20 @@ def _cors_allowed_origins() -> list[str]:
     ]
 
 
+def _is_allowed_cors_origin(origin: str | None) -> bool:
+    o = (origin or "").strip().rstrip("/")
+    if not o:
+        return False
+    if o in _cors_allowed_origins():
+        return True
+    return bool(_VERCEL_PREVIEW_ORIGIN.match(o))
+
+
 def _cors_headers_for_request(request: Request) -> dict[str, str]:
     origin = request.headers.get("origin")
     if not origin:
         return {}
-    o = origin.rstrip("/")
-    if o not in _cors_allowed_origins():
+    if not _is_allowed_cors_origin(origin):
         return {}
     return {
         "access-control-allow-origin": origin,
@@ -429,6 +444,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_allowed_origins(),
+    allow_origin_regex=r"https://ready-for-robots[a-z0-9-]*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

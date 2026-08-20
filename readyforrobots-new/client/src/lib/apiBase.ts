@@ -78,6 +78,11 @@ export function getApiBase(): string {
     if (h.endsWith(".fly.dev")) {
       return window.location.origin.replace(/\/$/, "");
     }
+    // Git-connected Vercel previews. Same-origin /api/* is rewritten to Fly
+    // (vercel.json) so Jobs works without adding each preview host to CORS.
+    if (h.endsWith(".vercel.app")) {
+      return window.location.origin.replace(/\/$/, "");
+    }
   }
 
   const metaFirst = _metaTagApiBase();
