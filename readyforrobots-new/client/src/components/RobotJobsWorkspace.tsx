@@ -25,7 +25,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { trackRobotJobsFunnel, trackSignupStart } from "@/lib/siteAnalytics";
+import { trackRobotJobsFunnel } from "@/lib/siteAnalytics";
 import {
   fetchRobotJobSearch,
   type RobotJobSearchResult,
@@ -44,7 +44,9 @@ import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
+  buyerLeadsCtaLabel,
   buyerLeadsHref,
+  capExampleJobs,
   jobsHeading,
   landingStageAfterConfirm,
 } from "@/lib/jobsWorkflow";
@@ -77,8 +79,6 @@ type ZeroReason =
 type ProductChoice = { name: string; displayClass?: string | null };
 type RestoreView = "review" | "jobs" | "portfolio";
 
-const PREVIEW_FREE = 5;
-const TOP_SHOWN = 12;
 const MARKET_FOUND_BASE = 140;
 const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
@@ -718,22 +718,6 @@ export default function RobotJobsWorkspace() {
     recordJobView(job);
   }
 
-  /** Pursue this work → bridge to the real matched-buyer pipeline (fires funnel
-   *  intent then the Link navigates to /pipeline?url=<robot>). */
-  function onPursue(job: MatchJob) {
-    if (!active) return;
-    trackRobotJobsFunnel("qualify_opened", {
-      ...funnelBase(),
-      job_key: job.job_key,
-    });
-    trackRobotJobsFunnel("qualify_requested", {
-      ...funnelBase(),
-      job_key: job.job_key,
-      robot_name: active.productName,
-      next: "pipeline_buyers",
-    });
-  }
-
   /** /pipeline scoped to real buyers matched to the researched robot. When an
    *  industry is passed (from a specific job's work type), it biases matching
    *  toward buyers in that vertical — the backend falls back to an open match if
@@ -770,29 +754,6 @@ export default function RobotJobsWorkspace() {
     submittedUrlRef.current = "";
     submissionIdRef.current = null;
     clearWorkspaceSession();
-  }
-
-  const signupHref = useMemo(() => {
-    const params = new URLSearchParams();
-    const next = srcRef.current
-      ? `/?src=${encodeURIComponent(srcRef.current)}`
-      : "/";
-    params.set("next", next);
-    params.set("src", "robot_jobs");
-    return `/signup?${params.toString()}`;
-  }, []);
-
-  function onSeeAll() {
-    trackRobotJobsFunnel("see_all_clicked", {
-      ...funnelBase(),
-      robot_name: active?.productName,
-      job_count_total: active?.jobCount,
-    });
-    trackSignupStart({
-      source: "robot_jobs",
-      robot_name: active?.productName,
-      ...funnelBase(),
-    });
   }
 
   /* -------------------------------------------------------------- */
@@ -850,7 +811,6 @@ export default function RobotJobsWorkspace() {
               portfolio.length > 1 ? () => setStage("portfolio") : undefined
             }
             onNewRobot={newRobot}
-            signedIn={unlocked}
           />
         )}
       </aside>
@@ -892,7 +852,6 @@ export default function RobotJobsWorkspace() {
             onView={goToJobs}
             onReview={openReviewFor}
             onSeeJobs={() => goToJobs(activeIdx)}
-            leadsHref={buyersHref()}
           />
         )}
 
@@ -912,10 +871,7 @@ export default function RobotJobsWorkspace() {
             showCount={showActiveCount}
             expandedJob={expandedJob}
             onToggle={toggleExpand}
-            onPursue={onPursue}
             buyersHref={buyersHref}
-            signupHref={signupHref}
-            onSeeAll={onSeeAll}
             robotCount={portfolio.length}
             companyName={companyName || active.companyName}
           />
@@ -1086,7 +1042,6 @@ function ContextRail({
   onTab,
   onBackToPortfolio,
   onNewRobot,
-  signedIn,
 }: {
   company: string;
   identityVerified: boolean;
@@ -1100,7 +1055,6 @@ function ContextRail({
   onTab: (t: RailTab) => void;
   onBackToPortfolio?: () => void;
   onNewRobot: () => void;
-  signedIn: boolean;
 }) {
   const navItem = (t: RailTab, label: string, badge?: string) => (
     <button
@@ -1153,31 +1107,23 @@ function ContextRail({
         </nav>
       )}
 
-      <div className="mt-auto space-y-2 pt-6">
-        {onBackToPortfolio && (
+      <div className="mt-auto space-y-1 pt-6">
+        {onBackToPortfolio ? (
           <button
             type="button"
             onClick={onBackToPortfolio}
-            className="w-full border border-slate-600 px-3 py-2 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-slate-400"
+            className="block text-left font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 transition hover:text-slate-300"
           >
             ← All {portfolioCount} robots
           </button>
-        )}
+        ) : null}
         <button
           type="button"
           onClick={onNewRobot}
-          className="w-full border border-emerald-500/50 px-3 py-2 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300 transition hover:border-emerald-400"
+          className="block text-left font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 transition hover:text-slate-300"
         >
           + New robot
         </button>
-        {signedIn ? (
-          <Link
-            href="/my-robots"
-            className="block w-full border border-slate-600 px-3 py-2 text-center font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-300 transition hover:border-slate-400"
-          >
-            Your robots &amp; leads →
-          </Link>
-        ) : null}
       </div>
     </div>
   );
@@ -1284,26 +1230,28 @@ function SelectPanel({
         })}
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-6">
         <button
           type="button"
-          disabled={selected.length === 0}
-          onClick={() => onConfirm(selected)}
+          onClick={() => onConfirm(selected.length > 0 ? selected : "all")}
           className={ctaClass}
         >
           <FaceCue scale={2} onEmerald />
-          {selected.length <= 1
-            ? `Find jobs for ${selected[0] || "selected"} →`
-            : `Find jobs for ${selected.length} robots →`}
+          {selected.length === 0
+            ? `Find jobs for all ${products.length} robots →`
+            : selected.length === 1
+              ? `Find jobs for ${selected[0]} →`
+              : `Find jobs for ${selected.length} robots →`}
         </button>
-        <button
-          type="button"
-          onClick={() => onConfirm("all")}
-          className={ctaClass}
-        >
-          <FaceCue scale={2} onEmerald />
-          Find jobs for all {products.length} robots →
-        </button>
+        {selected.length > 0 && selected.length < products.length ? (
+          <button
+            type="button"
+            onClick={() => onConfirm("all")}
+            className="mt-3 block font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 transition hover:text-slate-300"
+          >
+            or all {products.length} robots
+          </button>
+        ) : null}
       </div>
     </div>
   );
@@ -1320,7 +1268,6 @@ function PortfolioPanel({
   onView,
   onReview,
   onSeeJobs,
-  leadsHref,
 }: {
   company: string;
   robots: RobotAnalysis[];
@@ -1328,7 +1275,6 @@ function PortfolioPanel({
   onView: (idx: number) => void;
   onReview: (idx: number) => void;
   onSeeJobs: () => void;
-  leadsHref: string;
 }) {
   return (
     <div className="p-6 sm:p-8">
@@ -1336,15 +1282,11 @@ function PortfolioPanel({
       <h2 className="mt-1 font-display text-2xl font-bold text-slate-100">
         {robots.length} robots analyzed
       </h2>
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="mt-4">
         <button type="button" onClick={onSeeJobs} className={ctaClass}>
           <FaceCue scale={2} onEmerald />
           See jobs for these robots →
         </button>
-        <Link href={leadsHref} className={ctaClass}>
-          <FaceCue scale={2} onEmerald />
-          See 5 buyer leads →
-        </Link>
       </div>
       <div className="mt-6 space-y-3">
         {robots.map((a, idx) => (
@@ -1584,10 +1526,7 @@ function JobsPanel({
   showCount,
   expandedJob,
   onToggle,
-  onPursue,
   buyersHref,
-  signupHref,
-  onSeeAll,
   robotCount = 1,
   companyName = "",
 }: {
@@ -1596,17 +1535,12 @@ function JobsPanel({
   showCount: boolean;
   expandedJob: string | null;
   onToggle: (job: MatchJob) => void;
-  onPursue: (job: MatchJob) => void;
   buyersHref: (industry?: string) => string;
-  signupHref: string;
-  onSeeAll: () => void;
   robotCount?: number;
   companyName?: string;
 }) {
   const baseJobs = analysis.jobs;
-  const visible = unlocked ? baseJobs : baseJobs.slice(0, PREVIEW_FREE);
-  const hiddenCount = Math.max(0, analysis.jobCount - visible.length);
-  const shownOfTop = Math.min(TOP_SHOWN, baseJobs.length);
+  const visible = capExampleJobs(baseJobs);
   const heading = jobsHeading({
     productName: analysis.productName,
     companyName: companyName || analysis.companyName,
@@ -1620,22 +1554,17 @@ function JobsPanel({
           {heading}
         </h2>
         <span className="font-mono text-sm font-bold text-emerald-300">
-          {baseJobs.length === 0
+          {visible.length === 0
             ? ""
-            : showCount
-              ? `${analysis.jobCount} JOBS FOR ${analysis.productName.toUpperCase()}`
-              : `MATCHES FOR ${analysis.productName.toUpperCase()}`}
+            : `${visible.length} EXAMPLE JOBS FOR ${analysis.productName.toUpperCase()}`}
         </span>
       </div>
       {/* These are example roles that prove fit — the next step is real buyers. */}
       {baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
           Example work {analysis.productName} can do, matched to its confirmed
-          capabilities
-          {showCount && analysis.jobCount > visible.length
-            ? ` · showing the ${visible.length} strongest of ${analysis.jobCount}`
-            : ` · ${visible.length} shown`}
-          . Pick one to find real companies hiring for it.
+          capabilities · {visible.length} shown. Expand a card for evidence.
+          One next step: buyer companies.
         </p>
       )}
 
@@ -1653,48 +1582,28 @@ function JobsPanel({
               job={job}
               robotName={analysis.productName}
               expanded={expandedJob === job.job_key}
-              buyersHref={buyersHref}
               onToggle={() => onToggle(job)}
-              onPursue={() => onPursue(job)}
             />
           ))}
         </ol>
       )}
 
-      {!unlocked && hiddenCount > 0 && (
-        <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5 text-center">
-          <p className="font-display text-lg font-bold text-slate-100">
-            More matches for {analysis.productName}
-          </p>
-          <p className="mt-1 text-[12px] text-slate-400">
-            Create a free account to see every match and its evidence, then take
-            the ones worth pursuing to real buyers.
-          </p>
-          <Link
-            href={signupHref}
-            onClick={onSeeAll}
-            className={`${ctaClass} mt-4`}
-          >
-            {showCount
-              ? `See all ${analysis.jobCount} matches →`
-              : "See all matches →"}
-          </Link>
-        </div>
-      )}
-
       <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5 text-center">
         <p className="font-display text-lg font-bold text-slate-100">
-          Next step: 5 buyer leads
+          {unlocked ? "Next step: buyer leads" : "Next step: 5 buyer leads"}
         </p>
         <p className="mt-1 text-[12px] text-slate-400">
           Real companies that need this kind of robot work
           {robotCount > 1
             ? ` — matched across ${robotCount} robots.`
             : ` for ${analysis.productName}.`}
+          {unlocked
+            ? " More than 5 wait on the pipeline."
+            : " Signup is after these 5 — extra leads are only on the pipeline."}
         </p>
         <Link href={buyersHref()} className={`${ctaClass} mt-4`}>
           <FaceCue scale={2} onEmerald />
-          See 5 buyer leads →
+          {buyerLeadsCtaLabel(unlocked)}
         </Link>
       </div>
     </div>
@@ -1781,77 +1690,19 @@ function ZeroState({
   );
 }
 
-/**
- * Work-type → buyer vertical (substring-matched against Company.industry by the
- * backend, so tokens must be substrings of real industry names — e.g. "logistics"
- * not "warehouse", "healthcare" not "eldercare"). Specific tape families map
- * directly; generic families (transport/cart/gripper/scrub/inspect) fall back to
- * keywords found in the job's free-text industry (so e.g. an airport transport job
- * still biases toward airport buyers). Returns "" when unknown — the pipeline then
- * shows the full robot-matched set, and the backend soft-falls-back regardless.
- */
-const FAMILY_VERTICAL: Record<string, string> = {
-  clinical_delivery: "healthcare",
-  disinfection: "healthcare",
-  resident_services: "healthcare",
-  serve: "hospitality",
-  food_prep: "hospitality",
-  beverage: "hospitality",
-  restroom: "hospitality",
-  shelf_scan: "retail",
-  asrs: "logistics",
-  pick_pack: "logistics",
-  sortation: "logistics",
-  trailer_unload: "logistics",
-  pallet_move: "logistics",
-  pallet: "logistics",
-  agriculture: "agriculture",
-  construction: "construction",
-  mining: "mining",
-};
-
-const INDUSTRY_KEYWORD_VERTICAL: [string, string][] = [
-  ["hospital", "healthcare"], ["surgery", "healthcare"], ["clinic", "healthcare"],
-  ["pharmac", "healthcare"], ["senior", "healthcare"], ["assisted", "healthcare"],
-  ["nursing", "healthcare"], ["memory care", "healthcare"], ["med device", "healthcare"],
-  ["airport", "airport"],
-  ["hotel", "hospitality"], ["restaurant", "hospitality"], ["cafe", "hospitality"], ["bar", "hospitality"],
-  ["grocery", "retail"], ["retail", "retail"], ["mall", "retail"], ["home improvement", "retail"],
-  ["warehouse", "logistics"], ["fulfillment", "logistics"], ["distribution", "logistics"],
-  ["3pl", "logistics"], ["parcel", "logistics"], ["returns", "logistics"], ["port", "logistics"],
-  ["manufacturing", "manufacturing"], ["machine shop", "manufacturing"], ["aerospace", "manufacturing"],
-  ["packaging", "manufacturing"], ["process plant", "manufacturing"], ["industrial", "manufacturing"],
-  ["university", "education"], ["education", "education"],
-  ["utilities", "utilities"],
-  ["agriculture", "agriculture"], ["construction", "construction"], ["mining", "mining"],
-];
-
-function verticalForJob(job: MatchJob): string {
-  const fam = (job.tape_family || "").toLowerCase().trim();
-  if (FAMILY_VERTICAL[fam]) return FAMILY_VERTICAL[fam];
-  const ind = (job.industry || "").toLowerCase();
-  for (const [kw, vert] of INDUSTRY_KEYWORD_VERTICAL) {
-    if (ind.includes(kw)) return vert;
-  }
-  return "";
-}
 
 function JobCard({
   index,
   job,
   robotName,
   expanded,
-  buyersHref,
   onToggle,
-  onPursue,
 }: {
   index: number;
   job: MatchJob;
   robotName: string;
   expanded: boolean;
-  buyersHref: (industry?: string) => string;
   onToggle: () => void;
-  onPursue: () => void;
 }) {
   const possible = job.verdict !== "NOT_A_MATCH";
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
@@ -1944,19 +1795,10 @@ function JobCard({
           ) : null}
 
           {possible ? (
-            <div className="mt-4">
-              <Link
-                href={buyersHref(verticalForJob(job))}
-                onClick={onPursue}
-                className={`${ctaClass} w-full`}
-              >
-                Find buyers hiring for this →
-              </Link>
-              <p className="mt-2 text-[12px] text-slate-500">
-                Real companies hiring for this kind of work that fit {robotName}{" "}
-                — save the ones worth pursuing and draft outreach.
-              </p>
-            </div>
+            <p className="mt-4 text-[12px] text-slate-500">
+              Evidence for this example job. Use the buyer-leads button below to
+              see companies hiring for this kind of work.
+            </p>
           ) : null}
         </div>
       )}

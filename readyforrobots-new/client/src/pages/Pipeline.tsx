@@ -59,6 +59,7 @@ import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
+import { isJobsHandoffSrc } from "@/lib/jobsWorkflow";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1673,6 +1674,7 @@ export default function Pipeline() {
   const arrivedFromSignalActivation = submittedSrcFromQuery === "signal_activation";
   const arrivedFromResultsScan =
     submittedSrcFromQuery === "results_scan" || submittedSrcFromQuery === "results_next_step";
+  const arrivedFromJobs = isJobsHandoffSrc(submittedSrcFromQuery);
   /** URL submit searches stay on matched prospects — never default to the global market queue. */
   const preferUrlMatchedPipeline = Boolean(submittedUrlFromQuery || arrivedFromResultsScan);
 
@@ -1789,6 +1791,7 @@ export default function Pipeline() {
     }
   });
   const step3Intro = arrivedFromResultsScan && !build25Started && !isSignedIn;
+  const jobsLikeChrome = step3Intro || arrivedFromJobs;
 
   useEffect(() => {
     if (!isSignedIn || !arrivedFromResultsScan || build25Started) return;
@@ -3999,7 +4002,7 @@ export default function Pipeline() {
           </div>
         ) : null}
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
-          {!step3Intro ? (
+          {!jobsLikeChrome ? (
             <PageHeroDark
               maxWidthClass="max-w-[1500px]"
               showGrid={false}
@@ -4024,15 +4027,30 @@ export default function Pipeline() {
               innerClassName="pb-6 pt-20"
             />
           ) : (
-            <div className="flex items-center justify-between gap-3 pt-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-              <span>ReadyForRobots · Workspace</span>
-              {session?.access_token ? (
-                <span className="normal-case tracking-normal text-emerald-300/90">Signed in · {sessionDisplayName}</span>
+            <div className="flex flex-col gap-3 pt-2">
+              <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <span>{arrivedFromJobs ? "ReadyForRobots · Buyer leads" : "ReadyForRobots · Workspace"}</span>
+                {session?.access_token ? (
+                  <span className="normal-case tracking-normal text-emerald-300/90">Signed in · {sessionDisplayName}</span>
+                ) : null}
+              </div>
+              {arrivedFromJobs ? (
+                <div className="border border-slate-600 bg-[#0b162f] px-5 py-4">
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
+                    Pipeline
+                  </p>
+                  <h1 className="mt-1 font-display text-2xl font-bold text-slate-100">
+                    Companies that need this robot work
+                  </h1>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Same Jobs terminal. This page is where more than 5 buyer leads live.
+                  </p>
+                </div>
               ) : null}
             </div>
           )}
 
-          {!step3Intro ? (
+          {!jobsLikeChrome ? (
             <div className="pipeline-command-rail flex flex-col gap-3">
               {session?.access_token && <AdminNav variant="dark" />}
 

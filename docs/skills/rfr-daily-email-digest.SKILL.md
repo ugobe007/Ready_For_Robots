@@ -1,29 +1,31 @@
 ---
 name: rfr-daily-email-digest
-description: "Send RFR daily operator email via Fly. No OpenAI, Anthropic, or AI Gateway."
-version: 0.2.0
-author: Ready For Robots + Hermes Agent
+description: "RETIRED. Fly + GitHub Actions send the digest. Do not cron this on Hermes."
+version: 0.3.0
+author: Ready For Robots
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [Robotics, Email, Digest, ReadyForRobots]
+    tags: [Robotics, Email, Digest, ReadyForRobots, Retired]
     related_skills: [rfr-sales-floor-manager, rfr-qualify-match]
 ---
 
-# ReadyForRobots daily email digest
+# ReadyForRobots daily email digest — RETIRED ON HERMES
 
-Send the operator digest by calling the ReadyForRobots API. **Do not** use OpenAI, Anthropic, or Vercel AI Gateway. A 402 from `ai-gateway` means this skill was misconfigured.
+**Do not schedule this skill on Hermes.** The previous Hermes cron used `--provider ai-gateway` and failed HTTP 402 before any `curl` ran. That cron is retired.
 
-## Forbidden
+## Who sends the digest now (Hermes is not in this path)
 
-- `--provider ai-gateway` / `--provider openai` / `--provider anthropic`
-- Browsing api.openai.com, console.anthropic.com, or vercel.com/ai
-- Drafting the email body with an LLM
+Fly and GitHub Actions own this email. A leftover Hermes job with `--provider ai-gateway` can 402; that failure does **not** block the digest. Do not add a Hermes cron for this skill.
 
-## Required cron
+1. Fly in-process scheduler (`ENABLE_SCHEDULED_CAL_DAILY_DIGEST=1`, 15:00 UTC) on worker, and on web when `SKIP_CELERY=1`
+2. Celery Beat `cal-daily-digest` (15:00 UTC) when Celery is running
+3. GitHub Action `.github/workflows/cal-daily-digest.yml` (15:05 UTC backup)
 
-Terminal-only. `deliver=local`. Workdir Ready_For_Robots.
+All three call `send_cal_daily_digest`, which is idempotent per calendar day.
+
+## Manual send (terminal only)
 
 ```bash
 curl -sS -X POST "$RFR_API_BASE/api/v1/market-graph/daily-digest-send" \
@@ -32,10 +34,9 @@ curl -sS -X POST "$RFR_API_BASE/api/v1/market-graph/daily-digest-send" \
   -d '{"force": false, "period_hours": 24}'
 ```
 
-Expect JSON with `"engine": "local_inference"` and `"paid_llm": false`. Fly builds the Cal digest + heuristic industry brief and emails it via Resend.
+## Forbidden
 
-If `sent` is false and `reason` is `Already sent today`, that is success (idempotent).
-
-## Fallback
-
-In-app Cal digest already sends on a Fly scheduler. If curl fails, report the HTTP body — do not retry via a paid LLM provider.
+- `--provider ai-gateway` / `--provider openai` / `--provider anthropic`
+- Browsing api.openai.com, console.anthropic.com, or vercel.com/ai
+- Drafting the email body with an LLM
+- Keeping a Hermes cron that wraps this skill in an LLM provider
