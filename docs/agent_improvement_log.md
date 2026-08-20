@@ -20,7 +20,7 @@ Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
 ### Ranked proposals
 
-1. **[H/L]** Reconfigure Hermes crons: remove `--provider ai-gateway`. Digest cron = curl `daily-digest-send`. Qualify cron = curl `infer-qualify`. — owner: `hermes`
+1. **[H/L] DONE** Digest send is owned in-repo: Fly in-process (web backup when `SKIP_CELERY=1`) + Celery Beat + GitHub Action `cal-daily-digest.yml`. Hermes AI Gateway cron is retired. — owner: `fly`
 2. **[M/L]** Confirm Fly secrets do **not** need `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` for digest/qualify. — owner: `ops`
 
 ## 2026-08-13 — Commercial maturity thesis

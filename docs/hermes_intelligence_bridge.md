@@ -80,12 +80,14 @@ Qualify overlays use `truth_state: HERMES_OVERLAY` — not customer-confirmed CR
 
 **Do not pin crons to AI Gateway, OpenAI, or Anthropic.** Those lookups burn paid tokens and fail with HTTP 402 when the Vercel gateway has no credit. Hermes must use **terminal-only** (`curl` to Fly). Intelligence runs on ReadyForRobots’ local inference engine.
 
+**Daily digest cron is retired on Hermes.** Fly in-process + Celery Beat + `.github/workflows/cal-daily-digest.yml` send it. A leftover Hermes job named `RFR daily email digest` with `--provider ai-gateway` can 402; ignore it — the email still sends from Fly/GHA.
+
 | Schedule | Skill |
 |----------|-------|
 | `0 6 * * *` | `research/rfr-deployment-evidence` |
 | `0 7 * * *` | `research/rfr-job-orders` |
 | `30 8 * * *` | `research/rfr-qualify-match` (POST `/infer-qualify`) |
-| `0 8 * * *` | `research/rfr-daily-email-digest` (POST `/daily-digest-send`) |
+| — | `research/rfr-daily-email-digest` **retired** — Fly/GHA POST `/daily-digest-send` |
 | `0 9 * * *` | `research/rfr-buying-windows` |
 | `0 10 * * *` | `research/rfr-decision-makers` |
 | `0 11 * * *` | `research/rfr-vendor-customer-news` |

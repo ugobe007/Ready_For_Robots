@@ -207,6 +207,9 @@ def _run_web_startup() -> None:
 
     _start_web_cache_rehydrate()
     _start_cal_watchdog()
+    # Fly owns the daily digest. Hermes AI Gateway must not. Web is the backup
+    # sender when SKIP_CELERY=1 so a stopped worker cannot silence the email.
+    _start_scheduled_cal_daily_digest()
 
 
 def _web_cache_rehydrate_loop() -> None:
@@ -935,15 +938,21 @@ def _scheduled_cal_daily_digest_loop():
 
 
 def _start_scheduled_cal_daily_digest():
-    from app.runtime_role import is_worker_process
+    from app.runtime_role import is_web_process, is_worker_process
 
-    if not is_worker_process():
-        logger.info("In-app Cal daily digest skipped on web process")
-        return
     if os.getenv("ENABLE_SCHEDULED_CAL_DAILY_DIGEST", "1").strip().lower() in (
         "0", "false", "no"
     ):
         logger.info("In-app Cal daily digest disabled")
+        return
+    skip_celery = os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
+    # Hermes must never own this cron (AI Gateway 402). Fly does: worker primary,
+    # web backup when Celery is skipped. send_cal_daily_digest is idempotent per day.
+    if is_web_process() and not skip_celery:
+        logger.info("In-app Cal daily digest skipped on web process (Celery Beat owns it)")
+        return
+    if not is_worker_process() and not (is_web_process() and skip_celery):
+        logger.info("In-app Cal daily digest skipped on this process")
         return
     enabled = (
         os.getenv("FLY_APP_NAME")

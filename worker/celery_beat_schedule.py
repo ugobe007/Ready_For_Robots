@@ -262,6 +262,12 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute=15),
         'kwargs': {'limit': 50},
     },
+    # Fly-owned Cal digest. Hermes AI Gateway must not send this email.
+    'cal-daily-digest': {
+        'task': 'worker.tasks.send_cal_daily_digest_task',
+        'schedule': crontab(hour=15, minute=0),
+        'kwargs': {'force': False, 'period_hours': 24},
+    },
 }
 
 # Timezone

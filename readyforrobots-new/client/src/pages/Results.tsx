@@ -38,6 +38,7 @@ import {
   oemCalResultsAnonLine,
 } from "@/lib/oemCalCopy";
 import { markReviewedFiveLeads } from "@/lib/signupWorkflowPath";
+import { isJobsHandoffSrc } from "@/lib/jobsWorkflow";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -487,7 +488,9 @@ export default function Results() {
   const sampleMode = params.get("sample") === "1";
   const sampleName = (params.get("sample_name") || "").trim();
   const { session, loading: authLoading } = useAuth();
-  const requestedLimit = session?.access_token ? Math.max(urlLimit, 15) : Math.min(urlLimit, 5);
+  const jobsHandoff = isJobsHandoffSrc(params.get("src"));
+  // Results is the 5-lead preview. More than 5 lives only on /pipeline.
+  const requestedLimit = Math.min(urlLimit, 5);
 
   useEffect(() => {
     const attribution = readSupplyAttribution(search);
@@ -561,7 +564,10 @@ export default function Results() {
     () => [...prospects].sort((a, b) => b.score - a.score),
     [prospects],
   );
-  const anonymousUnlockedCount = Math.min(RESULTS_ANONYMOUS_UNLOCK, sortedProspects.length);
+  const anonymousUnlockedCount = Math.min(
+    jobsHandoff ? requestedLimit : RESULTS_ANONYMOUS_UNLOCK,
+    sortedProspects.length,
+  );
   const topLeadId = sortedProspects[0]?.leadId;
 
   const resultsPageHref = useMemo(() => {
@@ -779,8 +785,14 @@ export default function Results() {
     );
   }
 
-  // Workflow gate: new users sign up before the 5-lead Results page.
-  if (!sampleMode && submittedUrl && (authLoading || !session?.access_token)) {
+  // SIGNAL path can ask for signup first. Jobs handoff must show the 5
+  // buyer leads — signup is the next step after those 5, not a wall before them.
+  if (
+    !sampleMode &&
+    !jobsHandoff &&
+    submittedUrl &&
+    (authLoading || !session?.access_token)
+  ) {
     return (
       <div className="min-h-screen flex flex-col bg-[#081126]">
         <Header />
@@ -806,7 +818,21 @@ export default function Results() {
     <div className="min-h-screen flex flex-col bg-[#081126]">
       <Header />
 
-      {!submittedUrl ? (
+      {submittedUrl && jobsHandoff ? (
+        <div className="border-b border-slate-700 bg-[#081126] px-4 py-6 sm:px-6">
+          <div className="mx-auto max-w-4xl">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
+              Buyer leads
+            </p>
+            <h1 className="mt-1 font-display text-2xl font-bold text-slate-100 sm:text-3xl">
+              5 companies that need this robot work
+            </h1>
+            <p className="mt-1 text-sm text-slate-400">
+              Same Jobs terminal. Five buyer leads to review. More than 5 is on the pipeline after signup.
+            </p>
+          </div>
+        </div>
+      ) : !submittedUrl ? (
         <>
           <PageHeroDark
             maxWidthClass="max-w-4xl"
@@ -981,7 +1007,7 @@ export default function Results() {
                 {sortedProspects.map((p, index) => {
                   const isSelected = selectedIds.has(p.id);
                   const isActive = activatedIds.has(p.id);
-                  const isLocked = !isSignedIn && index >= RESULTS_ANONYMOUS_UNLOCK;
+                  const isLocked = !isSignedIn && index >= anonymousUnlockedCount;
                   return (
                     <div
                       key={p.id}
@@ -1135,6 +1161,7 @@ export default function Results() {
                         </p>
                       )}
 
+                      {!(jobsHandoff && !isSignedIn) ? (
                       <div className="mx-3 mb-2 flex flex-wrap items-center gap-2 border-t border-white/10 pt-1.5">
                         {isLocked ? (
                           <Link
@@ -1158,6 +1185,7 @@ export default function Results() {
                           </Link>
                         )}
                       </div>
+                      ) : null}
                     </div>
                   );
                 })}
