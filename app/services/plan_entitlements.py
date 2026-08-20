@@ -32,16 +32,23 @@ PIPELINE_WARM_SLOTS = int(os.getenv("PIPELINE_WARM_SLOTS", "30"))
 PIPELINE_MONITOR_SLOTS = int(os.getenv("PIPELINE_MONITOR_SLOTS", "20"))
 PIPELINE_TIERED_TOTAL = PIPELINE_HOT_SLOTS + PIPELINE_WARM_SLOTS + PIPELINE_MONITOR_SLOTS
 
-# Free / anonymous see 15 ranked opportunities. Pro unlocks the full 90-lead feed.
-PIPELINE_LIMIT_ANONYMOUS = 15
-PIPELINE_ANON_HOT_SLOTS = 8
-PIPELINE_ANON_WARM_SLOTS = 5
-PIPELINE_ANON_MONITOR_SLOTS = 2
+# Free + anonymous see 15 customer opportunities. Pro unlocks the full 90-lead feed.
+PIPELINE_PREVIEW_HOT_SLOTS = 8
+PIPELINE_PREVIEW_WARM_SLOTS = 5
+PIPELINE_PREVIEW_MONITOR_SLOTS = 2
+PIPELINE_LIMIT_PREVIEW = (
+    PIPELINE_PREVIEW_HOT_SLOTS + PIPELINE_PREVIEW_WARM_SLOTS + PIPELINE_PREVIEW_MONITOR_SLOTS
+)
 
-PIPELINE_LIMIT_FREE = 15
-PIPELINE_FREE_HOT_SLOTS = 8
-PIPELINE_FREE_WARM_SLOTS = 5
-PIPELINE_FREE_MONITOR_SLOTS = 2
+PIPELINE_LIMIT_ANONYMOUS = PIPELINE_LIMIT_PREVIEW
+PIPELINE_ANON_HOT_SLOTS = PIPELINE_PREVIEW_HOT_SLOTS
+PIPELINE_ANON_WARM_SLOTS = PIPELINE_PREVIEW_WARM_SLOTS
+PIPELINE_ANON_MONITOR_SLOTS = PIPELINE_PREVIEW_MONITOR_SLOTS
+
+PIPELINE_LIMIT_FREE = PIPELINE_LIMIT_PREVIEW
+PIPELINE_FREE_HOT_SLOTS = PIPELINE_PREVIEW_HOT_SLOTS
+PIPELINE_FREE_WARM_SLOTS = PIPELINE_PREVIEW_WARM_SLOTS
+PIPELINE_FREE_MONITOR_SLOTS = PIPELINE_PREVIEW_MONITOR_SLOTS
 
 PIPELINE_LIMIT_PAID = PIPELINE_TIERED_TOTAL
 SAVED_LEADS_LIMIT_FREE = 5
@@ -244,7 +251,7 @@ def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple
     # Preview/free feeds should not collapse when one bucket (often monitoring) is sparse.
     # Backfill remaining slots from highest-priority leftovers while preserving cap.
     preview_cap = pipeline_limit_for_plan(plan)
-    if plan in {PLAN_ANONYMOUS, PLAN_FREE} and len(trimmed) < preview_cap:
+    if plan != PLAN_PAID and len(trimmed) < preview_cap:
         picked_ids = {
             row.get("id")
             for row in trimmed

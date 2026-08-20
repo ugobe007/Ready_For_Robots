@@ -36,10 +36,10 @@ export default function WorkspaceQuickLinks({
           Everything happens on this page
         </p>
         <p className={`mt-0.5 text-xs ${dark ? "text-slate-300" : "text-gray-600"}`}>
-          Pick a lead → Develop with SIGNAL → Send from the right panel.{" "}
+          Pick a buyer → Activate CRM by saving → copy the draft and send from the right panel.{" "}
           {savedCount > 0
             ? `${savedCount} saved in your CRM.`
-            : "Activate CRM with the yellow button — do not wait for empty stage columns."}
+            : "Save your first buyer to activate CRM."}
         </p>
       </div>
       <div className="flex flex-wrap gap-1.5">

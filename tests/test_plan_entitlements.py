@@ -4,6 +4,7 @@ from app.services.plan_entitlements import (
     PLAN_PAID,
     PIPELINE_LIMIT_FREE,
     PIPELINE_LIMIT_PAID,
+    PIPELINE_LIMIT_PREVIEW,
     apply_pipeline_entitlements,
     pipeline_limit_for_plan,
     resolve_plan_tier,
@@ -27,10 +28,11 @@ def test_resolve_plan_tier_paid_metadata():
 
 
 def test_pipeline_limits():
-    assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == PIPELINE_LIMIT_FREE
+    assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == PIPELINE_LIMIT_PREVIEW
     assert pipeline_limit_for_plan(PLAN_FREE) == PIPELINE_LIMIT_FREE
     assert pipeline_limit_for_plan(PLAN_PAID) == PIPELINE_LIMIT_PAID
     assert PIPELINE_LIMIT_FREE == 15
+    assert PIPELINE_LIMIT_PREVIEW == 15
     assert PIPELINE_LIMIT_PAID == 90
 
 
@@ -45,6 +47,9 @@ def test_trim_pipeline_leads_free_tier_caps_at_fifteen():
     assert mix["hot"]["shown"] == 8
     assert mix["warm"]["shown"] == 5
     assert mix["monitoring"]["shown"] == 2
+    assert mix["hot"]["cap"] == 8
+    assert mix["warm"]["cap"] == 5
+    assert mix["monitoring"]["cap"] == 2
 
 
 def test_trim_pipeline_leads_by_tier_preserves_buckets():
@@ -130,7 +135,7 @@ def test_apply_pipeline_entitlements_trims_and_tags():
         ],
     }
     out = apply_pipeline_entitlements(feed, PLAN_FREE)
-    # Free workspace sees 15 ranked opportunities; Pro unlocks the rest.
+    # Free workspace shows 15 customer opportunities; Pro unlocks the full 90-lead feed.
     assert len(out["leads"]) == 15
     assert out["entitlements"]["plan"] == PLAN_FREE
     assert out["entitlements"]["pipeline_limit"] == 15
@@ -138,6 +143,21 @@ def test_apply_pipeline_entitlements_trims_and_tags():
     assert out["entitlements"]["tier_mix"]["warm"]["shown"] == 5
     assert out["entitlements"]["tier_mix"]["monitoring"]["shown"] == 0
     assert "share_summary" in out["leads"][0]
+
+
+def test_apply_pipeline_entitlements_paid_keeps_full_feed():
+    feed = {
+        "summary": {"hot": 40, "warm": 30, "total": 100},
+        "leads": (
+            [{"id": i, "company_name": f"Hot Co {i}", "priority_tier": "HOT"} for i in range(40)]
+            + [{"id": 100 + i, "company_name": f"Warm Co {i}", "priority_tier": "WARM"} for i in range(30)]
+            + [{"id": 200 + i, "company_name": f"Cold Co {i}", "priority_tier": "COLD"} for i in range(20)]
+        ),
+    }
+    out = apply_pipeline_entitlements(feed, PLAN_PAID)
+    assert len(out["leads"]) == 90
+    assert out["entitlements"]["pipeline_limit"] == 90
+    assert out["entitlements"]["tier_mix"]["hot"]["shown"] == 40
 
 
 def test_trim_pipeline_drops_headline_style_news_rows():
