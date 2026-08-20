@@ -1438,6 +1438,12 @@
     letter-spacing: 0.14em;
   }
 
+  .pipeline-detail-meta {
+    color: #e2e8f0 !important;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
   .pipeline-detail-company {
     color: #ffffff !important;
     font-family: "Space Grotesk", system-ui, sans-serif;
@@ -1447,21 +1453,10 @@
     line-height: 1.15;
   }
 
-  .pipeline-detail-meta {
-    color: #e2e8f0 !important;
-    font-size: 0.875rem;
-    line-height: 1.4;
-  }
-
-  .pipeline-company-name {
-    color: #f8fafc !important;
-    @apply text-[15px] font-bold leading-tight tracking-tight;
-  }
-
-  .pipeline-detail-company {
-    color: #ffffff !important;
-    font-family: "Space Grotesk", system-ui, sans-serif;
-    @apply text-2xl font-bold leading-tight tracking-tight sm:text-[1.7rem];
+  @media (min-width: 640px) {
+    .pipeline-detail-company {
+      font-size: 1.7rem;
+    }
   }
 
   .pipeline-crm-activate {
