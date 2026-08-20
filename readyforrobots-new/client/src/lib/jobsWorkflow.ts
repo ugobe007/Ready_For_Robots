@@ -43,8 +43,27 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
   );
 }
 
-export function buyerLeadsCtaLabel(signedIn: boolean): string {
-  return signedIn ? "See buyer leads →" : "See 5 buyer leads →";
+export function buyerLeadsCtaLabel(_signedIn: boolean): string {
+  return "Jobs for your robot →";
+}
+
+export function buyerLeadsCtaHeading(_signedIn: boolean): string {
+  return "Jobs for your robot";
+}
+
+/**
+ * After a robot-URL lookup, never leave the buyer page empty when a live
+ * feed exists. Scoped matches win; otherwise show the live pipeline.
+ */
+export function buyerLeadsToShow<T>(opts: {
+  scopedRows: T[];
+  liveRows: T[];
+  lookupPending: boolean;
+  scopeToUrl: boolean;
+}): T[] {
+  if (!opts.scopeToUrl) return opts.liveRows;
+  if (opts.lookupPending) return opts.scopedRows;
+  return opts.scopedRows.length > 0 ? opts.scopedRows : opts.liveRows;
 }
 
 export const JOBS_RESTORE_ONCE_KEY = "rfr_jobs_restore_once";

@@ -60,7 +60,7 @@ import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
-import { isJobsHandoffSrc, buyerLeadsHref } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, buyerLeadsHref, buyerLeadsToShow } from "@/lib/jobsWorkflow";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1635,7 +1635,7 @@ function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
 }
 
 export default function Pipeline() {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const isSignedIn = Boolean(session?.access_token);
   const BUILD_PIPELINE_TARGET = isSignedIn ? BUILD_PIPELINE_SIGNED_IN : BUILD_PIPELINE_ANON;
   const [, setLocation] = useLocation();
@@ -1678,7 +1678,9 @@ export default function Pipeline() {
   const arrivedFromJobs = isJobsHandoffSrc(submittedSrcFromQuery);
 
   // Anonymous Jobs arrivals stay on the 5-lead Results preview until signup.
+  // Wait for auth to settle so a signed-in session is not bounced mid-lookup.
   useEffect(() => {
+    if (authLoading) return;
     if (!arrivedFromJobs) return;
     if (isSignedIn) return;
     if (!submittedUrlFromQuery) return;
@@ -1689,7 +1691,7 @@ export default function Pipeline() {
         src: submittedSrcFromQuery,
       }),
     );
-  }, [arrivedFromJobs, isSignedIn, submittedUrlFromQuery, submittedSrcFromQuery]);
+  }, [authLoading, arrivedFromJobs, isSignedIn, submittedUrlFromQuery, submittedSrcFromQuery]);
   /** URL submit searches stay on matched prospects — never default to the global market queue. */
   const preferUrlMatchedPipeline = Boolean(submittedUrlFromQuery || arrivedFromResultsScan);
 
@@ -2759,9 +2761,24 @@ export default function Pipeline() {
   const scopeMatchesCount = matchedScopedDeals.length;
   const scopedNoMatches = scopeToSubmittedUrl && !submittedUrlMatchLoading && !submittedUrlMatchError && scopeMatchesCount === 0;
   const displayedDeals = useMemo(
-    () => (scopeToSubmittedUrl ? matchedScopedDeals : filtered),
-    [filtered, matchedScopedDeals, scopeToSubmittedUrl],
+    () =>
+      buyerLeadsToShow({
+        scopedRows: matchedScopedDeals,
+        liveRows: filtered,
+        lookupPending: submittedUrlMatchLoading,
+        scopeToUrl: scopeToSubmittedUrl,
+      }),
+    [filtered, matchedScopedDeals, scopeToSubmittedUrl, submittedUrlMatchLoading],
   );
+
+  // URL lookup finished with zero matches → drop the empty scope so the live
+  // list paints. Jobs arrivals must never land on a blank pipeline.
+  useEffect(() => {
+    if (submittedUrlMatchLoading) return;
+    if (!scopeToSubmittedUrl) return;
+    if (matchedScopedDeals.length > 0) return;
+    setScopeToSubmittedUrl(false);
+  }, [submittedUrlMatchLoading, scopeToSubmittedUrl, matchedScopedDeals.length]);
 
   useEffect(() => {
     // Pause the rotation offset while a deep-link lead is being displayed so
@@ -4044,7 +4061,7 @@ export default function Pipeline() {
           ) : (
             <div className="flex flex-col gap-3 pt-2">
               <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                <span>{arrivedFromJobs ? "ReadyForRobots · Buyer leads" : "ReadyForRobots · Workspace"}</span>
+                <span>{arrivedFromJobs ? "ReadyForRobots · Jobs for your robot" : "ReadyForRobots · Workspace"}</span>
                 {session?.access_token ? (
                   <span className="normal-case tracking-normal text-emerald-300/90">Signed in · {sessionDisplayName}</span>
                 ) : null}
@@ -4052,13 +4069,13 @@ export default function Pipeline() {
               {arrivedFromJobs ? (
                 <div className="border border-slate-600 bg-[#0b162f] px-5 py-4">
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
-                    Pipeline
+                    Jobs for your robot
                   </p>
                   <h1 className="mt-1 font-display text-2xl font-bold text-slate-100">
-                    Companies that need this robot work
+                    Jobs for your robot
                   </h1>
                   <p className="mt-1 text-sm text-slate-400">
-                    Same Jobs terminal. This page is where more than 5 buyer leads live.
+                    Same Jobs terminal. More than 5 jobs for this robot live here.
                   </p>
                 </div>
               ) : null}

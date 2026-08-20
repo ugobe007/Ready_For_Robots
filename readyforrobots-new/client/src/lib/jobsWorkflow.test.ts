@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   BUYER_LEADS_ANON_CAP,
   JOBS_EXAMPLE_CAP,
+  buyerLeadsCtaHeading,
   buyerLeadsCtaLabel,
   buyerLeadsHref,
+  buyerLeadsToShow,
   capExampleJobs,
   isJobsHandoffSrc,
   jobsHeading,
@@ -58,7 +60,8 @@ describe("jobsWorkflow", () => {
     expect(href).toContain("url=https%3A%2F%2Fwww.unitree.com%2F");
     expect(href).toContain(`limit=${BUYER_LEADS_ANON_CAP}`);
     expect(href).toContain("src=jobs_all_robots");
-    expect(buyerLeadsCtaLabel(false)).toBe("See 5 buyer leads →");
+    expect(buyerLeadsCtaLabel(false)).toBe("Jobs for your robot →");
+    expect(buyerLeadsCtaHeading(false)).toBe("Jobs for your robot");
   });
 
   it("sends signed-in users to the pipeline with the same robot URL", () => {
@@ -73,7 +76,8 @@ describe("jobsWorkflow", () => {
     expect(href).toContain("submission=42");
     expect(href).toContain("industries=warehousing");
     expect(href).not.toContain("limit=");
-    expect(buyerLeadsCtaLabel(true)).toBe("See buyer leads →");
+    expect(buyerLeadsCtaLabel(true)).toBe("Jobs for your robot →");
+    expect(buyerLeadsCtaHeading(true)).toBe("Jobs for your robot");
   });
 
   it("recognizes Jobs terminal handoff src values", () => {
@@ -107,6 +111,41 @@ describe("jobsWorkflow", () => {
     expect(shouldRestoreJobsWorkspace({ navigationType: "back_forward" })).toBe(true);
     expect(shouldRestoreJobsWorkspace({ navigationType: "navigate", restoreOnce: true })).toBe(true);
     expect(shouldRestoreJobsWorkspace({ navigationType: "navigate", restoreQuery: true })).toBe(true);
+  });
+
+  it("falls back to the live buyer feed when URL lookup returns no rows", () => {
+    expect(
+      buyerLeadsToShow({
+        scopedRows: [],
+        liveRows: ["acme", "bold"],
+        lookupPending: true,
+        scopeToUrl: true,
+      }),
+    ).toEqual([]);
+    expect(
+      buyerLeadsToShow({
+        scopedRows: [],
+        liveRows: ["acme", "bold"],
+        lookupPending: false,
+        scopeToUrl: true,
+      }),
+    ).toEqual(["acme", "bold"]);
+    expect(
+      buyerLeadsToShow({
+        scopedRows: ["scoped"],
+        liveRows: ["acme"],
+        lookupPending: false,
+        scopeToUrl: true,
+      }),
+    ).toEqual(["scoped"]);
+    expect(
+      buyerLeadsToShow({
+        scopedRows: ["scoped"],
+        liveRows: ["acme"],
+        lookupPending: false,
+        scopeToUrl: false,
+      }),
+    ).toEqual(["acme"]);
   });
 
   it("treats / and /jobs paths as Jobs home after auth, not /pipeline", () => {
