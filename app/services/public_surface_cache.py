@@ -257,7 +257,7 @@ def refresh_newsletter_surface_cache(db: Session, *, force: bool = False) -> dic
         db,
         limit=15,
         force=force,
-        skip_openai_brief=not force,
+        skip_openai_brief=True,
     )
     write_cached_edition(edition, db)
     publish_api_snapshot(db, edition, limit=15)

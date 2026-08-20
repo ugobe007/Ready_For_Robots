@@ -13,15 +13,17 @@ metadata:
 
 # ReadyForRobots Sales Floor Manager
 
-Hourly coach for **Cal** and the OEM conversion floor. Hermes researches; Cal sells; this skill **manages** — scoreboard, adjustments, stop-the-bleeding. It does **not** send buyer email and does **not** invent facts.
+This skill **does not** call OpenAI, Anthropic, or Vercel AI Gateway. Read Fly APIs with `curl`. Daily email is `rfr-daily-email-digest` (POST `/api/v1/market-graph/daily-digest-send`), not an LLM draft.
 
 Division of labor: [docs/hermes_cal_bridge.md](../../docs/hermes_cal_bridge.md) · OemCal UI copy: `readyforrobots-new/client/src/lib/oemCalCopy.ts`
 
 ## When to Use
 
-- Hourly cron tick (`20 * * * *` America/Los_Angeles)
-- "How is Cal doing this hour?" / "Adjust Cal priority"
-- After a quiet conversion window or bad send streak
+- Hourly cron (`20 * * * *` America/Los_Angeles)
+- "How is Cal this hour?" / "Reprioritize Cal"
+- After a quiet conversion window or a bad send streak
+
+**No paid LLM.** Scoreboard is `curl` to Fly. Daily operator email is skill `rfr-daily-email-digest`, not an AI Gateway draft.
 
 ## Environment
 

@@ -130,7 +130,7 @@ def get_newsletter_edition(
         db = SessionLocal()
         try:
             assert_newsletter_regen_allowed(authorization, x_newsletter_regen_key)
-            data = build_daily_newsletter_edition(db, limit=limit, force=True, skip_openai_brief=False)
+            data = build_daily_newsletter_edition(db, limit=limit, force=True, skip_openai_brief=True)
             write_cached_edition(data, db)
             return publish_api_snapshot(db, data, limit=limit)
         finally:

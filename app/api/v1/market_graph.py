@@ -442,6 +442,63 @@ def market_graph_qualify_overlay(
     }
 
 
+class InferQualifyBody(BaseModel):
+    company_ids: list[int] = Field(default_factory=list)
+    limit: int = Field(12, ge=1, le=40)
+    hermes_run_id: Optional[str] = Field(None, max_length=120)
+    dry_run: bool = False
+
+
+@router.post("/infer-qualify")
+def market_graph_infer_qualify(
+    body: InferQualifyBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Qualify pipeline companies with the local inference engine (no OpenAI/Anthropic)."""
+    from app.services.hermes_local_inference import infer_qualify_companies
+
+    payload = infer_qualify_companies(
+        db,
+        company_ids=body.company_ids,
+        limit=body.limit,
+        hermes_run_id=body.hermes_run_id,
+        dry_run=body.dry_run,
+    )
+    if not body.dry_run and payload.get("accepted"):
+        try:
+            db.commit()
+        except Exception as exc:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"commit failed: {exc}") from exc
+    payload["auth"] = _auth.get("auth")
+    return payload
+
+
+class DailyDigestSendBody(BaseModel):
+    force: bool = False
+    period_hours: int = Field(24, ge=1, le=168)
+
+
+@router.post("/daily-digest-send")
+def market_graph_daily_digest_send(
+    body: DailyDigestSendBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Send the operator daily digest via Resend. No paid LLM / AI Gateway."""
+    from app.services.cal_daily_digest import send_cal_daily_digest
+
+    result = send_cal_daily_digest(
+        db, period_hours=body.period_hours, force=body.force
+    )
+    result["engine"] = "local_inference"
+    result["paid_llm"] = False
+    result["auth"] = _auth.get("auth")
+    result["doc"] = "docs/skills/rfr-daily-email-digest.SKILL.md"
+    return result
+
+
 @router.post("/contacts/ingest")
 def market_graph_contacts_ingest(
     body: ContactsIngestBody,

@@ -671,7 +671,7 @@ def incremental_newsletter_update_task(self):
 
     db = get_db()
     try:
-        edition = build_daily_newsletter_edition(db, limit=15, force=False, skip_openai_brief=False)
+        edition = build_daily_newsletter_edition(db, limit=15, force=False, skip_openai_brief=True)
         write_cached_edition(edition, db)
         publish_api_snapshot(db, edition, limit=15)
         hydrate_public_surface_caches()
@@ -734,7 +734,7 @@ def publish_newsletter_daily_task(self):
 
     db = get_db()
     try:
-        edition = build_daily_newsletter_edition(db, limit=15, force=True, skip_openai_brief=False)
+        edition = build_daily_newsletter_edition(db, limit=15, force=True, skip_openai_brief=True)
         write_cached_edition(edition, db)
         publish_api_snapshot(db, edition, limit=15)
         from app.services.public_surface_cache import refresh_pipeline_surface_caches
