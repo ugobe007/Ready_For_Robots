@@ -38,8 +38,8 @@ export default function WorkspaceQuickLinks({
         <p className={`mt-0.5 text-xs ${dark ? "text-slate-300" : "text-gray-600"}`}>
           Pick a lead → Develop with SIGNAL → Send from the right panel.{" "}
           {savedCount > 0
-            ? `${savedCount} saved in your workspace.`
-            : "Save your first lead to unlock the kanban + send flow."}
+            ? `${savedCount} saved in your CRM.`
+            : "Activate CRM with the yellow button — do not wait for empty stage columns."}
         </p>
       </div>
       <div className="flex flex-wrap gap-1.5">
