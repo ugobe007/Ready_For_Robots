@@ -1628,7 +1628,7 @@ function JobsPanel({
             : `Example jobs for ${analysis.productName}.`}
           {unlocked
             ? " More than 5 jobs live on the pipeline after this step."
-            : " 5 jobs now. Sign up to keep them — more than 5 jobs live on the pipeline."}
+            : " Sign up to keep these 5 jobs — more than 5 jobs live on the pipeline."}
         </p>
         <Link href={buyersHref()} className={`${ctaClass} mt-4`}>
           <FaceCue scale={2} onEmerald />
