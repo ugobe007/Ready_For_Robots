@@ -56,7 +56,6 @@ import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachVa
 import CalLeadDrop, { dealToCalDrop } from "@/components/pipeline/CalLeadDrop";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
-import PipelineSalesWorkflowRail from "@/components/pipeline/PipelineSalesWorkflowRail";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
@@ -585,6 +584,7 @@ function FirstThreeActionsProgress({
             onClick={onPrimaryAction}
             className="mt-1.5 inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1.5 text-[10px] font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
+            <PixelIcon map={KARE_FACE} scale={2} fill="#ffffff" background="transparent" />
             {primaryActionLabel}
             <ArrowRight className="h-2.5 w-2.5" />
           </button>
@@ -702,6 +702,18 @@ function UpgradeProPriorityBanner({ src }: { src: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function FaceCue({ scale = 2, className = "" }: { scale?: number; className?: string }) {
+  return (
+    <PixelIcon
+      map={KARE_FACE}
+      scale={scale}
+      fill="#3ecf8e"
+      background="transparent"
+      className={`shrink-0 ${className}`.trim()}
+    />
   );
 }
 
@@ -829,10 +841,12 @@ type PipelineEntitlements = {
   };
 };
 
+const PIPELINE_LIMIT_ANONYMOUS = 5;
 const PIPELINE_LIMIT_FREE = 15;
 const PIPELINE_LIMIT_PAID = PIPELINE_FEED_TOTAL;
 /** Target curated working list after Results → Pipeline onboarding. */
-const BUILD_PIPELINE_TARGET = 15;
+const BUILD_PIPELINE_ANON = 5;
+const BUILD_PIPELINE_SIGNED_IN = 15;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
 const PIPELINE_LEAD_READ_MS = 7_000;
 const PIPELINE_SESSION_KEY = "pipeline_feed_v7";
@@ -1620,6 +1634,8 @@ function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
 
 export default function Pipeline() {
   const { session } = useAuth();
+  const isSignedIn = Boolean(session?.access_token);
+  const BUILD_PIPELINE_TARGET = isSignedIn ? BUILD_PIPELINE_SIGNED_IN : BUILD_PIPELINE_ANON;
   const [, setLocation] = useLocation();
   const search = useSearch();
   const [storageSubmittedUrl, setStorageSubmittedUrl] = useState("");
@@ -1660,10 +1676,11 @@ export default function Pipeline() {
   /** URL submit searches stay on matched prospects — never default to the global market queue. */
   const preferUrlMatchedPipeline = Boolean(submittedUrlFromQuery || arrivedFromResultsScan);
 
-  // Recovery: signup/OAuth sometimes landed on Pipeline Step 5 without the 5-lead Results review.
+  // After signup, stay on pipeline with 15 matched leads — do not bounce back to the 5-lead review.
   useEffect(() => {
     if (!arrivedFromResultsScan) return;
     if (!submittedUrlFromQuery) return;
+    if (isSignedIn) return;
     if (hasReviewedFiveLeads()) return;
     clearBuild15UnlockFlags();
     const dest = workflowResultsPath(
@@ -1671,7 +1688,7 @@ export default function Pipeline() {
       `/results?url=${encodeURIComponent(submittedUrlFromQuery)}&limit=5`,
     );
     window.location.replace(dest);
-  }, [arrivedFromResultsScan, submittedUrlFromQuery]);
+  }, [arrivedFromResultsScan, submittedUrlFromQuery, isSignedIn]);
 
   useEffect(() => {
     if (submittedUrlFromQuery) {
@@ -1771,7 +1788,18 @@ export default function Pipeline() {
       return false;
     }
   });
-  const step3Intro = arrivedFromResultsScan && !build25Started;
+  const step3Intro = arrivedFromResultsScan && !build25Started && !isSignedIn;
+
+  useEffect(() => {
+    if (!isSignedIn || !arrivedFromResultsScan || build25Started) return;
+    try {
+      sessionStorage.setItem("rfr_build15_started", "1");
+      sessionStorage.setItem("rfr_build25_started", "1");
+    } catch {
+      /* ignore */
+    }
+    setBuild25Started(true);
+  }, [isSignedIn, arrivedFromResultsScan, build25Started]);
   const [workspaceProfile, setWorkspaceProfile] = useState<RobotWorkspaceProfile>(() => {
     const existing = readRobotWorkspaceProfile();
     return {
@@ -1918,7 +1946,9 @@ export default function Pipeline() {
       : "";
     void fetchWithTimeoutRetry(
       `${base}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=${BUILD_PIPELINE_TARGET}${industryQs}`,
-      publicFetchInit(),
+      session?.access_token
+        ? publicFetchInit({ headers: authHeader(session.access_token) })
+        : publicFetchInit(),
       PIPELINE_TIMEOUT,
       { retries: 1, retryDelayMs: 800 },
     )
@@ -1956,7 +1986,7 @@ export default function Pipeline() {
     return () => {
       cancelled = true;
     };
-  }, [submittedUrl, matchIndustryKey, industriesFromQuery]);
+  }, [submittedUrl, matchIndustryKey, industriesFromQuery, BUILD_PIPELINE_TARGET, session?.access_token]);
   const firstThreeEnteredRef = useRef<FirstThreeStep | null>(null);
   const firstThreeAbandonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstThreeAbandonSignaturesRef = useRef<Set<string>>(new Set());
@@ -2684,8 +2714,13 @@ export default function Pipeline() {
       });
     }
 
-    if (!showFullPanel && next.length > PIPELINE_LIMIT_FREE) {
-      return next.slice(0, PIPELINE_LIMIT_FREE);
+    const feedCap = showFullPanel
+      ? PIPELINE_LIMIT_PAID
+      : panelPlan === "anonymous"
+        ? PIPELINE_LIMIT_ANONYMOUS
+        : PIPELINE_LIMIT_FREE;
+    if (!showFullPanel && next.length > feedCap) {
+      return next.slice(0, feedCap);
     }
     return next;
   }, [
@@ -2701,7 +2736,7 @@ export default function Pipeline() {
 
   const matchedScopedDeals = useMemo(
     () => mapPipelineRows(submittedUrlMatches, crmStageByCompanyId).slice(0, BUILD_PIPELINE_TARGET),
-    [submittedUrlMatches, crmStageByCompanyId],
+    [submittedUrlMatches, crmStageByCompanyId, BUILD_PIPELINE_TARGET],
   );
   const scopeMatchesCount = matchedScopedDeals.length;
   const scopedNoMatches = scopeToSubmittedUrl && !submittedUrlMatchLoading && !submittedUrlMatchError && scopeMatchesCount === 0;
@@ -4002,16 +4037,6 @@ export default function Pipeline() {
             <div className="pipeline-command-rail flex flex-col gap-3">
               {session?.access_token && <AdminNav variant="dark" />}
 
-              <PipelineSalesWorkflowRail
-                hasSession={Boolean(session?.access_token)}
-                hasSavedLeads={savedLeadCount > 0}
-                hasSelection={Boolean(selected)}
-                hasDraft={Boolean(selected?.outreachBody)}
-                hasContact={Boolean(selected?.contact)}
-                sent={selected?.stage === "Outreach Sent"}
-                variant="dark"
-                browseFirst={arrivedFromResultsScan}
-              />
               {session?.access_token && (
                 <WorkspaceQuickLinks
                   savedCount={savedLeadCount}
@@ -4162,15 +4187,18 @@ export default function Pipeline() {
                     <span className={firstThreeActions.sent ? "text-emerald-300" : ""}>3. Send outreach</span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={runFirstThreePrimaryAction}
-                  disabled={!selected || firstThreePrimaryActionDisabled}
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
-                >
-                  {selected?.outreachBody ? "Review prepared outreach" : "Review selected buyer"}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+                <span className="inline-flex w-full items-center justify-center gap-2 lg:w-auto">
+                  <FaceCue scale={3} />
+                  <button
+                    type="button"
+                    onClick={runFirstThreePrimaryAction}
+                    disabled={!selected || firstThreePrimaryActionDisabled}
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
+                  >
+                    {selected?.outreachBody ? "Review prepared outreach" : "Review selected buyer"}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </span>
               </div>
             </section>
           )}
@@ -4298,34 +4326,43 @@ export default function Pipeline() {
                     </ol>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {!isSignedIn && !arrivedFromResultsScan ? (
-                        <Link
-                          href={startFreeWorkspaceHref}
-                          className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-4 py-2.5 text-sm font-extrabold text-slate-950 hover:bg-amber-300"
-                        >
-                          {nextStepPrimaryLabel}
-                        </Link>
+                        <span className="inline-flex items-center gap-2">
+                          <FaceCue />
+                          <Link
+                            href={startFreeWorkspaceHref}
+                            className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-4 py-2.5 text-sm font-extrabold text-slate-950 hover:bg-amber-300"
+                          >
+                            {nextStepPrimaryLabel}
+                          </Link>
+                        </span>
                       ) : (
-                        <button
-                          type="button"
-                          onClick={runNextStepPrimary}
-                          disabled={
-                            arrivedFromResultsScan && (!build25Started || !selected)
-                              ? false
-                              : isSignedIn && !selected && !canCopySelectedDraft
-                          }
-                          className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-4 py-2.5 text-sm font-extrabold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {nextStepPrimaryLabel}
-                        </button>
+                        <span className="inline-flex items-center gap-2">
+                          <FaceCue />
+                          <button
+                            type="button"
+                            onClick={runNextStepPrimary}
+                            disabled={
+                              arrivedFromResultsScan && (!build25Started || !selected)
+                                ? false
+                                : isSignedIn && !selected && !canCopySelectedDraft
+                            }
+                            className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-4 py-2.5 text-sm font-extrabold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {nextStepPrimaryLabel}
+                          </button>
+                        </span>
                       )}
                       {isSignedIn && canCopySelectedDraft && canSaveSelected ? (
-                        <button
-                          type="button"
-                          onClick={copyDraft}
-                          className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10"
-                        >
-                          {copied ? "Copied draft" : "Copy draft"}
-                        </button>
+                        <span className="inline-flex items-center gap-2">
+                          <FaceCue />
+                          <button
+                            type="button"
+                            onClick={copyDraft}
+                            className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10"
+                          >
+                            {copied ? "Copied draft" : "Copy draft"}
+                          </button>
+                        </span>
                       ) : null}
                       {canOpenSelectedDraft ? (
                         <button
@@ -4926,7 +4963,8 @@ export default function Pipeline() {
                     {" "}
                     <span className="text-amber-200">Pro unlocks the full live pipeline.</span>
                   </span>
-                  <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-400 px-3 py-2 text-xs font-extrabold text-slate-950">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-amber-400 px-3 py-2 text-xs font-extrabold text-slate-950">
+                    <FaceCue scale={2} />
                     Upgrade to Pro
                     <ArrowRight className="h-3.5 w-3.5" />
                   </span>
@@ -5630,6 +5668,7 @@ export default function Pipeline() {
                           <Eye className="h-3 w-3" />
                           Preview
                         </button>
+                        <FaceCue />
                         <button
                           onClick={copyDraft}
                           className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded transition-all"
@@ -5872,13 +5911,16 @@ export default function Pipeline() {
                         {sendingLeadId === selected.id ? "Sending…" : "Send outreach"}
                       </button>
                     )}
-                    <button
-                      onClick={copyDraft}
-                      className="sb-btn"
-                    >
-                      <Copy className="h-3 w-3" />
-                      Copy draft
-                    </button>
+                    <span className="inline-flex items-center gap-1.5">
+                      <FaceCue />
+                      <button
+                        onClick={copyDraft}
+                        className="sb-btn"
+                      >
+                        <Copy className="h-3 w-3" />
+                        Copy draft
+                      </button>
+                    </span>
                     {crmAccountIdByCompanyId[selected.id] && STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
                       <button
                         onClick={() => void handleAdvanceLead(selected)}
@@ -5992,7 +6034,8 @@ export default function Pipeline() {
                 {selected.outreachBody}
               </pre>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <FaceCue />
               <button
                 onClick={copyDraft}
                 className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold border transition-all"

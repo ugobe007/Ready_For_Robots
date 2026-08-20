@@ -330,16 +330,15 @@ export default function Home() {
         }),
       );
     }
-    // Flow: URL → signup (if needed) → 5 sales leads → customer info → 15 leads.
+    // Flow: URL → 5 sales leads (anonymous) → signup → 15 leads on pipeline.
     if (!session?.access_token) {
-      const next = `/results?url=${encodeURIComponent(normalizedUrl)}&limit=5&src=home_signup_return`;
       window.location.assign(
-        `/signup?next=${encodeURIComponent(next)}&src=home_url_submit&company_url=${encodeURIComponent(normalizedUrl)}`,
+        `/results?url=${encodeURIComponent(normalizedUrl)}&limit=5&src=home_url_submit`,
       );
       return;
     }
     window.location.assign(
-      `/results?url=${encodeURIComponent(normalizedUrl)}&limit=5&src=home_url_submit`,
+      `/pipeline?url=${encodeURIComponent(normalizedUrl)}&src=home_url_submit`,
     );
   };
 
@@ -482,6 +481,7 @@ export default function Home() {
                       disabled={!normalizedUrl}
                       className="inline-flex shrink-0 items-center justify-center gap-2 text-[15px] font-semibold text-[#00d0a2] transition hover:text-[#4cf0c8] disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
                     >
+                      <PixelIcon map={KARE_FACE} scale={2} fill="#00d0a2" background="transparent" />
                       Find Jobs
                       <ArrowRight className="h-4 w-4" />
                     </button>
@@ -491,7 +491,7 @@ export default function Home() {
                   Find demand. Match your robot. Sell into the buying window.
                 </p>
                 <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
-                  1. Submit URL · 2. {session?.access_token ? "5 sales leads" : "Sign up → 5 sales leads"} · 3. Customer info · 4. 15 sales leads
+                  1. Submit URL · 2. {session?.access_token ? "15 sales leads" : "5 sales leads"} · 3. {session?.access_token ? "Copy outreach" : "Sign up for 15"}
                 </p>
 
               </div>
@@ -661,6 +661,7 @@ export default function Home() {
                   onClick={focusHeroInput}
                   className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#00c896] px-7 py-3 text-base font-semibold text-[#05271e] transition hover:bg-[#00d9a3]"
                 >
+                  <PixelIcon map={KARE_FACE} scale={2} fill="#05271e" background="transparent" />
                   Find Jobs
                   <ArrowRight className="h-4 w-4" />
                 </button>

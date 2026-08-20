@@ -123,13 +123,17 @@ def leads_match_submitted_url(
         None,
         description="Optional comma-separated ICP industries to bias matching",
     ),
+    user: Optional[dict] = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
     """
     Lookup URL → score robot company → match equally scored buyer opportunities.
-    Returns at most `limit` rows (product default: 15) in pipeline-card shape.
+    Anonymous callers get 5 leads; signed-in workspaces get 15.
     """
-    from app.api.robot_ready import URL_MATCHED_PIPELINE_LIMIT
+    from app.api.robot_ready import url_matched_limit_for_plan
+    from app.services.plan_entitlements import resolve_plan_tier
+
+    plan_cap = url_matched_limit_for_plan(resolve_plan_tier(user))
 
     submitted_url, submitted_domain = _submitted_url_match_input(url)
     if not submitted_url or not submitted_domain:
@@ -159,7 +163,7 @@ def leads_match_submitted_url(
             "matching_mode": "no_profile",
             "match_count": 0,
             "leads": [],
-            "pipeline_limit": URL_MATCHED_PIPELINE_LIMIT,
+            "pipeline_limit": plan_cap,
         }
 
     industry_list = [
@@ -175,7 +179,7 @@ def leads_match_submitted_url(
     # If ICP industries were too narrow, fall back to open match so unlock still works.
     if industry_list and not matched_all:
         matched_all = match_companies(robot_caps, db)
-    matched = matched_all[: min(limit, URL_MATCHED_PIPELINE_LIMIT)]
+    matched = matched_all[: min(limit, plan_cap)]
     matched_ids = [int(m.get("id")) for m in matched if m.get("id") is not None]
     if not matched_ids:
         return {
@@ -185,7 +189,7 @@ def leads_match_submitted_url(
             "matching_mode": "no_match",
             "match_count": 0,
             "leads": [],
-            "pipeline_limit": URL_MATCHED_PIPELINE_LIMIT,
+            "pipeline_limit": plan_cap,
         }
 
     companies = (
@@ -241,7 +245,7 @@ def leads_match_submitted_url(
         "matching_mode": "matched",
         "match_count": len(rows),
         "leads": rows,
-        "pipeline_limit": URL_MATCHED_PIPELINE_LIMIT,
+        "pipeline_limit": plan_cap,
     }
 
 

@@ -5,6 +5,8 @@ import { ArrowRight, Copy, CheckCheck, Mail, Eye, LockKeyhole } from "lucide-rea
 import { Link } from "wouter";
 import { cleanAndClampText } from "@/lib/text";
 import { signupHrefForLead } from "@/lib/signupHref";
+import PixelIcon from "@/components/PixelIcon";
+import { KARE_FACE } from "@/lib/kareIcons";
 
 type DealLike = {
   id: number;
@@ -78,6 +80,7 @@ export default function PipelineOutreachValuePanel({
                   : "mt-2 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 py-2 text-[11px] font-bold text-white hover:bg-blue-800"
               }
             >
+              <PixelIcon map={KARE_FACE} scale={2} fill={dark ? "#05271e" : "#ffffff"} background="transparent" />
               Unlock draft
               <ArrowRight className="h-3 w-3" />
             </Link>
@@ -130,19 +133,22 @@ export default function PipelineOutreachValuePanel({
             </button>
           )}
           {hasSession ? (
-            <button
-              type="button"
-              onClick={onCopy}
-              className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-semibold"
-              style={
-                copied
-                  ? { background: "rgba(52,211,153,0.12)", color: dark ? "#6ee7b7" : "#047857" }
-                  : { background: "rgba(255,176,0,0.12)", color: dark ? "#fcd34d" : "#b45309" }
-              }
-            >
-              {copied ? <CheckCheck className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              {copied ? "Copied" : "Copy"}
-            </button>
+            <span className="inline-flex items-center gap-1">
+              <PixelIcon map={KARE_FACE} scale={2} fill="#3ecf8e" background="transparent" />
+              <button
+                type="button"
+                onClick={onCopy}
+                className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-semibold"
+                style={
+                  copied
+                    ? { background: "rgba(52,211,153,0.12)", color: dark ? "#6ee7b7" : "#047857" }
+                    : { background: "rgba(255,176,0,0.12)", color: dark ? "#fcd34d" : "#b45309" }
+                }
+              >
+                {copied ? <CheckCheck className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copied ? "Copied" : "Copy"}
+              </button>
+            </span>
           ) : null}
         </div>
       </div>
@@ -187,6 +193,7 @@ export default function PipelineOutreachValuePanel({
             href={signupHref}
             className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2 text-[11px] font-bold text-[#05271e] hover:bg-emerald-400"
           >
+            <PixelIcon map={KARE_FACE} scale={2} fill="#05271e" background="transparent" />
             Sign up free — copy draft
             <ArrowRight className="h-3 w-3" />
           </Link>

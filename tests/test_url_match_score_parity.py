@@ -1,6 +1,12 @@
 """URL submit match: score OEM profile against equally scored buyer opportunities."""
 
-from app.api.robot_ready import URL_MATCHED_PIPELINE_LIMIT, match_companies
+from app.api.robot_ready import (
+    URL_MATCHED_ANONYMOUS_LIMIT,
+    URL_MATCHED_PIPELINE_LIMIT,
+    match_companies,
+    url_matched_limit_for_plan,
+)
+from app.services.plan_entitlements import PLAN_ANONYMOUS, PLAN_FREE, PLAN_PAID
 
 
 class _FakeSession:
@@ -9,6 +15,10 @@ class _FakeSession:
 
 def test_url_matched_pipeline_limit_is_fifteen():
     assert URL_MATCHED_PIPELINE_LIMIT == 15
+    assert URL_MATCHED_ANONYMOUS_LIMIT == 5
+    assert url_matched_limit_for_plan(PLAN_ANONYMOUS) == 5
+    assert url_matched_limit_for_plan(PLAN_FREE) == 15
+    assert url_matched_limit_for_plan(PLAN_PAID) == 15
 
 
 def test_match_companies_prefers_score_parity(monkeypatch):
