@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   BUYER_LEADS_ANON_CAP,
   JOBS_EXAMPLE_CAP,
+  JOBS_FOR_YOUR_ROBOT_CTA,
+  JOBS_FOR_YOUR_ROBOT_HEADING,
+  JOBS_FOR_YOUR_ROBOT_KEEP_CTA,
+  JOBS_LIST_NEXT_STEP_HEADING,
+  JOBS_SCAN_STEPS,
   buyerLeadsCtaHeading,
   buyerLeadsCtaLabel,
   buyerLeadsHref,
@@ -51,7 +56,7 @@ describe("jobsWorkflow", () => {
     expect(capExampleJobs(["a", "b"])).toEqual(["a", "b"]);
   });
 
-  it("sends anonymous users to 5 buyer leads", () => {
+  it("sends anonymous users to 5 jobs, not buyer leads", () => {
     const href = buyerLeadsHref({
       robotUrl: "https://www.unitree.com/",
       signedIn: false,
@@ -61,7 +66,7 @@ describe("jobsWorkflow", () => {
     expect(href).toContain(`limit=${BUYER_LEADS_ANON_CAP}`);
     expect(href).toContain("src=jobs_all_robots");
     expect(buyerLeadsCtaLabel(false)).toBe("Jobs for your robot →");
-    expect(buyerLeadsCtaHeading(false)).toBe("Jobs for your robot");
+    expect(buyerLeadsCtaHeading(false)).toBe("Next step: jobs for your robot");
   });
 
   it("sends signed-in users to the pipeline with the same robot URL", () => {
@@ -77,7 +82,29 @@ describe("jobsWorkflow", () => {
     expect(href).toContain("industries=warehousing");
     expect(href).not.toContain("limit=");
     expect(buyerLeadsCtaLabel(true)).toBe("Jobs for your robot →");
-    expect(buyerLeadsCtaHeading(true)).toBe("Jobs for your robot");
+    expect(buyerLeadsCtaHeading(true)).toBe("Next step: jobs for your robot");
+  });
+
+  it("never uses buyer or sales-lead language on the Jobs CTA", () => {
+    for (const signedIn of [false, true]) {
+      const label = buyerLeadsCtaLabel(signedIn);
+      const heading = buyerLeadsCtaHeading(signedIn);
+      expect(label.toLowerCase()).toContain("job");
+      expect(heading.toLowerCase()).toContain("job");
+      expect(label).not.toMatch(/buyer|lead/i);
+      expect(heading).not.toMatch(/buyer|lead/i);
+    }
+    expect(JOBS_FOR_YOUR_ROBOT_CTA).toBe("Jobs for your robot →");
+    expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
+    expect(JOBS_LIST_NEXT_STEP_HEADING).toBe("Next step: jobs for your robot");
+    expect(JOBS_LIST_NEXT_STEP_HEADING).not.toMatch(/buyer|lead/i);
+    expect(JOBS_LIST_NEXT_STEP_HEADING).not.toMatch(/Next step: buyer leads/i);
+    expect(JOBS_FOR_YOUR_ROBOT_KEEP_CTA.toLowerCase()).toContain("job");
+    expect(JOBS_FOR_YOUR_ROBOT_KEEP_CTA).not.toMatch(/buyer|lead/i);
+    expect(JOBS_FOR_YOUR_ROBOT_CTA).not.toMatch(/See Buyer Leads|SEE BUYER LEADS/i);
+    for (const step of JOBS_SCAN_STEPS) {
+      expect(step).not.toMatch(/buyer|sales lead/i);
+    }
   });
 
   it("recognizes Jobs terminal handoff src values", () => {

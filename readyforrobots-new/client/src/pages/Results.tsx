@@ -39,7 +39,7 @@ import {
   oemCalResultsAnonLine,
 } from "@/lib/oemCalCopy";
 import { markReviewedFiveLeads } from "@/lib/signupWorkflowPath";
-import { isJobsHandoffSrc, buyerLeadsHref, jobsSignupHref, persistJobsHandoffSrc } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, buyerLeadsHref, jobsSignupHref, persistJobsHandoffSrc, JOBS_SCAN_STEPS, JOBS_FOR_YOUR_ROBOT_CTA, JOBS_FOR_YOUR_ROBOT_HEADING, JOBS_FOR_YOUR_ROBOT_KEEP_CTA } from "@/lib/jobsWorkflow";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -491,7 +491,8 @@ export default function Results() {
   const { session, loading: authLoading } = useAuth();
   const jobsHandoff = isJobsHandoffSrc(params.get("src"));
   const jobsSrc = persistJobsHandoffSrc(params.get("src"));
-  // Results is the 5-lead preview. More than 5 lives only on /pipeline.
+  const scanSteps = jobsHandoff ? JOBS_SCAN_STEPS : SCAN_STEPS;
+  // Results is the 5-job preview on the Jobs path. More than 5 lives only on /pipeline.
   const requestedLimit = Math.min(urlLimit, 5);
 
   useEffect(() => {
@@ -626,7 +627,7 @@ export default function Results() {
     let finished = false;
     let hardDeadline = 0;
     const stepTimer = window.setInterval(() => {
-      setScanStep((current) => Math.min(current + 1, SCAN_STEPS.length - 1));
+      setScanStep((current) => Math.min(current + 1, scanSteps.length - 1));
     }, 650);
 
     const finishScan = (mapped: Prospect[], usedFallback: boolean) => {
@@ -634,13 +635,17 @@ export default function Results() {
       finished = true;
       window.clearInterval(stepTimer);
       if (hardDeadline) window.clearTimeout(hardDeadline);
-      setScanStep(SCAN_STEPS.length - 1);
+      setScanStep(scanSteps.length - 1);
       setProspects(mapped);
       setUsingFallback(usedFallback);
       // Gate Pipeline step 4/5 — signup must not jump past this 5-lead review.
       markReviewedFiveLeads();
       if (usedFallback) {
-        toast.info("SIGNAL could not reach the matcher in time — showing sample leads while the API recovers.");
+        toast.info(
+          jobsHandoff
+            ? "Could not reach the matcher in time — showing sample jobs while the API recovers."
+            : "SIGNAL could not reach the matcher in time — showing sample leads while the API recovers.",
+        );
       }
       window.setTimeout(() => {
         if (!cancelled) {
@@ -721,7 +726,7 @@ export default function Results() {
       window.clearInterval(stepTimer);
       if (hardDeadline) window.clearTimeout(hardDeadline);
     };
-  }, [requestedLimit, sampleAccessAllowed, sampleAccessLoading, sampleMode, session?.access_token, submittedUrl]);
+  }, [jobsHandoff, requestedLimit, sampleAccessAllowed, sampleAccessLoading, sampleMode, scanSteps.length, session?.access_token, submittedUrl]);
 
   useEffect(() => {
     setSelectedIds(new Set(prospects.map((p) => p.id)));
@@ -796,7 +801,7 @@ export default function Results() {
   }
 
   // SIGNAL path can ask for signup first. Jobs handoff must show the 5
-  // buyer leads — signup is the next step after those 5, not a wall before them.
+  // jobs — signup is the next step after those 5, not a wall before them.
   if (
     !sampleMode &&
     !jobsHandoff &&
@@ -832,10 +837,10 @@ export default function Results() {
         <div className="border-b border-slate-700 bg-[#081126] px-4 py-6 sm:px-6">
           <div className="mx-auto max-w-4xl">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
-              Jobs for your robot
+              {JOBS_FOR_YOUR_ROBOT_HEADING}
             </p>
             <h1 className="mt-1 font-display text-2xl font-bold text-slate-100 sm:text-3xl">
-              Jobs for your robot
+              {JOBS_FOR_YOUR_ROBOT_HEADING}
             </h1>
             <p className="mt-1 text-sm text-slate-400">
               Same Jobs terminal. Five jobs to review. More than 5 live after signup.
@@ -913,7 +918,7 @@ export default function Results() {
               </div>
 
               <div className="w-full max-w-sm space-y-2">
-                {SCAN_STEPS.slice(0, scanStep + 1).map((step, i) => {
+                {scanSteps.slice(0, scanStep + 1).map((step, i) => {
                   const done = i < scanStep;
                   const active = i === scanStep;
                   return (
@@ -1222,7 +1227,7 @@ export default function Results() {
                       href={isSignedIn ? fullPipelineHref : resultsSignupHref}
                       className="mt-3 inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] hover:bg-emerald-300"
                     >
-                      {isSignedIn ? "Jobs for your robot →" : "Keep these jobs for your robot →"}
+                      {isSignedIn ? JOBS_FOR_YOUR_ROBOT_CTA : JOBS_FOR_YOUR_ROBOT_KEEP_CTA}
                     </Link>
                   </div>
                 </div>

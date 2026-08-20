@@ -607,10 +607,12 @@ function MatchedPipelineSkeleton({
   hostname,
   target,
   secondsLeft,
+  jobsMode = false,
 }: {
   hostname?: string;
   target: number;
   secondsLeft: number;
+  jobsMode?: boolean;
 }) {
   return (
     <div className="mx-1 mb-2 space-y-3" aria-busy="true" aria-live="polite">
@@ -622,7 +624,7 @@ function MatchedPipelineSkeleton({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <p className="text-base font-bold text-slate-100 sm:text-lg">
-                Loading sales leads
+                {jobsMode ? "Loading jobs" : "Loading sales leads"}
                 {hostname ? ` for ${hostname}` : ""}…
               </p>
               <span
@@ -633,7 +635,9 @@ function MatchedPipelineSkeleton({
               </span>
             </div>
             <p className="mt-1 text-sm font-medium leading-snug text-slate-400">
-              Matching up to {target} buyers to your robot profile. Hang tight — the queue paints as soon as it is ready.
+              {jobsMode
+                ? `Matching up to ${target} jobs to your robot. Hang tight — the list paints as soon as it is ready.`
+                : `Matching up to ${target} buyers to your robot profile. Hang tight — the queue paints as soon as it is ready.`}
             </p>
           </div>
         </div>
@@ -663,7 +667,7 @@ function MatchedPipelineSkeleton({
 }
 
 /** Compact face + countdown strip — always visible while leads hydrate. */
-function PipelineLeadsLoadingStrip({ secondsLeft }: { secondsLeft: number }) {
+function PipelineLeadsLoadingStrip({ secondsLeft, jobsMode = false }: { secondsLeft: number; jobsMode?: boolean }) {
   return (
     <div
       className="mx-1 mb-2 flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-3"
@@ -673,7 +677,9 @@ function PipelineLeadsLoadingStrip({ secondsLeft }: { secondsLeft: number }) {
       <div className="shrink-0 rounded-md border border-emerald-200 bg-white p-1.5">
         <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
       </div>
-      <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950">Loading sales leads…</p>
+      <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950">
+        {jobsMode ? "Loading jobs for your robot…" : "Loading sales leads…"}
+      </p>
       <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600" aria-label={`${secondsLeft} seconds remaining`}>
         {secondsLeft}s
       </span>
@@ -2677,8 +2683,9 @@ export default function Pipeline() {
   const pipelineSource = rotationPool.length > deals.length ? rotationPool : deals;
   const previewLimit = entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE;
   const freeLeadCap = Math.min(entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE, PIPELINE_LIMIT_FREE);
-  const freeUpgradeMessage =
-    `You’re seeing ${freeLeadCap} customer opportunities. Upgrade to Pro for the full live pipeline, unlimited saves, and automated CRM motion.`;
+  const freeUpgradeMessage = arrivedFromJobs
+    ? `You’re seeing ${freeLeadCap} jobs for your robot. Upgrade to Pro for the full live list, unlimited saves, and automated CRM motion.`
+    : `You’re seeing ${freeLeadCap} customer opportunities. Upgrade to Pro for the full live pipeline, unlimited saves, and automated CRM motion.`;
   const sessionDisplayName =
     session?.user?.user_metadata?.full_name
     || session?.user?.user_metadata?.name
@@ -4025,7 +4032,7 @@ export default function Pipeline() {
                 <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
               </div>
               <p className="min-w-0 flex-1 text-sm font-bold text-slate-100 sm:text-base">
-                Loading sales leads…
+                {arrivedFromJobs ? "Loading jobs for your robot…" : "Loading sales leads…"}
               </p>
               <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-300 sm:text-3xl">
                 {loadCountdown}s
@@ -4730,12 +4737,16 @@ export default function Pipeline() {
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="pipeline-list-shell flex min-w-0 flex-1 flex-col gap-1 overflow-y-auto">
-              {loadUiVisible ? <PipelineLeadsLoadingStrip secondsLeft={loadCountdown} /> : null}
+              {loadUiVisible ? <PipelineLeadsLoadingStrip secondsLeft={loadCountdown} jobsMode={arrivedFromJobs} /> : null}
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-3 py-2">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-300">Customer opportunities</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-300">
+                    {arrivedFromJobs ? "Jobs" : "Customer opportunities"}
+                  </p>
                   <p className="mt-0.5 text-sm font-semibold text-slate-100">
-                    {displayedDeals.length} live buyer{displayedDeals.length === 1 ? "" : "s"}
+                    {arrivedFromJobs
+                      ? `${displayedDeals.length} live job${displayedDeals.length === 1 ? "" : "s"}`
+                      : `${displayedDeals.length} live buyer${displayedDeals.length === 1 ? "" : "s"}`}
                     {!showFullPanel ? ` · ${PIPELINE_LIMIT_FREE} on Free` : ""}
                   </p>
                 </div>
@@ -4765,6 +4776,7 @@ export default function Pipeline() {
                   }
                   target={BUILD_PIPELINE_TARGET}
                   secondsLeft={loadCountdown}
+                  jobsMode={arrivedFromJobs}
                 />
               ) : showCrmStages ? (
               STAGES.filter((stage) => displayedDeals.some((d) => d.stage === stage)).map((stage) => {
@@ -5008,7 +5020,7 @@ export default function Pipeline() {
                   className="pipeline-pro-cap-row mt-2"
                 >
                   <span className="text-sm font-semibold text-white">
-                    Showing {displayedDeals.length} customer opportunities.
+                    Showing {displayedDeals.length} {arrivedFromJobs ? "jobs" : "customer opportunities"}.
                     {" "}
                     <span className="text-amber-200">Pro unlocks the full live pipeline.</span>
                   </span>
