@@ -2794,7 +2794,6 @@ export default function Pipeline() {
       ? deals.find((d) => d.id === effectiveSelectedId) ?? null
       : null);
   const selectedActivation = activations.find((a) => a.id === selectedActivationId) ?? activations[0] ?? null;
-  const isSignedIn = Boolean(session?.access_token);
   const isFirstWorkspaceRun = isSignedIn && savedLeadCount === 0;
   const hasSavedLead = savedLeadCount > 0;
   const crmDeals = deals.filter((d) => Boolean(crmAccountIdByCompanyId[d.id]));
