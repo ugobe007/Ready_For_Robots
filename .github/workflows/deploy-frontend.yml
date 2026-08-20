@@ -6,7 +6,9 @@
 #   VERCEL_TOKEN       — a Vercel access token (Account Settings → Tokens)
 #   VERCEL_ORG_ID      — the Vercel team/org id for the project
 #   VERCEL_PROJECT_ID  — the Vercel project id for readyforrobots-new
-# Until all three are set, the deploy steps are skipped (the job stays green).
+# Until all three are set, this workflow skips the CLI deploy. Production
+# still needs a Vercel Git build (Pro) or a promoted Preview of this commit.
+# A green skip is not a production deploy.
 name: Deploy frontend to Vercel
 
 on:
@@ -44,7 +46,7 @@ jobs:
         run: |
           if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Vercel secrets not set (VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID). Skipping deploy — add them in repo Settings → Secrets and variables → Actions."
+            echo "::warning::Vercel CLI secrets not set (VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID). Skipping CLI deploy. Vercel Git must build this commit (Pro) or a Preview must be promoted."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
