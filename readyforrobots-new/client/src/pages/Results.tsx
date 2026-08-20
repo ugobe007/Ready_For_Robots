@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Link, useSearch } from "wouter";
 import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,7 +39,7 @@ import {
   oemCalResultsAnonLine,
 } from "@/lib/oemCalCopy";
 import { markReviewedFiveLeads } from "@/lib/signupWorkflowPath";
-import { isJobsHandoffSrc } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, buyerLeadsHref, jobsSignupHref, persistJobsHandoffSrc } from "@/lib/jobsWorkflow";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -489,6 +490,7 @@ export default function Results() {
   const sampleName = (params.get("sample_name") || "").trim();
   const { session, loading: authLoading } = useAuth();
   const jobsHandoff = isJobsHandoffSrc(params.get("src"));
+  const jobsSrc = persistJobsHandoffSrc(params.get("src"));
   // Results is the 5-lead preview. More than 5 lives only on /pipeline.
   const requestedLimit = Math.min(urlLimit, 5);
 
@@ -579,16 +581,24 @@ export default function Results() {
   }, [requestedLimit, submittedUrl]);
 
   const fullPipelineHref = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set("src", "results_scan");
-    if (submittedUrl) params.set("url", submittedUrl);
-    if (topLeadId != null) params.set("lead", String(topLeadId));
-    return `/pipeline?${params.toString()}`;
-  }, [submittedUrl, topLeadId]);
+    if (jobsHandoff) {
+      return buyerLeadsHref({
+        robotUrl: submittedUrl,
+        signedIn: true,
+        src: jobsSrc,
+        leadId: topLeadId,
+      });
+    }
+    const q = new URLSearchParams();
+    q.set("src", "results_scan");
+    if (submittedUrl) q.set("url", submittedUrl);
+    if (topLeadId != null) q.set("lead", String(topLeadId));
+    return `/pipeline?${q.toString()}`;
+  }, [jobsHandoff, jobsSrc, submittedUrl, topLeadId]);
 
-  // After signup from Results, land back on the 5-lead preview — then Pipeline is step 3.
-  const resultsSignupNext = fullPipelineHref;
-  const resultsSignupHref = `/signup?next=${encodeURIComponent(resultsSignupNext)}&src=results_gate`;
+  const resultsSignupHref = jobsHandoff
+    ? jobsSignupHref(fullPipelineHref, jobsSrc)
+    : `/signup?next=${encodeURIComponent(fullPipelineHref)}&src=results_gate`;
 
   // Anonymous users can review 5 leads here. Signup then opens the 15-lead pipeline.
 
@@ -815,8 +825,8 @@ export default function Results() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#081126]">
-      <Header />
+    <div className={`min-h-screen flex flex-col bg-[#081126] ${jobsHandoff ? "pt-[44px]" : ""}`}>
+      {jobsHandoff ? <ExperimentHeader /> : <Header />}
 
       {submittedUrl && jobsHandoff ? (
         <div className="border-b border-slate-700 bg-[#081126] px-4 py-6 sm:px-6">
@@ -949,6 +959,7 @@ export default function Results() {
                 </div>
               )}
 
+              {!jobsHandoff ? (
               <div className="mb-3 border border-amber-400/50 bg-transparent px-2.5 py-2">
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">
                   {isSignedIn ? "Step 3 of 5 · 5 sales leads" : "Step 2 of 5 · Sign up for 5 sales leads"}
@@ -984,8 +995,9 @@ export default function Results() {
                   </p>
                 )}
               </div>
+              ) : null}
 
-              {!isSignedIn && (
+              {!isSignedIn && !jobsHandoff && (
                 <ResultsValueStrip
                   leadCount={sortedProspects.length}
                   scanUrl={submittedUrl}
@@ -1175,7 +1187,14 @@ export default function Results() {
                           <Link
                             href={
                               p.leadId != null
-                                ? `/pipeline?src=results_scan&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
+                                ? jobsHandoff
+                                  ? buyerLeadsHref({
+                                      robotUrl: submittedUrl,
+                                      signedIn: true,
+                                      src: jobsSrc,
+                                      leadId: p.leadId,
+                                    })
+                                  : `/pipeline?src=results_scan&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
                                 : fullPipelineHref
                             }
                             className="inline-flex items-center gap-1.5 border border-amber-400/50 bg-transparent px-2.5 py-1 text-[11px] font-bold text-amber-100 hover:border-amber-300"
@@ -1191,12 +1210,30 @@ export default function Results() {
                 })}
               </div>
 
+              {jobsHandoff ? (
+                <div className="sticky bottom-2 z-40 mt-6">
+                  <div className="border border-emerald-500/40 bg-[#0b162f]/95 px-4 py-3 text-center">
+                    <p className="text-[12px] text-slate-300">
+                      {isSignedIn
+                        ? "More than 5 buyer leads live on the pipeline."
+                        : "Signup keeps these 5, then the pipeline is where more than 5 live."}
+                    </p>
+                    <Link
+                      href={isSignedIn ? fullPipelineHref : resultsSignupHref}
+                      className="mt-3 inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] hover:bg-emerald-300"
+                    >
+                      {isSignedIn ? "See more buyer leads →" : "Sign up to keep these 5 →"}
+                    </Link>
+                  </div>
+                </div>
+              ) : (
               <ResultsNextStepCta
                 matchCount={sortedProspects.length}
                 pipelineHref={fullPipelineHref}
                 isSignedIn={isSignedIn}
                 signupHref={resultsSignupHref}
               />
+              )}
             </>
           )}
         </div>

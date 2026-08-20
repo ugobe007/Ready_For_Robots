@@ -33,6 +33,7 @@ import {
   isJobsProductReturnPath,
   type WorkflowPrefill,
 } from "@/lib/signupWorkflowPath";
+import { isJobsHandoffSrc } from "@/lib/jobsWorkflow";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
@@ -144,7 +145,7 @@ export default function Signup() {
   const pipelineIntent = nextRaw.startsWith("/pipeline") || /[?&]lead=\d+/.test(nextRaw);
   const resultsIntent = nextRaw.startsWith("/results");
   const robotJobsIntent =
-    params.get("src") === "robot_jobs" || isJobsProductReturnPath(nextRaw);
+    isJobsHandoffSrc(params.get("src")) || isJobsProductReturnPath(nextRaw);
   // Specific buyer the anonymous user was acting on — carried through the signup wall
   // so we restate exactly what they unlock (value-first conversion continuity).
   const buyerCo = (params.get("co") || "").trim().slice(0, 80);
@@ -657,7 +658,7 @@ export default function Signup() {
                 {hubspotIntent
                   ? "Sign up for HubSpot sync"
                   : robotJobsIntent
-                    ? "See all jobs for your robot"
+                    ? "Keep these 5 buyer leads"
                     : matchedUnlockIntent
                       ? "Company details + free account"
                       : "Start free"}
@@ -666,7 +667,7 @@ export default function Signup() {
                 {hubspotIntent
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
                   : robotJobsIntent
-                    ? "Create an account to unlock the rest of the jobs we found for your robot."
+                    ? "Create an account to keep the 5 buyer leads we found. After signup you'll get the pipeline — that's where more than 5 live."
                   : matchedUnlockIntent
                     ? "Confirm company name, robot category, and ICP — then create your account to unlock 15 matched sales leads."
                     : resultsIntent

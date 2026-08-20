@@ -44,11 +44,16 @@ import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
+  JOBS_EXAMPLE_CAP,
+  JOBS_RESTORE_ONCE_KEY,
   buyerLeadsCtaLabel,
   buyerLeadsHref,
   capExampleJobs,
+  consumeJobsWorkspaceRestoreOnce,
   jobsHeading,
   landingStageAfterConfirm,
+  readNavigationType,
+  shouldRestoreJobsWorkspace,
 } from "@/lib/jobsWorkflow";
 
 /* ------------------------------------------------------------------ */
@@ -279,12 +284,25 @@ export default function RobotJobsWorkspace() {
   const { session } = useAuth();
   const unlocked = Boolean(session);
 
-  // On reload / auth return, start in the research state when a workspace session
-  // exists — restore() (mount effect) rebuilds it. Avoids a flash of the FIND +
-  // live-tape screen before the researched robot is restored.
-  const [stage, setStage] = useState<Stage>(() =>
-    readWorkspaceSession()?.url ? "research" : "find"
-  );
+  const [stage, setStage] = useState<Stage>(() => {
+    if (typeof window === "undefined") return "find";
+    const saved = readWorkspaceSession();
+    if (!saved?.url) return "find";
+    let restoreOnce = false;
+    try {
+      restoreOnce = window.sessionStorage.getItem(JOBS_RESTORE_ONCE_KEY) === "1";
+    } catch {
+      restoreOnce = false;
+    }
+    const restoreQuery = new URLSearchParams(window.location.search).get("restore") === "1";
+    return shouldRestoreJobsWorkspace({
+      navigationType: readNavigationType(),
+      restoreOnce,
+      restoreQuery,
+    })
+      ? "research"
+      : "find";
+  });
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [matching, setMatching] = useState(false);
@@ -339,15 +357,26 @@ export default function RobotJobsWorkspace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Restore the researched robot on reload OR auth return (signup continuity).
-     Runs once on mount for everyone — not just logged-in users — so a page
-     reload no longer drops the user back to an empty FIND screen. */
+  /* Restore only on refresh, back/forward, or an auth one-shot.
+     A normal revisit of `/` must show FIND — not replay the last robot URL. */
   useEffect(() => {
     if (restoredRef.current) return;
     restoredRef.current = true;
     const saved = readWorkspaceSession();
-    if (saved?.url) {
+    const restoreOnce = consumeJobsWorkspaceRestoreOnce();
+    const restoreQuery =
+      new URLSearchParams(window.location.search).get("restore") === "1";
+    const allowRestore = shouldRestoreJobsWorkspace({
+      navigationType: readNavigationType(),
+      restoreOnce,
+      restoreQuery,
+    });
+    if (allowRestore && saved?.url) {
       void restore(saved);
+    } else {
+      clearWorkspaceSession();
+      setUrl("");
+      setStage("find");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -793,7 +822,7 @@ export default function RobotJobsWorkspace() {
             tier={active?.tier || "C"}
             matched={Boolean(active?.matched)}
             showCount={showActiveCount}
-            jobCount={active?.jobCount || 0}
+            jobCount={Math.min(JOBS_EXAMPLE_CAP, active?.jobs?.length || 0)}
             portfolioCount={portfolio.length}
             railTab={railTab}
             onTab={t => {
@@ -1093,7 +1122,7 @@ function ContextRail({
         {/* Count only appears once the robot is actually matched AND trustworthy. */}
         {matched && showCount ? (
           <span className="ml-2 font-mono text-[11px] font-bold text-emerald-300">
-            {jobCount} JOBS
+            {jobCount} EXAMPLE JOBS
           </span>
         ) : null}
       </div>

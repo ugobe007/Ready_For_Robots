@@ -9,6 +9,7 @@ import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getApiBase } from "@/lib/apiBase";
 import { readNextParam, peekPendingNext, postAuthRedirectTarget, storePendingNext, readPlanParam, storeCheckoutIntent, resolvePostAuthPath, navigateAfterAuth } from "@/lib/authNext";
+import { markJobsWorkspaceRestoreIfHome } from "@/lib/jobsWorkflow";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
 
@@ -44,7 +45,7 @@ export default function Login() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errMsg, setErrMsg] = useState("");
 
-  const redirectTarget = () => postAuthRedirectTarget("/pipeline");
+  const redirectTarget = () => postAuthRedirectTarget("/");
 
   useEffect(() => {
     const plan = readPlanParam();
@@ -64,7 +65,8 @@ export default function Login() {
       if (!authError) return;
       const { data } = await client.auth.getSession();
       if (data?.session) {
-        const dest = resolvePostAuthPath("/pipeline");
+        const dest = resolvePostAuthPath("/");
+        if (readNextParam() || peekPendingNext()) markJobsWorkspaceRestoreIfHome(dest);
         navigateAfterAuth(dest);
         return;
       }
@@ -82,14 +84,15 @@ export default function Login() {
       const session = data?.session;
       if (!session) return;
       const hasExplicitReturn = Boolean(readNextParam() || peekPendingNext());
-      const dest = resolvePostAuthPath("/pipeline");
+      const dest = resolvePostAuthPath("/");
+      if (hasExplicitReturn) markJobsWorkspaceRestoreIfHome(dest);
       try {
         const res = await fetch(`${getApiBase()}/api/user/auth-debug`, {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
         if (res.ok) {
           const j = await res.json();
-          if (j?.is_admin && !hasExplicitReturn && dest === "/pipeline") {
+          if (j?.is_admin && !hasExplicitReturn) {
             setLocation("/admin");
             return;
           }
