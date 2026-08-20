@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from app.services.robot_job_search import compose_robot_job_search
+from app.services.robot_job_search import (
+    compose_robot_job_search,
+    overlay_selected_product,
+    profile_is_research_complete,
+)
 from app.services.robot_profile_cache import (
     clear_profile_cache_memory,
     get_cached_profile,
@@ -159,3 +163,121 @@ def test_compose_uncached_returns_timings_and_top_jobs(monkeypatch):
     assert out["timings"]["total_ms"] >= 0
     assert len(out["top_jobs"]) == 5
     assert len(out["jobs"]) == 8
+
+
+def test_overlay_selected_product_stamps_sku_and_clears_choice():
+    profile = {
+        "company": {"name": "Unitree"},
+        "needs_product_choice": True,
+        "products": [{"name": "G1"}, {"name": "B2"}, {"name": "Go2"}, {"name": "H1"}],
+        "selected_product": None,
+        "facts": [{"predicate": "payload", "value": "20kg"}],
+        "sources": [{"url": "https://www.unitree.com/"}],
+    }
+    out = overlay_selected_product(profile, "G1")
+    assert out["needs_product_choice"] is False
+    assert out["selected_product"]["name"] == "G1"
+    assert profile["needs_product_choice"] is True  # original not mutated
+
+
+def test_identity_only_cache_is_not_research_complete():
+    assert profile_is_research_complete(
+        {
+            "company": {"name": "Unitree"},
+            "needs_product_choice": True,
+            "products": [{"name": "G1"}],
+            "facts": [],
+            "sources": [],
+        }
+    ) is False
+    assert profile_is_research_complete(
+        {
+            "company": {"name": "Unitree"},
+            "needs_product_choice": False,
+            "facts": [{"predicate": "payload", "value": "20kg"}],
+            "sources": [],
+        }
+    ) is True
+
+
+def test_compose_reuses_grounded_company_cache_for_sku(monkeypatch):
+    payload = {
+        "company": {"name": "Unitree"},
+        "selected_product": {"name": "G1"},
+        "products": [{"name": "G1"}, {"name": "B2"}],
+        "needs_product_choice": False,
+        "facts": [{"predicate": "payload", "value": "20kg"}],
+        "sources": [{"url": "https://www.unitree.com/g1"}],
+        "profile_confidence": "B",
+    }
+    set_cached_profile("https://www.unitree.com/", None, payload)
+    built = MagicMock()
+    monkeypatch.setattr("app.services.robot_job_search.build_robot_profile", built)
+    monkeypatch.setattr("app.services.robot_job_search.assert_public_http_url", lambda u: u)
+    monkeypatch.setattr(
+        "app.services.robot_job_search.match_jobs_from_profile",
+        lambda *a, **k: {
+            "state": "matches",
+            "robot_name": "B2",
+            "company_name": "Unitree",
+            "capabilities": [],
+            "families": [],
+            "jobs": [{"job_key": "inspection", "title": "Patrol a site"}],
+            "job_count": 8,
+            "matcher": "requirement_v1",
+            "robot_class": "quadruped",
+        },
+    )
+    out = compose_robot_job_search("https://www.unitree.com/", product="B2")
+    built.assert_not_called()
+    assert out["timings"]["cached"] is True
+    assert out["profile"]["selected_product"]["name"] == "B2"
+    assert out["state"] == "matches"
+
+
+def test_compose_does_not_match_from_identity_only_cache(monkeypatch):
+    payload = {
+        "company": {"name": "Unitree"},
+        "selected_product": None,
+        "products": [{"name": "G1"}, {"name": "B2"}],
+        "needs_product_choice": True,
+        "facts": [],
+        "sources": [],
+        "profile_confidence": "C",
+    }
+    set_cached_profile("https://www.unitree.com/", None, payload)
+
+    class _Obj:
+        def to_dict(self):
+            return {
+                "company": {"name": "Unitree"},
+                "selected_product": {"name": "G1"},
+                "products": [{"name": "G1"}, {"name": "B2"}],
+                "needs_product_choice": False,
+                "facts": [{"predicate": "payload", "value": "20kg"}],
+                "sources": [{"url": "https://www.unitree.com/g1"}],
+                "profile_confidence": "B",
+            }
+
+    built = MagicMock(return_value=_Obj())
+    monkeypatch.setattr("app.services.robot_job_search.build_robot_profile", built)
+    monkeypatch.setattr("app.services.robot_job_search.assert_public_http_url", lambda u: u)
+    monkeypatch.setattr(
+        "app.services.robot_job_search.match_jobs_from_profile",
+        lambda *a, **k: {
+            "state": "matches",
+            "robot_name": "G1",
+            "company_name": "Unitree",
+            "capabilities": [],
+            "families": [],
+            "jobs": [{"job_key": "carry", "title": "Move totes"}],
+            "job_count": 5,
+            "matcher": "requirement_v1",
+            "robot_class": "humanoid",
+        },
+    )
+    out = compose_robot_job_search("https://www.unitree.com/", product="G1")
+    built.assert_called_once()
+    assert out["timings"]["cached"] is False
+    assert out["profile"]["selected_product"]["name"] == "G1"
+

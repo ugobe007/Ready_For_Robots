@@ -4,7 +4,9 @@
  * Left = robot / context / navigation. Right = work. One deliberate state at
  * a time (submit-stability principle):
  *
- *   FIND → RESEARCH → SELECT → REVIEW PROFILE → JOBS
+ *   FIND → RESEARCH → SELECT → JOBS (all/several robots)
+ *                      SELECT → REVIEW PROFILE → JOBS (one robot)
+
  *
  * Three separated objects:
  *   ROBOT  — what did we understand?      (REVIEW PROFILE, pre-match)
@@ -39,6 +41,13 @@ import {
 import type { MatchCapability, MatchJob } from "@/lib/robotJobMatch";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
+import PixelIcon from "@/components/PixelIcon";
+import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
+import {
+  buyerLeadsHref,
+  jobsHeading,
+  landingStageAfterConfirm,
+} from "@/lib/jobsWorkflow";
 
 /* ------------------------------------------------------------------ */
 /* Types + constants                                                   */
@@ -77,6 +86,26 @@ const eyebrow =
   "font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500";
 const ctaClass =
   "inline-flex items-center justify-center gap-2 bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45";
+
+function FaceCue({
+  scale = 2,
+  onEmerald = false,
+  className = "",
+}: {
+  scale?: number;
+  onEmerald?: boolean;
+  className?: string;
+}) {
+  return (
+    <PixelIcon
+      map={KARE_FACE}
+      scale={scale}
+      fill={onEmerald ? "#04122a" : FACE_EMERALD}
+      background="transparent"
+      className={`shrink-0 ${className}`.trim()}
+    />
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /* Session persistence (signup continuity)                             */
@@ -389,50 +418,60 @@ export default function RobotJobsWorkspace() {
       return;
     }
 
-    // Portfolio — each robot independently requirement-matched before we show it.
+    // Several / all — one company-level match, then JOBS (never a dead-end catalog).
     setStage("research");
     try {
-      const results = await Promise.all(
-        names.map(name =>
-          fetchRobotJobSearch({ url: submitUrl, product: name }).catch(
-            () => null
-          )
-        )
-      );
-      const validResults = results.filter(
-        (r): r is RobotJobSearchResult => Boolean(r)
-      );
+      const search = await fetchRobotJobSearch({
+        url: submitUrl,
+        product: names[0],
+      });
       submissionIdRef.current =
-        validResults.find(r => r.robot_submission_id)?.robot_submission_id ??
-        submissionIdRef.current;
-      const analyses = validResults.map(searchToAnalysis);
-      if (analyses.length === 0) {
-        setError("We could not research those robots.");
-        setStage("select");
-        return;
-      }
-      if (analyses.length === 1) {
+        search.robot_submission_id ?? submissionIdRef.current;
+      const base = searchToAnalysis(search);
+      const analyses: RobotAnalysis[] = names.map(name => ({
+        ...base,
+        productName: name,
+      }));
+      if (landingStageAfterConfirm(analyses.length) === "review") {
         enterReviewMatched(analyses[0], submitUrl);
         return;
       }
-      setPortfolio(analyses);
-      setActiveIdx(0);
-      saveWorkspaceSession({
-        url: submitUrl,
-        products: analyses.map(a => a.productName),
-        view: "portfolio",
-        activeIdx: 0,
-      });
-      trackRobotJobsFunnel("capabilities_viewed", {
-        ...funnelBase(),
-        robots_analyzed: analyses.length,
-        company_name: analyses[0]?.companyName,
-      });
-      setStage("portfolio");
+      enterJobsFromAnalyses(analyses, submitUrl, names);
     } catch {
-      setError("Portfolio research failed.");
+      setError("We could not match jobs for those robots.");
       setStage("select");
     }
+  }
+
+  function enterJobsFromAnalyses(
+    analyses: RobotAnalysis[],
+    submitUrl: string,
+    productNames: string[],
+  ) {
+    const idx = 0;
+    const a = analyses[idx];
+    setPortfolio(analyses);
+    setActiveIdx(idx);
+    setRailTab("jobs");
+    setExpandedJob(a?.jobs[0]?.job_key ?? null);
+    saveWorkspaceSession({
+      url: submitUrl,
+      products: productNames,
+      view: "jobs",
+      activeIdx: idx,
+    });
+    trackRobotJobsFunnel("capabilities_viewed", {
+      ...funnelBase(),
+      robots_analyzed: analyses.length,
+      company_name: analyses[0]?.companyName,
+    });
+    trackRobotJobsFunnel("discovery_complete", {
+      ...funnelBase(),
+      robot_name: a?.productName,
+      job_count: a?.jobCount,
+      robots_analyzed: analyses.length,
+    });
+    setStage("jobs");
   }
 
   /** Enter the profile checkpoint (matching deferred).
@@ -576,41 +615,33 @@ export default function RobotJobsWorkspace() {
     submittedUrlRef.current = saved.url;
     const savedIdx = typeof saved.activeIdx === "number" ? saved.activeIdx : 0;
     try {
-      // Multi-robot portfolio — rebuild every robot and return to the exact one
-      // the user was on before signup (not always robot 0).
+      // Multi-robot — one company-level search, then jobs (never a catalog dead end).
       if (saved.products.length > 1) {
-        const results = await Promise.all(
-          saved.products.map(name =>
-            fetchRobotJobSearch({ url: saved.url, product: name }).catch(
-              () => null
-            )
-          )
-        );
-        const validResults = results.filter(
-          (r): r is RobotJobSearchResult => Boolean(r)
-        );
+        const res = await fetchRobotJobSearch({
+          url: saved.url,
+          product: saved.products[0],
+        });
         submissionIdRef.current =
-          validResults.find(r => r.robot_submission_id)?.robot_submission_id ??
-          submissionIdRef.current;
-        const analyses = validResults.map(searchToAnalysis);
-        if (analyses.length > 1) {
-          const idx =
-            savedIdx >= 0 && savedIdx < analyses.length ? savedIdx : 0;
-          setPortfolio(analyses);
-          setCompanyName(analyses[0].companyName);
-          setActiveIdx(idx);
-          if (saved.view === "jobs") {
-            setRailTab("jobs");
-            setExpandedJob(analyses[idx].jobs[0]?.job_key ?? null);
-            setStage("jobs");
-          } else if (saved.view === "review") {
-            setRailTab("profile");
-            setStage("review");
-          } else {
-            setStage("portfolio");
-          }
-          return;
+          res.robot_submission_id ?? submissionIdRef.current;
+        const base = searchToAnalysis(res);
+        const analyses = saved.products.map(name => ({
+          ...base,
+          productName: name,
+        }));
+        const idx =
+          savedIdx >= 0 && savedIdx < analyses.length ? savedIdx : 0;
+        setPortfolio(analyses);
+        setCompanyName(analyses[0].companyName);
+        setActiveIdx(idx);
+        if (saved.view === "review") {
+          setRailTab("profile");
+          setStage("review");
+        } else {
+          setRailTab("jobs");
+          setExpandedJob(analyses[idx].jobs[0]?.job_key ?? null);
+          setStage("jobs");
         }
+        return;
       }
       const product = saved.products[0] || undefined;
       if (saved.view === "jobs") {
@@ -708,18 +739,13 @@ export default function RobotJobsWorkspace() {
    *  toward buyers in that vertical — the backend falls back to an open match if
    *  the filter is too narrow, so this never empties the pipeline. */
   function buyersHref(industry?: string): string {
-    const robotUrl = submittedUrlRef.current || url;
-    const params = new URLSearchParams();
-    if (robotUrl) params.set("url", robotUrl);
-    const ind = (industry || "").trim();
-    if (ind) params.set("industries", ind);
-    // Carry the durable robot id so saved buyer leads are grouped under this
-    // robot in the CRM hub ("this robot → its collected buyers").
-    if (submissionIdRef.current) {
-      params.set("submission", String(submissionIdRef.current));
-    }
-    params.set("src", "robot_jobs_qualify");
-    return `/pipeline?${params.toString()}`;
+    return buyerLeadsHref({
+      robotUrl: submittedUrlRef.current || url,
+      signedIn: unlocked,
+      submissionId: submissionIdRef.current,
+      src: portfolio.length > 1 ? "jobs_all_robots" : "robot_jobs_qualify",
+      industry: unlocked ? industry : undefined,
+    });
   }
 
   function newRobot() {
@@ -865,6 +891,8 @@ export default function RobotJobsWorkspace() {
             showCounts={countsTrusted}
             onView={goToJobs}
             onReview={openReviewFor}
+            onSeeJobs={() => goToJobs(activeIdx)}
+            leadsHref={buyersHref()}
           />
         )}
 
@@ -888,6 +916,8 @@ export default function RobotJobsWorkspace() {
             buyersHref={buyersHref}
             signupHref={signupHref}
             onSeeAll={onSeeAll}
+            robotCount={portfolio.length}
+            companyName={companyName || active.companyName}
           />
         )}
       </section>
@@ -1261,6 +1291,7 @@ function SelectPanel({
           onClick={() => onConfirm(selected)}
           className={ctaClass}
         >
+          <FaceCue scale={2} onEmerald />
           {selected.length <= 1
             ? `Find jobs for ${selected[0] || "selected"} →`
             : `Find jobs for ${selected.length} robots →`}
@@ -1268,9 +1299,10 @@ function SelectPanel({
         <button
           type="button"
           onClick={() => onConfirm("all")}
-          className="inline-flex items-center justify-center border border-slate-500 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-slate-200 transition hover:border-emerald-400 hover:text-emerald-300"
+          className={ctaClass}
         >
-          All {products.length} robots
+          <FaceCue scale={2} onEmerald />
+          Find jobs for all {products.length} robots →
         </button>
       </div>
     </div>
@@ -1287,12 +1319,16 @@ function PortfolioPanel({
   showCounts,
   onView,
   onReview,
+  onSeeJobs,
+  leadsHref,
 }: {
   company: string;
   robots: RobotAnalysis[];
   showCounts: boolean;
   onView: (idx: number) => void;
   onReview: (idx: number) => void;
+  onSeeJobs: () => void;
+  leadsHref: string;
 }) {
   return (
     <div className="p-6 sm:p-8">
@@ -1300,6 +1336,16 @@ function PortfolioPanel({
       <h2 className="mt-1 font-display text-2xl font-bold text-slate-100">
         {robots.length} robots analyzed
       </h2>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <button type="button" onClick={onSeeJobs} className={ctaClass}>
+          <FaceCue scale={2} onEmerald />
+          See jobs for these robots →
+        </button>
+        <Link href={leadsHref} className={ctaClass}>
+          <FaceCue scale={2} onEmerald />
+          See 5 buyer leads →
+        </Link>
+      </div>
       <div className="mt-6 space-y-3">
         {robots.map((a, idx) => (
           <div
@@ -1542,6 +1588,8 @@ function JobsPanel({
   buyersHref,
   signupHref,
   onSeeAll,
+  robotCount = 1,
+  companyName = "",
 }: {
   analysis: RobotAnalysis;
   unlocked: boolean;
@@ -1552,17 +1600,24 @@ function JobsPanel({
   buyersHref: (industry?: string) => string;
   signupHref: string;
   onSeeAll: () => void;
+  robotCount?: number;
+  companyName?: string;
 }) {
   const baseJobs = analysis.jobs;
   const visible = unlocked ? baseJobs : baseJobs.slice(0, PREVIEW_FREE);
   const hiddenCount = Math.max(0, analysis.jobCount - visible.length);
   const shownOfTop = Math.min(TOP_SHOWN, baseJobs.length);
+  const heading = jobsHeading({
+    productName: analysis.productName,
+    companyName: companyName || analysis.companyName,
+    robotCount,
+  });
 
   return (
     <div className="p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-2xl font-bold text-slate-100">
-          Jobs for {analysis.productName}
+          {heading}
         </h2>
         <span className="font-mono text-sm font-bold text-emerald-300">
           {baseJobs.length === 0
@@ -1627,21 +1682,21 @@ function JobsPanel({
         </div>
       )}
 
-      {/* List-level next step — real buyers for this robot in the pipeline. */}
-      {unlocked && baseJobs.length > 0 && (
-        <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5 text-center">
-          <p className="font-display text-lg font-bold text-slate-100">
-            Ready to pursue this work?
-          </p>
-          <p className="mt-1 text-[12px] text-slate-400">
-            We'll show real companies hiring for {analysis.productName}'s work —
-            save the ones worth pursuing and draft outreach in your pipeline.
-          </p>
-          <Link href={buyersHref()} className={`${ctaClass} mt-4`}>
-            Find buyers hiring for {analysis.productName}'s work →
-          </Link>
-        </div>
-      )}
+      <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5 text-center">
+        <p className="font-display text-lg font-bold text-slate-100">
+          Next step: 5 buyer leads
+        </p>
+        <p className="mt-1 text-[12px] text-slate-400">
+          Real companies that need this kind of robot work
+          {robotCount > 1
+            ? ` — matched across ${robotCount} robots.`
+            : ` for ${analysis.productName}.`}
+        </p>
+        <Link href={buyersHref()} className={`${ctaClass} mt-4`}>
+          <FaceCue scale={2} onEmerald />
+          See 5 buyer leads →
+        </Link>
+      </div>
     </div>
   );
 }
