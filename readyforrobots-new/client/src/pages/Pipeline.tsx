@@ -835,7 +835,7 @@ const PIPELINE_LIMIT_PAID = PIPELINE_FEED_TOTAL;
 const BUILD_PIPELINE_TARGET = 15;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
 const PIPELINE_LEAD_READ_MS = 7_000;
-const PIPELINE_SESSION_KEY = "pipeline_feed_v6";
+const PIPELINE_SESSION_KEY = "pipeline_feed_v7";
 const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 /** Stale paint while API revalidates — avoids blank page when Fly is slow. */
 const PIPELINE_STALE_PAINT_MS = 7 * 24 * 60 * 60 * 1000;
@@ -2110,6 +2110,7 @@ export default function Pipeline() {
   const showFullPanel = panelPlan === "paid";
   const showStandardPanel = panelPlan === "free";
   const hasSession = Boolean(session?.access_token);
+  const crmActivated = savedLeadCount > 0 || Boolean(hubspotIntegration?.connected);
   /** Admin ops only — customers never see empty CRM stage columns on the market feed. */
   const showCrmStages = isAdmin;
   /** Signed-in workspace tools: save, draft, send, proposal. */
@@ -2683,7 +2684,7 @@ export default function Pipeline() {
       });
     }
 
-    if (panelPlan !== "paid" && next.length > PIPELINE_LIMIT_FREE) {
+    if (!showFullPanel && next.length > PIPELINE_LIMIT_FREE) {
       return next.slice(0, PIPELINE_LIMIT_FREE);
     }
     return next;
@@ -2695,6 +2696,7 @@ export default function Pipeline() {
     qualityBandFilter,
     qualitySort,
     panelPlan,
+    showFullPanel,
   ]);
 
   const matchedScopedDeals = useMemo(
@@ -2766,7 +2768,9 @@ export default function Pipeline() {
     ? !build25Started
       ? "Step 4 · Provide customer name and information"
       : "Step 5 of 5 · 15 sales leads"
-    : "Your next step";
+    : crmActivated
+      ? "Your next CRM action"
+      : "Activate CRM";
   const nextStepsHeadline = arrivedFromResultsScan
     ? !build25Started
       ? "Provide customer name and information to unlock 15 sales leads"
@@ -3096,9 +3100,9 @@ export default function Pipeline() {
       }));
       setSavedLeadCount((count) => count + 1);
       const nextHint = deal.outreachBody || deal.sellerBrief
-        ? "Next: pick a lead, copy the outreach draft, paste into your email, and send."
-        : "Next: pick a lead on the right, review the brief, then copy and send.";
-      toast.success(`Lead saved. ${nextHint}`);
+        ? "CRM is active. Next: copy the outreach draft, paste into your email, and send."
+        : "CRM is active. Next: review the brief on the right, then copy and send.";
+      toast.success(`Lead saved — CRM activated. ${nextHint}`);
       // Keep motion going — don't leave the user staring at a finished CTA.
       window.setTimeout(() => {
         spotlightOutreachDraft();
@@ -3974,8 +3978,8 @@ export default function Pipeline() {
               title={isAdmin ? "Active Signals → Live Pipeline" : "Live Pipeline"}
               description={
                 session?.access_token
-                  ? "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Pick a lead on the left → develop with SIGNAL → send from the panel on the right. Replies land in Inbox."
-                  : "SIGNAL automates your sales pipeline and CRM process. It continuously reads market movement, and ReadyForRobots turns that analysis into outreach-ready pipeline decisions. Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
+                  ? "Pick a buyer, activate CRM, then copy and send from the right panel. Free workspaces see 15 live opportunities — Pro unlocks the full feed."
+                  : "15 live buyer opportunities. Pick one, start a free workspace, and activate CRM to work the deal. Every row shows what to pitch — not just who to call."
               }
               stats={[
                 { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading", tone: "white" },
@@ -4332,6 +4336,22 @@ export default function Pipeline() {
                           Open selected lead
                         </button>
                       ) : null}
+                      {isSignedIn ? (
+                        <>
+                          <Link
+                            href="/crm"
+                            className="inline-flex items-center justify-center rounded-lg border border-emerald-400/50 bg-emerald-400/10 px-2.5 py-1.5 text-[11px] font-bold text-emerald-100 hover:bg-emerald-400/20"
+                          >
+                            Open native CRM
+                          </Link>
+                          <Link
+                            href="/integrations/hubspot"
+                            className="inline-flex items-center justify-center rounded-lg border border-amber-400/40 bg-amber-400/10 px-2.5 py-1.5 text-[11px] font-bold text-amber-100 hover:bg-amber-400/20"
+                          >
+                            {hubspotIntegration?.connected ? "HubSpot connected" : "Connect HubSpot"}
+                          </Link>
+                        </>
+                      ) : null}
                     </div>
                   </div>
                   ) : null}
@@ -4625,13 +4645,22 @@ export default function Pipeline() {
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="pipeline-list-shell flex min-w-0 flex-1 flex-col gap-1 overflow-y-auto">
               {loadUiVisible ? <PipelineLeadsLoadingStrip secondsLeft={loadCountdown} /> : null}
-              <div className="mb-1 flex items-baseline justify-between gap-2 px-1">
-                <p className="text-sm font-bold text-white">Customer opportunities</p>
-                <p className="text-xs font-medium text-slate-300">
-                  {panelPlan === "paid"
-                    ? `${displayedDeals.length} live`
-                    : `${displayedDeals.length} of 15 · Pro unlocks more`}
-                </p>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-3 py-2">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-300">Customer opportunities</p>
+                  <p className="mt-0.5 text-sm font-semibold text-slate-100">
+                    {displayedDeals.length} live buyer{displayedDeals.length === 1 ? "" : "s"}
+                    {!showFullPanel ? ` · ${PIPELINE_LIMIT_FREE} on Free` : ""}
+                  </p>
+                </div>
+                {!showFullPanel ? (
+                  <Link
+                    href="/pricing?upgrade=pro"
+                    className="inline-flex items-center rounded-md border border-amber-400/50 bg-amber-400 px-2.5 py-1.5 text-[11px] font-bold text-slate-950 hover:bg-amber-300"
+                  >
+                    Unlock full pipeline · Pro
+                  </Link>
+                ) : null}
               </div>
               <div className="pipeline-list-columns">
                 <div className="col-span-5">Company</div>
@@ -4654,6 +4683,7 @@ export default function Pipeline() {
               ) : showCrmStages ? (
               STAGES.filter((stage) => displayedDeals.some((d) => d.stage === stage)).map((stage) => {
                 const stageDeals = displayedDeals.filter((d) => d.stage === stage);
+                if (stageDeals.length === 0) return null;
                 const meta = STAGE_META[stage];
                 return (
                   <div key={stage}>
@@ -4772,6 +4802,7 @@ export default function Pipeline() {
               ) : (
               USER_BUCKETS.filter((bucket) => displayedDeals.some((d) => userBucketForDeal(d) === bucket)).map((bucket) => {
                 const bucketDeals = displayedDeals.filter((d) => userBucketForDeal(d) === bucket);
+                if (bucketDeals.length === 0) return null;
                 const meta = USER_BUCKET_META[bucket];
                 return (
                   <div key={bucket}>
@@ -4784,6 +4815,9 @@ export default function Pipeline() {
                         style={{ color: meta.color, background: `${meta.color}15`, fontFamily: "'JetBrains Mono', monospace" }}
                       >
                         {bucketDeals.length}
+                        {showFullPanel && !hasActiveSearch && bucketDeals.length < meta.slotCap ? (
+                          <span className="text-gray-400 font-normal"> / {meta.slotCap}</span>
+                        ) : null}
                       </span>
                     </div>
 
@@ -4902,7 +4936,7 @@ export default function Pipeline() {
 
             {/* RIGHT: selected lead detail */}
             <div
-              className="pipeline-detail-shell flex h-auto max-h-none w-full shrink-0 flex-col overflow-hidden lg:sticky lg:top-20 lg:h-[calc(100vh-100px)] lg:max-h-[calc(100vh-100px)] lg:w-[420px] xl:w-[460px]"
+              className="pipeline-detail-shell flex h-auto max-h-none w-full shrink-0 flex-col overflow-hidden lg:sticky lg:top-20 lg:h-[calc(100vh-100px)] lg:max-h-[calc(100vh-100px)] lg:w-[440px] xl:w-[480px]"
             >
               {selected ? (
                 <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -4988,6 +5022,51 @@ export default function Pipeline() {
                         </span>
                       )}
                     </div>
+                    </div>
+                  </div>
+
+                  <div className="pipeline-crm-activate">
+                    <p className="pipeline-crm-activate-kicker">
+                      {crmActivated ? "CRM is on" : "CRM next step"}
+                    </p>
+                    <p className="pipeline-crm-activate-title">
+                      {crmActivated
+                        ? "Keep this deal moving from the panel below."
+                        : "Activate CRM on this buyer to start a real pipeline — not a browse list."}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {session?.access_token ? (
+                        canSaveSelected ? (
+                          <button
+                            type="button"
+                            onClick={() => void handleSaveLead(selected)}
+                            disabled={advancingLeadId === selected.id}
+                            className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
+                          >
+                            {advancingLeadId === selected.id ? "Saving…" : "Activate CRM — save this buyer"}
+                          </button>
+                        ) : (
+                          <Link
+                            href="/crm"
+                            className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-amber-300"
+                          >
+                            Open native CRM
+                          </Link>
+                        )
+                      ) : (
+                        <Link
+                          href={signupHrefForLead(selected.id, selected.company, { src: "pipeline_crm_activate" })}
+                          className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-amber-300"
+                        >
+                          Start free workspace
+                        </Link>
+                      )}
+                      <Link
+                        href="/integrations/hubspot"
+                        className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10"
+                      >
+                        {hubspotIntegration?.connected ? "HubSpot connected" : "Connect HubSpot"}
+                      </Link>
                     </div>
                   </div>
 

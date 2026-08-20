@@ -38,7 +38,7 @@ export default function WorkspaceQuickLinks({
         <p className={`mt-0.5 text-xs ${dark ? "text-slate-300" : "text-gray-600"}`}>
           Pick a buyer → Activate CRM by saving → copy the draft and send from the right panel.{" "}
           {savedCount > 0
-            ? `${savedCount} in your CRM.`
+            ? `${savedCount} saved in your CRM.`
             : "Save your first buyer to activate CRM."}
         </p>
       </div>

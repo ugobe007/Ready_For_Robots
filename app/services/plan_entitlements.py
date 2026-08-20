@@ -248,7 +248,7 @@ def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple
 
     trimmed = trimmed_hot + trimmed_warm + trimmed_cold
 
-    # Preview plans should not collapse when one bucket (often monitoring) is sparse.
+    # Preview/free feeds should not collapse when one bucket (often monitoring) is sparse.
     # Backfill remaining slots from highest-priority leftovers while preserving cap.
     preview_cap = pipeline_limit_for_plan(plan)
     if plan != PLAN_PAID and len(trimmed) < preview_cap:
