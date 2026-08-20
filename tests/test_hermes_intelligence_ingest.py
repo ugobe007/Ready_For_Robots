@@ -176,3 +176,29 @@ def test_vendor_news_ingest_dry_run(monkeypatch):
     assert body["accepted"] == 1
     assert body["results"][0]["dry_run"] is True
     assert body["results"][0]["news_id"].startswith("VN-")
+
+
+def test_infer_qualify_requires_auth(monkeypatch):
+    monkeypatch.setenv("ADMIN_KEY", "test-admin-secret")
+    monkeypatch.delenv("SCRAPER_CRON_TOKEN", raising=False)
+    from app.main import app
+
+    client = TestClient(app)
+    r = client.post(
+        "/api/v1/market-graph/infer-qualify",
+        json={"dry_run": True, "limit": 2},
+    )
+    assert r.status_code == 403
+
+
+def test_daily_digest_send_requires_auth(monkeypatch):
+    monkeypatch.setenv("ADMIN_KEY", "test-admin-secret")
+    monkeypatch.delenv("SCRAPER_CRON_TOKEN", raising=False)
+    from app.main import app
+
+    client = TestClient(app)
+    r = client.post(
+        "/api/v1/market-graph/daily-digest-send",
+        json={"force": False},
+    )
+    assert r.status_code == 403

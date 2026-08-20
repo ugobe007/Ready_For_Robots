@@ -1,8 +1,8 @@
 """
 Industry strategic brief — CB Insights / research-style synthesis from live signals.
 
-Uses OpenAI when OPENAI_API_KEY is set; otherwise a deterministic heuristic from
-the same aggregates as the daily analytics report.
+Uses the local heuristic / inference engine by default. Paid OpenAI/Anthropic
+briefs require ``RFR_ALLOW_PAID_LLM=1`` (off in production Hermes/digest paths).
 """
 from __future__ import annotations
 
@@ -298,7 +298,9 @@ def _openai_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) -> 
     Generate the strategic brief via whichever LLM provider is configured.
     Returns None when no provider is available — caller falls back to heuristics.
     """
-    from app.services.llm_client import llm_json_completion, active_provider
+    from app.services.llm_client import llm_json_completion, active_provider, paid_llm_allowed
+    if not paid_llm_allowed():
+        return None  # local inference / heuristic brief only
     provider = active_provider()
     if provider is None:
         return None  # no API key — use local heuristics

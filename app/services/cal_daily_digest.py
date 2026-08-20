@@ -327,6 +327,24 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
         auto_filtered=auto_filtered,
     )
 
+    try:
+        from app.services.industry_brief_service import build_industry_brief_payload
+
+        brief = build_industry_brief_payload(db, days=1, use_cache=True)
+        take = (brief.get("executive_take") or "").strip()
+        source = brief.get("source") or "heuristic"
+        if take:
+            body = (
+                body
+                + "\n\nIndustry brief (local inference — "
+                + source
+                + ", no paid LLM)\n"
+                + take
+                + "\n"
+            )
+    except Exception:
+        logger.debug("industry brief attach skipped", exc_info=True)
+
     return {
         "date": day_label,
         "subject": f"Cal daily update — {day_label}",

@@ -12,8 +12,9 @@ Supports two providers — picked automatically from environment variables:
 Anthropic is preferred when both keys are present (it's cheaper per token for
 analytical tasks). Set LLM_PREFER_OPENAI=1 to reverse that preference.
 
-If neither key is set, callers fall back to the local heuristic engine
-(no API call — see industry_brief_service._heuristic_brief).
+Paid lookups are **off by default**. Set ``RFR_ALLOW_PAID_LLM=1`` to enable
+OpenAI/Anthropic. Otherwise callers use the local inference / heuristic engine
+(see industry_brief_service._heuristic_brief, lead_inference_engine).
 """
 from __future__ import annotations
 
@@ -32,8 +33,19 @@ def _prefer_openai() -> bool:
     return os.getenv("LLM_PREFER_OPENAI", "").strip().lower() in ("1", "true", "yes")
 
 
+def paid_llm_allowed() -> bool:
+    """Paid OpenAI/Anthropic lookups are off unless explicitly re-enabled.
+
+    Hermes, industry briefs, and digest jobs must use the local inference engine.
+    Set ``RFR_ALLOW_PAID_LLM=1`` only for a deliberate paid-LLM exception.
+    """
+    return os.getenv("RFR_ALLOW_PAID_LLM", "").strip().lower() in ("1", "true", "yes")
+
+
 def active_provider() -> str | None:
     """Returns 'anthropic', 'openai', or None (use local heuristics)."""
+    if not paid_llm_allowed():
+        return None
     if _anthropic_key() and not _prefer_openai():
         return "anthropic"
     if _openai_key():
@@ -122,7 +134,10 @@ def llm_json_completion(
     Returns None if no provider is configured (caller should use heuristics).
 
     Tries Anthropic first (when key present), falls back to OpenAI.
+    Returns None when paid LLM is disabled (default) so callers use local inference.
     """
+    if not paid_llm_allowed():
+        return None
     provider = active_provider()
 
     if provider == "anthropic":

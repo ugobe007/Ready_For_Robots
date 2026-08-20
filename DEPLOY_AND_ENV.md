@@ -42,7 +42,8 @@ Replace `ready-2-robot` with your app name from `fly.toml` if different.
 |----------|------------|
 | `DATABASE_URL` | Postgres connection string (e.g. Supabase). |
 | `SUPABASE_JWT_SECRET` | Lets the API verify logged-in users (from Supabase project settings). |
-| `OPENAI_API_KEY` | Optional. If set, the **industry strategic brief** uses OpenAI; if unset, a rule-based brief is used. |
+| `OPENAI_API_KEY` | Unused for lookups unless `RFR_ALLOW_PAID_LLM=1`. Industry brief, Hermes qualify, and digest use the local inference engine. |
+| `RFR_ALLOW_PAID_LLM` | Default off. Set `1` only to temporarily re-enable OpenAI/Anthropic JSON completions. |
 | `NEWSLETTER_REGEN_SECRET` | Optional but **recommended in production**. Protects forced newsletter regeneration (see below). |
 | `ADMIN_EMAILS` | Comma-separated emails allowed to use `/admin`. Already in `fly.toml` `[env]`; you can override with secrets if you prefer. |
 

@@ -2,6 +2,27 @@
 
 Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
+## 2026-08-20 — Stop paid LLM lookups (Hermes 402)
+
+### Findings
+
+- Cron `RFR daily email digest` failed HTTP 402 on Vercel AI Gateway (no credit, including BYOK).
+- Hermes skills were pinned to `--provider ai-gateway --model anthropic/claude-sonnet-4.6`, which spends tokens on OpenAI/Anthropic sites for lookups we already run locally.
+- Industry brief, newsletter force-rebuild, and company URL resolve still called paid providers when keys were present.
+
+### Done
+
+- Paid LLM gated behind `RFR_ALLOW_PAID_LLM` (default off) in `llm_client.llm_json_completion` / `active_provider`.
+- Company OpenAI URL resolve disabled unless that flag is on.
+- Newsletter + industry brief use heuristic / inference engine.
+- New Fly endpoints: `POST /api/v1/market-graph/infer-qualify`, `POST /api/v1/market-graph/daily-digest-send`.
+- Hermes must curl those endpoints with terminal tools only — never AI Gateway.
+
+### Ranked proposals
+
+1. **[H/L]** Reconfigure Hermes crons: remove `--provider ai-gateway`. Digest cron = curl `daily-digest-send`. Qualify cron = curl `infer-qualify`. — owner: `hermes`
+2. **[M/L]** Confirm Fly secrets do **not** need `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` for digest/qualify. — owner: `ops`
+
 ## 2026-08-13 — Commercial maturity thesis
 
 ### Findings

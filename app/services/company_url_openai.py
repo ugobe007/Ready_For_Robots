@@ -38,6 +38,16 @@ _TTL_SEC = _env_float("COMPANY_URL_OPENAI_CACHE_SEC", 86400.0)
 
 
 def openai_url_resolve_enabled() -> bool:
+    """OpenAI homepage lookup is retired.
+
+    Hermes and pipeline identity use evidence URLs plus ``website_inference``
+    (DuckDuckGo, no paid LLM). Re-enable only with ``RFR_ALLOW_PAID_LLM=1``
+    *and* ``COMPANY_URL_OPENAI_RESOLVE=1``.
+    """
+    from app.services.llm_client import paid_llm_allowed
+
+    if not paid_llm_allowed():
+        return False
     return os.getenv("COMPANY_URL_OPENAI_RESOLVE", "").strip().lower() in (
         "1",
         "true",

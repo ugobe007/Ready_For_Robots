@@ -78,13 +78,14 @@ Qualify overlays use `truth_state: HERMES_OVERLAY` — not customer-confirmed CR
 
 ## Cron roster (America/Los_Angeles)
 
-Pin every job: `--provider ai-gateway --model anthropic/claude-sonnet-4.6`, `deliver=local`, toolsets `web`+`terminal`, workdir Ready_For_Robots.
+**Do not pin crons to AI Gateway, OpenAI, or Anthropic.** Those lookups burn paid tokens and fail with HTTP 402 when the Vercel gateway has no credit. Hermes must use **terminal-only** (`curl` to Fly). Intelligence runs on ReadyForRobots’ local inference engine.
 
 | Schedule | Skill |
 |----------|-------|
 | `0 6 * * *` | `research/rfr-deployment-evidence` |
 | `0 7 * * *` | `research/rfr-job-orders` |
-| `30 8 * * *` | `research/rfr-qualify-match` |
+| `30 8 * * *` | `research/rfr-qualify-match` (POST `/infer-qualify`) |
+| `0 8 * * *` | `research/rfr-daily-email-digest` (POST `/daily-digest-send`) |
 | `0 9 * * *` | `research/rfr-buying-windows` |
 | `0 10 * * *` | `research/rfr-decision-makers` |
 | `0 11 * * *` | `research/rfr-vendor-customer-news` |
@@ -117,7 +118,29 @@ curl -s -X POST "$RFR_API_BASE/api/v1/market-graph/job-signals/ingest" \
 
 Creates/updates Company + `hermes_job_order` Signal, reconstructs WORK unit.
 
-### Qualify overlay
+### Infer-qualify (preferred — local inference, no LLM)
+
+```bash
+curl -s -X POST "$RFR_API_BASE/api/v1/market-graph/infer-qualify" \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Key: $RFR_ADMIN_KEY" \
+  -d '{"dry_run": true, "limit": 12, "hermes_run_id": "smoke-infer"}'
+```
+
+Runs `lead_inference_engine` + WORK reconstruction on stored signals and writes `hermes_qualify`. Do **not** call OpenAI/Anthropic/AI Gateway to invent fit scores.
+
+### Daily digest send (no AI Gateway)
+
+```bash
+curl -s -X POST "$RFR_API_BASE/api/v1/market-graph/daily-digest-send" \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Key: $RFR_ADMIN_KEY" \
+  -d '{"force": false, "period_hours": 24}'
+```
+
+Emails the Cal digest plus a heuristic industry brief. Skill: [rfr-daily-email-digest](skills/rfr-daily-email-digest.SKILL.md).
+
+### Qualify overlay (manual / already-scored only)
 
 ```bash
 curl -s -X POST "$RFR_API_BASE/api/v1/market-graph/qualify-overlay" \
