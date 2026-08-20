@@ -14,6 +14,8 @@ export type JobsConfirmLanding = "review" | "jobs";
 
 export const JOBS_EXAMPLE_CAP = 5;
 export const BUYER_LEADS_ANON_CAP = 5;
+/** Signed-in Jobs pipeline — more than the 5-example cap, from the matcher limit. */
+export const JOBS_PIPELINE_CAP = 12;
 
 export function landingStageAfterConfirm(robotCount: number): JobsConfirmLanding {
   return robotCount > 1 ? "jobs" : "review";

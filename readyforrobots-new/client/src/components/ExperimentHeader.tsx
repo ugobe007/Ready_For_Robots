@@ -9,6 +9,8 @@ import { loginHref, clearPendingNext } from "@/lib/authNext";
 import { supabase } from "@/lib/supabase";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
+import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
+import { buyerLeadsHref } from "@/lib/jobsWorkflow";
 
 const navIdle = "text-slate-400 transition hover:text-slate-200";
 const navActive = "border-b border-emerald-400 pb-0.5 text-emerald-400";
@@ -18,6 +20,10 @@ export default function ExperimentHeader() {
   const [location] = useLocation();
   const [onJobsSlug] = useRoute("/jobs/:slug");
   const jobsActive = location === "/" || location.startsWith("/?") || Boolean(onJobsSlug);
+  const lastJobs = readJobsHandoffSnapshot();
+  const pipelineHref = lastJobs
+    ? buyerLeadsHref({ robotUrl: lastJobs.url, signedIn: true, src: "jobs_all_robots" })
+    : "/pipeline";
 
   async function signOut() {
     clearPendingNext();
@@ -44,7 +50,7 @@ export default function ExperimentHeader() {
           {session ? (
             <>
               <Link
-                href="/pipeline"
+                href={pipelineHref}
                 className={location.startsWith("/pipeline") ? navActive : navIdle}
               >
                 Pipeline

@@ -43,6 +43,7 @@ import LiveJobTape from "@/components/jobs/LiveJobTape";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
+import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import {
   JOBS_EXAMPLE_CAP,
   JOBS_FOR_YOUR_ROBOT_CTA,
@@ -763,6 +764,15 @@ export default function RobotJobsWorkspace() {
     });
   }
 
+  function persistJobsHandoff() {
+    const activeRobot = portfolio[activeIdx];
+    saveJobsHandoffSnapshot({
+      url: submittedUrlRef.current || url,
+      productName: activeRobot?.productName || "",
+      jobs: activeRobot?.jobs || [],
+    });
+  }
+
   function newRobot() {
     if (matchAbortRef.current) {
       matchAbortRef.current();
@@ -903,6 +913,7 @@ export default function RobotJobsWorkspace() {
             expandedJob={expandedJob}
             onToggle={toggleExpand}
             buyersHref={buyersHref}
+            onHandoff={persistJobsHandoff}
             robotCount={portfolio.length}
             companyName={companyName || active.companyName}
           />
@@ -1558,6 +1569,7 @@ function JobsPanel({
   expandedJob,
   onToggle,
   buyersHref,
+  onHandoff,
   robotCount = 1,
   companyName = "",
 }: {
@@ -1567,6 +1579,7 @@ function JobsPanel({
   expandedJob: string | null;
   onToggle: (job: MatchJob) => void;
   buyersHref: (industry?: string) => string;
+  onHandoff: () => void;
   robotCount?: number;
   companyName?: string;
 }) {
@@ -1630,7 +1643,7 @@ function JobsPanel({
             ? " More than 5 jobs live on the pipeline after this step."
             : " Sign up to keep these 5 jobs — more than 5 jobs live on the pipeline."}
         </p>
-        <Link href={buyersHref()} className={`${ctaClass} mt-4`}>
+        <Link href={buyersHref()} onClick={onHandoff} className={`${ctaClass} mt-4`}>
           <FaceCue scale={2} onEmerald />
           {buyerLeadsCtaLabel(unlocked)}
         </Link>

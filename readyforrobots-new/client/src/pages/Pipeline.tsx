@@ -60,7 +60,8 @@ import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
-import { isJobsHandoffSrc, buyerLeadsHref, buyerLeadsToShow } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, buyerLeadsHref, buyerLeadsToShow, JOBS_PIPELINE_CAP } from "@/lib/jobsWorkflow";
+import JobsHandoffBoard from "@/components/JobsHandoffBoard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1951,6 +1952,13 @@ export default function Pipeline() {
     }
   }, [preferUrlMatchedPipeline, submittedHostname]);
   useEffect(() => {
+    if (arrivedFromJobs) {
+      setSubmittedUrlMatches([]);
+      setSubmittedUrlMatchLoading(false);
+      setSubmittedUrlMatchError(false);
+      setSubmittedUrlWeakProfile(false);
+      return;
+    }
     if (!submittedUrl) {
       setSubmittedUrlMatches([]);
       setSubmittedUrlMatchLoading(false);
@@ -2012,7 +2020,7 @@ export default function Pipeline() {
     return () => {
       cancelled = true;
     };
-  }, [submittedUrl, matchIndustryKey, industriesFromQuery, BUILD_PIPELINE_TARGET, session?.access_token]);
+  }, [submittedUrl, matchIndustryKey, industriesFromQuery, BUILD_PIPELINE_TARGET, session?.access_token, arrivedFromJobs]);
   const firstThreeEnteredRef = useRef<FirstThreeStep | null>(null);
   const firstThreeAbandonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstThreeAbandonSignaturesRef = useRef<Set<string>>(new Set());
@@ -4018,6 +4026,21 @@ export default function Pipeline() {
       }
     };
   }, [showFirstThreeActionsProgress, nextFirstThreeStep, firstThreeActions, selected]);
+
+  if (arrivedFromJobs) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#081126] pt-[44px]">
+        <ExperimentHeader />
+        <JobsHandoffBoard
+          robotUrl={submittedUrlFromQuery}
+          cap={JOBS_PIPELINE_CAP}
+          src={submittedSrcFromQuery}
+          signedIn={isSignedIn}
+          variant="pipeline"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`pipeline-page-bg flex min-h-screen flex-col ${arrivedFromJobs ? "pt-[44px]" : ""}`}>

@@ -39,7 +39,8 @@ import {
   oemCalResultsAnonLine,
 } from "@/lib/oemCalCopy";
 import { markReviewedFiveLeads } from "@/lib/signupWorkflowPath";
-import { isJobsHandoffSrc, buyerLeadsHref, jobsSignupHref, persistJobsHandoffSrc, JOBS_SCAN_STEPS, JOBS_FOR_YOUR_ROBOT_CTA, JOBS_FOR_YOUR_ROBOT_HEADING, JOBS_FOR_YOUR_ROBOT_KEEP_CTA } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, buyerLeadsHref, jobsSignupHref, persistJobsHandoffSrc, JOBS_SCAN_STEPS, JOBS_FOR_YOUR_ROBOT_CTA, JOBS_FOR_YOUR_ROBOT_HEADING, JOBS_FOR_YOUR_ROBOT_KEEP_CTA, JOBS_EXAMPLE_CAP } from "@/lib/jobsWorkflow";
+import JobsHandoffBoard from "@/components/JobsHandoffBoard";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -611,6 +612,7 @@ export default function Results() {
   };
 
   useEffect(() => {
+    if (jobsHandoff) return;
     if (sampleMode && (sampleAccessLoading || !sampleAccessAllowed)) return;
     if (!submittedUrl) return;
     trackUrlScan(submittedUrl, "results");
@@ -796,6 +798,21 @@ export default function Results() {
             </Link>
           </div>
         </main>
+      </div>
+    );
+  }
+
+  if (jobsHandoff && submittedUrl) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#081126] pt-[44px]">
+        <ExperimentHeader />
+        <JobsHandoffBoard
+          robotUrl={submittedUrl}
+          cap={JOBS_EXAMPLE_CAP}
+          src={jobsSrc}
+          signedIn={isSignedIn}
+          variant="results"
+        />
       </div>
     );
   }
