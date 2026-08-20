@@ -52,7 +52,7 @@ export default function PipelineSalesWorkflowRail(props: Props) {
       ]
     : [
         { id: "browse", label: "1. Pick", hint: "Select the highest-fit HOT lead", icon: Target },
-        { id: "save", label: "2. Save", hint: "Add to your workspace", icon: Zap },
+        { id: "save", label: "2. Activate CRM", hint: "Save this buyer to start a real pipeline", icon: Zap },
         { id: "draft", label: "3. Draft", hint: "Copy SIGNAL outreach", icon: Mail },
         { id: "send", label: "4. Send", hint: "Send from the detail panel", icon: Mail },
         { id: "track", label: "5. Replies", hint: "Track in Inbox", icon: ArrowRight },
@@ -136,13 +136,13 @@ export default function PipelineSalesWorkflowRail(props: Props) {
                 : "Track replies in Inbox and keep curating toward your 25-lead list."
           : hasSession
             ? current === "browse" || current === "save"
-              ? "Next step: select a HOT lead, then Save it to open your working pipeline."
+              ? "Select a buyer, then activate CRM with the yellow button."
               : current === "draft"
-                ? "Next step: copy the outreach draft in the detail panel."
+                ? "Copy the outreach draft in the right panel."
                 : current === "send"
-                  ? "Next step: send the draft, then watch Inbox for replies."
-                  : "Next step: check Inbox and advance the opportunity."
-            : "Next step: browse a HOT lead, then start a free workspace to save, draft, and send."}
+                  ? "Send the draft, then watch Inbox for replies."
+                  : "Check Inbox and advance the opportunity."
+            : "Pick a buyer, then start a free workspace to activate CRM."}
       </p>
     </div>
   );
