@@ -26,10 +26,12 @@ def _timings(
     match_ms: int = 0,
     total_ms: int = 0,
     cached: bool = False,
+    sources_ms: int = 0,
 ) -> dict[str, Any]:
     return {
         "resolve_ms": int(resolve_ms),
         "profile_ms": int(profile_ms),
+        "sources_ms": int(sources_ms),
         "match_ms": int(match_ms),
         "total_ms": int(total_ms),
         "cached": bool(cached),
@@ -95,6 +97,7 @@ def compose_robot_job_search(
             "timings": _timings(
                 resolve_ms=build_timings.get("resolve_ms") or 0,
                 profile_ms=build_timings.get("profile_ms") or 0,
+                sources_ms=build_timings.get("sources_ms") or 0,
                 match_ms=0,
                 total_ms=total_ms,
                 cached=cached_hit,
@@ -132,6 +135,7 @@ def compose_robot_job_search(
         "timings": _timings(
             resolve_ms=0 if cached_hit else (build_timings.get("resolve_ms") or 0),
             profile_ms=0 if cached_hit else (build_timings.get("profile_ms") or 0),
+            sources_ms=0 if cached_hit else (build_timings.get("sources_ms") or 0),
             match_ms=match_ms,
             total_ms=total_ms,
             cached=cached_hit,

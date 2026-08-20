@@ -4,6 +4,8 @@ from __future__ import annotations
 import io
 import re
 import ssl
+import threading
+import time
 from dataclasses import dataclass, field
 from typing import Optional
 from urllib.parse import urljoin, urlparse
@@ -14,6 +16,13 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.ssl_ import create_urllib3_context
 
 from app.services.robot_url_safety import assert_public_http_url
+
+# Per-page defaults. The source pack also caps these to remaining deadline so a
+# hung OEM page cannot add another 12s after the budget is already spent.
+DEFAULT_PAGE_TIMEOUT: tuple[float, float] = (2.5, 6.0)
+DEFAULT_TEXT_TIMEOUT: tuple[float, float] = (2.0, 4.0)
+
+_tls = threading.local()
 
 _HEADERS = {
     "User-Agent": (
@@ -57,7 +66,27 @@ class _TLSFlexAdapter(HTTPAdapter):
         return super().init_poolmanager(*args, **kwargs)
 
 
-def fetch_page(url: str, *, timeout: tuple[float, float] = (3.0, 12.0)) -> FetchedPage:
+def timeout_for_deadline(
+    deadline_monotonic: float | None,
+    *,
+    default: tuple[float, float] = DEFAULT_PAGE_TIMEOUT,
+    min_total: float = 0.4,
+) -> tuple[float, float] | None:
+    """Connect/read timeouts that fit remaining deadline, or None if too late."""
+    connect, read = default
+    if deadline_monotonic is None:
+        return (connect, read)
+    left = deadline_monotonic - time.monotonic()
+    if left < min_total:
+        return None
+    connect = min(connect, max(0.3, left * 0.3))
+    read = min(read, max(0.3, left - connect))
+    if connect + read < min_total:
+        return None
+    return (connect, read)
+
+
+def fetch_page(url: str, *, timeout: tuple[float, float] = DEFAULT_PAGE_TIMEOUT) -> FetchedPage:
     safe = assert_public_http_url(url)
     notes: list[str] = []
     degraded = False
@@ -149,7 +178,7 @@ def fetch_page(url: str, *, timeout: tuple[float, float] = (3.0, 12.0)) -> Fetch
     )
 
 
-def fetch_text(url: str, *, timeout: tuple[float, float] = (3.0, 8.0)) -> tuple[int, str]:
+def fetch_text(url: str, *, timeout: tuple[float, float] = DEFAULT_TEXT_TIMEOUT) -> tuple[int, str]:
     """Fetch raw response text (e.g. an XML sitemap) — fail-open.
 
     Returns (status_code, text). On any error returns (0, ""). Goes through the
@@ -170,14 +199,35 @@ def fetch_text(url: str, *, timeout: tuple[float, float] = (3.0, 8.0)) -> tuple[
         return 0, ""
 
 
+def _session() -> requests.Session:
+    """Thread-local pooled session so parallel source fetches reuse TLS."""
+    sess = getattr(_tls, "session", None)
+    if sess is None:
+        sess = requests.Session()
+        adapter = HTTPAdapter(pool_connections=8, pool_maxsize=8, max_retries=0)
+        sess.mount("http://", adapter)
+        sess.mount("https://", adapter)
+        sess.headers.update(_HEADERS)
+        sess.max_redirects = 5
+        _tls.session = sess
+    return sess
+
+
 def _get(url: str, *, timeout: tuple[float, float]) -> requests.Response:
-    session = requests.Session()
+    session = _session()
     try:
-        return session.get(url, headers=_HEADERS, timeout=timeout, allow_redirects=True)
+        return session.get(url, timeout=timeout, allow_redirects=True)
     except requests.exceptions.SSLError:
         # One flexible TLS retry on same URL — never rewrite to acquirer host.
-        session.mount("https://", _TLSFlexAdapter())
-        return session.get(url, headers=_HEADERS, timeout=timeout, allow_redirects=True)
+        # Cap retry so a brittle handshake cannot double the page wait.
+        retry = (min(2.0, timeout[0]), min(4.0, timeout[1]))
+        if retry[0] + retry[1] < 1.5:
+            raise
+        flex = requests.Session()
+        flex.mount("https://", _TLSFlexAdapter())
+        flex.headers.update(_HEADERS)
+        flex.max_redirects = 5
+        return flex.get(url, timeout=retry, allow_redirects=True)
 
 
 def _html_to_text(soup: BeautifulSoup) -> str:

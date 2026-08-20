@@ -77,9 +77,7 @@ def get_cached_profile(url: str, product: str | None = None) -> Optional[dict[st
         return value
 
 
-def set_cached_profile(url: str, product: str | None, payload: dict[str, Any]) -> None:
-    if not isinstance(payload, dict) or not payload.get("company"):
-        return
+def _store_cached_profile(url: str, product: str | None, payload: dict[str, Any]) -> None:
     key = profile_cache_key(url, product)
     ttl = profile_cache_ttl_sec()
     try:
@@ -92,6 +90,17 @@ def set_cached_profile(url: str, product: str | None, payload: dict[str, Any]) -
         if len(_mem) > _MEM_MAX:
             oldest = min(_mem.items(), key=lambda kv: kv[1][0])[0]
             _mem.pop(oldest, None)
+
+
+def set_cached_profile(url: str, product: str | None, payload: dict[str, Any]) -> None:
+    if not isinstance(payload, dict) or not payload.get("company"):
+        return
+    _store_cached_profile(url, product, payload)
+    # First submit caches under product=None; confirming that SKU should hit.
+    selected = (payload.get("selected_product") or {}).get("name")
+    if isinstance(selected, str) and selected.strip():
+        if profile_cache_key(url, selected) != profile_cache_key(url, product):
+            _store_cached_profile(url, selected, payload)
 
 
 def clear_profile_cache_memory() -> None:

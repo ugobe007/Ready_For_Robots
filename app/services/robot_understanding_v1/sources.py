@@ -1,13 +1,22 @@
 """Phase 2 — typed source pack (deliberate, ranked — not a generic crawl)."""
 from __future__ import annotations
 
+import os
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Optional
 from urllib.parse import urlparse
 
-from app.services.robot_understanding_v1.fetch import FetchedPage, fetch_page, fetch_text
+from app.services.robot_understanding_v1.fetch import (
+    DEFAULT_PAGE_TIMEOUT,
+    DEFAULT_TEXT_TIMEOUT,
+    FetchedPage,
+    fetch_page,
+    fetch_text,
+    timeout_for_deadline,
+)
 from app.services.robot_understanding_v1.models import RobotSource, SourceType
 
 # Sitemap discovery is a bounded fallback for thin/JS homepages whose product
@@ -106,6 +115,18 @@ _HUB_BONUS = {
 # Allowed into pack only when pack would otherwise be empty (identity fallback)
 _IDENTITY_ONLY_TYPES = frozenset({"homepage"})
 
+_MAX_FETCH_WORKERS = 6
+_PREFETCH_CAP = 12
+
+
+def _fetch_workers() -> int:
+    raw = (os.getenv("ROBOT_PROFILE_FETCH_WORKERS") or str(_MAX_FETCH_WORKERS)).strip()
+    try:
+        n = int(raw)
+    except ValueError:
+        n = _MAX_FETCH_WORKERS
+    return max(1, min(8, n))
+
 
 @dataclass
 class CollectedSource:
@@ -201,7 +222,12 @@ def discover_from_sitemap(
         for sm in ("/sitemap.xml", "/sitemap_index.xml"):
             if deadline_monotonic is not None and time.monotonic() >= deadline_monotonic:
                 break
-            status, body = fetch_text(origin + sm)
+            text_timeout = timeout_for_deadline(
+                deadline_monotonic, default=DEFAULT_TEXT_TIMEOUT
+            )
+            if text_timeout is None:
+                break
+            status, body = fetch_text(origin + sm, timeout=text_timeout)
             if status and body:
                 locs.extend(_LOC_RE.findall(body))
             if locs:
@@ -217,7 +243,12 @@ def discover_from_sitemap(
                 break
             if deadline_monotonic is not None and time.monotonic() >= deadline_monotonic:
                 break
-            status, body = fetch_text(cm)
+            text_timeout = timeout_for_deadline(
+                deadline_monotonic, default=DEFAULT_TEXT_TIMEOUT
+            )
+            if text_timeout is None:
+                break
+            status, body = fetch_text(cm, timeout=text_timeout)
             if status and body:
                 page_locs.extend(u for u in _LOC_RE.findall(body) if not u.lower().rstrip("/").endswith(".xml"))
 
@@ -391,11 +422,14 @@ def collect_source_pack(
     def _try_fetch(url: str, stype: SourceType, conf: float, hint: str) -> Optional[CollectedSource]:
         if _past_deadline() and _norm(url) != _norm(home.final_url):
             return None
+        timeout = timeout_for_deadline(deadline_monotonic, default=DEFAULT_PAGE_TIMEOUT)
+        if timeout is None and _norm(url) != _norm(home.final_url):
+            return None
         try:
             if _norm(url) == _norm(home.final_url):
                 page = home
             else:
-                page = fetch_page(url)
+                page = fetch_page(url, timeout=timeout or DEFAULT_PAGE_TIMEOUT)
         except Exception:
             return None
         if getattr(page, "fetch_degraded", False) and not (page.text or "").strip():
@@ -443,25 +477,87 @@ def collect_source_pack(
         )
         return CollectedSource(source=src, page=page)
 
-    for _score, url, stype, conf, hint in candidates:
-        if _past_deadline() and out:
-            break
+    def _run_wave(
+        batch: list[tuple[str, SourceType, float, str]],
+    ) -> dict[str, Optional[CollectedSource]]:
+        found: dict[str, Optional[CollectedSource]] = {}
+        if not batch:
+            return found
+        workers = min(_fetch_workers(), len(batch))
+        if workers <= 1:
+            for url, stype, conf, hint in batch:
+                found[_norm(url)] = _try_fetch(url, stype, conf, hint)
+            return found
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futs = {
+                pool.submit(_try_fetch, url, stype, conf, hint): url
+                for url, stype, conf, hint in batch
+            }
+            wait_s = None
+            if deadline_monotonic is not None:
+                wait_s = max(0.05, deadline_monotonic - time.monotonic() + 0.15)
+            try:
+                for fut in as_completed(futs, timeout=wait_s):
+                    url = futs[fut]
+                    try:
+                        found[_norm(url)] = fut.result()
+                    except Exception:
+                        found[_norm(url)] = None
+            except TimeoutError:
+                for fut, url in futs.items():
+                    if _norm(url) not in found:
+                        found[_norm(url)] = None
+        return found
+
+    def _take_batch(
+        ranked: list[tuple[float, str, SourceType, float, str]],
+        *,
+        skip_identity: bool,
+        limit: int,
+    ) -> list[tuple[str, SourceType, float, str]]:
+        batch: list[tuple[str, SourceType, float, str]] = []
+        local = set(seen)
+        for _score, url, stype, conf, hint in ranked:
+            if skip_identity and stype in _IDENTITY_ONLY_TYPES:
+                continue
+            key = _norm(url)
+            if key in local:
+                continue
+            local.add(key)
+            batch.append((url, stype, conf, hint))
+            if len(batch) >= limit:
+                break
+        return batch
+
+    def _keep(url: str, item: Optional[CollectedSource]) -> None:
+        if not item or len(out) >= max_sources:
+            return
         key = _norm(url)
-        if key in seen:
-            continue
-        if stype in _IDENTITY_ONLY_TYPES:
-            continue
-        item = _try_fetch(url, stype, conf, hint)
-        if not item:
-            continue
         final_key = _norm(item.page.final_url)
-        if final_key in seen:
-            continue
+        if key in seen or final_key in seen:
+            return
         seen.add(key)
         seen.add(final_key)
         out.append(item)
+
+    prefetch_limit = min(_PREFETCH_CAP, max(max_sources * 2, 8))
+    wave = _take_batch(candidates, skip_identity=True, limit=prefetch_limit)
+    fetched = _run_wave(wave)
+    for _score, url, stype, conf, hint in candidates:
+        if _past_deadline() and out:
+            break
         if len(out) >= max_sources:
             break
+        key = _norm(url)
+        if key in seen or stype in _IDENTITY_ONLY_TYPES:
+            continue
+        if key in fetched:
+            item = fetched[key]
+        elif not _past_deadline():
+            item = _try_fetch(url, stype, conf, hint)
+        else:
+            item = None
+        _keep(url, item)
 
     if len(out) < max_sources:
         product_pages = [c for c in out if c.source.source_type == "product"]
@@ -505,23 +601,15 @@ def collect_source_pack(
                     score += 40
                 hop_cands.append((score, url, stype, conf, anchor))
             hop_cands.sort(key=lambda t: (-t[0], t[1]))
+            hop_wave = _take_batch(hop_cands, skip_identity=True, limit=prefetch_limit)
+            hop_fetched = _run_wave(hop_wave)
             for _score, url, stype, conf, hint in hop_cands:
-                if len(out) >= max_sources:
-                    break
-                if _past_deadline():
+                if len(out) >= max_sources or _past_deadline():
                     break
                 key = _norm(url)
                 if key in seen:
                     continue
-                item = _try_fetch(url, stype, conf, hint)
-                if not item:
-                    continue
-                final_key = _norm(item.page.final_url)
-                if final_key in seen:
-                    continue
-                seen.add(key)
-                seen.add(final_key)
-                out.append(item)
+                _keep(url, hop_fetched.get(key))
 
     if len(out) < 2:
         for _score, url, stype, conf, hint in candidates:
