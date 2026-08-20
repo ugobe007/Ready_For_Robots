@@ -1307,10 +1307,6 @@
     @apply text-slate-100 leading-tight tracking-tight;
   }
 
-  .pipeline-page-header p {
-    @apply text-slate-400 leading-relaxed;
-  }
-
   .pipeline-metrics-grid {
     @apply grid grid-cols-2 gap-2.5 border-b border-slate-300 p-3 lg:grid-cols-4;
     background-color: var(--pipeline-panel-bg);
@@ -1331,7 +1327,7 @@
   }
 
   .pipeline-tier-title {
-    @apply text-xs font-bold tracking-tight text-slate-200;
+    @apply text-sm font-bold tracking-tight text-white;
   }
 
   .pipeline-deals-layout {
@@ -1340,7 +1336,7 @@
   }
 
   .pipeline-list-columns {
-    @apply mb-1.5 hidden grid-cols-12 gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 sm:grid;
+    @apply mb-1.5 hidden grid-cols-12 gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-2.5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-200 sm:grid;
     background-color: var(--pipeline-panel-bg);
   }
 
@@ -1356,6 +1352,61 @@
 
   .pipeline-deal-row-hover {
     @apply hover:border-slate-500 hover:bg-white/5 hover:shadow-[0_12px_22px_-16px_rgba(0,0,0,0.6)];
+  }
+
+  .pipeline-company-name {
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .pipeline-deal-action {
+    color: #dbe4ee !important;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  .pipeline-crm-motion {
+    @apply rounded-2xl border px-4 py-4 shadow-[0_16px_36px_-24px_rgba(0,0,0,0.85)] sm:px-5;
+  }
+
+  .pipeline-crm-motion-activate {
+    @apply border-amber-400/55 bg-gradient-to-br from-[#1a1408] via-[#0b162f] to-[#081126];
+  }
+
+  .pipeline-crm-motion-live {
+    @apply border-emerald-400/45 bg-[#0b162f];
+  }
+
+  .pipeline-crm-motion-kicker {
+    color: #6ee7b7 !important;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .pipeline-crm-motion-title {
+    color: #ffffff !important;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-top: 0.25rem;
+  }
+
+  .pipeline-crm-motion-body {
+    color: #cbd5e1 !important;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin-top: 0.35rem;
+    max-width: 42rem;
+  }
+
+  .pipeline-pro-cap-row {
+    @apply mx-1 mb-2 flex flex-col gap-2 rounded-xl border border-amber-400/40 bg-[#14100a] px-4 py-3 sm:flex-row sm:items-center sm:justify-between;
   }
 
   .pipeline-list-shell {
@@ -1380,13 +1431,26 @@
     @apply relative pl-3.5;
   }
 
-  .pipeline-detail-header h2 {
-    font-family: "Space Grotesk", system-ui, sans-serif;
-    @apply text-slate-100 leading-tight tracking-tight;
+  .pipeline-detail-header .sb-kicker {
+    color: #6ee7b7 !important;
+    font-size: 0.75rem !important;
+    font-weight: 800;
+    letter-spacing: 0.14em;
   }
 
-  .pipeline-detail-header p {
-    @apply text-slate-400 leading-relaxed;
+  .pipeline-detail-company {
+    color: #ffffff !important;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+
+  .pipeline-detail-meta {
+    color: #e2e8f0 !important;
+    font-size: 0.875rem;
+    line-height: 1.4;
   }
 
   .pipeline-score-badge {
