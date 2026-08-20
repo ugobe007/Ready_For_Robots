@@ -7,6 +7,7 @@ from app.services.robot_job_search import (
     compose_robot_job_search,
     overlay_selected_product,
     profile_is_research_complete,
+    profile_is_worth_caching,
 )
 from app.services.robot_profile_cache import (
     clear_profile_cache_memory,
@@ -280,4 +281,55 @@ def test_compose_does_not_match_from_identity_only_cache(monkeypatch):
     built.assert_called_once()
     assert out["timings"]["cached"] is False
     assert out["profile"]["selected_product"]["name"] == "G1"
+
+
+def test_low_coverage_profile_is_not_research_complete():
+    thin = {
+        "company": {"name": "1X"},
+        "selected_product": {"name": "Neo"},
+        "needs_product_choice": False,
+        "facts": [{"predicate": "carrying_capacity", "value": 18}],
+        "sources": [{"url": "https://www.1x.tech/neo"}],
+        "coverage_level": "low",
+        "profile_confidence": "C",
+    }
+    assert profile_is_research_complete(thin) is False
+    assert profile_is_worth_caching(thin) is False
+    grounded = {**thin, "coverage_level": "medium"}
+    assert profile_is_research_complete(grounded) is True
+    assert profile_is_worth_caching(grounded) is True
+
+
+def test_compose_does_not_cache_low_coverage(monkeypatch):
+    class _Obj:
+        def to_dict(self):
+            return {
+                "company": {"name": "1X"},
+                "selected_product": {"name": "Neo"},
+                "products": [{"name": "Neo"}],
+                "needs_product_choice": False,
+                "facts": [{"predicate": "carrying_capacity", "value": 18}],
+                "sources": [{"url": "https://www.1x.tech/neo"}],
+                "coverage_level": "low",
+                "profile_confidence": "C",
+            }
+
+    monkeypatch.setattr("app.services.robot_job_search.build_robot_profile", MagicMock(return_value=_Obj()))
+    monkeypatch.setattr("app.services.robot_job_search.assert_public_http_url", lambda u: u)
+    monkeypatch.setattr(
+        "app.services.robot_job_search.match_jobs_from_profile",
+        lambda *a, **k: {
+            "state": "could_not_understand",
+            "robot_name": "Neo",
+            "company_name": "1X",
+            "capabilities": [],
+            "families": [],
+            "jobs": [],
+            "job_count": 0,
+            "matcher": "requirement_v1",
+            "robot_class": None,
+        },
+    )
+    compose_robot_job_search("https://www.1x.tech/neo")
+    assert get_cached_profile("https://www.1x.tech/neo", None) is None
 

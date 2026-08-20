@@ -115,3 +115,41 @@ def test_new_product_classes_and_morphology():
         pcs, morph = _product_class_and_morph(text)
         assert cls in pcs, (cls, pcs)
         assert morph == cls, (cls, morph)
+
+
+def test_ip_and_payload_are_not_quadruped():
+    from app.services.robot_understanding_v1.coverage import infer_morphology
+    from app.services.robot_understanding_v1.models import RobotFact
+
+    facts = [
+        RobotFact.create(
+            "Neo", "carrying_capacity", 18, source_id="s0", units="lb",
+            evidence_span="Payload 18 lb",
+        ),
+        RobotFact.create(
+            "Neo", "ingress_protection", "IP68", source_id="s0",
+            evidence_span="IP68",
+        ),
+    ]
+    assert infer_morphology(facts) == "generic"
+
+
+def test_humanoid_product_class_derives_manipulate():
+    from app.services.robot_capability_derive import derive_capabilities
+
+    profile = {
+        "selected_product": {"name": "Neo"},
+        "company": {"name": "1X"},
+        "facts": [
+            {
+                "predicate": "product_class",
+                "value": "humanoid",
+                "epistemic": "explicit",
+                "confidence": 0.9,
+                "evidence_span": "fully electronic humanoid robot",
+                "source_id": "s0",
+            }
+        ],
+    }
+    caps = derive_capabilities(profile)
+    assert caps["manipulate"].present is True

@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import io
+import json
 import re
 import ssl
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -230,8 +231,104 @@ def _get(url: str, *, timeout: tuple[float, float]) -> requests.Response:
         return flex.get(url, timeout=retry, allow_redirects=True)
 
 
+_JSON_SCRIPT_TYPES = frozenset(
+    {
+        "application/json",
+        "application/ld+json",
+        "application/ld+json; charset=utf-8",
+    }
+)
+_JSON_KEEP_TERMS = re.compile(
+    r"\b(humanoid|quadruped|bipedal|payload|autonomous|lidar|slam|"
+    r"manipulator|cobot|amr|dexterous|bimanual|gripper|android)\b",
+    re.I,
+)
+_EMBEDDED_JSON_CAP = 20_000
+
+
+def _keep_json_string(value: str) -> bool:
+    """Keep prose / capability language; drop URLs, hashes, asset paths."""
+    s = (value or "").strip()
+    if not (8 <= len(s) <= 800):
+        return False
+    if s.startswith(("http://", "https://", "/", "data:")):
+        return False
+    if re.fullmatch(r"[0-9a-fA-F-]{20,}", s):
+        return False
+    if re.search(r"\.(png|jpe?g|gif|webp|svg|mp4|webm)(\?|$)", s, re.I):
+        return False
+    if " " in s or _JSON_KEEP_TERMS.search(s):
+        return True
+    return False
+
+
+def _walk_json_strings(obj: Any, out: list[str], *, budget: int) -> None:
+    if len(out) >= budget:
+        return
+    if isinstance(obj, str):
+        if _keep_json_string(obj):
+            out.append(re.sub(r"\s+", " ", obj.strip()))
+        return
+    if isinstance(obj, dict):
+        # Keep sibling strings together so "NEO" stays near "humanoid robot".
+        local: list[str] = []
+        nested: list[Any] = []
+        for v in obj.values():
+            if isinstance(v, str):
+                if _keep_json_string(v):
+                    local.append(re.sub(r"\s+", " ", v.strip()))
+            else:
+                nested.append(v)
+        if local:
+            out.append(" ".join(local))
+        for v in nested:
+            _walk_json_strings(v, out, budget=budget)
+        return
+    if isinstance(obj, list):
+        for v in obj:
+            _walk_json_strings(v, out, budget=budget)
+
+
+def _embedded_json_text(soup: BeautifulSoup) -> str:
+    """Manufacturer claims often live in Next.js / JSON-LD, not visible HTML.
+
+    Stripping every <script> before reading them is why JS product pages
+    (1X NEO) produced payload/IP facts and UNKNOWN class/mobility/autonomy.
+    This is source collection, not a v1 extractor retune.
+    """
+    chunks: list[str] = []
+    for script in soup.find_all("script"):
+        stype = (script.get("type") or "").strip().lower()
+        sid = (script.get("id") or "").strip()
+        if sid != "__NEXT_DATA__" and stype not in _JSON_SCRIPT_TYPES:
+            continue
+        raw = script.string or script.get_text() or ""
+        raw = raw.strip()
+        if not raw or raw[0] not in "{[":
+            continue
+        try:
+            data = json.loads(raw)
+        except Exception:
+            continue
+        _walk_json_strings(data, chunks, budget=80)
+        if sum(len(c) for c in chunks) >= _EMBEDDED_JSON_CAP:
+            break
+    if not chunks:
+        return ""
+    # Preserve order, drop exact duplicates.
+    seen: set[str] = set()
+    uniq: list[str] = []
+    for c in chunks:
+        if c not in seen:
+            seen.add(c)
+            uniq.append(c)
+    blob = " ".join(uniq)
+    return blob[:_EMBEDDED_JSON_CAP]
+
+
 def _html_to_text(soup: BeautifulSoup) -> str:
     """Preserve table/spec density better than flat get_text collapse."""
+    embedded = _embedded_json_text(soup)
     for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
 
@@ -262,7 +359,10 @@ def _html_to_text(soup: BeautifulSoup) -> str:
             dl.replace_with(soup.new_string(" " + " ; ".join(parts) + " "))
 
     text = soup.get_text(" ", strip=True)
-    return re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"\s+", " ", text).strip()
+    if embedded:
+        text = f"{text} {embedded}".strip() if text else embedded
+    return text
 
 
 def _pdf_text(raw: bytes, url: str) -> tuple[Optional[str], str]:

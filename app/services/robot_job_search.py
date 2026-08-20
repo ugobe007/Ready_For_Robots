@@ -30,7 +30,25 @@ def profile_is_research_complete(profile: dict[str, Any] | None) -> bool:
         return False
     if profile.get("needs_product_choice"):
         return False
+    # A low-coverage C profile (payload + IP only) is not match-ready.
+    # Reusing it for 6 hours is how 1X NEO stayed on insufficient evidence.
+    if (profile.get("coverage_level") or "").lower() == "low":
+        return False
     return bool(profile.get("facts") or profile.get("sources"))
+
+
+def profile_is_worth_caching(profile: dict[str, Any] | None) -> bool:
+    """Do not pin a 6-hour miss on a thin / low-coverage profile.
+
+    1X NEO's first pass extracted payload + IP only. Caching that C/low
+    profile made every retry return insufficient evidence until TTL expired.
+    """
+    if not profile_is_research_complete(profile):
+        return False
+    assert isinstance(profile, dict)
+    if (profile.get("coverage_level") or "").lower() == "low":
+        return False
+    return True
 
 
 def overlay_selected_product(profile: dict[str, Any], product: str) -> dict[str, Any]:
@@ -104,7 +122,8 @@ def compose_robot_job_search(
         profile_dict = cached
         cached_hit = True
         if product_name and get_cached_profile(safe, product_name) is None:
-            set_cached_profile(safe, product_name, profile_dict)
+            if profile_is_worth_caching(profile_dict):
+                set_cached_profile(safe, product_name, profile_dict)
     else:
         cached_hit = False
         profile_obj = build_robot_profile(
@@ -114,7 +133,8 @@ def compose_robot_job_search(
             timings=build_timings,
         )
         profile_dict = profile_obj.to_dict()
-        set_cached_profile(safe, product_name, profile_dict)
+        if profile_is_worth_caching(profile_dict):
+            set_cached_profile(safe, product_name, profile_dict)
         if record_shadow is not None:
             try:
                 duration_ms = int((time.perf_counter() - t0) * 1000)

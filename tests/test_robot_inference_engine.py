@@ -234,3 +234,25 @@ def test_infer_facts_disabled_is_noop():
     # Flag off → no work, no change (frozen v1 path).
     extra, summary = infer_facts(_pack("humanoid robot with 22 DoF hands"), subject="X", existing_facts=[])
     assert extra == [] and summary is None
+
+
+def test_works_autonomously_grounds_navigation():
+    pack = _pack("NEO works autonomously by default. Expert mode is optional.")
+    obs = {o.predicate: o.value for o in _phase1_detect(pack, "NEO")}
+    assert obs.get("autonomous_navigation") is True
+
+
+def test_infer_facts_1x_style_marketing_grounds_humanoid(monkeypatch):
+    monkeypatch.setenv("ROBOT_INFERENCE_ENGINE", "1")
+    pack = _pack(
+        "NEO is a fully electronic humanoid robot, with a .75 kWh battery pack. "
+        "NEO works autonomously by default. Payload 18 lb."
+    )
+    extra, summary = infer_facts(pack, subject="NEO", existing_facts=[])
+    preds = {f.predicate: f for f in extra}
+    assert preds.get("product_class") and preds["product_class"].value == "humanoid"
+    assert "has_mobile_base" in preds
+    assert "autonomous_navigation" in preds
+    caps = {c["capability"] for c in (summary or {}).get("capabilities") or []}
+    assert "manipulate" in caps
+    assert "mobile" in caps
