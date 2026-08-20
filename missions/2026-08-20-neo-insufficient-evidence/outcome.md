@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-20
 **Type:** build
-**Status:** local verify pass; Fly deploy follows this commit
+**Status:** local verify pass; Fly deploy not run from this agent (no `flyctl` / `FLY_API_TOKEN`). Merge to `main` to ship via `.github/workflows/deploy.yml`.
 
 ## What was wrong
 
@@ -49,6 +49,9 @@ python -m pytest tests/test_fetch_embedded_json.py \
 
 ## Follow-ups
 
-- Confirm production POST `/api/robot-job-search` after Fly deploy
+- Merge to `main` so GitHub Actions deploys Fly (`FLY_API_TOKEN` is a
+  repo secret; this cloud VM has no Fly CLI)
+- Confirm production `POST /api/robot-job-search` `{ "url": "https://www.1x.tech/neo" }`
+  returns `state=matches` and not `zero_reason=insufficient_profile_evidence`
 - `claims_surface_cleaning` on a home humanoid is pre-existing extractor
   behavior, not this mission
