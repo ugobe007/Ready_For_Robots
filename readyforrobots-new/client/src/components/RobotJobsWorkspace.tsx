@@ -1624,13 +1624,12 @@ function JobsPanel({
           {buyerLeadsCtaHeading(unlocked)}
         </p>
         <p className="mt-1 text-[12px] text-slate-400">
-          Work this robot can do
-          {robotCount > 1
-            ? ` — matched across ${robotCount} robots.`
-            : ` for ${analysis.productName}.`}
+          Jobs {analysis.productName} can do
+          {robotCount > 1 ? ` — matched across ${robotCount} robots` : ""}
+          .
           {unlocked
-            ? " More than 5 jobs live after this step."
-            : " Five jobs now. Signup keeps them."}
+            ? " More than 5 jobs live on the pipeline after this step."
+            : " Five jobs now. Signup keeps them — more than 5 live on the pipeline."}
         </p>
         <Link href={buyersHref()} className={`${ctaClass} mt-4`}>
           <FaceCue scale={2} onEmerald />

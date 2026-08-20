@@ -48,13 +48,15 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
 export const JOBS_FOR_YOUR_ROBOT_CTA = "Jobs for your robot →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 export const JOBS_FOR_YOUR_ROBOT_KEEP_CTA = "Keep these jobs for your robot →";
+/** Jobs-list (step 2) next-step box — never "Next step: buyer leads". */
+export const JOBS_LIST_NEXT_STEP_HEADING = "Next step: jobs for your robot";
 
 export function buyerLeadsCtaLabel(_signedIn: boolean): string {
   return JOBS_FOR_YOUR_ROBOT_CTA;
 }
 
 export function buyerLeadsCtaHeading(_signedIn: boolean): string {
-  return JOBS_FOR_YOUR_ROBOT_HEADING;
+  return JOBS_LIST_NEXT_STEP_HEADING;
 }
 
 /** Scan status on /results when arriving from Jobs — jobs, not sales leads. */
