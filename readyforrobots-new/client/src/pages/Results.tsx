@@ -254,8 +254,8 @@ function formatSignalAge(iso?: string | null): string | undefined {
 
 function clampResultsLimit(raw: string | null): number {
   const parsed = Number(raw || "");
-  if (!Number.isFinite(parsed)) return 8;
-  return Math.max(3, Math.min(30, Math.round(parsed)));
+  if (!Number.isFinite(parsed) || parsed <= 0) return 5;
+  return Math.max(1, Math.min(15, Math.round(parsed)));
 }
 
 function mapApiLead(lead: ApiLead, index: number): Prospect {
@@ -483,10 +483,11 @@ export default function Results() {
   const search = useSearch();
   const params = new URLSearchParams(search);
   const initialUrl = params.get("url")?.trim() || "";
-  const requestedLimit = clampResultsLimit(params.get("limit"));
+  const urlLimit = clampResultsLimit(params.get("limit"));
   const sampleMode = params.get("sample") === "1";
   const sampleName = (params.get("sample_name") || "").trim();
   const { session, loading: authLoading } = useAuth();
+  const requestedLimit = session?.access_token ? Math.max(urlLimit, 15) : Math.min(urlLimit, 5);
 
   useEffect(() => {
     const attribution = readSupplyAttribution(search);
@@ -580,16 +581,10 @@ export default function Results() {
   }, [submittedUrl, topLeadId]);
 
   // After signup from Results, land back on the 5-lead preview — then Pipeline is step 3.
-  const resultsSignupNext = resultsPageHref;
+  const resultsSignupNext = fullPipelineHref;
   const resultsSignupHref = `/signup?next=${encodeURIComponent(resultsSignupNext)}&src=results_gate`;
 
-  // Workflow: URL → signup (new) → Results → Pipeline. Keep unsigned users on the signup step.
-  useEffect(() => {
-    if (sampleMode || authLoading) return;
-    if (session?.access_token) return;
-    if (!submittedUrl) return;
-    window.location.replace(resultsSignupHref);
-  }, [authLoading, resultsSignupHref, sampleMode, session?.access_token, submittedUrl]);
+  // Anonymous users can review 5 leads here. Signup then opens the 15-lead pipeline.
 
   const copyRfqPacket = (prospect: Prospect) => {
     const packet = buildRfqSpecPacket(prospect);
@@ -645,7 +640,9 @@ export default function Results() {
         // Fast path: same matcher Pipeline uses (avoids slow scout/robot-ready scrape).
         const matchRes = await fetchWithTimeoutRetry(
           `${apiBase}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=${requestedLimit}`,
-          liveFetchInit(),
+          liveFetchInit(
+            session?.access_token ? { headers: authHeader(session.access_token) } : {},
+          ),
           12_000,
           { retries: 0 },
         );
@@ -708,7 +705,7 @@ export default function Results() {
       window.clearInterval(stepTimer);
       if (hardDeadline) window.clearTimeout(hardDeadline);
     };
-  }, [requestedLimit, sampleAccessAllowed, sampleAccessLoading, sampleMode, submittedUrl]);
+  }, [requestedLimit, sampleAccessAllowed, sampleAccessLoading, sampleMode, session?.access_token, submittedUrl]);
 
   useEffect(() => {
     setSelectedIds(new Set(prospects.map((p) => p.id)));

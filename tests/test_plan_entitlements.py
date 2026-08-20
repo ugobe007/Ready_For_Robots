@@ -2,6 +2,7 @@ from app.services.plan_entitlements import (
     PLAN_ANONYMOUS,
     PLAN_FREE,
     PLAN_PAID,
+    PIPELINE_LIMIT_ANONYMOUS,
     PIPELINE_LIMIT_FREE,
     PIPELINE_LIMIT_PAID,
     PIPELINE_LIMIT_PREVIEW,
@@ -28,9 +29,10 @@ def test_resolve_plan_tier_paid_metadata():
 
 
 def test_pipeline_limits():
-    assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == PIPELINE_LIMIT_PREVIEW
+    assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == PIPELINE_LIMIT_ANONYMOUS
     assert pipeline_limit_for_plan(PLAN_FREE) == PIPELINE_LIMIT_FREE
     assert pipeline_limit_for_plan(PLAN_PAID) == PIPELINE_LIMIT_PAID
+    assert PIPELINE_LIMIT_ANONYMOUS == 5
     assert PIPELINE_LIMIT_FREE == 15
     assert PIPELINE_LIMIT_PREVIEW == 15
     assert PIPELINE_LIMIT_PAID == 90
@@ -75,10 +77,10 @@ def test_trim_pipeline_anonymous_preview_includes_all_tiers():
         + [{"id": 200 + i, "priority_tier": "COLD"} for i in range(30)]
     )
     trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_ANONYMOUS)
-    assert len(trimmed) == 15
-    assert mix["hot"]["shown"] == 8
-    assert mix["warm"]["shown"] == 5
-    assert mix["monitoring"]["shown"] == 2
+    assert len(trimmed) == 5
+    assert mix["hot"]["shown"] == 3
+    assert mix["warm"]["shown"] == 2
+    assert mix["monitoring"]["shown"] == 0
 
 
 def test_trim_pipeline_anonymous_diversifies_hot_industries():
@@ -94,7 +96,7 @@ def test_trim_pipeline_anonymous_diversifies_hot_industries():
     industries = {r["industry"] for r in hot}
     assert "Logistics" in industries
     assert "Healthcare" in industries
-    assert mix["hot"]["shown"] == 8
+    assert mix["hot"]["shown"] == 3
 
 
 def test_trim_pipeline_anonymous_backfills_when_monitoring_sparse():
@@ -104,7 +106,7 @@ def test_trim_pipeline_anonymous_backfills_when_monitoring_sparse():
     )
     trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_ANONYMOUS)
     assert mix["monitoring"]["shown"] == 0
-    assert len(trimmed) == 15
+    assert len(trimmed) == 5
 
 
 def test_trim_pipeline_drops_known_robot_vendors():

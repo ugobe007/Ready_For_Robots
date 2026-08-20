@@ -270,6 +270,16 @@ def _capability_signal_bonus(robot_caps: Dict, signals: List[Dict]) -> int:
 
 # URL search → lookup → score OEM → match equally scored buyer opportunities.
 URL_MATCHED_PIPELINE_LIMIT = 15
+URL_MATCHED_ANONYMOUS_LIMIT = 5
+
+
+def url_matched_limit_for_plan(plan: str) -> int:
+    """Anonymous URL submit returns 5 leads; signed-in workspaces get 15."""
+    from app.services.plan_entitlements import PLAN_ANONYMOUS
+
+    if plan == PLAN_ANONYMOUS:
+        return URL_MATCHED_ANONYMOUS_LIMIT
+    return URL_MATCHED_PIPELINE_LIMIT
 
 
 def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] = None, target_regions: List[str] = None) -> List[Dict]:
