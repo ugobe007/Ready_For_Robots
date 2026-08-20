@@ -671,7 +671,7 @@ export default function Signup() {
                 {hubspotIntent
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
                   : robotJobsIntent
-                    ? "Create an account to keep these jobs for your robot. After signup you'll get the pipeline — that's where more than 5 live."
+                    ? "Create an account to keep these jobs for your robot. After you sign up, you land on the pipeline — that's where more than 5 jobs live."
                   : matchedUnlockIntent
                     ? "Confirm company name, robot category, and ICP — then create your account to unlock 15 matched sales leads."
                     : resultsIntent

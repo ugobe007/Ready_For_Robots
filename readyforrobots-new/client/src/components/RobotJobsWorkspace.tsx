@@ -1593,9 +1593,8 @@ function JobsPanel({
       {/* Example roles that prove fit — the next step is more jobs for this robot. */}
       {baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
-          Example work {analysis.productName} can do, matched to its confirmed
+          Example work {analysis.productName} can do, matched to confirmed
           capabilities · {visible.length} shown. Expand a card for evidence.
-          One next step: jobs for your robot.
         </p>
       )}
 
@@ -1624,12 +1623,12 @@ function JobsPanel({
           {buyerLeadsCtaHeading(unlocked)}
         </p>
         <p className="mt-1 text-[12px] text-slate-400">
-          Jobs {analysis.productName} can do
-          {robotCount > 1 ? ` — matched across ${robotCount} robots` : ""}
-          .
+          {robotCount > 1
+            ? `Example jobs across ${robotCount} robots.`
+            : `Example jobs for ${analysis.productName}.`}
           {unlocked
             ? " More than 5 jobs live on the pipeline after this step."
-            : " Five jobs now. Signup keeps them — more than 5 live on the pipeline."}
+            : " 5 jobs now. Sign up to keep them — more than 5 jobs live on the pipeline."}
         </p>
         <Link href={buyersHref()} className={`${ctaClass} mt-4`}>
           <FaceCue scale={2} onEmerald />
@@ -1826,8 +1825,8 @@ function JobCard({
 
           {possible ? (
             <p className="mt-4 text-[12px] text-slate-500">
-              Evidence for this example job. Use Jobs for your robot below to
-              see where this work lives.
+              Evidence for this example job. Continue with Jobs for your robot
+              below.
             </p>
           ) : null}
         </div>

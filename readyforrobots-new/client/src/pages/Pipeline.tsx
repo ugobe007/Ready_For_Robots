@@ -636,7 +636,7 @@ function MatchedPipelineSkeleton({
             </div>
             <p className="mt-1 text-sm font-medium leading-snug text-slate-400">
               {jobsMode
-                ? `Matching up to ${target} jobs to your robot. Hang tight — the list paints as soon as it is ready.`
+                ? `Matching up to ${target} jobs for your robot. Hang tight — the list paints as soon as it is ready.`
                 : `Matching up to ${target} buyers to your robot profile. Hang tight — the queue paints as soon as it is ready.`}
             </p>
           </div>

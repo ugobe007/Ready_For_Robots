@@ -843,7 +843,7 @@ export default function Results() {
               {JOBS_FOR_YOUR_ROBOT_HEADING}
             </h1>
             <p className="mt-1 text-sm text-slate-400">
-              Same Jobs terminal. Five jobs to review. More than 5 live after signup.
+              Same Jobs terminal. 5 jobs to review. More than 5 jobs live after you sign up.
             </p>
           </div>
         </div>
@@ -1221,7 +1221,7 @@ export default function Results() {
                     <p className="text-[12px] text-slate-300">
                       {isSignedIn
                         ? "More than 5 jobs for your robot live on the pipeline."
-                        : "Signup keeps these 5 jobs for your robot. More than 5 live on the pipeline."}
+                        : "Sign up to keep these 5 jobs for your robot. More than 5 jobs live on the pipeline."}
                     </p>
                     <Link
                       href={isSignedIn ? fullPipelineHref : resultsSignupHref}
