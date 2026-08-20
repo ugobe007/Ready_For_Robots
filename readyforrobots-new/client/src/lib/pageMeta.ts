@@ -19,7 +19,7 @@ const SITE =
     ? String(import.meta.env.VITE_SITE_URL).replace(/\/$/, "")
     : "https://readyforrobots.com";
 
-const DEFAULT_OG_IMAGE = `${SITE}/marketing/robot-industrial.jpg`;
+const DEFAULT_OG_IMAGE = `${SITE}/branding/og-face.png`;
 
 function upsertMeta(attr: "name" | "property", key: string, content: string) {
   if (!content) return;
@@ -64,7 +64,7 @@ export function usePageMeta({
   description,
   path = "",
   image = DEFAULT_OG_IMAGE,
-  imageAlt = "Ready For Robots — robot sales intelligence",
+  imageAlt = "ReadyForRobots face mark",
   linkedInOrgId = LINKEDIN_ORG_ID,
 }: PageMetaInput) {
   useEffect(() => {
