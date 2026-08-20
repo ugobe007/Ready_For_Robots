@@ -98,6 +98,7 @@ def post_robot_profile(
     payload["timings"] = {
         "resolve_ms": int(timings.get("resolve_ms") or 0),
         "profile_ms": int(timings.get("profile_ms") or 0),
+        "sources_ms": int(timings.get("sources_ms") or 0),
         "match_ms": 0,
         "total_ms": timings["total_ms"],
         "cached": bool(timings.get("cached")),

@@ -116,12 +116,15 @@ def build_robot_profile(
     subject = selected.name if selected else resolved.company.name
     t_profile = time.perf_counter()
     budget = _source_budget_sec()
+    t_sources = time.perf_counter()
     collected = collect_source_pack(
         home,
         product_name=selected.name if selected else product_name,
         max_sources=max_sources,
         deadline_monotonic=(time.monotonic() + budget) if budget is not None else None,
     )
+    if timings is not None:
+        timings["sources_ms"] = int((time.perf_counter() - t_sources) * 1000)
     if selected:
         for c in collected:
             c.source.product_id = selected.id
