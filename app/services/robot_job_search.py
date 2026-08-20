@@ -5,6 +5,7 @@ UI must still reveal atomically — this payload is the first-page result model.
 """
 from __future__ import annotations
 
+import copy
 import logging
 import time
 from typing import Any
@@ -17,6 +18,53 @@ from app.services.robot_url_safety import assert_public_http_url
 logger = logging.getLogger(__name__)
 
 TOP_JOBS = 5
+
+
+def profile_is_research_complete(profile: dict[str, Any] | None) -> bool:
+    """True when a cached profile is grounded enough to match jobs.
+
+    Identity-only picker payloads (`needs_product_choice`) must not be reused
+    as a match input — they have no facts/sources yet.
+    """
+    if not isinstance(profile, dict):
+        return False
+    if profile.get("needs_product_choice"):
+        return False
+    return bool(profile.get("facts") or profile.get("sources"))
+
+
+def overlay_selected_product(profile: dict[str, Any], product: str) -> dict[str, Any]:
+    """Stamp a SKU onto a grounded company profile without rebuilding sources."""
+    out = copy.deepcopy(profile)
+    want = (product or "").strip()
+    products = list(out.get("products") or [])
+    match = None
+    if want:
+        want_l = want.lower()
+        for row in products:
+            if isinstance(row, dict) and str(row.get("name") or "").strip().lower() == want_l:
+                match = row
+                break
+    if match is None and want:
+        match = {"name": want}
+        products = [*products, match]
+        out["products"] = products
+    out["selected_product"] = match
+    out["needs_product_choice"] = False
+    return out
+
+
+def resolve_cached_profile(url: str, product: str | None) -> dict[str, Any] | None:
+    """SKU cache, then grounded company cache overlaid with the requested product."""
+    hit = get_cached_profile(url, product)
+    if hit:
+        return hit
+    if not product:
+        return None
+    base = get_cached_profile(url, None)
+    if not profile_is_research_complete(base):
+        return None
+    return overlay_selected_product(base, product)
 
 
 def _timings(
@@ -50,11 +98,13 @@ def compose_robot_job_search(
     safe = assert_public_http_url(url)
     product_name = (product or "").strip() or None
 
-    cached = get_cached_profile(safe, product_name)
+    cached = resolve_cached_profile(safe, product_name)
     build_timings: dict[str, Any] = {"resolve_ms": 0, "profile_ms": 0}
     if cached:
         profile_dict = cached
         cached_hit = True
+        if product_name and get_cached_profile(safe, product_name) is None:
+            set_cached_profile(safe, product_name, profile_dict)
     else:
         cached_hit = False
         profile_obj = build_robot_profile(
