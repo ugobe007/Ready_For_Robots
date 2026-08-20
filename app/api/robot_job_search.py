@@ -28,6 +28,7 @@ class RobotJobSearchIn(BaseModel):
     product: Optional[str] = Field(default=None, max_length=120)
     max_sources: int = Field(default=6, ge=1, le=12)
     correlation_id: Optional[str] = Field(default=None, max_length=64)
+    asserted_class: Optional[str] = Field(default=None, max_length=40)
 
 
 @router.post("/robot-job-search")
@@ -52,6 +53,7 @@ def post_robot_job_search(
             product=body.product,
             max_sources=body.max_sources,
             record_shadow=_shadow,
+            asserted_class=body.asserted_class,
         )
         # Durable submitter ledger + funnel attribution (fail-open).
         try:

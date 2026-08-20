@@ -110,6 +110,7 @@ def compose_robot_job_search(
     product: str | None = None,
     max_sources: int = 6,
     record_shadow=None,
+    asserted_class: str | None = None,
 ) -> dict[str, Any]:
     """Build (or reuse) a Robot Profile and match jobs. Never streams partial jobs."""
     t0 = time.perf_counter()
@@ -141,6 +142,11 @@ def compose_robot_job_search(
                 record_shadow(profile_obj, duration_ms)
             except Exception:
                 logger.exception("robot_job_search shadow failed")
+
+    if asserted_class:
+        from app.services.robot_class_qualify import apply_asserted_class
+
+        profile_dict = apply_asserted_class(profile_dict, asserted_class)
 
     company = (profile_dict.get("company") or {}).get("name") or "your robot"
     selected = profile_dict.get("selected_product") or {}
@@ -186,6 +192,29 @@ def compose_robot_job_search(
         from app.services.zero_state import classify_zero_state, corpus_family_set
 
         zero_reason = classify_zero_state(match.get("capabilities") or [], corpus_family_set())
+
+    from app.services.robot_class_qualify import public_class_options
+    from app.services.zero_state import INSUFFICIENT_PROFILE_EVIDENCE
+
+    needs_class_choice = False
+    if not jobs and zero_reason == INSUFFICIENT_PROFILE_EVIDENCE:
+        # Never a dead-end: ask the operator to name the morphology so we can match.
+        needs_class_choice = True
+        state = "qualify_robot"
+        zero_reason = None
+    preview = None
+    for url in profile_dict.get("preview_images") or []:
+        if isinstance(url, str) and url.strip():
+            preview = url.strip()
+            break
+    if preview is None:
+        for src in profile_dict.get("sources") or []:
+            if isinstance(src, dict) and (src.get("url") or "").lower().endswith(
+                (".png", ".jpg", ".jpeg", ".webp", ".gif")
+            ):
+                preview = src.get("url")
+                break
+
     return {
         "state": state,
         "robot_name": match.get("robot_name") or robot_name,
@@ -198,6 +227,9 @@ def compose_robot_job_search(
         "profile": profile_dict,
         "products": products,
         "needs_product_choice": False,
+        "needs_class_choice": needs_class_choice,
+        "class_options": public_class_options() if needs_class_choice else [],
+        "preview_image_url": preview,
         "matcher": match.get("matcher"),
         "zero_reason": zero_reason,
         "robot_class": match.get("robot_class") or selected.get("display_class"),

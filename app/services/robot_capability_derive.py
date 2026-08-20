@@ -248,13 +248,24 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
             derived_from=["claims_item_delivery"],
             evidence=delivery.get("evidence_span") or "item delivery / transport",
         )
+    elif classes & TRANSPORT_CLASSES:
+        # Named derivation: product_class=amr → transport work primitive.
+        # Does not select a job family; the matcher still inspects requirements.
+        caps["transport"] = DerivedCapability(
+            key="transport",
+            label="autonomous item transport / delivery",
+            present=True,
+            derivation="inferred",
+            derived_from=["product_class"],
+            evidence="amr class",
+        )
     else:
         caps["transport"] = DerivedCapability(
             key="transport",
             label="autonomous item transport / delivery",
             present=False,
             derivation="explicit",
-            derived_from=["claims_item_delivery"],
+            derived_from=["claims_item_delivery", "product_class"],
         )
 
     # Food preparation / cooking (kitchen robots). Distinct dexterous capability —

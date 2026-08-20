@@ -38,7 +38,7 @@ import {
   sourceTypeLabel,
   type RobotProfileResult,
 } from "@/lib/robotProfile";
-import type { MatchCapability, MatchJob } from "@/lib/robotJobMatch";
+import type { ClassOption, MatchCapability, MatchJob } from "@/lib/robotJobMatch";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
@@ -77,6 +77,9 @@ type RobotAnalysis = {
   jobs: MatchJob[];
   jobCount: number;
   zeroReason?: string | null;
+  needsClassChoice?: boolean;
+  classOptions?: ClassOption[];
+  previewImageUrl?: string | null;
 };
 
 type ZeroReason =
@@ -89,6 +92,39 @@ type RestoreView = "review" | "jobs" | "portfolio";
 
 const MARKET_FOUND_BASE = 140;
 const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
+
+const DEFAULT_CLASS_OPTIONS: ClassOption[] = [
+  {
+    id: "humanoid",
+    label: "Humanoid",
+    hint: "Two legs, arms and hands — NEO, Unitree G1, Walker",
+  },
+  {
+    id: "amr",
+    label: "AMR / mobile robot",
+    hint: "Rolls on a base and moves materials or itself",
+  },
+  {
+    id: "mobile_manipulator",
+    label: "Mobile manipulator",
+    hint: "Rolling base with an arm that picks or places",
+  },
+  {
+    id: "cobot",
+    label: "Collaborative arm",
+    hint: "Stationary or cart-mounted arm beside a person",
+  },
+  {
+    id: "quadruped",
+    label: "Quadruped",
+    hint: "Four legs — inspection, patrol, unstructured ground",
+  },
+  {
+    id: "autonomous_scrubber",
+    label: "Floor scrubber",
+    hint: "Cleans floors on its own",
+  },
+];
 
 const eyebrow =
   "font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500";
@@ -202,6 +238,9 @@ function searchToAnalysis(res: RobotJobSearchResult): RobotAnalysis {
     jobs: res.jobs || [],
     jobCount: res.job_count || (res.jobs || []).length,
     zeroReason: res.zero_reason ?? null,
+    needsClassChoice: Boolean(res.needs_class_choice),
+    classOptions: res.class_options || [],
+    previewImageUrl: res.preview_image_url ?? null,
   };
 }
 
@@ -589,6 +628,9 @@ export default function RobotJobsWorkspace() {
         jobs: res.jobs || [],
         jobCount: res.job_count || (res.jobs || []).length,
         zeroReason: res.zero_reason ?? null,
+        needsClassChoice: Boolean(res.needs_class_choice),
+        classOptions: res.class_options || [],
+        previewImageUrl: res.preview_image_url ?? a.previewImageUrl ?? null,
       };
       setPortfolio(prev => prev.map((p, i) => (i === activeIdx ? merged : p)));
       saveWorkspaceSession({
@@ -610,6 +652,50 @@ export default function RobotJobsWorkspace() {
       if (!aborted) {
         setMatching(false);
       }
+    }
+  }
+
+  /** Operator names the morphology so Jobs can rematch from that class. */
+  async function qualifyActive(classId: string) {
+    const a = portfolio[activeIdx];
+    if (!a) return;
+    setMatching(true);
+    setMatchError(null);
+    try {
+      const url = submittedUrlRef.current;
+      let merged: RobotAnalysis;
+      if (a.profile) {
+        const res = await fetchRobotJobMatch({
+          url,
+          productName: a.productName,
+          profile: a.profile,
+          assertedClass: classId,
+        });
+        merged = {
+          ...a,
+          matched: true,
+          capabilities: res.capabilities || [],
+          jobs: res.jobs || [],
+          jobCount: res.job_count || (res.jobs || []).length,
+          zeroReason: res.zero_reason ?? null,
+          needsClassChoice: Boolean(res.needs_class_choice),
+          classOptions: res.class_options || [],
+          previewImageUrl: res.preview_image_url ?? a.previewImageUrl ?? null,
+        };
+      } else {
+        const res = await fetchRobotJobSearch({
+          url,
+          product: a.productName,
+          assertedClass: classId,
+        });
+        merged = { ...searchToAnalysis(res), productName: a.productName };
+      }
+      setPortfolio(prev => prev.map((p, i) => (i === activeIdx ? merged : p)));
+      revealJobs(merged);
+    } catch {
+      setMatchError("Could not apply that robot class. Try again.");
+    } finally {
+      setMatching(false);
     }
   }
 
@@ -916,6 +1002,8 @@ export default function RobotJobsWorkspace() {
             onHandoff={persistJobsHandoff}
             robotCount={portfolio.length}
             companyName={companyName || active.companyName}
+            qualifying={matching}
+            onSelectClass={id => void qualifyActive(id)}
           />
         )}
       </section>
@@ -1562,6 +1650,19 @@ function ReviewPanel({
 /* Workspace — JOBS (matching output)                                  */
 /* ================================================================== */
 
+function shouldQualify(analysis: RobotAnalysis): boolean {
+  if (analysis.needsClassChoice) return true;
+  if (analysis.zeroReason === "insufficient_profile_evidence") return true;
+  if (
+    analysis.matched &&
+    (analysis.jobs || []).length === 0 &&
+    (analysis.capabilities || []).length === 0
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function JobsPanel({
   analysis,
   unlocked,
@@ -1572,6 +1673,8 @@ function JobsPanel({
   onHandoff,
   robotCount = 1,
   companyName = "",
+  qualifying = false,
+  onSelectClass,
 }: {
   analysis: RobotAnalysis;
   unlocked: boolean;
@@ -1582,6 +1685,8 @@ function JobsPanel({
   onHandoff: () => void;
   robotCount?: number;
   companyName?: string;
+  qualifying?: boolean;
+  onSelectClass?: (classId: string) => void;
 }) {
   const baseJobs = analysis.jobs;
   const visible = capExampleJobs(baseJobs);
@@ -1612,10 +1717,20 @@ function JobsPanel({
       )}
 
       {baseJobs.length === 0 ? (
-        <ZeroState
-          robotName={analysis.productName}
-          reason={analysis.zeroReason}
-        />
+        shouldQualify(analysis) ? (
+          <ClassPicker
+            robotName={analysis.productName}
+            options={analysis.classOptions}
+            previewUrl={analysis.previewImageUrl}
+            busy={qualifying}
+            onSelect={onSelectClass}
+          />
+        ) : (
+          <ZeroState
+            robotName={analysis.productName}
+            reason={analysis.zeroReason}
+          />
+        )
       ) : (
         <ol className="mt-6 space-y-3">
           {visible.map((job, i) => (
@@ -1652,10 +1767,65 @@ function JobsPanel({
   );
 }
 
+function ClassPicker({
+  robotName,
+  options,
+  previewUrl,
+  busy,
+  onSelect,
+}: {
+  robotName: string;
+  options?: ClassOption[];
+  previewUrl?: string | null;
+  busy?: boolean;
+  onSelect?: (classId: string) => void;
+}) {
+  const choices = options && options.length > 0 ? options : DEFAULT_CLASS_OPTIONS;
+  return (
+    <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5">
+      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300">
+        Name the robot class
+      </p>
+      <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
+        What kind of robot is {robotName}?
+      </h3>
+      <p className="mt-2 text-[13px] leading-snug text-slate-300">
+        Photos and the product page were not enough to name the class. Pick the
+        closest match so we can find jobs — humanoids like NEO, Unitree, and
+        UBTech share the same work primitives.
+      </p>
+      {previewUrl ? (
+        <img
+          src={previewUrl}
+          alt={`${robotName} product photo`}
+          className="mt-4 max-h-40 border border-slate-700 object-contain"
+        />
+      ) : null}
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        {choices.map(opt => (
+          <button
+            key={opt.id}
+            type="button"
+            disabled={busy}
+            onClick={() => onSelect?.(opt.id)}
+            className="border border-slate-600 bg-[#081126] px-3 py-3 text-left transition hover:border-emerald-400/60 hover:bg-emerald-400/5 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span className="block font-display text-sm font-bold text-slate-100">
+              {opt.label}
+            </span>
+            <span className="mt-1 block text-[12px] leading-snug text-slate-400">
+              {opt.hint}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /**
- * Truthful zero-state. "Zero" must be explainable: did we fail to understand the
- * robot, understand it but find no compatible work, or simply lack corpus
- * coverage for its domain? These are radically different states.
+ * Truthful zero-state after the robot is understood. Class confusion is a
+ * picker, not a dead-end. This block is only corpus gap / no compatible jobs.
  */
 function ZeroState({
   robotName,
@@ -1665,32 +1835,6 @@ function ZeroState({
   reason?: string | null;
 }) {
   const r = (reason || "") as ZeroReason | "";
-  if (r === "insufficient_profile_evidence") {
-    return (
-      <div className="mt-6 border border-amber-500/30 bg-amber-500/5 p-5">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-amber-300">
-          Insufficient robot evidence
-        </p>
-        <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
-          We found {robotName}, but couldn't establish enough capability
-          evidence to match it confidently.
-        </h3>
-        <p className="mt-2 text-[13px] leading-snug text-slate-300">
-          We confirmed some product facts, but key information about mobility,
-          manipulation, autonomy, and operating capabilities is still missing —
-          so we won't claim matches we can't ground.
-        </p>
-        <p className="mt-4 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
-          What happens next
-        </p>
-        <ul className="mt-1 space-y-1 text-[13px] text-slate-300">
-          <li>· Review the robot profile (Profile tab)</li>
-          <li>· Add a product or specification URL if available</li>
-          <li>· Or try another product page for this robot</li>
-        </ul>
-      </div>
-    );
-  }
   if (r === "corpus_gap") {
     return (
       <div className="mt-6 border border-slate-600 bg-[#081126] p-5">

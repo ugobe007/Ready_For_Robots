@@ -39,6 +39,21 @@ def test_html_to_text_reads_next_json_humanoid():
     assert "helping hand" in text.lower()
 
 
+def test_html_to_text_includes_product_photo_alts():
+    html = """
+    <html><body>
+      <p>NEO Home Robot</p>
+      <img src="/neo.png" alt="bipedal humanoid robot standing" />
+    </body></html>
+    """
+    text = _html_to_text(
+        BeautifulSoup(html, "html.parser"),
+        page_url="https://www.1x.tech/neo",
+    )
+    assert "humanoid" in text.lower()
+    assert "product photo" in text.lower()
+
+
 def test_html_to_text_ignores_javascript_bundles():
     html = """
     <html><body>

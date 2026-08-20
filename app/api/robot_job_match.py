@@ -21,7 +21,13 @@ from app.services.robot_url_safety import UrlSafetyError
 router = APIRouter(tags=["robot-job-match"])
 
 ChipLiteral = Literal["moves_materials", "manipulates", "cleans", "inspects", "other"]
-StateLiteral = Literal["matches", "thin_corpus", "could_not_understand", "select_product"]
+StateLiteral = Literal[
+    "matches",
+    "thin_corpus",
+    "could_not_understand",
+    "select_product",
+    "qualify_robot",
+]
 
 
 class RobotJobMatchIn(BaseModel):
@@ -31,6 +37,7 @@ class RobotJobMatchIn(BaseModel):
     product_name: Optional[str] = Field(default=None, max_length=120)
     robot_capabilities: Optional[dict[str, Any]] = None
     page_text: Optional[str] = Field(default=None, max_length=20000)
+    asserted_class: Optional[str] = Field(default=None, max_length=40)
     profile: Optional[dict[str, Any]] = None
 
 
@@ -45,6 +52,9 @@ class RobotJobMatchOut(BaseModel):
     company_name: Optional[str] = None
     products: list[dict[str, Any]] = []
     needs_product_choice: bool = False
+    needs_class_choice: bool = False
+    class_options: list[dict[str, str]] = []
+    preview_image_url: Optional[str] = None
     research_stages: list[dict[str, Any]] = []
     robot_class: Optional[str] = None
     evidence_urls: list[str] = []
@@ -66,6 +76,9 @@ def _empty(state: StateLiteral, name: str, url: str | None = None) -> dict[str, 
         "company_name": None,
         "products": [],
         "needs_product_choice": False,
+        "needs_class_choice": False,
+        "class_options": [],
+        "preview_image_url": None,
         "research_stages": [],
         "robot_class": None,
         "evidence_urls": [],
@@ -87,6 +100,10 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
 
     try:
         if profile and (profile.get("facts") or profile.get("selected_product")):
+            if body.asserted_class:
+                from app.services.robot_class_qualify import apply_asserted_class
+
+                profile = apply_asserted_class(profile, body.asserted_class)
             result = match_jobs_from_profile(profile)
         elif chip and not url and not body.robot_capabilities:
             result = match_from_chip(chip, robot_name=name)
@@ -115,6 +132,18 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
 
         zero_reason = classify_zero_state(result.get("capabilities") or [], corpus_family_set())
 
+    needs_class_choice = False
+    class_options: list[dict[str, str]] = []
+    if not jobs_out and job_count == 0 and result.get("state") not in ("select_product",):
+        from app.services.robot_class_qualify import public_class_options
+        from app.services.zero_state import INSUFFICIENT_PROFILE_EVIDENCE
+
+        if zero_reason == INSUFFICIENT_PROFILE_EVIDENCE:
+            needs_class_choice = True
+            zero_reason = None
+            class_options = public_class_options()
+            result["state"] = "qualify_robot"
+
     return {
         "state": result["state"],
         "robot_name": result.get("robot_name") or name,
@@ -126,6 +155,12 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
         "company_name": result.get("company_name"),
         "products": result.get("products") or [],
         "needs_product_choice": bool(result.get("needs_product_choice")),
+        "needs_class_choice": needs_class_choice,
+        "class_options": class_options,
+        "preview_image_url": next(
+            (u for u in ((profile or {}).get("preview_images") or []) if isinstance(u, str) and u),
+            None,
+        ),
         "research_stages": result.get("research_stages") or [],
         "robot_class": result.get("robot_class"),
         "evidence_urls": result.get("evidence_urls") or [],

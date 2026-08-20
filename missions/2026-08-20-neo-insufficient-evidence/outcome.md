@@ -47,11 +47,35 @@ python -m pytest tests/test_fetch_embedded_json.py \
 - `coverage_level`: medium / B
 - `job_count`: 40 (CNC load/unload, palletize, …)
 
+## Follow-up: visual class + operator picker
+
+If photos/text still cannot name a class, Jobs no longer dead-ends.
+`state=qualify_robot` asks the operator to pick Humanoid / AMR / …
+That selection is an explicit `product_class` fact; humanoid derives
+`manipulate`, AMR derives `transport`, then jobs rematch.
+
+- Manufacturer photo alts/filenames classify morphology (never SKU
+  token `neo` → humanoid — Avidbots Neo is a scrubber)
+- Optional vision ask is fail-open
+- CLI: `python3 scripts/qualify_robot.py <product-url>`
+- Jobs UI: class picker. Banned copy is gone:
+  “We found _____, but we couldn't establish enough capability evidence
+  to match it confidently”
+
+```
+./venv/bin/python -m pytest tests/test_robot_class_qualify.py \
+  tests/test_fetch_embedded_json.py tests/test_robot_job_search.py \
+  tests/test_zero_state.py tests/test_robot_inference_engine.py \
+  tests/test_tier_work_families.py -q
+# 55 passed
+```
+
 ## Follow-ups
 
 - Merge to `main` so GitHub Actions deploys Fly (`FLY_API_TOKEN` is a
   repo secret; this cloud VM has no Fly CLI)
 - Confirm production `POST /api/robot-job-search` `{ "url": "https://www.1x.tech/neo" }`
-  returns `state=matches` and not `zero_reason=insufficient_profile_evidence`
+  returns `state=matches` (or `qualify_robot` with a class picker — never
+  the insufficient-evidence sentence)
 - `claims_surface_cleaning` on a home humanoid is pre-existing extractor
   behavior, not this mission

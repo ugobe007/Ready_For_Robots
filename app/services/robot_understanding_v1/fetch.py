@@ -50,6 +50,8 @@ class FetchedPage:
     fetch_degraded: bool = False
     fetch_notes: list[str] = field(default_factory=list)
     content_type: str = "text/html"
+    # Product photos harvested from img / og:image / Next.js JSON (url, alt).
+    image_alts: list[tuple[str, str]] = field(default_factory=list)
 
 
 class _TLSFlexAdapter(HTTPAdapter):
@@ -148,7 +150,8 @@ def fetch_page(url: str, *, timeout: tuple[float, float] = DEFAULT_PAGE_TIMEOUT)
     html = resp.text or ""
     soup = BeautifulSoup(html, "html.parser")
     title = soup.title.get_text(strip=True) if soup.title else None
-    text = _html_to_text(soup)
+    images = _harvest_page_images(soup, resp.url)
+    text = _html_to_text(soup, page_url=resp.url)
 
     host = (urlparse(resp.url).hostname or "").lower()
     links: list[tuple[str, str]] = []
@@ -176,6 +179,7 @@ def fetch_page(url: str, *, timeout: tuple[float, float] = DEFAULT_PAGE_TIMEOUT)
         fetch_degraded=degraded,
         fetch_notes=notes,
         content_type="text/html",
+        image_alts=images,
     )
 
 
@@ -244,6 +248,11 @@ _JSON_KEEP_TERMS = re.compile(
     re.I,
 )
 _EMBEDDED_JSON_CAP = 20_000
+_IMAGE_FILE = re.compile(r"\.(png|jpe?g|webp|gif|avif)(\?|$)", re.I)
+_SKIP_IMAGE = re.compile(
+    r"(favicon|sprite|pixel|1x1|tracking|logo[-_]?mark|social[-_]?icon)",
+    re.I,
+)
 
 
 def _keep_json_string(value: str) -> bool:
@@ -326,8 +335,96 @@ def _embedded_json_text(soup: BeautifulSoup) -> str:
     return blob[:_EMBEDDED_JSON_CAP]
 
 
-def _html_to_text(soup: BeautifulSoup) -> str:
+def _looks_like_image_url(value: str) -> bool:
+    s = (value or "").strip()
+    if len(s) < 12 or len(s) > 2000:
+        return False
+    if _SKIP_IMAGE.search(s):
+        return False
+    if s.startswith("data:"):
+        return False
+    if s.startswith(("http://", "https://", "/", "//")) and _IMAGE_FILE.search(s.split("?")[0]):
+        return True
+    return False
+
+
+def _walk_json_images(obj: Any, out: list[str], *, budget: int) -> None:
+    if len(out) >= budget:
+        return
+    if isinstance(obj, str):
+        if _looks_like_image_url(obj):
+            out.append(obj.strip())
+        return
+    if isinstance(obj, dict):
+        for v in obj.values():
+            _walk_json_images(v, out, budget=budget)
+        return
+    if isinstance(obj, list):
+        for v in obj:
+            _walk_json_images(v, out, budget=budget)
+
+
+def _harvest_page_images(soup: BeautifulSoup, page_url: str) -> list[tuple[str, str]]:
+    """Collect product photos as visual sources (url, alt/caption)."""
+    found: list[tuple[str, str]] = []
+    seen: set[str] = set()
+
+    def add(raw: str, alt: str) -> None:
+        href = (raw or "").strip()
+        if not href or href.startswith("data:"):
+            return
+        full = urljoin(page_url or "", href)
+        key = full.split("#")[0]
+        if not key or key in seen:
+            return
+        if _SKIP_IMAGE.search(key):
+            return
+        seen.add(key)
+        found.append((key, re.sub(r"\s+", " ", (alt or "").strip())[:160]))
+
+    for meta in soup.find_all("meta"):
+        prop = (meta.get("property") or meta.get("name") or "").strip().lower()
+        if prop in {"og:image", "og:image:url", "twitter:image", "twitter:image:src"}:
+            add(meta.get("content") or "", "Open Graph product photo")
+    for img in soup.find_all("img"):
+        alt = img.get("alt") or img.get("title") or ""
+        src = img.get("src") or img.get("data-src") or ""
+        add(src, alt)
+        srcset = img.get("srcset") or ""
+        if srcset:
+            first = srcset.split(",")[0].strip().split(" ")[0]
+            add(first, alt)
+    for script in soup.find_all("script"):
+        stype = (script.get("type") or "").strip().lower()
+        sid = (script.get("id") or "").strip()
+        if sid != "__NEXT_DATA__" and stype not in _JSON_SCRIPT_TYPES:
+            continue
+        raw = script.string or script.get_text() or ""
+        raw = raw.strip()
+        if not raw or raw[0] not in "{[":
+            continue
+        try:
+            data = json.loads(raw)
+        except Exception:
+            continue
+        urls: list[str] = []
+        _walk_json_images(data, urls, budget=24)
+        for u in urls:
+            add(u, "")
+    return found[:24]
+
+
+def _with_photo_alts(text: str, images: list[tuple[str, str]]) -> str:
+    alts = [alt for _, alt in images if alt and alt.lower() not in {"open graph product photo"}]
+    if not alts:
+        return text
+    blob = " ".join(f"Product photo: {alt}." for alt in alts[:12])
+    return f"{text} {blob}".strip() if text else blob
+
+
+def _html_to_text(soup: BeautifulSoup, page_url: str = "") -> str:
     """Preserve table/spec density better than flat get_text collapse."""
+    images = _harvest_page_images(soup, page_url)
     embedded = _embedded_json_text(soup)
     for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
@@ -362,7 +459,7 @@ def _html_to_text(soup: BeautifulSoup) -> str:
     text = re.sub(r"\s+", " ", text).strip()
     if embedded:
         text = f"{text} {embedded}".strip() if text else embedded
-    return text
+    return _with_photo_alts(text, images)
 
 
 def _pdf_text(raw: bytes, url: str) -> tuple[Optional[str], str]:
