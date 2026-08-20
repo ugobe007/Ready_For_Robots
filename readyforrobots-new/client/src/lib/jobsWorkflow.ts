@@ -1,11 +1,13 @@
 /**
- * Jobs submit workflow helpers — keep FIND → JOBS → 5 buyer leads on one path.
+ * Jobs submit workflow helpers — keep FIND → JOBS → jobs for your robot.
  * Multi-robot confirm must never dump the user on a catalog with no next step.
  *
  * Cap rules (signup-critical):
  *   Jobs terminal always shows 5 example jobs.
- *   Anonymous buyer preview is 5 companies (/results).
- *   More than 5 buyer leads exists only on /pipeline after that handoff.
+ *   Anonymous preview is 5 jobs (/results).
+ *   More than 5 jobs exists only on /pipeline after that handoff.
+ *
+ * User-facing CTA is always "Jobs for your robot". Never "buyer leads" / "sales leads".
  */
 
 export type JobsConfirmLanding = "review" | "jobs";
@@ -43,16 +45,29 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
   );
 }
 
+export const JOBS_FOR_YOUR_ROBOT_CTA = "Jobs for your robot →";
+export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
+export const JOBS_FOR_YOUR_ROBOT_KEEP_CTA = "Keep these jobs for your robot →";
+
 export function buyerLeadsCtaLabel(_signedIn: boolean): string {
-  return "Jobs for your robot →";
+  return JOBS_FOR_YOUR_ROBOT_CTA;
 }
 
 export function buyerLeadsCtaHeading(_signedIn: boolean): string {
-  return "Jobs for your robot";
+  return JOBS_FOR_YOUR_ROBOT_HEADING;
 }
 
+/** Scan status on /results when arriving from Jobs — jobs, not sales leads. */
+export const JOBS_SCAN_STEPS = [
+  "Waiting for your robot URL…",
+  "Reading what this robot can do…",
+  "Finding jobs for your robot…",
+  "Matching work to confirmed capabilities…",
+  "Preparing five jobs to review…",
+] as const;
+
 /**
- * After a robot-URL lookup, never leave the buyer page empty when a live
+ * After a robot-URL lookup, never leave the jobs list empty when a live
  * feed exists. Scoped matches win; otherwise show the live pipeline.
  */
 export function buyerLeadsToShow<T>(opts: {
@@ -135,7 +150,7 @@ export function readNavigationType(): string | number | null {
   return typeof legacy === "number" ? legacy : null;
 }
 
-/** Anonymous → 5-lead review. Signed-in → pipeline (more than 5). */
+/** Anonymous → 5-job review. Signed-in → pipeline (more than 5). */
 export function buyerLeadsHref(opts: {
   robotUrl: string;
   signedIn: boolean;

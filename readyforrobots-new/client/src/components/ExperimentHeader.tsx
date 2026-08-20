@@ -38,8 +38,8 @@ export default function ExperimentHeader() {
             About
           </Link>
           {session ? (
-            // Signed-in users need a persistent path to their CRM/leads from the
-            // Jobs terminal — without it the buyers → pipeline handoff dead-ends.
+            // Signed-in users need a persistent path to their jobs list from the
+            // Jobs terminal — without it the jobs → pipeline handoff dead-ends.
             <Link
               href="/pipeline"
               className={

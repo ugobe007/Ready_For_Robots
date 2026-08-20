@@ -476,6 +476,8 @@ export default function Signup() {
             <h1 className="max-w-xl font-display text-4xl font-bold leading-tight text-slate-100 md:text-5xl">
               {hubspotIntent
                 ? "Sign up, then SIGNAL links HubSpot automatically."
+                : robotJobsIntent
+                  ? "Keep these jobs for your robot."
                 : pipelineIntent
                   ? buyerCo
                     ? `Save ${buyerCo}. Copy the draft. Run your pipeline.`
@@ -487,6 +489,8 @@ export default function Signup() {
             <p className="mt-5 max-w-lg text-sm leading-relaxed text-slate-300">
               {hubspotIntent
                 ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
+                : robotJobsIntent
+                  ? "Free account keeps the 5 jobs we found. The pipeline is where more than 5 live."
                 : pipelineIntent
                   ? buyerCo
                     ? `Free workspace: land back on ${buyerCo}, save it in one click, copy the outreach draft SIGNAL wrote for them, and sync to HubSpot when you are ready.`
@@ -509,7 +513,7 @@ export default function Signup() {
                 )}
               </div>
             )}
-            {liveProof && (liveProof.hot || liveProof.companies) && (
+            {liveProof && !robotJobsIntent && (liveProof.hot || liveProof.companies) && (
               <p className="mt-3 inline-flex rounded-full border border-emerald-800 bg-emerald-950/40 px-3 py-1 text-[11px] font-semibold text-emerald-300">
                 Live now ·{" "}
                 {liveProof.hot ? `${liveProof.hot.toLocaleString()} hot buyers` : "buyer signals scored"}

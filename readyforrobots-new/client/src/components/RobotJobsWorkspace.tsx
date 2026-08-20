@@ -45,6 +45,7 @@ import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
   JOBS_EXAMPLE_CAP,
+  JOBS_FOR_YOUR_ROBOT_CTA,
   JOBS_RESTORE_ONCE_KEY,
   buyerLeadsCtaHeading,
   buyerLeadsCtaLabel,
@@ -969,7 +970,7 @@ function FindRail({
           disabled={busy || !url.trim()}
           className={`${ctaClass} mt-3 w-full`}
         >
-          {busy ? "Researching…" : "Jobs for your robot →"}
+          {busy ? "Researching…" : JOBS_FOR_YOUR_ROBOT_CTA}
         </button>
       </form>
 
@@ -1589,12 +1590,12 @@ function JobsPanel({
             : `${visible.length} EXAMPLE JOBS FOR ${analysis.productName.toUpperCase()}`}
         </span>
       </div>
-      {/* These are example roles that prove fit — the next step is real buyers. */}
+      {/* Example roles that prove fit — the next step is more jobs for this robot. */}
       {baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
           Example work {analysis.productName} can do, matched to its confirmed
           capabilities · {visible.length} shown. Expand a card for evidence.
-          One next step: buyer companies.
+          One next step: jobs for your robot.
         </p>
       )}
 
@@ -1826,8 +1827,8 @@ function JobCard({
 
           {possible ? (
             <p className="mt-4 text-[12px] text-slate-500">
-              Evidence for this example job. Use the buyer-leads button below to
-              see companies hiring for this kind of work.
+              Evidence for this example job. Use Jobs for your robot below to
+              see where this work lives.
             </p>
           ) : null}
         </div>
