@@ -87,6 +87,9 @@ _BOOL_DETECTORS: list[tuple[re.Pattern, str, Any, Optional[str], float]] = [
      "mobility_architecture", "bipedal", None, CONF["HIGH"]),
     (_rx(r"\b(?:autonomous\s+navigation|autonomously\s+navigat\w*|self[-\s]navigat\w*|\blidar\b|\bslam\b)\b"),
      "autonomous_navigation", True, None, CONF["HIGH"]),
+    # Manufacturer copy often says "works autonomously" without the word "navigation".
+    (_rx(r"\b(?:works?\s+autonomously|fully\s+autonomous|autonomous\s+operation)\b"),
+     "autonomous_navigation", True, None, CONF["MEDIUM"]),
     (_rx(r"\b(?:gripper|end[-\s]effector|vacuum\s+gripper|suction\s+cup|parallel[-\s]jaw|two[-\s]finger)\b"),
      "end_effector", "gripper", None, CONF["MEDIUM"]),
     (_rx(r"\btotes?\b|\bgoods[-\s]to[-\s]person\b|\bperson[-\s]to[-\s]goods\b|\border\s+picking\b|"
@@ -383,6 +386,9 @@ def _capability_summary(grounded: dict[str, Observation]) -> list[dict[str, Any]
         emit("dexterous_manipulation", [p for p in ("has_dexterous_hands", "hand_dof") if p in grounded])
     if any(p in grounded for p in ("has_dexterous_hands", "arm_count", "end_effector")):
         emit("manipulate", [p for p in ("has_dexterous_hands", "arm_count", "end_effector") if p in grounded])
+    elif _has(grounded, "product_class", "humanoid") or _has(grounded, "product_class", "mobile_manipulator"):
+        # Humanoid / mobile-manipulator class is itself manipulation morphology.
+        emit("manipulate", ["product_class"])
     ac = grounded.get("arm_count")
     if ac is not None:
         try:

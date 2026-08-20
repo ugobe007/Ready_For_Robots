@@ -43,8 +43,19 @@ export type MatchJob = {
   blockers?: string[];
 };
 
+export type ClassOption = {
+  id: string;
+  label: string;
+  hint: string;
+};
+
 export type RobotJobMatchResult = {
-  state: "matches" | "thin_corpus" | "could_not_understand" | "select_product";
+  state:
+    | "matches"
+    | "thin_corpus"
+    | "could_not_understand"
+    | "select_product"
+    | "qualify_robot";
   robot_name: string;
   capabilities: MatchCapability[];
   families: { id: string; confidence: number }[];
@@ -54,6 +65,9 @@ export type RobotJobMatchResult = {
   company_name?: string | null;
   products?: MatchProduct[];
   needs_product_choice?: boolean;
+  needs_class_choice?: boolean;
+  class_options?: ClassOption[];
+  preview_image_url?: string | null;
   research_stages?: ResearchStage[];
   robot_class?: string | null;
   evidence_urls?: string[];
@@ -72,6 +86,7 @@ export async function fetchRobotJobMatch(opts: {
   robotName?: string;
   productName?: string;
   profile?: RobotProfileResult | null;
+  assertedClass?: string;
   signal?: AbortSignal;
 }): Promise<RobotJobMatchResult> {
   const base = getPublicReadApiBase();
@@ -84,6 +99,7 @@ export async function fetchRobotJobMatch(opts: {
       robot_name: opts.robotName || null,
       product_name: opts.productName || null,
       profile: opts.profile || null,
+      asserted_class: opts.assertedClass || null,
     }),
     signal: opts.signal,
   });

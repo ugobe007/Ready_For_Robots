@@ -180,6 +180,7 @@ class RobotProfile:
     # / workflows, each with basis + confidence + provenance) — additive display
     # metadata; the matcher consumes facts, not this.
     inference: Optional[dict[str, Any]] = None
+    preview_images: list[str] = field(default_factory=list)
     built_at: str = field(default_factory=_utcnow)
 
     def to_dict(self) -> dict[str, Any]:
@@ -194,6 +195,7 @@ class RobotProfile:
             "source_quality_level": self.source_quality_level,
             "research_morphology": self.research_morphology,
             "inference": self.inference,
+            "preview_images": list(self.preview_images),
             "ungrounded_fact_ids": list(self.ungrounded_fact_ids),
             "notes": list(self.notes),
             "needs_product_choice": self.needs_product_choice,

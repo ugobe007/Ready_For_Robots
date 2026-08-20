@@ -130,6 +130,21 @@ def build_robot_profile(
             c.source.product_id = selected.id
 
     facts = extract_facts_from_sources(collected, subject=subject)
+    if not any(
+        f.predicate == "product_class" and f.epistemic not in ("unknown", "contradicted")
+        for f in facts
+    ):
+        from app.services.robot_visual_class import visual_class_facts
+
+        extra_vis = visual_class_facts(collected, subject=subject)
+        if extra_vis:
+            facts.extend(extra_vis)
+            notes_extra.append(
+                "Visual class grounded from manufacturer product photos."
+            )
+    from app.services.robot_visual_class import preview_image_urls
+
+    preview_images = preview_image_urls(collected)
     # Sibling contamination gate: drop material facts whose evidence is about another SKU.
     # On multi-product companies, capability/class claims must be subject-proximate so a
     # shared nav cannot leak a sibling product's capability onto the selected product.
@@ -268,6 +283,7 @@ def build_robot_profile(
         needs_product_choice=False,
         research_stages=stages,
         inference=inference,
+        preview_images=preview_images,
     )
     if timings is not None:
         timings["profile_ms"] = int((time.perf_counter() - t_profile) * 1000)

@@ -206,8 +206,8 @@ def infer_morphology(facts: list[RobotFact], display_class: str | None = None) -
         return "cobot_arm"
     if "claims_warehouse_transport" in preds or "supports_tote_handling" in preds:
         return "amr"
-    if "ingress_protection" in preds and "carrying_capacity" in preds:
-        return "quadruped"
+    # IP rating + payload is common on humanoids, AMRs, and outdoor platforms.
+    # It is not evidence of a quadruped.
     return "generic"
 
 
