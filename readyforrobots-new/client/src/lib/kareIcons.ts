@@ -4,6 +4,7 @@
  *
  * Face source of truth: public/branding/face-icon-reference.png
  * (15×15 — stroke + eyes + mouth only. Do not reinterpret.)
+ * Favicons / OG mark: python3 readyforrobots-new/scripts/render_kare_face_icons.py
  */
 
 export type PixelMap = readonly (readonly number[])[];
