@@ -39,7 +39,8 @@ import {
   oemCalResultsAnonLine,
 } from "@/lib/oemCalCopy";
 import { markReviewedFiveLeads } from "@/lib/signupWorkflowPath";
-import { isJobsHandoffSrc, buyerLeadsHref, jobsSignupHref, persistJobsHandoffSrc, JOBS_SCAN_STEPS, JOBS_FOR_YOUR_ROBOT_CTA, JOBS_FOR_YOUR_ROBOT_HEADING, JOBS_FOR_YOUR_ROBOT_KEEP_CTA } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, buyerLeadsHref, jobsSignupHref, persistJobsHandoffSrc, JOBS_SCAN_STEPS, JOBS_FOR_YOUR_ROBOT_CTA, JOBS_FOR_YOUR_ROBOT_HEADING, JOBS_FOR_YOUR_ROBOT_KEEP_CTA, JOBS_EXAMPLE_CAP } from "@/lib/jobsWorkflow";
+import JobsHandoffBoard from "@/components/JobsHandoffBoard";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -611,6 +612,7 @@ export default function Results() {
   };
 
   useEffect(() => {
+    if (jobsHandoff) return;
     if (sampleMode && (sampleAccessLoading || !sampleAccessAllowed)) return;
     if (!submittedUrl) return;
     trackUrlScan(submittedUrl, "results");
@@ -800,6 +802,21 @@ export default function Results() {
     );
   }
 
+  if (jobsHandoff && submittedUrl) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#081126] pt-[44px]">
+        <ExperimentHeader />
+        <JobsHandoffBoard
+          robotUrl={submittedUrl}
+          cap={JOBS_EXAMPLE_CAP}
+          src={jobsSrc}
+          signedIn={isSignedIn}
+          variant="results"
+        />
+      </div>
+    );
+  }
+
   // SIGNAL path can ask for signup first. Jobs handoff must show the 5
   // jobs — signup is the next step after those 5, not a wall before them.
   if (
@@ -843,7 +860,7 @@ export default function Results() {
               {JOBS_FOR_YOUR_ROBOT_HEADING}
             </h1>
             <p className="mt-1 text-sm text-slate-400">
-              Same Jobs terminal. Five jobs to review. More than 5 live after signup.
+              Same Jobs terminal. 5 jobs to review. More than 5 jobs live after you sign up.
             </p>
           </div>
         </div>
@@ -1221,7 +1238,7 @@ export default function Results() {
                     <p className="text-[12px] text-slate-300">
                       {isSignedIn
                         ? "More than 5 jobs for your robot live on the pipeline."
-                        : "Signup keeps these 5 jobs for your robot. More than 5 live on the pipeline."}
+                        : "Sign up to keep these 5 jobs for your robot. More than 5 jobs live on the pipeline."}
                     </p>
                     <Link
                       href={isSignedIn ? fullPipelineHref : resultsSignupHref}

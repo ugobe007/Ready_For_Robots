@@ -66,7 +66,7 @@ describe("jobsWorkflow", () => {
     expect(href).toContain(`limit=${BUYER_LEADS_ANON_CAP}`);
     expect(href).toContain("src=jobs_all_robots");
     expect(buyerLeadsCtaLabel(false)).toBe("Jobs for your robot →");
-    expect(buyerLeadsCtaHeading(false)).toBe("Next step: jobs for your robot");
+    expect(buyerLeadsCtaHeading(false)).toBe("Next step: Jobs for your robot");
   });
 
   it("sends signed-in users to the pipeline with the same robot URL", () => {
@@ -82,7 +82,7 @@ describe("jobsWorkflow", () => {
     expect(href).toContain("industries=warehousing");
     expect(href).not.toContain("limit=");
     expect(buyerLeadsCtaLabel(true)).toBe("Jobs for your robot →");
-    expect(buyerLeadsCtaHeading(true)).toBe("Next step: jobs for your robot");
+    expect(buyerLeadsCtaHeading(true)).toBe("Next step: Jobs for your robot");
   });
 
   it("never uses buyer or sales-lead language on the Jobs CTA", () => {
@@ -96,7 +96,7 @@ describe("jobsWorkflow", () => {
     }
     expect(JOBS_FOR_YOUR_ROBOT_CTA).toBe("Jobs for your robot →");
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
-    expect(JOBS_LIST_NEXT_STEP_HEADING).toBe("Next step: jobs for your robot");
+    expect(JOBS_LIST_NEXT_STEP_HEADING).toBe("Next step: Jobs for your robot");
     expect(JOBS_LIST_NEXT_STEP_HEADING).not.toMatch(/buyer|lead/i);
     expect(JOBS_LIST_NEXT_STEP_HEADING).not.toMatch(/Next step: buyer leads/i);
     expect(JOBS_FOR_YOUR_ROBOT_KEEP_CTA.toLowerCase()).toContain("job");

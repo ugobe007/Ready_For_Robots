@@ -1,0 +1,72 @@
+import { describe, expect, it, beforeEach } from "vitest";
+import {
+  loadJobsHandoffSnapshot,
+  normalizeRobotHandoffUrl,
+  saveJobsHandoffSnapshot,
+} from "./jobsHandoffSnapshot";
+import { JOBS_EXAMPLE_CAP, JOBS_PIPELINE_CAP } from "./jobsWorkflow";
+
+function installMemoryStorage() {
+  const store = new Map<string, string>();
+  const memory: Storage = {
+    get length() {
+      return store.size;
+    },
+    clear: () => store.clear(),
+    getItem: (key: string) => store.get(key) ?? null,
+    key: (index: number) => Array.from(store.keys())[index] ?? null,
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+  };
+  Object.defineProperty(globalThis, "window", {
+    value: { sessionStorage: memory },
+    configurable: true,
+  });
+  Object.defineProperty(globalThis, "sessionStorage", {
+    value: memory,
+    configurable: true,
+  });
+}
+
+describe("jobsHandoffSnapshot", () => {
+  beforeEach(() => {
+    installMemoryStorage();
+  });
+
+  it("normalizes trailing slashes so FIND and pipeline URLs match", () => {
+    expect(normalizeRobotHandoffUrl("https://www.dexmate.ai/")).toBe(
+      "https://www.dexmate.ai",
+    );
+    expect(normalizeRobotHandoffUrl("https://WWW.Dexmate.ai/vega")).toBe(
+      "https://www.dexmate.ai/vega",
+    );
+  });
+
+  it("returns saved jobs only for the same robot URL", () => {
+    saveJobsHandoffSnapshot({
+      url: "https://www.dexmate.ai/",
+      productName: "Vega",
+      jobs: [
+        {
+          job_key: "cnc-load",
+          title: "Load CNC cells",
+          industry: "manufacturing",
+          path: "/jobs/cnc-load",
+        },
+      ],
+    });
+    expect(loadJobsHandoffSnapshot("https://www.dexmate.ai")?.jobs[0]?.title).toBe(
+      "Load CNC cells",
+    );
+    expect(loadJobsHandoffSnapshot("https://agilityrobotics.com")).toBeNull();
+  });
+
+  it("keeps pipeline cap above the 5-job preview", () => {
+    expect(JOBS_EXAMPLE_CAP).toBe(5);
+    expect(JOBS_PIPELINE_CAP).toBeGreaterThan(JOBS_EXAMPLE_CAP);
+  });
+});

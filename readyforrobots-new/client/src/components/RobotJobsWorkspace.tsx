@@ -43,6 +43,7 @@ import LiveJobTape from "@/components/jobs/LiveJobTape";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
+import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import {
   JOBS_EXAMPLE_CAP,
   JOBS_FOR_YOUR_ROBOT_CTA,
@@ -763,6 +764,15 @@ export default function RobotJobsWorkspace() {
     });
   }
 
+  function persistJobsHandoff() {
+    const activeRobot = portfolio[activeIdx];
+    saveJobsHandoffSnapshot({
+      url: submittedUrlRef.current || url,
+      productName: activeRobot?.productName || "",
+      jobs: activeRobot?.jobs || [],
+    });
+  }
+
   function newRobot() {
     if (matchAbortRef.current) {
       matchAbortRef.current();
@@ -903,6 +913,7 @@ export default function RobotJobsWorkspace() {
             expandedJob={expandedJob}
             onToggle={toggleExpand}
             buyersHref={buyersHref}
+            onHandoff={persistJobsHandoff}
             robotCount={portfolio.length}
             companyName={companyName || active.companyName}
           />
@@ -1558,6 +1569,7 @@ function JobsPanel({
   expandedJob,
   onToggle,
   buyersHref,
+  onHandoff,
   robotCount = 1,
   companyName = "",
 }: {
@@ -1567,6 +1579,7 @@ function JobsPanel({
   expandedJob: string | null;
   onToggle: (job: MatchJob) => void;
   buyersHref: (industry?: string) => string;
+  onHandoff: () => void;
   robotCount?: number;
   companyName?: string;
 }) {
@@ -1593,9 +1606,8 @@ function JobsPanel({
       {/* Example roles that prove fit — the next step is more jobs for this robot. */}
       {baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
-          Example work {analysis.productName} can do, matched to its confirmed
+          Example work {analysis.productName} can do, matched to confirmed
           capabilities · {visible.length} shown. Expand a card for evidence.
-          One next step: jobs for your robot.
         </p>
       )}
 
@@ -1624,14 +1636,14 @@ function JobsPanel({
           {buyerLeadsCtaHeading(unlocked)}
         </p>
         <p className="mt-1 text-[12px] text-slate-400">
-          Jobs {analysis.productName} can do
-          {robotCount > 1 ? ` — matched across ${robotCount} robots` : ""}
-          .
+          {robotCount > 1
+            ? `Example jobs across ${robotCount} robots.`
+            : `Example jobs for ${analysis.productName}.`}
           {unlocked
             ? " More than 5 jobs live on the pipeline after this step."
-            : " Five jobs now. Signup keeps them — more than 5 live on the pipeline."}
+            : " Sign up to keep these 5 jobs — more than 5 jobs live on the pipeline."}
         </p>
-        <Link href={buyersHref()} className={`${ctaClass} mt-4`}>
+        <Link href={buyersHref()} onClick={onHandoff} className={`${ctaClass} mt-4`}>
           <FaceCue scale={2} onEmerald />
           {buyerLeadsCtaLabel(unlocked)}
         </Link>
@@ -1826,8 +1838,8 @@ function JobCard({
 
           {possible ? (
             <p className="mt-4 text-[12px] text-slate-500">
-              Evidence for this example job. Use Jobs for your robot below to
-              see where this work lives.
+              Evidence for this example job. Continue with Jobs for your robot
+              below.
             </p>
           ) : null}
         </div>
