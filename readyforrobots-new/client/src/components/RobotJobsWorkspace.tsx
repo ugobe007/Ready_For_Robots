@@ -46,6 +46,7 @@ import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
   JOBS_EXAMPLE_CAP,
   JOBS_RESTORE_ONCE_KEY,
+  buyerLeadsCtaHeading,
   buyerLeadsCtaLabel,
   buyerLeadsHref,
   capExampleJobs,
@@ -968,7 +969,7 @@ function FindRail({
           disabled={busy || !url.trim()}
           className={`${ctaClass} mt-3 w-full`}
         >
-          {busy ? "Researching…" : "Find Jobs →"}
+          {busy ? "Researching…" : "Jobs for your robot →"}
         </button>
       </form>
 
@@ -1619,16 +1620,16 @@ function JobsPanel({
 
       <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5 text-center">
         <p className="font-display text-lg font-bold text-slate-100">
-          {unlocked ? "Next step: buyer leads" : "Next step: 5 buyer leads"}
+          {buyerLeadsCtaHeading(unlocked)}
         </p>
         <p className="mt-1 text-[12px] text-slate-400">
-          Real companies that need this kind of robot work
+          Work this robot can do
           {robotCount > 1
             ? ` — matched across ${robotCount} robots.`
             : ` for ${analysis.productName}.`}
           {unlocked
-            ? " More than 5 wait on the pipeline."
-            : " Signup is after these 5 — extra leads are only on the pipeline."}
+            ? " More than 5 jobs live after this step."
+            : " Five jobs now. Signup keeps them."}
         </p>
         <Link href={buyersHref()} className={`${ctaClass} mt-4`}>
           <FaceCue scale={2} onEmerald />

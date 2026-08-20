@@ -832,13 +832,13 @@ export default function Results() {
         <div className="border-b border-slate-700 bg-[#081126] px-4 py-6 sm:px-6">
           <div className="mx-auto max-w-4xl">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
-              Buyer leads
+              Jobs for your robot
             </p>
             <h1 className="mt-1 font-display text-2xl font-bold text-slate-100 sm:text-3xl">
-              5 companies that need this robot work
+              Jobs for your robot
             </h1>
             <p className="mt-1 text-sm text-slate-400">
-              Same Jobs terminal. Five buyer leads to review. More than 5 is on the pipeline after signup.
+              Same Jobs terminal. Five jobs to review. More than 5 live after signup.
             </p>
           </div>
         </div>
@@ -1215,14 +1215,14 @@ export default function Results() {
                   <div className="border border-emerald-500/40 bg-[#0b162f]/95 px-4 py-3 text-center">
                     <p className="text-[12px] text-slate-300">
                       {isSignedIn
-                        ? "More than 5 buyer leads live on the pipeline."
-                        : "Signup keeps these 5, then the pipeline is where more than 5 live."}
+                        ? "More than 5 jobs for your robot live on the pipeline."
+                        : "Signup keeps these 5 jobs for your robot. More than 5 live on the pipeline."}
                     </p>
                     <Link
                       href={isSignedIn ? fullPipelineHref : resultsSignupHref}
                       className="mt-3 inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] hover:bg-emerald-300"
                     >
-                      {isSignedIn ? "See more buyer leads →" : "Sign up to keep these 5 →"}
+                      {isSignedIn ? "Jobs for your robot →" : "Keep these jobs for your robot →"}
                     </Link>
                   </div>
                 </div>
