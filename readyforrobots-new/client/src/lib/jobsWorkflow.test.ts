@@ -7,7 +7,11 @@ import {
   capExampleJobs,
   isJobsHandoffSrc,
   jobsHeading,
+  jobsSignupHref,
   landingStageAfterConfirm,
+  isJobsHomeDest,
+  persistJobsHandoffSrc,
+  shouldRestoreJobsWorkspace,
 } from "./jobsWorkflow";
 
 describe("jobsWorkflow", () => {
@@ -78,5 +82,37 @@ describe("jobsWorkflow", () => {
     expect(isJobsHandoffSrc("jobs_all_robots")).toBe(true);
     expect(isJobsHandoffSrc("results_scan")).toBe(false);
     expect(isJobsHandoffSrc("signal_activation")).toBe(false);
+  });
+
+  it("keeps a Jobs src on pipeline/signup hops instead of results_scan", () => {
+    expect(persistJobsHandoffSrc("jobs_all_robots")).toBe("jobs_all_robots");
+    expect(persistJobsHandoffSrc("results_scan")).toBe("jobs_all_robots");
+    const pipeline = buyerLeadsHref({
+      robotUrl: "https://www.unitree.com/",
+      signedIn: true,
+      src: "jobs_all_robots",
+      leadId: 9,
+    });
+    expect(pipeline).toContain("src=jobs_all_robots");
+    expect(pipeline).toContain("lead=9");
+    expect(pipeline).not.toContain("results_scan");
+    expect(jobsSignupHref(pipeline, "jobs_all_robots")).toContain("src=jobs_all_robots");
+  });
+
+  it("does not restore the Jobs workspace on a fresh visit or reload of /", () => {
+    expect(shouldRestoreJobsWorkspace({ navigationType: "navigate" })).toBe(false);
+    expect(shouldRestoreJobsWorkspace({ navigationType: 0 })).toBe(false);
+    expect(shouldRestoreJobsWorkspace({ navigationType: "reload" })).toBe(false);
+    expect(shouldRestoreJobsWorkspace({ navigationType: 1 })).toBe(false);
+    expect(shouldRestoreJobsWorkspace({ navigationType: "back_forward" })).toBe(true);
+    expect(shouldRestoreJobsWorkspace({ navigationType: "navigate", restoreOnce: true })).toBe(true);
+    expect(shouldRestoreJobsWorkspace({ navigationType: "navigate", restoreQuery: true })).toBe(true);
+  });
+
+  it("treats / and /jobs paths as Jobs home after auth, not /pipeline", () => {
+    expect(isJobsHomeDest("/")).toBe(true);
+    expect(isJobsHomeDest("/jobs/unitree")).toBe(true);
+    expect(isJobsHomeDest("/pipeline?src=jobs_all_robots")).toBe(false);
+    expect(isJobsHomeDest("/results?limit=5")).toBe(false);
   });
 });

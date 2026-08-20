@@ -12,6 +12,7 @@ import {
   Zap, RefreshCw, FileText, Sparkles, Download, Bookmark
 } from "lucide-react";
 import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import AdminNav from "@/components/AdminNav";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import ProposalPdfModal, { type ProposalData } from "@/components/ProposalPdfModal";
@@ -59,7 +60,7 @@ import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
-import { isJobsHandoffSrc } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, buyerLeadsHref } from "@/lib/jobsWorkflow";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1675,6 +1676,20 @@ export default function Pipeline() {
   const arrivedFromResultsScan =
     submittedSrcFromQuery === "results_scan" || submittedSrcFromQuery === "results_next_step";
   const arrivedFromJobs = isJobsHandoffSrc(submittedSrcFromQuery);
+
+  // Anonymous Jobs arrivals stay on the 5-lead Results preview until signup.
+  useEffect(() => {
+    if (!arrivedFromJobs) return;
+    if (isSignedIn) return;
+    if (!submittedUrlFromQuery) return;
+    window.location.replace(
+      buyerLeadsHref({
+        robotUrl: submittedUrlFromQuery,
+        signedIn: false,
+        src: submittedSrcFromQuery,
+      }),
+    );
+  }, [arrivedFromJobs, isSignedIn, submittedUrlFromQuery, submittedSrcFromQuery]);
   /** URL submit searches stay on matched prospects — never default to the global market queue. */
   const preferUrlMatchedPipeline = Boolean(submittedUrlFromQuery || arrivedFromResultsScan);
 
@@ -3981,9 +3996,9 @@ export default function Pipeline() {
   }, [showFirstThreeActionsProgress, nextFirstThreeStep, firstThreeActions, selected]);
 
   return (
-    <div className="pipeline-page-bg flex min-h-screen flex-col">
+    <div className={`pipeline-page-bg flex min-h-screen flex-col ${arrivedFromJobs ? "pt-[44px]" : ""}`}>
       <div ref={pipelineTopRef} id="pipeline-page-top" aria-hidden="true" className="h-0 w-0 overflow-hidden" />
-      <Header />
+      {arrivedFromJobs ? <ExperimentHeader /> : <Header />}
 
       <main className="flex-1 px-4 pb-6 pt-4 lg:px-6">
         {loadUiVisible ? (

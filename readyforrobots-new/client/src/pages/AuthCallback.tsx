@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import { supabase } from "@/lib/supabase";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
 import { clearPendingNext, readNextParam, peekPendingNext, postAuthRedirectTarget, navigateAfterAuth } from "@/lib/authNext";
+import { markJobsWorkspaceRestoreIfHome } from "@/lib/jobsWorkflow";
 import { markFreshSignup } from "@/lib/firstSaveGuide";
 import { trackSignupComplete } from "@/lib/siteAnalytics";
 
@@ -19,7 +20,9 @@ export default function AuthCallback() {
     const client = supabase;
     const pathname = window.location.pathname;
     const search = window.location.search;
-    const next = readNextParam(search) ?? peekPendingNext() ?? postAuthRedirectTarget("/pipeline");
+    const explicitNext = readNextParam(search) ?? peekPendingNext();
+    const next = explicitNext ?? postAuthRedirectTarget("/");
+    if (explicitNext) markJobsWorkspaceRestoreIfHome(explicitNext);
 
     let done = false;
     const finish = () => {

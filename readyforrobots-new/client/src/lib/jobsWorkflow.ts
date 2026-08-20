@@ -47,6 +47,75 @@ export function buyerLeadsCtaLabel(signedIn: boolean): string {
   return signedIn ? "See buyer leads →" : "See 5 buyer leads →";
 }
 
+export const JOBS_RESTORE_ONCE_KEY = "rfr_jobs_restore_once";
+
+/** Keep a Jobs src on later hops. Never rewrite Jobs → results_scan. */
+export function persistJobsHandoffSrc(src: string | null | undefined): string {
+  const value = (src || "").trim();
+  return isJobsHandoffSrc(value) ? value : "jobs_all_robots";
+}
+
+export function jobsSignupHref(nextHref: string, src: string): string {
+  return `/signup?next=${encodeURIComponent(nextHref)}&src=${encodeURIComponent(src)}`;
+}
+
+/**
+ * Revisit of `/` must show FIND (hero), not replay the last robot URL.
+ * Restore only on browser back/forward, auth return (one-shot), or ?restore=1.
+ * Reload / tab-discard / typed URL / bookmark stay on FIND — same-tab session
+ * cache must not auto-run the previous submit.
+ */
+export function shouldRestoreJobsWorkspace(opts: {
+  navigationType?: string | number | null;
+  restoreOnce?: boolean;
+  restoreQuery?: boolean;
+}): boolean {
+  if (opts.restoreQuery || opts.restoreOnce) return true;
+  const t = opts.navigationType;
+  return t === "back_forward" || t === 2;
+}
+
+/** True when post-auth `next` is the Jobs front door (not pipeline). */
+export function isJobsHomeDest(dest: string | null | undefined): boolean {
+  const path = (dest || "").trim().split("?")[0] || "";
+  return path === "/" || path === "/jobs" || path.startsWith("/jobs/");
+}
+
+/** Auth return to `/` or `/jobs…` may restore in-progress work once. */
+export function markJobsWorkspaceRestoreIfHome(dest: string | null | undefined): void {
+  if (isJobsHomeDest(dest)) markJobsWorkspaceRestoreOnce();
+}
+
+export function markJobsWorkspaceRestoreOnce(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(JOBS_RESTORE_ONCE_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+export function consumeJobsWorkspaceRestoreOnce(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const on = window.sessionStorage.getItem(JOBS_RESTORE_ONCE_KEY) === "1";
+    if (on) window.sessionStorage.removeItem(JOBS_RESTORE_ONCE_KEY);
+    return on;
+  } catch {
+    return false;
+  }
+}
+
+export function readNavigationType(): string | number | null {
+  if (typeof performance === "undefined") return null;
+  const entry = performance.getEntriesByType("navigation")[0] as
+    | PerformanceNavigationTiming
+    | undefined;
+  if (entry?.type) return entry.type;
+  const legacy = (performance as Performance & { navigation?: { type?: number } }).navigation?.type;
+  return typeof legacy === "number" ? legacy : null;
+}
+
 /** Anonymous → 5-lead review. Signed-in → pipeline (more than 5). */
 export function buyerLeadsHref(opts: {
   robotUrl: string;
@@ -54,12 +123,14 @@ export function buyerLeadsHref(opts: {
   submissionId?: number | null;
   src?: string;
   industry?: string;
+  leadId?: number | null;
 }): string {
   const params = new URLSearchParams();
   const url = (opts.robotUrl || "").trim();
   if (url) params.set("url", url);
-  params.set("src", opts.src || "jobs_all_robots");
+  params.set("src", persistJobsHandoffSrc(opts.src));
   if (opts.submissionId) params.set("submission", String(opts.submissionId));
+  if (opts.leadId) params.set("lead", String(opts.leadId));
   const industry = (opts.industry || "").trim();
   if (opts.signedIn) {
     if (industry) params.set("industries", industry);
