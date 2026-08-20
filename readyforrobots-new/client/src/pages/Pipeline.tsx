@@ -60,8 +60,7 @@ import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
-import { isJobsHandoffSrc, buyerLeadsHref, buyerLeadsToShow, JOBS_PIPELINE_CAP } from "@/lib/jobsWorkflow";
-import JobsHandoffBoard from "@/components/JobsHandoffBoard";
+import { isJobsHandoffSrc, buyerLeadsToShow, armJobsWorkspaceRestore } from "@/lib/jobsWorkflow";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1684,21 +1683,12 @@ export default function Pipeline() {
     submittedSrcFromQuery === "results_scan" || submittedSrcFromQuery === "results_next_step";
   const arrivedFromJobs = isJobsHandoffSrc(submittedSrcFromQuery);
 
-  // Anonymous Jobs arrivals stay on the 5-lead Results preview until signup.
-  // Wait for auth to settle so a signed-in session is not bounced mid-lookup.
+  // Jobs arrivals used to render a second job list with no action.
+  // Bounce back to `/` so FIND → QUALIFY stays on the Jobs terminal.
   useEffect(() => {
-    if (authLoading) return;
     if (!arrivedFromJobs) return;
-    if (isSignedIn) return;
-    if (!submittedUrlFromQuery) return;
-    window.location.replace(
-      buyerLeadsHref({
-        robotUrl: submittedUrlFromQuery,
-        signedIn: false,
-        src: submittedSrcFromQuery,
-      }),
-    );
-  }, [authLoading, arrivedFromJobs, isSignedIn, submittedUrlFromQuery, submittedSrcFromQuery]);
+    window.location.replace(armJobsWorkspaceRestore());
+  }, [arrivedFromJobs]);
   /** URL submit searches stay on matched prospects — never default to the global market queue. */
   const preferUrlMatchedPipeline = Boolean(submittedUrlFromQuery || arrivedFromResultsScan);
 
@@ -4031,13 +4021,18 @@ export default function Pipeline() {
     return (
       <div className="flex min-h-screen flex-col bg-[#081126] pt-[44px]">
         <ExperimentHeader />
-        <JobsHandoffBoard
-          robotUrl={submittedUrlFromQuery}
-          cap={JOBS_PIPELINE_CAP}
-          src={submittedSrcFromQuery}
-          signedIn={isSignedIn}
-          variant="pipeline"
-        />
+        <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
+            Jobs
+          </p>
+          <h1 className="mt-1 font-display text-2xl font-bold text-slate-100">
+            Taking you back to your jobs…
+          </h1>
+          <p className="mt-2 text-sm text-slate-400">
+            Qualify a job on the Jobs terminal — this page is not a second
+            job list.
+          </p>
+        </main>
       </div>
     );
   }

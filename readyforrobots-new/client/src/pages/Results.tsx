@@ -39,8 +39,7 @@ import {
   oemCalResultsAnonLine,
 } from "@/lib/oemCalCopy";
 import { markReviewedFiveLeads } from "@/lib/signupWorkflowPath";
-import { isJobsHandoffSrc, buyerLeadsHref, jobsSignupHref, persistJobsHandoffSrc, JOBS_SCAN_STEPS, JOBS_FOR_YOUR_ROBOT_CTA, JOBS_FOR_YOUR_ROBOT_HEADING, JOBS_FOR_YOUR_ROBOT_KEEP_CTA, JOBS_EXAMPLE_CAP } from "@/lib/jobsWorkflow";
-import JobsHandoffBoard from "@/components/JobsHandoffBoard";
+import { isJobsHandoffSrc, JOBS_SCAN_STEPS, armJobsWorkspaceRestore } from "@/lib/jobsWorkflow";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -491,10 +490,14 @@ export default function Results() {
   const sampleName = (params.get("sample_name") || "").trim();
   const { session, loading: authLoading } = useAuth();
   const jobsHandoff = isJobsHandoffSrc(params.get("src"));
-  const jobsSrc = persistJobsHandoffSrc(params.get("src"));
   const scanSteps = jobsHandoff ? JOBS_SCAN_STEPS : SCAN_STEPS;
-  // Results is the 5-job preview on the Jobs path. More than 5 lives only on /pipeline.
+  // Results is the SIGNAL 5-lead preview. Jobs traffic does not belong here.
   const requestedLimit = Math.min(urlLimit, 5);
+
+  useEffect(() => {
+    if (!jobsHandoff) return;
+    window.location.replace(armJobsWorkspaceRestore());
+  }, [jobsHandoff]);
 
   useEffect(() => {
     const attribution = readSupplyAttribution(search);
@@ -583,24 +586,14 @@ export default function Results() {
   }, [requestedLimit, submittedUrl]);
 
   const fullPipelineHref = useMemo(() => {
-    if (jobsHandoff) {
-      return buyerLeadsHref({
-        robotUrl: submittedUrl,
-        signedIn: true,
-        src: jobsSrc,
-        leadId: topLeadId,
-      });
-    }
     const q = new URLSearchParams();
     q.set("src", "results_scan");
     if (submittedUrl) q.set("url", submittedUrl);
     if (topLeadId != null) q.set("lead", String(topLeadId));
     return `/pipeline?${q.toString()}`;
-  }, [jobsHandoff, jobsSrc, submittedUrl, topLeadId]);
+  }, [submittedUrl, topLeadId]);
 
-  const resultsSignupHref = jobsHandoff
-    ? jobsSignupHref(fullPipelineHref, jobsSrc)
-    : `/signup?next=${encodeURIComponent(fullPipelineHref)}&src=results_gate`;
+  const resultsSignupHref = `/signup?next=${encodeURIComponent(fullPipelineHref)}&src=results_gate`;
 
   // Anonymous users can review 5 leads here. Signup then opens the 15-lead pipeline.
 
@@ -802,17 +795,22 @@ export default function Results() {
     );
   }
 
-  if (jobsHandoff && submittedUrl) {
+  if (jobsHandoff) {
     return (
       <div className="flex min-h-screen flex-col bg-[#081126] pt-[44px]">
         <ExperimentHeader />
-        <JobsHandoffBoard
-          robotUrl={submittedUrl}
-          cap={JOBS_EXAMPLE_CAP}
-          src={jobsSrc}
-          signedIn={isSignedIn}
-          variant="results"
-        />
+        <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
+            Jobs
+          </p>
+          <h1 className="mt-1 font-display text-2xl font-bold text-slate-100">
+            Taking you back to your jobs…
+          </h1>
+          <p className="mt-2 text-sm text-slate-400">
+            Qualify a job on the Jobs terminal — this page is not a second
+            job list.
+          </p>
+        </main>
       </div>
     );
   }
@@ -854,13 +852,14 @@ export default function Results() {
         <div className="border-b border-slate-700 bg-[#081126] px-4 py-6 sm:px-6">
           <div className="mx-auto max-w-4xl">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
-              {JOBS_FOR_YOUR_ROBOT_HEADING}
+              Jobs
             </p>
             <h1 className="mt-1 font-display text-2xl font-bold text-slate-100 sm:text-3xl">
-              {JOBS_FOR_YOUR_ROBOT_HEADING}
+              Taking you back to your jobs…
             </h1>
             <p className="mt-1 text-sm text-slate-400">
-              Same Jobs terminal. 5 jobs to review. More than 5 jobs live after you sign up.
+              Qualify a job on the Jobs terminal — this is not a second job
+              list.
             </p>
           </div>
         </div>
@@ -1209,14 +1208,7 @@ export default function Results() {
                           <Link
                             href={
                               p.leadId != null
-                                ? jobsHandoff
-                                  ? buyerLeadsHref({
-                                      robotUrl: submittedUrl,
-                                      signedIn: true,
-                                      src: jobsSrc,
-                                      leadId: p.leadId,
-                                    })
-                                  : `/pipeline?src=results_scan&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
+                                ? `/pipeline?src=results_scan&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
                                 : fullPipelineHref
                             }
                             className="inline-flex items-center gap-1.5 border border-amber-400/50 bg-transparent px-2.5 py-1 text-[11px] font-bold text-amber-100 hover:border-amber-300"
@@ -1232,30 +1224,12 @@ export default function Results() {
                 })}
               </div>
 
-              {jobsHandoff ? (
-                <div className="sticky bottom-2 z-40 mt-6">
-                  <div className="border border-emerald-500/40 bg-[#0b162f]/95 px-4 py-3 text-center">
-                    <p className="text-[12px] text-slate-300">
-                      {isSignedIn
-                        ? "More than 5 jobs for your robot live on the pipeline."
-                        : "Sign up to keep these 5 jobs for your robot. More than 5 jobs live on the pipeline."}
-                    </p>
-                    <Link
-                      href={isSignedIn ? fullPipelineHref : resultsSignupHref}
-                      className="mt-3 inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] hover:bg-emerald-300"
-                    >
-                      {isSignedIn ? JOBS_FOR_YOUR_ROBOT_CTA : JOBS_FOR_YOUR_ROBOT_KEEP_CTA}
-                    </Link>
-                  </div>
-                </div>
-              ) : (
               <ResultsNextStepCta
                 matchCount={sortedProspects.length}
                 pipelineHref={fullPipelineHref}
                 isSignedIn={isSignedIn}
                 signupHref={resultsSignupHref}
               />
-              )}
             </>
           )}
         </div>

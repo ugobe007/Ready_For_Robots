@@ -43,18 +43,20 @@ import LiveJobTape from "@/components/jobs/LiveJobTape";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
-import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import {
   JOBS_EXAMPLE_CAP,
-  JOBS_FOR_YOUR_ROBOT_CTA,
+  FIND_JOBS_CTA,
+  JOBS_FOR_YOUR_ROBOT_KEEP_CTA,
+  JOBS_PIPELINE_CAP,
   JOBS_RESTORE_ONCE_KEY,
-  buyerLeadsCtaHeading,
-  buyerLeadsCtaLabel,
-  buyerLeadsHref,
+  QUALIFY_JOB_CTA,
+  QUALIFY_JOB_REQUEST_CTA,
   capExampleJobs,
   consumeJobsWorkspaceRestoreOnce,
   jobsHeading,
+  jobsQualifySignupHref,
   landingStageAfterConfirm,
+  markJobsWorkspaceRestoreOnce,
   readNavigationType,
   shouldRestoreJobsWorkspace,
 } from "@/lib/jobsWorkflow";
@@ -160,6 +162,7 @@ type WorkspaceSession = {
   products: string[];
   view: RestoreView;
   activeIdx?: number;
+  selectedJobKey?: string;
 };
 
 function saveWorkspaceSession(data: WorkspaceSession) {
@@ -318,6 +321,14 @@ function differentiatedCounts(portfolio: RobotAnalysis[]): boolean {
   return new Set(matched.map(a => a.jobCount)).size > 1;
 }
 
+function pickSelectedJobKey(
+  jobs: MatchJob[],
+  preferred?: string | null,
+): string | null {
+  if (preferred && jobs.some(j => j.job_key === preferred)) return preferred;
+  return jobs[0]?.job_key ?? null;
+}
+
 /* ------------------------------------------------------------------ */
 /* Component                                                           */
 /* ------------------------------------------------------------------ */
@@ -360,6 +371,9 @@ export default function RobotJobsWorkspace() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [railTab, setRailTab] = useState<RailTab>("jobs");
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
+  const [qualifyOpen, setQualifyOpen] = useState(false);
+  const [qualifyRequested, setQualifyRequested] = useState(false);
+  const [showAllJobs, setShowAllJobs] = useState(false);
 
   const sessionId = useRef(
     typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -414,6 +428,9 @@ export default function RobotJobsWorkspace() {
       restoreQuery,
     });
     if (allowRestore && saved?.url) {
+      if (restoreQuery) {
+        window.history.replaceState({}, "", "/");
+      }
       void restore(saved);
     } else {
       clearWorkspaceSession();
@@ -530,6 +547,7 @@ export default function RobotJobsWorkspace() {
       products: productNames,
       view: "jobs",
       activeIdx: idx,
+      selectedJobKey: a?.jobs[0]?.job_key,
     });
     trackRobotJobsFunnel("capabilities_viewed", {
       ...funnelBase(),
@@ -701,7 +719,9 @@ export default function RobotJobsWorkspace() {
 
   function revealJobs(a: RobotAnalysis) {
     setRailTab("jobs");
-    setExpandedJob(a.jobs[0]?.job_key ?? null);
+    setExpandedJob(pickSelectedJobKey(a.jobs, expandedJob));
+    setQualifyOpen(false);
+    setQualifyRequested(false);
     setStage("jobs");
     trackRobotJobsFunnel("discovery_complete", {
       ...funnelBase(),
@@ -713,14 +733,18 @@ export default function RobotJobsWorkspace() {
   function goToJobs(idx: number) {
     setActiveIdx(idx);
     const a = portfolio[idx];
+    const selectedKey = pickSelectedJobKey(a?.jobs || [], expandedJob);
     setRailTab("jobs");
-    setExpandedJob(a?.jobs[0]?.job_key ?? null);
+    setExpandedJob(selectedKey);
+    setQualifyOpen(false);
+    setQualifyRequested(false);
     setStage("jobs");
     saveWorkspaceSession({
       url: submittedUrlRef.current,
       products: portfolio.map(p => p.productName),
       view: "jobs",
       activeIdx: idx,
+      selectedJobKey: selectedKey || undefined,
     });
     trackRobotJobsFunnel("discovery_complete", {
       ...funnelBase(),
@@ -756,7 +780,9 @@ export default function RobotJobsWorkspace() {
           setStage("review");
         } else {
           setRailTab("jobs");
-          setExpandedJob(analyses[idx].jobs[0]?.job_key ?? null);
+          setExpandedJob(
+            pickSelectedJobKey(analyses[idx].jobs, saved.selectedJobKey),
+          );
           setStage("jobs");
         }
         return;
@@ -769,7 +795,7 @@ export default function RobotJobsWorkspace() {
         setPortfolio([a]);
         setActiveIdx(0);
         setRailTab("jobs");
-        setExpandedJob(a.jobs[0]?.job_key ?? null);
+        setExpandedJob(pickSelectedJobKey(a.jobs, saved.selectedJobKey));
         setStage("jobs");
         return;
       }
@@ -831,31 +857,50 @@ export default function RobotJobsWorkspace() {
     }
   }
 
-  function toggleExpand(job: MatchJob) {
-    setExpandedJob(prev => (prev === job.job_key ? null : job.job_key));
+  function selectJob(job: MatchJob) {
+    setExpandedJob(job.job_key);
+    if (expandedJob !== job.job_key) {
+      setQualifyOpen(false);
+      setQualifyRequested(false);
+    }
     recordJobView(job);
-  }
-
-  /** /pipeline scoped to real buyers matched to the researched robot. When an
-   *  industry is passed (from a specific job's work type), it biases matching
-   *  toward buyers in that vertical — the backend falls back to an open match if
-   *  the filter is too narrow, so this never empties the pipeline. */
-  function buyersHref(industry?: string): string {
-    return buyerLeadsHref({
-      robotUrl: submittedUrlRef.current || url,
-      signedIn: unlocked,
-      submissionId: submissionIdRef.current,
-      src: portfolio.length > 1 ? "jobs_all_robots" : "robot_jobs_qualify",
-      industry: unlocked ? industry : undefined,
+    saveWorkspaceSession({
+      url: submittedUrlRef.current,
+      products: portfolio.map(p => p.productName),
+      view: "jobs",
+      activeIdx,
+      selectedJobKey: job.job_key,
     });
   }
 
-  function persistJobsHandoff() {
-    const activeRobot = portfolio[activeIdx];
-    saveJobsHandoffSnapshot({
-      url: submittedUrlRef.current || url,
-      productName: activeRobot?.productName || "",
-      jobs: activeRobot?.jobs || [],
+  function openQualify(job: MatchJob) {
+    selectJob(job);
+    setQualifyOpen(true);
+    trackRobotJobsFunnel("qualify_opened", {
+      ...funnelBase(),
+      job_key: job.job_key,
+      company_name: job.company_name,
+      robot_name: active?.productName,
+    });
+  }
+
+  function requestQualify(job: MatchJob) {
+    markJobsWorkspaceRestoreOnce();
+    setQualifyRequested(true);
+    trackRobotJobsFunnel("qualify_requested", {
+      ...funnelBase(),
+      job_key: job.job_key,
+      company_name: job.company_name,
+      robot_name: active?.productName,
+    });
+  }
+
+  function seeAllJobs() {
+    setShowAllJobs(true);
+    trackRobotJobsFunnel("see_all_clicked", {
+      ...funnelBase(),
+      robot_name: active?.productName,
+      job_count: active?.jobCount,
     });
   }
 
@@ -875,6 +920,9 @@ export default function RobotJobsWorkspace() {
     setCompanyName("");
     setActiveIdx(0);
     setExpandedJob(null);
+    setQualifyOpen(false);
+    setQualifyRequested(false);
+    setShowAllJobs(false);
     viewedRef.current = new Set();
     fired3Plus.current = false;
     restoredRef.current = true;
@@ -995,11 +1043,14 @@ export default function RobotJobsWorkspace() {
           <JobsPanel
             analysis={active}
             unlocked={unlocked}
-            showCount={showActiveCount}
             expandedJob={expandedJob}
-            onToggle={toggleExpand}
-            buyersHref={buyersHref}
-            onHandoff={persistJobsHandoff}
+            qualifyOpen={qualifyOpen}
+            qualifyRequested={qualifyRequested}
+            showAll={showAllJobs}
+            onSelectJob={selectJob}
+            onOpenQualify={openQualify}
+            onRequestQualify={requestQualify}
+            onSeeAll={seeAllJobs}
             robotCount={portfolio.length}
             companyName={companyName || active.companyName}
             qualifying={matching}
@@ -1069,7 +1120,7 @@ function FindRail({
           disabled={busy || !url.trim()}
           className={`${ctaClass} mt-3 w-full`}
         >
-          {busy ? "Researching…" : JOBS_FOR_YOUR_ROBOT_CTA}
+          {busy ? "Researching…" : FIND_JOBS_CTA}
         </button>
       </form>
 
@@ -1666,11 +1717,14 @@ function shouldQualify(analysis: RobotAnalysis): boolean {
 function JobsPanel({
   analysis,
   unlocked,
-  showCount,
   expandedJob,
-  onToggle,
-  buyersHref,
-  onHandoff,
+  qualifyOpen,
+  qualifyRequested,
+  showAll,
+  onSelectJob,
+  onOpenQualify,
+  onRequestQualify,
+  onSeeAll,
   robotCount = 1,
   companyName = "",
   qualifying = false,
@@ -1678,18 +1732,24 @@ function JobsPanel({
 }: {
   analysis: RobotAnalysis;
   unlocked: boolean;
-  showCount: boolean;
   expandedJob: string | null;
-  onToggle: (job: MatchJob) => void;
-  buyersHref: (industry?: string) => string;
-  onHandoff: () => void;
+  qualifyOpen: boolean;
+  qualifyRequested: boolean;
+  showAll: boolean;
+  onSelectJob: (job: MatchJob) => void;
+  onOpenQualify: (job: MatchJob) => void;
+  onRequestQualify: (job: MatchJob) => void;
+  onSeeAll: () => void;
   robotCount?: number;
   companyName?: string;
   qualifying?: boolean;
   onSelectClass?: (classId: string) => void;
 }) {
   const baseJobs = analysis.jobs;
-  const visible = capExampleJobs(baseJobs);
+  const visible = showAll
+    ? baseJobs.slice(0, JOBS_PIPELINE_CAP)
+    : capExampleJobs(baseJobs);
+  const hiddenCount = Math.max(0, Math.min(baseJobs.length, JOBS_PIPELINE_CAP) - visible.length);
   const heading = jobsHeading({
     productName: analysis.productName,
     companyName: companyName || analysis.companyName,
@@ -1705,14 +1765,13 @@ function JobsPanel({
         <span className="font-mono text-sm font-bold text-emerald-300">
           {visible.length === 0
             ? ""
-            : `${visible.length} EXAMPLE JOBS FOR ${analysis.productName.toUpperCase()}`}
+            : `${visible.length} JOBS FOR ${analysis.productName.toUpperCase()}`}
         </span>
       </div>
-      {/* Example roles that prove fit — the next step is more jobs for this robot. */}
       {baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
-          Example work {analysis.productName} can do, matched to confirmed
-          capabilities · {visible.length} shown. Expand a card for evidence.
+          Pick a job that looks interesting. Qualify it — that is the next
+          step, on this page.
         </p>
       )}
 
@@ -1732,37 +1791,35 @@ function JobsPanel({
           />
         )
       ) : (
-        <ol className="mt-6 space-y-3">
-          {visible.map((job, i) => (
-            <JobCard
-              key={job.job_key}
-              index={i + 1}
-              job={job}
-              robotName={analysis.productName}
-              expanded={expandedJob === job.job_key}
-              onToggle={() => onToggle(job)}
-            />
-          ))}
-        </ol>
+        <>
+          <ol className="mt-6 space-y-3">
+            {visible.map((job, i) => (
+              <JobCard
+                key={job.job_key}
+                index={i + 1}
+                job={job}
+                robotName={analysis.productName}
+                selected={expandedJob === job.job_key}
+                qualifyOpen={expandedJob === job.job_key && qualifyOpen}
+                qualifyRequested={expandedJob === job.job_key && qualifyRequested}
+                unlocked={unlocked}
+                onSelect={() => onSelectJob(job)}
+                onOpenQualify={() => onOpenQualify(job)}
+                onRequestQualify={() => onRequestQualify(job)}
+              />
+            ))}
+          </ol>
+          {hiddenCount > 0 ? (
+            <button
+              type="button"
+              onClick={onSeeAll}
+              className="mt-4 font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-emerald-400 hover:text-emerald-300"
+            >
+              See all {Math.min(baseJobs.length, JOBS_PIPELINE_CAP)} jobs
+            </button>
+          ) : null}
+        </>
       )}
-
-      <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5 text-center">
-        <p className="font-display text-lg font-bold text-slate-100">
-          {buyerLeadsCtaHeading(unlocked)}
-        </p>
-        <p className="mt-1 text-[12px] text-slate-400">
-          {robotCount > 1
-            ? `Example jobs across ${robotCount} robots.`
-            : `Example jobs for ${analysis.productName}.`}
-          {unlocked
-            ? " More than 5 jobs live on the pipeline after this step."
-            : " Sign up to keep these 5 jobs — more than 5 jobs live on the pipeline."}
-        </p>
-        <Link href={buyersHref()} onClick={onHandoff} className={`${ctaClass} mt-4`}>
-          <FaceCue scale={2} onEmerald />
-          {buyerLeadsCtaLabel(unlocked)}
-        </Link>
-      </div>
     </div>
   );
 }
@@ -1881,22 +1938,37 @@ function JobCard({
   index,
   job,
   robotName,
-  expanded,
-  onToggle,
+  selected,
+  qualifyOpen,
+  qualifyRequested,
+  unlocked,
+  onSelect,
+  onOpenQualify,
+  onRequestQualify,
 }: {
   index: number;
   job: MatchJob;
   robotName: string;
-  expanded: boolean;
-  onToggle: () => void;
+  selected: boolean;
+  qualifyOpen: boolean;
+  qualifyRequested: boolean;
+  unlocked: boolean;
+  onSelect: () => void;
+  onOpenQualify: () => void;
+  onRequestQualify: () => void;
 }) {
   const possible = job.verdict !== "NOT_A_MATCH";
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
+  const keepHref = jobsQualifySignupHref();
   return (
-    <li className="border border-slate-600 bg-[#081126]">
+    <li
+      className={`border bg-[#081126] ${
+        selected ? "border-emerald-400/60" : "border-slate-600"
+      }`}
+    >
       <button
         type="button"
-        onClick={onToggle}
+        onClick={onSelect}
         className="flex w-full items-start gap-3 p-4 text-left"
       >
         <span className="flex-1">
@@ -1920,11 +1992,11 @@ function JobCard({
           ) : null}
         </span>
         <span className="font-mono text-xs text-slate-500">
-          {expanded ? "−" : "+"}
+          {selected ? "−" : "+"}
         </span>
       </button>
 
-      {expanded && (
+      {selected && (
         <div className="border-t border-slate-700 px-4 pb-4 pt-3">
           {job.why?.length ? (
             <div>
@@ -1981,10 +2053,48 @@ function JobCard({
           ) : null}
 
           {possible ? (
-            <p className="mt-4 text-[12px] text-slate-500">
-              Evidence for this example job. Continue with Jobs for your robot
-              below.
-            </p>
+            qualifyOpen ? (
+              <div className="mt-4 border border-slate-600 p-3">
+                <p className="text-[12px] leading-relaxed text-slate-400">
+                  We&apos;ll investigate whether this job deserves your sales
+                  team&apos;s time.
+                </p>
+                {qualifyRequested ? (
+                  <>
+                    <p className="mt-2 text-xs font-bold text-emerald-400">
+                      Qualification requested
+                    </p>
+                    {!unlocked ? (
+                      <Link
+                        href={keepHref}
+                        className={`${ctaClass} mt-3 w-full text-xs`}
+                      >
+                        <FaceCue scale={2} onEmerald />
+                        {JOBS_FOR_YOUR_ROBOT_KEEP_CTA}
+                      </Link>
+                    ) : null}
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onRequestQualify}
+                    className={`${ctaClass} mt-3 w-full text-xs`}
+                  >
+                    <FaceCue scale={2} onEmerald />
+                    {QUALIFY_JOB_REQUEST_CTA}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onOpenQualify}
+                className={`${ctaClass} mt-4 w-full`}
+              >
+                <FaceCue scale={2} onEmerald />
+                {QUALIFY_JOB_CTA}
+              </button>
+            )
           ) : null}
         </div>
       )}
