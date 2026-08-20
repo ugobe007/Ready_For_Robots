@@ -250,7 +250,7 @@ export default function Profile() {
               <div className="rounded-lg border border-gray-100 px-2.5 py-2">
                 <p className="text-gray-400 uppercase text-[9px] tracking-wider">Pipeline</p>
                 <p className="font-mono font-bold text-emerald-700 mt-0.5">
-                  {me.entitlements.pipeline_limit ?? 10} leads
+                  {me.entitlements.pipeline_limit ?? 15} leads
                 </p>
               </div>
             </div>

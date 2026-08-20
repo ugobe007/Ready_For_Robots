@@ -27,24 +27,24 @@ def test_resolve_plan_tier_paid_metadata():
 
 
 def test_pipeline_limits():
-    assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == PIPELINE_LIMIT_PAID
-    assert pipeline_limit_for_plan(PLAN_FREE) == PIPELINE_LIMIT_FREE
+    assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == 15
+    assert pipeline_limit_for_plan(PLAN_FREE) == 15
     assert pipeline_limit_for_plan(PLAN_PAID) == PIPELINE_LIMIT_PAID
-    assert PIPELINE_LIMIT_FREE == PIPELINE_LIMIT_PAID
+    assert PIPELINE_LIMIT_FREE == 15
     assert PIPELINE_LIMIT_PAID == 90
 
 
-def test_trim_pipeline_leads_free_tier_matches_full_feed():
+def test_trim_pipeline_leads_free_tier_caps_at_fifteen():
     leads = (
         [{"id": i, "priority_tier": "HOT"} for i in range(50)]
         + [{"id": 100 + i, "priority_tier": "WARM"} for i in range(40)]
         + [{"id": 200 + i, "priority_tier": "COLD"} for i in range(30)]
     )
     trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_FREE)
-    assert len(trimmed) == 90
-    assert mix["hot"]["shown"] == 40
-    assert mix["warm"]["shown"] == 30
-    assert mix["monitoring"]["shown"] == 20
+    assert len(trimmed) == 15
+    assert mix["hot"]["shown"] == 10
+    assert mix["warm"]["shown"] == 5
+    assert mix["monitoring"]["shown"] == 0
 
 
 def test_trim_pipeline_leads_by_tier_preserves_buckets():
@@ -70,10 +70,10 @@ def test_trim_pipeline_anonymous_preview_includes_all_tiers():
         + [{"id": 200 + i, "priority_tier": "COLD"} for i in range(30)]
     )
     trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_ANONYMOUS)
-    assert len(trimmed) == 90
-    assert mix["hot"]["shown"] == 40
-    assert mix["warm"]["shown"] == 30
-    assert mix["monitoring"]["shown"] == 20
+    assert len(trimmed) == 15
+    assert mix["hot"]["shown"] == 10
+    assert mix["warm"]["shown"] == 5
+    assert mix["monitoring"]["shown"] == 0
 
 
 def test_trim_pipeline_anonymous_diversifies_hot_industries():
@@ -89,7 +89,7 @@ def test_trim_pipeline_anonymous_diversifies_hot_industries():
     industries = {r["industry"] for r in hot}
     assert "Logistics" in industries
     assert "Healthcare" in industries
-    assert mix["hot"]["shown"] == 40
+    assert mix["hot"]["shown"] == 10
 
 
 def test_trim_pipeline_anonymous_backfills_when_monitoring_sparse():
@@ -99,7 +99,7 @@ def test_trim_pipeline_anonymous_backfills_when_monitoring_sparse():
     )
     trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_ANONYMOUS)
     assert mix["monitoring"]["shown"] == 0
-    assert len(trimmed) == 90
+    assert len(trimmed) == 15
 
 
 def test_trim_pipeline_drops_known_robot_vendors():
@@ -130,12 +130,12 @@ def test_apply_pipeline_entitlements_trims_and_tags():
         ],
     }
     out = apply_pipeline_entitlements(feed, PLAN_FREE)
-    # Feed only has 20 HOT + 20 WARM available — show all of them (no artificial 12-cap).
-    assert len(out["leads"]) == 40
+    # Free / anonymous workspaces preview 15 buyers (10 HOT + 5 WARM). Pro keeps the full market.
+    assert len(out["leads"]) == 15
     assert out["entitlements"]["plan"] == PLAN_FREE
-    assert out["entitlements"]["pipeline_limit"] == 90
-    assert out["entitlements"]["tier_mix"]["hot"]["shown"] == 20
-    assert out["entitlements"]["tier_mix"]["warm"]["shown"] == 20
+    assert out["entitlements"]["pipeline_limit"] == 15
+    assert out["entitlements"]["tier_mix"]["hot"]["shown"] == 10
+    assert out["entitlements"]["tier_mix"]["warm"]["shown"] == 5
     assert out["entitlements"]["tier_mix"]["monitoring"]["shown"] == 0
     assert "share_summary" in out["leads"][0]
 

@@ -1358,6 +1358,34 @@
     @apply hover:border-slate-500 hover:bg-white/5 hover:shadow-[0_12px_22px_-16px_rgba(0,0,0,0.6)];
   }
 
+  .pipeline-company-name {
+    color: #f8fafc !important;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .pipeline-company-name-lg {
+    font-size: 1.5rem;
+    line-height: 1.25;
+    color: #ffffff !important;
+  }
+
+  .pipeline-work-kicker {
+    @apply text-[11px] font-extrabold uppercase tracking-[0.18em] text-emerald-300;
+  }
+
+  .pipeline-opportunity-head {
+    @apply mb-2 flex flex-wrap items-end justify-between gap-2 rounded-lg border border-slate-700 bg-[#0d1a33] px-3 py-2.5;
+  }
+
+  .pipeline-crm-activate {
+    @apply rounded-xl border border-emerald-400/40 bg-[#071a32] px-4 py-4 shadow-[0_16px_40px_-28px_rgba(16,185,129,0.85)];
+  }
+
+  .pipeline-crm-activate-compact {
+    @apply px-3 py-3;
+  }
+
   .pipeline-list-shell {
     @apply rounded-md border border-slate-700 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)];
     background-color: var(--pipeline-panel-bg);
@@ -1382,7 +1410,10 @@
 
   .pipeline-detail-header h2 {
     font-family: "Space Grotesk", system-ui, sans-serif;
-    @apply text-slate-100 leading-tight tracking-tight;
+    @apply leading-tight tracking-tight;
+    color: #ffffff !important;
+    font-size: 1.5rem;
+    font-weight: 700;
   }
 
   .pipeline-detail-header p {

@@ -32,16 +32,17 @@ PIPELINE_WARM_SLOTS = int(os.getenv("PIPELINE_WARM_SLOTS", "30"))
 PIPELINE_MONITOR_SLOTS = int(os.getenv("PIPELINE_MONITOR_SLOTS", "20"))
 PIPELINE_TIERED_TOTAL = PIPELINE_HOT_SLOTS + PIPELINE_WARM_SLOTS + PIPELINE_MONITOR_SLOTS
 
-# Show the full tiered feed on Pipeline for every plan — gate saves/outreach, not visibility.
-PIPELINE_LIMIT_ANONYMOUS = PIPELINE_TIERED_TOTAL
-PIPELINE_ANON_HOT_SLOTS = PIPELINE_HOT_SLOTS
-PIPELINE_ANON_WARM_SLOTS = PIPELINE_WARM_SLOTS
-PIPELINE_ANON_MONITOR_SLOTS = PIPELINE_MONITOR_SLOTS
+# Non-Pro workspaces see 15 live opportunities (value proof). Pro unlocks the full market.
+PIPELINE_PREVIEW_LIMIT = 15
+PIPELINE_LIMIT_ANONYMOUS = PIPELINE_PREVIEW_LIMIT
+PIPELINE_ANON_HOT_SLOTS = 10
+PIPELINE_ANON_WARM_SLOTS = 5
+PIPELINE_ANON_MONITOR_SLOTS = 0
 
-PIPELINE_LIMIT_FREE = PIPELINE_TIERED_TOTAL
-PIPELINE_FREE_HOT_SLOTS = PIPELINE_HOT_SLOTS
-PIPELINE_FREE_WARM_SLOTS = PIPELINE_WARM_SLOTS
-PIPELINE_FREE_MONITOR_SLOTS = PIPELINE_MONITOR_SLOTS
+PIPELINE_LIMIT_FREE = PIPELINE_PREVIEW_LIMIT
+PIPELINE_FREE_HOT_SLOTS = 10
+PIPELINE_FREE_WARM_SLOTS = 5
+PIPELINE_FREE_MONITOR_SLOTS = 0
 
 PIPELINE_LIMIT_PAID = PIPELINE_TIERED_TOTAL
 SAVED_LEADS_LIMIT_FREE = 5
@@ -232,7 +233,7 @@ def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple
         else:
             cold.append(row)
 
-    if plan == PLAN_ANONYMOUS:
+    if plan in (PLAN_ANONYMOUS, PLAN_FREE):
         trimmed_hot = _diversify_by_industry(hot, hot_n)
     else:
         trimmed_hot = hot[:hot_n]
@@ -241,9 +242,10 @@ def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple
 
     trimmed = trimmed_hot + trimmed_warm + trimmed_cold
 
-    # Anonymous preview should not collapse when one bucket (often monitoring) is sparse.
+    # Preview plans should not collapse when one bucket (often monitoring) is sparse.
     # Backfill remaining slots from highest-priority leftovers while preserving cap.
-    if plan == PLAN_ANONYMOUS and len(trimmed) < PIPELINE_LIMIT_ANONYMOUS:
+    preview_cap = pipeline_limit_for_plan(plan)
+    if plan in (PLAN_ANONYMOUS, PLAN_FREE) and len(trimmed) < preview_cap:
         picked_ids = {
             row.get("id")
             for row in trimmed
@@ -257,7 +259,7 @@ def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple
                     continue
                 leftovers.append(row)
         for row in leftovers:
-            if len(trimmed) >= PIPELINE_LIMIT_ANONYMOUS:
+            if len(trimmed) >= preview_cap:
                 break
             trimmed.append(row)
 

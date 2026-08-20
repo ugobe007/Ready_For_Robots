@@ -32,6 +32,7 @@ import {
 import { marketInsightForIndustry } from "@/lib/industryContext";
 import { dealMatchesIndustrySearch, pipelineSearchSuggestions } from "@/lib/industrySearchLexicon";
 import { mapApiLeadToDeal, crmOutreachStageFromPipelineStage, type ApiLead } from "@/lib/pipelineLeadMap";
+import { capOpportunities, occupiedPipelineStages, PIPELINE_PREVIEW_LIMIT } from "@/lib/pipelineVisibility";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
@@ -51,12 +52,11 @@ import {
 import { trackFirstSave, trackMarketingEvent } from "@/lib/siteAnalytics";
 import LeadShareBar from "@/components/LeadShareBar";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
-import FirstSaveNudge from "@/components/pipeline/FirstSaveNudge";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import CalLeadDrop, { dealToCalDrop } from "@/components/pipeline/CalLeadDrop";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
-import ActivationChecklist, { isActivationChecklistDismissed } from "@/components/pipeline/ActivationChecklist";
+import PipelineCrmActivateCard from "@/components/pipeline/PipelineCrmActivateCard";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import PipelineSalesWorkflowRail from "@/components/pipeline/PipelineSalesWorkflowRail";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
@@ -831,7 +831,7 @@ type PipelineEntitlements = {
   };
 };
 
-const PIPELINE_LIMIT_FREE = PIPELINE_FEED_TOTAL;
+const PIPELINE_LIMIT_FREE = PIPELINE_PREVIEW_LIMIT;
 const PIPELINE_LIMIT_PAID = PIPELINE_FEED_TOTAL;
 /** Target curated working list after Results → Pipeline onboarding. */
 const BUILD_PIPELINE_TARGET = 15;
@@ -1853,8 +1853,6 @@ export default function Pipeline() {
     return () => window.clearTimeout(t);
   }, [pipelineLeadsLoading, submittedUrl, matchIndustryKey]);
 
-  const [showActivationChecklist, setShowActivationChecklist] = useState(false);
-  const [draftCopiedForActivation, setDraftCopiedForActivation] = useState(false);
   const [firstThreeActions, setFirstThreeActions] = useState<FirstThreeActionsState>(() => readFirstThreeActions());
   const [outreachDraftSpotlight, setOutreachDraftSpotlight] = useState(false);
   const [checklistVariantOverride, setChecklistVariantOverride] = useState<"a" | "b" | null>(null);
@@ -2113,7 +2111,8 @@ export default function Pipeline() {
   const panelPlan = panelPlanFor(isAdmin, entitlements);
   const showFullPanel = panelPlan === "paid";
   const showStandardPanel = panelPlan === "free";
-  const showKanban = isAdmin || Boolean(session?.access_token);
+  const isWorkspaceUser = Boolean(session?.access_token);
+  const showCrmStages = isAdmin;
 
   useEffect(() => {
     if (!session?.access_token) {
@@ -2626,23 +2625,20 @@ export default function Pipeline() {
   const previewLimit = entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE;
   const freeLeadCap = Math.min(entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE, PIPELINE_LIMIT_FREE);
   const freeVisibleLeads = Math.min(entitlements?.visible_count ?? deals.length, freeLeadCap);
-  const freeLeadsRemaining = Math.max(0, freeLeadCap - freeVisibleLeads);
   const freeUpgradeMessage =
-    freeLeadsRemaining <= 2
-      ? `You have viewed ${freeVisibleLeads}/${freeLeadCap} leads. Upgrade to Pro to unlock more buyers and automate your sales pipeline.`
-      : `Ready to scale beyond ${freeLeadCap} leads? Upgrade to Pro to unlock more buyers and automate your sales pipeline.`;
+    `You're viewing ${freeVisibleLeads} of ${freeLeadCap} customer opportunities. Upgrade to Pro for the full live market.`;
   const sessionDisplayName =
     session?.user?.user_metadata?.full_name
     || session?.user?.user_metadata?.name
     || session?.user?.email?.split("@")[0]
     || "there";
   const rotationSource = useMemo(() => {
-    if (hasActiveSearch || qualityControlsActive || showKanban) return pipelineSource;
+    if (hasActiveSearch || qualityControlsActive || isWorkspaceUser) return pipelineSource;
     if (panelPlan === "anonymous" && pipelineSource.length > previewLimit) {
       return pickRotatingWindow(pipelineSource, previewLimit, rotateOffset);
     }
     return pipelineSource;
-  }, [hasActiveSearch, qualityControlsActive, showKanban, panelPlan, pipelineSource, previewLimit, rotateOffset]);
+  }, [hasActiveSearch, qualityControlsActive, isWorkspaceUser, panelPlan, pipelineSource, previewLimit, rotateOffset]);
   const rotatedDeals = useMemo(() => {
     // Bypass the rotation window while a deep-link lead is active so the full
     // deals array is used as listDeals and the CRM panel stays stable.
@@ -2650,14 +2646,14 @@ export default function Pipeline() {
     if (
       hasActiveSearch ||
       qualityControlsActive ||
-      showKanban ||
+      isWorkspaceUser ||
       deepLinkLeadId != null ||
       panelPlan !== "anonymous"
     ) {
       return null;
     }
     return buildRotatedPipelineDeals(rotationSource, rotateOffset);
-  }, [hasActiveSearch, qualityControlsActive, showKanban, deepLinkLeadId, panelPlan, rotationSource, rotateOffset]);
+  }, [hasActiveSearch, qualityControlsActive, isWorkspaceUser, deepLinkLeadId, panelPlan, rotationSource, rotateOffset]);
   const listDeals = rotatedDeals ?? deals;
   const dealQualityScore = (deal: Deal) => Number(deal.leadQuality?.overall_score ?? 0);
   const dealBand = (deal: Deal) => String(deal.confidenceBand || deal.leadQuality?.confidence_band || "").toLowerCase();
@@ -2686,8 +2682,8 @@ export default function Pipeline() {
       });
     }
 
-    if (panelPlan === "free" && next.length > PIPELINE_LIMIT_FREE) {
-      return next.slice(0, PIPELINE_LIMIT_FREE);
+    if (panelPlan !== "paid") {
+      return capOpportunities(next, panelPlan);
     }
     return next;
   }, [
@@ -2717,7 +2713,7 @@ export default function Pipeline() {
     if (
       hasActiveSearch ||
       qualityControlsActive ||
-      showKanban ||
+      isWorkspaceUser ||
       rotationPaused ||
       deepLinkLeadId != null ||
       step3Intro
@@ -2733,11 +2729,11 @@ export default function Pipeline() {
       PIPELINE_LEAD_READ_MS,
     );
     return () => window.clearInterval(timer);
-  }, [hasActiveSearch, qualityControlsActive, showKanban, rotationPaused, deepLinkLeadId, rotationSource, pipelineSource.length, panelPlan, previewLimit, step3Intro]);
+  }, [hasActiveSearch, qualityControlsActive, isWorkspaceUser, rotationPaused, deepLinkLeadId, rotationSource, pipelineSource.length, panelPlan, previewLimit, step3Intro]);
 
   // Keep CRM detail panel in sync with the rotating spotlight lead.
   useEffect(() => {
-    if (hasActiveSearch || qualityControlsActive || showKanban || rotationPaused || deepLinkLeadId != null || step3Intro) return;
+    if (hasActiveSearch || qualityControlsActive || isWorkspaceUser || rotationPaused || deepLinkLeadId != null || step3Intro) return;
     const canRotate =
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
@@ -2814,9 +2810,9 @@ export default function Pipeline() {
           ]
     : isFirstWorkspaceRun
       ? [
-          "Select the highest-fit HOT lead in the list.",
-          "Save it — that opens your working pipeline.",
-          "Copy the outreach draft and send your first message.",
+          "Select the highest-fit buyer in the list on the left.",
+          "Activate CRM by saving that buyer — that is your working pipeline.",
+          "Copy the outreach draft and send the first message.",
         ]
       : isSignedIn && hasSavedLead
         ? [
@@ -2831,7 +2827,7 @@ export default function Pipeline() {
         ];
   const canSaveSelected = Boolean(selected) && (!isSignedIn || !crmAccountIdByCompanyId[selected!.id]);
   const canCopySelectedDraft = Boolean(selected?.outreachBody || selected?.sellerBrief);
-  const canOpenSelectedDraft = Boolean(selected?.outreachBody || selected?.sellerBrief) && showKanban && Boolean(session?.access_token);
+  const canOpenSelectedDraft = Boolean(selected?.outreachBody || selected?.sellerBrief) && isWorkspaceUser && Boolean(session?.access_token);
   /** Next unmatched lead in the Step 5 queue — keep Save · n/15 alive until the goal is hit. */
   const nextUnsavedDeal = useMemo(() => {
     if (!arrivedFromResultsScan || !build25Started || !isSignedIn) return null;
@@ -2880,7 +2876,9 @@ export default function Pipeline() {
                 : "Pick a lead to curate"
     : !isSignedIn
     ? "Next step: Start free workspace"
-    : canSaveSelected
+    : canSaveSelected && savedLeadCount === 0
+      ? "Activate CRM — save this buyer"
+      : canSaveSelected
       ? "Next step: Save selected lead"
       : canCopySelectedDraft
         ? "Next step: Copy outreach draft"
@@ -2967,7 +2965,6 @@ export default function Pipeline() {
     if (!payload) return;
     navigator.clipboard.writeText(payload);
     setCopied(true);
-    setDraftCopiedForActivation(true);
     setFirstThreeActions((prev) => ({ ...prev, started: true, copied: true, dismissed: false }));
     trackMarketingEvent("pipeline_draft_copy", {
       lead_id: selected.id,
@@ -3090,8 +3087,6 @@ export default function Pipeline() {
         dismissed: false,
       }));
       setSavedLeadCount((count) => count + 1);
-      setShowActivationChecklist(true);
-      setDraftCopiedForActivation(false);
       const nextHint = deal.outreachBody || deal.sellerBrief
         ? "Next: pick a lead, copy the outreach draft, paste into your email, and send."
         : "Next: pick a lead on the right, review the brief, then copy and send.";
@@ -4444,30 +4439,22 @@ export default function Pipeline() {
               )}
               {session?.access_token && savedLeadCount === 0 && selected && (
                 <div className={panelPlan === "anonymous" ? "mt-2" : "mt-0 mb-2"}>
-                  <FirstSaveNudge
+                  <PipelineCrmActivateCard
                     deal={selected}
                     saving={advancingLeadId === selected.id}
-                    onSave={() => void handleSaveLead(selected)}
+                    onActivate={() => void handleSaveLead(selected)}
                   />
                 </div>
               )}
-              {session?.access_token && (showActivationChecklist || savedLeadCount >= 1) && !isActivationChecklistDismissed() && (
-                <div className="mt-2">
-                  <ActivationChecklist
-                    company={selected?.company}
-                    draftCopied={draftCopiedForActivation || firstThreeActions.copied}
-                    hasDraft={Boolean(selected?.outreachBody || selected?.sellerBrief)}
-                    onCopyDraft={copyDraft}
-                  />
-                </div>
-              )}
-              <div className={panelPlan === "anonymous" ? "mt-2" : savedLeadCount === 0 ? "" : "mt-2"}>
+              {session?.access_token && savedLeadCount >= 1 && (
+              <div className="mt-2">
                 <CrmPathFork
                   connected={hubspotIntegration?.connected}
                   hasSession={Boolean(session?.access_token)}
                   savedCount={savedLeadCount}
                 />
               </div>
+              )}
               {session?.access_token && panelPlan === "free" && (
                 <div className="mt-2 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white px-4 py-3">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -4648,9 +4635,10 @@ export default function Pipeline() {
                   target={BUILD_PIPELINE_TARGET}
                   secondsLeft={loadCountdown}
                 />
-              ) : showKanban ? (
-              STAGES.map((stage) => {
+              ) : showCrmStages ? (
+              occupiedPipelineStages(STAGES, displayedDeals).map((stage) => {
                 const stageDeals = displayedDeals.filter((d) => d.stage === stage);
+                if (stageDeals.length === 0) return null;
                 const meta = STAGE_META[stage];
                 return (
                   <div key={stage}>
@@ -4698,7 +4686,7 @@ export default function Pipeline() {
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
-                                  <span className="text-sm font-semibold text-gray-900 truncate">{deal.company}</span>
+                                  <span className="pipeline-company-name truncate text-base">{deal.company}</span>
                                   <span className="text-[10px] text-gray-400 shrink-0">{deal.location}</span>
                                   <span
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
@@ -4762,8 +4750,28 @@ export default function Pipeline() {
                 );
               })
               ) : (
-              USER_BUCKETS.map((bucket) => {
+              <>
+              <div className="pipeline-opportunity-head">
+                <div>
+                  <p className="pipeline-work-kicker">Customer opportunities</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-100">
+                    {panelPlan === "paid"
+                      ? `${displayedDeals.length} live buyers in this view`
+                      : `${displayedDeals.length} live buyers · Pro unlocks the full market`}
+                  </p>
+                </div>
+                {panelPlan !== "paid" ? (
+                  <Link
+                    href="/pricing?reason=pipeline_limit"
+                    className="inline-flex items-center rounded-lg border border-amber-400/70 bg-amber-400 px-3 py-1.5 text-[11px] font-extrabold text-slate-950 hover:bg-amber-300"
+                  >
+                    Unlock all with Pro
+                  </Link>
+                ) : null}
+              </div>
+              {USER_BUCKETS.map((bucket) => {
                 const bucketDeals = displayedDeals.filter((d) => userBucketForDeal(d) === bucket);
+                if (bucketDeals.length === 0) return null;
                 const meta = USER_BUCKET_META[bucket];
                 return (
                   <div key={bucket}>
@@ -4776,9 +4784,6 @@ export default function Pipeline() {
                         style={{ color: meta.color, background: `${meta.color}15`, fontFamily: "'JetBrains Mono', monospace" }}
                       >
                         {bucketDeals.length}
-                        {panelPlan === "anonymous" && !hasActiveSearch && bucketDeals.length < meta.slotCap ? (
-                          <span className="text-gray-400 font-normal"> / {meta.slotCap}</span>
-                        ) : null}
                       </span>
                     </div>
 
@@ -4813,7 +4818,7 @@ export default function Pipeline() {
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
-                                  <span className="text-sm font-semibold text-gray-900 truncate">{deal.company}</span>
+                                  <span className="pipeline-company-name truncate text-base">{deal.company}</span>
                                   <span className="text-[10px] text-gray-500 shrink-0">{deal.industry}</span>
                                   <span
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
@@ -4870,7 +4875,24 @@ export default function Pipeline() {
                     )}
                   </div>
                 );
-              })
+              })}
+              {panelPlan !== "paid" ? (
+                <div className="mx-1 mb-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3">
+                  <p className="text-sm font-semibold text-amber-100">
+                    You&apos;re seeing 15 customer opportunities.
+                  </p>
+                  <p className="mt-1 text-xs text-slate-300">
+                    Pro unlocks the rest of the live market plus unlimited saves.
+                  </p>
+                  <Link
+                    href="/pricing?reason=pipeline_limit"
+                    className="mt-2 inline-flex text-xs font-extrabold text-amber-300 hover:text-amber-200"
+                  >
+                    Upgrade to Pro →
+                  </Link>
+                </div>
+              ) : null}
+              </>
               )}
             </div>
 
@@ -4885,10 +4907,10 @@ export default function Pipeline() {
                     <div className="pipeline-detail-header-inner">
                     <div className="mb-2 flex items-start justify-between gap-2">
                       <div>
-                        <p className="sb-kicker mb-0.5 text-emerald-800">CRM · Lead workspace</p>
-                        <p className="font-display text-base font-semibold text-gray-900">
+                        <p className="pipeline-work-kicker mb-1">Work this buyer</p>
+                        <h2 className="pipeline-company-name pipeline-company-name-lg">
                           {selected.company}
-                        </p>
+                        </h2>
                         <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-600">
                           <MapPin className="h-3 w-3" />
                           {selected.location}
@@ -4931,7 +4953,7 @@ export default function Pipeline() {
 
                     {/* Tier / stage badge + contact inline */}
                     <div className="flex items-center gap-3 flex-wrap">
-                      {showKanban ? (
+                      {showCrmStages ? (
                         <span
                           className="text-[10px] font-bold px-2 py-1 rounded-full"
                           style={{ color: displayStageColor(selected), background: `${displayStageColor(selected)}15`, border: `1px solid ${displayStageColor(selected)}25` }}
@@ -5051,6 +5073,16 @@ export default function Pipeline() {
                   )}
 
                   <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col">
+                  {isWorkspaceUser && savedLeadCount === 0 && selected && (
+                    <div className="px-4 pt-3">
+                      <PipelineCrmActivateCard
+                        deal={selected}
+                        saving={advancingLeadId === selected.id}
+                        onActivate={() => void handleSaveLead(selected)}
+                        compact
+                      />
+                    </div>
+                  )}
                   {showFirstThreeActionsProgress && (
                     <div className="px-5 pt-3">
                       <FirstThreeActionsProgress
@@ -5483,7 +5515,7 @@ export default function Pipeline() {
                   )}
 
                   {/* Outreach draft — primary send path lives here (CRM is advanced editor only) */}
-                  {showKanban && session?.access_token && (
+                  {isWorkspaceUser && session?.access_token && (
                   <div
                     ref={outreachDraftRef}
                     tabIndex={-1}
@@ -5608,7 +5640,7 @@ export default function Pipeline() {
                       </div>
                     )}
 
-                    {selected.outreachBody && showKanban && (
+                    {selected.outreachBody && isWorkspaceUser && (
                       <button
                         type="button"
                         disabled={developingLeadId === selected.id}
@@ -5665,7 +5697,7 @@ export default function Pipeline() {
 
                   </div>
 
-                  {!showKanban && (
+                  {!showCrmStages && (
                     <div className="pipeline-detail-actions">
                       <HubSpotCtaLink
                         connected={hubspotIntegration?.connected}
@@ -5683,7 +5715,7 @@ export default function Pipeline() {
                             ? <RefreshCw className="h-3 w-3 animate-spin" />
                             : <Zap className="h-3 w-3" />
                           }
-                          {advancingLeadId === selected.id ? "Saving…" : "Save to workspace"}
+                          {advancingLeadId === selected.id ? "Saving…" : "Save to CRM"}
                         </button>
                       ) : (
                         <Link
@@ -5697,7 +5729,7 @@ export default function Pipeline() {
                     </div>
                   )}
 
-                  {showKanban && session?.access_token && selected && (
+                  {isWorkspaceUser && session?.access_token && selected && (
                     <div className="shrink-0 px-5 py-3 border-t border-gray-100">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1.5">
@@ -5732,9 +5764,9 @@ export default function Pipeline() {
                   )}
 
                   {/* Action bar — workspace kanban */}
-                  {showKanban && session?.access_token && selected && (
+                  {isWorkspaceUser && session?.access_token && selected && (
                   <div className="pipeline-detail-actions">
-                    {STAGES.indexOf(selected.stage) > 0 && (
+                    {showCrmStages && STAGES.indexOf(selected.stage) > 0 && (
                       <button
                         onClick={() => moveStage(selected.id, -1)}
                         className="sb-btn"
@@ -5765,7 +5797,7 @@ export default function Pipeline() {
                       <Copy className="h-3 w-3" />
                       Copy draft
                     </button>
-                    {STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
+                    {showCrmStages && STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
                       <button
                         onClick={() => void handleAdvanceLead(selected)}
                         disabled={advancingLeadId === selected.id}
@@ -5835,7 +5867,7 @@ export default function Pipeline() {
       </main>
 
       {/* Email Preview Modal — workspace users */}
-      {showKanban && previewOpen && selected && (
+      {isWorkspaceUser && previewOpen && selected && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}

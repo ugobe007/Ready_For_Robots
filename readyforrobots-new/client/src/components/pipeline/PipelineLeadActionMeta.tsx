@@ -72,7 +72,7 @@ export default function PipelineLeadActionMeta({ lead, variant = "light", classN
       : variant === "hero"
         ? "text-[12px] text-slate-300 leading-snug"
       : variant === "compact"
-        ? "text-[11px] text-stone-700 leading-snug"
+        ? "text-[13px] leading-snug text-slate-300"
         : "text-xs text-gray-700 leading-snug";
 
   const chipClass =
