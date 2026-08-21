@@ -154,7 +154,7 @@ submitted URL
       + commercial seed (app/data/vendor_robots_commercial_seed.json)
       + optional industrial seed
   → fetch the submitted page once (no Wayback if the host is already in the index)
-  → identity: index SKUs first; homepage HTML may add extras
+  → identity: index SKUs for the picker (homepage nav is not a robot)
   → several SKUs, no product=  → picker, stop (no source pack)
   → one SKU / product= selected
         indexed vendor → facts from stored specs + catalog claims
@@ -167,7 +167,7 @@ submitted URL
 
 | Host class | Identity | Specs / facts | Live crawl |
 |------------|----------|---------------|------------|
-| Indexed humanoid OEM (Unitree, EngineAI, Figure, …) | Stored SKUs | Index specs mapped to checklist predicates | Homepage only |
+| Indexed humanoid OEM (Unitree, EngineAI, Figure, …) | Stored SKUs only (no nav extras) | Index specs mapped to checklist predicates | Homepage only |
 | Indexed commercial OEM (Richtech, Bear, Pudu, Locus, …) | Stored SKUs | Curated class / environment / payload when known | Homepage only |
 | Same domain, extra SKUs in commercial seed (Boston Dynamics Spot/Stretch on top of Atlas) | Merged list | Per-SKU claims | Homepage only |
 | Press host (Morningstar, Yahoo, …) | Never a lookup key | — | Rejected as vendor key |

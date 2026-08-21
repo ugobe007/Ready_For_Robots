@@ -103,6 +103,31 @@ _PRODUCT_HREF_NOISE = frozenset(
         "terms-and-conditions",
         "robot-rentals",
         "get-in-touch",
+        "learn-more",
+        "more",
+        "contact-us",
+        "get-started",
+        "case-studies",
+        "customer-success",
+        "company-history",
+        "service-plan",
+        "eula",
+        "ethics",
+        "consulting",
+        "advertising",
+        "industry",
+        "models",
+        "platform",
+        "warehouse",
+        "compact",
+        "handling",
+        "orbit",
+        "history",
+        "bipedal",
+        "humanoid",
+        "semi-humanoid",
+        "scrubber-dryer",
+        "lidar",
     }
 )
 # Locale product pages (MagicLab /en/x1, /en/human, /en/app/g1).
@@ -186,6 +211,52 @@ _PROSE_NAME_NOISE = frozenset(
         "bridging",
         "current",
     }
+)
+
+# Nav / CTA / accessory labels that must never appear in the Jobs SKU picker.
+_NAV_PRODUCT_LABELS = frozenset(
+    {
+        "learn more",
+        "contact us",
+        "get started",
+        "get in touch",
+        "see all robots",
+        "case studies",
+        "customer success",
+        "company history",
+        "service plan",
+        "eula",
+        "ethics",
+        "consulting",
+        "advertising",
+        "industry",
+        "models",
+        "platform",
+        "warehouse",
+        "compact",
+        "handling",
+        "bipedal",
+        "semi-humanoid",
+        "semi humanoid",
+        "scrubber-dryer",
+        "scrubber dryer",
+        "orbit",
+        "solutions",
+        "company",
+        "contact",
+        "news",
+        "about",
+        "purchase",
+        "product purchase",
+    }
+)
+_ACCESSORY_PRODUCT_NAME = re.compile(
+    r"\b(4d\s*lidar|lidar|sdk|datasheet|whitepaper)\b",
+    re.I,
+)
+_CTA_PRODUCT_NAME = re.compile(
+    r"^(learn|see|get|contact|read|watch|explore|download)\s+\w+",
+    re.I,
 )
 
 _PLATFORM_NOISE = re.compile(
@@ -290,6 +361,7 @@ def resolve_identity(
     # negative invariant (product string ≠ company unless org evidence).
     discovered = _discover_product_names(home, product_hint=product_hint)
     product_names = _merge_catalog_names(catalog_names, discovered)
+    catalog_only = bool(catalog_names)
     blocked_products = list(product_names)
     if product_hint and product_hint.strip():
         blocked_products.append(product_hint.strip())
@@ -318,6 +390,10 @@ def resolve_identity(
                 f"Vendor index matched {catalog_brand} "
                 f"({len(catalog_names)} robot(s) from vendor robot index)."
             )
+            if catalog_only:
+                notes_prefix.append(
+                    "Picker lists vendor index SKUs only — homepage nav and accessories omitted."
+                )
 
     products: list[RobotProduct] = []
     for pname in product_names:
@@ -403,16 +479,47 @@ def resolve_identity(
     )
 
 
+def _is_noise_product_name(name: str) -> bool:
+    """True for nav CTAs, legal links, class words, and accessories (not a robot SKU)."""
+    raw = re.sub(r"\s+", " ", (name or "").strip())
+    if not raw:
+        return True
+    low = raw.lower()
+    if low in _NAV_PRODUCT_LABELS or low in _PRODUCT_HREF_NOISE or low in _PROSE_NAME_NOISE:
+        return True
+    if _name_key(raw) in {_name_key(x) for x in _NAV_PRODUCT_LABELS}:
+        return True
+    if _ACCESSORY_PRODUCT_NAME.search(raw):
+        return True
+    if _CTA_PRODUCT_NAME.match(raw):
+        return True
+    return False
+
+
 def _merge_catalog_names(catalog_names: list[str], discovered: list[str]) -> list[str]:
-    """Indexed SKUs first; homepage crawl may add extras, never replace the index."""
+    """Indexed SKUs only when the vendor is in the index.
+
+    Homepage crawl may still name robots for unknown OEMs. Nav labels, legal
+    links, and accessories never enter the picker.
+    """
     out: list[str] = []
     seen: set[str] = set()
-    for name in list(catalog_names) + list(discovered):
+
+    def _add(name: str) -> None:
         key = _name_key(name)
         if not key or key in seen:
-            continue
+            return
         seen.add(key)
         out.append(name)
+
+    if catalog_names:
+        for name in catalog_names:
+            _add(name)
+        return out
+    for name in discovered:
+        if _is_noise_product_name(name):
+            continue
+        _add(name)
     return out
 
 
@@ -905,6 +1012,7 @@ def _href_product_name(url: str, anchor: str) -> str | None:
         2 <= len(label) <= 48
         and re.search(r"[A-Za-z]", label)
         and label.lower() not in _PRODUCT_HREF_NOISE
+        and not _is_noise_product_name(label)
     )
     if labeled:
         if sku_canon.lower() not in label.lower() and _looks_like_model_or_sku(sku):
@@ -1079,6 +1187,8 @@ def _discover_product_names(
         if n < 2 and name.lower() not in (home.final_url or "").lower():
             if not (product_hint and name.lower() == product_hint.strip().lower()):
                 continue
+        if _is_noise_product_name(name):
+            continue
         out.append(name)
         if len(out) >= _MAX_DISCOVERED_PRODUCTS * 2:
             break
