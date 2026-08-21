@@ -127,10 +127,21 @@ def test_href_label_keeps_hidden_sku():
         == "MagicBot G1"
     )
     assert (
+        _href_product_name("https://en.engineai.com.cn/product-pm01.html", "ENGINEAI")
+        == "ENGINEAI PM01"
+    )
+    assert (
         _href_product_name("https://www.magiclab.top/en/x1", "MagicBot X1")
         == "MagicBot X1"
     )
     assert _href_product_name("https://www.magiclab.top/en/x1", "") == "X1"
+
+
+def test_family_prefix_is_oem_agnostic():
+    from app.services.robot_understanding_v1.resolve import _apply_family_prefix
+
+    assert _apply_family_prefix(["Unitree G1", "H1"]) == ["Unitree G1", "Unitree H1"]
+    assert _apply_family_prefix(["PM01", "T800", "S2"]) == ["PM01", "T800", "S2"]
 
 
 def test_profile_cache_namespace_busts_stale_engineai_identity():

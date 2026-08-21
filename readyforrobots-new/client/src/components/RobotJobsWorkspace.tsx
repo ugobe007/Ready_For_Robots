@@ -593,7 +593,7 @@ export default function RobotJobsWorkspace() {
     }
 
     // Several / all — a portfolio of distinct SKUs. Do NOT research the first
-    // robot and stamp those jobs onto every name (that is how MagicLab became G1).
+    // robot and stamp those jobs onto every name (any multi-product OEM).
     const analyses = names.map(name => identityAnalysis(name, companyName));
     setPortfolio(analyses);
     setActiveIdx(0);

@@ -714,7 +714,7 @@ def _sku_from_product_href(url: str) -> str | None:
 
 
 def _href_product_name(url: str, anchor: str) -> str | None:
-    """Prefer 'MagicBot G1' over a label that hides the SKU, or a bare slug."""
+    """Prefer 'Family G1' over a label that hides the SKU, or a bare slug."""
     sku = _sku_from_product_href(url)
     if not sku:
         return None
@@ -724,7 +724,8 @@ def _href_product_name(url: str, anchor: str) -> str | None:
         sku_canon = sku.upper()
     labeled = (
         2 <= len(label) <= 48
-        and re.search(r"(bot|dog|panda|robot|g1|x1|z1|human|magic)", label, re.I)
+        and re.search(r"[A-Za-z]", label)
+        and label.lower() not in _PRODUCT_HREF_NOISE
     )
     if labeled:
         if sku_canon.lower() not in label.lower() and _looks_like_model_or_sku(sku):
@@ -734,17 +735,15 @@ def _href_product_name(url: str, anchor: str) -> str | None:
 
 
 def _apply_family_prefix(names: list[str]) -> list[str]:
-    """X1 next to MagicBot G1 → MagicBot X1 so the picker is one family."""
-    family = next(
-        (
-            m.group(1)
-            for n in names
-            if (m := re.match(r"^(MagicBot)\b", n, re.I))
-        ),
-        None,
-    )
-    if not family:
+    """Bare SKU next to 'Family G1' → 'Family X1'. Any maker, not one OEM."""
+    prefixes: list[str] = []
+    for n in names:
+        parts = n.split()
+        if len(parts) >= 2 and _COMPACT_SKU.fullmatch(parts[-1]):
+            prefixes.append(" ".join(parts[:-1]))
+    if not prefixes:
         return names
+    family = max(set(prefixes), key=prefixes.count)
     out: list[str] = []
     for n in names:
         if _COMPACT_SKU.fullmatch(n):
@@ -755,7 +754,7 @@ def _apply_family_prefix(names: list[str]) -> list[str]:
 
 
 def _dedupe_product_names(names: list[str]) -> list[str]:
-    """Drop 'Z1' when 'MagicBot Z1' exists; drop generic Human/Dog/Panda lines."""
+    """Drop 'Z1' when 'Family Z1' exists; drop generic Human/Dog/Panda lines."""
     unique: list[str] = []
     seen: set[str] = set()
     for n in names:
