@@ -1305,7 +1305,13 @@ export default function RobotJobsWorkspace() {
 
   function onSubmitFind(e: React.FormEvent) {
     e.preventDefault();
-    const u = url.trim();
+    startJobs();
+  }
+
+  function startJobs() {
+    const field = document.getElementById("robot-url") as HTMLInputElement | null;
+    field?.focus();
+    const u = (field?.value || url).trim();
     if (!u) return;
     void submitFind(u);
   }
@@ -1415,9 +1421,11 @@ export default function RobotJobsWorkspace() {
         ? undefined
         : openProfileStep;
   const processOnJobs =
-    stage === "find" || stage === "research" || stage === "jobs"
-      ? undefined
-      : openJobsStep;
+    stage === "find"
+      ? startJobs
+      : stage === "research" || stage === "jobs"
+        ? undefined
+        : openJobsStep;
   const processOnActivate =
     stage === "jobs" || stage === "portfolio" ? goToActivate : undefined;
 
@@ -1486,18 +1494,33 @@ export default function RobotJobsWorkspace() {
       {/* ---------------- LARGE WORKSPACE ---------------- */}
       <section>
         {stage === "find" && (
-          <LiveJobTape
-            title="Live Robot Jobs"
-            subtitle={null}
-            corpus={MARKET_TAPE_JOBS}
-            baseCount={MARKET_FOUND_BASE}
-            running
-            statusLines={[]}
-            revealTarget={null}
-            onRevealComplete={() => undefined}
-            onSelect={() => undefined}
-            selectedKey={null}
-          />
+          <div>
+            <LiveJobTape
+              title="Live Robot Jobs"
+              subtitle={null}
+              corpus={MARKET_TAPE_JOBS}
+              baseCount={MARKET_FOUND_BASE}
+              running
+              statusLines={[]}
+              revealTarget={null}
+              onRevealComplete={() => undefined}
+              onSelect={() => undefined}
+              selectedKey={null}
+            />
+            <div className="rfr-jobs-start-bar border-t border-slate-600 px-6 py-4">
+              <button
+                type="button"
+                onClick={startJobs}
+                className={`${ctaClass} w-full sm:w-auto`}
+              >
+                <FaceCue scale={2} onEmerald />
+                {FIND_JOBS_CTA}
+              </button>
+              <p className="mt-2 text-[12px] text-slate-400">
+                Paste a robot URL on the left, then start jobs.
+              </p>
+            </div>
+          </div>
         )}
 
         {stage === "research" && <ResearchPanel company={companyName} />}

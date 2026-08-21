@@ -183,10 +183,10 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
   );
 }
 
-export const FIND_JOBS_CTA = "Find jobs →";
+export const FIND_JOBS_CTA = "Start jobs →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
-export const JOBS_NEXT_CTA = "Activate job list →";
+export const JOBS_NEXT_CTA = "Next →";
 export const JOBS_NEXT_HINT = "Your checked jobs sit at the top of 15 live jobs";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";
 
@@ -335,7 +335,7 @@ export function defaultCheckedJobKeys<T extends { job_key: string }>(
 export const RAIL_STEP_HINT = {
   find: "Paste the manufacturer URL. We research the company and every robot SKU we can prove.",
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
-  jobs: "Expand a card to inspect. Check every job you want. Activate the list when you are ready.",
+  jobs: "Expand a card to inspect. Check every job you want. Next activates the list.",
   pipeline: "Checked jobs stay at the top. We fill the rest so you see 15 live jobs, not one buyer.",
 } as const;
 

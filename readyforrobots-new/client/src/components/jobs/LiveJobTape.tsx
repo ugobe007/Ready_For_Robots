@@ -22,7 +22,6 @@ export const TAPE_ROW_PX = ROW_PX;
 export const TAPE_VIEWPORT_PX = VISIBLE * ROW_PX;
 const SHIFT_MS = 200;
 const NEW_HOLD_MS = 1500;
-const HEADER_FLASH_MS = 1100;
 const INTERVAL_MIN = 5000;
 const INTERVAL_MAX = 7000;
 /** 16×16 map → 24px (fits 34px icon column; stronger Kare presence) */
@@ -97,17 +96,18 @@ export default function LiveJobTape({
   const [foundCount, setFoundCount] = useState(revealing ? 0 : baseCount);
   const [offsetY, setOffsetY] = useState(0);
   const [animate, setAnimate] = useState(false);
-  const [headerFlash, setHeaderFlash] = useState(false);
   const [iconActive, setIconActive] = useState(false);
   const cursorRef = useRef(0);
   const seqRef = useRef(revealing ? 0 : baseCount);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const arriving = useRef(false);
   const revealDone = useRef(false);
+  const seededKey = useRef(`${revealing}:${baseCount}`);
   const onRevealCompleteRef = useRef(onRevealComplete);
   onRevealCompleteRef.current = onRevealComplete;
 
   useEffect(() => {
+    const key = `${revealing}:${baseCount}:${corpus.length}`;
     if (revealing) {
       setRows([]);
       setFoundCount(0);
@@ -116,14 +116,19 @@ export default function LiveJobTape({
       revealDone.current = false;
       setOffsetY(0);
       setAnimate(false);
+      seededKey.current = key;
       return;
     }
+    if (seededKey.current === key && rows.length > 0) return;
+    seededKey.current = key;
     setRows(seedRows(corpus, baseCount));
     setFoundCount(baseCount);
     seqRef.current = baseCount;
     cursorRef.current = VISIBLE % Math.max(corpus.length, 1);
     setOffsetY(0);
     setAnimate(false);
+    // rows.length is only a skip-on-mount guard; do not re-seed every paint.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [corpus, baseCount, revealing, revealTarget]);
 
   useEffect(() => {
@@ -201,7 +206,6 @@ export default function LiveJobTape({
     seqRef.current = nextSeq;
     const instanceId = `${job.key}_${nextSeq}_${Date.now()}`;
 
-    setHeaderFlash(true);
     setIconActive(true);
     setFoundCount(nextSeq);
 
@@ -225,7 +229,6 @@ export default function LiveJobTape({
       setRows((prev) => prev.slice(0, VISIBLE));
       if (!fromReveal) arriving.current = false;
     }, fromReveal ? Math.min(SHIFT_MS, 90) : SHIFT_MS);
-    later(() => setHeaderFlash(false), fromReveal ? 200 : HEADER_FLASH_MS);
     later(() => setIconActive(false), fromReveal ? 160 : 420);
     if (!fromReveal) {
       later(() => {
@@ -244,11 +247,7 @@ export default function LiveJobTape({
             {title}
           </p>
           <p className="font-mono text-[13px] font-bold uppercase tracking-[0.08em] tabular-nums text-emerald-400 sm:text-[14px]">
-            {headerFlash && !revealing ? (
-              <span>● New Job</span>
-            ) : (
-              <span>{jobsFoundLabel(foundCount)}</span>
-            )}
+            <span>{jobsFoundLabel(foundCount)}</span>
           </p>
         </div>
         <p className="mt-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-600">

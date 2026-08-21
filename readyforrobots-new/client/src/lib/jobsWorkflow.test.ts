@@ -108,6 +108,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/layout="page"/);
     expect(jobsPage).toMatch(/jobs-page min-h-screen/);
     expect(jobsPage).not.toMatch(/overflow-hidden/);
+    expect(jobsPage).not.toMatch(/fresh-find/);
     expect(workspace).not.toMatch(
       /min-h-0 flex-1 overflow-y-auto p-6 sm:p-8/,
     );
@@ -252,9 +253,9 @@ describe("jobsWorkflow", () => {
     expect(header).toMatch(/onJobsFreshHomeClick/);
     expect(header).toMatch(/jobsFreshHomeHref/);
     expect(jobsFreshHomeHref()).toBe("/?new=1");
-    expect(FIND_JOBS_CTA).toBe("Find jobs →");
+    expect(FIND_JOBS_CTA).toBe("Start jobs →");
     expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
-    expect(JOBS_NEXT_CTA).toBe("Activate job list →");
+    expect(JOBS_NEXT_CTA).toBe("Next →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
     expect(JOBS_NEXT_HINT).toMatch(/checked jobs/i);
     expect(JOBS_NEXT_HINT).not.toMatch(/buyer/i);
@@ -262,6 +263,8 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/JOBS_NEXT_CTA/);
     expect(workspace).toMatch(/JobsProcessNav/);
     expect(workspace).toMatch(/JOBS_PROCESS_STEPS/);
+    expect(workspace).toMatch(/rfr-jobs-start-bar/);
+    expect(workspace).toMatch(/function startJobs/);
     expect(workspace).not.toMatch(/03 Live list/);
     expect(workspace).not.toMatch(/onNext=\{\(\) => onNext\(job\)\}/);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");

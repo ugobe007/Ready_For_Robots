@@ -35,7 +35,7 @@ submit robot URL on /
   → see Robot Jobs (step 2) — 5 examples, checkboxes, Activate job list always visible
   → inspect cards (why / unknowns / blockers)
   → check the jobs to take forward
-  → Activate job list → /pipeline?src=jobs_activate
+  → Next → /pipeline?src=jobs_activate
   → checked jobs pinned at the top, fill to 15
   → discovery pull: See All Jobs (stays on step 2)
 ```
@@ -44,7 +44,7 @@ The picker already decides one vs several. **One robot → jobs for that robot o
 
 **Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Activate uses `src=jobs_activate` without the robot OEM as `url=` so `/pipeline` shows the job list, not a match-url scan of the manufacturer. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 
-Step 2 inspects. Checkboxes select. One **Activate job list →** is a page-level next step (process chrome + end of the jobs list). The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
+Step 2 inspects. Checkboxes select. One **Next →** is the page-level advance (process chrome + end of the jobs list). FIND uses **Start jobs →**. The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
 
 ---
 
