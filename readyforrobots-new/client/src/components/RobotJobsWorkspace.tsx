@@ -64,13 +64,11 @@ import {
   jobsHeading,
   jobsProcessStepFromStage,
   jobsToActivate,
-  landingStageAfterConfirm,
   lineupJobLookups,
   normalizeRobotClass,
   portfolioShowsJobCounts,
   productClassesFromLineup,
   readNavigationType,
-  robotClassTitle,
   shouldRestoreJobsWorkspace,
 } from "@/lib/jobsWorkflow";
 import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
@@ -378,6 +376,19 @@ function typeMatchToAnalysis(
   };
 }
 
+/** One picker SKU: keep the product name, use class match when we already know it. */
+function analysisForSelectedSku(
+  res: RobotJobSearchResult,
+  name: string,
+  displayClass?: string | null,
+): RobotAnalysis {
+  const cls = normalizeRobotClass(displayClass);
+  if (cls) {
+    return { ...typeMatchToAnalysis(res, name, cls), productName: name };
+  }
+  return { ...searchToAnalysis(res), productName: name, lookupGrain: "product" };
+}
+
 function sessionProductClasses(
   names: string[],
   products: ProductChoice[],
@@ -628,6 +639,45 @@ export default function RobotJobsWorkspace() {
   /* Data flow                                                       */
   /* -------------------------------------------------------------- */
 
+  function openJobsFromAnalyses(
+    analyses: RobotAnalysis[],
+    submitUrl: string,
+    names: string[],
+  ) {
+    const first = analyses[0];
+    if (!first) return;
+    const company = first.companyName || companyName;
+    const withCompany = analyses.map(row => ({
+      ...row,
+      companyName: row.companyName || company,
+    }));
+    const checks = defaultCheckedJobKeys(first.jobs);
+    const selectedKey = pickSelectedJobKey(first.jobs, null);
+    setPortfolio(withCompany);
+    setActiveIdx(0);
+    setCompanyName(company);
+    setRailTab("jobs");
+    setExpandedJob(selectedKey);
+    setCheckedJobKeys(checks);
+    saveWorkspaceSession({
+      url: submitUrl,
+      products: names,
+      view: "jobs",
+      activeIdx: 0,
+      selectedJobKey: selectedKey || undefined,
+      checkedJobKeys: checks,
+      productClasses: sessionProductClasses(names, products),
+    });
+    trackRobotJobsFunnel("discovery_complete", {
+      ...funnelBase(),
+      robot_name: first.productName,
+      job_count: first.jobCount,
+      robots_analyzed: names.length,
+      lookup_grain: first.lookupGrain || "product",
+    });
+    setStage("jobs");
+  }
+
   /** FIND submit — research identity first (no jobs yet). */
   async function submitFind(submitUrl: string) {
     setError(null);
@@ -657,9 +707,20 @@ export default function RobotJobsWorkspace() {
         setStage("select");
         return;
       }
-      enterReview(profileToAnalysis(profile), submitUrl, [
-        profile.selected_product?.name || "",
-      ]);
+      const name =
+        profile.selected_product?.name || profile.company?.name || "";
+      const displayClass = profile.selected_product?.display_class;
+      const cls = normalizeRobotClass(displayClass);
+      const res = await fetchRobotJobSearch({
+        url: submitUrl,
+        product: name || undefined,
+        assertedClass: cls || undefined,
+        lookupGrain: cls ? "robot_type" : "product",
+      });
+      submissionIdRef.current =
+        res.robot_submission_id ?? submissionIdRef.current;
+      const analysis = analysisForSelectedSku(res, name, displayClass);
+      openJobsFromAnalyses([analysis], submitUrl, name ? [name] : []);
     } catch (err) {
       const detail = err instanceof Error ? err.message.trim() : "";
       setError(
@@ -671,7 +732,7 @@ export default function RobotJobsWorkspace() {
     }
   }
 
-  /** SELECT — one robot goes to a profile checkpoint; several/all match the type. */
+  /** SELECT — picker already chose; go to jobs. One SKU = that product. Several = type-first. */
   async function confirmSelection(which: string[] | "all") {
     const names = (which === "all" ? products.map(p => p.name) : which).filter(
       Boolean
@@ -682,12 +743,21 @@ export default function RobotJobsWorkspace() {
     if (names.length === 1) {
       setStage("research");
       try {
-        const profile = await fetchRobotProfile({
+        const displayClass = products.find(p => p.name === names[0])?.displayClass;
+        const cls = normalizeRobotClass(displayClass);
+        const res = await fetchRobotJobSearch({
           url: submitUrl,
           product: names[0],
+          assertedClass: cls || undefined,
+          lookupGrain: cls ? "robot_type" : "product",
         });
-        submissionIdRef.current = profile.robot_submission_id ?? submissionIdRef.current;
-        enterReview(profileToAnalysis(profile), submitUrl, names);
+        submissionIdRef.current =
+          res.robot_submission_id ?? submissionIdRef.current;
+        openJobsFromAnalyses(
+          [analysisForSelectedSku(res, names[0], displayClass)],
+          submitUrl,
+          names,
+        );
       } catch {
         setError("Research failed for that robot.");
         setStage("select");
@@ -696,7 +766,6 @@ export default function RobotJobsWorkspace() {
     }
 
     // Several / all — one job search per robot type (the group), not per SKU.
-    // Product-level match waits until the operator picks a single robot.
     setStage("research");
     try {
       const selectedProducts = names.map(name => ({
@@ -752,39 +821,7 @@ export default function RobotJobsWorkspace() {
           break;
         }
       }
-      const landing = landingStageAfterConfirm(names.length);
-      setPortfolio(withCompany);
-      setActiveIdx(0);
-      setCompanyName(company);
-      const productClasses = sessionProductClasses(names, products);
-      if (landing === "jobs") {
-        const checks = defaultCheckedJobKeys(first.jobs);
-        const selectedKey = pickSelectedJobKey(first.jobs, null);
-        setRailTab("jobs");
-        setExpandedJob(selectedKey);
-        setCheckedJobKeys(checks);
-        saveWorkspaceSession({
-          url: submitUrl,
-          products: names,
-          view: "jobs",
-          activeIdx: 0,
-          selectedJobKey: selectedKey || undefined,
-          checkedJobKeys: checks,
-          productClasses,
-        });
-        trackRobotJobsFunnel("discovery_complete", {
-          ...funnelBase(),
-          robot_name: first.robotClass
-            ? robotClassTitle(first.robotClass)
-            : first.productName,
-          job_count: first.jobCount,
-          robots_analyzed: names.length,
-          lookup_grain: first.lookupGrain || "product",
-        });
-        setStage("jobs");
-      } else {
-        setStage("portfolio");
-      }
+      openJobsFromAnalyses(withCompany, submitUrl, names);
     } catch {
       setError("Research failed for those robots.");
       setStage("select");
@@ -1343,7 +1380,6 @@ export default function RobotJobsWorkspace() {
                 ? () => void confirmSelection(selected.length > 0 ? selected : "all")
                 : undefined
             }
-            onActivate={stage === "select" ? goToActivate : undefined}
           />
         ) : stage === "portfolio" ? (
           <PortfolioRail
@@ -1408,7 +1444,13 @@ export default function RobotJobsWorkspace() {
       </aside>
 
       {/* ---------------- LARGE WORKSPACE ---------------- */}
-      <section className="min-h-0 overflow-y-auto">
+      <section
+        className={
+          stage === "jobs"
+            ? "flex min-h-0 flex-col overflow-hidden"
+            : "min-h-0 overflow-y-auto"
+        }
+      >
         {stage === "find" && (
           <LiveJobTape
             title="Live Robot Jobs"
@@ -2192,61 +2234,72 @@ function JobsPanel({
   ).length;
 
   return (
-    <div className="p-6 sm:p-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-display text-2xl font-bold text-slate-100">
-          {heading}
-        </h2>
-        <span className="font-mono text-sm font-bold text-emerald-300">
-          {jobsCountEyebrow({
-            visibleCount: visible.length,
-            productName: analysis.productName,
-            companyName: companyName || analysis.companyName,
-            robotCount,
-            lookupGrain: analysis.lookupGrain,
-            robotClass: analysis.robotClass,
-          })}
-        </span>
-      </div>
-      {baseJobs.length > 0 && (
-        <p className="mt-1 text-[12px] text-slate-400">
-          Example work {analysis.productName} can do. Expand a card to inspect.
-          Check every job you want — then activate the list at the bottom.
-        </p>
-      )}
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto p-6 sm:p-8">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-display text-2xl font-bold text-slate-100">
+            {heading}
+          </h2>
+          <span className="font-mono text-sm font-bold text-emerald-300">
+            {jobsCountEyebrow({
+              visibleCount: visible.length,
+              productName: analysis.productName,
+              companyName: companyName || analysis.companyName,
+              robotCount,
+              lookupGrain: analysis.lookupGrain,
+              robotClass: analysis.robotClass,
+            })}
+          </span>
+        </div>
+        {baseJobs.length > 0 && (
+          <p className="mt-1 text-[12px] text-slate-400">
+            Example work {analysis.productName} can do. Expand a card to inspect.
+            Check every job you want — then activate the job list.
+          </p>
+        )}
 
-      {baseJobs.length === 0 ? (
-        shouldQualify(analysis) ? (
-          <ClassPicker
-            robotName={analysis.productName}
-            options={analysis.classOptions}
-            previewUrl={analysis.previewImageUrl}
-            busy={qualifying}
-            onSelect={onSelectClass}
-          />
-        ) : (
-          <ZeroState
-            robotName={analysis.productName}
-            reason={analysis.zeroReason}
-          />
-        )
-      ) : (
-        <ol className="mt-6 space-y-3">
-          {visible.map((job, i) => (
-            <JobCard
-              key={job.job_key}
-              index={i + 1}
-              job={job}
+        {baseJobs.length === 0 ? (
+          shouldQualify(analysis) ? (
+            <ClassPicker
               robotName={analysis.productName}
-              selected={expandedJob === job.job_key}
-              checked={checkedJobKeys.includes(job.job_key)}
-              onSelect={() => onSelectJob(job)}
-              onToggle={() => onToggleJob(job)}
+              options={analysis.classOptions}
+              previewUrl={analysis.previewImageUrl}
+              busy={qualifying}
+              onSelect={onSelectClass}
             />
-          ))}
-        </ol>
-      )}
-      <div className="mt-6">
+          ) : (
+            <ZeroState
+              robotName={analysis.productName}
+              reason={analysis.zeroReason}
+            />
+          )
+        ) : (
+          <ol className="mt-6 space-y-3">
+            {visible.map((job, i) => (
+              <JobCard
+                key={job.job_key}
+                index={i + 1}
+                job={job}
+                robotName={analysis.productName}
+                selected={expandedJob === job.job_key}
+                checked={checkedJobKeys.includes(job.job_key)}
+                onSelect={() => onSelectJob(job)}
+                onToggle={() => onToggleJob(job)}
+              />
+            ))}
+          </ol>
+        )}
+        {hiddenCount > 0 ? (
+          <button
+            type="button"
+            onClick={onSeeAll}
+            className="mt-4 font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-emerald-400 hover:text-emerald-300"
+          >
+            See all {Math.min(baseJobs.length, JOBS_PIPELINE_CAP)} jobs
+          </button>
+        ) : null}
+      </div>
+      <div className="rfr-jobs-activate-bar shrink-0 border-t border-slate-600 bg-[#0b162f] px-6 py-4 sm:px-8">
         <button type="button" onClick={onActivate} className={`${ctaClass} w-full sm:w-auto`}>
           <FaceCue scale={2} onEmerald />
           {JOBS_NEXT_CTA}
@@ -2255,15 +2308,6 @@ function JobsPanel({
           {checkedCount} selected. {JOBS_NEXT_HINT}.
         </p>
       </div>
-      {hiddenCount > 0 ? (
-        <button
-          type="button"
-          onClick={onSeeAll}
-          className="mt-4 font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-emerald-400 hover:text-emerald-300"
-        >
-          See all {Math.min(baseJobs.length, JOBS_PIPELINE_CAP)} jobs
-        </button>
-      ) : null}
     </div>
   );
 }

@@ -176,7 +176,7 @@ submitted URL
 
 **How coverage grows:** add vendors to the JSON index (or `--apply` into `manufacturers` / `robot_models`). Do not reopen Blind 20 extractors or live-crawl 129 OEM sites. Industrial lists later use `app/data/vendor_robots_industrial_seed.json` with the same shape.
 
-**Not in this loop:** job matching (`POST /api/robot-job-search`) runs after the profile checkpoint.
+**Not in this loop:** job matching (`POST /api/robot-job-search`) runs after identity. Picker confirm for one SKU (or a single product URL) goes straight to jobs; the profile checkpoint is optional via process nav 01.
 
 ---
 
