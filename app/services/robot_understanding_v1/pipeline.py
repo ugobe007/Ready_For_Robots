@@ -17,10 +17,22 @@ from app.services.robot_understanding_v1.facts import (
     mark_contradictions,
 )
 from app.services.robot_understanding_v1.fetch import fetch_page
-from app.services.robot_understanding_v1.models import ProfileTier, RobotProduct, RobotProfile
+from app.services.robot_understanding_v1.models import (
+    ProfileTier,
+    RobotFact,
+    RobotProduct,
+    RobotProfile,
+    RobotSource,
+)
 from app.services.robot_understanding_v1.resolve import resolve_identity
-from app.services.robot_understanding_v1.sources import collect_source_pack
+from app.services.robot_understanding_v1.sources import CollectedSource, collect_source_pack
 from app.services.robot_url_safety import assert_public_http_url
+from app.services.vendor_robot_lookup import (
+    catalog_claim_facts,
+    index_robot_for_name,
+    lookup_vendor_by_url,
+    select_index_robot,
+)
 
 
 def _source_budget_sec() -> float | None:
@@ -57,7 +69,8 @@ def build_robot_profile(
     """
     t0 = time.perf_counter()
     safe = assert_public_http_url(url)
-    home = fetch_page(safe)
+    catalog = lookup_vendor_by_url(safe)
+    home = fetch_page(safe, allow_archive=not bool(catalog))
     resolved = resolve_identity(safe, home, product_hint=product_name)
     resolve_ms = int((time.perf_counter() - t0) * 1000)
     if timings is not None:
@@ -117,14 +130,22 @@ def build_robot_profile(
     t_profile = time.perf_counter()
     budget = _source_budget_sec()
     t_sources = time.perf_counter()
-    collected = collect_source_pack(
-        home,
-        product_name=selected.name if selected else product_name,
-        max_sources=max_sources,
-        deadline_monotonic=(time.monotonic() + budget) if budget is not None else None,
+    home_blocked = bool(
+        getattr(home, "fetch_degraded", False) and not (home.text or "").strip()
     )
-    if timings is not None:
-        timings["sources_ms"] = int((time.perf_counter() - t_sources) * 1000)
+    if home_blocked:
+        collected = []
+        if timings is not None:
+            timings["sources_ms"] = 0
+    else:
+        collected = collect_source_pack(
+            home,
+            product_name=selected.name if selected else product_name,
+            max_sources=max_sources,
+            deadline_monotonic=(time.monotonic() + budget) if budget is not None else None,
+        )
+        if timings is not None:
+            timings["sources_ms"] = int((time.perf_counter() - t_sources) * 1000)
     if selected:
         for c in collected:
             c.source.product_id = selected.id
@@ -156,6 +177,39 @@ def build_robot_profile(
         if dropped_sib:
             notes_extra.append(
                 f"Dropped {dropped_sib} sibling/off-subject fact(s) to prevent SKU contamination."
+            )
+
+    catalog_robot = None
+    if catalog and selected:
+        catalog_robot = index_robot_for_name(catalog, selected.name) or select_index_robot(
+            safe, catalog
+        )
+    if catalog_robot:
+        src, extra = _facts_from_catalog_robot(
+            catalog_robot, subject=subject, product_id=selected.id if selected else None
+        )
+        collected.append(CollectedSource(source=src, page=home))
+        known = {
+            f.predicate
+            for f in facts
+            if f.epistemic not in ("unknown", "contradicted")
+        }
+        added = 0
+        for fact in extra:
+            if fact.predicate in known:
+                continue
+            facts.append(fact)
+            known.add(fact.predicate)
+            added += 1
+        if added:
+            notes_extra.append(
+                f"Used vendor index for {catalog_robot.get('name')} "
+                f"({added} catalog fact(s)"
+                + (
+                    "; live OEM pages were blocked)."
+                    if home_blocked
+                    else ")."
+                )
             )
 
     # Robot Inference Engine (M1 narrow reopen): deterministic phased inference
@@ -326,6 +380,37 @@ def _stages(
             "detail": f"Profile {tier}" if profile_ready and tier else None,
         },
     ]
+
+
+def _facts_from_catalog_robot(
+    robot: dict,
+    *,
+    subject: str,
+    product_id: str | None,
+) -> tuple[RobotSource, list[RobotFact]]:
+    url = (robot.get("product_url") or robot.get("vendor_url") or "").strip()
+    src = RobotSource.create(
+        url or "vendor-robots-index",
+        "product",
+        title=str(robot.get("name") or subject),
+        confidence=0.72,
+        product_id=product_id,
+        text_excerpt="Vendor robot index (not a live OEM crawl).",
+    )
+    facts = [
+        RobotFact.create(
+            subject,
+            str(claim["predicate"]),
+            claim["value"],
+            source_id=src.id,
+            epistemic=claim.get("epistemic") or "explicit",
+            units=claim.get("units"),
+            confidence=0.72,
+            evidence_span=claim.get("evidence_span"),
+        )
+        for claim in catalog_claim_facts(robot)
+    ]
+    return src, facts
 
 
 def _contradiction_notes(facts) -> list[str]:

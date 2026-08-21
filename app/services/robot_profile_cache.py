@@ -20,8 +20,8 @@ from app.services.shared_api_cache import shared_cache_get, shared_cache_set
 
 logger = logging.getLogger(__name__)
 
-# v6: archive fallback for bot-challenged OEM hosts; named robots from prose.
-NAMESPACE = "robot_profile_v6"
+# v7: commercial vendor index (Richtech) + skip 429/archive fan-out.
+NAMESPACE = "robot_profile_v7"
 DEFAULT_TTL_SEC = 6 * 60 * 60  # 6 hours
 _MEM_MAX = 64
 _mem: dict[str, tuple[float, dict[str, Any]]] = {}
@@ -95,6 +95,10 @@ def _store_cached_profile(url: str, product: str | None, payload: dict[str, Any]
 
 def _profile_is_cacheable(payload: dict[str, Any]) -> bool:
     """Do not pin a 6-hour miss when the OEM host challenged and we got nothing."""
+    if payload.get("needs_product_choice") and (payload.get("products") or []):
+        return True
+    if (payload.get("coverage_level") or "").lower() == "low":
+        return False
     products = payload.get("products") or []
     sources = payload.get("sources") or []
     selected = payload.get("selected_product")

@@ -1,0 +1,159 @@
+{
+  "generated_at": "2026-08-21T17:20:00+00:00",
+  "source": "commercial_seed",
+  "list_category": "commercial",
+  "notes": [
+    "Curated commercial OEM SKUs for Jobs URL lookup when the manufacturer is not on /robots (humanoids).",
+    "Live product pages may be bot-challenged; lookup must not guess from a 429 interstitial."
+  ],
+  "vendors": [
+    {
+      "vendor_name": "Richtech Robotics",
+      "domains": ["richtechrobotics.com"],
+      "vendor_url": "https://www.richtechrobotics.com",
+      "list_category": "commercial",
+      "robots": [
+        {
+          "name": "ADAM",
+          "model_slug": "richtech-adam",
+          "product_url": "https://www.richtechrobotics.com/adam",
+          "vendor_url": "https://www.richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "USA",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "service_robot", "evidence_span": "ADAM is Richtech's autonomous bar and F&B robot."},
+            {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Hospitality and food-service deployments."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Wheeled indoor service platform."}
+          ]
+        },
+        {
+          "name": "MATRADEE",
+          "model_slug": "richtech-matradee",
+          "product_url": "https://www.richtechrobotics.com/matradee",
+          "vendor_url": "https://www.richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "USA",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "service_robot", "evidence_span": "Autonomous food and amenity delivery."},
+            {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Hotels and restaurants."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+          ]
+        },
+        {
+          "name": "MATRADEE X",
+          "model_slug": "richtech-matradee-x",
+          "product_url": "https://www.richtechrobotics.com/matradee-x",
+          "vendor_url": "https://www.richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "USA",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "service_robot", "evidence_span": "High-capacity food and cargo delivery."},
+            {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Banquet and restaurant service."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+          ]
+        },
+        {
+          "name": "MATRADEE L",
+          "model_slug": "richtech-matradee-l",
+          "product_url": "https://www.richtechrobotics.com/matradee-l",
+          "vendor_url": "https://www.richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "USA",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "service_robot", "evidence_span": "Matradee L delivery robot."},
+            {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Hospitality delivery."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+          ]
+        },
+        {
+          "name": "LUCKI",
+          "model_slug": "richtech-lucki",
+          "product_url": "https://www.richtechrobotics.com/lucki",
+          "vendor_url": "https://www.richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "USA",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "service_robot", "evidence_span": "Delivery robot with secured drawers."},
+            {"predicate": "operating_environment", "value": "healthcare", "evidence_span": "Healthcare and hospitality logistics."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+          ]
+        },
+        {
+          "name": "MEDBOT",
+          "model_slug": "richtech-medbot",
+          "product_url": "https://www.richtechrobotics.com/medbot",
+          "vendor_url": "https://www.richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "USA",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "service_robot", "evidence_span": "Hospital-grade autonomous delivery."},
+            {"predicate": "operating_environment", "value": "healthcare", "evidence_span": "Hospitals and clinics."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+          ]
+        },
+        {
+          "name": "DUST-E MX",
+          "model_slug": "richtech-dust-e-mx",
+          "product_url": "https://www.richtechrobotics.com/dust-e-mx",
+          "vendor_url": "https://www.richtechrobotics.com",
+          "primary_class": "cleaning_robot",
+          "status": "available",
+          "country": "USA",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "cleaning_robot", "evidence_span": "Autonomous UV-C disinfection robot."},
+            {"predicate": "operating_environment", "value": "healthcare", "evidence_span": "Hospitals, hotels, food prep."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor cleaning platform."}
+          ]
+        },
+        {
+          "name": "AIDY",
+          "model_slug": "richtech-aidy",
+          "product_url": "https://www.richtechrobotics.com/aidy",
+          "vendor_url": "https://www.richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "USA",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "service_robot", "evidence_span": "Guest-facing indoor delivery robot."},
+            {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Hotel amenity and parcel delivery."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+          ]
+        },
+        {
+          "name": "Scorpion",
+          "model_slug": "richtech-scorpion",
+          "product_url": "https://www.richtechrobotics.com/scorpion",
+          "vendor_url": "https://www.richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "pilot",
+          "country": "USA",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "service_robot", "evidence_span": "Richtech Scorpion service robot."},
+            {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Indoor commercial deployments."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Wheeled indoor platform."}
+          ]
+        },
+        {
+          "name": "Titan",
+          "model_slug": "richtech-titan",
+          "product_url": "https://www.richtechrobotics.com/titan",
+          "vendor_url": "https://www.richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "pilot",
+          "country": "USA",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "service_robot", "evidence_span": "Richtech Titan commercial robot."},
+            {"predicate": "operating_environment", "value": "automotive_retail", "evidence_span": "Dealership and commercial floor work."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Wheeled indoor platform."}
+          ]
+        }
+      ]
+    }
+  ]
+}

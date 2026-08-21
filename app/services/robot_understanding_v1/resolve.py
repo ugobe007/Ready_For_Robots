@@ -11,6 +11,7 @@ from app.services.robot_understanding_v1.fetch import FetchedPage
 from app.services.robot_understanding_v1.models import RobotCompany, RobotProduct
 from app.services.robot_url_safety import registrable_domain
 from app.services.vendor_robot_lookup import (
+    index_robot_for_name,
     index_robot_names,
     lookup_vendor_by_url,
     select_index_robot,
@@ -315,12 +316,15 @@ def resolve_identity(
             company = RobotCompany.create(name=name, primary_domain=domain, aliases=aliases)
             notes_prefix.append(
                 f"Vendor index matched {catalog_brand} "
-                f"({len(catalog_names)} robot(s) from readyforrobots.com/robots)."
+                f"({len(catalog_names)} robot(s) from vendor robot index)."
             )
 
     products: list[RobotProduct] = []
     for pname in product_names:
         display_class = _hint_display_class(pname, home.text)
+        indexed = index_robot_for_name(catalog, pname) if catalog else None
+        if indexed and indexed.get("primary_class"):
+            display_class = str(indexed["primary_class"])
         products.append(
             RobotProduct.create(company.id, pname, display_class=display_class)
         )

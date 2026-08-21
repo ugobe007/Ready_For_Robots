@@ -293,6 +293,11 @@ def collect_source_pack(
     submit path can match on a grounded-enough pack instead of waiting for
     every candidate. Extractors are unchanged.
     """
+    if getattr(home, "fetch_degraded", False) and not (home.text or "").strip():
+        # Challenge / empty interstitial — do not fan out to /adam, sitemap, or
+        # Wayback copies of every hub (that is how Richtech took ~90s).
+        return []
+
     origin = f"{urlparse(home.final_url).scheme}://{urlparse(home.final_url).netloc}"
     candidates: list[tuple[float, str, SourceType, float, str]] = []
     slug = _product_slug(product_name) if product_name else None
