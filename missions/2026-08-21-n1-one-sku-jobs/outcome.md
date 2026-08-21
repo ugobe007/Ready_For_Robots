@@ -17,4 +17,6 @@ Picker confirm for one SKU (`Fourier N1`) still opened the profile checkpoint. T
 
 ## Tests
 
-Vitest `jobsWorkflow.test.ts` (and related) — see this cycle's run in the PR.
+- Vitest: 28 passed (`jobsWorkflow.test.ts` + `jobsQualify.test.ts`).
+- Production API smoke: `POST /api/robot-job-search` `{url: fftai.com/en, product: Fourier N1, asserted_class: humanoid, lookup_grain: robot_type}` → 38 jobs, ~1.2s. API `robot_name` is `Humanoid`; client stamps `Fourier N1`.
+- Manual: `https://www.fftai.com/en` → pick N1 → one Find jobs click → **Jobs for Fourier N1** with pinned **Activate job list →**. No second Find jobs / review screen.
