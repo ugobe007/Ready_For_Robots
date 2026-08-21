@@ -30,22 +30,22 @@ Not leads. Not SIGNAL. Not three products. One engine: **FIND → QUALIFY → PL
 submit robot URL on /
   → see understood capabilities (must be credible)
   → see Robot Jobs
-  → inspect cards
+  → inspect cards (why / unknowns / blockers)
   → discovery pull: See All Jobs
-  → and/or commercial pull: Qualify This Job (on the job card)
-  → signup / pursuit when ready
 ```
 
-**Do not hop.** FIND and QUALIFY live on `/`. Login restores that workspace. Never send Jobs traffic to a second "Jobs for ______" list on `/pipeline` or `/results` — that screen has no action and kills the loop.
+**Do not hop.** FIND lives on `/`. Login restores that workspace. Never send Jobs traffic to a second "Jobs for ______" list on `/pipeline` or `/results`.
+
+The jobs list is not a qualify step. Cards expand to show evidence. There is no Qualify CTA on step 2 — that button restated evidence already on the card and invented a next step that does not exist.
 
 **Product question:**
 
-> Does RFR understand their robot well enough to show credible work — and does that work create enough value that they want more (`rdd_see_all_clicked`) or ask us to qualify it (`rdd_qualify_requested`)?
+> Does RFR understand their robot well enough to show credible work — and does that work create enough value that they want more (`rdd_see_all_clicked`)?
 
 | Pull | Metric |
 |------|--------|
 | Discovery | See All CTR · `rdd_see_all_clicked` |
-| Commercial | Qualify requested · `rdd_qualify_requested` (stronger when present) |
+| Commercial | later — not a Qualify CTA on the jobs list |
 
 Segment by `persona` and robot product / family.
 
@@ -73,8 +73,7 @@ Legacy matcher stays live until Understanding v1 wins blind eval. No Fly migrate
 | Low submit → capabilities | Input / trust |
 | Capabilities shown, jobs feel wrong | **Understanding integrity** (fix Phases 1–3) |
 | High job views, low See All | Weak discovery pull |
-| High See All, low qualify | Curious but not commercially hooked |
-| Qualify requested | Strong commercial pull on that job |
+| High See All | Discovery pull working — QUALIFY is later, not a list CTA |
 | High unlock, low signup | Auth / gating friction |
 | One persona dominates | GTM wedge (still one engine) |
 
@@ -96,7 +95,6 @@ Prefer outreach to `/` (or current Jobs entry) with `?persona=oem|distributor|in
 | Search beat | `rdd_discovery_started` / `rdd_discovery_complete` |
 | Jobs | `rdd_first_job_viewed` · `rdd_job_viewed` · `rdd_jobs_3plus_viewed` |
 | Discovery unlock | `rdd_see_all_clicked` |
-| Commercial pull | `rdd_qualify_requested` |
 | Signup | `signup_start` / `signup_complete` (`src=robot_jobs`) |
 
 ---

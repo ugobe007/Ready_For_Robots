@@ -1,13 +1,12 @@
 /**
- * Jobs submit workflow — FIND → QUALIFY on `/`. PLACE is later.
+ * Jobs submit workflow — FIND on `/`. PLACE is later.
  *
- * The job list on `/` is the product. Clicking a job is the next step
- * (Qualify this job). Do not hop to a second "Jobs for ______" list on
- * /results or /pipeline after login — that screen has no action and kills
- * the workflow.
+ * The job list is the product. Cards expand to show why / unknowns / blockers.
+ * There is no Qualify CTA and no "next step" on that list — inventing one
+ * either hops to a dead board or restates evidence already on the card.
  *
- * Cap: the terminal shows 5 example jobs. See All reveals more on the same
- * page. Never send Jobs traffic to /pipeline as a duplicate job board.
+ * Cap: 5 example jobs. See All reveals more on the same page.
+ * Never send Jobs traffic to /pipeline as a duplicate job board.
  */
 
 export type JobsConfirmLanding = "review" | "jobs";
@@ -26,9 +25,6 @@ export function jobsHeading(opts: {
   companyName: string;
   robotCount: number;
 }): string {
-  if (opts.robotCount > 1) {
-    return `Jobs for ${opts.companyName || opts.productName}`;
-  }
   return `Jobs for ${opts.productName}`;
 }
 
@@ -48,21 +44,7 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
 }
 
 export const FIND_JOBS_CTA = "Find jobs →";
-/** @deprecated leftover copy — Jobs no longer uses a page-level "jobs for your robot" hop. */
-export const JOBS_FOR_YOUR_ROBOT_CTA = "Qualify this job →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
-export const JOBS_FOR_YOUR_ROBOT_KEEP_CTA = "Keep this search →";
-export const JOBS_LIST_NEXT_STEP_HEADING = "This job looks interesting";
-export const QUALIFY_JOB_CTA = "Qualify this job →";
-export const QUALIFY_JOB_REQUEST_CTA = "Request qualification";
-
-export function buyerLeadsCtaLabel(_signedIn: boolean): string {
-  return QUALIFY_JOB_CTA;
-}
-
-export function buyerLeadsCtaHeading(_signedIn: boolean): string {
-  return JOBS_LIST_NEXT_STEP_HEADING;
-}
 
 /** Scan status on /results when arriving from Jobs — unused; Jobs stays on `/`. */
 export const JOBS_SCAN_STEPS = [
@@ -103,10 +85,6 @@ export function jobsSignupHref(nextHref: string, src: string): string {
 /** Auth / leftover-link return to the Jobs workspace on `/`. */
 export function jobsWorkspaceRestoreHref(): string {
   return "/?restore=1";
-}
-
-export function jobsQualifySignupHref(): string {
-  return jobsSignupHref(jobsWorkspaceRestoreHref(), "robot_jobs_qualify");
 }
 
 /**

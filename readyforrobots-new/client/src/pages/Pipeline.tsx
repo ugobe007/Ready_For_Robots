@@ -4029,7 +4029,7 @@ export default function Pipeline() {
             Taking you back to your jobs…
           </h1>
           <p className="mt-2 text-sm text-slate-400">
-            Qualify a job on the Jobs terminal — this page is not a second
+            Your jobs stay on the Jobs terminal. This page is not a second
             job list.
           </p>
         </main>
