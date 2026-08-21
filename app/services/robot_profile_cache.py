@@ -20,8 +20,8 @@ from app.services.shared_api_cache import shared_cache_get, shared_cache_set
 
 logger = logging.getLogger(__name__)
 
-# v3: compound-ccTLD registrable domain + manufacturer product-href SKUs.
-NAMESPACE = "robot_profile_v3"
+# v4: locale product paths (MagicLab /en/x1) in addition to product-pm01 SKUs.
+NAMESPACE = "robot_profile_v4"
 DEFAULT_TTL_SEC = 6 * 60 * 60  # 6 hours
 _MEM_MAX = 64
 _mem: dict[str, tuple[float, dict[str, Any]]] = {}
