@@ -17,4 +17,5 @@ The Jobs workspace was a viewport-locked two-pane box (`h-[calc(100vh-76px)] ove
 
 ## Tests
 
-Vitest `jobsWorkflow.test.ts` — see this cycle's run.
+- Vitest: 29 passed (`jobsWorkflow` + `jobsQualify`).
+- Manual: Fourier `fftai.com/en` → N1 → Jobs for Fourier N1. Chrome document `scrollHeight` > `innerHeight`, `overflow: visible`. Window scrollbar, mouse wheel, Page Down all scroll to the footer process bar. 03 is a real link.
