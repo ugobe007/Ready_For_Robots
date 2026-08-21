@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 from app.services.robot_understanding_v1.fetch import FetchedPage
 from app.services.robot_understanding_v1.models import RobotCompany, RobotProduct
+from app.services.robot_url_safety import registrable_domain
 
 # Product-like proper nouns commonly used as robot SKUs (not OEM allowlists —
 # used only to *spot* names already present in page text / anchors).
@@ -220,7 +221,9 @@ def resolve_identity(
 
 def _root_domain(url: str) -> str:
     host = (urlparse(url).hostname or "").lower().removeprefix("www.")
-    return host or "unknown"
+    if not host:
+        return "unknown"
+    return registrable_domain(host)
 
 
 def _registrable_brand(domain: str) -> str:

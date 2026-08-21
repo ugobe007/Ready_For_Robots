@@ -96,7 +96,16 @@ export async function fetchRobotProfile(opts: {
     signal: opts.signal,
   });
   if (!res.ok) {
-    throw new Error(`robot-profile ${res.status}`);
+    let detail = `robot-profile ${res.status}`;
+    try {
+      const body = (await res.json()) as { detail?: unknown };
+      if (typeof body?.detail === "string" && body.detail.trim()) {
+        detail = body.detail.trim();
+      }
+    } catch {
+      /* keep status fallback */
+    }
+    throw new Error(detail);
   }
   return (await res.json()) as RobotProfileResult;
 }
