@@ -468,8 +468,13 @@ export default function RobotJobsWorkspace() {
       enterReview(profileToAnalysis(profile), submitUrl, [
         profile.selected_product?.name || "",
       ]);
-    } catch {
-      setError("Research failed. Check the URL and try again.");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message.trim() : "";
+      setError(
+        detail && !/^robot-profile\s+\d+$/i.test(detail)
+          ? `Research failed. ${detail}`
+          : "Research failed. Check the URL and try again.",
+      );
       setStage("find");
     }
   }

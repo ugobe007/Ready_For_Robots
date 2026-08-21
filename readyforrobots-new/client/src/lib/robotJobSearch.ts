@@ -38,7 +38,16 @@ export async function fetchRobotJobSearch(opts: {
     signal: opts.signal,
   });
   if (!res.ok) {
-    throw new Error(`robot-job-search ${res.status}`);
+    let detail = `robot-job-search ${res.status}`;
+    try {
+      const body = (await res.json()) as { detail?: unknown };
+      if (typeof body?.detail === "string" && body.detail.trim()) {
+        detail = body.detail.trim();
+      }
+    } catch {
+      /* keep status fallback */
+    }
+    throw new Error(detail);
   }
   return (await res.json()) as RobotJobSearchResult;
 }
