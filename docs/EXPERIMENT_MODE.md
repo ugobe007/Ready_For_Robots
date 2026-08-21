@@ -29,23 +29,24 @@ Not leads. Not SIGNAL. Not three products. One engine: **FIND → QUALIFY → PL
 ```
 submit robot URL on /
   → see understood capabilities (must be credible)
-  → see Robot Jobs
+  → see Robot Jobs (step 2)
   → inspect cards (why / unknowns / blockers)
-  → discovery pull: See All Jobs
+  → Next → QUALIFY that job (step 3)
+  → discovery pull: See All Jobs (stays on step 2)
 ```
 
 **Do not hop.** FIND lives on `/`. Login restores that workspace. Never send Jobs traffic to a second "Jobs for ______" list on `/pipeline` or `/results`.
 
-The jobs list is not a qualify step. Cards expand to show evidence. There is no Qualify CTA on step 2 — that button restated evidence already on the card and invented a next step that does not exist.
+Step 2 inspects. Next leaves step 2 for QUALIFY. Do not put Qualify this job on the card — that restated evidence already visible.
 
 **Product question:**
 
-> Does RFR understand their robot well enough to show credible work — and does that work create enough value that they want more (`rdd_see_all_clicked`)?
+> Does RFR understand their robot well enough to show credible work — and does that work create enough value that they want more (`rdd_see_all_clicked`) or take Next on a job (`rdd_qualify_opened`)?
 
 | Pull | Metric |
 |------|--------|
 | Discovery | See All CTR · `rdd_see_all_clicked` |
-| Commercial | later — not a Qualify CTA on the jobs list |
+| Commercial | Next → QUALIFY · `rdd_qualify_opened` |
 
 Segment by `persona` and robot product / family.
 
@@ -73,7 +74,8 @@ Legacy matcher stays live until Understanding v1 wins blind eval. No Fly migrate
 | Low submit → capabilities | Input / trust |
 | Capabilities shown, jobs feel wrong | **Understanding integrity** (fix Phases 1–3) |
 | High job views, low See All | Weak discovery pull |
-| High See All | Discovery pull working — QUALIFY is later, not a list CTA |
+| High See All, low Next | Curious, not ready to qualify a job |
+| Next on a job | Commercial pull — QUALIFY step 3 |
 | High unlock, low signup | Auth / gating friction |
 | One persona dominates | GTM wedge (still one engine) |
 
@@ -95,6 +97,7 @@ Prefer outreach to `/` (or current Jobs entry) with `?persona=oem|distributor|in
 | Search beat | `rdd_discovery_started` / `rdd_discovery_complete` |
 | Jobs | `rdd_first_job_viewed` · `rdd_job_viewed` · `rdd_jobs_3plus_viewed` |
 | Discovery unlock | `rdd_see_all_clicked` |
+| Qualify (step 3) | `rdd_qualify_opened` |
 | Signup | `signup_start` / `signup_complete` (`src=robot_jobs`) |
 
 ---

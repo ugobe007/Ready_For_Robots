@@ -1,12 +1,12 @@
 /**
  * Jobs submit workflow — FIND on `/`. PLACE is later.
  *
- * The job list is the product. Cards expand to show why / unknowns / blockers.
- * There is no Qualify CTA and no "next step" on that list — inventing one
- * either hops to a dead board or restates evidence already on the card.
+ * Step 1 PROFILE → step 2 JOBS → step 3 QUALIFY.
+ * The jobs list inspects (expand for why / unknowns / blockers).
+ * Next on that list leaves step 2 for QUALIFY — it is not a Qualify
+ * button on the card, and it does not hop to /pipeline.
  *
  * Cap: 5 example jobs. See All reveals more on the same page.
- * Never send Jobs traffic to /pipeline as a duplicate job board.
  */
 
 export type JobsConfirmLanding = "review" | "jobs";
@@ -45,6 +45,21 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
 
 export const FIND_JOBS_CTA = "Find jobs →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
+/** Page-level advance on the jobs list (step 2 → step 3). Not on the card. */
+export const JOBS_NEXT_CTA = "Next →";
+export const JOBS_NEXT_HINT = "This job looks interesting";
+
+/** The job Next will qualify: expanded card, else the first visible job. */
+export function jobForNextStep<T extends { job_key: string }>(
+  jobs: T[],
+  expandedKey: string | null | undefined,
+): T | null {
+  if (expandedKey) {
+    const hit = jobs.find(j => j.job_key === expandedKey);
+    if (hit) return hit;
+  }
+  return jobs[0] ?? null;
+}
 
 /** Scan status on /results when arriving from Jobs — unused; Jobs stays on `/`. */
 export const JOBS_SCAN_STEPS = [

@@ -6,6 +6,7 @@ import {
   FIND_JOBS_CTA,
   JOBS_EXAMPLE_CAP,
   JOBS_FOR_YOUR_ROBOT_HEADING,
+  JOBS_NEXT_CTA,
   JOBS_SCAN_STEPS,
   buyerLeadsHref,
   buyerLeadsToShow,
@@ -82,7 +83,7 @@ describe("jobsWorkflow", () => {
     expect(jobsWorkspaceRestoreHref()).toBe("/?restore=1");
   });
 
-  it("does not put a Qualify CTA or next-step copy on the jobs list", () => {
+  it("advances step 2 with Next, not Qualify this job on the card", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
@@ -102,6 +103,9 @@ describe("jobsWorkflow", () => {
     }
     expect(FIND_JOBS_CTA).toBe("Find jobs →");
     expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
+    expect(JOBS_NEXT_CTA).toBe("Next →");
+    expect(JOBS_NEXT_CTA).not.toMatch(/qualify/i);
+    expect(workspace).toMatch(/JOBS_NEXT_CTA/);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
     for (const step of JOBS_SCAN_STEPS) {
       expect(step).not.toMatch(/buyer|sales lead|qualify/i);
