@@ -4,7 +4,7 @@
  * Left = robot / context / navigation. Right = work. One deliberate state at
  * a time (submit-stability principle):
  *
- *   FIND → RESEARCH → SELECT → PORTFOLIO (several SKUs; research one at a time)
+ *   FIND → RESEARCH → SELECT → JOBS (several SKUs: match each one, show first with work)
  *                      SELECT → REVIEW PROFILE → JOBS → activate list (one robot)
 
  *
@@ -58,6 +58,8 @@ import {
   jobsActivateHref,
   jobsForActivatedPipeline,
   jobsHeading,
+  landingStageAfterConfirm,
+  portfolioShowsJobCounts,
   readNavigationType,
   shouldRestoreJobsWorkspace,
 } from "@/lib/jobsWorkflow";
@@ -354,12 +356,10 @@ function tierColor(tier: "A" | "B" | "C"): string {
  * Whether a robot's job count is trustworthy enough to display.
  * A single robot's own matched count is fine. Across a portfolio we only
  * assert a count when the robots actually differ — never three identical
- * numbers that would undermine the promise.
+ * numbers that would undermine the promise. Unresearched shells stay quiet.
  */
 function differentiatedCounts(portfolio: RobotAnalysis[]): boolean {
-  const matched = portfolio.filter(a => a.matched);
-  if (matched.length <= 1) return true;
-  return new Set(matched.map(a => a.jobCount)).size > 1;
+  return portfolioShowsJobCounts(portfolio);
 }
 
 function pickSelectedJobKey(
@@ -568,7 +568,30 @@ export default function RobotJobsWorkspace() {
     }
   }
 
-  /** SELECT — one robot goes to a profile checkpoint; several/all matches up front. */
+  /** SELECT — one robot goes to a profile checkpoint; several/all match per SKU. */
+  async function fillLineupJobs(
+    submitUrl: string,
+    names: string[],
+    company: string,
+  ) {
+    for (let i = 1; i < names.length; i++) {
+      try {
+        const res = await fetchRobotJobSearch({
+          url: submitUrl,
+          product: names[i],
+        });
+        const row = { ...searchToAnalysis(res), productName: names[i] };
+        setPortfolio(prev =>
+          prev.map((p, idx) =>
+            idx === i ? row : { ...p, companyName: p.companyName || company },
+          ),
+        );
+      } catch {
+        /* leave that SKU as an identity stub — do not copy a sibling's jobs */
+      }
+    }
+  }
+
   async function confirmSelection(which: string[] | "all") {
     const names = (which === "all" ? products.map(p => p.name) : which).filter(
       Boolean
@@ -592,24 +615,58 @@ export default function RobotJobsWorkspace() {
       return;
     }
 
-    // Several / all — a portfolio of distinct SKUs. Do NOT research the first
-    // robot and stamp those jobs onto every name (that is how MagicLab became G1).
-    const analyses = names.map(name => identityAnalysis(name, companyName));
-    setPortfolio(analyses);
-    setActiveIdx(0);
-    setRailTab("profile");
-    saveWorkspaceSession({
-      url: submitUrl,
-      products: names,
-      view: "portfolio",
-      activeIdx: 0,
-    });
-    trackRobotJobsFunnel("capabilities_viewed", {
-      ...funnelBase(),
-      robots_analyzed: analyses.length,
-      company_name: companyName,
-    });
-    setStage("portfolio");
+    // Several / all — match each SKU on its own (do not stamp one robot's jobs
+    // onto the lineup). Show jobs for the first SKU as soon as it returns so
+    // step 2 and Activate are not a dead portfolio of zeros.
+    setStage("research");
+    try {
+      const firstRes = await fetchRobotJobSearch({
+        url: submitUrl,
+        product: names[0],
+      });
+      submissionIdRef.current =
+        firstRes.robot_submission_id ?? submissionIdRef.current;
+      const first = {
+        ...searchToAnalysis(firstRes),
+        productName: names[0],
+      };
+      const company = first.companyName || companyName;
+      const analyses = names.map((name, i) =>
+        i === 0 ? first : identityAnalysis(name, company),
+      );
+      const landing = landingStageAfterConfirm(names.length);
+      setPortfolio(analyses);
+      setActiveIdx(0);
+      setCompanyName(company);
+      if (landing === "jobs") {
+        const checks = defaultCheckedJobKeys(first.jobs);
+        const selectedKey = pickSelectedJobKey(first.jobs, null);
+        setRailTab("jobs");
+        setExpandedJob(selectedKey);
+        setCheckedJobKeys(checks);
+        saveWorkspaceSession({
+          url: submitUrl,
+          products: names,
+          view: "jobs",
+          activeIdx: 0,
+          selectedJobKey: selectedKey || undefined,
+          checkedJobKeys: checks,
+        });
+        trackRobotJobsFunnel("discovery_complete", {
+          ...funnelBase(),
+          robot_name: first.productName,
+          job_count: first.jobCount,
+          robots_analyzed: names.length,
+        });
+        setStage("jobs");
+      } else {
+        setStage("portfolio");
+      }
+      void fillLineupJobs(submitUrl, names, company);
+    } catch {
+      setError("Research failed for those robots.");
+      setStage("select");
+    }
   }
 
   /** Enter the profile checkpoint (matching deferred).
@@ -1539,9 +1596,9 @@ function SelectPanel({
         We found {products.length} robots
       </h2>
       <p className="mt-2 text-sm text-slate-400">
-        Which robot should we research? Pick one SKU, or list all of them and
-        open each separately — {company || "this maker"} has {products.length}.
-        We do not copy one robot's jobs onto the others.
+        Which robot should we find jobs for? Pick one SKU, or find jobs for
+        all of them — each robot is matched on its own. {company || "This maker"}{" "}
+        has {products.length}.
       </p>
 
       <div className="mt-6 grid gap-2 sm:grid-cols-2">
@@ -1586,10 +1643,10 @@ function SelectPanel({
         >
           <FaceCue scale={2} onEmerald />
           {selected.length === 0
-            ? `List all ${products.length} robots →`
+            ? `Find jobs for all ${products.length} robots →`
             : selected.length === 1
               ? `Find jobs for ${selected[0]} →`
-              : `List ${selected.length} robots →`}
+              : `Find jobs for ${selected.length} robots →`}
         </button>
         {selected.length > 0 && selected.length < products.length ? (
           <button

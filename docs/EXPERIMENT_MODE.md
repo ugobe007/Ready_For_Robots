@@ -29,8 +29,8 @@ Not leads. Not SIGNAL. Not three products. One engine: **FIND → QUALIFY → PL
 ```
 submit robot URL on /
   → if several SKUs, pick one / several / all
-  → see understood capabilities (must be credible)
-  → see Robot Jobs (step 2) — 5 examples, checkboxes
+  → each selected SKU is matched on its own (no copied job list)
+  → see Robot Jobs (step 2) — 5 examples, checkboxes, Activate job list →
   → inspect cards (why / unknowns / blockers)
   → check the jobs to take forward
   → Activate job list → /pipeline?src=jobs_activate

@@ -25,6 +25,7 @@ import {
   jobsSignupHref,
   jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
+  portfolioShowsJobCounts,
   isJobsHomeDest,
   persistJobsHandoffSrc,
   placeBuyersToShow,
@@ -39,9 +40,9 @@ describe("jobsWorkflow", () => {
     expect(landingStageAfterConfirm(1)).toBe("review");
   });
 
-  it("sends several or all robots to a portfolio so each SKU is researched", () => {
-    expect(landingStageAfterConfirm(2)).toBe("portfolio");
-    expect(landingStageAfterConfirm(4)).toBe("portfolio");
+  it("sends several or all robots to jobs, matched per SKU", () => {
+    expect(landingStageAfterConfirm(2)).toBe("jobs");
+    expect(landingStageAfterConfirm(4)).toBe("jobs");
   });
 
   it("forces a real FIND navigation from the wordmark even on /", () => {
@@ -193,7 +194,31 @@ describe("jobsWorkflow", () => {
     );
     expect(workspace).not.toMatch(/\.\.\.base,\s*productName: name/);
     expect(workspace).toMatch(/researchPortfolioRobot/);
-    expect(workspace).toMatch(/identityAnalysis/);
+    expect(workspace).toMatch(/fillLineupJobs/);
+    expect(workspace).toMatch(/Find jobs for all/);
+    expect(workspace).not.toMatch(/List all \$\{products\.length\} robots/);
+  });
+
+  it("hides 0 matching jobs on unresearched lineup shells", () => {
+    expect(
+      portfolioShowsJobCounts([
+        { matched: false, jobCount: 0 },
+        { matched: false, jobCount: 0 },
+      ]),
+    ).toBe(false);
+    expect(portfolioShowsJobCounts([{ matched: true, jobCount: 5 }])).toBe(true);
+    expect(
+      portfolioShowsJobCounts([
+        { matched: true, jobCount: 5 },
+        { matched: true, jobCount: 5 },
+      ]),
+    ).toBe(false);
+    expect(
+      portfolioShowsJobCounts([
+        { matched: true, jobCount: 5 },
+        { matched: true, jobCount: 12 },
+      ]),
+    ).toBe(true);
   });
 
   it("puts checked jobs first and fills the live list to 15", () => {

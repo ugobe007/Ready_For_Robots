@@ -19,7 +19,19 @@ export const JOBS_PIPELINE_CAP = 15;
 export const JOBS_ACTIVATE_CAP = 15;
 
 export function landingStageAfterConfirm(robotCount: number): JobsConfirmLanding {
-  return robotCount > 1 ? "portfolio" : "review";
+  // One SKU: profile checkpoint, then Find jobs.
+  // Several / all: find jobs for the lineup (per SKU, not copied).
+  return robotCount > 1 ? "jobs" : "review";
+}
+
+/** Hide "0 matching jobs" on unresearched shells; hide identical counts across a lineup. */
+export function portfolioShowsJobCounts(
+  robots: Array<{ matched?: boolean; jobCount?: number }>,
+): boolean {
+  const matched = robots.filter(a => a.matched);
+  if (matched.length === 0) return false;
+  if (matched.length === 1) return true;
+  return new Set(matched.map(a => a.jobCount ?? 0)).size > 1;
 }
 
 export function jobsHeading(opts: {
