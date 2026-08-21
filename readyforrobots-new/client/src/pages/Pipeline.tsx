@@ -60,7 +60,7 @@ import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
-import { isJobsHandoffSrc, buyerLeadsToShow, armJobsWorkspaceRestore } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, isPlaceSrc, buyerLeadsToShow, armJobsWorkspaceRestore } from "@/lib/jobsWorkflow";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1647,14 +1647,17 @@ export default function Pipeline() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const [storageSubmittedUrl, setStorageSubmittedUrl] = useState("");
-  const submittedUrlFromQuery = useMemo(() => {
-    const params = new URLSearchParams(search);
-    return (params.get("url") || "").trim();
-  }, [search]);
   const submittedSrcFromQuery = useMemo(() => {
     const params = new URLSearchParams(search);
     return (params.get("src") || "").trim();
   }, [search]);
+  const arrivedFromPlace = isPlaceSrc(submittedSrcFromQuery);
+  const submittedUrlFromQuery = useMemo(() => {
+    // Place sends a Jobs robot OEM. `url=` on /pipeline is a buyer-company scan.
+    if (arrivedFromPlace) return "";
+    const params = new URLSearchParams(search);
+    return (params.get("url") || "").trim();
+  }, [search, arrivedFromPlace]);
   const viewFromQuery = useMemo(() => {
     const params = new URLSearchParams(search);
     return (params.get("view") || "").trim().toLowerCase();
@@ -1707,18 +1710,19 @@ export default function Pipeline() {
   }, [arrivedFromResultsScan, submittedUrlFromQuery, isSignedIn]);
 
   useEffect(() => {
-    if (submittedUrlFromQuery) {
+    if (submittedUrlFromQuery || arrivedFromPlace) {
       setStorageSubmittedUrl("");
       return;
     }
     setStorageSubmittedUrl(getSubmittedUrlFromStorage());
-  }, [submittedUrlFromQuery]);
+  }, [submittedUrlFromQuery, arrivedFromPlace]);
 
   const deepLinkLeadId = useMemo(() => resolvePipelineLeadId(search), [search]);
   const submittedUrl = submittedUrlFromQuery || storageSubmittedUrl;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (arrivedFromPlace) return;
     if (submittedUrlFromQuery || !storageSubmittedUrl) return;
     const params = new URLSearchParams(search);
     params.set("url", storageSubmittedUrl);
@@ -1726,7 +1730,7 @@ export default function Pipeline() {
     const next = `/pipeline?${params.toString()}`;
     window.history.replaceState({}, "", next);
     setLocation(next);
-  }, [search, setLocation, storageSubmittedUrl, submittedSrcFromQuery, submittedUrlFromQuery]);
+  }, [search, setLocation, storageSubmittedUrl, submittedSrcFromQuery, submittedUrlFromQuery, arrivedFromPlace]);
   const submittedHostname = useMemo(() => {
     if (!submittedUrl) return "";
     try {

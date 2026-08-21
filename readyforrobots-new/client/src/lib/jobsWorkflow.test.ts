@@ -14,6 +14,7 @@ import {
   buyerLeadsToShow,
   capExampleJobs,
   isJobsHandoffSrc,
+  isPlaceSrc,
   jobsHeading,
   jobsPlaceHref,
   jobsSignupHref,
@@ -21,6 +22,7 @@ import {
   landingStageAfterConfirm,
   isJobsHomeDest,
   persistJobsHandoffSrc,
+  placeBuyersToShow,
   shouldRestoreJobsWorkspace,
   armJobsWorkspaceRestore,
 } from "./jobsWorkflow";
@@ -113,7 +115,7 @@ describe("jobsWorkflow", () => {
     expect(JOBS_NEXT_CTA).toBe("Next →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify/i);
     expect(JOBS_NEXT_HINT).toMatch(/buyers/i);
-    expect(JOBS_PLACE_CTA).toBe("See buyers →");
+    expect(JOBS_PLACE_CTA).toBe("Open this buyer →");
     expect(workspace).toMatch(/JOBS_NEXT_CTA/);
     expect(workspace).not.toMatch(/onNext=\{\(\) => onNext\(job\)\}/);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
@@ -122,12 +124,24 @@ describe("jobsWorkflow", () => {
     }
   });
 
-  it("opens pipeline as buyers, not a Jobs bounce", () => {
-    expect(jobsPlaceHref("https://en.engineai.com.cn/")).toBe(
-      "/pipeline?url=https%3A%2F%2Fen.engineai.com.cn%2F&src=place",
+  it("opens the selected buyer in pipeline, not the robot OEM as a scan", () => {
+    expect(jobsPlaceHref({ leadId: 99, submissionId: 42 })).toBe(
+      "/pipeline?src=place&lead=99&submission=42",
     );
+    expect(jobsPlaceHref()).toBe("/pipeline?src=place");
+    expect(jobsPlaceHref({ leadId: 99 })).not.toContain("url=");
+    expect(isPlaceSrc("place")).toBe(true);
     expect(isJobsHandoffSrc("place")).toBe(false);
     expect(isJobsHandoffSrc("jobs_all_robots")).toBe(true);
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const pipeline = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
+    expect(workspace).not.toMatch(/jobsPlaceHref\(robotUrl/);
+    expect(workspace).toMatch(/PipelineOutreachValuePanel/);
+    expect(pipeline).toMatch(/arrivedFromPlace/);
+    expect(pipeline).toMatch(/isPlaceSrc/);
   });
 
   it("recognizes Jobs terminal handoff src values", () => {
@@ -161,6 +175,17 @@ describe("jobsWorkflow", () => {
     expect(shouldRestoreJobsWorkspace({ navigationType: "back_forward" })).toBe(true);
     expect(shouldRestoreJobsWorkspace({ navigationType: "navigate", restoreOnce: true })).toBe(true);
     expect(shouldRestoreJobsWorkspace({ navigationType: "navigate", restoreQuery: true })).toBe(true);
+  });
+
+  it("keeps industry-matched Place buyers when at least two rows hit", () => {
+    const rows = [
+      { id: 1, industry: "Manufacturing" },
+      { id: 2, industry: "Manufacturing / CNC" },
+      { id: 3, industry: "Hospitality" },
+    ];
+    expect(placeBuyersToShow(rows, "Manufacturing").map(r => r.id)).toEqual([1, 2]);
+    expect(placeBuyersToShow(rows, "Warehousing").map(r => r.id)).toEqual([1, 2, 3]);
+    expect(placeBuyersToShow(rows, "Manufacturing", 1).map(r => r.id)).toEqual([1]);
   });
 
   it("falls back to the live buyer feed when URL lookup returns no rows", () => {
