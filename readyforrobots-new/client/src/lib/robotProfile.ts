@@ -167,7 +167,13 @@ export function sourceTypeLabel(t: string): string {
 }
 
 /** Honest incompleteness copy for profile confidence tiers (Understanding v1.0). */
-export function profileConfidenceCopy(tier: "A" | "B" | "C"): string {
+export function profileConfidenceCopy(
+  tier: "A" | "B" | "C",
+  opts?: { emptyResearch?: boolean },
+): string {
+  if (opts?.emptyResearch) {
+    return "We recognized the manufacturer from the URL, but could not read its product pages — treat this as identity only, not a confirmed spec sheet.";
+  }
   if (tier === "A") {
     return "Strong identity and good research coverage of key facts — treat as a solid starting profile.";
   }

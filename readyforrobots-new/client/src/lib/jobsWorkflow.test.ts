@@ -19,6 +19,7 @@ import {
   jobsActivateHref,
   jobsForActivatedPipeline,
   jobsFreshHomeHref,
+  goJobsFreshHome,
   jobsHeading,
   jobsPlaceHref,
   jobsSignupHref,
@@ -41,6 +42,23 @@ describe("jobsWorkflow", () => {
   it("sends several or all robots to a portfolio so each SKU is researched", () => {
     expect(landingStageAfterConfirm(2)).toBe("portfolio");
     expect(landingStageAfterConfirm(4)).toBe("portfolio");
+  });
+
+  it("forces a real FIND navigation from the wordmark even on /", () => {
+    expect(typeof goJobsFreshHome).toBe("function");
+    const header = readFileSync(
+      join(here, "../components/ExperimentHeader.tsx"),
+      "utf8",
+    );
+    expect(header).toMatch(/onClick=\{onJobsFreshHomeClick\}/);
+    expect(header).not.toMatch(/<Link\s+href=\{jobsFreshHomeHref/);
+    const chrome = readFileSync(
+      join(here, "../components/Header.tsx"),
+      "utf8",
+    );
+    expect(chrome).toMatch(/onJobsFreshHomeClick/);
+    const workflow = readFileSync(join(here, "./jobsWorkflow.ts"), "utf8");
+    expect(workflow).toMatch(/location\.assign\(jobsFreshHomeHref\(\)\)/);
   });
 
   it("titles the jobs list for the selected robot, even in a portfolio", () => {
@@ -120,6 +138,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/03 Place/);
     expect(workspace).not.toMatch(/Open this buyer/i);
     expect(workspace).toMatch(/type="checkbox"/);
+    expect(header).toMatch(/onJobsFreshHomeClick/);
     expect(header).toMatch(/jobsFreshHomeHref/);
     expect(jobsFreshHomeHref()).toBe("/?new=1");
     expect(FIND_JOBS_CTA).toBe("Find jobs →");

@@ -20,8 +20,8 @@ from app.services.shared_api_cache import shared_cache_get, shared_cache_set
 
 logger = logging.getLogger(__name__)
 
-# v5: MagicLab href label+SKU (MagicBot G1) and drop generic Human/Dog dupes.
-NAMESPACE = "robot_profile_v5"
+# v6: archive fallback for bot-challenged OEM hosts; named robots from prose.
+NAMESPACE = "robot_profile_v6"
 DEFAULT_TTL_SEC = 6 * 60 * 60  # 6 hours
 _MEM_MAX = 64
 _mem: dict[str, tuple[float, dict[str, Any]]] = {}
@@ -93,8 +93,23 @@ def _store_cached_profile(url: str, product: str | None, payload: dict[str, Any]
             _mem.pop(oldest, None)
 
 
+def _profile_is_cacheable(payload: dict[str, Any]) -> bool:
+    """Do not pin a 6-hour miss when the OEM host challenged and we got nothing."""
+    products = payload.get("products") or []
+    sources = payload.get("sources") or []
+    selected = payload.get("selected_product")
+    notes = " ".join(str(n) for n in (payload.get("notes") or []))
+    if products or sources or selected:
+        return True
+    if "bot challenge" in notes.lower() or "degraded" in notes.lower():
+        return False
+    return False
+
+
 def set_cached_profile(url: str, product: str | None, payload: dict[str, Any]) -> None:
     if not isinstance(payload, dict) or not payload.get("company"):
+        return
+    if not _profile_is_cacheable(payload):
         return
     _store_cached_profile(url, product, payload)
     # First submit caches under product=None; confirming that SKU should hit.

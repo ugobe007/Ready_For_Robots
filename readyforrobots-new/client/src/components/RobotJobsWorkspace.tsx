@@ -1732,7 +1732,9 @@ function ReviewPanel({
         </span>
       </div>
       <p className="mt-1 max-w-2xl text-[13px] leading-snug text-slate-400">
-        {profileConfidenceCopy(analysis.tier)}
+        {profileConfidenceCopy(analysis.tier, {
+          emptyResearch: sources.length === 0 && confirmed.length === 0,
+        })}
       </p>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">

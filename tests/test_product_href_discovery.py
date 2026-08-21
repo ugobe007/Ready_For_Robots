@@ -134,4 +134,52 @@ def test_href_label_keeps_hidden_sku():
 
 
 def test_profile_cache_namespace_busts_stale_engineai_identity():
-    assert NAMESPACE == "robot_profile_v5"
+    assert NAMESPACE == "robot_profile_v6"
+
+
+def test_sku_from_root_named_product_paths():
+    assert _sku_from_product_href("https://www.richtechrobotics.com/adam") == "ADAM"
+    assert _sku_from_product_href("https://www.richtechrobotics.com/matradee-l")
+    assert _sku_from_product_href("https://www.richtechrobotics.com/scorpion") == "Scorpion"
+    assert _sku_from_product_href("https://www.richtechrobotics.com/about") is None
+    assert _sku_from_product_href("https://www.richtechrobotics.com/solutions") is None
+    assert _sku_from_product_href("https://www.agilityrobotics.com/robots/digit")
+
+
+def test_homepage_prose_names_yield_product_picker():
+    """Hospitality OEM homepages name robots in copy without /product-sku hrefs."""
+    origin = "https://www.richtechrobotics.com"
+    home = _page(
+        title="AI-driven robotics to solve real-world challenges - Richtech Robotics",
+        url=f"{origin}/",
+        text=(
+            "ADAM serves cocktails at NVIDIA HQ. "
+            "Scorpion shows off AI intelligence. "
+            "Titan skyrockets efficiency at Mercedes-Benz of Plano. "
+            "ADAM serves premium coffee in Walmart."
+        ),
+        links=[
+            (f"{origin}/solutions", "See all robots"),
+            (f"{origin}/company", "Company"),
+            (f"{origin}/contact", "Get in touch"),
+        ],
+    )
+    names = _discover_product_names(home)
+    joined = " ".join(names).lower()
+    assert "adam" in joined
+    assert "scorpion" in joined
+    assert "titan" in joined
+    assert "Solutions" not in names
+    assert "Company" not in names
+    resolved = resolve_identity(f"{origin}/", home)
+    found = {p.name for p in resolved.products}
+    assert len(found) >= 3
+    assert resolved.company.primary_domain == "richtechrobotics.com"
+
+
+def test_family_prefix_is_oem_agnostic():
+    from app.services.robot_understanding_v1.resolve import _apply_family_prefix
+
+    out = _apply_family_prefix(["Unitree G1", "H1"])
+    assert "Unitree H1" in out
+    assert "H1" not in out
