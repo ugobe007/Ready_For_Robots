@@ -15,8 +15,8 @@ Place (step 3) is a real commercial exit: click a live buyer, read pitch + outre
 
 ## Acceptance
 
-- [ ] Place buyers are clickable; selected row shows pitch + outreach draft on `/`
-- [ ] `jobsPlaceHref` does **not** pass the robot OEM as `url=`
-- [ ] Pipeline `src=place` ignores `url=` and does not recover a stored scan URL
-- [ ] Pipeline hop deep-links `?lead=` for the selected buyer
-- [ ] No Qualify panel, no Next on the job card, `src=place` is not a Jobs bounce
+- [x] Place buyers are clickable; selected row shows pitch + outreach draft on `/`
+- [x] `jobsPlaceHref` does **not** pass the robot OEM as `url=`
+- [x] Pipeline `src=place` ignores `url=` and does not recover a stored scan URL
+- [x] Pipeline hop deep-links `?lead=` for the selected buyer
+- [x] No Qualify panel, no Next on the job card, `src=place` is not a Jobs bounce
