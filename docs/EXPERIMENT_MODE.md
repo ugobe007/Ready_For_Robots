@@ -1,6 +1,6 @@
 # Product mode — Jobs terminal
 
-**Updated:** 2026-08-17  
+**Updated:** 2026-08-21  
 **Canonical strategy:** [`CAPABILITY_MODEL.md`](./CAPABILITY_MODEL.md)  
 **Product spine / milestones:** [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) (M1→M4, then sell/test)  
 **While waiting for M1 (20 shadow reviews):** operating loop = acquisition/content only — do not open M2 early ([`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md#current-operating-loop-while-waiting-for-m1)).  
@@ -29,10 +29,10 @@ Not leads. Not SIGNAL. Not three products. One engine: **FIND → QUALIFY → PL
 ```
 submit robot URL on /
   → if several SKUs, ask which robot to find jobs for
-  → one SKU: jobs for that product
+  → one SKU: picker confirm goes straight to jobs for that product (no profile / second Find jobs)
   → several / all: resolve the search without blocking next steps (type-first, one match per class)
   → 01 robot → 02 jobs → 03 activate are always navigational links
-  → see Robot Jobs (step 2) — 5 examples, checkboxes, Activate job list →
+  → see Robot Jobs (step 2) — 5 examples, checkboxes, Activate job list always visible
   → inspect cards (why / unknowns / blockers)
   → check the jobs to take forward
   → Activate job list → /pipeline?src=jobs_activate
@@ -40,11 +40,11 @@ submit robot URL on /
   → discovery pull: See All Jobs (stays on step 2)
 ```
 
-The picker already decides one vs several. One robot → jobs for that robot. Several/all is slower, so we resolve with a type-level match instead of N SKU scrapes. **Independent of that resolution, every stage keeps process nav** (01 Show us your robot → 02 Here are its jobs → 03 Activate the job list). Fourier empty portfolio failed because 02/03 were not links.
+The picker already decides one vs several. **One robot → jobs for that robot on the same click** — do not open the profile checkpoint and ask Find jobs again. Several/all is slower, so we resolve with a type-level match instead of N SKU scrapes. **Independent of that resolution, every stage keeps process nav** (01 Show us your robot → 02 Here are its jobs → 03 Activate the job list). Fourier empty portfolio failed because 02/03 were not links. Picking N1 then hitting a second Find jobs with Activate buried below the fold is the same break: the process stops at step 2.
 
 **Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Activate uses `src=jobs_activate` without the robot OEM as `url=` so `/pipeline` shows the job list, not a match-url scan of the manufacturer. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 
-Step 2 inspects. Checkboxes select. One **Activate job list →** at the bottom of the page leaves step 2 for the live list. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
+Step 2 inspects. Checkboxes select. One **Activate job list →** stays pinned on the jobs stage so the next step is visible without scrolling. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
 
 **Product question:**
 

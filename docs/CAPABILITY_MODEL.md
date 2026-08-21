@@ -1,6 +1,6 @@
 # ReadyForRobots Capability Model
 
-**Status:** Canonical strategy (updated 2026-08-17)  
+**Status:** Canonical strategy (updated 2026-08-21)  
 **Not:** Three products. One engine. Three entry points.  
 **Surface:** `/` is the Jobs terminal. `/experiment` is obsolete.  
 **Finite milestones (M1–M4):** [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) · **MATCH TRUTH — PRODUCTION PASS** · M2 frozen · submit workflow merged / production smoke PASS · traffic paused
@@ -72,7 +72,7 @@ Here are its jobs.
 Activate the job list — yours first, then 15 live jobs.
 ```
 
-Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **Checkboxes + one Activate job list → at the bottom of the page** leaves step 2 for the live list. Do not put Next on the card. Do not insert a Place buyer/outreach screen (duplicate of pipeline). Do not insert a Qualify screen that restates the card and loops back to jobs.
+Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **Checkboxes + one Activate job list → pinned on the jobs stage** leaves step 2 for the live list. Do not put Next on the card. Do not insert a Place buyer/outreach screen (duplicate of pipeline). Do not insert a Qualify screen that restates the card and loops back to jobs. Do not send a single selected SKU through a second Find jobs click.
 
 Everything underneath exists to make those interactions trustworthy.
 

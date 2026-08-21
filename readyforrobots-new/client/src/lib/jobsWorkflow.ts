@@ -3,8 +3,8 @@
  *
  * Step 1 PROFILE → step 2 JOBS → activate the job list (live pipeline).
  * Inspect cards (why / unknowns / blockers). Check the jobs to take
- * forward. One Activate at the page bottom — not a Place buyer dump,
- * not a Qualify loop, not Next on the card.
+ * forward. One Activate always visible on the jobs stage — not a Place
+ * buyer dump, not a Qualify loop, not Next on the card.
  *
  * Cap: 5 example jobs on `/`. Activate fills the live list to 15.
  */
@@ -123,9 +123,8 @@ export const JOBS_PIPELINE_CAP = 15;
 export const JOBS_ACTIVATE_CAP = 15;
 
 export function landingStageAfterConfirm(robotCount: number): JobsConfirmLanding {
-  // One SKU: profile checkpoint, then product-level jobs.
-  // Several / all: jobs for the robot type (the group), then a SKU on demand.
-  return robotCount > 1 ? "jobs" : "review";
+  // Picker already chose the robot(s). Land on jobs — do not ask Find jobs again.
+  return robotCount >= 1 ? "jobs" : "review";
 }
 
 /** Hide "0 matching jobs" on unresearched shells; hide identical counts across a lineup. */
@@ -148,9 +147,8 @@ export function jobsHeading(opts: {
   if (opts.robotCount > 1 && opts.companyName) {
     return `Jobs for ${opts.companyName}`;
   }
-  if (opts.lookupGrain === "robot_type" && opts.robotClass) {
-    return `Jobs for ${robotClassJobsLabel(opts.robotClass)}`;
-  }
+  // One selected SKU keeps the product name even when the match was type-first.
+  // "Jobs for humanoids" is a lineup heading, not a single-robot heading.
   return `Jobs for ${opts.productName}`;
 }
 
@@ -166,9 +164,7 @@ export function jobsCountEyebrow(opts: {
   const who =
     (opts.robotCount || 1) > 1 && opts.companyName
       ? opts.companyName
-      : opts.lookupGrain === "robot_type" && opts.robotClass
-        ? robotClassJobsLabel(opts.robotClass)
-        : opts.productName;
+      : opts.productName;
   return `${opts.visibleCount} JOBS FOR ${who.toUpperCase()}`;
 }
 

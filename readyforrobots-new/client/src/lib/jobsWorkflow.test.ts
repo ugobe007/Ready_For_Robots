@@ -45,13 +45,37 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 
 describe("jobsWorkflow", () => {
-  it("sends one robot to the profile checkpoint", () => {
-    expect(landingStageAfterConfirm(1)).toBe("review");
-  });
-
-  it("sends several or all robots to jobs for the robot type", () => {
+  it("sends one, several, or all selected robots to jobs — not a second Find jobs click", () => {
+    expect(landingStageAfterConfirm(1)).toBe("jobs");
     expect(landingStageAfterConfirm(2)).toBe("jobs");
     expect(landingStageAfterConfirm(4)).toBe("jobs");
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const confirm = workspace.slice(
+      workspace.indexOf("async function confirmSelection"),
+      workspace.indexOf("function enterReview"),
+    );
+    const oneSku = confirm.slice(
+      confirm.indexOf("if (names.length === 1)"),
+      confirm.indexOf("Several / all"),
+    );
+    expect(oneSku).toMatch(/openJobsFromAnalyses/);
+    expect(oneSku).toMatch(/fetchRobotJobSearch/);
+    expect(oneSku).toMatch(/lookupGrain: cls \? "robot_type" : "product"/);
+    expect(oneSku).not.toMatch(/enterReview/);
+    expect(oneSku).not.toMatch(/fetchRobotProfile/);
+    const submitFind = workspace.slice(
+      workspace.indexOf("async function submitFind"),
+      workspace.indexOf("async function confirmSelection"),
+    );
+    expect(submitFind).toMatch(/openJobsFromAnalyses/);
+    expect(submitFind).not.toMatch(/enterReview/);
+    expect(workspace).toMatch(/rfr-jobs-activate-bar/);
+    expect(workspace).not.toMatch(
+      /enterReview\(profileToAnalysis\(profile\), submitUrl, names\)/,
+    );
   });
 
   it("always names the three process steps as navigational links", () => {
@@ -116,6 +140,25 @@ describe("jobsWorkflow", () => {
         lookupGrain: "product",
       }),
     ).toBe("Jobs for Fourier GR-1");
+    expect(
+      jobsHeading({
+        productName: "Fourier N1",
+        companyName: "Fourier Intelligence",
+        robotCount: 1,
+        lookupGrain: "robot_type",
+        robotClass: "humanoid",
+      }),
+    ).toBe("Jobs for Fourier N1");
+    expect(
+      jobsCountEyebrow({
+        visibleCount: 5,
+        productName: "Fourier N1",
+        companyName: "Fourier Intelligence",
+        robotCount: 1,
+        lookupGrain: "robot_type",
+        robotClass: "humanoid",
+      }),
+    ).toBe("5 JOBS FOR FOURIER N1");
   });
 
   it("caps the Jobs terminal at 5 example jobs even when more exist", () => {
