@@ -32,9 +32,11 @@ submit robot URL on /
   → see Robot Jobs
   → inspect cards
   → discovery pull: See All Jobs
-  → and/or commercial pull: Qualify This Job
+  → and/or commercial pull: Qualify This Job (on the job card)
   → signup / pursuit when ready
 ```
+
+**Do not hop.** FIND and QUALIFY live on `/`. Login restores that workspace. Never send Jobs traffic to a second "Jobs for ______" list on `/pipeline` or `/results` — that screen has no action and kills the loop.
 
 **Product question:**
 

@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
-  BUYER_LEADS_ANON_CAP,
+  FIND_JOBS_CTA,
   JOBS_EXAMPLE_CAP,
   JOBS_FOR_YOUR_ROBOT_CTA,
   JOBS_FOR_YOUR_ROBOT_HEADING,
   JOBS_FOR_YOUR_ROBOT_KEEP_CTA,
   JOBS_LIST_NEXT_STEP_HEADING,
   JOBS_SCAN_STEPS,
+  QUALIFY_JOB_CTA,
   buyerLeadsCtaHeading,
   buyerLeadsCtaLabel,
   buyerLeadsHref,
@@ -14,11 +15,14 @@ import {
   capExampleJobs,
   isJobsHandoffSrc,
   jobsHeading,
+  jobsQualifySignupHref,
   jobsSignupHref,
+  jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
   isJobsHomeDest,
   persistJobsHandoffSrc,
   shouldRestoreJobsWorkspace,
+  armJobsWorkspaceRestore,
 } from "./jobsWorkflow";
 
 describe("jobsWorkflow", () => {
@@ -56,33 +60,23 @@ describe("jobsWorkflow", () => {
     expect(capExampleJobs(["a", "b"])).toEqual(["a", "b"]);
   });
 
-  it("sends anonymous users to 5 jobs, not buyer leads", () => {
-    const href = buyerLeadsHref({
-      robotUrl: "https://www.unitree.com/",
-      signedIn: false,
-    });
-    expect(href.startsWith("/results?")).toBe(true);
-    expect(href).toContain("url=https%3A%2F%2Fwww.unitree.com%2F");
-    expect(href).toContain(`limit=${BUYER_LEADS_ANON_CAP}`);
-    expect(href).toContain("src=jobs_all_robots");
-    expect(buyerLeadsCtaLabel(false)).toBe("Jobs for your robot →");
-    expect(buyerLeadsCtaHeading(false)).toBe("Next step: Jobs for your robot");
-  });
-
-  it("sends signed-in users to the pipeline with the same robot URL", () => {
-    const href = buyerLeadsHref({
-      robotUrl: "https://www.unitree.com/",
-      signedIn: true,
-      submissionId: 42,
-      industry: "warehousing",
-    });
-    expect(href.startsWith("/pipeline?")).toBe(true);
-    expect(href).toContain("url=https%3A%2F%2Fwww.unitree.com%2F");
-    expect(href).toContain("submission=42");
-    expect(href).toContain("industries=warehousing");
-    expect(href).not.toContain("limit=");
-    expect(buyerLeadsCtaLabel(true)).toBe("Jobs for your robot →");
-    expect(buyerLeadsCtaHeading(true)).toBe("Next step: Jobs for your robot");
+  it("never hops Jobs traffic to /pipeline or /results", () => {
+    for (const signedIn of [false, true]) {
+      const href = buyerLeadsHref({
+        robotUrl: "https://www.unitree.com/",
+        signedIn,
+        submissionId: 42,
+        industry: "warehousing",
+        src: "jobs_all_robots",
+        leadId: 9,
+      });
+      expect(href).toBe("/?restore=1");
+      expect(href).not.toContain("/pipeline");
+      expect(href).not.toContain("/results");
+    }
+    expect(jobsWorkspaceRestoreHref()).toBe("/?restore=1");
+    expect(buyerLeadsCtaLabel(false)).toBe(QUALIFY_JOB_CTA);
+    expect(buyerLeadsCtaHeading(true)).toBe("This job looks interesting");
   });
 
   it("never uses buyer or sales-lead language on the Jobs CTA", () => {
@@ -94,12 +88,14 @@ describe("jobsWorkflow", () => {
       expect(label).not.toMatch(/buyer|lead/i);
       expect(heading).not.toMatch(/buyer|lead/i);
     }
-    expect(JOBS_FOR_YOUR_ROBOT_CTA).toBe("Jobs for your robot →");
+    expect(FIND_JOBS_CTA).toBe("Find jobs →");
+    expect(FIND_JOBS_CTA).not.toMatch(/buyer|lead/i);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
-    expect(JOBS_LIST_NEXT_STEP_HEADING).toBe("Next step: Jobs for your robot");
+    expect(JOBS_LIST_NEXT_STEP_HEADING).toBe("This job looks interesting");
     expect(JOBS_LIST_NEXT_STEP_HEADING).not.toMatch(/buyer|lead/i);
     expect(JOBS_LIST_NEXT_STEP_HEADING).not.toMatch(/Next step: buyer leads/i);
-    expect(JOBS_FOR_YOUR_ROBOT_KEEP_CTA.toLowerCase()).toContain("job");
+    expect(JOBS_LIST_NEXT_STEP_HEADING).not.toMatch(/Next step: Jobs for your robot/i);
+    expect(JOBS_FOR_YOUR_ROBOT_KEEP_CTA.toLowerCase()).toContain("search");
     expect(JOBS_FOR_YOUR_ROBOT_KEEP_CTA).not.toMatch(/buyer|lead/i);
     expect(JOBS_FOR_YOUR_ROBOT_CTA).not.toMatch(/See Buyer Leads|SEE BUYER LEADS/i);
     for (const step of JOBS_SCAN_STEPS) {
@@ -115,19 +111,21 @@ describe("jobsWorkflow", () => {
     expect(isJobsHandoffSrc("signal_activation")).toBe(false);
   });
 
-  it("keeps a Jobs src on pipeline/signup hops instead of results_scan", () => {
+  it("keeps a Jobs src on signup hops instead of results_scan", () => {
     expect(persistJobsHandoffSrc("jobs_all_robots")).toBe("jobs_all_robots");
     expect(persistJobsHandoffSrc("results_scan")).toBe("jobs_all_robots");
-    const pipeline = buyerLeadsHref({
+    const home = buyerLeadsHref({
       robotUrl: "https://www.unitree.com/",
       signedIn: true,
       src: "jobs_all_robots",
       leadId: 9,
     });
-    expect(pipeline).toContain("src=jobs_all_robots");
-    expect(pipeline).toContain("lead=9");
-    expect(pipeline).not.toContain("results_scan");
-    expect(jobsSignupHref(pipeline, "jobs_all_robots")).toContain("src=jobs_all_robots");
+    expect(home).toBe("/?restore=1");
+    expect(home).not.toContain("results_scan");
+    expect(jobsSignupHref(home, "jobs_all_robots")).toContain("src=jobs_all_robots");
+    expect(jobsSignupHref(home, "jobs_all_robots")).toContain("next=%2F%3Frestore%3D1");
+    expect(jobsQualifySignupHref()).toContain("src=robot_jobs_qualify");
+    expect(jobsQualifySignupHref()).toContain("next=%2F%3Frestore%3D1");
   });
 
   it("does not restore the Jobs workspace on a fresh visit or reload of /", () => {
@@ -178,7 +176,27 @@ describe("jobsWorkflow", () => {
   it("treats / and /jobs paths as Jobs home after auth, not /pipeline", () => {
     expect(isJobsHomeDest("/")).toBe(true);
     expect(isJobsHomeDest("/jobs/unitree")).toBe(true);
+    expect(isJobsHomeDest("/?restore=1")).toBe(true);
     expect(isJobsHomeDest("/pipeline?src=jobs_all_robots")).toBe(false);
     expect(isJobsHomeDest("/results?limit=5")).toBe(false);
+  });
+
+  it("arms leftover Jobs hops to restore `/` instead of a second job list", () => {
+    const store = new Map<string, string>();
+    const memory = {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        store.set(key, value);
+      },
+      removeItem: (key: string) => {
+        store.delete(key);
+      },
+    };
+    Object.defineProperty(globalThis, "window", {
+      value: { sessionStorage: memory },
+      configurable: true,
+    });
+    expect(armJobsWorkspaceRestore()).toBe("/?restore=1");
+    expect(memory.getItem("rfr_jobs_restore_once")).toBe("1");
   });
 });

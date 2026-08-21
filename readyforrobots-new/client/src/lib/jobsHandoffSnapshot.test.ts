@@ -65,7 +65,7 @@ describe("jobsHandoffSnapshot", () => {
     expect(loadJobsHandoffSnapshot("https://agilityrobotics.com")).toBeNull();
   });
 
-  it("keeps pipeline cap above the 5-job preview", () => {
+  it("keeps See All above the 5-job example cap on the same page", () => {
     expect(JOBS_EXAMPLE_CAP).toBe(5);
     expect(JOBS_PIPELINE_CAP).toBeGreaterThan(JOBS_EXAMPLE_CAP);
   });

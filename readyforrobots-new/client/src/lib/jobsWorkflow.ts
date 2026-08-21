@@ -1,20 +1,20 @@
 /**
- * Jobs submit workflow helpers — keep FIND → JOBS → jobs for your robot.
- * Multi-robot confirm must never dump the user on a catalog with no next step.
+ * Jobs submit workflow — FIND → QUALIFY on `/`. PLACE is later.
  *
- * Cap rules (signup-critical):
- *   Jobs terminal always shows 5 example jobs.
- *   Anonymous preview is 5 jobs (/results).
- *   More than 5 jobs exists only on /pipeline after that handoff.
+ * The job list on `/` is the product. Clicking a job is the next step
+ * (Qualify this job). Do not hop to a second "Jobs for ______" list on
+ * /results or /pipeline after login — that screen has no action and kills
+ * the workflow.
  *
- * User-facing CTA is always "Jobs for your robot". Never "buyer leads" / "sales leads".
+ * Cap: the terminal shows 5 example jobs. See All reveals more on the same
+ * page. Never send Jobs traffic to /pipeline as a duplicate job board.
  */
 
 export type JobsConfirmLanding = "review" | "jobs";
 
 export const JOBS_EXAMPLE_CAP = 5;
 export const BUYER_LEADS_ANON_CAP = 5;
-/** Signed-in Jobs pipeline — more than the 5-example cap, from the matcher limit. */
+/** See All on `/` — more than the 5-example cap, still the same page. */
 export const JOBS_PIPELINE_CAP = 12;
 
 export function landingStageAfterConfirm(robotCount: number): JobsConfirmLanding {
@@ -47,21 +47,24 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
   );
 }
 
-export const JOBS_FOR_YOUR_ROBOT_CTA = "Jobs for your robot →";
+export const FIND_JOBS_CTA = "Find jobs →";
+/** @deprecated leftover copy — Jobs no longer uses a page-level "jobs for your robot" hop. */
+export const JOBS_FOR_YOUR_ROBOT_CTA = "Qualify this job →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
-export const JOBS_FOR_YOUR_ROBOT_KEEP_CTA = "Keep these jobs for your robot →";
-/** Jobs-list (step 2) next-step box — never "Next step: buyer leads". */
-export const JOBS_LIST_NEXT_STEP_HEADING = "Next step: Jobs for your robot";
+export const JOBS_FOR_YOUR_ROBOT_KEEP_CTA = "Keep this search →";
+export const JOBS_LIST_NEXT_STEP_HEADING = "This job looks interesting";
+export const QUALIFY_JOB_CTA = "Qualify this job →";
+export const QUALIFY_JOB_REQUEST_CTA = "Request qualification";
 
 export function buyerLeadsCtaLabel(_signedIn: boolean): string {
-  return JOBS_FOR_YOUR_ROBOT_CTA;
+  return QUALIFY_JOB_CTA;
 }
 
 export function buyerLeadsCtaHeading(_signedIn: boolean): string {
   return JOBS_LIST_NEXT_STEP_HEADING;
 }
 
-/** Scan status on /results when arriving from Jobs — jobs, not sales leads. */
+/** Scan status on /results when arriving from Jobs — unused; Jobs stays on `/`. */
 export const JOBS_SCAN_STEPS = [
   "Waiting for your robot URL…",
   "Reading what this robot can do…",
@@ -95,6 +98,15 @@ export function persistJobsHandoffSrc(src: string | null | undefined): string {
 
 export function jobsSignupHref(nextHref: string, src: string): string {
   return `/signup?next=${encodeURIComponent(nextHref)}&src=${encodeURIComponent(src)}`;
+}
+
+/** Auth / leftover-link return to the Jobs workspace on `/`. */
+export function jobsWorkspaceRestoreHref(): string {
+  return "/?restore=1";
+}
+
+export function jobsQualifySignupHref(): string {
+  return jobsSignupHref(jobsWorkspaceRestoreHref(), "robot_jobs_qualify");
 }
 
 /**
@@ -154,8 +166,21 @@ export function readNavigationType(): string | number | null {
   return typeof legacy === "number" ? legacy : null;
 }
 
-/** Anonymous → 5-job review. Signed-in → pipeline (more than 5). */
-export function buyerLeadsHref(opts: {
+/**
+ * Stamp restore and return `/`. Use when a leftover Jobs link still points
+ * at /pipeline or /results — bounce, do not render a second job list.
+ */
+export function armJobsWorkspaceRestore(): string {
+  markJobsWorkspaceRestoreOnce();
+  return jobsWorkspaceRestoreHref();
+}
+
+/**
+ * Legacy name. Jobs CTAs used to dump signed-in users on /pipeline and
+ * anonymous users on /results — a second FIND with no QUALIFY action.
+ * Always return to the Jobs workspace instead.
+ */
+export function buyerLeadsHref(_opts: {
   robotUrl: string;
   signedIn: boolean;
   submissionId?: number | null;
@@ -163,17 +188,5 @@ export function buyerLeadsHref(opts: {
   industry?: string;
   leadId?: number | null;
 }): string {
-  const params = new URLSearchParams();
-  const url = (opts.robotUrl || "").trim();
-  if (url) params.set("url", url);
-  params.set("src", persistJobsHandoffSrc(opts.src));
-  if (opts.submissionId) params.set("submission", String(opts.submissionId));
-  if (opts.leadId) params.set("lead", String(opts.leadId));
-  const industry = (opts.industry || "").trim();
-  if (opts.signedIn) {
-    if (industry) params.set("industries", industry);
-    return `/pipeline?${params.toString()}`;
-  }
-  params.set("limit", String(BUYER_LEADS_ANON_CAP));
-  return `/results?${params.toString()}`;
+  return jobsWorkspaceRestoreHref();
 }
