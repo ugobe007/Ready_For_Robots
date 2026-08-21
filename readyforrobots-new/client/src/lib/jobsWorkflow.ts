@@ -1,12 +1,12 @@
 /**
  * Jobs submit workflow — FIND on `/`.
  *
- * Step 1 PROFILE → step 2 JOBS → step 3 PLACE (buyers).
- * The jobs list inspects (expand for why / unknowns / blockers).
- * One Next at the bottom of the page leaves step 2 for buyers — not a
- * second CTA on the card, not a Qualify loop back to jobs.
+ * Step 1 PROFILE → step 2 JOBS → activate the job list (live pipeline).
+ * Inspect cards (why / unknowns / blockers). Check the jobs to take
+ * forward. One Activate at the page bottom — not a Place buyer dump,
+ * not a Qualify loop, not Next on the card.
  *
- * Cap: 5 example jobs. See All reveals more on the same page.
+ * Cap: 5 example jobs on `/`. Activate fills the live list to 15.
  */
 
 export type JobsConfirmLanding = "review" | "jobs";
@@ -14,7 +14,9 @@ export type JobsConfirmLanding = "review" | "jobs";
 export const JOBS_EXAMPLE_CAP = 5;
 export const BUYER_LEADS_ANON_CAP = 5;
 /** See All on `/` — more than the 5-example cap, still the same page. */
-export const JOBS_PIPELINE_CAP = 12;
+export const JOBS_PIPELINE_CAP = 15;
+/** Live list after Activate: checked jobs first, then fill to this cap. */
+export const JOBS_ACTIVATE_CAP = 15;
 
 export function landingStageAfterConfirm(robotCount: number): JobsConfirmLanding {
   return robotCount > 1 ? "jobs" : "review";
@@ -32,7 +34,7 @@ export function capExampleJobs<T>(jobs: T[], cap = JOBS_EXAMPLE_CAP): T[] {
   return jobs.slice(0, cap);
 }
 
-/** Jobs / results `src` values that continue the Jobs terminal, not SIGNAL. */
+/** Jobs / results `src` values that continue the Jobs terminal. */
 export function isJobsHandoffSrc(src: string | null | undefined): boolean {
   const value = (src || "").trim();
   return (
@@ -45,33 +47,72 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
 
 export const FIND_JOBS_CTA = "Find jobs →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
-/** Page-level advance on the jobs list (step 2 → Place). Not on the card. */
-export const JOBS_NEXT_CTA = "Next →";
-export const JOBS_NEXT_HINT = "Buyers who need this work";
+/** Page-level advance on the jobs list. Not on the card. */
+export const JOBS_NEXT_CTA = "Activate job list →";
+export const JOBS_NEXT_HINT = "Your checked jobs sit at the top of 15 live jobs";
+export const JOBS_ACTIVATE_SRC = "jobs_activate";
 export const JOBS_PLACE_SRC = "place";
-export const JOBS_PLACE_CTA = "Open this buyer →";
+export const JOBS_PLACE_CTA = "Activate job list →";
 
-/** Place is a sales-lead hop, not a Jobs bounce back to `/`. */
+export const JOBS_FRESH_QUERY = "new";
+
+export function jobsFreshHomeHref(): string {
+  return `/?${JOBS_FRESH_QUERY}=1`;
+}
+
+export function isJobsFreshQuery(search: string | null | undefined): boolean {
+  return new URLSearchParams(search || "").get(JOBS_FRESH_QUERY) === "1";
+}
+
+/** Place leftovers still must not bounce as a Jobs handoff. */
 export function isPlaceSrc(src: string | null | undefined): boolean {
   return (src || "").trim() === JOBS_PLACE_SRC;
 }
 
-/**
- * Pipeline as the selected buyer — never a Jobs handoff src, and never the
- * robot OEM as `url=` (that is a buyer-company scan on /pipeline).
- */
+export function isJobsActivateSrc(src: string | null | undefined): boolean {
+  return (src || "").trim() === JOBS_ACTIVATE_SRC;
+}
+
+/** Live pipeline as the activated job list — never the OEM as `url=`. */
+export function jobsActivateHref(submissionId?: number | null): string {
+  const params = new URLSearchParams();
+  params.set("src", JOBS_ACTIVATE_SRC);
+  if (submissionId && submissionId > 0) params.set("submission", String(submissionId));
+  return `/pipeline?${params.toString()}`;
+}
+
+/** @deprecated Use jobsActivateHref. Kept so leftover Place links compile. */
 export function jobsPlaceHref(opts?: {
   leadId?: number | null;
   submissionId?: number | null;
 }): string {
-  const params = new URLSearchParams();
-  params.set("src", JOBS_PLACE_SRC);
-  const leadId = opts?.leadId;
-  if (leadId && leadId > 0) params.set("lead", String(leadId));
-  const submissionId = opts?.submissionId;
-  if (submissionId && submissionId > 0) params.set("submission", String(submissionId));
-  return `/pipeline?${params.toString()}`;
+  return jobsActivateHref(opts?.submissionId);
 }
+
+export function jobsForActivatedPipeline<T extends { job_key: string }>(
+  selected: T[],
+  pool: T[],
+  cap = JOBS_ACTIVATE_CAP,
+): T[] {
+  const picked = selected.filter(job => job?.job_key);
+  const seen = new Set(picked.map(job => job.job_key));
+  const extra = pool.filter(job => job?.job_key && !seen.has(job.job_key));
+  return [...picked, ...extra].slice(0, cap);
+}
+
+export function defaultCheckedJobKeys<T extends { job_key: string }>(
+  jobs: T[],
+  cap = JOBS_EXAMPLE_CAP,
+): string[] {
+  return capExampleJobs(jobs, cap).map(job => job.job_key);
+}
+
+export const RAIL_STEP_HINT = {
+  find: "Paste the manufacturer URL. We research the company and every robot SKU we can prove.",
+  profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
+  jobs: "Expand a card to inspect. Check every job you want. Activate the list when you are ready.",
+  pipeline: "Checked jobs stay at the top. We fill the rest so you see 15 live jobs, not one buyer.",
+} as const;
 
 /** The job Next will place: expanded card, else the first visible job. */
 export function jobForNextStep<T extends { job_key: string }>(
@@ -215,7 +256,7 @@ export function armJobsWorkspaceRestore(): string {
 
 /**
  * Legacy name. Jobs CTAs used to dump signed-in users on /pipeline as a
- * second job list. Buyer Place uses jobsPlaceHref (`src=place`, `lead=`) instead.
+ * second job list. Activate uses jobsActivateHref (`src=jobs_activate`) instead.
  * This helper still returns the Jobs workspace for leftover links.
  */
 export function buyerLeadsHref(_opts: {

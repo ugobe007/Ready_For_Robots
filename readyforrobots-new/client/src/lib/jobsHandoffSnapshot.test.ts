@@ -4,7 +4,7 @@ import {
   normalizeRobotHandoffUrl,
   saveJobsHandoffSnapshot,
 } from "./jobsHandoffSnapshot";
-import { JOBS_EXAMPLE_CAP, JOBS_PIPELINE_CAP } from "./jobsWorkflow";
+import { JOBS_ACTIVATE_CAP, JOBS_EXAMPLE_CAP, JOBS_PIPELINE_CAP } from "./jobsWorkflow";
 
 function installMemoryStorage() {
   const store = new Map<string, string>();
@@ -67,6 +67,23 @@ describe("jobsHandoffSnapshot", () => {
 
   it("keeps See All above the 5-job example cap on the same page", () => {
     expect(JOBS_EXAMPLE_CAP).toBe(5);
-    expect(JOBS_PIPELINE_CAP).toBeGreaterThan(JOBS_EXAMPLE_CAP);
+    expect(JOBS_PIPELINE_CAP).toBe(15);
+    expect(JOBS_ACTIVATE_CAP).toBe(15);
+  });
+
+  it("stores how many jobs the user checked", () => {
+    saveJobsHandoffSnapshot({
+      url: "https://www.magiclab.top/en",
+      productName: "G1",
+      selectedCount: 5,
+      jobs: Array.from({ length: 15 }, (_, i) => ({
+        job_key: `job-${i}`,
+        title: `Job ${i}`,
+        industry: "manufacturing",
+        path: `/jobs/${i}`,
+      })),
+    });
+    expect(loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.selectedCount).toBe(5);
+    expect(loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.jobs).toHaveLength(15);
   });
 });
