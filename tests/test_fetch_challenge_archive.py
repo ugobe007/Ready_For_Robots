@@ -55,10 +55,22 @@ def test_hollow_challenge_profiles_are_not_cached():
     assert _profile_is_cacheable(
         {
             "company": {"name": "Richtech Robotics"},
-            "products": [{"name": "ADAM"}],
+            "products": [{"name": "ADAM"}, {"name": "MATRADEE"}],
+            "needs_product_choice": True,
             "sources": [],
             "selected_product": None,
             "notes": [],
+        }
+    )
+    assert not _profile_is_cacheable(
+        {
+            "company": {"name": "Richtech Robotics"},
+            "products": [{"name": "ADAM"}],
+            "sources": [],
+            "selected_product": {"name": "ADAM"},
+            "needs_product_choice": False,
+            "coverage_level": "low",
+            "notes": ["Bot challenge from manufacturer host (HTTP 429)"],
         }
     )
 
@@ -101,4 +113,27 @@ def test_fetch_page_uses_archive_when_live_host_challenges(monkeypatch):
     assert "ADAM serves" in page.text
     assert any("adam" in url.lower() for url, _ in page.links)
     assert any("archive" in n.lower() for n in page.fetch_notes)
+
+
+def test_fetch_page_skips_archive_when_disabled(monkeypatch):
+    from types import SimpleNamespace
+
+    from app.services.robot_understanding_v1 import fetch as F
+
+    def fake_get(url: str, *, timeout):
+        if "web.archive.org" in url:
+            raise AssertionError("archive must not be fetched")
+        return SimpleNamespace(
+            url="https://richtechrobotics.com/",
+            status_code=429,
+            headers={"Content-Type": "text/html", "x-vercel-mitigated": "challenge"},
+            content=b"<html><title>Vercel Security Checkpoint</title></html>",
+            text="<html><title>Vercel Security Checkpoint</title></html>",
+        )
+
+    monkeypatch.setattr(F, "_get", fake_get)
+    monkeypatch.setattr(F, "assert_public_http_url", lambda url: url)
+    page = F.fetch_page("https://richtechrobotics.com/", allow_archive=False)
+    assert page.fetch_degraded is True
+    assert page.text == ""
 

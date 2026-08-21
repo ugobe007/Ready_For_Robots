@@ -70,6 +70,7 @@ data/
 !app/data/
 !app/data/industry_sector_ontology.json
 !app/data/vendor_robots_index.json
+!app/data/vendor_robots_commercial_seed.json
 
 # Coverage
 .coverage

@@ -22,6 +22,12 @@ from app.services.robot_url_safety import registrable_domain
 logger = logging.getLogger(__name__)
 
 INDEX_PATH = Path(__file__).resolve().parents[1] / "data" / "vendor_robots_index.json"
+COMMERCIAL_SEED_PATH = (
+    Path(__file__).resolve().parents[1] / "data" / "vendor_robots_commercial_seed.json"
+)
+INDUSTRIAL_SEED_PATH = (
+    Path(__file__).resolve().parents[1] / "data" / "vendor_robots_industrial_seed.json"
+)
 
 # Press / CDN hosts that appear as product_url on thin catalog rows.
 JUNK_LOOKUP_HOSTS = frozenset(
@@ -150,13 +156,15 @@ def profile_from_specs(
     product_url: str | None,
     specs: dict[str, Any] | None,
     list_category: str = "humanoid",
+    primary_class: str | None = None,
 ) -> dict[str, Any]:
-    """Lightweight identity profile from the /robots index — not a live crawl."""
+    """Lightweight identity profile from a vendor index — not a live crawl."""
     slim = slim_specs(specs)
+    class_value = (primary_class or list_category or "robot").strip() or list_category
     facts: list[dict[str, Any]] = [
         {
             "predicate": "product_class",
-            "value": list_category,
+            "value": class_value,
             "units": None,
             "epistemic": "explicit",
         }
@@ -208,12 +216,28 @@ def profile_from_specs(
 @lru_cache(maxsize=1)
 def load_vendor_robots_index(path: str | None = None) -> dict[str, Any]:
     target = Path(path) if path else INDEX_PATH
+    data = _read_index_file(target)
+    if path is None:
+        for extra in (COMMERCIAL_SEED_PATH, INDUSTRIAL_SEED_PATH):
+            extra_data = _read_index_file(extra)
+            extras = extra_data.get("vendors") or []
+            if extras:
+                vendors = list(data.get("vendors") or [])
+                vendors.extend(extras)
+                data["vendors"] = vendors
+    data.setdefault("vendors", [])
+    data["vendor_count"] = len(data["vendors"])
+    data["robot_count"] = sum(len(v.get("robots") or []) for v in data["vendors"])
+    return data
+
+
+def _read_index_file(target: Path) -> dict[str, Any]:
     if not target.exists():
         return {"vendors": [], "generated_at": None, "source": None}
     try:
         data = json.loads(target.read_text(encoding="utf-8"))
     except Exception:
-        logger.exception("vendor_robots_index unreadable")
+        logger.exception("vendor robots index unreadable: %s", target)
         return {"vendors": [], "generated_at": None, "source": None}
     if not isinstance(data, dict):
         return {"vendors": [], "generated_at": None, "source": None}
@@ -343,3 +367,61 @@ def index_robot_names(vendor: dict[str, Any]) -> list[str]:
         seen.add(key)
         names.append(name)
     return names
+
+
+def _name_key(name: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", (name or "").lower())
+
+
+def index_robot_for_name(vendor: dict[str, Any] | None, name: str | None) -> Optional[dict[str, Any]]:
+    if not vendor or not name:
+        return None
+    want = _name_key(name)
+    if not want:
+        return None
+    for robot in vendor.get("robots") or []:
+        if _name_key(str(robot.get("name") or "")) == want:
+            return robot
+        short = str(robot.get("model_slug") or "").split("-")[-1]
+        if len(want) >= 3 and _name_key(short) == want:
+            return robot
+    return None
+
+
+def catalog_claim_facts(robot: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Typed claims from the vendor index (not a live OEM crawl)."""
+    if not robot:
+        return []
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for raw in robot.get("catalog_claims") or []:
+        if not isinstance(raw, dict):
+            continue
+        pred = str(raw.get("predicate") or "").strip()
+        if not pred or pred in seen:
+            continue
+        if raw.get("value") in (None, ""):
+            continue
+        seen.add(pred)
+        out.append(
+            {
+                "predicate": pred,
+                "value": raw.get("value"),
+                "units": raw.get("units"),
+                "epistemic": raw.get("epistemic") or "explicit",
+                "evidence_span": raw.get("evidence_span") or "",
+            }
+        )
+    primary = (robot.get("primary_class") or "").strip()
+    if primary and "product_class" not in seen:
+        out.insert(
+            0,
+            {
+                "predicate": "product_class",
+                "value": primary,
+                "units": None,
+                "epistemic": "explicit",
+                "evidence_span": f"Indexed class for {robot.get('name')}.",
+            },
+        )
+    return out

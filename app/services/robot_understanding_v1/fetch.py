@@ -157,7 +157,12 @@ def _empty_page(url: str, *, notes: list[str], status_code: int = 0) -> FetchedP
     )
 
 
-def fetch_page(url: str, *, timeout: tuple[float, float] = DEFAULT_PAGE_TIMEOUT) -> FetchedPage:
+def fetch_page(
+    url: str,
+    *,
+    timeout: tuple[float, float] = DEFAULT_PAGE_TIMEOUT,
+    allow_archive: bool = True,
+) -> FetchedPage:
     safe = assert_public_http_url(url)
     notes: list[str] = []
     try:
@@ -170,21 +175,25 @@ def fetch_page(url: str, *, timeout: tuple[float, float] = DEFAULT_PAGE_TIMEOUT)
         return _empty_page(safe, notes=notes)
 
     page = _page_from_response(safe, resp, notes=notes)
-    if page.fetch_degraded and not (page.text or "").strip():
-        archived = _fetch_archive_copy(safe, notes)
+    if page.fetch_degraded and not (page.text or "").strip() and allow_archive:
+        archived = _fetch_archive_copy(safe, notes, timeout=timeout)
         if archived:
             return archived
     return page
 
 
-def _fetch_archive_copy(live_url: str, notes: list[str]) -> FetchedPage | None:
+def _fetch_archive_copy(
+    live_url: str,
+    notes: list[str],
+    timeout: tuple[float, float] = ARCHIVE_PAGE_TIMEOUT,
+) -> FetchedPage | None:
     """Best-effort Internet Archive copy when the live OEM host challenges bots."""
     if "web.archive.org" in (urlparse(live_url).hostname or "").lower():
         return None
     archive = _archive_fetch_url(live_url)
     try:
         assert_public_http_url(archive)
-        resp = _get(archive, timeout=ARCHIVE_PAGE_TIMEOUT)
+        resp = _get(archive, timeout=timeout)
     except Exception as exc:
         notes.append(f"Archive fallback failed: {type(exc).__name__}")
         return None
