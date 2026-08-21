@@ -219,6 +219,11 @@ export function jobsProcessStepFromStage(stage: string): JobsProcessStepId {
   return "find";
 }
 
+/** Page-chrome wizard button: Start jobs on FIND, Next on the job list. */
+export function jobsProcessActionLabel(step: JobsProcessStepId): string {
+  return step === "find" ? FIND_JOBS_CTA : JOBS_NEXT_CTA;
+}
+
 export const JOBS_ACTIVATE_SRC = "jobs_activate";
 export const JOBS_PLACE_SRC = "place";
 export const JOBS_PLACE_CTA = "Activate job list →";
@@ -247,14 +252,15 @@ export function clearJobsWorkspaceSession(): void {
 }
 
 /**
- * Wordmark / Jobs home. Wouter Link to `/?new=1` is a no-op while already on
- * `/` (profile, jobs, picker) — same pathname, query ignored — so the chrome
- * looks dead. Always assign so FIND remounts.
+ * Wordmark / Jobs home. Wouter Link to `/` is a no-op while already on `/`
+ * (jobs, picker) — same pathname — so the chrome looks dead. Hard-load `/`
+ * after clearing session. Do not bounce through `/?new=1` (that paints FIND,
+ * then strips the query and paints again).
  */
 export function goJobsFreshHome(): void {
   clearJobsWorkspaceSession();
   if (typeof window === "undefined") return;
-  window.location.assign(jobsFreshHomeHref());
+  window.location.assign("/");
 }
 
 export function onJobsFreshHomeClick(event: {

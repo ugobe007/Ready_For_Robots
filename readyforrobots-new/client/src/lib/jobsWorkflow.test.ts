@@ -25,6 +25,7 @@ import {
   goJobsFreshHome,
   jobsHeading,
   jobsPlaceHref,
+  jobsProcessActionLabel,
   jobsProcessStepFromStage,
   jobsToActivate,
   jobsSignupHref,
@@ -85,6 +86,9 @@ describe("jobsWorkflow", () => {
     expect(jobsProcessStepFromStage("review")).toBe("find");
     expect(jobsProcessStepFromStage("jobs")).toBe("jobs");
     expect(jobsProcessStepFromStage("portfolio")).toBe("jobs");
+    expect(jobsProcessActionLabel("find")).toBe(FIND_JOBS_CTA);
+    expect(jobsProcessActionLabel("jobs")).toBe(JOBS_NEXT_CTA);
+    expect(jobsProcessActionLabel("activate")).toBe(JOBS_NEXT_CTA);
     const pool = [{ job_key: "a" }, { job_key: "b" }, { job_key: "c" }];
     expect(jobsToActivate([], pool, 15).map(j => j.job_key)).toEqual(["a", "b", "c"]);
     expect(jobsToActivate([pool[2]], pool, 15).map(j => j.job_key)).toEqual([
@@ -106,6 +110,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/rfr-jobs-process-bar/);
     expect(workspace).toMatch(/rfr-jobs-page-footer/);
     expect(workspace).toMatch(/layout="page"/);
+    expect(workspace).toMatch(/rfr-jobs-process-action/);
     expect(jobsPage).toMatch(/jobs-page min-h-screen/);
     expect(jobsPage).not.toMatch(/overflow-hidden/);
     expect(jobsPage).not.toMatch(/fresh-find/);
@@ -125,6 +130,8 @@ describe("jobsWorkflow", () => {
     );
     expect(tape).toMatch(/export const TAPE_VIEWPORT_PX = VISIBLE \* ROW_PX/);
     expect(tape).toMatch(/height: TAPE_VIEWPORT_PX/);
+    expect(tape).toMatch(/\$\{revealing\}:\$\{baseCount\}:\$\{corpus\.length\}/);
+    expect(tape).toMatch(/if \(seededKey\.current === key\) return;/);
     expect(tape).not.toMatch(/flex h-full min-h-0 flex-col/);
     expect(tape).not.toMatch(/min-h-0 flex-1 overflow-hidden/);
     expect(workspace).toMatch(/<LiveJobTape/);
@@ -145,7 +152,7 @@ describe("jobsWorkflow", () => {
     );
     expect(chrome).toMatch(/onJobsFreshHomeClick/);
     const workflow = readFileSync(join(here, "./jobsWorkflow.ts"), "utf8");
-    expect(workflow).toMatch(/location\.assign\(jobsFreshHomeHref\(\)\)/);
+    expect(workflow).toMatch(/location\.assign\("\/"\)/);
   });
 
   it("titles type-level jobs for the company group, product-level jobs for a SKU", () => {
@@ -264,7 +271,10 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/JobsProcessNav/);
     expect(workspace).toMatch(/JOBS_PROCESS_STEPS/);
     expect(workspace).toMatch(/rfr-jobs-start-bar/);
+    expect(workspace).toMatch(/rfr-jobs-process-action/);
+    expect(workspace).toMatch(/function JobsActivateBar/);
     expect(workspace).toMatch(/function startJobs/);
+    expect(workspace).toMatch(/Start jobs for all/);
     expect(workspace).not.toMatch(/03 Live list/);
     expect(workspace).not.toMatch(/onNext=\{\(\) => onNext\(job\)\}/);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
@@ -357,7 +367,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/fillLineupJobs/);
     expect(workspace).toMatch(/lineupJobLookups/);
     expect(workspace).toMatch(/lookupGrain: "robot_type"/);
-    expect(workspace).toMatch(/Find jobs for all/);
+    expect(workspace).toMatch(/Start jobs for all/);
     expect(workspace).not.toMatch(/List all \$\{products\.length\} robots/);
   });
 

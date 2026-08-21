@@ -6,11 +6,12 @@
 
 ## What shipped
 
-- FIND: **Start jobs →** on the form and under the live tape.
-- Jobs list: **Next →** activates the list (step 03 still named Activate).
-- No workspace remount when `/?new=1` is stripped.
-- Live tape keeps a stable jobs-found count (no ● New Job header swap).
+- FIND: **Start jobs →** in the process bar, above the live tape, and on the URL form.
+- Jobs list: **Next →** in the process bar, at the top of the list, and at the bottom.
+- Wordmark hard-loads `/` (does not bounce `/?new=1` → `/`).
+- Live tape seeds once (no remount re-seed). Auth skips duplicate `INITIAL_SESSION`.
 
 ## Tests
 
-Vitest + FIND/jobs walkthrough — see the PR.
+- Vitest: `jobsWorkflow` + `jobsQualify`.
+- Manual: FIND shows Start jobs without a remount flash. Fourier N1 jobs list shows Next in chrome and above the cards.

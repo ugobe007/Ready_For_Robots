@@ -102,12 +102,14 @@ export default function LiveJobTape({
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const arriving = useRef(false);
   const revealDone = useRef(false);
-  const seededKey = useRef(`${revealing}:${baseCount}`);
+  const seededKey = useRef(`${revealing}:${baseCount}:${corpus.length}`);
   const onRevealCompleteRef = useRef(onRevealComplete);
   onRevealCompleteRef.current = onRevealComplete;
 
   useEffect(() => {
     const key = `${revealing}:${baseCount}:${corpus.length}`;
+    if (seededKey.current === key) return;
+    seededKey.current = key;
     if (revealing) {
       setRows([]);
       setFoundCount(0);
@@ -116,20 +118,17 @@ export default function LiveJobTape({
       revealDone.current = false;
       setOffsetY(0);
       setAnimate(false);
-      seededKey.current = key;
       return;
     }
-    if (seededKey.current === key && rows.length > 0) return;
-    seededKey.current = key;
     setRows(seedRows(corpus, baseCount));
     setFoundCount(baseCount);
     seqRef.current = baseCount;
     cursorRef.current = VISIBLE % Math.max(corpus.length, 1);
     setOffsetY(0);
     setAnimate(false);
-    // rows.length is only a skip-on-mount guard; do not re-seed every paint.
+    // Seed once per reveal/count/corpus size. Do not re-seed on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [corpus, baseCount, revealing, revealTarget]);
+  }, [corpus.length, baseCount, revealing, revealTarget]);
 
   useEffect(() => {
     return () => {
