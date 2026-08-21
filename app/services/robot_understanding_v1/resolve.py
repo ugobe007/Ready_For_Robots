@@ -71,7 +71,8 @@ _LOCALE_PRODUCT_HREF = re.compile(
     re.I,
 )
 _ROBOT_LINE_SLUGS = frozenset({"human", "dog", "panda"})
-_MAX_DISCOVERED_PRODUCTS = 8
+_MAX_DISCOVERED_PRODUCTS = 10
+_COMPACT_SKU = re.compile(r"^[A-Za-z]{1,3}\d{1,3}[A-Za-z]{0,3}$")
 
 _PLATFORM_NOISE = re.compile(
     r"\b(cloud\s+platform|fleet\s+management|software\s+platform|WES|WMS)\b",
@@ -712,6 +713,80 @@ def _sku_from_product_href(url: str) -> str | None:
     return None
 
 
+def _href_product_name(url: str, anchor: str) -> str | None:
+    """Prefer 'MagicBot G1' over a label that hides the SKU, or a bare slug."""
+    sku = _sku_from_product_href(url)
+    if not sku:
+        return None
+    label = re.sub(r"\s+", " ", (anchor or "").strip())
+    sku_canon = sku
+    if _COMPACT_SKU.fullmatch(sku):
+        sku_canon = sku.upper()
+    labeled = (
+        2 <= len(label) <= 48
+        and re.search(r"(bot|dog|panda|robot|g1|x1|z1|human|magic)", label, re.I)
+    )
+    if labeled:
+        if sku_canon.lower() not in label.lower() and _looks_like_model_or_sku(sku):
+            return f"{label} {sku_canon}".strip()
+        return label
+    return sku_canon
+
+
+def _apply_family_prefix(names: list[str]) -> list[str]:
+    """X1 next to MagicBot G1 → MagicBot X1 so the picker is one family."""
+    family = next(
+        (
+            m.group(1)
+            for n in names
+            if (m := re.match(r"^(MagicBot)\b", n, re.I))
+        ),
+        None,
+    )
+    if not family:
+        return names
+    out: list[str] = []
+    for n in names:
+        if _COMPACT_SKU.fullmatch(n):
+            out.append(f"{family} {n.upper()}")
+        else:
+            out.append(n)
+    return out
+
+
+def _dedupe_product_names(names: list[str]) -> list[str]:
+    """Drop 'Z1' when 'MagicBot Z1' exists; drop generic Human/Dog/Panda lines."""
+    unique: list[str] = []
+    seen: set[str] = set()
+    for n in names:
+        key = _name_key(n)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        unique.append(n)
+    keep: list[str] = []
+    for n in unique:
+        low = n.lower()
+        drop = False
+        if low in _ROBOT_LINE_SLUGS:
+            if low == "human" and any(re.search(r"bot|g1|humanoid", o, re.I) for o in unique if o != n):
+                drop = True
+            elif low == "dog" and any(re.search(r"dog", o, re.I) for o in unique if o != n):
+                drop = True
+            elif low == "panda" and any(re.search(r"panda", o, re.I) for o in unique if o != n):
+                drop = True
+        if not drop:
+            for other in unique:
+                if other == n or len(other) <= len(n):
+                    continue
+                if re.search(rf"\b{re.escape(n)}\b", other, re.I):
+                    drop = True
+                    break
+        if not drop:
+            keep.append(n)
+    return keep
+
+
 def _discover_product_names(
     home: FetchedPage,
     *,
@@ -770,22 +845,15 @@ def _discover_product_names(
             }.get(canon.lower(), canon if canon[0].isupper() else canon.title())
             counts[key] = counts.get(key, 0) + 2  # anchor weight
 
-    # Manufacturer product URLs (product-pm01.html) — evidence, not an allowlist.
+    # Manufacturer product URLs (product-pm01.html /en/x1) — evidence, not an allowlist.
     href_skus: list[str] = []
     for url, anchor in home.links:
-        sku = _sku_from_product_href(url)
-        if not sku:
+        name = _href_product_name(url, anchor)
+        if not name:
             continue
-        label = re.sub(r"\s+", " ", (anchor or "").strip())
-        if (
-            2 <= len(label) <= 48
-            and re.search(r"(bot|dog|panda|robot|g1|x1|z1|human)", label, re.I)
-        ):
-            name = label
-        else:
-            name = sku
         href_skus.append(name)
         counts[name] = counts.get(name, 0) + 3
+        label = re.sub(r"\s+", " ", (anchor or "").strip())
         if label and _name_key(label) == _name_key(name):
             counts[name] += 1
 
@@ -810,9 +878,9 @@ def _discover_product_names(
             if not (product_hint and name.lower() == product_hint.strip().lower()):
                 continue
         out.append(name)
-        if len(out) >= _MAX_DISCOVERED_PRODUCTS:
+        if len(out) >= _MAX_DISCOVERED_PRODUCTS * 2:
             break
-    return out
+    return _dedupe_product_names(_apply_family_prefix(out))[:_MAX_DISCOVERED_PRODUCTS]
 
 
 def _hint_display_class(product_name: str, text: str) -> Optional[str]:
