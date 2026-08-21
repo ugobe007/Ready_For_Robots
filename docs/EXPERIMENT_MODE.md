@@ -32,7 +32,7 @@ submit robot URL on /
   → see Robot Jobs
   → inspect cards
   → discovery pull: See All Jobs
-  → and/or commercial pull: Qualify This Job (on the job card)
+  → and/or commercial pull: Qualify This Job (on the job card) → pursuit judgment
   → signup / pursuit when ready
 ```
 
