@@ -15,4 +15,5 @@ LiveJobTape rows are absolutely positioned. Height used to come from the 100vh r
 
 ## Tests
 
-Vitest + FIND screenshot — see this cycle's PR.
+- Vitest: `jobsWorkflow.test.ts` 21 passed (tape viewport height contract).
+- Manual FIND: Live Robot Jobs shows 12 classified rows and a jobs-found count.
