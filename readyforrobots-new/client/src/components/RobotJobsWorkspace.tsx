@@ -1656,12 +1656,14 @@ function FindRail({
   error: string | null;
   onCancel?: () => void;
 }) {
-  const busy = stage === "research" || stage === "select";
+  const researching = stage === "research";
   return (
     <div>
-      <p className={eyebrow}>{busy ? "Your robot" : "Find jobs"}</p>
+      <p className={eyebrow}>{researching || stage === "select" ? "Your robot" : "Find jobs"}</p>
       <h1 className="mt-1 font-display text-3xl font-bold leading-tight tracking-tight text-slate-100">
-        {busy ? (
+        {stage === "select" ? (
+          companyName || "Select a robot"
+        ) : researching ? (
           companyName || "Researching…"
         ) : (
           <>
@@ -1669,7 +1671,7 @@ function FindRail({
           </>
         )}
       </h1>
-      {!busy && (
+      {stage === "find" && (
         <p className="mt-3 text-sm text-slate-400">
           {RAIL_STEP_HINT.find}
         </p>
@@ -1685,15 +1687,15 @@ function FindRail({
           value={url}
           onChange={e => setUrl(e.target.value)}
           placeholder="Paste robot product URL"
-          disabled={busy}
+          disabled={researching || stage === "select"}
           className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 font-mono text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500 disabled:opacity-50"
         />
         <button
           type="submit"
-          disabled={busy || !url.trim()}
+          disabled={researching || stage === "select" || !url.trim()}
           className={`${ctaClass} mt-3 w-full`}
         >
-          {busy ? "Researching…" : FIND_JOBS_CTA}
+          {researching ? "Researching…" : FIND_JOBS_CTA}
         </button>
       </form>
 

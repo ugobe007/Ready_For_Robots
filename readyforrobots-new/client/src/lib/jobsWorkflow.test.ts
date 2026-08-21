@@ -275,6 +275,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/function JobsActivateBar/);
     expect(workspace).toMatch(/function startJobs/);
     expect(workspace).toMatch(/Start jobs for all/);
+    expect(workspace).toMatch(/const researching = stage === "research"/);
     expect(workspace).not.toMatch(/03 Live list/);
     expect(workspace).not.toMatch(/onNext=\{\(\) => onNext\(job\)\}/);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
