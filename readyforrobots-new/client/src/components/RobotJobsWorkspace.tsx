@@ -4,7 +4,7 @@
  * Left = robot / context / navigation. Right = work. One deliberate state at
  * a time (submit-stability principle):
  *
- *   FIND → RESEARCH → SELECT → JOBS (all/several robots)
+ *   FIND → RESEARCH → SELECT → PORTFOLIO (several SKUs; research one at a time)
  *                      SELECT → REVIEW PROFILE → JOBS → activate list (one robot)
 
  *
@@ -58,7 +58,6 @@ import {
   jobsActivateHref,
   jobsForActivatedPipeline,
   jobsHeading,
-  landingStageAfterConfirm,
   readNavigationType,
   shouldRestoreJobsWorkspace,
 } from "@/lib/jobsWorkflow";
@@ -237,7 +236,19 @@ function srcFromQuery(): string | null {
 /* Pure helpers                                                        */
 /* ------------------------------------------------------------------ */
 
-/** Profile-only analysis — matching has not happened yet. */
+/** Identity-only row — matching has not happened yet. */
+function identityAnalysis(productName: string, companyName: string): RobotAnalysis {
+  return {
+    productName,
+    companyName,
+    tier: "C",
+    profile: null,
+    matched: false,
+    capabilities: [],
+    jobs: [],
+    jobCount: 0,
+  };
+}
 function profileToAnalysis(profile: RobotProfileResult): RobotAnalysis {
   return {
     productName:
@@ -322,6 +333,7 @@ function conflictFacts(profile: RobotProfileResult | null) {
 }
 
 function capabilitySummary(a: RobotAnalysis): string {
+  if (!a.matched) return "Not researched yet — open this SKU for its own jobs.";
   const labels = a.capabilities.filter(c => c.label).map(c => c.label);
   if (labels.length) return labels.slice(0, 3).join(" · ");
   const fams = [
@@ -580,63 +592,24 @@ export default function RobotJobsWorkspace() {
       return;
     }
 
-    // Several / all — one company-level match, then JOBS (never a dead-end catalog).
-    setStage("research");
-    try {
-      const search = await fetchRobotJobSearch({
-        url: submitUrl,
-        product: names[0],
-      });
-      submissionIdRef.current =
-        search.robot_submission_id ?? submissionIdRef.current;
-      const base = searchToAnalysis(search);
-      const analyses: RobotAnalysis[] = names.map(name => ({
-        ...base,
-        productName: name,
-      }));
-      if (landingStageAfterConfirm(analyses.length) === "review") {
-        enterReviewMatched(analyses[0], submitUrl);
-        return;
-      }
-      enterJobsFromAnalyses(analyses, submitUrl, names);
-    } catch {
-      setError("We could not match jobs for those robots.");
-      setStage("select");
-    }
-  }
-
-  function enterJobsFromAnalyses(
-    analyses: RobotAnalysis[],
-    submitUrl: string,
-    productNames: string[],
-  ) {
-    const idx = 0;
-    const a = analyses[idx];
+    // Several / all — a portfolio of distinct SKUs. Do NOT research the first
+    // robot and stamp those jobs onto every name (that is how MagicLab became G1).
+    const analyses = names.map(name => identityAnalysis(name, companyName));
     setPortfolio(analyses);
-    setActiveIdx(idx);
-    setRailTab("jobs");
-    setExpandedJob(a?.jobs[0]?.job_key ?? null);
-    setCheckedJobKeys(defaultCheckedJobKeys(a?.jobs || []));
+    setActiveIdx(0);
+    setRailTab("profile");
     saveWorkspaceSession({
       url: submitUrl,
-      products: productNames,
-      view: "jobs",
-      activeIdx: idx,
-      selectedJobKey: a?.jobs[0]?.job_key,
-      checkedJobKeys: defaultCheckedJobKeys(a?.jobs || []),
+      products: names,
+      view: "portfolio",
+      activeIdx: 0,
     });
     trackRobotJobsFunnel("capabilities_viewed", {
       ...funnelBase(),
       robots_analyzed: analyses.length,
-      company_name: analyses[0]?.companyName,
+      company_name: companyName,
     });
-    trackRobotJobsFunnel("discovery_complete", {
-      ...funnelBase(),
-      robot_name: a?.productName,
-      job_count: a?.jobCount,
-      robots_analyzed: analyses.length,
-    });
-    setStage("jobs");
+    setStage("portfolio");
   }
 
   /** Enter the profile checkpoint (matching deferred).
@@ -652,8 +625,21 @@ export default function RobotJobsWorkspace() {
     opts: { track?: boolean } = {}
   ) {
     const { track = true } = opts;
-    setPortfolio([analysis]);
-    setActiveIdx(0);
+    const keepPortfolio = productNames.filter(Boolean).length > 1;
+    if (keepPortfolio) {
+      const idx = activeIdx;
+      setPortfolio(prev => {
+        if (prev.length === productNames.length) {
+          return prev.map((p, i) => (i === idx ? analysis : p));
+        }
+        return productNames.map((name, i) =>
+          i === idx ? analysis : identityAnalysis(name, analysis.companyName),
+        );
+      });
+    } else {
+      setPortfolio([analysis]);
+      setActiveIdx(0);
+    }
     setRailTab("profile");
     setExpandedJob(null);
     viewedRef.current = new Set();
@@ -662,7 +648,7 @@ export default function RobotJobsWorkspace() {
       url: submitUrl,
       products: productNames.filter(Boolean),
       view: "review",
-      activeIdx: 0,
+      activeIdx: keepPortfolio ? activeIdx : 0,
     });
     if (track) {
       trackRobotJobsFunnel("capabilities_viewed", {
@@ -872,39 +858,127 @@ export default function RobotJobsWorkspace() {
     return next;
   }
 
+  async function researchPortfolioRobot(idx: number, dest: "review" | "jobs") {
+    const a = portfolio[idx];
+    if (!a) return;
+    const submitUrl = submittedUrlRef.current;
+    const names = portfolio.map(p => p.productName);
+    setActiveIdx(idx);
+    if (dest === "jobs" && a.matched && (a.jobs || []).length > 0) {
+      goToJobs(idx);
+      return;
+    }
+    if (dest === "review" && a.profile && !a.matched) {
+      setRailTab("profile");
+      setStage("review");
+      return;
+    }
+    setStage("research");
+    setError(null);
+    try {
+      if (dest === "jobs") {
+        const search = await fetchRobotJobSearch({
+          url: submitUrl,
+          product: a.productName,
+        });
+        submissionIdRef.current =
+          search.robot_submission_id ?? submissionIdRef.current;
+        const merged = {
+          ...searchToAnalysis(search),
+          productName: a.productName,
+        };
+        setPortfolio(prev => prev.map((p, i) => (i === idx ? merged : p)));
+        setCompanyName(merged.companyName);
+        setRailTab("jobs");
+        setExpandedJob(pickSelectedJobKey(merged.jobs, null));
+        setCheckedJobKeys(defaultCheckedJobKeys(merged.jobs));
+        saveWorkspaceSession({
+          url: submitUrl,
+          products: names,
+          view: "jobs",
+          activeIdx: idx,
+          selectedJobKey: merged.jobs[0]?.job_key,
+          checkedJobKeys: defaultCheckedJobKeys(merged.jobs),
+        });
+        trackRobotJobsFunnel("discovery_complete", {
+          ...funnelBase(),
+          robot_name: merged.productName,
+          job_count: merged.jobCount,
+        });
+        setStage("jobs");
+        return;
+      }
+      const profile = await fetchRobotProfile({
+        url: submitUrl,
+        product: a.productName,
+      });
+      submissionIdRef.current =
+        profile.robot_submission_id ?? submissionIdRef.current;
+      const merged = profileToAnalysis(profile);
+      setPortfolio(prev =>
+        prev.map((p, i) =>
+          i === idx ? merged : { ...p, companyName: merged.companyName || p.companyName },
+        ),
+      );
+      setCompanyName(merged.companyName);
+      setRailTab("profile");
+      saveWorkspaceSession({
+        url: submitUrl,
+        products: names,
+        view: "review",
+        activeIdx: idx,
+      });
+      setStage("review");
+    } catch {
+      setError("Research failed for that robot.");
+      setStage("portfolio");
+    }
+  }
+
   async function restore(saved: WorkspaceSession) {
     submittedUrlRef.current = saved.url;
     const savedIdx = typeof saved.activeIdx === "number" ? saved.activeIdx : 0;
     try {
-      // Multi-robot — one company-level search, then jobs (never a catalog dead end).
       if (saved.products.length > 1) {
-        const res = await fetchRobotJobSearch({
-          url: saved.url,
-          product: saved.products[0],
-        });
-        submissionIdRef.current =
-          res.robot_submission_id ?? submissionIdRef.current;
-        const base = searchToAnalysis(res);
-        const analyses = saved.products.map(name => ({
-          ...base,
-          productName: name,
-        }));
         const idx =
-          savedIdx >= 0 && savedIdx < analyses.length ? savedIdx : 0;
-        setPortfolio(analyses);
-        setCompanyName(analyses[0].companyName);
-        setActiveIdx(idx);
-        if (saved.view === "review") {
-          setRailTab("profile");
-          setStage("review");
-        } else {
-          setExpandedJob(
-            pickSelectedJobKey(analyses[idx].jobs, saved.selectedJobKey),
+          savedIdx >= 0 && savedIdx < saved.products.length ? savedIdx : 0;
+        const stubs = saved.products.map(name => identityAnalysis(name, ""));
+        if (saved.view === "portfolio") {
+          setPortfolio(stubs);
+          setActiveIdx(idx);
+          setStage("portfolio");
+          return;
+        }
+        const product = saved.products[idx];
+        if (saved.view === "jobs") {
+          const res = await fetchRobotJobSearch({ url: saved.url, product });
+          submissionIdRef.current =
+            res.robot_submission_id ?? submissionIdRef.current;
+          const a = { ...searchToAnalysis(res), productName: product };
+          const analyses = stubs.map((row, i) =>
+            i === idx ? a : { ...row, companyName: a.companyName },
           );
-          applyCheckedKeys(analyses[idx].jobs, saved.checkedJobKeys);
+          setPortfolio(analyses);
+          setCompanyName(a.companyName);
+          setActiveIdx(idx);
+          setExpandedJob(pickSelectedJobKey(a.jobs, saved.selectedJobKey));
+          applyCheckedKeys(a.jobs, saved.checkedJobKeys);
           setRailTab("jobs");
           setStage("jobs");
+          return;
         }
+        const profile = await fetchRobotProfile({ url: saved.url, product });
+        submissionIdRef.current =
+          profile.robot_submission_id ?? submissionIdRef.current;
+        const a = profileToAnalysis(profile);
+        const analyses = stubs.map((row, i) =>
+          i === idx ? a : { ...row, companyName: a.companyName },
+        );
+        setPortfolio(analyses);
+        setCompanyName(a.companyName);
+        setActiveIdx(idx);
+        setRailTab("profile");
+        setStage("review");
         return;
       }
       const product = saved.products[0] || undefined;
@@ -946,18 +1020,6 @@ export default function RobotJobsWorkspace() {
     setSelected(prev =>
       prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
     );
-  }
-
-  function openReviewFor(idx: number) {
-    setActiveIdx(idx);
-    setRailTab("profile");
-    setStage("review");
-    saveWorkspaceSession({
-      url: submittedUrlRef.current,
-      products: portfolio.map(p => p.productName),
-      view: "review",
-      activeIdx: idx,
-    });
   }
 
   function recordJobView(job: MatchJob) {
@@ -1120,9 +1182,8 @@ export default function RobotJobsWorkspace() {
             company={companyName || portfolio[0]?.companyName || ""}
             robots={portfolio}
             showCounts={countsTrusted}
-            onView={goToJobs}
-            onReview={openReviewFor}
-            onSeeJobs={() => goToJobs(activeIdx)}
+            onView={idx => void researchPortfolioRobot(idx, "jobs")}
+            onReview={idx => void researchPortfolioRobot(idx, "review")}
           />
         )}
 
@@ -1281,11 +1342,11 @@ function PortfolioRail({
         </p>
       ) : null}
       <p className="mt-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
-        {count} robots analyzed
+        {count} robots
       </p>
       <p className="mt-3 text-[12px] leading-snug text-slate-400">
-        Pick a robot to review its profile and matched work. Each robot keeps
-        its own confirmed capabilities.
+        Pick one robot. Each SKU is researched on its own — we do not copy one
+        robot's jobs onto the rest of the lineup.
       </p>
       <div className="mt-auto pt-6">
         <button
@@ -1478,8 +1539,9 @@ function SelectPanel({
         We found {products.length} robots
       </h2>
       <p className="mt-2 text-sm text-slate-400">
-        Which robots should we find jobs for? Choose one, several, or all —{" "}
-        {company || "this maker"} has {products.length}.
+        Which robot should we research? Pick one SKU, or list all of them and
+        open each separately — {company || "this maker"} has {products.length}.
+        We do not copy one robot's jobs onto the others.
       </p>
 
       <div className="mt-6 grid gap-2 sm:grid-cols-2">
@@ -1524,10 +1586,10 @@ function SelectPanel({
         >
           <FaceCue scale={2} onEmerald />
           {selected.length === 0
-            ? `Find jobs for all ${products.length} robots →`
+            ? `List all ${products.length} robots →`
             : selected.length === 1
               ? `Find jobs for ${selected[0]} →`
-              : `Find jobs for ${selected.length} robots →`}
+              : `List ${selected.length} robots →`}
         </button>
         {selected.length > 0 && selected.length < products.length ? (
           <button
@@ -1553,27 +1615,23 @@ function PortfolioPanel({
   showCounts,
   onView,
   onReview,
-  onSeeJobs,
 }: {
   company: string;
   robots: RobotAnalysis[];
   showCounts: boolean;
   onView: (idx: number) => void;
   onReview: (idx: number) => void;
-  onSeeJobs: () => void;
 }) {
   return (
     <div className="p-6 sm:p-8">
       <p className={eyebrow}>{company}</p>
       <h2 className="mt-1 font-display text-2xl font-bold text-slate-100">
-        {robots.length} robots analyzed
+        {robots.length} robots
       </h2>
-      <div className="mt-4">
-        <button type="button" onClick={onSeeJobs} className={ctaClass}>
-          <FaceCue scale={2} onEmerald />
-          See jobs for these robots →
-        </button>
-      </div>
+      <p className="mt-2 max-w-xl text-sm text-slate-400">
+        Pick a robot to research. Each SKU gets its own jobs — we do not reuse
+        one robot's matches for the whole lineup.
+      </p>
       <div className="mt-6 space-y-3">
         {robots.map((a, idx) => (
           <div
@@ -1602,7 +1660,7 @@ function PortfolioPanel({
                 onClick={() => onView(idx)}
                 className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300 hover:text-emerald-200"
               >
-                View matches →
+                {a.matched ? "View matches →" : "Find jobs for this robot →"}
               </button>
               <button
                 type="button"

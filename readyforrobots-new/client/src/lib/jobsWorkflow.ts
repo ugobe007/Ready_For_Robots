@@ -9,7 +9,7 @@
  * Cap: 5 example jobs on `/`. Activate fills the live list to 15.
  */
 
-export type JobsConfirmLanding = "review" | "jobs";
+export type JobsConfirmLanding = "review" | "jobs" | "portfolio";
 
 export const JOBS_EXAMPLE_CAP = 5;
 export const BUYER_LEADS_ANON_CAP = 5;
@@ -19,7 +19,7 @@ export const JOBS_PIPELINE_CAP = 15;
 export const JOBS_ACTIVATE_CAP = 15;
 
 export function landingStageAfterConfirm(robotCount: number): JobsConfirmLanding {
-  return robotCount > 1 ? "jobs" : "review";
+  return robotCount > 1 ? "portfolio" : "review";
 }
 
 export function jobsHeading(opts: {

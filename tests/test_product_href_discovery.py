@@ -107,14 +107,31 @@ def test_magiclab_homepage_links_yield_product_picker():
         ],
     )
     names = _discover_product_names(home)
-    assert "G1" in names
-    assert any("X1" in n or n == "MagicBot X1" for n in names)
-    assert any("Z1" in n or n == "MagicBot Z1" for n in names)
-    assert any("Dog" in n or n == "MagicDog" for n in names)
+    joined = " ".join(names).lower()
+    assert "g1" in joined
+    assert any("x1" in n.lower() for n in names)
+    assert any("z1" in n.lower() for n in names)
+    assert any("dog" in n.lower() for n in names)
     assert "About" not in names
     assert "News" not in names
-    assert len(names) >= 3
+    assert "Human" not in names
+    assert len(names) >= 4
+    assert names != ["G1"]
+
+
+def test_href_label_keeps_hidden_sku():
+    from app.services.robot_understanding_v1.resolve import _href_product_name
+
+    assert (
+        _href_product_name("https://www.magiclab.top/en/app/g1", "MagicBot")
+        == "MagicBot G1"
+    )
+    assert (
+        _href_product_name("https://www.magiclab.top/en/x1", "MagicBot X1")
+        == "MagicBot X1"
+    )
+    assert _href_product_name("https://www.magiclab.top/en/x1", "") == "X1"
 
 
 def test_profile_cache_namespace_busts_stale_engineai_identity():
-    assert NAMESPACE == "robot_profile_v4"
+    assert NAMESPACE == "robot_profile_v5"

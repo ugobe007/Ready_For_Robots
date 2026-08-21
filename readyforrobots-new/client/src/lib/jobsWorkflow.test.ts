@@ -38,9 +38,9 @@ describe("jobsWorkflow", () => {
     expect(landingStageAfterConfirm(1)).toBe("review");
   });
 
-  it("sends several or all robots to jobs, not a catalog", () => {
-    expect(landingStageAfterConfirm(2)).toBe("jobs");
-    expect(landingStageAfterConfirm(4)).toBe("jobs");
+  it("sends several or all robots to a portfolio so each SKU is researched", () => {
+    expect(landingStageAfterConfirm(2)).toBe("portfolio");
+    expect(landingStageAfterConfirm(4)).toBe("portfolio");
   });
 
   it("titles the jobs list for the selected robot, even in a portfolio", () => {
@@ -165,6 +165,16 @@ describe("jobsWorkflow", () => {
     expect(handoff).not.toMatch(/Taking you back/);
     expect(pipeline).toMatch(/arrivedFromPlace/);
     expect(pipeline).toMatch(/isPlaceSrc/);
+  });
+
+  it("does not stamp the first SKU's jobs onto every robot in a lineup", () => {
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    expect(workspace).not.toMatch(/\.\.\.base,\s*productName: name/);
+    expect(workspace).toMatch(/researchPortfolioRobot/);
+    expect(workspace).toMatch(/identityAnalysis/);
   });
 
   it("puts checked jobs first and fills the live list to 15", () => {
