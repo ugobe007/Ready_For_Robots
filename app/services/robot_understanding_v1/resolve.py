@@ -24,6 +24,36 @@ _PRODUCT_CANDIDATE = re.compile(
     re.I,
 )
 
+# Manufacturer product pages (EngineAI /product-pm01.html, /products/t800).
+# Path evidence — not an OEM SKU allowlist.
+_PRODUCT_HREF = re.compile(
+    r"(?:^|/)products?[-_/]([a-z0-9][a-z0-9-]{0,24})(?:\.html?)?$",
+    re.I,
+)
+_PRODUCT_HREF_NOISE = frozenset(
+    {
+        "purchase",
+        "catalog",
+        "list",
+        "index",
+        "home",
+        "support",
+        "service",
+        "center",
+        "overview",
+        "all",
+        "line",
+        "lines",
+        "family",
+        "series",
+        "detail",
+        "details",
+        "info",
+        "page",
+    }
+)
+_MAX_DISCOVERED_PRODUCTS = 8
+
 _PLATFORM_NOISE = re.compile(
     r"\b(cloud\s+platform|fleet\s+management|software\s+platform|WES|WMS)\b",
     re.I,
@@ -629,6 +659,29 @@ def _org_source_names_string(src: str, name: str, product_hint: str | None) -> b
     return True
 
 
+def _canon_path_sku(slug: str) -> str:
+    """pm01 / T800 / s2 → compact uppercase SKU."""
+    compact = re.sub(r"[^a-zA-Z0-9]", "", slug or "")
+    if re.fullmatch(r"[A-Za-z]{1,8}\d{1,4}[A-Za-z]{0,4}", compact):
+        return compact.upper()
+    return (slug or "").strip()
+
+
+def _sku_from_product_href(url: str) -> str | None:
+    """SKU from a manufacturer product path, or None if the path is generic."""
+    path = (urlparse(url).path or "").rstrip("/")
+    match = _PRODUCT_HREF.search(path)
+    if not match:
+        return None
+    slug = match.group(1)
+    if slug.lower() in _PRODUCT_HREF_NOISE:
+        return None
+    if not _looks_like_model_or_sku(slug):
+        return None
+    canon = _canon_path_sku(slug)
+    return canon or None
+
+
 def _discover_product_names(
     home: FetchedPage,
     *,
@@ -687,6 +740,22 @@ def _discover_product_names(
             }.get(canon.lower(), canon if canon[0].isupper() else canon.title())
             counts[key] = counts.get(key, 0) + 2  # anchor weight
 
+    # Manufacturer product URLs (product-pm01.html) — evidence, not an allowlist.
+    href_skus: list[str] = []
+    for url, anchor in home.links:
+        sku = _sku_from_product_href(url)
+        if not sku:
+            continue
+        href_skus.append(sku)
+        counts[sku] = counts.get(sku, 0) + 3
+        if (anchor or "").strip() and _name_key(anchor) == _name_key(sku):
+            counts[sku] += 1
+
+    for sku in dict.fromkeys(href_skus):
+        counts[sku] = counts.get(sku, 0) + len(
+            re.findall(rf"\b{re.escape(sku)}\b", blob, re.I)
+        )
+
     if product_hint:
         hint = product_hint.strip()
         if hint:
@@ -703,7 +772,7 @@ def _discover_product_names(
             if not (product_hint and name.lower() == product_hint.strip().lower()):
                 continue
         out.append(name)
-        if len(out) >= 5:
+        if len(out) >= _MAX_DISCOVERED_PRODUCTS:
             break
     return out
 
