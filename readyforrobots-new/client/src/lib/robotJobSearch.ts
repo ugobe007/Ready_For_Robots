@@ -23,6 +23,7 @@ export async function fetchRobotJobSearch(opts: {
   product?: string;
   maxSources?: number;
   assertedClass?: string;
+  lookupGrain?: "robot_type" | "product";
   signal?: AbortSignal;
 }): Promise<RobotJobSearchResult> {
   const base = getPublicReadApiBase();
@@ -34,6 +35,7 @@ export async function fetchRobotJobSearch(opts: {
       product: opts.product || null,
       max_sources: opts.maxSources ?? 6,
       asserted_class: opts.assertedClass || null,
+      lookup_grain: opts.lookupGrain || null,
     }),
     signal: opts.signal,
   });

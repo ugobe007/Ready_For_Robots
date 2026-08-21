@@ -28,15 +28,19 @@ Not leads. Not SIGNAL. Not three products. One engine: **FIND → QUALIFY → PL
 
 ```
 submit robot URL on /
-  → if several SKUs, pick one / several / all
-  → see understood capabilities (must be credible)
-  → see Robot Jobs (step 2) — 5 examples, checkboxes
+  → if several SKUs, ask which robot to find jobs for
+  → one SKU: jobs for that product
+  → several / all: resolve the search without blocking next steps (type-first, one match per class)
+  → 01 robot → 02 jobs → 03 activate are always navigational links
+  → see Robot Jobs (step 2) — 5 examples, checkboxes, Activate job list →
   → inspect cards (why / unknowns / blockers)
   → check the jobs to take forward
   → Activate job list → /pipeline?src=jobs_activate
   → checked jobs pinned at the top, fill to 15
   → discovery pull: See All Jobs (stays on step 2)
 ```
+
+The picker already decides one vs several. One robot → jobs for that robot. Several/all is slower, so we resolve with a type-level match instead of N SKU scrapes. **Independent of that resolution, every stage keeps process nav** (01 Show us your robot → 02 Here are its jobs → 03 Activate the job list). Fourier empty portfolio failed because 02/03 were not links.
 
 **Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Activate uses `src=jobs_activate` without the robot OEM as `url=` so `/pipeline` shows the job list, not a match-url scan of the manufacturer. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 

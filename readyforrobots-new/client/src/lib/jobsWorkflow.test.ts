@@ -9,7 +9,9 @@ import {
   JOBS_NEXT_CTA,
   JOBS_NEXT_HINT,
   JOBS_PLACE_CTA,
+  JOBS_PROCESS_STEPS,
   JOBS_SCAN_STEPS,
+  JOBS_SEE_JOBS_CTA,
   buyerLeadsHref,
   buyerLeadsToShow,
   capExampleJobs,
@@ -17,14 +19,22 @@ import {
   isJobsHandoffSrc,
   isPlaceSrc,
   jobsActivateHref,
+  jobsCountEyebrow,
   jobsForActivatedPipeline,
   jobsFreshHomeHref,
   goJobsFreshHome,
   jobsHeading,
   jobsPlaceHref,
+  jobsProcessStepFromStage,
+  jobsToActivate,
   jobsSignupHref,
   jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
+  lineupJobLookups,
+  normalizeRobotClass,
+  portfolioShowsJobCounts,
+  productClassesFromLineup,
+  robotClassJobsLabel,
   isJobsHomeDest,
   persistJobsHandoffSrc,
   placeBuyersToShow,
@@ -39,9 +49,26 @@ describe("jobsWorkflow", () => {
     expect(landingStageAfterConfirm(1)).toBe("review");
   });
 
-  it("sends several or all robots to a portfolio so each SKU is researched", () => {
-    expect(landingStageAfterConfirm(2)).toBe("portfolio");
-    expect(landingStageAfterConfirm(4)).toBe("portfolio");
+  it("sends several or all robots to jobs for the robot type", () => {
+    expect(landingStageAfterConfirm(2)).toBe("jobs");
+    expect(landingStageAfterConfirm(4)).toBe("jobs");
+  });
+
+  it("always names the three process steps as navigational links", () => {
+    expect(JOBS_PROCESS_STEPS.map(s => s.id)).toEqual(["find", "jobs", "activate"]);
+    expect(JOBS_SEE_JOBS_CTA).toBe("See jobs →");
+    expect(jobsProcessStepFromStage("select")).toBe("find");
+    expect(jobsProcessStepFromStage("review")).toBe("find");
+    expect(jobsProcessStepFromStage("jobs")).toBe("jobs");
+    expect(jobsProcessStepFromStage("portfolio")).toBe("jobs");
+    const pool = [{ job_key: "a" }, { job_key: "b" }, { job_key: "c" }];
+    expect(jobsToActivate([], pool, 15).map(j => j.job_key)).toEqual(["a", "b", "c"]);
+    expect(jobsToActivate([pool[2]], pool, 15).map(j => j.job_key)).toEqual([
+      "c",
+      "a",
+      "b",
+    ]);
+    expect(jobsToActivate([], [], 15)).toEqual([]);
   });
 
   it("forces a real FIND navigation from the wordmark even on /", () => {
@@ -61,28 +88,34 @@ describe("jobsWorkflow", () => {
     expect(workflow).toMatch(/location\.assign\(jobsFreshHomeHref\(\)\)/);
   });
 
-  it("titles the jobs list for the selected robot, even in a portfolio", () => {
+  it("titles type-level jobs for the company group, product-level jobs for a SKU", () => {
     expect(
       jobsHeading({
-        productName: "Servi",
-        companyName: "Bear Robotics",
-        robotCount: 2,
+        productName: "Fourier GR-1",
+        companyName: "Fourier Intelligence",
+        robotCount: 5,
+        lookupGrain: "robot_type",
+        robotClass: "humanoid",
       }),
-    ).toBe("Jobs for Servi");
+    ).toBe("Jobs for Fourier Intelligence");
     expect(
-      jobsHeading({
-        productName: "G1",
-        companyName: "Unitree",
-        robotCount: 4,
+      jobsCountEyebrow({
+        visibleCount: 5,
+        productName: "Fourier GR-1",
+        companyName: "Fourier Intelligence",
+        robotCount: 5,
+        lookupGrain: "robot_type",
+        robotClass: "humanoid",
       }),
-    ).toBe("Jobs for G1");
+    ).toBe("5 JOBS FOR FOURIER INTELLIGENCE");
     expect(
       jobsHeading({
-        productName: "G1",
-        companyName: "Unitree",
+        productName: "Fourier GR-1",
+        companyName: "Fourier Intelligence",
         robotCount: 1,
+        lookupGrain: "product",
       }),
-    ).toBe("Jobs for G1");
+    ).toBe("Jobs for Fourier GR-1");
   });
 
   it("caps the Jobs terminal at 5 example jobs even when more exist", () => {
@@ -149,6 +182,9 @@ describe("jobsWorkflow", () => {
     expect(JOBS_NEXT_HINT).not.toMatch(/buyer/i);
     expect(JOBS_PLACE_CTA).toBe("Activate job list →");
     expect(workspace).toMatch(/JOBS_NEXT_CTA/);
+    expect(workspace).toMatch(/JobsProcessNav/);
+    expect(workspace).toMatch(/JOBS_PROCESS_STEPS/);
+    expect(workspace).not.toMatch(/03 Live list/);
     expect(workspace).not.toMatch(/onNext=\{\(\) => onNext\(job\)\}/);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
     for (const step of JOBS_SCAN_STEPS) {
@@ -186,14 +222,84 @@ describe("jobsWorkflow", () => {
     expect(pipeline).toMatch(/isPlaceSrc/);
   });
 
-  it("does not stamp the first SKU's jobs onto every robot in a lineup", () => {
+  it("looks up a lineup once per robot type, not once per SKU", () => {
+    expect(normalizeRobotClass("Humanoid")).toBe("humanoid");
+    expect(robotClassJobsLabel("humanoid")).toBe("humanoids");
+    const fourier = lineupJobLookups([
+      { name: "Fourier GR-1", displayClass: "humanoid" },
+      { name: "Fourier GR-2", displayClass: "humanoid" },
+      { name: "Fourier GR-3", displayClass: "humanoid" },
+      { name: "Fourier N1", displayClass: "humanoid" },
+    ]);
+    expect(fourier).toEqual([
+      {
+        grain: "robot_type",
+        robotClass: "humanoid",
+        productNames: [
+          "Fourier GR-1",
+          "Fourier GR-2",
+          "Fourier GR-3",
+          "Fourier N1",
+        ],
+      },
+    ]);
+    const mixed = lineupJobLookups([
+      { name: "Atlas", displayClass: "humanoid" },
+      { name: "Spot", displayClass: "quadruped" },
+      { name: "Stretch", displayClass: "mobile_manipulator" },
+    ]);
+    expect(mixed.map(row => row.robotClass).sort()).toEqual([
+      "humanoid",
+      "mobile_manipulator",
+      "quadruped",
+    ]);
+    expect(mixed.every(row => row.grain === "robot_type")).toBe(true);
+    expect(mixed.every(row => row.productNames.length === 1)).toBe(true);
+    const unknown = lineupJobLookups([{ name: "MysteryBot", displayClass: null }]);
+    expect(unknown).toEqual([
+      { grain: "product", robotClass: null, productNames: ["MysteryBot"] },
+    ]);
+    expect(
+      productClassesFromLineup([
+        { name: "Fourier GR-1", displayClass: "humanoid" },
+        { name: "Spot", displayClass: "quadruped" },
+      ]),
+    ).toEqual({ "Fourier GR-1": "humanoid", Spot: "quadruped" });
+  });
+
+  it("shares type-level jobs across a class and does not copy one SKU onto another type", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
     );
     expect(workspace).not.toMatch(/\.\.\.base,\s*productName: name/);
-    expect(workspace).toMatch(/researchPortfolioRobot/);
-    expect(workspace).toMatch(/identityAnalysis/);
+    expect(workspace).not.toMatch(/fillLineupJobs/);
+    expect(workspace).toMatch(/lineupJobLookups/);
+    expect(workspace).toMatch(/lookupGrain: "robot_type"/);
+    expect(workspace).toMatch(/Find jobs for all/);
+    expect(workspace).not.toMatch(/List all \$\{products\.length\} robots/);
+  });
+
+  it("hides 0 matching jobs on unresearched lineup shells", () => {
+    expect(
+      portfolioShowsJobCounts([
+        { matched: false, jobCount: 0 },
+        { matched: false, jobCount: 0 },
+      ]),
+    ).toBe(false);
+    expect(portfolioShowsJobCounts([{ matched: true, jobCount: 5 }])).toBe(true);
+    expect(
+      portfolioShowsJobCounts([
+        { matched: true, jobCount: 5 },
+        { matched: true, jobCount: 5 },
+      ]),
+    ).toBe(false);
+    expect(
+      portfolioShowsJobCounts([
+        { matched: true, jobCount: 5 },
+        { matched: true, jobCount: 12 },
+      ]),
+    ).toBe(true);
   });
 
   it("puts checked jobs first and fills the live list to 15", () => {

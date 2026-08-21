@@ -10,6 +10,110 @@
  */
 
 export type JobsConfirmLanding = "review" | "jobs" | "portfolio";
+export type JobLookupGrain = "robot_type" | "product";
+
+export type LineupProduct = { name: string; displayClass?: string | null };
+
+export type LineupJobLookup = {
+  grain: JobLookupGrain;
+  robotClass: string | null;
+  productNames: string[];
+};
+
+/** Frontend aliases — keep in sync with `robot_class_qualify.normalize_class_id`. */
+const ROBOT_CLASS_ALIASES: Record<string, string> = {
+  humanoid: "humanoid",
+  biped: "humanoid",
+  bipedal: "humanoid",
+  amr: "amr",
+  agv: "amr",
+  mobile_robot: "amr",
+  mobile_manipulator: "mobile_manipulator",
+  cobot: "cobot",
+  arm: "cobot",
+  collaborative: "cobot",
+  quadruped: "quadruped",
+  spot: "quadruped",
+  scrubber: "autonomous_scrubber",
+  autonomous_scrubber: "autonomous_scrubber",
+  forklift: "amr",
+};
+
+const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
+  humanoid: "humanoids",
+  amr: "AMRs",
+  mobile_manipulator: "mobile manipulators",
+  cobot: "collaborative arms",
+  quadruped: "quadrupeds",
+  autonomous_scrubber: "floor scrubbers",
+};
+
+const ROBOT_CLASS_TITLE: Record<string, string> = {
+  humanoid: "Humanoid",
+  amr: "AMR",
+  mobile_manipulator: "Mobile manipulator",
+  cobot: "Collaborative arm",
+  quadruped: "Quadruped",
+  autonomous_scrubber: "Floor scrubber",
+};
+
+export function normalizeRobotClass(raw?: string | null): string | null {
+  const want = (raw || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (!want) return null;
+  return ROBOT_CLASS_ALIASES[want] || null;
+}
+
+export function robotClassTitle(classId?: string | null): string {
+  const id = normalizeRobotClass(classId);
+  if (!id) return "robot";
+  return ROBOT_CLASS_TITLE[id] || id.replace(/_/g, " ");
+}
+
+export function robotClassJobsLabel(classId?: string | null): string {
+  const id = normalizeRobotClass(classId);
+  if (!id) return "this robot type";
+  return ROBOT_CLASS_JOBS_LABEL[id] || `${id.replace(/_/g, " ")}s`;
+}
+
+/**
+ * One lookup per robot type (class), not per SKU.
+ * Unknown class falls back to a product-level lookup so we never mix types.
+ */
+export function lineupJobLookups(products: LineupProduct[]): LineupJobLookup[] {
+  const groups = new Map<string, string[]>();
+  const unknown: string[] = [];
+  for (const row of products) {
+    const name = (row.name || "").trim();
+    if (!name) continue;
+    const cls = normalizeRobotClass(row.displayClass);
+    if (!cls) {
+      unknown.push(name);
+      continue;
+    }
+    const names = groups.get(cls) || [];
+    names.push(name);
+    groups.set(cls, names);
+  }
+  const out: LineupJobLookup[] = [];
+  for (const [robotClass, productNames] of groups) {
+    out.push({ grain: "robot_type", robotClass, productNames });
+  }
+  for (const name of unknown) {
+    out.push({ grain: "product", robotClass: null, productNames: [name] });
+  }
+  return out;
+}
+
+export function productClassesFromLineup(
+  products: LineupProduct[],
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const row of products) {
+    const cls = normalizeRobotClass(row.displayClass);
+    if (row.name && cls) out[row.name] = cls;
+  }
+  return out;
+}
 
 export const JOBS_EXAMPLE_CAP = 5;
 export const BUYER_LEADS_ANON_CAP = 5;
@@ -19,15 +123,53 @@ export const JOBS_PIPELINE_CAP = 15;
 export const JOBS_ACTIVATE_CAP = 15;
 
 export function landingStageAfterConfirm(robotCount: number): JobsConfirmLanding {
-  return robotCount > 1 ? "portfolio" : "review";
+  // One SKU: profile checkpoint, then product-level jobs.
+  // Several / all: jobs for the robot type (the group), then a SKU on demand.
+  return robotCount > 1 ? "jobs" : "review";
+}
+
+/** Hide "0 matching jobs" on unresearched shells; hide identical counts across a lineup. */
+export function portfolioShowsJobCounts(
+  robots: Array<{ matched?: boolean; jobCount?: number }>,
+): boolean {
+  const matched = robots.filter(a => a.matched);
+  if (matched.length === 0) return false;
+  if (matched.length === 1) return true;
+  return new Set(matched.map(a => a.jobCount ?? 0)).size > 1;
 }
 
 export function jobsHeading(opts: {
   productName: string;
   companyName: string;
   robotCount: number;
+  lookupGrain?: JobLookupGrain | null;
+  robotClass?: string | null;
 }): string {
+  if (opts.robotCount > 1 && opts.companyName) {
+    return `Jobs for ${opts.companyName}`;
+  }
+  if (opts.lookupGrain === "robot_type" && opts.robotClass) {
+    return `Jobs for ${robotClassJobsLabel(opts.robotClass)}`;
+  }
   return `Jobs for ${opts.productName}`;
+}
+
+export function jobsCountEyebrow(opts: {
+  visibleCount: number;
+  productName: string;
+  companyName?: string;
+  robotCount?: number;
+  lookupGrain?: JobLookupGrain | null;
+  robotClass?: string | null;
+}): string {
+  if (opts.visibleCount === 0) return "";
+  const who =
+    (opts.robotCount || 1) > 1 && opts.companyName
+      ? opts.companyName
+      : opts.lookupGrain === "robot_type" && opts.robotClass
+        ? robotClassJobsLabel(opts.robotClass)
+        : opts.productName;
+  return `${opts.visibleCount} JOBS FOR ${who.toUpperCase()}`;
 }
 
 export function capExampleJobs<T>(jobs: T[], cap = JOBS_EXAMPLE_CAP): T[] {
@@ -50,6 +192,37 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = "Activate job list →";
 export const JOBS_NEXT_HINT = "Your checked jobs sit at the top of 15 live jobs";
+export const JOBS_SEE_JOBS_CTA = "See jobs →";
+
+export type JobsProcessStepId = "find" | "jobs" | "activate";
+
+/** FIND → jobs → activate. Always shown as navigational links. */
+export const JOBS_PROCESS_STEPS = [
+  {
+    id: "find" as const,
+    n: "01",
+    label: "Show us your robot",
+    linkLabel: FIND_JOBS_CTA,
+  },
+  {
+    id: "jobs" as const,
+    n: "02",
+    label: "Here are its jobs",
+    linkLabel: JOBS_SEE_JOBS_CTA,
+  },
+  {
+    id: "activate" as const,
+    n: "03",
+    label: "Activate the job list",
+    linkLabel: JOBS_NEXT_CTA,
+  },
+];
+
+export function jobsProcessStepFromStage(stage: string): JobsProcessStepId {
+  if (stage === "jobs" || stage === "portfolio") return "jobs";
+  return "find";
+}
+
 export const JOBS_ACTIVATE_SRC = "jobs_activate";
 export const JOBS_PLACE_SRC = "place";
 export const JOBS_PLACE_CTA = "Activate job list →";
@@ -143,6 +316,17 @@ export function jobsForActivatedPipeline<T extends { job_key: string }>(
   const seen = new Set(picked.map(job => job.job_key));
   const extra = pool.filter(job => job?.job_key && !seen.has(job.job_key));
   return [...picked, ...extra].slice(0, cap);
+}
+
+/** Activate never no-ops: checked jobs first, else the example cap, else the pool. */
+export function jobsToActivate<T extends { job_key: string }>(
+  selected: T[],
+  pool: T[],
+  cap = JOBS_ACTIVATE_CAP,
+): T[] {
+  const picked = selected.filter(job => job?.job_key);
+  const seed = picked.length > 0 ? picked : capExampleJobs(pool);
+  return jobsForActivatedPipeline(seed, pool, cap);
 }
 
 export function defaultCheckedJobKeys<T extends { job_key: string }>(

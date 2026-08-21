@@ -4,7 +4,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from app.services.robot_capability_derive import derive_capabilities
-from app.services.robot_class_qualify import apply_asserted_class, public_class_options
+from app.services.robot_class_qualify import (
+    apply_asserted_class,
+    public_class_options,
+    thin_class_profile,
+)
 from app.services.robot_job_search import compose_robot_job_search
 from app.services.robot_profile_cache import clear_profile_cache_memory
 from app.services.robot_requirement_match import match_jobs_from_profile
@@ -178,6 +182,21 @@ def test_asserted_humanoid_profile_matches_jobs():
         },
         "humanoid",
     )
+    out = match_jobs_from_profile(profile)
+    assert out["state"] == "matches"
+    assert out["job_count"] > 0
+    assert any(c.get("key") == "manipulate" for c in out["capabilities"])
+
+
+def test_thin_humanoid_class_matches_jobs_without_sku():
+    """Type-first: product_class is enough. Matcher still inspects requirements."""
+    profile = thin_class_profile("Fourier Intelligence", "humanoid")
+    classes = {
+        str(f.get("value")).lower()
+        for f in profile["facts"]
+        if f.get("predicate") == "product_class"
+    }
+    assert "humanoid" in classes
     out = match_jobs_from_profile(profile)
     assert out["state"] == "matches"
     assert out["job_count"] > 0

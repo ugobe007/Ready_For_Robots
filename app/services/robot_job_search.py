@@ -104,6 +104,26 @@ def _timings(
     }
 
 
+def _normalize_lookup_grain(raw: str | None) -> str:
+    grain = (raw or "product").strip().lower().replace("-", "_")
+    if grain in {"type", "class", "product_class", "robot_class", "robot_type"}:
+        return "robot_type"
+    return "product"
+
+
+def _vendor_company_name(url: str) -> str | None:
+    try:
+        from app.services.vendor_robot_lookup import lookup_vendor_by_url
+
+        hit = lookup_vendor_by_url(url)
+    except Exception:
+        return None
+    if not isinstance(hit, dict):
+        return None
+    name = (hit.get("vendor_name") or "").strip()
+    return name or None
+
+
 def compose_robot_job_search(
     url: str,
     *,
@@ -111,49 +131,74 @@ def compose_robot_job_search(
     max_sources: int = 6,
     record_shadow=None,
     asserted_class: str | None = None,
+    lookup_grain: str | None = None,
 ) -> dict[str, Any]:
-    """Build (or reuse) a Robot Profile and match jobs. Never streams partial jobs."""
+    """Build (or reuse) a Robot Profile and match jobs. Never streams partial jobs.
+
+    `lookup_grain=robot_type` matches from product_class (the group) without
+    scraping a SKU page. `product` still researches one robot.
+    """
     t0 = time.perf_counter()
     safe = assert_public_http_url(url)
     product_name = (product or "").strip() or None
-
-    cached = resolve_cached_profile(safe, product_name)
+    grain = _normalize_lookup_grain(lookup_grain)
     build_timings: dict[str, Any] = {"resolve_ms": 0, "profile_ms": 0}
-    if cached:
-        profile_dict = cached
-        cached_hit = True
-        if product_name and get_cached_profile(safe, product_name) is None:
+    cached_hit = False
+    type_first = False
+    profile_dict: dict[str, Any] | None = None
+
+    if grain == "robot_type":
+        from app.services.robot_class_qualify import normalize_class_id, thin_class_profile
+
+        class_id = normalize_class_id(asserted_class)
+        if class_id:
+            company_name = _vendor_company_name(safe) or "your robot"
+            profile_dict = thin_class_profile(company_name, class_id, source_url=safe)
+            type_first = True
+
+    if not type_first:
+        cached = resolve_cached_profile(safe, product_name)
+        if cached:
+            profile_dict = cached
+            cached_hit = True
+            if product_name and get_cached_profile(safe, product_name) is None:
+                if profile_is_worth_caching(profile_dict):
+                    set_cached_profile(safe, product_name, profile_dict)
+        else:
+            cached_hit = False
+            profile_obj = build_robot_profile(
+                safe,
+                product_name=product_name,
+                max_sources=max_sources,
+                timings=build_timings,
+            )
+            profile_dict = profile_obj.to_dict()
             if profile_is_worth_caching(profile_dict):
                 set_cached_profile(safe, product_name, profile_dict)
-    else:
-        cached_hit = False
-        profile_obj = build_robot_profile(
-            safe,
-            product_name=product_name,
-            max_sources=max_sources,
-            timings=build_timings,
-        )
-        profile_dict = profile_obj.to_dict()
-        if profile_is_worth_caching(profile_dict):
-            set_cached_profile(safe, product_name, profile_dict)
-        if record_shadow is not None:
-            try:
-                duration_ms = int((time.perf_counter() - t0) * 1000)
-                record_shadow(profile_obj, duration_ms)
-            except Exception:
-                logger.exception("robot_job_search shadow failed")
+            if record_shadow is not None:
+                try:
+                    duration_ms = int((time.perf_counter() - t0) * 1000)
+                    record_shadow(profile_obj, duration_ms)
+                except Exception:
+                    logger.exception("robot_job_search shadow failed")
 
-    if asserted_class:
-        from app.services.robot_class_qualify import apply_asserted_class
+        if asserted_class:
+            from app.services.robot_class_qualify import apply_asserted_class
 
-        profile_dict = apply_asserted_class(profile_dict, asserted_class)
+            profile_dict = apply_asserted_class(profile_dict, asserted_class)
 
+    assert profile_dict is not None
     company = (profile_dict.get("company") or {}).get("name") or "your robot"
     selected = profile_dict.get("selected_product") or {}
     robot_name = selected.get("name") or company
     products = profile_dict.get("products") or []
 
-    if profile_dict.get("needs_product_choice") and len(products) > 1 and not product_name:
+    if (
+        not type_first
+        and profile_dict.get("needs_product_choice")
+        and len(products) > 1
+        and not product_name
+    ):
         total_ms = int((time.perf_counter() - t0) * 1000)
         return {
             "state": "select_product",
