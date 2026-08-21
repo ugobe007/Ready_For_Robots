@@ -32,11 +32,12 @@ submit robot URL on /
   → see Robot Jobs (step 2)
   → inspect cards (why / unknowns / blockers)
   → Next (page bottom) → PLACE buyers (step 3)
-  → See buyers → /pipeline (sales leads, not a second job list)
+  → click a buyer → pitch + outreach draft on `/`
+  → Open this buyer → /pipeline?src=place&lead= (sales lead, not an OEM URL scan)
   → discovery pull: See All Jobs (stays on step 2)
 ```
 
-**Do not hop Jobs traffic to a second "Jobs for ______" list** on `/pipeline` or `/results`. Place uses `src=place` so `/pipeline` is buyers.
+**Do not hop Jobs traffic to a second "Jobs for ______" list** on `/pipeline` or `/results`. Place uses `src=place` without the robot OEM as `url=` so `/pipeline` shows buyers, not a match-url scan of the manufacturer.
 
 Step 2 inspects. One Next at the bottom of the page leaves step 2 for Place. No Next on the card. No Qualify loop back to jobs — first-time users are still learning the site.
 
@@ -47,7 +48,7 @@ Step 2 inspects. One Next at the bottom of the page leaves step 2 for Place. No 
 | Pull | Metric |
 |------|--------|
 | Discovery | See All CTR · `rdd_see_all_clicked` |
-| Commercial | Next → QUALIFY · `rdd_qualify_opened` |
+| Commercial | Next → PLACE · `rdd_place_opened` |
 
 Segment by `persona` and robot product / family.
 
@@ -98,7 +99,7 @@ Prefer outreach to `/` (or current Jobs entry) with `?persona=oem|distributor|in
 | Search beat | `rdd_discovery_started` / `rdd_discovery_complete` |
 | Jobs | `rdd_first_job_viewed` · `rdd_job_viewed` · `rdd_jobs_3plus_viewed` |
 | Discovery unlock | `rdd_see_all_clicked` |
-| Place (step 3) | `rdd_place_opened` |
+| Place (step 3) | `rdd_place_opened` · `rdd_place_buyer_opened` |
 | Signup | `signup_start` / `signup_complete` (`src=robot_jobs`) |
 
 ---

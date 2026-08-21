@@ -24,6 +24,9 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { trackRobotJobsFunnel } from "@/lib/siteAnalytics";
+import { useAuth } from "@/contexts/AuthContext";
+import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
+import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import {
   fetchRobotJobSearch,
   type RobotJobSearchResult,
@@ -55,6 +58,7 @@ import {
   jobsHeading,
   jobsPlaceHref,
   landingStageAfterConfirm,
+  placeBuyersToShow,
   readNavigationType,
   shouldRestoreJobsWorkspace,
 } from "@/lib/jobsWorkflow";
@@ -1086,7 +1090,6 @@ export default function RobotJobsWorkspace() {
           <PlacePanel
             analysis={active}
             job={jobForNextStep(active.jobs, expandedJob)}
-            robotUrl={submittedUrlRef.current}
             submissionId={submissionIdRef.current}
             onBack={() => goToJobs(activeIdx)}
           />
@@ -2090,22 +2093,23 @@ function JobCard({
   );
 }
 
+type PlaceDeal = ReturnType<typeof mapApiLeadToDeal>;
+
 function PlacePanel({
   analysis,
   job,
-  robotUrl,
   submissionId,
   onBack,
 }: {
   analysis: RobotAnalysis;
   job: MatchJob | null;
-  robotUrl: string;
   submissionId?: number | null;
   onBack: () => void;
 }) {
-  const [buyers, setBuyers] = useState<
-    Array<{ id: number; name: string; industry: string; action: string }>
-  >([]);
+  const { session } = useAuth();
+  const [buyers, setBuyers] = useState<PlaceDeal[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -2114,16 +2118,24 @@ function PlacePanel({
       try {
         const res = await fetch(`${getPublicReadApiBase()}/api/leads/pipeline`);
         if (!res.ok) throw new Error("pipeline");
-        const data = (await res.json()) as { leads?: Array<Record<string, unknown>> };
-        const rows = (data.leads || []).slice(0, 5).map((row, i) => ({
-          id: Number(row.id) || i,
-          name: String(row.company_name || "Buyer").trim() || "Buyer",
-          industry: String(row.industry || "").trim(),
-          action: String(row.pipeline_action || "").trim(),
-        }));
-        if (!cancelled) setBuyers(rows);
+        const data = (await res.json()) as { leads?: ApiLead[] };
+        const mapped: PlaceDeal[] = [];
+        for (const row of data.leads || []) {
+          try {
+            mapped.push(mapApiLeadToDeal(row));
+          } catch {
+            /* skip malformed pipeline row */
+          }
+        }
+        const shown = placeBuyersToShow(mapped, job?.industry);
+        if (cancelled) return;
+        setBuyers(shown);
+        setSelectedId(shown[0]?.id ?? null);
       } catch {
-        if (!cancelled) setBuyers([]);
+        if (!cancelled) {
+          setBuyers([]);
+          setSelectedId(null);
+        }
       } finally {
         if (!cancelled) setLoaded(true);
       }
@@ -2131,12 +2143,40 @@ function PlacePanel({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [job?.industry]);
 
-  const href = jobsPlaceHref(robotUrl, submissionId);
+  const selected = buyers.find(buyer => buyer.id === selectedId) ?? buyers[0] ?? null;
+  const href = jobsPlaceHref({
+    leadId: selected?.id,
+    submissionId,
+  });
   const site = job
     ? [job.company_name, job.locality].filter(Boolean).join(" · ")
     : "";
+
+  function selectBuyer(buyer: PlaceDeal) {
+    setSelectedId(buyer.id);
+    setCopied(false);
+    trackRobotJobsFunnel("place_buyer_opened", {
+      lead_id: buyer.id,
+      company_name: buyer.company,
+      job_key: job?.job_key,
+      robot_name: analysis.productName,
+    });
+  }
+
+  function copyDraft() {
+    if (!selected) return;
+    const text = [
+      selected.outreachSubject ? `Subject: ${selected.outreachSubject}` : "",
+      selected.outreachBody || "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    void navigator.clipboard.writeText(text);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  }
 
   return (
     <div className="p-6 sm:p-8">
@@ -2159,8 +2199,8 @@ function PlacePanel({
         </p>
       )}
       <p className="mt-4 max-w-2xl text-[14px] leading-snug text-slate-300">
-        Companies that need this kind of automation. Open the pipeline to
-        read the pitch and outreach draft.
+        Companies that need this kind of automation. Open a buyer for the
+        pitch and outreach draft — then continue that lead in the pipeline.
       </p>
 
       {loaded && buyers.length === 0 ? (
@@ -2169,24 +2209,64 @@ function PlacePanel({
         </p>
       ) : (
         <ol className="mt-6 space-y-2">
-          {buyers.map(buyer => (
-            <li
-              key={buyer.id}
-              className="border border-slate-600 bg-[#081126] px-4 py-3"
-            >
-              <p className="font-display text-sm font-bold text-slate-100">
-                {buyer.name}
-              </p>
-              {buyer.industry ? (
-                <p className="mt-0.5 text-[12px] text-slate-400">{buyer.industry}</p>
-              ) : null}
-              {buyer.action ? (
-                <p className="mt-1 text-[12px] leading-snug text-slate-300">
-                  {buyer.action}
-                </p>
-              ) : null}
-            </li>
-          ))}
+          {buyers.map(buyer => {
+            const open = selected?.id === buyer.id;
+            return (
+              <li key={buyer.id}>
+                <button
+                  type="button"
+                  onClick={() => selectBuyer(buyer)}
+                  className={`w-full border px-4 py-3 text-left transition ${
+                    open
+                      ? "border-emerald-400 bg-[#0b162f]"
+                      : "border-slate-600 bg-[#081126] hover:border-slate-400"
+                  }`}
+                >
+                  <p className="font-display text-sm font-bold text-slate-100">
+                    {buyer.company}
+                  </p>
+                  {buyer.industry ? (
+                    <p className="mt-0.5 text-[12px] text-slate-400">{buyer.industry}</p>
+                  ) : null}
+                  {buyer.pipelineAction ? (
+                    <p className="mt-1 text-[12px] leading-snug text-slate-300">
+                      {buyer.pipelineAction}
+                    </p>
+                  ) : null}
+                </button>
+                {open ? (
+                  <div className="border border-t-0 border-emerald-400/60 bg-[#081126] px-4 py-4">
+                    {buyer.sellerBrief?.pitch ? (
+                      <p className="text-[13px] leading-snug text-slate-200">
+                        {buyer.sellerBrief.pitch}
+                      </p>
+                    ) : null}
+                    {buyer.sellerBrief?.whyNow ? (
+                      <p className="mt-2 text-[12px] leading-snug text-slate-400">
+                        {buyer.sellerBrief.whyNow}
+                      </p>
+                    ) : null}
+                    <div className="mt-4">
+                      <PipelineOutreachValuePanel
+                        deal={{
+                          id: buyer.id,
+                          company: buyer.company,
+                          outreachSubject: buyer.outreachSubject,
+                          outreachBody: buyer.outreachBody,
+                        }}
+                        hasSession={Boolean(session?.access_token)}
+                        copied={copied}
+                        onCopy={copyDraft}
+                        variant="compact"
+                        tone="dark"
+                        signupNext={href}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
         </ol>
       )}
 

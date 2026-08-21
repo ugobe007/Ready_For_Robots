@@ -48,17 +48,29 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list (step 2 → Place). Not on the card. */
 export const JOBS_NEXT_CTA = "Next →";
 export const JOBS_NEXT_HINT = "Buyers who need this work";
-export const JOBS_PLACE_CTA = "See buyers →";
+export const JOBS_PLACE_SRC = "place";
+export const JOBS_PLACE_CTA = "Open this buyer →";
 
-/** Pipeline as sales leads — never a Jobs handoff src (those bounce back to `/`). */
-export function jobsPlaceHref(robotUrl: string, submissionId?: number | null): string {
+/** Place is a sales-lead hop, not a Jobs bounce back to `/`. */
+export function isPlaceSrc(src: string | null | undefined): boolean {
+  return (src || "").trim() === JOBS_PLACE_SRC;
+}
+
+/**
+ * Pipeline as the selected buyer — never a Jobs handoff src, and never the
+ * robot OEM as `url=` (that is a buyer-company scan on /pipeline).
+ */
+export function jobsPlaceHref(opts?: {
+  leadId?: number | null;
+  submissionId?: number | null;
+}): string {
   const params = new URLSearchParams();
-  const url = (robotUrl || "").trim();
-  if (url) params.set("url", url);
-  params.set("src", "place");
+  params.set("src", JOBS_PLACE_SRC);
+  const leadId = opts?.leadId;
+  if (leadId && leadId > 0) params.set("lead", String(leadId));
+  const submissionId = opts?.submissionId;
   if (submissionId && submissionId > 0) params.set("submission", String(submissionId));
-  const qs = params.toString();
-  return qs ? `/pipeline?${qs}` : "/pipeline";
+  return `/pipeline?${params.toString()}`;
 }
 
 /** The job Next will place: expanded card, else the first visible job. */
@@ -95,6 +107,27 @@ export function buyerLeadsToShow<T>(opts: {
   if (!opts.scopeToUrl) return opts.liveRows;
   if (opts.lookupPending) return opts.scopedRows;
   return opts.scopedRows.length > 0 ? opts.scopedRows : opts.liveRows;
+}
+
+/**
+ * Place prefers buyers in the job's industry. If the filter is too thin,
+ * keep the live feed so step 3 is never empty.
+ */
+export function placeBuyersToShow<T extends { industry?: string | null }>(
+  rows: T[],
+  industry?: string | null,
+  cap = BUYER_LEADS_ANON_CAP,
+): T[] {
+  const needle = (industry || "").trim().toLowerCase();
+  const scoped = needle
+    ? rows.filter(row => {
+        const ind = (row.industry || "").trim().toLowerCase();
+        if (!ind) return false;
+        return ind.includes(needle) || needle.includes(ind);
+      })
+    : [];
+  const pool = scoped.length >= 2 ? scoped : rows;
+  return pool.slice(0, cap);
 }
 
 export const JOBS_RESTORE_ONCE_KEY = "rfr_jobs_restore_once";
@@ -182,7 +215,7 @@ export function armJobsWorkspaceRestore(): string {
 
 /**
  * Legacy name. Jobs CTAs used to dump signed-in users on /pipeline as a
- * second job list. Buyer Place uses jobsPlaceHref (`src=place`) instead.
+ * second job list. Buyer Place uses jobsPlaceHref (`src=place`, `lead=`) instead.
  * This helper still returns the Jobs workspace for leftover links.
  */
 export function buyerLeadsHref(_opts: {

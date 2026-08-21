@@ -196,9 +196,9 @@ Now:
 | Manifestation | Signal | Event |
 |---------------|--------|--------|
 | **Discovery pull** | Want to see more jobs | See All Jobs · `rdd_see_all_clicked` |
-| **Commercial pull** | This job is worth qualifying | Next → QUALIFY · `rdd_qualify_opened` |
+| **Commercial pull** | This job is worth placing with buyers | Next → PLACE · `rdd_place_opened` |
 
-Keep See All CTR. Qualify is step 3, not a button on the job card.
+Keep See All CTR. Place is step 3, not a button on the job card.
 
 Segment by `persona` (oem / distributor / integrator) and by robot product / family within persona.
 
@@ -244,7 +244,7 @@ That is the critical distinction. Heuristic keyword patches are not integrity wo
 | Surface | `/` Jobs terminal |
 | Intelligence | Identity → Sources → Facts → Capabilities → Requirements Match |
 | Discovery metric | See All CTR |
-| Commercial metric | Qualify requested |
+| Commercial metric | Place opened |
 | First segmentation | OEM vs distributor vs integrator |
 
 **Decision rule:** Expansion and GTM wedges come from **behavior**. Understanding accuracy comes from **evidence + blind eval**, not from fixture echo.
