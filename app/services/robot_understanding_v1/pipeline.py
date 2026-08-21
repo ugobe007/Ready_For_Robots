@@ -25,7 +25,11 @@ from app.services.robot_understanding_v1.models import (
     RobotSource,
 )
 from app.services.robot_understanding_v1.resolve import resolve_identity
-from app.services.robot_understanding_v1.sources import CollectedSource, collect_source_pack
+from app.services.robot_understanding_v1.sources import (
+    CollectedSource,
+    collect_source_pack,
+    collected_from_page,
+)
 from app.services.robot_url_safety import assert_public_http_url
 from app.services.vendor_robot_lookup import (
     catalog_claim_facts,
@@ -70,7 +74,10 @@ def build_robot_profile(
     t0 = time.perf_counter()
     safe = assert_public_http_url(url)
     catalog = lookup_vendor_by_url(safe)
-    home = fetch_page(safe, allow_archive=not bool(catalog))
+    # Never Wayback the submitted URL. Archive copies of challenged hosts are how
+    # FIND used to sit on a spinner for ~90s; unknown OEMs fall through to a
+    # live pack with allow_archive=False instead.
+    home = fetch_page(safe, allow_archive=False)
     resolved = resolve_identity(safe, home, product_hint=product_name)
     resolve_ms = int((time.perf_counter() - t0) * 1000)
     if timings is not None:
@@ -133,19 +140,37 @@ def build_robot_profile(
     home_blocked = bool(
         getattr(home, "fetch_degraded", False) and not (home.text or "").strip()
     )
+    catalog_skus = bool(catalog and (catalog.get("robots") or []))
     if home_blocked:
         collected = []
         if timings is not None:
             timings["sources_ms"] = 0
+            timings["source_strategy"] = "blocked"
+    elif catalog_skus:
+        # Indexed vendor: identity and specs come from the vendor index.
+        # Keep the already-fetched homepage as evidence; do not guess hubs.
+        collected = []
+        home_src = collected_from_page(home)
+        if home_src:
+            collected.append(home_src)
+        if timings is not None:
+            timings["sources_ms"] = int((time.perf_counter() - t_sources) * 1000)
+            timings["source_strategy"] = "catalog"
+        notes_extra.append(
+            "Catalog vendor — skipped live source fan-out; facts come from the "
+            "vendor index plus the submitted page."
+        )
     else:
         collected = collect_source_pack(
             home,
             product_name=selected.name if selected else product_name,
             max_sources=max_sources,
             deadline_monotonic=(time.monotonic() + budget) if budget is not None else None,
+            allow_archive=False,
         )
         if timings is not None:
             timings["sources_ms"] = int((time.perf_counter() - t_sources) * 1000)
+            timings["source_strategy"] = "live_pack"
     if selected:
         for c in collected:
             c.source.product_id = selected.id

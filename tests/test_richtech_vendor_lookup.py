@@ -79,8 +79,11 @@ def test_richtech_adam_uses_catalog_when_live_pages_are_blocked(monkeypatch):
     def fake_fetch(url, timeout=(2.5, 6.0), allow_archive=True):
         return _challenge_page(url)
 
+    def boom(*_a, **_k):
+        raise AssertionError("catalog SKU must not crawl when the live host is blocked")
+
     monkeypatch.setattr(P, "fetch_page", fake_fetch)
-    monkeypatch.setattr(P, "collect_source_pack", lambda *_a, **_k: [])
+    monkeypatch.setattr(P, "collect_source_pack", boom)
     profile = P.build_robot_profile(
         "https://www.richtechrobotics.com/adam",
         product_name="ADAM",

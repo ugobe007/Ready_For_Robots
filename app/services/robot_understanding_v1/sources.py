@@ -134,6 +134,31 @@ class CollectedSource:
     page: FetchedPage
 
 
+def collected_from_page(
+    page: FetchedPage,
+    *,
+    product_id: str | None = None,
+) -> Optional[CollectedSource]:
+    """Wrap an already-fetched page as a typed source — no extra HTTP."""
+    if page is None or not (page.text or "").strip():
+        return None
+    if getattr(page, "fetch_degraded", False) and len((page.text or "").strip()) < 40:
+        return None
+    stype, conf = classify_source_type(page.final_url, title=page.title or "")
+    if stype == "other":
+        stype, conf = "homepage", 0.55
+    src = RobotSource.create(
+        page.final_url,
+        stype,
+        publisher_role="manufacturer",
+        title=page.title,
+        confidence=conf,
+        product_id=product_id,
+        text_excerpt=(page.text or "")[:400],
+    )
+    return CollectedSource(source=src, page=page)
+
+
 def classify_source_type(url: str, anchor: str = "", title: str = "") -> tuple[SourceType, float]:
     blob = f"{url} {anchor} {title}"
     for pattern, stype, conf in _TYPE_RULES:
@@ -282,6 +307,7 @@ def collect_source_pack(
     product_name: str | None = None,
     max_sources: int = 6,
     deadline_monotonic: float | None = None,
+    allow_archive: bool = False,
 ) -> list[CollectedSource]:
     """
     Build a small typed pack: best same-domain evidence pages.
@@ -292,6 +318,10 @@ def collect_source_pack(
     deadline_monotonic: stop fetching additional pages after this clock so the
     submit path can match on a grounded-enough pack instead of waiting for
     every candidate. Extractors are unchanged.
+
+    allow_archive defaults False — guessed hubs (/adam, /products, sitemap)
+    must not fan out to Wayback when the live OEM is challenged. That is how
+    unknown and catalog-miss URLs used to take ~90s.
     """
     if getattr(home, "fetch_degraded", False) and not (home.text or "").strip():
         # Challenge / empty interstitial — do not fan out to /adam, sitemap, or
@@ -434,7 +464,11 @@ def collect_source_pack(
             if _norm(url) == _norm(home.final_url):
                 page = home
             else:
-                page = fetch_page(url, timeout=timeout or DEFAULT_PAGE_TIMEOUT)
+                page = fetch_page(
+                    url,
+                    timeout=timeout or DEFAULT_PAGE_TIMEOUT,
+                    allow_archive=allow_archive,
+                )
         except Exception:
             return None
         if getattr(page, "fetch_degraded", False) and not (page.text or "").strip():

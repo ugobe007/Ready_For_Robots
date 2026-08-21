@@ -143,6 +143,43 @@ Live `/` path stays until blind eval wins. Feature-flag / shadow the new spine.
 
 ---
 
+## Jobs FIND lookup (what actually runs)
+
+`POST /api/robot-profile` (Jobs URL submit) is **catalog-first**, then a bounded live crawl. It is not “scrape every OEM site and guess SKUs.”
+
+```
+submitted URL
+  → vendor index lookup (domain)
+        humanoid JSON  (readyforrobots.com/robots → app/data/vendor_robots_index.json)
+      + commercial seed (app/data/vendor_robots_commercial_seed.json)
+      + optional industrial seed
+  → fetch the submitted page once (no Wayback if the host is already in the index)
+  → identity: index SKUs first; homepage HTML may add extras
+  → several SKUs, no product=  → picker, stop (no source pack)
+  → one SKU / product= selected
+        indexed vendor → facts from stored specs + catalog claims
+                         (homepage HTML kept; no /adam, sitemap, or Wayback fan-out)
+        unknown host, live HTML → typed source pack (≤6 pages, 12s budget, no archive)
+        unknown host, 429/empty → identity from domain only, Profile C, stop
+  → regex extractors (frozen) + inference engine (narrow M1 reopen)
+  → coverage checklist → Profile A/B/C
+```
+
+| Host class | Identity | Specs / facts | Live crawl |
+|------------|----------|---------------|------------|
+| Indexed humanoid OEM (Unitree, EngineAI, Figure, …) | Stored SKUs | Index specs mapped to checklist predicates | Homepage only |
+| Indexed commercial OEM (Richtech, Bear, Pudu, Locus, …) | Stored SKUs | Curated class / environment / payload when known | Homepage only |
+| Same domain, extra SKUs in commercial seed (Boston Dynamics Spot/Stretch on top of Atlas) | Merged list | Per-SKU claims | Homepage only |
+| Press host (Morningstar, Yahoo, …) | Never a lookup key | — | Rejected as vendor key |
+| Unknown OEM, live site | Guessed from homepage links/prose | Regex + inference on a small typed pack | Yes, no Wayback |
+| Unknown OEM, bot-challenge | Domain label only | Almost none → Profile C | No fan-out |
+
+**How coverage grows:** add vendors to the JSON index (or `--apply` into `manufacturers` / `robot_models`). Do not reopen Blind 20 extractors or live-crawl 129 OEM sites. Industrial lists later use `app/data/vendor_robots_industrial_seed.json` with the same shape.
+
+**Not in this loop:** job matching (`POST /api/robot-job-search`) runs after the profile checkpoint.
+
+---
+
 ## Persistent objects (v1 spine — Phases 1–3)
 
 Thin schema. No grand ontology. No workflow/job tables in this phase.

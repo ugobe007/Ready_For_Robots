@@ -15,13 +15,17 @@
 - Catalog hit skips Wayback on the homepage fetch.
 - Empty challenged homepages do not fan out source fetches.
 - Catalog facts (service-robot class, environment, mobile base) fill the selected SKU when live pages are blocked.
-- Cache namespace `robot_profile_v7`; do not pin 6-hour low-coverage misses.
+- Cache namespace `robot_profile_v8`; catalog-first skip of live hub fan-out for every indexed vendor.
+- Commercial seed also covers Bear, Pudu, Locus, and Boston Dynamics Spot/Stretch (merged with Atlas from `/robots`).
+- Index specs map onto checklist predicates (`carrying_capacity`, `battery_runtime`).
+- Unknown OEMs still get a typed live pack; guessed hubs never use Wayback.
 
 ## Tests
 
-`pytest tests/test_richtech_vendor_lookup.py tests/test_fetch_challenge_archive.py tests/test_vendor_robot_lookup.py tests/test_product_href_discovery.py tests/test_robot_job_search.py` → 38 passed.
+Targeted pytest on lookup + pipeline + fetch challenge tests.
 
 ## Follow-ups
 
-- Fly deploy so Jobs API serves the commercial seed.
+- Fly deploy so Jobs API serves the vendor index + commercial seed.
 - Industrial seed file (`vendor_robots_industrial_seed.json`) when that list is ready.
+- More commercial OEMs: add JSON rows (do not reopen extractors).
