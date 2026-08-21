@@ -134,7 +134,7 @@ def test_href_label_keeps_hidden_sku():
 
 
 def test_profile_cache_namespace_busts_stale_engineai_identity():
-    assert NAMESPACE == "robot_profile_v7"
+    assert NAMESPACE == "robot_profile_v8"
 
 
 def test_sku_from_root_named_product_paths():

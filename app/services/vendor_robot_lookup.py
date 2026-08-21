@@ -1,11 +1,13 @@
-"""Vendor URL → robot SKUs from the /robots index (no homepage guessing).
+"""Vendor URL → robot SKUs from the vendor index (no homepage guessing).
 
 Jobs resolve still crawls unknown OEMs. When the submitted host matches a
-vendor we already indexed from readyforrobots.com/robots, return those SKUs
-and a lightweight profile built from stored specs.
+vendor we already indexed (`/robots` humanoids + commercial/industrial seed),
+return those SKUs and a lightweight profile built from stored specs.
 
-Industrial / commercial lists can append the same JSON shape later
-(`list_category`).
+Live OEM crawl is a fallback for hosts that are not in the index. Indexed
+vendors skip guessed hub / Wayback fan-out.
+
+Industrial / commercial lists append the same JSON shape (`list_category`).
 """
 from __future__ import annotations
 
@@ -100,6 +102,19 @@ _SPEC_FACT = {
     "weight_kg": ("weight", "kg"),
     "top_speed_mps": ("mobility", "m/s"),
     "total_dof": ("arm_count", None),
+    "has_dexterous_hands": ("has_dexterous_hands", None),
+    "autonomy_level": ("autonomy_or_control", None),
+    "can_climb_stairs": ("mobility", None),
+}
+
+# Pipeline catalog facts use the Understanding checklist predicates so indexed
+# specs fill coverage slots (carrying_capacity / battery_runtime) without a crawl.
+_CHECKLIST_SPEC_FACT = {
+    "payload_kg": ("carrying_capacity", "kg"),
+    "battery_life_h": ("battery_runtime", "h"),
+    "height_cm": ("reach_or_workspace", "cm"),
+    "weight_kg": ("weight", "kg"),
+    "top_speed_mps": ("mobility", "m/s"),
     "has_dexterous_hands": ("has_dexterous_hands", None),
     "autonomy_level": ("autonomy_or_control", None),
     "can_climb_stairs": ("mobility", None),
@@ -423,5 +438,20 @@ def catalog_claim_facts(robot: dict[str, Any] | None) -> list[dict[str, Any]]:
                 "epistemic": "explicit",
                 "evidence_span": f"Indexed class for {robot.get('name')}.",
             },
+        )
+        seen.add("product_class")
+    slim = slim_specs(robot.get("specs") if isinstance(robot.get("specs"), dict) else {})
+    for spec_key, (predicate, units) in _CHECKLIST_SPEC_FACT.items():
+        if spec_key not in slim or predicate in seen:
+            continue
+        seen.add(predicate)
+        out.append(
+            {
+                "predicate": predicate,
+                "value": slim[spec_key],
+                "units": units,
+                "epistemic": "explicit",
+                "evidence_span": f"Indexed spec {spec_key} for {robot.get('name')}.",
+            }
         )
     return out
