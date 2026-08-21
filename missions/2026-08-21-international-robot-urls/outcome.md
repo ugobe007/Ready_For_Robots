@@ -6,7 +6,9 @@
 
 ## What changed
 
-Production `POST /api/robot-profile` for `https://en.engineai.com.cn/` returned 400 `Could not resolve host` — Fly's system DNS misses that `.com.cn` CDN chain.
+Production `POST /api/robot-profile` for `https://en.engineai.com.cn/` returned 400 `Could not resolve host` (Fly system DNS misses that `.com.cn` CDN chain; it can also succeed intermittently). The UI mapped any 400 to "Research failed."
+
+Also `en.engineai.com.cn` was stored as the company domain instead of `engineai.com.cn`.
 
 - IDNA / punycode for international host labels
 - Compound ccTLD registrable domain (`en.engineai.com.cn` → `engineai.com.cn`)
