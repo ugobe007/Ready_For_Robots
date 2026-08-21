@@ -44,7 +44,28 @@ The picker already decides one vs several. **One robot → jobs for that robot o
 
 **Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Activate uses `src=jobs_activate` without the robot OEM as `url=` so `/pipeline` shows the job list, not a match-url scan of the manufacturer. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 
-Step 2 inspects. Checkboxes select. One **Activate job list →** stays pinned on the jobs stage so the next step is visible without scrolling. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
+Step 2 inspects. Checkboxes select. One **Activate job list →** is a page-level next step (process chrome + end of the jobs list). The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
+
+---
+
+## Jobs page architecture (locked)
+
+Jobs is a **three-step process on a normal web page**. It is not a viewport-locked two-pane dashboard.
+
+```
+Site header (Jobs / About / Sign in)
+Process bar — 01 Show us your robot → 02 Here are its jobs → 03 Activate
+Content (two columns are layout, not a clipping box)
+Process bar repeated at the bottom of the page
+```
+
+**Do not** set `100vh` + `overflow: hidden` on the Jobs workspace. Chrome then cannot scroll below the fold, so step 03 sits in a cut-off box. Pinning Activate inside that box is a patch, not a fix.
+
+The document scrolls. Process chrome is page-level (top and bottom). Two columns may remain as layout.
+
+---
+
+## What is allowed vs frozen
 
 **Product question:**
 
