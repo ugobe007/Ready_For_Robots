@@ -126,3 +126,54 @@ def apply_asserted_class(profile: dict[str, Any], class_id: str) -> dict[str, An
     notes.append(f"Operator qualified class as {cls}.")
     out["notes"] = notes
     return out
+
+
+def thin_class_profile(
+    company: str,
+    class_id: str,
+    *,
+    source_url: str | None = None,
+) -> dict[str, Any]:
+    """Grounded-enough profile to match jobs for a robot *type*.
+
+    Used when the operator listed a group of SKUs that share a class
+    (Fourier GR-1/GR-2/GR-3 are all humanoid). Does not scrape a product
+    page. The matcher still inspects requirements from product_class
+    derivations — this is not a family dump.
+    """
+    nid = normalize_class_id(class_id)
+    if not nid:
+        return {
+            "company": {"name": (company or "").strip() or "your robot"},
+            "selected_product": None,
+            "facts": [],
+            "sources": [],
+            "coverage_level": "low",
+            "needs_product_choice": False,
+        }
+    row = next(r for r in CLASS_OPTIONS if r["id"] == nid)
+    company_name = (company or "").strip() or "your robot"
+    sources = []
+    if source_url:
+        sources.append(
+            {
+                "id": "src_type_lookup",
+                "url": source_url,
+                "source_type": "other",
+                "title": f"{row['label']} type lookup",
+                "publisher_role": "operator",
+                "confidence": 0.9,
+            }
+        )
+    base: dict[str, Any] = {
+        "company": {"name": company_name},
+        "selected_product": {"name": row["label"], "display_class": nid},
+        "products": [],
+        "facts": [],
+        "sources": sources,
+        "coverage_level": "medium",
+        "profile_confidence": "B",
+        "needs_product_choice": False,
+        "notes": [f"Type-first job lookup for {nid}."],
+    }
+    return apply_asserted_class(base, nid)

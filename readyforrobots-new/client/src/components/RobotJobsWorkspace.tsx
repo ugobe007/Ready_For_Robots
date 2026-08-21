@@ -4,8 +4,9 @@
  * Left = robot / context / navigation. Right = work. One deliberate state at
  * a time (submit-stability principle):
  *
- *   FIND → RESEARCH → SELECT → JOBS (several SKUs: match each one, show first with work)
- *                      SELECT → REVIEW PROFILE → JOBS → activate list (one robot)
+ *   FIND → RESEARCH → SELECT → JOBS (several SKUs: jobs for the robot type first)
+ *                      SELECT → REVIEW PROFILE → JOBS → activate list (one product)
+
 
  *
  * Three separated objects:
@@ -58,9 +59,15 @@ import {
   jobsActivateHref,
   jobsForActivatedPipeline,
   jobsHeading,
+  jobsCountEyebrow,
   landingStageAfterConfirm,
+  lineupJobLookups,
+  normalizeRobotClass,
   portfolioShowsJobCounts,
+  productClassesFromLineup,
   readNavigationType,
+  robotClassJobsLabel,
+  robotClassTitle,
   shouldRestoreJobsWorkspace,
 } from "@/lib/jobsWorkflow";
 import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
@@ -86,6 +93,8 @@ type RobotAnalysis = {
   needsClassChoice?: boolean;
   classOptions?: ClassOption[];
   previewImageUrl?: string | null;
+  lookupGrain?: "robot_type" | "product";
+  robotClass?: string | null;
 };
 
 type ZeroReason =
@@ -168,6 +177,7 @@ type WorkspaceSession = {
   activeIdx?: number;
   selectedJobKey?: string;
   checkedJobKeys?: string[];
+  productClasses?: Record<string, string>;
 };
 
 function saveWorkspaceSession(data: WorkspaceSession) {
@@ -191,6 +201,7 @@ function readWorkspaceSession(): WorkspaceSession | null {
       activeIdx?: number;
       selectedJobKey?: string;
       checkedJobKeys?: unknown;
+      productClasses?: unknown;
     };
     if (!parsed?.url) return null;
     const view: RestoreView =
@@ -204,6 +215,14 @@ function readWorkspaceSession(): WorkspaceSession | null {
     const checkedJobKeys = Array.isArray(parsed.checkedJobKeys)
       ? parsed.checkedJobKeys.filter((k): k is string => typeof k === "string")
       : [];
+    const productClasses: Record<string, string> = {};
+    if (parsed.productClasses && typeof parsed.productClasses === "object") {
+      for (const [name, cls] of Object.entries(
+        parsed.productClasses as Record<string, unknown>,
+      )) {
+        if (typeof cls === "string" && cls.trim()) productClasses[name] = cls;
+      }
+    }
     return {
       url: parsed.url,
       products: Array.isArray(parsed.products) ? parsed.products : [],
@@ -211,6 +230,7 @@ function readWorkspaceSession(): WorkspaceSession | null {
       activeIdx: parsed.activeIdx,
       selectedJobKey: parsed.selectedJobKey,
       checkedJobKeys,
+      productClasses,
     };
   } catch {
     return null;
@@ -286,7 +306,38 @@ function searchToAnalysis(res: RobotJobSearchResult): RobotAnalysis {
     needsClassChoice: Boolean(res.needs_class_choice),
     classOptions: res.class_options || [],
     previewImageUrl: res.preview_image_url ?? null,
+    lookupGrain: "product",
+    robotClass:
+      normalizeRobotClass(res.robot_class) ||
+      normalizeRobotClass(profile?.selected_product?.display_class),
   };
+}
+
+function typeMatchToAnalysis(
+  res: RobotJobSearchResult,
+  productName: string,
+  robotClass: string,
+): RobotAnalysis {
+  return {
+    ...searchToAnalysis(res),
+    productName,
+    lookupGrain: "robot_type",
+    robotClass,
+  };
+}
+
+function sessionProductClasses(
+  names: string[],
+  products: ProductChoice[],
+  extra?: Record<string, string>,
+): Record<string, string> {
+  const fromPicker = productClassesFromLineup(
+    names.map(name => ({
+      name,
+      displayClass: products.find(p => p.name === name)?.displayClass,
+    })),
+  );
+  return { ...fromPicker, ...(extra || {}) };
 }
 
 /** Weak identity: low-confidence profile whose company name may be tagline-derived. */
@@ -568,30 +619,7 @@ export default function RobotJobsWorkspace() {
     }
   }
 
-  /** SELECT — one robot goes to a profile checkpoint; several/all match per SKU. */
-  async function fillLineupJobs(
-    submitUrl: string,
-    names: string[],
-    company: string,
-  ) {
-    for (let i = 1; i < names.length; i++) {
-      try {
-        const res = await fetchRobotJobSearch({
-          url: submitUrl,
-          product: names[i],
-        });
-        const row = { ...searchToAnalysis(res), productName: names[i] };
-        setPortfolio(prev =>
-          prev.map((p, idx) =>
-            idx === i ? row : { ...p, companyName: p.companyName || company },
-          ),
-        );
-      } catch {
-        /* leave that SKU as an identity stub — do not copy a sibling's jobs */
-      }
-    }
-  }
-
+  /** SELECT — one robot goes to a profile checkpoint; several/all match the type. */
   async function confirmSelection(which: string[] | "all") {
     const names = (which === "all" ? products.map(p => p.name) : which).filter(
       Boolean
@@ -615,29 +643,68 @@ export default function RobotJobsWorkspace() {
       return;
     }
 
-    // Several / all — match each SKU on its own (do not stamp one robot's jobs
-    // onto the lineup). Show jobs for the first SKU as soon as it returns so
-    // step 2 and Activate are not a dead portfolio of zeros.
+    // Several / all — one job search per robot type (the group), not per SKU.
+    // Product-level match waits until the operator picks a single robot.
     setStage("research");
     try {
-      const firstRes = await fetchRobotJobSearch({
-        url: submitUrl,
-        product: names[0],
-      });
-      submissionIdRef.current =
-        firstRes.robot_submission_id ?? submissionIdRef.current;
-      const first = {
-        ...searchToAnalysis(firstRes),
-        productName: names[0],
-      };
-      const company = first.companyName || companyName;
-      const analyses = names.map((name, i) =>
-        i === 0 ? first : identityAnalysis(name, company),
+      const selectedProducts = names.map(name => ({
+        name,
+        displayClass: products.find(p => p.name === name)?.displayClass || null,
+      }));
+      const lookups = lineupJobLookups(selectedProducts);
+      const classResults = new Map<string, RobotJobSearchResult>();
+      const skuResults = new Map<string, RobotJobSearchResult>();
+      await Promise.all(
+        lookups.map(async lookup => {
+          if (lookup.grain === "robot_type" && lookup.robotClass) {
+            const res = await fetchRobotJobSearch({
+              url: submitUrl,
+              assertedClass: lookup.robotClass,
+              lookupGrain: "robot_type",
+            });
+            classResults.set(lookup.robotClass, res);
+            return;
+          }
+          const product = lookup.productNames[0];
+          if (!product) return;
+          const res = await fetchRobotJobSearch({ url: submitUrl, product });
+          skuResults.set(product, res);
+        }),
       );
+
+      const analyses: RobotAnalysis[] = selectedProducts.map(row => {
+        const cls = normalizeRobotClass(row.displayClass);
+        if (cls && classResults.has(cls)) {
+          return typeMatchToAnalysis(classResults.get(cls)!, row.name, cls);
+        }
+        const sku = skuResults.get(row.name);
+        if (sku) {
+          return { ...searchToAnalysis(sku), productName: row.name };
+        }
+        return identityAnalysis(row.name, companyName);
+      });
+      const first = analyses[0];
+      if (!first) {
+        setError("Research failed for those robots.");
+        setStage("select");
+        return;
+      }
+      const company = first.companyName || companyName;
+      const withCompany = analyses.map(row => ({
+        ...row,
+        companyName: row.companyName || company,
+      }));
+      for (const res of [...classResults.values(), ...skuResults.values()]) {
+        if (res.robot_submission_id) {
+          submissionIdRef.current = res.robot_submission_id;
+          break;
+        }
+      }
       const landing = landingStageAfterConfirm(names.length);
-      setPortfolio(analyses);
+      setPortfolio(withCompany);
       setActiveIdx(0);
       setCompanyName(company);
+      const productClasses = sessionProductClasses(names, products);
       if (landing === "jobs") {
         const checks = defaultCheckedJobKeys(first.jobs);
         const selectedKey = pickSelectedJobKey(first.jobs, null);
@@ -651,18 +718,21 @@ export default function RobotJobsWorkspace() {
           activeIdx: 0,
           selectedJobKey: selectedKey || undefined,
           checkedJobKeys: checks,
+          productClasses,
         });
         trackRobotJobsFunnel("discovery_complete", {
           ...funnelBase(),
-          robot_name: first.productName,
+          robot_name: first.robotClass
+            ? robotClassTitle(first.robotClass)
+            : first.productName,
           job_count: first.jobCount,
           robots_analyzed: names.length,
+          lookup_grain: first.lookupGrain || "product",
         });
         setStage("jobs");
       } else {
         setStage("portfolio");
       }
-      void fillLineupJobs(submitUrl, names, company);
     } catch {
       setError("Research failed for those robots.");
       setStage("select");
@@ -768,6 +838,7 @@ export default function RobotJobsWorkspace() {
         needsClassChoice: Boolean(res.needs_class_choice),
         classOptions: res.class_options || [],
         previewImageUrl: res.preview_image_url ?? a.previewImageUrl ?? null,
+        lookupGrain: "product",
       };
       setPortfolio(prev => prev.map((p, i) => (i === activeIdx ? merged : p)));
       saveWorkspaceSession({
@@ -818,6 +889,8 @@ export default function RobotJobsWorkspace() {
           needsClassChoice: Boolean(res.needs_class_choice),
           classOptions: res.class_options || [],
           previewImageUrl: res.preview_image_url ?? a.previewImageUrl ?? null,
+          lookupGrain: "product",
+          robotClass: classId,
         };
       } else {
         const res = await fetchRobotJobSearch({
@@ -934,16 +1007,24 @@ export default function RobotJobsWorkspace() {
     setError(null);
     try {
       if (dest === "jobs") {
-        const search = await fetchRobotJobSearch({
-          url: submitUrl,
-          product: a.productName,
-        });
+        const cls = a.robotClass || normalizeRobotClass(
+          products.find(p => p.name === a.productName)?.displayClass,
+        );
+        const search = cls
+          ? await fetchRobotJobSearch({
+              url: submitUrl,
+              assertedClass: cls,
+              lookupGrain: "robot_type",
+            })
+          : await fetchRobotJobSearch({
+              url: submitUrl,
+              product: a.productName,
+            });
         submissionIdRef.current =
           search.robot_submission_id ?? submissionIdRef.current;
-        const merged = {
-          ...searchToAnalysis(search),
-          productName: a.productName,
-        };
+        const merged = cls
+          ? typeMatchToAnalysis(search, a.productName, cls)
+          : { ...searchToAnalysis(search), productName: a.productName };
         setPortfolio(prev => prev.map((p, i) => (i === idx ? merged : p)));
         setCompanyName(merged.companyName);
         setRailTab("jobs");
@@ -956,6 +1037,7 @@ export default function RobotJobsWorkspace() {
           activeIdx: idx,
           selectedJobKey: merged.jobs[0]?.job_key,
           checkedJobKeys: defaultCheckedJobKeys(merged.jobs),
+          productClasses: sessionProductClasses(names, products),
         });
         trackRobotJobsFunnel("discovery_complete", {
           ...funnelBase(),
@@ -1008,18 +1090,66 @@ export default function RobotJobsWorkspace() {
         }
         const product = saved.products[idx];
         if (saved.view === "jobs") {
-          const res = await fetchRobotJobSearch({ url: saved.url, product });
-          submissionIdRef.current =
-            res.robot_submission_id ?? submissionIdRef.current;
-          const a = { ...searchToAnalysis(res), productName: product };
-          const analyses = stubs.map((row, i) =>
-            i === idx ? a : { ...row, companyName: a.companyName },
+          const lineup = saved.products.map(name => ({
+            name,
+            displayClass: saved.productClasses?.[name] || null,
+          }));
+          setProducts(
+            lineup.map(row => ({
+              name: row.name,
+              displayClass: row.displayClass,
+            })),
           );
-          setPortfolio(analyses);
-          setCompanyName(a.companyName);
+          const lookups = lineupJobLookups(lineup);
+          const classResults = new Map<string, RobotJobSearchResult>();
+          const skuResults = new Map<string, RobotJobSearchResult>();
+          await Promise.all(
+            lookups.map(async lookup => {
+              if (lookup.grain === "robot_type" && lookup.robotClass) {
+                const res = await fetchRobotJobSearch({
+                  url: saved.url,
+                  assertedClass: lookup.robotClass,
+                  lookupGrain: "robot_type",
+                });
+                classResults.set(lookup.robotClass, res);
+                return;
+              }
+              const skuName = lookup.productNames[0];
+              if (!skuName) return;
+              const res = await fetchRobotJobSearch({
+                url: saved.url,
+                product: skuName,
+              });
+              skuResults.set(skuName, res);
+            }),
+          );
+          const analyses = lineup.map(row => {
+            const cls = normalizeRobotClass(row.displayClass);
+            if (cls && classResults.has(cls)) {
+              return typeMatchToAnalysis(classResults.get(cls)!, row.name, cls);
+            }
+            const sku = skuResults.get(row.name);
+            if (sku) return { ...searchToAnalysis(sku), productName: row.name };
+            return identityAnalysis(row.name, "");
+          });
+          const firstMatched = analyses.find(row => row.matched) || analyses[idx];
+          const company = firstMatched?.companyName || "";
+          const withCompany = analyses.map(row => ({
+            ...row,
+            companyName: row.companyName || company,
+          }));
+          for (const res of [...classResults.values(), ...skuResults.values()]) {
+            if (res.robot_submission_id) {
+              submissionIdRef.current = res.robot_submission_id;
+              break;
+            }
+          }
+          const activeRow = withCompany[idx] || withCompany[0];
+          setPortfolio(withCompany);
+          setCompanyName(company);
           setActiveIdx(idx);
-          setExpandedJob(pickSelectedJobKey(a.jobs, saved.selectedJobKey));
-          applyCheckedKeys(a.jobs, saved.checkedJobKeys);
+          setExpandedJob(pickSelectedJobKey(activeRow?.jobs || [], saved.selectedJobKey));
+          applyCheckedKeys(activeRow?.jobs || [], saved.checkedJobKeys);
           setRailTab("jobs");
           setStage("jobs");
           return;
@@ -1173,7 +1303,11 @@ export default function RobotJobsWorkspace() {
           <ContextRail
             company={active ? companyIdentity(active).label : companyName}
             identityVerified={active ? companyIdentity(active).verified : true}
-            product={active?.productName || ""}
+            product={
+              active?.lookupGrain === "robot_type" && active.robotClass
+                ? robotClassTitle(active.robotClass)
+                : active?.productName || ""
+            }
             tier={active?.tier || "C"}
             matched={Boolean(active?.matched)}
             showCount={showActiveCount}
@@ -1402,8 +1536,7 @@ function PortfolioRail({
         {count} robots
       </p>
       <p className="mt-3 text-[12px] leading-snug text-slate-400">
-        Pick one robot. Each SKU is researched on its own — we do not copy one
-        robot's jobs onto the rest of the lineup.
+        Jobs for the robot type first. Pick a SKU to refine to that product.
       </p>
       <div className="mt-auto pt-6">
         <button
@@ -1541,7 +1674,7 @@ function ResearchPanel({ company }: { company: string }) {
   const steps = [
     { n: "01", label: "Identify company", done: true },
     { n: "02", label: "Find robots", done: true },
-    { n: "03", label: "Read sources & confirm facts", done: false },
+    { n: "03", label: "Find matching jobs", done: false },
   ];
   return (
     <div className="p-6 sm:p-8">
@@ -1596,9 +1729,9 @@ function SelectPanel({
         We found {products.length} robots
       </h2>
       <p className="mt-2 text-sm text-slate-400">
-        Which robot should we find jobs for? Pick one SKU, or find jobs for
-        all of them — each robot is matched on its own. {company || "This maker"}{" "}
-        has {products.length}.
+        Which robots should we find jobs for? Listing several looks up jobs
+        for the robot type first (the group), then a product when you pick
+        one SKU. {company || "This maker"} has {products.length}.
       </p>
 
       <div className="mt-6 grid gap-2 sm:grid-cols-2">
@@ -1686,8 +1819,8 @@ function PortfolioPanel({
         {robots.length} robots
       </h2>
       <p className="mt-2 max-w-xl text-sm text-slate-400">
-        Pick a robot to research. Each SKU gets its own jobs — we do not reuse
-        one robot's matches for the whole lineup.
+        Same type shares type-level jobs. Pick a SKU to review the product
+        and refine.
       </p>
       <div className="mt-6 space-y-3">
         {robots.map((a, idx) => (
@@ -1972,6 +2105,8 @@ function JobsPanel({
     productName: analysis.productName,
     companyName: companyName || analysis.companyName,
     robotCount,
+    lookupGrain: analysis.lookupGrain,
+    robotClass: analysis.robotClass,
   });
   const checkedCount = checkedJobKeys.filter(k =>
     visible.some(job => job.job_key === k),
@@ -1984,16 +2119,19 @@ function JobsPanel({
           {heading}
         </h2>
         <span className="font-mono text-sm font-bold text-emerald-300">
-          {visible.length === 0
-            ? ""
-            : `${visible.length} JOBS FOR ${analysis.productName.toUpperCase()}`}
+          {jobsCountEyebrow({
+            visibleCount: visible.length,
+            productName: analysis.productName,
+            lookupGrain: analysis.lookupGrain,
+            robotClass: analysis.robotClass,
+          })}
         </span>
       </div>
       {baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
-          Example work {analysis.productName} can do, matched to confirmed
-          capabilities. Expand a card to inspect. Check every job you want —
-          then activate the list at the bottom.
+          {analysis.lookupGrain === "robot_type" && analysis.robotClass
+            ? `Example work ${robotClassJobsLabel(analysis.robotClass)} can do. Expand a card to inspect. Check every job you want — then activate the list at the bottom. Review a SKU to refine to that product.`
+            : `Example work ${analysis.productName} can do, matched to confirmed capabilities. Expand a card to inspect. Check every job you want — then activate the list at the bottom.`}
         </p>
       )}
 

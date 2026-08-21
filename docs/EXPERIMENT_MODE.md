@@ -29,7 +29,8 @@ Not leads. Not SIGNAL. Not three products. One engine: **FIND → QUALIFY → PL
 ```
 submit robot URL on /
   → if several SKUs, pick one / several / all
-  → each selected SKU is matched on its own (no copied job list)
+  → several / all: jobs for the **robot type** first (one match per class, shared across the group)
+  → one SKU: profile checkpoint, then jobs for that **product**
   → see Robot Jobs (step 2) — 5 examples, checkboxes, Activate job list →
   → inspect cards (why / unknowns / blockers)
   → check the jobs to take forward
@@ -37,6 +38,8 @@ submit robot URL on /
   → checked jobs pinned at the top, fill to 15
   → discovery pull: See All Jobs (stays on step 2)
 ```
+
+The workflow correlates to the **group** (humanoid, AMR, …), not one SKU. Fourier GR-1/GR-2/GR-3 share type-level jobs. Boston Dynamics Atlas / Spot / Stretch do **not** share — they are three types, so three lookups. Product-level match waits until the operator picks a single robot. Matcher still inspects requirements from `product_class` (not a family dump).
 
 **Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Activate uses `src=jobs_activate` without the robot OEM as `url=` so `/pipeline` shows the job list, not a match-url scan of the manufacturer. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 

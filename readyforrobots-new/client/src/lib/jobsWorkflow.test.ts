@@ -17,6 +17,7 @@ import {
   isJobsHandoffSrc,
   isPlaceSrc,
   jobsActivateHref,
+  jobsCountEyebrow,
   jobsForActivatedPipeline,
   jobsFreshHomeHref,
   goJobsFreshHome,
@@ -25,7 +26,11 @@ import {
   jobsSignupHref,
   jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
+  lineupJobLookups,
+  normalizeRobotClass,
   portfolioShowsJobCounts,
+  productClassesFromLineup,
+  robotClassJobsLabel,
   isJobsHomeDest,
   persistJobsHandoffSrc,
   placeBuyersToShow,
@@ -40,7 +45,7 @@ describe("jobsWorkflow", () => {
     expect(landingStageAfterConfirm(1)).toBe("review");
   });
 
-  it("sends several or all robots to jobs, matched per SKU", () => {
+  it("sends several or all robots to jobs for the robot type", () => {
     expect(landingStageAfterConfirm(2)).toBe("jobs");
     expect(landingStageAfterConfirm(4)).toBe("jobs");
   });
@@ -62,28 +67,32 @@ describe("jobsWorkflow", () => {
     expect(workflow).toMatch(/location\.assign\(jobsFreshHomeHref\(\)\)/);
   });
 
-  it("titles the jobs list for the selected robot, even in a portfolio", () => {
+  it("titles type-level jobs for the group, product-level jobs for a SKU", () => {
     expect(
       jobsHeading({
-        productName: "Servi",
-        companyName: "Bear Robotics",
-        robotCount: 2,
+        productName: "Fourier GR-1",
+        companyName: "Fourier Intelligence",
+        robotCount: 5,
+        lookupGrain: "robot_type",
+        robotClass: "humanoid",
       }),
-    ).toBe("Jobs for Servi");
+    ).toBe("Jobs for humanoids");
+    expect(
+      jobsCountEyebrow({
+        visibleCount: 5,
+        productName: "Fourier GR-1",
+        lookupGrain: "robot_type",
+        robotClass: "humanoid",
+      }),
+    ).toBe("5 JOBS FOR HUMANOIDS");
     expect(
       jobsHeading({
-        productName: "G1",
-        companyName: "Unitree",
-        robotCount: 4,
+        productName: "Fourier GR-1",
+        companyName: "Fourier Intelligence",
+        robotCount: 5,
+        lookupGrain: "product",
       }),
-    ).toBe("Jobs for G1");
-    expect(
-      jobsHeading({
-        productName: "G1",
-        companyName: "Unitree",
-        robotCount: 1,
-      }),
-    ).toBe("Jobs for G1");
+    ).toBe("Jobs for Fourier GR-1");
   });
 
   it("caps the Jobs terminal at 5 example jobs even when more exist", () => {
@@ -187,14 +196,60 @@ describe("jobsWorkflow", () => {
     expect(pipeline).toMatch(/isPlaceSrc/);
   });
 
-  it("does not stamp the first SKU's jobs onto every robot in a lineup", () => {
+  it("looks up a lineup once per robot type, not once per SKU", () => {
+    expect(normalizeRobotClass("Humanoid")).toBe("humanoid");
+    expect(robotClassJobsLabel("humanoid")).toBe("humanoids");
+    const fourier = lineupJobLookups([
+      { name: "Fourier GR-1", displayClass: "humanoid" },
+      { name: "Fourier GR-2", displayClass: "humanoid" },
+      { name: "Fourier GR-3", displayClass: "humanoid" },
+      { name: "Fourier N1", displayClass: "humanoid" },
+    ]);
+    expect(fourier).toEqual([
+      {
+        grain: "robot_type",
+        robotClass: "humanoid",
+        productNames: [
+          "Fourier GR-1",
+          "Fourier GR-2",
+          "Fourier GR-3",
+          "Fourier N1",
+        ],
+      },
+    ]);
+    const mixed = lineupJobLookups([
+      { name: "Atlas", displayClass: "humanoid" },
+      { name: "Spot", displayClass: "quadruped" },
+      { name: "Stretch", displayClass: "mobile_manipulator" },
+    ]);
+    expect(mixed.map(row => row.robotClass).sort()).toEqual([
+      "humanoid",
+      "mobile_manipulator",
+      "quadruped",
+    ]);
+    expect(mixed.every(row => row.grain === "robot_type")).toBe(true);
+    expect(mixed.every(row => row.productNames.length === 1)).toBe(true);
+    const unknown = lineupJobLookups([{ name: "MysteryBot", displayClass: null }]);
+    expect(unknown).toEqual([
+      { grain: "product", robotClass: null, productNames: ["MysteryBot"] },
+    ]);
+    expect(
+      productClassesFromLineup([
+        { name: "Fourier GR-1", displayClass: "humanoid" },
+        { name: "Spot", displayClass: "quadruped" },
+      ]),
+    ).toEqual({ "Fourier GR-1": "humanoid", Spot: "quadruped" });
+  });
+
+  it("shares type-level jobs across a class and does not copy one SKU onto another type", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
     );
     expect(workspace).not.toMatch(/\.\.\.base,\s*productName: name/);
-    expect(workspace).toMatch(/researchPortfolioRobot/);
-    expect(workspace).toMatch(/fillLineupJobs/);
+    expect(workspace).not.toMatch(/fillLineupJobs/);
+    expect(workspace).toMatch(/lineupJobLookups/);
+    expect(workspace).toMatch(/lookupGrain: "robot_type"/);
     expect(workspace).toMatch(/Find jobs for all/);
     expect(workspace).not.toMatch(/List all \$\{products\.length\} robots/);
   });

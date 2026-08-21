@@ -333,3 +333,22 @@ def test_compose_does_not_cache_low_coverage(monkeypatch):
     compose_robot_job_search("https://www.1x.tech/neo")
     assert get_cached_profile("https://www.1x.tech/neo", None) is None
 
+
+def test_compose_robot_type_skips_sku_scrape(monkeypatch):
+    """Lineup type-first must not build five SKU profiles."""
+    build = MagicMock()
+    monkeypatch.setattr("app.services.robot_job_search.build_robot_profile", build)
+    monkeypatch.setattr("app.services.robot_job_search.assert_public_http_url", lambda u: u)
+    out = compose_robot_job_search(
+        "https://www.fftai.com/en",
+        asserted_class="humanoid",
+        lookup_grain="robot_type",
+    )
+    build.assert_not_called()
+    assert out["state"] == "matches"
+    assert out["job_count"] > 0
+    assert out["company_name"] == "Fourier Intelligence"
+    assert out["robot_class"] == "humanoid"
+    assert out["timings"]["total_ms"] < 5000
+    assert get_cached_profile("https://www.fftai.com/en", None) is None
+
