@@ -10,6 +10,7 @@ import {
   RAIL_STEP_HINT,
   jobsFreshHomeHref,
   jobsWorkspaceRestoreHref,
+  onJobsFreshHomeClick,
 } from "@/lib/jobsWorkflow";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 
@@ -70,12 +71,13 @@ export default function JobsHandoffBoard(_props: {
           >
             Inspect jobs
           </Link>
-          <Link
+          <a
             href={jobsFreshHomeHref()}
+            onClick={onJobsFreshHomeClick}
             className="block font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 hover:text-slate-300"
           >
             + New robot
-          </Link>
+          </a>
         </div>
       </aside>
 

@@ -31,6 +31,7 @@ import {
 import { isDarkHeroRoute } from "@/lib/darkHeroRoutes";
 import { loginHref, clearPendingNext } from "@/lib/authNext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { jobsFreshHomeHref, onJobsFreshHomeClick } from "@/lib/jobsWorkflow";
 
 const PIPELINE_SUBMIT_CONTEXT_KEY = "rfr_pipeline_submit_context";
 const PIPELINE_SUBMIT_CONTEXT_TTL_MS = 2 * 60 * 60 * 1000;
@@ -200,7 +201,11 @@ export default function Header() {
       >
         <div className="container">
           <div className="flex items-center justify-between h-16 gap-4">
-            <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <a
+              href={jobsFreshHomeHref()}
+              onClick={onJobsFreshHomeClick}
+              className="flex items-center gap-2.5 shrink-0"
+            >
               <img src="/logo-r.png" alt="ReadyForRobots" className="h-8 w-8 object-contain" />
               <div className="flex flex-col leading-none">
                 <span className={`font-display font-bold text-[15px] tracking-tight ${lightNav ? "text-white" : "text-gray-900"}`}>
@@ -210,7 +215,7 @@ export default function Header() {
                   SIGNAL
                 </span>
               </div>
-            </Link>
+            </a>
 
             <nav className="hidden lg:flex items-center gap-1 min-w-0">
               {resolvedPriorityNavLinks.map((link) => (
@@ -417,10 +422,17 @@ export default function Header() {
         }`}
       >
         <div className="flex items-center justify-between px-5 py-5 border-b border-gray-100">
-          <Link href="/" onClick={closeDrawer} className="flex items-center gap-2.5">
+          <a
+            href={jobsFreshHomeHref()}
+            onClick={(event) => {
+              closeDrawer();
+              onJobsFreshHomeClick(event);
+            }}
+            className="flex items-center gap-2.5"
+          >
             <img src="/logo-r.png" alt="" className="h-7 w-7" />
             <span className="font-display font-bold text-gray-900 text-sm">ReadyForRobots</span>
-          </Link>
+          </a>
           <button onClick={closeDrawer} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100">
             <X className="h-4 w-4" />
           </button>

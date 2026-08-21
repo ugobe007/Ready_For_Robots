@@ -22,6 +22,19 @@ from app.services.robot_url_safety import assert_public_http_url
 # hung OEM page cannot add another 12s after the budget is already spent.
 DEFAULT_PAGE_TIMEOUT: tuple[float, float] = (2.5, 6.0)
 DEFAULT_TEXT_TIMEOUT: tuple[float, float] = (2.0, 4.0)
+ARCHIVE_PAGE_TIMEOUT: tuple[float, float] = (2.0, 8.0)
+
+_CHALLENGE_TITLE = re.compile(
+    r"(vercel security checkpoint|just a moment(\.\.\.)?|attention required|"
+    r"enable javascript to continue|checking your browser|"
+    r"please wait( while we verify)?|cf-browser-verification|"
+    r"un instant|un momento)",
+    re.I,
+)
+_ARCHIVE_WRAP = re.compile(
+    r"/web/\d{8,14}(?:id_|if_)?/(https?://.+)$",
+    re.I,
+)
 
 _tls = threading.local()
 
@@ -89,77 +102,180 @@ def timeout_for_deadline(
     return (connect, read)
 
 
+def unwrap_archive_url(url: str) -> str:
+    """Strip Wayback/archive.org wrappers so identity uses the manufacturer host."""
+    raw = (url or "").strip()
+    match = _ARCHIVE_WRAP.search(raw.replace("&amp;", "&"))
+    if match:
+        return match.group(1)
+    return raw
+
+
+def is_bot_challenge(
+    *,
+    status_code: int,
+    title: str | None,
+    html: str,
+    headers: dict[str, str] | None = None,
+) -> bool:
+    """True when the response is a CDN/WAF interstitial, not the OEM page."""
+    if status_code in {401, 403, 429, 503}:
+        return True
+    hdrs = {str(k).lower(): str(v) for k, v in (headers or {}).items()}
+    mitigated = hdrs.get("x-vercel-mitigated") or hdrs.get("cf-mitigated") or ""
+    if mitigated.lower() in {"challenge", "error"}:
+        return True
+    blob = f"{title or ''} {(html or '')[:4000]}"
+    return bool(_CHALLENGE_TITLE.search(blob))
+
+
+def _hosts_match(a: str | None, b: str | None) -> bool:
+    def norm(host: str | None) -> str:
+        h = (host or "").lower()
+        return h[4:] if h.startswith("www.") else h
+
+    na, nb = norm(a), norm(b)
+    return bool(na) and na == nb
+
+
+def _archive_fetch_url(url: str) -> str:
+    return "https://web.archive.org/web/" + url
+
+
+def _empty_page(url: str, *, notes: list[str], status_code: int = 0) -> FetchedPage:
+    return FetchedPage(
+        url=url,
+        final_url=url,
+        status_code=status_code,
+        title=None,
+        text="",
+        html="",
+        links=[],
+        fetch_degraded=True,
+        fetch_notes=notes,
+        content_type="application/octet-stream",
+    )
+
+
 def fetch_page(url: str, *, timeout: tuple[float, float] = DEFAULT_PAGE_TIMEOUT) -> FetchedPage:
     safe = assert_public_http_url(url)
     notes: list[str] = []
-    degraded = False
     try:
         resp = _get(safe, timeout=timeout)
     except requests.exceptions.SSLError as exc:
-        # Soft-fail TLS: do not redefine company via a different host.
-        # Caller keeps the submitted URL identity; mark acquisition degraded.
-        degraded = True
         notes.append(f"TLS/fetch degraded: {type(exc).__name__}")
-        return FetchedPage(
-            url=safe,
-            final_url=safe,
-            status_code=0,
-            title=None,
-            text="",
-            html="",
-            links=[],
-            fetch_degraded=True,
-            fetch_notes=notes,
-            content_type="application/octet-stream",
-        )
+        return _empty_page(safe, notes=notes)
     except requests.RequestException as exc:
-        degraded = True
         notes.append(f"Fetch degraded: {type(exc).__name__}")
-        return FetchedPage(
-            url=safe,
-            final_url=safe,
-            status_code=0,
-            title=None,
-            text="",
-            html="",
-            links=[],
-            fetch_degraded=True,
-            fetch_notes=notes,
-            content_type="application/octet-stream",
-        )
+        return _empty_page(safe, notes=notes)
 
+    page = _page_from_response(safe, resp, notes=notes)
+    if page.fetch_degraded and not (page.text or "").strip():
+        archived = _fetch_archive_copy(safe, notes)
+        if archived:
+            return archived
+    return page
+
+
+def _fetch_archive_copy(live_url: str, notes: list[str]) -> FetchedPage | None:
+    """Best-effort Internet Archive copy when the live OEM host challenges bots."""
+    if "web.archive.org" in (urlparse(live_url).hostname or "").lower():
+        return None
+    archive = _archive_fetch_url(live_url)
+    try:
+        assert_public_http_url(archive)
+        resp = _get(archive, timeout=ARCHIVE_PAGE_TIMEOUT)
+    except Exception as exc:
+        notes.append(f"Archive fallback failed: {type(exc).__name__}")
+        return None
+    page = _page_from_response(
+        live_url,
+        resp,
+        notes=notes,
+        canonical_url=live_url,
+        unwrap_archive=True,
+    )
+    if is_bot_challenge(
+        status_code=page.status_code,
+        title=page.title,
+        html=page.html,
+    ) or not (page.text or page.html):
+        notes.append("Archive fallback was also a challenge or empty")
+        return None
+    page.fetch_notes.append("Live manufacturer page blocked; used Internet Archive copy")
+    page.fetch_degraded = False
+    return page
+
+
+def _page_from_response(
+    requested: str,
+    resp: requests.Response,
+    *,
+    notes: list[str],
+    canonical_url: str | None = None,
+    unwrap_archive: bool = False,
+) -> FetchedPage:
     ctype = (resp.headers.get("Content-Type") or "").lower()
-    final = resp.url or safe
+    final = canonical_url or unwrap_archive_url(resp.url or requested) or requested
     raw = resp.content or b""
+    headers = {str(k): str(v) for k, v in resp.headers.items()}
 
     if "pdf" in ctype or final.lower().endswith(".pdf") or raw[:4] == b"%PDF":
         title, text = _pdf_text(raw, final)
         return FetchedPage(
-            url=safe,
+            url=requested,
             final_url=final,
             status_code=resp.status_code,
             title=title,
             text=text,
             html="",
             links=[],
-            fetch_degraded=degraded,
+            fetch_degraded=False,
             fetch_notes=notes,
             content_type="application/pdf",
         )
 
     html = resp.text or ""
+    if unwrap_archive:
+        html = _ARCHIVE_WRAP.sub(lambda m: m.group(1), html)
     soup = BeautifulSoup(html, "html.parser")
     title = soup.title.get_text(strip=True) if soup.title else None
-    images = _harvest_page_images(soup, resp.url)
-    text = _html_to_text(soup, page_url=resp.url)
+    if is_bot_challenge(
+        status_code=resp.status_code,
+        title=title,
+        html=html,
+        headers=headers,
+    ):
+        notes.append(
+            f"Bot challenge from manufacturer host (HTTP {resp.status_code})"
+        )
+        return FetchedPage(
+            url=requested,
+            final_url=canonical_url or requested,
+            status_code=resp.status_code,
+            title=title,
+            text="",
+            html="",
+            links=[],
+            fetch_degraded=True,
+            fetch_notes=notes,
+            content_type="text/html",
+        )
 
-    host = (urlparse(resp.url).hostname or "").lower()
+    page_url = canonical_url or unwrap_archive_url(resp.url or requested) or requested
+    images = _harvest_page_images(soup, page_url)
+    text = _html_to_text(soup, page_url=page_url)
+    host = (urlparse(page_url).hostname or "").lower()
     links: list[tuple[str, str]] = []
     seen: set[str] = set()
     for a in soup.find_all("a", href=True):
-        full = urljoin(resp.url, a["href"])
+        raw_href = unwrap_archive_url(a["href"])
+        if raw_href.startswith(("http://", "https://")):
+            full = raw_href
+        else:
+            full = urljoin(page_url, raw_href)
         parsed = urlparse(full)
-        if (parsed.hostname or "").lower() != host:
+        if not _hosts_match(parsed.hostname, host):
             continue
         key = full.split("#")[0].rstrip("/")
         if key in seen:
@@ -169,15 +285,15 @@ def fetch_page(url: str, *, timeout: tuple[float, float] = DEFAULT_PAGE_TIMEOUT)
         links.append((key, anchor))
 
     return FetchedPage(
-        url=safe,
-        final_url=resp.url,
+        url=requested,
+        final_url=page_url,
         status_code=resp.status_code,
         title=title,
         text=text,
         html=html,
         links=links,
-        fetch_degraded=degraded,
-        fetch_notes=notes,
+        fetch_degraded=False,
+        fetch_notes=list(notes),
         content_type="text/html",
         image_alts=images,
     )

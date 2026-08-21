@@ -55,6 +55,8 @@ export const JOBS_PLACE_SRC = "place";
 export const JOBS_PLACE_CTA = "Activate job list →";
 
 export const JOBS_FRESH_QUERY = "new";
+export const JOBS_WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
+export const JOBS_RESTORE_ONCE_KEY = "rfr_jobs_restore_once";
 
 export function jobsFreshHomeHref(): string {
   return `/?${JOBS_FRESH_QUERY}=1`;
@@ -62,6 +64,49 @@ export function jobsFreshHomeHref(): string {
 
 export function isJobsFreshQuery(search: string | null | undefined): boolean {
   return new URLSearchParams(search || "").get(JOBS_FRESH_QUERY) === "1";
+}
+
+/** Drop in-progress FIND state. Used by the wordmark before leaving the page. */
+export function clearJobsWorkspaceSession(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(JOBS_WORKSPACE_SESSION_KEY);
+    window.sessionStorage.removeItem(JOBS_RESTORE_ONCE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Wordmark / Jobs home. Wouter Link to `/?new=1` is a no-op while already on
+ * `/` (profile, jobs, picker) — same pathname, query ignored — so the chrome
+ * looks dead. Always assign so FIND remounts.
+ */
+export function goJobsFreshHome(): void {
+  clearJobsWorkspaceSession();
+  if (typeof window === "undefined") return;
+  window.location.assign(jobsFreshHomeHref());
+}
+
+export function onJobsFreshHomeClick(event: {
+  preventDefault: () => void;
+  metaKey?: boolean;
+  ctrlKey?: boolean;
+  shiftKey?: boolean;
+  altKey?: boolean;
+  button?: number;
+}): void {
+  const newTab = Boolean(
+    event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      (event.button != null && event.button !== 0),
+  );
+  clearJobsWorkspaceSession();
+  if (newTab) return;
+  event.preventDefault();
+  goJobsFreshHome();
 }
 
 /** Place leftovers still must not bounce as a Jobs handoff. */
@@ -170,8 +215,6 @@ export function placeBuyersToShow<T extends { industry?: string | null }>(
   const pool = scoped.length >= 2 ? scoped : rows;
   return pool.slice(0, cap);
 }
-
-export const JOBS_RESTORE_ONCE_KEY = "rfr_jobs_restore_once";
 
 /** Keep a Jobs src on later hops. Never rewrite Jobs → results_scan. */
 export function persistJobsHandoffSrc(src: string | null | undefined): string {

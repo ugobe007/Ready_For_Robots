@@ -63,6 +63,40 @@ _PRODUCT_HREF_NOISE = frozenset(
         "contactinformation",
         "login",
         "privacy",
+        "terms",
+        "careers",
+        "jobs",
+        "blog",
+        "press",
+        "media",
+        "investors",
+        "company",
+        "technology",
+        "solutions",
+        "resources",
+        "rental",
+        "rentals",
+        "shop",
+        "cart",
+        "store",
+        "pricing",
+        "demo",
+        "events",
+        "partners",
+        "team",
+        "legal",
+        "cookies",
+        "search",
+        "subscribe",
+        "newsletter",
+        "faq",
+        "industrial",
+        "commercial",
+        "data",
+        "privacy-policy",
+        "terms-and-conditions",
+        "robot-rentals",
+        "get-in-touch",
     }
 )
 # Locale product pages (MagicLab /en/x1, /en/human, /en/app/g1).
@@ -70,9 +104,83 @@ _LOCALE_PRODUCT_HREF = re.compile(
     r"(?:^|/)(?:en|zh)(?:/app)?/([a-z0-9][a-z0-9-]{0,24})$",
     re.I,
 )
+_ROBOTS_HREF = re.compile(
+    r"(?:^|/)(?:robots?|hardware|models?|platform)/([a-z0-9][a-z0-9-]{0,24})(?:\.html?)?$",
+    re.I,
+)
+_ROOT_PRODUCT_HREF = re.compile(r"^/([a-z0-9][a-z0-9-]{1,40})$", re.I)
 _ROBOT_LINE_SLUGS = frozenset({"human", "dog", "panda"})
 _MAX_DISCOVERED_PRODUCTS = 10
 _COMPACT_SKU = re.compile(r"^[A-Za-z]{1,3}\d{1,3}[A-Za-z]{0,3}$")
+_PROSE_NAME = re.compile(
+    r"\b((?:[A-Z]{3,10})|(?:[A-Z][a-z]{2,14}(?:-[A-Z0-9][A-Za-z0-9]{0,10}){0,3}))\b"
+)
+_NAME_FOLLOW = re.compile(
+    r"^\s*(?:the\s+)?(?:AI[- ]powered\s+)?(?:dual[- ]arm\s+|single[- ]arm\s+)?"
+    r"(?:"
+    r"robot|humanoid|cobot|serves?|shows?|delivers?|works\b|helps?|"
+    r"makes?|mixes?|cleans?|navigates?|skyrockets?|automates?|"
+    r"bartender|barista|waiter|server|scrubber|vacuum|"
+    r"is\s+an?\s+(?:AI[- ]powered\s+)?(?:humanoid|service|delivery|cleaning)"
+    r")\b",
+    re.I,
+)
+_PROSE_NAME_NOISE = frozenset(
+    {
+        "the",
+        "and",
+        "for",
+        "our",
+        "you",
+        "this",
+        "with",
+        "from",
+        "that",
+        "ceo",
+        "cto",
+        "usa",
+        "llc",
+        "inc",
+        "nasdaq",
+        "gpu",
+        "cpu",
+        "api",
+        "faq",
+        "nvidia",
+        "amd",
+        "ibm",
+        "aws",
+        "microsoft",
+        "google",
+        "amazon",
+        "meta",
+        "apple",
+        "walmart",
+        "mercedes",
+        "benz",
+        "forbes",
+        "columbia",
+        "solutions",
+        "technology",
+        "company",
+        "investors",
+        "resources",
+        "contact",
+        "privacy",
+        "terms",
+        "news",
+        "learn",
+        "watch",
+        "video",
+        "robotics",
+        "robot",
+        "robots",
+        "recent",
+        "bringing",
+        "bridging",
+        "current",
+    }
+)
 
 _PLATFORM_NOISE = re.compile(
     r"\b(cloud\s+platform|fleet\s+management|software\s+platform|WES|WMS)\b",
@@ -687,6 +795,21 @@ def _canon_path_sku(slug: str) -> str:
     return (slug or "").strip()
 
 
+def _display_from_slug(slug: str) -> str:
+    parts = [p for p in re.split(r"[-_]", slug or "") if p]
+    out: list[str] = []
+    for part in parts:
+        if len(part) <= 2:
+            out.append(part.upper())
+        elif part.isalpha() and part.isupper():
+            out.append(part)
+        elif part.isalpha() and len(part) <= 4:
+            out.append(part.upper())
+        else:
+            out.append(part[:1].upper() + part[1:])
+    return " ".join(out).strip()
+
+
 def _sku_from_product_href(url: str) -> str | None:
     """SKU from a manufacturer product path, or None if the path is generic."""
     path = (urlparse(url).path or "").rstrip("/")
@@ -695,26 +818,43 @@ def _sku_from_product_href(url: str) -> str | None:
         slug = match.group(1)
         if slug.lower() in _PRODUCT_HREF_NOISE:
             return None
-        if not _looks_like_model_or_sku(slug):
+        if not _looks_like_model_or_sku(slug) and "-" not in slug:
+            # Named product pages still count (/products/adam).
+            if not re.fullmatch(r"[a-z]{3,24}", slug, re.I):
+                return None
+        return _canon_path_sku(slug) or _display_from_slug(slug) or None
+    robots = _ROBOTS_HREF.search(path)
+    if robots:
+        slug = robots.group(1)
+        if slug.lower() in _PRODUCT_HREF_NOISE:
             return None
-        return _canon_path_sku(slug) or None
+        return _canon_path_sku(slug) or _display_from_slug(slug) or None
     locale = _LOCALE_PRODUCT_HREF.search(path)
-    if not locale:
+    if locale:
+        slug = locale.group(1)
+        if slug.lower() in _PRODUCT_HREF_NOISE:
+            return None
+        if _looks_like_model_or_sku(slug):
+            return _canon_path_sku(slug) or slug.upper()
+        if slug.lower() in _ROBOT_LINE_SLUGS:
+            return slug.replace("-", " ").title()
+        if re.fullmatch(r"[a-z]{2,10}-[a-z0-9]{1,8}", slug, re.I):
+            return slug
         return None
-    slug = locale.group(1)
-    if slug.lower() in _PRODUCT_HREF_NOISE:
-        return None
-    if _looks_like_model_or_sku(slug):
-        return _canon_path_sku(slug) or slug.upper()
-    if slug.lower() in _ROBOT_LINE_SLUGS:
-        return slug.replace("-", " ").title()
-    if re.fullmatch(r"[a-z]{2,10}-[a-z0-9]{1,8}", slug, re.I):
-        return slug
+    root = _ROOT_PRODUCT_HREF.search(path or "/")
+    if root:
+        slug = root.group(1)
+        if slug.lower() in _PRODUCT_HREF_NOISE:
+            return None
+        if _looks_like_model_or_sku(slug) or "-" in slug:
+            return _canon_path_sku(slug) or _display_from_slug(slug)
+        if re.fullmatch(r"[a-z]{3,20}", slug, re.I):
+            return _display_from_slug(slug)
     return None
 
 
 def _href_product_name(url: str, anchor: str) -> str | None:
-    """Prefer 'MagicBot G1' over a label that hides the SKU, or a bare slug."""
+    """Prefer 'Family G1' over a label that hides the SKU, or a bare slug."""
     sku = _sku_from_product_href(url)
     if not sku:
         return None
@@ -724,7 +864,8 @@ def _href_product_name(url: str, anchor: str) -> str | None:
         sku_canon = sku.upper()
     labeled = (
         2 <= len(label) <= 48
-        and re.search(r"(bot|dog|panda|robot|g1|x1|z1|human|magic)", label, re.I)
+        and re.search(r"[A-Za-z]", label)
+        and label.lower() not in _PRODUCT_HREF_NOISE
     )
     if labeled:
         if sku_canon.lower() not in label.lower() and _looks_like_model_or_sku(sku):
@@ -734,17 +875,15 @@ def _href_product_name(url: str, anchor: str) -> str | None:
 
 
 def _apply_family_prefix(names: list[str]) -> list[str]:
-    """X1 next to MagicBot G1 → MagicBot X1 so the picker is one family."""
-    family = next(
-        (
-            m.group(1)
-            for n in names
-            if (m := re.match(r"^(MagicBot)\b", n, re.I))
-        ),
-        None,
-    )
-    if not family:
+    """Bare SKU next to 'Family G1' → 'Family X1'. Any maker, not one OEM."""
+    prefixes: list[str] = []
+    for n in names:
+        parts = n.split()
+        if len(parts) >= 2 and _COMPACT_SKU.fullmatch(parts[-1]):
+            prefixes.append(" ".join(parts[:-1]))
+    if not prefixes:
         return names
+    family = max(set(prefixes), key=prefixes.count)
     out: list[str] = []
     for n in names:
         if _COMPACT_SKU.fullmatch(n):
@@ -755,7 +894,7 @@ def _apply_family_prefix(names: list[str]) -> list[str]:
 
 
 def _dedupe_product_names(names: list[str]) -> list[str]:
-    """Drop 'Z1' when 'MagicBot Z1' exists; drop generic Human/Dog/Panda lines."""
+    """Drop 'Z1' when 'Family Z1' exists; drop generic Human/Dog/Panda lines."""
     unique: list[str] = []
     seen: set[str] = set()
     for n in names:
@@ -785,6 +924,24 @@ def _dedupe_product_names(names: list[str]) -> list[str]:
         if not drop:
             keep.append(n)
     return keep
+
+
+def _named_robots_from_prose(text: str, *, blocked: set[str] | None = None) -> dict[str, int]:
+    """ADAM serves / Scorpion shows — named robots without a SKU regex allowlist."""
+    counts: dict[str, int] = {}
+    blocked_keys = {_name_key(x) for x in (blocked or set()) if x}
+    for m in _PROSE_NAME.finditer(text or ""):
+        name = m.group(1)
+        low = name.lower()
+        if low in _PROSE_NAME_NOISE or low in _PRODUCT_HREF_NOISE:
+            continue
+        if _name_key(name) in blocked_keys:
+            continue
+        after = (text or "")[m.end() : m.end() + 90]
+        if not _NAME_FOLLOW.search(after):
+            continue
+        counts[name] = counts.get(name, 0) + 2
+    return counts
 
 
 def _discover_product_names(
@@ -861,6 +1018,12 @@ def _discover_product_names(
         counts[sku] = counts.get(sku, 0) + len(
             re.findall(rf"\b{re.escape(sku)}\b", blob, re.I)
         )
+
+    title = home.title or ""
+    tail = re.split(r"\s+[|\-–—]\s+", title)[-1] if title else ""
+    blocked = {t for t in re.findall(r"[A-Za-z]{3,}", tail)}
+    for name, n in _named_robots_from_prose(blob, blocked=blocked).items():
+        counts[name] = counts.get(name, 0) + n
 
     if product_hint:
         hint = product_hint.strip()
