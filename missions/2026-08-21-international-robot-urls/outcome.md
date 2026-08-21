@@ -21,8 +21,10 @@ Also `en.engineai.com.cn` was stored as the company domain instead of `engineai.
 
 `venv/bin/python -m pytest tests/test_robot_url_safety.py tests/test_robot_analysis_slice1.py` — 20 passed
 
-Local profile build (system DNS stubbed empty, DoH + fetch): company `ENGINEAI`, domain `engineai.com.cn`, HTTP 200.
+Local profile build (system DNS stubbed empty, DoH + fetch): company `ENGINEAI`, domain `engineai.com.cn`, HTTP 200, 13 facts.
+
+Production `POST /api/robot-profile` at check time returned **200** (cached `2026-08-21T03:02:02Z`) with `primary_domain: en.engineai.com.cn` — the DNS 400 is intermittent; the compound-ccTLD domain bug is still live until deploy.
 
 ## Follow-up
 
-Fly deploy of `app/services/robot_url_safety.py` is required for production. This VM has no Fly token.
+Fly deploy of `app/services/robot_url_safety.py` is required for production. This VM has no Fly token. Profile cache TTL is 6h, so a successful cached EngineAI profile may keep the old domain until expiry.
