@@ -9,7 +9,9 @@ import {
   JOBS_NEXT_CTA,
   JOBS_NEXT_HINT,
   JOBS_PLACE_CTA,
+  JOBS_PROCESS_STEPS,
   JOBS_SCAN_STEPS,
+  JOBS_SEE_JOBS_CTA,
   buyerLeadsHref,
   buyerLeadsToShow,
   capExampleJobs,
@@ -23,6 +25,8 @@ import {
   goJobsFreshHome,
   jobsHeading,
   jobsPlaceHref,
+  jobsProcessStepFromStage,
+  jobsToActivate,
   jobsSignupHref,
   jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
@@ -50,6 +54,23 @@ describe("jobsWorkflow", () => {
     expect(landingStageAfterConfirm(4)).toBe("jobs");
   });
 
+  it("always names the three process steps as navigational links", () => {
+    expect(JOBS_PROCESS_STEPS.map(s => s.id)).toEqual(["find", "jobs", "activate"]);
+    expect(JOBS_SEE_JOBS_CTA).toBe("See jobs →");
+    expect(jobsProcessStepFromStage("select")).toBe("find");
+    expect(jobsProcessStepFromStage("review")).toBe("find");
+    expect(jobsProcessStepFromStage("jobs")).toBe("jobs");
+    expect(jobsProcessStepFromStage("portfolio")).toBe("jobs");
+    const pool = [{ job_key: "a" }, { job_key: "b" }, { job_key: "c" }];
+    expect(jobsToActivate([], pool, 15).map(j => j.job_key)).toEqual(["a", "b", "c"]);
+    expect(jobsToActivate([pool[2]], pool, 15).map(j => j.job_key)).toEqual([
+      "c",
+      "a",
+      "b",
+    ]);
+    expect(jobsToActivate([], [], 15)).toEqual([]);
+  });
+
   it("forces a real FIND navigation from the wordmark even on /", () => {
     expect(typeof goJobsFreshHome).toBe("function");
     const header = readFileSync(
@@ -67,7 +88,7 @@ describe("jobsWorkflow", () => {
     expect(workflow).toMatch(/location\.assign\(jobsFreshHomeHref\(\)\)/);
   });
 
-  it("titles type-level jobs for the group, product-level jobs for a SKU", () => {
+  it("titles type-level jobs for the company group, product-level jobs for a SKU", () => {
     expect(
       jobsHeading({
         productName: "Fourier GR-1",
@@ -76,20 +97,22 @@ describe("jobsWorkflow", () => {
         lookupGrain: "robot_type",
         robotClass: "humanoid",
       }),
-    ).toBe("Jobs for humanoids");
+    ).toBe("Jobs for Fourier Intelligence");
     expect(
       jobsCountEyebrow({
         visibleCount: 5,
         productName: "Fourier GR-1",
+        companyName: "Fourier Intelligence",
+        robotCount: 5,
         lookupGrain: "robot_type",
         robotClass: "humanoid",
       }),
-    ).toBe("5 JOBS FOR HUMANOIDS");
+    ).toBe("5 JOBS FOR FOURIER INTELLIGENCE");
     expect(
       jobsHeading({
         productName: "Fourier GR-1",
         companyName: "Fourier Intelligence",
-        robotCount: 5,
+        robotCount: 1,
         lookupGrain: "product",
       }),
     ).toBe("Jobs for Fourier GR-1");
@@ -159,6 +182,9 @@ describe("jobsWorkflow", () => {
     expect(JOBS_NEXT_HINT).not.toMatch(/buyer/i);
     expect(JOBS_PLACE_CTA).toBe("Activate job list →");
     expect(workspace).toMatch(/JOBS_NEXT_CTA/);
+    expect(workspace).toMatch(/JobsProcessNav/);
+    expect(workspace).toMatch(/JOBS_PROCESS_STEPS/);
+    expect(workspace).not.toMatch(/03 Live list/);
     expect(workspace).not.toMatch(/onNext=\{\(\) => onNext\(job\)\}/);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
     for (const step of JOBS_SCAN_STEPS) {

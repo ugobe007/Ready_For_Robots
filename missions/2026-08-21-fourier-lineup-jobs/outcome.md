@@ -12,8 +12,9 @@
 
 - Several / all: one job search per **robot type** (`lookup_grain=robot_type` + `asserted_class`). Thin class profile, no SKU scrape.
 - Same-class SKUs share type-level jobs. Mixed classes look up separately.
-- Land on **jobs** (Activate visible). Heading: `Jobs for humanoids`.
+- Land on **jobs** (Activate visible). Heading: `Jobs for {company}` when several robots.
 - One SKU: unchanged — profile checkpoint, then product-level jobs.
+- **Process nav always:** 01 Show us your robot → 02 Here are its jobs → 03 Activate the job list. 02/03 are links, not dead labels. Activate never no-ops.
 - CTA: `Find jobs for all N robots →`.
 
 ## Tests

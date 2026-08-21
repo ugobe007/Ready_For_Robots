@@ -4,8 +4,9 @@
  * Left = robot / context / navigation. Right = work. One deliberate state at
  * a time (submit-stability principle):
  *
- *   FIND → RESEARCH → SELECT → JOBS (several SKUs: jobs for the robot type first)
- *                      SELECT → REVIEW PROFILE → JOBS → activate list (one product)
+ *   FIND → SELECT (several SKUs) → one robot: jobs for that product
+ *                              → several/all: type-first match (faster) → jobs
+ *   Every stage keeps process nav: 01 robot → 02 jobs → 03 activate.
 
 
  *
@@ -50,23 +51,25 @@ import {
   JOBS_NEXT_HINT,
   JOBS_PIPELINE_CAP,
   JOBS_ACTIVATE_CAP,
+  JOBS_PROCESS_STEPS,
   JOBS_RESTORE_ONCE_KEY,
+  JOBS_SEE_JOBS_CTA,
   RAIL_STEP_HINT,
   capExampleJobs,
   consumeJobsWorkspaceRestoreOnce,
   defaultCheckedJobKeys,
   isJobsFreshQuery,
   jobsActivateHref,
-  jobsForActivatedPipeline,
-  jobsHeading,
   jobsCountEyebrow,
+  jobsHeading,
+  jobsProcessStepFromStage,
+  jobsToActivate,
   landingStageAfterConfirm,
   lineupJobLookups,
   normalizeRobotClass,
   portfolioShowsJobCounts,
   productClassesFromLineup,
   readNavigationType,
-  robotClassJobsLabel,
   robotClassTitle,
   shouldRestoreJobsWorkspace,
 } from "@/lib/jobsWorkflow";
@@ -163,6 +166,55 @@ function FaceCue({
       background="transparent"
       className={`shrink-0 ${className}`.trim()}
     />
+  );
+}
+
+function JobsProcessNav({
+  current,
+  onFind,
+  onJobs,
+  onActivate,
+}: {
+  current: "find" | "jobs" | "activate";
+  onFind?: () => void;
+  onJobs?: () => void;
+  onActivate?: () => void;
+}) {
+  return (
+    <nav aria-label="Jobs process" className="space-y-1">
+      {JOBS_PROCESS_STEPS.map(step => {
+        const isCurrent = current === step.id;
+        const onClick =
+          step.id === "find"
+            ? onFind
+            : step.id === "jobs"
+              ? onJobs
+              : onActivate;
+        const className = `flex w-full items-center justify-between border-l-2 px-3 py-2 text-left font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition ${
+          isCurrent
+            ? "border-emerald-400 bg-emerald-400/5 text-emerald-300"
+            : onClick
+              ? "border-transparent text-slate-400 hover:text-slate-200"
+              : "border-transparent text-slate-600"
+        }`;
+        const label = `${step.n} ${step.label}`;
+        if (!onClick) {
+          return (
+            <p key={step.id} className={className}>
+              {label}
+            </p>
+          );
+        }
+        return (
+          <button key={step.id} type="button" onClick={onClick} className={className}>
+            <span>{label}</span>
+            {!isCurrent ? (
+              <span className="text-slate-500">{step.linkLabel}</span>
+            ) : null}
+          </button>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -964,8 +1016,7 @@ export default function RobotJobsWorkspace() {
   function goToActivate() {
     const pool = active?.jobs || [];
     const selected = pool.filter(job => checkedJobKeys.includes(job.job_key));
-    if (selected.length === 0) return;
-    const jobs = jobsForActivatedPipeline(selected, pool, JOBS_ACTIVATE_CAP);
+    const jobs = jobsToActivate(selected, pool, JOBS_ACTIVATE_CAP);
     saveJobsHandoffSnapshot({
       url: submittedUrlRef.current,
       productName: active?.productName || "",
@@ -975,7 +1026,7 @@ export default function RobotJobsWorkspace() {
     trackRobotJobsFunnel("jobs_list_activated", {
       ...funnelBase(),
       robot_name: active?.productName,
-      selected_count: selected.length,
+      selected_count: selected.length || jobs.length,
       list_count: jobs.length,
     });
     window.location.href = jobsActivateHref(submissionIdRef.current);
@@ -1287,6 +1338,12 @@ export default function RobotJobsWorkspace() {
             companyName={companyName}
             error={error}
             onCancel={stage === "select" ? newRobot : undefined}
+            onJobs={
+              stage === "select"
+                ? () => void confirmSelection(selected.length > 0 ? selected : "all")
+                : undefined
+            }
+            onActivate={stage === "select" ? goToActivate : undefined}
           />
         ) : stage === "portfolio" ? (
           <PortfolioRail
@@ -1298,14 +1355,19 @@ export default function RobotJobsWorkspace() {
             }
             count={portfolio.length}
             onNewRobot={newRobot}
+            onJobs={() => {
+              const idx = portfolio.findIndex(row => row.matched && (row.jobs || []).length > 0);
+              void researchPortfolioRobot(idx >= 0 ? idx : 0, "jobs");
+            }}
+            onActivate={goToActivate}
           />
         ) : (
           <ContextRail
             company={active ? companyIdentity(active).label : companyName}
             identityVerified={active ? companyIdentity(active).verified : true}
             product={
-              active?.lookupGrain === "robot_type" && active.robotClass
-                ? robotClassTitle(active.robotClass)
+              portfolio.length > 1
+                ? `${portfolio.length} robots`
                 : active?.productName || ""
             }
             tier={active?.tier || "C"}
@@ -1315,6 +1377,7 @@ export default function RobotJobsWorkspace() {
             hint={railTab === "profile" ? RAIL_STEP_HINT.profile : RAIL_STEP_HINT.jobs}
             portfolioCount={portfolio.length}
             railTab={railTab}
+            processCurrent={jobsProcessStepFromStage(stage)}
             onTab={t => {
               if (t === "profile") {
                 setRailTab("profile");
@@ -1329,8 +1392,13 @@ export default function RobotJobsWorkspace() {
                 });
                 return;
               }
-              goToJobs(activeIdx);
+              if (active?.matched) {
+                goToJobs(activeIdx);
+                return;
+              }
+              void findJobsForActive();
             }}
+            onActivate={goToActivate}
             onBackToPortfolio={
               portfolio.length > 1 ? () => setStage("portfolio") : undefined
             }
@@ -1375,6 +1443,13 @@ export default function RobotJobsWorkspace() {
             showCounts={countsTrusted}
             onView={idx => void researchPortfolioRobot(idx, "jobs")}
             onReview={idx => void researchPortfolioRobot(idx, "review")}
+            onSeeJobs={() => {
+              const idx = portfolio.findIndex(
+                row => row.matched && (row.jobs || []).length > 0,
+              );
+              void researchPortfolioRobot(idx >= 0 ? idx : 0, "jobs");
+            }}
+            onActivate={goToActivate}
           />
         )}
 
@@ -1420,6 +1495,8 @@ function FindRail({
   companyName,
   error,
   onCancel,
+  onJobs,
+  onActivate,
 }: {
   stage: Stage;
   url: string;
@@ -1428,6 +1505,8 @@ function FindRail({
   companyName: string;
   error: string | null;
   onCancel?: () => void;
+  onJobs?: () => void;
+  onActivate?: () => void;
 }) {
   const busy = stage === "research" || stage === "select";
   return (
@@ -1487,20 +1566,11 @@ function FindRail({
       )}
 
       <div className="mt-auto pt-6">
-        <ol className="space-y-3 text-xs text-slate-400">
-          <li>
-            <span className="font-mono text-emerald-400">01</span> Show us your
-            robot — we research the company and product.
-          </li>
-          <li>
-            <span className="font-mono text-emerald-400">02</span> Here are its
-            jobs — expand a card for why, unknowns, and blockers.
-          </li>
-          <li>
-            <span className="font-mono text-emerald-400">03</span> Activate the
-            job list — checked jobs sit at the top of 15 live jobs.
-          </li>
-        </ol>
+        <JobsProcessNav
+          current="find"
+          onJobs={onJobs}
+          onActivate={onActivate}
+        />
       </div>
     </div>
   );
@@ -1515,11 +1585,15 @@ function PortfolioRail({
   identityVerified,
   count,
   onNewRobot,
+  onJobs,
+  onActivate,
 }: {
   company: string;
   identityVerified: boolean;
   count: number;
   onNewRobot: () => void;
+  onJobs?: () => void;
+  onActivate?: () => void;
 }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -1536,8 +1610,11 @@ function PortfolioRail({
         {count} robots
       </p>
       <p className="mt-3 text-[12px] leading-snug text-slate-400">
-        Jobs for the robot type first. Pick a SKU to refine to that product.
+        Pick one robot for that product, or continue to jobs for the lineup.
       </p>
+      <div className="mt-6">
+        <JobsProcessNav current="jobs" onJobs={onJobs} onActivate={onActivate} />
+      </div>
       <div className="mt-auto pt-6">
         <button
           type="button"
@@ -1566,7 +1643,9 @@ function ContextRail({
   hint,
   portfolioCount,
   railTab,
+  processCurrent,
   onTab,
+  onActivate,
   onBackToPortfolio,
   onNewRobot,
 }: {
@@ -1580,24 +1659,14 @@ function ContextRail({
   hint: string;
   portfolioCount: number;
   railTab: RailTab;
+  processCurrent: "find" | "jobs" | "activate";
   onTab: (t: RailTab) => void;
+  onActivate?: () => void;
   onBackToPortfolio?: () => void;
   onNewRobot: () => void;
 }) {
-  const navItem = (t: RailTab, label: string, badge?: string) => (
-    <button
-      type="button"
-      onClick={() => onTab(t)}
-      className={`flex w-full items-center justify-between border-l-2 px-3 py-2 text-left font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition ${
-        railTab === t
-          ? "border-emerald-400 bg-emerald-400/5 text-emerald-300"
-          : "border-transparent text-slate-400 hover:text-slate-200"
-      }`}
-    >
-      <span>{label}</span>
-      {badge ? <span className="text-slate-500">{badge}</span> : null}
-    </button>
-  );
+  const current =
+    railTab === "profile" ? "find" : processCurrent;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -1618,7 +1687,6 @@ function ContextRail({
         <span className={`font-mono text-base font-bold ${tierColor(tier)}`}>
           {tier}
         </span>
-        {/* Count only appears once the robot is actually matched AND trustworthy. */}
         {matched && showCount ? (
           <span className="ml-2 font-mono text-[11px] font-bold text-emerald-300">
             {jobCount} EXAMPLE JOBS
@@ -1626,21 +1694,14 @@ function ContextRail({
         ) : null}
       </div>
 
-      {/* Profile is the pre-match checkpoint. Jobs unlock after matching.
-          Live list is the activate destination — not a Place buyer dump. */}
-      <nav className="mt-6 space-y-1">
-        {navItem("profile", "01 Profile")}
-        {matched
-          ? navItem("jobs", "02 Jobs", showCount ? `${jobCount}` : undefined)
-          : (
-            <p className="border-l-2 border-transparent px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-600">
-              02 Jobs
-            </p>
-          )}
-        <p className="border-l-2 border-transparent px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-600">
-          03 Live list
-        </p>
-      </nav>
+      <div className="mt-6">
+        <JobsProcessNav
+          current={current}
+          onFind={() => onTab("profile")}
+          onJobs={() => onTab("jobs")}
+          onActivate={onActivate}
+        />
+      </div>
 
       <p className="mt-4 text-[12px] leading-snug text-slate-400">{hint}</p>
 
@@ -1729,9 +1790,10 @@ function SelectPanel({
         We found {products.length} robots
       </h2>
       <p className="mt-2 text-sm text-slate-400">
-        Which robots should we find jobs for? Listing several looks up jobs
-        for the robot type first (the group), then a product when you pick
-        one SKU. {company || "This maker"} has {products.length}.
+        Which robot should we find jobs for? Pick one SKU, or several / all.
+        One robot gets jobs for that product. Several takes a bit longer — we
+        resolve the search, then you activate the list.{" "}
+        {company || "This maker"} has {products.length}.
       </p>
 
       <div className="mt-6 grid gap-2 sm:grid-cols-2">
@@ -1805,12 +1867,16 @@ function PortfolioPanel({
   showCounts,
   onView,
   onReview,
+  onSeeJobs,
+  onActivate,
 }: {
   company: string;
   robots: RobotAnalysis[];
   showCounts: boolean;
   onView: (idx: number) => void;
   onReview: (idx: number) => void;
+  onSeeJobs: () => void;
+  onActivate: () => void;
 }) {
   return (
     <div className="p-6 sm:p-8">
@@ -1819,8 +1885,8 @@ function PortfolioPanel({
         {robots.length} robots
       </h2>
       <p className="mt-2 max-w-xl text-sm text-slate-400">
-        Same type shares type-level jobs. Pick a SKU to review the product
-        and refine.
+        Pick one robot for jobs for that product, or continue to jobs for
+        the lineup.
       </p>
       <div className="mt-6 space-y-3">
         {robots.map((a, idx) => (
@@ -1862,6 +1928,19 @@ function PortfolioPanel({
             </div>
           </div>
         ))}
+      </div>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <button type="button" onClick={onSeeJobs} className={ctaClass}>
+          <FaceCue scale={2} onEmerald />
+          {JOBS_SEE_JOBS_CTA}
+        </button>
+        <button
+          type="button"
+          onClick={onActivate}
+          className="inline-flex items-center justify-center gap-2 border border-emerald-500/50 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-emerald-300 transition hover:border-emerald-400"
+        >
+          {JOBS_NEXT_CTA}
+        </button>
       </div>
     </div>
   );
@@ -2122,6 +2201,8 @@ function JobsPanel({
           {jobsCountEyebrow({
             visibleCount: visible.length,
             productName: analysis.productName,
+            companyName: companyName || analysis.companyName,
+            robotCount,
             lookupGrain: analysis.lookupGrain,
             robotClass: analysis.robotClass,
           })}
@@ -2129,9 +2210,8 @@ function JobsPanel({
       </div>
       {baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
-          {analysis.lookupGrain === "robot_type" && analysis.robotClass
-            ? `Example work ${robotClassJobsLabel(analysis.robotClass)} can do. Expand a card to inspect. Check every job you want — then activate the list at the bottom. Review a SKU to refine to that product.`
-            : `Example work ${analysis.productName} can do, matched to confirmed capabilities. Expand a card to inspect. Check every job you want — then activate the list at the bottom.`}
+          Example work {analysis.productName} can do. Expand a card to inspect.
+          Check every job you want — then activate the list at the bottom.
         </p>
       )}
 
@@ -2151,46 +2231,39 @@ function JobsPanel({
           />
         )
       ) : (
-        <>
-          <ol className="mt-6 space-y-3">
-            {visible.map((job, i) => (
-              <JobCard
-                key={job.job_key}
-                index={i + 1}
-                job={job}
-                robotName={analysis.productName}
-                selected={expandedJob === job.job_key}
-                checked={checkedJobKeys.includes(job.job_key)}
-                onSelect={() => onSelectJob(job)}
-                onToggle={() => onToggleJob(job)}
-              />
-            ))}
-          </ol>
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={onActivate}
-              disabled={checkedCount === 0}
-              className={`${ctaClass} w-full sm:w-auto`}
-            >
-              <FaceCue scale={2} onEmerald />
-              {JOBS_NEXT_CTA}
-            </button>
-            <p className="mt-2 text-[12px] text-slate-400">
-              {checkedCount} selected. {JOBS_NEXT_HINT}.
-            </p>
-          </div>
-          {hiddenCount > 0 ? (
-            <button
-              type="button"
-              onClick={onSeeAll}
-              className="mt-4 font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-emerald-400 hover:text-emerald-300"
-            >
-              See all {Math.min(baseJobs.length, JOBS_PIPELINE_CAP)} jobs
-            </button>
-          ) : null}
-        </>
+        <ol className="mt-6 space-y-3">
+          {visible.map((job, i) => (
+            <JobCard
+              key={job.job_key}
+              index={i + 1}
+              job={job}
+              robotName={analysis.productName}
+              selected={expandedJob === job.job_key}
+              checked={checkedJobKeys.includes(job.job_key)}
+              onSelect={() => onSelectJob(job)}
+              onToggle={() => onToggleJob(job)}
+            />
+          ))}
+        </ol>
       )}
+      <div className="mt-6">
+        <button type="button" onClick={onActivate} className={`${ctaClass} w-full sm:w-auto`}>
+          <FaceCue scale={2} onEmerald />
+          {JOBS_NEXT_CTA}
+        </button>
+        <p className="mt-2 text-[12px] text-slate-400">
+          {checkedCount} selected. {JOBS_NEXT_HINT}.
+        </p>
+      </div>
+      {hiddenCount > 0 ? (
+        <button
+          type="button"
+          onClick={onSeeAll}
+          className="mt-4 font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-emerald-400 hover:text-emerald-300"
+        >
+          See all {Math.min(baseJobs.length, JOBS_PIPELINE_CAP)} jobs
+        </button>
+      ) : null}
     </div>
   );
 }

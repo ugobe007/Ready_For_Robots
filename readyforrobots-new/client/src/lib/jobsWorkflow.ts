@@ -145,6 +145,9 @@ export function jobsHeading(opts: {
   lookupGrain?: JobLookupGrain | null;
   robotClass?: string | null;
 }): string {
+  if (opts.robotCount > 1 && opts.companyName) {
+    return `Jobs for ${opts.companyName}`;
+  }
   if (opts.lookupGrain === "robot_type" && opts.robotClass) {
     return `Jobs for ${robotClassJobsLabel(opts.robotClass)}`;
   }
@@ -154,14 +157,18 @@ export function jobsHeading(opts: {
 export function jobsCountEyebrow(opts: {
   visibleCount: number;
   productName: string;
+  companyName?: string;
+  robotCount?: number;
   lookupGrain?: JobLookupGrain | null;
   robotClass?: string | null;
 }): string {
   if (opts.visibleCount === 0) return "";
   const who =
-    opts.lookupGrain === "robot_type" && opts.robotClass
-      ? robotClassJobsLabel(opts.robotClass)
-      : opts.productName;
+    (opts.robotCount || 1) > 1 && opts.companyName
+      ? opts.companyName
+      : opts.lookupGrain === "robot_type" && opts.robotClass
+        ? robotClassJobsLabel(opts.robotClass)
+        : opts.productName;
   return `${opts.visibleCount} JOBS FOR ${who.toUpperCase()}`;
 }
 
@@ -185,6 +192,37 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = "Activate job list →";
 export const JOBS_NEXT_HINT = "Your checked jobs sit at the top of 15 live jobs";
+export const JOBS_SEE_JOBS_CTA = "See jobs →";
+
+export type JobsProcessStepId = "find" | "jobs" | "activate";
+
+/** FIND → jobs → activate. Always shown as navigational links. */
+export const JOBS_PROCESS_STEPS = [
+  {
+    id: "find" as const,
+    n: "01",
+    label: "Show us your robot",
+    linkLabel: FIND_JOBS_CTA,
+  },
+  {
+    id: "jobs" as const,
+    n: "02",
+    label: "Here are its jobs",
+    linkLabel: JOBS_SEE_JOBS_CTA,
+  },
+  {
+    id: "activate" as const,
+    n: "03",
+    label: "Activate the job list",
+    linkLabel: JOBS_NEXT_CTA,
+  },
+];
+
+export function jobsProcessStepFromStage(stage: string): JobsProcessStepId {
+  if (stage === "jobs" || stage === "portfolio") return "jobs";
+  return "find";
+}
+
 export const JOBS_ACTIVATE_SRC = "jobs_activate";
 export const JOBS_PLACE_SRC = "place";
 export const JOBS_PLACE_CTA = "Activate job list →";
@@ -278,6 +316,17 @@ export function jobsForActivatedPipeline<T extends { job_key: string }>(
   const seen = new Set(picked.map(job => job.job_key));
   const extra = pool.filter(job => job?.job_key && !seen.has(job.job_key));
   return [...picked, ...extra].slice(0, cap);
+}
+
+/** Activate never no-ops: checked jobs first, else the example cap, else the pool. */
+export function jobsToActivate<T extends { job_key: string }>(
+  selected: T[],
+  pool: T[],
+  cap = JOBS_ACTIVATE_CAP,
+): T[] {
+  const picked = selected.filter(job => job?.job_key);
+  const seed = picked.length > 0 ? picked : capExampleJobs(pool);
+  return jobsForActivatedPipeline(seed, pool, cap);
 }
 
 export function defaultCheckedJobKeys<T extends { job_key: string }>(
