@@ -10,6 +10,11 @@ from urllib.parse import urlparse
 from app.services.robot_understanding_v1.fetch import FetchedPage
 from app.services.robot_understanding_v1.models import RobotCompany, RobotProduct
 from app.services.robot_url_safety import registrable_domain
+from app.services.vendor_robot_lookup import (
+    index_robot_names,
+    lookup_vendor_by_url,
+    select_index_robot,
+)
 
 # Product-like proper nouns commonly used as robot SKUs (not OEM allowlists —
 # used only to *spot* names already present in page text / anchors).
@@ -278,9 +283,12 @@ def resolve_identity(
     appears strongly in title or URL path.
     """
     domain = _root_domain(home.final_url or submitted_url)
+    catalog = lookup_vendor_by_url(submitted_url) or lookup_vendor_by_url(home.final_url)
+    catalog_names = index_robot_names(catalog) if catalog else []
     # Discover product candidates first so the company step can enforce the
     # negative invariant (product string ≠ company unless org evidence).
-    product_names = _discover_product_names(home, product_hint=product_hint)
+    discovered = _discover_product_names(home, product_hint=product_hint)
+    product_names = _merge_catalog_names(catalog_names, discovered)
     blocked_products = list(product_names)
     if product_hint and product_hint.strip():
         blocked_products.append(product_hint.strip())
@@ -299,6 +307,16 @@ def resolve_identity(
         if host_brand and host_brand.lower() not in {a.lower() for a in aliases}:
             aliases.append(host_brand)
     company = RobotCompany.create(name=name, primary_domain=domain, aliases=aliases)
+    notes_prefix: list[str] = []
+    if catalog and catalog.get("vendor_name"):
+        catalog_brand = str(catalog["vendor_name"]).strip()
+        if catalog_brand:
+            name = catalog_brand
+            company = RobotCompany.create(name=name, primary_domain=domain, aliases=aliases)
+            notes_prefix.append(
+                f"Vendor index matched {catalog_brand} "
+                f"({len(catalog_names)} robot(s) from readyforrobots.com/robots)."
+            )
 
     products: list[RobotProduct] = []
     for pname in product_names:
@@ -307,7 +325,11 @@ def resolve_identity(
             RobotProduct.create(company.id, pname, display_class=display_class)
         )
 
-    notes: list[str] = list(company_notes)
+    notes: list[str] = list(notes_prefix) + list(company_notes)
+    if not product_hint and catalog:
+        indexed = select_index_robot(submitted_url, catalog)
+        if indexed and indexed.get("name"):
+            product_hint = str(indexed["name"])
     selected: Optional[RobotProduct] = None
     if len(products) == 1:
         selected = products[0]
@@ -375,6 +397,19 @@ def resolve_identity(
         selected_product=selected,
         notes=notes,
     )
+
+
+def _merge_catalog_names(catalog_names: list[str], discovered: list[str]) -> list[str]:
+    """Indexed SKUs first; homepage crawl may add extras, never replace the index."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for name in list(catalog_names) + list(discovered):
+        key = _name_key(name)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        out.append(name)
+    return out
 
 
 def _root_domain(url: str) -> str:
