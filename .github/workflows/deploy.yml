@@ -20,9 +20,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
 
       - name: Set up flyctl
         uses: superfly/flyctl-actions/setup-flyctl@1.5
+
+      - name: Detect Alembic migration changes
+        id: migrate
+        run: |
+          set -euo pipefail
+          before="${{ github.event.before }}"
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            echo "skip_release=false" >> "$GITHUB_OUTPUT"
+            echo "No previous SHA; running release_command."
+            exit 0
+          fi
+          if git diff --name-only "$before" "${{ github.sha }}" | grep -E '^migrations/' >/dev/null; then
+            echo "skip_release=false" >> "$GITHUB_OUTPUT"
+            echo "migrations/ changed — running Alembic release_command."
+          else
+            echo "skip_release=true" >> "$GITHUB_OUTPUT"
+            echo "No migration files changed — skip release_command (known Fly hang waiting for stopped)."
+          fi
 
       - name: Deploy
         # Machines go healthy in ~1 min, but `fly deploy` (strategy=immediate) can
@@ -35,7 +55,20 @@ jobs:
         # state stopped") even though the migration applied — so keep this at 10m
         # to give migrations headroom while post-deploy checks stay the source of
         # truth. (`--release-command-timeout` bounds the command itself.)
-        run: flyctl deploy --remote-only --wait-timeout 10m --release-command-timeout 15m
+        # When this push does not touch migrations/, skip release_command: #78
+        # built the image then aborted because the migrate machine never reached
+        # `stopped` (10m). AGENTS.md: skip-release-command if no new migrations.
+        run: |
+          set -euo pipefail
+          extra=()
+          if [ "${{ steps.migrate.outputs.skip_release }}" = "true" ]; then
+            extra+=(--skip-release-command)
+            echo "flyctl deploy with --skip-release-command"
+          else
+            extra+=(--release-command-timeout 15m)
+            echo "flyctl deploy with Alembic release_command"
+          fi
+          flyctl deploy --remote-only --wait-timeout 10m "${extra[@]}"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
