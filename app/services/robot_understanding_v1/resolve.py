@@ -50,8 +50,27 @@ _PRODUCT_HREF_NOISE = frozenset(
         "details",
         "info",
         "page",
+        "about",
+        "news",
+        "contact",
+        "applications",
+        "opensource",
+        "policy",
+        "parts",
+        "app",
+        "en",
+        "zh",
+        "contactinformation",
+        "login",
+        "privacy",
     }
 )
+# Locale product pages (MagicLab /en/x1, /en/human, /en/app/g1).
+_LOCALE_PRODUCT_HREF = re.compile(
+    r"(?:^|/)(?:en|zh)(?:/app)?/([a-z0-9][a-z0-9-]{0,24})$",
+    re.I,
+)
+_ROBOT_LINE_SLUGS = frozenset({"human", "dog", "panda"})
 _MAX_DISCOVERED_PRODUCTS = 8
 
 _PLATFORM_NOISE = re.compile(
@@ -671,15 +690,26 @@ def _sku_from_product_href(url: str) -> str | None:
     """SKU from a manufacturer product path, or None if the path is generic."""
     path = (urlparse(url).path or "").rstrip("/")
     match = _PRODUCT_HREF.search(path)
-    if not match:
+    if match:
+        slug = match.group(1)
+        if slug.lower() in _PRODUCT_HREF_NOISE:
+            return None
+        if not _looks_like_model_or_sku(slug):
+            return None
+        return _canon_path_sku(slug) or None
+    locale = _LOCALE_PRODUCT_HREF.search(path)
+    if not locale:
         return None
-    slug = match.group(1)
+    slug = locale.group(1)
     if slug.lower() in _PRODUCT_HREF_NOISE:
         return None
-    if not _looks_like_model_or_sku(slug):
-        return None
-    canon = _canon_path_sku(slug)
-    return canon or None
+    if _looks_like_model_or_sku(slug):
+        return _canon_path_sku(slug) or slug.upper()
+    if slug.lower() in _ROBOT_LINE_SLUGS:
+        return slug.replace("-", " ").title()
+    if re.fullmatch(r"[a-z]{2,10}-[a-z0-9]{1,8}", slug, re.I):
+        return slug
+    return None
 
 
 def _discover_product_names(
@@ -746,10 +776,18 @@ def _discover_product_names(
         sku = _sku_from_product_href(url)
         if not sku:
             continue
-        href_skus.append(sku)
-        counts[sku] = counts.get(sku, 0) + 3
-        if (anchor or "").strip() and _name_key(anchor) == _name_key(sku):
-            counts[sku] += 1
+        label = re.sub(r"\s+", " ", (anchor or "").strip())
+        if (
+            2 <= len(label) <= 48
+            and re.search(r"(bot|dog|panda|robot|g1|x1|z1|human)", label, re.I)
+        ):
+            name = label
+        else:
+            name = sku
+        href_skus.append(name)
+        counts[name] = counts.get(name, 0) + 3
+        if label and _name_key(label) == _name_key(name):
+            counts[name] += 1
 
     for sku in dict.fromkeys(href_skus):
         counts[sku] = counts.get(sku, 0) + len(

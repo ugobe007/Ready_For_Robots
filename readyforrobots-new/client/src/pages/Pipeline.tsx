@@ -59,8 +59,9 @@ import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import PixelIcon from "@/components/PixelIcon";
+import JobsHandoffBoard from "@/components/JobsHandoffBoard";
 import { KARE_FACE } from "@/lib/kareIcons";
-import { isJobsHandoffSrc, isPlaceSrc, buyerLeadsToShow, armJobsWorkspaceRestore } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, isPlaceSrc, buyerLeadsToShow, JOBS_ACTIVATE_CAP } from "@/lib/jobsWorkflow";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1686,12 +1687,6 @@ export default function Pipeline() {
     submittedSrcFromQuery === "results_scan" || submittedSrcFromQuery === "results_next_step";
   const arrivedFromJobs = isJobsHandoffSrc(submittedSrcFromQuery);
 
-  // Jobs arrivals used to render a second job list with no action.
-  // Bounce back to `/` so FIND → QUALIFY stays on the Jobs terminal.
-  useEffect(() => {
-    if (!arrivedFromJobs) return;
-    window.location.replace(armJobsWorkspaceRestore());
-  }, [arrivedFromJobs]);
   /** URL submit searches stay on matched prospects — never default to the global market queue. */
   const preferUrlMatchedPipeline = Boolean(submittedUrlFromQuery || arrivedFromResultsScan);
 
@@ -4025,18 +4020,13 @@ export default function Pipeline() {
     return (
       <div className="flex min-h-screen flex-col bg-[#081126] pt-[44px]">
         <ExperimentHeader />
-        <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
-            Jobs
-          </p>
-          <h1 className="mt-1 font-display text-2xl font-bold text-slate-100">
-            Taking you back to your jobs…
-          </h1>
-          <p className="mt-2 text-sm text-slate-400">
-            Your jobs stay on the Jobs terminal. This page is not a second
-            job list.
-          </p>
-        </main>
+        <JobsHandoffBoard
+          robotUrl={submittedUrlFromQuery}
+          cap={JOBS_ACTIVATE_CAP}
+          src={submittedSrcFromQuery}
+          signedIn={isSignedIn}
+          variant="pipeline"
+        />
       </div>
     );
   }

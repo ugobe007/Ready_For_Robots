@@ -10,6 +10,8 @@ export type JobsHandoffSnapshot = {
   url: string;
   productName: string;
   jobs: MatchJob[];
+  /** How many jobs at the top were checked on `/`. */
+  selectedCount?: number;
 };
 
 export function normalizeRobotHandoffUrl(url: string): string {
@@ -36,6 +38,7 @@ export function saveJobsHandoffSnapshot(snap: JobsHandoffSnapshot): void {
         url,
         productName: snap.productName || "",
         jobs: snap.jobs,
+        selectedCount: snap.selectedCount ?? snap.jobs.length,
       } satisfies JobsHandoffSnapshot),
     );
   } catch {

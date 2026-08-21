@@ -69,10 +69,10 @@ ROBOT / PORTFOLIO / SOLUTION CAPABILITIES
 ```
 Show us your robot.
 Here are its jobs.
-Next → buyers who need this work.
+Activate the job list — yours first, then 15 live jobs.
 ```
 
-Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **One Next → at the bottom of the page** leaves step 2 for PLACE (buyers). Do not put Next on the card. Do not insert a Qualify screen that restates the card and loops back to jobs.
+Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **Checkboxes + one Activate job list → at the bottom of the page** leaves step 2 for the live list. Do not put Next on the card. Do not insert a Place buyer/outreach screen (duplicate of pipeline). Do not insert a Qualify screen that restates the card and loops back to jobs.
 
 Everything underneath exists to make those interactions trustworthy.
 
@@ -189,16 +189,16 @@ Not merely: *Do people click See All?*
 
 Now:
 
-> Does ReadyForRobots understand their robot well enough to show credible work — and does that work create enough value that they take Next on a job?
+> Does ReadyForRobots understand their robot well enough to show credible work — and does that work create enough value that they activate a job list?
 
 ### Pull metrics
 
 | Manifestation | Signal | Event |
 |---------------|--------|--------|
 | **Discovery pull** | Want to see more jobs | See All Jobs · `rdd_see_all_clicked` |
-| **Commercial pull** | This job is worth placing with buyers | Next → PLACE · `rdd_place_opened` |
+| **Commercial pull** | Keep this work in a live list | Activate job list · `rdd_jobs_list_activated` |
 
-Keep See All CTR. Place is step 3, not a button on the job card.
+Keep See All CTR. Activate is one page-level CTA, not a button on the job card.
 
 Segment by `persona` (oem / distributor / integrator) and by robot product / family within persona.
 
@@ -244,7 +244,7 @@ That is the critical distinction. Heuristic keyword patches are not integrity wo
 | Surface | `/` Jobs terminal |
 | Intelligence | Identity → Sources → Facts → Capabilities → Requirements Match |
 | Discovery metric | See All CTR |
-| Commercial metric | Place opened |
+| Commercial metric | Job list activated |
 | First segmentation | OEM vs distributor vs integrator |
 
 **Decision rule:** Expansion and GTM wedges come from **behavior**. Understanding accuracy comes from **evidence + blind eval**, not from fixture echo.

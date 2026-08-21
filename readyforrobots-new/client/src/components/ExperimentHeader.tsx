@@ -9,6 +9,19 @@ import { loginHref, clearPendingNext } from "@/lib/authNext";
 import { supabase } from "@/lib/supabase";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
+import { JOBS_RESTORE_ONCE_KEY, jobsFreshHomeHref } from "@/lib/jobsWorkflow";
+
+const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
+
+function clearJobsWorkspaceSession() {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(WORKSPACE_SESSION_KEY);
+    window.sessionStorage.removeItem(JOBS_RESTORE_ONCE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 const navIdle = "text-slate-400 transition hover:text-slate-200";
 const navActive = "border-b border-emerald-400 pb-0.5 text-emerald-400";
@@ -29,14 +42,24 @@ export default function ExperimentHeader() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-600/90 bg-[#0b162f]">
       <div className="mx-auto flex h-11 max-w-[1200px] items-center justify-between px-3 sm:px-4">
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link
+          href={jobsFreshHomeHref()}
+          className="flex items-center gap-2.5"
+          onClick={() => clearJobsWorkspaceSession()}
+        >
           <PixelIcon map={KARE_FACE} scale={2} fill={FACE_EMERALD} background="transparent" />
           <span className="font-display text-sm font-bold tracking-tight text-slate-100">
             ReadyForRobots
           </span>
         </Link>
         <nav className="flex items-center gap-5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em]">
-          <Link href="/" className={jobsActive ? navActive : navIdle}>
+          <Link
+            href={jobsFreshHomeHref()}
+            className={jobsActive ? navActive : navIdle}
+            onClick={() => {
+              if (jobsActive) clearJobsWorkspaceSession();
+            }}
+          >
             Jobs
           </Link>
           <Link href="/intelligence" className={navIdle}>

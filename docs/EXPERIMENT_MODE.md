@@ -28,27 +28,28 @@ Not leads. Not SIGNAL. Not three products. One engine: **FIND → QUALIFY → PL
 
 ```
 submit robot URL on /
+  → if several SKUs, pick one / several / all
   → see understood capabilities (must be credible)
-  → see Robot Jobs (step 2)
+  → see Robot Jobs (step 2) — 5 examples, checkboxes
   → inspect cards (why / unknowns / blockers)
-  → Next (page bottom) → PLACE buyers (step 3)
-  → click a buyer → pitch + outreach draft on `/`
-  → Open this buyer → /pipeline?src=place&lead= (sales lead, not an OEM URL scan)
+  → check the jobs to take forward
+  → Activate job list → /pipeline?src=jobs_activate
+  → checked jobs pinned at the top, fill to 15
   → discovery pull: See All Jobs (stays on step 2)
 ```
 
-**Do not hop Jobs traffic to a second "Jobs for ______" list** on `/pipeline` or `/results`. Place uses `src=place` without the robot OEM as `url=` so `/pipeline` shows buyers, not a match-url scan of the manufacturer.
+**Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Activate uses `src=jobs_activate` without the robot OEM as `url=` so `/pipeline` shows the job list, not a match-url scan of the manufacturer. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 
-Step 2 inspects. One Next at the bottom of the page leaves step 2 for Place. No Next on the card. No Qualify loop back to jobs — first-time users are still learning the site.
+Step 2 inspects. Checkboxes select. One **Activate job list →** at the bottom of the page leaves step 2 for the live list. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
 
 **Product question:**
 
-> Does RFR understand their robot well enough to show credible work — and does that work create enough value that they want more (`rdd_see_all_clicked`) or take Next toward buyers (`rdd_place_opened`)?
+> Does RFR understand their robot well enough to show credible work — and does that work create enough value that they want more (`rdd_see_all_clicked`) or activate a job list (`rdd_jobs_list_activated`)?
 
 | Pull | Metric |
 |------|--------|
 | Discovery | See All CTR · `rdd_see_all_clicked` |
-| Commercial | Next → PLACE · `rdd_place_opened` |
+| Commercial | Activate job list · `rdd_jobs_list_activated` |
 
 Segment by `persona` and robot product / family.
 
@@ -76,8 +77,8 @@ Legacy matcher stays live until Understanding v1 wins blind eval. No Fly migrate
 | Low submit → capabilities | Input / trust |
 | Capabilities shown, jobs feel wrong | **Understanding integrity** (fix Phases 1–3) |
 | High job views, low See All | Weak discovery pull |
-| High See All, low Next | Curious, not ready for buyers |
-| Next on a job | Commercial pull — PLACE buyers |
+| High See All, low Activate | Curious, not ready to keep a list |
+| Activate job list | Commercial pull — live 15-job list |
 | High unlock, low signup | Auth / gating friction |
 | One persona dominates | GTM wedge (still one engine) |
 
@@ -99,7 +100,7 @@ Prefer outreach to `/` (or current Jobs entry) with `?persona=oem|distributor|in
 | Search beat | `rdd_discovery_started` / `rdd_discovery_complete` |
 | Jobs | `rdd_first_job_viewed` · `rdd_job_viewed` · `rdd_jobs_3plus_viewed` |
 | Discovery unlock | `rdd_see_all_clicked` |
-| Place (step 3) | `rdd_place_opened` · `rdd_place_buyer_opened` |
+| Activate (step 3) | `rdd_jobs_list_activated` |
 | Signup | `signup_start` / `signup_complete` (`src=robot_jobs`) |
 
 ---

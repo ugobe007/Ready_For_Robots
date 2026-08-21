@@ -78,5 +78,43 @@ def test_allowlist_digit_still_discovered_without_product_href():
     assert "Digit" in names
 
 
+def test_sku_from_magiclab_locale_paths():
+    assert _sku_from_product_href("https://www.magiclab.top/en/x1") == "X1"
+    assert _sku_from_product_href("https://www.magiclab.top/en/z1") == "Z1"
+    assert _sku_from_product_href("https://www.magiclab.top/en/app/g1") == "G1"
+    assert _sku_from_product_href("https://www.magiclab.top/en/dog-w") == "dog-w"
+    assert _sku_from_product_href("https://www.magiclab.top/en/human") == "Human"
+    assert _sku_from_product_href("https://www.magiclab.top/en/about") is None
+    assert _sku_from_product_href("https://www.magiclab.top/en/news") is None
+
+
+def test_magiclab_homepage_links_yield_product_picker():
+    origin = "https://www.magiclab.top"
+    home = _page(
+        title="MagicLab",
+        url=f"{origin}/en",
+        text="MagicBot MagicDog Magic Panda humanoid quadruped robot.",
+        links=[
+            (f"{origin}/en/human", "MagicBot"),
+            (f"{origin}/en/x1", "MagicBot X1"),
+            (f"{origin}/en/z1", "MagicBot Z1"),
+            (f"{origin}/en/app/g1", "G1"),
+            (f"{origin}/en/dog", "MagicDog"),
+            (f"{origin}/en/dog-w", "MagicDog-W"),
+            (f"{origin}/en/panda", "Magic Panda"),
+            (f"{origin}/en/about", "About"),
+            (f"{origin}/en/news", "News"),
+        ],
+    )
+    names = _discover_product_names(home)
+    assert "G1" in names
+    assert any("X1" in n or n == "MagicBot X1" for n in names)
+    assert any("Z1" in n or n == "MagicBot Z1" for n in names)
+    assert any("Dog" in n or n == "MagicDog" for n in names)
+    assert "About" not in names
+    assert "News" not in names
+    assert len(names) >= 3
+
+
 def test_profile_cache_namespace_busts_stale_engineai_identity():
-    assert NAMESPACE == "robot_profile_v3"
+    assert NAMESPACE == "robot_profile_v4"

@@ -13,8 +13,12 @@ import {
   buyerLeadsHref,
   buyerLeadsToShow,
   capExampleJobs,
+  defaultCheckedJobKeys,
   isJobsHandoffSrc,
   isPlaceSrc,
+  jobsActivateHref,
+  jobsForActivatedPipeline,
+  jobsFreshHomeHref,
   jobsHeading,
   jobsPlaceHref,
   jobsSignupHref,
@@ -88,7 +92,7 @@ describe("jobsWorkflow", () => {
     expect(jobsWorkspaceRestoreHref()).toBe("/?restore=1");
   });
 
-  it("advances step 2 with one Next at the page bottom, not a Qualify loop", () => {
+  it("advances step 2 with Activate job list, not a Place buyer dump", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
@@ -100,6 +104,10 @@ describe("jobsWorkflow", () => {
     );
     const pipeline = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
     const results = readFileSync(join(here, "../pages/Results.tsx"), "utf8");
+    const header = readFileSync(
+      join(here, "../components/ExperimentHeader.tsx"),
+      "utf8",
+    );
     for (const src of [workspace, workflow, handoff, pipeline, results]) {
       expect(src).not.toMatch(/Qualify this job/i);
       expect(src).not.toMatch(/that is the next step/i);
@@ -108,14 +116,19 @@ describe("jobsWorkflow", () => {
     }
     expect(workspace).not.toMatch(/function QualifyPanel/);
     expect(workspace).not.toMatch(/03 Qualify/);
-    expect(workspace).toMatch(/function PlacePanel/);
-    expect(workspace).toMatch(/03 Place/);
+    expect(workspace).not.toMatch(/function PlacePanel/);
+    expect(workspace).not.toMatch(/03 Place/);
+    expect(workspace).not.toMatch(/Open this buyer/i);
+    expect(workspace).toMatch(/type="checkbox"/);
+    expect(header).toMatch(/jobsFreshHomeHref/);
+    expect(jobsFreshHomeHref()).toBe("/?new=1");
     expect(FIND_JOBS_CTA).toBe("Find jobs →");
     expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
-    expect(JOBS_NEXT_CTA).toBe("Next →");
-    expect(JOBS_NEXT_CTA).not.toMatch(/qualify/i);
-    expect(JOBS_NEXT_HINT).toMatch(/buyers/i);
-    expect(JOBS_PLACE_CTA).toBe("Open this buyer →");
+    expect(JOBS_NEXT_CTA).toBe("Activate job list →");
+    expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
+    expect(JOBS_NEXT_HINT).toMatch(/checked jobs/i);
+    expect(JOBS_NEXT_HINT).not.toMatch(/buyer/i);
+    expect(JOBS_PLACE_CTA).toBe("Activate job list →");
     expect(workspace).toMatch(/JOBS_NEXT_CTA/);
     expect(workspace).not.toMatch(/onNext=\{\(\) => onNext\(job\)\}/);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
@@ -124,24 +137,44 @@ describe("jobsWorkflow", () => {
     }
   });
 
-  it("opens the selected buyer in pipeline, not the robot OEM as a scan", () => {
+  it("activates the job list on pipeline without the OEM as a scan", () => {
+    expect(jobsActivateHref(42)).toBe("/pipeline?src=jobs_activate&submission=42");
+    expect(jobsActivateHref()).toBe("/pipeline?src=jobs_activate");
+    expect(jobsActivateHref(42)).not.toContain("url=");
     expect(jobsPlaceHref({ leadId: 99, submissionId: 42 })).toBe(
-      "/pipeline?src=place&lead=99&submission=42",
+      "/pipeline?src=jobs_activate&submission=42",
     );
-    expect(jobsPlaceHref()).toBe("/pipeline?src=place");
-    expect(jobsPlaceHref({ leadId: 99 })).not.toContain("url=");
     expect(isPlaceSrc("place")).toBe(true);
     expect(isJobsHandoffSrc("place")).toBe(false);
+    expect(isJobsHandoffSrc("jobs_activate")).toBe(true);
     expect(isJobsHandoffSrc("jobs_all_robots")).toBe(true);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
     );
     const pipeline = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
+    const handoff = readFileSync(
+      join(here, "../components/JobsHandoffBoard.tsx"),
+      "utf8",
+    );
     expect(workspace).not.toMatch(/jobsPlaceHref\(robotUrl/);
-    expect(workspace).toMatch(/PipelineOutreachValuePanel/);
+    expect(workspace).not.toMatch(/PipelineOutreachValuePanel/);
+    expect(pipeline).toMatch(/JobsHandoffBoard/);
+    expect(pipeline).not.toMatch(/armJobsWorkspaceRestore\(\)/);
+    expect(handoff).toMatch(/From your list/);
+    expect(handoff).not.toMatch(/Taking you back/);
     expect(pipeline).toMatch(/arrivedFromPlace/);
     expect(pipeline).toMatch(/isPlaceSrc/);
+  });
+
+  it("puts checked jobs first and fills the live list to 15", () => {
+    const pool = Array.from({ length: 20 }, (_, i) => ({ job_key: `j${i}` }));
+    const selected = [pool[2], pool[0]];
+    const filled = jobsForActivatedPipeline(selected, pool, 15);
+    expect(filled).toHaveLength(15);
+    expect(filled.map(j => j.job_key).slice(0, 2)).toEqual(["j2", "j0"]);
+    expect(filled.map(j => j.job_key)).not.toContain("j15");
+    expect(defaultCheckedJobKeys(pool)).toEqual(["j0", "j1", "j2", "j3", "j4"]);
   });
 
   it("recognizes Jobs terminal handoff src values", () => {

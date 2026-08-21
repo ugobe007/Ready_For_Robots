@@ -46,9 +46,9 @@ export function trackMarketingEvent(action: string, payload: Record<string, unkn
  *
  * Two pull expressions after jobs are shown (not a single linear funnel):
  * - Access pull: job_viewed → see_all_clicked → signup_start
- * - Commercial pull: place_opened (Next from jobs) → buyer draft → pipeline / save
+ * - Commercial pull: jobs_list_activated (checked jobs → 15 live jobs)
  *
- * Place payloads should include job_key, profile_key, persona, src.
+ * Activate payloads should include selected_count, list_count, robot_name, src.
  */
 export type RobotJobsFunnelStep =
   | "experiment_view"
@@ -65,6 +65,7 @@ export type RobotJobsFunnelStep =
   | "qualify_requested"
   | "place_opened"
   | "place_buyer_opened"
+  | "jobs_list_activated"
   | "see_all_clicked";
 
 export function trackRobotJobsFunnel(step: RobotJobsFunnelStep, payload: Record<string, unknown> = {}) {
