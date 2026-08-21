@@ -1,10 +1,10 @@
 /**
- * Jobs submit workflow — FIND on `/`. PLACE is later.
+ * Jobs submit workflow — FIND on `/`.
  *
- * Step 1 PROFILE → step 2 JOBS → step 3 QUALIFY.
+ * Step 1 PROFILE → step 2 JOBS → step 3 PLACE (buyers).
  * The jobs list inspects (expand for why / unknowns / blockers).
- * Next on that list leaves step 2 for QUALIFY — it is not a Qualify
- * button on the card, and it does not hop to /pipeline.
+ * One Next at the bottom of the page leaves step 2 for buyers — not a
+ * second CTA on the card, not a Qualify loop back to jobs.
  *
  * Cap: 5 example jobs. See All reveals more on the same page.
  */
@@ -45,11 +45,23 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
 
 export const FIND_JOBS_CTA = "Find jobs →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
-/** Page-level advance on the jobs list (step 2 → step 3). Not on the card. */
+/** Page-level advance on the jobs list (step 2 → Place). Not on the card. */
 export const JOBS_NEXT_CTA = "Next →";
-export const JOBS_NEXT_HINT = "This job looks interesting";
+export const JOBS_NEXT_HINT = "Buyers who need this work";
+export const JOBS_PLACE_CTA = "See buyers →";
 
-/** The job Next will qualify: expanded card, else the first visible job. */
+/** Pipeline as sales leads — never a Jobs handoff src (those bounce back to `/`). */
+export function jobsPlaceHref(robotUrl: string, submissionId?: number | null): string {
+  const params = new URLSearchParams();
+  const url = (robotUrl || "").trim();
+  if (url) params.set("url", url);
+  params.set("src", "place");
+  if (submissionId && submissionId > 0) params.set("submission", String(submissionId));
+  const qs = params.toString();
+  return qs ? `/pipeline?${qs}` : "/pipeline";
+}
+
+/** The job Next will place: expanded card, else the first visible job. */
 export function jobForNextStep<T extends { job_key: string }>(
   jobs: T[],
   expandedKey: string | null | undefined,
@@ -169,9 +181,9 @@ export function armJobsWorkspaceRestore(): string {
 }
 
 /**
- * Legacy name. Jobs CTAs used to dump signed-in users on /pipeline and
- * anonymous users on /results — a second FIND with no QUALIFY action.
- * Always return to the Jobs workspace instead.
+ * Legacy name. Jobs CTAs used to dump signed-in users on /pipeline as a
+ * second job list. Buyer Place uses jobsPlaceHref (`src=place`) instead.
+ * This helper still returns the Jobs workspace for leftover links.
  */
 export function buyerLeadsHref(_opts: {
   robotUrl: string;

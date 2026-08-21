@@ -69,11 +69,10 @@ ROBOT / PORTFOLIO / SOLUTION CAPABILITIES
 ```
 Show us your robot.
 Here are its jobs.
-This one looks interesting.
-Next → qualify it.
+Next → buyers who need this work.
 ```
 
-Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **Next →** is the control that leaves step 2 for QUALIFY (step 3). Do not put Qualify this job on the card — that restated evidence already visible.
+Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **One Next → at the bottom of the page** leaves step 2 for PLACE (buyers). Do not put Next on the card. Do not insert a Qualify screen that restates the card and loops back to jobs.
 
 Everything underneath exists to make those interactions trustworthy.
 
