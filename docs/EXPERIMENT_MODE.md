@@ -30,13 +30,13 @@ Not leads. Not SIGNAL. Not three products. One engine: **FIND → QUALIFY → PL
 submit robot URL on /
   → see understood capabilities (must be credible)
   → see Robot Jobs
-  → inspect cards
+  → inspect cards (why / unknowns / blockers)
   → discovery pull: See All Jobs
-  → and/or commercial pull: Qualify This Job (on the job card) → pursuit judgment
-  → signup / pursuit when ready
 ```
 
-**Do not hop.** FIND and QUALIFY live on `/`. Login restores that workspace. Never send Jobs traffic to a second "Jobs for ______" list on `/pipeline` or `/results` — that screen has no action and kills the loop.
+**Do not hop.** FIND lives on `/`. Login restores that workspace. Never send Jobs traffic to a second "Jobs for ______" list on `/pipeline` or `/results`.
+
+The jobs list is not a qualify step. Cards expand to show evidence. There is no Qualify CTA on step 2 — that button restated evidence already on the card and invented a next step that does not exist.
 
 **Product question:**
 

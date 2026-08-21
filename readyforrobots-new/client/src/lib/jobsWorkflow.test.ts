@@ -35,14 +35,21 @@ describe("jobsWorkflow", () => {
     expect(landingStageAfterConfirm(4)).toBe("jobs");
   });
 
-  it("titles multi-robot jobs with the company, not a SKU list", () => {
+  it("titles the jobs list for the selected robot, even in a portfolio", () => {
+    expect(
+      jobsHeading({
+        productName: "Servi",
+        companyName: "Bear Robotics",
+        robotCount: 2,
+      }),
+    ).toBe("Jobs for Servi");
     expect(
       jobsHeading({
         productName: "G1",
         companyName: "Unitree",
         robotCount: 4,
       }),
-    ).toBe("Jobs for Unitree");
+    ).toBe("Jobs for G1");
     expect(
       jobsHeading({
         productName: "G1",

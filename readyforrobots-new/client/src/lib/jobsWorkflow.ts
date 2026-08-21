@@ -1,13 +1,12 @@
 /**
- * Jobs submit workflow — FIND → QUALIFY on `/`. PLACE is later.
+ * Jobs submit workflow — FIND on `/`. PLACE is later.
  *
- * The job list on `/` is the product. Clicking a job is the next step
- * (Qualify this job). Do not hop to a second "Jobs for ______" list on
- * /results or /pipeline after login — that screen has no action and kills
- * the workflow.
+ * The job list is the product. Cards expand to show why / unknowns / blockers.
+ * There is no Qualify CTA and no "next step" on that list — inventing one
+ * either hops to a dead board or restates evidence already on the card.
  *
- * Cap: the terminal shows 5 example jobs. See All reveals more on the same
- * page. Never send Jobs traffic to /pipeline as a duplicate job board.
+ * Cap: 5 example jobs. See All reveals more on the same page.
+ * Never send Jobs traffic to /pipeline as a duplicate job board.
  */
 
 export type JobsConfirmLanding = "review" | "jobs";
@@ -26,9 +25,6 @@ export function jobsHeading(opts: {
   companyName: string;
   robotCount: number;
 }): string {
-  if (opts.robotCount > 1) {
-    return `Jobs for ${opts.companyName || opts.productName}`;
-  }
   return `Jobs for ${opts.productName}`;
 }
 

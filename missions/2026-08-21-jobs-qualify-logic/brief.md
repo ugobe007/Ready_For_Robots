@@ -1,4 +1,4 @@
-# Mission: Qualify is a judgment, not a request slip
+# Mission: Jobs list is inspect, not Qualify
 
 **Date:** 2026-08-21
 **Type:** build
@@ -7,18 +7,17 @@
 
 ## Goal
 
-After FIND, **Qualify this job** must produce a pursuit judgment from evidence already on the card. It must not be a second empty click ("Request qualification") that only stores an analytics event.
+Remove **Qualify this job** from the jobs list. Step 2 has no next-step CTA. Cards expand to evidence. Heading is the selected robot (Servi), not the company.
 
 ## Why
 
-PR #68 put QUALIFY on the job card so login no longer killed the workflow. The card still asked twice and then said "we'll investigate" without judging. That is the same wasted step, on the same page.
-
-QUALIFY = determine whether this work is worth pursuing. FIND already produced `why` / `still_unknown` / `blockers`. Use those. Do not reopen the matcher. Do not hop to /pipeline.
+Qualify on the card restates why/unknowns already shown. It is not a step. Production (Bear Robotics / Servi) showed a fake next step and titled the list "Jobs for Bear Robotics" while Servi was selected.
 
 ## Acceptance
 
-- [x] One click: Qualify this job → pursuit brief (pursue / needs evidence / not now)
-- [x] Brief is grounded only in match evidence already on the job
-- [x] No inner "Request qualification" dead click
-- [x] Anonymous users still see the brief before any signup ask
-- [x] Targeted tests pass
+- [ ] No Qualify this job button on job cards
+- [ ] No “that is the next step, on this page”
+- [ ] Heading is Jobs for {selected robot}
+- [ ] Expand still shows why / unknowns / blockers
+- [ ] See All still on the same page
+- [ ] Smoke-tested
