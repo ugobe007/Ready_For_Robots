@@ -1803,6 +1803,7 @@ function JobsPanel({
                 robotName={analysis.productName}
                 selected={expandedJob === job.job_key}
                 onSelect={() => onSelectJob(job)}
+                onNext={() => onNext(job)}
               />
             ))}
           </ol>
@@ -1956,12 +1957,14 @@ function JobCard({
   robotName,
   selected,
   onSelect,
+  onNext,
 }: {
   index: number;
   job: MatchJob;
   robotName: string;
   selected: boolean;
   onSelect: () => void;
+  onNext: () => void;
 }) {
   const possible = job.verdict !== "NOT_A_MATCH";
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
@@ -2056,6 +2059,14 @@ function JobCard({
               No confirmed blocker
             </p>
           ) : null}
+          <button
+            type="button"
+            onClick={onNext}
+            className={`${ctaClass} mt-4 w-full`}
+          >
+            <FaceCue scale={2} onEmerald />
+            {JOBS_NEXT_CTA}
+          </button>
         </div>
       )}
     </li>

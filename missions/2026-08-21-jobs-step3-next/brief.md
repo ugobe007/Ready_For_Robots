@@ -15,8 +15,8 @@ Digit jobs list after removing Qualify-on-card had no way to leave step 2. Quali
 
 ## Acceptance
 
-- [ ] Jobs list shows Next → (page-level, uses expanded job)
-- [ ] Next opens Qualify for that job (pursuit judgment)
-- [ ] Rail shows 01 Profile · 02 Jobs · 03 Qualify
-- [ ] No Qualify this job on job cards
-- [ ] Smoke-tested
+- [x] Jobs list shows Next → (page-level, uses expanded job)
+- [x] Next opens Qualify for that job (pursuit judgment)
+- [x] Rail shows 01 Profile · 02 Jobs · 03 Qualify
+- [x] No Qualify this job on job cards
+- [x] Smoke-tested
