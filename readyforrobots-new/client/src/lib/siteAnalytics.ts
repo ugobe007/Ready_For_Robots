@@ -46,12 +46,9 @@ export function trackMarketingEvent(action: string, payload: Record<string, unkn
  *
  * Two pull expressions after jobs are shown (not a single linear funnel):
  * - Access pull: job_viewed → see_all_clicked → signup_start
- * - Commercial pull: qualify_opened (curiosity) → qualify_requested (intent)
+ * - Commercial pull: place_opened (Next from jobs) → pipeline / save
  *
- * qualify_requested is commercial intent: user asked RFR to investigate a
- * specific deployment opportunity. Do not force it behind signup.
- *
- * Qualify payloads should include job_key, profile_key, persona, src.
+ * Place payloads should include job_key, profile_key, persona, src.
  */
 export type RobotJobsFunnelStep =
   | "experiment_view"
@@ -66,6 +63,7 @@ export type RobotJobsFunnelStep =
   | "preview_complete"
   | "qualify_opened"
   | "qualify_requested"
+  | "place_opened"
   | "see_all_clicked";
 
 export function trackRobotJobsFunnel(step: RobotJobsFunnelStep, payload: Record<string, unknown> = {}) {

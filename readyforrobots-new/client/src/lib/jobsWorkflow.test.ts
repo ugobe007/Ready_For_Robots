@@ -7,12 +7,15 @@ import {
   JOBS_EXAMPLE_CAP,
   JOBS_FOR_YOUR_ROBOT_HEADING,
   JOBS_NEXT_CTA,
+  JOBS_NEXT_HINT,
+  JOBS_PLACE_CTA,
   JOBS_SCAN_STEPS,
   buyerLeadsHref,
   buyerLeadsToShow,
   capExampleJobs,
   isJobsHandoffSrc,
   jobsHeading,
+  jobsPlaceHref,
   jobsSignupHref,
   jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
@@ -83,7 +86,7 @@ describe("jobsWorkflow", () => {
     expect(jobsWorkspaceRestoreHref()).toBe("/?restore=1");
   });
 
-  it("advances step 2 with Next, not Qualify this job on the card", () => {
+  it("advances step 2 with one Next at the page bottom, not a Qualify loop", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
@@ -101,15 +104,30 @@ describe("jobsWorkflow", () => {
       expect(src).not.toMatch(/Request qualification/i);
       expect(src).not.toMatch(/Qualify a job on the Jobs terminal/i);
     }
+    expect(workspace).not.toMatch(/function QualifyPanel/);
+    expect(workspace).not.toMatch(/03 Qualify/);
+    expect(workspace).toMatch(/function PlacePanel/);
+    expect(workspace).toMatch(/03 Place/);
     expect(FIND_JOBS_CTA).toBe("Find jobs →");
     expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
     expect(JOBS_NEXT_CTA).toBe("Next →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify/i);
+    expect(JOBS_NEXT_HINT).toMatch(/buyers/i);
+    expect(JOBS_PLACE_CTA).toBe("See buyers →");
     expect(workspace).toMatch(/JOBS_NEXT_CTA/);
+    expect(workspace).not.toMatch(/onNext=\{\(\) => onNext\(job\)\}/);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
     for (const step of JOBS_SCAN_STEPS) {
       expect(step).not.toMatch(/buyer|sales lead|qualify/i);
     }
+  });
+
+  it("opens pipeline as buyers, not a Jobs bounce", () => {
+    expect(jobsPlaceHref("https://en.engineai.com.cn/")).toBe(
+      "/pipeline?url=https%3A%2F%2Fen.engineai.com.cn%2F&src=place",
+    );
+    expect(isJobsHandoffSrc("place")).toBe(false);
+    expect(isJobsHandoffSrc("jobs_all_robots")).toBe(true);
   });
 
   it("recognizes Jobs terminal handoff src values", () => {

@@ -5,7 +5,7 @@
  * a time (submit-stability principle):
  *
  *   FIND → RESEARCH → SELECT → JOBS (all/several robots)
- *                      SELECT → REVIEW PROFILE → JOBS → QUALIFY (one robot)
+ *                      SELECT → REVIEW PROFILE → JOBS → PLACE (one robot)
 
  *
  * Three separated objects:
@@ -47,23 +47,26 @@ import {
   JOBS_NEXT_CTA,
   JOBS_NEXT_HINT,
   JOBS_PIPELINE_CAP,
+  JOBS_PLACE_CTA,
   JOBS_RESTORE_ONCE_KEY,
   capExampleJobs,
   consumeJobsWorkspaceRestoreOnce,
   jobForNextStep,
   jobsHeading,
+  jobsPlaceHref,
   landingStageAfterConfirm,
   readNavigationType,
   shouldRestoreJobsWorkspace,
 } from "@/lib/jobsWorkflow";
-import { qualifyJob } from "@/lib/jobsQualify";
+import { getPublicReadApiBase } from "@/lib/apiBase";
+import { Link } from "wouter";
 
 /* ------------------------------------------------------------------ */
 /* Types + constants                                                   */
 /* ------------------------------------------------------------------ */
 
-type Stage = "find" | "research" | "select" | "portfolio" | "review" | "jobs" | "qualify";
-type RailTab = "profile" | "jobs" | "qualify";
+type Stage = "find" | "research" | "select" | "portfolio" | "review" | "jobs" | "place";
+type RailTab = "profile" | "jobs" | "place";
 
 /** One robot in the workspace. `matched` gates every count we display. */
 type RobotAnalysis = {
@@ -87,7 +90,7 @@ type ZeroReason =
   | "corpus_gap";
 
 type ProductChoice = { name: string; displayClass?: string | null };
-type RestoreView = "review" | "jobs" | "portfolio" | "qualify";
+type RestoreView = "review" | "jobs" | "portfolio" | "place";
 
 const MARKET_FOUND_BASE = 140;
 const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
@@ -176,9 +179,29 @@ function readWorkspaceSession(): WorkspaceSession | null {
   try {
     const raw = window.sessionStorage.getItem(WORKSPACE_SESSION_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as WorkspaceSession;
+    const parsed = JSON.parse(raw) as {
+      url?: string;
+      products?: string[];
+      view?: string;
+      activeIdx?: number;
+      selectedJobKey?: string;
+    };
     if (!parsed?.url) return null;
-    return parsed;
+    const view: RestoreView =
+      parsed.view === "place" || parsed.view === "qualify"
+        ? "place"
+        : parsed.view === "portfolio"
+          ? "portfolio"
+          : parsed.view === "review"
+            ? "review"
+            : "jobs";
+    return {
+      url: parsed.url,
+      products: Array.isArray(parsed.products) ? parsed.products : [],
+      view,
+      activeIdx: parsed.activeIdx,
+      selectedJobKey: parsed.selectedJobKey,
+    };
   } catch {
     return null;
   }
@@ -746,25 +769,23 @@ export default function RobotJobsWorkspace() {
     });
   }
 
-  function goToQualify(job: MatchJob) {
+  function goToPlace(job: MatchJob) {
     setExpandedJob(job.job_key);
     recordJobView(job);
-    setRailTab("qualify");
-    setStage("qualify");
+    setRailTab("place");
+    setStage("place");
     saveWorkspaceSession({
       url: submittedUrlRef.current,
       products: portfolio.map(p => p.productName),
-      view: "qualify",
+      view: "place",
       activeIdx,
       selectedJobKey: job.job_key,
     });
-    const brief = qualifyJob(job);
-    trackRobotJobsFunnel("qualify_opened", {
+    trackRobotJobsFunnel("place_opened", {
       ...funnelBase(),
       job_key: job.job_key,
       company_name: job.company_name,
       robot_name: active?.productName,
-      stance: brief.stance,
     });
   }
 
@@ -797,9 +818,9 @@ export default function RobotJobsWorkspace() {
           setExpandedJob(
             pickSelectedJobKey(analyses[idx].jobs, saved.selectedJobKey),
           );
-          if (saved.view === "qualify") {
-            setRailTab("qualify");
-            setStage("qualify");
+          if (saved.view === "place") {
+            setRailTab("place");
+            setStage("place");
           } else {
             setRailTab("jobs");
             setStage("jobs");
@@ -808,16 +829,16 @@ export default function RobotJobsWorkspace() {
         return;
       }
       const product = saved.products[0] || undefined;
-      if (saved.view === "jobs" || saved.view === "qualify") {
+      if (saved.view === "jobs" || saved.view === "place") {
         const res = await fetchRobotJobSearch({ url: saved.url, product });
         submissionIdRef.current = res.robot_submission_id ?? submissionIdRef.current;
         const a = searchToAnalysis(res);
         setPortfolio([a]);
         setActiveIdx(0);
         setExpandedJob(pickSelectedJobKey(a.jobs, saved.selectedJobKey));
-        if (saved.view === "qualify") {
-          setRailTab("qualify");
-          setStage("qualify");
+        if (saved.view === "place") {
+          setRailTab("place");
+          setStage("place");
         } else {
           setRailTab("jobs");
           setStage("jobs");
@@ -966,7 +987,7 @@ export default function RobotJobsWorkspace() {
             matched={Boolean(active?.matched)}
             showCount={showActiveCount}
             jobCount={Math.min(JOBS_EXAMPLE_CAP, active?.jobs?.length || 0)}
-            canQualify={(active?.jobs || []).length > 0}
+            canPlace={(active?.jobs || []).length > 0}
             portfolioCount={portfolio.length}
             railTab={railTab}
             onTab={t => {
@@ -982,9 +1003,9 @@ export default function RobotJobsWorkspace() {
                 });
                 return;
               }
-              if (t === "qualify") {
+              if (t === "place") {
                 const job = jobForNextStep(active?.jobs || [], expandedJob);
-                if (job) goToQualify(job);
+                if (job) goToPlace(job);
                 return;
               }
               goToJobs(activeIdx);
@@ -1052,7 +1073,7 @@ export default function RobotJobsWorkspace() {
             expandedJob={expandedJob}
             showAll={showAllJobs}
             onSelectJob={selectJob}
-            onNext={goToQualify}
+            onNext={goToPlace}
             onSeeAll={seeAllJobs}
             robotCount={portfolio.length}
             companyName={companyName || active.companyName}
@@ -1061,10 +1082,12 @@ export default function RobotJobsWorkspace() {
           />
         )}
 
-        {stage === "qualify" && active && (
-          <QualifyPanel
+        {stage === "place" && active && (
+          <PlacePanel
             analysis={active}
             job={jobForNextStep(active.jobs, expandedJob)}
+            robotUrl={submittedUrlRef.current}
+            submissionId={submissionIdRef.current}
             onBack={() => goToJobs(activeIdx)}
           />
         )}
@@ -1163,7 +1186,7 @@ function FindRail({
           </li>
           <li>
             <span className="font-mono text-emerald-400">03</span> Next —
-            qualify the job that looks interesting.
+            buyers who need this work.
           </li>
         </ol>
       </div>
@@ -1229,7 +1252,7 @@ function ContextRail({
   matched,
   showCount,
   jobCount,
-  canQualify = false,
+  canPlace = false,
   portfolioCount,
   railTab,
   onTab,
@@ -1243,7 +1266,7 @@ function ContextRail({
   matched: boolean;
   showCount: boolean;
   jobCount: number;
-  canQualify?: boolean;
+  canPlace?: boolean;
   portfolioCount: number;
   railTab: RailTab;
   onTab: (t: RailTab) => void;
@@ -1298,7 +1321,7 @@ function ContextRail({
         <nav className="mt-6 space-y-1">
           {navItem("profile", "01 Profile")}
           {navItem("jobs", "02 Jobs", showCount ? `${jobCount}` : undefined)}
-          {canQualify ? navItem("qualify", "03 Qualify") : null}
+          {canPlace ? navItem("place", "03 Place") : null}
         </nav>
       )}
 
@@ -1778,7 +1801,7 @@ function JobsPanel({
       {baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
           Example work {analysis.productName} can do, matched to confirmed
-          capabilities. Expand a card, then Next.
+          capabilities. Expand a card to inspect. Next is at the bottom.
         </p>
       )}
 
@@ -1808,14 +1831,13 @@ function JobsPanel({
                 robotName={analysis.productName}
                 selected={expandedJob === job.job_key}
                 onSelect={() => onSelectJob(job)}
-                onNext={() => onNext(job)}
               />
             ))}
           </ol>
           {nextJob ? (
             <div className="mt-6 border border-emerald-400/40 bg-emerald-400/5 p-4">
               <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300">
-                03 Next
+                03 Place
               </p>
               <p className="mt-1 text-[12px] text-slate-400">{JOBS_NEXT_HINT}</p>
               <p className="mt-0.5 font-display text-base font-bold leading-snug text-slate-100">
@@ -1962,14 +1984,12 @@ function JobCard({
   robotName,
   selected,
   onSelect,
-  onNext,
 }: {
   index: number;
   job: MatchJob;
   robotName: string;
   selected: boolean;
   onSelect: () => void;
-  onNext: () => void;
 }) {
   const possible = job.verdict !== "NOT_A_MATCH";
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
@@ -2064,111 +2084,122 @@ function JobCard({
               No confirmed blocker
             </p>
           ) : null}
-          <button
-            type="button"
-            onClick={onNext}
-            className={`${ctaClass} mt-4 w-full`}
-          >
-            <FaceCue scale={2} onEmerald />
-            {JOBS_NEXT_CTA}
-          </button>
         </div>
       )}
     </li>
   );
 }
 
-function QualifyPanel({
+function PlacePanel({
   analysis,
   job,
+  robotUrl,
+  submissionId,
   onBack,
 }: {
   analysis: RobotAnalysis;
   job: MatchJob | null;
+  robotUrl: string;
+  submissionId?: number | null;
   onBack: () => void;
 }) {
-  if (!job) {
-    return (
-      <div className="p-6 sm:p-8">
-        <p className="text-sm text-slate-400">Pick a job on step 2 first.</p>
-        <button type="button" onClick={onBack} className={`${ctaClass} mt-4`}>
-          ← Jobs
-        </button>
-      </div>
-    );
-  }
+  const [buyers, setBuyers] = useState<
+    Array<{ id: number; name: string; industry: string; action: string }>
+  >([]);
+  const [loaded, setLoaded] = useState(false);
 
-  const brief = qualifyJob(job);
-  const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
-  const stanceColor =
-    brief.stance === "pursue"
-      ? "text-emerald-300"
-      : brief.stance === "not_now"
-        ? "text-rose-300"
-        : "text-amber-200";
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${getPublicReadApiBase()}/api/leads/pipeline`);
+        if (!res.ok) throw new Error("pipeline");
+        const data = (await res.json()) as { leads?: Array<Record<string, unknown>> };
+        const rows = (data.leads || []).slice(0, 5).map((row, i) => ({
+          id: Number(row.id) || i,
+          name: String(row.company_name || "Buyer").trim() || "Buyer",
+          industry: String(row.industry || "").trim(),
+          action: String(row.pipeline_action || "").trim(),
+        }));
+        if (!cancelled) setBuyers(rows);
+      } catch {
+        if (!cancelled) setBuyers([]);
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const href = jobsPlaceHref(robotUrl, submissionId);
+  const site = job
+    ? [job.company_name, job.locality].filter(Boolean).join(" · ")
+    : "";
 
   return (
     <div className="p-6 sm:p-8">
       <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300">
-        03 Qualify
+        03 Place
       </p>
-      <h2 className={`mt-1 font-display text-2xl font-bold ${stanceColor}`}>
-        {brief.headline}
+      <h2 className="mt-1 font-display text-2xl font-bold text-slate-100">
+        Buyers for this work
       </h2>
-      <p className="mt-2 font-display text-lg font-bold leading-snug text-slate-100">
-        {job.title}
-      </p>
-      {place ? <p className="mt-0.5 text-sm text-slate-400">{place}</p> : null}
-      <p className="mt-4 max-w-2xl text-[14px] leading-snug text-slate-300">
-        {brief.reason}
-      </p>
-
-      {brief.why.length ? (
-        <div className="mt-6">
-          <p className={eyebrow}>Why {analysis.productName}</p>
-          <ul className="mt-1 space-y-0.5">
-            {brief.why.map(w => (
-              <li key={w} className="text-[13px] leading-snug text-slate-200">
-                <span className="text-emerald-400">✓</span> {w}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {brief.stillUnknown.length ? (
-        <div className="mt-4">
-          <p className={eyebrow}>Still unknown</p>
-          <ul className="mt-1 space-y-0.5">
-            {brief.stillUnknown.map(w => (
-              <li key={w} className="text-[13px] leading-snug text-amber-200/80">
-                ? {w}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {brief.blockers.length ? (
-        <div className="mt-4">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-rose-400/80">
-            Blocker
+      {job ? (
+        <>
+          <p className="mt-2 font-display text-lg font-bold leading-snug text-slate-100">
+            {job.title}
           </p>
-          <ul className="mt-1 space-y-0.5">
-            {brief.blockers.map(w => (
-              <li key={w} className="text-[13px] leading-snug text-slate-300">
-                {w}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      <p className="mt-8 text-[12px] text-slate-500">
-        Place is later. This is the judgment on this job.
+          {site ? <p className="mt-0.5 text-sm text-slate-400">{site}</p> : null}
+        </>
+      ) : (
+        <p className="mt-2 text-sm text-slate-400">
+          Jobs for {analysis.productName}
+        </p>
+      )}
+      <p className="mt-4 max-w-2xl text-[14px] leading-snug text-slate-300">
+        Companies that need this kind of automation. Open the pipeline to
+        read the pitch and outreach draft.
       </p>
-      <button type="button" onClick={onBack} className={`${ctaClass} mt-4`}>
-        ← Jobs
+
+      {loaded && buyers.length === 0 ? (
+        <p className="mt-6 text-sm text-slate-400">
+          Buyer list is still warming up. Open the pipeline to continue.
+        </p>
+      ) : (
+        <ol className="mt-6 space-y-2">
+          {buyers.map(buyer => (
+            <li
+              key={buyer.id}
+              className="border border-slate-600 bg-[#081126] px-4 py-3"
+            >
+              <p className="font-display text-sm font-bold text-slate-100">
+                {buyer.name}
+              </p>
+              {buyer.industry ? (
+                <p className="mt-0.5 text-[12px] text-slate-400">{buyer.industry}</p>
+              ) : null}
+              {buyer.action ? (
+                <p className="mt-1 text-[12px] leading-snug text-slate-300">
+                  {buyer.action}
+                </p>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <Link href={href} className={`${ctaClass} mt-8 inline-flex`}>
+        <FaceCue scale={2} onEmerald />
+        {JOBS_PLACE_CTA}
+      </Link>
+      <button
+        type="button"
+        onClick={onBack}
+        className="mt-4 block font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 hover:text-slate-300"
+      >
+        Inspect jobs
       </button>
     </div>
   );

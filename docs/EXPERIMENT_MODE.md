@@ -31,17 +31,18 @@ submit robot URL on /
   → see understood capabilities (must be credible)
   → see Robot Jobs (step 2)
   → inspect cards (why / unknowns / blockers)
-  → Next → QUALIFY that job (step 3)
+  → Next (page bottom) → PLACE buyers (step 3)
+  → See buyers → /pipeline (sales leads, not a second job list)
   → discovery pull: See All Jobs (stays on step 2)
 ```
 
-**Do not hop.** FIND lives on `/`. Login restores that workspace. Never send Jobs traffic to a second "Jobs for ______" list on `/pipeline` or `/results`.
+**Do not hop Jobs traffic to a second "Jobs for ______" list** on `/pipeline` or `/results`. Place uses `src=place` so `/pipeline` is buyers.
 
-Step 2 inspects. Next leaves step 2 for QUALIFY. Do not put Qualify this job on the card — that restated evidence already visible.
+Step 2 inspects. One Next at the bottom of the page leaves step 2 for Place. No Next on the card. No Qualify loop back to jobs — first-time users are still learning the site.
 
 **Product question:**
 
-> Does RFR understand their robot well enough to show credible work — and does that work create enough value that they want more (`rdd_see_all_clicked`) or take Next on a job (`rdd_qualify_opened`)?
+> Does RFR understand their robot well enough to show credible work — and does that work create enough value that they want more (`rdd_see_all_clicked`) or take Next toward buyers (`rdd_place_opened`)?
 
 | Pull | Metric |
 |------|--------|
@@ -74,8 +75,8 @@ Legacy matcher stays live until Understanding v1 wins blind eval. No Fly migrate
 | Low submit → capabilities | Input / trust |
 | Capabilities shown, jobs feel wrong | **Understanding integrity** (fix Phases 1–3) |
 | High job views, low See All | Weak discovery pull |
-| High See All, low Next | Curious, not ready to qualify a job |
-| Next on a job | Commercial pull — QUALIFY step 3 |
+| High See All, low Next | Curious, not ready for buyers |
+| Next on a job | Commercial pull — PLACE buyers |
 | High unlock, low signup | Auth / gating friction |
 | One persona dominates | GTM wedge (still one engine) |
 
@@ -97,7 +98,7 @@ Prefer outreach to `/` (or current Jobs entry) with `?persona=oem|distributor|in
 | Search beat | `rdd_discovery_started` / `rdd_discovery_complete` |
 | Jobs | `rdd_first_job_viewed` · `rdd_job_viewed` · `rdd_jobs_3plus_viewed` |
 | Discovery unlock | `rdd_see_all_clicked` |
-| Qualify (step 3) | `rdd_qualify_opened` |
+| Place (step 3) | `rdd_place_opened` |
 | Signup | `signup_start` / `signup_complete` (`src=robot_jobs`) |
 
 ---
