@@ -70,10 +70,12 @@ ROBOT / PORTFOLIO / SOLUTION CAPABILITIES
 Show us your robot.
 Here are its jobs.
 This one looks interesting.
-Qualify it.
+Qualify it.   ← later. Not a button on the jobs list.
 ```
 
-Everything underneath exists to make those four interactions trustworthy.
+On today's Jobs list, "this one looks interesting" is expand/inspect (why / unknowns / blockers). There is no Qualify CTA on that list — it restated evidence already on the card and invented a next step that does not exist. QUALIFY is a later beat, not step 2.
+
+Everything underneath exists to make those interactions trustworthy.
 
 ---
 
@@ -188,16 +190,16 @@ Not merely: *Do people click See All?*
 
 Now:
 
-> Does ReadyForRobots understand their robot well enough to show credible work — and does that work create enough value that they want more or ask us to qualify it?
+> Does ReadyForRobots understand their robot well enough to show credible work — and does that work create enough value that they want more (`rdd_see_all_clicked`)?
 
-### Pull metrics (both legitimate)
+### Pull metrics
 
 | Manifestation | Signal | Event |
 |---------------|--------|--------|
 | **Discovery pull** | Want to see more jobs | See All Jobs · `rdd_see_all_clicked` |
-| **Commercial pull** | This work is worth investigating | Qualify This Job · `rdd_qualify_requested` |
+| **Commercial pull** | QUALIFY / PLACE | later — not a CTA on the jobs list |
 
-Keep See All CTR. Treat **qualify requested** as the stronger commercial signal when present — the user is saying this particular work is interesting enough that they want RFR to investigate it.
+Keep See All CTR. Do not put a Qualify button on step 2 to farm `rdd_qualify_requested`.
 
 Segment by `persona` (oem / distributor / integrator) and by robot product / family within persona.
 

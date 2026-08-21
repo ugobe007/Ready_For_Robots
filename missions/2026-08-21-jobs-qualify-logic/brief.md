@@ -15,9 +15,9 @@ Qualify on the card restates why/unknowns already shown. It is not a step. Produ
 
 ## Acceptance
 
-- [ ] No Qualify this job button on job cards
-- [ ] No “that is the next step, on this page”
-- [ ] Heading is Jobs for {selected robot}
-- [ ] Expand still shows why / unknowns / blockers
-- [ ] See All still on the same page
-- [ ] Smoke-tested
+- [x] No Qualify this job button on job cards
+- [x] No “that is the next step, on this page”
+- [x] Heading is Jobs for {selected robot}
+- [x] Expand still shows why / unknowns / blockers
+- [x] See All still on the same page
+- [x] Smoke-tested

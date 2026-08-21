@@ -1,7 +1,6 @@
 /**
  * Leftover Jobs hops used to render a second FIND list on /results and
- * /pipeline. That screen had no QUALIFY action and killed the workflow.
- * Bounce back to the Jobs terminal on `/`.
+ * /pipeline. That screen killed the workflow. Bounce back to `/`.
  */
 import { useEffect } from "react";
 import { armJobsWorkspaceRestore } from "@/lib/jobsWorkflow";
@@ -26,8 +25,8 @@ export default function JobsHandoffBoard(_props: {
         Taking you back to your jobs…
       </h1>
       <p className="mt-2 text-sm text-slate-400">
-        Pick a job on the Jobs terminal and qualify it. This page is not a
-        second job list.
+        Your jobs stay on the Jobs terminal. This page is not a second job
+        list.
       </p>
     </main>
   );

@@ -1,21 +1,17 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   FIND_JOBS_CTA,
   JOBS_EXAMPLE_CAP,
-  JOBS_FOR_YOUR_ROBOT_CTA,
   JOBS_FOR_YOUR_ROBOT_HEADING,
-  JOBS_FOR_YOUR_ROBOT_KEEP_CTA,
-  JOBS_LIST_NEXT_STEP_HEADING,
   JOBS_SCAN_STEPS,
-  QUALIFY_JOB_CTA,
-  buyerLeadsCtaHeading,
-  buyerLeadsCtaLabel,
   buyerLeadsHref,
   buyerLeadsToShow,
   capExampleJobs,
   isJobsHandoffSrc,
   jobsHeading,
-  jobsQualifySignupHref,
   jobsSignupHref,
   jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
@@ -24,6 +20,8 @@ import {
   shouldRestoreJobsWorkspace,
   armJobsWorkspaceRestore,
 } from "./jobsWorkflow";
+
+const here = dirname(fileURLToPath(import.meta.url));
 
 describe("jobsWorkflow", () => {
   it("sends one robot to the profile checkpoint", () => {
@@ -82,31 +80,31 @@ describe("jobsWorkflow", () => {
       expect(href).not.toContain("/results");
     }
     expect(jobsWorkspaceRestoreHref()).toBe("/?restore=1");
-    expect(buyerLeadsCtaLabel(false)).toBe(QUALIFY_JOB_CTA);
-    expect(buyerLeadsCtaHeading(true)).toBe("This job looks interesting");
   });
 
-  it("never uses buyer or sales-lead language on the Jobs CTA", () => {
-    for (const signedIn of [false, true]) {
-      const label = buyerLeadsCtaLabel(signedIn);
-      const heading = buyerLeadsCtaHeading(signedIn);
-      expect(label.toLowerCase()).toContain("job");
-      expect(heading.toLowerCase()).toContain("job");
-      expect(label).not.toMatch(/buyer|lead/i);
-      expect(heading).not.toMatch(/buyer|lead/i);
+  it("does not put a Qualify CTA or next-step copy on the jobs list", () => {
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const workflow = readFileSync(join(here, "./jobsWorkflow.ts"), "utf8");
+    const handoff = readFileSync(
+      join(here, "../components/JobsHandoffBoard.tsx"),
+      "utf8",
+    );
+    const pipeline = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
+    const results = readFileSync(join(here, "../pages/Results.tsx"), "utf8");
+    for (const src of [workspace, workflow, handoff, pipeline, results]) {
+      expect(src).not.toMatch(/Qualify this job/i);
+      expect(src).not.toMatch(/that is the next step/i);
+      expect(src).not.toMatch(/Request qualification/i);
+      expect(src).not.toMatch(/Qualify a job on the Jobs terminal/i);
     }
     expect(FIND_JOBS_CTA).toBe("Find jobs →");
-    expect(FIND_JOBS_CTA).not.toMatch(/buyer|lead/i);
+    expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
     expect(JOBS_FOR_YOUR_ROBOT_HEADING).toBe("Jobs for your robot");
-    expect(JOBS_LIST_NEXT_STEP_HEADING).toBe("This job looks interesting");
-    expect(JOBS_LIST_NEXT_STEP_HEADING).not.toMatch(/buyer|lead/i);
-    expect(JOBS_LIST_NEXT_STEP_HEADING).not.toMatch(/Next step: buyer leads/i);
-    expect(JOBS_LIST_NEXT_STEP_HEADING).not.toMatch(/Next step: Jobs for your robot/i);
-    expect(JOBS_FOR_YOUR_ROBOT_KEEP_CTA.toLowerCase()).toContain("search");
-    expect(JOBS_FOR_YOUR_ROBOT_KEEP_CTA).not.toMatch(/buyer|lead/i);
-    expect(JOBS_FOR_YOUR_ROBOT_CTA).not.toMatch(/See Buyer Leads|SEE BUYER LEADS/i);
     for (const step of JOBS_SCAN_STEPS) {
-      expect(step).not.toMatch(/buyer|sales lead/i);
+      expect(step).not.toMatch(/buyer|sales lead|qualify/i);
     }
   });
 
@@ -131,8 +129,6 @@ describe("jobsWorkflow", () => {
     expect(home).not.toContain("results_scan");
     expect(jobsSignupHref(home, "jobs_all_robots")).toContain("src=jobs_all_robots");
     expect(jobsSignupHref(home, "jobs_all_robots")).toContain("next=%2F%3Frestore%3D1");
-    expect(jobsQualifySignupHref()).toContain("src=robot_jobs_qualify");
-    expect(jobsQualifySignupHref()).toContain("next=%2F%3Frestore%3D1");
   });
 
   it("does not restore the Jobs workspace on a fresh visit or reload of /", () => {

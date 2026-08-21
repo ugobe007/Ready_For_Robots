@@ -44,21 +44,7 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
 }
 
 export const FIND_JOBS_CTA = "Find jobs →";
-/** @deprecated leftover copy — Jobs no longer uses a page-level "jobs for your robot" hop. */
-export const JOBS_FOR_YOUR_ROBOT_CTA = "Qualify this job →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
-export const JOBS_FOR_YOUR_ROBOT_KEEP_CTA = "Keep this search →";
-export const JOBS_LIST_NEXT_STEP_HEADING = "This job looks interesting";
-export const QUALIFY_JOB_CTA = "Qualify this job →";
-export const QUALIFY_JOB_REQUEST_CTA = "Request qualification";
-
-export function buyerLeadsCtaLabel(_signedIn: boolean): string {
-  return QUALIFY_JOB_CTA;
-}
-
-export function buyerLeadsCtaHeading(_signedIn: boolean): string {
-  return JOBS_LIST_NEXT_STEP_HEADING;
-}
 
 /** Scan status on /results when arriving from Jobs — unused; Jobs stays on `/`. */
 export const JOBS_SCAN_STEPS = [
@@ -99,10 +85,6 @@ export function jobsSignupHref(nextHref: string, src: string): string {
 /** Auth / leftover-link return to the Jobs workspace on `/`. */
 export function jobsWorkspaceRestoreHref(): string {
   return "/?restore=1";
-}
-
-export function jobsQualifySignupHref(): string {
-  return jobsSignupHref(jobsWorkspaceRestoreHref(), "robot_jobs_qualify");
 }
 
 /**
