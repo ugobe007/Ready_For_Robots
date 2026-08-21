@@ -20,8 +20,8 @@ from app.services.shared_api_cache import shared_cache_get, shared_cache_set
 
 logger = logging.getLogger(__name__)
 
-# v8: catalog-first lookup for every indexed vendor (skip live hub fan-out).
-NAMESPACE = "robot_profile_v8"
+# v9: catalog-only Jobs picker (drop homepage nav / accessory names).
+NAMESPACE = "robot_profile_v9"
 DEFAULT_TTL_SEC = 6 * 60 * 60  # 6 hours
 _MEM_MAX = 64
 _mem: dict[str, tuple[float, dict[str, Any]]] = {}

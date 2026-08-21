@@ -91,20 +91,28 @@ def test_resolve_selects_sku_from_product_url(monkeypatch):
     assert "G1" in resolved.selected_product.name
 
 
-def test_resolve_keeps_homepage_skus_in_addition_to_index(monkeypatch):
+def test_catalog_vendor_picker_does_not_add_homepage_extras(monkeypatch):
     import app.services.robot_understanding_v1.resolve as R
 
     monkeypatch.setattr(R, "lookup_vendor_by_url", lambda url: UNITREE)
     home = _page(
         url="https://www.unitree.com/",
         title="Unitree",
-        text="Unitree B2 robot payload Unitree B2 quadruped robot.",
-        links=[("https://www.unitree.com/b2", "B2")],
+        text="Unitree B2 robot payload Unitree B2 quadruped robot. Learn More. 4D LiDAR G1.",
+        links=[
+            ("https://www.unitree.com/b2", "B2"),
+            ("https://www.unitree.com/learn-more", "Learn More"),
+            ("https://www.unitree.com/lidar", "4D LiDAR G1"),
+        ],
     )
     resolved = resolve_identity("https://www.unitree.com/", home)
-    names = " ".join(p.name for p in resolved.products)
-    assert "G1" in names
-    assert "B2" in names or "b2" in names.lower()
+    names = {p.name for p in resolved.products}
+    assert "Unitree G1" in names
+    assert "Unitree H1" in names
+    assert not any("B2" == n or n.endswith(" B2") for n in names)
+    assert "Learn More" not in names
+    assert not any("lidar" in n.lower() for n in names)
+    assert any("index SKUs only" in n for n in resolved.notes)
 
 
 def test_homepage_and_locale_root_do_not_select_a_sku():

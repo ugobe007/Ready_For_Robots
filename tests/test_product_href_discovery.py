@@ -61,7 +61,11 @@ def test_engineai_homepage_links_yield_product_picker():
     assert resolved.company.primary_domain == "engineai.com.cn"
     assert resolved.company.name.upper() == "ENGINEAI"
     found = {p.name for p in resolved.products}
-    assert {"PM01", "T800", "SE01"} <= found
+    assert any("PM01" in n for n in found)
+    assert any("T800" in n for n in found)
+    assert any("SE01" in n or "SA01" in n for n in found)
+    assert "Purchase" not in found
+    assert "Learn More" not in found
     assert len(resolved.products) >= 3
 
 
@@ -134,7 +138,7 @@ def test_href_label_keeps_hidden_sku():
 
 
 def test_profile_cache_namespace_busts_stale_engineai_identity():
-    assert NAMESPACE == "robot_profile_v8"
+    assert NAMESPACE == "robot_profile_v9"
 
 
 def test_sku_from_root_named_product_paths():
@@ -183,3 +187,45 @@ def test_family_prefix_is_oem_agnostic():
     out = _apply_family_prefix(["Unitree G1", "H1"])
     assert "Unitree H1" in out
     assert "H1" not in out
+
+
+def test_discover_drops_nav_and_lidar_labels():
+    home = _page(
+        title="Bear Robotics",
+        url="https://www.bearrobotics.ai/",
+        text="Servi delivers food in restaurants. Learn More. EULA. 4D LiDAR G1 sensor.",
+        links=[
+            ("https://www.bearrobotics.ai/servi", "Servi"),
+            ("https://www.bearrobotics.ai/learn-more", "Learn More"),
+            ("https://www.bearrobotics.ai/eula", "EULA"),
+            ("https://www.bearrobotics.ai/lidar", "4D LiDAR G1"),
+            ("https://www.bearrobotics.ai/industry", "Industry"),
+        ],
+    )
+    names = _discover_product_names(home)
+    assert any("servi" in n.lower() for n in names)
+    assert "Learn More" not in names
+    assert "EULA" not in names
+    assert "Industry" not in names
+    assert not any("lidar" in n.lower() for n in names)
+
+
+def test_richtech_resolve_picker_is_catalog_skus_not_prose_only():
+    origin = "https://www.richtechrobotics.com"
+    home = _page(
+        title="Richtech Robotics",
+        url=f"{origin}/",
+        text="ADAM serves cocktails. Learn More. Contact Us.",
+        links=[
+            (f"{origin}/learn-more", "Learn More"),
+            (f"{origin}/contact", "Contact Us"),
+        ],
+    )
+    resolved = resolve_identity(f"{origin}/", home)
+    found = {p.name for p in resolved.products}
+    assert "ADAM" in found
+    assert "MATRADEE" in found
+    assert "Learn More" not in found
+    assert "Contact Us" not in found
+    assert len(found) == 10
+
