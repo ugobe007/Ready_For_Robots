@@ -113,6 +113,23 @@ describe("jobsWorkflow", () => {
     );
   });
 
+  it("gives the home live tape its own height so 12 jobs show without a 100vh parent", () => {
+    const tape = readFileSync(
+      join(here, "../components/jobs/LiveJobTape.tsx"),
+      "utf8",
+    );
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    expect(tape).toMatch(/export const TAPE_VIEWPORT_PX = VISIBLE \* ROW_PX/);
+    expect(tape).toMatch(/height: TAPE_VIEWPORT_PX/);
+    expect(tape).not.toMatch(/flex h-full min-h-0 flex-col/);
+    expect(tape).not.toMatch(/min-h-0 flex-1 overflow-hidden/);
+    expect(workspace).toMatch(/<LiveJobTape/);
+    expect(workspace).not.toMatch(/min-h-\[28rem\]/);
+  });
+
   it("forces a real FIND navigation from the wordmark even on /", () => {
     expect(typeof goJobsFreshHome).toBe("function");
     const header = readFileSync(

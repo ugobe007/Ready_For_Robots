@@ -1486,20 +1486,18 @@ export default function RobotJobsWorkspace() {
       {/* ---------------- LARGE WORKSPACE ---------------- */}
       <section>
         {stage === "find" && (
-          <div className="min-h-[28rem]">
-            <LiveJobTape
-              title="Live Robot Jobs"
-              subtitle={null}
-              corpus={MARKET_TAPE_JOBS}
-              baseCount={MARKET_FOUND_BASE}
-              running
-              statusLines={[]}
-              revealTarget={null}
-              onRevealComplete={() => undefined}
-              onSelect={() => undefined}
-              selectedKey={null}
-            />
-          </div>
+          <LiveJobTape
+            title="Live Robot Jobs"
+            subtitle={null}
+            corpus={MARKET_TAPE_JOBS}
+            baseCount={MARKET_FOUND_BASE}
+            running
+            statusLines={[]}
+            revealTarget={null}
+            onRevealComplete={() => undefined}
+            onSelect={() => undefined}
+            selectedKey={null}
+          />
         )}
 
         {stage === "research" && <ResearchPanel company={companyName} />}

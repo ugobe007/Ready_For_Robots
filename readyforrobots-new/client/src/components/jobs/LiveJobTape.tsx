@@ -1,5 +1,7 @@
 /**
- * Live job tape — fixed 58px classified rows; 12 visible; feed rotates behind.
+ * Live job tape — 12 classified rows at 58px. Rows are absolutely
+ * positioned for the rotate animation, so the list viewport must set
+ * its own height. Do not size it with h-full of a parent pane.
  * Exact row grid: 48 | 34 | 1fr | 24. Reveal mode: rapid 0001→N after robot submit.
  */
 import { useEffect, useRef, useState } from "react";
@@ -14,6 +16,10 @@ import {
 const VISIBLE = 12;
 /** Fixed row height — animation translates by this amount only. */
 const ROW_PX = 58;
+/** Rows are `position: absolute`; this is the only height the list has. */
+export const TAPE_VISIBLE_ROWS = VISIBLE;
+export const TAPE_ROW_PX = ROW_PX;
+export const TAPE_VIEWPORT_PX = VISIBLE * ROW_PX;
 const SHIFT_MS = 200;
 const NEW_HOLD_MS = 1500;
 const HEADER_FLASH_MS = 1100;
@@ -231,7 +237,7 @@ export default function LiveJobTape({
   const showStatus = Boolean(statusLines?.length) && !revealing;
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#081126]">
+    <div className="flex flex-col bg-[#081126]">
       <div className="shrink-0 border-b border-slate-600 px-4 py-2.5">
         <div className="flex items-center justify-between gap-3">
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-100 sm:text-[12px]">
@@ -256,7 +262,10 @@ export default function LiveJobTape({
       </div>
 
       {showStatus ? (
-        <div className="flex flex-1 flex-col justify-center gap-2 px-5 py-8 font-mono text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+        <div
+          className="flex flex-col justify-center gap-2 px-5 py-8 font-mono text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-400"
+          style={{ minHeight: TAPE_VIEWPORT_PX }}
+        >
           {statusLines!.map((line) => (
             <p
               key={line}
@@ -269,7 +278,10 @@ export default function LiveJobTape({
           ))}
         </div>
       ) : (
-        <div className="relative min-h-0 flex-1 overflow-hidden">
+        <div
+          className="relative overflow-hidden"
+          style={{ height: TAPE_VIEWPORT_PX }}
+        >
           <ul
             className="absolute inset-x-0 top-0"
             style={{
