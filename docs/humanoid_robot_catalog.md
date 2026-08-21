@@ -5280,6 +5280,7 @@ Complete reference of humanoid robots in the Ready For Robots benchmark index (`
 - Seed / scorer: `app/services/humanoid_scraper.py`
 - Vendor catalog: `app/services/humanoid_vendor_catalog.py`
 - Public API: `GET /api/humanoid/robots`
+- Vendor URL lookup index: `app/data/vendor_robots_index.json` — Jobs resolve uses this so a manufacturer homepage returns stored SKUs. Rebuild with `scripts/backfill_vendor_robots_from_index.py`. Optional DB upsert: `--apply`.
 - Secondary pass: `app/services/humanoid_secondary_pass.py`
 
 ---

@@ -90,6 +90,7 @@ Pythh reference spine (pattern only): `~/Desktop/hot-honey` — submit resolve �
 
 `agilityrobotics.com` → **Agility Robotics** → product(s) such as **Digit**.
 
+- **Vendor URL lookup (seed):** if the submitted host matches `app/data/vendor_robots_index.json` (scraped from `/robots` / `GET /api/humanoid/robots`), return that vendor's stored SKUs instead of guessing from a thin homepage. Homepage crawl may **add** extra SKUs; it must not replace the index. Press hosts (Morningstar, TMCnet, Yahoo, …) are never lookup keys. Industrial / commercial lists can append the same JSON shape later (`list_category`). Rebuild: `PYTHONPATH=. python3 scripts/backfill_vendor_robots_from_index.py`.
 - The **robot product** is the match subject, not the company hostname.
 - Multi-product → user choice (or clear default with audit trail).
 - Identity is persisted; do not re-derive a company label from the hostname every request.
