@@ -3,8 +3,8 @@
  *
  * Step 1 PROFILE → step 2 JOBS → activate the job list (live pipeline).
  * Inspect cards (why / unknowns / blockers). Check the jobs to take
- * forward. One Activate always visible on the jobs stage — not a Place
- * buyer dump, not a Qualify loop, not Next on the card.
+ * forward. Process chrome lives on the page (01 → 02 → 03). The document
+ * scrolls. Do not trap the next step inside a clipped 100vh box.
  *
  * Cap: 5 example jobs on `/`. Activate fills the live list to 15.
  */

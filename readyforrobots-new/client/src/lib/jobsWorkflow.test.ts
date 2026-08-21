@@ -95,6 +95,24 @@ describe("jobsWorkflow", () => {
     expect(jobsToActivate([], [], 15)).toEqual([]);
   });
 
+  it("is a scrolling process page, not a clipped two-pane box", () => {
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
+    expect(workspace).not.toMatch(/h-\[calc\(100vh/);
+    expect(workspace).toMatch(/rfr-jobs-page-shell/);
+    expect(workspace).toMatch(/rfr-jobs-process-bar/);
+    expect(workspace).toMatch(/rfr-jobs-page-footer/);
+    expect(workspace).toMatch(/layout="page"/);
+    expect(jobsPage).toMatch(/jobs-page min-h-screen/);
+    expect(jobsPage).not.toMatch(/overflow-hidden/);
+    expect(workspace).not.toMatch(
+      /min-h-0 flex-1 overflow-y-auto p-6 sm:p-8/,
+    );
+  });
+
   it("forces a real FIND navigation from the wordmark even on /", () => {
     expect(typeof goJobsFreshHome).toBe("function");
     const header = readFileSync(

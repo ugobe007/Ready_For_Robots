@@ -16,9 +16,9 @@ export default function Jobs() {
   const search = location.includes("?") ? location.slice(location.indexOf("?")) : "";
   const workspaceKey = isJobsFreshQuery(search) ? "fresh-find" : "workspace";
   return (
-    <div className="jobs-page flex min-h-screen flex-col bg-[#081126] text-slate-100">
+    <div className="jobs-page min-h-screen bg-[#081126] text-slate-100">
       <ExperimentHeader />
-      <main className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col px-3 pb-6 pt-[52px] sm:px-4">
+      <main className="mx-auto w-full max-w-[1200px] px-3 pb-16 pt-[52px] sm:px-4">
         <RobotJobsWorkspace key={workspaceKey} />
       </main>
     </div>
