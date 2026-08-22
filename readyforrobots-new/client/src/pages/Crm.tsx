@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import AdminNav from "@/components/AdminNav";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
 import CrmAccountWorkspace from "@/components/crm/CrmAccountWorkspace";
@@ -9,6 +9,13 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { openWorkspaceHref } from "@/lib/adminNavLinks";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
+import {
+  CRM_PAGE_HEADLINE,
+  CRM_PAGE_NEXT,
+  JOBS_EYEBROW_CLASS,
+  jobsFreshHomeHref,
+  onJobsFreshHomeClick,
+} from "@/lib/jobsWorkflow";
 
 type Team = { id: string; name: string; role: string };
 type Account = {
@@ -376,8 +383,8 @@ export default function Crm() {
 
   if (!supabase) {
     return (
-      <div className="min-h-screen pt-24 px-4 text-gray-500 bg-slate-50">
-        <Header />
+      <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-slate-300">
+        <ExperimentHeader />
         <p>Supabase not configured.</p>
       </div>
     );
@@ -385,8 +392,8 @@ export default function Crm() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 text-gray-500 bg-slate-50">
-        <Header />
+      <div className="pipeline-page-bg min-h-screen pt-16 text-slate-300">
+        <ExperimentHeader />
         Loading…
       </div>
     );
@@ -394,10 +401,11 @@ export default function Crm() {
 
   if (!session) {
     return (
-      <div className="min-h-screen pt-24 px-4 text-center bg-slate-50">
-        <Header />
-        <p className="text-gray-600 mb-4">Sign in for CRM workspaces.</p>
-        <Link href="/login" className="text-emerald-700 underline text-sm">
+      <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-center text-slate-100">
+        <ExperimentHeader />
+        <h1 className="font-display text-3xl font-bold tracking-tight text-white">CRM</h1>
+        <p className="mt-3 text-base text-slate-300">Sign in to work your CRM.</p>
+        <Link href="/login" className="mt-4 inline-block text-base text-emerald-400 underline">
           Login
         </Link>
       </div>
@@ -405,42 +413,47 @@ export default function Crm() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <Header />
-      <main className="admin-workspace flex-1 w-full max-w-4xl mx-auto px-4 pt-24 pb-8">
-        <AdminNav />
-        <div className="workspace-page-header mb-4">
-          <div className="workspace-page-header-inner flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="workspace-kicker">Advanced outreach editor</p>
-              <h1 className="text-lg sm:text-xl">Outreach editor</h1>
-              <p>
-                Bulk-style approve/send for saved accounts. For the main workflow, use{" "}
-                <Link href="/pipeline" className="font-semibold text-emerald-200 underline underline-offset-2 hover:text-white">
-                  Live pipeline
-                </Link>
-                {" "}— pick a lead, draft, and send from the right panel.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              <Link href="/pipeline" className="sb-btn sb-btn-primary border-emerald-400/50 bg-emerald-600 text-white hover:bg-emerald-700">
-                ← Back to pipeline
-              </Link>
-              {isAdmin && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
-                    className="sb-btn border-amber-300/40 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20"
-                  >
-                    Cal queue — bulk send
-                  </button>
-                </>
-              )}
-              <Link href="/integrations" className="sb-btn sb-btn-ghost border-white/10 bg-white/5 text-emerald-300 hover:bg-white/10">
-                Connect HubSpot / GitHub
-              </Link>
-            </div>
+    <div className="pipeline-page-bg flex min-h-screen flex-col text-slate-100">
+      <ExperimentHeader />
+      <main className="admin-workspace mx-auto w-full max-w-4xl flex-1 px-4 pb-8 pt-16">
+        <AdminNav variant="dark" />
+        <div className="mb-5 border border-slate-600 bg-[#0b162f] px-5 py-5 sm:px-6">
+          <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>ReadyForRobots</p>
+          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            {CRM_PAGE_HEADLINE}
+          </h1>
+          <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-300">
+            {CRM_PAGE_NEXT}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/pipeline"
+              className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+            >
+              ← Back to pipeline
+            </Link>
+            <a
+              href={jobsFreshHomeHref()}
+              onClick={onJobsFreshHomeClick}
+              className="inline-flex items-center font-mono text-sm font-semibold uppercase tracking-[0.08em] text-emerald-400 hover:text-emerald-300"
+            >
+              + New robot
+            </a>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
+                className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-amber-200 hover:text-amber-100"
+              >
+                Cal queue — bulk send
+              </button>
+            )}
+            <Link
+              href="/integrations"
+              className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-slate-300 hover:text-white"
+            >
+              Connect HubSpot / GitHub
+            </Link>
           </div>
         </div>
         {msg && (
@@ -480,9 +493,9 @@ export default function Crm() {
           ) : accounts.length === 0 ? (
             <p className="p-4 text-sm text-gray-500">No accounts in this workspace.</p>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full text-base">
               <thead>
-                <tr className="border-b border-stone-200 text-left text-[10px] uppercase tracking-wide text-stone-600">
+                <tr className="border-b border-slate-600 text-left text-sm font-semibold uppercase tracking-[0.08em] text-slate-300">
                   <th className="px-2 py-1.5">Account</th>
                   <th className="px-2 py-1.5">Company #</th>
                   <th className="px-2 py-1.5">Stage</th>
@@ -498,10 +511,10 @@ export default function Crm() {
                       selectedAccountId === a.id ? "bg-emerald-50" : "hover:bg-stone-50"
                     }`}
                   >
-                    <td className="px-2 py-1.5 font-semibold text-gray-900">{a.name}</td>
-                    <td className="px-2 py-1.5 font-mono text-xs text-stone-600">{a.company_id ?? "—"}</td>
-                    <td className="px-2 py-1.5 text-xs text-emerald-800">{a.outreach_stage || "—"}</td>
-                    <td className="px-2 py-1.5 text-xs truncate max-w-[140px]">{a.contact_email || "—"}</td>
+                    <td className="px-3 py-2.5 font-display text-lg font-bold text-white">{a.name}</td>
+                    <td className="px-3 py-2.5 font-mono text-sm text-slate-300">{a.company_id ?? "—"}</td>
+                    <td className="px-3 py-2.5 text-sm text-emerald-300">{a.outreach_stage || "—"}</td>
+                    <td className="px-3 py-2.5 text-sm truncate max-w-[140px]">{a.contact_email || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -519,9 +532,9 @@ export default function Crm() {
               <div className="mb-2 flex items-start justify-between gap-2 border-b border-gray-100 pb-2">
                 <div>
                   <p className="sb-kicker">Buyer outreach checkpoint</p>
-                  <h2 className="mt-0.5 text-base font-semibold text-gray-900">{selectedAccount.name}</h2>
+                  <h2 className="mt-0.5 text-xl font-semibold text-white">{selectedAccount.name}</h2>
                 </div>
-                <span className="inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800" style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                <span className="inline-flex rounded px-1.5 py-0.5 text-sm font-semibold uppercase tracking-wide text-amber-200" style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)" }}>
                   {selectedAccount.outreach_stage || "captured"}
                 </span>
               </div>
@@ -553,7 +566,7 @@ export default function Crm() {
                       key={trait.id}
                       type="button"
                       onClick={() => toggleTrait(trait.id)}
-                      className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
+                      className={`rounded-full border px-2 py-1 text-sm font-bold ${
                         selectedTraits.includes(trait.id)
                           ? "border-amber-400 bg-amber-50 text-amber-900"
                           : "border-gray-200 bg-white text-gray-500"

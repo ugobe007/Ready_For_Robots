@@ -8,6 +8,13 @@ import type { MatchJob } from "@/lib/robotJobMatch";
 import {
   JOBS_ACTIVATE_CAP,
   JOBS_ACTIVATE_SRC,
+  JOBS_EYEBROW_CLASS,
+  JOBS_JOB_TITLE_CLASS,
+  JOBS_META_CLASS,
+  JOBS_PLACE_CLASS,
+  JOBS_PROCESS_NAV_CLASS,
+  JOBS_RAIL_LINK_CLASS,
+  JOBS_ROBOT_NAME_CLASS,
   JOBS_SAVE_TO_CRM_CTA,
   JOBS_SAVE_TO_CRM_HINT,
   RAIL_STEP_HINT,
@@ -36,27 +43,25 @@ export default function JobsHandoffBoard(_props: {
   return (
     <div className="mx-auto grid w-full max-w-[1200px] flex-1 grid-cols-1 lg:grid-cols-[minmax(0,0.34fr)_minmax(0,0.66fr)]">
       <aside className="border-b border-slate-600 p-5 sm:p-6 lg:border-b-0 lg:border-r">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-          Your robot
-        </p>
-        <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">
+        <p className={JOBS_EYEBROW_CLASS}>Your robot</p>
+        <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-white">
           {product}
         </h2>
         <nav className="mt-6 space-y-1">
-          <p className="border-l-2 border-transparent px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+          <p className={`border-l-2 border-transparent px-3 py-2 ${JOBS_PROCESS_NAV_CLASS} text-slate-500`}>
             01 Profile
           </p>
-          <p className="border-l-2 border-transparent px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+          <p className={`border-l-2 border-transparent px-3 py-2 ${JOBS_PROCESS_NAV_CLASS} text-slate-500`}>
             02 Jobs
           </p>
-          <p className="border-l-2 border-emerald-400 bg-emerald-400/5 px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
+          <p className={`border-l-2 border-emerald-400 bg-emerald-400/5 px-3 py-2 ${JOBS_PROCESS_NAV_CLASS} text-emerald-300`}>
             03 Live list
           </p>
         </nav>
-        <p className="mt-4 text-[12px] leading-snug text-slate-400">
+        <p className="mt-4 text-sm leading-relaxed text-slate-300">
           {RAIL_STEP_HINT.pipeline}
         </p>
-        <ol className="mt-4 space-y-2 text-[12px] leading-snug text-slate-400">
+        <ol className="mt-4 space-y-2 text-sm leading-relaxed text-slate-300">
           <li>
             <span className="font-mono text-emerald-400">1.</span> The jobs you
             checked stay pinned at the top.
@@ -71,16 +76,13 @@ export default function JobsHandoffBoard(_props: {
           </li>
         </ol>
         <div className="mt-8 space-y-2">
-          <Link
-            href={jobsWorkspaceRestoreHref()}
-            className="block font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 hover:text-slate-300"
-          >
+          <Link href={jobsWorkspaceRestoreHref()} className={JOBS_RAIL_LINK_CLASS}>
             Inspect jobs
           </Link>
           <a
             href={jobsFreshHomeHref()}
             onClick={onJobsFreshHomeClick}
-            className="block font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 hover:text-slate-300"
+            className={JOBS_RAIL_LINK_CLASS}
           >
             + New robot
           </a>
@@ -88,13 +90,11 @@ export default function JobsHandoffBoard(_props: {
       </aside>
 
       <main className="min-h-0 px-4 py-8 sm:px-6">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
-          Live job list
-        </p>
-        <h1 className="mt-1 font-display text-2xl font-bold text-slate-100 sm:text-3xl">
+        <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>Live job list</p>
+        <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
           Jobs for {product}
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-300">
           You checked {selectedCount}. The list shows {jobs.length} of{" "}
           {JOBS_ACTIVATE_CAP}
           {filled > 0 ? ` (${filled} more from this match)` : ""}.{" "}
@@ -106,13 +106,13 @@ export default function JobsHandoffBoard(_props: {
               ? "/crm"
               : jobsSignupHref(jobsActivateHref(), JOBS_ACTIVATE_SRC)
           }
-          className="mt-4 inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+          className="mt-5 inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
         >
           {JOBS_SAVE_TO_CRM_CTA}
         </a>
 
         {jobs.length === 0 ? (
-          <p className="mt-8 text-sm text-slate-400">
+          <p className="mt-8 text-base text-slate-300">
             No jobs were carried over.{" "}
             <Link href={jobsWorkspaceRestoreHref()} className="text-emerald-400 hover:text-emerald-300">
               Return to Jobs
@@ -120,7 +120,7 @@ export default function JobsHandoffBoard(_props: {
             .
           </p>
         ) : (
-          <ol className="mt-8 space-y-2">
+          <ol className="mt-8 space-y-3">
             {jobs.map((job, i) => (
               <JobRow
                 key={job.job_key}
@@ -150,19 +150,14 @@ function JobRow({
 }) {
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
   return (
-    <li className="border border-slate-600 bg-[#081126] px-4 py-3">
-      <p className="flex flex-wrap items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-        <span>{jobIsForLabel(index, robotName)}</span>
-        {pinned ? (
-          <span className="text-emerald-400">From your list</span>
-        ) : (
-          <span>More from this match</span>
-        )}
+    <li className="border border-slate-600 bg-[#081126] px-4 py-4">
+      <p className={JOBS_ROBOT_NAME_CLASS}>{robotName}</p>
+      <p className={JOBS_JOB_TITLE_CLASS}>{job.title}</p>
+      {place ? <p className={JOBS_PLACE_CLASS}>{place}</p> : null}
+      <p className={JOBS_META_CLASS}>
+        {jobIsForLabel(index, robotName)} ·{" "}
+        {pinned ? "From your list" : "More from this match"}
       </p>
-      <p className="mt-1 font-display text-base font-bold leading-snug text-slate-100">
-        {job.title}
-      </p>
-      {place ? <p className="mt-0.5 text-xs text-slate-400">{place}</p> : null}
     </li>
   );
 }

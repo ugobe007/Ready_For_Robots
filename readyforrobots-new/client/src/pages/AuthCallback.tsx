@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import { supabase } from "@/lib/supabase";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
 import { clearPendingNext, readNextParam, peekPendingNext, postAuthRedirectTarget, navigateAfterAuth } from "@/lib/authNext";
@@ -82,11 +82,11 @@ export default function AuthCallback() {
   }, [setLocation]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Header />
+    <div className="min-h-screen bg-[#081126] text-slate-100">
+      <ExperimentHeader />
       <main className="mx-auto max-w-md px-6 pt-32 text-center">
-        <p className="text-sm text-gray-600">{message}</p>
-        <Link href="/login" className="mt-6 inline-block text-sm font-semibold text-emerald-700">
+        <p className="text-base text-slate-300">{message}</p>
+        <Link href="/login" className="mt-6 inline-block text-base font-semibold text-emerald-400">
           Back to sign in
         </Link>
       </main>

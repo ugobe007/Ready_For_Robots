@@ -26,7 +26,7 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
   {
     label: "Outreach",
     links: [
-      { label: "Outreach editor", href: "/crm", shortLabel: "Advanced approve/send UI" },
+      { label: "CRM", href: "/crm", shortLabel: "Approve and send outreach" },
       { label: "Calendar", href: "/calendar" },
       { label: "Sales console", href: "/sales-console", shortLabel: "Reply automation" },
     ],

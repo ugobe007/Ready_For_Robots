@@ -1336,7 +1336,7 @@
   }
 
   .pipeline-list-columns {
-    @apply mb-1.5 hidden grid-cols-12 gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-2.5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-200 sm:grid;
+    @apply mb-1.5 hidden grid-cols-12 gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-2.5 py-2 text-sm font-semibold uppercase tracking-[0.08em] text-slate-200 sm:grid;
     background-color: var(--pipeline-panel-bg);
   }
 
@@ -1357,7 +1357,7 @@
   .pipeline-company-name {
     color: #ffffff !important;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.25rem;
     letter-spacing: -0.02em;
     line-height: 1.25;
   }

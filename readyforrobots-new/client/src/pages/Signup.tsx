@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Github } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getPublicReadApiBase } from "@/lib/apiBase";
@@ -466,7 +466,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#081126] text-slate-100">
-      <Header />
+      <ExperimentHeader />
       <main className="flex-1 px-4 pt-24 pb-16">
         <div className="mx-auto grid w-full max-w-5xl items-start gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>

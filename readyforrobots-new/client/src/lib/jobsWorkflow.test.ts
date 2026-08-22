@@ -12,6 +12,14 @@ import {
   JOBS_PROCESS_STEPS,
   JOBS_SCAN_STEPS,
   JOBS_SEE_JOBS_CTA,
+  JOBS_EYEBROW_CLASS,
+  JOBS_JOB_TITLE_CLASS,
+  JOBS_META_CLASS,
+  JOBS_ROBOT_NAME_CLASS,
+  CRM_PAGE_HEADLINE,
+  CRM_PAGE_NEXT,
+  PIPELINE_PAGE_HEADLINE,
+  PIPELINE_PAGE_NEXT,
   buyerLeadsHref,
   buyerLeadsToShow,
   capExampleJobs,
@@ -27,6 +35,7 @@ import {
   jobsFreshHomeHref,
   goJobsFreshHome,
   jobsHeading,
+  jobIndexLabel,
   jobIsForLabel,
   jobsListHint,
   jobsPlaceHref,
@@ -570,5 +579,47 @@ describe("jobsWorkflow", () => {
     });
     expect(armJobsWorkspaceRestore()).toBe("/?restore=1");
     expect(memory.getItem("rfr_jobs_restore_once")).toBe("1");
+  });
+
+  it("makes Jobs type readable and uses Jobs chrome on Pipeline and CRM", () => {
+    expect(jobIndexLabel(1)).toBe("Job 00001");
+    expect(JOBS_ROBOT_NAME_CLASS).toMatch(/text-xl/);
+    expect(JOBS_JOB_TITLE_CLASS).toMatch(/text-lg/);
+    expect(JOBS_META_CLASS).toMatch(/text-sm/);
+    expect(JOBS_EYEBROW_CLASS).toMatch(/text-sm/);
+    expect(CRM_PAGE_HEADLINE).toBe("CRM");
+    expect(PIPELINE_PAGE_HEADLINE).toBe("Pipeline");
+    expect(CRM_PAGE_NEXT).toMatch(/this is your CRM/i);
+    expect(PIPELINE_PAGE_NEXT).toMatch(/live list/i);
+
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const card = workspace.slice(workspace.indexOf("function JobCard"));
+    expect(card).toMatch(/JOBS_ROBOT_NAME_CLASS/);
+    expect(card).toMatch(/JOBS_JOB_TITLE_CLASS/);
+    expect(card).toMatch(/jobIsForLabel/);
+    expect(card).not.toMatch(/text-\[10px\]/);
+
+    const header = readFileSync(
+      join(here, "../components/ExperimentHeader.tsx"),
+      "utf8",
+    );
+    expect(header).toMatch(/href="\/crm"/);
+    expect(header).toMatch(/h-14/);
+    expect(header).toMatch(/sm:text-base/);
+
+    const pipeline = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
+    expect(pipeline).toMatch(/<ExperimentHeader/);
+    expect(pipeline).toMatch(/PIPELINE_PAGE_HEADLINE/);
+    expect(pipeline).not.toMatch(/from "@\/components\/Header"/);
+    expect(pipeline).not.toMatch(/SIGNAL · Sales intelligence/);
+
+    const crm = readFileSync(join(here, "../pages/Crm.tsx"), "utf8");
+    expect(crm).toMatch(/ExperimentHeader/);
+    expect(crm).toMatch(/CRM_PAGE_HEADLINE/);
+    expect(crm).not.toMatch(/from "@\/components\/Header"/);
+    expect(crm).not.toMatch(/Outreach editor/);
   });
 });

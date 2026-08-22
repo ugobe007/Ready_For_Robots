@@ -212,11 +212,39 @@ export function exampleJobsForLineup<T extends { job_key: string }>(
   return out;
 }
 
+export function jobIndexLabel(index: number): string {
+  return `Job ${String(Math.max(1, index)).padStart(5, "0")}`;
+}
+
 export function jobIsForLabel(index: number, robotName: string): string {
   const id = String(Math.max(1, index)).padStart(5, "0");
   const who = (robotName || "this robot").trim() || "this robot";
   return `Job ${id} is for ${who}`;
 }
+
+/** Readable 1970s terminal type — identity is never 10px. */
+export const JOBS_EYEBROW_CLASS =
+  "font-mono text-sm font-semibold uppercase tracking-[0.12em] text-slate-400";
+export const JOBS_ROBOT_NAME_CLASS =
+  "block font-display text-xl font-bold leading-tight tracking-tight text-white sm:text-2xl";
+export const JOBS_JOB_TITLE_CLASS =
+  "mt-1 block font-display text-lg font-bold leading-snug text-slate-100 sm:text-xl";
+export const JOBS_META_CLASS =
+  "mt-1.5 block font-mono text-sm text-emerald-400/90";
+export const JOBS_PLACE_CLASS = "mt-1 block text-sm leading-snug text-slate-400";
+export const JOBS_PROCESS_NAV_CLASS =
+  "font-mono text-sm font-bold uppercase tracking-[0.08em]";
+export const JOBS_RAIL_LINK_CLASS =
+  "block text-left font-mono text-sm font-semibold uppercase tracking-[0.08em] text-slate-400 transition hover:text-slate-200";
+
+export const CRM_PAGE_HEADLINE = "CRM";
+export const CRM_PAGE_NEXT =
+  "This is your CRM. Pick an account, approve the outreach draft, then send. Or go back to Pipeline to work the live list.";
+export const PIPELINE_PAGE_HEADLINE = "Pipeline";
+export const PIPELINE_PAGE_NEXT =
+  "This is your live list. Open a row, then save it to CRM so we can watch the job and tell you what to do next.";
+export const JOBS_OPEN_CRM_CTA = "Open CRM →";
+export const JOBS_HEADER_OFFSET_CLASS = "pt-14";
 
 export function jobsListHint(opts: {
   robotCount: number;

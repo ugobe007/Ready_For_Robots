@@ -14,7 +14,7 @@ export default function Jobs() {
   return (
     <div className="jobs-page min-h-screen bg-[#081126] text-slate-100">
       <ExperimentHeader />
-      <main className="mx-auto w-full max-w-[1200px] px-3 pb-16 pt-[52px] sm:px-4">
+      <main className="mx-auto w-full max-w-[1200px] px-3 pb-16 pt-16 sm:px-4">
         <RobotJobsWorkspace />
       </main>
     </div>
