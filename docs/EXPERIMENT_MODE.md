@@ -37,14 +37,14 @@ submit robot URL on /
        several robots: 1 sample job per SKU, tagged; run each robot individually for five jobs
   → inspect cards (why / unknowns / blockers)
   → check the jobs to take forward
-  → Next → /pipeline?src=jobs_activate
-  → save the job list to CRM (signup if needed)
+  → Next → /crm?src=jobs_activate (signup first if signed out)
+  → CRM shows 3 unlocked job opportunities (free)
   → run the next robot the same way
 ```
 
-The picker already decides one vs several. **One robot → jobs for that robot on the same click** — do not open the profile checkpoint and ask Find jobs again. Several/all is slower, so we resolve with a type-level match instead of N SKU scrapes. **Independent of that resolution, every stage keeps process nav** (01 Show us your robot → 02 Here are its jobs → 03 Activate the job list). Fourier empty portfolio failed because 02/03 were not links. Picking N1 then hitting a second Find jobs with Activate buried below the fold is the same break: the process stops at step 2.
+The picker already decides one vs several. **One robot → jobs for that robot on the same click** — do not open the profile checkpoint and ask Find jobs again. Several/all is slower, so we resolve with a type-level match instead of N SKU scrapes. **Independent of that resolution, every stage keeps process nav** (01 Show us your robot → 02 Here are its jobs → 03 CRM). Fourier empty portfolio failed because 02/03 were not links. Picking N1 then hitting a second Find jobs with Activate buried below the fold is the same break: the process stops at step 2.
 
-**Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Activate uses `src=jobs_activate` without the robot OEM as `url=` so `/pipeline` shows the job list, not a match-url scan of the manufacturer. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
+**Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Next uses `src=jobs_activate` on `/crm` so the destination is 3 unlocked job opportunities, not a pipeline confirmation that restates the list. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 
 Step 2 inspects. Checkboxes select. **Start jobs →** (FIND) and **Next →** (job list) sit in the process bar, at the top of the job list, and in the page footer — not only under the tape or under the cards. The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
 

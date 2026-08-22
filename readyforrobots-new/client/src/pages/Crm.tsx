@@ -11,6 +11,7 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
 import CrmHero, { type JobsWatchStatus } from "@/components/crm/CrmHero";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
+import { CRM_UNLOCKED_JOBS } from "@/lib/jobsWorkflow";
 
 type Team = { id: string; name: string; role: string };
 type Account = {
@@ -201,6 +202,9 @@ export default function Crm() {
   }, [session?.access_token, teamId, authFetch]);
 
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId) ?? null;
+  const handoff = readJobsHandoffSnapshot();
+  const tasteJobs = (handoff?.jobs || []).slice(0, CRM_UNLOCKED_JOBS);
+  const tasteProduct = handoff?.productName || null;
 
   const optInWatch = useCallback(
     async (optedIn: boolean) => {
@@ -212,7 +216,7 @@ export default function Crm() {
         if (optedIn && snap?.url) {
           payload.robot_url = snap.url;
           payload.product_name = snap.productName || "";
-          payload.seed_jobs = (snap.jobs || []).map(job => ({
+          payload.seed_jobs = (snap.jobs || []).slice(0, CRM_UNLOCKED_JOBS).map(job => ({
             job_key: job.job_key,
             title: job.title,
             company_name: job.company_name,
@@ -441,7 +445,11 @@ export default function Crm() {
       <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-slate-100">
         <ExperimentHeader />
         <div className="mx-auto max-w-4xl">
-          <CrmHero footer="Loading CRM…" />
+          <CrmHero
+            footer="Loading CRM…"
+            tasteJobs={tasteJobs}
+            tasteProduct={tasteProduct}
+          />
         </div>
       </div>
     );
@@ -453,6 +461,8 @@ export default function Crm() {
         <ExperimentHeader />
         <div className="mx-auto max-w-4xl">
           <CrmHero
+            tasteJobs={tasteJobs}
+            tasteProduct={tasteProduct}
             actions={
               <Link
                 href="/login"
@@ -478,6 +488,8 @@ export default function Crm() {
           watchBusy={watchBusy}
           watchError={watchError}
           onOptIn={optInWatch}
+          tasteJobs={tasteJobs}
+          tasteProduct={tasteProduct}
           actions={
             <>
               <Link

@@ -75,15 +75,15 @@ describe("jobsHandoffSnapshot", () => {
     saveJobsHandoffSnapshot({
       url: "https://www.magiclab.top/en",
       productName: "G1",
-      selectedCount: 5,
-      jobs: Array.from({ length: 15 }, (_, i) => ({
+      selectedCount: 3,
+      jobs: Array.from({ length: 3 }, (_, i) => ({
         job_key: `job-${i}`,
         title: `Job ${i}`,
         industry: "manufacturing",
         path: `/jobs/${i}`,
       })),
     });
-    expect(loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.selectedCount).toBe(5);
-    expect(loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.jobs).toHaveLength(15);
+    expect(loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.selectedCount).toBe(3);
+    expect(loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.jobs).toHaveLength(3);
   });
 });
