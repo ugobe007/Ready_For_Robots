@@ -647,7 +647,8 @@ describe("jobsWorkflow", () => {
 
     const pipelineSrc = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
     expect(pipelineSrc).toMatch(/JOBS_PIPELINE_CAP/);
-    expect(pipelineSrc).not.toMatch(/showFullPanel\s*\n\s*\? PIPELINE_LIMIT_PAID/);
+    expect(pipelineSrc).not.toMatch(/Find buyers by industry/);
+    expect(pipelineSrc).not.toMatch(/Customer opportunities/);
 
     const cardSrc = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),

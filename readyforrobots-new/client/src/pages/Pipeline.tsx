@@ -607,10 +607,16 @@ function FirstThreeActionsProgress({
   );
 }
 
+function userBucketLabel(bucket: UserBucket): string {
+  if (bucket === "Hot Leads") return "Hot jobs";
+  if (bucket === "Warm Leads") return "Warm jobs";
+  return "Watch list";
+}
+
 const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string; slotCap: number }> = {
-  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "Pitch these first", slotCap: PIPELINE_HOT_SLOTS },
-  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Sequence next", slotCap: PIPELINE_WARM_SLOTS },
-  "Monitoring":  { color: "#059669", dot: "#059669", desc: "Watch for a stronger signal", slotCap: PIPELINE_MONITOR_SLOTS },
+  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "Do this work first", slotCap: PIPELINE_HOT_SLOTS },
+  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Next jobs to inspect", slotCap: PIPELINE_WARM_SLOTS },
+  "Monitoring":  { color: "#059669", dot: "#059669", desc: "Keep an eye on this work", slotCap: PIPELINE_MONITOR_SLOTS },
 };
 
 /** Placeholder while pipeline / match-url loads — face icon + countdown so the page never looks blank. */
@@ -635,7 +641,7 @@ function MatchedPipelineSkeleton({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <p className="text-base font-bold text-slate-100 sm:text-lg">
-                {jobsMode ? "Loading jobs" : "Loading sales leads"}
+                {jobsMode ? "Loading jobs" : "Loading jobs"}
                 {hostname ? ` for ${hostname}` : ""}…
               </p>
               <span
@@ -689,7 +695,7 @@ function PipelineLeadsLoadingStrip({ secondsLeft, jobsMode = false }: { secondsL
         <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
       </div>
       <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950">
-        {jobsMode ? "Loading jobs for your robot…" : "Loading sales leads…"}
+        {jobsMode ? "Loading jobs for your robot…" : "Loading jobs…"}
       </p>
       <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600" aria-label={`${secondsLeft} seconds remaining`}>
         {secondsLeft}s
@@ -707,7 +713,7 @@ function UpgradeProPriorityBanner({ src }: { src: string }) {
             Priority
           </p>
           <p className="mt-1 text-base font-extrabold text-white">
-            Upgrade to Pro and automate your sales campaign.
+            Keep watching jobs with Pro.
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2.5">
@@ -2691,7 +2697,7 @@ export default function Pipeline() {
   const freeLeadCap = Math.min(entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE, PIPELINE_LIMIT_FREE);
   const freeUpgradeMessage = arrivedFromJobs
     ? `You’re seeing ${freeLeadCap} jobs for your robot. Upgrade to Pro for the full live list, unlimited saves, and automated CRM motion.`
-    : `You’re seeing ${freeLeadCap} customer opportunities. Upgrade to Pro for the full live pipeline, unlimited saves, and automated CRM motion.`;
+    : `You’re seeing ${freeLeadCap} jobs. Pro keeps the watch loop on every SKU.`;
   const sessionDisplayName =
     session?.user?.user_metadata?.full_name
     || session?.user?.user_metadata?.name
@@ -2857,7 +2863,7 @@ export default function Pipeline() {
       ? "Activate CRM — save a buyer, then work the draft"
       : isSignedIn && hasSavedLead
         ? "Work your CRM accounts, then pick the next buyer"
-        : "Pick a buyer, start free, then activate CRM";
+        : "Pick a job, save it to CRM, then send";
   const nextStepsItems = arrivedFromResultsScan
     ? !build25Started
       ? [
@@ -2898,7 +2904,7 @@ export default function Pipeline() {
           ]
     : isFirstWorkspaceRun
       ? [
-          "Select the highest-fit HOT buyer in the list on the left.",
+          "Select the strongest job in the list on the left.",
           "Activate CRM by saving that buyer — that opens your working pipeline.",
           "Copy the outreach draft on the right, then send.",
         ]
@@ -2909,7 +2915,7 @@ export default function Pipeline() {
             "Send, then track replies in Inbox.",
           ]
       : [
-          "Select the highest-fit HOT buyer in the list.",
+          "Select the strongest job in the list.",
           "Start a free workspace, then activate CRM by saving that buyer.",
           "Copy the outreach draft and send from the panel on the right.",
         ];
@@ -4049,7 +4055,7 @@ export default function Pipeline() {
                 <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
               </div>
               <p className="min-w-0 flex-1 text-sm font-bold text-slate-100 sm:text-base">
-                {arrivedFromJobs ? "Loading jobs for your robot…" : "Loading sales leads…"}
+                {arrivedFromJobs ? "Loading jobs for your robot…" : "Loading jobs…"}
               </p>
               <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-300 sm:text-3xl">
                 {loadCountdown}s
@@ -4299,7 +4305,7 @@ export default function Pipeline() {
                     <li className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                       <div className="flex items-center justify-center gap-3">
                         <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
-                        <span className="text-sm font-bold text-emerald-950">Loading sales leads…</span>
+                        <span className="text-sm font-bold text-emerald-950">Loading jobs…</span>
                         <span className="font-mono text-xl font-extrabold tabular-nums text-emerald-600">
                           {loadCountdown}s
                         </span>
@@ -4330,9 +4336,9 @@ export default function Pipeline() {
                   <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="min-w-0 flex-1">
                   <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-900">
-                    Search pipeline
+                    Search jobs
                   </span>
-                  <p className="mt-1 text-base font-semibold text-white sm:text-lg">Find buyers by industry, company, or signal.</p>
+                  <p className="mt-1 text-base font-semibold text-white sm:text-lg">Find jobs by industry, company, or the work itself.</p>
                   {session?.access_token && (
                     <p className="mt-1 text-[12px] font-medium text-emerald-900">
                       Welcome back, {sessionDisplayName}. Your sales workspace is active.
@@ -4743,13 +4749,11 @@ export default function Pipeline() {
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-3 py-2">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-300">
-                    {arrivedFromJobs ? "Jobs" : "Customer opportunities"}
+                    Jobs
                   </p>
                   <p className="mt-0.5 text-sm font-semibold text-slate-100">
-                    {arrivedFromJobs
-                      ? `${displayedDeals.length} live job${displayedDeals.length === 1 ? "" : "s"}`
-                      : `${displayedDeals.length} live buyer${displayedDeals.length === 1 ? "" : "s"}`}
-                    {!showFullPanel ? ` · ${PIPELINE_LIMIT_FREE} on Free` : ""}
+                    {displayedDeals.length} live job{displayedDeals.length === 1 ? "" : "s"}
+                    {` · ${JOBS_PIPELINE_CAP} on this list`}
                   </p>
                 </div>
                 {!showFullPanel ? (
@@ -4908,16 +4912,13 @@ export default function Pipeline() {
                   <div key={bucket}>
                     <div className="pipeline-tier-header">
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: meta.dot }} />
-                      <span className="pipeline-tier-title">{bucket}</span>
+                      <span className="pipeline-tier-title">{userBucketLabel(bucket)}</span>
                       <span className="ml-0.5 text-[10px] font-medium text-slate-600">— {meta.desc}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded font-mono"
                         style={{ color: meta.color, background: `${meta.color}15`, fontFamily: "'JetBrains Mono', monospace" }}
                       >
                         {bucketDeals.length}
-                        {showFullPanel && !hasActiveSearch && bucketDeals.length < meta.slotCap ? (
-                          <span className="text-gray-400 font-normal"> / {meta.slotCap}</span>
-                        ) : null}
                       </span>
                     </div>
 
@@ -5022,7 +5023,7 @@ export default function Pipeline() {
                   className="pipeline-pro-cap-row mt-2"
                 >
                   <span className="text-sm font-semibold text-white">
-                    Showing {displayedDeals.length} {arrivedFromJobs ? "jobs" : "customer opportunities"}.
+                    Showing {displayedDeals.length} jobs.
                     {" "}
                     <span className="text-amber-200">Pro unlocks the full live pipeline.</span>
                   </span>

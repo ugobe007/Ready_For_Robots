@@ -40,7 +40,7 @@ export default function AnonymousValueStrip({ leadCount, limit, selectedCompany,
           <p className="pipeline-value-strip-body">
             {hasLead
               ? `Read Cal's note for ${company} — short, timely, no hard sell. Free workspace saves the lead and lets you copy the draft.`
-              : `Browse ${Math.min(leadCount, limit)} live buyers with pitch actions, robot types, and Cal's research notes — no account required. Free workspace adds save, copy, and HubSpot sync.`}
+              : `Browse ${Math.min(leadCount, limit)} live jobs — what the work is, which robot types fit, and Cal’s note. No account required.`}
           </p>
         </div>
       </div>
