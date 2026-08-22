@@ -572,6 +572,34 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
   );
 }
 
+/** Path without query — `/` and `/jobs…` are the Jobs terminal. */
+export function isJobsChromePath(pathname: string | null | undefined): boolean {
+  const path = (pathname || "").trim().split("?")[0] || "";
+  return path === "/" || path === "/jobs" || path.startsWith("/jobs/");
+}
+
+/**
+ * SIGNAL Pipeline in the header. Hidden on Jobs chrome and Jobs CRM so
+ * FIND → cards → CRM does not hop onto buyer pipeline.
+ */
+export function showSignalPipelineNav(opts: {
+  pathname: string;
+  src?: string | null;
+}): boolean {
+  const path = (opts.pathname || "").trim().split("?")[0] || "";
+  if (isJobsChromePath(path) || isJobsHandoffSrc(opts.src)) return false;
+  return path.startsWith("/pipeline") || path.startsWith("/crm");
+}
+
+/** Jobs chrome CRM is step 3 (`src=jobs_activate`). SIGNAL `/crm` stays `/crm`. */
+export function jobsHeaderCrmHref(
+  pathname: string,
+  src?: string | null,
+): string {
+  if (showSignalPipelineNav({ pathname, src })) return "/crm";
+  return jobsActivateHref();
+}
+
 export const FIND_JOBS_CTA = "Start jobs →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */

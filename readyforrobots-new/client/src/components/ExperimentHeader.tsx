@@ -1,15 +1,21 @@
 /**
  * Top panel for product front door — Kare face + ReadyForRobots, dark brand chrome.
  * JOBS selected on / and /jobs/:slug; ABOUT links to /intelligence.
- * Signed-in: Pipeline + CRM. Sign In / Sign Out stay in the upper-right.
+ * Jobs chrome hides Pipeline. CRM on Jobs is `/crm?src=jobs_activate`.
+ * SIGNAL `/pipeline` and `/crm` still show Pipeline.
  */
-import { Link, useRoute, useLocation } from "wouter";
+import { Link, useRoute, useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { loginHref, clearPendingNext } from "@/lib/authNext";
 import { supabase } from "@/lib/supabase";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
-import { jobsFreshHomeHref, onJobsFreshHomeClick } from "@/lib/jobsWorkflow";
+import {
+  jobsFreshHomeHref,
+  jobsHeaderCrmHref,
+  onJobsFreshHomeClick,
+  showSignalPipelineNav,
+} from "@/lib/jobsWorkflow";
 
 const navIdle = "text-slate-400 transition hover:text-slate-200";
 const navActive = "border-b-2 border-emerald-400 pb-0.5 text-emerald-400";
@@ -17,11 +23,15 @@ const navActive = "border-b-2 border-emerald-400 pb-0.5 text-emerald-400";
 export default function ExperimentHeader() {
   const { session } = useAuth();
   const [location] = useLocation();
+  const search = useSearch();
   const [onJobsSlug] = useRoute("/jobs/:slug");
   const jobsActive = location === "/" || location.startsWith("/?") || Boolean(onJobsSlug);
   const pipelineActive = location.startsWith("/pipeline");
   const crmActive = location.startsWith("/crm");
   const aboutActive = location.startsWith("/intelligence");
+  const jobsSrc = new URLSearchParams(search).get("src");
+  const showPipeline = showSignalPipelineNav({ pathname: location, src: jobsSrc });
+  const crmHref = jobsHeaderCrmHref(location, jobsSrc);
 
   async function signOut() {
     clearPendingNext();
@@ -53,15 +63,17 @@ export default function ExperimentHeader() {
           <Link href="/intelligence" className={`${aboutActive ? navActive : navIdle} max-sm:hidden`}>
             About
           </Link>
-          <Link
-            href="/pipeline"
-            className={pipelineActive ? navActive : navIdle}
-          >
-            Pipeline
-          </Link>
+          {showPipeline ? (
+            <Link
+              href="/pipeline"
+              className={pipelineActive ? navActive : navIdle}
+            >
+              Pipeline
+            </Link>
+          ) : null}
           {session ? (
             <>
-              <Link href="/crm" className={crmActive ? navActive : navIdle}>
+              <Link href={crmHref} className={crmActive ? navActive : navIdle}>
                 CRM
               </Link>
               <button type="button" onClick={() => void signOut()} className={navIdle}>

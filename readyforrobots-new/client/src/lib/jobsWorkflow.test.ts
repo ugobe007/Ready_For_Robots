@@ -36,8 +36,10 @@ import {
   exampleJobsForLineup,
   filterJobsLineupProducts,
   isJobsHandoffSrc,
+  isJobsChromePath,
   isPlaceSrc,
   jobsActivateHref,
+  jobsHeaderCrmHref,
   jobsCountEyebrow,
   jobsForActivatedPipeline,
   jobsFreshHomeHref,
@@ -69,6 +71,7 @@ import {
   persistJobsHandoffSrc,
   placeBuyersToShow,
   shouldRestoreJobsWorkspace,
+  showSignalPipelineNav,
   armJobsWorkspaceRestore,
 } from "./jobsWorkflow";
 
@@ -314,6 +317,26 @@ describe("jobsWorkflow", () => {
       expect(href).not.toContain("/results");
     }
     expect(jobsWorkspaceRestoreHref()).toBe("/?restore=1");
+    expect(showSignalPipelineNav({ pathname: "/" })).toBe(false);
+    expect(showSignalPipelineNav({ pathname: "/jobs" })).toBe(false);
+    expect(showSignalPipelineNav({ pathname: "/crm", src: "jobs_activate" })).toBe(false);
+    expect(showSignalPipelineNav({ pathname: "/pipeline" })).toBe(true);
+    expect(showSignalPipelineNav({ pathname: "/crm" })).toBe(true);
+    expect(isJobsChromePath("/")).toBe(true);
+    expect(jobsHeaderCrmHref("/")).toBe("/crm?src=jobs_activate");
+    expect(jobsHeaderCrmHref("/crm")).toBe("/crm");
+    expect(jobsHeaderCrmHref("/crm", "jobs_activate")).toBe(
+      "/crm?src=jobs_activate",
+    );
+    expect(jobsHeaderCrmHref("/pipeline")).toBe("/crm");
+    const header = readFileSync(
+      join(here, "../components/ExperimentHeader.tsx"),
+      "utf8",
+    );
+    expect(header).toMatch(/showSignalPipelineNav/);
+    expect(header).toMatch(/jobsHeaderCrmHref/);
+    expect(header).toMatch(/showPipeline/);
+    expect(header).toMatch(/useSearch/);
   });
 
   it("advances step 2 with Activate job list, not a Place buyer dump", () => {
@@ -690,7 +713,8 @@ describe("jobsWorkflow", () => {
       join(here, "../components/ExperimentHeader.tsx"),
       "utf8",
     );
-    expect(header).toMatch(/href="\/crm"/);
+    expect(header).toMatch(/href=\{crmHref\}/);
+    expect(header).toMatch(/showPipeline \? \(/);
     expect(header).toMatch(/h-14/);
     expect(header).toMatch(/sm:text-base/);
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import AdminNav from "@/components/AdminNav";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
@@ -83,6 +83,7 @@ export default function Crm() {
   const { session, loading } = useAuth();
   const isAdmin = useIsAdmin();
   const [, setLocation] = useLocation();
+  const search = useSearch();
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState("");
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -106,14 +107,10 @@ export default function Crm() {
   const [watch, setWatch] = useState<JobsWatchStatus | null>(null);
   const [watchBusy, setWatchBusy] = useState(false);
   const [watchError, setWatchError] = useState<string | null>(null);
-  const jobsSrc =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("src")
-      : null;
+  const jobsSrc = new URLSearchParams(search).get("src");
   const fromJobs = isJobsHandoffSrc(jobsSrc);
   const crmReturnHref = (() => {
-    if (typeof window === "undefined") return "/crm";
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(search);
     if (!isJobsHandoffSrc(params.get("src"))) params.set("src", JOBS_ACTIVATE_SRC);
     const q = params.toString();
     return q ? `/crm?${q}` : "/crm";

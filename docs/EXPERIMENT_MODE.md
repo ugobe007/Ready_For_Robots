@@ -57,11 +57,13 @@ Step 2 inspects. Checkboxes select. **Start jobs →** (FIND) and **Next →** (
 Jobs is a **three-step process on a normal web page**. It is not a viewport-locked two-pane dashboard.
 
 ```
-Site header (Jobs / About / Sign in)
+Site header (Jobs / About / Sign in). Pipeline is SIGNAL-only.
 Process bar — 01 robot → 02 jobs → 03 activate + Start jobs / Next
 Content (two columns are layout, not a clipping box)
 Process bar repeated at the bottom of the page
 ```
+
+Jobs chrome and Jobs CRM (`src=jobs_activate`) do not show Pipeline. Signed-in header CRM on those pages is `/crm?src=jobs_activate`, not bare `/crm`. SIGNAL `/pipeline` and `/crm` without a Jobs `src` still show Pipeline.
 
 **Do not** set `100vh` + `overflow: hidden` on the Jobs workspace. Chrome then cannot scroll below the fold, so step 03 sits in a cut-off box. Pinning Activate inside that box is a patch, not a fix.
 
