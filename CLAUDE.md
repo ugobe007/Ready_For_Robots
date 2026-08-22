@@ -11,8 +11,8 @@ Read **AGENTS.md** for the full harness constitution. This file is loaded on eve
 1. **North star order:** names/events → scores → rank → robot specs. Fix junk before ranking tweaks (infrastructure for PMF, not the product itself).
 2. **Market thesis:** read `docs/market_thesis.md`; update backlog after research missions.
 3. **One mission per cycle.** Write or follow `missions/YYYY-MM-DD-<slug>/brief.md`.
-4. **Observe first:** `python3 scripts/harness_snapshot.py` → read `reports/harness_snapshot_latest.json` (especially `intelligence`).
-5. **Verify:** run targeted pytest; deploy autonomously when mission requires it.
+4. **Observe first:** `python3 scripts/harness_snapshot.py` then `python3 scripts/harness_compile_memory.py` → read `reports/compiled_memory_latest.json` (not chat). Product loop: `docs/product_integrity_loop.md`.
+5. **Verify:** run targeted pytest; **real** Vercel production (CLI secrets) + Fly; do not trust a 7s “Deploy frontend” skip.
 6. **Notify:** `python3 scripts/harness_notify.py --mission <path>` when done.
 7. **Frontend:** `readyforrobots-new/` (Vite + wouter). API: `https://ready-2-robot.fly.dev`.
 8. **Do not commit** `reports/` artifacts.
