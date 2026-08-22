@@ -31,7 +31,7 @@ submit robot URL on /
   → if several SKUs, ask which robot to find jobs for
   → one SKU: picker confirm goes straight to jobs for that product (no profile / second Find jobs)
   → several / all: resolve the search without blocking next steps (type-first, one match per class)
-  → 01 robot → 02 jobs → 03 activate are always navigational links
+  → 01 robot → 02 jobs → 03 CRM are always navigational links
   → see Robot Jobs (step 2)
        one robot: 5 jobs, each tagged `Job ##### is for {SKU}`
        several robots: 1 sample job per SKU, tagged; run each robot individually for five jobs

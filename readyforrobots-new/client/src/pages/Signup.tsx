@@ -33,7 +33,8 @@ import {
   isJobsProductReturnPath,
   type WorkflowPrefill,
 } from "@/lib/signupWorkflowPath";
-import { isJobsHandoffSrc } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, CRM_UNLOCKED_JOBS } from "@/lib/jobsWorkflow";
+import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
@@ -145,10 +146,15 @@ export default function Signup() {
   const pipelineIntent = nextRaw.startsWith("/pipeline") || /[?&]lead=\d+/.test(nextRaw);
   const resultsIntent = nextRaw.startsWith("/results");
   const robotJobsIntent =
-    isJobsHandoffSrc(params.get("src")) || isJobsProductReturnPath(nextRaw);
+    isJobsHandoffSrc(params.get("src")) ||
+    isJobsProductReturnPath(nextRaw) ||
+    nextRaw.startsWith("/crm");
   // Specific buyer the anonymous user was acting on — carried through the signup wall
   // so we restate exactly what they unlock (value-first conversion continuity).
   const buyerCo = (params.get("co") || "").trim().slice(0, 80);
+  const jobsHandoff = robotJobsIntent ? readJobsHandoffSnapshot() : null;
+  const tasteJobs = (jobsHandoff?.jobs || []).slice(0, CRM_UNLOCKED_JOBS);
+  const tasteProduct = jobsHandoff?.productName || "";
 
   const workflowPrefill = useMemo<WorkflowPrefill>(() => {
     const fromQuery: WorkflowPrefill = {
@@ -301,6 +307,7 @@ export default function Signup() {
   }, [setLocation]);
 
   useEffect(() => {
+    if (robotJobsIntent) return;
     let cancelled = false;
     void fetch(`${getPublicReadApiBase()}/api/leads/summary?exclude_junk=true`)
       .then((res) => (res.ok ? res.json() : null))
@@ -319,13 +326,13 @@ export default function Signup() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [robotJobsIntent]);
 
   // Pull one real named HOT buyer from the live pipeline for cold/generic signups.
   // Skipped when the user already carried a specific buyer (buyerCo) or HubSpot intent,
   // so we never show a competing company than the one they came to act on.
   useEffect(() => {
-    if (hubspotIntent || buyerCo) return;
+    if (hubspotIntent || buyerCo || robotJobsIntent) return;
     let cancelled = false;
     void fetch(`${getPublicReadApiBase()}/api/leads/pipeline`)
       .then((res) => (res.ok ? res.json() : null))
@@ -353,7 +360,7 @@ export default function Signup() {
     return () => {
       cancelled = true;
     };
-  }, [hubspotIntent, buyerCo]);
+  }, [hubspotIntent, buyerCo, robotJobsIntent]);
 
   async function oauth(provider: "google" | "github" | "azure") {
     if (!supabase) {
@@ -520,7 +527,7 @@ export default function Signup() {
                 {liveProof.companies ? ` · ${liveProof.companies.toLocaleString()} companies tracked` : ""}
               </p>
             )}
-            {!hubspotIntent && !pipelineIntent && !resultsIntent && (
+            {!hubspotIntent && !pipelineIntent && !resultsIntent && !robotJobsIntent && (
               <div className="mt-4 flex max-w-xl items-center gap-5">
                 <ul className="min-w-0 flex-1 space-y-2 text-xs text-slate-300">
                   <li className="flex gap-2">
@@ -562,7 +569,51 @@ export default function Signup() {
                 </div>
               </div>
             )}
-            {liveBuyer && (
+            {robotJobsIntent && (
+              <div className="mt-4 flex max-w-xl items-center gap-5">
+                <ul className="min-w-0 flex-1 space-y-2 text-xs text-slate-300">
+                  <li className="flex gap-2">
+                    <span className="font-bold text-emerald-700">✓</span>
+                    {CRM_UNLOCKED_JOBS} job opportunities unlocked in CRM
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-emerald-700">✓</span>
+                    Opt in and we watch the robot URL you just ran
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold text-emerald-700">✓</span>
+                    Free to start · no credit card
+                  </li>
+                </ul>
+                <div className="shrink-0" aria-hidden="true">
+                  <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+                </div>
+              </div>
+            )}
+            {robotJobsIntent ? (
+              <div className="mt-6 rounded-2xl border border-slate-700 p-4 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                  {tasteJobs.length || CRM_UNLOCKED_JOBS} job opportunities for{" "}
+                  {tasteProduct || "your robot"}
+                </p>
+                {tasteJobs.length > 0 ? (
+                  <ul className="mt-3 space-y-2">
+                    {tasteJobs.map((job, i) => (
+                      <li key={job.job_key || `${job.title}-${i}`} className="text-sm text-slate-200">
+                        • {job.title}
+                        {job.company_name ? (
+                          <span className="text-slate-400"> · {job.company_name}</span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-2 text-sm text-slate-300">
+                    Sign up and CRM keeps the jobs you checked — 3 on free.
+                  </p>
+                )}
+              </div>
+            ) : liveBuyer ? (
               <div className="mt-6 rounded-2xl border border-slate-700 p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
                   <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
@@ -596,7 +647,7 @@ export default function Signup() {
                   Sign up to save these matched leads. Upgrade to unlock full lead coverage, CRM sync, and automated sales process.
                 </p>
               </div>
-            )}
+            ) : null}
           </div>
 
           {status === "sent" ? (
@@ -607,7 +658,9 @@ export default function Signup() {
                 Open it and you'll land{" "}
                 {pipelineIntent && buyerCo
                   ? `back on ${buyerCo}, ready to save and copy the draft.`
-                  : "in your pipeline, ready to save your first lead and copy the outreach draft."}
+                  : robotJobsIntent
+                    ? "in CRM, with 3 job opportunities unlocked."
+                    : "in your pipeline, ready to save your first lead and copy the outreach draft."}
               </p>
               {(() => {
                 const inboxes = emailInboxLinks(email);
@@ -701,7 +754,7 @@ export default function Signup() {
                   </div>
                 </div>
               )}
-              {liveProof && (liveProof.hot || liveProof.companies) && (
+              {liveProof && !robotJobsIntent && (liveProof.hot || liveProof.companies) && (
                 <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-800 px-3 py-2 text-[11px] font-semibold text-emerald-300">
                   <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
