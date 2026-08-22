@@ -12,7 +12,7 @@
 
 ## Metrics
 
-Not a pipeline-cache mission. Omron-style LD/HD/MD and Fourier GR vs N1 split in the picker without a per-SKU crawl.
+Not a pipeline-cache mission. Live `https://www.fftai.com/en`: picker **5 robots in 2 groups** (GR humanoids + Fourier N1). Family click searched 3 of 4 GR SKUs (free cap), type-first — not a 5-SKU crawl.
 
 ## Follow-ups
 
