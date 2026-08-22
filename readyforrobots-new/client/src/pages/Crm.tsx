@@ -11,7 +11,12 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
 import CrmHero, { type JobsWatchStatus } from "@/components/crm/CrmHero";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
-import { CRM_UNLOCKED_JOBS } from "@/lib/jobsWorkflow";
+import {
+  CRM_UNLOCKED_JOBS,
+  JOBS_ACTIVATE_SRC,
+  isJobsHandoffSrc,
+  jobsSignupHref,
+} from "@/lib/jobsWorkflow";
 
 type Team = { id: string; name: string; role: string };
 type Account = {
@@ -101,6 +106,18 @@ export default function Crm() {
   const [watch, setWatch] = useState<JobsWatchStatus | null>(null);
   const [watchBusy, setWatchBusy] = useState(false);
   const [watchError, setWatchError] = useState<string | null>(null);
+  const jobsSrc =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("src")
+      : null;
+  const fromJobs = isJobsHandoffSrc(jobsSrc);
+  const crmReturnHref = (() => {
+    if (typeof window === "undefined") return "/crm";
+    const params = new URLSearchParams(window.location.search);
+    if (!isJobsHandoffSrc(params.get("src"))) params.set("src", JOBS_ACTIVATE_SRC);
+    const q = params.toString();
+    return q ? `/crm?${q}` : "/crm";
+  })();
 
   const authFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -181,7 +198,7 @@ export default function Crm() {
   }, [session?.access_token]);
 
   useEffect(() => {
-    if (!session?.access_token || !teamId) return;
+    if (!session?.access_token || !teamId || fromJobs) return;
     (async () => {
       setBusy(true);
       setMsg("");
@@ -199,7 +216,7 @@ export default function Crm() {
         setBusy(false);
       }
     })();
-  }, [session?.access_token, teamId, authFetch]);
+  }, [session?.access_token, teamId, authFetch, fromJobs]);
 
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId) ?? null;
   const handoff = readJobsHandoffSnapshot();
@@ -465,7 +482,7 @@ export default function Crm() {
             tasteProduct={tasteProduct}
             actions={
               <Link
-                href="/login"
+                href={jobsSignupHref(crmReturnHref, jobsSrc || JOBS_ACTIVATE_SRC)}
                 className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
               >
                 Sign in to CRM →
@@ -481,7 +498,7 @@ export default function Crm() {
     <div className="pipeline-page-bg crm-navy flex min-h-screen flex-col text-slate-100">
       <ExperimentHeader />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-8 pt-16">
-        <AdminNav variant="dark" />
+        {!fromJobs ? <AdminNav variant="dark" /> : null}
         <CrmHero
           signedIn
           watch={watch}
@@ -491,6 +508,14 @@ export default function Crm() {
           tasteJobs={tasteJobs}
           tasteProduct={tasteProduct}
           actions={
+            fromJobs ? (
+              <Link
+                href="/integrations"
+                className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-slate-300 hover:text-white"
+              >
+                Connect HubSpot / GitHub
+              </Link>
+            ) : (
             <>
               <Link
                 href="/pipeline"
@@ -514,8 +539,11 @@ export default function Crm() {
                 Connect HubSpot / GitHub
               </Link>
             </>
+            )
           }
         />
+        {!fromJobs ? (
+          <>
           {msg && (
           <p className="mb-2 rounded-md border border-amber-400/40 bg-amber-400/10 px-2.5 py-1.5 text-xs font-medium text-amber-200">
             {msg}
@@ -829,6 +857,8 @@ export default function Crm() {
             </aside>
           </section>
         )}
+          </>
+        ) : null}
       </main>
     </div>
   );

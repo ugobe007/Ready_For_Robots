@@ -434,6 +434,35 @@ describe("jobsWorkflow", () => {
     expect(JOBS_PROCESS_STEPS[2].label).toBe("CRM");
   });
 
+  it("Jobs CRM src keeps 3 jobs and hides SIGNAL pipeline chrome", () => {
+    const crm = readFileSync(join(here, "../pages/Crm.tsx"), "utf8");
+    expect(crm).toMatch(/const fromJobs = isJobsHandoffSrc\(jobsSrc\)/);
+    expect(crm).toMatch(/jobsSignupHref\(crmReturnHref, jobsSrc \|\| JOBS_ACTIVATE_SRC\)/);
+    expect(crm).toMatch(/!teamId \|\| fromJobs\) return/);
+    expect(crm).toMatch(/\{!fromJobs \? <AdminNav variant="dark" \/> : null\}/);
+    expect(crm).toMatch(/fromJobs \? \(/);
+    expect(crm).toMatch(/Connect HubSpot \/ GitHub/);
+    expect(crm).toMatch(/\{!fromJobs \? \(/);
+    expect(crm).toMatch(/CrmHero/);
+    expect(crm).toMatch(/tasteJobs/);
+    const back = crm.indexOf("← Back to pipeline");
+    const fork = crm.indexOf("<CrmPathFork");
+    const outreach = crm.indexOf("Job outreach checkpoint");
+    const hide = crm.lastIndexOf("{!fromJobs ? (", fork);
+    expect(back).toBeGreaterThan(-1);
+    expect(fork).toBeGreaterThan(-1);
+    expect(outreach).toBeGreaterThan(-1);
+    expect(hide).toBeGreaterThan(-1);
+    expect(fork).toBeGreaterThan(hide);
+    expect(outreach).toBeGreaterThan(hide);
+    const jobsTrueStart = crm.indexOf("fromJobs ? (");
+    const jobsTrueEnd = crm.indexOf(") : (", jobsTrueStart);
+    const jobsTrue = crm.slice(jobsTrueStart, jobsTrueEnd);
+    expect(jobsTrue).toMatch(/href="\/integrations"/);
+    expect(jobsTrue).not.toMatch(/href="\/pipeline"/);
+    expect(jobsTrue).not.toMatch(/Cal queue/);
+  });
+
   it("looks up a lineup once per robot type, not once per SKU", () => {
     expect(normalizeRobotClass("Humanoid")).toBe("humanoid");
     expect(robotClassJobsLabel("humanoid")).toBe("humanoids");
