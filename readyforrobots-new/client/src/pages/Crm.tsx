@@ -383,31 +383,54 @@ export default function Crm() {
 
   if (!supabase) {
     return (
-      <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-slate-300">
+      <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-slate-100">
         <ExperimentHeader />
-        <p>Supabase not configured.</p>
+        <div className="mx-auto max-w-4xl border border-slate-600 bg-[#0b162f] px-5 py-6">
+          <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>ReadyForRobots</p>
+          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            {CRM_PAGE_HEADLINE}
+          </h1>
+          <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-300">
+            {CRM_PAGE_NEXT}
+          </p>
+          <p className="mt-4 text-base text-slate-400">CRM is not connected in this environment.</p>
+        </div>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="pipeline-page-bg min-h-screen pt-16 text-slate-300">
+      <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-slate-100">
         <ExperimentHeader />
-        Loading…
+        <div className="mx-auto max-w-4xl">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-white">{CRM_PAGE_HEADLINE}</h1>
+          <p className="mt-2 text-base text-slate-300">Loading CRM…</p>
+        </div>
       </div>
     );
   }
 
   if (!session) {
     return (
-      <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-center text-slate-100">
+      <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-slate-100">
         <ExperimentHeader />
-        <h1 className="font-display text-3xl font-bold tracking-tight text-white">CRM</h1>
-        <p className="mt-3 text-base text-slate-300">Sign in to work your CRM.</p>
-        <Link href="/login" className="mt-4 inline-block text-base text-emerald-400 underline">
-          Login
-        </Link>
+        <div className="mx-auto max-w-4xl border border-slate-600 bg-[#0b162f] px-5 py-6 text-left">
+          <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>ReadyForRobots</p>
+          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            {CRM_PAGE_HEADLINE}
+          </h1>
+          <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-300">
+            {CRM_PAGE_NEXT}
+          </p>
+          <p className="mt-4 text-base text-slate-300">Sign in to open your accounts.</p>
+          <Link
+            href="/login"
+            className="mt-5 inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+          >
+            Sign in to CRM →
+          </Link>
+        </div>
       </div>
     );
   }
