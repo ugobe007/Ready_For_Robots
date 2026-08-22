@@ -55,7 +55,10 @@ function evidenceLine(lead: PipelineLeadActionFields): string {
   if (e.workflow_scope?.label) parts.push(e.workflow_scope.label);
   if (e.robot_type?.label) parts.push(e.robot_type.label);
   if (parts.length > 0) return cleanAndClampText(parts.join(" · "), 180);
-  if (e.friction_point) return cleanAndClampText(e.friction_point, 180);
+  const friction = String(e.friction_point || "").trim();
+  if (friction && !/\b(why now signal not yet|discovery call|automation opportunity)\b/i.test(friction)) {
+    return cleanAndClampText(friction, 180);
+  }
   return "";
 }
 

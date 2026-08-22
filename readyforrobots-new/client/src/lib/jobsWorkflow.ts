@@ -260,7 +260,7 @@ export const JOBS_OPEN_CRM_CTA = "Open CRM →";
 export const JOBS_HEADER_OFFSET_CLASS = "pt-14";
 
 const SALES_PITCH_RE =
-  /\b(pitch|lead with|ask who owns|ask about|open with|sequence the|upgrade to|buyer intent|sales motion|outreach draft|hard sell|owns the budget|easy wedge|capex this quarter|focus on|qualify (manufacturing|lab)|avoid front-of-house)\b/i;
+  /\b(pitch|lead with|ask who owns|ask about|open with|sequence the|upgrade to|buyer intent|sales motion|outreach draft|hard sell|owns the budget|easy wedge|capex this quarter|focus on|qualify (manufacturing|lab)|avoid front-of-house|discovery call|automation opportunity|confirm specific pain|why now signal not yet)\b/i;
 
 export type JobExplanationInput = {
   title?: string | null;
@@ -274,6 +274,12 @@ export type JobExplanationInput = {
 };
 
 /** One sentence of work — not a sales pitch. */
+export function isSalesPlaceholder(text?: string | null): boolean {
+  const value = String(text || "").replace(/\s+/g, " ").trim();
+  if (value.length < 8) return true;
+  return SALES_PITCH_RE.test(value);
+}
+
 export function jobExplanation(input: JobExplanationInput): string {
   const strippedAction = (input.action || "")
     .replace(/^(priority|next)\s*:\s*/i, "")

@@ -42,6 +42,7 @@ import {
   jobIndexLabel,
   jobIsForLabel,
   jobExplanation,
+  isSalesPlaceholder,
   jobsListHint,
   jobsPlaceHref,
   jobsProcessActionLabel,
@@ -656,6 +657,7 @@ describe("jobsWorkflow", () => {
     expect(pipelineSrc).not.toMatch(/Customer opportunities/);
     expect(pipelineSrc).not.toMatch(/Why this is a sales lead/);
     expect(pipelineSrc).not.toMatch(/saving that buyer/);
+    expect(pipelineSrc).not.toMatch(/Buyer workspace · preview/);
 
     const cardSrc = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
@@ -690,8 +692,13 @@ describe("jobsWorkflow", () => {
     ).toBe("Dock to stock — Acme Logistics · Logistics");
     expect(
       jobExplanation({
-        action: "Priority: Pitch overnight cleaning robots",
+        action: "Operational automation opportunity — confirm specific pain on discovery call",
+        friction: "Why now signal not yet summarized",
+        workflow: "cleaning / housekeeping robots",
+        company: "MGM Resorts",
       }),
-    ).not.toMatch(/pitch/i);
+    ).toBe("cleaning / housekeeping robots");
+    expect(isSalesPlaceholder("Operational automation opportunity — confirm specific pain on discovery call")).toBe(true);
+    expect(isSalesPlaceholder("Move pallets from receiving to reserve overnight")).toBe(false);
   });
 });

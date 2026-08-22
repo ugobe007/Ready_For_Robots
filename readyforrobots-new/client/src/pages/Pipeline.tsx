@@ -69,6 +69,8 @@ import {
   JOBS_OPEN_CRM_CTA,
   PIPELINE_PAGE_HEADLINE,
   PIPELINE_PAGE_NEXT,
+  isSalesPlaceholder,
+  jobExplanation,
   jobsFreshHomeHref,
   onJobsFreshHomeClick,
 } from "@/lib/jobsWorkflow";
@@ -1320,10 +1322,12 @@ function evidenceStackForDeal(deal: Deal) {
 
   return {
     frictionPoint:
-      evidence?.friction_point
-      || deal.leadHighlights?.specific_problem
-      || deal.shareSummary
-      || deal.signal,
+      [
+        evidence?.friction_point,
+        deal.leadHighlights?.specific_problem,
+        deal.shareSummary,
+        deal.signal,
+      ].find((row) => !isSalesPlaceholder(row)) || null,
     workflowLabel: evidence?.workflow_scope?.label || (workflowItems.length > 1 ? "Multiple workflows" : "One workflow"),
     workflowItems,
     timingLabel: evidence?.timing?.label || deal.projectTiming?.display_phrase || deal.projectTiming?.label,
@@ -5054,8 +5058,8 @@ export default function Pipeline() {
                           {crmAccountIdByCompanyId[selected.id]
                             ? "CRM workspace · saved account"
                             : hasSession
-                              ? "Buyer workspace · activate CRM to track this account"
-                              : "Buyer workspace · preview"}
+                              ? "Job workspace · activate CRM to track this work"
+                              : "Job workspace · preview"}
                         </p>
                         <p className="pipeline-detail-company">
                           {selected.company}
@@ -5321,19 +5325,20 @@ export default function Pipeline() {
                         {(() => {
                           const evidence = evidenceStackForDeal(selected);
                           const gapCount = evidence.missingByKey.size;
-                          const summary = cleanAndClampText(
-                            selected.leadHighlights?.specific_problem
-                              || selected.shareSummary
-                              || selected.notes
-                              || "Buyer intent and workflow context are being summarized.",
-                            170,
-                          );
+                          const summary = jobExplanation({
+                            friction: selected.leadHighlights?.specific_problem,
+                            summary: selected.shareSummary || selected.notes,
+                            action: selected.pipelineAction,
+                            company: selected.company,
+                            industry: selected.industry,
+                            title: selected.signals?.[0]?.display_text,
+                          }) || "This is the work — inspect the station, shift, and robot fit.";
                           return (
                             <div className="rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/70 p-2.5 shadow-[0_1px_0_rgba(16,185,129,0.06)]">
                               <div className="flex items-start justify-between gap-2">
                                 <div>
-                                  <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">SIGNAL intelligence</p>
-                                  <p className="mt-0.5 text-[11px] leading-snug text-slate-600">Buyer context first, operator controls second.</p>
+                                  <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">The job</p>
+                                  <p className="mt-0.5 text-[11px] leading-snug text-slate-600">What the robot would do here.</p>
                                 </div>
                                 <div className="flex flex-wrap items-center justify-end gap-1.5">
                                   {gapCount > 0 && (
@@ -5349,20 +5354,12 @@ export default function Pipeline() {
                                 </div>
                               </div>
                               <p className="mt-2 text-[12px] leading-relaxed text-slate-700">{summary}</p>
-                              {selected.pipelineAction && (
-                                <div className="mt-2 rounded-lg border border-emerald-200/80 bg-white/85 px-2.5 py-2">
-                                  <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Next action</p>
-                                  <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-900">
-                                    {cleanAndClampText(selected.pipelineAction, 180)}
-                                  </p>
-                                </div>
-                              )}
                             </div>
                           );
                         })()}
 
                         <div className="pt-1.5 space-y-2">
-                          {selected.leadHighlights?.specific_problem && (
+                          {selected.leadHighlights?.specific_problem && !isSalesPlaceholder(selected.leadHighlights.specific_problem) && (
                             <p className="break-words text-[12px] leading-relaxed text-gray-800">
                               <span className="font-semibold text-gray-900">Problem: </span>
                               {cleanAndClampText(
@@ -5420,7 +5417,7 @@ export default function Pipeline() {
                             return (
                               <div className="pipeline-detail-section-muted">
                                 <p className={panelSectionLabel}>
-                                  Buyer evidence
+                                  The job
                                   {evidence.researchState === "researching" ? (
                                     <span className="ml-2 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800">
                                       AI researching gaps
@@ -5457,7 +5454,7 @@ export default function Pipeline() {
                                           <span className="font-semibold text-slate-900">{evidence.budgetTopAmount}</span> appears in the evidence set.
                                         </>
                                       ) : (
-                                        "No public budget signal yet. Confirm range and budget owner on the first call."
+                                        "No public budget signal yet."
                                       )}
                                     </p>
                                     {evidence.budgetSignals.length > 0 && (
