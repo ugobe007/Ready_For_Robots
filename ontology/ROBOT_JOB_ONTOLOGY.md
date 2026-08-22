@@ -4,8 +4,10 @@
 which a robot may (or may not) match it. A robot job is:
 
 ```
-COMPANY + WORKSITE + PHYSICAL WORKFLOW + REQUIREMENTS + EVIDENCE + UNKNOWNS + COMMERCIAL STATE
+EMPLOYER + WORKPLACE + WORK + REQUIREMENTS + EVIDENCE + UNKNOWNS
 ```
+
+Product language: [`docs/robot_employment_model.md`](../docs/robot_employment_model.md). A Robot Job is work defined well enough to recruit a robot against — not a lead.
 
 Code: `app/data/robot_job_match_corpus.json` (corpus rows),
 `app/data/robot_job_requirements_gold.json` (gold requirements),
@@ -15,8 +17,8 @@ Code: `app/data/robot_job_match_corpus.json` (corpus rows),
 
 | Field | Meaning | Code |
 |-------|---------|------|
-| `company_name` | Employer / buyer at the worksite | `company_name` |
-| `locality` / worksite | Where the work happens | `locality`, `path`, `industry` |
+| `company_name` | Employer at the workplace | `company_name` |
+| `locality` / worksite | Workplace | `locality`, `path`, `industry` |
 | Physical workflow | The work-physics family | `tape_family` (see [workflow ontology](ROBOT_WORKFLOW_ONTOLOGY.md)) |
 | Requirements | Capabilities/constraints the work needs | `requirements[]` (`id`, `necessity`, `state`) |
 | Evidence | Text/source grounding the work | `text`, `source`, gold spec |

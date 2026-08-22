@@ -2,23 +2,19 @@
 
 Living document for the agent harness **intelligence loop**. Updated by research missions (`MarketIntel`, `FrictionMiner`, `ProductThesis`). Execution missions must align with active bets unless fixing a P0 blocker (empty pipeline, broken deploy).
 
-**Last updated:** 2026-08-13 (commercial maturity thesis)
+**Last updated:** 2026-08-22 (robot employment model)
 
 ---
 
 ## What we sell
 
-**The commercial intelligence layer + automated sales pipeline for robot companies** — OEMs and integrators automate their funnel on verified buyer intent, with Cal bringing commercial judgment that young companies often lack.
+**Recruitment and placement infrastructure for robotic labor.** The unit of value is the Robot Job. Operating model: [robot_employment_model.md](./robot_employment_model.md).
 
-They run deals in our **native CRM** (`/pipeline`, `/crm`) or **sync to HubSpot**. We win on intent + autonomy + **maturity-aware coaching**, not dashboard parity with Salesforce.
+We win on **job requirements ↔ robot capabilities**, not company count. SIGNAL lead quality remains frozen infrastructure — not the product.
 
-**Primary asymmetry is not “who has leads.”** It is commercial maturity: customers often know more about robotics evaluation and deployment than startups assume. Full model: [commercial_maturity_models.md](./commercial_maturity_models.md).
+Hero: **Find jobs for your robot. Robots need jobs. We find the work.**
 
-Product shape (from `docs/readyforrobots-ux.md` and `docs/product_market_fit.md`):
-
-**Detect → Qualify → Engage → Advance**
-
-Hero narrative: **“Automate Your Sales Pipeline.”** Users want deals moving forward without doing the work — SIGNAL-ranked leads, pipeline actions, outreach, and stage advance — not another news feed.
+Current experiment: five evidence-backed machine-tending Job Cards for RobCo — [docs/experiments/robco_job_cards.md](./experiments/robco_job_cards.md). Do not invent a tenth job.
 
 ---
 
@@ -134,10 +130,11 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 
 ### Conversion funnel (browse → signup → CRM) — standing ProductSurface directive
 
-See [product_market_fit.md](product_market_fit.md) and [conversion_agent_challenges.md](conversion_agent_challenges.md). Agents must drive robot OEM/integrator signup → funnel automation → native CRM or HubSpot every mission.
+See [product_market_fit.md](product_market_fit.md) and [robot_employment_model.md](robot_employment_model.md). Agents must drive robot URL → Job Cards → CRM unlock. Do not hop onto SIGNAL buyers.
 
 | Rank | Mission slug | Agent | Rationale |
 |------|--------------|-------|-----------|
+| 1 | `robot-employment-model` | ProductThesis | **Now:** Job Cards are the unit of value. Formalize employment model; RobCo pack is 5 evidenced CNC jobs, not 10 invented. |
 | ~~1~~ | ~~`conversion-funnel-pass`~~ | ProductSurface | ✅ **Done 2026-06-23** — Pricing→signup, default `/pipeline`, dual home CTA, save-limit upgrade toast. |
 | ~~1~~ | ~~`entitlement-honesty`~~ | ProductSurface | ✅ **Done 2026-06-23** — Free/Pro/Premium pricing; `/me` entitlements; profile meters. |
 | ~~2~~ | ~~`pipeline-research-upsell`~~ | ProductSurface | ✅ **Done 2026-06-23** — blurred research teaser + Pro CTA for free users. |

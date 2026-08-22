@@ -12,23 +12,23 @@ The harness operates **autonomously**: commit, push, deploy, and apply scripts w
 
 ## Product / market fit (primary focus)
 
-Read `docs/product_market_fit.md` and **`docs/value_first_principle.md`** before every mission. **Users do not buy unless they see value** — prove outcomes (live leads, pitch actions, outreach drafts) before signup or upgrade asks.
+Read `docs/product_market_fit.md`, **`docs/value_first_principle.md`**, and **`docs/robot_employment_model.md`** before every mission. **Users do not buy unless they see value** — prove Robot Job Cards (employer + work) before signup or upgrade asks.
 
 **EXPERIMENT MODE:** Read `docs/EXPERIMENT_MODE.md` and **`docs/CAPABILITY_MODEL.md`**. The experiment is now the product: **`/` = Jobs terminal** (FIND → QUALIFY → PLACE later). Freeze SIGNAL/CRM/Cal-as-core and hypothesis expansion — but **Robot Understanding v1 Phases 1–3** (`docs/robot_understanding_v1.md`) is allowed product-integrity work. Tiny loop: robot URL → credible jobs. Interviews falsify; they don’t grant permission to expand.
 
 **All agents optimize toward this outcome:**
 
-> ReadyForRobots is the **automated sales pipeline for robot companies**. Customers sign up to **automate their sales funnel** (SIGNAL-ranked leads, outreach, deal advance). They run in the **native CRM** (`/pipeline`, `/crm`) or **sync to HubSpot**.
+> ReadyForRobots is **recruitment and placement infrastructure for robotic labor**. The unit of value is the **Robot Job**. Customers register a robot as available for work and receive jobs it is qualified to perform. They keep those jobs in **native CRM** (`/crm?src=jobs_activate`) or HubSpot. A sale is an outcome of placement — not the object we optimize.
 
 | Lens | Question every mission must answer |
 |------|-----------------------------------|
-| **ICP** | Does this help a robot OEM/integrator sell more robots? |
-| **Activation** | Does this move browse → signup → first saved lead → pipeline motion? |
-| **CRM path** | Does this work for native CRM *and* HubSpot-connected teams? |
-| **Trust** | Does the pipeline surface defensible buyer intent (not junk/news)? |
-| **Value proof** | Can an anonymous user see a concrete win (draft, action, robot SKU) before signup? |
+| **ICP** | Does this help a robot OEM/integrator **place robots into work**? |
+| **Activation** | Does this move URL → Job Cards → signup → unlocked jobs in CRM? |
+| **CRM path** | Does Jobs CRM stay on jobs (not SIGNAL buyers)? |
+| **Trust** | Are Job Cards real work with named employers, not invented economics? |
+| **Value proof** | Can an anonymous user see a Robot Job Card before signup? |
 
-Lead-quality north star (below) is **infrastructure for PMF** — fix junk before ranking tweaks, but do not confuse data cleanup with product success. ProductSurface missions default to the conversion funnel in `docs/conversion_agent_challenges.md`.
+Lead-quality north star (below) is **SIGNAL infrastructure**, not the product. Fix junk on that path; do not hop Jobs traffic onto HOT buyers.
 
 ## North star (strict priority)
 

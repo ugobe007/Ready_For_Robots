@@ -14,7 +14,7 @@
  * Three separated objects:
  *   ROBOT  — what did we understand?      (REVIEW PROFILE, pre-match)
  *   MATCH  — what work looks compatible?  (JOBS, produced only when asked)
- *   JOB    — inspect this one             (why / unknowns / blockers)
+ *   JOB    — inspect this one             (employer / work / qualification)
  *
  * Product-integrity contract (every displayed number must be true):
  *   - The profile screen is a pre-match checkpoint: no job count until the
@@ -65,7 +65,6 @@ import {
   exampleJobsForLineup,
   isJobsFreshQuery,
   jobIsForLabel,
-  jobExplanation,
   JOBS_EYEBROW_CLASS,
   JOBS_JOB_TITLE_CLASS,
   JOBS_META_CLASS,
@@ -101,6 +100,7 @@ import {
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
+import { robotJobCardFromMatch } from "@/lib/robotJobCard";
 
 /* ------------------------------------------------------------------ */
 /* Types + constants                                                   */
@@ -2811,14 +2811,8 @@ function JobCard({
   onSelect: () => void;
   onToggle: () => void;
 }) {
-  const possible = job.verdict !== "NOT_A_MATCH";
-  const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
-  const work = jobExplanation({
-    title: job.title,
-    why: job.why,
-    company: job.company_name,
-    industry: job.industry,
-  });
+  const card = robotJobCardFromMatch(job);
+  const place = [card.employer, card.workplace].filter(Boolean).join(" · ");
   return (
     <li
       className={`border bg-[#081126] ${
@@ -2834,7 +2828,7 @@ function JobCard({
             type="checkbox"
             checked={checked}
             onChange={onToggle}
-            aria-label={`Include ${job.title} in the job list`}
+            aria-label={`Include ${card.jobTitle} in the job list`}
             className="mt-0.5 h-4 w-4 accent-emerald-400"
           />
         </label>
@@ -2845,14 +2839,13 @@ function JobCard({
         >
           <span className="flex-1">
             <span className={JOBS_ROBOT_NAME_CLASS}>{robotName}</span>
-            <span className={JOBS_JOB_TITLE_CLASS}>{job.title}</span>
+            <span className={JOBS_JOB_TITLE_CLASS}>{card.jobTitle}</span>
             {place ? <span className={JOBS_PLACE_CLASS}>{place}</span> : null}
-            {work && work !== job.title ? (
-              <span className="mt-1.5 block text-sm leading-snug text-slate-200">{work}</span>
+            {card.work && card.work !== card.jobTitle ? (
+              <span className="mt-1.5 block text-sm leading-snug text-slate-200">{card.work}</span>
             ) : null}
             <span className={JOBS_META_CLASS}>
-              {jobIsForLabel(index, robotName)} ·{" "}
-              {possible ? "Possible match" : "Not a match"}
+              {jobIsForLabel(index, robotName)} · {card.qualificationLabel}
             </span>
           </span>
           <span className="font-mono text-xs text-slate-500">
@@ -2863,11 +2856,26 @@ function JobCard({
 
       {selected && (
         <div className="border-t border-slate-700 px-4 pb-4 pt-3">
-          {job.why?.length ? (
+          <dl className="grid gap-2 text-[13px] leading-snug text-slate-200">
             <div>
-              <p className={eyebrow}>The job</p>
+              <dt className={eyebrow}>Employer</dt>
+              <dd className="mt-0.5">{card.employer || "Unknown"}</dd>
+            </div>
+            <div>
+              <dt className={eyebrow}>Workplace</dt>
+              <dd className="mt-0.5">{card.workplace || "Unknown"}</dd>
+            </div>
+            <div>
+              <dt className={eyebrow}>Work being performed</dt>
+              <dd className="mt-0.5">{card.work}</dd>
+            </div>
+          </dl>
+
+          {card.requirements.length ? (
+            <div className="mt-3">
+              <p className={eyebrow}>Qualification</p>
               <ul className="mt-1 space-y-0.5">
-                {job.why.map(w => (
+                {card.requirements.map(w => (
                   <li
                     key={w}
                     className="text-[13px] leading-snug text-slate-200"
@@ -2879,11 +2887,11 @@ function JobCard({
             </div>
           ) : null}
 
-          {job.still_unknown?.length ? (
+          {card.openQuestions.length ? (
             <div className="mt-3">
-              <p className={eyebrow}>Still unknown</p>
+              <p className={eyebrow}>Open questions</p>
               <ul className="mt-1 space-y-0.5">
-                {job.still_unknown.map(w => (
+                {card.openQuestions.map(w => (
                   <li
                     key={w}
                     className="text-[13px] leading-snug text-amber-200/80"
@@ -2898,7 +2906,7 @@ function JobCard({
           {job.blockers?.length ? (
             <div className="mt-3">
               <p className="mt-3 font-mono text-sm font-semibold uppercase tracking-[0.08em] text-rose-400/80">
-                Blocker
+                Not qualified
               </p>
               <ul className="mt-1 space-y-0.5">
                 {job.blockers.map(w => (
@@ -2911,11 +2919,11 @@ function JobCard({
                 ))}
               </ul>
             </div>
-          ) : possible ? (
-            <p className="mt-3 text-sm text-slate-400">
-              No confirmed blocker
-            </p>
           ) : null}
+
+          <p className="mt-3 text-sm text-slate-400">
+            Next step: {card.nextStep}
+          </p>
         </div>
       )}
     </li>

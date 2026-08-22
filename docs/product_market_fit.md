@@ -2,19 +2,25 @@
 
 **Canonical PMF statement for all harness agents, Cursor sessions, and mission briefs.**
 
-**Last updated:** 2026-08-13
+**Last updated:** 2026-08-22
+
+**Operating model:** [`robot_employment_model.md`](./robot_employment_model.md)
 
 ---
 
 ## What we are
 
-**ReadyForRobots is the commercial intelligence layer for robot companies** — the automated sales pipeline *and* the judgment layer that makes those companies ready for real customers.
+**ReadyForRobots is the employment layer for robots** — recruitment and placement infrastructure for robotic labor.
 
-Robot OEMs, integrators, and distributors sign up to **automate their sales funnel** — from verified buyer intent through outreach and deal advance — without building their own lead-ops stack.
+Companies have work. Robots need jobs. We find the match.
 
-**Deeper thesis:** Robot technology is advancing faster than robot companies are learning how to commercialize it. Matching supply and demand is secondary to closing the **commercial maturity** gap. See [commercial_maturity_models.md](./commercial_maturity_models.md).
+The unit of value is the **Robot Job**, not a lead. The robot is the candidate. The company with work is the employer. A sale is what happens after a robot gets the job.
 
-**Brand dual meaning:** Is the customer ready for robots? Is the robot company ready for the customer?
+GTM still starts with robot companies (OEMs, distributors, integrators, RaaS): they register a robot as **available for work**. We do not sell “SDR productivity.” We show up with jobs.
+
+**Deeper thesis:** Matching supply and demand *is* the product. Commercial maturity still matters at placement — see [commercial_maturity_models.md](./commercial_maturity_models.md) — but it is not the category.
+
+**Brand dual meaning:** Is the work ready for a robot? Is the robot ready for the work?
 
 ---
 
@@ -22,22 +28,22 @@ Robot OEMs, integrators, and distributors sign up to **automate their sales funn
 
 | Segment | Job to be done |
 |---------|----------------|
-| **Robot OEMs** | Find qualified buyer ops (warehouses, retail, hospitality, healthcare) and pitch the right robot SKU |
-| **Integrators / VARs** | Turn SIGNAL-ranked leads into meetings faster than manual prospecting |
-| **Sales leaders at robotics vendors** | Replace spreadsheet + RSS chaos with a pipeline that moves deals forward |
+| **Robot OEMs** | Find Robot Jobs their machines are qualified to perform |
+| **Integrators / VARs** | Place their robots (or the robots they install) into qualified work |
+| **Distributors / RaaS / fleet operators** | Keep carried robots employed |
 
-We do **not** sell to end-user operators as the primary ICP. We sell **to the companies that sell robots**.
+Primary ICP remains the **robot workforce side**. Employers (factories, hospitals, warehouses) are the other side of the labor market — we discover their work; we do not pitch them “buy a robot” as the product.
 
 ---
 
 ## Core product promise
 
-1. **Detect** — verified buyer intent (not vendor PR, not headline junk)
-2. **Qualify** — SIGNAL-ranked leads with industry, robot types, and pipeline actions
-3. **Engage** — outreach templates, social amplify, autonomous next actions
-4. **Advance** — kanban pipeline, CRM accounts, stage progression
+1. **Discover work** — observable physical jobs, robot-neutral
+2. **Define the Robot Job** — employer, workplace, requirements, evidence
+3. **Qualify the robot** — capabilities ↔ requirements (explainable, never a %)
+4. **Place later** — site assessment → pilot → employment
 
-Hero copy and home narrative: **“Automate Your Sales Pipeline.”**
+Hero copy: **“Find jobs for your robot. Robots need jobs. We find the work.”**
 
 ---
 
@@ -50,7 +56,7 @@ Customers run their funnel in **either**:
 | **Native CRM** | `/pipeline`, `/crm`, in-app save + kanban | Default for new signups; fastest time-to-value |
 | **HubSpot** | HubSpot connect + sync (Growth tier) | Teams already on HubSpot; keep reps in familiar CRM |
 
-**Agent rule:** ProductSurface and backend work should support **both paths equally** in copy, onboarding, and feature parity where feasible. Do not over-index on dashboards or generic robotics content — index on **signup → first saved lead → pipeline motion → CRM or HubSpot**.
+**Agent rule:** ProductSurface work indexes on **submit robot URL → credible Robot Job Cards → unlock jobs in CRM**. Native CRM and HubSpot keep the job list; they are not a SIGNAL buyer workspace on the Jobs path.
 
 Salesforce and other CRMs are future; HubSpot is the external CRM bet today.
 
@@ -62,25 +68,19 @@ Measure weekly and report in mission `outcome.md`:
 
 | Stage | Metric |
 |-------|--------|
-| Awareness | Anonymous `/pipeline` views, hero live-panel engagement |
-| Intent | Signup starts, OAuth/magic-link completes |
-| Activation | First lead saved, first CRM account, HubSpot connected |
-| Value | Deals advanced, outreach sent, social shares from pipeline |
-| Revenue | Upgrade attempts, `/pricing` clicks at save limit |
+| Awareness | Anonymous `/` Jobs submits, Job Cards inspected |
+| Intent | Signup starts after jobs (`src=jobs_activate`) |
+| Activation | Jobs unlocked in CRM, watch opt-in |
+| Value | Jobs qualified, robots submitted as available for work |
+| Later | Placements, robot hours, expansion jobs |
 
-**North star for product missions:** increase **activated robot-company workspaces** (signed up + first pipeline value), not raw page views or news volume.
+**North star for product missions:** increase **robots that have jobs** (URL → credible Job Cards → kept in CRM), not leads or news volume.
 
 ---
 
 ## How this relates to lead quality
 
-Lead quality (`docs/lead_quality_north_star.md`) is **infrastructure for PMF**, not the product itself:
-
-- Clean **names/events** → reps trust the pipeline
-- Defensible **scores** → SIGNAL activation converts
-- **Robot types + pipeline_action** → OEMs know what to pitch
-
-**Never** ship UX that showcases junk leads to win demos. **Always** ship UX that makes a signed-up robot company feel their funnel is running on autopilot.
+Lead quality (`docs/lead_quality_north_star.md`) is **SIGNAL infrastructure**, not the product. Jobs copy must not hop onto HOT buyers. Never showcase junk work to win a demo. Always ship UX that makes a robot company feel we found **work their robot can do**.
 
 ---
 

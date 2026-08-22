@@ -16,6 +16,16 @@ COMPANY
 
 And **never**: `company name → robot category → jobs`.
 
+Employment overlay (product meaning, not a sixth ontology file):
+
+```
+Employer → Workplace → Work → Robot Job → Job requirements
+                                              ↕
+Robot → Capabilities → Qualifications → Experience
+```
+
+Canonical narrative: [`docs/robot_employment_model.md`](../docs/robot_employment_model.md).
+
 A robot's capabilities belong to a **specific product/configuration** grounded in
 **hardware/evidence** — not to the company name and not to a morphology label.
 "AMR" does not mean "cannot manipulate." "Humanoid" does not mean "can palletize."
