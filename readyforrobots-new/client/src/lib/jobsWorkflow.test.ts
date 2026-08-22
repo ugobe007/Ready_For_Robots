@@ -419,6 +419,9 @@ describe("jobsWorkflow", () => {
     expect(handoff).not.toMatch(/function JobRow/);
     expect(crm).toMatch(/tasteJobs/);
     expect(crm).toMatch(/CRM_UNLOCKED_JOBS/);
+    const signup = readFileSync(join(here, "../pages/Signup.tsx"), "utf8");
+    expect(signup).toMatch(/3 job opportunities in CRM/);
+    expect(signup).not.toMatch(/The pipeline is where more than 5 live/);
     expect(pipeline).toMatch(/arrivedFromPlace/);
     expect(pipeline).toMatch(/isPlaceSrc/);
     expect(JOBS_PROCESS_STEPS[2].label).toBe("CRM");
