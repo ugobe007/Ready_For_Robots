@@ -2866,11 +2866,15 @@ function JobCard({
               <dt className={eyebrow}>Work being performed</dt>
               <dd className="mt-0.5">{card.work}</dd>
             </div>
+            <div>
+              <dt className={eyebrow}>{card.qualificationLabel}</dt>
+              <dd className="mt-0.5 text-slate-300">{card.qualificationHint}</dd>
+            </div>
           </dl>
 
           {card.requirements.length ? (
             <div className="mt-3">
-              <p className={eyebrow}>Qualification</p>
+              <p className={eyebrow}>Why this is listed</p>
               <ul className="mt-1 space-y-0.5">
                 {card.requirements.map(w => (
                   <li
