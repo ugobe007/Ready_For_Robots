@@ -1508,6 +1508,8 @@ SIGNAL_TYPES_WARM = frozenset({
     "equipment_integration",
     # Classifier emits automation_interest widely — treat as explore/nurture, not max HOT
     "automation_interest",
+    "robot_job",
+    "robot_job_closed",
 })
 
 # Aliases for membership checks in priority_tier (frozenset supports `in`)
