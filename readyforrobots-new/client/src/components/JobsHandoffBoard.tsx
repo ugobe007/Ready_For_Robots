@@ -7,8 +7,14 @@ import { Link } from "wouter";
 import type { MatchJob } from "@/lib/robotJobMatch";
 import {
   JOBS_ACTIVATE_CAP,
+  JOBS_ACTIVATE_SRC,
+  JOBS_SAVE_TO_CRM_CTA,
+  JOBS_SAVE_TO_CRM_HINT,
   RAIL_STEP_HINT,
+  jobIsForLabel,
+  jobsActivateHref,
   jobsFreshHomeHref,
+  jobsSignupHref,
   jobsWorkspaceRestoreHref,
   onJobsFreshHomeClick,
 } from "@/lib/jobsWorkflow";
@@ -91,8 +97,19 @@ export default function JobsHandoffBoard(_props: {
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
           You checked {selectedCount}. The list shows {jobs.length} of{" "}
           {JOBS_ACTIVATE_CAP}
-          {filled > 0 ? ` (${filled} more from this match)` : ""}.
+          {filled > 0 ? ` (${filled} more from this match)` : ""}.{" "}
+          {JOBS_SAVE_TO_CRM_HINT}
         </p>
+        <a
+          href={
+            _props.signedIn
+              ? "/crm"
+              : jobsSignupHref(jobsActivateHref(), JOBS_ACTIVATE_SRC)
+          }
+          className="mt-4 inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+        >
+          {JOBS_SAVE_TO_CRM_CTA}
+        </a>
 
         {jobs.length === 0 ? (
           <p className="mt-8 text-sm text-slate-400">
@@ -109,6 +126,7 @@ export default function JobsHandoffBoard(_props: {
                 key={job.job_key}
                 index={i + 1}
                 job={job}
+                robotName={job.forRobot || product}
                 pinned={i < selectedCount}
               />
             ))}
@@ -122,17 +140,19 @@ export default function JobsHandoffBoard(_props: {
 function JobRow({
   index,
   job,
+  robotName,
   pinned,
 }: {
   index: number;
   job: MatchJob;
+  robotName: string;
   pinned: boolean;
 }) {
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
   return (
     <li className="border border-slate-600 bg-[#081126] px-4 py-3">
       <p className="flex flex-wrap items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-        <span>Job {String(index).padStart(2, "0")}</span>
+        <span>{jobIsForLabel(index, robotName)}</span>
         {pinned ? (
           <span className="text-emerald-400">From your list</span>
         ) : (

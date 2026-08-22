@@ -116,6 +116,8 @@ export function productClassesFromLineup(
 }
 
 export const JOBS_EXAMPLE_CAP = 5;
+/** Lineup preview: one sample job per robot. Run each SKU for five jobs. */
+export const JOBS_LINEUP_JOBS_PER_ROBOT = 1;
 export const BUYER_LEADS_ANON_CAP = 5;
 /** See All on `/` — more than the 5-example cap, still the same page. */
 export const JOBS_PIPELINE_CAP = 15;
@@ -161,16 +163,75 @@ export function jobsCountEyebrow(opts: {
   robotClass?: string | null;
 }): string {
   if (opts.visibleCount === 0) return "";
-  const who =
-    (opts.robotCount || 1) > 1 && opts.companyName
-      ? opts.companyName
-      : opts.productName;
-  return `${opts.visibleCount} JOBS FOR ${who.toUpperCase()}`;
+  if ((opts.robotCount || 1) > 1) {
+    return `${opts.visibleCount} ROBOTS · 1 JOB EACH`;
+  }
+  return `${opts.visibleCount} JOBS FOR ${opts.productName.toUpperCase()}`;
 }
 
 export function capExampleJobs<T>(jobs: T[], cap = JOBS_EXAMPLE_CAP): T[] {
   return jobs.slice(0, cap);
 }
+
+export function exampleJobCap(robotCount: number): number {
+  return robotCount > 1 ? JOBS_LINEUP_JOBS_PER_ROBOT : JOBS_EXAMPLE_CAP;
+}
+
+export type TaggedExampleJob<T extends { job_key: string }> = T & {
+  forRobot: string;
+};
+
+/**
+ * One robot → five tagged jobs. Several robots → one distinct sample each,
+ * tagged with that SKU. Shared type-level matches still get different jobs
+ * when the pool allows it so the lineup is not five copies of the same card.
+ */
+export function exampleJobsForLineup<T extends { job_key: string }>(
+  robots: Array<{ productName: string; jobs: T[] }>,
+): TaggedExampleJob<T>[] {
+  const list = robots.filter(row => (row.productName || "").trim());
+  if (list.length <= 1) {
+    const row = list[0];
+    if (!row) return [];
+    return capExampleJobs(row.jobs).map(job => ({
+      ...job,
+      forRobot: row.productName,
+    }));
+  }
+  const used = new Set<string>();
+  const out: TaggedExampleJob<T>[] = [];
+  for (const row of list) {
+    const pool = row.jobs || [];
+    const job =
+      pool.find(j => j?.job_key && !used.has(j.job_key)) ||
+      pool.find(j => j?.job_key);
+    if (!job) continue;
+    used.add(job.job_key);
+    out.push({ ...job, forRobot: row.productName });
+  }
+  return out;
+}
+
+export function jobIsForLabel(index: number, robotName: string): string {
+  const id = String(Math.max(1, index)).padStart(5, "0");
+  const who = (robotName || "this robot").trim() || "this robot";
+  return `Job ${id} is for ${who}`;
+}
+
+export function jobsListHint(opts: {
+  robotCount: number;
+  productName: string;
+}): string {
+  if (opts.robotCount > 1) {
+    return "One sample job per robot. Run each robot by itself for five jobs, then save that list.";
+  }
+  return `Five example jobs ${opts.productName} can do. Expand a card to inspect. Check every job you want — then Next.`;
+}
+
+export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
+export const JOBS_SAVE_TO_CRM_CTA = "Save this job list to CRM";
+export const JOBS_SAVE_TO_CRM_HINT =
+  "Save the list so we can watch these jobs and email you when something changes.";
 
 /** Jobs / results `src` values that continue the Jobs terminal. */
 export function isJobsHandoffSrc(src: string | null | undefined): boolean {
@@ -338,11 +399,17 @@ export function defaultCheckedJobKeys<T extends { job_key: string }>(
   return capExampleJobs(jobs, cap).map(job => job.job_key);
 }
 
+export function defaultCheckedKeysForLineup<T extends { job_key: string }>(
+  robots: Array<{ productName: string; jobs: T[] }>,
+): string[] {
+  return exampleJobsForLineup(robots).map(job => job.job_key);
+}
+
 export const RAIL_STEP_HINT = {
   find: "Paste the manufacturer URL. We research the company and every robot SKU we can prove.",
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
-  jobs: "Expand a card to inspect. Check every job you want. Next activates the list.",
-  pipeline: "Checked jobs stay at the top. We fill the rest so you see 15 live jobs, not one buyer.",
+  jobs: "Each job is tagged with its robot. One SKU shows five jobs. Several robots show one each — run each SKU by itself to save a list.",
+  pipeline: "Save this list to your CRM. We watch the jobs and email you when news or requirements change.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */

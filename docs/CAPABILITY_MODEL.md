@@ -72,7 +72,7 @@ Here are its jobs.
 Activate the job list — yours first, then 15 live jobs.
 ```
 
-Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **Checkboxes + Next → in the process bar and at the top of the jobs list** (repeated at the bottom of the list and in the page footer). FIND is **Start jobs →** in the same process chrome, not only under the live tape. The document scrolls. Do not put Next on the card. Do not insert a Place buyer/outreach screen (duplicate of pipeline). Do not insert a Qualify screen that restates the card and loops back to jobs. Do not send a single selected SKU through a second Find jobs click. Do not trap the process inside a `100vh` overflow-hidden box.
+Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **One robot → five jobs, each tagged `Job ##### is for {SKU}`.** Several robots → one tagged sample each, plus **Run one robot for 5 jobs**. Checkboxes + Next → in the process bar. FIND is **Start jobs →**. After Next, prompt **Save this job list to CRM**. The document scrolls. Do not put Next on the card. Do not insert a Place buyer/outreach screen. Do not mix unlabeled jobs across a lineup.
 
 Everything underneath exists to make those interactions trustworthy.
 

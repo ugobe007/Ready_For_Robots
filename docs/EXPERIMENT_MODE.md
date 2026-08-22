@@ -32,12 +32,14 @@ submit robot URL on /
   → one SKU: picker confirm goes straight to jobs for that product (no profile / second Find jobs)
   → several / all: resolve the search without blocking next steps (type-first, one match per class)
   → 01 robot → 02 jobs → 03 activate are always navigational links
-  → see Robot Jobs (step 2) — 5 examples, checkboxes, Activate job list always visible
+  → see Robot Jobs (step 2)
+       one robot: 5 jobs, each tagged `Job ##### is for {SKU}`
+       several robots: 1 sample job per SKU, tagged; run each robot individually for five jobs
   → inspect cards (why / unknowns / blockers)
   → check the jobs to take forward
   → Next → /pipeline?src=jobs_activate
-  → checked jobs pinned at the top, fill to 15
-  → discovery pull: See All Jobs (stays on step 2)
+  → save the job list to CRM (signup if needed)
+  → run the next robot the same way
 ```
 
 The picker already decides one vs several. **One robot → jobs for that robot on the same click** — do not open the profile checkpoint and ask Find jobs again. Several/all is slower, so we resolve with a type-level match instead of N SKU scrapes. **Independent of that resolution, every stage keeps process nav** (01 Show us your robot → 02 Here are its jobs → 03 Activate the job list). Fourier empty portfolio failed because 02/03 were not links. Picking N1 then hitting a second Find jobs with Activate buried below the fold is the same break: the process stops at step 2.
@@ -62,6 +64,19 @@ Process bar repeated at the bottom of the page
 **Do not** set `100vh` + `overflow: hidden` on the Jobs workspace. Chrome then cannot scroll below the fold, so step 03 sits in a cut-off box. Pinning Activate inside that box is a patch, not a fix.
 
 The document scrolls. Process chrome is page-level (top and bottom). Two columns may remain as layout.
+
+---
+
+## One robot vs several (money-maker)
+
+| Lookup | Jobs shown before signup | Tag |
+|--------|--------------------------|-----|
+| **One robot** | 5 example jobs | `Job 00001 is for Fourier N1` |
+| **Several / all** | 1 sample job per robot | `Job 00002 is for Fourier GR-1` |
+
+The ideal motion is **one robot at a time**: five jobs → Next → save that list to CRM → run the next SKU. A lineup preview is a sampler, not a dump of unlabeled work. **Run one robot for 5 jobs →** returns to the picker.
+
+**Retention loop (next, not this surface):** saved CRM jobs are watched. When news or requirements change, email the user and bring them back to respond. Do not build that email loop until this Jobs tagging path is clean.
 
 ---
 
