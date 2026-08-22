@@ -123,6 +123,85 @@ export const BUYER_LEADS_ANON_CAP = 5;
 export const JOBS_PIPELINE_CAP = 15;
 /** Live list after Activate: checked jobs first, then fill to this cap. */
 export const JOBS_ACTIVATE_CAP = 15;
+/** Free / anonymous: search this many SKUs per FIND. Paid unlocks five. */
+export const JOBS_PRODUCT_CAP_FREE = 3;
+export const JOBS_PRODUCT_CAP_PAID = 5;
+/** How many real SKUs the picker may list. Search is still 3/5. */
+export const JOBS_LINEUP_DISPLAY_CAP = 10;
+export const ROBOT_PROFILE_TIMEOUT_MS = 22_000;
+export const ROBOT_JOB_SEARCH_TIMEOUT_MS = 30_000;
+
+const JOBS_LINEUP_NOISE_NAMES = new Set([
+  "about",
+  "about us",
+  "industries",
+  "industry",
+  "products overview",
+  "product overview",
+  "overview",
+  "discontinued",
+  "discontinued products",
+  "deutsch",
+  "español",
+  "espanol",
+  "français",
+  "francais",
+  "english",
+  "italiano",
+  "nederlands",
+  "activate your amr license",
+  "collaborative",
+  "collaborative robots",
+  "amr",
+  "amrs",
+  "agv",
+  "agvs",
+  "mobile robots",
+  "mobile robot",
+  "contact",
+  "contact us",
+  "news",
+  "company",
+  "solutions",
+]);
+
+const JOBS_LINEUP_NOISE_RE =
+  /\b(discontinued|activate your|amr license|products?\s+overview)\b/i;
+const JOBS_LINEUP_LOCALE_RE =
+  /^(deutsch|espa[nñ]ol|fran[cç]ais|english|italiano|nederlands|portugu[eê]s|日本語|中文|한국어|de|fr|es|en|zh|ja)$/i;
+
+export function jobsProductLimitForPlan(plan?: string | null): number {
+  return plan === "paid" ? JOBS_PRODUCT_CAP_PAID : JOBS_PRODUCT_CAP_FREE;
+}
+
+export function isJobsLineupNoiseName(name: string): boolean {
+  const raw = (name || "").replace(/\s+/g, " ").trim();
+  if (!raw) return true;
+  const low = raw.toLowerCase();
+  if (JOBS_LINEUP_NOISE_NAMES.has(low)) return true;
+  if (JOBS_LINEUP_LOCALE_RE.test(low)) return true;
+  if (JOBS_LINEUP_NOISE_RE.test(low)) return true;
+  if (low.startsWith("about ")) return true;
+  return false;
+}
+
+export function filterJobsLineupProducts<T extends { name: string }>(
+  products: T[],
+  limit = JOBS_PRODUCT_CAP_FREE,
+): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const row of products) {
+    const name = (row.name || "").trim();
+    if (!name || isJobsLineupNoiseName(name)) continue;
+    const key = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(row);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
 
 export function landingStageAfterConfirm(robotCount: number): JobsConfirmLanding {
   // Picker already chose the robot(s). Land on jobs — do not ask Find jobs again.
@@ -499,7 +578,7 @@ export const RAIL_STEP_HINT = {
   find: "Paste the manufacturer URL. We research the company and every robot SKU we can prove.",
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
   jobs: "Each job is tagged with its robot. One SKU shows five jobs. Several robots show one each — run each SKU by itself to save a list.",
-  pipeline: "Save this list to your CRM. We watch the jobs and email you when news or requirements change.",
+  pipeline: "Save this list to your CRM. Inspect jobs if you need to change it — this step does not list the jobs again.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */

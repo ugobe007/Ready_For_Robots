@@ -468,7 +468,7 @@ export default function Crm() {
   }
 
   return (
-    <div className="pipeline-page-bg flex min-h-screen flex-col text-slate-100">
+    <div className="pipeline-page-bg crm-navy flex min-h-screen flex-col text-slate-100">
       <ExperimentHeader />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-8 pt-16">
         <AdminNav variant="dark" />
@@ -504,8 +504,8 @@ export default function Crm() {
             </>
           }
         />
-        {msg && (
-          <p className="mb-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-900">
+          {msg && (
+          <p className="mb-2 rounded-md border border-amber-400/40 bg-amber-400/10 px-2.5 py-1.5 text-xs font-medium text-amber-200">
             {msg}
           </p>
         )}
@@ -525,7 +525,7 @@ export default function Crm() {
               key={t.id}
               type="button"
               onClick={() => setTeamId(t.id)}
-              className={`sb-btn ${teamId === t.id ? "border-emerald-500 bg-emerald-50 text-emerald-800" : ""}`}
+              className={`sb-btn ${teamId === t.id ? "border-emerald-400 bg-emerald-400/15 text-emerald-200" : ""}`}
             >
               {t.name}
             </button>
@@ -537,9 +537,9 @@ export default function Crm() {
             <div className="sb-surface-rail" />
             <div className="sb-surface-body min-w-0 flex-1 p-0">
           {busy ? (
-            <p className="p-4 text-sm text-gray-500">Loading accounts…</p>
+            <p className="p-4 text-sm text-slate-400">Loading accounts…</p>
           ) : accounts.length === 0 ? (
-            <p className="p-4 text-sm text-gray-500">No accounts in this workspace.</p>
+            <p className="p-4 text-sm text-slate-400">No accounts in this workspace.</p>
           ) : (
             <table className="w-full text-base">
               <thead>
@@ -577,7 +577,7 @@ export default function Crm() {
               <div className="flex">
                 <div className="sb-surface-rail" />
                 <div className="sb-surface-body flex-1">
-              <div className="mb-2 flex items-start justify-between gap-2 border-b border-gray-100 pb-2">
+              <div className="mb-2 flex items-start justify-between gap-2 border-b border-slate-700 pb-2">
                 <div>
                   <p className="sb-kicker">Job outreach checkpoint</p>
                   <h2 className="mt-0.5 text-xl font-semibold text-white">{selectedAccount.name}</h2>
@@ -696,7 +696,7 @@ export default function Crm() {
                   className="sb-input min-h-[72px] leading-relaxed"
                 />
               </label>
-              <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-2">
+              <div className="mt-2 rounded-md border border-slate-600 bg-[#081126] p-2">
                 <p className="sb-kicker mb-1.5">Refine from this draft</p>
                 <div className="flex flex-wrap gap-1">
                   {VOICE_FEEDBACK.map((item) => (
@@ -712,11 +712,11 @@ export default function Crm() {
                 </div>
               </div>
               {scoutStyleGuidance() && (
-                <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-[11px] leading-relaxed text-gray-700">
+                <div className="mt-2 rounded-md border border-emerald-500/30 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-slate-200">
                   {scoutStyleGuidance()}
                 </div>
               )}
-              <div className="mt-2 flex flex-wrap gap-1.5 border-t border-gray-100 pt-2">
+              <div className="mt-2 flex flex-wrap gap-1.5 border-t border-slate-700 pt-2">
                 <button type="button" onClick={() => void generatePlan()} disabled={busy || sending} className="sb-btn">
                   Generate sales plan
                 </button>
@@ -727,7 +727,7 @@ export default function Crm() {
                   type="button"
                   onClick={() => void saveDraft()}
                   disabled={busy || sending || !draft.trim()}
-                  className={`sb-btn ${styleApproved ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-amber-300 bg-amber-50 text-amber-900"}`}
+                  className={`sb-btn ${styleApproved ? "border-emerald-400 bg-emerald-400/15 text-emerald-200" : "border-amber-400/50 bg-amber-400/10 text-amber-200"}`}
                 >
                   {styleApproved ? "Draft approved ✓" : "Approve draft"}
                 </button>
@@ -742,7 +742,7 @@ export default function Crm() {
                 </button>
               </div>
               {sendBlockers().length > 0 && (
-                <p className="mt-1.5 text-[11px] text-gray-500">
+                <p className="mt-1.5 text-[11px] text-slate-500">
                   Before sending: {sendBlockers().join(" · ")}.
                 </p>
               )}

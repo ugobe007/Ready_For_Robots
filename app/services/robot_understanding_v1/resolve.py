@@ -116,6 +116,7 @@ _PRODUCT_HREF_NOISE = frozenset(
         "consulting",
         "advertising",
         "industry",
+        "industries",
         "models",
         "platform",
         "warehouse",
@@ -128,6 +129,34 @@ _PRODUCT_HREF_NOISE = frozenset(
         "semi-humanoid",
         "scrubber-dryer",
         "lidar",
+        "amr",
+        "amrs",
+        "agv",
+        "agvs",
+        "cobot",
+        "cobots",
+        "collaborative",
+        "discontinued",
+        "discontinued-products",
+        "mobile-robots",
+        "mobile-robot",
+        "about-us",
+        "contact-us",
+        "products-overview",
+        "product-overview",
+        "overview",
+        "deutsch",
+        "espanol",
+        "francais",
+        "english",
+        "italiano",
+        "nederlands",
+        "portugues",
+        "japanese",
+        "chinese",
+        "korean",
+        "activate",
+        "license",
     }
 )
 # Locale product pages (MagicLab /en/x1, /en/human, /en/app/g1).
@@ -200,6 +229,15 @@ _PROSE_NAME_NOISE = frozenset(
         "privacy",
         "terms",
         "news",
+        "about",
+        "industries",
+        "industry",
+        "overview",
+        "deutsch",
+        "espanol",
+        "francais",
+        "english",
+        "amrs",
         "learn",
         "watch",
         "video",
@@ -230,6 +268,7 @@ _NAV_PRODUCT_LABELS = frozenset(
         "consulting",
         "advertising",
         "industry",
+        "industries",
         "models",
         "platform",
         "warehouse",
@@ -246,9 +285,60 @@ _NAV_PRODUCT_LABELS = frozenset(
         "contact",
         "news",
         "about",
+        "about us",
         "purchase",
         "product purchase",
+        "products overview",
+        "product overview",
+        "overview",
+        "amr",
+        "amrs",
+        "agv",
+        "agvs",
+        "cobot",
+        "cobots",
+        "collaborative",
+        "collaborative robots",
+        "mobile robots",
+        "mobile robot",
+        "discontinued",
+        "discontinued products",
+        "activate your amr license",
+        "deutsch",
+        "español",
+        "espanol",
+        "français",
+        "francais",
+        "english",
+        "italiano",
+        "nederlands",
     }
+)
+
+# Hub / category paths that look like /products/<slug> but are not SKUs.
+_CATEGORY_HUB_SLUGS = frozenset(
+    {
+        "mobile-robots",
+        "mobile-robot",
+        "industrial-robots",
+        "collaborative-robots",
+        "discontinued-products",
+        "about-us",
+        "contact-us",
+        "case-studies",
+        "product-overview",
+        "products-overview",
+        "amr-license",
+        "activate-license",
+    }
+)
+
+_LOCALE_PRODUCT_LABEL = re.compile(
+    r"^(deutsch|espa[nñ]ol|fran[cç]ais|english|italiano|nederlands|"
+    r"portugu[eê]s(?:\s*\([^)]+\))?|japanese|chinese|korean|svenska|"
+    r"norsk|dansk|suomi|polski|russian|arabic|日本語|中文|한국어|"
+    r"de|fr|es|en|zh|ja|it|nl|pt|ko|sv|da|fi|pl|ru|ar)$",
+    re.I,
 )
 _ACCESSORY_PRODUCT_NAME = re.compile(
     r"\b(4d\s*lidar|lidar|sdk|datasheet|whitepaper)\b",
@@ -489,11 +579,47 @@ def _is_noise_product_name(name: str) -> bool:
         return True
     if _name_key(raw) in {_name_key(x) for x in _NAV_PRODUCT_LABELS}:
         return True
+    if _LOCALE_PRODUCT_LABEL.fullmatch(low):
+        return True
+    if re.search(r"\bdiscontinued\b", low):
+        return True
+    if re.search(r"\b(activate your|amr license|license activation)\b", low):
+        return True
+    if re.search(r"\bproducts?\s+overview\b", low) or low == "overview":
+        return True
+    if low == "about us" or low.startswith("about "):
+        return True
     if _ACCESSORY_PRODUCT_NAME.search(raw):
         return True
     if _CTA_PRODUCT_NAME.match(raw):
         return True
     return False
+
+
+def _href_slug_is_product(slug: str) -> bool:
+    """True when a path slug is a robot SKU, not a hub/nav/locale page."""
+    s = (slug or "").strip().lower()
+    if not s or s in _PRODUCT_HREF_NOISE or s in _CATEGORY_HUB_SLUGS:
+        return False
+    if _LOCALE_PRODUCT_LABEL.fullmatch(s):
+        return False
+    if _looks_like_model_or_sku(slug):
+        return True
+    if "-" in s:
+        if re.search(r"\d", s):
+            return True
+        parts = [p for p in s.split("-") if p]
+        # Named models with a short suffix (matradee-l, dog-w), not mobile-robots.
+        if (
+            len(parts) == 2
+            and parts[0].isalpha()
+            and 3 <= len(parts[0]) <= 24
+            and len(parts[1]) <= 2
+            and parts[0] not in _PRODUCT_HREF_NOISE
+        ):
+            return True
+        return False
+    return bool(re.fullmatch(r"[a-z]{3,24}", s))
 
 
 def _merge_catalog_names(catalog_names: list[str], discovered: list[str]) -> list[str]:
@@ -962,23 +1088,19 @@ def _sku_from_product_href(url: str) -> str | None:
     match = _PRODUCT_HREF.search(path)
     if match:
         slug = match.group(1)
-        if slug.lower() in _PRODUCT_HREF_NOISE:
+        if not _href_slug_is_product(slug):
             return None
-        if not _looks_like_model_or_sku(slug) and "-" not in slug:
-            # Named product pages still count (/products/adam).
-            if not re.fullmatch(r"[a-z]{3,24}", slug, re.I):
-                return None
         return _canon_path_sku(slug) or _display_from_slug(slug) or None
     robots = _ROBOTS_HREF.search(path)
     if robots:
         slug = robots.group(1)
-        if slug.lower() in _PRODUCT_HREF_NOISE:
+        if not _href_slug_is_product(slug):
             return None
         return _canon_path_sku(slug) or _display_from_slug(slug) or None
     locale = _LOCALE_PRODUCT_HREF.search(path)
     if locale:
         slug = locale.group(1)
-        if slug.lower() in _PRODUCT_HREF_NOISE:
+        if not _href_slug_is_product(slug):
             return None
         if _looks_like_model_or_sku(slug):
             return _canon_path_sku(slug) or slug.upper()
@@ -990,7 +1112,7 @@ def _sku_from_product_href(url: str) -> str | None:
     root = _ROOT_PRODUCT_HREF.search(path or "/")
     if root:
         slug = root.group(1)
-        if slug.lower() in _PRODUCT_HREF_NOISE:
+        if not _href_slug_is_product(slug):
             return None
         if _looks_like_model_or_sku(slug) or "-" in slug:
             return _canon_path_sku(slug) or _display_from_slug(slug)
@@ -1177,8 +1299,12 @@ def _discover_product_names(
         if hint:
             counts[hint] = counts.get(hint, 0) + 5
 
-    # Drop platform-only false positives when never near robot language
-    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    # Drop platform-only false positives when never near robot language.
+    # SKU-like names (LD-250) outrank hub leftovers that survived the noise filter.
+    ranked = sorted(
+        counts.items(),
+        key=lambda kv: (-int(_looks_like_model_or_sku(kv[0])), -kv[1], kv[0]),
+    )
     out: list[str] = []
     for name, n in ranked:
         if n < 1:

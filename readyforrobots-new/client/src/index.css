@@ -1084,7 +1084,7 @@
 
   /* Supabase-style surfaces & controls (dashboard: tight, bordered, inline actions) */
   .sb-surface {
-    @apply overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm;
+    @apply overflow-hidden rounded-md border border-slate-600 bg-[#0b162f] text-slate-100 shadow-none;
   }
 
   .sb-surface-rail {
@@ -1104,11 +1104,11 @@
   }
 
   .sb-input {
-    @apply w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30;
+    @apply w-full rounded-md border border-slate-600 bg-[#081126] px-2.5 py-1.5 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30;
   }
 
   .sb-btn {
-    @apply inline-flex items-center justify-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-1 rounded-md border border-slate-600 bg-[#081126] px-2.5 py-1 text-xs font-medium text-slate-200 transition-colors hover:border-emerald-400/50 hover:bg-[#0b162f] disabled:opacity-50;
   }
 
   .sb-btn-primary {
@@ -1150,6 +1150,12 @@
     color: #e2e8f0;
     box-shadow: none;
   }
+  .crm-navy .sb-surface,
+  .crm-navy .bg-white {
+    background-color: #0b162f !important;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
   .pipeline-page-bg .sb-input {
     background-color: #081126 !important;
     border-color: #334155 !important;
@@ -1181,14 +1187,11 @@
     color: #e2e8f0 !important;
     border-color: #334155 !important;
   }
-  .pipeline-page-bg
-    :where(
-      .bg-white,
-      .bg-white\/80,
-      .bg-white\/85,
-      .bg-white\/90,
-      .bg-white\/95
-    ) {
+  .pipeline-page-bg .bg-white,
+  .pipeline-page-bg .bg-white\/80,
+  .pipeline-page-bg .bg-white\/85,
+  .pipeline-page-bg .bg-white\/90,
+  .pipeline-page-bg .bg-white\/95 {
     background-color: #0b162f !important;
   }
   .pipeline-page-bg

@@ -10,6 +10,8 @@ import {
   JOBS_NEXT_HINT,
   JOBS_PLACE_CTA,
   JOBS_PROCESS_STEPS,
+  JOBS_PRODUCT_CAP_FREE,
+  JOBS_PRODUCT_CAP_PAID,
   JOBS_SCAN_STEPS,
   JOBS_SEE_JOBS_CTA,
   JOBS_EYEBROW_CLASS,
@@ -31,6 +33,7 @@ import {
   defaultCheckedKeysForLineup,
   exampleJobCap,
   exampleJobsForLineup,
+  filterJobsLineupProducts,
   isJobsHandoffSrc,
   isPlaceSrc,
   jobsActivateHref,
@@ -47,6 +50,7 @@ import {
   jobsPlaceHref,
   jobsProcessActionLabel,
   jobsProcessStepFromStage,
+  jobsProductLimitForPlan,
   jobsToActivate,
   jobsSignupHref,
   jobsWorkspaceRestoreHref,
@@ -286,7 +290,8 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/JOBS_RUN_ONE_ROBOT_CTA/);
     expect(workspace).toMatch(/lineupPreview/);
     expect(handoff).toMatch(/JOBS_SAVE_TO_CRM_CTA/);
-    expect(handoff).toMatch(/jobIsForLabel/);
+    expect(handoff).not.toMatch(/function JobRow/);
+    expect(handoff).not.toMatch(/jobIsForLabel/);
   });
 
   it("never hops Jobs traffic to /pipeline or /results", () => {
@@ -385,8 +390,10 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/PipelineOutreachValuePanel/);
     expect(pipeline).toMatch(/JobsHandoffBoard/);
     expect(pipeline).not.toMatch(/armJobsWorkspaceRestore\(\)/);
-    expect(handoff).toMatch(/From your list/);
+    expect(handoff).toMatch(/JOBS_SAVE_TO_CRM_CTA/);
+    expect(handoff).not.toMatch(/From your list/);
     expect(handoff).not.toMatch(/Taking you back/);
+    expect(handoff).not.toMatch(/function JobRow/);
     expect(pipeline).toMatch(/arrivedFromPlace/);
     expect(pipeline).toMatch(/isPlaceSrc/);
   });
@@ -701,5 +708,67 @@ describe("jobsWorkflow", () => {
     ).toBe("cleaning / housekeeping robots");
     expect(isSalesPlaceholder("Operational automation opportunity — confirm specific pain on discovery call")).toBe(true);
     expect(isSalesPlaceholder("Move pallets from receiving to reserve overnight")).toBe(false);
+  });
+
+  it("filters OEM hub noise and caps product searches 3 free / 5 paid", () => {
+    expect(jobsProductLimitForPlan(null)).toBe(JOBS_PRODUCT_CAP_FREE);
+    expect(jobsProductLimitForPlan("anonymous")).toBe(3);
+    expect(jobsProductLimitForPlan("free")).toBe(3);
+    expect(jobsProductLimitForPlan("paid")).toBe(JOBS_PRODUCT_CAP_PAID);
+    const omron = filterJobsLineupProducts(
+      [
+        { name: "Products overview" },
+        { name: "AMRs" },
+        { name: "Industries" },
+        { name: "About Us" },
+        { name: "Collaborative" },
+        { name: "Discontinued Products" },
+        { name: "Activate your AMR License" },
+        { name: "Deutsch" },
+        { name: "Español" },
+        { name: "Français" },
+        { name: "LD-250" },
+        { name: "HD-1500" },
+        { name: "MD-650" },
+        { name: "LD-90" },
+      ],
+      JOBS_PRODUCT_CAP_FREE,
+    );
+    expect(omron.map(p => p.name)).toEqual(["LD-250", "HD-1500", "MD-650"]);
+    const paid = filterJobsLineupProducts(
+      [
+        { name: "LD-250" },
+        { name: "HD-1500" },
+        { name: "MD-650" },
+        { name: "LD-90" },
+        { name: "LD-60" },
+        { name: "LD-105" },
+      ],
+      JOBS_PRODUCT_CAP_PAID,
+    );
+    expect(paid.map(p => p.name)).toEqual([
+      "LD-250",
+      "HD-1500",
+      "MD-650",
+      "LD-90",
+      "LD-60",
+    ]);
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    expect(workspace).toMatch(/filterJobsLineupProducts/);
+    expect(workspace).toMatch(/ROBOT_PROFILE_TIMEOUT_MS/);
+    expect(workspace).toMatch(/productCap/);
+    expect(workspace).toMatch(/phase=\{researchPhase\}/);
+    const crm = readFileSync(join(here, "../pages/Crm.tsx"), "utf8");
+    expect(crm).toMatch(/crm-navy/);
+    expect(crm).not.toMatch(/bg-white/);
+    const account = readFileSync(
+      join(here, "../components/crm/CrmAccountWorkspace.tsx"),
+      "utf8",
+    );
+    expect(account).not.toMatch(/bg-white/);
+    expect(account).toMatch(/bg-\[#0b162f\]/);
   });
 });

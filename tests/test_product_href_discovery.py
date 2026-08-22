@@ -138,7 +138,7 @@ def test_href_label_keeps_hidden_sku():
 
 
 def test_profile_cache_namespace_busts_stale_engineai_identity():
-    assert NAMESPACE == "robot_profile_v9"
+    assert NAMESPACE == "robot_profile_v10"
 
 
 def test_sku_from_root_named_product_paths():
@@ -228,4 +228,52 @@ def test_richtech_resolve_picker_is_catalog_skus_not_prose_only():
     assert "Learn More" not in found
     assert "Contact Us" not in found
     assert len(found) == 10
+
+
+def test_omron_hub_nav_is_not_a_robot_lineup():
+    origin = "https://robotics.omron.com"
+    home = _page(
+        title="Mobile Robots | OMRON",
+        url=f"{origin}/products/mobile-robots/",
+        text=(
+            "OMRON LD-250 AMR and HD-1500 MD-650 autonomous mobile robots "
+            "move pallets in warehouses. LD-250 LD-250 HD-1500 MD-650."
+        ),
+        links=[
+            (f"{origin}/products/mobile-robots/", "Products overview"),
+            (f"{origin}/products/amrs", "AMRs"),
+            (f"{origin}/industries", "Industries"),
+            (f"{origin}/about-us", "About Us"),
+            (f"{origin}/products/collaborative", "Collaborative"),
+            (f"{origin}/products/discontinued-products", "Discontinued Products"),
+            (f"{origin}/products/mobile-robots/activate-license", "Activate your AMR License"),
+            (f"{origin}/de/", "Deutsch"),
+            (f"{origin}/es/", "Español"),
+            (f"{origin}/fr/", "Français"),
+            (f"{origin}/products/ld-250", "LD-250"),
+            (f"{origin}/products/hd-1500", "HD-1500"),
+            (f"{origin}/products/md-650", "MD-650"),
+        ],
+    )
+    names = _discover_product_names(home)
+    lowered = {n.lower() for n in names}
+    for noise in (
+        "about us",
+        "industries",
+        "products overview",
+        "discontinued products",
+        "deutsch",
+        "español",
+        "espanol",
+        "français",
+        "francais",
+        "amrs",
+        "collaborative",
+        "activate your amr license",
+    ):
+        assert noise not in lowered
+    assert any("ld-250" in n.lower() or "ld250" in n.lower() for n in names)
+    assert any("hd-1500" in n.lower() or "hd1500" in n.lower() for n in names)
+    assert _sku_from_product_href(f"{origin}/products/mobile-robots/") is None
+    assert _sku_from_product_href(f"{origin}/products/ld-250") == "LD250"
 

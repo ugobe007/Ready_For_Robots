@@ -56,6 +56,11 @@ PIPELINE_FREE_MONITOR_SLOTS = PIPELINE_PREVIEW_MONITOR_SLOTS
 PIPELINE_LIMIT_PAID = PIPELINE_TIERED_TOTAL
 SAVED_LEADS_LIMIT_FREE = 5
 
+# Jobs picker: how many manufacturer SKUs we will search in one pass.
+# Large OEM catalogs stay a later segmentation problem — this cap keeps FIND fast.
+JOBS_PRODUCT_LIMIT_FREE = 3
+JOBS_PRODUCT_LIMIT_PAID = 5
+
 
 def _is_admin_email(email: str) -> bool:
     from app.api.auth_deps import _is_admin
@@ -168,6 +173,7 @@ def user_workspace_entitlements(user: Optional[dict], db=None) -> dict[str, Any]
         "billing_tier": billing,
         "display_name": label,
         "pipeline_limit": pipeline_limit_for_plan(plan),
+        "jobs_product_limit": jobs_product_limit_for_plan(plan),
         "saved_limit": saved_limit,
         "saved_count": saved_count,
         "features": features,
@@ -181,6 +187,16 @@ def pipeline_limit_for_plan(plan: str) -> int:
     if plan == PLAN_FREE:
         return PIPELINE_LIMIT_FREE
     return PIPELINE_LIMIT_ANONYMOUS
+
+
+def jobs_product_limit_for_plan(plan: str) -> int:
+    """How many robot SKUs one Jobs lookup may search.
+
+    Anonymous and free share the 3-product cap. Paid unlocks 5.
+    """
+    if plan == PLAN_PAID:
+        return JOBS_PRODUCT_LIMIT_PAID
+    return JOBS_PRODUCT_LIMIT_FREE
 
 
 def saved_leads_limit_for_plan(plan: str) -> Optional[int]:

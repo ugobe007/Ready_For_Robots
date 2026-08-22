@@ -184,11 +184,16 @@ export async function fetchWithTimeout(
 ): Promise<Response> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-  const baseInit = opts?.publicCache ? publicFetchInit(init) : liveFetchInit(init);
+  const onParentAbort = () => ctrl.abort();
+  init.signal?.addEventListener("abort", onParentAbort);
+  if (init.signal?.aborted) ctrl.abort();
+  const { signal: _ignored, ...rest } = init;
+  const baseInit = opts?.publicCache ? publicFetchInit(rest) : liveFetchInit(rest);
   try {
     return await fetch(url, { ...baseInit, signal: ctrl.signal });
   } finally {
     clearTimeout(timer);
+    init.signal?.removeEventListener("abort", onParentAbort);
   }
 }
 
