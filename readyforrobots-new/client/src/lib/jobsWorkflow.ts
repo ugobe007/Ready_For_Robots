@@ -122,10 +122,12 @@ export function productClassesFromLineup(
 export function skuFamilyStem(name: string): string | null {
   const raw = (name || "").trim();
   if (!raw) return null;
-  const token = raw.split(/\s+/).pop() || raw;
-  const match = token.match(/^([A-Za-z]{1,8})[-_]?(\d)/);
-  if (!match) return null;
-  return match[1].toUpperCase();
+  const tokens = raw.split(/\s+/);
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    const match = tokens[i].match(/^([A-Za-z]{1,8})[-_]?(\d)/);
+    if (match) return match[1].toUpperCase();
+  }
+  return null;
 }
 
 export type LineupSegment = {

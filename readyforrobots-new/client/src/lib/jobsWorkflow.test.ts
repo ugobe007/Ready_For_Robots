@@ -782,6 +782,7 @@ describe("jobsWorkflow", () => {
     expect(skuFamilyStem("LD-250")).toBe("LD");
     expect(skuFamilyStem("HD-1500")).toBe("HD");
     expect(skuFamilyStem("Fourier GR-1")).toBe("GR");
+    expect(skuFamilyStem("Fourier GR-3C Cosmo")).toBe("GR");
     expect(skuFamilyStem("N1")).toBe("N");
     expect(skuFamilyStem("Digit")).toBeNull();
 
@@ -812,16 +813,17 @@ describe("jobsWorkflow", () => {
     ]);
 
     const fourier = lineupSegments([
-      { name: "Fourier GR-1", displayClass: "humanoid" },
-      { name: "Fourier GR-2", displayClass: "humanoid" },
+      { name: "Fourier GR-3C Cosmo", displayClass: "humanoid" },
       { name: "Fourier GR-3", displayClass: "humanoid" },
+      { name: "Fourier GR-2", displayClass: "humanoid" },
+      { name: "Fourier GR-1", displayClass: "humanoid" },
       { name: "Fourier N1", displayClass: "humanoid" },
     ]);
     expect(fourier.map(s => s.title)).toEqual(["GR humanoids", "Fourier N1"]);
     expect(searchNamesForSegment(fourier[0], 3)).toEqual([
-      "Fourier GR-1",
-      "Fourier GR-2",
+      "Fourier GR-3C Cosmo",
       "Fourier GR-3",
+      "Fourier GR-2",
     ]);
 
     const mixed = lineupSegments([
