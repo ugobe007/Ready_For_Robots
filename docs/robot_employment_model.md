@@ -147,8 +147,8 @@ Do **not** invent FTE, loaded labor cost, payback, or route meters. Unknown is a
 
 Qualification is explainable:
 
-- **Qualified** — required capabilities hold; residual unknowns are named
-- **Conditional** — physically plausible; a named requirement needs validation
+- **Qualified** — you or the employer confirmed the work (not a matcher score)
+- **Conditional** — physically plausible; pending your review and a site assessment
 - **Not qualified** — a required capability is unmet
 - **Pending robot** — the job is real; this robot has no résumé in R4R yet
 

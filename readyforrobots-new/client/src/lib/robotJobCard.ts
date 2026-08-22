@@ -24,6 +24,7 @@ export type RobotJobCardView = {
   evidence: string | null;
   qualification: RobotJobQualification;
   qualificationLabel: string;
+  qualificationHint: string;
   openQuestions: string[];
   nextStep: string;
 };
@@ -35,12 +36,23 @@ export const QUALIFICATION_LABEL: Record<RobotJobQualification, string> = {
   pending_robot: "Pending robot résumé",
 };
 
+export const QUALIFICATION_HINT: Record<RobotJobQualification, string> = {
+  qualified: "Confirmed by you or the employer.",
+  conditional: "Pending your review and a site assessment.",
+  not_qualified: "A required capability is unmet.",
+  pending_robot: "Submit this robot’s URL to evaluate it against the job.",
+};
+
 export function qualificationFromVerdict(
   verdict?: string | null,
+  blockers?: string[] | null,
 ): RobotJobQualification {
-  if (verdict === "NOT_A_MATCH") return "not_qualified";
-  if (verdict === "INSUFFICIENT") return "conditional";
-  if (verdict === "POSSIBLE_MATCH") return "qualified";
+  if (verdict === "NOT_A_MATCH" || (blockers && blockers.length > 0)) {
+    return "not_qualified";
+  }
+  if (verdict === "POSSIBLE_MATCH" || verdict === "INSUFFICIENT") {
+    return "conditional";
+  }
   return "pending_robot";
 }
 
@@ -60,7 +72,7 @@ export function robotJobCardFromMatch(job: {
     ...(job.still_unknown || []),
     ...(job.unknowns || []),
   ]);
-  const qualification = qualificationFromVerdict(job.verdict);
+  const qualification = qualificationFromVerdict(job.verdict, job.blockers);
   const title = (job.title || "").trim() || "Untitled job";
   return {
     employer: emptyToNull(job.company_name),
@@ -73,6 +85,7 @@ export function robotJobCardFromMatch(job: {
     evidence: emptyToNull(job.text) || (job.why?.[0] ?? null),
     qualification,
     qualificationLabel: QUALIFICATION_LABEL[qualification],
+    qualificationHint: QUALIFICATION_HINT[qualification],
     openQuestions: open,
     nextStep: ROBOT_JOB_CARD_NEXT_STEP,
   };

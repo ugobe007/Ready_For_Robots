@@ -23,8 +23,9 @@ describe("robotJobCard", () => {
     });
     expect(card.employer).toBe("groninger");
     expect(card.workplace).toBe("Charlotte, NC");
-    expect(card.qualification).toBe("qualified");
-    expect(card.qualificationLabel).toBe("Qualified");
+    expect(card.qualification).toBe("conditional");
+    expect(card.qualificationLabel).toBe("Conditional");
+    expect(card.qualificationHint).toMatch(/Pending your review/i);
     expect(card.work).toBe(
       "Tend CNC mills/lathes — workpiece load/unload around cycle",
     );
@@ -35,10 +36,14 @@ describe("robotJobCard", () => {
     expect(card.nextStep).toMatch(/Site assessment/i);
   });
 
-  it("does not score a robot with no verdict as already qualified", () => {
+  it("does not score a matcher hit as Qualified without user or employer feedback", () => {
+    expect(qualificationFromVerdict("POSSIBLE_MATCH")).toBe("conditional");
     expect(qualificationFromVerdict(null)).toBe("pending_robot");
     expect(qualificationFromVerdict("INSUFFICIENT")).toBe("conditional");
     expect(qualificationFromVerdict("NOT_A_MATCH")).toBe("not_qualified");
+    expect(qualificationFromVerdict("POSSIBLE_MATCH", ["Reach insufficient"])).toBe(
+      "not_qualified",
+    );
   });
 
   it("keeps the RobCo pack honest: named machine-tending work, no fake labor dollars", () => {
@@ -67,10 +72,9 @@ describe("robotJobCard", () => {
     expect(cardSrc).toMatch(/robotJobCardFromMatch/);
     expect(cardSrc).toMatch(/Employer/);
     expect(cardSrc).toMatch(/Workplace/);
-    expect(cardSrc).toMatch(/Open questions/);
-    expect(cardSrc).toMatch(/Next step:/);
-    expect(cardSrc).toMatch(/card\.nextStep/);
+    expect(cardSrc).toMatch(/Why this is listed/);
+    expect(cardSrc).toMatch(/qualificationHint/);
     expect(cardSrc).not.toMatch(/Possible match/);
-    expect(cardSrc).not.toMatch(/\bLead\b/);
+    expect(cardSrc).not.toMatch(/>Qualified</);
   });
 });
