@@ -259,6 +259,55 @@ export const PIPELINE_PAGE_NEXT =
 export const JOBS_OPEN_CRM_CTA = "Open CRM →";
 export const JOBS_HEADER_OFFSET_CLASS = "pt-14";
 
+const SALES_PITCH_RE =
+  /\b(pitch|lead with|ask who owns|ask about|open with|sequence the|upgrade to|buyer intent|sales motion|outreach draft|hard sell|owns the budget|easy wedge|capex this quarter|focus on|qualify (manufacturing|lab)|avoid front-of-house|discovery call|automation opportunity|confirm specific pain|why now signal not yet)\b/i;
+
+export type JobExplanationInput = {
+  title?: string | null;
+  why?: string[] | null;
+  company?: string | null;
+  industry?: string | null;
+  friction?: string | null;
+  workflow?: string | null;
+  summary?: string | null;
+  action?: string | null;
+};
+
+/** One sentence of work — not a sales pitch. */
+export function isSalesPlaceholder(text?: string | null): boolean {
+  const value = String(text || "").replace(/\s+/g, " ").trim();
+  if (value.length < 8) return true;
+  return SALES_PITCH_RE.test(value);
+}
+
+export function jobExplanation(input: JobExplanationInput): string {
+  const strippedAction = (input.action || "")
+    .replace(/^(priority|next)\s*:\s*/i, "")
+    .replace(/^pitch\s+/i, "")
+    .trim();
+  const candidates = [
+    ...(input.why || []),
+    input.friction,
+    input.workflow,
+    input.summary,
+    input.title,
+    strippedAction,
+  ];
+  for (const raw of candidates) {
+    const text = String(raw || "").replace(/\s+/g, " ").trim();
+    if (text.length < 8) continue;
+    if (SALES_PITCH_RE.test(text)) continue;
+    const place = [input.company, input.industry].filter(Boolean).join(" · ");
+    if (input.title && text === input.title.trim() && place) {
+      return `${text} — ${place}`;
+    }
+    return text;
+  }
+  const title = (input.title || "This job").trim();
+  const place = [input.company, input.industry].filter(Boolean).join(" · ");
+  return place ? `${title} at ${place}` : title;
+}
+
 export function jobsListHint(opts: {
   robotCount: number;
   productName: string;

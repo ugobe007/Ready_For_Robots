@@ -41,6 +41,8 @@ import {
   jobsHeading,
   jobIndexLabel,
   jobIsForLabel,
+  jobExplanation,
+  isSalesPlaceholder,
   jobsListHint,
   jobsPlaceHref,
   jobsProcessActionLabel,
@@ -628,6 +630,7 @@ describe("jobsWorkflow", () => {
     expect(crm).toMatch(/ExperimentHeader/);
     expect(crm).toMatch(/CrmHero/);
     expect(crm).toMatch(/\/api\/crm\/jobs-watch/);
+    expect(crm).not.toMatch(/admin-workspace/);
     expect(crm).not.toMatch(/from "@\/components\/Header"/);
     expect(crm).not.toMatch(/Outreach editor/);
 
@@ -637,5 +640,65 @@ describe("jobsWorkflow", () => {
     expect(hero).toMatch(/CRM_HEADLINE_CLASS/);
     expect(hero).toMatch(/CRM_WATCH_OPT_IN_LABEL/);
     expect(hero).toMatch(/CRM_HOW_TO_STEPS/);
+
+    const intel = readFileSync(join(here, "../pages/Intelligence.tsx"), "utf8");
+    expect(intel).toMatch(/ExperimentHeader/);
+    expect(intel).toMatch(/KARE_FACE/);
+    expect(intel).toMatch(/bg-\[#081126\]/);
+    expect(intel).not.toMatch(/from "@\/components\/Header"/);
+
+    expect(crm).toMatch(/Job outreach checkpoint/);
+    expect(crm).not.toMatch(/Buyer outreach checkpoint/);
+    expect(crm).not.toMatch(/admin-workspace/);
+
+    const pipelineSrc = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
+    expect(pipelineSrc).toMatch(/JOBS_PIPELINE_CAP/);
+    expect(pipelineSrc).not.toMatch(/Find buyers by industry/);
+    expect(pipelineSrc).not.toMatch(/Customer opportunities/);
+    expect(pipelineSrc).not.toMatch(/Why this is a sales lead/);
+    expect(pipelineSrc).not.toMatch(/saving that buyer/);
+    expect(pipelineSrc).not.toMatch(/Buyer workspace · preview/);
+
+    const cardSrc = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    expect(cardSrc).toMatch(/jobExplanation/);
+    expect(cardSrc).toMatch(/The job/);
+  });
+
+  it("explains the job instead of a sales pitch", () => {
+    expect(
+      jobExplanation({
+        action: "Priority: Pitch AMR fleet for new distribution centers",
+        friction: "Move pallets from receiving to reserve overnight",
+        company: "Acme Logistics",
+      }),
+    ).toBe("Move pallets from receiving to reserve overnight");
+    expect(
+      jobExplanation({
+        title: "Tray return",
+        why: ["Carry dirty trays from dining room to the dish pit all shift"],
+        company: "Panera Bread",
+      }),
+    ).toMatch(/dish pit/i);
+    expect(
+      jobExplanation({
+        action: "Open with dock-to-stock AMR ROI — ask who owns slotting and outbound flow.",
+        industry: "Logistics",
+        company: "Acme Logistics",
+        title: "Dock to stock",
+      }),
+    ).toBe("Dock to stock — Acme Logistics · Logistics");
+    expect(
+      jobExplanation({
+        action: "Operational automation opportunity — confirm specific pain on discovery call",
+        friction: "Why now signal not yet summarized",
+        workflow: "cleaning / housekeeping robots",
+        company: "MGM Resorts",
+      }),
+    ).toBe("cleaning / housekeeping robots");
+    expect(isSalesPlaceholder("Operational automation opportunity — confirm specific pain on discovery call")).toBe(true);
+    expect(isSalesPlaceholder("Move pallets from receiving to reserve overnight")).toBe(false);
   });
 });

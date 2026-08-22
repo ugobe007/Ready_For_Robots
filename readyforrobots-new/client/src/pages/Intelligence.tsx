@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, BarChart3, Building2, FileText, Mail, Radio, Search, Send, Zap } from "lucide-react";
 import { Link } from "wouter";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
+import PixelIcon from "@/components/PixelIcon";
+import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
+import { JOBS_HEADER_OFFSET_CLASS } from "@/lib/jobsWorkflow";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
 
@@ -105,18 +108,23 @@ export default function Intelligence() {
   }
 
   const inputClass =
-    "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-emerald-500";
+    "w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-colors focus:border-emerald-400";
 
   return (
-    <div className="intelligence-page min-h-screen flex flex-col">
-      <Header />
+    <div className={`intelligence-page flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <ExperimentHeader />
       <PageHeroDark
         maxWidthClass="max-w-6xl"
-        eyebrow="ReadyForRobots Intelligence"
-        title="Robot Demand Signals, Ranked"
+        eyebrow="ReadyForRobots"
+        title={
+          <span className="inline-flex items-center gap-4">
+            <PixelIcon map={KARE_FACE} scale={3} fill={FACE_EMERALD} background="transparent" />
+            <span className="font-display text-emerald-400">About</span>
+          </span>
+        }
         description={
           <>
-            The same engine that powers <span className="font-bold text-amber-400">SIGNAL</span> watches labor pressure, expansion plans, CapEx hints, automation hiring, and deployment news, then turns those signals into sales and partnership opportunities.
+            Labor pressure, expansion, CapEx, and deployment news — ranked as work robots can do, not as a generic sales dump.
           </>
         }
         innerClassName="pb-8"
@@ -150,24 +158,24 @@ export default function Intelligence() {
       <main className="flex-1 px-6 pb-20">
         <div className="max-w-6xl mx-auto">
 
-          <section className="mb-12 overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <section className="mb-12 overflow-hidden rounded-lg border border-slate-600 bg-[#0b162f]">
             <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="border-b border-gray-100 p-6 lg:border-b-0 lg:border-r">
                 <p className={`mb-3 ${EYEBROW}`} style={{ color: "#FFB000" }}>Lead scoring model</p>
-                <h2 className="max-w-xl text-xl font-bold leading-tight text-gray-900 lg:text-2xl">
-                  We score the buyer first, then match it to the robot sales motion.
+                <h2 className="max-w-xl font-display text-xl font-bold leading-tight text-white lg:text-2xl">
+                  We score the work first, then match it to a robot that can do the job.
                 </h2>
                 <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-gray-500">
                   SIGNAL does not treat every lead as equal. It ranks the company’s buying intent, the operational problem, and the timing window, then compares that profile against the robot category or vendor URL you submit.
                 </p>
-                <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-gray-200 bg-gray-100">
+                <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-slate-600 bg-[#081126]">
                   {[
                     ["HOT", "Act now"],
                     ["WARM", "Sequence"],
                     ["EMERGING", "Watch"],
                     ["PARTNER", "Channel fit"],
                   ].map(([tier, action]) => (
-                    <div key={tier} className="p-3 bg-white">
+                    <div key={tier} className="p-3 bg-[#0b162f]">
                       <p className="font-mono text-[13px] font-bold" style={{ color: tier === "HOT" ? "#FFB000" : "#059669", fontFamily: "'JetBrains Mono', monospace" }}>{tier}</p>
                       <p className="mt-0.5 text-[11px] text-gray-600">{action}</p>
                     </div>
@@ -181,7 +189,7 @@ export default function Intelligence() {
                     <div key={item.label}>
                       <div className="mb-1.5 flex items-start justify-between gap-4">
                         <div>
-                          <p className="text-[13px] font-semibold text-gray-800">{item.label}</p>
+                          <p className="text-[13px] font-semibold text-slate-100">{item.label}</p>
                           <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{item.copy}</p>
                         </div>
                         <span className="shrink-0 font-mono text-[13px] font-bold" style={{ color: item.color, fontFamily: "'JetBrains Mono', monospace" }}>{item.value}</span>
@@ -201,14 +209,14 @@ export default function Intelligence() {
             </div>
           </section>
 
-          <section id="report" className="mb-12 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-gray-200 lg:grid-cols-[1fr_360px] bg-gray-100">
-            <div className="p-6 bg-white">
-              <p className={`mb-3 ${EYEBROW}`} style={{ color: "#059669" }}>Enterprise Intelligence Report</p>
-              <h2 className="max-w-2xl text-2xl font-bold leading-tight text-gray-900 lg:text-3xl">
+          <section id="report" className="mb-12 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-slate-600 lg:grid-cols-[1fr_360px] bg-[#081126]">
+            <div className="p-6 bg-[#0b162f]">
+              <p className={`mb-3 ${EYEBROW}`} style={{ color: "#34d399" }}>Enterprise Intelligence Report</p>
+              <h2 className="max-w-2xl font-display text-2xl font-bold leading-tight text-white lg:text-3xl">
                 The Automation Imperative: labor-intensive industries are flashing buy signals.
               </h2>
-              <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-gray-500">
-                Built from real ReadyForRobots signal data: <span className="text-gray-700">158 enterprises</span>, <span className="text-gray-700">437 buying signals</span>, and sector-level ROI patterns for robotics vendors selling into labor-constrained operations.
+              <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-slate-400">
+                Built from real ReadyForRobots signal data: <span className="text-slate-200">158 enterprises</span>, <span className="text-slate-200">437 buying signals</span>, and sector-level ROI patterns for robotics vendors selling into labor-constrained operations.
               </p>
               <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
                 {[
@@ -217,20 +225,20 @@ export default function Intelligence() {
                   ["ROI models", "sales narrative ready"],
                 ].map(([label, copy]) => (
                   <div key={label} className="border-l px-3 py-1.5" style={{ borderColor: "rgba(3,218,197,0.45)" }}>
-                    <p className="text-[13px] font-semibold text-gray-800">{label}</p>
-                    <p className="mt-0.5 text-xs text-gray-500">{copy}</p>
+                    <p className="text-[13px] font-semibold text-slate-100">{label}</p>
+                    <p className="mt-0.5 text-xs text-slate-400">{copy}</p>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="p-5 bg-slate-50">
+            <div className="p-5 bg-[#081126]">
               <div className="mb-4 flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md border" style={{ borderColor: "rgba(3,218,197,0.35)", background: "rgba(3,218,197,0.07)" }}>
-                  <FileText className="h-4 w-4" style={{ color: "#059669" }} />
+                <div className="flex h-8 w-8 items-center justify-center rounded-md border" style={{ borderColor: "rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.07)" }}>
+                  <FileText className="h-4 w-4" style={{ color: "#34d399" }} />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-gray-900">Download the 2026 report</p>
-                  <p className="text-[11px] text-gray-500">No padded buttons. Just the data.</p>
+                  <p className="text-[13px] font-semibold text-white">Download the 2026 report</p>
+                  <p className="text-[11px] text-slate-400">No padded buttons. Just the data.</p>
                 </div>
               </div>
               {reportStatus === "success" ? (
@@ -279,20 +287,20 @@ export default function Intelligence() {
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className="rounded-lg border border-gray-100 p-4 transition-colors hover:border-teal-300/25 bg-white">
-                  <Icon className="mb-4 h-[18px] w-[18px]" style={{ color: item.title === "Rank" ? "#FFB000" : "#059669" }} />
-                  <p className="mb-1 text-[13px] font-semibold text-gray-900">{item.title}</p>
-                  <p className="text-[13px] leading-relaxed text-gray-500">{item.copy}</p>
+                <div key={item.title} className="rounded-lg border border-slate-600 bg-[#0b162f] p-4 transition-colors hover:border-emerald-400/40">
+                  <Icon className="mb-4 h-[18px] w-[18px]" style={{ color: item.title === "Rank" ? "#FFB000" : "#34d399" }} />
+                  <p className="mb-1 text-[13px] font-semibold text-white">{item.title}</p>
+                  <p className="text-[13px] leading-relaxed text-slate-400">{item.copy}</p>
                 </div>
               );
             })}
           </section>
 
-          <section id="brief" className="rounded-lg border border-gray-200 p-6 bg-white">
+          <section id="brief" className="rounded-lg border border-slate-600 bg-[#0b162f] p-6">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px]">
               <div>
-                <p className={`mb-2.5 ${EYEBROW}`} style={{ color: "#10b981" }}>Robot Intelligence Brief</p>
-                <h2 className="max-w-2xl text-2xl font-bold leading-tight text-gray-900">
+                <p className={`mb-2.5 ${EYEBROW}`} style={{ color: "#34d399" }}>Robot Intelligence Brief</p>
+                <h2 className="max-w-2xl font-display text-2xl font-bold leading-tight text-white">
                   A weekly brief that keeps the market warm between sales cycles.
                 </h2>
                 <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-gray-500">
@@ -301,17 +309,17 @@ export default function Intelligence() {
                 {stories.length > 0 && (
                   <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
                     {stories.slice(0, 3).map((story, i) => (
-                      <div key={`${story.title || story.company || i}`} className="rounded-md border border-gray-100 p-3.5 bg-gray-50">
-                        <p className="break-words mb-1.5 text-[13px] font-semibold text-gray-800">{cleanScrapedText(story.title || story.company) || "Signal story"}</p>
+                      <div key={`${story.title || story.company || i}`} className="rounded-md border border-slate-600 bg-[#081126] p-3.5">
+                        <p className="break-words mb-1.5 text-[13px] font-semibold text-slate-100">{cleanScrapedText(story.title || story.company) || "Signal story"}</p>
                         <p className="break-words text-xs leading-relaxed text-gray-500">{cleanScrapedText(story.summary) || "Fresh signal intelligence from ReadyForRobots."}</p>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              <form onSubmit={subscribe} className="rounded-md border border-gray-100 p-4 bg-gray-50">
-                <Mail className="mb-3 h-[18px] w-[18px]" style={{ color: "#059669" }} />
-                <p className="mb-1.5 text-[13px] font-semibold text-gray-900">Subscribe free</p>
+              <form onSubmit={subscribe} className="rounded-md border border-slate-600 bg-[#081126] p-4">
+                <Mail className="mb-3 h-[18px] w-[18px]" style={{ color: "#34d399" }} />
+                <p className="mb-1.5 text-[13px] font-semibold text-white">Subscribe free</p>
                 <p className="mb-3.5 text-xs leading-relaxed text-gray-500">Buying signals, deployment stories, ROI benchmarks, and SIGNAL activation prompts.</p>
                 <input
                   value={email}
@@ -339,7 +347,7 @@ export default function Intelligence() {
             <Link href="/signup" className="group inline-flex items-center gap-1.5 font-semibold transition-colors" style={{ color: "#FFB000" }}>
               Activate SIGNAL from live intelligence <Send className="h-3.5 w-3.5" />
             </Link>
-            <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-gray-500 transition-colors hover:text-gray-800">
+            <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white">
               Browse signal types <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>

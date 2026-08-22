@@ -1,6 +1,7 @@
 /**
  * Pipeline action line + robot type chips — demo proof vs generic company search.
  */
+import { jobExplanation } from "@/lib/jobsWorkflow";
 import { cleanAndClampText } from "@/lib/text";
 
 export type PipelineLeadActionFields = {
@@ -9,9 +10,13 @@ export type PipelineLeadActionFields = {
   robot_types_needed?: string[];
   robotTypesNeeded?: string[];
   share_summary?: string | null;
+  shareSummary?: string | null;
   core_need?: string | null;
   signal?: string;
+  company?: string | null;
+  industry?: string | null;
   signals?: { display_text?: string }[];
+  leadHighlights?: { specific_problem?: string | null };
   crmEvidence?: {
     friction_point?: string | null;
     workflow_scope?: { count?: number; label?: string | null; items?: string[] };
@@ -22,11 +27,20 @@ export type PipelineLeadActionFields = {
 };
 
 function actionLine(lead: PipelineLeadActionFields): string {
-  const action = (lead.pipeline_action || lead.pipelineAction || "").trim();
-  if (action) return cleanAndClampText(action, 200);
-  const summary = (lead.share_summary || lead.core_need || lead.signal || "").trim();
-  if (summary) return cleanAndClampText(summary, 200);
-  return cleanAndClampText(lead.signals?.[0]?.display_text, 200) || "";
+  return cleanAndClampText(
+    jobExplanation({
+      friction: lead.crmEvidence?.friction_point || lead.leadHighlights?.specific_problem,
+      workflow:
+        lead.crmEvidence?.workflow_scope?.label ||
+        lead.crmEvidence?.workflow_scope?.items?.[0],
+      summary: lead.share_summary || lead.shareSummary || lead.core_need || lead.signal,
+      action: lead.pipeline_action || lead.pipelineAction,
+      company: lead.company,
+      industry: lead.industry,
+      title: lead.signals?.[0]?.display_text,
+    }),
+    200,
+  );
 }
 
 function robotTypes(lead: PipelineLeadActionFields): string[] {
@@ -39,12 +53,12 @@ function evidenceLine(lead: PipelineLeadActionFields): string {
   if (!e) return "";
   const parts: string[] = [];
   if (e.workflow_scope?.label) parts.push(e.workflow_scope.label);
-  if (e.timing?.label) parts.push(`Timing: ${e.timing.label}`);
-  if (e.robot_type?.label) parts.push(`Robots: ${e.robot_type.label}`);
-  if (e.budget?.top_amount) parts.push(`Budget: ${e.budget.top_amount}`);
-  else if (e.budget?.has_budget) parts.push("Budget signal detected");
+  if (e.robot_type?.label) parts.push(e.robot_type.label);
   if (parts.length > 0) return cleanAndClampText(parts.join(" · "), 180);
-  if (e.friction_point) return cleanAndClampText(e.friction_point, 180);
+  const friction = String(e.friction_point || "").trim();
+  if (friction && !/\b(why now signal not yet|discovery call|automation opportunity)\b/i.test(friction)) {
+    return cleanAndClampText(friction, 180);
+  }
   return "";
 }
 

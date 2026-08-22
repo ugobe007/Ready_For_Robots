@@ -21,6 +21,7 @@ export default function ExperimentHeader() {
   const jobsActive = location === "/" || location.startsWith("/?") || Boolean(onJobsSlug);
   const pipelineActive = location.startsWith("/pipeline");
   const crmActive = location.startsWith("/crm");
+  const aboutActive = location.startsWith("/intelligence");
 
   async function signOut() {
     clearPendingNext();
@@ -49,7 +50,7 @@ export default function ExperimentHeader() {
           >
             Jobs
           </a>
-          <Link href="/intelligence" className={`${navIdle} max-sm:hidden`}>
+          <Link href="/intelligence" className={`${aboutActive ? navActive : navIdle} max-sm:hidden`}>
             About
           </Link>
           <Link

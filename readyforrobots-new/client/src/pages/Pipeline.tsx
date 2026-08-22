@@ -64,10 +64,13 @@ import {
   isPlaceSrc,
   buyerLeadsToShow,
   JOBS_ACTIVATE_CAP,
+  JOBS_PIPELINE_CAP,
   JOBS_EYEBROW_CLASS,
   JOBS_OPEN_CRM_CTA,
   PIPELINE_PAGE_HEADLINE,
   PIPELINE_PAGE_NEXT,
+  isSalesPlaceholder,
+  jobExplanation,
   jobsFreshHomeHref,
   onJobsFreshHomeClick,
 } from "@/lib/jobsWorkflow";
@@ -606,10 +609,16 @@ function FirstThreeActionsProgress({
   );
 }
 
+function userBucketLabel(bucket: UserBucket): string {
+  if (bucket === "Hot Leads") return "Hot jobs";
+  if (bucket === "Warm Leads") return "Warm jobs";
+  return "Watch list";
+}
+
 const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string; slotCap: number }> = {
-  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "Pitch these first", slotCap: PIPELINE_HOT_SLOTS },
-  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Sequence next", slotCap: PIPELINE_WARM_SLOTS },
-  "Monitoring":  { color: "#059669", dot: "#059669", desc: "Watch for a stronger signal", slotCap: PIPELINE_MONITOR_SLOTS },
+  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "Do this work first", slotCap: PIPELINE_HOT_SLOTS },
+  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Next jobs to inspect", slotCap: PIPELINE_WARM_SLOTS },
+  "Monitoring":  { color: "#059669", dot: "#059669", desc: "Keep an eye on this work", slotCap: PIPELINE_MONITOR_SLOTS },
 };
 
 /** Placeholder while pipeline / match-url loads — face icon + countdown so the page never looks blank. */
@@ -634,7 +643,7 @@ function MatchedPipelineSkeleton({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <p className="text-base font-bold text-slate-100 sm:text-lg">
-                {jobsMode ? "Loading jobs" : "Loading sales leads"}
+                {jobsMode ? "Loading jobs" : "Loading jobs"}
                 {hostname ? ` for ${hostname}` : ""}…
               </p>
               <span
@@ -688,7 +697,7 @@ function PipelineLeadsLoadingStrip({ secondsLeft, jobsMode = false }: { secondsL
         <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
       </div>
       <p className="min-w-0 flex-1 text-sm font-bold text-emerald-950">
-        {jobsMode ? "Loading jobs for your robot…" : "Loading sales leads…"}
+        {jobsMode ? "Loading jobs for your robot…" : "Loading jobs…"}
       </p>
       <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600" aria-label={`${secondsLeft} seconds remaining`}>
         {secondsLeft}s
@@ -706,7 +715,7 @@ function UpgradeProPriorityBanner({ src }: { src: string }) {
             Priority
           </p>
           <p className="mt-1 text-base font-extrabold text-white">
-            Upgrade to Pro and automate your sales campaign.
+            Keep watching jobs with Pro.
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2.5">
@@ -1313,10 +1322,12 @@ function evidenceStackForDeal(deal: Deal) {
 
   return {
     frictionPoint:
-      evidence?.friction_point
-      || deal.leadHighlights?.specific_problem
-      || deal.shareSummary
-      || deal.signal,
+      [
+        evidence?.friction_point,
+        deal.leadHighlights?.specific_problem,
+        deal.shareSummary,
+        deal.signal,
+      ].find((row) => !isSalesPlaceholder(row)) || null,
     workflowLabel: evidence?.workflow_scope?.label || (workflowItems.length > 1 ? "Multiple workflows" : "One workflow"),
     workflowItems,
     timingLabel: evidence?.timing?.label || deal.projectTiming?.display_phrase || deal.projectTiming?.label,
@@ -1611,7 +1622,7 @@ function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
 
         {(whyLead?.specific_problem || (whyLead?.reasons || []).length > 0) && (
           <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Why this is a sales lead</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Why this is the job</p>
             {whyLead?.specific_problem && (
               <p className="mt-1 text-[12px] leading-relaxed text-slate-800">
                 {cleanAndClampText(whyLead.specific_problem, 180)}
@@ -1627,7 +1638,7 @@ function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
 
         {(opportunityPoints.length > 0 || robotHistory.length > 0 || competitorClues.length > 0) && (
           <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Opportunity and competitive context</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">The work and context</p>
             {opportunityPoints.slice(0, 2).map((point, idx) => (
               <p key={`${point}-${idx}`} className="mt-1 text-[11px] leading-relaxed text-slate-700">
                 • {cleanAndClampText(point, 170)}
@@ -2690,7 +2701,7 @@ export default function Pipeline() {
   const freeLeadCap = Math.min(entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE, PIPELINE_LIMIT_FREE);
   const freeUpgradeMessage = arrivedFromJobs
     ? `You’re seeing ${freeLeadCap} jobs for your robot. Upgrade to Pro for the full live list, unlimited saves, and automated CRM motion.`
-    : `You’re seeing ${freeLeadCap} customer opportunities. Upgrade to Pro for the full live pipeline, unlimited saves, and automated CRM motion.`;
+    : `You’re seeing ${freeLeadCap} jobs. Pro keeps the watch loop on every SKU.`;
   const sessionDisplayName =
     session?.user?.user_metadata?.full_name
     || session?.user?.user_metadata?.name
@@ -2746,12 +2757,9 @@ export default function Pipeline() {
       });
     }
 
-    const feedCap = showFullPanel
-      ? PIPELINE_LIMIT_PAID
-      : panelPlan === "anonymous"
-        ? PIPELINE_LIMIT_ANONYMOUS
-        : PIPELINE_LIMIT_FREE;
-    if (!showFullPanel && next.length > feedCap) {
+    const feedCap =
+      panelPlan === "anonymous" ? PIPELINE_LIMIT_ANONYMOUS : JOBS_PIPELINE_CAP;
+    if (next.length > feedCap) {
       return next.slice(0, feedCap);
     }
     return next;
@@ -2763,7 +2771,6 @@ export default function Pipeline() {
     qualityBandFilter,
     qualitySort,
     panelPlan,
-    showFullPanel,
   ]);
 
   const matchedScopedDeals = useMemo(
@@ -2773,14 +2780,17 @@ export default function Pipeline() {
   const scopeMatchesCount = matchedScopedDeals.length;
   const scopedNoMatches = scopeToSubmittedUrl && !submittedUrlMatchLoading && !submittedUrlMatchError && scopeMatchesCount === 0;
   const displayedDeals = useMemo(
-    () =>
-      buyerLeadsToShow({
+    () => {
+      const rows = buyerLeadsToShow({
         scopedRows: matchedScopedDeals,
         liveRows: filtered,
         lookupPending: submittedUrlMatchLoading,
         scopeToUrl: scopeToSubmittedUrl,
-      }),
-    [filtered, matchedScopedDeals, scopeToSubmittedUrl, submittedUrlMatchLoading],
+      });
+      const cap = panelPlan === "anonymous" ? PIPELINE_LIMIT_ANONYMOUS : JOBS_PIPELINE_CAP;
+      return rows.length > cap ? rows.slice(0, cap) : rows;
+    },
+    [filtered, matchedScopedDeals, scopeToSubmittedUrl, submittedUrlMatchLoading, panelPlan],
   );
 
   // URL lookup finished with zero matches → drop the empty scope so the live
@@ -2857,10 +2867,10 @@ export default function Pipeline() {
       ? "Provide customer name and information to unlock 15 sales leads"
       : "Curate sales leads & run outreach"
     : isFirstWorkspaceRun
-      ? "Activate CRM — save a buyer, then work the draft"
+      ? "Activate CRM — save a job, then work the draft"
       : isSignedIn && hasSavedLead
-        ? "Work your CRM accounts, then pick the next buyer"
-        : "Pick a buyer, start free, then activate CRM";
+        ? "Work your CRM accounts, then pick the next job"
+        : "Pick a job, save it to CRM, then send";
   const nextStepsItems = arrivedFromResultsScan
     ? !build25Started
       ? [
@@ -2884,8 +2894,8 @@ export default function Pipeline() {
         ]
       : isFirstWorkspaceRun
         ? [
-            `Pick the best buyer related to ${submittedHostname} from the list (left).`,
-            "Click Save to put them in your working pipeline.",
+            `Pick the strongest job related to ${submittedHostname} from the list (left).`,
+            "Click Save to put that job in your working pipeline.",
             "Copy the outreach draft in the detail panel, then send.",
           ]
         : isSignedIn && hasSavedLead
@@ -2901,19 +2911,19 @@ export default function Pipeline() {
           ]
     : isFirstWorkspaceRun
       ? [
-          "Select the highest-fit HOT buyer in the list on the left.",
-          "Activate CRM by saving that buyer — that opens your working pipeline.",
+          "Select the strongest job in the list on the left.",
+          "Activate CRM by saving that job — that opens your working pipeline.",
           "Copy the outreach draft on the right, then send.",
         ]
       : isSignedIn && hasSavedLead
         ? [
-            "Open a saved CRM account first, then add the next best buyer.",
-            "Copy the outreach draft from the buyer workspace on the right.",
+            "Open a saved CRM account first, then add the next strongest job.",
+            "Copy the outreach draft from the job workspace on the right.",
             "Send, then track replies in Inbox.",
           ]
       : [
-          "Select the highest-fit HOT buyer in the list.",
-          "Start a free workspace, then activate CRM by saving that buyer.",
+          "Select the strongest job in the list.",
+          "Start a free workspace, then activate CRM by saving that job.",
           "Copy the outreach draft and send from the panel on the right.",
         ];
   const canSaveSelected = Boolean(selected) && (!isSignedIn || !crmAccountIdByCompanyId[selected!.id]);
@@ -2970,16 +2980,16 @@ export default function Pipeline() {
     : isFirstWorkspaceRun && canSaveSelected
       ? selected
         ? `Activate CRM — save ${selected.company}`
-        : "Activate CRM — save a buyer"
+        : "Activate CRM — save a job"
     : canSaveSelected
-      ? "Save selected buyer to CRM"
+      ? "Save selected job to CRM"
       : canCopySelectedDraft
         ? "Copy outreach draft"
         : canOpenSelectedDraft
-          ? "Open selected buyer"
+          ? "Open selected job"
           : selected
-            ? "Review selected buyer"
-            : "Pick a HOT buyer";
+            ? "Review selected job"
+            : "Pick a HOT job";
 
   const nextStepCoachText = arrivedFromResultsScan && build25Started
     ? step5Phase === "copy"
@@ -3809,8 +3819,8 @@ export default function Pipeline() {
     alreadySent: Boolean(selected?.stage === "Outreach Sent"),
   };
   const first3SaveCtaVariant = selected && selected.id % 2 === 0 ? "a" : "b";
-  const first3SaveCtaLabel = "Save this lead";
-  const first3SaveHelperText = "Step 1: save this buyer, then copy the draft and send — that is the full motion.";
+  const first3SaveCtaLabel = "Save this job";
+  const first3SaveHelperText = "Step 1: save this job, then copy the draft and send — that is the full motion.";
   const sendChecklistAssignedVariant = selected && selected.id % 2 === 0 ? "a" : "b";
   const sendChecklistVariant = checklistVariantOverride || sendChecklistAssignedVariant;
   const sendChecklistVariantLabel = sendChecklistVariant === "a" ? "Variant A" : "Variant B";
@@ -4052,7 +4062,7 @@ export default function Pipeline() {
                 <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
               </div>
               <p className="min-w-0 flex-1 text-sm font-bold text-slate-100 sm:text-base">
-                {arrivedFromJobs ? "Loading jobs for your robot…" : "Loading sales leads…"}
+                {arrivedFromJobs ? "Loading jobs for your robot…" : "Loading jobs…"}
               </p>
               <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-300 sm:text-3xl">
                 {loadCountdown}s
@@ -4302,7 +4312,7 @@ export default function Pipeline() {
                     <li className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                       <div className="flex items-center justify-center gap-3">
                         <PixelIcon map={KARE_FACE} scale={3} fill="#3ecf8e" background="transparent" />
-                        <span className="text-sm font-bold text-emerald-950">Loading sales leads…</span>
+                        <span className="text-sm font-bold text-emerald-950">Loading jobs…</span>
                         <span className="font-mono text-xl font-extrabold tabular-nums text-emerald-600">
                           {loadCountdown}s
                         </span>
@@ -4333,9 +4343,9 @@ export default function Pipeline() {
                   <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="min-w-0 flex-1">
                   <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-900">
-                    Search pipeline
+                    Search jobs
                   </span>
-                  <p className="mt-1 text-base font-semibold text-white sm:text-lg">Find buyers by industry, company, or signal.</p>
+                  <p className="mt-1 text-base font-semibold text-white sm:text-lg">Find jobs by industry, company, or the work itself.</p>
                   {session?.access_token && (
                     <p className="mt-1 text-[12px] font-medium text-emerald-900">
                       Welcome back, {sessionDisplayName}. Your sales workspace is active.
@@ -4464,7 +4474,7 @@ export default function Pipeline() {
                       setFilter("All");
                     }}
                     list="pipeline-industries"
-                    placeholder="Search pipeline: industry, company, or signal…"
+                    placeholder="Search jobs: industry, company, or the work…"
                     className="sb-input py-2 pl-9 pr-10"
                   />
                   {industryQuery && (
@@ -4746,13 +4756,11 @@ export default function Pipeline() {
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-3 py-2">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-300">
-                    {arrivedFromJobs ? "Jobs" : "Customer opportunities"}
+                    Jobs
                   </p>
                   <p className="mt-0.5 text-sm font-semibold text-slate-100">
-                    {arrivedFromJobs
-                      ? `${displayedDeals.length} live job${displayedDeals.length === 1 ? "" : "s"}`
-                      : `${displayedDeals.length} live buyer${displayedDeals.length === 1 ? "" : "s"}`}
-                    {!showFullPanel ? ` · ${PIPELINE_LIMIT_FREE} on Free` : ""}
+                    {displayedDeals.length} live job{displayedDeals.length === 1 ? "" : "s"}
+                    {` · ${JOBS_PIPELINE_CAP} on this list`}
                   </p>
                 </div>
                 {!showFullPanel ? (
@@ -4766,7 +4774,7 @@ export default function Pipeline() {
               </div>
               <div className="pipeline-list-columns">
                 <div className="col-span-5">Company</div>
-                <div className="col-span-4 hidden md:block">Signal</div>
+                <div className="col-span-4 hidden md:block">The job</div>
                 <div className="col-span-1 text-center">Score</div>
                 <div className="col-span-2 text-right">Tier</div>
               </div>
@@ -4911,22 +4919,19 @@ export default function Pipeline() {
                   <div key={bucket}>
                     <div className="pipeline-tier-header">
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: meta.dot }} />
-                      <span className="pipeline-tier-title">{bucket}</span>
+                      <span className="pipeline-tier-title">{userBucketLabel(bucket)}</span>
                       <span className="ml-0.5 text-[10px] font-medium text-slate-600">— {meta.desc}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded font-mono"
                         style={{ color: meta.color, background: `${meta.color}15`, fontFamily: "'JetBrains Mono', monospace" }}
                       >
                         {bucketDeals.length}
-                        {showFullPanel && !hasActiveSearch && bucketDeals.length < meta.slotCap ? (
-                          <span className="text-gray-400 font-normal"> / {meta.slotCap}</span>
-                        ) : null}
                       </span>
                     </div>
 
                     {bucketDeals.length === 0 ? (
                       <div className="mx-1 mb-2 rounded-xl border border-dashed border-slate-700 bg-[#0b162f] px-4 py-3">
-                        <p className="text-[11px] text-slate-500 italic">No leads in this tier right now</p>
+                        <p className="text-[11px] text-slate-500 italic">No jobs in this tier right now</p>
                       </div>
                     ) : (
                       <div className="flex flex-col gap-1.5 mb-3">
@@ -5025,7 +5030,7 @@ export default function Pipeline() {
                   className="pipeline-pro-cap-row mt-2"
                 >
                   <span className="text-sm font-semibold text-white">
-                    Showing {displayedDeals.length} {arrivedFromJobs ? "jobs" : "customer opportunities"}.
+                    Showing {displayedDeals.length} jobs.
                     {" "}
                     <span className="text-amber-200">Pro unlocks the full live pipeline.</span>
                   </span>
@@ -5053,8 +5058,8 @@ export default function Pipeline() {
                           {crmAccountIdByCompanyId[selected.id]
                             ? "CRM workspace · saved account"
                             : hasSession
-                              ? "Buyer workspace · activate CRM to track this account"
-                              : "Buyer workspace · preview"}
+                              ? "Job workspace · activate CRM to track this work"
+                              : "Job workspace · preview"}
                         </p>
                         <p className="pipeline-detail-company">
                           {selected.company}
@@ -5320,19 +5325,20 @@ export default function Pipeline() {
                         {(() => {
                           const evidence = evidenceStackForDeal(selected);
                           const gapCount = evidence.missingByKey.size;
-                          const summary = cleanAndClampText(
-                            selected.leadHighlights?.specific_problem
-                              || selected.shareSummary
-                              || selected.notes
-                              || "Buyer intent and workflow context are being summarized.",
-                            170,
-                          );
+                          const summary = jobExplanation({
+                            friction: selected.leadHighlights?.specific_problem,
+                            summary: selected.shareSummary || selected.notes,
+                            action: selected.pipelineAction,
+                            company: selected.company,
+                            industry: selected.industry,
+                            title: selected.signals?.[0]?.display_text,
+                          }) || "This is the work — inspect the station, shift, and robot fit.";
                           return (
                             <div className="rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/70 p-2.5 shadow-[0_1px_0_rgba(16,185,129,0.06)]">
                               <div className="flex items-start justify-between gap-2">
                                 <div>
-                                  <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">SIGNAL intelligence</p>
-                                  <p className="mt-0.5 text-[11px] leading-snug text-slate-600">Buyer context first, operator controls second.</p>
+                                  <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">The job</p>
+                                  <p className="mt-0.5 text-[11px] leading-snug text-slate-600">What the robot would do here.</p>
                                 </div>
                                 <div className="flex flex-wrap items-center justify-end gap-1.5">
                                   {gapCount > 0 && (
@@ -5348,20 +5354,12 @@ export default function Pipeline() {
                                 </div>
                               </div>
                               <p className="mt-2 text-[12px] leading-relaxed text-slate-700">{summary}</p>
-                              {selected.pipelineAction && (
-                                <div className="mt-2 rounded-lg border border-emerald-200/80 bg-white/85 px-2.5 py-2">
-                                  <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Next action</p>
-                                  <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-900">
-                                    {cleanAndClampText(selected.pipelineAction, 180)}
-                                  </p>
-                                </div>
-                              )}
                             </div>
                           );
                         })()}
 
                         <div className="pt-1.5 space-y-2">
-                          {selected.leadHighlights?.specific_problem && (
+                          {selected.leadHighlights?.specific_problem && !isSalesPlaceholder(selected.leadHighlights.specific_problem) && (
                             <p className="break-words text-[12px] leading-relaxed text-gray-800">
                               <span className="font-semibold text-gray-900">Problem: </span>
                               {cleanAndClampText(
@@ -5419,7 +5417,7 @@ export default function Pipeline() {
                             return (
                               <div className="pipeline-detail-section-muted">
                                 <p className={panelSectionLabel}>
-                                  Buyer evidence
+                                  The job
                                   {evidence.researchState === "researching" ? (
                                     <span className="ml-2 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800">
                                       AI researching gaps
@@ -5456,7 +5454,7 @@ export default function Pipeline() {
                                           <span className="font-semibold text-slate-900">{evidence.budgetTopAmount}</span> appears in the evidence set.
                                         </>
                                       ) : (
-                                        "No public budget signal yet. Confirm range and budget owner on the first call."
+                                        "No public budget signal yet."
                                       )}
                                     </p>
                                     {evidence.budgetSignals.length > 0 && (
