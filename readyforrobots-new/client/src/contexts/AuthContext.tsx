@@ -32,13 +32,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data?.session ?? null);
+      const next = data?.session ?? null;
+      setSession(next);
       setLoading(false);
+      maybeResumeIntentAfterSignIn(next);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      // getSession already applied the first paint — skip the duplicate
+      // INITIAL_SESSION so the Jobs header does not flash Sign In → session.
+      if (event === "INITIAL_SESSION") return;
       setSession(s);
       setLoading(false);
-      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+      if (event === "SIGNED_IN") {
         maybeResumeIntentAfterSignIn(s);
       }
     });

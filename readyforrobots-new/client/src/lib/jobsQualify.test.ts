@@ -87,8 +87,8 @@ describe("jobForNextStep", () => {
     expect(jobForNextStep(jobs, null)?.job_key).toBe("a");
   });
 
-  it("labels the jobs-list advance Activate job list, not Qualify this job", () => {
-    expect(JOBS_NEXT_CTA).toBe("Activate job list →");
+  it("labels the jobs-list advance Next, not Qualify this job", () => {
+    expect(JOBS_NEXT_CTA).toBe("Next →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
   });
 });

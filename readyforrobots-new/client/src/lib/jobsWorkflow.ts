@@ -183,10 +183,10 @@ export function isJobsHandoffSrc(src: string | null | undefined): boolean {
   );
 }
 
-export const FIND_JOBS_CTA = "Find jobs →";
+export const FIND_JOBS_CTA = "Start jobs →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
-export const JOBS_NEXT_CTA = "Activate job list →";
+export const JOBS_NEXT_CTA = "Next →";
 export const JOBS_NEXT_HINT = "Your checked jobs sit at the top of 15 live jobs";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";
 
@@ -219,6 +219,11 @@ export function jobsProcessStepFromStage(stage: string): JobsProcessStepId {
   return "find";
 }
 
+/** Page-chrome wizard button: Start jobs on FIND, Next on the job list. */
+export function jobsProcessActionLabel(step: JobsProcessStepId): string {
+  return step === "find" ? FIND_JOBS_CTA : JOBS_NEXT_CTA;
+}
+
 export const JOBS_ACTIVATE_SRC = "jobs_activate";
 export const JOBS_PLACE_SRC = "place";
 export const JOBS_PLACE_CTA = "Activate job list →";
@@ -247,14 +252,15 @@ export function clearJobsWorkspaceSession(): void {
 }
 
 /**
- * Wordmark / Jobs home. Wouter Link to `/?new=1` is a no-op while already on
- * `/` (profile, jobs, picker) — same pathname, query ignored — so the chrome
- * looks dead. Always assign so FIND remounts.
+ * Wordmark / Jobs home. Wouter Link to `/` is a no-op while already on `/`
+ * (jobs, picker) — same pathname — so the chrome looks dead. Hard-load `/`
+ * after clearing session. Do not bounce through `/?new=1` (that paints FIND,
+ * then strips the query and paints again).
  */
 export function goJobsFreshHome(): void {
   clearJobsWorkspaceSession();
   if (typeof window === "undefined") return;
-  window.location.assign(jobsFreshHomeHref());
+  window.location.assign("/");
 }
 
 export function onJobsFreshHomeClick(event: {
@@ -335,7 +341,7 @@ export function defaultCheckedJobKeys<T extends { job_key: string }>(
 export const RAIL_STEP_HINT = {
   find: "Paste the manufacturer URL. We research the company and every robot SKU we can prove.",
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
-  jobs: "Expand a card to inspect. Check every job you want. Activate the list when you are ready.",
+  jobs: "Expand a card to inspect. Check every job you want. Next activates the list.",
   pipeline: "Checked jobs stay at the top. We fill the rest so you see 15 live jobs, not one buyer.",
 } as const;
 

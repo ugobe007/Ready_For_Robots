@@ -63,6 +63,7 @@ import {
   jobsActivateHref,
   jobsCountEyebrow,
   jobsHeading,
+  jobsProcessActionLabel,
   jobsProcessStepFromStage,
   jobsToActivate,
   lineupJobLookups,
@@ -174,12 +175,16 @@ function JobsProcessNav({
   onJobs,
   onActivate,
   layout = "rail",
+  actionLabel,
+  onAction,
 }: {
   current: "find" | "jobs" | "activate";
   onFind?: () => void;
   onJobs?: () => void;
   onActivate?: () => void;
   layout?: "rail" | "page";
+  actionLabel?: string;
+  onAction?: () => void;
 }) {
   const page = layout === "page";
   return (
@@ -225,12 +230,23 @@ function JobsProcessNav({
         return (
           <button key={step.id} type="button" onClick={onClick} className={className}>
             <span>{label}</span>
-            {!isCurrent ? (
-              <span className="text-slate-500">{step.linkLabel}</span>
+            {!page ? (
+              <span className={isCurrent ? "text-emerald-400/80" : "text-slate-500"}>
+                {step.linkLabel}
+              </span>
             ) : null}
           </button>
         );
       })}
+      {page && onAction && actionLabel ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="rfr-jobs-process-action m-2 inline-flex shrink-0 items-center justify-center bg-emerald-400 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </nav>
   );
 }
@@ -511,7 +527,16 @@ export default function RobotJobsWorkspace() {
   const [location, setLocation] = useLocation();
   const [stage, setStage] = useState<Stage>(() => {
     if (typeof window === "undefined") return "find";
-    if (isJobsFreshQuery(window.location.search)) return "find";
+    if (isJobsFreshQuery(window.location.search)) {
+      try {
+        window.history.replaceState({}, "", "/");
+        window.sessionStorage.removeItem(WORKSPACE_SESSION_KEY);
+        window.sessionStorage.removeItem(JOBS_RESTORE_ONCE_KEY);
+      } catch {
+        /* ignore */
+      }
+      return "find";
+    }
     const saved = readWorkspaceSession();
     if (!saved?.url) return "find";
     let restoreOnce = false;
@@ -610,13 +635,20 @@ export default function RobotJobsWorkspace() {
     submissionIdRef.current = null;
     clearWorkspaceSession();
     if (replaceHome && isJobsFreshQuery(window.location.search)) {
+      window.history.replaceState({}, "", "/");
       setLocation("/", { replace: true });
     }
   }
 
-  /* Wordmark / Jobs nav: `/?new=1` must dump in-progress work and show FIND. */
+  /* Wordmark / Jobs nav: `/?new=1` dumps in-progress work. Strip the query
+     without remounting — a second FIND paint is the flash. */
   useEffect(() => {
-    if (!isJobsFreshQuery(typeof window === "undefined" ? location : window.location.search)) {
+    if (!isJobsFreshQuery(window.location.search)) {
+      return;
+    }
+    if (stage === "find" && !url && portfolio.length === 0) {
+      window.history.replaceState({}, "", "/");
+      setLocation("/", { replace: true });
       return;
     }
     resetToFind(true);
@@ -1305,7 +1337,13 @@ export default function RobotJobsWorkspace() {
 
   function onSubmitFind(e: React.FormEvent) {
     e.preventDefault();
-    const u = url.trim();
+    startJobs();
+  }
+
+  function startJobs() {
+    const field = document.getElementById("robot-url") as HTMLInputElement | null;
+    field?.focus();
+    const u = (field?.value || url).trim();
     if (!u) return;
     void submitFind(u);
   }
@@ -1415,11 +1453,20 @@ export default function RobotJobsWorkspace() {
         ? undefined
         : openProfileStep;
   const processOnJobs =
-    stage === "find" || stage === "research" || stage === "jobs"
-      ? undefined
-      : openJobsStep;
+    stage === "find"
+      ? startJobs
+      : stage === "research" || stage === "jobs"
+        ? undefined
+        : openJobsStep;
   const processOnActivate =
     stage === "jobs" || stage === "portfolio" ? goToActivate : undefined;
+  const processActionLabel = jobsProcessActionLabel(processCurrent);
+  const processOnAction =
+    processCurrent === "jobs"
+      ? goToActivate
+      : stage === "find" || stage === "research"
+        ? startJobs
+        : openJobsStep;
 
   /* -------------------------------------------------------------- */
   /* Render                                                          */
@@ -1434,6 +1481,8 @@ export default function RobotJobsWorkspace() {
           onFind={processOnFind}
           onJobs={processOnJobs}
           onActivate={processOnActivate}
+          actionLabel={processActionLabel}
+          onAction={processOnAction}
         />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.34fr)_minmax(0,0.66fr)]">
@@ -1486,18 +1535,33 @@ export default function RobotJobsWorkspace() {
       {/* ---------------- LARGE WORKSPACE ---------------- */}
       <section>
         {stage === "find" && (
-          <LiveJobTape
-            title="Live Robot Jobs"
-            subtitle={null}
-            corpus={MARKET_TAPE_JOBS}
-            baseCount={MARKET_FOUND_BASE}
-            running
-            statusLines={[]}
-            revealTarget={null}
-            onRevealComplete={() => undefined}
-            onSelect={() => undefined}
-            selectedKey={null}
-          />
+          <div>
+            <div className="rfr-jobs-start-bar border-b border-slate-600 px-6 py-4">
+              <button
+                type="button"
+                onClick={startJobs}
+                className={`${ctaClass} w-full sm:w-auto`}
+              >
+                <FaceCue scale={2} onEmerald />
+                {FIND_JOBS_CTA}
+              </button>
+              <p className="mt-2 text-[12px] text-slate-400">
+                Paste a robot URL on the left, then start jobs.
+              </p>
+            </div>
+            <LiveJobTape
+              title="Live Robot Jobs"
+              subtitle={null}
+              corpus={MARKET_TAPE_JOBS}
+              baseCount={MARKET_FOUND_BASE}
+              running
+              statusLines={[]}
+              revealTarget={null}
+              onRevealComplete={() => undefined}
+              onSelect={() => undefined}
+              selectedKey={null}
+            />
+          </div>
         )}
 
         {stage === "research" && <ResearchPanel company={companyName} />}
@@ -1563,6 +1627,8 @@ export default function RobotJobsWorkspace() {
           onFind={processOnFind}
           onJobs={processOnJobs}
           onActivate={processOnActivate}
+          actionLabel={processActionLabel}
+          onAction={processOnAction}
         />
       </div>
     </div>
@@ -1590,12 +1656,14 @@ function FindRail({
   error: string | null;
   onCancel?: () => void;
 }) {
-  const busy = stage === "research" || stage === "select";
+  const researching = stage === "research";
   return (
     <div>
-      <p className={eyebrow}>{busy ? "Your robot" : "Find jobs"}</p>
+      <p className={eyebrow}>{researching || stage === "select" ? "Your robot" : "Find jobs"}</p>
       <h1 className="mt-1 font-display text-3xl font-bold leading-tight tracking-tight text-slate-100">
-        {busy ? (
+        {stage === "select" ? (
+          companyName || "Select a robot"
+        ) : researching ? (
           companyName || "Researching…"
         ) : (
           <>
@@ -1603,7 +1671,7 @@ function FindRail({
           </>
         )}
       </h1>
-      {!busy && (
+      {stage === "find" && (
         <p className="mt-3 text-sm text-slate-400">
           {RAIL_STEP_HINT.find}
         </p>
@@ -1619,15 +1687,15 @@ function FindRail({
           value={url}
           onChange={e => setUrl(e.target.value)}
           placeholder="Paste robot product URL"
-          disabled={busy}
+          disabled={researching || stage === "select"}
           className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 font-mono text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500 disabled:opacity-50"
         />
         <button
           type="submit"
-          disabled={busy || !url.trim()}
+          disabled={researching || stage === "select" || !url.trim()}
           className={`${ctaClass} mt-3 w-full`}
         >
-          {busy ? "Researching…" : FIND_JOBS_CTA}
+          {researching ? "Researching…" : FIND_JOBS_CTA}
         </button>
       </form>
 
@@ -1885,10 +1953,10 @@ function SelectPanel({
         >
           <FaceCue scale={2} onEmerald />
           {selected.length === 0
-            ? `Find jobs for all ${products.length} robots →`
+            ? `Start jobs for all ${products.length} robots →`
             : selected.length === 1
-              ? `Find jobs for ${selected[0]} →`
-              : `Find jobs for ${selected.length} robots →`}
+              ? `Start jobs for ${selected[0]} →`
+              : `Start jobs for ${selected.length} robots →`}
         </button>
         {selected.length > 0 && selected.length < products.length ? (
           <button
@@ -2195,6 +2263,28 @@ function shouldQualify(analysis: RobotAnalysis): boolean {
   return false;
 }
 
+function JobsActivateBar({
+  onActivate,
+  checkedCount,
+  className = "",
+}: {
+  onActivate: () => void;
+  checkedCount: number;
+  className?: string;
+}) {
+  return (
+    <div className={`rfr-jobs-activate-bar ${className}`.trim()}>
+      <button type="button" onClick={onActivate} className={`${ctaClass} w-full sm:w-auto`}>
+        <FaceCue scale={2} onEmerald />
+        {JOBS_NEXT_CTA}
+      </button>
+      <p className="mt-2 text-[12px] text-slate-400">
+        {checkedCount} selected. {JOBS_NEXT_HINT}.
+      </p>
+    </div>
+  );
+}
+
 function JobsPanel({
   analysis,
   expandedJob,
@@ -2258,9 +2348,14 @@ function JobsPanel({
       {baseJobs.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
           Example work {analysis.productName} can do. Expand a card to inspect.
-          Check every job you want — then activate the job list.
+          Check every job you want — then Next.
         </p>
       )}
+      <JobsActivateBar
+        onActivate={onActivate}
+        checkedCount={checkedCount}
+        className="mt-4"
+      />
 
       {baseJobs.length === 0 ? (
         shouldQualify(analysis) ? (
@@ -2302,15 +2397,11 @@ function JobsPanel({
           See all {Math.min(baseJobs.length, JOBS_PIPELINE_CAP)} jobs
         </button>
       ) : null}
-      <div className="rfr-jobs-activate-bar mt-8 border-t border-slate-600 pt-6">
-        <button type="button" onClick={onActivate} className={`${ctaClass} w-full sm:w-auto`}>
-          <FaceCue scale={2} onEmerald />
-          {JOBS_NEXT_CTA}
-        </button>
-        <p className="mt-2 text-[12px] text-slate-400">
-          {checkedCount} selected. {JOBS_NEXT_HINT}.
-        </p>
-      </div>
+      <JobsActivateBar
+        onActivate={onActivate}
+        checkedCount={checkedCount}
+        className="mt-8 border-t border-slate-600 pt-6"
+      />
     </div>
   );
 }
