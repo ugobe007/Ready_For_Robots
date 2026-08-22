@@ -27,6 +27,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
 import { trackRobotJobsFunnel } from "@/lib/siteAnalytics";
 import {
   fetchRobotJobSearch,
@@ -77,6 +78,7 @@ import {
   jobsListHint,
   jobsProcessActionLabel,
   jobsProcessStepFromStage,
+  jobsProductLimitForPlan,
   jobsToActivate,
   lineupJobLookups,
   normalizeRobotClass,
@@ -84,7 +86,15 @@ import {
   productClassesFromLineup,
   readNavigationType,
   shouldRestoreJobsWorkspace,
+  filterJobsLineupProducts,
+  JOBS_PRODUCT_CAP_FREE,
+  JOBS_PRODUCT_CAP_PAID,
+  JOBS_LINEUP_DISPLAY_CAP,
+  ROBOT_PROFILE_TIMEOUT_MS,
+  ROBOT_JOB_SEARCH_TIMEOUT_MS,
 } from "@/lib/jobsWorkflow";
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { authHeader } from "@/lib/supabase";
 import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 
 /* ------------------------------------------------------------------ */
@@ -93,6 +103,7 @@ import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 
 type Stage = "find" | "research" | "select" | "portfolio" | "review" | "jobs";
 type RailTab = "profile" | "jobs";
+type ResearchPhase = "identity" | "jobs";
 
 /** One robot in the workspace. `matched` gates every count we display. */
 type RobotAnalysis = {
@@ -522,6 +533,20 @@ function differentiatedCounts(portfolio: RobotAnalysis[]): boolean {
   return portfolioShowsJobCounts(portfolio);
 }
 
+function lookupFailedMessage(err: unknown, fallback: string): string {
+  if (
+    (err instanceof DOMException && err.name === "AbortError") ||
+    (err instanceof Error && /aborted|timeout/i.test(err.message))
+  ) {
+    return "That manufacturer site took too long. Paste a specific product URL, not a hub, language, or About page.";
+  }
+  const detail = err instanceof Error ? err.message.trim() : "";
+  if (detail && !/^robot-(profile|job-search)\s+\d+$/i.test(detail)) {
+    return `${fallback} ${detail}`;
+  }
+  return fallback;
+}
+
 function pickSelectedJobKey(
   jobs: MatchJob[],
   preferred?: string | null,
@@ -535,6 +560,7 @@ function pickSelectedJobKey(
 /* ------------------------------------------------------------------ */
 
 export default function RobotJobsWorkspace() {
+  const { session } = useAuth();
   const [location, setLocation] = useLocation();
   const [stage, setStage] = useState<Stage>(() => {
     if (typeof window === "undefined") return "find";
@@ -574,6 +600,8 @@ export default function RobotJobsWorkspace() {
   const [companyName, setCompanyName] = useState("");
   const [products, setProducts] = useState<ProductChoice[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
+  const [productCap, setProductCap] = useState(JOBS_PRODUCT_CAP_FREE);
+  const [researchPhase, setResearchPhase] = useState<ResearchPhase>("identity");
 
   // Results
   const [portfolio, setPortfolio] = useState<RobotAnalysis[]>([]);
@@ -595,6 +623,7 @@ export default function RobotJobsWorkspace() {
   const viewedRef = useRef<Set<string>>(new Set());
   const fired3Plus = useRef(false);
   const restoredRef = useRef(false);
+  const researchAbortRef = useRef<AbortController | null>(null);
   const matchAbortRef = useRef<(() => void) | null>(null);
 
   const funnelBase = () => ({
@@ -622,7 +651,42 @@ export default function RobotJobsWorkspace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const token = session?.access_token;
+    if (!token) {
+      setProductCap(JOBS_PRODUCT_CAP_FREE);
+      return;
+    }
+    let cancelled = false;
+    void fetch(
+      `${getApiBase()}/api/user/me`,
+      liveFetchInit({ headers: authHeader(token) }),
+    )
+      .then(res => (res.ok ? res.json() : null))
+      .then(
+        (data: { entitlements?: { plan?: string; jobs_product_limit?: number } } | null) => {
+          if (cancelled) return;
+          const fromApi = data?.entitlements?.jobs_product_limit;
+          if (typeof fromApi === "number" && fromApi > 0) {
+            setProductCap(fromApi);
+            return;
+          }
+          setProductCap(jobsProductLimitForPlan(data?.entitlements?.plan));
+        },
+      )
+      .catch(() => {
+        if (!cancelled) setProductCap(JOBS_PRODUCT_CAP_FREE);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.access_token]);
+
   function resetToFind(replaceHome = false) {
+    if (researchAbortRef.current) {
+      researchAbortRef.current.abort();
+      researchAbortRef.current = null;
+    }
     if (matchAbortRef.current) {
       matchAbortRef.current();
       matchAbortRef.current = null;
@@ -748,6 +812,7 @@ export default function RobotJobsWorkspace() {
   async function submitFind(submitUrl: string) {
     setError(null);
     submittedUrlRef.current = submitUrl;
+    setResearchPhase("identity");
     setStage("research");
     trackRobotJobsFunnel("robot_submitted", {
       ...funnelBase(),
@@ -758,41 +823,57 @@ export default function RobotJobsWorkspace() {
       ...funnelBase(),
       url: submitUrl,
     });
+    researchAbortRef.current?.abort();
+    const ac = new AbortController();
+    researchAbortRef.current = ac;
     try {
-      const profile = await fetchRobotProfile({ url: submitUrl });
+      const profile = await fetchRobotProfile({
+        url: submitUrl,
+        signal: ac.signal,
+        timeoutMs: ROBOT_PROFILE_TIMEOUT_MS,
+      });
       submissionIdRef.current = profile.robot_submission_id ?? submissionIdRef.current;
       setCompanyName(profile.company?.name || "");
-      if (profile.needs_product_choice && (profile.products || []).length > 1) {
-        setProducts(
-          (profile.products || []).map(p => ({
-            name: p.name,
-            displayClass: p.display_class,
-          }))
-        );
+      const lineup = filterJobsLineupProducts(
+        (profile.products || []).map(p => ({
+          name: p.name,
+          displayClass: p.display_class,
+        })),
+        JOBS_LINEUP_DISPLAY_CAP,
+      );
+      if ((profile.needs_product_choice || lineup.length > 1) && lineup.length > 1) {
+        setProducts(lineup);
         setSelected([]);
         setStage("select");
         return;
       }
       const name =
-        profile.selected_product?.name || profile.company?.name || "";
-      const displayClass = profile.selected_product?.display_class;
+        lineup[0]?.name ||
+        profile.selected_product?.name ||
+        profile.company?.name ||
+        "";
+      const displayClass =
+        lineup[0]?.displayClass || profile.selected_product?.display_class;
       const cls = normalizeRobotClass(displayClass);
+      setResearchPhase("jobs");
       const res = await fetchRobotJobSearch({
         url: submitUrl,
         product: name || undefined,
         assertedClass: cls || undefined,
         lookupGrain: cls ? "robot_type" : "product",
+        signal: ac.signal,
+        timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
       });
       submissionIdRef.current =
         res.robot_submission_id ?? submissionIdRef.current;
       const analysis = analysisForSelectedSku(res, name, displayClass);
       openJobsFromAnalyses([analysis], submitUrl, name ? [name] : []);
     } catch (err) {
-      const detail = err instanceof Error ? err.message.trim() : "";
       setError(
-        detail && !/^robot-profile\s+\d+$/i.test(detail)
-          ? `Research failed. ${detail}`
-          : "Research failed. Check the URL and try again.",
+        lookupFailedMessage(
+          err,
+          "Research failed. Check the URL and try again.",
+        ),
       );
       setStage("find");
     }
@@ -800,12 +881,18 @@ export default function RobotJobsWorkspace() {
 
   /** SELECT — picker already chose; go to jobs. One SKU = that product. Several = type-first. */
   async function confirmSelection(which: string[] | "all") {
-    const names = (which === "all" ? products.map(p => p.name) : which).filter(
-      Boolean
-    );
+    const names = (
+      which === "all" ? products.map(p => p.name) : which
+    )
+      .filter(Boolean)
+      .slice(0, productCap);
     if (names.length === 0) return;
     const submitUrl = submittedUrlRef.current || url;
 
+    researchAbortRef.current?.abort();
+    const ac = new AbortController();
+    researchAbortRef.current = ac;
+    setResearchPhase("jobs");
     if (names.length === 1) {
       setStage("research");
       try {
@@ -816,6 +903,8 @@ export default function RobotJobsWorkspace() {
           product: names[0],
           assertedClass: cls || undefined,
           lookupGrain: cls ? "robot_type" : "product",
+          signal: ac.signal,
+          timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
         });
         submissionIdRef.current =
           res.robot_submission_id ?? submissionIdRef.current;
@@ -824,8 +913,8 @@ export default function RobotJobsWorkspace() {
           submitUrl,
           names,
         );
-      } catch {
-        setError("Research failed for that robot.");
+      } catch (err) {
+        setError(lookupFailedMessage(err, "Research failed for that robot."));
         setStage("select");
       }
       return;
@@ -848,13 +937,20 @@ export default function RobotJobsWorkspace() {
               url: submitUrl,
               assertedClass: lookup.robotClass,
               lookupGrain: "robot_type",
+              signal: ac.signal,
+              timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
             });
             classResults.set(lookup.robotClass, res);
             return;
           }
           const product = lookup.productNames[0];
           if (!product) return;
-          const res = await fetchRobotJobSearch({ url: submitUrl, product });
+          const res = await fetchRobotJobSearch({
+            url: submitUrl,
+            product,
+            signal: ac.signal,
+            timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+          });
           skuResults.set(product, res);
         }),
       );
@@ -888,8 +984,8 @@ export default function RobotJobsWorkspace() {
         }
       }
       openJobsFromAnalyses(withCompany, submitUrl, names);
-    } catch {
-      setError("Research failed for those robots.");
+    } catch (err) {
+      setError(lookupFailedMessage(err, "Research failed for those robots."));
       setStage("select");
     }
   }
@@ -1375,9 +1471,11 @@ export default function RobotJobsWorkspace() {
   }
 
   function toggleProduct(name: string) {
-    setSelected(prev =>
-      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
-    );
+    setSelected(prev => {
+      if (prev.includes(name)) return prev.filter(n => n !== name);
+      if (prev.length >= productCap) return prev;
+      return [...prev, name];
+    });
   }
 
   function recordJobView(job: MatchJob) {
@@ -1601,13 +1699,16 @@ export default function RobotJobsWorkspace() {
           </div>
         )}
 
-        {stage === "research" && <ResearchPanel company={companyName} />}
+        {stage === "research" && (
+          <ResearchPanel company={companyName} phase={researchPhase} />
+        )}
 
         {stage === "select" && (
           <SelectPanel
             company={companyName}
             products={products}
             selected={selected}
+            productCap={productCap}
             onToggle={toggleProduct}
             onConfirm={confirmSelection}
           />
@@ -1886,12 +1987,30 @@ function ContextRail({
 /* Workspace — RESEARCH                                                */
 /* ================================================================== */
 
-function ResearchPanel({ company }: { company: string }) {
+function ResearchPanel({
+  company,
+  phase,
+}: {
+  company: string;
+  phase: ResearchPhase;
+}) {
   const steps = [
-    { n: "01", label: "Identify company", done: true },
-    { n: "02", label: "Find robots", done: true },
-    { n: "03", label: "Find matching jobs", done: false },
-  ];
+    {
+      n: "01",
+      label: "Identify company",
+      state: phase === "identity" ? "active" : "done",
+    },
+    {
+      n: "02",
+      label: "Find robots",
+      state: phase === "identity" ? "pending" : "done",
+    },
+    {
+      n: "03",
+      label: "Find matching jobs",
+      state: phase === "jobs" ? "active" : "pending",
+    },
+  ] as const;
   return (
     <div className="p-6 sm:p-8">
       <p className={eyebrow}>Researching your robot</p>
@@ -1906,16 +2025,24 @@ function ResearchPanel({ company }: { company: string }) {
               {s.label}
             </span>
             <span
-              className={`font-mono text-sm ${s.done ? "text-emerald-400" : "text-amber-300"}`}
+              className={`font-mono text-sm ${
+                s.state === "done"
+                  ? "text-emerald-400"
+                  : s.state === "active"
+                    ? "text-amber-300"
+                    : "text-slate-600"
+              }`}
             >
-              {s.done ? "✓" : "→"}
+              {s.state === "done" ? "✓" : s.state === "active" ? "→" : "·"}
             </span>
           </li>
         ))}
       </ul>
       <div className="mt-8 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-slate-500">
         <span className="inline-flex h-2 w-2 animate-ping rounded-full bg-emerald-400" />
-        Reading manufacturer sources…
+        {phase === "identity"
+          ? "Reading the product page…"
+          : "Matching jobs to this robot…"}
       </div>
     </div>
   );
@@ -1929,15 +2056,23 @@ function SelectPanel({
   company,
   products,
   selected,
+  productCap,
   onToggle,
   onConfirm,
 }: {
   company: string;
   products: ProductChoice[];
   selected: string[];
+  productCap: number;
   onToggle: (name: string) => void;
   onConfirm: (which: string[] | "all") => void;
 }) {
+  const defaultNames = products.slice(0, productCap).map(p => p.name);
+  const startNames = selected.length > 0 ? selected.slice(0, productCap) : defaultNames;
+  const paidHint =
+    productCap <= JOBS_PRODUCT_CAP_FREE
+      ? `Search up to ${productCap} robots here. Pro searches ${JOBS_PRODUCT_CAP_PAID}.`
+      : `Search up to ${productCap} robots in this pass.`;
   return (
     <div className="p-6 sm:p-8">
       <p className={eyebrow}>Select robot</p>
@@ -1948,21 +2083,25 @@ function SelectPanel({
         Pick one robot for five jobs you can save. Pick several and we show
         one sample job per robot — run each SKU by itself to get a full list.
         {" "}
-        {company || "This maker"} has {products.length}.
+        {company || "This maker"} has {products.length}. {paidHint}
       </p>
 
       <div className="mt-6 grid gap-2 sm:grid-cols-2">
         {products.map(p => {
           const on = selected.includes(p.name);
+          const blocked = !on && selected.length >= productCap;
           return (
             <button
               key={p.name}
               type="button"
               onClick={() => onToggle(p.name)}
+              disabled={blocked}
               className={`flex items-center justify-between border px-4 py-3 text-left transition ${
                 on
                   ? "border-emerald-400 bg-emerald-400/10"
-                  : "border-slate-600 bg-[#081126] hover:border-emerald-500/40"
+                  : blocked
+                    ? "cursor-not-allowed border-slate-800 bg-[#081126] opacity-50"
+                    : "border-slate-600 bg-[#081126] hover:border-emerald-500/40"
               }`}
             >
               <span>
@@ -1988,23 +2127,24 @@ function SelectPanel({
       <div className="mt-6">
         <button
           type="button"
-          onClick={() => onConfirm(selected.length > 0 ? selected : "all")}
+          onClick={() => onConfirm(startNames)}
           className={ctaClass}
         >
           <FaceCue scale={2} onEmerald />
-          {selected.length === 0
-            ? `Start jobs for all ${products.length} robots →`
-            : selected.length === 1
-              ? `Start jobs for ${selected[0]} →`
-              : `Start jobs for ${selected.length} robots →`}
+          {startNames.length === 1
+            ? `Start jobs for ${startNames[0]} →`
+            : products.length <= productCap && selected.length === 0
+              ? `Start jobs for all ${products.length} robots →`
+              : `Start jobs for ${startNames.length} robots →`}
         </button>
-        {selected.length > 0 && selected.length < products.length ? (
+        {selected.length > 0 &&
+        selected.length < Math.min(products.length, productCap) ? (
           <button
             type="button"
             onClick={() => onConfirm("all")}
             className="mt-3 block font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 transition hover:text-slate-300"
           >
-            or all {products.length} robots
+            or first {Math.min(products.length, productCap)} robots
           </button>
         ) : null}
       </div>

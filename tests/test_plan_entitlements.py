@@ -6,7 +6,10 @@ from app.services.plan_entitlements import (
     PIPELINE_LIMIT_FREE,
     PIPELINE_LIMIT_PAID,
     PIPELINE_LIMIT_PREVIEW,
+    JOBS_PRODUCT_LIMIT_FREE,
+    JOBS_PRODUCT_LIMIT_PAID,
     apply_pipeline_entitlements,
+    jobs_product_limit_for_plan,
     pipeline_limit_for_plan,
     resolve_plan_tier,
     sanitize_lead_for_plan,
@@ -36,6 +39,14 @@ def test_pipeline_limits():
     assert PIPELINE_LIMIT_FREE == 15
     assert PIPELINE_LIMIT_PREVIEW == 15
     assert PIPELINE_LIMIT_PAID == 90
+
+
+def test_jobs_product_limits():
+    assert jobs_product_limit_for_plan(PLAN_ANONYMOUS) == JOBS_PRODUCT_LIMIT_FREE
+    assert jobs_product_limit_for_plan(PLAN_FREE) == JOBS_PRODUCT_LIMIT_FREE
+    assert jobs_product_limit_for_plan(PLAN_PAID) == JOBS_PRODUCT_LIMIT_PAID
+    assert JOBS_PRODUCT_LIMIT_FREE == 3
+    assert JOBS_PRODUCT_LIMIT_PAID == 5
 
 
 def test_trim_pipeline_leads_free_tier_caps_at_fifteen():
@@ -221,8 +232,10 @@ def test_plan_feature_flags():
     anon = user_workspace_entitlements(None)
     assert anon["plan"] == PLAN_ANONYMOUS
     assert anon["saved_limit"] == 0
+    assert anon["jobs_product_limit"] == 3
 
     free = user_workspace_entitlements({"email": "buyer@example.com", "uid": "00000000-0000-0000-0000-000000000001"})
     assert free["plan"] == PLAN_FREE
     assert free["display_name"] == "Free workspace"
     assert free["saved_limit"] == 5
+    assert free["jobs_product_limit"] == 3

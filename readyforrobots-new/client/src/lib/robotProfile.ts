@@ -2,7 +2,7 @@
  * POST /api/robot-profile — Understanding v1 Phases 1–3 research agent.
  * Identity → sources → facts → Robot Profile (no jobs).
  */
-import { getPublicReadApiBase } from "@/lib/apiBase";
+import { getPublicReadApiBase, fetchWithTimeout } from "@/lib/apiBase";
 
 export type ProfileSourceType =
   | "product"
@@ -83,18 +83,23 @@ export async function fetchRobotProfile(opts: {
   product?: string;
   maxSources?: number;
   signal?: AbortSignal;
+  timeoutMs?: number;
 }): Promise<RobotProfileResult> {
   const base = getPublicReadApiBase();
-  const res = await fetch(`${base}/api/robot-profile`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({
-      url: opts.url,
-      product: opts.product || null,
-      max_sources: opts.maxSources ?? 6,
-    }),
-    signal: opts.signal,
-  });
+  const res = await fetchWithTimeout(
+    `${base}/api/robot-profile`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        url: opts.url,
+        product: opts.product || null,
+        max_sources: opts.maxSources ?? 6,
+      }),
+      signal: opts.signal,
+    },
+    opts.timeoutMs ?? 22_000,
+  );
   if (!res.ok) {
     let detail = `robot-profile ${res.status}`;
     try {
