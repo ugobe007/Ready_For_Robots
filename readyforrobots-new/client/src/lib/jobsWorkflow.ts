@@ -137,14 +137,23 @@ export type LineupSegment = {
   products: LineupProduct[];
 };
 
-function segmentsForClass(cls: string, rows: LineupProduct[]): LineupSegment[] {
+function classBucketTitle(cls: string | null): string {
+  return cls ? robotClassJobsLabel(cls) : "robots";
+}
+
+function classBucketSubtitle(cls: string | null): string {
+  return cls ? robotClassTitle(cls) : "One robot";
+}
+
+function segmentsForClass(cls: string | null, rows: LineupProduct[]): LineupSegment[] {
+  const classKey = cls || "unknown";
   if (rows.length === 1) {
     const row = rows[0];
     return [
       {
         id: `sku:${row.name}`,
         title: row.name,
-        subtitle: robotClassTitle(cls),
+        subtitle: classBucketSubtitle(cls),
         robotClass: cls,
         family: skuFamilyStem(row.name),
         products: rows,
@@ -177,8 +186,8 @@ function segmentsForClass(cls: string, rows: LineupProduct[]): LineupSegment[] {
     const family = families.length === 1 ? families[0][0] : null;
     return [
       {
-        id: `class:${cls}`,
-        title: robotClassJobsLabel(cls),
+        id: `class:${classKey}`,
+        title: cls ? robotClassJobsLabel(cls) : `${rows.length} robots`,
         subtitle: `${rows.length} robots`,
         robotClass: cls,
         family,
@@ -190,8 +199,8 @@ function segmentsForClass(cls: string, rows: LineupProduct[]): LineupSegment[] {
   const out: LineupSegment[] = [];
   for (const [stem, group] of families) {
     out.push({
-      id: `family:${cls}:${stem}`,
-      title: `${stem} ${robotClassJobsLabel(cls)}`,
+      id: `family:${classKey}:${stem}`,
+      title: `${stem} ${classBucketTitle(cls)}`,
       subtitle: group.map(p => p.name).join(" · "),
       robotClass: cls,
       family: stem,
@@ -202,7 +211,7 @@ function segmentsForClass(cls: string, rows: LineupProduct[]): LineupSegment[] {
     out.push({
       id: `sku:${row.name}`,
       title: row.name,
-      subtitle: robotClassTitle(cls),
+      subtitle: classBucketSubtitle(cls),
       robotClass: cls,
       family: skuFamilyStem(row.name),
       products: [row],
@@ -231,15 +240,8 @@ export function lineupSegments(products: LineupProduct[]): LineupSegment[] {
   for (const [cls, rows] of byClass) {
     out.push(...segmentsForClass(cls, rows));
   }
-  for (const row of unknown) {
-    out.push({
-      id: `sku:${row.name}`,
-      title: row.name,
-      subtitle: "One robot",
-      robotClass: null,
-      family: skuFamilyStem(row.name),
-      products: [row],
-    });
+  if (unknown.length) {
+    out.push(...segmentsForClass(null, unknown));
   }
   return out;
 }

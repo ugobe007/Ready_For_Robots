@@ -848,5 +848,12 @@ describe("jobsWorkflow", () => {
         3,
       ),
     ).toBe(false);
+
+    const unlabeled = lineupSegments([
+      { name: "LD-250" },
+      { name: "LD-90" },
+      { name: "HD-1500" },
+    ]);
+    expect(unlabeled.map(s => s.title)).toEqual(["LD robots", "HD-1500"]);
   });
 });
