@@ -215,6 +215,8 @@ def test_plan_feature_flags():
     assert plan_feature_flags(PLAN_PAID)["research_updates"] is True
     assert plan_feature_flags(PLAN_FREE)["research_updates"] is False
     assert plan_feature_flags(PLAN_ANONYMOUS)["full_lead_intel"] is False
+    assert plan_feature_flags(PLAN_PAID)["jobs_watch_unlimited"] is True
+    assert plan_feature_flags(PLAN_FREE)["jobs_watch_unlimited"] is False
 
     anon = user_workspace_entitlements(None)
     assert anon["plan"] == PLAN_ANONYMOUS
