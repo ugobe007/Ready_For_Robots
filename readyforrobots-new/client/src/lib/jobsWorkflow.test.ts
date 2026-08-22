@@ -16,8 +16,12 @@ import {
   JOBS_JOB_TITLE_CLASS,
   JOBS_META_CLASS,
   JOBS_ROBOT_NAME_CLASS,
+  CRM_HEADLINE_CLASS,
+  CRM_HOW_TO_STEPS,
   CRM_PAGE_HEADLINE,
   CRM_PAGE_NEXT,
+  CRM_WATCH_FREE_HINT,
+  CRM_WATCH_OPT_IN_LABEL,
   PIPELINE_PAGE_HEADLINE,
   PIPELINE_PAGE_NEXT,
   buyerLeadsHref,
@@ -591,6 +595,10 @@ describe("jobsWorkflow", () => {
     expect(PIPELINE_PAGE_HEADLINE).toBe("Pipeline");
     expect(CRM_PAGE_NEXT).toMatch(/this is your CRM/i);
     expect(PIPELINE_PAGE_NEXT).toMatch(/live list/i);
+    expect(CRM_HEADLINE_CLASS).toMatch(/text-emerald-400/);
+    expect(CRM_HOW_TO_STEPS).toHaveLength(3);
+    expect(CRM_WATCH_OPT_IN_LABEL).toMatch(/email me when these jobs change/i);
+    expect(CRM_WATCH_FREE_HINT).toMatch(/free watches 1 robot/i);
 
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
@@ -618,8 +626,16 @@ describe("jobsWorkflow", () => {
 
     const crm = readFileSync(join(here, "../pages/Crm.tsx"), "utf8");
     expect(crm).toMatch(/ExperimentHeader/);
-    expect(crm).toMatch(/CRM_PAGE_HEADLINE/);
+    expect(crm).toMatch(/CrmHero/);
+    expect(crm).toMatch(/\/api\/crm\/jobs-watch/);
     expect(crm).not.toMatch(/from "@\/components\/Header"/);
     expect(crm).not.toMatch(/Outreach editor/);
+
+    const hero = readFileSync(join(here, "../components/crm/CrmHero.tsx"), "utf8");
+    expect(hero).toMatch(/KARE_FACE/);
+    expect(hero).toMatch(/FACE_EMERALD/);
+    expect(hero).toMatch(/CRM_HEADLINE_CLASS/);
+    expect(hero).toMatch(/CRM_WATCH_OPT_IN_LABEL/);
+    expect(hero).toMatch(/CRM_HOW_TO_STEPS/);
   });
 });

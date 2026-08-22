@@ -1205,3 +1205,20 @@ def send_cal_daily_digest_task(self, force: bool = False, period_hours: int = 24
         raise self.retry(exc=exc)
     finally:
         db.close()
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def run_jobs_watch_task(self, limit: int = 25):
+    """Re-check opted-in robot URLs and email new jobs. No paid LLM."""
+    from app.services.jobs_watch import run_jobs_watch_cycle
+
+    db = get_db()
+    try:
+        result = run_jobs_watch_cycle(db, limit=limit, send=True)
+        logger.info("[JOBS_WATCH] cycle result=%s", result)
+        return result
+    except Exception as exc:
+        logger.error("[JOBS_WATCH] cycle failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()

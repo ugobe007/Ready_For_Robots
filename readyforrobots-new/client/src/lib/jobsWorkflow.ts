@@ -239,7 +239,20 @@ export const JOBS_RAIL_LINK_CLASS =
 
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT =
-  "This is your CRM. Pick an account, approve the outreach draft, then send. Or go back to Pipeline to work the live list.";
+  "This is your CRM. Pick an account, approve the outreach draft, then send. Opt in so we email you when jobs change or new work appears for your robot.";
+export const CRM_HOW_TO_STEPS = [
+  "Pick an account from the list — those are the jobs you saved.",
+  "Approve the outreach draft, then send.",
+  "Opt in to email. We watch your robot URL on the cron and tell you when jobs change or new work shows up.",
+] as const;
+export const CRM_WATCH_OPT_IN_LABEL =
+  "Email me when these jobs change or we find new work for my robot.";
+export const CRM_WATCH_FREE_HINT =
+  "Free watches 1 robot and sends 2 alerts so you feel the loop. Pro keeps every SKU on the cron.";
+export const CRM_WATCH_SIGNED_OUT =
+  "Sign in to opt in. We will watch the robot URL you ran on Jobs.";
+export const CRM_HEADLINE_CLASS =
+  "font-display text-3xl font-bold tracking-tight text-emerald-400 sm:text-4xl";
 export const PIPELINE_PAGE_HEADLINE = "Pipeline";
 export const PIPELINE_PAGE_NEXT =
   "This is your live list. Open a row, then save it to CRM so we can watch the job and tell you what to do next.";
