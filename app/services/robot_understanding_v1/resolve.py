@@ -170,7 +170,8 @@ _ROBOTS_HREF = re.compile(
 )
 _ROOT_PRODUCT_HREF = re.compile(r"^/([a-z0-9][a-z0-9-]{1,40})$", re.I)
 _ROBOT_LINE_SLUGS = frozenset({"human", "dog", "panda"})
-_MAX_DISCOVERED_PRODUCTS = 10
+# List enough SKUs to form class / family groups. Jobs still searches 3/5.
+_MAX_DISCOVERED_PRODUCTS = 24
 _COMPACT_SKU = re.compile(r"^[A-Za-z]{1,3}\d{1,3}[A-Za-z]{0,3}$")
 _PROSE_NAME = re.compile(
     r"\b((?:[A-Z]{3,10})|(?:[A-Z][a-z]{2,14}(?:-[A-Z0-9][A-Za-z0-9]{0,10}){0,3}))\b"
