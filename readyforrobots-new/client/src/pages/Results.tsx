@@ -797,16 +797,16 @@ export default function Results() {
 
   if (jobsHandoff) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#081126] pt-[44px]">
+      <div className="flex min-h-screen flex-col bg-[#081126] pt-14">
         <ExperimentHeader />
         <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
+          <p className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-emerald-400">
             Jobs
           </p>
-          <h1 className="mt-1 font-display text-2xl font-bold text-slate-100">
+          <h1 className="mt-2 font-display text-3xl font-bold text-white">
             Taking you back to your jobs…
           </h1>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-base text-slate-300">
             Your jobs stay on the Jobs terminal. This page is not a second
             job list.
           </p>
@@ -845,7 +845,7 @@ export default function Results() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col bg-[#081126] ${jobsHandoff ? "pt-[44px]" : ""}`}>
+    <div className={`min-h-screen flex flex-col bg-[#081126] ${jobsHandoff ? "pt-14" : ""}`}>
       {jobsHandoff ? <ExperimentHeader /> : <Header />}
 
       {submittedUrl && jobsHandoff ? (

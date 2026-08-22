@@ -11,10 +11,8 @@ import {
   Users, Clock, Target, Newspaper, Send, Eye, MousePointerClick,
   Zap, RefreshCw, FileText, Sparkles, Download, Bookmark
 } from "lucide-react";
-import Header from "@/components/Header";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import AdminNav from "@/components/AdminNav";
-import PageHeroDark from "@/components/layout/PageHeroDark";
 import ProposalPdfModal, { type ProposalData } from "@/components/ProposalPdfModal";
 import { Link, useLocation, useSearch } from "wouter";
 import { openWorkspaceHref } from "@/lib/adminNavLinks";
@@ -61,7 +59,18 @@ import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspacePro
 import PixelIcon from "@/components/PixelIcon";
 import JobsHandoffBoard from "@/components/JobsHandoffBoard";
 import { KARE_FACE } from "@/lib/kareIcons";
-import { isJobsHandoffSrc, isPlaceSrc, buyerLeadsToShow, JOBS_ACTIVATE_CAP } from "@/lib/jobsWorkflow";
+import {
+  isJobsHandoffSrc,
+  isPlaceSrc,
+  buyerLeadsToShow,
+  JOBS_ACTIVATE_CAP,
+  JOBS_EYEBROW_CLASS,
+  JOBS_OPEN_CRM_CTA,
+  PIPELINE_PAGE_HEADLINE,
+  PIPELINE_PAGE_NEXT,
+  jobsFreshHomeHref,
+  onJobsFreshHomeClick,
+} from "@/lib/jobsWorkflow";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1804,7 +1813,6 @@ export default function Pipeline() {
     }
   });
   const step3Intro = arrivedFromResultsScan && !build25Started && !isSignedIn;
-  const jobsLikeChrome = step3Intro || arrivedFromJobs;
 
   useEffect(() => {
     if (!isSignedIn || !arrivedFromResultsScan || build25Started) return;
@@ -4018,7 +4026,7 @@ export default function Pipeline() {
 
   if (arrivedFromJobs) {
     return (
-      <div className="flex min-h-screen flex-col bg-[#081126] pt-[44px]">
+      <div className="flex min-h-screen flex-col bg-[#081126] pt-14">
         <ExperimentHeader />
         <JobsHandoffBoard
           robotUrl={submittedUrlFromQuery}
@@ -4032,9 +4040,9 @@ export default function Pipeline() {
   }
 
   return (
-    <div className={`pipeline-page-bg flex min-h-screen flex-col ${arrivedFromJobs ? "pt-[44px]" : ""}`}>
+    <div className="pipeline-page-bg flex min-h-screen flex-col pt-14">
       <div ref={pipelineTopRef} id="pipeline-page-top" aria-hidden="true" className="h-0 w-0 overflow-hidden" />
-      {arrivedFromJobs ? <ExperimentHeader /> : <Header />}
+      <ExperimentHeader />
 
       <main className="flex-1 px-4 pb-6 pt-4 lg:px-6">
         {loadUiVisible ? (
@@ -4053,68 +4061,53 @@ export default function Pipeline() {
           </div>
         ) : null}
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
-          {!jobsLikeChrome ? (
-            <PageHeroDark
-              maxWidthClass="max-w-[1500px]"
-              showGrid={false}
-              badge={
-                <div className="page-hero-badge">
-                  {typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading"} active opportunities · updated live
-                </div>
-              }
-              eyebrow="SIGNAL · Sales intelligence"
-              title={isAdmin ? "Active Signals → Live Pipeline" : "Live Pipeline"}
-              description={
-                session?.access_token
-                  ? "Pick a buyer, activate CRM, then copy and send from the right panel. Free workspaces see 15 live opportunities — Pro unlocks the full feed."
-                  : "15 live buyer opportunities. Pick one, start a free workspace, and activate CRM to work the deal. Every row shows what to pitch — not just who to call."
-              }
-              stats={[
-                { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading", tone: "white" },
-                { label: "Hot", value: typeof hotDeals === "number" ? hotDeals : "Loading", tone: "amber" },
-                { label: "Warm", value: typeof warmDeals === "number" ? warmDeals : "Loading", tone: "amber" },
-                { label: "Visible", value: visibleDeals, tone: "emerald" },
-              ]}
-              innerClassName="pb-6 pt-20"
-            />
-          ) : (
-            <div className="flex flex-col gap-3 pt-2">
-              <div className="flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                <span>{arrivedFromJobs ? "ReadyForRobots · Jobs for your robot" : "ReadyForRobots · Workspace"}</span>
-                {session?.access_token ? (
-                  <span className="normal-case tracking-normal text-emerald-300/90">Signed in · {sessionDisplayName}</span>
-                ) : null}
-              </div>
-              {arrivedFromJobs ? (
-                <div className="border border-slate-600 bg-[#0b162f] px-5 py-4">
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
-                    Jobs for your robot
-                  </p>
-                  <h1 className="mt-1 font-display text-2xl font-bold text-slate-100">
-                    Jobs for your robot
-                  </h1>
-                  <p className="mt-1 text-sm text-slate-400">
-                    Same Jobs terminal. More than 5 jobs for this robot live here.
-                  </p>
-                </div>
+          <div className="border border-slate-600 bg-[#0b162f] px-5 py-5 sm:px-6">
+            <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>ReadyForRobots</p>
+            <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              {PIPELINE_PAGE_HEADLINE}
+            </h1>
+            <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-300">
+              {PIPELINE_PAGE_NEXT}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Link
+                href="/crm"
+                className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+              >
+                {JOBS_OPEN_CRM_CTA}
+              </Link>
+              <a
+                href={jobsFreshHomeHref()}
+                onClick={onJobsFreshHomeClick}
+                className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-emerald-400 hover:text-emerald-300"
+              >
+                + New robot
+              </a>
+              {session?.access_token ? (
+                <span className="text-sm text-slate-400">Signed in · {sessionDisplayName}</span>
               ) : null}
             </div>
-          )}
+            <p className="mt-4 font-mono text-sm text-slate-400">
+              {typeof dbTotal === "number" ? dbTotal.toLocaleString() : "Loading"} live rows
+              {typeof hotDeals === "number" ? ` · ${hotDeals} hot` : ""}
+              {typeof warmDeals === "number" ? ` · ${warmDeals} warm` : ""}
+              {" · "}
+              {visibleDeals} visible
+            </p>
+          </div>
 
-          {!jobsLikeChrome ? (
-            <div className="pipeline-command-rail flex flex-col gap-3">
-              {session?.access_token && <AdminNav variant="dark" />}
+          <div className="pipeline-command-rail flex flex-col gap-3">
+            {session?.access_token && <AdminNav variant="dark" />}
 
-              {session?.access_token && (
-                <WorkspaceQuickLinks
-                  savedCount={savedLeadCount}
-                  hubspotConnected={hubspotIntegration?.connected}
-                  queuedActions={queuedActivations}
-                  variant="dark"
-                />
-              )}
-            </div>
-          ) : null}
+            {session?.access_token && (
+              <WorkspaceQuickLinks
+                savedCount={savedLeadCount}
+                hubspotConnected={hubspotIntegration?.connected}
+                queuedActions={queuedActivations}
+                variant="dark"
+              />
+            )}
+          </div>
 
           {arrivedFromResultsScan && !arrivedFromSignalActivation && (
             <section
@@ -4801,7 +4794,7 @@ export default function Pipeline() {
                     <div className="pipeline-tier-header">
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: meta.dot }} />
                       <span className="pipeline-tier-title">{stageLabel(stage)}</span>
-                      <span className="ml-0.5 text-[10px] font-medium text-slate-600">— {stageDesc(stage)}</span>
+                      <span className="ml-0.5 text-sm font-medium text-slate-400">— {stageDesc(stage)}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded"
                         style={{ color: meta.color, background: `${meta.color}15` }}
@@ -4847,7 +4840,7 @@ export default function Pipeline() {
                                       In CRM
                                     </span>
                                   ) : null}
-                                  <span className="text-[10px] text-gray-400 shrink-0">{deal.location}</span>
+                                  <span className="text-sm text-slate-400 shrink-0">{deal.location}</span>
                                   <span
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
                                     style={{ color: displayStageColor(deal), background: `${displayStageColor(deal)}15` }}
@@ -4968,7 +4961,7 @@ export default function Pipeline() {
                                       In CRM
                                     </span>
                                   ) : null}
-                                  <span className="text-[10px] text-gray-500 shrink-0">{deal.industry}</span>
+                                  <span className="text-sm text-slate-400 shrink-0">{deal.industry}</span>
                                   <span
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
                                     style={{ color: tier.color, background: `${tier.color}15` }}

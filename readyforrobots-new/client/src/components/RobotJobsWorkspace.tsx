@@ -63,6 +63,13 @@ import {
   exampleJobsForLineup,
   isJobsFreshQuery,
   jobIsForLabel,
+  JOBS_EYEBROW_CLASS,
+  JOBS_JOB_TITLE_CLASS,
+  JOBS_META_CLASS,
+  JOBS_PLACE_CLASS,
+  JOBS_PROCESS_NAV_CLASS,
+  JOBS_RAIL_LINK_CLASS,
+  JOBS_ROBOT_NAME_CLASS,
   jobsActivateHref,
   jobsCountEyebrow,
   jobsHeading,
@@ -148,8 +155,7 @@ const DEFAULT_CLASS_OPTIONS: ClassOption[] = [
   },
 ];
 
-const eyebrow =
-  "font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500";
+const eyebrow = JOBS_EYEBROW_CLASS;
 const ctaClass =
   "inline-flex items-center justify-center gap-2 bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45";
 
@@ -209,14 +215,14 @@ function JobsProcessNav({
               ? onJobs
               : onActivate;
         const className = page
-          ? `flex min-w-0 flex-1 items-center justify-between gap-2 px-3 py-3 text-left font-mono text-[10px] font-bold uppercase tracking-[0.12em] transition sm:text-[11px] ${
+          ? `flex min-w-0 flex-1 items-center justify-between gap-2 px-3 py-3 text-left ${JOBS_PROCESS_NAV_CLASS} transition ${
               isCurrent
                 ? "border-b-2 border-emerald-400 bg-emerald-400/5 text-emerald-300"
                 : onClick
                   ? "border-b-2 border-transparent text-slate-400 hover:text-slate-200"
                   : "border-b-2 border-transparent text-slate-600"
             }`
-          : `flex w-full items-center justify-between border-l-2 px-3 py-2 text-left font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition ${
+          : `flex w-full items-center justify-between border-l-2 px-3 py-2 text-left ${JOBS_PROCESS_NAV_CLASS} transition ${
               isCurrent
                 ? "border-emerald-400 bg-emerald-400/5 text-emerald-300"
                 : onClick
@@ -246,7 +252,7 @@ function JobsProcessNav({
         <button
           type="button"
           onClick={onAction}
-          className="rfr-jobs-process-action m-2 inline-flex shrink-0 items-center justify-center bg-emerald-400 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+          className="rfr-jobs-process-action m-2 inline-flex shrink-0 items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
         >
           {actionLabel}
         </button>
@@ -1504,7 +1510,7 @@ export default function RobotJobsWorkspace() {
 
   return (
     <div className="rfr-jobs-page-shell border border-slate-600 bg-[#0b162f]">
-      <div className="sticky top-11 z-40 border-b border-slate-600 bg-[#0b162f]">
+      <div className="sticky top-14 z-40 border-b border-slate-600 bg-[#0b162f]">
         <JobsProcessNav
           layout="page"
           current={processCurrent}
@@ -1858,7 +1864,7 @@ function ContextRail({
           <button
             type="button"
             onClick={onBackToPortfolio}
-            className="block text-left font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 transition hover:text-slate-300"
+            className={JOBS_RAIL_LINK_CLASS}
           >
             ← All {portfolioCount} robots
           </button>
@@ -1866,7 +1872,7 @@ function ContextRail({
         <button
           type="button"
           onClick={onNewRobot}
-          className="block text-left font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 transition hover:text-slate-300"
+          className={JOBS_RAIL_LINK_CLASS}
         >
           + New robot
         </button>
@@ -1963,7 +1969,7 @@ function SelectPanel({
                   {p.name}
                 </span>
                 {p.displayClass ? (
-                  <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-slate-500">
+                  <span className="mt-0.5 block font-mono text-sm uppercase tracking-[0.08em] text-slate-400">
                     {p.displayClass.replace(/_/g, " ")}
                   </span>
                 ) : null}
@@ -2311,7 +2317,7 @@ function JobsActivateBar({
         <FaceCue scale={2} onEmerald />
         {JOBS_NEXT_CTA}
       </button>
-      <p className="mt-2 text-[12px] text-slate-400">
+      <p className="mt-2 text-sm leading-snug text-slate-300">
         {checkedCount} selected. {JOBS_NEXT_HINT}.
       </p>
     </div>
@@ -2377,10 +2383,10 @@ function JobsPanel({
   return (
     <div className="p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-display text-2xl font-bold text-slate-100">
+        <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
           {heading}
         </h2>
-        <span className="font-mono text-sm font-bold text-emerald-300">
+        <span className="font-mono text-base font-bold text-emerald-300">
           {jobsCountEyebrow({
             visibleCount: visible.length,
             productName: analysis.productName,
@@ -2392,7 +2398,7 @@ function JobsPanel({
         </span>
       </div>
       {visible.length > 0 && (
-        <p className="mt-1 text-[12px] text-slate-400">
+        <p className="mt-2 text-base leading-relaxed text-slate-300">
           {jobsListHint({
             robotCount,
             productName: analysis.productName,
@@ -2408,7 +2414,7 @@ function JobsPanel({
         <button
           type="button"
           onClick={onRunOneRobot}
-          className="mt-3 font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-emerald-400 hover:text-emerald-300"
+          className="mt-3 font-mono text-sm font-semibold uppercase tracking-[0.08em] text-emerald-400 hover:text-emerald-300"
         >
           {JOBS_RUN_ONE_ROBOT_CTA}
         </button>
@@ -2449,7 +2455,7 @@ function JobsPanel({
         <button
           type="button"
           onClick={onSeeAll}
-          className="mt-4 font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-emerald-400 hover:text-emerald-300"
+          className="mt-4 font-mono text-sm font-semibold uppercase tracking-[0.08em] text-emerald-400 hover:text-emerald-300"
         >
           See all {Math.min(baseJobs.length, JOBS_PIPELINE_CAP)} jobs
         </button>
@@ -2479,7 +2485,7 @@ function ClassPicker({
   const choices = options && options.length > 0 ? options : DEFAULT_CLASS_OPTIONS;
   return (
     <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5">
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300">
+      <p className={`${JOBS_EYEBROW_CLASS} text-emerald-300`}>
         Name the robot class
       </p>
       <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
@@ -2534,7 +2540,7 @@ function ZeroState({
   if (r === "corpus_gap") {
     return (
       <div className="mt-6 border border-slate-600 bg-[#081126] p-5">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+        <p className={JOBS_EYEBROW_CLASS}>
           Corpus gap
         </p>
         <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
@@ -2551,7 +2557,7 @@ function ZeroState({
   if (r === "no_compatible_jobs") {
     return (
       <div className="mt-6 border border-slate-600 bg-[#081126] p-5">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+        <p className={JOBS_EYEBROW_CLASS}>
           No compatible jobs
         </p>
         <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
@@ -2617,24 +2623,13 @@ function JobCard({
           className="flex min-w-0 flex-1 items-start gap-3 py-4 pr-4 text-left"
         >
           <span className="flex-1">
-            <span className="flex items-center gap-2">
-              <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                {jobIsForLabel(index, robotName)}
-              </span>
-              <span
-                className={`font-mono text-[10px] font-bold uppercase tracking-[0.12em] ${
-                  possible ? "text-emerald-400" : "text-rose-400"
-                }`}
-              >
-                {possible ? "Possible match" : "Not a match"}
-              </span>
+            <span className={JOBS_ROBOT_NAME_CLASS}>{robotName}</span>
+            <span className={JOBS_JOB_TITLE_CLASS}>{job.title}</span>
+            {place ? <span className={JOBS_PLACE_CLASS}>{place}</span> : null}
+            <span className={JOBS_META_CLASS}>
+              {jobIsForLabel(index, robotName)} ·{" "}
+              {possible ? "Possible match" : "Not a match"}
             </span>
-            <span className="mt-1 block font-display text-base font-bold leading-snug text-slate-100">
-              {job.title}
-            </span>
-            {place ? (
-              <span className="mt-0.5 block text-xs text-slate-400">{place}</span>
-            ) : null}
           </span>
           <span className="font-mono text-xs text-slate-500">
             {selected ? "−" : "+"}
@@ -2678,7 +2673,7 @@ function JobCard({
 
           {job.blockers?.length ? (
             <div className="mt-3">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-rose-400/80">
+              <p className="mt-3 font-mono text-sm font-semibold uppercase tracking-[0.08em] text-rose-400/80">
                 Blocker
               </p>
               <ul className="mt-1 space-y-0.5">
@@ -2693,7 +2688,7 @@ function JobCard({
               </ul>
             </div>
           ) : possible ? (
-            <p className="mt-3 text-[12px] text-slate-500">
+            <p className="mt-3 text-sm text-slate-400">
               No confirmed blocker
             </p>
           ) : null}
