@@ -81,6 +81,9 @@ import {
   jobsProductLimitForPlan,
   jobsToActivate,
   lineupJobLookups,
+  lineupSegments,
+  usesLineupSegments,
+  searchNamesForSegment,
   normalizeRobotClass,
   portfolioShowsJobCounts,
   productClassesFromLineup,
@@ -1565,7 +1568,16 @@ export default function RobotJobsWorkspace() {
 
   function openJobsStep() {
     if (stage === "select") {
-      void confirmSelection(selected.length > 0 ? selected : "all");
+      if (selected.length > 0) {
+        void confirmSelection(selected);
+        return;
+      }
+      const segs = lineupSegments(products);
+      if (usesLineupSegments(products, productCap) && segs[0]) {
+        void confirmSelection(searchNamesForSegment(segs[0], productCap));
+        return;
+      }
+      void confirmSelection("all");
       return;
     }
     if (stage === "portfolio") {
@@ -2067,26 +2079,72 @@ function SelectPanel({
   onToggle: (name: string) => void;
   onConfirm: (which: string[] | "all") => void;
 }) {
+  const segments = lineupSegments(products);
+  const grouped = usesLineupSegments(products, productCap);
   const defaultNames = products.slice(0, productCap).map(p => p.name);
   const startNames = selected.length > 0 ? selected.slice(0, productCap) : defaultNames;
   const paidHint =
     productCap <= JOBS_PRODUCT_CAP_FREE
-      ? `Search up to ${productCap} robots here. Pro searches ${JOBS_PRODUCT_CAP_PAID}.`
-      : `Search up to ${productCap} robots in this pass.`;
+      ? `Each pass searches up to ${productCap} robots. Pro searches ${JOBS_PRODUCT_CAP_PAID}.`
+      : `Each pass searches up to ${productCap} robots.`;
+
   return (
     <div className="p-6 sm:p-8">
       <p className={eyebrow}>Select robot</p>
       <h2 className="mt-1 font-display text-2xl font-bold text-slate-100">
-        We found {products.length} robots
+        {grouped
+          ? `${products.length} robots in ${segments.length} groups`
+          : `We found ${products.length} robots`}
       </h2>
       <p className="mt-2 text-sm text-slate-400">
-        Pick one robot for five jobs you can save. Pick several and we show
-        one sample job per robot — run each SKU by itself to get a full list.
-        {" "}
-        {company || "This maker"} has {products.length}. {paidHint}
+        {grouped
+          ? `Run one family — one job search for that class, not a crawl of every SKU. ${company || "This maker"} has ${products.length}. ${paidHint}`
+          : `Pick one robot for five jobs you can save. Pick several and we show one sample job per robot — run each SKU by itself to get a full list. ${company || "This maker"} has ${products.length}. ${paidHint}`}
       </p>
 
-      <div className="mt-6 grid gap-2 sm:grid-cols-2">
+      {grouped ? (
+        <div className="mt-6 space-y-3">
+          {segments.map(seg => {
+            const names = searchNamesForSegment(seg, productCap);
+            const extra = seg.products.length - names.length;
+            return (
+              <div
+                key={seg.id}
+                className="border border-slate-600 bg-[#081126] p-4"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <div>
+                    <h3 className="font-display text-lg font-bold text-slate-100">
+                      {seg.title}
+                    </h3>
+                    <p className="mt-0.5 text-sm text-slate-400">{seg.subtitle}</p>
+                    {extra > 0 ? (
+                      <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.08em] text-slate-500">
+                        Searching {names.length} of {seg.products.length} this pass
+                      </p>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onConfirm(names)}
+                    className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-300 transition hover:text-emerald-200"
+                  >
+                    Start jobs for {seg.title} →
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {grouped ? (
+        <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.12em] text-slate-500">
+          Or pick up to {productCap} SKUs
+        </p>
+      ) : null}
+
+      <div className={`${grouped ? "mt-3" : "mt-6"} grid gap-2 sm:grid-cols-2`}>
         {products.map(p => {
           const on = selected.includes(p.name);
           const blocked = !on && selected.length >= productCap;
@@ -2127,17 +2185,28 @@ function SelectPanel({
       <div className="mt-6">
         <button
           type="button"
-          onClick={() => onConfirm(startNames)}
+          onClick={() =>
+            onConfirm(
+              grouped && selected.length === 0
+                ? searchNamesForSegment(segments[0], productCap)
+                : startNames,
+            )
+          }
           className={ctaClass}
         >
           <FaceCue scale={2} onEmerald />
-          {startNames.length === 1
-            ? `Start jobs for ${startNames[0]} →`
-            : products.length <= productCap && selected.length === 0
-              ? `Start jobs for all ${products.length} robots →`
-              : `Start jobs for ${startNames.length} robots →`}
+          {selected.length === 1
+            ? `Start jobs for ${selected[0]} →`
+            : grouped && selected.length === 0 && segments[0]
+              ? `Start jobs for ${segments[0].title} →`
+              : startNames.length === 1
+                ? `Start jobs for ${startNames[0]} →`
+                : products.length <= productCap && selected.length === 0
+                  ? `Start jobs for all ${products.length} robots →`
+                  : `Start jobs for ${startNames.length} robots →`}
         </button>
-        {selected.length > 0 &&
+        {!grouped &&
+        selected.length > 0 &&
         selected.length < Math.min(products.length, productCap) ? (
           <button
             type="button"

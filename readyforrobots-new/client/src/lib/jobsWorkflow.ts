@@ -115,6 +115,159 @@ export function productClassesFromLineup(
   return out;
 }
 
+/**
+ * SKU family stem: LD-250 → LD, Fourier GR-1 → GR, N1 → N.
+ * Marketing names without a model code return null.
+ */
+export function skuFamilyStem(name: string): string | null {
+  const raw = (name || "").trim();
+  if (!raw) return null;
+  const token = raw.split(/\s+/).pop() || raw;
+  const match = token.match(/^([A-Za-z]{1,8})[-_]?(\d)/);
+  if (!match) return null;
+  return match[1].toUpperCase();
+}
+
+export type LineupSegment = {
+  id: string;
+  title: string;
+  subtitle: string;
+  robotClass: string | null;
+  family: string | null;
+  products: LineupProduct[];
+};
+
+function segmentsForClass(cls: string, rows: LineupProduct[]): LineupSegment[] {
+  if (rows.length === 1) {
+    const row = rows[0];
+    return [
+      {
+        id: `sku:${row.name}`,
+        title: row.name,
+        subtitle: robotClassTitle(cls),
+        robotClass: cls,
+        family: skuFamilyStem(row.name),
+        products: rows,
+      },
+    ];
+  }
+
+  const byStem = new Map<string, LineupProduct[]>();
+  const noStem: LineupProduct[] = [];
+  for (const row of rows) {
+    const stem = skuFamilyStem(row.name);
+    if (!stem) {
+      noStem.push(row);
+      continue;
+    }
+    const list = byStem.get(stem) || [];
+    list.push(row);
+    byStem.set(stem, list);
+  }
+
+  const families: Array<[string, LineupProduct[]]> = [];
+  const leftovers: LineupProduct[] = [...noStem];
+  for (const [stem, group] of byStem) {
+    if (group.length >= 2) families.push([stem, group]);
+    else leftovers.push(...group);
+  }
+
+  const splitFamilies = families.length >= 2 || (families.length === 1 && leftovers.length > 0);
+  if (!splitFamilies) {
+    const family = families.length === 1 ? families[0][0] : null;
+    return [
+      {
+        id: `class:${cls}`,
+        title: robotClassJobsLabel(cls),
+        subtitle: `${rows.length} robots`,
+        robotClass: cls,
+        family,
+        products: rows,
+      },
+    ];
+  }
+
+  const out: LineupSegment[] = [];
+  for (const [stem, group] of families) {
+    out.push({
+      id: `family:${cls}:${stem}`,
+      title: `${stem} ${robotClassJobsLabel(cls)}`,
+      subtitle: group.map(p => p.name).join(" · "),
+      robotClass: cls,
+      family: stem,
+      products: group,
+    });
+  }
+  for (const row of leftovers) {
+    out.push({
+      id: `sku:${row.name}`,
+      title: row.name,
+      subtitle: robotClassTitle(cls),
+      robotClass: cls,
+      family: skuFamilyStem(row.name),
+      products: [row],
+    });
+  }
+  return out;
+}
+
+/** Class buckets, then SKU families inside a class (LD vs HD AMRs). */
+export function lineupSegments(products: LineupProduct[]): LineupSegment[] {
+  const byClass = new Map<string, LineupProduct[]>();
+  const unknown: LineupProduct[] = [];
+  for (const row of products) {
+    const name = (row.name || "").trim();
+    if (!name) continue;
+    const cls = normalizeRobotClass(row.displayClass);
+    if (!cls) {
+      unknown.push({ ...row, name });
+      continue;
+    }
+    const list = byClass.get(cls) || [];
+    list.push({ ...row, name });
+    byClass.set(cls, list);
+  }
+  const out: LineupSegment[] = [];
+  for (const [cls, rows] of byClass) {
+    out.push(...segmentsForClass(cls, rows));
+  }
+  for (const row of unknown) {
+    out.push({
+      id: `sku:${row.name}`,
+      title: row.name,
+      subtitle: "One robot",
+      robotClass: null,
+      family: skuFamilyStem(row.name),
+      products: [row],
+    });
+  }
+  return out;
+}
+
+/** Segmented picker when the lineup is bigger than one search, or spans types. */
+export function usesLineupSegments(
+  products: LineupProduct[],
+  cap = JOBS_PRODUCT_CAP_FREE,
+): boolean {
+  const named = products.filter(p => (p.name || "").trim());
+  if (named.length <= 1) return false;
+  const classes = new Set(
+    named.map(p => normalizeRobotClass(p.displayClass)).filter(Boolean),
+  );
+  if (classes.size >= 2) return true;
+  if (named.length > cap) return true;
+  const segs = lineupSegments(named);
+  return segs.length >= 2 && segs.some(s => (s.products || []).length >= 2);
+}
+
+export function searchNamesForSegment(
+  segment: LineupSegment | undefined,
+  cap = JOBS_PRODUCT_CAP_FREE,
+): string[] {
+  if (!segment) return [];
+  return segment.products.map(p => p.name).filter(Boolean).slice(0, cap);
+}
+
 export const JOBS_EXAMPLE_CAP = 5;
 /** Lineup preview: one sample job per robot. Run each SKU for five jobs. */
 export const JOBS_LINEUP_JOBS_PER_ROBOT = 1;
@@ -126,8 +279,8 @@ export const JOBS_ACTIVATE_CAP = 15;
 /** Free / anonymous: search this many SKUs per FIND. Paid unlocks five. */
 export const JOBS_PRODUCT_CAP_FREE = 3;
 export const JOBS_PRODUCT_CAP_PAID = 5;
-/** How many real SKUs the picker may list. Search is still 3/5. */
-export const JOBS_LINEUP_DISPLAY_CAP = 10;
+/** How many real SKUs the picker may list. Search is still 3/5 per family. */
+export const JOBS_LINEUP_DISPLAY_CAP = 24;
 export const ROBOT_PROFILE_TIMEOUT_MS = 22_000;
 export const ROBOT_JOB_SEARCH_TIMEOUT_MS = 30_000;
 

@@ -56,6 +56,10 @@ import {
   jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
   lineupJobLookups,
+  lineupSegments,
+  usesLineupSegments,
+  searchNamesForSegment,
+  skuFamilyStem,
   normalizeRobotClass,
   portfolioShowsJobCounts,
   productClassesFromLineup,
@@ -452,6 +456,8 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/fillLineupJobs/);
     expect(workspace).toMatch(/lineupJobLookups/);
     expect(workspace).toMatch(/lookupGrain: "robot_type"/);
+    expect(workspace).toMatch(/lineupSegments/);
+    expect(workspace).toMatch(/Start jobs for \{seg\.title\}/);
     expect(workspace).toMatch(/Start jobs for all/);
     expect(workspace).not.toMatch(/List all \$\{products\.length\} robots/);
   });
@@ -770,5 +776,77 @@ describe("jobsWorkflow", () => {
     );
     expect(account).not.toMatch(/bg-white/);
     expect(account).toMatch(/bg-\[#0b162f\]/);
+  });
+
+  it("segments large OEM catalogs by class and SKU family without a per-SKU crawl", () => {
+    expect(skuFamilyStem("LD-250")).toBe("LD");
+    expect(skuFamilyStem("HD-1500")).toBe("HD");
+    expect(skuFamilyStem("Fourier GR-1")).toBe("GR");
+    expect(skuFamilyStem("N1")).toBe("N");
+    expect(skuFamilyStem("Digit")).toBeNull();
+
+    const omron = lineupSegments([
+      { name: "LD-250", displayClass: "amr" },
+      { name: "LD-90", displayClass: "amr" },
+      { name: "LD-60", displayClass: "amr" },
+      { name: "HD-1500", displayClass: "amr" },
+      { name: "MD-650", displayClass: "amr" },
+    ]);
+    expect(usesLineupSegments(omron.flatMap(s => s.products), 3)).toBe(true);
+    expect(omron.map(s => s.title)).toEqual([
+      "LD AMRs",
+      "HD-1500",
+      "MD-650",
+    ]);
+    expect(searchNamesForSegment(omron[0], 3)).toEqual([
+      "LD-250",
+      "LD-90",
+      "LD-60",
+    ]);
+    expect(lineupJobLookups(omron[0].products)).toEqual([
+      {
+        grain: "robot_type",
+        robotClass: "amr",
+        productNames: ["LD-250", "LD-90", "LD-60"],
+      },
+    ]);
+
+    const fourier = lineupSegments([
+      { name: "Fourier GR-1", displayClass: "humanoid" },
+      { name: "Fourier GR-2", displayClass: "humanoid" },
+      { name: "Fourier GR-3", displayClass: "humanoid" },
+      { name: "Fourier N1", displayClass: "humanoid" },
+    ]);
+    expect(fourier.map(s => s.title)).toEqual(["GR humanoids", "Fourier N1"]);
+    expect(searchNamesForSegment(fourier[0], 3)).toEqual([
+      "Fourier GR-1",
+      "Fourier GR-2",
+      "Fourier GR-3",
+    ]);
+
+    const mixed = lineupSegments([
+      { name: "Atlas", displayClass: "humanoid" },
+      { name: "Spot", displayClass: "quadruped" },
+      { name: "Stretch", displayClass: "mobile_manipulator" },
+    ]);
+    expect(usesLineupSegments(mixed.flatMap(s => s.products), 3)).toBe(true);
+    expect(mixed.map(s => s.robotClass).sort()).toEqual([
+      "humanoid",
+      "mobile_manipulator",
+      "quadruped",
+    ]);
+    expect(usesLineupSegments([{ name: "Digit", displayClass: "humanoid" }], 3)).toBe(
+      false,
+    );
+    expect(
+      usesLineupSegments(
+        [
+          { name: "LD-250", displayClass: "amr" },
+          { name: "LD-90", displayClass: "amr" },
+          { name: "LD-60", displayClass: "amr" },
+        ],
+        3,
+      ),
+    ).toBe(false);
   });
 });
