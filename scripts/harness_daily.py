@@ -160,6 +160,8 @@ def main() -> int:
     if rc != 0:
         return rc
 
+    _run([py, "scripts/harness_compile_memory.py"], dry_run=args.dry_run)
+
     if not args.skip_cache_refresh and _pipeline_needs_refresh(args.api_base):
         refresh_cmd = [
             py,

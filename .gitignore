@@ -81,6 +81,7 @@ htmlcov/
 # Generated report artifacts (timestamped run outputs)
 reports/harness_snapshot_*.json
 reports/harness_*_latest.md
+reports/compiled_memory_latest.json
 reports/*_quarantine_*.csv
 reports/*_cleanup_*.csv
 reports/*_triage_*.csv

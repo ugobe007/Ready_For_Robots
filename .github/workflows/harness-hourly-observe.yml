@@ -1,0 +1,49 @@
+# Hourly ProductManager observe — health + compiled memory. No agent. No PR. No merge.
+#
+# Optional secrets:
+#   DATABASE_URL — included in snapshot when present; site probe does not need it
+#
+# Manual run: Actions → Harness hourly observe → Run workflow
+name: Harness hourly observe
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: harness-hourly-observe
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  observe:
+    name: Observe site + compile memory
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install diagnostics deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install httpx python-dotenv
+
+      - name: Site health (observe; alerts go into compiled memory, not a red hour)
+        run: python3 scripts/harness_diagnostics.py --check site || true
+
+      - name: Compile memory
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/harness_compile_memory.py --stdout

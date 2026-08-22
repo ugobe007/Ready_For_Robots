@@ -160,10 +160,12 @@ def check_site_health(*, api_base: str = FLY_API) -> dict[str, Any]:
     billing = _fetch_probe(f"{base}/api/billing/config", timeout=10)
     checkout_auth = _probe_checkout_requires_auth(api_base=base)
     pages = {
+        "home": _page_probe("/"),
         "robots": _page_probe("/robots"),
         "pricing": _page_probe("/pricing"),
         "pipeline": _page_probe("/pipeline"),
         "signup": _page_probe("/signup"),
+        "jobs_crm": _page_probe("/crm?src=jobs_activate"),
     }
 
     if not fly_robots.get("ok"):
@@ -648,6 +650,12 @@ def render_daily_report_markdown(
     lines.append(
         f"- **Robots via Vercel proxy:** {'OK' if vercel.get('ok') else 'FAIL'} — {vercel.get('latency_ms', '?')}ms"
     )
+    vercel_gha = site.get("vercel_frontend_gha") or {}
+    if vercel_gha:
+        lines.append(
+            f"- **Vercel production GHA:** {vercel_gha.get('label', '?')}"
+            + (" — SKIP-GREEN LIE" if vercel_gha.get('lie') else "")
+        )
     lines.append(
         f"- **Pipeline cache:** {'OK' if pipe.get('ok') else 'FAIL'} — "
         f"{pipe.get('leads_count', '?')} leads"

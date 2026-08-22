@@ -7,6 +7,8 @@ Graph ontology: [`ontology/rfr_graph.v1.json`](../ontology/rfr_graph.v1.json)
 
 **Graph** = what connects a robot to a job. **Loop** = what we learn after we act.
 
+Sibling (the *product*, not the market): [`docs/product_integrity_loop.md`](product_integrity_loop.md) — ProductManager compiles memory, tests `/` → cards → CRM, and refuses skip-green Vercel.
+
 ## Cycle (canonical stages)
 
 | Stage | v1 status | What this worker does |

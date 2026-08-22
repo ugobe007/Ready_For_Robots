@@ -191,7 +191,8 @@
       "labor": "JOB_POSTINGS → TASKS → WORK → ROBOTABILITY → OPPORTUNITY → CUSTOMER_VALIDATION → BETTER_TASK_EXTRACTION",
       "robot": "SPECS → CAPABILITIES → WORK_MATCH → DEPLOYMENT → ACTUAL_PERFORMANCE → BETTER_CAPABILITY_MODEL",
       "sales": "OPPORTUNITY → CALL_PRIORITY → ACTION → RESPONSE → QUALIFY → WIN_LOSS → BETTER_BUYABILITY",
-      "deployment": "WORK → ROBOT → PILOT → PERFORMANCE → FAILURES → ECONOMICS → EXPANSION"
+      "deployment": "WORK → ROBOT → PILOT → PERFORMANCE → FAILURES → ECONOMICS → EXPANSION",
+      "product": "See ontology/rfr_product_loop.v1.json — Jobs workflow + deploy truth + compiled memory. Not WORK nodes."
     }
   },
   "fundamental_questions": [

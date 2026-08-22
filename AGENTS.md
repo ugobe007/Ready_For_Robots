@@ -59,6 +59,7 @@ Read `docs/market_thesis.md` before choosing missions. The intelligence loop fee
 | **Intelligence** | Weekly (or first cycle of week) | Updated thesis, ranked backlog |
 | **Execution** | Daily | Code, deploy, metrics delta |
 | **Market graph** | Worker (~12h) | Tension + match edges → cache (`/api/v1/market-graph/*`) |
+| **Product integrity** | Hourly observe / daily one act | Compiled memory + Jobs-path mission. Charter: `docs/product_integrity_loop.md` |
 
 Snapshot `intelligence` slice (junk reasons, gap frequency, industry deltas) drives FrictionMiner and mission selection.
 
@@ -66,7 +67,8 @@ Snapshot `intelligence` slice (junk reasons, gap frequency, industry deltas) dri
 
 | Agent | Scope | Primary docs |
 |-------|--------|--------------|
-| **Orchestrator** | Pick one mission per cycle; spawn subagents; enforce budgets; notify | This file, `docs/product_market_fit.md`, `harness/gates.yaml`, `docs/market_thesis.md`, latest snapshot |
+| **Orchestrator** | Pick one mission per cycle; spawn subagents; enforce budgets; notify | This file, `docs/product_market_fit.md`, `harness/gates.yaml`, `docs/market_thesis.md`, latest snapshot, compiled memory |
+| **ProductManager** | Test Jobs workflow + site + deploys + DB; compile memory; rank the next Jobs-path mission. Hourly observe only. Does not merge. | `docs/product_integrity_loop.md`, `scripts/harness_compile_memory.py` |
 | **MarketIntel** | External scan: earnings, trade press, competitor moves (Explee, Apollo, Clay), category trends | `docs/market_thesis.md`, `docs/competitive_positioning.md` |
 | **FrictionMiner** | Internal friction: junk patterns, gaps, quarantine, rectification failures | Snapshot `intelligence`, `docs/lead_quality_north_star.md` |
 | **ProductThesis** | Synthesize intel + friction → update thesis backlog ranks | `docs/market_thesis.md` |

@@ -170,9 +170,9 @@ Example: third-shift forklift hiring → reconstruct pallet flow → high Work M
 
 ---
 
-## 6. Four simultaneous loops
+## 6. Five simultaneous loops
 
-All feed the same graph:
+Four **market** loops feed the WORK graph. A fifth **product** loop is a sibling graph — it does not add WORK nodes.
 
 | Loop | Path | Learns |
 |------|------|--------|
@@ -180,6 +180,11 @@ All feed the same graph:
 | **Robot** | Specs → capabilities → work match → deployment → actual performance → better capability model | Spec vs real-world capability |
 | **Sales** | Opportunity → call priority → action → response → qualify → win/loss → better buyability | What leads to meetings → surveys → deployments |
 | **Deployment** | Work → robot → pilot → performance → failures → interventions → economics → expansion | What actually works |
+| **Product** | Jobs workflow → Vercel/Fly/DB truth → compiled memory → one mission → verify production | Whether `/` still finds jobs, and whether production actually shipped |
+
+Product loop charter: [`docs/product_integrity_loop.md`](product_integrity_loop.md) · ontology: [`ontology/rfr_product_loop.v1.json`](../ontology/rfr_product_loop.v1.json)
+
+Hourly observe. Daily one act. Do not spawn a swarm that merges PRs — that is how the Jobs experiment dies.
 
 ```
                  READYFORROBOTS GRAPH
@@ -244,6 +249,7 @@ Recommendation becomes evidence-based, not just “specs look compatible.”
 | WORK persistence | `work_units` + `work_matches` tables | Full JD capture + facility link |
 | DEPLOYMENT EVIDENCE | `deployment_*` tables + public seed claims | Recurring crawler across ~500 vendors |
 | Loop runner | `market_graph_loop.py` + persist WORK | Deployment evidence crawl worker |
+| Product integrity | Daily harness + skip-green Vercel GHA | ProductManager + compiled memory + real Vercel `--prod` |
 | Product | Pipeline Work Match badge | Comparable deployment evidence on cards |
 
 See also: [`docs/work_unit_reconstruction.md`](work_unit_reconstruction.md), [`docs/deployment_evidence_engine.md`](deployment_evidence_engine.md).
