@@ -470,7 +470,7 @@ export default function Crm() {
   return (
     <div className="pipeline-page-bg flex min-h-screen flex-col text-slate-100">
       <ExperimentHeader />
-      <main className="admin-workspace mx-auto w-full max-w-4xl flex-1 px-4 pb-8 pt-16">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-8 pt-16">
         <AdminNav variant="dark" />
         <CrmHero
           signedIn
@@ -555,14 +555,14 @@ export default function Crm() {
                   <tr
                     key={a.id}
                     onClick={() => setSelectedAccountId(a.id)}
-                    className={`cursor-pointer border-b border-stone-100 text-gray-800 ${
-                      selectedAccountId === a.id ? "bg-emerald-50" : "hover:bg-stone-50"
+                    className={`cursor-pointer border-b border-slate-700 ${
+                      selectedAccountId === a.id ? "bg-emerald-400/10" : "hover:bg-[#081126]"
                     }`}
                   >
                     <td className="px-3 py-2.5 font-display text-lg font-bold text-white">{a.name}</td>
                     <td className="px-3 py-2.5 font-mono text-sm text-slate-300">{a.company_id ?? "—"}</td>
                     <td className="px-3 py-2.5 text-sm text-emerald-300">{a.outreach_stage || "—"}</td>
-                    <td className="px-3 py-2.5 text-sm truncate max-w-[140px]">{a.contact_email || "—"}</td>
+                    <td className="px-3 py-2.5 text-sm text-slate-300 truncate max-w-[140px]">{a.contact_email || "—"}</td>
                   </tr>
                 ))}
               </tbody>

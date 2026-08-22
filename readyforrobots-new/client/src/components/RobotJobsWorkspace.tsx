@@ -63,6 +63,7 @@ import {
   exampleJobsForLineup,
   isJobsFreshQuery,
   jobIsForLabel,
+  jobExplanation,
   JOBS_EYEBROW_CLASS,
   JOBS_JOB_TITLE_CLASS,
   JOBS_META_CLASS,
@@ -2598,6 +2599,12 @@ function JobCard({
 }) {
   const possible = job.verdict !== "NOT_A_MATCH";
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
+  const work = jobExplanation({
+    title: job.title,
+    why: job.why,
+    company: job.company_name,
+    industry: job.industry,
+  });
   return (
     <li
       className={`border bg-[#081126] ${
@@ -2626,6 +2633,9 @@ function JobCard({
             <span className={JOBS_ROBOT_NAME_CLASS}>{robotName}</span>
             <span className={JOBS_JOB_TITLE_CLASS}>{job.title}</span>
             {place ? <span className={JOBS_PLACE_CLASS}>{place}</span> : null}
+            {work && work !== job.title ? (
+              <span className="mt-1.5 block text-sm leading-snug text-slate-200">{work}</span>
+            ) : null}
             <span className={JOBS_META_CLASS}>
               {jobIsForLabel(index, robotName)} ·{" "}
               {possible ? "Possible match" : "Not a match"}
@@ -2641,7 +2651,7 @@ function JobCard({
         <div className="border-t border-slate-700 px-4 pb-4 pt-3">
           {job.why?.length ? (
             <div>
-              <p className={eyebrow}>Why {robotName}</p>
+              <p className={eyebrow}>The job</p>
               <ul className="mt-1 space-y-0.5">
                 {job.why.map(w => (
                   <li

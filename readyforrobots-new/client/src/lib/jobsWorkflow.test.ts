@@ -41,6 +41,7 @@ import {
   jobsHeading,
   jobIndexLabel,
   jobIsForLabel,
+  jobExplanation,
   jobsListHint,
   jobsPlaceHref,
   jobsProcessActionLabel,
@@ -628,6 +629,7 @@ describe("jobsWorkflow", () => {
     expect(crm).toMatch(/ExperimentHeader/);
     expect(crm).toMatch(/CrmHero/);
     expect(crm).toMatch(/\/api\/crm\/jobs-watch/);
+    expect(crm).not.toMatch(/admin-workspace/);
     expect(crm).not.toMatch(/from "@\/components\/Header"/);
     expect(crm).not.toMatch(/Outreach editor/);
 
@@ -637,5 +639,43 @@ describe("jobsWorkflow", () => {
     expect(hero).toMatch(/CRM_HEADLINE_CLASS/);
     expect(hero).toMatch(/CRM_WATCH_OPT_IN_LABEL/);
     expect(hero).toMatch(/CRM_HOW_TO_STEPS/);
+
+    const intel = readFileSync(join(here, "../pages/Intelligence.tsx"), "utf8");
+    expect(intel).toMatch(/ExperimentHeader/);
+    expect(intel).toMatch(/KARE_FACE/);
+    expect(intel).not.toMatch(/from "@\/components\/Header"/);
+
+    const pipelineSrc = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
+    expect(pipelineSrc).toMatch(/JOBS_PIPELINE_CAP/);
+    expect(pipelineSrc).not.toMatch(/showFullPanel\s*\n\s*\? PIPELINE_LIMIT_PAID/);
+
+    const cardSrc = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    expect(cardSrc).toMatch(/jobExplanation/);
+    expect(cardSrc).toMatch(/The job/);
+  });
+
+  it("explains the job instead of a sales pitch", () => {
+    expect(
+      jobExplanation({
+        action: "Priority: Pitch AMR fleet for new distribution centers",
+        friction: "Move pallets from receiving to reserve overnight",
+        company: "Acme Logistics",
+      }),
+    ).toBe("Move pallets from receiving to reserve overnight");
+    expect(
+      jobExplanation({
+        title: "Tray return",
+        why: ["Carry dirty trays from dining room to the dish pit all shift"],
+        company: "Panera Bread",
+      }),
+    ).toMatch(/dish pit/i);
+    expect(
+      jobExplanation({
+        action: "Priority: Pitch overnight cleaning robots",
+      }),
+    ).not.toMatch(/pitch/i);
   });
 });

@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, BarChart3, Building2, FileText, Mail, Radio, Search, Send, Zap } from "lucide-react";
 import { Link } from "wouter";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
+import PixelIcon from "@/components/PixelIcon";
+import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
+import { JOBS_HEADER_OFFSET_CLASS } from "@/lib/jobsWorkflow";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
 
@@ -105,18 +108,23 @@ export default function Intelligence() {
   }
 
   const inputClass =
-    "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-emerald-500";
+    "w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-colors focus:border-emerald-400";
 
   return (
-    <div className="intelligence-page min-h-screen flex flex-col">
-      <Header />
+    <div className={`intelligence-page flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <ExperimentHeader />
       <PageHeroDark
         maxWidthClass="max-w-6xl"
-        eyebrow="ReadyForRobots Intelligence"
-        title="Robot Demand Signals, Ranked"
+        eyebrow="ReadyForRobots"
+        title={
+          <span className="inline-flex items-center gap-4">
+            <PixelIcon map={KARE_FACE} scale={3} fill={FACE_EMERALD} background="transparent" />
+            <span className="font-display text-emerald-400">About</span>
+          </span>
+        }
         description={
           <>
-            The same engine that powers <span className="font-bold text-amber-400">SIGNAL</span> watches labor pressure, expansion plans, CapEx hints, automation hiring, and deployment news, then turns those signals into sales and partnership opportunities.
+            Labor pressure, expansion, CapEx, and deployment news — ranked as work robots can do, not as a generic sales dump.
           </>
         }
         innerClassName="pb-8"
@@ -150,12 +158,12 @@ export default function Intelligence() {
       <main className="flex-1 px-6 pb-20">
         <div className="max-w-6xl mx-auto">
 
-          <section className="mb-12 overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <section className="mb-12 overflow-hidden rounded-lg border border-slate-600 bg-[#0b162f]">
             <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="border-b border-gray-100 p-6 lg:border-b-0 lg:border-r">
                 <p className={`mb-3 ${EYEBROW}`} style={{ color: "#FFB000" }}>Lead scoring model</p>
-                <h2 className="max-w-xl text-xl font-bold leading-tight text-gray-900 lg:text-2xl">
-                  We score the buyer first, then match it to the robot sales motion.
+                <h2 className="max-w-xl text-xl font-bold leading-tight text-white lg:text-2xl">
+                  We score the work first, then match it to a robot that can do the job.
                 </h2>
                 <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-gray-500">
                   SIGNAL does not treat every lead as equal. It ranks the company’s buying intent, the operational problem, and the timing window, then compares that profile against the robot category or vendor URL you submit.

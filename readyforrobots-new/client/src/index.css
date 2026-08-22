@@ -1144,6 +1144,43 @@
      dark translucents (bg-white/5, border-white/10, etc.) so overlays keep working.
      The .pipeline-* classes below are flipped directly; this catches the many
      one-off inline utilities in the JSX (banners, skeletons, detail panels). */
+  .pipeline-page-bg .sb-surface {
+    background-color: #0b162f !important;
+    border-color: #334155 !important;
+    color: #e2e8f0;
+    box-shadow: none;
+  }
+  .pipeline-page-bg .sb-input {
+    background-color: #081126 !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+  }
+  .pipeline-page-bg .sb-input::placeholder {
+    color: #64748b !important;
+  }
+  .pipeline-page-bg .sb-btn {
+    background-color: #081126 !important;
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+  }
+  .pipeline-page-bg .sb-btn-primary {
+    background-color: #34d399 !important;
+    border-color: #34d399 !important;
+    color: #04122a !important;
+  }
+  .pipeline-page-bg .sb-kicker,
+  .pipeline-page-bg .sb-label {
+    color: #94a3b8 !important;
+  }
+  .pipeline-page-bg .admin-workspace {
+    color: #e2e8f0;
+    color-scheme: dark;
+  }
+  .pipeline-page-bg .admin-workspace :where(input, select, textarea) {
+    background-color: #081126 !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+  }
   .pipeline-page-bg
     :where(
       .bg-white,
@@ -1707,6 +1744,10 @@
   .compare-page main :where(.border-sky-100, .border-sky-200, .border-sky-300) { border-color: rgba(56, 189, 248, 0.35) !important; }
   .compare-page main :where(.hover\:bg-gray-50, .hover\:bg-amber-50):hover { background-color: #1e293b !important; }
   .compare-page main :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  .intelligence-page {
+    background: #081126;
+    color: #e2e8f0;
+  }
   .intelligence-page .page-hero-fade {
     background-image: linear-gradient(to bottom, #111827, #081126) !important;
   }

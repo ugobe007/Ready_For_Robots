@@ -64,6 +64,7 @@ import {
   isPlaceSrc,
   buyerLeadsToShow,
   JOBS_ACTIVATE_CAP,
+  JOBS_PIPELINE_CAP,
   JOBS_EYEBROW_CLASS,
   JOBS_OPEN_CRM_CTA,
   PIPELINE_PAGE_HEADLINE,
@@ -2746,12 +2747,9 @@ export default function Pipeline() {
       });
     }
 
-    const feedCap = showFullPanel
-      ? PIPELINE_LIMIT_PAID
-      : panelPlan === "anonymous"
-        ? PIPELINE_LIMIT_ANONYMOUS
-        : PIPELINE_LIMIT_FREE;
-    if (!showFullPanel && next.length > feedCap) {
+    const feedCap =
+      panelPlan === "anonymous" ? PIPELINE_LIMIT_ANONYMOUS : JOBS_PIPELINE_CAP;
+    if (next.length > feedCap) {
       return next.slice(0, feedCap);
     }
     return next;
@@ -2763,7 +2761,6 @@ export default function Pipeline() {
     qualityBandFilter,
     qualitySort,
     panelPlan,
-    showFullPanel,
   ]);
 
   const matchedScopedDeals = useMemo(

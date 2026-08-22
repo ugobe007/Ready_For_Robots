@@ -18,6 +18,7 @@ import {
   JOBS_SAVE_TO_CRM_CTA,
   JOBS_SAVE_TO_CRM_HINT,
   RAIL_STEP_HINT,
+  jobExplanation,
   jobIsForLabel,
   jobsActivateHref,
   jobsFreshHomeHref,
@@ -149,11 +150,20 @@ function JobRow({
   pinned: boolean;
 }) {
   const place = [job.company_name, job.locality].filter(Boolean).join(" · ");
+  const work = jobExplanation({
+    title: job.title,
+    why: job.why,
+    company: job.company_name,
+    industry: job.industry,
+  });
   return (
     <li className="border border-slate-600 bg-[#081126] px-4 py-4">
       <p className={JOBS_ROBOT_NAME_CLASS}>{robotName}</p>
       <p className={JOBS_JOB_TITLE_CLASS}>{job.title}</p>
       {place ? <p className={JOBS_PLACE_CLASS}>{place}</p> : null}
+      {work && work !== job.title ? (
+        <p className="mt-1.5 text-sm leading-snug text-slate-200">{work}</p>
+      ) : null}
       <p className={JOBS_META_CLASS}>
         {jobIsForLabel(index, robotName)} ·{" "}
         {pinned ? "From your list" : "More from this match"}

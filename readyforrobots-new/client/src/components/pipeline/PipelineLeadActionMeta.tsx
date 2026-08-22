@@ -1,6 +1,7 @@
 /**
  * Pipeline action line + robot type chips — demo proof vs generic company search.
  */
+import { jobExplanation } from "@/lib/jobsWorkflow";
 import { cleanAndClampText } from "@/lib/text";
 
 export type PipelineLeadActionFields = {
@@ -9,9 +10,13 @@ export type PipelineLeadActionFields = {
   robot_types_needed?: string[];
   robotTypesNeeded?: string[];
   share_summary?: string | null;
+  shareSummary?: string | null;
   core_need?: string | null;
   signal?: string;
+  company?: string | null;
+  industry?: string | null;
   signals?: { display_text?: string }[];
+  leadHighlights?: { specific_problem?: string | null };
   crmEvidence?: {
     friction_point?: string | null;
     workflow_scope?: { count?: number; label?: string | null; items?: string[] };
@@ -22,11 +27,20 @@ export type PipelineLeadActionFields = {
 };
 
 function actionLine(lead: PipelineLeadActionFields): string {
-  const action = (lead.pipeline_action || lead.pipelineAction || "").trim();
-  if (action) return cleanAndClampText(action, 200);
-  const summary = (lead.share_summary || lead.core_need || lead.signal || "").trim();
-  if (summary) return cleanAndClampText(summary, 200);
-  return cleanAndClampText(lead.signals?.[0]?.display_text, 200) || "";
+  return cleanAndClampText(
+    jobExplanation({
+      friction: lead.crmEvidence?.friction_point || lead.leadHighlights?.specific_problem,
+      workflow:
+        lead.crmEvidence?.workflow_scope?.label ||
+        lead.crmEvidence?.workflow_scope?.items?.[0],
+      summary: lead.share_summary || lead.shareSummary || lead.core_need || lead.signal,
+      action: lead.pipeline_action || lead.pipelineAction,
+      company: lead.company,
+      industry: lead.industry,
+      title: lead.signals?.[0]?.display_text,
+    }),
+    200,
+  );
 }
 
 function robotTypes(lead: PipelineLeadActionFields): string[] {
