@@ -4044,6 +4044,7 @@ export default function Pipeline() {
           src={submittedSrcFromQuery}
           signedIn={isSignedIn}
           variant="pipeline"
+          submissionId={submissionIdFromQuery}
         />
       </div>
     );

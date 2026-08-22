@@ -280,6 +280,8 @@ export const BUYER_LEADS_ANON_CAP = 5;
 export const JOBS_PIPELINE_CAP = 15;
 /** Live list after Activate: checked jobs first, then fill to this cap. */
 export const JOBS_ACTIVATE_CAP = 15;
+/** Free CRM taste — keep in sync with `JOBS_WATCH_FREE_VISIBLE_EVENTS`. */
+export const CRM_UNLOCKED_JOBS = 3;
 /** Free / anonymous: search this many SKUs per FIND. Paid unlocks five. */
 export const JOBS_PRODUCT_CAP_FREE = 3;
 export const JOBS_PRODUCT_CAP_PAID = 5;
@@ -475,11 +477,11 @@ export const JOBS_RAIL_LINK_CLASS =
 
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT =
-  "This is your CRM. Pick an account, approve the outreach draft, then send. Opt in so we email you when jobs change or new work appears for your robot.";
+  "This is your CRM. Free unlocks 3 job opportunities from the list you just checked. Opt in so we email you when those jobs change.";
 export const CRM_HOW_TO_STEPS = [
-  "Pick an account from the list — those are the jobs you saved.",
-  "Approve the outreach draft, then send.",
+  "The 3 unlocked jobs are the ones you checked on Jobs.",
   "Opt in to email. We watch your robot URL on the cron and tell you when jobs change or new work shows up.",
+  "Pro keeps every SKU on the cron. HubSpot is optional.",
 ] as const;
 export const CRM_WATCH_OPT_IN_LABEL =
   "Email me when these jobs change or we find new work for my robot.";
@@ -549,15 +551,15 @@ export function jobsListHint(opts: {
   productName: string;
 }): string {
   if (opts.robotCount > 1) {
-    return "One sample job per robot. Run each robot by itself for five jobs, then save that list.";
+    return "One sample job per robot. Run each robot by itself for five jobs, then Next to CRM.";
   }
-  return `Five example jobs ${opts.productName} can do. Expand a card to inspect. Check every job you want — then Next.`;
+  return `Five example jobs ${opts.productName} can do. Expand a card to inspect. Check the jobs you want — Next opens CRM with ${CRM_UNLOCKED_JOBS}.`;
 }
 
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
-export const JOBS_SAVE_TO_CRM_CTA = "Save this job list to CRM";
+export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
-  "Save the list so we can watch these jobs and email you when something changes.";
+  "Free CRM unlocks 3 job opportunities. Next opens that list — there is no extra save page.";
 
 /** Jobs / results `src` values that continue the Jobs terminal. */
 export function isJobsHandoffSrc(src: string | null | undefined): boolean {
@@ -574,7 +576,7 @@ export const FIND_JOBS_CTA = "Start jobs →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = "Next →";
-export const JOBS_NEXT_HINT = "Your checked jobs sit at the top of 15 live jobs";
+export const JOBS_NEXT_HINT = "Next opens CRM with your checked jobs — 3 opportunities on free";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
@@ -596,7 +598,7 @@ export const JOBS_PROCESS_STEPS = [
   {
     id: "activate" as const,
     n: "03",
-    label: "Activate the job list",
+    label: "CRM",
     linkLabel: JOBS_NEXT_CTA,
   },
 ];
@@ -680,12 +682,12 @@ export function isJobsActivateSrc(src: string | null | undefined): boolean {
   return (src || "").trim() === JOBS_ACTIVATE_SRC;
 }
 
-/** Live pipeline as the activated job list — never the OEM as `url=`. */
+/** CRM is step 3 — never a second pipeline confirmation, never the OEM as `url=`. */
 export function jobsActivateHref(submissionId?: number | null): string {
   const params = new URLSearchParams();
   params.set("src", JOBS_ACTIVATE_SRC);
   if (submissionId && submissionId > 0) params.set("submission", String(submissionId));
-  return `/pipeline?${params.toString()}`;
+  return `/crm?${params.toString()}`;
 }
 
 /** @deprecated Use jobsActivateHref. Kept so leftover Place links compile. */
@@ -734,8 +736,8 @@ export function defaultCheckedKeysForLineup<T extends { job_key: string }>(
 export const RAIL_STEP_HINT = {
   find: "Paste the manufacturer URL. We research the company and every robot SKU we can prove.",
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
-  jobs: "Each job is tagged with its robot. One SKU shows five jobs. Several robots show one each — run each SKU by itself to save a list.",
-  pipeline: "Save this list to your CRM. Inspect jobs if you need to change it — this step does not list the jobs again.",
+  jobs: "Each job is tagged with its robot. One SKU shows five jobs. Several robots show one each — run each SKU by itself, then Next to CRM.",
+  pipeline: "CRM unlocks 3 job opportunities. There is no extra activate page.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */

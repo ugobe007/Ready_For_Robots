@@ -7,7 +7,7 @@
  *
  *   FIND → SELECT (several SKUs) → one robot: jobs for that product
  *                              → several/all: type-first match (faster) → jobs
- *   Process: 01 robot → 02 jobs → 03 activate (top and bottom of the page).
+ *   Process: 01 robot → 02 jobs → 03 CRM (top and bottom of the page).
 
 
  *
@@ -52,7 +52,8 @@ import {
   JOBS_NEXT_CTA,
   JOBS_NEXT_HINT,
   JOBS_PIPELINE_CAP,
-  JOBS_ACTIVATE_CAP,
+  JOBS_ACTIVATE_SRC,
+  CRM_UNLOCKED_JOBS,
   JOBS_PROCESS_STEPS,
   JOBS_RESTORE_ONCE_KEY,
   JOBS_RUN_ONE_ROBOT_CTA,
@@ -73,6 +74,7 @@ import {
   JOBS_RAIL_LINK_CLASS,
   JOBS_ROBOT_NAME_CLASS,
   jobsActivateHref,
+  jobsSignupHref,
   jobsCountEyebrow,
   jobsHeading,
   jobsListHint,
@@ -1226,14 +1228,14 @@ export default function RobotJobsWorkspace() {
         }));
     const pool = tagged;
     const selected = pool.filter(job => checkedJobKeys.includes(job.job_key));
-    const jobs = jobsToActivate(selected, pool, JOBS_ACTIVATE_CAP);
+    const jobs = jobsToActivate(selected, pool, CRM_UNLOCKED_JOBS);
     saveJobsHandoffSnapshot({
       url: submittedUrlRef.current,
       productName: lineupPreview
         ? companyName || active?.companyName || ""
         : active?.productName || "",
       jobs,
-      selectedCount: selected.length,
+      selectedCount: Math.min(selected.length || jobs.length, CRM_UNLOCKED_JOBS),
     });
     trackRobotJobsFunnel("jobs_list_activated", {
       ...funnelBase(),
@@ -1241,7 +1243,10 @@ export default function RobotJobsWorkspace() {
       selected_count: selected.length || jobs.length,
       list_count: jobs.length,
     });
-    window.location.href = jobsActivateHref(submissionIdRef.current);
+    const dest = jobsActivateHref(submissionIdRef.current);
+    window.location.href = session
+      ? dest
+      : jobsSignupHref(dest, JOBS_ACTIVATE_SRC);
   }
 
   function applyCheckedKeys(jobs: MatchJob[], saved?: string[]) {

@@ -13,6 +13,7 @@ import {
   CRM_WATCH_FREE_HINT,
   CRM_WATCH_OPT_IN_LABEL,
   CRM_WATCH_SIGNED_OUT,
+  CRM_UNLOCKED_JOBS,
   JOBS_EYEBROW_CLASS,
   jobsFreshHomeHref,
   onJobsFreshHomeClick,
@@ -39,12 +40,20 @@ export type JobsWatchStatus = {
   free_taste?: boolean;
 };
 
+export type CrmTasteJob = {
+  title?: string | null;
+  company_name?: string | null;
+  forRobot?: string | null;
+};
+
 type Props = {
   signedIn?: boolean;
   watch?: JobsWatchStatus | null;
   watchBusy?: boolean;
   watchError?: string | null;
   onOptIn?: (optedIn: boolean) => void;
+  tasteJobs?: CrmTasteJob[];
+  tasteProduct?: string | null;
   actions?: ReactNode;
   footer?: ReactNode;
 };
@@ -55,11 +64,14 @@ export default function CrmHero({
   watchBusy,
   watchError,
   onOptIn,
+  tasteJobs = [],
+  tasteProduct,
   actions,
   footer,
 }: Props) {
   const optedIn = Boolean(watch?.opted_in);
   const events = watch?.events || [];
+  const unlocked = tasteJobs.slice(0, CRM_UNLOCKED_JOBS);
   return (
     <div className="mb-5 border border-slate-600 bg-[#0b162f] px-5 py-5 sm:px-6">
       <div className="flex items-start gap-4">
@@ -87,6 +99,25 @@ export default function CrmHero({
           </li>
         ))}
       </ol>
+
+      {unlocked.length > 0 ? (
+        <div className="mt-5 border border-slate-600 bg-[#081126] px-4 py-4">
+          <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>
+            {unlocked.length} of {CRM_UNLOCKED_JOBS} job opportunities unlocked
+          </p>
+          {tasteProduct ? (
+            <p className="mt-1 text-sm text-slate-400">{tasteProduct}</p>
+          ) : null}
+          <ul className="mt-3 space-y-1.5">
+            {unlocked.map((job, i) => (
+              <li key={`${job.title || "job"}-${i}`} className="text-sm text-slate-200">
+                • {job.title}
+                {job.company_name ? ` · ${job.company_name}` : ""}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="mt-5 border border-emerald-500/30 bg-emerald-400/5 px-4 py-4">
         <label className="flex cursor-pointer items-start gap-3">

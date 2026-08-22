@@ -490,7 +490,7 @@ export default function Signup() {
               {hubspotIntent
                 ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
                 : robotJobsIntent
-                  ? "Free account keeps the 5 jobs we found. The pipeline is where more than 5 live."
+                  ? "Free account unlocks 3 job opportunities in CRM. Opt in and we watch the robot URL."
                 : pipelineIntent
                   ? buyerCo
                     ? `Free workspace: land back on ${buyerCo}, save it in one click, copy the outreach draft SIGNAL wrote for them, and sync to HubSpot when you are ready.`
@@ -671,7 +671,7 @@ export default function Signup() {
                 {hubspotIntent
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
                   : robotJobsIntent
-                    ? "Create an account to keep these jobs for your robot. After you sign up, you land on the pipeline — that's where more than 5 jobs live."
+                    ? "Create an account to keep 3 job opportunities in CRM. After you sign up, you land on CRM — not a second job list."
                   : matchedUnlockIntent
                     ? "Confirm company name, robot category, and ICP — then create your account to unlock 15 matched sales leads."
                     : resultsIntent

@@ -24,6 +24,7 @@ import {
   CRM_PAGE_NEXT,
   CRM_WATCH_FREE_HINT,
   CRM_WATCH_OPT_IN_LABEL,
+  CRM_UNLOCKED_JOBS,
   PIPELINE_PAGE_HEADLINE,
   PIPELINE_PAGE_NEXT,
   buyerLeadsHref,
@@ -293,7 +294,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/jobIsForLabel/);
     expect(workspace).toMatch(/JOBS_RUN_ONE_ROBOT_CTA/);
     expect(workspace).toMatch(/lineupPreview/);
-    expect(handoff).toMatch(/JOBS_SAVE_TO_CRM_CTA/);
+    expect(handoff).toMatch(/Opening CRM/);
     expect(handoff).not.toMatch(/function JobRow/);
     expect(handoff).not.toMatch(/jobIsForLabel/);
   });
@@ -370,17 +371,31 @@ describe("jobsWorkflow", () => {
     }
   });
 
-  it("activates the job list on pipeline without the OEM as a scan", () => {
-    expect(jobsActivateHref(42)).toBe("/pipeline?src=jobs_activate&submission=42");
-    expect(jobsActivateHref()).toBe("/pipeline?src=jobs_activate");
+  it("opens CRM with 3 job opportunities, not a pipeline save page", () => {
+    expect(CRM_UNLOCKED_JOBS).toBe(3);
+    expect(jobsActivateHref(42)).toBe("/crm?src=jobs_activate&submission=42");
+    expect(jobsActivateHref()).toBe("/crm?src=jobs_activate");
     expect(jobsActivateHref(42)).not.toContain("url=");
+    expect(jobsActivateHref()).not.toContain("/pipeline");
     expect(jobsPlaceHref({ leadId: 99, submissionId: 42 })).toBe(
-      "/pipeline?src=jobs_activate&submission=42",
+      "/crm?src=jobs_activate&submission=42",
     );
     expect(isPlaceSrc("place")).toBe(true);
     expect(isJobsHandoffSrc("place")).toBe(false);
     expect(isJobsHandoffSrc("jobs_activate")).toBe(true);
     expect(isJobsHandoffSrc("jobs_all_robots")).toBe(true);
+    const pool = [
+      { job_key: "a" },
+      { job_key: "b" },
+      { job_key: "c" },
+      { job_key: "d" },
+      { job_key: "e" },
+    ];
+    expect(jobsToActivate(pool, pool, CRM_UNLOCKED_JOBS).map(j => j.job_key)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
@@ -390,16 +405,26 @@ describe("jobsWorkflow", () => {
       join(here, "../components/JobsHandoffBoard.tsx"),
       "utf8",
     );
+    const crm = readFileSync(join(here, "../pages/Crm.tsx"), "utf8");
     expect(workspace).not.toMatch(/jobsPlaceHref\(robotUrl/);
     expect(workspace).not.toMatch(/PipelineOutreachValuePanel/);
+    expect(workspace).toMatch(/CRM_UNLOCKED_JOBS/);
+    expect(workspace).toMatch(/jobsSignupHref/);
     expect(pipeline).toMatch(/JobsHandoffBoard/);
     expect(pipeline).not.toMatch(/armJobsWorkspaceRestore\(\)/);
-    expect(handoff).toMatch(/JOBS_SAVE_TO_CRM_CTA/);
-    expect(handoff).not.toMatch(/From your list/);
-    expect(handoff).not.toMatch(/Taking you back/);
+    expect(handoff).toMatch(/Opening CRM/);
+    expect(handoff).toMatch(/jobsActivateHref/);
+    expect(handoff).not.toMatch(/Save this job list to CRM/i);
+    expect(handoff).not.toMatch(/5 checked/);
     expect(handoff).not.toMatch(/function JobRow/);
+    expect(crm).toMatch(/tasteJobs/);
+    expect(crm).toMatch(/CRM_UNLOCKED_JOBS/);
+    const signup = readFileSync(join(here, "../pages/Signup.tsx"), "utf8");
+    expect(signup).toMatch(/3 job opportunities in CRM/);
+    expect(signup).not.toMatch(/The pipeline is where more than 5 live/);
     expect(pipeline).toMatch(/arrivedFromPlace/);
     expect(pipeline).toMatch(/isPlaceSrc/);
+    expect(JOBS_PROCESS_STEPS[2].label).toBe("CRM");
   });
 
   it("looks up a lineup once per robot type, not once per SKU", () => {
@@ -653,6 +678,8 @@ describe("jobsWorkflow", () => {
     expect(hero).toMatch(/CRM_HEADLINE_CLASS/);
     expect(hero).toMatch(/CRM_WATCH_OPT_IN_LABEL/);
     expect(hero).toMatch(/CRM_HOW_TO_STEPS/);
+    expect(hero).toMatch(/tasteJobs/);
+    expect(hero).toMatch(/CRM_UNLOCKED_JOBS/);
 
     const intel = readFileSync(join(here, "../pages/Intelligence.tsx"), "utf8");
     expect(intel).toMatch(/ExperimentHeader/);
