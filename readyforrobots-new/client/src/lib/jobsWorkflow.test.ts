@@ -658,6 +658,7 @@ describe("jobsWorkflow", () => {
     expect(pipelineSrc).not.toMatch(/Why this is a sales lead/);
     expect(pipelineSrc).not.toMatch(/saving that buyer/);
     expect(pipelineSrc).not.toMatch(/Buyer workspace · preview/);
+    expect(pipelineSrc).not.toMatch(/save this buyer/);
 
     const cardSrc = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),

@@ -3917,7 +3917,7 @@ export default function Pipeline() {
         ? Boolean(!selected || sendingLeadId === selected.id)
         : true;
   const firstThreeHelperText = nextFirstThreeStep === "save_lead"
-    ? "Step 1: save this buyer into your working list."
+    ? "Step 1: save this job into your working list."
     : nextFirstThreeStep === "copy_draft"
       ? "Step 2: copy the outreach draft, then paste it into your email client."
       : nextFirstThreeStep === "send_outreach"
@@ -5141,7 +5141,7 @@ export default function Pipeline() {
                     <p className="pipeline-crm-activate-title">
                       {crmActivated
                         ? "Keep this deal moving from the panel below."
-                        : "Activate CRM on this buyer to start a real pipeline — not a browse list."}
+                        : "Activate CRM on this job to start a real pipeline — not a browse list."}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {session?.access_token ? (
@@ -5152,7 +5152,7 @@ export default function Pipeline() {
                             disabled={advancingLeadId === selected.id}
                             className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
                           >
-                            {advancingLeadId === selected.id ? "Saving…" : "Activate CRM — save this buyer"}
+                            {advancingLeadId === selected.id ? "Saving…" : "Activate CRM — save this job"}
                           </button>
                         ) : (
                           <Link
