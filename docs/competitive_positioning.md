@@ -2,19 +2,7 @@
 
 **For ProductSurface, MarketIntel, Orchestrator, and sales copy.**
 
-**Last updated:** 2026-08-13
-
----
-
-## The comparison users make
-
-Prospects will stack us against horizontal GTM data providers — especially [Explee](https://explee.com/landing-search) (105M companies, 536M people, AI search, deep-research agents), plus Apollo, ZoomInfo, Clay, and generic “AI SDR” stacks.
-
-They will also hear from **“Revenue Operating System”** vendors — especially [Reevo](https://reevo.ai) ($80M+, Khosla / Kleiner Perkins, Nov 2025) — pitching one platform that replaces CRM, engagement, and intelligence for any B2B team.
-
-**We do not win on database size, filter breadth, or stack consolidation.** We win on **robot sales outcomes**: verified buyer intent → qualified pipeline → outreach → CRM advance — with **commercial maturity** awareness (is the robot company ready for this customer?).
-
-**Deeper line:** Explee finds accounts. AI SDRs spray messages. ReadyForRobots makes robot companies **ready for the customer** and moves deals that can become deployments. See [commercial_maturity_models.md](./commercial_maturity_models.md).
+**Last updated:** 2026-08-22
 
 ---
 
@@ -22,12 +10,22 @@ They will also hear from **“Revenue Operating System”** vendors — especial
 
 | They sell | We sell |
 |-----------|---------|
-| **GTM data** — find companies and people | **Automated sales pipeline** — move robot deals forward |
-| Search, lists, enrichment, research runs | SIGNAL-ranked leads, pipeline actions, kanban, HubSpot sync |
-| Horizontal B2B (any ICP) | Vertical: **buyers of robots** (operators, not OEM PR) |
-| Output = export / API | Output = **first meeting faster** with the right SKU pitch |
+| **GTM data** — find companies and people | **Robot employment** — find work a robot is qualified to perform |
+| Search, lists, enrichment | Robot Job Cards: employer, workplace, work, requirements |
+| Horizontal B2B | Vertical: physical work × robot capabilities |
+| Output = export / API | Output = **jobs for the robot** |
 
-**One-liner:** Explee helps you **find** accounts. Reevo helps you **replace your GTM stack**. ReadyForRobots helps robot companies **close** buyers who are already showing intent.
+**One-liner:** Explee helps you **find** accounts. ReadyForRobots **employs robots** — we match job requirements to robot capabilities.
+
+## The comparison users make
+
+Prospects will stack us against horizontal GTM data providers — especially [Explee](https://explee.com/landing-search) (105M companies, 536M people, AI search, deep-research agents), plus Apollo, ZoomInfo, Clay, and generic “AI SDR” stacks.
+
+They will also hear from **“Revenue Operating System”** vendors — especially [Reevo](https://reevo.ai) ($80M+, Khosla / Kleiner Perkins, Nov 2025) — pitching one platform that replaces CRM, engagement, and intelligence for any B2B team.
+
+**We do not win on database size, filter breadth, or stack consolidation.** We win on **robot jobs**: observed work → job requirements → robot qualification → placement later.
+
+**Deeper line:** Explee finds accounts. AI SDRs spray messages. ReadyForRobots finds **work a robot can perform**. See [robot_employment_model.md](./robot_employment_model.md).
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Users do not buy unless they see value.** Every agent mission and product change must prove outcomes before asking for signup, save, or upgrade.
 
-**Last updated:** 2026-06-25
+**Last updated:** 2026-08-22
 
 ---
 
@@ -10,19 +10,21 @@
 
 > **Show → Believe → Act → Pay**
 
-Never lead with account creation, pricing, or "Activate SIGNAL" when the user has not yet felt a concrete win. Value is not marketing copy — it is **evidence in the product** within 60 seconds of landing.
+Never lead with account creation or pricing when the user has not seen a Robot Job Card.
 
 ---
 
-## What "value" means for robot sales teams
+## What "value" means
 
 | Moment | User thinks | We must show |
 |--------|-------------|--------------|
-| **Anonymous browse** | "Is this real?" | Live HOT lead + company name + score + **pipeline_action** + **robot types** |
-| **Lead selected** | "Would I send this?" | **Cal outreach draft** tied to their signal (subject + body preview) |
-| **URL scan** | "Does this work for my ICP?" | Matched buyers with why-now, not empty results |
-| **Free signup** | "Did signing up change anything?" | First save + copy draft + lead in workspace within one session |
-| **Upgrade ask** | "Is Pro worth it?" | Blurred research they almost had, or save limit at 5/5 **after** they saved 5 |
+| **Anonymous Jobs** | "Is this real work?" | A Robot Job Card: employer, workplace, work being performed |
+| **Card expanded** | "Would I send a robot here?" | Requirements, open questions, site assessment as next step |
+| **URL scan** | "Does this fit my machine?" | Explainable qualification (✓ / △ / ✕), never a % |
+| **Free signup** | "Did signing up change anything?" | 3 unlocked jobs in CRM |
+| **Upgrade ask** | "Is Pro worth it?" | Watching more SKUs / more jobs — after they have kept 3 |
+
+Proof is **jobs for the robot**, not a HOT buyer or outreach draft.
 
 ---
 

@@ -740,8 +740,8 @@ describe("jobsWorkflow", () => {
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
     );
-    expect(cardSrc).toMatch(/jobExplanation/);
-    expect(cardSrc).toMatch(/The job/);
+    expect(cardSrc).toMatch(/robotJobCardFromMatch/);
+    expect(cardSrc).toMatch(/Employer/);
   });
 
   it("explains the job instead of a sales pitch", () => {

@@ -17,19 +17,15 @@
 
 ## Company definition
 
-> ReadyForRobots helps companies find, qualify and eventually place robotic capabilities into real work.
+> ReadyForRobots is recruitment and placement infrastructure for robotic labor.
 
-## Product primitive
+The primitive remains:
 
 ```
 CAPABILITIES → FIND WORK
 ```
 
-That remains correct — and it has two sides:
-
-```
-UNDERSTAND CAPABILITIES → FIND WORK → DETERMINE WHETHER IT'S WORTH PURSUING
-```
+Employment-model expansion (PLACE later) is specified in [`robot_employment_model.md`](./robot_employment_model.md). Do not build marketplace posting, pilots, or employment-rate dashboards this cycle.
 
 In product language:
 
@@ -60,16 +56,16 @@ ROBOT / PORTFOLIO / SOLUTION CAPABILITIES
 
 | Object | Meaning |
 |--------|---------|
-| **Robot Job** | Work potentially worth pursuing |
-| **Pursuit Brief** | Work sufficiently qualified to decide whether sales resources should pursue it |
-| **Placement** | Later: attributed opportunity routed toward deployment |
+| **Robot Job** | Work defined well enough to recruit a robot against |
+| **Job Card** | Employer · workplace · work · requirements · qualification · open questions |
+| **Placement** | Later: robot hired into the job |
 
 ### UX (keep primitive)
 
 ```
 Show us your robot.
 Here are its jobs.
-Activate the job list — Next opens CRM with 3 job opportunities (free). No extra pipeline save page.
+Next opens CRM with 3 unlocked Job Cards (free).
 ```
 
 Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **One robot → five jobs, each tagged `Job ##### is for {SKU}`.** Several robots → one tagged sample each, plus **Run one robot for 5 jobs**. Checkboxes + Next → in the process bar. FIND is **Start jobs →**. After Next, CRM shows 3 unlocked jobs. The document scrolls. Do not put Next on the card. Do not insert a Place buyer/outreach screen. Do not mix unlabeled jobs across a lineup.

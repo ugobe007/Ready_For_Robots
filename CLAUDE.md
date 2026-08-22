@@ -4,10 +4,10 @@ Read **AGENTS.md** for the full harness constitution. This file is loaded on eve
 
 ## Summary for every turn
 
-0. **PMF focus:** read `docs/product_market_fit.md`. We are the **automated sales pipeline for robot companies** — signup → automate funnel → native CRM or HubSpot. Every change should drive activated robot-company workspaces, not generic robotics content.
+0. **PMF focus:** read `docs/product_market_fit.md` and `docs/robot_employment_model.md`. We are the **employment layer for robots** — Job Cards, not leads. Every change should drive robot URL → credible jobs, not generic robotics content.
 0a. **Jobs product:** `docs/CAPABILITY_MODEL.md` + `docs/EXPERIMENT_MODE.md` — `/` is Jobs (FIND → QUALIFY → PLACE later). Freeze SIGNAL/CRM/Cal-as-core and hypothesis expansion; **Understanding v1 Phases 1–3** (`docs/robot_understanding_v1.md`) is allowed integrity work. Loop: robot URL → credible jobs.
-0b. **Competitive frame:** read `docs/competitive_positioning.md`. Users compare us to Explee/Apollo-style data tools — win on **robot buyer intent + pipeline motion**, not company count.
-0c. **Value first:** read `docs/value_first_principle.md`. Prove value (live lead + pitch + outreach draft) **before** signup or upgrade asks.
+0b. **Competitive frame:** read `docs/competitive_positioning.md`. Users compare us to Explee/Apollo — win on **job requirements ↔ robot capabilities**, not company count.
+0c. **Value first:** read `docs/value_first_principle.md`. Prove a Robot Job Card **before** signup or upgrade asks.
 1. **North star order:** names/events → scores → rank → robot specs. Fix junk before ranking tweaks (infrastructure for PMF, not the product itself).
 2. **Market thesis:** read `docs/market_thesis.md`; update backlog after research missions.
 3. **One mission per cycle.** Write or follow `missions/YYYY-MM-DD-<slug>/brief.md`.

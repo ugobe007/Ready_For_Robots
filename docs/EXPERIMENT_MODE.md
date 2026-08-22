@@ -35,12 +35,14 @@ submit robot URL on /
   → see Robot Jobs (step 2)
        one robot: 5 jobs, each tagged `Job ##### is for {SKU}`
        several robots: 1 sample job per SKU, tagged; run each robot individually for five jobs
-  → inspect cards (why / unknowns / blockers)
+  → inspect Robot Job Cards (employer, workplace, work, qualification, open questions)
   → check the jobs to take forward
   → Next → /crm?src=jobs_activate (signup first if signed out)
   → CRM shows 3 unlocked job opportunities (free)
   → run the next robot the same way
 ```
+
+Do not hop Jobs traffic onto SIGNAL buyers. Current experiment: Job Cards as employment opportunities — [`robot_employment_model.md`](./robot_employment_model.md) · [`experiments/robco_job_cards.md`](./experiments/robco_job_cards.md).
 
 The picker already decides one vs several. **One robot → jobs for that robot on the same click** — do not open the profile checkpoint and ask Find jobs again. Several/all is slower, so we resolve with a type-level match instead of N SKU scrapes. **Independent of that resolution, every stage keeps process nav** (01 Show us your robot → 02 Here are its jobs → 03 CRM). Fourier empty portfolio failed because 02/03 were not links. Picking N1 then hitting a second Find jobs with Activate buried below the fold is the same break: the process stops at step 2.
 
