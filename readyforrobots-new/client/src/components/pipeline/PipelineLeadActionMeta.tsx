@@ -53,10 +53,7 @@ function evidenceLine(lead: PipelineLeadActionFields): string {
   if (!e) return "";
   const parts: string[] = [];
   if (e.workflow_scope?.label) parts.push(e.workflow_scope.label);
-  if (e.timing?.label) parts.push(`Timing: ${e.timing.label}`);
-  if (e.robot_type?.label) parts.push(`Robots: ${e.robot_type.label}`);
-  if (e.budget?.top_amount) parts.push(`Budget: ${e.budget.top_amount}`);
-  else if (e.budget?.has_budget) parts.push("Budget signal detected");
+  if (e.robot_type?.label) parts.push(e.robot_type.label);
   if (parts.length > 0) return cleanAndClampText(parts.join(" · "), 180);
   if (e.friction_point) return cleanAndClampText(e.friction_point, 180);
   return "";

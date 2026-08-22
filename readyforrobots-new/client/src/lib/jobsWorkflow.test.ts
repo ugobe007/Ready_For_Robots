@@ -643,12 +643,19 @@ describe("jobsWorkflow", () => {
     const intel = readFileSync(join(here, "../pages/Intelligence.tsx"), "utf8");
     expect(intel).toMatch(/ExperimentHeader/);
     expect(intel).toMatch(/KARE_FACE/);
+    expect(intel).toMatch(/bg-\[#081126\]/);
     expect(intel).not.toMatch(/from "@\/components\/Header"/);
+
+    expect(crm).toMatch(/Job outreach checkpoint/);
+    expect(crm).not.toMatch(/Buyer outreach checkpoint/);
+    expect(crm).not.toMatch(/admin-workspace/);
 
     const pipelineSrc = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
     expect(pipelineSrc).toMatch(/JOBS_PIPELINE_CAP/);
     expect(pipelineSrc).not.toMatch(/Find buyers by industry/);
     expect(pipelineSrc).not.toMatch(/Customer opportunities/);
+    expect(pipelineSrc).not.toMatch(/Why this is a sales lead/);
+    expect(pipelineSrc).not.toMatch(/saving that buyer/);
 
     const cardSrc = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
@@ -673,6 +680,14 @@ describe("jobsWorkflow", () => {
         company: "Panera Bread",
       }),
     ).toMatch(/dish pit/i);
+    expect(
+      jobExplanation({
+        action: "Open with dock-to-stock AMR ROI — ask who owns slotting and outbound flow.",
+        industry: "Logistics",
+        company: "Acme Logistics",
+        title: "Dock to stock",
+      }),
+    ).toBe("Dock to stock — Acme Logistics · Logistics");
     expect(
       jobExplanation({
         action: "Priority: Pitch overnight cleaning robots",

@@ -260,7 +260,7 @@ export const JOBS_OPEN_CRM_CTA = "Open CRM →";
 export const JOBS_HEADER_OFFSET_CLASS = "pt-14";
 
 const SALES_PITCH_RE =
-  /\b(pitch|lead with|ask who owns|open with|sequence the|upgrade to|buyer intent|sales motion|outreach draft)\b/i;
+  /\b(pitch|lead with|ask who owns|ask about|open with|sequence the|upgrade to|buyer intent|sales motion|outreach draft|hard sell|owns the budget|easy wedge|capex this quarter|focus on|qualify (manufacturing|lab)|avoid front-of-house)\b/i;
 
 export type JobExplanationInput = {
   title?: string | null;

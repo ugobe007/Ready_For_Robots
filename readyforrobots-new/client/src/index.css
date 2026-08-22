@@ -1744,9 +1744,8 @@
   .compare-page main :where(.border-sky-100, .border-sky-200, .border-sky-300) { border-color: rgba(56, 189, 248, 0.35) !important; }
   .compare-page main :where(.hover\:bg-gray-50, .hover\:bg-amber-50):hover { background-color: #1e293b !important; }
   .compare-page main :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
-  .intelligence-page {
-    background: #081126;
-    color: #e2e8f0;
+  .intelligence-page h2 {
+    font-family: var(--font-display);
   }
   .intelligence-page .page-hero-fade {
     background-image: linear-gradient(to bottom, #111827, #081126) !important;

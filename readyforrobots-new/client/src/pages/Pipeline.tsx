@@ -1618,7 +1618,7 @@ function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
 
         {(whyLead?.specific_problem || (whyLead?.reasons || []).length > 0) && (
           <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Why this is a sales lead</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Why this is the job</p>
             {whyLead?.specific_problem && (
               <p className="mt-1 text-[12px] leading-relaxed text-slate-800">
                 {cleanAndClampText(whyLead.specific_problem, 180)}
@@ -1634,7 +1634,7 @@ function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
 
         {(opportunityPoints.length > 0 || robotHistory.length > 0 || competitorClues.length > 0) && (
           <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Opportunity and competitive context</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">The work and context</p>
             {opportunityPoints.slice(0, 2).map((point, idx) => (
               <p key={`${point}-${idx}`} className="mt-1 text-[11px] leading-relaxed text-slate-700">
                 • {cleanAndClampText(point, 170)}
@@ -2776,14 +2776,17 @@ export default function Pipeline() {
   const scopeMatchesCount = matchedScopedDeals.length;
   const scopedNoMatches = scopeToSubmittedUrl && !submittedUrlMatchLoading && !submittedUrlMatchError && scopeMatchesCount === 0;
   const displayedDeals = useMemo(
-    () =>
-      buyerLeadsToShow({
+    () => {
+      const rows = buyerLeadsToShow({
         scopedRows: matchedScopedDeals,
         liveRows: filtered,
         lookupPending: submittedUrlMatchLoading,
         scopeToUrl: scopeToSubmittedUrl,
-      }),
-    [filtered, matchedScopedDeals, scopeToSubmittedUrl, submittedUrlMatchLoading],
+      });
+      const cap = panelPlan === "anonymous" ? PIPELINE_LIMIT_ANONYMOUS : JOBS_PIPELINE_CAP;
+      return rows.length > cap ? rows.slice(0, cap) : rows;
+    },
+    [filtered, matchedScopedDeals, scopeToSubmittedUrl, submittedUrlMatchLoading, panelPlan],
   );
 
   // URL lookup finished with zero matches → drop the empty scope so the live
@@ -2860,9 +2863,9 @@ export default function Pipeline() {
       ? "Provide customer name and information to unlock 15 sales leads"
       : "Curate sales leads & run outreach"
     : isFirstWorkspaceRun
-      ? "Activate CRM — save a buyer, then work the draft"
+      ? "Activate CRM — save a job, then work the draft"
       : isSignedIn && hasSavedLead
-        ? "Work your CRM accounts, then pick the next buyer"
+        ? "Work your CRM accounts, then pick the next job"
         : "Pick a job, save it to CRM, then send";
   const nextStepsItems = arrivedFromResultsScan
     ? !build25Started
@@ -2887,8 +2890,8 @@ export default function Pipeline() {
         ]
       : isFirstWorkspaceRun
         ? [
-            `Pick the best buyer related to ${submittedHostname} from the list (left).`,
-            "Click Save to put them in your working pipeline.",
+            `Pick the strongest job related to ${submittedHostname} from the list (left).`,
+            "Click Save to put that job in your working pipeline.",
             "Copy the outreach draft in the detail panel, then send.",
           ]
         : isSignedIn && hasSavedLead
@@ -2905,18 +2908,18 @@ export default function Pipeline() {
     : isFirstWorkspaceRun
       ? [
           "Select the strongest job in the list on the left.",
-          "Activate CRM by saving that buyer — that opens your working pipeline.",
+          "Activate CRM by saving that job — that opens your working pipeline.",
           "Copy the outreach draft on the right, then send.",
         ]
       : isSignedIn && hasSavedLead
         ? [
-            "Open a saved CRM account first, then add the next best buyer.",
-            "Copy the outreach draft from the buyer workspace on the right.",
+            "Open a saved CRM account first, then add the next strongest job.",
+            "Copy the outreach draft from the job workspace on the right.",
             "Send, then track replies in Inbox.",
           ]
       : [
           "Select the strongest job in the list.",
-          "Start a free workspace, then activate CRM by saving that buyer.",
+          "Start a free workspace, then activate CRM by saving that job.",
           "Copy the outreach draft and send from the panel on the right.",
         ];
   const canSaveSelected = Boolean(selected) && (!isSignedIn || !crmAccountIdByCompanyId[selected!.id]);
@@ -2973,16 +2976,16 @@ export default function Pipeline() {
     : isFirstWorkspaceRun && canSaveSelected
       ? selected
         ? `Activate CRM — save ${selected.company}`
-        : "Activate CRM — save a buyer"
+        : "Activate CRM — save a job"
     : canSaveSelected
-      ? "Save selected buyer to CRM"
+      ? "Save selected job to CRM"
       : canCopySelectedDraft
         ? "Copy outreach draft"
         : canOpenSelectedDraft
-          ? "Open selected buyer"
+          ? "Open selected job"
           : selected
-            ? "Review selected buyer"
-            : "Pick a HOT buyer";
+            ? "Review selected job"
+            : "Pick a HOT job";
 
   const nextStepCoachText = arrivedFromResultsScan && build25Started
     ? step5Phase === "copy"
@@ -3812,8 +3815,8 @@ export default function Pipeline() {
     alreadySent: Boolean(selected?.stage === "Outreach Sent"),
   };
   const first3SaveCtaVariant = selected && selected.id % 2 === 0 ? "a" : "b";
-  const first3SaveCtaLabel = "Save this lead";
-  const first3SaveHelperText = "Step 1: save this buyer, then copy the draft and send — that is the full motion.";
+  const first3SaveCtaLabel = "Save this job";
+  const first3SaveHelperText = "Step 1: save this job, then copy the draft and send — that is the full motion.";
   const sendChecklistAssignedVariant = selected && selected.id % 2 === 0 ? "a" : "b";
   const sendChecklistVariant = checklistVariantOverride || sendChecklistAssignedVariant;
   const sendChecklistVariantLabel = sendChecklistVariant === "a" ? "Variant A" : "Variant B";
@@ -4467,7 +4470,7 @@ export default function Pipeline() {
                       setFilter("All");
                     }}
                     list="pipeline-industries"
-                    placeholder="Search pipeline: industry, company, or signal…"
+                    placeholder="Search jobs: industry, company, or the work…"
                     className="sb-input py-2 pl-9 pr-10"
                   />
                   {industryQuery && (
@@ -4767,7 +4770,7 @@ export default function Pipeline() {
               </div>
               <div className="pipeline-list-columns">
                 <div className="col-span-5">Company</div>
-                <div className="col-span-4 hidden md:block">Signal</div>
+                <div className="col-span-4 hidden md:block">The job</div>
                 <div className="col-span-1 text-center">Score</div>
                 <div className="col-span-2 text-right">Tier</div>
               </div>
@@ -4924,7 +4927,7 @@ export default function Pipeline() {
 
                     {bucketDeals.length === 0 ? (
                       <div className="mx-1 mb-2 rounded-xl border border-dashed border-slate-700 bg-[#0b162f] px-4 py-3">
-                        <p className="text-[11px] text-slate-500 italic">No leads in this tier right now</p>
+                        <p className="text-[11px] text-slate-500 italic">No jobs in this tier right now</p>
                       </div>
                     ) : (
                       <div className="flex flex-col gap-1.5 mb-3">

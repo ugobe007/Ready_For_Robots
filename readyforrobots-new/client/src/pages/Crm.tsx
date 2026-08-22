@@ -579,7 +579,7 @@ export default function Crm() {
                 <div className="sb-surface-body flex-1">
               <div className="mb-2 flex items-start justify-between gap-2 border-b border-gray-100 pb-2">
                 <div>
-                  <p className="sb-kicker">Buyer outreach checkpoint</p>
+                  <p className="sb-kicker">Job outreach checkpoint</p>
                   <h2 className="mt-0.5 text-xl font-semibold text-white">{selectedAccount.name}</h2>
                 </div>
                 <span className="inline-flex rounded px-1.5 py-0.5 text-sm font-semibold uppercase tracking-wide text-amber-200" style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)" }}>
@@ -616,8 +616,8 @@ export default function Crm() {
                       onClick={() => toggleTrait(trait.id)}
                       className={`rounded-full border px-2 py-1 text-sm font-bold ${
                         selectedTraits.includes(trait.id)
-                          ? "border-amber-400 bg-amber-50 text-amber-900"
-                          : "border-gray-200 bg-white text-gray-500"
+                          ? "border-amber-400 bg-amber-400/15 text-amber-200"
+                          : "border-slate-600 bg-[#081126] text-slate-400"
                       }`}
                     >
                       {trait.label}
@@ -762,21 +762,21 @@ export default function Crm() {
                   });
                 }}
               />
-              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2">
-                <p className="sb-kicker text-emerald-800">SIGNAL workflow intelligence</p>
-                <p className="mt-1 text-sm font-semibold text-gray-900">
+              <div className="rounded-md border border-emerald-500/30 bg-[#081126] p-2">
+                <p className="sb-kicker text-emerald-300">SIGNAL workflow intelligence</p>
+                <p className="mt-1 text-sm font-semibold text-white">
                   {selectedAccount.workflow_intelligence?.recommended_action || "Waiting for SIGNAL activity on this account."}
                 </p>
-                <div className="mt-2 grid grid-cols-2 gap-1 text-[11px] text-gray-600">
+                <div className="mt-2 grid grid-cols-2 gap-1 text-[11px] text-slate-400">
                   <span>Priority: {selectedAccount.workflow_intelligence?.priority_score ?? "—"}</span>
                   <span>Events: {selectedAccount.workflow_intelligence?.experience_count ?? 0}</span>
                   <span>Sent: {selectedAccount.workflow_intelligence?.sent_count ?? 0}</span>
                   <span>Replies: {selectedAccount.workflow_intelligence?.reply_count ?? 0}</span>
                 </div>
               </div>
-              <div className="mb-2 rounded-md border border-gray-200 bg-white p-2">
+              <div className="mb-2 rounded-md border border-slate-600 bg-[#081126] p-2">
                 <p className="sb-kicker">Apollo prospect search</p>
-                <p className="mt-1 text-xs text-gray-600">
+                <p className="mt-1 text-xs text-slate-400">
                   Search target: {selectedAccount.prospect_search?.organization_domain || selectedAccount.prospect_search?.organization_name || selectedAccount.name}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1">
@@ -791,22 +791,22 @@ export default function Crm() {
                 </Link>
               </div>
               <p className="sb-kicker">User checkpoints</p>
-              <ol className="mt-1.5 space-y-1.5 text-xs text-gray-600">
-                <li><span className="font-semibold text-gray-800">1. Lead captured:</span> account saved to CRM.</li>
-                <li><span className="font-semibold text-gray-800">2. Draft review:</span> check recipient, subject, body.</li>
-                <li><span className="font-semibold text-gray-800">3. Send approval:</span> outreach sends after you approve.</li>
-                <li><span className="font-semibold text-gray-800">4. Reply capture:</span> replies route back into CRM.</li>
-                <li><span className="font-semibold text-gray-800">5. Follow-up:</span> SIGNAL tracks workflow from Profile.</li>
+              <ol className="mt-1.5 space-y-1.5 text-xs text-slate-400">
+                <li><span className="font-semibold text-slate-100">1. Lead captured:</span> account saved to CRM.</li>
+                <li><span className="font-semibold text-slate-100">2. Draft review:</span> check recipient, subject, body.</li>
+                <li><span className="font-semibold text-slate-100">3. Send approval:</span> outreach sends after you approve.</li>
+                <li><span className="font-semibold text-slate-100">4. Reply capture:</span> replies route back into CRM.</li>
+                <li><span className="font-semibold text-slate-100">5. Follow-up:</span> SIGNAL tracks workflow from Profile.</li>
               </ol>
               {suggestions.length > 0 && (
-                <div className="mt-2 border-t border-gray-200 pt-2">
+                <div className="mt-2 border-t border-slate-600 pt-2">
                   <p className="sb-kicker">SIGNAL background ideas</p>
                   <div className="mt-1.5 space-y-1.5">
                     {suggestions.map((item) => (
-                      <div key={item.trigger} className="rounded-md border border-gray-200 bg-gray-50 p-2">
-                        <p className="text-[11px] font-semibold text-gray-800">{item.trigger}</p>
-                        <p className="mt-0.5 text-[11px] leading-relaxed text-gray-600">{item.action}</p>
-                        <p className="mt-0.5 text-[10px] leading-relaxed text-gray-500">{item.why}</p>
+                      <div key={item.trigger} className="rounded-md border border-slate-600 bg-[#081126] p-2">
+                        <p className="text-[11px] font-semibold text-slate-100">{item.trigger}</p>
+                        <p className="mt-0.5 text-[11px] leading-relaxed text-slate-400">{item.action}</p>
+                        <p className="mt-0.5 text-[10px] leading-relaxed text-slate-500">{item.why}</p>
                       </div>
                     ))}
                   </div>
