@@ -2,6 +2,9 @@
 
 **This is not the market graph.** The market graph (`docs/rfr_intelligence_architecture.md`) maps robot ↔ work. This loop maps **the product itself**: Jobs workflow, site, deploys, database, agent memory.
 
+**ProductManager agent spec (role / I/O / guardrails):** [`agent-product-manager.md`](agent-product-manager.md) — this file is the loop, that file is the agent.  
+**Vercel production secrets:** [`vercel_production_secrets.md`](vercel_production_secrets.md)
+
 Canonical market loop: [`docs/market_graph_loop.md`](market_graph_loop.md)  
 Ontology: [`ontology/rfr_product_loop.v1.json`](../ontology/rfr_product_loop.v1.json)  
 Compiler: `python3 scripts/harness_compile_memory.py`  

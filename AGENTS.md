@@ -68,7 +68,7 @@ Snapshot `intelligence` slice (junk reasons, gap frequency, industry deltas) dri
 | Agent | Scope | Primary docs |
 |-------|--------|--------------|
 | **Orchestrator** | Pick one mission per cycle; spawn subagents; enforce budgets; notify | This file, `docs/product_market_fit.md`, `harness/gates.yaml`, `docs/market_thesis.md`, latest snapshot, compiled memory |
-| **ProductManager** | Test Jobs workflow + site + deploys + DB; compile memory; rank the next Jobs-path mission. Hourly observe only. Does not merge. | `docs/product_integrity_loop.md`, `scripts/harness_compile_memory.py` |
+| **ProductManager** | Test Jobs workflow + site + deploys + DB; compile memory; rank the next Jobs-path mission. Hourly observe only. Does not merge. | `docs/agent-product-manager.md`, `docs/product_integrity_loop.md`, `scripts/harness_compile_memory.py` |
 | **MarketIntel** | External scan: earnings, trade press, competitor moves (Explee, Apollo, Clay), category trends | `docs/market_thesis.md`, `docs/competitive_positioning.md` |
 | **FrictionMiner** | Internal friction: junk patterns, gaps, quarantine, rectification failures | Snapshot `intelligence`, `docs/lead_quality_north_star.md` |
 | **ProductThesis** | Synthesize intel + friction → update thesis backlog ranks | `docs/market_thesis.md` |
