@@ -1,18 +1,19 @@
 """
 scrape_targets.py -- Scrape target registry for Ready for Robots.
 
-PURPOSE: Find companies that NEED robots, not companies that BUILD them.
+PURPOSE: Find Robot Jobs — human work a robot could be hired to do.
 
-Signals we hunt:
-  - Labor pain: companies mass-hiring manual workers in our verticals
-  - Budget signals: funding rounds, CapEx, M&A (money to spend)
-  - Expansion: new facilities, new locations, renovations (new contracts)
-  - Buyer personas: ops/facilities/F&B/housekeeping decision-makers being hired
-  - Labor shortage news: companies publicly struggling to staff operations
+Fields we extract when the posting states them (unknown if not):
+  - job function / title
+  - compensation (wage range, signing bonus)
+  - performance specs (throughput, payload, shift, openings)
+
+Close-out: re-read public evidence. If a robot now performs that work at
+that employer, mark the Robot Job filled_by_robot (not a CRM closed-won).
 
 We are NOT interested in:
-  - Robotics engineers / AMR software developers (those are competitors/builders)
-  - Companies building their own robots (not buyers)
+  - Robotics engineers / AMR software developers (builders)
+  - Invented wages or FTE economics
 
 Target verticals:
     Hospitality . Logistics . Healthcare . Food Service . Retail . Manufacturing
@@ -34,11 +35,11 @@ class ScrapeTarget:
     notes: str = ""
 
 
-# -- Job Boards: search for LABOR PAIN, not robot engineers ------------------
+# -- Job Boards: Robot Jobs (operational work), not robot engineers ----------
 # JobBoardScraper detects:
-#   - High-volume operational roles (pickers, housekeepers, cooks) -> labor_pain
-#   - Urgency language (immediate hire, sign-on bonus)             -> labor_shortage
-#   - Operations decision-maker hires                              -> strategic_hire
+#   - Operational roles → robot_job (title, pay, specs when evidenced)
+#   - Close-out when later evidence shows a robot doing that work
+#   - Ops decision-maker hires remain strategic_hire (SIGNAL leftover)
 
 JOB_BOARD_TARGETS: List[ScrapeTarget] = [
 
@@ -48,29 +49,29 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="Indeed - Warehouse Pickers / Packers (volume hiring)",
         scraper="job_board", cadence="daily",
         industries=["Logistics"],
-        signal_types=["labor_pain", "labor_shortage"],
-        notes="Mass hiring of pickers/packers = company is drowning in manual labor",
+        signal_types=["robot_job"],
+        notes="Operational hiring = Robot Job (extract title, pay, specs when stated)",
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=fulfillment+center+associate+distribution&l=United+States&sort=date",
         label="Indeed - Fulfillment Center Associates (volume hiring)",
         scraper="job_board", cadence="daily",
         industries=["Logistics"],
-        signal_types=["labor_pain", "labor_shortage"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=freight+handler+dock+worker+material+handler&l=United+States&sort=date",
         label="Indeed - Freight / Dock / Material Handlers",
         scraper="job_board", cadence="daily",
         industries=["Logistics"],
-        signal_types=["labor_pain"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=inventory+associate+shipping+receiving&l=United+States&sort=date",
         label="Indeed - Inventory / Shipping / Receiving Associates",
         scraper="job_board", cadence="daily",
         industries=["Logistics"],
-        signal_types=["labor_pain"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=VP+Director+operations+distribution+fulfillment&l=United+States&sort=date",
@@ -94,7 +95,7 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="Indeed - Hotel Housekeepers / Room Attendants (volume hiring)",
         scraper="job_board", cadence="daily",
         industries=["Hospitality"],
-        signal_types=["labor_pain", "labor_shortage"],
+        signal_types=["robot_job"],
         notes="Housekeeping = #1 robot use case for hotels",
     ),
     ScrapeTarget(
@@ -102,7 +103,7 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="Indeed - Hotel Guest-Facing Staff (bell/valet/porter)",
         scraper="job_board", cadence="daily",
         industries=["Hospitality"],
-        signal_types=["labor_pain"],
+        signal_types=["robot_job"],
         notes="Delivery robots can replace room service + porter runs",
     ),
     ScrapeTarget(
@@ -110,7 +111,7 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="Indeed - Hotel Front Desk Multiple Openings / Night Audit",
         scraper="job_board", cadence="daily",
         industries=["Hospitality"],
-        signal_types=["labor_pain", "labor_shortage"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=General+Manager+hotel+resort+property&l=United+States&sort=date",
@@ -134,7 +135,7 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="Indeed - Line Cook / Dishwasher / Kitchen Staff (volume hiring)",
         scraper="job_board", cadence="daily",
         industries=["Food Service"],
-        signal_types=["labor_pain", "labor_shortage"],
+        signal_types=["robot_job"],
         notes="Kitchen labor pain = opportunity for food prep / delivery robots",
     ),
     ScrapeTarget(
@@ -150,7 +151,7 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="Indeed - Food Runner / Busser / Server Multiple Openings",
         scraper="job_board", cadence="daily",
         industries=["Food Service"],
-        signal_types=["labor_pain"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=VP+Director+food+beverage+restaurant+operations&l=United+States&sort=date",
@@ -174,7 +175,7 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="Indeed - Hospital EVS / Environmental Services (volume hiring)",
         scraper="job_board", cadence="daily",
         industries=["Healthcare"],
-        signal_types=["labor_pain", "labor_shortage"],
+        signal_types=["robot_job"],
         notes="Hospital housekeeping = disinfection robot opportunity",
     ),
     ScrapeTarget(
@@ -182,7 +183,7 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="Indeed - Patient Transport / Hospital Aide",
         scraper="job_board", cadence="daily",
         industries=["Healthcare"],
-        signal_types=["labor_pain"],
+        signal_types=["robot_job"],
         notes="Logistics robots can handle internal transport runs",
     ),
     ScrapeTarget(
@@ -190,14 +191,14 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="Indeed - Pharmacy Tech / Sterile Processing (volume hiring)",
         scraper="job_board", cadence="daily",
         industries=["Healthcare"],
-        signal_types=["labor_pain"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=dietary+aide+food+service+hospital+healthcare&l=United+States&sort=date",
         label="Indeed - Hospital Dietary Aide / Food Service",
         scraper="job_board", cadence="daily",
         industries=["Healthcare"],
-        signal_types=["labor_pain"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=VP+Director+facilities+operations+hospital+health+system&l=United+States&sort=date",
@@ -350,28 +351,28 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="SimplyHired - Hotel Housekeepers (volume hiring)",
         scraper="job_board", cadence="daily",
         industries=["Hospitality"],
-        signal_types=["labor_pain", "labor_shortage"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.simplyhired.com/search?q=warehouse+associate+fulfillment+picker+packer&l=United+States",
         label="SimplyHired - Warehouse Associates / Fulfillment Pickers",
         scraper="job_board", cadence="daily",
         industries=["Logistics"],
-        signal_types=["labor_pain", "labor_shortage"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.simplyhired.com/search?q=line+cook+prep+cook+dishwasher+restaurant&l=United+States",
         label="SimplyHired - Kitchen Staff (volume hiring)",
         scraper="job_board", cadence="daily",
         industries=["Food Service"],
-        signal_types=["labor_pain", "labor_shortage"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.simplyhired.com/search?q=environmental+services+hospital+EVS+dietary+aide&l=United+States",
         label="SimplyHired - Hospital EVS / Dietary (volume hiring)",
         scraper="job_board", cadence="daily",
         industries=["Healthcare"],
-        signal_types=["labor_pain", "labor_shortage"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.simplyhired.com/search?q=VP+Director+operations+hospitality+hotel+resort&l=United+States",
@@ -408,7 +409,7 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="SimplyHired - Institutional Food Service Workers (hospitals / corporate)",
         scraper="job_board", cadence="daily",
         industries=["Food Service", "Healthcare"],
-        signal_types=["labor_pain"],
+        signal_types=["robot_job"],
     ),
     ScrapeTarget(
         url="https://www.simplyhired.com/search?q=Director+Manager+automation+operations+food+service+restaurant&l=United+States",
@@ -1392,13 +1393,20 @@ OEM_INTELLIGENCE_TARGETS: List[ScrapeTarget] = [
 ]
 
 
-# -- Google News Queries: buyer-intent only ----------------------------------
-# Hunting for: pain, budget, expansion, new decision-makers.
-# NOT hunting for: robotics engineers, robot builders.
+# -- Google News Queries: Robot Jobs + close-out evidence --------------------
+# Operational work discovery first. Buyer-intent queries below are SIGNAL leftovers.
 
 NEWS_QUERIES = [
 
-    # === Labor Pain & Staffing Shortage ===
+    # === Close-out: robot already doing the work ===
+    {"query": "warehouse AMR deployed picking robots live",                 "industries": ["Logistics"],    "signal_types": ["robot_job_closed", "robot_installation"]},
+    {"query": "humanoid robot warehouse deployment Digit GXO",              "industries": ["Logistics"],    "signal_types": ["robot_job_closed", "robot_installation"]},
+    {"query": "hospital delivery robot live deployment TUG Aethon",         "industries": ["Healthcare"],   "signal_types": ["robot_job_closed", "robot_installation"]},
+    {"query": "hotel housekeeping robot deployed commercial",               "industries": ["Hospitality"],  "signal_types": ["robot_job_closed"]},
+    {"query": "autonomous floor scrubber robot commercial deployment",      "industries": ["Healthcare", "Hospitality"], "signal_types": ["robot_job_closed"]},
+    {"query": "robots replaced warehouse associates picking packing",       "industries": ["Logistics"],    "signal_types": ["robot_job_closed"]},
+
+    # === Labor Pain & Staffing Shortage (still work evidence, extract as Robot Jobs) ===
     {"query": "hotel labor shortage housekeeping staff 2025",                "industries": ["Hospitality"],                  "signal_types": ["labor_shortage"]},
     {"query": "restaurant worker shortage staffing crisis 2025",             "industries": ["Food Service"],                 "signal_types": ["labor_shortage"]},
     {"query": "warehouse staffing shortage fulfillment workers",             "industries": ["Logistics"],                    "signal_types": ["labor_shortage"]},
