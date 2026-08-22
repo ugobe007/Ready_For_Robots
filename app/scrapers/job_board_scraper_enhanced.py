@@ -17,6 +17,13 @@ from bs4 import BeautifulSoup
 
 from app.scrapers.base_scraper import BaseScraper
 from app.services.ontology import CONCEPTS
+from app.services.robot_job_extract import extract_robot_job, format_robot_job_signal
+from app.services.robot_job_lifecycle import (
+    apply_closeout_to_job,
+    status_from_evidence,
+    status_from_posting_text,
+    upsert_robot_job_from_extract,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -195,11 +202,11 @@ class EnhancedJobBoardScraper(BaseScraper):
     3. Duplicate Detection: Job fingerprinting (title + company)
     4. Better Entity Extraction: Use ontology to validate buyer personas
     
-    Strategy: Find companies that:
-      1. Post high volumes of manual operational roles  → labor_pain signal
-      2. Use retention/urgency language in postings     → labor_shortage signal
-      3. Hire operations decision-makers                → strategic_hire (buyer persona)
-      
+    Strategy: Find Robot Jobs — human work a robot could be hired to do:
+      1. Operational titles (picker, housekeeper, EVS) with pay/specs when evidenced
+      2. Re-check evidence later so jobs fill (robot deployed) or withdraw
+      3. Ops VP hires remain SIGNAL leftovers (strategic_hire), not Robot Jobs
+
     NOT looking for: Companies that build robots or hire robotics engineers
     """
 
@@ -294,7 +301,8 @@ class EnhancedJobBoardScraper(BaseScraper):
             if not self._is_relevant(title, desc):
                 continue
 
-            # --- Buyer persona hire (operations decision-maker) ---
+            # --- Buyer persona hire (operations decision-maker) — SIGNAL leftover ---
+            robot_job_extract = None
             if _is_buyer_persona(title):
                 strength = 0.80
                 sig_type = "strategic_hire"
@@ -306,7 +314,7 @@ class EnhancedJobBoardScraper(BaseScraper):
                 sig_type = "automation_intent"
                 summary_text = f"Automation intent hire: {title}"
 
-            # --- High-volume operational role (labor pain signal) ---
+            # --- Operational work = Robot Job (title, pay, specs when evidenced) ---
             else:
                 pain_score   = sum(1 for kw in LABOR_PAIN_KEYWORDS if kw in full_text)
                 urgency_score = sum(1 for p in PAIN_SIGNALS if p in full_text)
@@ -314,10 +322,19 @@ class EnhancedJobBoardScraper(BaseScraper):
                 if pain_score == 0:
                     continue
 
-                # Multiple pain keywords or urgency language = stronger signal
+                job = extract_robot_job(
+                    title=title,
+                    description=desc,
+                    company=company_name,
+                    locality=location,
+                    source_url=url,
+                )
+                posting_state = status_from_posting_text(desc)
+                job["status"] = posting_state["status"]
                 strength = min(1.0, round(0.20 + pain_score * 0.15 + urgency_score * 0.10, 2))
-                sig_type = "labor_shortage" if urgency_score >= 2 else "labor_pain"
-                summary_text = f"{title} | pain_kws={pain_score} urgency={urgency_score} | {desc[:300]}"
+                sig_type = "robot_job"
+                summary_text = format_robot_job_signal(job)
+                robot_job_extract = job
 
             parts = location.split(",")
             city  = parts[0].strip() if parts else location
@@ -351,5 +368,23 @@ class EnhancedJobBoardScraper(BaseScraper):
                 "signal_strength": strength,
                 "source_url": url,
             })
+
+            if robot_job_extract is not None:
+                try:
+                    row = upsert_robot_job_from_extract(
+                        self.db,
+                        company_id=company.id,
+                        extract=robot_job_extract,
+                        source_url=url,
+                    )
+                    close = status_from_evidence(
+                        employer=company_name,
+                        job_title=title,
+                        job_function=robot_job_extract.get("job_function"),
+                        evidence_text=desc,
+                    )
+                    apply_closeout_to_job(row, close)
+                except Exception:
+                    logger.exception("[JobBoardScraper] robot_jobs persist skipped for %s", title[:80])
 
         logger.info(f"[JobBoardScraper] Session stats: {self.request_count} requests, {len(self.session_seen_fingerprints)} unique jobs seen")

@@ -27,4 +27,5 @@ Compiler `next_mission` on this machine: `vercel-production-cli-secrets`.
 
 ## Follow-ups
 
-Set Vercel CLI secrets. Then smoke FIND → cards → CRM on `readyforrobots.com`.
+Set Vercel CLI secrets (`docs/vercel_production_secrets.md`). ProductManager spec is `docs/agent-product-manager.md`. Then smoke FIND → cards → CRM on `readyforrobots.com`.
+Robot Job scrapers extract pay/specs and close on deployment evidence (`docs/robot_job_scraper.md`).

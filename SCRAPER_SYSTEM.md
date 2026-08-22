@@ -35,13 +35,15 @@ This is a **production-grade automated scraper system** similar to pythh.ai's in
 
 ## Data Sources
 
-- **News:** Google News RSS (150+ queries, 6x daily)
-- **Job Boards:** 38 sites (hiring patterns, labor signals)
+- **News:** Google News RSS (includes Robot Job close-out queries: robot live at workplace)
+- **Job Boards:** operational titles as Robot Jobs (function, compensation, specs when stated)
 - **Hotel Directories:** 19 sources
 - **Logistics Directories:** 7 sources
-- **RFP Marketplaces:** 10 sources (high-value buyer intent)
+- **RFP Marketplaces:** 10 sources (high-value buyer intent) — SIGNAL leftover
 - **SERP:** Google searches for expansion signals
 - **Manufacturing-Specific:** Quality, safety, capacity, throughput signals
+
+Robot Job extract + close-out: [`docs/robot_job_scraper.md`](docs/robot_job_scraper.md)
 
 ## Manufacturing Signal Detection
 

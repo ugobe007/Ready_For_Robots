@@ -84,6 +84,8 @@ SIGNAL_LABELS = {
     "government_contract": "Gov Contract",
     "rfp_posted": "RFP Posted",
     "labor_pain": "Labor Pain",
+    "robot_job": "Robot Job",
+    "robot_job_closed": "Robot Job closed",
 }
 
 
