@@ -7,8 +7,8 @@
 
 - CRM: navy account table, job outreach checkpoint, sidebar cards. No light `admin-workspace`. Kicker is **Job outreach checkpoint**.
 - `/intelligence`: Jobs header, Kare face, emerald About, explicit navy panels (not white remaps only).
-- `/pipeline`: signed-in list capped at 15 (`JOBS_PIPELINE_CAP`) with a second slice on `displayedDeals`. Anonymous stays 5.
-- Job cards use `jobExplanation()` — friction / workflow / job why. Sales templates (`Pitch`, `Open with`, `Lead with`, `ask who owns`) are skipped. Pipeline chrome calls rows **jobs**, not buyers.
+- `/pipeline`: signed-in list capped at 15 (`JOBS_PIPELINE_CAP`) with a second slice on `displayedDeals`. Anonymous stays 5. Detail panel is **Job workspace**.
+- Job cards use `jobExplanation()` — friction / workflow / job why. Sales templates (`Pitch`, `Open with`, `Lead with`, `discovery call`, `Why now signal not yet`) are skipped.
 
 ## Verify
 
