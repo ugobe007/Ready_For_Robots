@@ -336,6 +336,7 @@ describe("jobsWorkflow", () => {
     expect(header).toMatch(/showSignalPipelineNav/);
     expect(header).toMatch(/jobsHeaderCrmHref/);
     expect(header).toMatch(/showPipeline/);
+    expect(header).toMatch(/useSearch/);
   });
 
   it("advances step 2 with Activate job list, not a Place buyer dump", () => {

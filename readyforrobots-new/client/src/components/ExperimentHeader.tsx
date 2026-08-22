@@ -4,7 +4,7 @@
  * Jobs chrome hides Pipeline. CRM on Jobs is `/crm?src=jobs_activate`.
  * SIGNAL `/pipeline` and `/crm` still show Pipeline.
  */
-import { Link, useRoute, useLocation } from "wouter";
+import { Link, useRoute, useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { loginHref, clearPendingNext } from "@/lib/authNext";
 import { supabase } from "@/lib/supabase";
@@ -23,15 +23,13 @@ const navActive = "border-b-2 border-emerald-400 pb-0.5 text-emerald-400";
 export default function ExperimentHeader() {
   const { session } = useAuth();
   const [location] = useLocation();
+  const search = useSearch();
   const [onJobsSlug] = useRoute("/jobs/:slug");
   const jobsActive = location === "/" || location.startsWith("/?") || Boolean(onJobsSlug);
   const pipelineActive = location.startsWith("/pipeline");
   const crmActive = location.startsWith("/crm");
   const aboutActive = location.startsWith("/intelligence");
-  const jobsSrc =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("src")
-      : null;
+  const jobsSrc = new URLSearchParams(search).get("src");
   const showPipeline = showSignalPipelineNav({ pathname: location, src: jobsSrc });
   const crmHref = jobsHeaderCrmHref(location, jobsSrc);
 
