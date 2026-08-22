@@ -41,6 +41,8 @@ export type MatchJob = {
   why?: string[];
   still_unknown?: string[];
   blockers?: string[];
+  /** SKU this card is for. Set on the Jobs terminal, carried onto the pipeline list. */
+  forRobot?: string;
 };
 
 export type ClassOption = {

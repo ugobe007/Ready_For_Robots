@@ -54,15 +54,19 @@ import {
   JOBS_ACTIVATE_CAP,
   JOBS_PROCESS_STEPS,
   JOBS_RESTORE_ONCE_KEY,
+  JOBS_RUN_ONE_ROBOT_CTA,
   JOBS_SEE_JOBS_CTA,
   RAIL_STEP_HINT,
-  capExampleJobs,
   consumeJobsWorkspaceRestoreOnce,
   defaultCheckedJobKeys,
+  defaultCheckedKeysForLineup,
+  exampleJobsForLineup,
   isJobsFreshQuery,
+  jobIsForLabel,
   jobsActivateHref,
   jobsCountEyebrow,
   jobsHeading,
+  jobsListHint,
   jobsProcessActionLabel,
   jobsProcessStepFromStage,
   jobsToActivate,
@@ -571,6 +575,7 @@ export default function RobotJobsWorkspace() {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [checkedJobKeys, setCheckedJobKeys] = useState<string[]>([]);
   const [showAllJobs, setShowAllJobs] = useState(false);
+  const [lineupPreview, setLineupPreview] = useState(false);
 
   const sessionId = useRef(
     typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -628,6 +633,7 @@ export default function RobotJobsWorkspace() {
     setExpandedJob(null);
     setCheckedJobKeys([]);
     setShowAllJobs(false);
+    setLineupPreview(false);
     viewedRef.current = new Set();
     fired3Plus.current = false;
     restoredRef.current = true;
@@ -702,14 +708,16 @@ export default function RobotJobsWorkspace() {
       ...row,
       companyName: row.companyName || company,
     }));
-    const checks = defaultCheckedJobKeys(first.jobs);
-    const selectedKey = pickSelectedJobKey(first.jobs, null);
+    const tagged = exampleJobsForLineup(withCompany);
+    const checks = defaultCheckedKeysForLineup(withCompany);
+    const selectedKey = tagged[0]?.job_key || pickSelectedJobKey(first.jobs, null);
     setPortfolio(withCompany);
     setActiveIdx(0);
     setCompanyName(company);
     setRailTab("jobs");
     setExpandedJob(selectedKey);
     setCheckedJobKeys(checks);
+    setLineupPreview(names.length > 1);
     saveWorkspaceSession({
       url: submitUrl,
       products: names,
@@ -1051,6 +1059,7 @@ export default function RobotJobsWorkspace() {
 
   function revealJobs(a: RobotAnalysis) {
     const checks = defaultCheckedJobKeys(a.jobs);
+    setLineupPreview(false);
     setRailTab("jobs");
     setExpandedJob(pickSelectedJobKey(a.jobs, expandedJob));
     setCheckedJobKeys(checks);
@@ -1075,6 +1084,7 @@ export default function RobotJobsWorkspace() {
 
   function goToJobs(idx: number) {
     setActiveIdx(idx);
+    setLineupPreview(false);
     const a = portfolio[idx];
     const selectedKey = pickSelectedJobKey(a?.jobs || [], expandedJob);
     const checks =
@@ -1102,12 +1112,20 @@ export default function RobotJobsWorkspace() {
   }
 
   function goToActivate() {
-    const pool = active?.jobs || [];
+    const tagged = lineupPreview
+      ? exampleJobsForLineup(portfolio)
+      : (active?.jobs || []).map(job => ({
+          ...job,
+          forRobot: active?.productName || "",
+        }));
+    const pool = tagged;
     const selected = pool.filter(job => checkedJobKeys.includes(job.job_key));
     const jobs = jobsToActivate(selected, pool, JOBS_ACTIVATE_CAP);
     saveJobsHandoffSnapshot({
       url: submittedUrlRef.current,
-      productName: active?.productName || "",
+      productName: lineupPreview
+        ? companyName || active?.companyName || ""
+        : active?.productName || "",
       jobs,
       selectedCount: selected.length,
     });
@@ -1166,6 +1184,7 @@ export default function RobotJobsWorkspace() {
           : { ...searchToAnalysis(search), productName: a.productName };
         setPortfolio(prev => prev.map((p, i) => (i === idx ? merged : p)));
         setCompanyName(merged.companyName);
+        setLineupPreview(false);
         setRailTab("jobs");
         setExpandedJob(pickSelectedJobKey(merged.jobs, null));
         setCheckedJobKeys(defaultCheckedJobKeys(merged.jobs));
@@ -1402,6 +1421,17 @@ export default function RobotJobsWorkspace() {
     });
   }
 
+  function runOneRobot() {
+    setLineupPreview(false);
+    if (products.length > 1) {
+      setStage("select");
+      return;
+    }
+    if (portfolio.length > 1) {
+      setStage("portfolio");
+    }
+  }
+
   function seeAllJobs() {
     setShowAllJobs(true);
     trackRobotJobsFunnel("see_all_clicked", {
@@ -1605,6 +1635,8 @@ export default function RobotJobsWorkspace() {
         {stage === "jobs" && active && (
           <JobsPanel
             analysis={active}
+            lineup={portfolio}
+            lineupPreview={lineupPreview}
             expandedJob={expandedJob}
             checkedJobKeys={checkedJobKeys}
             showAll={showAllJobs}
@@ -1612,7 +1644,8 @@ export default function RobotJobsWorkspace() {
             onToggleJob={toggleCheckedJob}
             onActivate={goToActivate}
             onSeeAll={seeAllJobs}
-            robotCount={portfolio.length}
+            onRunOneRobot={runOneRobot}
+            robotCount={lineupPreview ? portfolio.length : 1}
             companyName={companyName || active.companyName}
             qualifying={matching}
             onSelectClass={id => void qualifyActive(id)}
@@ -1905,9 +1938,9 @@ function SelectPanel({
         We found {products.length} robots
       </h2>
       <p className="mt-2 text-sm text-slate-400">
-        Which robot should we find jobs for? Pick one SKU, or several / all.
-        One robot gets jobs for that product. Several takes a bit longer — we
-        resolve the search, then you activate the list.{" "}
+        Pick one robot for five jobs you can save. Pick several and we show
+        one sample job per robot — run each SKU by itself to get a full list.
+        {" "}
         {company || "This maker"} has {products.length}.
       </p>
 
@@ -2287,6 +2320,8 @@ function JobsActivateBar({
 
 function JobsPanel({
   analysis,
+  lineup,
+  lineupPreview,
   expandedJob,
   checkedJobKeys,
   showAll,
@@ -2294,12 +2329,15 @@ function JobsPanel({
   onToggleJob,
   onActivate,
   onSeeAll,
+  onRunOneRobot,
   robotCount = 1,
   companyName = "",
   qualifying = false,
   onSelectClass,
 }: {
   analysis: RobotAnalysis;
+  lineup: RobotAnalysis[];
+  lineupPreview: boolean;
   expandedJob: string | null;
   checkedJobKeys: string[];
   showAll: boolean;
@@ -2307,16 +2345,24 @@ function JobsPanel({
   onToggleJob: (job: MatchJob) => void;
   onActivate: () => void;
   onSeeAll: () => void;
+  onRunOneRobot: () => void;
   robotCount?: number;
   companyName?: string;
   qualifying?: boolean;
   onSelectClass?: (classId: string) => void;
 }) {
+  const sources = lineupPreview && lineup.length > 1 ? lineup : [analysis];
+  const tagged = exampleJobsForLineup(sources);
   const baseJobs = analysis.jobs;
-  const visible = showAll
-    ? baseJobs.slice(0, JOBS_PIPELINE_CAP)
-    : capExampleJobs(baseJobs);
-  const hiddenCount = Math.max(0, Math.min(baseJobs.length, JOBS_PIPELINE_CAP) - visible.length);
+  const visible = !lineupPreview && showAll
+    ? baseJobs.slice(0, JOBS_PIPELINE_CAP).map(job => ({
+        ...job,
+        forRobot: analysis.productName,
+      }))
+    : tagged;
+  const hiddenCount = lineupPreview
+    ? 0
+    : Math.max(0, Math.min(baseJobs.length, JOBS_PIPELINE_CAP) - tagged.length);
   const heading = jobsHeading({
     productName: analysis.productName,
     companyName: companyName || analysis.companyName,
@@ -2345,10 +2391,12 @@ function JobsPanel({
           })}
         </span>
       </div>
-      {baseJobs.length > 0 && (
+      {visible.length > 0 && (
         <p className="mt-1 text-[12px] text-slate-400">
-          Example work {analysis.productName} can do. Expand a card to inspect.
-          Check every job you want — then Next.
+          {jobsListHint({
+            robotCount,
+            productName: analysis.productName,
+          })}
         </p>
       )}
       <JobsActivateBar
@@ -2356,8 +2404,17 @@ function JobsPanel({
         checkedCount={checkedCount}
         className="mt-4"
       />
+      {lineupPreview ? (
+        <button
+          type="button"
+          onClick={onRunOneRobot}
+          className="mt-3 font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-emerald-400 hover:text-emerald-300"
+        >
+          {JOBS_RUN_ONE_ROBOT_CTA}
+        </button>
+      ) : null}
 
-      {baseJobs.length === 0 ? (
+      {baseJobs.length === 0 && visible.length === 0 ? (
         shouldQualify(analysis) ? (
           <ClassPicker
             robotName={analysis.productName}
@@ -2376,10 +2433,10 @@ function JobsPanel({
         <ol className="mt-6 space-y-3">
           {visible.map((job, i) => (
             <JobCard
-              key={job.job_key}
+              key={`${job.forRobot}:${job.job_key}`}
               index={i + 1}
               job={job}
-              robotName={analysis.productName}
+              robotName={job.forRobot || analysis.productName}
               selected={expandedJob === job.job_key}
               checked={checkedJobKeys.includes(job.job_key)}
               onSelect={() => onSelectJob(job)}
@@ -2562,7 +2619,7 @@ function JobCard({
           <span className="flex-1">
             <span className="flex items-center gap-2">
               <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                Job {String(index).padStart(2, "0")}
+                {jobIsForLabel(index, robotName)}
               </span>
               <span
                 className={`font-mono text-[10px] font-bold uppercase tracking-[0.12em] ${

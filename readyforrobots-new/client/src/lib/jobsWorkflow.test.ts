@@ -16,6 +16,9 @@ import {
   buyerLeadsToShow,
   capExampleJobs,
   defaultCheckedJobKeys,
+  defaultCheckedKeysForLineup,
+  exampleJobCap,
+  exampleJobsForLineup,
   isJobsHandoffSrc,
   isPlaceSrc,
   jobsActivateHref,
@@ -24,6 +27,8 @@ import {
   jobsFreshHomeHref,
   goJobsFreshHome,
   jobsHeading,
+  jobIsForLabel,
+  jobsListHint,
   jobsPlaceHref,
   jobsProcessActionLabel,
   jobsProcessStepFromStage,
@@ -174,7 +179,7 @@ describe("jobsWorkflow", () => {
         lookupGrain: "robot_type",
         robotClass: "humanoid",
       }),
-    ).toBe("5 JOBS FOR FOURIER INTELLIGENCE");
+    ).toBe("5 ROBOTS · 1 JOB EACH");
     expect(
       jobsHeading({
         productName: "Fourier GR-1",
@@ -206,10 +211,67 @@ describe("jobsWorkflow", () => {
 
   it("caps the Jobs terminal at 5 example jobs even when more exist", () => {
     expect(JOBS_EXAMPLE_CAP).toBe(5);
+    expect(exampleJobCap(1)).toBe(5);
+    expect(exampleJobCap(5)).toBe(1);
     expect(capExampleJobs([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])).toEqual([
       1, 2, 3, 4, 5,
     ]);
     expect(capExampleJobs(["a", "b"])).toEqual(["a", "b"]);
+  });
+
+  it("tags each job with its robot: five for one SKU, one each for a lineup", () => {
+    expect(jobIsForLabel(1, "Fourier N1")).toBe("Job 00001 is for Fourier N1");
+    expect(jobIsForLabel(887, "GR-1")).toBe("Job 00887 is for GR-1");
+    const n1Jobs = [
+      { job_key: "a", title: "A" },
+      { job_key: "b", title: "B" },
+      { job_key: "c", title: "C" },
+      { job_key: "d", title: "D" },
+      { job_key: "e", title: "E" },
+      { job_key: "f", title: "F" },
+    ];
+    const one = exampleJobsForLineup([{ productName: "Fourier N1", jobs: n1Jobs }]);
+    expect(one).toHaveLength(5);
+    expect(one.every(j => j.forRobot === "Fourier N1")).toBe(true);
+    expect(one.map(j => j.job_key)).toEqual(["a", "b", "c", "d", "e"]);
+    const shared = [
+      { job_key: "a", title: "A" },
+      { job_key: "b", title: "B" },
+      { job_key: "c", title: "C" },
+    ];
+    const lineup = exampleJobsForLineup([
+      { productName: "Fourier GR-1", jobs: shared },
+      { productName: "Fourier N1", jobs: shared },
+      { productName: "Fourier GR-3", jobs: shared },
+    ]);
+    expect(lineup.map(j => j.forRobot)).toEqual([
+      "Fourier GR-1",
+      "Fourier N1",
+      "Fourier GR-3",
+    ]);
+    expect(lineup.map(j => j.job_key)).toEqual(["a", "b", "c"]);
+    expect(defaultCheckedKeysForLineup([
+      { productName: "Fourier N1", jobs: n1Jobs },
+    ])).toEqual(["a", "b", "c", "d", "e"]);
+    expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
+      /Five example jobs Fourier N1/,
+    );
+    expect(jobsListHint({ robotCount: 5, productName: "Fourier N1" })).toMatch(
+      /one sample job per robot/i,
+    );
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const handoff = readFileSync(
+      join(here, "../components/JobsHandoffBoard.tsx"),
+      "utf8",
+    );
+    expect(workspace).toMatch(/jobIsForLabel/);
+    expect(workspace).toMatch(/JOBS_RUN_ONE_ROBOT_CTA/);
+    expect(workspace).toMatch(/lineupPreview/);
+    expect(handoff).toMatch(/JOBS_SAVE_TO_CRM_CTA/);
+    expect(handoff).toMatch(/jobIsForLabel/);
   });
 
   it("never hops Jobs traffic to /pipeline or /results", () => {
