@@ -12,8 +12,9 @@
 
 ## Verify
 
-- `python3 -m pytest tests/test_jobs_watch.py tests/test_plan_entitlements.py -q`
-- `npx vitest run client/src/lib/jobsWorkflow.test.ts` (from `readyforrobots-new/`)
+- `python3 -m pytest tests/test_jobs_watch.py tests/test_plan_entitlements.py -q` — 24 passed
+- `npx vitest run client/src/lib/jobsWorkflow.test.ts` — 23 passed
+- Local `/crm` (Vite :3003): Kare face, emerald CRM headline, how-to, opt-in checkbox. Auth is not configured, so opt-in stays disabled with sign-in copy.
 
 ## Follow-ups
 
