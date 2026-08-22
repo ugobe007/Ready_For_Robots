@@ -2841,9 +2841,6 @@ function JobCard({
             <span className={JOBS_ROBOT_NAME_CLASS}>{robotName}</span>
             <span className={JOBS_JOB_TITLE_CLASS}>{card.jobTitle}</span>
             {place ? <span className={JOBS_PLACE_CLASS}>{place}</span> : null}
-            {card.work && card.work !== card.jobTitle ? (
-              <span className="mt-1.5 block text-sm leading-snug text-slate-200">{card.work}</span>
-            ) : null}
             <span className={JOBS_META_CLASS}>
               {jobIsForLabel(index, robotName)} · {card.qualificationLabel}
             </span>

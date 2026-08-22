@@ -25,6 +25,10 @@ describe("robotJobCard", () => {
     expect(card.workplace).toBe("Charlotte, NC");
     expect(card.qualification).toBe("qualified");
     expect(card.qualificationLabel).toBe("Qualified");
+    expect(card.work).toBe(
+      "Tend CNC mills/lathes — workpiece load/unload around cycle",
+    );
+    expect(card.requirements).toEqual(["Payload in range", "Indoor industrial cell"]);
     expect(card.workVolume).toBeNull();
     expect(card.currentLabor).toBeNull();
     expect(card.openQuestions).toEqual(["How much of role is tend vs program"]);

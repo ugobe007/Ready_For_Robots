@@ -3,7 +3,6 @@
  * Canonical model: docs/robot_employment_model.md
  */
 import robcoPack from "./robcoJobCards.json";
-import { jobExplanation } from "./jobsWorkflow";
 
 export const ROBOT_JOB_CARD_NEXT_STEP =
   "Site assessment — can the robot actually work here?";
@@ -62,17 +61,12 @@ export function robotJobCardFromMatch(job: {
     ...(job.unknowns || []),
   ]);
   const qualification = qualificationFromVerdict(job.verdict);
-  const work = jobExplanation({
-    title: job.title,
-    why: job.why,
-    company: job.company_name,
-    industry: job.industry,
-  });
+  const title = (job.title || "").trim() || "Untitled job";
   return {
     employer: emptyToNull(job.company_name),
     workplace: emptyToNull(job.locality),
-    jobTitle: (job.title || "").trim() || "Untitled job",
-    work: work || (job.title || "").trim(),
+    jobTitle: title,
+    work: title,
     requirements: [...(job.why || [])],
     workVolume: null,
     currentLabor: null,
