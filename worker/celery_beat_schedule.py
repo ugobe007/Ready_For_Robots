@@ -268,6 +268,12 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(hour=15, minute=0),
         'kwargs': {'force': False, 'period_hours': 24},
     },
+    # ── JOBS WATCH ── Opted-in robot URLs → new/changed jobs → email (free is capped)
+    'jobs-watch-daily': {
+        'task': 'worker.tasks.run_jobs_watch_task',
+        'schedule': crontab(hour=12, minute=0),
+        'kwargs': {'limit': 25},
+    },
 }
 
 # Timezone

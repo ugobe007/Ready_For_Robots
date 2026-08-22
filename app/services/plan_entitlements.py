@@ -125,6 +125,7 @@ def plan_feature_flags(plan: str) -> dict[str, bool]:
             "hubspot_auto_sync": True,
             "unlimited_saves": True,
             "full_lead_intel": True,
+            "jobs_watch_unlimited": True,
         }
     if plan == PLAN_FREE:
         return {
@@ -132,12 +133,14 @@ def plan_feature_flags(plan: str) -> dict[str, bool]:
             "hubspot_auto_sync": False,
             "unlimited_saves": False,
             "full_lead_intel": True,
+            "jobs_watch_unlimited": False,
         }
     return {
         "research_updates": False,
         "hubspot_auto_sync": False,
         "unlimited_saves": False,
         "full_lead_intel": False,
+        "jobs_watch_unlimited": False,
     }
 
 

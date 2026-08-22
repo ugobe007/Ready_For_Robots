@@ -9,13 +9,8 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { openWorkspaceHref } from "@/lib/adminNavLinks";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
-import {
-  CRM_PAGE_HEADLINE,
-  CRM_PAGE_NEXT,
-  JOBS_EYEBROW_CLASS,
-  jobsFreshHomeHref,
-  onJobsFreshHomeClick,
-} from "@/lib/jobsWorkflow";
+import CrmHero, { type JobsWatchStatus } from "@/components/crm/CrmHero";
+import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 
 type Team = { id: string; name: string; role: string };
 type Account = {
@@ -102,6 +97,9 @@ export default function Crm() {
   const [busy, setBusy] = useState(false);
   const [sending, setSending] = useState(false);
   const [hubspotConnected, setHubspotConnected] = useState(false);
+  const [watch, setWatch] = useState<JobsWatchStatus | null>(null);
+  const [watchBusy, setWatchBusy] = useState(false);
+  const [watchError, setWatchError] = useState<string | null>(null);
 
   const authFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -143,6 +141,12 @@ export default function Crm() {
         );
         setCollateralPolicy(userSettings.scout_collateral_policy || "selective");
         setCollateralLinks(userSettings.scout_collateral_links || "");
+        try {
+          const watchStatus = (await authFetch("/api/crm/jobs-watch")) as JobsWatchStatus;
+          setWatch(watchStatus);
+        } catch {
+          setWatch(null);
+        }
       } catch (e) {
         setMsg(e instanceof Error ? e.message : "Failed to load teams");
       }
@@ -197,6 +201,46 @@ export default function Crm() {
   }, [session?.access_token, teamId, authFetch]);
 
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId) ?? null;
+
+  const optInWatch = useCallback(
+    async (optedIn: boolean) => {
+      setWatchBusy(true);
+      setWatchError(null);
+      try {
+        const snap = readJobsHandoffSnapshot();
+        const payload: Record<string, unknown> = { opted_in: optedIn };
+        if (optedIn && snap?.url) {
+          payload.robot_url = snap.url;
+          payload.product_name = snap.productName || "";
+          payload.seed_jobs = (snap.jobs || []).map(job => ({
+            job_key: job.job_key,
+            title: job.title,
+            company_name: job.company_name,
+          }));
+        }
+        const next = (await authFetch("/api/crm/jobs-watch", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })) as JobsWatchStatus;
+        setWatch(next);
+      } catch (e) {
+        let message = e instanceof Error ? e.message : "Could not update job watch.";
+        try {
+          const parsed = JSON.parse(message) as { detail?: unknown };
+          if (typeof parsed.detail === "string" && parsed.detail.trim()) {
+            message = parsed.detail;
+          }
+        } catch {
+          /* raw text */
+        }
+        setWatchError(message);
+      } finally {
+        setWatchBusy(false);
+      }
+    },
+    [authFetch],
+  );
 
   useEffect(() => {
     if (!selectedAccount) {
@@ -385,15 +429,8 @@ export default function Crm() {
     return (
       <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-slate-100">
         <ExperimentHeader />
-        <div className="mx-auto max-w-4xl border border-slate-600 bg-[#0b162f] px-5 py-6">
-          <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>ReadyForRobots</p>
-          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            {CRM_PAGE_HEADLINE}
-          </h1>
-          <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-300">
-            {CRM_PAGE_NEXT}
-          </p>
-          <p className="mt-4 text-base text-slate-400">CRM is not connected in this environment.</p>
+        <div className="mx-auto max-w-4xl">
+          <CrmHero footer="CRM is not connected in this environment." />
         </div>
       </div>
     );
@@ -404,8 +441,7 @@ export default function Crm() {
       <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-slate-100">
         <ExperimentHeader />
         <div className="mx-auto max-w-4xl">
-          <h1 className="font-display text-3xl font-bold tracking-tight text-white">{CRM_PAGE_HEADLINE}</h1>
-          <p className="mt-2 text-base text-slate-300">Loading CRM…</p>
+          <CrmHero footer="Loading CRM…" />
         </div>
       </div>
     );
@@ -415,21 +451,17 @@ export default function Crm() {
     return (
       <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-slate-100">
         <ExperimentHeader />
-        <div className="mx-auto max-w-4xl border border-slate-600 bg-[#0b162f] px-5 py-6 text-left">
-          <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>ReadyForRobots</p>
-          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            {CRM_PAGE_HEADLINE}
-          </h1>
-          <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-300">
-            {CRM_PAGE_NEXT}
-          </p>
-          <p className="mt-4 text-base text-slate-300">Sign in to open your accounts.</p>
-          <Link
-            href="/login"
-            className="mt-5 inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
-          >
-            Sign in to CRM →
-          </Link>
+        <div className="mx-auto max-w-4xl">
+          <CrmHero
+            actions={
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+              >
+                Sign in to CRM →
+              </Link>
+            }
+          />
         </div>
       </div>
     );
@@ -440,45 +472,38 @@ export default function Crm() {
       <ExperimentHeader />
       <main className="admin-workspace mx-auto w-full max-w-4xl flex-1 px-4 pb-8 pt-16">
         <AdminNav variant="dark" />
-        <div className="mb-5 border border-slate-600 bg-[#0b162f] px-5 py-5 sm:px-6">
-          <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>ReadyForRobots</p>
-          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            {CRM_PAGE_HEADLINE}
-          </h1>
-          <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-300">
-            {CRM_PAGE_NEXT}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href="/pipeline"
-              className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
-            >
-              ← Back to pipeline
-            </Link>
-            <a
-              href={jobsFreshHomeHref()}
-              onClick={onJobsFreshHomeClick}
-              className="inline-flex items-center font-mono text-sm font-semibold uppercase tracking-[0.08em] text-emerald-400 hover:text-emerald-300"
-            >
-              + New robot
-            </a>
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
-                className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-amber-200 hover:text-amber-100"
+        <CrmHero
+          signedIn
+          watch={watch}
+          watchBusy={watchBusy}
+          watchError={watchError}
+          onOptIn={optInWatch}
+          actions={
+            <>
+              <Link
+                href="/pipeline"
+                className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
               >
-                Cal queue — bulk send
-              </button>
-            )}
-            <Link
-              href="/integrations"
-              className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-slate-300 hover:text-white"
-            >
-              Connect HubSpot / GitHub
-            </Link>
-          </div>
-        </div>
+                ← Back to pipeline
+              </Link>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
+                  className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-amber-200 hover:text-amber-100"
+                >
+                  Cal queue — bulk send
+                </button>
+              )}
+              <Link
+                href="/integrations"
+                className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-slate-300 hover:text-white"
+              >
+                Connect HubSpot / GitHub
+              </Link>
+            </>
+          }
+        />
         {msg && (
           <p className="mb-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-900">
             {msg}
