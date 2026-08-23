@@ -43,6 +43,25 @@ Also: [hermes_cal_bridge.md](hermes_cal_bridge.md) — how Hermes intelligence f
 
 ## Auth
 
+### Where to run this (Cursor Cloud vs Mac)
+
+The Cursor **Cloud** `[workspace]` terminal (`/workspace` on this VM) has **no** `flyctl`, **no** Hermes CLI, and **no** Mac `~/.hermes/.env`. Commands pasted there will not land.
+
+| Task | Where |
+|------|--------|
+| Paste `RFR_ADMIN_KEY` into Fly as `ADMIN_KEY` | Browser: [Fly secrets for `ready-2-robot`](https://fly.io/apps/ready-2-robot/secrets). No terminal. Field name on Fly is `ADMIN_KEY` (not `RFR_ADMIN_KEY`). |
+| Same string → GitHub Actions | Browser: repo **Settings → Secrets and variables → Actions → `ADMIN_KEY`**. |
+| `fly secrets set` / `hermes doctor` / `hermes gateway` | **Mac** Terminal.app, or a Cursor terminal that is actually on the Mac (not Cloud). |
+| Prove the key works (`curl` to `ready-2-robot.fly.dev`) | Any machine, including Cloud, **after** Fly has the secret (~60s). |
+
+Mac repo root (this machine’s documented clone):
+
+```bash
+cd ~/Desktop/Ready_For_Robots
+```
+
+Hermes keys live in `~/.hermes/.env`, not in the git repo. Repo `.env` may have a local `ADMIN_KEY=` copy; `./scripts/sync_fly_admin_key.sh` reads **that** file, not Hermes.
+
 ### What is `ADMIN_KEY`?
 
 Gemini is right: **Supabase has no `ADMIN_KEY`.** Do not look for it in the Supabase dashboard.
@@ -71,9 +90,26 @@ Gemini is right: **Supabase has no `ADMIN_KEY`.** Do not look for it in the Supa
 - `-C` quoting / flyctl version (`--command` vs `-C`)
 - Fly **never had** `ADMIN_KEY` — the command prints nothing; the dashboard cannot reveal secret values
 
-You do not need to read the key off Fly. **Hermes already has `RFR_ADMIN_KEY`.** Push that string onto Fly.
+You do not need to read the key off Fly. **Hermes already has `RFR_ADMIN_KEY`.** Put that string on Fly as `ADMIN_KEY`.
 
-### Fix (Mac Terminal.app, after `fly auth login`)
+### Fastest fix: paste into the Fly dashboard (no Mac CLI)
+
+1. Open `~/.hermes/.env` (or the Hermes env you already have) and copy the **`RFR_ADMIN_KEY=`** value only — not `SERVICE_ROLE_KEY`. It must not start with `eyJ`.
+2. Open [https://fly.io/apps/ready-2-robot/secrets](https://fly.io/apps/ready-2-robot/secrets) while logged into the Fly org that owns `ready-2-robot`.
+3. Set secret name **`ADMIN_KEY`** (exactly that). Value = the pasted string. Save. Machines restart.
+4. GitHub → **Settings → Secrets and variables → Actions** → `ADMIN_KEY` = the same paste.
+
+Wait ~60s. Then this `curl` **can** run in the Cursor Cloud terminal:
+
+```bash
+# paste the key only into the header; do not commit it
+curl -sS -X POST "https://ready-2-robot.fly.dev/api/v1/market-graph/infer-qualify" \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Key: PASTE_RFR_ADMIN_KEY_HERE" \
+  -d '{"dry_run": true, "limit": 1}'
+```
+
+### Optional: same thing from Mac Terminal.app (`flyctl` + `fly auth login`)
 
 If `RFR_ADMIN_KEY` does **not** start with `eyJ` (it should not match `SERVICE_ROLE_KEY`):
 
