@@ -54,7 +54,7 @@ The workflow no longer runs `vercel pull`. It runs `vercel deploy --prod` from t
 2. A real run is **minutes** (upload + Vercel cloud build), not 7–30 seconds.
 3. Confirm `https://readyforrobots.com` HTML bundle hash changed.
 
-The GitHub job **builds Vite in Actions**, packs `.vercel/output`, and runs `vercel deploy --prebuilt --prod`. Cloud `vercel deploy` was returning Ready while Vite was still transforming and aliasing `index-bxLpnQiT.js`. After alias, the custom domain can still serve that hash for a few seconds (edge HIT). Smoke checks the deployment URL first, then polls `readyforrobots.com`.
+The GitHub job **builds Vite in Actions**, packs `.vercel/output`, and runs `vercel deploy --prebuilt --prod`. Cloud `vercel deploy` was returning Ready while Vite was still transforming and aliasing `index-bxLpnQiT.js`. After alias, the custom domain can still serve that hash for a few seconds (edge HIT). `scripts/vercel_production_smoke.py` **gates only on `https://readyforrobots.com`**: JS path ≠ `index-bxLpnQiT.js`, downloaded JS >100kB, canary `Jobs for`. A `*.vercel.app` 404 (Deployment Protection / same-second race) is logged and ignored — `#105` aborted on `curl -f` of that host under `set -e` while the custom domain was already the new bundle.
 
 `setup-flyctl@1.5` fails on Node 24 GitHub runners (`flyctl: command not found`). Deploy.yml uses `setup-flyctl@master`. The **Fly.io** GitHub check is Fly’s own Git integration and can go red even when `https://ready-2-robot.fly.dev/health` is 200.
 
