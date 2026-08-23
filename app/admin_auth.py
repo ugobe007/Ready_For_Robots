@@ -32,8 +32,10 @@ def _reject_misleading_admin_key(value: str) -> None:
         raise HTTPException(
             status_code=401,
             detail=(
-                "Put JWTs in Authorization: Bearer <token>, not X-Admin-Key. "
-                "Use a user session access_token (not service_role) for admin JWT auth."
+                "X-Admin-Key rejected: that value is a Supabase JWT (anon, "
+                "user access_token, or SERVICE_ROLE_KEY). Supabase has no ADMIN_KEY. "
+                "ADMIN_KEY is a random string we store on Fly and alias on Hermes as "
+                "RFR_ADMIN_KEY. Do not send SERVICE_ROLE_KEY as X-Admin-Key."
             ),
         )
 

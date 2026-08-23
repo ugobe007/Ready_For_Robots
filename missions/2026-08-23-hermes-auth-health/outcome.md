@@ -31,5 +31,5 @@ Jobs FIND does not depend on Hermes. Cal/pipeline overlays do.
 ## Follow-ups (operator, Mac + GitHub secrets)
 
 1. `hermes doctor --fix && hermes gateway start && hermes cron list` — no `ai-gateway`.
-2. Set GitHub Actions `ADMIN_KEY` = Fly `ADMIN_KEY` = Hermes `RFR_ADMIN_KEY` (not the fingerprint).
+2. `ADMIN_KEY` is not a Supabase key. Push Hermes `RFR_ADMIN_KEY` onto Fly (`fly secrets set`); copy the same string to GitHub Actions. Do not use `SERVICE_ROLE_KEY`. `fly ssh printenv` cannot recover it.
 3. POST `/api/v1/market-graph/infer-qualify` once overlays should appear.

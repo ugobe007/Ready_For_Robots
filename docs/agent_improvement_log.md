@@ -10,6 +10,7 @@ Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 - Floor manager log still says “Awaiting first cron tick” (skill stood up 2026-08-14). Hourly `rfr-sales-floor-manager` has not written.
 - GHA **Cal daily digest** failed HTTP **403** on 2026-08-20/21/22. `ADMIN_KEY` is set in Actions but Fly rejects it (`Invalid X-Admin-Key or token`). Common cause: GitHub secret is the 16-char `fly secrets list` digest, not the real `ADMIN_KEY`.
 - Hermes Mac crons still likely pinned to `--provider ai-gateway` (HTTP 402, 2026-08-20). Skills in-repo are terminal `curl` only; the Mac job list was never confirmed.
+- **`ADMIN_KEY` is not a Supabase secret.** Gemini is correct that Supabase has no such key. Fly `ADMIN_KEY` = Hermes `RFR_ADMIN_KEY` (homemade random string). `SERVICE_ROLE_KEY` is a different JWT. `fly ssh … printenv ADMIN_KEY` is not how you retrieve it — push `RFR_ADMIN_KEY` to Fly with `fly secrets set`.
 
 ### Done (this cycle)
 
@@ -18,8 +19,8 @@ Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
 ### Ranked proposals
 
-1. **[H/L]** On the Mac: `hermes doctor --fix`, `hermes gateway start`, `hermes cron list` — remove `--provider ai-gateway`; jobs must `curl` Fly with `RFR_ADMIN_KEY` = Fly `ADMIN_KEY`.
-2. **[H/L]** Sync GitHub Actions `ADMIN_KEY` to the real Fly secret (not the fingerprint). Same value Hermes uses as `RFR_ADMIN_KEY`.
+1. **[H/L]** On the Mac: `fly secrets set "ADMIN_KEY=${RFR_ADMIN_KEY}" -a ready-2-robot` (after `fly auth login`). Do not send `SERVICE_ROLE_KEY`. Then `hermes doctor --fix`, `hermes gateway start`, `hermes cron list` — remove `--provider ai-gateway`.
+2. **[H/L]** GitHub Actions `ADMIN_KEY` = that same Hermes `RFR_ADMIN_KEY` (not the `fly secrets list` fingerprint, not the service_role JWT).
 3. **[M/L]** After auth works, POST `/api/v1/market-graph/infer-qualify` once so overlays appear on pipeline.
 
 ## 2026-08-20 — Stop paid LLM lookups (Hermes 402)
