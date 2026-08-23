@@ -29,7 +29,19 @@ If that key were wrong, the job would fail. It did not.
 | pipeline cache refresh | **200** `started` (15–20 min background rebuild) |
 | overlays on public GET immediately after | 0 (`built_at` still `2026-08-23T23:04:25Z`) |
 
-The workflow did not break. Overlays are on those five company rows; the public feed lags until cache rebuild finishes.
+Public GET after cache rebuild (`built_at` **2026-08-23T23:18:08Z**): **5/5** leads have `hermes_qualify` (Accor 98, Stellantis 88, MGM 99, Dubai Airports 67, Zoox 54). The workflow wrote overlays; the feed caught up.
+
+## Hermes doctor (Mac) — 3 findings, gateway still started
+
+`hermes doctor --fix` then gateway start reported:
+
+| # | Doctor line | What it is | Action |
+|---|-------------|------------|--------|
+| 1 | `web` workspace 1 npm vulnerability | Hermes Agent install (`NousResearch/hermes-agent` `web/`), **devDependency** graph. `npm audit --omit=dev` is clean. Open upstream: [#68736](https://github.com/NousResearch/hermes-agent/issues/68736). | Not ReadyForRobots. Do not `npm audit fix` this repo. |
+| 2 | `ui-tui` workspace 2 npm vulnerabilities | Same upstream TUI workspace, same class of build-tool advisories. | Same. |
+| 3 | `Run 'hermes setup' to configure missing API keys` | Nous Portal / LLM / tool-gateway keys in `~/.hermes/.env`. **Not** `RFR_ADMIN_KEY`. | On the Mac only: `hermes setup --portal`. Skip if ingest-only; Fly already accepts the Hermes `RFR_ADMIN_KEY`. |
+
+`✓ Service started` means the gateway is up. RFR ingest does not need item 3.
 
 ## Code
 
@@ -38,4 +50,4 @@ The workflow did not break. Overlays are on those five company rows; the public 
 
 ## Still operator-only
 
-Mac `hermes doctor --fix && hermes gateway start` cannot run from Cursor Cloud. Tracks 8–10 need this PR on Fly to appear in production OpenAPI.
+`hermes setup --portal` is interactive on the Mac. Tracks 8–10 need this PR on Fly to appear in production OpenAPI.

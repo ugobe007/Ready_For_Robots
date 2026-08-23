@@ -22,7 +22,8 @@ Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
 1. **[done]** GitHub `ADMIN_KEY` matches Fly (GHA run `32672185240`: cal-status 200, infer-qualify apply accepted 12). Same string as Hermes `RFR_ADMIN_KEY`. If it diverges, `hermes-fly-smoke.yml` fails.
 2. **[H/M]** Deploy market-graph ingest (this PR) so tracks 8–10 exist on Fly. — owner: `deploy`
-3. **[in progress]** Point infer-qualify at the five public pipeline company IDs and refresh the pipeline cache so `hermes_qualify` is visible. — owner: `hermes`
+3. **[done]** infer-qualify on public pipeline IDs + cache refresh. Public GET 23:18Z: 5/5 `hermes_qualify` (Accor, Stellantis, MGM, Dubai Airports, Zoox).
+4. **[ignore / upstream]** `hermes doctor` npm hits on `web` + `ui-tui` are Hermes Agent devDependency advisories ([#68736](https://github.com/NousResearch/hermes-agent/issues/68736)), not RFR. `hermes setup` is Nous/LLM keys; `RFR_ADMIN_KEY` already authenticates.
 
 ## 2026-08-23 — Hermes is not reaching Fly
 

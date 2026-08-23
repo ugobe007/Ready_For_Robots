@@ -62,6 +62,8 @@ cd ~/Desktop/Ready_For_Robots
 
 Hermes keys live in `~/.hermes/.env`, not in the git repo. Repo `.env` may have a local `ADMIN_KEY=` copy; `./scripts/sync_fly_admin_key.sh` reads **that** file, not Hermes.
 
+`hermes doctor` npm hits on the **`web`** and **`ui-tui`** workspaces are inside the Hermes Agent install (`NousResearch/hermes-agent`), not this repo. They are build/devDependency advisories; `npm audit --omit=dev` is clean. Do not run `npm audit fix` in ReadyForRobots for those lines. `Run 'hermes setup'` is Nous Portal / LLM keys. It is **not** `RFR_ADMIN_KEY`. Gateway can start without it; Fly ingest already uses `RFR_ADMIN_KEY`. On the Mac: `hermes setup --portal`.
+
 ### What is `ADMIN_KEY`?
 
 Gemini is right: **Supabase has no `ADMIN_KEY`.** Do not look for it in the Supabase dashboard.
