@@ -71,22 +71,41 @@ jobs:
         run: python3 scripts/vercel_pack_static_output.py
 
       - name: Deploy prebuilt output to production
-        if: steps.guard.outputs.configured == 'true'
-        run: vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID"
-
-      - name: Confirm production bundle is not the stale hash
+        id: deploy
         if: steps.guard.outputs.configured == 'true'
         run: |
           set -euo pipefail
-          html="$(curl -fsS --max-time 30 https://readyforrobots.com/)"
-          js_path="$(printf '%s' "$html" | grep -oE '/assets/index-[A-Za-z0-9_-]+\.js' | head -1)"
-          echo "Live bundle: $js_path"
-          if [ "$js_path" = "/assets/index-bxLpnQiT.js" ]; then
-            echo "::error::Production still serving stale index-bxLpnQiT.js"
-            exit 1
-          fi
-          bytes="$(curl -fsS --max-time 30 -o /tmp/live.js -w '%{size_download}' "https://readyforrobots.com${js_path}")"
-          echo "JS bytes: $bytes"
-          test "$bytes" -gt 100000
-          grep -q 'Jobs for' /tmp/live.js
-          echo "Production JS is a new hashed bundle."
+          url="$(vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID" | tee /tmp/vercel-deploy.log | tail -n 1)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed $url"
+
+      - name: Confirm production bundle is not the stale hash
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+          check() {
+            local base="${1%/}"
+            local html js_path bytes
+            html="$(curl -fsS --max-time 30 -H 'Cache-Control: no-cache' "${base}/?n=$(date +%s)")"
+            js_path="$(printf '%s' "$html" | grep -oE '/assets/index-[A-Za-z0-9_-]+\.js' | head -1)"
+            echo "$base -> $js_path"
+            if [ -z "$js_path" ] || [ "$js_path" = "/assets/index-bxLpnQiT.js" ]; then
+              return 1
+            fi
+            bytes="$(curl -fsS --max-time 30 -o /tmp/live.js -w '%{size_download}' "${base}${js_path}")"
+            echo "JS bytes: $bytes"
+            test "$bytes" -gt 100000
+            grep -q 'Jobs for' /tmp/live.js
+          }
+          check "$DEPLOY_URL"
+          for _ in $(seq 1 12); do
+            if check "https://readyforrobots.com"; then
+              echo "Custom domain matches new bundle."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::readyforrobots.com still serving a stale bundle after alias"
+          exit 1
