@@ -63,7 +63,7 @@ Content (two columns are layout, not a clipping box)
 Process bar repeated at the bottom of the page
 ```
 
-Jobs chrome and Jobs CRM (`src=jobs_activate`) do not show Pipeline. Signed-in header CRM on those pages is `/crm?src=jobs_activate`, not bare `/crm`. SIGNAL `/pipeline` and `/crm` without a Jobs `src` still show Pipeline. Jobs footer and the Signal FAB match the header: no Pipeline / SIGNAL on `/`, About, Jobs CRM, or Jobs signup/login.
+Jobs chrome and Jobs CRM (`src=jobs_activate`) do not show Pipeline. Signed-in header CRM on those pages is `/crm?src=jobs_activate`, not bare `/crm`. SIGNAL `/pipeline` and `/crm` without a Jobs `src` still show Pipeline. Jobs footer and the Signal FAB match the header: no Pipeline / SIGNAL on `/`, About, Jobs CRM, or Jobs signup/login. About (`/intelligence`) body is the Jobs loop — Start jobs on `/?new=1`, signup `src=jobs_activate` — not a second product hop.
 
 **Do not** set `100vh` + `overflow: hidden` on the Jobs workspace. Chrome then cannot scroll below the fold, so step 03 sits in a cut-off box. Pinning Activate inside that box is a patch, not a fix.
 
