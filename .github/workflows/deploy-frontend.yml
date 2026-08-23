@@ -10,8 +10,10 @@
 #
 # Do not use `vercel pull` here. CLI 59 fails on project-scoped tokens with
 # "Could not retrieve Project Settings" (user 404 + team 403) even when the
-# project GET is 200. `vercel deploy --prod` from the repo root works.
-# Production Root Directory is `.` (root vercel.json), not readyforrobots-new/.
+# project GET is 200. `vercel deploy --prod --force --logs` from the repo root
+# works and does not restore a stale Vite cache. Production Root Directory is
+# `.` (root vercel.json), not readyforrobots-new/. Git builds on `main` are
+# skipped via ignoreCommand so they do not race this job.
 name: Deploy frontend to Vercel
 
 on:
@@ -63,4 +65,14 @@ jobs:
 
       - name: Deploy production from repo root
         if: steps.guard.outputs.configured == 'true'
-        run: vercel deploy --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID"
+        run: vercel deploy --prod --yes --force --logs --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID"
+
+      - name: Confirm production bundle is current main
+        if: steps.guard.outputs.configured == 'true'
+        run: |
+          set -euo pipefail
+          html="$(curl -fsS --max-time 30 https://readyforrobots.com/)"
+          js_path="$(printf '%s' "$html" | grep -oE '/assets/index-[A-Za-z0-9_-]+\.js' | head -1)"
+          echo "Live bundle: $js_path"
+          curl -fsS --max-time 30 "https://readyforrobots.com${js_path}" | grep -q 'showSignalPipelineNav'
+          echo "Production JS includes Jobs chrome helper from main."
