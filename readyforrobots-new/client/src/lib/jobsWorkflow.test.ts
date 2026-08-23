@@ -72,6 +72,7 @@ import {
   placeBuyersToShow,
   shouldRestoreJobsWorkspace,
   showSignalPipelineNav,
+  showJobsSiteChrome,
   armJobsWorkspaceRestore,
 } from "./jobsWorkflow";
 
@@ -340,6 +341,68 @@ describe("jobsWorkflow", () => {
     expect(header).toMatch(/jobsHeaderCrmHref/);
     expect(header).toMatch(/showPipeline/);
     expect(header).toMatch(/useSearch/);
+  });
+
+  it("Jobs footer and Signal FAB follow header chrome (no Pipeline / SIGNAL)", () => {
+    expect(showJobsSiteChrome({ pathname: "/" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/jobs" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/jobs/acme" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/intelligence" })).toBe(true);
+    expect(
+      showJobsSiteChrome({ pathname: "/crm", search: "src=jobs_activate" }),
+    ).toBe(true);
+    expect(
+      showJobsSiteChrome({ pathname: "/signup", search: "src=jobs_activate" }),
+    ).toBe(true);
+    expect(
+      showJobsSiteChrome({
+        pathname: "/signup",
+        search: "next=%2Fcrm%3Fsrc%3Djobs_activate&src=jobs_activate",
+      }),
+    ).toBe(true);
+    expect(
+      showJobsSiteChrome({
+        pathname: "/signup",
+        search: "next=%2Fcrm%3Fsrc%3Djobs_activate",
+      }),
+    ).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/login", search: "next=%2F" })).toBe(
+      true,
+    );
+    expect(
+      showJobsSiteChrome({ pathname: "/signup", search: "next=%2F%3Frestore%3D1" }),
+    ).toBe(true);
+
+    expect(showJobsSiteChrome({ pathname: "/pipeline" })).toBe(false);
+    expect(showJobsSiteChrome({ pathname: "/crm" })).toBe(false);
+    expect(showJobsSiteChrome({ pathname: "/signals" })).toBe(false);
+    expect(
+      showJobsSiteChrome({ pathname: "/signup", search: "next=%2Fpipeline" }),
+    ).toBe(false);
+    expect(showJobsSiteChrome({ pathname: "/signup" })).toBe(false);
+
+    const footer = readFileSync(
+      join(here, "../components/layout/SiteFooter.tsx"),
+      "utf8",
+    );
+    expect(footer).toMatch(/showJobsSiteChrome/);
+    expect(footer).toMatch(/const JOBS_LINKS/);
+    expect(footer).toMatch(/const SIGNAL_LINKS/);
+    expect(footer).toMatch(/jobsChrome \? JOBS_LINKS : SIGNAL_LINKS/);
+    expect(footer).toMatch(/jobsChrome \? "JOBS" : "SIGNAL"/);
+    const jobsLinks = footer.slice(
+      footer.indexOf("const JOBS_LINKS"),
+      footer.indexOf("const SIGNAL_LINKS"),
+    );
+    expect(jobsLinks).toMatch(/jobsFreshHomeHref/);
+    expect(jobsLinks).toMatch(/jobsActivateHref/);
+    expect(jobsLinks).not.toMatch(/\/pipeline/);
+    expect(jobsLinks).not.toMatch(/Signals/);
+    expect(footer).not.toMatch(/rounded-lg/);
+
+    const scout = readFileSync(join(here, "../components/ScoutChat.tsx"), "utf8");
+    expect(scout).toMatch(/showJobsSiteChrome/);
+    expect(scout).toMatch(/useSearch/);
   });
 
   it("advances step 2 with Activate job list, not a Place buyer dump", () => {
