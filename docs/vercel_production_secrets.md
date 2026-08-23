@@ -54,9 +54,11 @@ The workflow no longer runs `vercel pull`. It runs `vercel deploy --prod` from t
 2. A real run is **minutes** (upload + Vercel cloud build), not 7–30 seconds.
 3. Confirm `https://readyforrobots.com` HTML bundle hash changed.
 
-The #102 CLI deploy aliased production in 21s while Vite was still transforming and **restored build cache** from an older deployment. Live JS stayed `index-bxLpnQiT.js` (no `showSignalPipelineNav`). The workflow now uses `vercel deploy --force --logs`. Root `vercel.json` `ignoreCommand` skips Vercel Git builds on `main` so Git does not race GHA for production. PR Preview builds still run.
+The GitHub job **builds Vite in Actions**, packs `.vercel/output`, and runs `vercel deploy --prebuilt --prod`. Cloud `vercel deploy` was returning Ready while Vite was still transforming and aliasing `index-bxLpnQiT.js`. Smoke check: live JS path must not be that stale hash.
 
-Framework Settings in the dashboard: leave **Other** and keep Override toggles **off**. Do not Save the `npm run build` / `public` placeholders. `vercel.json` is the source of truth. The yellow “Overridden” banner is expected until a clean production deploy matches those file settings.
+`setup-flyctl@1.5` fails on Node 24 GitHub runners (`flyctl: command not found`). Deploy.yml uses `setup-flyctl@master`. The **Fly.io** GitHub check is Fly’s own Git integration and can go red even when `https://ready-2-robot.fly.dev/health` is 200.
+
+Framework Settings: leave **Other** and keep Override toggles **off**. Do not Save the `npm run build` / `public` placeholders.
 
 Alternatively: Vercel dashboard → a Preview for the merge SHA → **Promote to Production**.
 

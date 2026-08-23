@@ -3,17 +3,11 @@
 #
 # Required repo secret:
 #   VERCEL_TOKEN — Account Settings → Tokens (project-scoped is OK)
-# Optional but recommended (workflow resolves them from the token if the
-# token can see project ready-for-robots):
-#   VERCEL_ORG_ID      team_i9wBQr2ur295OmAB8COX5Q0r
-#   VERCEL_PROJECT_ID  prj_VHdUEY8x5jC9O2dnUdYxbDHWeTqn
+# Optional: VERCEL_ORG_ID / VERCEL_PROJECT_ID (preflight fills them).
 #
-# Do not use `vercel pull` here. CLI 59 fails on project-scoped tokens with
-# "Could not retrieve Project Settings" (user 404 + team 403) even when the
-# project GET is 200. `vercel deploy --prod --force --logs` from the repo root
-# works and does not restore a stale Vite cache. Production Root Directory is
-# `.` (root vercel.json), not readyforrobots-new/. Git builds on `main` are
-# skipped via ignoreCommand so they do not race this job.
+# Do not use `vercel pull` (CLI 59 + project-scoped token). Do not rely on
+# Vercel's cloud Vite build: it returns Ready while transforming and aliases
+# a stale index-*.js. Build in GHA, pack Build Output API v3, deploy --prebuilt.
 name: Deploy frontend to Vercel
 
 on:
@@ -26,6 +20,7 @@ on:
       - ".github/workflows/deploy-frontend.yml"
       - "scripts/sanitize_vercel_cli_secret.py"
       - "scripts/vercel_cli_preflight.py"
+      - "scripts/vercel_pack_static_output.py"
   workflow_dispatch:
 
 concurrency:
@@ -59,20 +54,39 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install Vercel CLI
+      - name: Install pnpm and Vercel CLI
         if: steps.guard.outputs.configured == 'true'
-        run: npm install -g vercel@latest
+        run: npm install -g pnpm@10.4.1 vercel@latest
 
-      - name: Deploy production from repo root
+      - name: Install frontend dependencies
         if: steps.guard.outputs.configured == 'true'
-        run: vercel deploy --prod --yes --force --logs --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID"
+        run: pnpm install --frozen-lockfile -C readyforrobots-new
 
-      - name: Confirm production bundle is current main
+      - name: Vite production build
+        if: steps.guard.outputs.configured == 'true'
+        run: pnpm --dir readyforrobots-new exec vite build
+
+      - name: Pack Vercel Build Output
+        if: steps.guard.outputs.configured == 'true'
+        run: python3 scripts/vercel_pack_static_output.py
+
+      - name: Deploy prebuilt output to production
+        if: steps.guard.outputs.configured == 'true'
+        run: vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID"
+
+      - name: Confirm production bundle is not the stale hash
         if: steps.guard.outputs.configured == 'true'
         run: |
           set -euo pipefail
           html="$(curl -fsS --max-time 30 https://readyforrobots.com/)"
           js_path="$(printf '%s' "$html" | grep -oE '/assets/index-[A-Za-z0-9_-]+\.js' | head -1)"
           echo "Live bundle: $js_path"
-          curl -fsS --max-time 30 "https://readyforrobots.com${js_path}" | grep -q 'showSignalPipelineNav'
-          echo "Production JS includes Jobs chrome helper from main."
+          if [ "$js_path" = "/assets/index-bxLpnQiT.js" ]; then
+            echo "::error::Production still serving stale index-bxLpnQiT.js"
+            exit 1
+          fi
+          bytes="$(curl -fsS --max-time 30 -o /tmp/live.js -w '%{size_download}' "https://readyforrobots.com${js_path}")"
+          echo "JS bytes: $bytes"
+          test "$bytes" -gt 100000
+          grep -q 'Jobs for' /tmp/live.js
+          echo "Production JS is a new hashed bundle."
