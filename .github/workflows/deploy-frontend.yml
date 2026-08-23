@@ -1,17 +1,17 @@
-# Builds the canonical Vite frontend (readyforrobots-new/) and deploys it to
-# Vercel production on every push to main. The backend deploy lives in
-# deploy.yml (Fly.io); this workflow only ships the frontend.
+# Deploys the canonical Vite frontend to Vercel production on every push to
+# main. Backend deploy lives in deploy.yml (Fly.io).
 #
-# Required repo secrets (Settings → Secrets and variables → Actions):
-#   VERCEL_TOKEN       — a Vercel access token (Account Settings → Tokens)
-#   VERCEL_ORG_ID      — the Vercel team/org id for the project
-#   VERCEL_PROJECT_ID  — the Vercel project id for readyforrobots-new
-# All three secrets are required. A missing-secret skip used to mark the
-# job green in ~7s while readyforrobots.com stayed on a stale Preview.
-# Fail instead so ProductManager / GHA cannot lie. Vercel CLI 59+ also
-# rejects --token values that contain a space (trailing paste is common);
-# the guard step trims that before vercel pull. Vercel Git on Hobby still
-# builds PR Previews; Production needs this CLI --prod path.
+# Required repo secret:
+#   VERCEL_TOKEN — Account Settings → Tokens (project-scoped is OK)
+# Optional but recommended (workflow resolves them from the token if the
+# token can see project ready-for-robots):
+#   VERCEL_ORG_ID      team_i9wBQr2ur295OmAB8COX5Q0r
+#   VERCEL_PROJECT_ID  prj_VHdUEY8x5jC9O2dnUdYxbDHWeTqn
+#
+# Do not use `vercel pull` here. CLI 59 fails on project-scoped tokens with
+# "Could not retrieve Project Settings" (user 404 + team 403) even when the
+# project GET is 200. `vercel deploy --prod` from the repo root works.
+# Production Root Directory is `.` (root vercel.json), not readyforrobots-new/.
 name: Deploy frontend to Vercel
 
 on:
@@ -19,12 +19,14 @@ on:
     branches: [main]
     paths:
       - "readyforrobots-new/**"
+      - "vercel.json"
+      - ".vercelignore"
       - ".github/workflows/deploy-frontend.yml"
+      - "scripts/sanitize_vercel_cli_secret.py"
+      - "scripts/vercel_cli_preflight.py"
   workflow_dispatch:
 
 concurrency:
-  # Never run two production deploys at once; queue instead of cancelling so a
-  # roll finishes cleanly.
   group: vercel-frontend-deploy
   cancel-in-progress: false
 
@@ -33,9 +35,6 @@ jobs:
     name: Vercel production deploy
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: readyforrobots-new
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -46,8 +45,11 @@ jobs:
 
       - name: Check Vercel secrets are configured
         id: guard
-        working-directory: ${{ github.workspace }}
         run: python3 scripts/sanitize_vercel_cli_secret.py
+
+      - name: Resolve Vercel project (skip vercel pull)
+        if: steps.guard.outputs.configured == 'true'
+        run: python3 scripts/vercel_cli_preflight.py
 
       - name: Setup Node.js
         if: steps.guard.outputs.configured == 'true'
@@ -59,14 +61,6 @@ jobs:
         if: steps.guard.outputs.configured == 'true'
         run: npm install -g vercel@latest
 
-      - name: Pull Vercel project settings (production)
+      - name: Deploy production from repo root
         if: steps.guard.outputs.configured == 'true'
-        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-
-      - name: Build (uses install/build commands from vercel.json)
-        if: steps.guard.outputs.configured == 'true'
-        run: vercel build --prod --token="$VERCEL_TOKEN"
-
-      - name: Deploy prebuilt output to production
-        if: steps.guard.outputs.configured == 'true'
-        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        run: vercel deploy --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID"

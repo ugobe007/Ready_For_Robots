@@ -61,18 +61,17 @@ def main() -> int:
     sanitized: dict[str, SanitizedSecret] = {}
     for name in names:
         secret = sanitize_vercel_cli_secret(os.environ.get(name))
+        required = name == "VERCEL_TOKEN"
+        if not secret.value and not required:
+            continue
         try:
             assert_cli_safe(name, secret)
         except ValueError as exc:
             print(f"::error::{exc}")
             if name == "VERCEL_TOKEN" and not secret.value:
                 print(
-                    "Vercel CLI secrets not set (VERCEL_TOKEN / VERCEL_ORG_ID / "
-                    "VERCEL_PROJECT_ID)."
-                )
-                print(
-                    "This job used to skip-green in ~7s while readyforrobots.com "
-                    "did not move."
+                    "VERCEL_TOKEN is not set. This job used to skip-green in ~7s "
+                    "while readyforrobots.com did not move."
                 )
                 print("See docs/vercel_production_secrets.md")
             return 1
