@@ -12,6 +12,7 @@ from app.admin_auth import _reject_misleading_admin_key, get_admin_key, get_cron
 from app.database import get_db
 from app.services.market_graph_loop import (
     get_market_graph_loop_status,
+    loop_health_from_snapshot,
     read_market_graph_snapshot,
     run_market_graph_loop,
 )
@@ -193,8 +194,17 @@ def _require_ingest_auth(
 @router.get("/status")
 def market_graph_status(db: Session = Depends(get_db)) -> dict[str, Any]:
     snap = read_market_graph_snapshot(db) or {}
+    loop = loop_health_from_snapshot(snap)
+    web_thread = get_market_graph_loop_status()
     return {
-        "scheduler": get_market_graph_loop_status(),
+        "loop": loop,
+        # web-process RAM only — do not treat running/last_run as the worker
+        "scheduler": {
+            **web_thread,
+            "source": "serving_process_memory",
+            "healthy": loop.get("healthy"),
+            "last_completed_at": loop.get("last_completed_at"),
+        },
         "snapshot": {
             "generated_at": snap.get("generated_at"),
             "status": snap.get("status"),

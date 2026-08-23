@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Run the Hermes qualify tick against Fly using Hermes/GitHub ADMIN_KEY.
 
-Never prints the secret. Loads (first hit wins): env RFR_ADMIN_KEY / ADMIN_KEY /
-RFR_ADMIN_KEY, then ~/.hermes/.env, then repo .env.
+Never prints the secret. Loads (first hit wins): env RFR_ADMIN_KEY / ADMIN_KEY,
+then ~/.hermes/.env, then repo .env.
 
 If the key is wrong, Fly returns 401/403 and this script exits 1 (the workflow
 breaks). GitHub Actions injects secrets.ADMIN_KEY as RFR_ADMIN_KEY — same string
@@ -30,7 +30,7 @@ CAL = f"{FLY}/api/v1/market-graph/cal-status"
 INFER = f"{FLY}/api/v1/market-graph/infer-qualify"
 PIPELINE = f"{FLY}/api/leads/pipeline"
 CACHE = f"{FLY}/api/admin/leads/refresh-pipeline-cache"
-KEY_NAMES = ("RFR_ADMIN_KEY", "ADMIN_KEY", "RFR_ADMIN_KEY")
+KEY_NAMES = ("RFR_ADMIN_KEY", "ADMIN_KEY")
 
 
 def _load_dotenv(path: Path) -> dict[str, str]:
@@ -58,7 +58,7 @@ def load_admin_key() -> tuple[str, str]:
     repo = Path(__file__).resolve().parents[1] / ".env"
     for path, names in (
         (home, KEY_NAMES),
-        (repo, ("ADMIN_KEY", "RFR_ADMIN_KEY", "RFR_ADMIN_KEY")),
+        (repo, ("ADMIN_KEY", "RFR_ADMIN_KEY")),
     ):
         data = _load_dotenv(path)
         for name in names:

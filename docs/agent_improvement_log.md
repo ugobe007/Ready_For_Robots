@@ -6,11 +6,11 @@ Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
 ### Findings
 
-- Ingest **auth contract on Fly is correct**: unauth 403, `fly secrets list` fingerprint 401, Supabase JWT 401. Reconstruct is public 200.
-- Pipeline overlays are still **empty** (5 leads). Vendor-news + deployment-evidence rows exist, so *some* Hermes/research data has landed historically — qualify/jobs/DM overlays have not.
-- GHA Cal digest still 403 as of 15:12 UTC (before PR #111). Next scheduled run should print Fly’s body; the secret is still wrong.
-- Documented tracks 8–10 (buying-window, customer video, vendor video, seed-targets) were **docs-only** on Fly (OpenAPI 404/SPA). In-repo ingest now exists; needs Fly deploy.
-- Qualify/contacts `dry_run` queried `companies` even when `dry_run=true`, so Hermes smoke against an empty/local DB reported `accepted: 0`.
+- Hermes ingest **auth works**. Unauth 403, fingerprint 401, JWT 401. GitHub `ADMIN_KEY` = Fly `ADMIN_KEY` = Hermes `RFR_ADMIN_KEY`.
+- Public pipeline **5/5 `hermes_qualify`** after infer-qualify on live IDs + cache rebuild (23:18Z). Job titles / buying windows / video still empty until tracks 8–10 deploy.
+- Market graph snapshot **completed** 23:04Z: 8 tensions, 40 matches, 7 work units (Knowledge layer). Web `scheduler.last_run` is empty by design; heartbeat is snapshot `generated_at`.
+- GHA Cal digest last failed 403 at 15:12Z (before the key was proven). Next scheduled send is the retest.
+- Qualify/contacts `dry_run` used to query `companies` even when `dry_run=true` (fixed this cycle).
 
 ### Done (this cycle)
 

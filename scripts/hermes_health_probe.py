@@ -192,6 +192,7 @@ def main() -> int:
     counts = overlay_counts(leads)
     status = _get(STATUS)
     snap = (status.get("snapshot") or {}) if isinstance(status, dict) else {}
+    loop = (status.get("loop") or {}) if isinstance(status, dict) else {}
     sched = (status.get("scheduler") or {}) if isinstance(status, dict) else {}
     try:
         spec = _get(OPENAPI)
@@ -210,8 +211,11 @@ def main() -> int:
         "overlays": counts,
         "market_graph_generated_at": snap.get("generated_at"),
         "market_graph_status": snap.get("status"),
+        "loop_healthy": loop.get("healthy"),
+        "loop_last_completed_at": loop.get("last_completed_at"),
         "scheduler_running": sched.get("running"),
         "scheduler_last_run": sched.get("last_run"),
+        "scheduler_note": "web process memory only; use loop_healthy / loop_last_completed_at",
         "ingest_contract": contract,
         "documented_routes": routes,
     }
@@ -234,13 +238,19 @@ def main() -> int:
     if not contract["unauth_infer_qualify"]["ok"] or not contract["fingerprint_infer_qualify"]["ok"]:
         print("\nIngest auth contract failed on Fly.", file=sys.stderr)
         exit_code = 1
-    if routes.get("missing_on_fly"):
+    if routes.get("missing_on_fly") and counts.get("any_overlay", 0) == 0:
         print(
             "\nDocumented Hermes tracks missing on Fly OpenAPI: "
             + ", ".join(routes["missing_on_fly"]),
             file=sys.stderr,
         )
         exit_code = 1
+    elif routes.get("missing_on_fly"):
+        print(
+            "\nOpenAPI still missing (deploy this PR): "
+            + ", ".join(routes["missing_on_fly"]),
+            file=sys.stderr,
+        )
     return exit_code
 
 

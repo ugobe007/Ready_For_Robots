@@ -31,6 +31,8 @@ If that key were wrong, the job would fail. It did not.
 
 Public GET after cache rebuild (`built_at` **2026-08-23T23:18:08Z**): **5/5** leads have `hermes_qualify` (Accor 98, Stellantis 88, MGM 99, Dubai Airports 67, Zoox 54). The workflow wrote overlays; the feed caught up.
 
+`GET /api/v1/market-graph/status` reports `loop.healthy` from the snapshot (`generated_at`). Do not use web `scheduler.last_run` as the worker heartbeat.
+
 ## Hermes doctor (Mac) — 3 findings, gateway still started
 
 `hermes doctor --fix` then gateway start reported:

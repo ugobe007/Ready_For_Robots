@@ -71,6 +71,59 @@ def get_market_graph_loop_status() -> Dict[str, Any]:
         }
 
 
+def loop_health_from_snapshot(snap: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Public heartbeat from the cached snapshot, not web-process RAM.
+
+    The 12h loop runs on the Fly worker. ``GET /status`` is served by web
+    processes whose in-memory ``last_run`` is always empty. Trust
+    ``last_completed_at`` (snapshot ``generated_at``).
+    """
+    snap = snap if isinstance(snap, dict) else {}
+    generated = snap.get("generated_at")
+    status = snap.get("status")
+    age_hours: Optional[float] = None
+    if generated:
+        try:
+            raw = str(generated).replace("Z", "+00:00")
+            dt = datetime.fromisoformat(raw)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            age_hours = round(
+                (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0, 2
+            )
+        except ValueError:
+            age_hours = None
+    try:
+        interval_hours = float(os.getenv("MARKET_GRAPH_EVERY_HOURS", "12") or 12)
+    except ValueError:
+        interval_hours = 12.0
+    if interval_hours <= 0:
+        interval_hours = 12.0
+    stale_after_hours = round(interval_hours * 2 + 2.0, 2)
+    healthy = (
+        status == "completed"
+        and age_hours is not None
+        and age_hours <= stale_after_hours
+    )
+    thread = get_market_graph_loop_status()
+    return {
+        "healthy": healthy,
+        "last_completed_at": generated,
+        "snapshot_age_hours": age_hours,
+        "interval_hours": interval_hours,
+        "stale_after_hours": stale_after_hours,
+        "snapshot_status": status,
+        "web_thread": {
+            "running": thread.get("running"),
+            "last_run": thread.get("last_run"),
+            "note": (
+                "In-process RAM on the process serving this request. "
+                "Web dynos do not run the 12h loop. Use last_completed_at."
+            ),
+        },
+    }
+
+
 def _set_running(running: bool) -> None:
     with _STATE_LOCK:
         _STATE["running"] = running
