@@ -25,9 +25,10 @@ jobs:
       - name: Run Hermes workflow against Fly
         env:
           RFR_ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
         run: |
           set -euo pipefail
-          if [ -z "${RFR_ADMIN_KEY:-}" ]; then
+          if [ -z "${RFR_ADMIN_KEY:-}${ADMIN_KEY:-}" ]; then
             echo "GitHub secret ADMIN_KEY is empty. Set it to Hermes RFR_ADMIN_KEY."
             exit 1
           fi

@@ -2,39 +2,33 @@
 
 **Date:** 2026-08-23  
 **Type:** test  
-**Status:** tested (PR)
+**Status:** workflow ran against Fly (PR)
 
-## What was tested
+## What was run (not another audit)
 
-| Layer | Result |
-|-------|--------|
-| Unit ingest (job / qualify / contacts / vendor news / infer-qualify auth / digest auth) | pass |
-| Dry-run qualify + contacts without a `companies` table | **was failing** — dry_run still queried SQLite. Fixed. |
-| New tracks 8–10 dry_run + OpenAPI contract | pass locally |
-| Live Fly ingest auth | unauth **403**, fingerprint **401**, JWT **401** |
-| Live reconstruct | **200** `work:unknown:b8f7c8bb698e` |
-| Live pipeline overlays | 5 leads, **0** Hermes overlays |
-| Live vendor news / deployment evidence | present (OTTO, Geek+, Locus; Agility/Schaeffler, Figure/BMW) |
-| GHA Cal daily digest (15:12 UTC today) | **403** — ran *before* PR #111 body-print; GitHub `ADMIN_KEY` still rejected |
-| Mac Hermes CLI / gateway | not in this environment |
+GitHub Actions **Hermes Fly workflow** (`32672185240`, 2026-08-23T22:58Z) injected `secrets.ADMIN_KEY` as `RFR_ADMIN_KEY` (same string as Hermes `~/.hermes/.env`) and called `python3 scripts/hermes_auth_smoke.py --apply`.
 
-## Production probe
+| Step | Result |
+|------|--------|
+| Key kind / length | `random`, 44 chars (not a JWT, not the 16-char Fly fingerprint) |
+| `GET /cal-status` | **200**, `auth: admin_key` |
+| `POST /infer-qualify` dry_run | **200**, accepted 1 |
+| `POST /infer-qualify` apply | **200**, **accepted 12**, failed 0, `paid_llm: false` |
+| Auth mismatch | **none** — if this key were wrong, that job would have exited 1 |
 
-`python3 scripts/hermes_health_probe.py` (exit 1, expected until overlays + Fly deploy):
+The key is correct. Do not paste it again. If it stops matching Fly, this workflow breaks.
 
-- Pipeline built `2026-08-23T22:34:25Z`, 5 leads, all `hermes_*` empty (Changi, Graybar, Aramark, ABM/LaGuardia, Cencora).
-- Market-graph snapshot `completed` at `2026-08-23T17:35:58Z`. Scheduler not running.
-- Ingest contract ok.
-- Fly OpenAPI **missing** buying-window + video tracks until this PR is deployed.
+## Public pipeline still empty after that apply
 
-## Diff
+infer-qualify without `company_ids` writes overlays on the **latest 12 Company rows by id**, which are not the five public pipeline leads (Changi `2009`, Graybar `3823`, Aramark `8096`, ABM/LaGuardia `10629`, Cencora `4672`). The pipeline cache `built_at` was also older than the apply.
 
-- `apply_qualify_overlay` / `ingest_contact` skip DB on `dry_run=true` (Hermes smoke must not require company rows).
-- Implement documented ingest: `POST /buying-window-overlay`, `POST /video-evidence/ingest`, `POST /vendor-video-evidence/ingest`, `GET /video-evidence/seed-targets`.
-- Expand `scripts/hermes_health_probe.py` with ingest auth + OpenAPI route check.
+This revision points `--apply` at those public pipeline IDs and kicks `POST /api/admin/leads/refresh-pipeline-cache`.
 
-## Follow-ups (operator)
+## Code
 
-1. **[H/L]** Paste Hermes `RFR_ADMIN_KEY` → Fly `ADMIN_KEY` and GitHub Actions `ADMIN_KEY`. Then `hermes doctor --fix && hermes gateway start`.
-2. **[H/M]** Deploy this PR to Fly so tracks 8–10 exist in production OpenAPI.
-3. **[M/L]** After auth works, POST `/infer-qualify` once so pipeline overlays are non-empty.
+- `scripts/hermes_auth_smoke.py` — load Hermes/GitHub key aliases; qualify public pipeline IDs; trigger cache refresh.
+- `.github/workflows/hermes-fly-smoke.yml` — inject `ADMIN_KEY` as `RFR_ADMIN_KEY` / `ADMIN_KEY` / `RFR_ADMIN_KEY`.
+
+## Still operator-only
+
+Mac `hermes doctor --fix && hermes gateway start` cannot run from Cursor Cloud (no Hermes CLI, no `~/.hermes/.env` on this VM). Tracks 8–10 need this PR deployed to appear on Fly OpenAPI.

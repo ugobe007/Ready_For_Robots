@@ -20,9 +20,9 @@ Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
 ### Ranked proposals
 
-1. **[H/L]** Sync `RFR_ADMIN_KEY` → Fly `ADMIN_KEY` + GitHub Actions (not fingerprint, not `SERVICE_ROLE_KEY`). — owner: `ops` / Mac
+1. **[done]** GitHub `ADMIN_KEY` matches Fly (GHA run `32672185240`: cal-status 200, infer-qualify apply accepted 12). Same string as Hermes `RFR_ADMIN_KEY`. If it diverges, `hermes-fly-smoke.yml` fails.
 2. **[H/M]** Deploy market-graph ingest (this PR) so tracks 8–10 exist on Fly. — owner: `deploy`
-3. **[M/L]** After auth works, one `POST /infer-qualify` so pipeline `hermes_qualify` is non-empty. — owner: `hermes`
+3. **[in progress]** Point infer-qualify at the five public pipeline company IDs and refresh the pipeline cache so `hermes_qualify` is visible. — owner: `hermes`
 
 ## 2026-08-23 — Hermes is not reaching Fly
 
