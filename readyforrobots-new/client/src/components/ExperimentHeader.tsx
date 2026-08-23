@@ -55,9 +55,10 @@ export default function ExperimentHeader() {
         <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 font-mono text-sm font-semibold uppercase tracking-[0.08em] sm:gap-x-5 sm:text-base">
           <a
             href={jobsFreshHomeHref()}
-            className={jobsActive ? navActive : navIdle}
+            className={`inline-flex items-center gap-1.5 ${jobsActive ? navActive : navIdle}`}
             onClick={onJobsFreshHomeClick}
           >
+            {jobsActive ? <span className="rfr-led" aria-hidden="true" /> : null}
             Jobs
           </a>
           <Link href="/intelligence" className={`${aboutActive ? navActive : navIdle} max-sm:hidden`}>

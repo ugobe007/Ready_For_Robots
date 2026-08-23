@@ -15,7 +15,7 @@ import { KARE_FACE } from "@/lib/kareIcons";
 
 function GoogleGlyph() {
   return (
-    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white" aria-hidden="true">
+    <span className="inline-flex h-5 w-5 items-center justify-center  bg-white" aria-hidden="true">
       <svg viewBox="0 0 24 24" className="h-4 w-4" focusable="false">
         <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-1.4 3.5-5.5 3.5-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 6.8 2 2.6 6.2 2.6 11.4S6.8 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"/>
         <path fill="#34A853" d="M3.7 7.3l3.2 2.3c.9-1.8 2.8-3 5.1-3 1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 8.1 2 4.8 4.2 3.2 7.3Z"/>
@@ -169,7 +169,7 @@ export default function Login() {
           </div>
 
           {status === "sent" ? (
-            <div className="rounded-2xl border border-emerald-400/35 bg-emerald-950/30 px-6 py-8 text-center">
+            <div className=" border border-emerald-400/35 bg-emerald-950/30 px-6 py-8 text-center">
               <h2 className="text-base font-semibold text-slate-100 mb-2">Check your email</h2>
               <p className="text-sm text-slate-300">
                 We sent a magic link to <span className="font-semibold text-emerald-300">{email}</span>.
@@ -179,13 +179,13 @@ export default function Login() {
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-700/70 bg-[#0b162f]/85 px-6 py-8 shadow-[0_20px_45px_-25px_rgba(0,0,0,0.8)]">
+            <div className=" border border-slate-700/70 bg-[#0b162f]/85 px-6 py-8 shadow-[0_20px_45px_-25px_rgba(0,0,0,0.8)]">
               <div className="flex flex-col gap-2 mb-5">
                 <button
                   type="button"
                   onClick={() => void oauth("google")}
                   disabled={!supabase}
-                  className="w-full flex items-center justify-center gap-2 border border-slate-600 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
+                  className="w-full flex items-center justify-center gap-2 border border-slate-600  px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
                 >
                   <GoogleGlyph />
                   Continue with Google - one tap
@@ -194,7 +194,7 @@ export default function Login() {
                   type="button"
                   onClick={() => void oauth("azure")}
                   disabled={!supabase}
-                  className="w-full flex items-center justify-center gap-2 border border-slate-600 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
+                  className="w-full flex items-center justify-center gap-2 border border-slate-600  px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
                 >
                   <MicrosoftGlyph />
                   Continue with Microsoft 365 - one tap
@@ -203,7 +203,7 @@ export default function Login() {
                   type="button"
                   onClick={() => void oauth("github")}
                   disabled={!supabase}
-                  className="w-full flex items-center justify-center gap-2 border border-slate-600 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
+                  className="w-full flex items-center justify-center gap-2 border border-slate-600  px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
                 >
                   <Github className="h-4 w-4" aria-hidden="true" />
                   Continue with GitHub - one tap
@@ -222,15 +222,15 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   disabled={status === "sending"}
-                  className="w-full rounded-xl border border-slate-600 bg-[#0a1327] px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-400"
+                  className="w-full  border border-slate-600 bg-[#0a1327] px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-400"
                 />
                 {status === "error" && (
-                  <p className="text-xs text-red-200 border border-red-400/40 bg-red-900/30 rounded-lg px-3 py-2 whitespace-pre-wrap">{errMsg}</p>
+                  <p className="text-xs text-red-200 border border-red-400/40 bg-red-900/30 px-3 py-2 whitespace-pre-wrap">{errMsg}</p>
                 )}
                 <button
                   type="submit"
                   disabled={status === "sending" || !email.trim()}
-                  className="w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-[#06261f] bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40"
+                  className="w-full  px-4 py-2.5 text-sm font-semibold text-[#06261f] bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40"
                 >
                   {status === "sending" ? "Sending…" : "Send magic link"}
                 </button>

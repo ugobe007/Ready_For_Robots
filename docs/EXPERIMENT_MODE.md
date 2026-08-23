@@ -69,6 +69,8 @@ Jobs chrome and Jobs CRM (`src=jobs_activate`) do not show Pipeline. Signed-in h
 
 The document scrolls. Process chrome is page-level (top and bottom). Two columns may remain as layout.
 
+Chrome is **rectilinear**: panels, buttons, cards, and inputs have square corners. Bevel CTAs, inset fields, a faint CRT scan on the Jobs shell, and square LEDs — 1970s control panel, not SaaS pills.
+
 ---
 
 ## One robot vs several (money-maker)
