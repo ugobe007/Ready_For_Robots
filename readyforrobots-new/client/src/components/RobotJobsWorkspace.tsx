@@ -174,7 +174,7 @@ const DEFAULT_CLASS_OPTIONS: ClassOption[] = [
 
 const eyebrow = JOBS_EYEBROW_CLASS;
 const ctaClass =
-  "inline-flex items-center justify-center gap-2 bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45";
+  "rfr-bevel inline-flex items-center justify-center gap-2 bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45";
 
 function FaceCue({
   scale = 2,
@@ -269,7 +269,7 @@ function JobsProcessNav({
         <button
           type="button"
           onClick={onAction}
-          className="rfr-jobs-process-action m-2 inline-flex shrink-0 items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+          className="rfr-bevel rfr-jobs-process-action m-2 inline-flex shrink-0 items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
         >
           {actionLabel}
         </button>
@@ -2056,7 +2056,7 @@ function ResearchPanel({
         ))}
       </ul>
       <div className="mt-8 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-slate-500">
-        <span className="inline-flex h-2 w-2 animate-ping rounded-full bg-emerald-400" />
+        <span className="rfr-led animate-pulse" />
         {phase === "identity"
           ? "Reading the product page…"
           : "Matching jobs to this robot…"}

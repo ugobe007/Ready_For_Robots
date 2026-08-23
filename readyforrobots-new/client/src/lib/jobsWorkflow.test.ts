@@ -139,6 +139,9 @@ describe("jobsWorkflow", () => {
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
     expect(workspace).not.toMatch(/h-\[calc\(100vh/);
     expect(workspace).toMatch(/rfr-jobs-page-shell/);
+    expect(workspace).toMatch(/rfr-bevel/);
+    expect(workspace).toMatch(/rfr-led/);
+    expect(workspace).not.toMatch(/rounded-full/);
     expect(workspace).toMatch(/rfr-jobs-process-bar/);
     expect(workspace).toMatch(/rfr-jobs-page-footer/);
     expect(workspace).toMatch(/layout="page"/);
@@ -717,6 +720,14 @@ describe("jobsWorkflow", () => {
     expect(header).toMatch(/showPipeline \? \(/);
     expect(header).toMatch(/h-14/);
     expect(header).toMatch(/sm:text-base/);
+    expect(header).toMatch(/rfr-led/);
+
+    const css = readFileSync(join(here, "../index.css"), "utf8");
+    expect(css).toMatch(/--radius:\s*0;/);
+    expect(css).toMatch(/border-radius:\s*0\s*!important/);
+    expect(css).toMatch(/\.rfr-bevel/);
+    expect(css).toMatch(/\.rfr-led \{/);
+    expect(css).toMatch(/\.rfr-jobs-page-shell::after/);
 
     const pipeline = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
     expect(pipeline).toMatch(/<ExperimentHeader/);

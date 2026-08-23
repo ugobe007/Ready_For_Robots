@@ -4,10 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -78,7 +78,7 @@
   --border: oklch(0.91 0.005 240);
   --input: oklch(0.91 0.005 240);
   --ring: oklch(0.527 0.154 162);
-  --radius: 0.5rem;
+  --radius: 0;
   --background: oklch(1 0 0);
   --foreground: oklch(0.13 0.02 240);
   --card: oklch(1 0 0);
@@ -137,9 +137,74 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* 1970s control panel: rectangles, not pills. Glow orbs stay elliptical. */
+  *:not(.home-hero-panel-glow):not(.signal-panel-right-glow),
+  *:not(.home-hero-panel-glow):not(.signal-panel-right-glow)::before,
+  *:not(.home-hero-panel-glow):not(.signal-panel-right-glow)::after {
+    border-radius: 0 !important;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
+    caret-color: #34d399;
+  }
+  ::selection {
+    background: #10b981;
+    color: #04122a;
+  }
+  [data-slot="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  .rfr-bevel {
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 255, 255, 0.22),
+      inset -1px -1px 0 rgba(0, 0, 0, 0.38);
+  }
+  [data-slot="button"]:not(:disabled):active,
+  [type="submit"]:not(:disabled):active,
+  .rfr-bevel:active {
+    box-shadow:
+      inset 1px 1px 0 rgba(0, 0, 0, 0.45),
+      inset -1px -1px 0 rgba(255, 255, 255, 0.08);
+  }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  textarea,
+  select {
+    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.45);
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    border: 1px solid #64748b;
+    background: #081126;
+    display: inline-grid;
+    place-content: center;
+    vertical-align: middle;
+  }
+  input[type="checkbox"]::after,
+  input[type="radio"]::after {
+    content: "";
+    width: 0.55rem;
+    height: 0.55rem;
+    background: #34d399;
+    transform: scale(0);
+  }
+  input[type="checkbox"]:checked::after,
+  input[type="radio"]:checked::after {
+    transform: scale(1);
+  }
+  input[type="checkbox"]:focus-visible,
+  input[type="radio"]:focus-visible,
+  input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  button:focus-visible {
+    outline: 2px solid #34d399;
+    outline-offset: 1px;
   }
   h1,
   h2,
@@ -216,6 +281,42 @@
 
   .font-display {
     font-family: var(--font-display);
+  }
+
+  .rfr-jobs-page-shell {
+    position: relative;
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 255, 255, 0.07),
+      inset -1px -1px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  .rfr-jobs-page-shell::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(16, 185, 129, 0.04) 3px
+    );
+  }
+
+  .rfr-bevel {
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 255, 255, 0.28),
+      inset -1px -1px 0 rgba(0, 0, 0, 0.42);
+  }
+
+  .rfr-led {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    background: #34d399;
+    box-shadow: 0 0 8px #34d399;
   }
 
   .font-mono-data {

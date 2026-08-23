@@ -211,14 +211,14 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
 
   return (
     <div className="space-y-3">
-      <div className="rounded-md border border-slate-600 bg-[#0b162f] p-2.5">
+      <div className=" border border-slate-600 bg-[#0b162f] p-2.5">
         <p className="sb-kicker">Account workspace</p>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-          <span className="rounded bg-[#081126] px-1.5 py-0.5 font-mono text-slate-200">
+          <span className=" bg-[#081126] px-1.5 py-0.5 font-mono text-slate-200">
             {detail.account.outreach_stage || "new"}
           </span>
           {detail.account.pipeline_priority_tier && (
-            <span className="rounded bg-emerald-400/10 px-1.5 py-0.5 text-emerald-300">
+            <span className=" bg-emerald-400/10 px-1.5 py-0.5 text-emerald-300">
               {detail.account.pipeline_priority_tier}
             </span>
           )}
@@ -251,7 +251,7 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
         ) : null}
       </div>
 
-      <div className="rounded-md border border-slate-600 bg-[#0b162f] p-2.5">
+      <div className=" border border-slate-600 bg-[#0b162f] p-2.5">
         <div className="flex items-center justify-between gap-2">
           <p className="sb-kicker">Tasks</p>
           <span className="text-[10px] text-slate-500">{openTasks.length} open</span>
@@ -261,12 +261,12 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
         ) : (
           <ul className="mt-2 space-y-1.5">
             {openTasks.slice(0, 8).map((task) => (
-              <li key={task.id} className="flex items-start gap-2 rounded border border-slate-700 bg-[#081126] p-1.5">
+              <li key={task.id} className="flex items-start gap-2  border border-slate-700 bg-[#081126] p-1.5">
                 <button
                   type="button"
                   disabled={busy}
                   onClick={() => void toggleTask(task)}
-                  className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-slate-500 bg-[#0b162f] hover:border-emerald-400"
+                  className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center  border border-slate-500 bg-[#0b162f] hover:border-emerald-400"
                   aria-label={`Mark ${task.title} done`}
                 >
                   {task.status === "done" ? <Check className="h-3 w-3 text-emerald-400" /> : null}
@@ -283,7 +283,7 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
       </div>
 
       {sequenceName ? (
-        <div className="rounded-md border border-slate-600 bg-[#0b162f] p-2.5">
+        <div className=" border border-slate-600 bg-[#0b162f] p-2.5">
           <p className="sb-kicker">Outreach sequence</p>
           <p className="mt-1 text-[11px] text-slate-300">
             {sequenceName} · {sequenceSteps} steps
@@ -298,7 +298,7 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
         </div>
       ) : null}
 
-      <div className="rounded-md border border-slate-600 bg-[#0b162f] p-2.5">
+      <div className=" border border-slate-600 bg-[#0b162f] p-2.5">
         <p className="sb-kicker">Notes</p>
         <form onSubmit={(e) => void addNote(e)} className="mt-2 flex gap-1.5">
           <input
@@ -313,7 +313,7 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
         </form>
         <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto">
           {detail.notes.slice(0, 6).map((note) => (
-            <li key={note.id} className="rounded border border-slate-700 bg-[#081126] p-1.5 text-[10px] text-slate-300">
+            <li key={note.id} className=" border border-slate-700 bg-[#081126] p-1.5 text-[10px] text-slate-300">
               {note.body}
               <span className="mt-0.5 block text-slate-500">{fmtWhen(note.created_at)}</span>
             </li>
@@ -321,7 +321,7 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
         </ul>
       </div>
 
-      <div className="rounded-md border border-slate-600 bg-[#0b162f] p-2.5">
+      <div className=" border border-slate-600 bg-[#0b162f] p-2.5">
         <p className="sb-kicker">Outreach history</p>
         {detail.outreach_history.length === 0 ? (
           <p className="mt-2 text-[11px] text-slate-500">No outreach sent yet.</p>
@@ -339,7 +339,7 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
         )}
       </div>
 
-      <div className="rounded-md border border-slate-600 bg-[#0b162f] p-2.5">
+      <div className=" border border-slate-600 bg-[#0b162f] p-2.5">
         <p className="sb-kicker">Activity timeline</p>
         <ul className="mt-2 max-h-36 space-y-1 overflow-y-auto">
           {detail.timeline.slice(0, 10).map((item, idx) => (

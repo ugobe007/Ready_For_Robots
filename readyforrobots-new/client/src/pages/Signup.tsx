@@ -43,7 +43,7 @@ type InboxLink = { label: string; url: string };
 
 function GoogleGlyph() {
   return (
-    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white" aria-hidden="true">
+    <span className="inline-flex h-5 w-5 items-center justify-center  bg-white" aria-hidden="true">
       <svg viewBox="0 0 24 24" className="h-4 w-4" focusable="false">
         <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-1.4 3.5-5.5 3.5-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 6.8 2 2.6 6.2 2.6 11.4S6.8 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"/>
         <path fill="#34A853" d="M3.7 7.3l3.2 2.3c.9-1.8 2.8-3 5.1-3 1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 8.1 2 4.8 4.2 3.2 7.3Z"/>
@@ -509,19 +509,19 @@ export default function Signup() {
             {(workflowPrefill.wf || workflowPrefill.intent_focus) && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 {workflowPrefill.wf && (
-                  <span className="rounded-full border border-slate-600 bg-slate-900 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                  <span className=" border border-slate-600 bg-slate-900 px-3 py-1 text-[11px] font-semibold text-slate-200">
                     Workflow: {workflowPrefill.wf === "robot_company" ? "Robot company" : "Potential customer"}
                   </span>
                 )}
                 {workflowPrefill.intent_focus && (
-                  <span className="rounded-full border border-emerald-800 bg-emerald-950/40 px-3 py-1 text-[11px] font-semibold text-emerald-300">
+                  <span className=" border border-emerald-800 bg-emerald-950/40 px-3 py-1 text-[11px] font-semibold text-emerald-300">
                     Focus: {workflowPrefill.intent_focus}
                   </span>
                 )}
               </div>
             )}
             {liveProof && !robotJobsIntent && (liveProof.hot || liveProof.companies) && (
-              <p className="mt-3 inline-flex rounded-full border border-emerald-800 bg-emerald-950/40 px-3 py-1 text-[11px] font-semibold text-emerald-300">
+              <p className="mt-3 inline-flex  border border-emerald-800 bg-emerald-950/40 px-3 py-1 text-[11px] font-semibold text-emerald-300">
                 Live now ·{" "}
                 {liveProof.hot ? `${liveProof.hot.toLocaleString()} hot buyers` : "buyer signals scored"}
                 {liveProof.companies ? ` · ${liveProof.companies.toLocaleString()} companies tracked` : ""}
@@ -591,7 +591,7 @@ export default function Signup() {
               </div>
             )}
             {robotJobsIntent ? (
-              <div className="mt-6 rounded-2xl border border-slate-700 p-4 shadow-sm">
+              <div className="mt-6  border border-slate-700 p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
                   {tasteJobs.length || CRM_UNLOCKED_JOBS} job opportunities for{" "}
                   {tasteProduct || "your robot"}
@@ -614,11 +614,11 @@ export default function Signup() {
                 )}
               </div>
             ) : liveBuyer ? (
-              <div className="mt-6 rounded-2xl border border-slate-700 p-4 shadow-sm">
+              <div className="mt-6  border border-slate-700 p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
                   <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="absolute inline-flex h-full w-full animate-ping  bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2  bg-emerald-500" />
                   </span>
                   Live {liveBuyer.tier || "HOT"} buyer in the pipeline right now
                 </div>
@@ -636,7 +636,7 @@ export default function Signup() {
                     {liveBuyer.robots.map((r) => (
                       <span
                         key={r}
-                        className="rounded-full border border-emerald-500 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
+                        className=" border border-emerald-500 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
                       >
                         {r}
                       </span>
@@ -651,7 +651,7 @@ export default function Signup() {
           </div>
 
           {status === "sent" ? (
-            <div className="rounded-2xl border border-emerald-800 px-6 py-8 text-center">
+            <div className=" border border-emerald-800 px-6 py-8 text-center">
               <h2 className="text-xl font-bold text-slate-100">Check your email</h2>
               <p className="mt-3 text-sm text-slate-300">
                 We sent a one-tap sign-in link to <span className="font-semibold text-emerald-700">{email}</span>.
@@ -675,8 +675,8 @@ export default function Signup() {
                         rel="noopener noreferrer"
                         className={
                           i === 0
-                            ? "inline-block w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400"
-                            : "inline-block w-full rounded-xl border border-emerald-700 px-4 py-3 text-sm font-semibold text-emerald-300 transition-all hover:border-emerald-500"
+                            ? "inline-block w-full  border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400"
+                            : "inline-block w-full  border border-emerald-700 px-4 py-3 text-sm font-semibold text-emerald-300 transition-all hover:border-emerald-500"
                         }
                       >
                         {inbox.label} →
@@ -710,7 +710,7 @@ export default function Signup() {
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-700 p-6 shadow-sm">
+            <div className=" border border-slate-700 p-6 shadow-sm">
               <h2 className="font-display text-xl font-bold text-slate-100">
                 {hubspotIntent
                   ? "Sign up for HubSpot sync"
@@ -734,7 +734,7 @@ export default function Signup() {
                     : "Use one-tap OAuth to create your account instantly, then upgrade to unlock full pipeline coverage and CRM automation."}
               </p>
               {matchedUnlockIntent && (
-                <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+                <div className="mt-4  border border-amber-500/40 bg-amber-500/5 p-4">
                   <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-300">
                     Required for matched pipeline
                   </p>
@@ -755,10 +755,10 @@ export default function Signup() {
                 </div>
               )}
               {liveProof && !robotJobsIntent && (liveProof.hot || liveProof.companies) && (
-                <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-800 px-3 py-2 text-[11px] font-semibold text-emerald-300">
+                <div className="mt-4 flex items-center gap-2  border border-emerald-800 px-3 py-2 text-[11px] font-semibold text-emerald-300">
                   <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="absolute inline-flex h-full w-full animate-ping  bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2  bg-emerald-500" />
                   </span>
                   <span>
                     {liveProof.hot ? `${liveProof.hot.toLocaleString()} HOT buyers live now` : "Live buyer signals scored"}
@@ -773,7 +773,7 @@ export default function Signup() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Full name"
-                  className="mt-4 w-full rounded-xl border border-slate-600 bg-transparent px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
+                  className="mt-4 w-full  border border-slate-600 bg-transparent px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
                 />
               )}
               <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-2`}>
@@ -781,7 +781,7 @@ export default function Signup() {
                   type="button"
                   onClick={() => void oauth("google")}
                   disabled={!supabase || oauthPending !== null}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
+                  className="flex w-full items-center justify-center gap-2  border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
                 >
                   <GoogleGlyph />
                   {oauthPending === "google" ? "Redirecting to Google..." : "Continue with Google — one tap"}
@@ -790,7 +790,7 @@ export default function Signup() {
                   type="button"
                   onClick={() => void oauth("github")}
                   disabled={!supabase || oauthPending !== null}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600 px-4 py-3 text-sm font-bold text-slate-100 transition-all hover:border-slate-400 disabled:opacity-40"
+                  className="flex w-full items-center justify-center gap-2  border border-slate-600 px-4 py-3 text-sm font-bold text-slate-100 transition-all hover:border-slate-400 disabled:opacity-40"
                 >
                   <Github className="h-4 w-4" aria-hidden="true" />
                   {oauthPending === "github" ? "Redirecting to GitHub..." : "Continue with GitHub — one tap"}
@@ -801,7 +801,7 @@ export default function Signup() {
                   </p>
                 )}
               </div>
-              <div className="mt-4 rounded-xl border border-cyan-700 px-4 py-3 text-xs text-cyan-300">
+              <div className="mt-4  border border-cyan-700 px-4 py-3 text-xs text-cyan-300">
                 Microsoft sign in coming soon.
               </div>
               <div className="my-5 flex items-center gap-3">
@@ -819,18 +819,18 @@ export default function Signup() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@robotcompany.com"
                   disabled={status === "sending"}
-                  className="w-full rounded-xl border border-slate-600 bg-transparent px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
+                  className="w-full  border border-slate-600 bg-transparent px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
                 />
                 {status === "error" && (
-                  <p className="rounded-lg border border-red-700 px-3 py-2 text-xs text-red-300">{errMsg}</p>
+                  <p className="border border-red-700 px-3 py-2 text-xs text-red-300">{errMsg}</p>
                 )}
                 <button
                   type="submit"
                   disabled={status === "sending" || !email.trim()}
                   className={
                     hubspotIntent
-                      ? "w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
-                      : "w-full rounded-xl border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
+                      ? "w-full  border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
+                      : "w-full  border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
                   }
                 >
                   {status === "sending" ? "Sending..." : hubspotIntent ? "Sign up & connect HubSpot" : "Email me a sign-in link"}

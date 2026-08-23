@@ -542,7 +542,7 @@ export default function Crm() {
         {!fromJobs ? (
           <>
           {msg && (
-          <p className="mb-2 rounded-md border border-amber-400/40 bg-amber-400/10 px-2.5 py-1.5 text-xs font-medium text-amber-200">
+          <p className="mb-2  border border-amber-400/40 bg-amber-400/10 px-2.5 py-1.5 text-xs font-medium text-amber-200">
             {msg}
           </p>
         )}
@@ -619,7 +619,7 @@ export default function Crm() {
                   <p className="sb-kicker">Job outreach checkpoint</p>
                   <h2 className="mt-0.5 text-xl font-semibold text-white">{selectedAccount.name}</h2>
                 </div>
-                <span className="inline-flex rounded px-1.5 py-0.5 text-sm font-semibold uppercase tracking-wide text-amber-200" style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                <span className="inline-flex px-1.5 py-0.5 text-sm font-semibold uppercase tracking-wide text-amber-200" style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)" }}>
                   {selectedAccount.outreach_stage || "captured"}
                 </span>
               </div>
@@ -651,7 +651,7 @@ export default function Crm() {
                       key={trait.id}
                       type="button"
                       onClick={() => toggleTrait(trait.id)}
-                      className={`rounded-full border px-2 py-1 text-sm font-bold ${
+                      className={` border px-2 py-1 text-sm font-bold ${
                         selectedTraits.includes(trait.id)
                           ? "border-amber-400 bg-amber-400/15 text-amber-200"
                           : "border-slate-600 bg-[#081126] text-slate-400"
@@ -733,7 +733,7 @@ export default function Crm() {
                   className="sb-input min-h-[72px] leading-relaxed"
                 />
               </label>
-              <div className="mt-2 rounded-md border border-slate-600 bg-[#081126] p-2">
+              <div className="mt-2  border border-slate-600 bg-[#081126] p-2">
                 <p className="sb-kicker mb-1.5">Refine from this draft</p>
                 <div className="flex flex-wrap gap-1">
                   {VOICE_FEEDBACK.map((item) => (
@@ -749,7 +749,7 @@ export default function Crm() {
                 </div>
               </div>
               {scoutStyleGuidance() && (
-                <div className="mt-2 rounded-md border border-emerald-500/30 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-slate-200">
+                <div className="mt-2  border border-emerald-500/30 bg-emerald-400/10 p-2 text-[11px] leading-relaxed text-slate-200">
                   {scoutStyleGuidance()}
                 </div>
               )}
@@ -799,7 +799,7 @@ export default function Crm() {
                   });
                 }}
               />
-              <div className="rounded-md border border-emerald-500/30 bg-[#081126] p-2">
+              <div className=" border border-emerald-500/30 bg-[#081126] p-2">
                 <p className="sb-kicker text-emerald-300">SIGNAL workflow intelligence</p>
                 <p className="mt-1 text-sm font-semibold text-white">
                   {selectedAccount.workflow_intelligence?.recommended_action || "Waiting for SIGNAL activity on this account."}
@@ -811,7 +811,7 @@ export default function Crm() {
                   <span>Replies: {selectedAccount.workflow_intelligence?.reply_count ?? 0}</span>
                 </div>
               </div>
-              <div className="mb-2 rounded-md border border-slate-600 bg-[#081126] p-2">
+              <div className="mb-2  border border-slate-600 bg-[#081126] p-2">
                 <p className="sb-kicker">Apollo prospect search</p>
                 <p className="mt-1 text-xs text-slate-400">
                   Search target: {selectedAccount.prospect_search?.organization_domain || selectedAccount.prospect_search?.organization_name || selectedAccount.name}
@@ -840,7 +840,7 @@ export default function Crm() {
                   <p className="sb-kicker">SIGNAL background ideas</p>
                   <div className="mt-1.5 space-y-1.5">
                     {suggestions.map((item) => (
-                      <div key={item.trigger} className="rounded-md border border-slate-600 bg-[#081126] p-2">
+                      <div key={item.trigger} className=" border border-slate-600 bg-[#081126] p-2">
                         <p className="text-[11px] font-semibold text-slate-100">{item.trigger}</p>
                         <p className="mt-0.5 text-[11px] leading-relaxed text-slate-400">{item.action}</p>
                         <p className="mt-0.5 text-[10px] leading-relaxed text-slate-500">{item.why}</p>
