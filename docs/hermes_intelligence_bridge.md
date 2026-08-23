@@ -46,6 +46,8 @@ Also: [hermes_cal_bridge.md](hermes_cal_bridge.md) — how Hermes intelligence f
 - Header: `X-Admin-Key: <ADMIN_KEY>` (Fly secret / Hermes `RFR_ADMIN_KEY`), **or**
 - Query: `?token=<SCRAPER_CRON_TOKEN>`
 
+`fly secrets list` prints a 16-character hex **fingerprint**, not the key. Using that digest as `X-Admin-Key` is rejected. Hermes `RFR_ADMIN_KEY` and GitHub Actions `ADMIN_KEY` must be the same value as Fly `ADMIN_KEY`.
+
 Never put keys in digests, watch state, or git.
 
 Hermes env:

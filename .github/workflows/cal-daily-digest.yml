@@ -27,15 +27,28 @@ jobs:
           set -euo pipefail
           URL="https://ready-2-robot.fly.dev/api/v1/market-graph/daily-digest-send"
           BODY='{"force": false, "period_hours": 24}'
+          post() {
+            local extra=("$@")
+            local tmp
+            tmp="$(mktemp)"
+            local code
+            code="$(curl -sS -o "$tmp" -w "%{http_code}" -X POST "$URL" \
+              -H "Content-Type: application/json" \
+              "${extra[@]}" \
+              -d "$BODY" || true)"
+            echo "HTTP $code"
+            cat "$tmp"
+            echo
+            if [ "$code" != "200" ]; then
+              echo "::error::daily-digest-send failed HTTP $code. If the body mentions a 16-character hex fingerprint, GitHub ADMIN_KEY is the fly secrets list digest — set the real ADMIN_KEY (same value as Fly), not the fingerprint."
+              exit 1
+            fi
+          }
           if [ -n "${ADMIN_KEY:-}" ]; then
-            curl -sS -f -X POST "$URL" \
-              -H "Content-Type: application/json" \
-              -H "X-Admin-Key: ${ADMIN_KEY}" \
-              -d "$BODY"
+            post -H "X-Admin-Key: ${ADMIN_KEY}"
           elif [ -n "${SCRAPER_CRON_TOKEN:-}" ]; then
-            curl -sS -f -X POST "${URL}?token=${SCRAPER_CRON_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -d "$BODY"
+            URL="${URL}?token=${SCRAPER_CRON_TOKEN}"
+            post
           else
             echo "No ADMIN_KEY or SCRAPER_CRON_TOKEN in Actions. Fly in-process digest still owns the send."
             exit 0

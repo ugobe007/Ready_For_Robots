@@ -2,6 +2,26 @@
 
 Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
+## 2026-08-23 — Hermes is not reaching Fly
+
+### Findings
+
+- Public pipeline (5 leads, `built_at` 2026-08-23) has **empty** `hermes_qualify` / job titles / DMs / buying windows / video evidence.
+- Floor manager log still says “Awaiting first cron tick” (skill stood up 2026-08-14). Hourly `rfr-sales-floor-manager` has not written.
+- GHA **Cal daily digest** failed HTTP **403** on 2026-08-20/21/22. `ADMIN_KEY` is set in Actions but Fly rejects it (`Invalid X-Admin-Key or token`). Common cause: GitHub secret is the 16-char `fly secrets list` digest, not the real `ADMIN_KEY`.
+- Hermes Mac crons still likely pinned to `--provider ai-gateway` (HTTP 402, 2026-08-20). Skills in-repo are terminal `curl` only; the Mac job list was never confirmed.
+
+### Done (this cycle)
+
+- Ingest auth (`_require_ingest_auth`) rejects the 16-char fingerprint with an explicit message.
+- GHA digest prints the Fly error body instead of a bare curl 403.
+
+### Ranked proposals
+
+1. **[H/L]** On the Mac: `hermes doctor --fix`, `hermes gateway start`, `hermes cron list` — remove `--provider ai-gateway`; jobs must `curl` Fly with `RFR_ADMIN_KEY` = Fly `ADMIN_KEY`.
+2. **[H/L]** Sync GitHub Actions `ADMIN_KEY` to the real Fly secret (not the fingerprint). Same value Hermes uses as `RFR_ADMIN_KEY`.
+3. **[M/L]** After auth works, POST `/api/v1/market-graph/infer-qualify` once so overlays appear on pipeline.
+
 ## 2026-08-20 — Stop paid LLM lookups (Hermes 402)
 
 ### Findings
