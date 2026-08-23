@@ -43,19 +43,51 @@ Also: [hermes_cal_bridge.md](hermes_cal_bridge.md) — how Hermes intelligence f
 
 ## Auth
 
-- Header: `X-Admin-Key: <ADMIN_KEY>` (Fly secret / Hermes `RFR_ADMIN_KEY`), **or**
-- Query: `?token=<SCRAPER_CRON_TOKEN>`
+Hermes does not have its own ReadyForRobots key. **`RFR_ADMIN_KEY` is an alias** for the Fly secret named **`ADMIN_KEY`** on app **`ready-2-robot`**.
 
-`fly secrets list` prints a 16-character hex **fingerprint**, not the key. Using that digest as `X-Admin-Key` is rejected. Hermes `RFR_ADMIN_KEY` and GitHub Actions `ADMIN_KEY` must be the same value as Fly `ADMIN_KEY`.
+| Name you see | Where it lives | What it is |
+|--------------|----------------|------------|
+| `ADMIN_KEY` | Fly → `ready-2-robot` secrets | Canonical ops key. Header `X-Admin-Key`. |
+| `ADMIN_KEY` | Repo-root `.env` (gitignored) | Local copy. `./scripts/sync_fly_admin_key.sh` pushes this **to** Fly. |
+| `ADMIN_KEY` | GitHub → repo **Settings → Secrets and variables → Actions** | Copy of the same Fly value (digest Action / harness). |
+| `RFR_ADMIN_KEY` | Mac file `~/.hermes/.env` | Hermes env name for that **same** Fly `ADMIN_KEY`. |
+| `SCRAPER_CRON_TOKEN` | Fly (optional) | Alternate auth: `?token=` on ingest URLs. |
+
+`fly secrets list` prints a 16-character hex **fingerprint**, not the secret. Pasting that fingerprint as `X-Admin-Key` is rejected.
+
+### Read the real value (Mac Terminal.app, with `flyctl` logged in)
+
+Do **not** run this in Cursor Cloud or in the Hermes chat window.
+
+```bash
+fly ssh console -a ready-2-robot -C 'printenv ADMIN_KEY'
+```
+
+If you already have a repo checkout on the Mac:
+
+```bash
+grep '^ADMIN_KEY=' /path/to/Ready_For_Robots/.env
+```
+
+### Put it on Hermes (Mac only)
+
+Nous Hermes Agent is a CLI on the Mac (`hermes`), not a bash builtin. Install/docs: https://github.com/nousresearch/hermes-agent — then:
+
+```bash
+# ~/.hermes/.env  (create if missing)
+RFR_API_BASE=https://ready-2-robot.fly.dev
+RFR_ADMIN_KEY='paste-the-printenv-value-here'
+```
+
+```bash
+hermes doctor --fix
+hermes gateway start
+hermes cron list
+```
+
+Those three commands fail in Cursor’s cloud terminal and in Hermes chat because `hermes` is not on PATH there.
 
 Never put keys in digests, watch state, or git.
-
-Hermes env:
-
-| Var | Purpose |
-|-----|---------|
-| `RFR_API_BASE` | e.g. `https://ready-2-robot.fly.dev` |
-| `RFR_ADMIN_KEY` | Same as Fly `ADMIN_KEY` |
 
 ## Track map
 
