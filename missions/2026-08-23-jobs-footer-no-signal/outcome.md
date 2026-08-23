@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-23  
 **Type:** build  
-**Status:** in progress
+**Status:** shipped (PR)
 
 ## Diff
 
@@ -16,6 +16,12 @@
 
 `pnpm exec vitest run client/src/lib/jobsWorkflow.test.ts` — 28 passed.
 
+Local Vite (`localhost:3009`):
+
+- `/signup?src=jobs_activate` — footer kicker JOBS; Product is Jobs / CRM / About; no Pipeline / Signals; no Signal FAB; copyright “Jobs for your robot.”
+- `/intelligence` — same Jobs footer; no Signal FAB.
+- `/signup?next=/pipeline` — SIGNAL footer keeps Pipeline / Signals and the Signal FAB.
+
 ## Follow-ups
 
-Intelligence **body** is still SIGNAL copy. CRM “Pipeline lead #” hop stays SIGNAL-side for a later cycle.
+Intelligence **body** is still SIGNAL copy (“Activate SIGNAL from live intelligence”). CRM “Pipeline lead #” hop stays SIGNAL-side for a later cycle.
