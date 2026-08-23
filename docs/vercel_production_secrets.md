@@ -16,6 +16,8 @@ Until these three **repository secrets** exist, that workflow cannot call `verce
 
 Paste them in GitHub: **ugobe007/Ready_For_Robots** → Settings → Secrets and variables → Actions → New repository secret. Names must match **exactly** (case-sensitive).
 
+**Paste rules for `VERCEL_TOKEN`:** one token string, nothing else. No trailing space, no newline, no quotes, no `Bearer ` prefix. Vercel CLI 59+ errors with `Must not contain: " "` if any space is present. A GitHub Actions env dump that shows `VERCEL_TOKEN: *** ` (space after the mask) while `VERCEL_ORG_ID: ***` has none means the token secret itself has a trailing space. The deploy workflow now trims that; still re-paste the secret so later jobs do not depend on trim.
+
 These are **not** `DATABASE_URL`, `FLY_API_TOKEN`, or `ANTHROPIC_API_KEY`. Those are other systems.
 
 ---
@@ -37,6 +39,7 @@ Alternatively: Vercel dashboard → a Preview for the merge SHA → **Promote to
 |--|---------------|------|
 | Duration | 6–11s | minutes |
 | Log | `VERCEL_TOKEN:` empty; warning/error about secrets | `vercel deploy --prebuilt --prod` |
+| Token paste | `Must not contain: " "` (CLI 59+) | `vercel pull` then a minutes-long build |
 | GitHub Deployments | Fly `production` only | Vercel Production or a new `readyforrobots.com` alias |
 | Live JS | Same `index-….js` as yesterday | New hashed bundle |
 

@@ -8,8 +8,10 @@
 #   VERCEL_PROJECT_ID  — the Vercel project id for readyforrobots-new
 # All three secrets are required. A missing-secret skip used to mark the
 # job green in ~7s while readyforrobots.com stayed on a stale Preview.
-# Fail instead so ProductManager / GHA cannot lie. Vercel Git on Hobby
-# still builds PR Previews; Production needs this CLI --prod path.
+# Fail instead so ProductManager / GHA cannot lie. Vercel CLI 59+ also
+# rejects --token values that contain a space (trailing paste is common);
+# the guard step trims that before vercel pull. Vercel Git on Hobby still
+# builds PR Previews; Production needs this CLI --prod path.
 name: Deploy frontend to Vercel
 
 on:
@@ -44,16 +46,8 @@ jobs:
 
       - name: Check Vercel secrets are configured
         id: guard
-        run: |
-          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::error::Vercel CLI secrets not set (VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID)."
-            echo "This job used to skip-green in ~7s while readyforrobots.com did not move."
-            echo "Add the three repo secrets, then re-run this workflow (or promote a Preview)."
-            echo "See docs/product_integrity_loop.md"
-            exit 1
-          fi
-          echo "configured=true" >> "$GITHUB_OUTPUT"
+        working-directory: ${{ github.workspace }}
+        run: python3 scripts/sanitize_vercel_cli_secret.py
 
       - name: Setup Node.js
         if: steps.guard.outputs.configured == 'true'
