@@ -165,6 +165,8 @@ Never put keys in digests, watch state, or git.
 
 Qualify overlays use `truth_state: HERMES_OVERLAY` — not customer-confirmed CRM QUALIFY.
 
+**Implementation note (2026-08-23):** Tracks 8–10 (`/buying-window-overlay`, `/video-evidence/ingest`, `/vendor-video-evidence/ingest`, `/video-evidence/seed-targets`) were documented before they existed on Fly. They are implemented in-repo with `dry_run` support; production OpenAPI will list them after the next Fly deploy. Live overlay coverage is still empty until Hermes auth reaches Fly.
+
 ## Cron roster (America/Los_Angeles)
 
 **Do not pin crons to AI Gateway, OpenAI, or Anthropic.** Those lookups burn paid tokens and fail with HTTP 402 when the Vercel gateway has no credit. Hermes must use **terminal-only** (`curl` to Fly). Intelligence runs on ReadyForRobots’ local inference engine.

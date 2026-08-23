@@ -2,6 +2,28 @@
 
 Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
+## 2026-08-23 — Hermes workflow test (Sunday)
+
+### Findings
+
+- Ingest **auth contract on Fly is correct**: unauth 403, `fly secrets list` fingerprint 401, Supabase JWT 401. Reconstruct is public 200.
+- Pipeline overlays are still **empty** (5 leads). Vendor-news + deployment-evidence rows exist, so *some* Hermes/research data has landed historically — qualify/jobs/DM overlays have not.
+- GHA Cal digest still 403 as of 15:12 UTC (before PR #111). Next scheduled run should print Fly’s body; the secret is still wrong.
+- Documented tracks 8–10 (buying-window, customer video, vendor video, seed-targets) were **docs-only** on Fly (OpenAPI 404/SPA). In-repo ingest now exists; needs Fly deploy.
+- Qualify/contacts `dry_run` queried `companies` even when `dry_run=true`, so Hermes smoke against an empty/local DB reported `accepted: 0`.
+
+### Done (this cycle)
+
+- Skip DB on qualify/contacts dry_run.
+- Implement buying-window + video ingest + seed-targets.
+- Health probe now checks ingest auth + documented routes.
+
+### Ranked proposals
+
+1. **[H/L]** Sync `RFR_ADMIN_KEY` → Fly `ADMIN_KEY` + GitHub Actions (not fingerprint, not `SERVICE_ROLE_KEY`). — owner: `ops` / Mac
+2. **[H/M]** Deploy market-graph ingest (this PR) so tracks 8–10 exist on Fly. — owner: `deploy`
+3. **[M/L]** After auth works, one `POST /infer-qualify` so pipeline `hermes_qualify` is non-empty. — owner: `hermes`
+
 ## 2026-08-23 — Hermes is not reaching Fly
 
 ### Findings

@@ -226,16 +226,6 @@ def apply_qualify_overlay(
     if automation_fit < 0 or automation_fit > 100:
         raise ValueError("automation_fit must be 0–100")
 
-    company = None
-    if company_id is not None:
-        company = db.query(Company).filter(Company.id == int(company_id)).first()
-    elif signal_url:
-        sig = db.query(Signal).filter(Signal.source_url == signal_url).first()
-        if sig:
-            company = db.query(Company).filter(Company.id == sig.company_id).first()
-    if company is None and not dry_run:
-        raise ValueError("company not found for company_id or signal_url")
-
     overlay = {
         "automation_fit": int(automation_fit),
         "labor_intensity": labor_intensity,
@@ -250,9 +240,19 @@ def apply_qualify_overlay(
     if dry_run:
         return {
             "dry_run": True,
-            "company_id": company.id if company else company_id,
+            "company_id": company_id,
             "hermes_qualify": overlay,
         }
+
+    company = None
+    if company_id is not None:
+        company = db.query(Company).filter(Company.id == int(company_id)).first()
+    elif signal_url:
+        sig = db.query(Signal).filter(Signal.source_url == signal_url).first()
+        if sig:
+            company = db.query(Company).filter(Company.id == sig.company_id).first()
+    if company is None:
+        raise ValueError("company not found for company_id or signal_url")
 
     meta = dict(company.crm_metadata or {})
     meta["hermes_qualify"] = overlay
@@ -291,10 +291,6 @@ def ingest_contact(
             "name": name,
         }
 
-    company = db.query(Company).filter(Company.id == int(company_id)).first()
-    if company is None and not dry_run:
-        raise ValueError(f"company_id {company_id} not found")
-
     parts = _norm_name(name).split(" ", 1)
     first = parts[0] if parts else name
     last = parts[1] if len(parts) > 1 else None
@@ -310,6 +306,10 @@ def ingest_contact(
     }
     if dry_run:
         return {"dry_run": True, **preview}
+
+    company = db.query(Company).filter(Company.id == int(company_id)).first()
+    if company is None:
+        raise ValueError(f"company_id {company_id} not found")
 
     row = None
     if linkedin_url:
@@ -452,4 +452,281 @@ def ingest_vendor_news(
         "db_id": str(row.id),
         **preview,
         "company_id": company_id,
+    }
+
+
+def apply_buying_window_overlay(
+    db,
+    *,
+    company_id: int,
+    urgency_0_100: int,
+    window_label: Optional[str] = None,
+    factors: Optional[list[dict[str, Any]]] = None,
+    cal_hint: Optional[str] = None,
+    confidence: Optional[float] = None,
+    hermes_run_id: Optional[str] = None,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Persist timing urgency on company.crm_metadata.hermes_buying_window (not automation fit)."""
+    from app.models.company import Company
+
+    urgency = int(urgency_0_100)
+    if urgency < 0 or urgency > 100:
+        raise ValueError("urgency_0_100 must be 0–100")
+    overlay = {
+        "urgency_0_100": urgency,
+        "window_label": (window_label or "")[:160] or None,
+        "factors": list(factors or [])[:12],
+        "cal_hint": (cal_hint or "")[:280] or None,
+        "confidence": None if confidence is None else float(confidence),
+        "hermes_run_id": hermes_run_id,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "truth_state": "HERMES_OVERLAY",
+    }
+    if dry_run:
+        return {
+            "dry_run": True,
+            "company_id": company_id,
+            "hermes_buying_window": overlay,
+        }
+
+    company = db.query(Company).filter(Company.id == int(company_id)).first()
+    if company is None:
+        raise ValueError(f"company_id {company_id} not found")
+    meta = dict(company.crm_metadata or {})
+    meta["hermes_buying_window"] = overlay
+    company.crm_metadata = meta
+    db.flush()
+    return {
+        "dry_run": False,
+        "company_id": company.id,
+        "company_name": company.name,
+        "hermes_buying_window": overlay,
+    }
+
+
+def _video_item(
+    *,
+    source_url: str,
+    platform: Optional[str],
+    evidence_kind: Optional[str],
+    title: Optional[str],
+    excerpt: Optional[str],
+    workflow_hint: Optional[str],
+    robot_visible: Optional[str],
+    facility_hint: Optional[str],
+    confidence: Optional[float],
+    published_at: Optional[str],
+) -> dict[str, Any]:
+    url = (source_url or "").strip()
+    if not url:
+        raise ValueError("source_url required")
+    return {
+        "source_url": url[:500],
+        "platform": (platform or urlparse(url).netloc or "unknown")[:64],
+        "evidence_kind": (evidence_kind or "facility_tour")[:64],
+        "title": (title or "")[:240] or None,
+        "excerpt": (excerpt or "")[:800] or None,
+        "workflow_hint": (workflow_hint or "")[:160] or None,
+        "robot_visible": (robot_visible or "")[:120] or None,
+        "facility_hint": (facility_hint or "")[:160] or None,
+        "confidence": None if confidence is None else float(confidence),
+        "published_at": published_at,
+        "ingested_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def ingest_video_evidence(
+    db,
+    *,
+    company_id: Optional[int] = None,
+    company_name: Optional[str] = None,
+    source_url: str,
+    platform: Optional[str] = None,
+    evidence_kind: Optional[str] = None,
+    title: Optional[str] = None,
+    excerpt: Optional[str] = None,
+    workflow_hint: Optional[str] = None,
+    robot_visible: Optional[str] = None,
+    facility_hint: Optional[str] = None,
+    confidence: Optional[float] = None,
+    published_at: Optional[str] = None,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Append URL-deduped customer use-case video onto crm_metadata.hermes_video_evidence."""
+    from app.models.company import Company
+
+    item = _video_item(
+        source_url=source_url,
+        platform=platform,
+        evidence_kind=evidence_kind,
+        title=title,
+        excerpt=excerpt,
+        workflow_hint=workflow_hint,
+        robot_visible=robot_visible,
+        facility_hint=facility_hint,
+        confidence=confidence,
+        published_at=published_at,
+    )
+    if dry_run:
+        return {
+            "dry_run": True,
+            "company_id": company_id,
+            "company_name": company_name,
+            "hermes_video_evidence": item,
+        }
+
+    company = None
+    if company_id is not None:
+        company = db.query(Company).filter(Company.id == int(company_id)).first()
+    elif company_name:
+        company = find_or_create_company(
+            db, employer=company_name, source="hermes_video_evidence"
+        )
+    if company is None:
+        raise ValueError("company_id or company_name required")
+
+    meta = dict(company.crm_metadata or {})
+    videos = [
+        v
+        for v in list(meta.get("hermes_video_evidence") or [])
+        if isinstance(v, dict) and v.get("source_url") != item["source_url"]
+    ]
+    videos.append(item)
+    meta["hermes_video_evidence"] = videos[-25:]
+    company.crm_metadata = meta
+    db.flush()
+    return {
+        "dry_run": False,
+        "company_id": company.id,
+        "company_name": company.name,
+        "hermes_video_evidence": item,
+        "stored": len(meta["hermes_video_evidence"]),
+    }
+
+
+def ingest_vendor_video_evidence(
+    db,
+    *,
+    vendor_name: str,
+    source_url: str,
+    platform: Optional[str] = None,
+    evidence_kind: Optional[str] = None,
+    title: Optional[str] = None,
+    robot_model: Optional[str] = None,
+    confidence: Optional[float] = None,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Append OEM demo / field video onto robot_companies.market_intelligence."""
+    from app.models.robot_company import RobotCompany
+
+    name = _norm_name(vendor_name)
+    if not name:
+        raise ValueError("vendor_name required")
+    item = _video_item(
+        source_url=source_url,
+        platform=platform,
+        evidence_kind=evidence_kind or "oem_demo",
+        title=title,
+        excerpt=None,
+        workflow_hint=None,
+        robot_visible=robot_model,
+        facility_hint=None,
+        confidence=confidence,
+        published_at=None,
+    )
+    item["robot_model"] = (robot_model or "")[:120] or None
+    if dry_run:
+        return {
+            "dry_run": True,
+            "vendor_name": name,
+            "hermes_video_evidence": item,
+        }
+
+    row = (
+        db.query(RobotCompany)
+        .filter(RobotCompany.company_name.ilike(name))
+        .order_by(RobotCompany.id.asc())
+        .first()
+    )
+    if row is None:
+        raise ValueError(f"robot vendor {name!r} not found")
+    intel = dict(row.market_intelligence or {})
+    videos = [
+        v
+        for v in list(intel.get("hermes_video_evidence") or [])
+        if isinstance(v, dict) and v.get("source_url") != item["source_url"]
+    ]
+    videos.append(item)
+    intel["hermes_video_evidence"] = videos[-25:]
+    row.market_intelligence = intel
+    db.flush()
+    return {
+        "dry_run": False,
+        "vendor_name": row.company_name,
+        "robot_company_id": row.id,
+        "hermes_video_evidence": item,
+        "stored": len(intel["hermes_video_evidence"]),
+    }
+
+
+def list_video_seed_targets(
+    db,
+    *,
+    kind: str = "both",
+    missing_only: bool = True,
+    limit: int = 40,
+) -> dict[str, Any]:
+    """Companies / vendors still missing Hermes video evidence (for cron seeds)."""
+    from app.models.company import Company
+    from app.models.robot_company import RobotCompany
+
+    kind_n = (kind or "both").strip().lower()
+    cap = max(1, min(int(limit), 80))
+    customers: list[dict[str, Any]] = []
+    vendors: list[dict[str, Any]] = []
+    if kind_n in {"customer", "both"}:
+        rows = db.query(Company).order_by(Company.id.desc()).limit(200).all()
+        for c in rows:
+            meta = c.crm_metadata if isinstance(c.crm_metadata, dict) else {}
+            videos = meta.get("hermes_video_evidence") or []
+            if missing_only and videos:
+                continue
+            customers.append(
+                {
+                    "company_id": c.id,
+                    "name": c.name,
+                    "has_video": bool(videos),
+                    "has_qualify": bool(meta.get("hermes_qualify")),
+                }
+            )
+            if len(customers) >= cap:
+                break
+    if kind_n in {"vendor", "both"}:
+        rows = (
+            db.query(RobotCompany)
+            .order_by(RobotCompany.id.desc())
+            .limit(200)
+            .all()
+        )
+        for r in rows:
+            intel = r.market_intelligence if isinstance(r.market_intelligence, dict) else {}
+            videos = intel.get("hermes_video_evidence") or []
+            if missing_only and videos:
+                continue
+            vendors.append(
+                {
+                    "robot_company_id": r.id,
+                    "name": r.company_name,
+                    "has_video": bool(videos),
+                }
+            )
+            if len(vendors) >= cap:
+                break
+    return {
+        "kind": kind_n,
+        "missing_only": missing_only,
+        "customers": customers,
+        "vendors": vendors,
+        "count": len(customers) + len(vendors),
     }
