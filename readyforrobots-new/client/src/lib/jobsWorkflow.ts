@@ -600,6 +600,46 @@ export function jobsHeaderCrmHref(
   return jobsActivateHref();
 }
 
+function queryParams(search?: string | null): URLSearchParams {
+  const raw = (search || "").trim();
+  if (!raw) return new URLSearchParams();
+  return new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw);
+}
+
+function srcFromDest(dest: string): string {
+  const raw = (dest || "").trim();
+  const q = raw.includes("?") ? raw.slice(raw.indexOf("?") + 1) : "";
+  if (!q) return "";
+  try {
+    return new URLSearchParams(q).get("src") || "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Footer + Signal FAB follow the header: Jobs chrome has no Pipeline / SIGNAL.
+ * True on `/` `/jobs…`, About, Jobs CRM, and auth pages that continue Jobs.
+ * False on SIGNAL `/pipeline`, `/signals`, bare `/crm`, and `/signup?next=/pipeline`.
+ */
+export function showJobsSiteChrome(opts: {
+  pathname: string;
+  search?: string | null;
+}): boolean {
+  const path = (opts.pathname || "").trim().split("?")[0] || "";
+  const params = queryParams(opts.search);
+  const src = params.get("src") || "";
+  if (isJobsChromePath(path)) return true;
+  if (path === "/intelligence") return true;
+  if (isJobsHandoffSrc(src)) return true;
+  if (path === "/signup" || path === "/login") {
+    const next = params.get("next") || "";
+    if (isJobsHomeDest(next)) return true;
+    if (isJobsHandoffSrc(srcFromDest(next))) return true;
+  }
+  return false;
+}
+
 export const FIND_JOBS_CTA = "Start jobs →";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */

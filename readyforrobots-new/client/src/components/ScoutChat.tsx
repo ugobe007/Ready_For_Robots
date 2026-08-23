@@ -2,8 +2,9 @@
  * SIGNAL chat shell — light emerald theme, matches site redesign.
  */
 import { createContext, useCallback, useContext, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { MessageSquare, X, Zap } from "lucide-react";
+import { showJobsSiteChrome } from "@/lib/jobsWorkflow";
 
 type ScoutChatCtx = { openChat: () => void };
 const ScoutChatContext = createContext<ScoutChatCtx>({ openChat: () => {} });
@@ -55,14 +56,11 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
 export function ScoutChat({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
+  const search = useSearch();
   const openChat = useCallback(() => setOpen(true), []);
   const onPipeline = location === "/pipeline" || location.startsWith("/admin/prospects");
   const hideFab =
-    location === "/" ||
-    location.startsWith("/?") ||
-    location === "/jobs" ||
-    location.startsWith("/jobs/") ||
-    location.startsWith("/jobs?") ||
+    showJobsSiteChrome({ pathname: location, search }) ||
     location === "/experiment" ||
     location.startsWith("/experiment?");
 
