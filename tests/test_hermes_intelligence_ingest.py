@@ -202,3 +202,37 @@ def test_daily_digest_send_requires_auth(monkeypatch):
         json={"force": False},
     )
     assert r.status_code == 403
+
+
+def test_infer_qualify_rejects_fly_secrets_list_fingerprint(monkeypatch):
+    monkeypatch.setenv("ADMIN_KEY", "test-admin-secret")
+    monkeypatch.delenv("SCRAPER_CRON_TOKEN", raising=False)
+    from app.main import app
+
+    client = TestClient(app)
+    r = client.post(
+        "/api/v1/market-graph/infer-qualify",
+        headers={"X-Admin-Key": "0123456789abcdef"},
+        json={"dry_run": True, "limit": 1},
+    )
+    assert r.status_code == 401
+    assert "fingerprint" in (r.json().get("detail") or "").lower()
+
+
+def test_infer_qualify_rejects_supabase_service_role_jwt(monkeypatch):
+    monkeypatch.setenv("ADMIN_KEY", "test-admin-secret")
+    monkeypatch.delenv("SCRAPER_CRON_TOKEN", raising=False)
+    from app.main import app
+
+    client = TestClient(app)
+    r = client.post(
+        "/api/v1/market-graph/infer-qualify",
+        headers={
+            "X-Admin-Key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.sig",
+        },
+        json={"dry_run": True, "limit": 1},
+    )
+    assert r.status_code == 401
+    detail = (r.json().get("detail") or "").lower()
+    assert "service_role" in detail
+    assert "supabase" in detail

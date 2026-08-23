@@ -73,6 +73,8 @@ Env:
 ```
 GET {RFR_API_BASE}/api/v1/market-graph/cal-status
 Header: X-Admin-Key: {RFR_ADMIN_KEY}
+
+`RFR_ADMIN_KEY` is Hermes’s name for Fly `ADMIN_KEY` (a homemade random string). It is **not** `SERVICE_ROLE_KEY`. See [hermes_intelligence_bridge.md](hermes_intelligence_bridge.md) Auth.
 ```
 
 Returns autopilot / Redis heartbeat summary for digests. Does **not** trigger sends.

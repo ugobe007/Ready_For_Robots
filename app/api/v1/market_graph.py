@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.admin_auth import get_admin_key, get_cron_token
+from app.admin_auth import _reject_misleading_admin_key, get_admin_key, get_cron_token
 from app.database import get_db
 from app.services.market_graph_loop import (
     get_market_graph_loop_status,
@@ -132,6 +132,8 @@ def _require_ingest_auth(
     ok_admin = bool(admin and x_admin_key and x_admin_key.strip() == admin)
     ok_cron = bool(cron and token.strip() == cron)
     if not ok_admin and not ok_cron:
+        if x_admin_key:
+            _reject_misleading_admin_key(x_admin_key)
         raise HTTPException(status_code=403, detail="Invalid X-Admin-Key or token")
     return {"auth": "admin_key" if ok_admin else "cron_token"}
 

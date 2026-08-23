@@ -43,17 +43,106 @@ Also: [hermes_cal_bridge.md](hermes_cal_bridge.md) — how Hermes intelligence f
 
 ## Auth
 
-- Header: `X-Admin-Key: <ADMIN_KEY>` (Fly secret / Hermes `RFR_ADMIN_KEY`), **or**
-- Query: `?token=<SCRAPER_CRON_TOKEN>`
+### Where to run this (Cursor Cloud vs Mac)
+
+The Cursor **Cloud** `[workspace]` terminal (`/workspace` on this VM) has **no** `flyctl`, **no** Hermes CLI, and **no** Mac `~/.hermes/.env`. Commands pasted there will not land.
+
+| Task | Where |
+|------|--------|
+| Paste `RFR_ADMIN_KEY` into Fly as `ADMIN_KEY` | Browser: [Fly secrets for `ready-2-robot`](https://fly.io/apps/ready-2-robot/secrets). No terminal. Field name on Fly is `ADMIN_KEY` (not `RFR_ADMIN_KEY`). |
+| Same string → GitHub Actions | Browser: repo **Settings → Secrets and variables → Actions → `ADMIN_KEY`**. |
+| `fly secrets set` / `hermes doctor` / `hermes gateway` | **Mac** Terminal.app, or a Cursor terminal that is actually on the Mac (not Cloud). |
+| Prove the key works (`curl` to `ready-2-robot.fly.dev`) | Any machine, including Cloud, **after** Fly has the secret (~60s). |
+
+Mac repo root (this machine’s documented clone):
+
+```bash
+cd ~/Desktop/Ready_For_Robots
+```
+
+Hermes keys live in `~/.hermes/.env`, not in the git repo. Repo `.env` may have a local `ADMIN_KEY=` copy; `./scripts/sync_fly_admin_key.sh` reads **that** file, not Hermes.
+
+### What is `ADMIN_KEY`?
+
+Gemini is right: **Supabase has no `ADMIN_KEY`.** Do not look for it in the Supabase dashboard.
+
+`ADMIN_KEY` is a **ReadyForRobots-invented** random string. The API reads `os.getenv("ADMIN_KEY")` in `app/admin_auth.py` and compares it to header `X-Admin-Key`. We store that string on Fly as `ADMIN_KEY`. Hermes stores the **same** string under a different name: `RFR_ADMIN_KEY`.
+
+`SERVICE_ROLE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` is the Supabase **service_role JWT** (`eyJ…`). It talks to Postgres/Auth as the admin role. It is **not** `ADMIN_KEY`. The two values in Hermes `.env` **must be different**. The API **rejects** any `X-Admin-Key` that starts with `eyJ`.
+
+| Name | Where | What it is |
+|------|--------|------------|
+| `ADMIN_KEY` | Fly app `ready-2-robot` | Canonical homemade string. We set it. Not from Supabase. |
+| `ADMIN_KEY` | Repo `.env` (gitignored) | Local copy. `./scripts/sync_fly_admin_key.sh` pushes it to Fly. |
+| `ADMIN_KEY` | GitHub Actions secrets | Same string. Digest 403 means this copy is wrong. |
+| `RFR_ADMIN_KEY` | Mac `~/.hermes/.env` | **Same string as Fly `ADMIN_KEY`**, Hermes name. |
+| `SERVICE_ROLE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | Supabase + Fly + Hermes | Postgres/Auth JWT. Never send as `X-Admin-Key`. |
+| `SCRAPER_CRON_TOKEN` | Fly (optional) | Alternate: `?token=` instead of `X-Admin-Key`. |
+
+`fly secrets list` shows a 16-character hex **fingerprint**, not the secret.
+
+### Do not use `fly ssh … printenv` to discover the key
+
+`fly ssh console -a ready-2-robot -C 'printenv ADMIN_KEY'` is a bad way to learn `ADMIN_KEY`. It fails when:
+
+- `flyctl` is not installed or `fly auth login` was never run
+- machines are stopped (`fly status -a ready-2-robot`)
+- `-C` quoting / flyctl version (`--command` vs `-C`)
+- Fly **never had** `ADMIN_KEY` — the command prints nothing; the dashboard cannot reveal secret values
+
+You do not need to read the key off Fly. **Hermes already has `RFR_ADMIN_KEY`.** Put that string on Fly as `ADMIN_KEY`.
+
+### Fastest fix: paste into the Fly dashboard (no Mac CLI)
+
+1. Open `~/.hermes/.env` (or the Hermes env you already have) and copy the **`RFR_ADMIN_KEY=`** value only — not `SERVICE_ROLE_KEY`. It must not start with `eyJ`.
+2. Open [https://fly.io/apps/ready-2-robot/secrets](https://fly.io/apps/ready-2-robot/secrets) while logged into the Fly org that owns `ready-2-robot`.
+3. Set secret name **`ADMIN_KEY`** (exactly that). Value = the pasted string. Save. Machines restart.
+4. GitHub → **Settings → Secrets and variables → Actions** → `ADMIN_KEY` = the same paste.
+
+Wait ~60s. Then this `curl` **can** run in the Cursor Cloud terminal:
+
+```bash
+# paste the key only into the header; do not commit it
+curl -sS -X POST "https://ready-2-robot.fly.dev/api/v1/market-graph/infer-qualify" \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Key: PASTE_RFR_ADMIN_KEY_HERE" \
+  -d '{"dry_run": true, "limit": 1}'
+```
+
+### Optional: same thing from Mac Terminal.app (`flyctl` + `fly auth login`)
+
+If `RFR_ADMIN_KEY` does **not** start with `eyJ` (it should not match `SERVICE_ROLE_KEY`):
+
+```bash
+set -a && source ~/.hermes/.env && set +a
+case "$RFR_ADMIN_KEY" in eyJ*) echo "STOP: RFR_ADMIN_KEY is a JWT; generate a new hex"; exit 1;; esac
+echo "RFR_ADMIN_KEY length ${#RFR_ADMIN_KEY}"   # expect ~32–64 chars, not a JWT
+fly secrets set "ADMIN_KEY=${RFR_ADMIN_KEY}" -a ready-2-robot
+```
+
+Then GitHub → repo → Settings → Secrets → Actions → `ADMIN_KEY` = **that same string**.
+
+If `RFR_ADMIN_KEY` *does* start with `eyJ`, it was copied from a Supabase JWT. Throw it away:
+
+```bash
+NEW_KEY="$(openssl rand -hex 32)"
+fly secrets set "ADMIN_KEY=${NEW_KEY}" -a ready-2-robot
+# ~/.hermes/.env → RFR_ADMIN_KEY=<paste NEW_KEY>
+# GitHub Actions secret ADMIN_KEY = same NEW_KEY
+```
+
+Wait ~60s after `fly secrets set`. Test:
+
+```bash
+curl -sS -X POST "https://ready-2-robot.fly.dev/api/v1/market-graph/infer-qualify" \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Key: ${RFR_ADMIN_KEY:-$NEW_KEY}" \
+  -d '{"dry_run": true, "limit": 1}'
+```
+
+A 200 JSON body means Fly now has the same key Hermes will send. A 401 mentioning `SERVICE_ROLE_KEY` / `eyJ` means the header is still the Supabase JWT.
 
 Never put keys in digests, watch state, or git.
-
-Hermes env:
-
-| Var | Purpose |
-|-----|---------|
-| `RFR_API_BASE` | e.g. `https://ready-2-robot.fly.dev` |
-| `RFR_ADMIN_KEY` | Same as Fly `ADMIN_KEY` |
 
 ## Track map
 
