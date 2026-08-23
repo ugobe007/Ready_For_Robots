@@ -1,12 +1,24 @@
+/**
+ * About (`/intelligence`) — Jobs chrome. Robot URL → jobs → CRM.
+ */
 import { useEffect, useState } from "react";
-import { ArrowRight, BarChart3, Building2, FileText, Mail, Radio, Search, Send, Zap } from "lucide-react";
+import { ArrowRight, Building2, FileText, Mail, Search } from "lucide-react";
 import { Link } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
-import { JOBS_HEADER_OFFSET_CLASS } from "@/lib/jobsWorkflow";
+import {
+  CRM_UNLOCKED_JOBS,
+  FIND_JOBS_CTA,
+  JOBS_ACTIVATE_SRC,
+  JOBS_EXAMPLE_CAP,
+  JOBS_FOR_YOUR_ROBOT_HEADING,
+  JOBS_HEADER_OFFSET_CLASS,
+  JOBS_PROCESS_STEPS,
+  jobsFreshHomeHref,
+} from "@/lib/jobsWorkflow";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
 
@@ -17,40 +29,37 @@ type Story = {
   score?: number;
 };
 
-const signalStats = [
-  ["158", "enterprises analyzed"],
-  ["437", "buying signals detected"],
-  ["62%", "strong buying intent"],
-];
+const ABOUT_STATS = [
+  ["01", JOBS_PROCESS_STEPS[0].label],
+  ["02", JOBS_PROCESS_STEPS[1].label],
+  ["03", JOBS_PROCESS_STEPS[2].label],
+] as const;
 
-const scoringModel = [
+const JOBS_LOOP = [
   {
-    label: "Intent score",
-    value: "40%",
-    color: "#FFB000",
-    copy: "Weights urgent public signals: labor gaps, expansion, CapEx, funding, executive hires, and robotics pilots.",
+    icon: Search,
+    title: "FIND",
+    copy: "Paste a robot URL. We read the SKU — not a category guess.",
   },
   {
-    label: "Robot fit",
-    value: "30%",
-    color: "#059669",
-    copy: "Maps the buyer’s operating pain to robot categories like AMRs, service robots, cleaning, healthcare logistics, or food automation.",
+    icon: Building2,
+    title: "JOBS",
+    copy: `Inspect ${JOBS_EXAMPLE_CAP} employment cards: employer, workplace, work.`,
   },
   {
-    label: "Timing window",
-    value: "20%",
-    color: "#10b981",
-    copy: "Prioritizes signals that imply a current buying window: new facility design, budget planning, staffing urgency, or active vendor review.",
+    icon: FileText,
+    title: "CARDS",
+    copy: "Cards stay Conditional until there is evidence. Qualification is explainable, never a %.",
   },
   {
-    label: "Sales motion",
-    value: "10%",
-    color: "#34d399",
-    copy: "Turns the signal into an action: who to contact, what proof point to lead with, and why now.",
+    icon: Mail,
+    title: "CRM",
+    copy: `Keep ${CRM_UNLOCKED_JOBS} opportunities on free. Run the next robot the same way.`,
   },
 ];
 
 const EYEBROW = "text-[10px] font-semibold uppercase tracking-[0.15em]";
+const JOBS_SIGNUP_HREF = `/signup?src=${JOBS_ACTIVATE_SRC}`;
 
 export default function Intelligence() {
   const [stories, setStories] = useState<Story[]>([]);
@@ -124,32 +133,36 @@ export default function Intelligence() {
         }
         description={
           <>
-            Labor pressure, expansion, CapEx, and deployment news — ranked as work robots can do, not as a generic sales dump.
+            Robots need jobs. We find the work your machine is qualified to do — employer, workplace, work — then keep it in CRM.
           </>
         }
         innerClassName="pb-8"
       >
         <div className="mt-6 space-y-6">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {signalStats.map(([value, label]) => (
-              <div key={label} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
-                <div className={`font-mono text-xl font-black ${value === "62%" ? "text-amber-400" : "text-emerald-400"}`}>
-                  {value}
-                </div>
+            {ABOUT_STATS.map(([value, label]) => (
+              <div key={label} className="border border-white/10 bg-white/5 px-3 py-2.5">
+                <div className="font-mono text-xl font-black text-emerald-400">{value}</div>
                 <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">{label}</div>
               </div>
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-[13px]">
-            <a href="#report" className="group inline-flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300">
+            <Link
+              href={jobsFreshHomeHref()}
+              className="group inline-flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
+            >
+              {FIND_JOBS_CTA}
+            </Link>
+            <Link
+              href={JOBS_SIGNUP_HREF}
+              className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white"
+            >
+              Keep jobs in CRM <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <a href="#report" className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white">
               Download report <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </a>
-            <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white">
-              Explore robot signals <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <Link href="/signup" className="group inline-flex items-center gap-1.5 font-semibold text-amber-400 transition-colors hover:text-amber-300">
-              Activate SIGNAL <Zap className="h-3.5 w-3.5" />
-            </Link>
           </div>
         </div>
       </PageHeroDark>
@@ -158,26 +171,21 @@ export default function Intelligence() {
       <main className="flex-1 px-6 pb-20">
         <div className="max-w-6xl mx-auto">
 
-          <section className="mb-12 overflow-hidden rounded-lg border border-slate-600 bg-[#0b162f]">
+          <section className="mb-12 overflow-hidden border border-slate-600 bg-[#0b162f]">
             <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="border-b border-gray-100 p-6 lg:border-b-0 lg:border-r">
-                <p className={`mb-3 ${EYEBROW}`} style={{ color: "#FFB000" }}>Lead scoring model</p>
+              <div className="border-b border-slate-600 p-6 lg:border-b-0 lg:border-r">
+                <p className={`mb-3 ${EYEBROW}`} style={{ color: "#34d399" }}>How Jobs works</p>
                 <h2 className="max-w-xl font-display text-xl font-bold leading-tight text-white lg:text-2xl">
-                  We score the work first, then match it to a robot that can do the job.
+                  {JOBS_FOR_YOUR_ROBOT_HEADING}
                 </h2>
-                <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-gray-500">
-                  SIGNAL does not treat every lead as equal. It ranks the company’s buying intent, the operational problem, and the timing window, then compares that profile against the robot category or vendor URL you submit.
+                <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-slate-400">
+                  Companies have work. Robots need jobs. Paste a product URL, inspect the cards, check the jobs to take forward. Next opens CRM with {CRM_UNLOCKED_JOBS} unlocked opportunities — not a buyer pipeline.
                 </p>
-                <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-slate-600 bg-[#081126]">
-                  {[
-                    ["HOT", "Act now"],
-                    ["WARM", "Sequence"],
-                    ["EMERGING", "Watch"],
-                    ["PARTNER", "Channel fit"],
-                  ].map(([tier, action]) => (
-                    <div key={tier} className="p-3 bg-[#0b162f]">
-                      <p className="font-mono text-[13px] font-bold" style={{ color: tier === "HOT" ? "#FFB000" : "#059669", fontFamily: "'JetBrains Mono', monospace" }}>{tier}</p>
-                      <p className="mt-0.5 text-[11px] text-gray-600">{action}</p>
+                <div className="mt-5 grid grid-cols-3 gap-px overflow-hidden border border-slate-600 bg-[#081126]">
+                  {JOBS_PROCESS_STEPS.map((step) => (
+                    <div key={step.id} className="bg-[#0b162f] p-3">
+                      <p className="font-mono text-[13px] font-bold text-emerald-400">{step.n}</p>
+                      <p className="mt-0.5 text-[11px] text-slate-400">{step.label}</p>
                     </div>
                   ))}
                 </div>
@@ -185,44 +193,36 @@ export default function Intelligence() {
 
               <div className="p-6">
                 <div className="space-y-3.5">
-                  {scoringModel.map((item) => (
-                    <div key={item.label}>
-                      <div className="mb-1.5 flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-[13px] font-semibold text-slate-100">{item.label}</p>
-                          <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{item.copy}</p>
-                        </div>
-                        <span className="shrink-0 font-mono text-[13px] font-bold" style={{ color: item.color, fontFamily: "'JetBrains Mono', monospace" }}>{item.value}</span>
-                      </div>
-                      <div className="h-1 overflow-hidden rounded-full bg-gray-100">
-                        <div className="h-full rounded-full" style={{ width: item.value, background: item.color }} />
-                      </div>
+                  {[
+                    ["Employer", "The organization with physical work — not a prospect or lead."],
+                    ["Workplace", "The facility where the work happens."],
+                    ["Work", "Observable activity, robot-neutral. We do not invent a use-case to fit a SKU."],
+                    ["Robot Job", "Work defined well enough to recruit against. Cards stay Conditional until evidence."],
+                  ].map(([label, copy]) => (
+                    <div key={label} className="border-l-2 border-emerald-400/50 bg-emerald-400/[0.04] px-3.5 py-2.5">
+                      <p className="text-[13px] font-semibold text-slate-100">{label}</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{copy}</p>
                     </div>
                   ))}
-                </div>
-                <div className="mt-5 rounded-r border-l-2 bg-amber-400/[0.04] px-3.5 py-2.5" style={{ borderColor: "#FFB000" }}>
-                  <p className="text-[13px] leading-relaxed" style={{ color: "#FFB000" }}>
-                    Example: a warehouse expansion plus automation hiring scores differently for an AMR vendor than it does for a surgical robotics company. The lead stays the same; the opportunity ranking changes based on robot fit.
-                  </p>
                 </div>
               </div>
             </div>
           </section>
 
-          <section id="report" className="mb-12 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-slate-600 lg:grid-cols-[1fr_360px] bg-[#081126]">
+          <section id="report" className="mb-12 grid grid-cols-1 gap-px overflow-hidden border border-slate-600 lg:grid-cols-[1fr_360px] bg-[#081126]">
             <div className="p-6 bg-[#0b162f]">
-              <p className={`mb-3 ${EYEBROW}`} style={{ color: "#34d399" }}>Enterprise Intelligence Report</p>
+              <p className={`mb-3 ${EYEBROW}`} style={{ color: "#34d399" }}>Work briefing</p>
               <h2 className="max-w-2xl font-display text-2xl font-bold leading-tight text-white lg:text-3xl">
-                The Automation Imperative: labor-intensive industries are flashing buy signals.
+                Labor-intensive workplaces still have jobs robots can do.
               </h2>
               <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-slate-400">
-                Built from real ReadyForRobots signal data: <span className="text-slate-200">158 enterprises</span>, <span className="text-slate-200">437 buying signals</span>, and sector-level ROI patterns for robotics vendors selling into labor-constrained operations.
+                A short briefing on where physical work is piling up — so robot companies show up with jobs, not a generic sales dump.
               </p>
               <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
                 {[
-                  ["Logistics", "leading adoption"],
-                  ["Labor shortage", "highest-intent trigger"],
-                  ["ROI models", "sales narrative ready"],
+                  ["Logistics", "warehouses with work to fill"],
+                  ["Labor shortage", "shifts robots can cover"],
+                  ["Site work", "employer · workplace · task"],
                 ].map(([label, copy]) => (
                   <div key={label} className="border-l px-3 py-1.5" style={{ borderColor: "rgba(3,218,197,0.45)" }}>
                     <p className="text-[13px] font-semibold text-slate-100">{label}</p>
@@ -233,17 +233,17 @@ export default function Intelligence() {
             </div>
             <div className="p-5 bg-[#081126]">
               <div className="mb-4 flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md border" style={{ borderColor: "rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.07)" }}>
+                <div className="flex h-8 w-8 items-center justify-center border" style={{ borderColor: "rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.07)" }}>
                   <FileText className="h-4 w-4" style={{ color: "#34d399" }} />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-white">Download the 2026 report</p>
-                  <p className="text-[11px] text-slate-400">No padded buttons. Just the data.</p>
+                  <p className="text-[13px] font-semibold text-white">Download the 2026 briefing</p>
+                  <p className="text-[11px] text-slate-400">Work, not a buyer dump.</p>
                 </div>
               </div>
               {reportStatus === "success" ? (
-                <div className="rounded-md border border-teal-300/20 px-3.5 py-3 text-[13px]" style={{ color: "#99f6e4", background: "rgba(3,218,197,0.06)" }}>
-                  Report requested. We saved your request and queued the follow-up email.
+                <div className="border border-teal-300/20 px-3.5 py-3 text-[13px]" style={{ color: "#99f6e4", background: "rgba(3,218,197,0.06)" }}>
+                  Briefing requested. We saved your request and queued the follow-up email.
                 </div>
               ) : (
                 <form onSubmit={requestReport} className="space-y-2.5">
@@ -251,7 +251,7 @@ export default function Intelligence() {
                     ["name", "Name", "text"],
                     ["email", "Work email", "email"],
                     ["company", "Company", "text"],
-                    ["robotCategory", "Robot category", "text"],
+                    ["robotCategory", "Robot you place", "text"],
                   ].map(([key, label, type]) => (
                     <input
                       key={key}
@@ -263,14 +263,14 @@ export default function Intelligence() {
                       className={inputClass}
                     />
                   ))}
-                  {reportStatus === "error" && <p className="text-xs text-red-300">Could not request report. Try again.</p>}
+                  {reportStatus === "error" && <p className="text-xs text-red-300">Could not request briefing. Try again.</p>}
                   <button
                     type="submit"
                     disabled={reportStatus === "submitting"}
                     className="group inline-flex items-center gap-1.5 pt-1 text-[13px] font-semibold transition-colors hover:text-teal-200 disabled:opacity-50"
                     style={{ color: "#059669" }}
                   >
-                    {reportStatus === "submitting" ? "Requesting…" : "Download free report"}
+                    {reportStatus === "submitting" ? "Requesting…" : "Download free briefing"}
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </button>
                 </form>
@@ -279,16 +279,11 @@ export default function Intelligence() {
           </section>
 
           <section className="mb-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: Search, title: "Source", copy: "Industry news, job posts, filings, earnings calls, permits, and trade signals." },
-              { icon: Radio, title: "Signal", copy: "SIGNAL identifies the public clues that point to automation readiness." },
-              { icon: BarChart3, title: "Rank", copy: "Scores prioritize timing, pain intensity, fit, and deal motion." },
-              { icon: Building2, title: "Identify", copy: "Sales leads and partnership opportunities become next actions." },
-            ].map((item) => {
+            {JOBS_LOOP.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className="rounded-lg border border-slate-600 bg-[#0b162f] p-4 transition-colors hover:border-emerald-400/40">
-                  <Icon className="mb-4 h-[18px] w-[18px]" style={{ color: item.title === "Rank" ? "#FFB000" : "#34d399" }} />
+                <div key={item.title} className="border border-slate-600 bg-[#0b162f] p-4 transition-colors hover:border-emerald-400/40">
+                  <Icon className="mb-4 h-[18px] w-[18px] text-emerald-400" />
                   <p className="mb-1 text-[13px] font-semibold text-white">{item.title}</p>
                   <p className="text-[13px] leading-relaxed text-slate-400">{item.copy}</p>
                 </div>
@@ -296,31 +291,31 @@ export default function Intelligence() {
             })}
           </section>
 
-          <section id="brief" className="rounded-lg border border-slate-600 bg-[#0b162f] p-6">
+          <section id="brief" className="border border-slate-600 bg-[#0b162f] p-6">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px]">
               <div>
-                <p className={`mb-2.5 ${EYEBROW}`} style={{ color: "#34d399" }}>Robot Intelligence Brief</p>
+                <p className={`mb-2.5 ${EYEBROW}`} style={{ color: "#34d399" }}>Jobs brief</p>
                 <h2 className="max-w-2xl font-display text-2xl font-bold leading-tight text-white">
-                  A weekly brief that keeps the market warm between sales cycles.
+                  A weekly look at work robots can take.
                 </h2>
-                <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-gray-500">
-                  Each issue packages new signals, deployment stories, vendor movement, and ROI language so teams know where to act before the market does.
+                <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-slate-400">
+                  Deployments, open work, and SKUs getting hired — so you run FIND on the next robot instead of waiting on a sales cycle.
                 </p>
                 {stories.length > 0 && (
                   <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
                     {stories.slice(0, 3).map((story, i) => (
-                      <div key={`${story.title || story.company || i}`} className="rounded-md border border-slate-600 bg-[#081126] p-3.5">
-                        <p className="break-words mb-1.5 text-[13px] font-semibold text-slate-100">{cleanScrapedText(story.title || story.company) || "Signal story"}</p>
-                        <p className="break-words text-xs leading-relaxed text-gray-500">{cleanScrapedText(story.summary) || "Fresh signal intelligence from ReadyForRobots."}</p>
+                      <div key={`${story.title || story.company || i}`} className="border border-slate-600 bg-[#081126] p-3.5">
+                        <p className="break-words mb-1.5 text-[13px] font-semibold text-slate-100">{cleanScrapedText(story.title || story.company) || "Work story"}</p>
+                        <p className="break-words text-xs leading-relaxed text-slate-400">{cleanScrapedText(story.summary) || "Fresh work from ReadyForRobots."}</p>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              <form onSubmit={subscribe} className="rounded-md border border-slate-600 bg-[#081126] p-4">
-                <Mail className="mb-3 h-[18px] w-[18px]" style={{ color: "#34d399" }} />
+              <form onSubmit={subscribe} className="border border-slate-600 bg-[#081126] p-4">
+                <Mail className="mb-3 h-[18px] w-[18px] text-emerald-400" />
                 <p className="mb-1.5 text-[13px] font-semibold text-white">Subscribe free</p>
-                <p className="mb-3.5 text-xs leading-relaxed text-gray-500">Buying signals, deployment stories, ROI benchmarks, and SIGNAL activation prompts.</p>
+                <p className="mb-3.5 text-xs leading-relaxed text-slate-400">Jobs, workplaces, and which robots are getting the work.</p>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -333,8 +328,7 @@ export default function Intelligence() {
                 <button
                   type="submit"
                   disabled={newsletterStatus === "submitting"}
-                  className="group mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold transition-colors hover:text-amber-300 disabled:opacity-50"
-                  style={{ color: "#FFB000" }}
+                  className="group mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-emerald-400 transition-colors hover:text-emerald-300 disabled:opacity-50"
                 >
                   {newsletterStatus === "submitting" ? "Subscribing…" : "Subscribe free"}
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -344,11 +338,17 @@ export default function Intelligence() {
           </section>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-5 text-[13px]">
-            <Link href="/signup" className="group inline-flex items-center gap-1.5 font-semibold transition-colors" style={{ color: "#FFB000" }}>
-              Activate SIGNAL from live intelligence <Send className="h-3.5 w-3.5" />
+            <Link
+              href={jobsFreshHomeHref()}
+              className="group inline-flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
+            >
+              {FIND_JOBS_CTA}
             </Link>
-            <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white">
-              Browse signal types <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            <Link
+              href={JOBS_SIGNUP_HREF}
+              className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white"
+            >
+              Keep jobs in CRM <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
         </div>

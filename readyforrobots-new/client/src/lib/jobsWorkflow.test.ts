@@ -820,6 +820,17 @@ describe("jobsWorkflow", () => {
     expect(intel).toMatch(/KARE_FACE/);
     expect(intel).toMatch(/bg-\[#081126\]/);
     expect(intel).not.toMatch(/from "@\/components\/Header"/);
+    expect(intel).toMatch(/jobsFreshHomeHref/);
+    expect(intel).toMatch(/FIND_JOBS_CTA/);
+    expect(intel).toMatch(/JOBS_ACTIVATE_SRC/);
+    expect(intel).toMatch(/JOBS_PROCESS_STEPS/);
+    expect(intel).toMatch(/JOBS_FOR_YOUR_ROBOT_HEADING/);
+    expect(intel).not.toMatch(/Activate SIGNAL/);
+    expect(intel).not.toMatch(/Lead scoring model/);
+    expect(intel).not.toMatch(/buying signals/);
+    expect(intel).not.toMatch(/href=["']\/signals/);
+    expect(intel).not.toMatch(/href=\{\s*["']\/signals["']/);
+    expect(intel).not.toMatch(/\bSIGNAL\b/);
 
     expect(crm).toMatch(/Job outreach checkpoint/);
     expect(crm).not.toMatch(/Buyer outreach checkpoint/);
