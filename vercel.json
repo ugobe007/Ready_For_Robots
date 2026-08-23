@@ -4,7 +4,6 @@
   "installCommand": "npx --yes pnpm@10.4.1 install --frozen-lockfile -C readyforrobots-new",
   "buildCommand": "cd readyforrobots-new && VITE_PUBLIC_API_URL= npx --yes pnpm@10.4.1 exec vite build",
   "outputDirectory": "readyforrobots-new/dist/public",
-  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = main ]; then echo 'Skip Git production; GHA Deploy frontend owns readyforrobots.com'; exit 0; fi; exit 1",
   "rewrites": [
     {
       "source": "/api/:path*",
