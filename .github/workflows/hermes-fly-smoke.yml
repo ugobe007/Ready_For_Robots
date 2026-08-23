@@ -1,0 +1,34 @@
+name: Hermes Fly workflow
+
+# Runs the Hermes qualify tick against production Fly using GitHub ADMIN_KEY
+# (same string as Hermes ~/.hermes/.env RFR_ADMIN_KEY). Never prints the secret.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  infer-qualify:
+    name: Auth smoke + infer-qualify apply
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Hermes workflow against Fly
+        env:
+          RFR_ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RFR_ADMIN_KEY:-}" ]; then
+            echo "GitHub secret ADMIN_KEY is empty. Set it to Hermes RFR_ADMIN_KEY."
+            exit 1
+          fi
+          python3 scripts/hermes_auth_smoke.py --apply
