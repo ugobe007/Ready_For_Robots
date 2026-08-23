@@ -84,7 +84,7 @@ The Vercel project for `readyforrobots.com` must be a **static** deploy (0 serve
 
 If the build fails with “No more than 12 Serverless Functions”, the project is building server/API code on Vercel — fix Root Directory and redeploy.
 
-GitHub **Deploy frontend to Vercel** needs `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`. Missing secrets used to skip-green; the workflow now fails. See `docs/product_integrity_loop.md`.
+GitHub **Deploy frontend to Vercel** needs `VERCEL_TOKEN`. Missing token used to skip-green; `vercel pull` fails on project-scoped tokens. See `docs/vercel_production_secrets.md`.
 
 - Framework preset: Vite or Other
 - Install command: `npx --yes pnpm@10.4.1 install --frozen-lockfile -C readyforrobots-new`

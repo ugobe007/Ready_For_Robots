@@ -76,7 +76,7 @@ flyctl scale memory 2048
 
 `readyforrobots.com` is Vercel. Fly is the API.
 
-GitHub **Deploy frontend to Vercel** must have repo secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`. Without them the job used to skip-green in ~7s and production did not move. It now **fails** until those secrets exist. Vercel Git still builds PR **Preview** URLs; Production needs `vercel deploy --prebuilt --prod` (this workflow) or a promoted Preview.
+GitHub **Deploy frontend to Vercel** must have repo secret `VERCEL_TOKEN`. Without it the job used to skip-green in ~7s and production did not move. `vercel pull` in CLI 59 fails on project-scoped tokens (`Could not retrieve Project Settings`); this workflow uses `vercel deploy --prod` from the repo root instead. See `docs/vercel_production_secrets.md`. Vercel Git still builds PR **Preview** URLs.
 
 See `docs/product_integrity_loop.md`.
 

@@ -1,43 +1,69 @@
-# Vercel production secrets (the three GitHub secrets)
+# Vercel production secrets
 
-`readyforrobots.com` is a Vercel static site. Fly is the API. GitHub workflow **Deploy frontend to Vercel** (`.github/workflows/deploy-frontend.yml`) is the only path that promotes `main` to that domain **unless** you click Promote on a Preview in the Vercel UI.
+`readyforrobots.com` is a Vercel static site. Fly is the API. GitHub workflow **Deploy frontend to Vercel** (`.github/workflows/deploy-frontend.yml`) is the path that promotes `main` to that domain **unless** you click Promote on a Preview in the Vercel UI.
 
-Until these three **repository secrets** exist, that workflow cannot call `vercel deploy --prebuilt --prod`. It used to skip-green in ~7 seconds. It now **fails** so the lie is visible.
-
----
-
-## The three secrets
-
-| GitHub secret | What it is | Where to copy it |
-|---------------|------------|------------------|
-| **`VERCEL_TOKEN`** | Personal (or team) access token that can deploy | Vercel → Account Settings → **Tokens** → Create. Scope: the `ugobe07-gmailcoms-projects` team / `ready-for-robots` project |
-| **`VERCEL_ORG_ID`** | Team/org id (`team_…`) | Vercel → team **Settings** → General → **Team ID**. Or from a linked checkout: `.vercel/project.json` → `orgId` |
-| **`VERCEL_PROJECT_ID`** | Project id (`prj_…`) | Vercel → project **ready-for-robots** → Settings → General → **Project ID**. Or `.vercel/project.json` → `projectId` |
-
-Paste them in GitHub: **ugobe007/Ready_For_Robots** → Settings → Secrets and variables → Actions → New repository secret. Names must match **exactly** (case-sensitive).
-
-These are **not** `DATABASE_URL`, `FLY_API_TOKEN`, or `ANTHROPIC_API_KEY`. Those are other systems.
+The production Vercel project is **`ready-for-robots`**. Root Directory is the **repository root** (`.`), using root `vercel.json` — not `readyforrobots-new/`.
 
 ---
 
-## After the secrets are set
+## Required GitHub secret
 
-1. Actions → **Deploy frontend to Vercel** → Run workflow on `main`  
-   **or** push an empty commit / re-run the failed job on the latest `main` push.
-2. A real run is **minutes** (`vercel pull` → `vercel build` → `vercel deploy --prebuilt --prod`), not 7 seconds.
-3. Confirm `https://readyforrobots.com` HTML bundle hash changed and Jobs header has no Pipeline.
+| GitHub secret | What it is |
+|---------------|------------|
+| **`VERCEL_TOKEN`** | Access token from [Account Tokens](https://vercel.com/account/tokens) |
 
-Alternatively: Vercel dashboard → a Preview for the merge SHA → **Promote to Production**. Git still will not stay in sync until the CLI secrets exist for the next merge.
+**Paste rules:** one token string. No trailing space, no newline, no quotes, no `Bearer ` prefix.
+
+Project-scoped tokens (`vcp_…` created by picking a single project) are **valid**. Do not recreate as Full Account unless you want to.
+
+**Revoke any token that was pasted into chat, email, or a ticket.** GitHub secret scanning and this conversation both count as exposure. Create a new token, put it in the GitHub secret, delete the old one.
+
+Optional (the workflow fills these from the token if it can see `ready-for-robots`):
+
+| GitHub secret | Value for this project |
+|---------------|------------------------|
+| **`VERCEL_ORG_ID`** | `team_i9wBQr2ur295OmAB8COX5Q0r` (team slug `ugobe07-gmailcoms-projects`) |
+| **`VERCEL_PROJECT_ID`** | `prj_VHdUEY8x5jC9O2dnUdYxbDHWeTqn` (project name `ready-for-robots`) |
+
+Copy **Team ID** / **Project ID** from Vercel Settings → General. Not the project name, not the dashboard URL.
+
+These are **not** `DATABASE_URL`, `FLY_API_TOKEN`, or `ANTHROPIC_API_KEY`.
 
 ---
 
-## How to tell skip-green from a real deploy
+## Why `#100` re-runs fail with `.vercel` / Project Settings
 
-| | Skip (broken) | Real |
-|--|---------------|------|
-| Duration | 6–11s | minutes |
-| Log | `VERCEL_TOKEN:` empty; warning/error about secrets | `vercel deploy --prebuilt --prod` |
-| GitHub Deployments | Fly `production` only | Vercel Production or a new `readyforrobots.com` alias |
-| Live JS | Same `index-….js` as yesterday | New hashed bundle |
+That log:
 
-`python3 scripts/harness_compile_memory.py` labels skip-green `skipped_missing_secrets` and sets `next_mission` to `vercel-production-cli-secrets`.
+```
+Retrieving project…
+Error: Could not retrieve Project Settings. To link your Project, remove the `.vercel` directory
+```
+
+is **not** a missing `.vercel` folder and **not** a space in the token. Vercel CLI 59 `vercel pull` also calls `GET /v2/user` and `GET /teams/{orgId}`. A **project-scoped** token returns user **404** and team **403** even when `GET /v9/projects/{id}` is **200**. Upstream: [vercel/vercel#17506](https://github.com/vercel/vercel/issues/17506).
+
+The workflow no longer runs `vercel pull`. It runs `vercel deploy --prod` from the repo root, which works with a project-scoped token.
+
+**Do not re-run the #100 job** after this lands. That job still contains `vercel pull`. Merge the workflow change (or Run workflow on `main` once the new YAML is on `main`).
+
+---
+
+## After the token is set
+
+1. Actions → **Deploy frontend to Vercel** → Run workflow on `main` (workflow file must already include `vercel deploy --prod`, not `vercel pull`).
+2. A real run is **minutes** (upload + Vercel cloud build), not 7–30 seconds.
+3. Confirm `https://readyforrobots.com` HTML bundle hash changed.
+
+Alternatively: Vercel dashboard → a Preview for the merge SHA → **Promote to Production**.
+
+---
+
+## How to tell skip-green / pull-fail from a real deploy
+
+| | Skip (broken) | Pull fail (project-scoped token) | Real |
+|--|---------------|----------------------------------|------|
+| Duration | 6–11s | ~30s | minutes |
+| Log | `VERCEL_TOKEN` empty | `Could not retrieve Project Settings` | `vercel deploy --prod` then a Production URL |
+| Live JS | Same `index-….js` | Unchanged (or a bad promote) | New hashed bundle |
+
+`python3 scripts/harness_compile_memory.py` labels skip-green `skipped_missing_secrets`.

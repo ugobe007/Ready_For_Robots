@@ -121,6 +121,6 @@ Chat transcripts, Linear, and “I think last time we…” are not memory.
 
 ## Deploy truth (Vercel)
 
-GitHub job **Deploy frontend to Vercel** is not a deploy until `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` are set. A 6–11s green run is a skip. Vercel Git on this project ships **Preview** URLs for PR branches; **Production** (`readyforrobots.com`) does not move unless the CLI `--prod` path runs or a Preview is promoted.
+GitHub job **Deploy frontend to Vercel** is not a deploy until `VERCEL_TOKEN` is set. A 6–11s green run is a skip. A ~30s red run with `Must not contain: " "` is a token paste with a trailing space. A ~30s red run with `Could not retrieve Project Settings` is CLI 59 `vercel pull` on a **project-scoped** token — the workflow must use `vercel deploy --prod`, not pull. See `docs/vercel_production_secrets.md`. Vercel Git on this project ships **Preview** URLs for PR branches; **Production** (`readyforrobots.com`) does not move unless the CLI `--prod` path runs or a Preview is promoted.
 
 ProductManager treats skip-green as **P0**. Workflow: `.github/workflows/deploy-frontend.yml` must **fail** when secrets are missing so the lie cannot hide in a success badge.
