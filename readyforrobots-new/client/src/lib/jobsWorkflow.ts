@@ -641,6 +641,13 @@ export function showJobsSiteChrome(opts: {
 }
 
 export const FIND_JOBS_CTA = "Start jobs →";
+export const FIND_JOBS_HOME_HEADLINE = "Find jobs for your robot.";
+export const FIND_JOBS_HOME_SUBHEAD =
+  "We match your robots to specific jobs and models using your URL";
+export const FIND_JOBS_HEADLINE_CLASS =
+  "mt-1 font-display text-5xl font-bold leading-[1.05] tracking-tight text-slate-100 sm:text-6xl lg:text-7xl";
+export const FIND_JOBS_SUBHEAD_CLASS =
+  "mt-4 max-w-3xl text-lg leading-snug text-slate-300 sm:text-xl";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = "Next →";
@@ -802,7 +809,7 @@ export function defaultCheckedKeysForLineup<T extends { job_key: string }>(
 }
 
 export const RAIL_STEP_HINT = {
-  find: "Paste the manufacturer URL. We research the company and every robot SKU we can prove.",
+  find: FIND_JOBS_HOME_SUBHEAD,
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
   jobs: "Each job is tagged with its robot. One SKU shows five jobs. Several robots show one each — run each SKU by itself, then Next to CRM.",
   pipeline: "CRM unlocks 3 job opportunities. There is no extra activate page.",

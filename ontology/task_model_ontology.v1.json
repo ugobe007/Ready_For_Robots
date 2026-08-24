@@ -127,6 +127,24 @@
       "name": "GitHub — foundation-model codebases",
       "url": "https://github.com/topics/foundation-models",
       "note": "Cutting-edge weights often land here before commercial platforms. Search Awesome Foundation Models / Awesome robotics VLAs."
+    },
+    {
+      "kind": "training_data",
+      "name": "Robotic Data",
+      "url": "https://roboticdata.com/",
+      "note": "Real-world Physical AI training data (LiDAR, human/task traces). A dataset is not a site-qualified warehouse or hospital policy. Do not invent a dataset price."
+    },
+    {
+      "kind": "sim_to_real",
+      "name": "World Labs — real-to-sim-to-real (SceniX)",
+      "url": "https://www.worldlabs.ai/blog/real-to-sim-to-real",
+      "note": "Train and evaluate robot policies in reconstructed scenes, then transfer back to the physical cell. Simulation success is not workplace qualification."
+    },
+    {
+      "kind": "talent",
+      "name": "Mercor",
+      "url": "https://www.mercor.com/",
+      "note": "People who can train, fine-tune, or host a robot policy. This is who builds the task model — not SIGNAL buyers and not a price list."
     }
   ],
   "slots": [

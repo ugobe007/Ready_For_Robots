@@ -6,8 +6,9 @@
 
 ## Diff
 
-- Ontology catalogs: `shared_lookups` (HF robotics / OpenVLA / LeRobot, Argo-Robot survey, Papers with Code, GitHub), `qualify_filters` (VLA vs chat LLM, license, compute, context, site), `pricing_lookups` (BenchLM, Axe physical-AI compute, Vertex/Bedrock/Azure/Databricks, OEM quote, integrator SOW).
-- Resolver attaches those to every required task-model payload. Chat LLMs are a counterexample, not a warehouse/hospital policy.
+- Ontology catalogs: `shared_lookups` (HF robotics / OpenVLA / LeRobot, Argo-Robot survey, Papers with Code, GitHub, Robotic Data, World Labs R2S2R, Mercor talent), `qualify_filters` (VLA vs chat LLM, license, compute, context, site), `pricing_lookups` (BenchLM, Axe physical-AI compute, Vertex/Bedrock/Azure/Databricks, OEM quote, integrator SOW).
+- Homepage `/`: larger **Find jobs for your robot.** display type; subhead **We match your robots to specific jobs and models using your URL**.
+- Resolver attaches those to every required task-model payload. Chat LLMs are a counterexample, not a warehouse/hospital policy. Mercor is who trains the policy, not SIGNAL buyers.
 - Job Card: search families, **How we qualify a candidate**, **Where to find price**. No invented dollars. Presence still unknown.
 
 ## Tests

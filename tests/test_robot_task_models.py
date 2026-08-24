@@ -47,6 +47,13 @@ def test_warehouse_palletize_needs_pick_policy_unknown():
     names = {d["name"] for m in models for d in m["where_to_look"]}
     assert any("Hugging Face" in n for n in names)
     assert any("Argo-Robot" in n or "OpenVLA" in n for n in names)
+    assert any("Robotic Data" in n for n in names)
+    assert any("World Labs" in n for n in names)
+    assert any("Mercor" in n for n in names)
+    kinds = {d.get("kind") for m in models for d in m["where_to_look"]}
+    assert "training_data" in kinds
+    assert "sim_to_real" in kinds
+    assert "talent" in kinds
     assert models[0]["qualify_filters"]
     assert any(f["id"] == "commercial_license" for f in models[0]["qualify_filters"])
     assert any(f["id"] == "compute_footprint" for f in models[0]["qualify_filters"])

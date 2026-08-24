@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   FIND_JOBS_CTA,
+  FIND_JOBS_HEADLINE_CLASS,
+  FIND_JOBS_HOME_SUBHEAD,
+  FIND_JOBS_SUBHEAD_CLASS,
   JOBS_EXAMPLE_CAP,
   JOBS_FOR_YOUR_ROBOT_HEADING,
   JOBS_NEXT_CTA,
@@ -438,6 +441,18 @@ describe("jobsWorkflow", () => {
     expect(jobsFreshHomeHref()).toBe("/?new=1");
     expect(FIND_JOBS_CTA).toBe("Start jobs →");
     expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
+    expect(FIND_JOBS_HOME_SUBHEAD).toBe(
+      "We match your robots to specific jobs and models using your URL",
+    );
+    expect(FIND_JOBS_HOME_SUBHEAD).not.toMatch(/manufacturer URL|SKU we can prove/i);
+    expect(FIND_JOBS_HEADLINE_CLASS).toMatch(/text-5xl/);
+    expect(FIND_JOBS_HEADLINE_CLASS).toMatch(/sm:text-6xl/);
+    expect(FIND_JOBS_HEADLINE_CLASS).toMatch(/lg:text-7xl/);
+    expect(FIND_JOBS_SUBHEAD_CLASS).toMatch(/text-lg/);
+    expect(workspace).toMatch(/FIND_JOBS_HEADLINE_CLASS/);
+    expect(workspace).toMatch(/FIND_JOBS_HOME_SUBHEAD/);
+    expect(workspace).toMatch(/text-emerald-400">jobs/);
+    expect(workspace).not.toMatch(/Paste the manufacturer URL/);
     expect(JOBS_NEXT_CTA).toBe("Next →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
     expect(JOBS_NEXT_HINT).toMatch(/checked jobs/i);

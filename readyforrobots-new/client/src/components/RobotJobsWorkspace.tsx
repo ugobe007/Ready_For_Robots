@@ -49,6 +49,9 @@ import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
   JOBS_EXAMPLE_CAP,
   FIND_JOBS_CTA,
+  FIND_JOBS_HEADLINE_CLASS,
+  FIND_JOBS_HOME_SUBHEAD,
+  FIND_JOBS_SUBHEAD_CLASS,
   JOBS_NEXT_CTA,
   JOBS_NEXT_HINT,
   JOBS_PIPELINE_CAP,
@@ -1818,7 +1821,7 @@ function FindRail({
   return (
     <div>
       <p className={eyebrow}>{researching || stage === "select" ? "Your robot" : "Find jobs"}</p>
-      <h1 className="mt-1 font-display text-3xl font-bold leading-tight tracking-tight text-slate-100">
+      <h1 className={FIND_JOBS_HEADLINE_CLASS}>
         {stage === "select" ? (
           companyName || "Select a robot"
         ) : researching ? (
@@ -1830,8 +1833,8 @@ function FindRail({
         )}
       </h1>
       {stage === "find" && (
-        <p className="mt-3 text-sm text-slate-400">
-          {RAIL_STEP_HINT.find}
+        <p className={FIND_JOBS_SUBHEAD_CLASS}>
+          {FIND_JOBS_HOME_SUBHEAD}
         </p>
       )}
 

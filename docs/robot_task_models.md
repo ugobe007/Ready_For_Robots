@@ -43,7 +43,9 @@ If (3) is unknown, qualification is **conditional**, not Qualified.
 | Surveys | [Argo-Robot manipulation FMs](https://github.com/Argo-Robot/foundation_models) (ACT, Octo, OpenVLA, Helix), [Robocloud robotics FMs](https://robocloud-dashboard.vercel.app/learn/blog/foundation-models-robotics) |
 | Benchmarks | [Papers with Code robot manipulation](https://paperswithcode.com/task/robot-manipulation) |
 | GitHub | [foundation-models topic](https://github.com/topics/foundation-models) / Awesome lists — weights often land here first |
-| Sim-to-real | NVIDIA Isaac / GR00T |
+| Training data | [Robotic Data](https://roboticdata.com/) — Physical AI traces (LiDAR, human/task). Not a site-qualified policy. |
+| Sim-to-real | NVIDIA Isaac / GR00T; [World Labs real-to-sim-to-real](https://www.worldlabs.ai/blog/real-to-sim-to-real) (SceniX) — train/eval in reconstructed scenes |
+| Talent | [Mercor](https://www.mercor.com/) — people who train/fine-tune/host the policy. Not SIGNAL buyers. |
 | Labs | Physical Intelligence π-series |
 
 **Not a lookup for this job:** GPT, Claude, Gemini, Llama, Mistral as *the* warehouse or hospital policy. Those are chat/VLM APIs. Search **VLAs** (OpenVLA, Octo, LeRobot, ACT) or an OEM pack.
