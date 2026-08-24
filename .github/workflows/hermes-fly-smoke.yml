@@ -12,6 +12,11 @@ on:
       - "**/*.md"
       - "missions/**"
   workflow_dispatch:
+    inputs:
+      apply:
+        description: Persist infer-qualify on public pipeline IDs (triggers cache rebuild)
+        type: boolean
+        default: false
 
 concurrency:
   group: hermes-fly-smoke
@@ -19,7 +24,7 @@ concurrency:
 
 jobs:
   infer-qualify:
-    name: Auth smoke + infer-qualify apply
+    name: Auth smoke + tracks 8-10 dry_run
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -41,4 +46,8 @@ jobs:
             echo "GitHub secret ADMIN_KEY is empty. Set it to Hermes RFR_ADMIN_KEY."
             exit 1
           fi
-          python3 scripts/hermes_auth_smoke.py --apply
+          extra=()
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.apply }}" = "true" ]; then
+            extra+=(--apply)
+          fi
+          python3 scripts/hermes_auth_smoke.py "${extra[@]}"
