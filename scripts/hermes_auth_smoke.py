@@ -13,6 +13,8 @@ as Hermes ~/.hermes/.env RFR_ADMIN_KEY.
 
 Mac:
   cd ~/Desktop/Ready_For_Robots && python3 scripts/hermes_auth_smoke.py --apply
+
+Cursor Cloud has no ~/.hermes/.env unless GHA/env injects RFR_ADMIN_KEY.
 """
 from __future__ import annotations
 
@@ -114,8 +116,6 @@ def _safe_summary(body: dict | str) -> dict:
         "error",
         "doc",
         "hermes_run_id",
-        "hermes_run_id",
-        "dry_run",
         "dry_run",
         "status",
         "message",
@@ -139,6 +139,9 @@ def _safe_summary(body: dict | str) -> dict:
             out["company_ids"] = ids
         if names:
             out["company_names"] = names[:12]
+    cal = body.get("cal")
+    if isinstance(cal, dict):
+        out["cal_keys"] = sorted(cal.keys())[:12]
     return out
 
 
@@ -158,7 +161,7 @@ def _pipeline_snapshot() -> dict:
         nm = row.get("company_name") or row.get("name")
         if nm:
             names.append(str(nm)[:80])
-        hq = row.get("hermes_qualify") or row.get("hermes_qualify")
+        hq = row.get("hermes_qualify")
         if hq:
             qualify += 1
             filled += 1
