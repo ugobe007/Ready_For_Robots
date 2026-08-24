@@ -630,7 +630,8 @@ export function showJobsSiteChrome(opts: {
   const params = queryParams(opts.search);
   const src = params.get("src") || "";
   if (isJobsChromePath(path)) return true;
-  if (path === "/intelligence") return true;
+  if (path === "/intelligence" || path === "/compare" || path === "/vendor/design") return true;
+  if (path.startsWith("/design/")) return true;
   if (isJobsHandoffSrc(src)) return true;
   if (path === "/signup" || path === "/login") {
     const next = params.get("next") || "";

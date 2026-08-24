@@ -27,9 +27,9 @@ const SUPPORT_LINKS = [
 
 const COMPANY_LINKS = [
   { label: "About", href: "/intelligence" },
-  { label: "Compare robots", href: "/compare" },
+  { label: "Compare", href: "/compare" },
   { label: "Find Robots", href: "/find-robots" },
-  { label: "Deployment design", href: "/vendor/design" },
+  { label: "Job site sketch", href: "/vendor/design" },
   { label: "Privacy Policy", href: "/privacy" },
 ];
 
@@ -37,6 +37,7 @@ const JOBS_LINKS = {
   Product: [
     { label: "Jobs", href: jobsFreshHomeHref() },
     { label: "CRM", href: jobsActivateHref() },
+    { label: "Job site sketch", href: "/vendor/design" },
     { label: "About", href: "/intelligence" },
     { label: "Start free workspace", href: "/signup?src=jobs_activate" },
     { label: "Robots", href: "/robots" },

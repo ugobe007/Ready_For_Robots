@@ -50,7 +50,7 @@ function WorkflowFlowViewerInner({ layout, className = "", showLegend = true }: 
 
   return (
     <div className={className}>
-      <div className="h-[360px] rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+      <div className="h-[360px] overflow-hidden border border-slate-600 bg-[#081126]">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -65,11 +65,11 @@ function WorkflowFlowViewerInner({ layout, className = "", showLegend = true }: 
           zoomOnScroll
           proOptions={{ hideAttribution: true }}
         >
-          <Background gap={16} size={1} color="#cbd5e1" />
+          <Background gap={16} size={1} color="#334155" />
         </ReactFlow>
       </div>
       {showLegend && (
-        <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-slate-500">
+        <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-slate-400">
           <span className="inline-flex items-center gap-1">
             <span className="h-0.5 w-4 bg-emerald-600" /> Automated flow
           </span>

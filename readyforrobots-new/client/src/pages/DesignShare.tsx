@@ -1,14 +1,15 @@
 /**
- * /design/:shareId — buyer-facing deployment design + ROI (shareable).
+ * /design/:shareId — shareable floor plan for a robot job.
  */
 import { useEffect, useState } from "react";
 import { Link, useRoute } from "wouter";
 import { Loader2 } from "lucide-react";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import WorkflowFlowViewer from "@/components/vendor/WorkflowFlowViewer";
 import type { WorkflowLayout } from "@/lib/workflowLayoutTypes";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { FIND_JOBS_CTA, JOBS_HEADER_OFFSET_CLASS, jobsFreshHomeHref } from "@/lib/jobsWorkflow";
 
 type DesignModel = {
   title?: string;
@@ -58,55 +59,55 @@ export default function DesignShare() {
   }, [shareId]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+    <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <ExperimentHeader />
+      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
         {loading ? (
-          <div className="flex justify-center py-20 text-gray-500 text-sm gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading design…
+          <div className="flex justify-center gap-2 py-20 text-sm text-slate-400">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading site plan…
           </div>
         ) : error ? (
-          <p className="text-center text-red-600">{error}</p>
+          <p className="text-center text-red-400">{error}</p>
         ) : data ? (
           <article className="space-y-6">
             <header>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">
-                Deployment proposal
+              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                Job site sketch
               </p>
-              <h1 className="text-2xl font-bold text-gray-900 mt-1">{data.title}</h1>
-              <p className="text-sm text-gray-600 mt-2">
+              <h1 className="mt-1 text-2xl font-bold text-slate-100">{data.title}</h1>
+              <p className="mt-2 text-sm text-slate-400">
                 {data.vendor_company && <span>{data.vendor_company}</span>}
                 {data.buyer_company && <span> → {data.buyer_company}</span>}
                 {data.industry && <span> · {data.industry}</span>}
               </p>
               {data.robot_product && (
-                <p className="text-sm text-gray-800 mt-1">
+                <p className="mt-1 text-sm text-slate-200">
                   Robot: <strong>{data.robot_product}</strong>
                 </p>
               )}
             </header>
 
             {data.roi && (
-              <section className="grid sm:grid-cols-3 gap-4">
-                <div className="rounded-xl border border-emerald-200 bg-white p-4">
-                  <p className="text-[10px] uppercase text-gray-500 font-bold">Payback</p>
-                  <p className="text-2xl font-bold text-emerald-800">{data.roi.payback_months} mo</p>
+              <section className="grid gap-4 sm:grid-cols-3">
+                <div className="border border-emerald-500/40 bg-emerald-500/10 p-4">
+                  <p className="text-[10px] font-bold uppercase text-emerald-300">Payback</p>
+                  <p className="text-2xl font-bold text-emerald-200">{data.roi.payback_months} mo</p>
                 </div>
-                <div className="rounded-xl border border-gray-200 bg-white p-4">
-                  <p className="text-[10px] uppercase text-gray-500 font-bold">Annual savings</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                <div className="border border-slate-600 bg-[#0b162f] p-4">
+                  <p className="text-[10px] font-bold uppercase text-slate-400">Annual savings</p>
+                  <p className="text-2xl font-bold text-slate-100">
                     ${Math.round(data.roi.annual_net_savings || 0).toLocaleString()}
                   </p>
                 </div>
-                <div className="rounded-xl border border-gray-200 bg-white p-4">
-                  <p className="text-[10px] uppercase text-gray-500 font-bold">3-year ROI</p>
-                  <p className="text-2xl font-bold text-gray-900">{data.roi.roi_year_3_pct}%</p>
+                <div className="border border-slate-600 bg-[#0b162f] p-4">
+                  <p className="text-[10px] font-bold uppercase text-slate-400">3-year ROI</p>
+                  <p className="text-2xl font-bold text-slate-100">{data.roi.roi_year_3_pct}%</p>
                 </div>
               </section>
             )}
 
             {data.workflow_impact && (
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-slate-300">
                 Workflow impact:{" "}
                 <strong>{data.workflow_impact.labor_hours_saved_per_week}h/wk</strong> labor saved ·{" "}
                 <strong>+{data.workflow_impact.peak_throughput_delta_pct}%</strong> throughput ·{" "}
@@ -115,17 +116,17 @@ export default function DesignShare() {
             )}
 
             {data.layout && (
-              <section className="rounded-2xl border border-gray-200 bg-white p-5">
-                <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">
+              <section className="border border-slate-600 bg-[#0b162f] p-5">
+                <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-slate-400">
                   Physical workflow
                 </h2>
                 <WorkflowFlowViewer layout={data.layout} />
               </section>
             )}
 
-            <p className="text-center text-xs text-gray-400">
-              <Link href="/pipeline" className="text-emerald-700 underline">
-                Explore live buyer signals
+            <p className="text-center text-xs text-slate-500">
+              <Link href={jobsFreshHomeHref()} className="text-emerald-400 underline">
+                {FIND_JOBS_CTA}
               </Link>
             </p>
           </article>
