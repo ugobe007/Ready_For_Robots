@@ -2872,6 +2872,66 @@ function JobCard({
             </div>
           </dl>
 
+          {card.taskModels.length ? (
+            <div className="mt-3">
+              <p className={eyebrow}>Task models</p>
+              <p className="mt-1 text-[12px] leading-snug text-slate-400">
+                Hardware can enter the workplace. A task model is what performs
+                this work. Distributors who only resell robots still have to
+                buy, license, or train these.
+              </p>
+              <ul className="mt-1 space-y-2">
+                {card.taskModels.map(model => (
+                  <li
+                    key={model.id}
+                    className="text-[13px] leading-snug text-slate-200"
+                  >
+                    <p>
+                      {model.label}
+                      <span className="text-slate-400">
+                        {" "}
+                        ·{" "}
+                        {model.presence === "unknown"
+                          ? "Unknown on this robot"
+                          : model.presence === "present"
+                            ? "Present"
+                            : "Absent"}
+                      </span>
+                    </p>
+                    {model.physicalTask ? (
+                      <p className="text-slate-300">{model.physicalTask}</p>
+                    ) : null}
+                    {model.hardwareNotEnough ? (
+                      <p className="text-slate-500">{model.hardwareNotEnough}</p>
+                    ) : null}
+                    {model.whereToLook.length ? (
+                      <ul className="mt-0.5 space-y-0.5 text-slate-400">
+                        {model.whereToLook.map(dest => (
+                          <li key={`${model.id}-${dest.name}`}>
+                            Where to look:{" "}
+                            {dest.url ? (
+                              <a
+                                href={dest.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-slate-300 underline decoration-slate-600 underline-offset-2"
+                              >
+                                {dest.name}
+                              </a>
+                            ) : (
+                              dest.name
+                            )}
+                            {dest.note ? ` — ${dest.note}` : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           {card.requirements.length ? (
             <div className="mt-3">
               <p className={eyebrow}>Why this is listed</p>

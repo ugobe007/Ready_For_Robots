@@ -7,7 +7,7 @@ confidence output and its status in code.
 ## The core traversal (never violate)
 
 ```
-COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES → WORKFLOWS → JOB REQUIREMENTS → MATCH
+COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES → TASK MODELS → WORKFLOWS → JOB REQUIREMENTS → MATCH
 ```
 
 **Forbidden:** `company name → robot category → jobs`. `primary_class` is a

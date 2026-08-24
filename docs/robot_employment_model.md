@@ -88,7 +88,7 @@ Robot → Capabilities → Qualifications → Experience
 
 This extends, it does not replace, the capability spine:
 
-`COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES → WORKFLOWS → JOB REQUIREMENTS → MATCH`
+`COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES → TASK MODELS → WORKFLOWS → JOB REQUIREMENTS → MATCH`
 
 Never: `company → category → jobs`.
 

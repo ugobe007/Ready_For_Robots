@@ -77,6 +77,11 @@ def vertical_ontology() -> dict[str, Any]:
     return _load("vertical_ontology.v1.json")
 
 
+@lru_cache(maxsize=1)
+def task_model_ontology() -> dict[str, Any]:
+    return _load("task_model_ontology.v1.json")
+
+
 # ── Accessors used by the pipeline (each fails open to the baked-in default) ──
 
 def confidence_states() -> tuple[str, ...]:

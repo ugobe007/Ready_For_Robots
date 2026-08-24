@@ -851,6 +851,8 @@ describe("jobsWorkflow", () => {
     );
     expect(cardSrc).toMatch(/robotJobCardFromMatch/);
     expect(cardSrc).toMatch(/Employer/);
+    expect(cardSrc).toMatch(/Task models/);
+    expect(cardSrc).not.toMatch(/certificate/i);
   });
 
   it("explains the job instead of a sales pitch", () => {

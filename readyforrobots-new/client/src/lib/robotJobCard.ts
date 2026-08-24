@@ -13,6 +13,25 @@ export type RobotJobQualification =
   | "not_qualified"
   | "pending_robot";
 
+export type TaskModelPresence = "unknown" | "present" | "absent";
+
+export type TaskModelLookup = {
+  kind: string;
+  name: string;
+  url: string | null;
+  note: string;
+};
+
+export type RequiredTaskModel = {
+  id: string;
+  label: string;
+  physicalTask: string;
+  vertical: string;
+  presence: TaskModelPresence;
+  hardwareNotEnough: string;
+  whereToLook: TaskModelLookup[];
+};
+
 export type RobotJobCardView = {
   employer: string | null;
   workplace: string | null;
@@ -27,6 +46,7 @@ export type RobotJobCardView = {
   qualificationHint: string;
   openQuestions: string[];
   nextStep: string;
+  taskModels: RequiredTaskModel[];
 };
 
 export const QUALIFICATION_LABEL: Record<RobotJobQualification, string> = {
@@ -38,22 +58,69 @@ export const QUALIFICATION_LABEL: Record<RobotJobQualification, string> = {
 
 export const QUALIFICATION_HINT: Record<RobotJobQualification, string> = {
   qualified: "Confirmed by you or the employer.",
-  conditional: "Pending your review and a site assessment.",
-  not_qualified: "A required capability is unmet.",
+  conditional: "Pending your review, a site assessment, and a task model for this work.",
+  not_qualified: "A required capability or task model is unmet.",
   pending_robot: "Submit this robot’s URL to evaluate it against the job.",
 };
 
 export function qualificationFromVerdict(
   verdict?: string | null,
   blockers?: string[] | null,
+  taskModels?: { presence?: string | null }[] | null,
 ): RobotJobQualification {
   if (verdict === "NOT_A_MATCH" || (blockers && blockers.length > 0)) {
+    return "not_qualified";
+  }
+  if (taskModels?.some(m => m.presence === "absent")) {
     return "not_qualified";
   }
   if (verdict === "POSSIBLE_MATCH" || verdict === "INSUFFICIENT") {
     return "conditional";
   }
   return "pending_robot";
+}
+
+type MatchTaskModelIn = {
+  id?: string | null;
+  label?: string | null;
+  physical_task?: string | null;
+  vertical?: string | null;
+  presence?: string | null;
+  hardware_not_enough?: string | null;
+  where_to_look?: {
+    kind?: string | null;
+    name?: string | null;
+    url?: string | null;
+    note?: string | null;
+  }[] | null;
+};
+
+function normalizeTaskModels(raw?: MatchTaskModelIn[] | null): RequiredTaskModel[] {
+  const out: RequiredTaskModel[] = [];
+  for (const row of raw || []) {
+    const id = (row.id || "").trim();
+    const label = (row.label || "").trim();
+    if (!id && !label) continue;
+    const presence: TaskModelPresence =
+      row.presence === "present" || row.presence === "absent"
+        ? row.presence
+        : "unknown";
+    out.push({
+      id: id || label,
+      label: label || id,
+      physicalTask: (row.physical_task || "").trim(),
+      vertical: (row.vertical || "").trim(),
+      presence,
+      hardwareNotEnough: (row.hardware_not_enough || "").trim(),
+      whereToLook: (row.where_to_look || []).map(d => ({
+        kind: (d.kind || "").trim(),
+        name: (d.name || "").trim(),
+        url: d.url ? d.url.trim() : null,
+        note: (d.note || "").trim(),
+      })),
+    });
+  }
+  return out;
 }
 
 export function robotJobCardFromMatch(job: {
@@ -67,12 +134,18 @@ export function robotJobCardFromMatch(job: {
   verdict?: string | null;
   industry?: string | null;
   text?: string | null;
+  required_task_models?: MatchTaskModelIn[] | null;
 }): RobotJobCardView {
+  const taskModels = normalizeTaskModels(job.required_task_models);
   const open = unique([
     ...(job.still_unknown || []),
     ...(job.unknowns || []),
   ]);
-  const qualification = qualificationFromVerdict(job.verdict, job.blockers);
+  const qualification = qualificationFromVerdict(
+    job.verdict,
+    job.blockers,
+    taskModels,
+  );
   const title = (job.title || "").trim() || "Untitled job";
   return {
     employer: emptyToNull(job.company_name),
@@ -88,6 +161,7 @@ export function robotJobCardFromMatch(job: {
     qualificationHint: QUALIFICATION_HINT[qualification],
     openQuestions: open,
     nextStep: ROBOT_JOB_CARD_NEXT_STEP,
+    taskModels,
   };
 }
 
