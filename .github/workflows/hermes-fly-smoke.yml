@@ -8,13 +8,20 @@ name: Hermes Fly workflow
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "missions/**"
   workflow_dispatch:
+
+concurrency:
+  group: hermes-fly-smoke
+  cancel-in-progress: false
 
 jobs:
   infer-qualify:
     name: Auth smoke + infer-qualify apply
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - name: Checkout
         uses: actions/checkout@v5

@@ -38,6 +38,19 @@ def test_smoke_rejects_service_role_jwt():
     assert body["reason"] == "wrong_kind_of_secret"
 
 
+def test_request_maps_timeout_to_598(monkeypatch):
+    smoke = _load_smoke()
+
+    def _boom(*_a, **_k):
+        raise TimeoutError("The read operation timed out")
+
+    monkeypatch.setattr(smoke.urllib.request, "urlopen", _boom)
+    monkeypatch.setattr(smoke.time, "sleep", lambda _s: None)
+    code, body = smoke._request("https://example.com/timeout", "k", {"dry_run": True})
+    assert code == 598
+    assert body["error"] == "timeout"
+
+
 def test_tracks_8_10_dry_payloads_are_dry_run():
     smoke = _load_smoke()
     payloads = smoke.tracks_8_10_dry_payloads(941)

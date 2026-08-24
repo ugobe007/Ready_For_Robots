@@ -88,21 +88,29 @@ def _request(url: str, key: str | None, payload: dict | None) -> tuple[int, dict
         data = json.dumps(payload).encode()
         method = "POST"
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=90) as resp:
-            body = resp.read().decode()
+    last_err = "request_failed"
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=90) as resp:
+                body = resp.read().decode()
+                try:
+                    parsed: dict | str = json.loads(body)
+                except json.JSONDecodeError:
+                    parsed = body[:400]
+                return resp.status, parsed
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode()
             try:
-                parsed: dict | str = json.loads(body)
+                parsed = json.loads(body)
             except json.JSONDecodeError:
                 parsed = body[:400]
-            return resp.status, parsed
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode()
-        try:
-            parsed = json.loads(body)
-        except json.JSONDecodeError:
-            parsed = body[:400]
-        return exc.code, parsed
+            return exc.code, parsed
+        except (TimeoutError, urllib.error.URLError, OSError) as exc:
+            last_err = f"{type(exc).__name__}: {exc}"[:240]
+            if attempt < 2:
+                time.sleep(8)
+                continue
+    return 598, {"error": "timeout", "detail": last_err}
 
 
 def _safe_summary(body: dict | str) -> dict:

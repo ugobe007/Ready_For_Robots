@@ -28,7 +28,7 @@ Run [32687223021](https://github.com/ugobe007/Ready_For_Robots/actions/runs/3268
 
 `--apply` still persists **infer-qualify only**. Synthetic 8–10 bodies stay `dry_run`.
 
-Local: `tests/test_hermes_auth_smoke.py` + ingest tests **18 passed**. GHA Fly smoke **success** (`32687223021`).
+Local: `tests/test_hermes_auth_smoke.py` + ingest tests **18 passed**. GHA Fly smoke **success** (`32687223021`). Follow-up run `32687285950` failed: `TimeoutError` on infer-qualify dry_run while Fly was still rebuilding cache from the first `--apply`. Fix: catch timeout + retry; queue overlapping smokes; skip markdown-only PR pushes.
 
 ## Not this cycle
 
