@@ -1,6 +1,6 @@
 # ReadyForRobots Ontology Library
 
-Five linked ontologies + one inference-rules file. Together they encode the
+Linked ontologies (Entity · Hardware · Capability · Task model · Workflow · Job) + one inference-rules file. Together they encode the
 **one rule the copilot must never break**:
 
 ```
@@ -9,9 +9,10 @@ COMPANY
     → CONFIGURATION
       → HARDWARE
         → CAPABILITIES
-          → WORKFLOWS
-            → JOB REQUIREMENTS
-              → MATCH
+          → TASK MODELS
+            → WORKFLOWS
+              → JOB REQUIREMENTS
+                → MATCH
 ```
 
 And **never**: `company name → robot category → jobs`.
@@ -37,6 +38,7 @@ A robot's capabilities belong to a **specific product/configuration** grounded i
 | [`ROBOT_ENTITY_ONTOLOGY.md`](ROBOT_ENTITY_ONTOLOGY.md) | Entity | Company → Product → Configuration → Components |
 | [`ROBOT_HARDWARE_ONTOLOGY.md`](ROBOT_HARDWARE_ONTOLOGY.md) | Hardware | What physical parts are present? |
 | [`ROBOT_CAPABILITY_ONTOLOGY.md`](ROBOT_CAPABILITY_ONTOLOGY.md) | Capability | What actions can it perform? (incl. manipulation hierarchy) |
+| [`ROBOT_TASK_MODEL_ONTOLOGY.md`](ROBOT_TASK_MODEL_ONTOLOGY.md) | Task model | Which trained policy does this *job* require, and where would you look? |
 | [`ROBOT_WORKFLOW_ONTOLOGY.md`](ROBOT_WORKFLOW_ONTOLOGY.md) | Workflow | What real jobs-of-work does it do? |
 | [`ROBOT_JOB_ONTOLOGY.md`](ROBOT_JOB_ONTOLOGY.md) | Job | Company + worksite + workflow + requirements + evidence |
 | [`ROBOT_VERTICAL_ONTOLOGY.md`](ROBOT_VERTICAL_ONTOLOGY.md) | Vertical | Operating environments (warehouse, healthcare, eldercare, hospitality, …) |
@@ -68,6 +70,7 @@ workflow via `app/services/robot_ontology.py`:
 - [`hardware_ontology.v1.json`](hardware_ontology.v1.json) — fact/hardware predicates the parser may ground.
 - [`vertical_ontology.v1.json`](vertical_ontology.v1.json) — operating environments / verticals (healthcare, eldercare, hospitality, …). The extractor emits `operating_environment` = a vertical key.
 - [`inference_rules.v1.json`](inference_rules.v1.json) — structured R1–R21 with status.
+- [`task_model_ontology.v1.json`](task_model_ontology.v1.json) — per-job required task-model slots + where to look. Presence starts unknown.
 
 Pre-existing companions:
 - [`primitives.v1.json`](primitives.v1.json) — frozen WORK primitive codes (IDs never renamed).

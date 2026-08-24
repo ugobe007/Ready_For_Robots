@@ -40,8 +40,10 @@ Primary ICP remains the **robot workforce side**. Employers (factories, hospital
 
 1. **Discover work** — observable physical jobs, robot-neutral
 2. **Define the Robot Job** — employer, workplace, requirements, evidence
-3. **Qualify the robot** — capabilities ↔ requirements (explainable, never a %)
+3. **Qualify the robot** — hardware capabilities **and task models** ↔ job requirements (explainable, never a %)
 4. **Place later** — site assessment → pilot → employment
+
+**The channel hole:** a robot can be sold into a warehouse or a hospital and still fail the work. The physical task is performed by a **task model** (internal nickname: “certificate”) — a trained policy for that job. Distributors and integrators often resell platforms and skip this cost. Qualification stays **conditional** until we know which model covers the work and where it is published.
 
 Hero copy: **“Find jobs for your robot. Robots need jobs. We find the work.”**
 

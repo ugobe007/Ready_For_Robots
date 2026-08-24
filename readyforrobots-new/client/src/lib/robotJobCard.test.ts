@@ -44,6 +44,43 @@ describe("robotJobCard", () => {
     expect(qualificationFromVerdict("POSSIBLE_MATCH", ["Reach insufficient"])).toBe(
       "not_qualified",
     );
+    expect(
+      qualificationFromVerdict("POSSIBLE_MATCH", [], [{ presence: "absent" }]),
+    ).toBe("not_qualified");
+  });
+
+  it("names required task models without claiming the robot already has them", () => {
+    const card = robotJobCardFromMatch({
+      title: "Pick cases onto pallets",
+      company_name: "Novolex",
+      locality: "Kinston, NC",
+      why: ["Manipulation grounded"],
+      verdict: "POSSIBLE_MATCH",
+      required_task_models: [
+        {
+          id: "warehouse_pick_place_policy",
+          label: "Warehouse pick-and-place policy",
+          physical_task: "Pick and stow cases in a fulfillment cell",
+          presence: "unknown",
+          hardware_not_enough: "An arm in the DC is not the pick policy.",
+          where_to_look: [
+            {
+              kind: "open_weights",
+              name: "Hugging Face robotics models",
+              url: "https://huggingface.co/models?pipeline_tag=robotics",
+              note: "Public checkpoints. Presence unknown until named.",
+            },
+          ],
+        },
+      ],
+    });
+    expect(card.qualification).toBe("conditional");
+    expect(card.taskModels).toHaveLength(1);
+    expect(card.taskModels[0].presence).toBe("unknown");
+    expect(card.taskModels[0].label).toMatch(/pick-and-place/i);
+    expect(card.taskModels[0].whereToLook[0].name).toMatch(/Hugging Face/i);
+    const src = readFileSync(join(here, "./robotJobCard.ts"), "utf8");
+    expect(src).not.toMatch(/certificate/i);
   });
 
   it("keeps the RobCo pack honest: named machine-tending work, no fake labor dollars", () => {
@@ -73,6 +110,8 @@ describe("robotJobCard", () => {
     expect(cardSrc).toMatch(/Employer/);
     expect(cardSrc).toMatch(/Workplace/);
     expect(cardSrc).toMatch(/Why this is listed/);
+    expect(cardSrc).toMatch(/Task models/);
+    expect(cardSrc).not.toMatch(/certificate/i);
     expect(cardSrc).toMatch(/qualificationHint/);
     expect(cardSrc).not.toMatch(/Possible match/);
     expect(cardSrc).not.toMatch(/>Qualified</);

@@ -41,6 +41,20 @@ export type MatchJob = {
   why?: string[];
   still_unknown?: string[];
   blockers?: string[];
+  required_task_models?: {
+    id: string;
+    label: string;
+    physical_task: string;
+    vertical: string;
+    presence: "unknown" | "present" | "absent";
+    hardware_not_enough: string;
+    where_to_look: {
+      kind: string;
+      name: string;
+      url: string | null;
+      note: string;
+    }[];
+  }[];
   /** SKU this card is for. Set on the Jobs terminal, carried onto the pipeline list. */
   forRobot?: string;
 };

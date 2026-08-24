@@ -15,7 +15,9 @@
 | Horizontal B2B | Vertical: physical work × robot capabilities |
 | Output = export / API | Output = **jobs for the robot** |
 
-**One-liner:** Explee helps you **find** accounts. ReadyForRobots **employs robots** — we match job requirements to robot capabilities.
+**One-liner:** Explee helps you **find** accounts. ReadyForRobots **employs robots** — we match job requirements to robot capabilities **and the task models those jobs require**.
+
+Channel hole GTM data never sees: distributors sell the chassis. The job needs a warehouse pick policy or a hospital logistics policy. Those models are licensed or trained at high cost. We put that gap on the Job Card.
 
 ## The comparison users make
 

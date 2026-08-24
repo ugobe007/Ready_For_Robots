@@ -60,6 +60,8 @@ def test_ontology_files_load():
     assert ont.workflow_ontology().get("families")
     assert ont.hardware_ontology().get("predicates")
     assert ont.inference_rules().get("rules")
+    task_models = ont.task_model_ontology()
+    assert task_models.get("slots") or task_models.get("slots")
     assert ont.ONTOLOGY_VERSION == "1.0.0"
 
 

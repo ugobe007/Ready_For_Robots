@@ -24,6 +24,10 @@ from typing import Any, Optional
 
 from app.services import robot_ontology
 from app.services.robot_capability_derive import DerivedCapability, derive_capabilities
+from app.services.robot_task_models import (
+    required_task_models_for_job,
+    task_model_open_questions,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GOLD_PATH = REPO_ROOT / "app" / "data" / "robot_job_requirements_gold.json"
@@ -137,6 +141,7 @@ class JobMatchCard:
     blockers: list[str] = field(default_factory=list)
     requirements: list[RequirementResult] = field(default_factory=list)
     source: str = "requirement_match"
+    required_task_models: list[dict[str, Any]] = field(default_factory=list)
 
     def to_api_job(self) -> dict[str, Any]:
         return {
@@ -153,6 +158,7 @@ class JobMatchCard:
             "blockers": list(self.blockers),
             "unknowns": list(self.still_unknown),
             "requirements": [r.to_dict() for r in self.requirements],
+            "required_task_models": list(self.required_task_models),
             "source": self.source,
         }
 
@@ -547,21 +553,46 @@ def evaluate_job(
     results = [_eval_requirement(req, caps) for req in job_spec.get("requirements") or []]
     verdict = _verdict(results)
     row = corpus_row or {}
+    title = job_spec.get("title") or row.get("title") or ""
+    industry = row.get("industry") or job_spec.get("locality") or job_spec.get("physics") or ""
+    path = row.get("path") or ""
+    tape_family = row.get("tape_family") or job_spec.get("physics") or "transport"
+    models = required_task_models_for_job(
+        tape_family=str(tape_family),
+        industry=str(industry),
+        title=str(title),
+        path=str(path),
+        text=str(row.get("text") or ""),
+    )
+    why = _why_lines(results, caps, verdict)
+    if models and verdict != VERDICT_NOT and all(
+        (m.get("presence") or "unknown") != "present" for m in models
+    ):
+        hole = (
+            "Hardware can enter the workplace; a task model for this work is still unknown."
+        )
+        if hole not in why:
+            why.append(hole)
+    unknowns = _unknown_lines(results) if verdict != VERDICT_NOT else []
+    for question in task_model_open_questions(models):
+        if question not in unknowns:
+            unknowns.append(question)
     return JobMatchCard(
         job_key=job_spec.get("job_key") or row.get("job_key") or "",
-        title=job_spec.get("title") or row.get("title") or "",
+        title=title,
         company_name=job_spec.get("company_name") if job_spec.get("company_name") is not None else row.get("company_name"),
         locality=job_spec.get("locality") if job_spec.get("locality") is not None else row.get("locality"),
-        industry=row.get("industry") or job_spec.get("locality") or job_spec.get("physics") or "",
-        path=row.get("path") or "",
-        tape_family=row.get("tape_family") or job_spec.get("physics") or "transport",
+        industry=industry,
+        path=path,
+        tape_family=tape_family,
         verdict=verdict,
         robot_name=product,
-        why=_why_lines(results, caps, verdict),
-        still_unknown=_unknown_lines(results) if verdict != VERDICT_NOT else [],
+        why=why,
+        still_unknown=unknowns,
         blockers=_blocker_lines(results, job_spec),
         requirements=results,
         source="requirement_match",
+        required_task_models=models,
     )
 
 

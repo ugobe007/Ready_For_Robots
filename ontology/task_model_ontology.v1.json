@@ -1,0 +1,178 @@
+{
+  "ontology_id": "rfr_task_models_v1",
+  "version": "1.0.0",
+  "product_term": "task_model",
+  "internal_nickname": "certificate",
+  "ui_term": "task model",
+  "note": "A task model is a trained policy/skill pack for a specific physical job. Hardware capability is not enough. Do not call these certificates in product UI.",
+  "presence_states": ["unknown", "present", "absent"],
+  "slots": [
+    {
+      "id": "warehouse_pick_place_policy",
+      "label": "Warehouse pick-and-place policy",
+      "vertical": "warehouse",
+      "physical_task": "Pick, place, and stow SKUs or totes in a fulfillment cell",
+      "tape_families": ["gripper", "pallet", "transport"],
+      "keywords": ["warehouse", "fulfillment", "distribution center", "asin", "pick station", "pallet", "case", "carton", "conveyor", "palletiz"],
+      "hardware_not_enough": "A mobile manipulator can exist in the DC and still lack the pick policy for that SKU mix.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "OEM skill / application store",
+          "url": null,
+          "note": "Ask the robot OEM which warehouse pick policy they ship for this SKU class."
+        },
+        {
+          "kind": "foundation_robotics",
+          "name": "Physical Intelligence (π-series) and similar robot foundation models",
+          "url": "https://www.physicalintelligence.company/",
+          "note": "Task-general robot policies; still must be qualified on this workplace."
+        },
+        {
+          "kind": "sim_to_real",
+          "name": "NVIDIA Isaac / GR00T",
+          "url": "https://developer.nvidia.com/isaac",
+          "note": "Simulation-trained policies; not proof that this job is done."
+        },
+        {
+          "kind": "open_weights",
+          "name": "Hugging Face robotics models",
+          "url": "https://huggingface.co/models?pipeline_tag=robotics",
+          "note": "Public checkpoints. Presence on a candidate is unknown until named."
+        }
+      ]
+    },
+    {
+      "id": "warehouse_amr_fleet_nav",
+      "label": "Warehouse AMR navigation / fleet policy",
+      "vertical": "warehouse",
+      "physical_task": "Navigate aisles, docks, and human traffic while moving goods",
+      "tape_families": ["transport", "cart"],
+      "keywords": ["amr", "agv", "warehouse", "fulfillment", "dock", "tote", "cart", "aisle", "zone"],
+      "hardware_not_enough": "A drive base is not a site-qualified navigation model for that map and traffic mix.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "AMR OEM fleet software",
+          "url": null,
+          "note": "Site map + traffic rules are usually OEM-specific, not transferable hardware."
+        },
+        {
+          "kind": "open_weights",
+          "name": "Hugging Face robotics / navigation checkpoints",
+          "url": "https://huggingface.co/models?pipeline_tag=robotics",
+          "note": "Look for navigation or VLN policies; do not assume they run on this SKU."
+        }
+      ]
+    },
+    {
+      "id": "machine_tending_load_unload",
+      "label": "Machine-tending load/unload policy",
+      "vertical": "manufacturing",
+      "physical_task": "Load and unload parts on CNC / process machines without crashing the fixture",
+      "tape_families": ["gripper"],
+      "keywords": ["cnc", "machine tend", "machine-tend", "lathe", "mill", "workpiece", "fixture", "load/unload", "tending"],
+      "hardware_not_enough": "Reach and payload do not encode fixture geometry or cycle interlocks.",
+      "where_to_look": [
+        {
+          "kind": "integrator_cell",
+          "name": "Integrator / OEM tending cell software",
+          "url": null,
+          "note": "Often a custom cell program, not a downloadable general model."
+        },
+        {
+          "kind": "sim_to_real",
+          "name": "NVIDIA Isaac industrial examples",
+          "url": "https://developer.nvidia.com/isaac",
+          "note": "Starting point only; the fixture model is site-specific."
+        }
+      ]
+    },
+    {
+      "id": "hospital_logistics_transport",
+      "label": "Hospital logistics transport policy",
+      "vertical": "healthcare",
+      "physical_task": "Move linens, meals, meds, or samples through clinical corridors under hospital rules",
+      "tape_families": ["transport", "cart"],
+      "keywords": ["hospital", "clinic", "nursing", "patient", "pharmacy", "linen", "or suite"],
+      "hardware_not_enough": "Indoor mobility is not a HIPAA/infection-control qualified clinical transport policy.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Clinical AMR OEM application pack",
+          "url": null,
+          "note": "Aethon, Diligent, and similar ship hospital-specific behaviors — not warehouse AMR software."
+        },
+        {
+          "kind": "open_weights",
+          "name": "Hugging Face robotics models",
+          "url": "https://huggingface.co/models?pipeline_tag=robotics",
+          "note": "Public models rarely include hospital SOP. Treat as unknown unless named."
+        }
+      ]
+    },
+    {
+      "id": "floor_cleaning_policy",
+      "label": "Autonomous floor-cleaning policy",
+      "vertical": "commercial",
+      "physical_task": "Cover and reclean floors to a specified soil standard without colliding with people",
+      "tape_families": ["scrub"],
+      "keywords": ["scrub", "floor clean", "janitorial", "custodial"],
+      "hardware_not_enough": "A scrub deck is not the coverage policy for that floorplate.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Scrubber OEM autonomy stack",
+          "url": null,
+          "note": "Avidbots, Tennant, etc. ship site maps + cleaning programs with the machine."
+        }
+      ]
+    },
+    {
+      "id": "inspection_route_policy",
+      "label": "Inspection-route policy",
+      "vertical": "utilities",
+      "physical_task": "Follow a route and capture the right observations (leak, thermal, visual)",
+      "tape_families": ["inspect"],
+      "keywords": ["inspect", "patrol", "thermal", "leak"],
+      "hardware_not_enough": "Cameras plus legs/wheels are not an inspection checklist model.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Inspection OEM mission software",
+          "url": null,
+          "note": "Spot, ANYmal, and similar: missions are sold/configured separately from the platform."
+        }
+      ]
+    },
+    {
+      "id": "site_task_policy",
+      "label": "Site-specific task policy",
+      "vertical": "any",
+      "physical_task": "Perform this job's physical tasks under this workplace's rules",
+      "tape_families": [],
+      "keywords": [],
+      "hardware_not_enough": "A robot SKU is not a trained policy for this workplace's tasks.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "OEM skill / application store",
+          "url": null,
+          "note": "Ask which task policy they ship for this work — not only which chassis."
+        },
+        {
+          "kind": "integrator_cell",
+          "name": "Integrator-developed cell or site program",
+          "url": null,
+          "note": "Often custom and expensive. Distributors who only resell hardware leave this unpaid."
+        },
+        {
+          "kind": "open_weights",
+          "name": "Hugging Face robotics models",
+          "url": "https://huggingface.co/models?pipeline_tag=robotics",
+          "note": "Public checkpoints. Presence on a candidate is unknown until named."
+        }
+      ]
+    }
+  ]
+}
