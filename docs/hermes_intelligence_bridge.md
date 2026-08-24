@@ -99,15 +99,15 @@ You do not need to read the key off Fly. **Hermes already has `RFR_ADMIN_KEY`.**
 3. Set secret name **`ADMIN_KEY`** (exactly that). Value = the pasted string. Save. Machines restart.
 4. GitHub → **Settings → Secrets and variables → Actions** → `ADMIN_KEY` = the same paste.
 
-Wait ~60s. Then this `curl` **can** run in the Cursor Cloud terminal:
+Wait ~60s. Prove the match **on the Mac** (does not print the key):
 
 ```bash
-# paste the key only into the header; do not commit it
-curl -sS -X POST "https://ready-2-robot.fly.dev/api/v1/market-graph/infer-qualify" \
-  -H "Content-Type: application/json" \
-  -H "X-Admin-Key: PASTE_RFR_ADMIN_KEY_HERE" \
-  -d '{"dry_run": true, "limit": 1}'
+cd ~/Desktop/Ready_For_Robots
+git pull
+python3 scripts/hermes_auth_smoke.py
 ```
+
+Expect `"ok": true` and HTTP 200 on `cal_status` and `infer_qualify_dry_run`. Cursor Cloud will exit 2 (`no_key`).
 
 ### Optional: same thing from Mac Terminal.app (`flyctl` + `fly auth login`)
 
