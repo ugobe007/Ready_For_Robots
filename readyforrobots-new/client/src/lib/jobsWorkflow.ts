@@ -477,11 +477,23 @@ export const JOBS_RAIL_LINK_CLASS =
 
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT =
-  "This is your CRM. Free unlocks 3 job opportunities from the list you just checked. Opt in so we email you when those jobs change.";
+  "This is your CRM. Free unlocks 3 job opportunities from the list you just checked. Activate jobs so we can apply and land them with CRM automation.";
 export const CRM_HOW_TO_STEPS = [
   "The 3 unlocked jobs are the ones you checked on Jobs.",
   "Opt in to email. We watch your robot URL on the cron and tell you when jobs change or new work shows up.",
-  "Pro keeps every SKU on the cron. HubSpot is optional.",
+  "Activate jobs to open Pipeline. CRM automation applies to those jobs and helps land the robot.",
+] as const;
+export const CRM_SUBHEAD_CLASS =
+  "mt-2 max-w-2xl text-lg leading-relaxed text-slate-200 sm:text-xl";
+export const JOBS_ACTIVATE_JOBS_CTA = "Activate jobs";
+export const JOBS_AUTOMATE_JOBS_CTA = "Automate jobs";
+export const JOBS_AUTOMATE_SRC = "jobs_automate";
+export const PIPELINE_JOBS_AUTOMATE_NEXT =
+  "CRM automation applies to the jobs you unlocked and helps land them. Open a row, then Automate jobs — we help you apply and get the robot hired.";
+export const PIPELINE_JOBS_AUTOMATE_STEPS = [
+  "These rows are the employers for the jobs in your CRM.",
+  "Open a job. Automate jobs starts CRM automation for that employer.",
+  "We help you apply to the job and land the robot at that workplace.",
 ] as const;
 export const CRM_WATCH_OPT_IN_LABEL =
   "Email me when these jobs change or we find new work for my robot.";
@@ -758,12 +770,24 @@ export function isJobsActivateSrc(src: string | null | undefined): boolean {
   return (src || "").trim() === JOBS_ACTIVATE_SRC;
 }
 
+export function isJobsAutomateSrc(src: string | null | undefined): boolean {
+  return (src || "").trim() === JOBS_AUTOMATE_SRC;
+}
+
 /** CRM is step 3 — never a second pipeline confirmation, never the OEM as `url=`. */
 export function jobsActivateHref(submissionId?: number | null): string {
   const params = new URLSearchParams();
   params.set("src", JOBS_ACTIVATE_SRC);
   if (submissionId && submissionId > 0) params.set("submission", String(submissionId));
   return `/crm?${params.toString()}`;
+}
+
+/** CRM → Pipeline: apply and land the unlocked jobs with CRM automation. */
+export function jobsAutomateHref(submissionId?: number | null): string {
+  const params = new URLSearchParams();
+  params.set("src", JOBS_AUTOMATE_SRC);
+  if (submissionId && submissionId > 0) params.set("submission", String(submissionId));
+  return `/pipeline?${params.toString()}`;
 }
 
 /** @deprecated Use jobsActivateHref. Kept so leftover Place links compile. */

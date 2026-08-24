@@ -5,6 +5,7 @@
 import { useEffect } from "react";
 import {
   JOBS_ACTIVATE_SRC,
+  isJobsAutomateSrc,
   jobsActivateHref,
   jobsSignupHref,
 } from "@/lib/jobsWorkflow";
@@ -18,6 +19,7 @@ export default function JobsHandoffBoard(props: {
   submissionId?: number | null;
 }) {
   useEffect(() => {
+    if (isJobsAutomateSrc(props.src)) return;
     const dest = jobsActivateHref(props.submissionId);
     window.location.replace(
       props.signedIn ? dest : jobsSignupHref(dest, props.src || JOBS_ACTIVATE_SRC),

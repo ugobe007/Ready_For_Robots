@@ -15,6 +15,7 @@ import {
   CRM_UNLOCKED_JOBS,
   JOBS_ACTIVATE_SRC,
   isJobsHandoffSrc,
+  jobsAutomateHref,
   jobsSignupHref,
 } from "@/lib/jobsWorkflow";
 
@@ -109,6 +110,10 @@ export default function Crm() {
   const [watchError, setWatchError] = useState<string | null>(null);
   const jobsSrc = new URLSearchParams(search).get("src");
   const fromJobs = isJobsHandoffSrc(jobsSrc);
+  const submissionId = Number(new URLSearchParams(search).get("submission"));
+  const jobsAutomatePath = jobsAutomateHref(
+    Number.isFinite(submissionId) && submissionId > 0 ? submissionId : null,
+  );
   const crmReturnHref = (() => {
     const params = new URLSearchParams(search);
     if (!isJobsHandoffSrc(params.get("src"))) params.set("src", JOBS_ACTIVATE_SRC);
@@ -463,6 +468,7 @@ export default function Crm() {
             footer="Loading CRM…"
             tasteJobs={tasteJobs}
             tasteProduct={tasteProduct}
+            activateHref={fromJobs ? jobsAutomatePath : undefined}
           />
         </div>
       </div>
@@ -477,10 +483,11 @@ export default function Crm() {
           <CrmHero
             tasteJobs={tasteJobs}
             tasteProduct={tasteProduct}
+            activateHref={fromJobs ? jobsAutomatePath : undefined}
             actions={
               <Link
                 href={jobsSignupHref(crmReturnHref, jobsSrc || JOBS_ACTIVATE_SRC)}
-                className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+                className="inline-flex items-center justify-center border border-emerald-400 bg-emerald-400/15 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-emerald-200 transition hover:bg-emerald-400/25"
               >
                 Sign in to CRM →
               </Link>
@@ -504,6 +511,7 @@ export default function Crm() {
           onOptIn={optInWatch}
           tasteJobs={tasteJobs}
           tasteProduct={tasteProduct}
+          activateHref={fromJobs ? jobsAutomatePath : undefined}
           actions={
             fromJobs ? (
               <Link

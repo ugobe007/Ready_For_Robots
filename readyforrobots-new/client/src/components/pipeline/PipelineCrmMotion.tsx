@@ -25,6 +25,7 @@ type Props = {
   savedDeals?: CrmMotionDeal[];
   selectedId?: number | null;
   onSelectDeal?: (id: number) => void;
+  jobsAutomate?: boolean;
 };
 
 export default function PipelineCrmMotion({
@@ -38,20 +39,27 @@ export default function PipelineCrmMotion({
   savedDeals = [],
   selectedId = null,
   onSelectDeal,
+  jobsAutomate = false,
 }: Props) {
   if (!hasSession) return null;
 
-  const company = (selectedCompany || "this buyer").trim() || "this buyer";
+  const company = (selectedCompany || (jobsAutomate ? "this job" : "this buyer")).trim()
+    || (jobsAutomate ? "this job" : "this buyer");
   const crmLive = savedCount > 0;
 
   if (!crmLive) {
     return (
       <section className="pipeline-crm-motion pipeline-crm-motion-activate">
-        <p className="pipeline-crm-motion-kicker">CRM · next action</p>
-        <h2 className="pipeline-crm-motion-title">Activate CRM on this page</h2>
+        <p className="pipeline-crm-motion-kicker">
+          {jobsAutomate ? "CRM · automate jobs" : "CRM · next action"}
+        </p>
+        <h2 className="pipeline-crm-motion-title">
+          {jobsAutomate ? "Automate jobs" : "Activate CRM on this page"}
+        </h2>
         <p className="pipeline-crm-motion-body">
-          Saving {company} starts your working pipeline. Native CRM is the default path;
-          HubSpot can sync after the first save.
+          {jobsAutomate
+            ? `We apply to the jobs you unlocked and help land the robot. Automate jobs for ${company} starts CRM automation for that employer.`
+            : `Saving ${company} starts your working pipeline. Native CRM is the default path; HubSpot can sync after the first save.`}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button
@@ -61,7 +69,11 @@ export default function PipelineCrmMotion({
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Bookmark className="h-4 w-4" />
-            {saving ? "Saving…" : `Activate CRM — save ${company}`}
+            {saving
+              ? "Saving…"
+              : jobsAutomate
+                ? `Automate jobs — apply ${company}`
+                : `Activate CRM — save ${company}`}
             {!saving && <ArrowRight className="h-4 w-4" />}
           </button>
           <Link
@@ -85,7 +97,9 @@ export default function PipelineCrmMotion({
             {savedCount} active account{savedCount === 1 ? "" : "s"}
           </h2>
           <p className="pipeline-crm-motion-body">
-            Work saved buyers here, then open the full CRM to advance stages and track replies.
+            {jobsAutomate
+              ? "CRM automation is applying to these jobs. Open a row to keep landing the robot, or open CRM for the full list."
+              : "Work saved buyers here, then open the full CRM to advance stages and track replies."}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
