@@ -23,6 +23,12 @@ def test_ontology_loads_task_model_slots():
     assert data.get("internal_nickname") == "certificate"
     dumped = json.dumps(slots).lower()
     assert "certificate" not in dumped
+    assert data.get("shared_lookups")
+    assert data.get("qualify_filters")
+    assert data.get("pricing_lookups")
+    blob = json.dumps(data).lower()
+    # Chat LLMs may be named as a counterexample, never as the job policy.
+    assert "not warehouse pick" in blob or "not a chat llm" in blob or "not warehouse" in blob
 
 
 def test_warehouse_palletize_needs_pick_policy_unknown():
@@ -38,6 +44,26 @@ def test_warehouse_palletize_needs_pick_policy_unknown():
     assert all(m["where_to_look"] for m in models)
     questions = task_model_open_questions(models)
     assert any("pick-and-place" in q.lower() or "pick-and-place" in q.lower() for q in questions)
+    names = {d["name"] for m in models for d in m["where_to_look"]}
+    assert any("Hugging Face" in n for n in names)
+    assert any("Argo-Robot" in n or "OpenVLA" in n for n in names)
+    assert any("Robotic Data" in n for n in names)
+    assert any("World Labs" in n for n in names)
+    assert any("Mercor" in n for n in names)
+    kinds = {d.get("kind") for m in models for d in m["where_to_look"]}
+    assert "training_data" in kinds
+    assert "sim_to_real" in kinds
+    assert "talent" in kinds
+    assert models[0]["qualify_filters"]
+    assert any(f["id"] == "commercial_license" for f in models[0]["qualify_filters"])
+    assert any(f["id"] == "compute_footprint" for f in models[0]["qualify_filters"])
+    price_names = {d["name"] for d in models[0]["pricing_lookups"]}
+    assert any("BenchLM" in n for n in price_names)
+    assert any("Axe Compute" in n for n in price_names)
+    assert "OpenVLA" in models[0]["candidate_families"]
+    assert any("chat LLM" in q.lower() or "vla" in q.lower() for q in questions)
+    assert any("license" in q.lower() for q in questions)
+    assert any("cost" in q.lower() or "price" in q.lower() or "token" in q.lower() for q in questions)
 
 
 def test_warehouse_tote_move_is_amr_nav_not_hospital():

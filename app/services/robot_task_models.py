@@ -92,22 +92,53 @@ def _slot_matches(slot: dict[str, Any], *, tape: str, hay: str) -> bool:
     return _vertical_hit(slot, hay)
 
 
-def _lookups(slot: dict[str, Any]) -> list[dict[str, Any]]:
-    rows = slot.get("where_to_look") or slot.get("where_to_look") or []
+def _dest(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "kind": row.get("kind") or "",
+        "name": row.get("name") or "",
+        "url": row.get("url"),
+        "note": row.get("note") or "",
+    }
+
+
+def _merge_lookups(*groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
-    for dest in rows:
-        out.append(
-            {
-                "kind": dest.get("kind") or "",
-                "name": dest.get("name") or "",
-                "url": dest.get("url"),
-                "note": dest.get("note") or "",
-            }
-        )
+    seen: set[str] = set()
+    for group in groups:
+        for row in group:
+            dest = _dest(row)
+            key = dest["name"].lower()
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            out.append(dest)
     return out
 
 
+def _catalog(key: str) -> list[dict[str, Any]]:
+    rows = load_task_model_ontology().get(key) or []
+    return [r for r in rows if isinstance(r, dict)]
+
+
+def _lookups(slot: dict[str, Any]) -> list[dict[str, Any]]:
+    slot_rows = slot.get("where_to_look") or slot.get("where_to_look") or []
+    return _merge_lookups(list(slot_rows), _catalog("shared_lookups"))
+
+
+def _filter(row: dict[str, Any]) -> dict[str, Any]:
+    label = row.get("label") or row.get("name") or ""
+    return {
+        "id": row.get("id") or "",
+        "kind": row.get("kind") or row.get("id") or "",
+        "name": label,
+        "label": label,
+        "url": row.get("url"),
+        "note": row.get("note") or "",
+    }
+
+
 def _serialize_slot(slot: dict[str, Any], *, presence: str = "unknown") -> dict[str, Any]:
+    ont = load_task_model_ontology()
     return {
         "id": slot.get("id") or "",
         "label": slot.get("label") or "",
@@ -117,7 +148,10 @@ def _serialize_slot(slot: dict[str, Any], *, presence: str = "unknown") -> dict[
         "hardware_not_enough": (
             slot.get("hardware_not_enough") or slot.get("hardware_not_enough") or ""
         ),
+        "candidate_families": list(ont.get("candidate_families") or []),
         "where_to_look": _lookups(slot),
+        "qualify_filters": [_filter(r) for r in _catalog("qualify_filters")],
+        "pricing_lookups": [_dest(r) for r in _catalog("pricing_lookups")],
     }
 
 
@@ -148,6 +182,14 @@ def required_task_models_for_job(
     return []
 
 
+_SHARED_OPEN_QUESTIONS = (
+    "Is a candidate policy a robot VLA or OEM pack — not a chat LLM?",
+    "Does the license allow commercial placement on this robot?",
+    "Can it run on this SKU / at the edge, or is it cloud-only?",
+    "What does it cost — OEM license, integrator SOW, GPU training, or a token API?",
+)
+
+
 def task_model_open_questions(models: list[dict[str, Any]]) -> list[str]:
     out: list[str] = []
     for model in models:
@@ -161,4 +203,8 @@ def task_model_open_questions(models: list[dict[str, Any]]) -> list[str]:
             out.append(
                 f"Which {label.lower()} covers this work, and where is it published?"
             )
+    if models:
+        for question in _SHARED_OPEN_QUESTIONS:
+            if question not in out:
+                out.append(question)
     return out

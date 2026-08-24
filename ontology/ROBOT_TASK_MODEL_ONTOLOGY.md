@@ -26,9 +26,13 @@ Distributors and integrators usually sell platforms. They under-invest in **task
 | `physical_task` | The work the policy must perform |
 | `vertical` | Operating environment |
 | `presence` | `unknown` until evidence names a model on this candidate |
-| `where_to_look` | Places to find a model (OEM store, HF robotics, Isaac, …) — **lookups, not fake listings** |
+| `where_to_look` | Places to find a model (OEM store, HF robotics / OpenVLA / LeRobot, Argo survey, Papers with Code) — **lookups, not fake listings** |
+| `qualify_filters` | VLA vs chat LLM, commercial license, on-robot compute, context, site qualification |
+| `pricing_lookups` | BenchLM token index, cloud FM APIs, physical-AI compute, OEM quote, integrator SOW — **no invented dollars** |
 
 We do **not** invent “Robot X has NVIDIA GR00T for job Y.” Presence starts as `unknown`. We do identify **which slot the job needs** and **where a practitioner would search**.
+
+Chat LLMs (GPT, Claude, Gemini, Llama) are named only as a **counterexample**. Search families: OpenVLA, Octo, LeRobot, ACT, GR00T.
 
 ## Match rule
 

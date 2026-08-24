@@ -49,6 +49,9 @@ import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
   JOBS_EXAMPLE_CAP,
   FIND_JOBS_CTA,
+  FIND_JOBS_HEADLINE_CLASS,
+  FIND_JOBS_HOME_SUBHEAD,
+  FIND_JOBS_SUBHEAD_CLASS,
   JOBS_NEXT_CTA,
   JOBS_NEXT_HINT,
   JOBS_PIPELINE_CAP,
@@ -1818,7 +1821,7 @@ function FindRail({
   return (
     <div>
       <p className={eyebrow}>{researching || stage === "select" ? "Your robot" : "Find jobs"}</p>
-      <h1 className="mt-1 font-display text-3xl font-bold leading-tight tracking-tight text-slate-100">
+      <h1 className={FIND_JOBS_HEADLINE_CLASS}>
         {stage === "select" ? (
           companyName || "Select a robot"
         ) : researching ? (
@@ -1830,8 +1833,8 @@ function FindRail({
         )}
       </h1>
       {stage === "find" && (
-        <p className="mt-3 text-sm text-slate-400">
-          {RAIL_STEP_HINT.find}
+        <p className={FIND_JOBS_SUBHEAD_CLASS}>
+          {FIND_JOBS_HOME_SUBHEAD}
         </p>
       )}
 
@@ -2925,6 +2928,53 @@ function JobCard({
                           </li>
                         ))}
                       </ul>
+                    ) : null}
+                    {model.candidateFamilies.length ? (
+                      <p className="mt-1 text-slate-500">
+                        Search families: {model.candidateFamilies.join(", ")} —
+                        not chat LLMs.
+                      </p>
+                    ) : null}
+                    {model.qualifyFilters.length ? (
+                      <div className="mt-2">
+                        <p className="text-[12px] uppercase tracking-[0.08em] text-slate-500">
+                          How we qualify a candidate
+                        </p>
+                        <ul className="mt-0.5 space-y-0.5 text-slate-400">
+                          {model.qualifyFilters.map(f => (
+                            <li key={f.id || f.label}>
+                              {f.label}
+                              {f.note ? ` — ${f.note}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                    {model.pricingLookups.length ? (
+                      <div className="mt-2">
+                        <p className="text-[12px] uppercase tracking-[0.08em] text-slate-500">
+                          Where to find price
+                        </p>
+                        <ul className="mt-0.5 space-y-0.5 text-slate-400">
+                          {model.pricingLookups.map(dest => (
+                            <li key={`${model.id}-price-${dest.name}`}>
+                              {dest.url ? (
+                                <a
+                                  href={dest.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-slate-300 underline decoration-slate-600 underline-offset-2"
+                                >
+                                  {dest.name}
+                                </a>
+                              ) : (
+                                dest.name
+                              )}
+                              {dest.note ? ` — ${dest.note}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     ) : null}
                   </li>
                 ))}

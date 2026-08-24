@@ -20,6 +20,8 @@
 | Distributor | Find jobs for the robots you sell. |
 | Integrator | Find automation jobs your company can solve. |
 
+Home `/` subhead: **We match your robots to specific jobs and models using your URL**.
+
 Not leads. Not SIGNAL. Not three products. One engine: **FIND → QUALIFY → PLACE later**.
 
 ---

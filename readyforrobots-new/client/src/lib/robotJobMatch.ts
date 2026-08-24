@@ -48,7 +48,19 @@ export type MatchJob = {
     vertical: string;
     presence: "unknown" | "present" | "absent";
     hardware_not_enough: string;
+    candidate_families?: string[];
     where_to_look: {
+      kind: string;
+      name: string;
+      url: string | null;
+      note: string;
+    }[];
+    qualify_filters?: {
+      id: string;
+      label: string;
+      note: string;
+    }[];
+    pricing_lookups?: {
       kind: string;
       name: string;
       url: string | null;
