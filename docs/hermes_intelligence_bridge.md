@@ -167,7 +167,9 @@ Never put keys in digests, watch state, or git.
 
 Qualify overlays use `truth_state: HERMES_OVERLAY` — not customer-confirmed CRM QUALIFY.
 
-**Implementation note (2026-08-23):** Tracks 8–10 (`/buying-window-overlay`, `/video-evidence/ingest`, `/vendor-video-evidence/ingest`, `/video-evidence/seed-targets`) were documented before they existed on Fly. They are implemented in-repo with `dry_run` support; production OpenAPI will list them after the next Fly deploy. Live overlay coverage is still empty until Hermes auth reaches Fly.
+**Implementation note (2026-08-24):** Tracks 8–10 (`/buying-window-overlay`, `/video-evidence/ingest`, `/vendor-video-evidence/ingest`, `/video-evidence/seed-targets`) exist on this branch with `dry_run` tests. Production OpenAPI still omits them until this PR is merged (Fly deploy is `push` to `main` via `.github/workflows/deploy.yml`). Public pipeline already shows `hermes_qualify` on all five leads. Buying-window and video overlays stay empty until those routes are live and Mac crons POST them.
+
+**Mac Hermes (operator `hermes status`, 2026-08-23 evening PT):** gateway running (launchd), 12/12 jobs, 0 chat sessions. OpenAI and Anthropic keys set. Google/Gemini **not** set. Chat model is Anthropic `claude-opus-4-6`. Messaging: email only (`ugobe07@gmail.com`). Nous Portal logged in but **no paid credits** (managed web/browser tools off). Cloud agents cannot attach to that TUI; `hermes status` is CLI, not a chat thread.
 
 ## Cron roster (America/Los_Angeles)
 

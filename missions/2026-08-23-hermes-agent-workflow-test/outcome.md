@@ -52,4 +52,21 @@ Public GET after cache rebuild (`built_at` **2026-08-23T23:18:08Z**): **5/5** le
 
 ## Still operator-only
 
-`hermes setup --portal` is interactive on the Mac. Tracks 8–10 need this PR on Fly to appear in production OpenAPI.
+`hermes setup --portal` is interactive on the Mac. Tracks 8–10 need this PR merged to `main` so GitHub Actions deploys Fly. This Cloud VM has no `FLY_API_TOKEN` / `flyctl`.
+
+## Proceed 2026-08-24 — Mac status + live Fly
+
+Operator pasted `hermes status` from the Mac. Cloud still cannot talk to that process. Interpretation:
+
+| Item | State |
+|------|--------|
+| Gateway | running (launchd) |
+| Scheduled jobs | 12 active / 12 total |
+| Chat sessions | 0 (status CLI, not a thread — prompts do not land) |
+| OpenAI | set |
+| Anthropic | set; session model `claude-opus-4-6` |
+| Google / Gemini | **not set** |
+| Email | configured (`ugobe07@gmail.com`) |
+| Nous credits | none — managed web/browser/TTS tools off |
+
+Live probe `2026-08-24T02:34:54Z` pipeline: **5/5** `hermes_qualify`, **2** decision-maker overlays, **0** job titles / buying windows / video. Ingest contract still 403 / 401 / 401 / reconstruct 200. Fly OpenAPI still missing tracks 8–10. `GET /status` has no `loop` key (pre-this-PR web). `loop.healthy` ships when this PR deploys.
