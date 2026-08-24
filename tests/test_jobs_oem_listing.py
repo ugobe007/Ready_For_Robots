@@ -5,6 +5,7 @@ from app.services.jobs_oem_listing import (
     FIND_PRODUCT_LIST_CAP,
     listing_from_catalog,
     listing_from_page,
+    listing_payload_for_url,
     split_primary_robots,
 )
 from app.services.vendor_robot_lookup import (
@@ -150,3 +151,32 @@ def test_listing_from_catalog_is_name_then_description():
     assert [r["name"] for r in rows][:3]
     assert all(r.get("description") for r in rows)
     assert len(rows) <= FIND_PRODUCT_LIST_CAP
+
+
+def test_listing_payload_matches_bare_reflex_host():
+    reload_vendor_robots_index()
+    payload = listing_payload_for_url("reflexrobotics.com")
+    assert payload["matched"] is True
+    names = [r["name"] for r in payload["robots"]]
+    assert any("Gen2" in n or "Gen 2" in n for n in names)
+    assert any("Humanoid" in n for n in names)
+    assert len(names) <= FIND_PRODUCT_LIST_CAP
+    assert payload["robots"][0]["description"]  # specs folded into blurb when present
+
+
+def test_oem_listing_http_does_not_resolve_dns(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app
+    import app.services.robot_url_safety as S
+
+    def boom(*_a, **_k):
+        raise AssertionError("oem-listing must not wait on DNS")
+
+    monkeypatch.setattr(S, "assert_public_http_url", boom)
+    monkeypatch.setattr(S, "_system_resolve_ips", boom)
+    client = TestClient(app)
+    res = client.get("/api/oem-listing", params={"url": "reflexrobotics.com"})
+    assert res.status_code == 200
+    body = res.json()
+    assert body["matched"] is True
+    assert body["robots"]

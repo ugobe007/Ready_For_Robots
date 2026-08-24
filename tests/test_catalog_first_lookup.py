@@ -185,6 +185,20 @@ def test_reflex_homepage_opens_picker_without_live_fetch(monkeypatch):
     assert profile.company.name == "Reflex Robotics"
 
 
+def test_indexed_oem_skips_ssrf_dns(monkeypatch):
+    import app.services.robot_understanding_v1.pipeline as P
+
+    def boom(*_a, **_k):
+        raise AssertionError("indexed OEM must not wait on SSRF DNS")
+
+    monkeypatch.setattr(P, "assert_public_http_url", boom)
+    monkeypatch.setattr(P, "fetch_page", boom)
+    profile = P.build_robot_profile("reflexrobotics.com")
+    assert profile.needs_product_choice is True
+    names = {p.name for p in profile.products}
+    assert any("Gen2" in n or "Gen 2" in n for n in names)
+
+
 def test_every_indexed_vendor_homepage_skips_live_fetch(monkeypatch):
     """Reflex is not special — any indexed OEM homepage must skip live I/O."""
     import app.services.robot_understanding_v1.pipeline as P

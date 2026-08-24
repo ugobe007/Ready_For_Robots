@@ -35,7 +35,7 @@ from app.services.robot_understanding_v1.sources import (
     collect_source_pack,
     collected_from_page,
 )
-from app.services.robot_url_safety import assert_public_http_url
+from app.services.robot_url_safety import assert_public_http_url, normalize_product_url
 from app.services.vendor_robot_lookup import (
     catalog_claim_facts,
     index_robot_for_name,
@@ -106,9 +106,16 @@ def build_robot_profile(
     timings, if provided, is filled with resolve_ms and profile_ms.
     """
     t0 = time.perf_counter()
-    safe = assert_public_http_url(url)
-    catalog = lookup_vendor_by_url(safe)
+    # Catalog match is host-string only. Do it before SSRF DNS so a hung
+    # Cloudflare OEM resolver cannot burn FIND's 22s budget on vendors we
+    # already list (Reflex, Richtech, …).
+    normalized = normalize_product_url(url) or (url or "").strip()
+    catalog = lookup_vendor_by_url(normalized) or lookup_vendor_by_url(url)
     catalog_skus = bool(catalog and (catalog.get("robots") or []))
+    if catalog_skus:
+        safe = normalized
+    else:
+        safe = assert_public_http_url(url)
     live_budget = _source_budget_sec()
     live_deadline = (time.monotonic() + live_budget) if live_budget is not None else None
     # Indexed OEM homepages (and SKU URLs) skip live fetch — Reflex-class

@@ -287,6 +287,7 @@ export const JOBS_PRODUCT_CAP_FREE = 3;
 export const JOBS_PRODUCT_CAP_PAID = 5;
 /** FIND lists 3 robots per OEM URL. Search is still 3 free / 5 paid per pass. */
 export const JOBS_LINEUP_DISPLAY_CAP = 3;
+export const OEM_LISTING_TIMEOUT_MS = 5_000;
 export const ROBOT_PROFILE_TIMEOUT_MS = 22_000;
 export const ROBOT_JOB_SEARCH_TIMEOUT_MS = 30_000;
 

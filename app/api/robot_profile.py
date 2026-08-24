@@ -14,7 +14,7 @@ import time
 import uuid
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -35,6 +35,14 @@ class RobotProfileIn(BaseModel):
     product: Optional[str] = Field(default=None, max_length=120)
     max_sources: int = Field(default=6, ge=1, le=12)
     correlation_id: Optional[str] = Field(default=None, max_length=64)
+
+
+@router.get("/oem-listing")
+def get_oem_listing(url: str = Query(..., min_length=3, max_length=2000)) -> dict[str, Any]:
+    """Indexed OEM URL → top 3 named robots. No DNS, no live fetch, no Redis."""
+    from app.services.jobs_oem_listing import listing_payload_for_url
+
+    return listing_payload_for_url(url)
 
 
 @router.post("/robot-profile")

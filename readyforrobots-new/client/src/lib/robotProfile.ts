@@ -79,6 +79,47 @@ export type RobotProfileResult = {
   facts: RobotProfileFact[];
 };
 
+export type OemListingRobot = {
+  name: string;
+  description?: string | null;
+  display_class?: string | null;
+};
+
+export type OemListingResult = {
+  matched: boolean;
+  vendor_name?: string | null;
+  vendor_url?: string | null;
+  robots: OemListingRobot[];
+};
+
+/** Indexed OEM homepage → top 3 names. Skips live manufacturer fetch. */
+export async function fetchOemListing(opts: {
+  url: string;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+}): Promise<OemListingResult> {
+  const base = getPublicReadApiBase();
+  const res = await fetchWithTimeout(
+    `${base}/api/oem-listing?url=${encodeURIComponent(opts.url)}`,
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: opts.signal,
+    },
+    opts.timeoutMs ?? 5_000,
+  );
+  if (!res.ok) {
+    throw new Error(`oem-listing ${res.status}`);
+  }
+  const body = (await res.json()) as OemListingResult;
+  return {
+    matched: Boolean(body?.matched),
+    vendor_name: body?.vendor_name || null,
+    vendor_url: body?.vendor_url || null,
+    robots: Array.isArray(body?.robots) ? body.robots : [],
+  };
+}
+
 export async function fetchRobotProfile(opts: {
   url: string;
   product?: string;
