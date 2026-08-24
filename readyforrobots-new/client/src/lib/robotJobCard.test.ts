@@ -84,6 +84,12 @@ describe("robotJobCard", () => {
               note: "Often a custom cell program.",
             },
             {
+              kind: "open_weights",
+              name: "Hugging Face robotics models",
+              url: "https://huggingface.co/models?pipeline_tag=robotics",
+              note: "Public checkpoints. Presence unknown until named.",
+            },
+            {
               kind: "sim_to_real",
               name: "NVIDIA Isaac / GR00T",
               url: "https://developer.nvidia.com/isaac",
@@ -91,13 +97,25 @@ describe("robotJobCard", () => {
             },
             {
               kind: "open_weights",
-              name: "Hugging Face robotics models",
-              url: "https://huggingface.co/models?pipeline_tag=robotics",
-              note: "Public checkpoints. Presence unknown until named.",
+              name: "OpenVLA",
+              url: "https://openvla.github.io/",
+              note: "7B open VLA. Presence unknown until named.",
+            },
+            {
+              kind: "foundation_robotics",
+              name: "Physical Intelligence π0.5",
+              url: "https://www.pi.website/blog/pi05",
+              note: "Open-world VLA. Not site-qualified.",
             },
             {
               kind: "open_weights",
-              name: "Hugging Face — OpenVLA / Octo / LeRobot",
+              name: "NVIDIA GR00T N1.5",
+              url: "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
+              note: "GEAR open foundation VLA. Presence unknown.",
+            },
+            {
+              kind: "open_weights",
+              name: "Hugging Face — OpenVLA checkpoints",
               url: "https://huggingface.co/models?search=openvla",
               note: "Embodied VLA families.",
             },
@@ -146,9 +164,14 @@ describe("robotJobCard", () => {
     expect(card.modelLinks).toHaveLength(JOB_CARD_MODEL_LINK_CAP);
     expect(card.modelLinks.every(d => d.url)).toBe(true);
     expect(card.modelLinks.map(d => d.name)).toEqual([
-      "NVIDIA Isaac",
-      "Hugging Face robotics",
       "OpenVLA",
+      "π0.5",
+      "GR00T N1.5",
+    ]);
+    expect(card.modelLinks.map(d => d.url)).toEqual([
+      "https://openvla.github.io/",
+      "https://www.pi.website/blog/pi05",
+      "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
     ]);
     expect(card.modelLinks.some(d => /Mercor|BenchLM|Argo-Robot/i.test(d.name))).toBe(
       false,
@@ -219,6 +242,53 @@ describe("robotJobCard", () => {
     });
     expect(twoSlots.taskModels).toHaveLength(2);
     expect(twoSlots.modelLinks).toHaveLength(JOB_CARD_MODEL_LINK_CAP);
+    expect(
+      cardModelLinks([
+        {
+          kind: "open_weights",
+          name: "Hugging Face robotics models",
+          url: "https://huggingface.co/models?pipeline_tag=robotics",
+          note: "",
+        },
+        {
+          kind: "foundation_robotics",
+          name: "Physical Intelligence π0.5",
+          url: "https://www.pi.website/blog/pi05?curius=1433",
+          note: "",
+        },
+        {
+          kind: "open_weights",
+          name: "OpenVLA",
+          url: "https://openvla.github.io/?utm_source=chatgpt.com",
+          note: "",
+        },
+        {
+          kind: "open_weights",
+          name: "NVIDIA GR00T N1.5",
+          url: "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
+          note: "",
+        },
+      ]),
+    ).toEqual([
+      {
+        kind: "open_weights",
+        name: "OpenVLA",
+        url: "https://openvla.github.io/",
+        note: "",
+      },
+      {
+        kind: "foundation_robotics",
+        name: "π0.5",
+        url: "https://www.pi.website/blog/pi05",
+        note: "",
+      },
+      {
+        kind: "open_weights",
+        name: "GR00T N1.5",
+        url: "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
+        note: "",
+      },
+    ]);
   });
 
   it("keeps the RobCo pack honest: named machine-tending work, no fake labor dollars", () => {

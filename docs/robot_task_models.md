@@ -28,7 +28,7 @@ The expanded Job Card stays short:
 
 1. Employer, workplace, work
 2. **Which task model this work needs** (slot + unknown/present/absent)
-3. **Three model links** (VLA / Isaac / OEM weights with URLs — not surveys, talent, or price maps)
+3. **Three model links** (OpenVLA, π0.5, GR00T N1.5 — project pages with URLs, not surveys, talent, or price maps)
 4. Why it is listed, **three** open questions, next step = site assessment
 
 Qualify-a-candidate filters and pricing lookups stay in the ontology for a later workflow step. Do not dump them on the posting.
@@ -40,16 +40,16 @@ If presence is unknown, qualification is **conditional**, not Qualified.
 | Kind | Destination |
 |------|-------------|
 | OEM runtime | Skill / fleet / clinical / scrub / inspection packs sold with the machine |
-| Open weights | [Hugging Face robotics](https://huggingface.co/models?pipeline_tag=robotics), [OpenVLA](https://huggingface.co/models?search=openvla), [LeRobot](https://huggingface.co/lerobot) |
+| Open weights | [OpenVLA](https://openvla.github.io/), [NVIDIA GR00T N1.5](https://research.nvidia.com/labs/gear/gr00t-n1_5/), [Hugging Face robotics](https://huggingface.co/models?pipeline_tag=robotics), [LeRobot](https://huggingface.co/lerobot) |
 | Surveys | [Argo-Robot manipulation FMs](https://github.com/Argo-Robot/foundation_models) (ACT, Octo, OpenVLA, Helix), [Robocloud robotics FMs](https://robocloud-dashboard.vercel.app/learn/blog/foundation-models-robotics) |
 | Benchmarks | [Papers with Code robot manipulation](https://paperswithcode.com/task/robot-manipulation) |
 | GitHub | [foundation-models topic](https://github.com/topics/foundation-models) / Awesome lists — weights often land here first |
 | Training data | [Robotic Data](https://roboticdata.com/) — Physical AI traces (LiDAR, human/task). Not a site-qualified policy. |
-| Sim-to-real | NVIDIA Isaac / GR00T; [World Labs real-to-sim-to-real](https://www.worldlabs.ai/blog/real-to-sim-to-real) (SceniX) — train/eval in reconstructed scenes |
+| Sim-to-real | NVIDIA Isaac (developer.nvidia.com/isaac); [World Labs real-to-sim-to-real](https://www.worldlabs.ai/blog/real-to-sim-to-real) (SceniX) — train/eval in reconstructed scenes |
 | Talent | [Mercor](https://www.mercor.com/) — people who train/fine-tune/host the policy. Not SIGNAL buyers. |
-| Labs | Physical Intelligence π-series |
+| Labs | [Physical Intelligence π0.5](https://www.pi.website/blog/pi05) — open-world VLA. Not a site-qualified pack. |
 
-**Not a lookup for this job:** GPT, Claude, Gemini, Llama, Mistral as *the* warehouse or hospital policy. Those are chat/VLM APIs. Search **VLAs** (OpenVLA, Octo, LeRobot, ACT) or an OEM pack.
+**Not a lookup for this job:** GPT, Claude, Gemini, Llama, Mistral as *the* warehouse or hospital policy. Those are chat/VLM APIs. Search **VLAs** (OpenVLA, π0.5, Octo, LeRobot, ACT, GR00T N1.5) or an OEM pack. Do not invent that a catalog SKU already runs these models.
 
 ## How we qualify a candidate
 
