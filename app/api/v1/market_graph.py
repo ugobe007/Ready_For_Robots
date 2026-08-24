@@ -12,6 +12,7 @@ from app.admin_auth import _reject_misleading_admin_key, get_admin_key, get_cron
 from app.database import get_db
 from app.services.market_graph_loop import (
     get_market_graph_loop_status,
+    loop_health_from_snapshot,
     read_market_graph_snapshot,
     run_market_graph_loop,
 )
@@ -123,6 +124,58 @@ class VendorNewsIngestBody(BaseModel):
     dry_run: bool = False
 
 
+class BuyingWindowOverlayIn(BaseModel):
+    company_id: int
+    urgency_0_100: int = Field(..., ge=0, le=100)
+    window_label: Optional[str] = Field(None, max_length=160)
+    factors: list[dict[str, Any]] = Field(default_factory=list)
+    cal_hint: Optional[str] = Field(None, max_length=280)
+    confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
+
+
+class BuyingWindowOverlayBody(BaseModel):
+    overlays: list[BuyingWindowOverlayIn] = Field(..., min_length=1, max_length=40)
+    hermes_run_id: Optional[str] = Field(None, max_length=120)
+    dry_run: bool = False
+
+
+class VideoEvidenceIn(BaseModel):
+    company_id: Optional[int] = None
+    company_name: Optional[str] = Field(None, max_length=240)
+    source_url: str = Field(..., min_length=8, max_length=2000)
+    platform: Optional[str] = Field(None, max_length=64)
+    evidence_kind: Optional[str] = Field(None, max_length=64)
+    title: Optional[str] = Field(None, max_length=240)
+    excerpt: Optional[str] = Field(None, max_length=2000)
+    workflow_hint: Optional[str] = Field(None, max_length=160)
+    robot_visible: Optional[str] = Field(None, max_length=120)
+    facility_hint: Optional[str] = Field(None, max_length=160)
+    confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
+    published_at: Optional[str] = Field(None, max_length=32)
+
+
+class VideoEvidenceIngestBody(BaseModel):
+    videos: list[VideoEvidenceIn] = Field(..., min_length=1, max_length=40)
+    hermes_run_id: Optional[str] = Field(None, max_length=120)
+    dry_run: bool = False
+
+
+class VendorVideoEvidenceIn(BaseModel):
+    vendor_name: str = Field(..., min_length=2, max_length=240)
+    source_url: str = Field(..., min_length=8, max_length=2000)
+    platform: Optional[str] = Field(None, max_length=64)
+    evidence_kind: Optional[str] = Field(None, max_length=64)
+    title: Optional[str] = Field(None, max_length=240)
+    robot_model: Optional[str] = Field(None, max_length=120)
+    confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
+
+
+class VendorVideoEvidenceIngestBody(BaseModel):
+    videos: list[VendorVideoEvidenceIn] = Field(..., min_length=1, max_length=40)
+    hermes_run_id: Optional[str] = Field(None, max_length=120)
+    dry_run: bool = False
+
+
 def _require_ingest_auth(
     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
     token: str = Query("", description="SCRAPER_CRON_TOKEN alternative"),
@@ -141,8 +194,17 @@ def _require_ingest_auth(
 @router.get("/status")
 def market_graph_status(db: Session = Depends(get_db)) -> dict[str, Any]:
     snap = read_market_graph_snapshot(db) or {}
+    loop = loop_health_from_snapshot(snap)
+    web_thread = get_market_graph_loop_status()
     return {
-        "scheduler": get_market_graph_loop_status(),
+        "loop": loop,
+        # web-process RAM only — do not treat running/last_run as the worker
+        "scheduler": {
+            **web_thread,
+            "source": "serving_process_memory",
+            "healthy": loop.get("healthy"),
+            "last_completed_at": loop.get("last_completed_at"),
+        },
         "snapshot": {
             "generated_at": snap.get("generated_at"),
             "status": snap.get("status"),
@@ -638,6 +700,185 @@ def market_graph_vendor_news_list(
         }
     except Exception as exc:
         return {"count": 0, "items": [], "error": str(exc)[:240]}
+
+
+@router.post("/buying-window-overlay")
+def market_graph_buying_window_overlay(
+    body: BuyingWindowOverlayBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Hermes buying-window overlay (timing urgency ≠ automation fit)."""
+    from app.services.hermes_intelligence_ingest import apply_buying_window_overlay
+
+    accepted: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    for idx, item in enumerate(body.overlays):
+        try:
+            result = apply_buying_window_overlay(
+                db,
+                company_id=item.company_id,
+                urgency_0_100=item.urgency_0_100,
+                window_label=item.window_label,
+                factors=item.factors,
+                cal_hint=item.cal_hint,
+                confidence=item.confidence,
+                hermes_run_id=body.hermes_run_id,
+                dry_run=body.dry_run,
+            )
+            accepted.append({"index": idx, **result})
+        except Exception as exc:
+            logger.warning("buying-window-overlay %s failed: %s", idx, exc)
+            errors.append({"index": idx, "error": str(exc)[:300]})
+
+    if not body.dry_run and accepted:
+        try:
+            db.commit()
+        except Exception as exc:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"commit failed: {exc}") from exc
+
+    return {
+        "ok": len(errors) == 0,
+        "hermes_run_id": body.hermes_run_id,
+        "accepted": len(accepted),
+        "failed": len(errors),
+        "results": accepted,
+        "errors": errors,
+        "auth": _auth.get("auth"),
+        "doc": "docs/hermes_intelligence_bridge.md",
+    }
+
+
+@router.post("/video-evidence/ingest")
+def market_graph_video_evidence_ingest(
+    body: VideoEvidenceIngestBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Hermes customer use-case videos → crm_metadata.hermes_video_evidence."""
+    from app.services.hermes_intelligence_ingest import ingest_video_evidence
+
+    accepted: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    for idx, vid in enumerate(body.videos):
+        try:
+            if vid.company_id is None and not (vid.company_name or "").strip():
+                raise ValueError("company_id or company_name required")
+            result = ingest_video_evidence(
+                db,
+                company_id=vid.company_id,
+                company_name=vid.company_name,
+                source_url=vid.source_url,
+                platform=vid.platform,
+                evidence_kind=vid.evidence_kind,
+                title=vid.title,
+                excerpt=vid.excerpt,
+                workflow_hint=vid.workflow_hint,
+                robot_visible=vid.robot_visible,
+                facility_hint=vid.facility_hint,
+                confidence=vid.confidence,
+                published_at=vid.published_at,
+                dry_run=body.dry_run,
+            )
+            accepted.append({"index": idx, **result})
+        except Exception as exc:
+            logger.warning("video-evidence ingest %s failed: %s", idx, exc)
+            errors.append({"index": idx, "error": str(exc)[:300]})
+
+    if not body.dry_run and accepted:
+        try:
+            db.commit()
+        except Exception as exc:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"commit failed: {exc}") from exc
+
+    return {
+        "ok": len(errors) == 0,
+        "hermes_run_id": body.hermes_run_id,
+        "accepted": len(accepted),
+        "failed": len(errors),
+        "results": accepted,
+        "errors": errors,
+        "auth": _auth.get("auth"),
+        "doc": "docs/hermes_intelligence_bridge.md",
+    }
+
+
+@router.post("/vendor-video-evidence/ingest")
+def market_graph_vendor_video_evidence_ingest(
+    body: VendorVideoEvidenceIngestBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Hermes OEM demo / field videos → robot_companies.market_intelligence."""
+    from app.services.hermes_intelligence_ingest import ingest_vendor_video_evidence
+
+    accepted: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    for idx, vid in enumerate(body.videos):
+        try:
+            result = ingest_vendor_video_evidence(
+                db,
+                vendor_name=vid.vendor_name,
+                source_url=vid.source_url,
+                platform=vid.platform,
+                evidence_kind=vid.evidence_kind,
+                title=vid.title,
+                robot_model=vid.robot_model,
+                confidence=vid.confidence,
+                dry_run=body.dry_run,
+            )
+            accepted.append({"index": idx, **result})
+        except Exception as exc:
+            logger.warning("vendor-video-evidence ingest %s failed: %s", idx, exc)
+            errors.append({"index": idx, "error": str(exc)[:300]})
+
+    if not body.dry_run and accepted:
+        try:
+            db.commit()
+        except Exception as exc:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"commit failed: {exc}") from exc
+
+    return {
+        "ok": len(errors) == 0,
+        "hermes_run_id": body.hermes_run_id,
+        "accepted": len(accepted),
+        "failed": len(errors),
+        "results": accepted,
+        "errors": errors,
+        "auth": _auth.get("auth"),
+        "doc": "docs/hermes_intelligence_bridge.md",
+    }
+
+
+@router.get("/video-evidence/seed-targets")
+def market_graph_video_evidence_seed_targets(
+    kind: str = Query("both"),
+    missing_only: bool = Query(True),
+    limit: int = Query(40, ge=1, le=80),
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Seed list for customer/vendor video crons (auth required)."""
+    from app.services.hermes_intelligence_ingest import list_video_seed_targets
+
+    try:
+        payload = list_video_seed_targets(
+            db, kind=kind, missing_only=missing_only, limit=limit
+        )
+    except Exception as exc:
+        return {
+            "count": 0,
+            "customers": [],
+            "vendors": [],
+            "error": str(exc)[:240],
+            "auth": _auth.get("auth"),
+        }
+    payload["auth"] = _auth.get("auth")
+    payload["doc"] = "docs/hermes_intelligence_bridge.md"
+    return payload
 
 
 @router.get("/cal-status")

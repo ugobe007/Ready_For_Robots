@@ -1,10 +1,13 @@
 """Unit tests for market graph tension + match scoring (no DB)."""
+from datetime import datetime, timedelta, timezone
+
 from app.services.market_graph_loop import (
     CORE_LOOP_STAGES,
     build_knowledge_truth_layers,
     build_loop_stages,
     detect_tensions,
     industry_bucket,
+    loop_health_from_snapshot,
     match_edge_score,
     propose_matches,
     tension_score,
@@ -178,6 +181,30 @@ def test_loop_stages_cover_canonical_observe_to_learn():
     assert stages["MATCH"]["status"] == "completed"
     assert stages["ACT"]["status"] == "deferred"
     assert stages["LEARN"]["status"] == "partial"
+
+
+def test_loop_health_uses_snapshot_not_empty_web_thread():
+    fresh = (datetime.now(timezone.utc) - timedelta(minutes=25)).isoformat()
+    health = loop_health_from_snapshot(
+        {
+            "generated_at": fresh,
+            "status": "completed",
+            "tension_count": 8,
+            "match_count": 40,
+        }
+    )
+    assert health["healthy"] is True
+    assert health["last_completed_at"] == fresh
+    assert health["snapshot_age_hours"] is not None
+    assert health["snapshot_age_hours"] < 1
+    assert health["web_thread"]["running"] is False
+    assert health["web_thread"]["last_run"] is None
+
+
+def test_loop_health_unhealthy_when_snapshot_missing():
+    health = loop_health_from_snapshot({})
+    assert health["healthy"] is False
+    assert health["last_completed_at"] is None
 
 
 def test_knowledge_truth_layers_split_beliefs_from_outcomes():

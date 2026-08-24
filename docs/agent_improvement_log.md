@@ -2,6 +2,42 @@
 
 Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
+## 2026-08-24 — Mac Hermes status (proceed)
+
+### Findings
+
+- `hermes status` on the Mac: gateway running, **12/12 jobs**, **0 chat sessions**. OpenAI + Anthropic set. **Gemini not set.** Model is Anthropic `claude-opus-4-6`. Email home `ugobe07@gmail.com`. Nous Portal has no paid credits.
+- Cloud cannot attach to that TUI. Status CLI is not a chat thread.
+- Live Fly after deploy: tracks 8–10 on OpenAPI; `loop.healthy` true. Pipeline still 5/5 qualify, 2 DM overlays, 0 buying-window/video until Mac crons POST. Merge #113 so `main` matches Fly.
+
+### Ranked proposals
+
+1. **[done]** Fly deploy from this branch: tracks 8–10 on production OpenAPI; `loop.healthy` true. Merge PR #113 so `main` matches Fly. — owner: `deploy`
+2. **[L/L]** Optional: add `GOOGLE_API_KEY` in Hermes only if Gemini is wanted inside that TUI. Not required for RFR ingest.
+
+## 2026-08-23 — Hermes workflow test (Sunday)
+
+### Findings
+
+- Hermes ingest **auth works**. Unauth 403, fingerprint 401, JWT 401. GitHub `ADMIN_KEY` = Fly `ADMIN_KEY` = Hermes `RFR_ADMIN_KEY`.
+- Public pipeline **5/5 `hermes_qualify`** after infer-qualify on live IDs + cache rebuild (23:18Z). Job titles / buying windows / video still empty until tracks 8–10 deploy.
+- Market graph snapshot **completed** 23:04Z: 8 tensions, 40 matches, 7 work units (Knowledge layer). Web `scheduler.last_run` is empty by design; heartbeat is snapshot `generated_at`.
+- GHA Cal digest last failed 403 at 15:12Z (before the key was proven). Next scheduled send is the retest.
+- Qualify/contacts `dry_run` used to query `companies` even when `dry_run=true` (fixed this cycle).
+
+### Done (this cycle)
+
+- Skip DB on qualify/contacts dry_run.
+- Implement buying-window + video ingest + seed-targets.
+- Health probe now checks ingest auth + documented routes.
+
+### Ranked proposals
+
+1. **[done]** GitHub `ADMIN_KEY` matches Fly (GHA run `32672185240`: cal-status 200, infer-qualify apply accepted 12). Same string as Hermes `RFR_ADMIN_KEY`. If it diverges, `hermes-fly-smoke.yml` fails.
+2. **[H/M]** Deploy market-graph ingest (this PR) so tracks 8–10 exist on Fly. — owner: `deploy`
+3. **[done]** infer-qualify on public pipeline IDs + cache refresh. Public GET 23:18Z: 5/5 `hermes_qualify` (Accor, Stellantis, MGM, Dubai Airports, Zoox).
+4. **[ignore / upstream]** `hermes doctor` npm hits on `web` + `ui-tui` are Hermes Agent devDependency advisories ([#68736](https://github.com/NousResearch/hermes-agent/issues/68736)), not RFR. `hermes setup` is Nous/LLM keys; `RFR_ADMIN_KEY` already authenticates.
+
 ## 2026-08-23 — Hermes is not reaching Fly
 
 ### Findings

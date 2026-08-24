@@ -40,9 +40,10 @@ Additional APIs:
 
 ## Runtime
 
-- Worker daemon: `app/main.py` → `_start_scheduled_market_graph_loop`  
-- Service: `app/services/market_graph_loop.py`  
-- Env (see `fly.toml`): `ENABLE_SCHEDULED_MARKET_GRAPH_LOOP`, `MARKET_GRAPH_EVERY_HOURS`, …  
+- Worker daemon: `app/main.py` → `_start_scheduled_market_graph_loop` (Fly **worker** only; 45 min first delay, then every `MARKET_GRAPH_EVERY_HOURS`)
+- Service: `app/services/market_graph_loop.py`
+- Env (see `fly.toml`): `ENABLE_SCHEDULED_MARKET_GRAPH_LOOP`, `MARKET_GRAPH_EVERY_HOURS`
+- **Heartbeat:** `GET /api/v1/market-graph/status` → `loop.last_completed_at` / `loop.healthy` from the cached snapshot. `scheduler.running` is web-process RAM and will look idle. Do not treat that as “the loop is down.”  
 
 ## API
 
