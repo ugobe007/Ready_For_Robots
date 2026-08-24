@@ -10,10 +10,12 @@ import {
   CRM_HOW_TO_STEPS,
   CRM_PAGE_HEADLINE,
   CRM_PAGE_NEXT,
+  CRM_SUBHEAD_CLASS,
   CRM_WATCH_FREE_HINT,
   CRM_WATCH_OPT_IN_LABEL,
   CRM_WATCH_SIGNED_OUT,
   CRM_UNLOCKED_JOBS,
+  JOBS_ACTIVATE_JOBS_CTA,
   JOBS_EYEBROW_CLASS,
   jobsFreshHomeHref,
   onJobsFreshHomeClick,
@@ -54,6 +56,7 @@ type Props = {
   onOptIn?: (optedIn: boolean) => void;
   tasteJobs?: CrmTasteJob[];
   tasteProduct?: string | null;
+  activateHref?: string;
   actions?: ReactNode;
   footer?: ReactNode;
 };
@@ -66,9 +69,18 @@ export default function CrmHero({
   onOptIn,
   tasteJobs = [],
   tasteProduct,
+  activateHref,
   actions,
   footer,
 }: Props) {
+  const activateCta = activateHref ? (
+    <Link
+      href={activateHref}
+      className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+    >
+      {JOBS_ACTIVATE_JOBS_CTA}
+    </Link>
+  ) : null;
   const optedIn = Boolean(watch?.opted_in);
   const events = watch?.events || [];
   const unlocked = tasteJobs.slice(0, CRM_UNLOCKED_JOBS);
@@ -85,9 +97,8 @@ export default function CrmHero({
         <div className="min-w-0 flex-1">
           <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>ReadyForRobots</p>
           <h1 className={`mt-2 ${CRM_HEADLINE_CLASS}`}>{CRM_PAGE_HEADLINE}</h1>
-          <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-300">
-            {CRM_PAGE_NEXT}
-          </p>
+          <p className={CRM_SUBHEAD_CLASS}>{CRM_PAGE_NEXT}</p>
+          {activateCta ? <div className="mt-4">{activateCta}</div> : null}
         </div>
       </div>
 
@@ -171,6 +182,7 @@ export default function CrmHero({
       </div>
 
       {actions ? <div className="mt-4 flex flex-wrap gap-3">{actions}</div> : null}
+      {activateCta ? <div className="mt-4">{activateCta}</div> : null}
       {footer ? <div className="mt-4 text-base text-slate-400">{footer}</div> : null}
       <a
         href={jobsFreshHomeHref()}

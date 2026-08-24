@@ -61,17 +61,25 @@ import JobsHandoffBoard from "@/components/JobsHandoffBoard";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
   isJobsHandoffSrc,
+  isJobsAutomateSrc,
   isPlaceSrc,
   buyerLeadsToShow,
   JOBS_ACTIVATE_CAP,
   JOBS_PIPELINE_CAP,
   JOBS_EYEBROW_CLASS,
+  JOBS_AUTOMATE_JOBS_CTA,
   JOBS_OPEN_CRM_CTA,
+  PIPELINE_JOBS_AUTOMATE_NEXT,
+  PIPELINE_JOBS_AUTOMATE_STEPS,
   PIPELINE_PAGE_HEADLINE,
   PIPELINE_PAGE_NEXT,
   isSalesPlaceholder,
   jobExplanation,
   jobsFreshHomeHref,
+  jobsActivateHref,
+  jobsAutomateHref,
+  jobsSignupHref,
+  JOBS_AUTOMATE_SRC,
   onJobsFreshHomeClick,
 } from "@/lib/jobsWorkflow";
 import {
@@ -1706,6 +1714,7 @@ export default function Pipeline() {
   const arrivedFromResultsScan =
     submittedSrcFromQuery === "results_scan" || submittedSrcFromQuery === "results_next_step";
   const arrivedFromJobs = isJobsHandoffSrc(submittedSrcFromQuery);
+  const arrivedFromJobsAutomate = isJobsAutomateSrc(submittedSrcFromQuery);
 
   /** URL submit searches stay on matched prospects — never default to the global market queue. */
   const preferUrlMatchedPipeline = Boolean(submittedUrlFromQuery || arrivedFromResultsScan);
@@ -4034,7 +4043,7 @@ export default function Pipeline() {
     };
   }, [showFirstThreeActionsProgress, nextFirstThreeStep, firstThreeActions, selected]);
 
-  if (arrivedFromJobs) {
+  if (arrivedFromJobs && !arrivedFromJobsAutomate) {
     return (
       <div className="flex min-h-screen flex-col bg-[#081126] pt-14">
         <ExperimentHeader />
@@ -4077,13 +4086,44 @@ export default function Pipeline() {
             <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
               {PIPELINE_PAGE_HEADLINE}
             </h1>
-            <p className="mt-2 max-w-2xl text-base leading-relaxed text-slate-300">
-              {PIPELINE_PAGE_NEXT}
+            <p className="mt-2 max-w-2xl text-lg leading-relaxed text-slate-200 sm:text-xl">
+              {arrivedFromJobsAutomate ? PIPELINE_JOBS_AUTOMATE_NEXT : PIPELINE_PAGE_NEXT}
             </p>
+            {arrivedFromJobsAutomate ? (
+              <ol className="mt-4 max-w-2xl space-y-2">
+                {PIPELINE_JOBS_AUTOMATE_STEPS.map((step, i) => (
+                  <li key={step} className="flex gap-3 text-base leading-relaxed text-slate-200">
+                    <span className="font-mono text-emerald-400">{i + 1}.</span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : null}
             <div className="mt-4 flex flex-wrap items-center gap-3">
+              {arrivedFromJobsAutomate ? (
+                session?.access_token ? (
+                  <a
+                    href="#jobs-automate"
+                    className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+                  >
+                    {JOBS_AUTOMATE_JOBS_CTA}
+                  </a>
+                ) : (
+                  <Link
+                    href={jobsSignupHref(jobsAutomateHref(submissionIdFromQuery), JOBS_AUTOMATE_SRC)}
+                    className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+                  >
+                    {JOBS_AUTOMATE_JOBS_CTA}
+                  </Link>
+                )
+              ) : null}
               <Link
-                href="/crm"
-                className="inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+                href={arrivedFromJobsAutomate ? jobsActivateHref(submissionIdFromQuery) : "/crm"}
+                className={
+                  arrivedFromJobsAutomate
+                    ? "inline-flex items-center justify-center border border-emerald-400 bg-emerald-400/10 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-emerald-200 transition hover:bg-emerald-400/20"
+                    : "inline-flex items-center justify-center bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+                }
               >
                 {JOBS_OPEN_CRM_CTA}
               </Link>
@@ -4575,7 +4615,7 @@ export default function Pipeline() {
                 </div>
               )}
               {session?.access_token && selected && (
-                <div className={panelPlan === "anonymous" ? "mt-2" : "mt-0 mb-2"}>
+                <div id="jobs-automate" className={panelPlan === "anonymous" ? "mt-2" : "mt-0 mb-2"}>
                   <PipelineCrmMotion
                     hasSession={Boolean(session?.access_token)}
                     savedCount={savedLeadCount}
@@ -4589,6 +4629,7 @@ export default function Pipeline() {
                     savedDeals={crmDeals}
                     selectedId={effectiveSelectedId}
                     onSelectDeal={selectLead}
+                    jobsAutomate={arrivedFromJobsAutomate}
                   />
                 </div>
               )}
