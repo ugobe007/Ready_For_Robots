@@ -351,6 +351,9 @@ describe("jobsWorkflow", () => {
     expect(showJobsSiteChrome({ pathname: "/jobs" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/jobs/acme" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/intelligence" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/compare" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/vendor/design" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/design/abc" })).toBe(true);
     expect(
       showJobsSiteChrome({ pathname: "/crm", search: "src=jobs_activate" }),
     ).toBe(true);
@@ -403,6 +406,24 @@ describe("jobsWorkflow", () => {
     expect(jobsLinks).not.toMatch(/Signals/);
     expect(footer).not.toMatch(/rounded-lg/);
     expect(footer).not.toMatch(/\/#case-studies/);
+
+    const compare = readFileSync(join(here, "../pages/Compare.tsx"), "utf8");
+    expect(compare).toMatch(/jobs for your robot/i);
+    expect(compare).toMatch(/ExperimentHeader/);
+    expect(compare).not.toMatch(/Full Stack Sales/);
+    expect(compare).not.toMatch(/CRM 4.0/);
+    const design = readFileSync(
+      join(here, "../pages/VendorDesignBuilder.tsx"),
+      "utf8",
+    );
+    expect(design).toMatch(/What this page does/);
+    expect(design).toMatch(/ExperimentHeader/);
+    expect(design).not.toMatch(/Supply pipeline/);
+    const share = readFileSync(join(here, "../pages/DesignShare.tsx"), "utf8");
+    expect(share).toMatch(/Job site sketch/);
+    expect(share).toMatch(/ExperimentHeader/);
+    expect(share).not.toMatch(/Explore live buyer signals/);
+    expect(share).not.toMatch(/\/pipeline/);
 
     const scout = readFileSync(join(here, "../components/ScoutChat.tsx"), "utf8");
     expect(scout).toMatch(/showJobsSiteChrome/);

@@ -71,7 +71,7 @@ const priorityNavLinks = [
 
 const supportNavLinks = [
   { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
-  { label: "Compare", href: "/compare", icon: HelpCircle, desc: "Pipeline vs GTM data tools" },
+  { label: "Compare", href: "/compare", icon: HelpCircle, desc: "Jobs for robots vs sales lists" },
   { label: "Integrations", href: "/integrations", icon: BriefcaseBusiness, desc: "HubSpot live · more CRMs soon" },
   { label: "FAQ", href: "/pricing#faq", icon: HelpCircle, desc: "Pricing and product questions" },
 ];

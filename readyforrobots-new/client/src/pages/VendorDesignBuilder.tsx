@@ -1,15 +1,20 @@
 /**
- * /vendor/design — deployment design studio (workflow-first layout).
+ * /vendor/design — floor plan for a robot job (not a sales pipeline).
  */
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
-import { AlertTriangle, ArrowRight, CheckCircle2, Copy, Loader2, Share2 } from "lucide-react";
-import Header from "@/components/Header";
+import { ArrowRight, CheckCircle2, Loader2, Share2 } from "lucide-react";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import WorkflowFlowEditor from "@/components/vendor/WorkflowFlowEditor";
 import type { WorkflowLayout } from "@/lib/workflowLayoutTypes";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import {
+  FIND_JOBS_CTA,
+  JOBS_HEADER_OFFSET_CLASS,
+  jobsFreshHomeHref,
+} from "@/lib/jobsWorkflow";
 
 type RoiIssue = {
   code: string;
@@ -42,7 +47,7 @@ const INDUSTRIES = [
 ];
 
 export default function VendorDesignBuilder() {
-  const [title, setTitle] = useState("Deployment design");
+  const [title, setTitle] = useState("Job site sketch");
   const [vendorCompany, setVendorCompany] = useState("");
   const [buyerCompany, setBuyerCompany] = useState("");
   const [industry, setIndustry] = useState("Logistics / Warehouse");
@@ -148,27 +153,42 @@ export default function VendorDesignBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
+    <div className={`flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <ExperimentHeader />
       <PageHeroDark
-        eyebrow="Vendor tools"
-        title="Deployment design studio"
-        description="Map the physical workflow first, then validate ROI for the buyer."
+        eyebrow="Jobs"
+        title="Sketch the job site"
+        description="This page is a floor plan for a robot job — not a sales pipeline. Draw where work happens, place the robot, then see whether replacing labor pays back the machine."
       />
 
-      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 pb-16 -mt-4 relative z-10 space-y-5">
-        {/* Workflow — primary, top of page */}
-        <section className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+      <main className="relative z-10 mx-auto w-full max-w-[1400px] space-y-5 px-4 pb-16 sm:px-6">
+        <section className="border border-slate-600 bg-[#0b162f] p-4 sm:p-5">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-400">What this page does</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
+            ReadyForRobots matches robots to jobs. Use this sketch when you already have a workplace in mind:
+            rooms, flows, and where a robot would stand. Save a link and keep it with the Job Card. To find
+            jobs from a robot URL, go back to Jobs.
+          </p>
+          <ol className="mt-3 grid gap-2 text-[13px] text-slate-400 sm:grid-cols-5">
+            <li><span className="font-mono text-emerald-400">01</span> Pick a site type</li>
+            <li><span className="font-mono text-emerald-400">02</span> Drag rooms and robots</li>
+            <li><span className="font-mono text-emerald-400">03</span> Connect how work moves</li>
+            <li><span className="font-mono text-emerald-400">04</span> Enter cost and labor</li>
+            <li><span className="font-mono text-emerald-400">05</span> Save a share link</li>
+          </ol>
+        </section>
+
+        <section className="border border-slate-600 bg-[#0b162f] p-4 sm:p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500">Workflow layout</h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Drag zones, connect flows, place robots — this is the buyer-facing floor plan.
+              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">Workplace layout</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Drag rooms, connect flows, place robots — this is the floor plan for the job.
               </p>
             </div>
             <div className="flex items-center gap-2">
               <select
-                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs"
+                className="border border-slate-600 bg-[#081126] px-3 py-1.5 text-xs text-slate-100 outline-none focus:border-emerald-400"
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
               >
@@ -180,7 +200,7 @@ export default function VendorDesignBuilder() {
               </select>
               <button
                 type="button"
-                className="text-xs font-semibold text-emerald-700 hover:underline"
+                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300"
                 onClick={() => void loadTemplate()}
               >
                 Reset template
@@ -190,101 +210,100 @@ export default function VendorDesignBuilder() {
           {layout && <WorkflowFlowEditor layout={layout} onChange={setLayout} />}
         </section>
 
-        {/* Deal + ROI — secondary row */}
-        <div className="grid lg:grid-cols-2 gap-5">
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500">Deal context</h2>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <section className="space-y-3 border border-slate-600 bg-[#0b162f] p-5">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">Job context</h2>
             <input
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-              placeholder="Design title"
+              className="w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-400"
+              placeholder="Sketch title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <input
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                placeholder="Your company (vendor)"
+                className="border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-400"
+                placeholder="Robot company"
                 value={vendorCompany}
                 onChange={(e) => setVendorCompany(e.target.value)}
               />
               <input
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                placeholder="Buyer company"
+                className="border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-400"
+                placeholder="Employer"
                 value={buyerCompany}
                 onChange={(e) => setBuyerCompany(e.target.value)}
               />
             </div>
             <input
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-              placeholder="Robot product / SKU"
+              className="w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-400"
+              placeholder="Robot / SKU on this job"
               value={robotProduct}
               onChange={(e) => setRobotProduct(e.target.value)}
             />
           </section>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500">ROI inputs</h2>
+          <section className="space-y-3 border border-slate-600 bg-[#0b162f] p-5">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">Labor vs robot cost</h2>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <label className="space-y-1">
-                <span className="text-xs text-gray-500">Robot unit cost ($)</span>
-                <input className="w-full rounded-lg border border-gray-200 px-3 py-2" value={robotCost} onChange={(e) => setRobotCost(e.target.value)} />
+                <span className="text-xs text-slate-500">Robot unit cost ($)</span>
+                <input className="w-full border border-slate-600 bg-[#081126] px-3 py-2 text-slate-100 outline-none focus:border-emerald-400" value={robotCost} onChange={(e) => setRobotCost(e.target.value)} />
               </label>
               <label className="space-y-1">
-                <span className="text-xs text-gray-500">Robot count</span>
-                <input className="w-full rounded-lg border border-gray-200 px-3 py-2" value={robotCount} onChange={(e) => setRobotCount(e.target.value)} />
+                <span className="text-xs text-slate-500">Robot count</span>
+                <input className="w-full border border-slate-600 bg-[#081126] px-3 py-2 text-slate-100 outline-none focus:border-emerald-400" value={robotCount} onChange={(e) => setRobotCount(e.target.value)} />
               </label>
               <label className="space-y-1">
-                <span className="text-xs text-gray-500">FTE replaced</span>
-                <input className="w-full rounded-lg border border-gray-200 px-3 py-2" value={fteCount} onChange={(e) => setFteCount(e.target.value)} />
+                <span className="text-xs text-slate-500">FTE replaced</span>
+                <input className="w-full border border-slate-600 bg-[#081126] px-3 py-2 text-slate-100 outline-none focus:border-emerald-400" value={fteCount} onChange={(e) => setFteCount(e.target.value)} />
               </label>
               <label className="space-y-1">
-                <span className="text-xs text-gray-500">Fully loaded FTE ($/yr)</span>
-                <input className="w-full rounded-lg border border-gray-200 px-3 py-2" value={fteLoaded} onChange={(e) => setFteLoaded(e.target.value)} />
+                <span className="text-xs text-slate-500">Fully loaded FTE ($/yr)</span>
+                <input className="w-full border border-slate-600 bg-[#081126] px-3 py-2 text-slate-100 outline-none focus:border-emerald-400" value={fteLoaded} onChange={(e) => setFteLoaded(e.target.value)} />
               </label>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-sm pt-1">
+            <div className="grid grid-cols-2 gap-3 pt-1 text-sm">
               <input
-                className="rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2 text-sm"
-                placeholder="Buyer payback (mo)"
+                className="border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-amber-400"
+                placeholder="Stated payback (mo)"
                 value={buyerPayback}
                 onChange={(e) => setBuyerPayback(e.target.value)}
               />
               <input
-                className="rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2 text-sm"
-                placeholder="Buyer savings ($/yr)"
+                className="border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-amber-400"
+                placeholder="Stated savings ($/yr)"
                 value={buyerSavings}
                 onChange={(e) => setBuyerSavings(e.target.value)}
               />
             </div>
             {loading && (
-              <p className="text-xs text-gray-500 flex items-center gap-2">
+              <p className="flex items-center gap-2 text-xs text-slate-500">
                 <Loader2 className="h-3 w-3 animate-spin" /> Recalculating…
               </p>
             )}
             {roi && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 grid grid-cols-2 gap-2 text-sm">
+              <div className="grid grid-cols-2 gap-2 border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm">
                 <div>
-                  <p className="text-[10px] uppercase text-emerald-800 font-bold">Payback</p>
-                  <p className="text-lg font-bold text-emerald-900">{roi.payback_months} mo</p>
+                  <p className="text-[10px] font-bold uppercase text-emerald-300">Payback</p>
+                  <p className="text-lg font-bold text-emerald-200">{roi.payback_months} mo</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase text-emerald-800 font-bold">Annual savings</p>
-                  <p className="text-lg font-bold text-emerald-900">${Math.round(roi.annual_net_savings).toLocaleString()}</p>
+                  <p className="text-[10px] font-bold uppercase text-emerald-300">Annual savings</p>
+                  <p className="text-lg font-bold text-emerald-200">${Math.round(roi.annual_net_savings).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase text-gray-500">3-yr ROI</p>
-                  <p className="font-semibold">{roi.roi_year_3_pct}%</p>
+                  <p className="text-[10px] uppercase text-slate-500">3-yr ROI</p>
+                  <p className="font-semibold text-slate-100">{roi.roi_year_3_pct}%</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase text-gray-500">Net 3-yr</p>
-                  <p className="font-semibold">${Math.round(roi.net_savings_3yr).toLocaleString()}</p>
+                  <p className="text-[10px] uppercase text-slate-500">Net 3-yr</p>
+                  <p className="font-semibold text-slate-100">${Math.round(roi.net_savings_3yr).toLocaleString()}</p>
                 </div>
               </div>
             )}
             {roi?.issues && roi.issues.length > 0 && (
-              <ul className="space-y-1.5 max-h-32 overflow-y-auto">
+              <ul className="max-h-32 space-y-1.5 overflow-y-auto">
                 {roi.issues.map((issue) => (
-                  <li key={issue.code} className="rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-950">
+                  <li key={issue.code} className="border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-100">
                     {issue.message}
                   </li>
                 ))}
@@ -293,25 +312,28 @@ export default function VendorDesignBuilder() {
           </section>
         </div>
 
-        <div className="flex flex-wrap gap-3 items-center sticky bottom-4 rounded-xl border border-gray-200 bg-white/95 backdrop-blur px-4 py-3 shadow-lg">
+        <div className="sticky bottom-4 flex flex-wrap items-center gap-3 border border-slate-600 bg-[#0b162f]/95 px-4 py-3 backdrop-blur">
           <button
             type="button"
             onClick={() => void saveAndShare()}
             disabled={saving || !roi}
-            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="inline-flex items-center gap-2 border border-emerald-400 bg-emerald-500/15 px-4 py-2.5 text-sm font-bold text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
-            Save & copy buyer link
+            Save &amp; copy site-plan link
           </button>
           {shareUrl && (
-            <span className="text-xs text-gray-600 flex items-center gap-1">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+            <span className="flex items-center gap-1 text-xs text-slate-300">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
               Copied: {shareUrl}
             </span>
           )}
-          {error && <span className="text-sm text-red-600">{error}</span>}
-          <Link href="/supply-pipeline" className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-gray-600 hover:text-gray-900">
-            Supply pipeline <ArrowRight className="h-3 w-3" />
+          {error && <span className="text-sm text-red-400">{error}</span>}
+          <Link
+            href={jobsFreshHomeHref()}
+            className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
+          >
+            {FIND_JOBS_CTA} <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
       </main>
@@ -319,3 +341,4 @@ export default function VendorDesignBuilder() {
     </div>
   );
 }
+
