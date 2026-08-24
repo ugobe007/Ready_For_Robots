@@ -68,6 +68,12 @@ function canonicalModelUrl(url: string): string {
   }
 }
 
+function cardLinkRank(url: string): number {
+  const u = url.toLowerCase();
+  const idx = CARD_LINK_PRIORITY.findIndex(token => u.includes(token));
+  return idx === -1 ? CARD_LINK_PRIORITY.length : idx;
+}
+
 export type RobotJobQualification =
   | "qualified"
   | "conditional"
