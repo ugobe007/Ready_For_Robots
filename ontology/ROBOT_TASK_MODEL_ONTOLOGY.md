@@ -39,7 +39,7 @@ Chat LLMs (GPT, Claude, Gemini, Llama) are named only as a **counterexample**. S
 - Missing hardware capability → `UNMET` (already true).
 - Hardware present, task model `unknown` → job stays **conditional**. Open question: which model covers this work, and where is it published?
 - Task model `absent` after evidence → not qualified, even if the arm/base is fine.
-- Never a match percentage.
+- Categorical verdict is not a match percentage. **Hardware Fit**, **Intelligence Fit**, and **Environment Fit** are a second layer (`fit` on the job payload). Deployment readiness is their product. See [`docs/robot_task_intelligence.md`](../docs/robot_task_intelligence.md).
 
-JSON: [`task_model_ontology.v1.json`](task_model_ontology.v1.json)  
+JSON: [`task_model_ontology.v1.json`](task_model_ontology.v1.json) · trained tasks [`robot_task_registry.v1.json`](robot_task_registry.v1.json)  
 Product: [`docs/robot_task_models.md`](../docs/robot_task_models.md)

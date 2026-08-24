@@ -67,6 +67,24 @@ export type MatchJob = {
       note: string;
     }[];
   }[];
+  fit?: {
+    hardware_fit?: number;
+    intelligence_fit?: number;
+    environment_fit?: number;
+    deployment_readiness?: number;
+    honesty?: string;
+    task_coverage?: {
+      task_family?: string;
+      coverage?: string;
+      trained_task_count?: number;
+    }[];
+    model_matches?: {
+      model_name?: string | null;
+      coverage?: number;
+      url?: string | null;
+      embodiment_compatible?: string;
+    }[];
+  };
   /** SKU this card is for. Set on the Jobs terminal, carried onto the pipeline list. */
   forRobot?: string;
 };

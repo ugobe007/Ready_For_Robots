@@ -73,6 +73,48 @@ export type RequiredTaskModel = {
   pricingLookups: TaskModelLookup[];
 };
 
+export type JobFitModelMatch = {
+  model_id?: string;
+  model_name?: string | null;
+  model_family?: string | null;
+  url?: string | null;
+  coverage?: number;
+  embodiment_compatible?: string;
+  note?: string;
+};
+
+export type JobFitTaskCoverage = {
+  task_family?: string;
+  coverage?: string;
+  trained_task_count?: number;
+};
+
+export type JobFit = {
+  hardware_fit?: number;
+  intelligence_fit?: number;
+  environment_fit?: number;
+  deployment_readiness?: number;
+  formula?: string;
+  honesty?: string;
+  work_units?: {
+    environment?: string;
+    object_types?: string[];
+    task_families?: string[];
+    required_perception?: string[];
+    required_manipulation?: string[];
+    required_mobility?: string[];
+  };
+  skill_coverage?: Record<string, string>;
+  task_coverage?: JobFitTaskCoverage[];
+  model_matches?: JobFitModelMatch[];
+  registry_task_count?: number;
+};
+
+export function fitPercent(value?: number | null): string {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return `${Math.round(value * 100)}%`;
+}
+
 export type RobotJobCardView = {
   employer: string | null;
   workplace: string | null;
@@ -89,6 +131,7 @@ export type RobotJobCardView = {
   nextStep: string;
   taskModels: RequiredTaskModel[];
   modelLinks: TaskModelLookup[];
+  fit: JobFit | null;
 };
 
 export const QUALIFICATION_LABEL: Record<RobotJobQualification, string> = {
@@ -217,6 +260,7 @@ export function robotJobCardFromMatch(job: {
   industry?: string | null;
   text?: string | null;
   required_task_models?: MatchTaskModelIn[] | null;
+  fit?: JobFit | null;
 }): RobotJobCardView {
   const taskModels = normalizeTaskModels(job.required_task_models);
   const modelLinks = cardModelLinks(
@@ -248,6 +292,7 @@ export function robotJobCardFromMatch(job: {
     nextStep: ROBOT_JOB_CARD_NEXT_STEP,
     taskModels,
     modelLinks,
+    fit: job.fit || null,
   };
 }
 

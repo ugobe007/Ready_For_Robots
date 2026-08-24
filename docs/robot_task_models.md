@@ -79,7 +79,9 @@ Token price ≠ OEM warehouse pack price ≠ GPU hours to train a site policy.
 
 Extends, does not replace:
 
-`COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES → TASK MODELS → WORKFLOWS → JOB REQUIREMENTS → MATCH`
+`COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES → EMBODIMENT → TASK MODELS / LEARNED SKILLS → WORKFLOWS → JOB REQUIREMENTS → MATCH`
+
+Hardware Fit (embodiment vs job physics) is separate from Intelligence Fit (public trained tasks vs job skills). Deployment readiness is their product with Environment Fit. See [`robot_task_intelligence.md`](robot_task_intelligence.md).
 
 Never: `company → category → jobs`.  
 Never: `robot has arms → warehouse jobs`.

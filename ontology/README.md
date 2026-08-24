@@ -9,13 +9,23 @@ COMPANY
     → CONFIGURATION
       → HARDWARE
         → CAPABILITIES
-          → TASK MODELS
-            → WORKFLOWS
-              → JOB REQUIREMENTS
-                → MATCH
+          → EMBODIMENT
+            → TASK MODELS / LEARNED SKILLS
+              → WORKFLOWS
+                → JOB REQUIREMENTS
+                  → MATCH
 ```
 
-And **never**: `company name → robot category → jobs`.
+Match is two scores, not a vendor claim:
+
+- **Hardware Fit** — can this embodiment physically do the job?
+- **Intelligence Fit** — do public trained tasks/policies cover the job's skills?
+- **Environment Fit** — do those trained tasks overlap this workplace?
+- **Deployment readiness** = Hardware × Intelligence × Environment
+
+Never: `company name → robot category → jobs`.
+
+Trained-task registry: [`robot_task_registry.v1.json`](robot_task_registry.v1.json) (seeded from LeRobot, Open X-Embodiment, OpenVLA, Octo, LIBERO, RoboCasa, RoboTwin, BEHAVIOR-1K, π₀, GR00T). Cataloging **tasks**, not a claim that a SKU has those weights.
 
 Employment overlay (product meaning, not a sixth ontology file):
 
@@ -71,6 +81,7 @@ workflow via `app/services/robot_ontology.py`:
 - [`vertical_ontology.v1.json`](vertical_ontology.v1.json) — operating environments / verticals (healthcare, eldercare, hospitality, …). The extractor emits `operating_environment` = a vertical key.
 - [`inference_rules.v1.json`](inference_rules.v1.json) — structured R1–R21 with status.
 - [`task_model_ontology.v1.json`](task_model_ontology.v1.json) — per-job required task-model slots + where to look. Presence starts unknown.
+- [`robot_task_registry.v1.json`](robot_task_registry.v1.json) — trained tasks from LeRobot / OXE / OpenVLA / Octo / LIBERO / RoboCasa / RoboTwin / BEHAVIOR-1K / π₀ / GR00T. Skills + models + embodiments; not SKU possession.
 
 Pre-existing companions:
 - [`primitives.v1.json`](primitives.v1.json) — frozen WORK primitive codes (IDs never renamed).

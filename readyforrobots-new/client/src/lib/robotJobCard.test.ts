@@ -37,6 +37,29 @@ describe("robotJobCard", () => {
     expect(card.currentLabor).toBeNull();
     expect(card.openQuestions).toEqual(["How much of role is tend vs program"]);
     expect(card.nextStep).toMatch(/Site assessment/i);
+    expect(card.fit).toBeNull();
+  });
+
+  it("passes hardware and intelligence fit through without inventing SKU weights", () => {
+    const card = robotJobCardFromMatch({
+      title: "Depalletize mixed cartons onto a conveyor",
+      company_name: "Novolex",
+      locality: "Kinston, NC",
+      verdict: "POSSIBLE_MATCH",
+      why: ["Manipulation grounded"],
+      fit: {
+        hardware_fit: 0.72,
+        intelligence_fit: 0.41,
+        environment_fit: 0.55,
+        deployment_readiness: 0.16,
+        honesty: "Not a claim this SKU has OpenVLA installed.",
+        task_coverage: [{ task_family: "pick_place", coverage: "HIGH" }],
+        model_matches: [{ model_name: "OpenVLA 7B", coverage: 0.81 }],
+      },
+    });
+    expect(card.fit?.intelligence_fit).toBe(0.41);
+    expect(card.fit?.model_matches?.[0].model_name).toMatch(/OpenVLA/);
+    expect(card.fit?.honesty).toMatch(/Not a claim/i);
   });
 
   it("does not score a matcher hit as Qualified without user or employer feedback", () => {
@@ -256,6 +279,8 @@ describe("robotJobCard", () => {
     expect(cardSrc).not.toMatch(/Search families:/);
     expect(cardSrc).not.toMatch(/certificate/i);
     expect(cardSrc).toMatch(/qualificationHint/);
+    expect(cardSrc).toMatch(/Deployment readiness/);
+    expect(cardSrc).toMatch(/Intelligence fit/);
     expect(cardSrc).not.toMatch(/Possible match/);
     expect(cardSrc).not.toMatch(/>Qualified</);
   });

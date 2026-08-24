@@ -103,7 +103,7 @@ import {
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
-import { robotJobCardFromMatch } from "@/lib/robotJobCard";
+import { fitPercent, robotJobCardFromMatch } from "@/lib/robotJobCard";
 
 /* ------------------------------------------------------------------ */
 /* Types + constants                                                   */
@@ -2918,6 +2918,54 @@ function JobCard({
                     </li>
                   ))}
                 </ul>
+              ) : null}
+            </div>
+          ) : null}
+
+          {card.fit ? (
+            <div className="mt-3">
+              <p className={eyebrow}>Deployment readiness</p>
+              <p className="mt-1 text-[13px] leading-snug text-slate-200">
+                Hardware fit {fitPercent(card.fit.hardware_fit)}
+                {" · "}
+                Intelligence fit {fitPercent(card.fit.intelligence_fit)}
+                {" · "}
+                Environment fit {fitPercent(card.fit.environment_fit)}
+              </p>
+              <p className="mt-0.5 text-[13px] leading-snug text-emerald-300/90">
+                Readiness {fitPercent(card.fit.deployment_readiness)}
+                <span className="text-slate-400">
+                  {" "}
+                  · hardware × intelligence × environment
+                </span>
+              </p>
+              {card.fit.model_matches?.length ? (
+                <ul className="mt-1 space-y-0.5">
+                  {card.fit.model_matches.slice(0, 4).map(row => (
+                    <li
+                      key={row.model_id || row.model_name || ""}
+                      className="text-[13px] leading-snug text-slate-300"
+                    >
+                      {row.model_name}
+                      {typeof row.coverage === "number" ? ` ${fitPercent(row.coverage)}` : ""}
+                      {row.embodiment_compatible === "mismatch"
+                        ? " · embodiment mismatch"
+                        : ""}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {card.fit.task_coverage?.length ? (
+                <p className="mt-1 text-[12px] leading-snug text-slate-400">
+                  {card.fit.task_coverage
+                    .map(row => `${(row.task_family || "").replace(/_/g, " ")} ${row.coverage}`)
+                    .join(" · ")}
+                </p>
+              ) : null}
+              {card.fit.honesty ? (
+                <p className="mt-1 text-[12px] leading-snug text-slate-500">
+                  {card.fit.honesty}
+                </p>
               ) : null}
             </div>
           ) : null}

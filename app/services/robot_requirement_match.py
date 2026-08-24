@@ -24,6 +24,7 @@ from typing import Any, Optional
 
 from app.services import robot_ontology
 from app.services.robot_capability_derive import DerivedCapability, derive_capabilities
+from app.services.robot_intelligence_fit import intelligence_fit_for_job
 from app.services.robot_task_models import (
     required_task_models_for_job,
     task_model_open_questions,
@@ -142,6 +143,7 @@ class JobMatchCard:
     requirements: list[RequirementResult] = field(default_factory=list)
     source: str = "requirement_match"
     required_task_models: list[dict[str, Any]] = field(default_factory=list)
+    fit: dict[str, Any] = field(default_factory=dict)
 
     def to_api_job(self) -> dict[str, Any]:
         return {
@@ -159,6 +161,7 @@ class JobMatchCard:
             "unknowns": list(self.still_unknown),
             "requirements": [r.to_dict() for r in self.requirements],
             "required_task_models": list(self.required_task_models),
+            "fit": dict(self.fit),
             "source": self.source,
         }
 
@@ -577,6 +580,15 @@ def evaluate_job(
     for question in task_model_open_questions(models):
         if question not in unknowns:
             unknowns.append(question)
+    fit = intelligence_fit_for_job(
+        title=str(title),
+        industry=str(industry),
+        path=str(path),
+        text=str(row.get("text") or job_spec.get("text") or ""),
+        tape_family=str(tape_family),
+        requirements=results,
+        robot_classes=_classes(caps),
+    )
     return JobMatchCard(
         job_key=job_spec.get("job_key") or row.get("job_key") or "",
         title=title,
@@ -593,6 +605,7 @@ def evaluate_job(
         requirements=results,
         source="requirement_match",
         required_task_models=models,
+        fit=fit,
     )
 
 

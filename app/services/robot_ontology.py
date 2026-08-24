@@ -82,6 +82,19 @@ def task_model_ontology() -> dict[str, Any]:
     return _load("task_model_ontology.v1.json")
 
 
+@lru_cache(maxsize=1)
+def trained_task_registry() -> dict[str, Any]:
+    data = _load("robot_task_registry.v1.json")
+    if data.get("tasks"):
+        return data
+    try:
+        from app.services.robot_task_registry_catalog import build_registry
+
+        return build_registry()
+    except Exception:
+        return {}
+
+
 # ── Accessors used by the pipeline (each fails open to the baked-in default) ──
 
 def confidence_states() -> tuple[str, ...]:
