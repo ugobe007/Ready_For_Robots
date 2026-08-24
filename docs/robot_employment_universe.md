@@ -37,6 +37,9 @@ Humanoids are not equal. Figure / Agility / Apptronik / 1X sit in the same emplo
 | [`calibration/robot_employment_taxonomy_v1.json`](./calibration/robot_employment_taxonomy_v1.json) | 19 employment categories + core company names (hand-authored) |
 | [`calibration/robot_employment_universe_v1.json`](./calibration/robot_employment_universe_v1.json) | Compiled roster (~200 companies) |
 | [`../scripts/compile_employment_universe.py`](../scripts/compile_employment_universe.py) | Resolve websites + ≤3 catalog names, fill from named-product seed OEMs |
+| [`calibration/readyforrobots_robot_workforce_registry_v1.xlsx`](./calibration/readyforrobots_robot_workforce_registry_v1.xlsx) | Researcher workbook (ChatGPT). One row per company. **Not catalog.** |
+| [`calibration/robot_workforce_registry_overlay_v1.json`](./calibration/robot_workforce_registry_overlay_v1.json) | Same workbook as JSON. Every product name is `researcher_claim`. |
+| [`calibration/robot_workforce_registry_v1_audit.md`](./calibration/robot_workforce_registry_v1_audit.md) | Why 172 “available now” is not placement-ready |
 
 Rebuild:
 
@@ -46,6 +49,8 @@ python3 scripts/compile_employment_universe.py
 
 Core companies with `robots: []` still belong in the universe. They are placeable-labor OEMs whose **product names are not in our catalog yet**. Fill those names from the OEM site (max 3, never generic “AGV/AMR”), then recompile. Do not paste the roster into ChatGPT and ask it to invent models.
 
+The workforce-registry workbook is useful as a **candidate list** (new OEMs, likely SKUs, work-family language). It is one product cell per company, rubber-stamps every row as an official source, and marks 172 of 200 “available for work now.” Do not replace the compiled universe with it. Verify names on the OEM page before they enter `robots[]` or FIND.
+
 ## Relation to FIND
 
-FIND still looks up a pasted OEM URL against host-normalized catalogs. This universe is the **employment overlay**: which companies are candidates, which categories they hire into, which named robots we already know. It does not replace Understanding v1 or the matcher.
+FIND still looks up a pasted OEM URL against host-normalized catalogs. This compiled universe is the **canonical supply roster**: which companies are candidates, which categories they hire into, which named robots we already know. It does not replace Understanding v1 or the matcher.

@@ -54,7 +54,7 @@ EXPAND EMPLOYMENT  →  DISCOVER MORE WORK
 
 Product today implements the top of the loop: **show us the robot → confirm capabilities → find work**. PLACE, pilots, and employment history come after FIND is trusted.
 
-Supply-side candidate roster (who can be placed): [robot_employment_universe.md](./robot_employment_universe.md).
+Supply-side candidate roster (who can be placed): [robot_employment_universe.md](./robot_employment_universe.md). The ChatGPT workforce registry workbook is a researcher overlay, not that roster — do not treat its 172 “available now” rows as placement-ready.
 
 ---
 

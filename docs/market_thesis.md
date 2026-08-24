@@ -12,7 +12,7 @@ Living document for the agent harness **intelligence loop**. Updated by research
 
 We win on **job requirements ↔ robot capabilities**, not company count. SIGNAL lead quality remains frozen infrastructure — not the product.
 
-Supply-side roster: [robot_employment_universe.md](./robot_employment_universe.md) — ~200 placeable OEM candidates across 19 employment categories. The 500-vendor seed is input, not the product. Humanoids are not one job family; Dusty FieldPrinter ≠ Figure.
+Supply-side roster: [robot_employment_universe.md](./robot_employment_universe.md) — ~200 placeable OEM candidates across 19 employment categories. The 500-vendor seed is input, not the product. The ChatGPT workforce registry workbook is a researcher overlay ([audit](./calibration/robot_workforce_registry_v1_audit.md)), not catalog — 172 “available now” is not placement-ready. Humanoids are not one job family; Dusty FieldPrinter ≠ Figure.
 
 Hero: **Find jobs for your robot. Robots need jobs. We find the work.**
 

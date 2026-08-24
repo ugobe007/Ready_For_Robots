@@ -6,6 +6,10 @@ resolves websites and up to 3 product names from existing catalogs, then
 fills toward 200 OEMs that already have named robots in the vendor seed.
 
 Never invents SKUs or specs. Category is a search lens, not a match key.
+
+Does not read robot_workforce_registry_overlay_v1.json. That file is a
+researcher overlay (ChatGPT workbook). Treat claimed product names as
+`researcher_claim` until they appear on the OEM page / vendor catalog.
 """
 from __future__ import annotations
 

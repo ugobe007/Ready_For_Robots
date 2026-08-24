@@ -91,3 +91,34 @@ def test_empty_robots_are_core_catalog_gaps():
     filled = [c for c in data["companies"] if c["priority"] == "fill"]
     assert filled
     assert all(c["robots"] for c in filled)
+
+
+OVERLAY = ROOT / "docs" / "calibration" / "robot_workforce_registry_overlay_v1.json"
+
+
+def test_workforce_registry_overlay_is_researcher_claim_not_catalog():
+    overlay = _load(OVERLAY)
+    assert overlay["kind"] == "researcher_overlay"
+    assert overlay["n"] == 200
+    assert len(overlay["rows"]) == 200
+    assert overlay["dashboard_claims"]["available_for_work_now"] == 172
+    assert overlay["dashboard_claims"]["rfr_verdict"] == "too_optimistic_not_placement_ready"
+    for row in overlay["rows"]:
+        assert row["epistemic"] == "researcher_claim"
+        assert row["do_not_treat_as_catalog"] is True
+        assert row["company"]
+        assert row["claimed_product"]
+
+    universe = _load(UNIVERSE)
+    catalog_names = {
+        robot["name"]
+        for company in universe["companies"]
+        for robot in company["robots"]
+    }
+    assert "UR Series" not in catalog_names
+    assert "Dexterity AI Robots" not in catalog_names
+    assert "Shelf-to-Person / Tote-to-Person" not in catalog_names
+    assert "Cat MineStar Command" not in catalog_names
+    for company in universe["companies"]:
+        for robot in company["robots"]:
+            assert robot["name_source"] in {"vendor_index", "vendor_seed"}
