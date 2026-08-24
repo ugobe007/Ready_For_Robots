@@ -22,6 +22,12 @@ export type TaskModelLookup = {
   note: string;
 };
 
+export type TaskModelQualifyFilter = {
+  id: string;
+  label: string;
+  note: string;
+};
+
 export type RequiredTaskModel = {
   id: string;
   label: string;
@@ -29,7 +35,10 @@ export type RequiredTaskModel = {
   vertical: string;
   presence: TaskModelPresence;
   hardwareNotEnough: string;
+  candidateFamilies: string[];
   whereToLook: TaskModelLookup[];
+  qualifyFilters: TaskModelQualifyFilter[];
+  pricingLookups: TaskModelLookup[];
 };
 
 export type RobotJobCardView = {
@@ -80,6 +89,13 @@ export function qualificationFromVerdict(
   return "pending_robot";
 }
 
+type MatchLookupIn = {
+  kind?: string | null;
+  name?: string | null;
+  url?: string | null;
+  note?: string | null;
+};
+
 type MatchTaskModelIn = {
   id?: string | null;
   label?: string | null;
@@ -87,13 +103,25 @@ type MatchTaskModelIn = {
   vertical?: string | null;
   presence?: string | null;
   hardware_not_enough?: string | null;
-  where_to_look?: {
-    kind?: string | null;
+  candidate_families?: string[] | null;
+  where_to_look?: MatchLookupIn[] | null;
+  qualify_filters?: {
+    id?: string | null;
+    label?: string | null;
     name?: string | null;
-    url?: string | null;
     note?: string | null;
   }[] | null;
+  pricing_lookups?: MatchLookupIn[] | null;
 };
+
+function mapLookups(raw?: MatchLookupIn[] | null): TaskModelLookup[] {
+  return (raw || []).map(d => ({
+    kind: (d.kind || "").trim(),
+    name: (d.name || "").trim(),
+    url: d.url ? d.url.trim() : null,
+    note: (d.note || "").trim(),
+  }));
+}
 
 function normalizeTaskModels(raw?: MatchTaskModelIn[] | null): RequiredTaskModel[] {
   const out: RequiredTaskModel[] = [];
@@ -112,12 +140,16 @@ function normalizeTaskModels(raw?: MatchTaskModelIn[] | null): RequiredTaskModel
       vertical: (row.vertical || "").trim(),
       presence,
       hardwareNotEnough: (row.hardware_not_enough || "").trim(),
-      whereToLook: (row.where_to_look || []).map(d => ({
-        kind: (d.kind || "").trim(),
-        name: (d.name || "").trim(),
-        url: d.url ? d.url.trim() : null,
-        note: (d.note || "").trim(),
-      })),
+      candidateFamilies: (row.candidate_families || []).map(s => s.trim()).filter(Boolean),
+      whereToLook: mapLookups(row.where_to_look),
+      qualifyFilters: (row.qualify_filters || [])
+        .map(f => ({
+          id: (f.id || "").trim(),
+          label: (f.label || f.name || "").trim(),
+          note: (f.note || "").trim(),
+        }))
+        .filter(f => f.label),
+      pricingLookups: mapLookups(row.pricing_lookups),
     });
   }
   return out;

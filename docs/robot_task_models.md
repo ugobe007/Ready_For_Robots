@@ -27,10 +27,50 @@ Channel (SI/dist)  →  can we commercially deliver both?
 Every Robot Job must answer:
 
 1. **What task models does this work require?** (slot + physical task)
-2. **Where would you look for them?** (OEM runtime, foundation-robotics labs, Isaac, Hugging Face robotics — as search destinations)
+2. **Where would you look for them?** (OEM pack, VLA weights, surveys — search destinations)
 3. **Does this candidate carry one?** (`unknown` until named evidence)
+4. **How would you qualify a candidate?** (VLA vs chat LLM, commercial license, on-robot compute, site qualification)
+5. **Where is price?** (OEM quote, integrator SOW, physical-AI GPU hours, token APIs) — never invent a dollar figure
 
 If (3) is unknown, qualification is **conditional**, not Qualified.
+
+## Where we look
+
+| Kind | Destination |
+|------|-------------|
+| OEM runtime | Skill / fleet / clinical / scrub / inspection packs sold with the machine |
+| Open weights | [Hugging Face robotics](https://huggingface.co/models?pipeline_tag=robotics), [OpenVLA](https://huggingface.co/models?search=openvla), [LeRobot](https://huggingface.co/lerobot) |
+| Surveys | [Argo-Robot manipulation FMs](https://github.com/Argo-Robot/foundation_models) (ACT, Octo, OpenVLA, Helix), [Robocloud robotics FMs](https://robocloud-dashboard.vercel.app/learn/blog/foundation-models-robotics) |
+| Benchmarks | [Papers with Code robot manipulation](https://paperswithcode.com/task/robot-manipulation) |
+| GitHub | [foundation-models topic](https://github.com/topics/foundation-models) / Awesome lists — weights often land here first |
+| Sim-to-real | NVIDIA Isaac / GR00T |
+| Labs | Physical Intelligence π-series |
+
+**Not a lookup for this job:** GPT, Claude, Gemini, Llama, Mistral as *the* warehouse or hospital policy. Those are chat/VLM APIs. Search **VLAs** (OpenVLA, Octo, LeRobot, ACT) or an OEM pack.
+
+## How we qualify a candidate
+
+Once 3–4 candidates exist, filter:
+
+1. **Task family** — robot policy / VLA / OEM pack, not a chat LLM
+2. **Commercial license** — research-only CC cannot place paid work
+3. **Compute footprint** — on-robot / edge often needs small or quantized policies (~<8B) or the OEM stack; cloud VLMs are not the cell
+4. **Context** — long video/SOP vs a pick cell (a 1M-token window is not a motor policy)
+5. **Site qualification** — a downloaded checkpoint is not qualified on this workplace until that site says so
+
+## Where we find price
+
+Do not scrape or invent dollars. Point at:
+
+| Source | What it prices |
+|--------|----------------|
+| [BenchLM](https://benchlm.ai/llm-pricing) | Pay-per-token / image APIs |
+| Vertex Model Garden, Amazon Bedrock, Azure AI Foundry, [Databricks FM APIs](https://docs.databricks.com/gcp/en/machine-learning/foundation-model-apis/) | Managed API list prices |
+| [Axe Compute physical AI stack](https://axecompute.com/physical-ai-compute-stack/) | Why robot policies cost more than LLMs (sim + synthetic data + VLA train + always-on inference) |
+| OEM application quote | Task pack for this SKU — usually not list-priced |
+| Integrator SOW | Custom cell / fixture program |
+
+Token price ≠ OEM warehouse pack price ≠ GPU hours to train a site policy.
 
 ## Spine
 

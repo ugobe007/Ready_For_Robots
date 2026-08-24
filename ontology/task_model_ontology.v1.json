@@ -6,6 +6,129 @@
   "ui_term": "task model",
   "note": "A task model is a trained policy/skill pack for a specific physical job. Hardware capability is not enough. Do not call these certificates in product UI.",
   "presence_states": ["unknown", "present", "absent"],
+  "honesty": "Chat LLMs (GPT, Claude, Gemini, Llama, Mistral) are not warehouse pick, hospital logistics, or CNC tending policies. Search vision-language-action families and OEM packs. Token API prices are not robot-policy prices.",
+  "candidate_families": ["OpenVLA", "Octo", "LeRobot", "ACT", "GR00T"],
+  "qualify_filters": [
+    {
+      "id": "task_family",
+      "label": "Is it a robot policy (VLA / OEM pack), not a chat LLM?",
+      "note": "OpenVLA, Octo, LeRobot, ACT, GR00T, or an OEM application pack. GPT/Claude/Gemini/Llama text APIs do not pick cases or run hospital linens."
+    },
+    {
+      "id": "commercial_license",
+      "label": "Does the license allow commercial placement?",
+      "note": "Research-only and non-commercial CC licenses cannot put a robot into paid work. Check the model card before a distributor quotes a job."
+    },
+    {
+      "id": "compute_footprint",
+      "label": "Can it run on this robot, on-prem, or only in the cloud?",
+      "note": "On-robot / edge work prefers small or quantized policies (often under ~8B parameters, or an OEM stack). Cloud VLMs are not the cell policy. Physical AI also pays simulation + always-on inference, not one pretrain run."
+    },
+    {
+      "id": "context_window",
+      "label": "Does context match the job (site map, video, long SOP)?",
+      "note": "Huge context windows matter for long video or documents. A pick cell still needs the motor policy, not a 1M-token chat window."
+    },
+    {
+      "id": "site_qualification",
+      "label": "Has it been qualified on this workplace?",
+      "note": "A downloaded checkpoint is not a site-qualified warehouse or hospital policy until that site says so."
+    }
+  ],
+  "pricing_lookups": [
+    {
+      "kind": "token_price_index",
+      "name": "BenchLM LLM pricing",
+      "url": "https://benchlm.ai/llm-pricing",
+      "note": "Pay-per-token / image API list prices. Useful for managed VLMs. Not a price for an OEM warehouse pack or a trained cell policy."
+    },
+    {
+      "kind": "physical_compute",
+      "name": "Axe Compute — physical AI compute stack",
+      "url": "https://axecompute.com/physical-ai-compute-stack/",
+      "note": "Why robot policies cost more than LLMs: simulation, synthetic data, VLA training, and continuous on-robot inference. Quote GPU hours here — do not invent a dollar figure."
+    },
+    {
+      "kind": "managed_api",
+      "name": "Vertex AI Model Garden",
+      "url": "https://cloud.google.com/vertex-ai/generative-ai/docs/model-garden/explore-models",
+      "note": "Google Gemini plus curated open models, billed per token/image. Not a robot cell license."
+    },
+    {
+      "kind": "managed_api",
+      "name": "Amazon Bedrock",
+      "url": "https://aws.amazon.com/bedrock/",
+      "note": "Unified API pricing for Claude, Llama, Titan, and others. Filter by use case; still not a warehouse pick policy."
+    },
+    {
+      "kind": "managed_api",
+      "name": "Azure AI Foundry",
+      "url": "https://ai.azure.com/",
+      "note": "OpenAI frontier models plus enterprise open-source. Pay-per-token. Does not qualify a hospital AMR."
+    },
+    {
+      "kind": "managed_api",
+      "name": "Databricks Foundation Model APIs",
+      "url": "https://docs.databricks.com/gcp/en/machine-learning/foundation-model-apis/",
+      "note": "Hosted FM pay-per-token on Databricks. Orientation for cloud cost, not physical-task pricing."
+    },
+    {
+      "kind": "oem_quote",
+      "name": "OEM application / fleet license quote",
+      "url": null,
+      "note": "Usually not on a public price list. Ask the OEM what the task pack costs for this SKU."
+    },
+    {
+      "kind": "integrator_sow",
+      "name": "Integrator cell / site-program SOW",
+      "url": null,
+      "note": "Custom training and fixture programs are often the largest line item. Distributors who only resell hardware leave this unpaid."
+    }
+  ],
+  "shared_lookups": [
+    {
+      "kind": "open_weights",
+      "name": "Hugging Face robotics models",
+      "url": "https://huggingface.co/models?pipeline_tag=robotics",
+      "note": "Filter by robotics tasks. Then search OpenVLA, Octo, LeRobot. Presence on a candidate is unknown until named."
+    },
+    {
+      "kind": "open_weights",
+      "name": "Hugging Face — OpenVLA / Octo / LeRobot",
+      "url": "https://huggingface.co/models?search=openvla",
+      "note": "Embodied VLA families: vision + language → motor actions. Fine-tune and host yourself. Check commercial license and parameter size."
+    },
+    {
+      "kind": "open_weights",
+      "name": "LeRobot on Hugging Face",
+      "url": "https://huggingface.co/lerobot",
+      "note": "Open robotics datasets and policies for download, fine-tune, and self-host."
+    },
+    {
+      "kind": "curated_survey",
+      "name": "Argo-Robot foundation models for manipulation",
+      "url": "https://github.com/Argo-Robot/foundation_models",
+      "note": "Survey of imitation-learning manipulation FMs (ACT, Octo, OpenVLA, Helix). Research map, not a storefront."
+    },
+    {
+      "kind": "curated_survey",
+      "name": "Foundation models in robotics (Robocloud)",
+      "url": "https://robocloud-dashboard.vercel.app/learn/blog/foundation-models-robotics",
+      "note": "Orientation on robotics foundation models. Not a catalog of site-qualified policies."
+    },
+    {
+      "kind": "benchmarks",
+      "name": "Papers with Code — robotics / manipulation",
+      "url": "https://paperswithcode.com/task/robot-manipulation",
+      "note": "Academic leaderboards mapped to code and weights. Best-on-benchmark ≠ qualified on this workplace."
+    },
+    {
+      "kind": "github",
+      "name": "GitHub — foundation-model codebases",
+      "url": "https://github.com/topics/foundation-models",
+      "note": "Cutting-edge weights often land here before commercial platforms. Search Awesome Foundation Models / Awesome robotics VLAs."
+    }
+  ],
   "slots": [
     {
       "id": "warehouse_pick_place_policy",

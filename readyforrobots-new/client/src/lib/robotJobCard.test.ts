@@ -71,6 +71,21 @@ describe("robotJobCard", () => {
               note: "Public checkpoints. Presence unknown until named.",
             },
           ],
+          qualify_filters: [
+            {
+              id: "commercial_license",
+              label: "Does the license allow commercial placement?",
+              note: "Research-only licenses cannot put a robot into paid work.",
+            },
+          ],
+          pricing_lookups: [
+            {
+              kind: "token_price_index",
+              name: "BenchLM LLM pricing",
+              url: "https://benchlm.ai/llm-pricing",
+              note: "Token API list prices. Not a robot-policy price.",
+            },
+          ],
         },
       ],
     });
@@ -79,6 +94,12 @@ describe("robotJobCard", () => {
     expect(card.taskModels[0].presence).toBe("unknown");
     expect(card.taskModels[0].label).toMatch(/pick-and-place/i);
     expect(card.taskModels[0].whereToLook[0].name).toMatch(/Hugging Face/i);
+    expect(card.taskModels[0].qualifyFilters.map(f => f.id)).toContain(
+      "commercial_license",
+    );
+    expect(card.taskModels[0].pricingLookups.some(d => /BenchLM/i.test(d.name))).toBe(
+      true,
+    );
     const src = readFileSync(join(here, "./robotJobCard.ts"), "utf8");
     expect(src).not.toMatch(/certificate/i);
   });
@@ -111,6 +132,8 @@ describe("robotJobCard", () => {
     expect(cardSrc).toMatch(/Workplace/);
     expect(cardSrc).toMatch(/Why this is listed/);
     expect(cardSrc).toMatch(/Task models/);
+    expect(cardSrc).toMatch(/How we qualify a candidate/);
+    expect(cardSrc).toMatch(/Where to find price/);
     expect(cardSrc).not.toMatch(/certificate/i);
     expect(cardSrc).toMatch(/qualificationHint/);
     expect(cardSrc).not.toMatch(/Possible match/);
