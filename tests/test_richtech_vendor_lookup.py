@@ -75,7 +75,7 @@ def test_richtech_homepage_is_a_fast_picker_when_live_host_challenges(monkeypatc
     names = {p.name for p in profile.products}
     assert "ADAM" in names
     assert "MATRADEE" in names
-    assert "LUCKI" in names
+    assert len(profile.products) <= 3
     assert calls == []
 
 

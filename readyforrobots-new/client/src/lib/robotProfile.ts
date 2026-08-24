@@ -50,6 +50,7 @@ export type RobotProfileProduct = {
   name: string;
   generation?: string | null;
   display_class?: string | null;
+  description?: string | null;
 };
 
 export type RobotProfileResult = {

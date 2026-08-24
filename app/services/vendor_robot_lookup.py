@@ -1,13 +1,15 @@
 """Vendor URL → robot SKUs from the vendor index (no homepage guessing).
 
 Jobs resolve still crawls unknown OEMs. When the submitted host matches a
-vendor we already indexed (`/robots` humanoids + commercial/industrial seed),
-return those SKUs and a lightweight profile built from stored specs.
+vendor we already indexed (`/robots` humanoids + commercial/industrial seed
++ jobs URL seed), return those SKUs and a lightweight profile built from
+stored specs.
 
 Live OEM crawl is a fallback for hosts that are not in the index. Indexed
 vendors skip guessed hub / Wayback fan-out.
 
-Industrial / commercial lists append the same JSON shape (`list_category`).
+Industrial / commercial / jobs-seed lists append the same JSON shape
+(`list_category`). The jobs seed lists at most three robots per OEM.
 """
 from __future__ import annotations
 
@@ -29,6 +31,9 @@ COMMERCIAL_SEED_PATH = (
 )
 INDUSTRIAL_SEED_PATH = (
     Path(__file__).resolve().parents[1] / "data" / "vendor_robots_industrial_seed.json"
+)
+JOBS_SEED_PATH = (
+    Path(__file__).resolve().parents[1] / "data" / "vendor_robots_jobs_seed.json"
 )
 
 # Press / CDN hosts that appear as product_url on thin catalog rows.
@@ -56,6 +61,20 @@ JUNK_LOOKUP_HOSTS = frozenset(
         "prnewswire.com",
         "businesswire.com",
         "humanoid.guide",
+        # Consumer / research homepages — not robot product listings.
+        "amazon.com",
+        "walmart.com",
+        "toyota.com",
+        "toyota-global.com",
+        "bytedance.com",
+        "tencent.com",
+        "huawei.com",
+        "mi.com",
+        "google.com",
+        "microsoft.com",
+        "apple.com",
+        "alibaba.com",
+        "baidu.com",
     }
 )
 
@@ -233,7 +252,7 @@ def load_vendor_robots_index(path: str | None = None) -> dict[str, Any]:
     target = Path(path) if path else INDEX_PATH
     data = _read_index_file(target)
     if path is None:
-        for extra in (COMMERCIAL_SEED_PATH, INDUSTRIAL_SEED_PATH):
+        for extra in (COMMERCIAL_SEED_PATH, INDUSTRIAL_SEED_PATH, JOBS_SEED_PATH):
             extra_data = _read_index_file(extra)
             extras = extra_data.get("vendors") or []
             if extras:
