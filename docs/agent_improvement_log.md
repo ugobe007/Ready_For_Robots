@@ -8,12 +8,11 @@ Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 
 - `hermes status` on the Mac: gateway running, **12/12 jobs**, **0 chat sessions**. OpenAI + Anthropic set. **Gemini not set.** Model is Anthropic `claude-opus-4-6`. Email home `ugobe07@gmail.com`. Nous Portal has no paid credits.
 - Cloud cannot attach to that TUI. Status CLI is not a chat thread.
-- Live Fly pipeline `built_at` 2026-08-24T02:34Z: **5/5 qualify**, 2 DM overlays, 0 buying-window/video. OpenAPI still missing tracks 8–10. `GET /status` has no `loop` key until this PR deploys.
-- This Cloud VM has no `FLY_API_TOKEN`. Deploy path is merge → `.github/workflows/deploy.yml`.
+- Live Fly after deploy: tracks 8–10 on OpenAPI; `loop.healthy` true. Pipeline still 5/5 qualify, 2 DM overlays, 0 buying-window/video until Mac crons POST. Merge #113 so `main` matches Fly.
 
 ### Ranked proposals
 
-1. **[H/M]** Merge PR #113 so Fly gains buying-window + video ingest + `loop.healthy`. — owner: `deploy`
+1. **[done]** Fly deploy from this branch: tracks 8–10 on production OpenAPI; `loop.healthy` true. Merge PR #113 so `main` matches Fly. — owner: `deploy`
 2. **[L/L]** Optional: add `GOOGLE_API_KEY` in Hermes only if Gemini is wanted inside that TUI. Not required for RFR ingest.
 
 ## 2026-08-23 — Hermes workflow test (Sunday)

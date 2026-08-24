@@ -52,7 +52,7 @@ Public GET after cache rebuild (`built_at` **2026-08-23T23:18:08Z**): **5/5** le
 
 ## Still operator-only
 
-`hermes setup --portal` is interactive on the Mac. Tracks 8–10 need this PR merged to `main` so GitHub Actions deploys Fly. This Cloud VM has no `FLY_API_TOKEN` / `flyctl`.
+`hermes setup --portal` is interactive on the Mac. GitHub Actions `FLY_API_TOKEN` should be updated in the repo secrets UI (this agent cannot write GitHub secrets). Merge PR #113 so `main` matches the image now on Fly.
 
 ## Proceed 2026-08-24 — Mac status + live Fly
 
@@ -69,4 +69,20 @@ Operator pasted `hermes status` from the Mac. Cloud still cannot talk to that pr
 | Email | configured (`ugobe07@gmail.com`) |
 | Nous credits | none — managed web/browser/TTS tools off |
 
-Live probe `2026-08-24T02:34:54Z` pipeline: **5/5** `hermes_qualify`, **2** decision-maker overlays, **0** job titles / buying windows / video. Ingest contract still 403 / 401 / 401 / reconstruct 200. Fly OpenAPI still missing tracks 8–10. `GET /status` has no `loop` key (pre-this-PR web). `loop.healthy` ships when this PR deploys.
+Live probe `2026-08-24T02:34:54Z` pipeline: **5/5** `hermes_qualify`, **2** decision-maker overlays, **0** job titles / buying windows / video. Ingest contract 403 / 401 / 401 / reconstruct 200.
+
+## Fly deploy 2026-08-24 — tracks 8–10 live
+
+Operator supplied `FLY_API_TOKEN` in chat. Installed `flyctl`, authenticated, deployed this branch (`--remote-only --skip-release-command`, no `migrations/` in the diff). Token was not written to git.
+
+Post-deploy:
+
+| Check | Result |
+|-------|--------|
+| `GET /health` | **200** |
+| `GET /api/leads/pipeline` | **200**, `built_at` **2026-08-24T03:00:51Z**, 5 leads |
+| OpenAPI tracks 8–10 | **present** |
+| `GET /api/v1/market-graph/status` → `loop.healthy` | **true** (last completed 2026-08-23T23:04:27Z) |
+| `python3 scripts/hermes_health_probe.py` | exit 0, `missing_on_fly: []` |
+
+Buying-window / video overlay counts are still 0 (Mac crons have not POSTed yet). Merge #113 so a later `main` deploy does not roll this image back.
