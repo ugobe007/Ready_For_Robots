@@ -2,7 +2,20 @@
 
 **Date:** 2026-08-24  
 **Type:** test  
-**Status:** code + unit tests; Fly proof via GHA `hermes-fly-smoke.yml`
+**Status:** Fly smoke green (GHA `32687223021`)
+
+## Fly (GHA `--apply` on this PR)
+
+Run [32687223021](https://github.com/ugobe007/Ready_For_Robots/actions/runs/32687223021): `tracks_8_10.ok` true.
+
+| Call | Result |
+|------|--------|
+| seed-targets | **200**, `count` 10, `auth: admin_key` |
+| buying-window dry_run | **200**, accepted 1, company 79 |
+| video ingest dry_run | **200**, accepted 1 |
+| vendor-video dry_run | **200**, accepted 1 |
+
+`--apply` infer-qualify still accepted 5. Synthetic 8–10 bodies were `dry_run` (not persisted).
 
 ## Code
 
@@ -15,7 +28,7 @@
 
 `--apply` still persists **infer-qualify only**. Synthetic 8–10 bodies stay `dry_run`.
 
-Local: `tests/test_hermes_auth_smoke.py` + ingest tests **18 passed**.
+Local: `tests/test_hermes_auth_smoke.py` + ingest tests **18 passed**. GHA Fly smoke **success** (`32687223021`).
 
 ## Not this cycle
 
