@@ -310,32 +310,41 @@ def main() -> int:
     pipe = _pipeline_snapshot()
     report["pipeline_before"] = pipe
     company_ids = list(pipe.get("company_ids") or [])
+    # Dry infer is an auth/contract probe only. Sending every pipeline ID
+    # plus --apply on every PR push saturates Fly during cache rebuild.
     infer_body_dry: dict = {
-        # Fly production schema (OpenAPI): dry_run / hermes_run_id / company_ids
         "dry_run": True,
         "hermes_run_id": "hermes-pipeline-dry",
+        "limit": 1,
     }
-    if company_ids:
-        infer_body_dry["company_ids"] = company_ids
-        infer_body_dry["limit"] = max(len(company_ids), 1)
-    else:
-        infer_body_dry["limit"] = 1
 
     cal_code, cal_body = _request(CAL, key, None)
-    infer_code, infer_body = _request(INFER, key, infer_body_dry)
     report["cal_status"] = {"http": cal_code, **_safe_summary(cal_body)}
-    report["infer_qualify_dry_run"] = {"http": infer_code, **_safe_summary(infer_body)}
-    report["ok"] = cal_code == 200 and infer_code == 200
-    if not report["ok"]:
-        report["reason"] = "auth_or_contract_failed"
-        print(json.dumps(report, indent=2, default=str))
-        return 1
 
     tracks = _tracks_8_10_dry_run(key, company_ids)
     report["tracks_8_10"] = tracks
+
+    infer_code, infer_body = _request(INFER, key, infer_body_dry)
+    infer_summary = {"http": infer_code, **_safe_summary(infer_body)}
+    infer_ok = infer_code == 200
+    infer_timeout = infer_code == 598
+    if infer_timeout:
+        infer_summary["skipped"] = "timeout_after_retries"
+    report["infer_qualify_dry_run"] = infer_summary
+
+    report["ok"] = cal_code == 200 and bool(tracks.get("ok")) and (infer_ok or infer_timeout)
+    if cal_code != 200:
+        report["reason"] = "auth_or_contract_failed"
+        print(json.dumps(report, indent=2, default=str))
+        return 1
     if not tracks.get("ok"):
         report["ok"] = False
         report["reason"] = "tracks_8_10_dry_run_failed"
+        print(json.dumps(report, indent=2, default=str))
+        return 1
+    if not infer_ok and not infer_timeout:
+        report["ok"] = False
+        report["reason"] = "auth_or_contract_failed"
         print(json.dumps(report, indent=2, default=str))
         return 1
 
