@@ -6,7 +6,7 @@ import { Github } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
-import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
+import { AUTH_UNAVAILABLE_MSG, supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getApiBase } from "@/lib/apiBase";
 import { readNextParam, peekPendingNext, postAuthRedirectTarget, storePendingNext, readPlanParam, storeCheckoutIntent, resolvePostAuthPath, navigateAfterAuth } from "@/lib/authNext";
 import { markJobsWorkspaceRestoreIfHome } from "@/lib/jobsWorkflow";
@@ -113,7 +113,7 @@ export default function Login() {
   async function oauth(provider: "google" | "github" | "azure") {
     if (!supabase) {
       setStatus("error");
-      setErrMsg("Configure VITE_PUBLIC_SUPABASE_URL and VITE_PUBLIC_SUPABASE_ANON_KEY.");
+      setErrMsg(AUTH_UNAVAILABLE_MSG);
       return;
     }
     setErrMsg("");
@@ -134,7 +134,12 @@ export default function Login() {
 
   async function magicLink(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim() || !supabase) return;
+    if (!supabase) {
+      setStatus("error");
+      setErrMsg(AUTH_UNAVAILABLE_MSG);
+      return;
+    }
+    if (!email.trim()) return;
     setStatus("sending");
     setErrMsg("");
     const redirectTo = supabaseOAuthRedirect(redirectTarget());
@@ -180,6 +185,11 @@ export default function Login() {
             </div>
           ) : (
             <div className=" border border-slate-700/70 bg-[#0b162f]/85 px-6 py-8 shadow-[0_20px_45px_-25px_rgba(0,0,0,0.8)]">
+              {!supabase ? (
+                <p className="mb-5 text-xs text-red-200 border border-red-400/40 bg-red-900/30 px-3 py-2" role="alert">
+                  {AUTH_UNAVAILABLE_MSG}
+                </p>
+              ) : null}
               <div className="flex flex-col gap-2 mb-5">
                 <button
                   type="button"
@@ -229,7 +239,7 @@ export default function Login() {
                 )}
                 <button
                   type="submit"
-                  disabled={status === "sending" || !email.trim()}
+                  disabled={status === "sending" || !email.trim() || !supabase}
                   className="w-full  px-4 py-2.5 text-sm font-semibold text-[#06261f] bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40"
                 >
                   {status === "sending" ? "Sending…" : "Send magic link"}

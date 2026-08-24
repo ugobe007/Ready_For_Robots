@@ -65,6 +65,13 @@ jobs:
 
       - name: Vite production build
         if: steps.guard.outputs.configured == 'true'
+        env:
+          # Vite inlines these at build time. Omitting them ships a dead /signup:
+          # Google/GitHub OAuth and magic-link never fire (supabase client is null).
+          # Same public values as fly.toml [build.args] (anon key is a client JWT).
+          VITE_PUBLIC_API_URL: https://ready-2-robot.fly.dev
+          VITE_PUBLIC_SUPABASE_URL: https://lmoyydlhlgdyqbxkmkuz.supabase.co
+          VITE_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb3l5ZGxobGdkeXFieGtta3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNTAyOTUsImV4cCI6MjA4NzgyNjI5NX0.SImYCwJtWwMRThqjHCuIBQOXuiLlg5xm39UXm1pxKJ8
         run: pnpm --dir readyforrobots-new exec vite build
 
       - name: Pack Vercel Build Output
