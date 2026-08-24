@@ -60,7 +60,13 @@ def test_richtech_homepage_is_a_fast_picker_when_live_host_challenges(monkeypatc
     def boom(*_a, **_k):
         raise AssertionError("must not crawl product pages on a challenged catalog host")
 
-    monkeypatch.setattr(P, "fetch_page", fake_fetch)
+    monkeypatch.setattr(
+        P,
+        "fetch_page",
+        lambda *_a, **_k: (_ for _ in ()).throw(
+            AssertionError("indexed OEM homepage must not fetch the live host")
+        ),
+    )
     monkeypatch.setattr(P, "collect_source_pack", boom)
     t0 = time.perf_counter()
     profile = P.build_robot_profile("https://www.richtechrobotics.com/")
@@ -70,19 +76,22 @@ def test_richtech_homepage_is_a_fast_picker_when_live_host_challenges(monkeypatc
     assert "ADAM" in names
     assert "MATRADEE" in names
     assert "LUCKI" in names
-    assert calls and calls[0]["allow_archive"] is False
+    assert calls == []
 
 
 def test_richtech_adam_uses_catalog_when_live_pages_are_blocked(monkeypatch):
     import app.services.robot_understanding_v1.pipeline as P
 
-    def fake_fetch(url, timeout=(2.5, 6.0), allow_archive=True):
-        return _challenge_page(url)
-
     def boom(*_a, **_k):
         raise AssertionError("catalog SKU must not crawl when the live host is blocked")
 
-    monkeypatch.setattr(P, "fetch_page", fake_fetch)
+    monkeypatch.setattr(
+        P,
+        "fetch_page",
+        lambda *_a, **_k: (_ for _ in ()).throw(
+            AssertionError("indexed SKU must not fetch the live OEM host")
+        ),
+    )
     monkeypatch.setattr(P, "collect_source_pack", boom)
     profile = P.build_robot_profile(
         "https://www.richtechrobotics.com/adam",

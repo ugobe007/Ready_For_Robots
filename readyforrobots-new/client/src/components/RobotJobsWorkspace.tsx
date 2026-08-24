@@ -546,7 +546,7 @@ function lookupFailedMessage(err: unknown, fallback: string): string {
     (err instanceof DOMException && err.name === "AbortError") ||
     (err instanceof Error && /aborted|timeout/i.test(err.message))
   ) {
-    return "That manufacturer site took too long. Paste a specific product URL, not a hub, language, or About page.";
+    return "Lookup took too long. Try again — a manufacturer homepage is fine if we already know their robots.";
   }
   const detail = err instanceof Error ? err.message.trim() : "";
   if (detail && !/^robot-(profile|job-search)\s+\d+$/i.test(detail)) {

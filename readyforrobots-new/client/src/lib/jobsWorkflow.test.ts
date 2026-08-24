@@ -998,6 +998,8 @@ describe("jobsWorkflow", () => {
     );
     expect(workspace).toMatch(/filterJobsLineupProducts/);
     expect(workspace).toMatch(/ROBOT_PROFILE_TIMEOUT_MS/);
+    expect(workspace).toMatch(/Lookup took too long/);
+    expect(workspace).not.toMatch(/Paste a specific product URL/);
     expect(workspace).toMatch(/productCap/);
     expect(workspace).toMatch(/phase=\{researchPhase\}/);
     const crm = readFileSync(join(here, "../pages/Crm.tsx"), "utf8");

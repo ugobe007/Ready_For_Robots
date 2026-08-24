@@ -67,14 +67,13 @@ def test_index_specs_fill_checklist_predicates():
 def test_indexed_sku_skips_live_source_pack(monkeypatch):
     import app.services.robot_understanding_v1.pipeline as P
 
-    def fake_fetch(url, timeout=(2.5, 6.0), allow_archive=True):
-        assert allow_archive is False
-        return _page(url, text="Unitree G1 humanoid")
+    def boom_fetch(*_a, **_k):
+        raise AssertionError("indexed vendors must not fetch the live OEM page")
 
     def boom(*_a, **_k):
         raise AssertionError("indexed vendors must not fan out a live source pack")
 
-    monkeypatch.setattr(P, "fetch_page", fake_fetch)
+    monkeypatch.setattr(P, "fetch_page", boom_fetch)
     monkeypatch.setattr(P, "collect_source_pack", boom)
     timings: dict = {}
     profile = P.build_robot_profile(
@@ -82,6 +81,7 @@ def test_indexed_sku_skips_live_source_pack(monkeypatch):
         product_name="Unitree G1",
         timings=timings,
     )
+    assert timings.get("home_fetch") == "skipped"
     assert timings.get("source_strategy") == "catalog"
     assert profile.needs_product_choice is False
     assert profile.selected_product is not None
@@ -99,7 +99,13 @@ def test_indexed_sku_skips_live_source_pack(monkeypatch):
 def test_bear_servi_uses_catalog_without_source_pack(monkeypatch):
     import app.services.robot_understanding_v1.pipeline as P
 
-    monkeypatch.setattr(P, "fetch_page", lambda *a, **k: _page(a[0], text=""))
+    monkeypatch.setattr(
+        P,
+        "fetch_page",
+        lambda *_a, **_k: (_ for _ in ()).throw(
+            AssertionError("indexed SKUs must not wait on the live OEM host")
+        ),
+    )
     monkeypatch.setattr(
         P,
         "collect_source_pack",
@@ -141,3 +147,39 @@ def test_unknown_oem_still_uses_live_pack_without_archive(monkeypatch):
     assert timings.get("source_strategy") == "live_pack"
     assert pack_calls
     assert pack_calls[0].get("allow_archive") is False
+
+def test_reflex_homepage_is_in_vendor_index():
+    reload_vendor_robots_index()
+    hit = lookup_vendor_by_url("https://www.reflexrobotics.com/")
+    assert hit is not None
+    names = index_robot_names(hit)
+    assert any("Gen2" in n or "Gen 2" in n for n in names)
+    assert any("Humanoid" in n for n in names)
+    assert select_index_robot("https://www.reflexrobotics.com/", hit) is None
+    assert select_index_robot("https://www.reflexrobotics.com", hit) is None
+
+
+def test_reflex_homepage_opens_picker_without_live_fetch(monkeypatch):
+    import time
+    import app.services.robot_understanding_v1.pipeline as P
+
+    def boom_fetch(*_a, **_k):
+        raise AssertionError("Reflex homepage must not wait on reflexrobotics.com")
+
+    def boom_pack(*_a, **_k):
+        raise AssertionError("catalog homepage must not crawl product pages")
+
+    monkeypatch.setattr(P, "fetch_page", boom_fetch)
+    monkeypatch.setattr(P, "collect_source_pack", boom_pack)
+    timings: dict = {}
+    t0 = time.perf_counter()
+    profile = P.build_robot_profile("https://www.reflexrobotics.com/", timings=timings)
+    assert time.perf_counter() - t0 < 1.0
+    assert timings.get("home_fetch") == "skipped"
+    assert timings.get("source_strategy") == "catalog"
+    assert profile.needs_product_choice is True
+    names = {p.name for p in profile.products}
+    assert any("Gen2" in n or "Gen 2" in n for n in names)
+    assert any("Humanoid" in n for n in names)
+    assert profile.company.name == "Reflex Robotics"
+
