@@ -26,6 +26,9 @@ STALE_JS = "/assets/index-bxLpnQiT.js"
 JS_PATH_RE = re.compile(r"/assets/index-[A-Za-z0-9_-]+\.js")
 DEPLOY_URL_RE = re.compile(r"https://[A-Za-z0-9._-]+\.vercel\.app")
 CANARY = "Jobs for"
+# Signup Google/GitHub OAuth is dead if Vite omitted this host.
+SUPABASE_HOST_CANARY = "lmoyydlhlgdyqbxkmkuz.supabase.co"
+REQUIRED_JS_SUBSTRINGS = (CANARY, SUPABASE_HOST_CANARY)
 MIN_JS_BYTES = 100_000
 DEFAULT_DOMAIN = "https://readyforrobots.com"
 DEFAULT_ATTEMPTS = 12
@@ -102,8 +105,11 @@ def check_origin(origin: str, *, get: Getter | None = None, nonce: str = "n") ->
         text = js_body.decode("utf-8", errors="replace")
     except Exception:
         text = ""
-    if CANARY not in text:
-        return BundleCheck(False, base, js_status, js_path, js_bytes, f"missing canary {CANARY!r}")
+    missing = [needle for needle in REQUIRED_JS_SUBSTRINGS if needle not in text]
+    if missing:
+        return BundleCheck(
+            False, base, js_status, js_path, js_bytes, f"missing canary {missing[0]!r}"
+        )
     return BundleCheck(True, base, js_status, js_path, js_bytes, "ok")
 
 

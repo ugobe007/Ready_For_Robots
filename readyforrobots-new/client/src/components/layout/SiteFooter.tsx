@@ -27,7 +27,7 @@ const SUPPORT_LINKS = [
 
 const COMPANY_LINKS = [
   { label: "About", href: "/intelligence" },
-  { label: "Case Studies", href: "/#case-studies" },
+  { label: "Compare robots", href: "/compare" },
   { label: "Find Robots", href: "/find-robots" },
   { label: "Deployment design", href: "/vendor/design" },
   { label: "Privacy Policy", href: "/privacy" },

@@ -6,6 +6,9 @@ const anon =
   import.meta.env.VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   "";
 
+export const AUTH_UNAVAILABLE_MSG =
+  "Sign-in is not configured in this build, so Google, GitHub, and email links cannot run. Refresh, or email support@readyforrobots.com.";
+
 export const supabase =
   url && anon
     ? createClient(url, anon, {

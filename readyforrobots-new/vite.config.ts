@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
-import { defineConfig, type Plugin, type ViteDevServer } from "vite";
+import { defineConfig, loadEnv, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 // =============================================================================
@@ -29,6 +29,33 @@ function injectRfrApiMeta(): Plugin {
       const raw = (process.env.VITE_PUBLIC_API_URL || "").trim().replace(/\/$/, "");
       if (!raw) return html;
       return html.replace("<head>", `<head>\n    <meta name="rfr-api-base" content="${raw}" />`);
+    },
+  };
+}
+
+/** Fail production builds that would ship a dead /signup (null supabase client). */
+function requirePublicSupabaseEnv(): Plugin {
+  return {
+    name: "require-public-supabase-env",
+    configResolved(config) {
+      if (config.command !== "build" || config.mode !== "production") return;
+      const fileEnv = loadEnv(config.mode, config.envDir || PROJECT_ROOT, "VITE_");
+      const url =
+        process.env.VITE_PUBLIC_SUPABASE_URL || fileEnv.VITE_PUBLIC_SUPABASE_URL || "";
+      const key =
+        process.env.VITE_PUBLIC_SUPABASE_ANON_KEY ||
+        fileEnv.VITE_PUBLIC_SUPABASE_ANON_KEY ||
+        process.env.VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        fileEnv.VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        "";
+      if (!url.includes("supabase.co") || key.length < 20) {
+        throw new Error(
+          "Production Vite build requires VITE_PUBLIC_SUPABASE_URL and " +
+            "VITE_PUBLIC_SUPABASE_ANON_KEY (or VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY). " +
+            "Without them /signup Google and GitHub buttons do nothing. " +
+            "Set them in .github/workflows/deploy-frontend.yml (same values as fly.toml [build.args]).",
+        );
+      }
     },
   };
 }
@@ -222,6 +249,7 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const plugins = [
   injectRfrApiMeta(),
+  requirePublicSupabaseEnv(),
   react(),
   tailwindcss(),
   jsxLocPlugin(),

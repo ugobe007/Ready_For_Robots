@@ -6,7 +6,7 @@ import { Github } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
-import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
+import { AUTH_UNAVAILABLE_MSG, supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getPublicReadApiBase } from "@/lib/apiBase";
 import { readSupplyAttribution, trackSupplyConversion, trackSignupStart } from "@/lib/siteAnalytics";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError } from "@/lib/authCallback";
@@ -365,7 +365,7 @@ export default function Signup() {
   async function oauth(provider: "google" | "github" | "azure") {
     if (!supabase) {
       setStatus("error");
-      setErrMsg("Configure VITE_PUBLIC_SUPABASE_URL and VITE_PUBLIC_SUPABASE_ANON_KEY.");
+      setErrMsg(AUTH_UNAVAILABLE_MSG);
       return;
     }
     if (hubspotIntent && !fullName.trim()) {
@@ -412,7 +412,12 @@ export default function Signup() {
   }, [resendCooldown]);
 
   async function sendMagicLink(): Promise<boolean> {
-    if (!email.trim() || !supabase) return false;
+    if (!supabase) {
+      setStatus("error");
+      setErrMsg(AUTH_UNAVAILABLE_MSG);
+      return false;
+    }
+    if (!email.trim()) return false;
     storePendingNext(intendedPostAuthPath);
     const redirectTo = supabaseOAuthRedirect(intendedPostAuthPath);
     const { error } = await supabase.auth.signInWithOtp({
@@ -429,7 +434,12 @@ export default function Signup() {
 
   async function magicLink(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim() || !supabase) return;
+    if (!supabase) {
+      setStatus("error");
+      setErrMsg(AUTH_UNAVAILABLE_MSG);
+      return;
+    }
+    if (!email.trim()) return;
     if (hubspotIntent && !fullName.trim()) {
       setStatus("error");
       setErrMsg("Enter your full name so SIGNAL can authenticate your HubSpot workspace.");
@@ -776,6 +786,14 @@ export default function Signup() {
                   className="mt-4 w-full  border border-slate-600 bg-transparent px-3 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500"
                 />
               )}
+              {!supabase ? (
+                <p
+                  className="mt-4 border border-red-700 px-3 py-2 text-xs text-red-300"
+                  role="alert"
+                >
+                  {AUTH_UNAVAILABLE_MSG}
+                </p>
+              ) : null}
               <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-2`}>
                 <button
                   type="button"
@@ -826,7 +844,7 @@ export default function Signup() {
                 )}
                 <button
                   type="submit"
-                  disabled={status === "sending" || !email.trim()}
+                  disabled={status === "sending" || !email.trim() || !supabase}
                   className={
                     hubspotIntent
                       ? "w-full  border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"

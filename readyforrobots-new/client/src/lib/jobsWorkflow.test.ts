@@ -402,6 +402,7 @@ describe("jobsWorkflow", () => {
     expect(jobsLinks).not.toMatch(/\/pipeline/);
     expect(jobsLinks).not.toMatch(/Signals/);
     expect(footer).not.toMatch(/rounded-lg/);
+    expect(footer).not.toMatch(/\/#case-studies/);
 
     const scout = readFileSync(join(here, "../components/ScoutChat.tsx"), "utf8");
     expect(scout).toMatch(/showJobsSiteChrome/);

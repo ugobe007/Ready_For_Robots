@@ -12,7 +12,10 @@ from scripts.vercel_production_smoke import (
 FRESH_JS = "/assets/index-CoF0C_UB.js"
 HTML = f'<script type="module" src="{FRESH_JS}"></script>'
 STALE_HTML = f'<script type="module" src="{STALE_JS}"></script>'
-JS_BODY = ("x" * 120_000 + "Find Jobs for your robot").encode()
+JS_BODY = (
+    "x" * 120_000 + "Find Jobs for your robot lmoyydlhlgdyqbxkmkuz.supabase.co"
+).encode()
+JS_BODY_NO_SUPABASE = ("x" * 120_000 + "Find Jobs for your robot").encode()
 
 
 def test_extract_deploy_url_from_cli_log():
@@ -55,6 +58,19 @@ def test_check_origin_accepts_fresh_jobs_bundle():
     assert result.ok
     assert result.js_path == FRESH_JS
     assert result.js_bytes > 100_000
+
+
+def test_check_origin_rejects_bundle_without_supabase_host():
+    origin = "https://readyforrobots.com"
+    get = _pages(
+        {
+            f"{origin}/?n=": (200, HTML.encode()),
+            f"{origin}{FRESH_JS}": (200, JS_BODY_NO_SUPABASE),
+        }
+    )
+    result = check_origin(origin, get=get, nonce="1")
+    assert not result.ok
+    assert "supabase.co" in result.reason
 
 
 def test_check_origin_rejects_stale_hash():
