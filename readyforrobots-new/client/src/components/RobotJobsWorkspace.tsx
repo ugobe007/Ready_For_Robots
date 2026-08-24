@@ -34,6 +34,7 @@ import {
   type RobotJobSearchResult,
 } from "@/lib/robotJobSearch";
 import { fetchOemListing, fetchRobotProfile } from "@/lib/robotProfile";
+import { lookupKnownOem } from "@/lib/knownOemLineups";
 import { fetchRobotJobMatch } from "@/lib/robotJobMatch";
 import {
   formatFactLine,
@@ -840,6 +841,43 @@ export default function RobotJobsWorkspace() {
     const ac = new AbortController();
     researchAbortRef.current = ac;
     try {
+      const known = lookupKnownOem(submitUrl);
+      if (known && known.robots.length > 0) {
+        setCompanyName(known.vendor_name || "");
+        const lineup = filterJobsLineupProducts(
+          known.robots.map(p => ({
+            name: p.name,
+            displayClass: p.display_class,
+            description: p.description,
+          })),
+          JOBS_LINEUP_DISPLAY_CAP,
+        );
+        if (lineup.length > 1) {
+          setProducts(lineup);
+          setSelected([]);
+          setStage("select");
+          return;
+        }
+        if (lineup.length === 1) {
+          const name = lineup[0].name;
+          const displayClass = lineup[0].displayClass;
+          const cls = normalizeRobotClass(displayClass);
+          setResearchPhase("jobs");
+          const res = await fetchRobotJobSearch({
+            url: submitUrl,
+            product: name || undefined,
+            assertedClass: cls || undefined,
+            lookupGrain: cls ? "robot_type" : "product",
+            signal: ac.signal,
+            timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+          });
+          submissionIdRef.current =
+            res.robot_submission_id ?? submissionIdRef.current;
+          const analysis = analysisForSelectedSku(res, name, displayClass);
+          openJobsFromAnalyses([analysis], submitUrl, name ? [name] : []);
+          return;
+        }
+      }
       try {
         const listing = await fetchOemListing({
           url: submitUrl,

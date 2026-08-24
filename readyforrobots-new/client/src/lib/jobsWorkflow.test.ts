@@ -1000,6 +1000,7 @@ describe("jobsWorkflow", () => {
     );
     expect(workspace).toMatch(/filterJobsLineupProducts/);
     expect(workspace).toMatch(/ROBOT_PROFILE_TIMEOUT_MS/);
+    expect(workspace).toMatch(/lookupKnownOem/);
     expect(workspace).toMatch(/fetchOemListing/);
     expect(workspace).toMatch(/OEM_LISTING_TIMEOUT_MS/);
     expect(workspace).toMatch(/Lookup took too long/);
