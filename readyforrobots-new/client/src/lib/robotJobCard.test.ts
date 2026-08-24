@@ -7,6 +7,9 @@ import {
   robcoJobCards,
   robcoPackHonesty,
   robotJobCardFromMatch,
+  JOB_CARD_MODEL_LINK_CAP,
+  JOB_CARD_OPEN_QUESTION_CAP,
+  cardModelLinks,
 } from "./robotJobCard";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -54,7 +57,17 @@ describe("robotJobCard", () => {
       title: "Pick cases onto pallets",
       company_name: "Novolex",
       locality: "Kinston, NC",
-      why: ["Manipulation grounded"],
+      why: [
+        "Manipulation grounded",
+        "Hardware can enter the workplace; a task model for this work is still unknown.",
+      ],
+      still_unknown: [
+        "part weight",
+        "gripper suitability",
+        "Which warehouse pick-and-place policy covers this work, and where is it published?",
+        "Is a candidate policy a robot VLA or OEM pack — not a chat LLM?",
+        "What does it cost — OEM license, integrator SOW, GPU training, or a token API?",
+      ],
       verdict: "POSSIBLE_MATCH",
       required_task_models: [
         {
@@ -65,10 +78,46 @@ describe("robotJobCard", () => {
           hardware_not_enough: "An arm in the DC is not the pick policy.",
           where_to_look: [
             {
+              kind: "integrator_cell",
+              name: "Integrator / OEM tending cell software",
+              url: null,
+              note: "Often a custom cell program.",
+            },
+            {
+              kind: "sim_to_real",
+              name: "NVIDIA Isaac / GR00T",
+              url: "https://developer.nvidia.com/isaac",
+              note: "Starting point only.",
+            },
+            {
               kind: "open_weights",
               name: "Hugging Face robotics models",
               url: "https://huggingface.co/models?pipeline_tag=robotics",
               note: "Public checkpoints. Presence unknown until named.",
+            },
+            {
+              kind: "open_weights",
+              name: "Hugging Face — OpenVLA / Octo / LeRobot",
+              url: "https://huggingface.co/models?search=openvla",
+              note: "Embodied VLA families.",
+            },
+            {
+              kind: "curated_survey",
+              name: "Argo-Robot foundation models for manipulation",
+              url: "https://github.com/Argo-Robot/foundation_models",
+              note: "Research map, not a storefront.",
+            },
+            {
+              kind: "talent",
+              name: "Mercor",
+              url: "https://www.mercor.com/",
+              note: "People who train policies.",
+            },
+            {
+              kind: "token_price_index",
+              name: "BenchLM LLM pricing",
+              url: "https://benchlm.ai/llm-pricing",
+              note: "Not a robot-policy price.",
             },
           ],
           qualify_filters: [
@@ -93,13 +142,34 @@ describe("robotJobCard", () => {
     expect(card.taskModels).toHaveLength(1);
     expect(card.taskModels[0].presence).toBe("unknown");
     expect(card.taskModels[0].label).toMatch(/pick-and-place/i);
-    expect(card.taskModels[0].whereToLook[0].name).toMatch(/Hugging Face/i);
-    expect(card.taskModels[0].qualifyFilters.map(f => f.id)).toContain(
-      "commercial_license",
+    expect(card.taskModels[0].whereToLook).toHaveLength(JOB_CARD_MODEL_LINK_CAP);
+    expect(card.taskModels[0].whereToLook.every(d => d.url)).toBe(true);
+    expect(card.taskModels[0].whereToLook.map(d => d.name).join(" ")).toMatch(
+      /Hugging Face|Isaac|OpenVLA|LeRobot/i,
     );
-    expect(card.taskModels[0].pricingLookups.some(d => /BenchLM/i.test(d.name))).toBe(
-      true,
+    expect(card.taskModels[0].whereToLook.some(d => /Mercor|BenchLM|Argo-Robot/i.test(d.name))).toBe(
+      false,
     );
+    expect(card.taskModels[0].whereToLook.every(d => d.note === "")).toBe(true);
+    expect(card.taskModels[0].qualifyFilters).toEqual([]);
+    expect(card.taskModels[0].pricingLookups).toEqual([]);
+    expect(card.openQuestions).toHaveLength(JOB_CARD_OPEN_QUESTION_CAP);
+    expect(card.openQuestions).toEqual([
+      "part weight",
+      "gripper suitability",
+      "Which warehouse pick-and-place policy covers this work, and where is it published?",
+    ]);
+    expect(card.requirements).toEqual(["Manipulation grounded"]);
+    expect(
+      cardModelLinks([
+        {
+          kind: "talent",
+          name: "Mercor",
+          url: "https://www.mercor.com/",
+          note: "skip",
+        },
+      ]),
+    ).toEqual([]);
     const src = readFileSync(join(here, "./robotJobCard.ts"), "utf8");
     expect(src).not.toMatch(/certificate/i);
   });
@@ -132,8 +202,10 @@ describe("robotJobCard", () => {
     expect(cardSrc).toMatch(/Workplace/);
     expect(cardSrc).toMatch(/Why this is listed/);
     expect(cardSrc).toMatch(/Task models/);
-    expect(cardSrc).toMatch(/How we qualify a candidate/);
-    expect(cardSrc).toMatch(/Where to find price/);
+    expect(cardSrc).not.toMatch(/How we qualify a candidate/);
+    expect(cardSrc).not.toMatch(/Where to find price/);
+    expect(cardSrc).not.toMatch(/Where to look:/);
+    expect(cardSrc).not.toMatch(/Search families:/);
     expect(cardSrc).not.toMatch(/certificate/i);
     expect(cardSrc).toMatch(/qualificationHint/);
     expect(cardSrc).not.toMatch(/Possible match/);
