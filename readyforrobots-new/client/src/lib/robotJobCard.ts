@@ -82,6 +82,7 @@ export type RobotJobCardView = {
   openQuestions: string[];
   nextStep: string;
   taskModels: RequiredTaskModel[];
+  modelLinks: TaskModelLookup[];
 };
 
 export const QUALIFICATION_LABEL: Record<RobotJobQualification, string> = {
@@ -190,7 +191,7 @@ function normalizeTaskModels(raw?: MatchTaskModelIn[] | null): RequiredTaskModel
       presence,
       hardwareNotEnough: (row.hardware_not_enough || "").trim(),
       candidateFamilies: [],
-      whereToLook: cardModelLinks(mapLookups(row.where_to_look)),
+      whereToLook: [],
       qualifyFilters: [],
       pricingLookups: [],
     });
@@ -212,6 +213,9 @@ export function robotJobCardFromMatch(job: {
   required_task_models?: MatchTaskModelIn[] | null;
 }): RobotJobCardView {
   const taskModels = normalizeTaskModels(job.required_task_models);
+  const modelLinks = cardModelLinks(
+    (job.required_task_models || []).flatMap(row => mapLookups(row.where_to_look)),
+  );
   const open = unique([
     ...(job.still_unknown || []),
     ...(job.unknowns || []),
@@ -237,6 +241,7 @@ export function robotJobCardFromMatch(job: {
     openQuestions: open,
     nextStep: ROBOT_JOB_CARD_NEXT_STEP,
     taskModels,
+    modelLinks,
   };
 }
 

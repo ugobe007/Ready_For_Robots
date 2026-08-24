@@ -2875,16 +2875,16 @@ function JobCard({
             </div>
           </dl>
 
-          {card.taskModels.length ? (
+          {card.taskModels.length || card.modelLinks.length ? (
             <div className="mt-3">
               <p className={eyebrow}>Task models</p>
-              <ul className="mt-1 space-y-2">
-                {card.taskModels.map(model => (
-                  <li
-                    key={model.id}
-                    className="text-[13px] leading-snug text-slate-200"
-                  >
-                    <p>
+              {card.taskModels.length ? (
+                <ul className="mt-1 space-y-0.5">
+                  {card.taskModels.map(model => (
+                    <li
+                      key={model.id}
+                      className="text-[13px] leading-snug text-slate-200"
+                    >
                       {model.label}
                       <span className="text-slate-400">
                         {" "}
@@ -2895,30 +2895,30 @@ function JobCard({
                             ? "Present"
                             : "Absent"}
                       </span>
-                    </p>
-                    {model.whereToLook.length ? (
-                      <ul className="mt-0.5 space-y-0.5">
-                        {model.whereToLook.map(dest => (
-                          <li key={`${model.id}-${dest.url || dest.name}`}>
-                            {dest.url ? (
-                              <a
-                                href={dest.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-slate-300 underline decoration-slate-600 underline-offset-2"
-                              >
-                                {dest.name}
-                              </a>
-                            ) : (
-                              dest.name
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {card.modelLinks.length ? (
+                <ul className="mt-1 space-y-0.5">
+                  {card.modelLinks.map(dest => (
+                    <li key={dest.url || dest.name}>
+                      {dest.url ? (
+                        <a
+                          href={dest.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[13px] leading-snug text-slate-300 underline decoration-slate-600 underline-offset-2"
+                        >
+                          {dest.name}
+                        </a>
+                      ) : (
+                        dest.name
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           ) : null}
 

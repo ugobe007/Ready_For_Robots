@@ -142,15 +142,16 @@ describe("robotJobCard", () => {
     expect(card.taskModels).toHaveLength(1);
     expect(card.taskModels[0].presence).toBe("unknown");
     expect(card.taskModels[0].label).toMatch(/pick-and-place/i);
-    expect(card.taskModels[0].whereToLook).toHaveLength(JOB_CARD_MODEL_LINK_CAP);
-    expect(card.taskModels[0].whereToLook.every(d => d.url)).toBe(true);
-    expect(card.taskModels[0].whereToLook.map(d => d.name).join(" ")).toMatch(
+    expect(card.taskModels[0].whereToLook).toEqual([]);
+    expect(card.modelLinks).toHaveLength(JOB_CARD_MODEL_LINK_CAP);
+    expect(card.modelLinks.every(d => d.url)).toBe(true);
+    expect(card.modelLinks.map(d => d.name).join(" ")).toMatch(
       /Hugging Face|Isaac|OpenVLA|LeRobot/i,
     );
-    expect(card.taskModels[0].whereToLook.some(d => /Mercor|BenchLM|Argo-Robot/i.test(d.name))).toBe(
+    expect(card.modelLinks.some(d => /Mercor|BenchLM|Argo-Robot/i.test(d.name))).toBe(
       false,
     );
-    expect(card.taskModels[0].whereToLook.every(d => d.note === "")).toBe(true);
+    expect(card.modelLinks.every(d => d.note === "")).toBe(true);
     expect(card.taskModels[0].qualifyFilters).toEqual([]);
     expect(card.taskModels[0].pricingLookups).toEqual([]);
     expect(card.openQuestions).toHaveLength(JOB_CARD_OPEN_QUESTION_CAP);
@@ -172,6 +173,50 @@ describe("robotJobCard", () => {
     ).toEqual([]);
     const src = readFileSync(join(here, "./robotJobCard.ts"), "utf8");
     expect(src).not.toMatch(/certificate/i);
+    const twoSlots = robotJobCardFromMatch({
+      title: "Return empty totes",
+      company_name: "CuraScript SD",
+      locality: "Tempe, AZ",
+      verdict: "POSSIBLE_MATCH",
+      required_task_models: [
+        {
+          id: "warehouse_pick_place_policy",
+          label: "Warehouse pick-and-place policy",
+          presence: "unknown",
+          where_to_look: [
+            {
+              kind: "open_weights",
+              name: "Hugging Face robotics models",
+              url: "https://huggingface.co/models?pipeline_tag=robotics",
+            },
+            {
+              kind: "sim_to_real",
+              name: "NVIDIA Isaac / GR00T",
+              url: "https://developer.nvidia.com/isaac",
+            },
+          ],
+        },
+        {
+          id: "warehouse_amr_fleet_nav",
+          label: "Warehouse AMR navigation / fleet policy",
+          presence: "unknown",
+          where_to_look: [
+            {
+              kind: "open_weights",
+              name: "LeRobot on Hugging Face",
+              url: "https://huggingface.co/lerobot",
+            },
+            {
+              kind: "open_weights",
+              name: "Hugging Face — OpenVLA / Octo / LeRobot",
+              url: "https://huggingface.co/models?search=openvla",
+            },
+          ],
+        },
+      ],
+    });
+    expect(twoSlots.taskModels).toHaveLength(2);
+    expect(twoSlots.modelLinks).toHaveLength(JOB_CARD_MODEL_LINK_CAP);
   });
 
   it("keeps the RobCo pack honest: named machine-tending work, no fake labor dollars", () => {
@@ -201,6 +246,7 @@ describe("robotJobCard", () => {
     expect(cardSrc).toMatch(/Employer/);
     expect(cardSrc).toMatch(/Workplace/);
     expect(cardSrc).toMatch(/Why this is listed/);
+    expect(cardSrc).toMatch(/card.modelLinks/);
     expect(cardSrc).toMatch(/Task models/);
     expect(cardSrc).not.toMatch(/How we qualify a candidate/);
     expect(cardSrc).not.toMatch(/Where to find price/);
