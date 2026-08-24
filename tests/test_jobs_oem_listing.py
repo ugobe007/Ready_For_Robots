@@ -1,4 +1,7 @@
-"""FIND lists top 3 robots per OEM URL — names, then descriptions, then specs."""
+"""FIND lists named robots per OEM URL — names, then descriptions, then specs.
+
+FIND surfaces three robots at a time. Catalogs are not capped at 3.
+"""
 from __future__ import annotations
 
 from app.services.jobs_oem_listing import (
@@ -31,7 +34,7 @@ def test_split_primary_robots_expands_families():
         "Locus Vector",
     ]
     assert split_primary_robots("AGV/AMR", "Daifuku") == []
-    assert len(split_primary_robots("A/B/C/D", "Acme")) <= FIND_PRODUCT_LIST_CAP
+    assert len(split_primary_robots("A/B/C/D", "Acme")) == 4
 
 
 def test_jobs_seed_url_lists_top_three_named_robots():
@@ -92,16 +95,16 @@ def test_page_parse_is_name_then_description_then_specs():
     assert rows[1]["specs"]["payload_kg"] == 750
 
 
-def test_unknown_oem_discover_caps_at_three(monkeypatch):
+def test_unknown_oem_discover_keeps_homepage_names(monkeypatch):
     import app.services.robot_understanding_v1.pipeline as P
     from app.services.robot_understanding_v1.fetch import FetchedPage
 
     page_text = (
-        "Digit is a bipedal robot for totes in warehouses. "
-        "Vega is a warehouse AMR for mixed SKUs. "
-        "Atlas walks through industrial sites. "
-        "Apollo is a humanoid for factory work. "
-        "Neo is a home robot for indoor tasks."
+        "Digit is a bipedal robot for totes in warehouses. Digit lifts totes. "
+        "Vega is a warehouse AMR for mixed SKUs. Vega moves mixed SKUs. "
+        "Atlas walks through industrial sites. Atlas is a humanoid robot. "
+        "Apollo is a humanoid for factory work. Apollo works in factories. "
+        "Neo is a home robot for indoor tasks. Neo does indoor tasks."
     )
 
     def fake_fetch(url, timeout=(2.5, 6.0), allow_archive=True):
@@ -118,7 +121,9 @@ def test_unknown_oem_discover_caps_at_three(monkeypatch):
     monkeypatch.setattr(P, "fetch_page", fake_fetch)
     monkeypatch.setattr(P, "collect_source_pack", lambda *_a, **_k: [])
     profile = P.build_robot_profile("https://unknown-bots.example/")
-    assert len(profile.products) <= FIND_PRODUCT_LIST_CAP
+    names = {p.name for p in profile.products}
+    assert {"Digit", "Vega", "Atlas", "Apollo", "Neo"} <= names
+    assert len(names) >= 5
 
 
 def test_research_names_are_not_invented_products():
@@ -150,7 +155,18 @@ def test_listing_from_catalog_is_name_then_description():
     rows = listing_from_catalog(mir)
     assert [r["name"] for r in rows][:3]
     assert all(r.get("description") for r in rows)
-    assert len(rows) <= FIND_PRODUCT_LIST_CAP
+    assert [r["name"] for r in rows] == index_robot_names(mir)
+
+
+def test_catalog_lineup_is_not_capped_at_three():
+    reload_vendor_robots_index()
+    richtech = lookup_vendor_by_url("https://www.richtechrobotics.com/")
+    names = index_robot_names(richtech)
+    assert len(names) > FIND_PRODUCT_LIST_CAP
+    rows = listing_from_catalog(richtech)
+    assert [r["name"] for r in rows] == names
+    page = listing_from_catalog(richtech, limit=FIND_PRODUCT_LIST_CAP)
+    assert [r["name"] for r in page] == names[:FIND_PRODUCT_LIST_CAP]
 
 
 def test_listing_payload_matches_bare_reflex_host():
@@ -160,7 +176,7 @@ def test_listing_payload_matches_bare_reflex_host():
     names = [r["name"] for r in payload["robots"]]
     assert any("Gen2" in n or "Gen 2" in n for n in names)
     assert any("Humanoid" in n for n in names)
-    assert len(names) <= FIND_PRODUCT_LIST_CAP
+    assert names
     assert payload["robots"][0]["description"]  # specs folded into blurb when present
 
 

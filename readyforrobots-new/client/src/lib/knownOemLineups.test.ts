@@ -13,7 +13,6 @@ describe("knownOemLineups", () => {
     expect(names.some(n => /Gen2|Gen 2/i.test(n))).toBe(true);
     expect(names.some(n => /Humanoid/i.test(n))).toBe(true);
     expect(names.length).toBeGreaterThan(0);
-    expect(names.length).toBeLessThanOrEqual(3);
   });
 
   it("returns null for unknown hosts", () => {

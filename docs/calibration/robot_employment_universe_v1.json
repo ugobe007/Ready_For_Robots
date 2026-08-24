@@ -1,6 +1,6 @@
 {
   "dataset_id": "robot_employment_universe_v1",
-  "generated_at": "2026-08-24T22:48:45+00:00",
+  "generated_at": "2026-08-24T23:30:41+00:00",
   "source": "docs/calibration/robot_employment_taxonomy_v1.json",
   "purpose": "Supply-side labor market for ReadyForRobots. Companies whose robots can plausibly be placed into work — not a robotics-technology directory.",
   "north_star": "Robot candidates and the work they are qualified to do. Not a 500-company catalog.",
@@ -20,8 +20,9 @@
   "target_companies": 200,
   "company_count": 200,
   "core_company_count": 138,
-  "named_robot_count": 258,
+  "named_robot_count": 276,
   "companies_with_three_robots": 18,
+  "companies_with_more_than_three_robots": 8,
   "unresolved_core": [
     {
       "company_name": "CenoBots",
@@ -233,6 +234,7 @@
     "Core companies come from the employment taxonomy (placeable labor).",
     "Fill companies are existing seed OEMs that already have named robots.",
     "Robot names are copied from vendor indexes / primary_robots only.",
+    "A company may have any number of named robots. FIND surfaces three at a time.",
     "Empty robots[] means the OEM site names are not in our catalog yet — do not invent them.",
     "work_families are product-level search lenses from known SKUs, not category leakage.",
     "jobs_rfr_can_find is the FIND matcher output at query time, not a stored list."
@@ -467,13 +469,13 @@
     },
     {
       "company_name": "AgiBot",
-      "matched_seed_name": "AgiBot (Zhiyuan)",
+      "matched_seed_name": "AGIBOT",
       "taxonomy_name": "AgiBot",
       "website": "https://www.agibot.com",
       "country": "China",
       "vendor_role": "robot_oem",
-      "commercial_maturity": "pilot",
-      "us_availability": "yes",
+      "commercial_maturity": "unknown",
+      "us_availability": "unknown",
       "employment_categories": [
         "humanoids"
       ],
@@ -522,6 +524,26 @@
             "has_sdk": true
           },
           "product_url": "https://agibot.com",
+          "product_hint": null
+        },
+        {
+          "name": "G2 humanoid robot",
+          "robot_class": "humanoid",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.agibot.com",
+          "product_hint": null
+        },
+        {
+          "name": "X2",
+          "robot_class": "humanoid",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.agibot.com",
           "product_hint": null
         }
       ],
@@ -816,6 +838,16 @@
             "payload_kg": 100.0
           },
           "product_url": "https://www.bearrobotics.ai/carti",
+          "product_hint": null
+        },
+        {
+          "name": "Carti High Payload",
+          "robot_class": "amr",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.bearrobotics.ai/carti-high-payload",
           "product_hint": null
         }
       ],
@@ -1923,6 +1955,33 @@
           },
           "product_url": "https://www.fftai.com/products-gr2",
           "product_hint": null
+        },
+        {
+          "name": "Fourier GR-1",
+          "robot_class": "humanoid",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "explicit",
+          "specs": {
+            "height_cm": 165,
+            "weight_kg": 55,
+            "top_speed_mps": 1.39,
+            "peak_torque_nm": 230
+          },
+          "product_url": "https://www.fftai.com/products-gr1",
+          "product_hint": null
+        },
+        {
+          "name": "Fourier N1",
+          "robot_class": "humanoid",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "explicit",
+          "specs": {
+            "height_cm": 175
+          },
+          "product_url": "https://www.fftai.com",
+          "product_hint": null
         }
       ],
       "resolved": true
@@ -2578,6 +2637,18 @@
             "has_sdk": true,
             "charge_time_h": 1,
             "peak_torque_nm": 200
+          },
+          "product_url": "https://www.limxdynamics.com/en",
+          "product_hint": null
+        },
+        {
+          "name": "LimX TRON 2",
+          "robot_class": "humanoid",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "explicit",
+          "specs": {
+            "has_sdk": true
           },
           "product_url": "https://www.limxdynamics.com/en",
           "product_hint": null
@@ -3458,6 +3529,78 @@
           "specs": {},
           "product_url": "https://www.richtechrobotics.com/matradee-x",
           "product_hint": null
+        },
+        {
+          "name": "MATRADEE L",
+          "robot_class": "service_robot",
+          "work_families": [
+            "serve"
+          ],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.richtechrobotics.com/matradee-l",
+          "product_hint": null
+        },
+        {
+          "name": "LUCKI",
+          "robot_class": "service_robot",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.richtechrobotics.com/lucki",
+          "product_hint": null
+        },
+        {
+          "name": "MEDBOT",
+          "robot_class": "service_robot",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.richtechrobotics.com/medbot",
+          "product_hint": null
+        },
+        {
+          "name": "DUST-E MX",
+          "robot_class": "cleaning_robot",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.richtechrobotics.com/dust-e-mx",
+          "product_hint": null
+        },
+        {
+          "name": "AIDY",
+          "robot_class": "service_robot",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.richtechrobotics.com/aidy",
+          "product_hint": null
+        },
+        {
+          "name": "Scorpion",
+          "robot_class": "service_robot",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.richtechrobotics.com/scorpion",
+          "product_hint": null
+        },
+        {
+          "name": "Titan",
+          "robot_class": "service_robot",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.richtechrobotics.com/titan",
+          "product_hint": null
         }
       ],
       "resolved": true
@@ -4071,6 +4214,41 @@
           },
           "product_url": "https://www.ubtrobot.com/en/",
           "product_hint": null
+        },
+        {
+          "name": "U1 Lite",
+          "robot_class": "humanoid",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.ubtrobot.com",
+          "product_hint": null
+        },
+        {
+          "name": "U1 Ultra",
+          "robot_class": "humanoid",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.ubtrobot.com",
+          "product_hint": null
+        },
+        {
+          "name": "UBTECH Walker S",
+          "robot_class": "humanoid",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "explicit",
+          "specs": {
+            "payload_kg": 15.0,
+            "height_cm": 170,
+            "weight_kg": 70,
+            "total_dof": 41
+          },
+          "product_url": "https://www.ubtrobot.com/en/",
+          "product_hint": null
         }
       ],
       "resolved": true
@@ -4140,6 +4318,16 @@
           },
           "product_url": "https://www.unitree.com/h1",
           "product_hint": null
+        },
+        {
+          "name": "Unitree R1",
+          "robot_class": "humanoid",
+          "work_families": [],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.unitree.com",
+          "product_hint": null
         }
       ],
       "resolved": true
@@ -4188,6 +4376,16 @@
           "work_families": [
             "gripper"
           ],
+          "name_source": "vendor_index",
+          "capabilities_epistemic": "unknown",
+          "specs": {},
+          "product_url": "https://www.universal-robots.com",
+          "product_hint": null
+        },
+        {
+          "name": "Universal Robots UR20",
+          "robot_class": "cobot",
+          "work_families": [],
           "name_source": "vendor_index",
           "capabilities_epistemic": "unknown",
           "specs": {},

@@ -68,12 +68,14 @@ def test_dusty_fieldprinter_is_construction_layout():
     assert "construction" in row["employment_categories"]
 
 
-def test_robot_names_are_at_most_three_and_not_generic_agv():
+def test_robot_names_are_named_products_not_generic_agv():
     data = _load(UNIVERSE)
     families = set((_load(WORKFLOW).get("families") or {}).keys())
+    saw_more_than_three = False
     for company in data["companies"]:
         robots = company["robots"]
-        assert len(robots) <= 3
+        if len(robots) > 3:
+            saw_more_than_three = True
         for robot in robots:
             name = (robot.get("name") or "").strip()
             assert name
@@ -81,6 +83,7 @@ def test_robot_names_are_at_most_three_and_not_generic_agv():
             for fam in robot.get("work_families") or []:
                 assert fam in families
             assert robot["name_source"] in {"vendor_index", "vendor_seed"}
+    assert saw_more_than_three, "roster should keep full lineups (Richtech, UBTECH, …)"
 
 
 def test_empty_robots_are_core_catalog_gaps():

@@ -8,7 +8,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from app.services.jobs_oem_listing import (
-    FIND_PRODUCT_LIST_CAP,
+    FIND_LIVE_DISCOVERY_CAP,
     format_listing_blurb,
     listing_from_catalog,
     listing_from_page,
@@ -176,8 +176,9 @@ _ROBOTS_HREF = re.compile(
 )
 _ROOT_PRODUCT_HREF = re.compile(r"^/([a-z0-9][a-z0-9-]{1,40})$", re.I)
 _ROBOT_LINE_SLUGS = frozenset({"human", "dog", "panda"})
-# Jobs lists three robots at a time. Do not crawl a 24-SKU catalog.
-_MAX_DISCOVERED_PRODUCTS = FIND_PRODUCT_LIST_CAP
+# Jobs searches three robots at a time. Homepage parse may keep more names;
+# do not crawl each SKU page. Catalogs are uncapped.
+_MAX_DISCOVERED_PRODUCTS = FIND_LIVE_DISCOVERY_CAP
 _COMPACT_SKU = re.compile(r"^[A-Za-z]{1,3}\d{1,3}[A-Za-z]{0,3}$")
 _PROSE_NAME = re.compile(
     r"\b((?:[A-Z]{3,10})|(?:[A-Z][a-z]{2,14}(?:-[A-Z0-9][A-Za-z0-9]{0,10}){0,3}))\b"
@@ -495,10 +496,10 @@ def resolve_identity(
     products: list[RobotProduct] = []
     listing_by_key: dict[str, dict] = {}
     if catalog:
-        for row in listing_from_catalog(catalog, limit=FIND_PRODUCT_LIST_CAP):
+        for row in listing_from_catalog(catalog):
             listing_by_key[_name_key(row["name"])] = row
     else:
-        for row in listing_from_page(product_names, home.text or "", limit=FIND_PRODUCT_LIST_CAP):
+        for row in listing_from_page(product_names, home.text or ""):
             listing_by_key[_name_key(row["name"])] = row
     for pname in product_names:
         row = listing_by_key.get(_name_key(pname)) or {}
@@ -659,7 +660,7 @@ def _merge_catalog_names(catalog_names: list[str], discovered: list[str]) -> lis
         out.append(name)
 
     if catalog_names:
-        for name in catalog_names[:FIND_PRODUCT_LIST_CAP]:
+        for name in catalog_names:
             _add(name)
         return out
     for name in discovered:

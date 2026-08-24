@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Compile robot_vendor_seed_v1.json → vendor_robots_jobs_seed.json.
 
-Additional OEM companies for FIND: website → top 3 robots (names, then
+Additional OEM companies for FIND: website → named robots (names, then
 description, then specs if the seed has them). Does not crawl product pages.
-Skips vendors already in the humanoid/commercial index so richer SKUs win.
+FIND still searches three robots at a time. Skips vendors already in the
+humanoid/commercial index so richer SKUs win.
 """
 from __future__ import annotations
 
@@ -16,7 +17,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from app.services.jobs_oem_listing import (  # noqa: E402
-    FIND_PRODUCT_LIST_CAP,
     host_from_website,
     slugify,
     split_primary_robots,
@@ -133,7 +133,7 @@ def compile_jobs_seed() -> dict:
         primary = CATEGORY_CLASS.get(row.get("robot_category") or "", "service_robot")
         country = (row.get("country") or "").strip() or None
         robots = []
-        for name in names[:FIND_PRODUCT_LIST_CAP]:
+        for name in names:
             desc = _description(row, name)
             robots.append(
                 {
@@ -177,7 +177,8 @@ def compile_jobs_seed() -> dict:
         "source": "docs/calibration/robot_vendor_seed_v1.json",
         "list_category": "jobs_seed",
         "notes": [
-            "FIND listing seed: robot company URL → top 3 product names.",
+            "FIND listing seed: robot company URL → named products (uncapped roster).",
+            "FIND surfaces three robots at a time; this file is not truncated to 3.",
             "Names come from primary_robots; description from work_type/industries.",
             "Specs are omitted unless a later pass has numbers — do not invent them.",
             "Vendors already in the humanoid or commercial index are skipped.",

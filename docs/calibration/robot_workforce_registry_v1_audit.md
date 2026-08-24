@@ -30,7 +30,7 @@ Readiness scores cluster at 4–5 (97 + 75). All 200 `Source Type` values are �
 
 ## Shape vs catalog rule
 
-FIND and the compiled universe cap at **three named robots per OEM**, copied from catalog. This workbook is **one row per company**:
+FIND and the compiled universe keep **every named robot** we already have in catalog. FIND **surfaces three at a time**. This workbook is **one row per company**:
 
 - Pudu dumps six products in one cell (`CC1 / MT1 / SH1 / BellaBot / FlashBot / HolaBot`).
 - Boston Dynamics is `Atlas / Spot` on the Atlas URL, marked Research / not yet. **Stretch is absent** — the warehouse robot we can actually place.
@@ -88,7 +88,7 @@ Dusty’s category peers that the workbook dropped, plus named-product fill: MiR
 
 1. Leave compiled `robots[]` as catalog-only.
 2. Use overlay company names as a **research queue**, not a FIND index.
-3. Verify the 35 empty-catalog claims on the `source_url`. Accept at most three **page-visible** names.
+3. Verify the 35 empty-catalog claims on the `source_url`. Accept every **page-visible** named robot (FIND still shows three at a time).
 4. Split multi-product cells (Pudu, KEENON, Boston Dynamics Stretch vs Spot vs Atlas) into one row per robot.
 5. Re-score Available for Work from deployment evidence, not from “Commercial / Scale” marketing language.
 6. Decide roster swaps (Nomagic, Aethon, Skydio, Hilti, …) against the placeable-labor bar — not against a 200-name quota.

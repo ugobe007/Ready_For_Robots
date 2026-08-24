@@ -2,10 +2,11 @@
 """Compile the robot employment universe (placeable labor, not a tech directory).
 
 Reads the hand-authored taxonomy (employment categories + company names),
-resolves websites and up to 3 product names from existing catalogs, then
-fills toward 200 OEMs that already have named robots in the vendor seed.
+resolves websites and named robots from existing catalogs, then fills toward
+200 OEMs that already have named robots in the vendor seed.
 
 Never invents SKUs or specs. Category is a search lens, not a match key.
+FIND still surfaces three robots at a time; this roster is not capped at 3.
 
 Does not read robot_workforce_registry_overlay_v1.json. That file is a
 researcher overlay (ChatGPT workbook). Treat claimed product names as
@@ -24,7 +25,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from app.services.jobs_oem_listing import (  # noqa: E402
-    FIND_PRODUCT_LIST_CAP,
     split_primary_robots,
 )
 from app.services.vendor_robot_lookup import (  # noqa: E402
@@ -347,9 +347,7 @@ def _robots_from_catalog(website: str, hint: str | None) -> list[dict[str, Any]]
         if any(_norm(name) == _norm(r["name"]) for r in names):
             continue
         names.append(_robot_row(robot, source="vendor_index", hint=None))
-        if len(names) >= FIND_PRODUCT_LIST_CAP:
-            break
-    return names[:FIND_PRODUCT_LIST_CAP]
+    return names
 
 
 def _robots_from_seed(vendor: dict[str, Any], hint: str | None) -> list[dict[str, Any]]:
@@ -361,7 +359,7 @@ def _robots_from_seed(vendor: dict[str, Any], hint: str | None) -> list[dict[str
         names = hinted + rest
     class_value = SEED_CATEGORY_TO_EMPLOYMENT.get(vendor.get("robot_category") or "", "")
     out: list[dict[str, Any]] = []
-    for name in names[:FIND_PRODUCT_LIST_CAP]:
+    for name in names:
         out.append(
             {
                 "name": name,
@@ -488,7 +486,7 @@ def compile_universe() -> dict[str, Any]:
             # Prefer hinted SKU first.
             hinted = [r for r in row["robots"] if hint.lower() in r["name"].lower()]
             rest = [r for r in row["robots"] if r not in hinted]
-            row["robots"] = (hinted + rest)[:FIND_PRODUCT_LIST_CAP]
+            row["robots"] = hinted + rest
 
     # Fill toward 200 from seed OEMs that already have named robots.
     taken_hosts = {
@@ -563,6 +561,7 @@ def compile_universe() -> dict[str, Any]:
     )
     named_robot_count = sum(len(c["robots"]) for c in ordered)
     with_three = sum(1 for c in ordered if len(c["robots"]) >= 3)
+    with_more = sum(1 for c in ordered if len(c["robots"]) > 3)
     core = sum(1 for c in ordered if c["priority"] == "core")
 
     return {
@@ -578,11 +577,13 @@ def compile_universe() -> dict[str, Any]:
         "core_company_count": core,
         "named_robot_count": named_robot_count,
         "companies_with_three_robots": with_three,
+        "companies_with_more_than_three_robots": with_more,
         "unresolved_core": unresolved,
         "notes": [
             "Core companies come from the employment taxonomy (placeable labor).",
             "Fill companies are existing seed OEMs that already have named robots.",
             "Robot names are copied from vendor indexes / primary_robots only.",
+            "A company may have any number of named robots. FIND surfaces three at a time.",
             "Empty robots[] means the OEM site names are not in our catalog yet — do not invent them.",
             "work_families are product-level search lenses from known SKUs, not category leakage.",
             "jobs_rfr_can_find is the FIND matcher output at query time, not a stored list.",
@@ -602,7 +603,8 @@ def main() -> None:
         f"wrote {OUT.relative_to(ROOT)} companies={data['company_count']} "
         f"core={data['core_company_count']} robots={data['named_robot_count']} "
         f"unresolved={len(data['unresolved_core'])} "
-        f"with_3={data['companies_with_three_robots']}"
+        f"with_3={data['companies_with_three_robots']} "
+        f"with_gt3={data['companies_with_more_than_three_robots']}"
     )
 
 

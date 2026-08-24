@@ -11,7 +11,6 @@ export type KnownOemListing = {
   robots: KnownOemRobot[];
 };
 
-const LINEUP_CAP = 3;
 const BY_HOST = data as Record<string, KnownOemListing>;
 
 /** Compound public suffixes used by OEM sites. Keep in sync with app/services/robot_url_safety.py. */
@@ -84,11 +83,11 @@ function listingFromHost(host: string): KnownOemListing | null {
   if (!hit?.robots?.length) return null;
   return {
     vendor_name: hit.vendor_name || null,
-    robots: hit.robots.slice(0, LINEUP_CAP),
+    robots: hit.robots,
   };
 }
 
-/** Instant FIND listing for indexed manufacturers — no network. */
+/** Instant FIND listing for indexed manufacturers — no network. Full named lineup. */
 export function lookupKnownOem(url: string): KnownOemListing | null {
   const host = hostFromOemUrl(url);
   if (!host) return null;

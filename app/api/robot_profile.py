@@ -39,7 +39,7 @@ class RobotProfileIn(BaseModel):
 
 @router.get("/oem-listing")
 def get_oem_listing(url: str = Query(..., min_length=3, max_length=2000)) -> dict[str, Any]:
-    """Indexed OEM URL → top 3 named robots. No DNS, no live fetch, no Redis."""
+    """Indexed OEM URL → named robots (full lineup). No DNS, no live fetch, no Redis."""
     from app.services.jobs_oem_listing import listing_payload_for_url
 
     return listing_payload_for_url(url)

@@ -95,6 +95,7 @@ import {
   readNavigationType,
   shouldRestoreJobsWorkspace,
   filterJobsLineupProducts,
+  pageJobsLineup,
   JOBS_PRODUCT_CAP_FREE,
   JOBS_PRODUCT_CAP_PAID,
   JOBS_LINEUP_DISPLAY_CAP,
@@ -850,7 +851,6 @@ export default function RobotJobsWorkspace() {
             displayClass: p.display_class,
             description: p.description,
           })),
-          JOBS_LINEUP_DISPLAY_CAP,
         );
         if (lineup.length > 1) {
           setProducts(lineup);
@@ -892,7 +892,6 @@ export default function RobotJobsWorkspace() {
               displayClass: p.display_class,
               description: p.description,
             })),
-            JOBS_LINEUP_DISPLAY_CAP,
           );
           if (lineup.length > 1) {
             setProducts(lineup);
@@ -935,7 +934,6 @@ export default function RobotJobsWorkspace() {
           displayClass: p.display_class,
           description: p.description,
         })),
-        JOBS_LINEUP_DISPLAY_CAP,
       );
       if ((profile.needs_product_choice || lineup.length > 1) && lineup.length > 1) {
         setProducts(lineup);
@@ -2175,14 +2173,21 @@ function SelectPanel({
   onToggle: (name: string) => void;
   onConfirm: (which: string[] | "all") => void;
 }) {
+  const [lineupPage, setLineupPage] = useState(0);
   const segments = lineupSegments(products);
   const grouped = usesLineupSegments(products, productCap);
+  const pageSize = JOBS_LINEUP_DISPLAY_CAP;
+  const pageCount = Math.max(1, Math.ceil(products.length / pageSize));
+  const safePage = Math.min(lineupPage, pageCount - 1);
+  const visible = pageJobsLineup(products, safePage, pageSize);
   const defaultNames = products.slice(0, productCap).map(p => p.name);
   const startNames = selected.length > 0 ? selected.slice(0, productCap) : defaultNames;
   const paidHint =
     productCap <= JOBS_PRODUCT_CAP_FREE
       ? `Each pass searches up to ${productCap} robots. Pro searches ${JOBS_PRODUCT_CAP_PAID}.`
       : `Each pass searches up to ${productCap} robots.`;
+  const from = safePage * pageSize + 1;
+  const to = Math.min(products.length, (safePage + 1) * pageSize);
 
   return (
     <div className="p-6 sm:p-8">
@@ -2195,7 +2200,7 @@ function SelectPanel({
       <p className="mt-2 text-sm text-slate-400">
         {grouped
           ? `Run one family — one job search for that class, not a crawl of every SKU. ${company || "This maker"} has ${products.length}. ${paidHint}`
-          : `Pick up to ${productCap} robots. ${company || "This maker"} — names first, then a short description if we have one.`}
+          : `Pick up to ${productCap} robots this pass. ${company || "This maker"} has ${products.length} named robot${products.length === 1 ? "" : "s"} — names first, then a short description if we have one.`}
       </p>
 
       {grouped ? (
@@ -2241,7 +2246,7 @@ function SelectPanel({
       ) : null}
 
       <div className={`${grouped ? "mt-3" : "mt-6"} grid gap-2 sm:grid-cols-2`}>
-        {products.map(p => {
+        {visible.map(p => {
           const on = selected.includes(p.name);
           const blocked = !on && selected.length >= productCap;
           return (
@@ -2282,6 +2287,31 @@ function SelectPanel({
           );
         })}
       </div>
+      {pageCount > 1 ? (
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-slate-500">
+            Showing {from}–{to} of {products.length}
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              disabled={safePage <= 0}
+              onClick={() => setLineupPage(p => Math.max(0, p - 1))}
+              className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 transition hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Previous 3
+            </button>
+            <button
+              type="button"
+              disabled={safePage >= pageCount - 1}
+              onClick={() => setLineupPage(p => Math.min(pageCount - 1, p + 1))}
+              className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-300 transition hover:text-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Next 3 →
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-6">
         <button

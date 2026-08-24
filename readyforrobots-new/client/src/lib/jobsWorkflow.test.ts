@@ -40,6 +40,7 @@ import {
   exampleJobCap,
   exampleJobsForLineup,
   filterJobsLineupProducts,
+  pageJobsLineup,
   isJobsHandoffSrc,
   isJobsChromePath,
   isJobsAutomateSrc,
@@ -950,33 +951,41 @@ describe("jobsWorkflow", () => {
     expect(isSalesPlaceholder("Move pallets from receiving to reserve overnight")).toBe(false);
   });
 
-  it("filters OEM hub noise and caps product searches 3 free / 5 paid", () => {
+  it("filters OEM hub noise; search is 3 free / 5 paid; lineup is not capped at 3", () => {
     expect(jobsProductLimitForPlan(null)).toBe(JOBS_PRODUCT_CAP_FREE);
     expect(jobsProductLimitForPlan("anonymous")).toBe(3);
     expect(jobsProductLimitForPlan("free")).toBe(3);
     expect(jobsProductLimitForPlan("paid")).toBe(JOBS_PRODUCT_CAP_PAID);
     expect(JOBS_LINEUP_DISPLAY_CAP).toBe(3);
-    const omron = filterJobsLineupProducts(
-      [
-        { name: "Products overview" },
-        { name: "AMRs" },
-        { name: "Industries" },
-        { name: "About Us" },
-        { name: "Collaborative" },
-        { name: "Discontinued Products" },
-        { name: "Activate your AMR License" },
-        { name: "Deutsch" },
-        { name: "Español" },
-        { name: "Français" },
-        { name: "LD-250" },
-        { name: "HD-1500" },
-        { name: "MD-650" },
-        { name: "LD-90" },
-      ],
-      JOBS_PRODUCT_CAP_FREE,
-    );
-    expect(omron.map(p => p.name)).toEqual(["LD-250", "HD-1500", "MD-650"]);
-    const paid = filterJobsLineupProducts(
+    const omron = filterJobsLineupProducts([
+      { name: "Products overview" },
+      { name: "AMRs" },
+      { name: "Industries" },
+      { name: "About Us" },
+      { name: "Collaborative" },
+      { name: "Discontinued Products" },
+      { name: "Activate your AMR License" },
+      { name: "Deutsch" },
+      { name: "Español" },
+      { name: "Français" },
+      { name: "LD-250" },
+      { name: "HD-1500" },
+      { name: "MD-650" },
+      { name: "LD-90" },
+    ]);
+    expect(omron.map(p => p.name)).toEqual([
+      "LD-250",
+      "HD-1500",
+      "MD-650",
+      "LD-90",
+    ]);
+    expect(pageJobsLineup(omron, 0).map(p => p.name)).toEqual([
+      "LD-250",
+      "HD-1500",
+      "MD-650",
+    ]);
+    expect(pageJobsLineup(omron, 1).map(p => p.name)).toEqual(["LD-90"]);
+    const paidSearch = filterJobsLineupProducts(
       [
         { name: "LD-250" },
         { name: "HD-1500" },
@@ -987,7 +996,7 @@ describe("jobsWorkflow", () => {
       ],
       JOBS_PRODUCT_CAP_PAID,
     );
-    expect(paid.map(p => p.name)).toEqual([
+    expect(paidSearch.map(p => p.name)).toEqual([
       "LD-250",
       "HD-1500",
       "MD-650",
@@ -999,6 +1008,8 @@ describe("jobsWorkflow", () => {
       "utf8",
     );
     expect(workspace).toMatch(/filterJobsLineupProducts/);
+    expect(workspace).toMatch(/pageJobsLineup/);
+    expect(workspace).toMatch(/Next 3/);
     expect(workspace).toMatch(/ROBOT_PROFILE_TIMEOUT_MS/);
     expect(workspace).toMatch(/lookupKnownOem/);
     expect(workspace).toMatch(/fetchOemListing/);

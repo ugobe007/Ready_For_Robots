@@ -21,7 +21,7 @@ Company → Robot → Robot class → Work families
 | Layer | What we store now | What we do not invent |
 |-------|-------------------|------------------------|
 | Company | Taxonomy name + website | — |
-| Robot | Up to 3 names from existing catalogs | SKUs not in the catalog |
+| Robot | All named products we already have in catalog | SKUs not in the catalog |
 | Robot class | Descriptor from the catalog | Job selector |
 | Work families | Only for known products (Stretch → trailer unload, FieldPrinter → construction, …) | Category-wide capability claims |
 | Capabilities / specs | Copied if the catalog already has numbers | Payload, runtime, “can harvest” |
@@ -36,7 +36,7 @@ Humanoids are not equal. Figure / Agility / Apptronik / 1X sit in the same emplo
 |------|------|
 | [`calibration/robot_employment_taxonomy_v1.json`](./calibration/robot_employment_taxonomy_v1.json) | 19 employment categories + core company names (hand-authored) |
 | [`calibration/robot_employment_universe_v1.json`](./calibration/robot_employment_universe_v1.json) | Compiled roster (~200 companies) |
-| [`../scripts/compile_employment_universe.py`](../scripts/compile_employment_universe.py) | Resolve websites + ≤3 catalog names, fill from named-product seed OEMs |
+| [`../scripts/compile_employment_universe.py`](../scripts/compile_employment_universe.py) | Resolve websites + catalog names (full lineup), fill from named-product seed OEMs |
 | [`calibration/readyforrobots_robot_workforce_registry_v1.xlsx`](./calibration/readyforrobots_robot_workforce_registry_v1.xlsx) | Researcher workbook (ChatGPT). One row per company. **Not catalog.** |
 | [`calibration/robot_workforce_registry_overlay_v1.json`](./calibration/robot_workforce_registry_overlay_v1.json) | Same workbook as JSON. Every product name is `researcher_claim`. |
 | [`calibration/robot_workforce_registry_v1_audit.md`](./calibration/robot_workforce_registry_v1_audit.md) | Why 172 “available now” is not placement-ready |
@@ -45,9 +45,10 @@ Rebuild:
 
 ```bash
 python3 scripts/compile_employment_universe.py
+python3 scripts/compile_known_oem_lineups.py
 ```
 
-Core companies with `robots: []` still belong in the universe. They are placeable-labor OEMs whose **product names are not in our catalog yet**. Fill those names from the OEM site (max 3, never generic “AGV/AMR”), then recompile. Do not paste the roster into ChatGPT and ask it to invent models.
+Core companies with `robots: []` still belong in the universe. They are placeable-labor OEMs whose **product names are not in our catalog yet**. Fill those names from the OEM site (never generic “AGV/AMR”), then recompile. FIND still **surfaces three robots at a time**; do not truncate the company roster to 3. Do not paste the roster into ChatGPT and ask it to invent models.
 
 The workforce-registry workbook is useful as a **candidate list** (new OEMs, likely SKUs, work-family language). It is one product cell per company, rubber-stamps every row as an official source, and marks 172 of 200 “available for work now.” Do not replace the compiled universe with it. Verify names on the OEM page before they enter `robots[]` or FIND.
 

@@ -285,7 +285,7 @@ export const CRM_UNLOCKED_JOBS = 3;
 /** Free / anonymous: search this many SKUs per FIND. Paid unlocks five. */
 export const JOBS_PRODUCT_CAP_FREE = 3;
 export const JOBS_PRODUCT_CAP_PAID = 5;
-/** FIND lists 3 robots per OEM URL. Search is still 3 free / 5 paid per pass. */
+/** FIND shows this many robots per picker page. Not a company roster cap. */
 export const JOBS_LINEUP_DISPLAY_CAP = 3;
 export const OEM_LISTING_TIMEOUT_MS = 5_000;
 export const ROBOT_PROFILE_TIMEOUT_MS = 22_000;
@@ -347,7 +347,7 @@ export function isJobsLineupNoiseName(name: string): boolean {
 
 export function filterJobsLineupProducts<T extends { name: string }>(
   products: T[],
-  limit = JOBS_PRODUCT_CAP_FREE,
+  limit?: number,
 ): T[] {
   const seen = new Set<string>();
   const out: T[] = [];
@@ -358,9 +358,20 @@ export function filterJobsLineupProducts<T extends { name: string }>(
     if (!key || seen.has(key)) continue;
     seen.add(key);
     out.push(row);
-    if (out.length >= limit) break;
+    if (limit != null && out.length >= limit) break;
   }
   return out;
+}
+
+/** One picker page. Search still uses JOBS_PRODUCT_CAP_FREE / PAID. */
+export function pageJobsLineup<T>(
+  products: T[],
+  page = 0,
+  pageSize = JOBS_LINEUP_DISPLAY_CAP,
+): T[] {
+  const size = Math.max(1, pageSize);
+  const start = Math.max(0, page) * size;
+  return products.slice(start, start + size);
 }
 
 export function landingStageAfterConfirm(robotCount: number): JobsConfirmLanding {

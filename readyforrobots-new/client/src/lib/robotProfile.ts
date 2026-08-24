@@ -92,7 +92,7 @@ export type OemListingResult = {
   robots: OemListingRobot[];
 };
 
-/** Indexed OEM homepage → top 3 names. Skips live manufacturer fetch. */
+/** Indexed OEM homepage → named robots. Skips live manufacturer fetch. */
 export async function fetchOemListing(opts: {
   url: string;
   signal?: AbortSignal;
