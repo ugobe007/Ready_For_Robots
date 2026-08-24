@@ -55,6 +55,7 @@ class RobotProduct:
     name: str
     generation: Optional[str] = None
     display_class: Optional[str] = None  # descriptive only
+    description: Optional[str] = None  # name first; blurb/specs only if present
 
     @staticmethod
     def create(
@@ -63,6 +64,7 @@ class RobotProduct:
         *,
         generation: str | None = None,
         display_class: str | None = None,
+        description: str | None = None,
     ) -> "RobotProduct":
         return RobotProduct(
             id=_new_id("prod"),
@@ -70,6 +72,7 @@ class RobotProduct:
             name=name,
             generation=generation,
             display_class=display_class,
+            description=(description or "").strip() or None,
         )
 
 

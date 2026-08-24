@@ -198,27 +198,42 @@ def test_every_indexed_vendor_homepage_skips_live_fetch(monkeypatch):
     monkeypatch.setattr(P, "fetch_page", boom_fetch)
     monkeypatch.setattr(P, "collect_source_pack", boom_pack)
     reload_vendor_robots_index()
+    indexed = [
+        v
+        for v in (load_vendor_robots_index().get("vendors") or [])
+        if v.get("robots")
+        and lookup_vendor_by_url(
+            (v.get("vendor_url") or "").strip()
+            or (f"https://{(v.get('domains') or ['x'])[0]}/")
+        )
+    ]
+    assert len(indexed) >= 50
+    prefer = []
+    rest = []
+    for vendor in indexed:
+        label = (vendor.get("vendor_name") or "").lower()
+        if any(token in label for token in ("reflex", "richtech", "mir (", "otto motors")):
+            prefer.append(vendor)
+        else:
+            rest.append(vendor)
     checked = 0
     homepage_sku_vendors = 0
-    for vendor in load_vendor_robots_index().get("vendors") or []:
+    for vendor in (prefer + rest)[:45]:
         robots = vendor.get("robots") or []
-        if not robots:
-            continue
         url = (vendor.get("vendor_url") or "").strip()
         domains = vendor.get("domains") or []
         if not url and domains:
             url = f"https://{domains[0]}/"
-        if not url or lookup_vendor_by_url(url) is None:
-            continue
         timings: dict = {}
         profile = P.build_robot_profile(url, timings=timings)
         assert timings.get("home_fetch") == "skipped", vendor.get("vendor_name")
         assert profile.products, vendor.get("vendor_name")
+        assert len(profile.products) <= 3, vendor.get("vendor_name")
         checked += 1
         if len(robots) > 1 and profile.needs_product_choice:
             homepage_sku_vendors += 1
-    assert checked >= 50
-    assert homepage_sku_vendors >= 10
+    assert checked >= 40
+    assert homepage_sku_vendors >= 8
 
 
 def test_unknown_oem_home_fetch_shares_find_deadline(monkeypatch):

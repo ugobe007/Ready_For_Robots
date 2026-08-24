@@ -285,8 +285,8 @@ export const CRM_UNLOCKED_JOBS = 3;
 /** Free / anonymous: search this many SKUs per FIND. Paid unlocks five. */
 export const JOBS_PRODUCT_CAP_FREE = 3;
 export const JOBS_PRODUCT_CAP_PAID = 5;
-/** How many real SKUs the picker may list. Search is still 3/5 per family. */
-export const JOBS_LINEUP_DISPLAY_CAP = 24;
+/** FIND lists 3 robots per OEM URL. Search is still 3 free / 5 paid per pass. */
+export const JOBS_LINEUP_DISPLAY_CAP = 3;
 export const ROBOT_PROFILE_TIMEOUT_MS = 22_000;
 export const ROBOT_JOB_SEARCH_TIMEOUT_MS = 30_000;
 

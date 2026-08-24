@@ -15,6 +15,7 @@ import {
   JOBS_PROCESS_STEPS,
   JOBS_PRODUCT_CAP_FREE,
   JOBS_PRODUCT_CAP_PAID,
+  JOBS_LINEUP_DISPLAY_CAP,
   JOBS_SCAN_STEPS,
   JOBS_SEE_JOBS_CTA,
   JOBS_EYEBROW_CLASS,
@@ -954,6 +955,7 @@ describe("jobsWorkflow", () => {
     expect(jobsProductLimitForPlan("anonymous")).toBe(3);
     expect(jobsProductLimitForPlan("free")).toBe(3);
     expect(jobsProductLimitForPlan("paid")).toBe(JOBS_PRODUCT_CAP_PAID);
+    expect(JOBS_LINEUP_DISPLAY_CAP).toBe(3);
     const omron = filterJobsLineupProducts(
       [
         { name: "Products overview" },

@@ -136,7 +136,11 @@ type ZeroReason =
   | "no_compatible_jobs"
   | "corpus_gap";
 
-type ProductChoice = { name: string; displayClass?: string | null };
+type ProductChoice = {
+  name: string;
+  displayClass?: string | null;
+  description?: string | null;
+};
 type RestoreView = "review" | "jobs" | "portfolio";
 
 const MARKET_FOUND_BASE = 140;
@@ -846,6 +850,7 @@ export default function RobotJobsWorkspace() {
         (profile.products || []).map(p => ({
           name: p.name,
           displayClass: p.display_class,
+          description: p.description,
         })),
         JOBS_LINEUP_DISPLAY_CAP,
       );
@@ -2107,7 +2112,7 @@ function SelectPanel({
       <p className="mt-2 text-sm text-slate-400">
         {grouped
           ? `Run one family — one job search for that class, not a crawl of every SKU. ${company || "This maker"} has ${products.length}. ${paidHint}`
-          : `Pick one robot for five jobs you can save. Pick several and we show one sample job per robot — run each SKU by itself to get a full list. ${company || "This maker"} has ${products.length}. ${paidHint}`}
+          : `Pick up to ${productCap} robots. ${company || "This maker"} — names first, then a short description if we have one.`}
       </p>
 
       {grouped ? (
@@ -2177,6 +2182,11 @@ function SelectPanel({
                 {p.displayClass ? (
                   <span className="mt-0.5 block font-mono text-sm uppercase tracking-[0.08em] text-slate-400">
                     {p.displayClass.replace(/_/g, " ")}
+                  </span>
+                ) : null}
+                {p.description ? (
+                  <span className="mt-1 block text-xs leading-snug text-slate-500">
+                    {p.description}
                   </span>
                 ) : null}
               </span>
