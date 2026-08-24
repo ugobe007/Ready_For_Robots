@@ -1,21 +1,24 @@
-# Outcome — Indexed OEM homepages skip live fetch
+# Outcome — Indexed OEM homepages skip live fetch (systemic)
 
 **Date:** 2026-08-24
-**Status:** code complete, tests green; production Fly not deployed from this branch
+**Status:** code complete; production Fly still on previous revision until merge/deploy
 
-## Diff
+## Is this Reflex-only?
 
-- `app/services/robot_understanding_v1/pipeline.py` — if the vendor index has robots for the host, stub the homepage and skip `fetch_page`.
-- `tests/test_catalog_first_lookup.py` — Reflex picker without live fetch; indexed SKUs boom if fetch is called.
-- `tests/test_richtech_vendor_lookup.py` — same contract for Richtech.
-- FIND timeout copy: homepage of a known OEM is valid.
+No. The vendor index has **21 multi-SKU OEMs** whose every `product_url` is the homepage (Figure, UBTECH, EngineAI, Sanctuary, Reflex, …) and **45 homepage-only vendors**. Cloudflare/WAF delays are normal on robot OEM sites. FIND must not wait on those hosts when the catalog already has SKUs.
+
+## Fix
+
+- Indexed vendor URLs (homepage or SKU) skip `fetch_page` for **every** catalog OEM, not only Reflex.
+- Unknown OEMs may still crawl, but homepage fetch and source pack share one wall-clock budget (default 12s) so FIND's 22s client abort cannot fire from additive timeouts.
+- Timeout copy no longer tells the user they pasted the wrong kind of URL.
 
 ## Metrics
 
-- `build_robot_profile("https://www.reflexrobotics.com/")` → 5ms, `home_fetch=skipped`, picker: Reflex Gen2, Reflex Humanoid.
-- pytest: 19 passed (`test_catalog_first_lookup`, `test_richtech_vendor_lookup`, `test_vendor_robot_lookup`).
-- vitest: `jobsWorkflow.test.ts` 28 passed.
+- `build_robot_profile` on indexed homepages: `home_fetch=skipped` (50+ vendors in test).
+- Reflex: picker in ~5ms (Gen2 + Humanoid).
+- pytest: catalog-first + vendor lookup suite green.
 
 ## Follow-ups
 
-Deploy `ready-2-robot` after merge so production FIND stops waiting on reflexrobotics.com.
+Deploy `ready-2-robot` after merge. Index misses (OEM not in the catalog) still crawl live under the 12s budget.

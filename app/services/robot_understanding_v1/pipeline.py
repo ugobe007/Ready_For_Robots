@@ -16,7 +16,12 @@ from app.services.robot_understanding_v1.facts import (
     filter_facts_to_subject,
     mark_contradictions,
 )
-from app.services.robot_understanding_v1.fetch import FetchedPage, fetch_page
+from app.services.robot_understanding_v1.fetch import (
+    DEFAULT_PAGE_TIMEOUT,
+    FetchedPage,
+    fetch_page,
+    timeout_for_deadline,
+)
 from app.services.robot_understanding_v1.models import (
     ProfileTier,
     RobotFact,
@@ -63,7 +68,13 @@ def _catalog_identity_page(url: str) -> FetchedPage:
 
 
 def _source_budget_sec() -> float | None:
-    """Optional fetch deadline. 0/empty = no cap (do not starve source quality)."""
+    """Wall-clock budget for unknown-OEM live fetch + source pack.
+
+    FIND's client abort is 22s. Indexed vendors skip live I/O entirely.
+    For unknown hosts this budget covers homepage fetch AND pack fan-out
+    together so a slow Cloudflare/WAF page cannot spend 8s then start a
+    fresh 12s crawl. 0/empty = no cap.
+    """
     raw = (os.getenv("ROBOT_PROFILE_SOURCE_BUDGET_MS") or "12000").strip()
     try:
         ms = int(raw)
@@ -98,15 +109,37 @@ def build_robot_profile(
     safe = assert_public_http_url(url)
     catalog = lookup_vendor_by_url(safe)
     catalog_skus = bool(catalog and (catalog.get("robots") or []))
-    # Indexed OEM homepages (and SKU URLs) skip live fetch. Unknown hosts still
-    # load the submitted page; never Wayback it (archive copies of challenged
-    # hosts are how FIND used to sit on a spinner for ~90s).
+    live_budget = _source_budget_sec()
+    live_deadline = (time.monotonic() + live_budget) if live_budget is not None else None
+    # Indexed OEM homepages (and SKU URLs) skip live fetch — Reflex-class
+    # sites where every SKU URL is the homepage are normal, not an error.
+    # Unknown hosts still load the submitted page under live_deadline; never
+    # Wayback it (archive copies of challenged hosts sat FIND on a ~90s spinner).
     if catalog_skus:
         home = _catalog_identity_page(safe)
         if timings is not None:
             timings["home_fetch"] = "skipped"
     else:
-        home = fetch_page(safe, allow_archive=False)
+        home_timeout = timeout_for_deadline(
+            live_deadline, default=DEFAULT_PAGE_TIMEOUT
+        )
+        if home_timeout is None:
+            home = FetchedPage(
+                url=safe,
+                final_url=safe,
+                status_code=0,
+                title=None,
+                text="",
+                html="",
+                links=[],
+                fetch_degraded=True,
+                fetch_notes=["Live manufacturer fetch skipped — FIND deadline exhausted."],
+                content_type="text/html",
+            )
+        else:
+            home = fetch_page(
+                safe, timeout=home_timeout, allow_archive=False
+            )
         if timings is not None:
             timings["home_fetch"] = "live"
     resolved = resolve_identity(safe, home, product_hint=product_name)
@@ -168,7 +201,6 @@ def build_robot_profile(
 
     subject = selected.name if selected else resolved.company.name
     t_profile = time.perf_counter()
-    budget = _source_budget_sec()
     t_sources = time.perf_counter()
     home_blocked = bool(
         getattr(home, "fetch_degraded", False) and not (home.text or "").strip()
@@ -197,7 +229,7 @@ def build_robot_profile(
             home,
             product_name=selected.name if selected else product_name,
             max_sources=max_sources,
-            deadline_monotonic=(time.monotonic() + budget) if budget is not None else None,
+            deadline_monotonic=live_deadline,
             allow_archive=False,
         )
         if timings is not None:
