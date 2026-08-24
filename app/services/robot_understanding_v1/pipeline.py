@@ -16,7 +16,12 @@ from app.services.robot_understanding_v1.facts import (
     filter_facts_to_subject,
     mark_contradictions,
 )
-from app.services.robot_understanding_v1.fetch import fetch_page
+from app.services.robot_understanding_v1.fetch import (
+    DEFAULT_PAGE_TIMEOUT,
+    FetchedPage,
+    fetch_page,
+    timeout_for_deadline,
+)
 from app.services.robot_understanding_v1.models import (
     ProfileTier,
     RobotFact,
@@ -39,8 +44,37 @@ from app.services.vendor_robot_lookup import (
 )
 
 
+def _catalog_identity_page(url: str) -> FetchedPage:
+    """Placeholder page so indexed vendors never wait on a live OEM host.
+
+    FIND's client budget is 22s. A hung manufacturer homepage used to abort
+    with "paste a product URL" even when the vendor index already had SKUs.
+    Identity and specs come from that index; this stub is not evidence.
+    """
+    return FetchedPage(
+        url=url,
+        final_url=url,
+        status_code=0,
+        title=None,
+        text="",
+        html="",
+        links=[],
+        fetch_degraded=False,
+        fetch_notes=[
+            "Skipped live manufacturer fetch — vendor is in the robot index."
+        ],
+        content_type="text/html",
+    )
+
+
 def _source_budget_sec() -> float | None:
-    """Optional fetch deadline. 0/empty = no cap (do not starve source quality)."""
+    """Wall-clock budget for unknown-OEM live fetch + source pack.
+
+    FIND's client abort is 22s. Indexed vendors skip live I/O entirely.
+    For unknown hosts this budget covers homepage fetch AND pack fan-out
+    together so a slow Cloudflare/WAF page cannot spend 8s then start a
+    fresh 12s crawl. 0/empty = no cap.
+    """
     raw = (os.getenv("ROBOT_PROFILE_SOURCE_BUDGET_MS") or "12000").strip()
     try:
         ms = int(raw)
@@ -74,10 +108,40 @@ def build_robot_profile(
     t0 = time.perf_counter()
     safe = assert_public_http_url(url)
     catalog = lookup_vendor_by_url(safe)
-    # Never Wayback the submitted URL. Archive copies of challenged hosts are how
-    # FIND used to sit on a spinner for ~90s; unknown OEMs fall through to a
-    # live pack with allow_archive=False instead.
-    home = fetch_page(safe, allow_archive=False)
+    catalog_skus = bool(catalog and (catalog.get("robots") or []))
+    live_budget = _source_budget_sec()
+    live_deadline = (time.monotonic() + live_budget) if live_budget is not None else None
+    # Indexed OEM homepages (and SKU URLs) skip live fetch — Reflex-class
+    # sites where every SKU URL is the homepage are normal, not an error.
+    # Unknown hosts still load the submitted page under live_deadline; never
+    # Wayback it (archive copies of challenged hosts sat FIND on a ~90s spinner).
+    if catalog_skus:
+        home = _catalog_identity_page(safe)
+        if timings is not None:
+            timings["home_fetch"] = "skipped"
+    else:
+        home_timeout = timeout_for_deadline(
+            live_deadline, default=DEFAULT_PAGE_TIMEOUT
+        )
+        if home_timeout is None:
+            home = FetchedPage(
+                url=safe,
+                final_url=safe,
+                status_code=0,
+                title=None,
+                text="",
+                html="",
+                links=[],
+                fetch_degraded=True,
+                fetch_notes=["Live manufacturer fetch skipped — FIND deadline exhausted."],
+                content_type="text/html",
+            )
+        else:
+            home = fetch_page(
+                safe, timeout=home_timeout, allow_archive=False
+            )
+        if timings is not None:
+            timings["home_fetch"] = "live"
     resolved = resolve_identity(safe, home, product_hint=product_name)
     resolve_ms = int((time.perf_counter() - t0) * 1000)
     if timings is not None:
@@ -112,6 +176,8 @@ def build_robot_profile(
         )
         if timings is not None:
             timings["profile_ms"] = 0
+            if catalog_skus:
+                timings["source_strategy"] = "catalog"
         return RobotProfile(
             submitted_url=safe,
             company=resolved.company,
@@ -135,20 +201,13 @@ def build_robot_profile(
 
     subject = selected.name if selected else resolved.company.name
     t_profile = time.perf_counter()
-    budget = _source_budget_sec()
     t_sources = time.perf_counter()
     home_blocked = bool(
         getattr(home, "fetch_degraded", False) and not (home.text or "").strip()
     )
-    catalog_skus = bool(catalog and (catalog.get("robots") or []))
-    if home_blocked:
-        collected = []
-        if timings is not None:
-            timings["sources_ms"] = 0
-            timings["source_strategy"] = "blocked"
-    elif catalog_skus:
+    if catalog_skus:
         # Indexed vendor: identity and specs come from the vendor index.
-        # Keep the already-fetched homepage as evidence; do not guess hubs.
+        # The submitted URL was not fetched; do not guess hubs.
         collected = []
         home_src = collected_from_page(home)
         if home_src:
@@ -157,15 +216,20 @@ def build_robot_profile(
             timings["sources_ms"] = int((time.perf_counter() - t_sources) * 1000)
             timings["source_strategy"] = "catalog"
         notes_extra.append(
-            "Catalog vendor — skipped live source fan-out; facts come from the "
-            "vendor index plus the submitted page."
+            "Catalog vendor — skipped live manufacturer fetch and source fan-out; "
+            "facts come from the vendor index."
         )
+    elif home_blocked:
+        collected = []
+        if timings is not None:
+            timings["sources_ms"] = 0
+            timings["source_strategy"] = "blocked"
     else:
         collected = collect_source_pack(
             home,
             product_name=selected.name if selected else product_name,
             max_sources=max_sources,
-            deadline_monotonic=(time.monotonic() + budget) if budget is not None else None,
+            deadline_monotonic=live_deadline,
             allow_archive=False,
         )
         if timings is not None:
