@@ -2875,110 +2875,50 @@ function JobCard({
             </div>
           </dl>
 
-          {card.taskModels.length ? (
+          {card.taskModels.length || card.modelLinks.length ? (
             <div className="mt-3">
               <p className={eyebrow}>Task models</p>
-              <p className="mt-1 text-[12px] leading-snug text-slate-400">
-                Hardware can enter the workplace. A task model is what performs
-                this work. Distributors who only resell robots still have to
-                buy, license, or train these.
-              </p>
-              <ul className="mt-1 space-y-2">
-                {card.taskModels.map(model => (
-                  <li
-                    key={model.id}
-                    className="text-[13px] leading-snug text-slate-200"
-                  >
-                    <p>
+              {card.taskModels.length ? (
+                <ul className="mt-1 space-y-0.5">
+                  {card.taskModels.map(model => (
+                    <li
+                      key={model.id}
+                      className="text-[13px] leading-snug text-slate-200"
+                    >
                       {model.label}
                       <span className="text-slate-400">
                         {" "}
                         ·{" "}
                         {model.presence === "unknown"
-                          ? "Unknown on this robot"
+                          ? "Unknown"
                           : model.presence === "present"
                             ? "Present"
                             : "Absent"}
                       </span>
-                    </p>
-                    {model.physicalTask ? (
-                      <p className="text-slate-300">{model.physicalTask}</p>
-                    ) : null}
-                    {model.hardwareNotEnough ? (
-                      <p className="text-slate-500">{model.hardwareNotEnough}</p>
-                    ) : null}
-                    {model.whereToLook.length ? (
-                      <ul className="mt-0.5 space-y-0.5 text-slate-400">
-                        {model.whereToLook.map(dest => (
-                          <li key={`${model.id}-${dest.name}`}>
-                            Where to look:{" "}
-                            {dest.url ? (
-                              <a
-                                href={dest.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-slate-300 underline decoration-slate-600 underline-offset-2"
-                              >
-                                {dest.name}
-                              </a>
-                            ) : (
-                              dest.name
-                            )}
-                            {dest.note ? ` — ${dest.note}` : ""}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                    {model.candidateFamilies.length ? (
-                      <p className="mt-1 text-slate-500">
-                        Search families: {model.candidateFamilies.join(", ")} —
-                        not chat LLMs.
-                      </p>
-                    ) : null}
-                    {model.qualifyFilters.length ? (
-                      <div className="mt-2">
-                        <p className="text-[12px] uppercase tracking-[0.08em] text-slate-500">
-                          How we qualify a candidate
-                        </p>
-                        <ul className="mt-0.5 space-y-0.5 text-slate-400">
-                          {model.qualifyFilters.map(f => (
-                            <li key={f.id || f.label}>
-                              {f.label}
-                              {f.note ? ` — ${f.note}` : ""}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
-                    {model.pricingLookups.length ? (
-                      <div className="mt-2">
-                        <p className="text-[12px] uppercase tracking-[0.08em] text-slate-500">
-                          Where to find price
-                        </p>
-                        <ul className="mt-0.5 space-y-0.5 text-slate-400">
-                          {model.pricingLookups.map(dest => (
-                            <li key={`${model.id}-price-${dest.name}`}>
-                              {dest.url ? (
-                                <a
-                                  href={dest.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-slate-300 underline decoration-slate-600 underline-offset-2"
-                                >
-                                  {dest.name}
-                                </a>
-                              ) : (
-                                dest.name
-                              )}
-                              {dest.note ? ` — ${dest.note}` : ""}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {card.modelLinks.length ? (
+                <ul className="mt-1 space-y-0.5">
+                  {card.modelLinks.map(dest => (
+                    <li key={dest.url || dest.name}>
+                      {dest.url ? (
+                        <a
+                          href={dest.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[13px] leading-snug text-slate-300 underline decoration-slate-600 underline-offset-2"
+                        >
+                          {dest.name}
+                        </a>
+                      ) : (
+                        dest.name
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           ) : null}
 

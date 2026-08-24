@@ -7,6 +7,38 @@ import robcoPack from "./robcoJobCards.json";
 export const ROBOT_JOB_CARD_NEXT_STEP =
   "Site assessment — can the robot actually work here?";
 
+/** Job Card inspect step: three model links, three questions. Price later. */
+export const JOB_CARD_MODEL_LINK_CAP = 3;
+export const JOB_CARD_OPEN_QUESTION_CAP = 3;
+
+const CARD_LINK_SKIP_KINDS = new Set([
+  "curated_survey",
+  "benchmarks",
+  "github",
+  "training_data",
+  "talent",
+  "token_price_index",
+  "physical_compute",
+  "managed_api",
+  "oem_quote",
+  "integrator_sow",
+]);
+
+const CARD_LINK_PREFER_KINDS = new Set(["open_weights", "sim_to_real"]);
+
+const TASK_MODEL_WHY_HOLE =
+  /hardware can enter the workplace|task model for this work is still unknown/i;
+
+function shortModelLinkName(dest: TaskModelLookup): string {
+  const url = (dest.url || "").toLowerCase();
+  if (url.includes("huggingface.co/lerobot")) return "LeRobot";
+  if (url.includes("search=openvla") || url.includes("openvla")) return "OpenVLA";
+  if (url.includes("huggingface.co")) return "Hugging Face robotics";
+  if (url.includes("nvidia.com/isaac") || url.includes("/isaac")) return "NVIDIA Isaac";
+  if (url.includes("physicalintelligence")) return "Physical Intelligence";
+  return dest.name.replace(/\s+[—–-]\s+.*$/, "").trim() || dest.name;
+}
+
 export type RobotJobQualification =
   | "qualified"
   | "conditional"
@@ -56,6 +88,7 @@ export type RobotJobCardView = {
   openQuestions: string[];
   nextStep: string;
   taskModels: RequiredTaskModel[];
+  modelLinks: TaskModelLookup[];
 };
 
 export const QUALIFICATION_LABEL: Record<RobotJobQualification, string> = {
@@ -123,6 +156,29 @@ function mapLookups(raw?: MatchLookupIn[] | null): TaskModelLookup[] {
   }));
 }
 
+/** Clickable model destinations for the Job Card — no catalogs, surveys, or price maps. */
+export function cardModelLinks(lookups: TaskModelLookup[]): TaskModelLookup[] {
+  const withUrl = lookups.filter(d => d.url && d.name);
+  const ranked = [
+    ...withUrl.filter(
+      d => CARD_LINK_PREFER_KINDS.has(d.kind) && !CARD_LINK_SKIP_KINDS.has(d.kind),
+    ),
+    ...withUrl.filter(
+      d => !CARD_LINK_PREFER_KINDS.has(d.kind) && !CARD_LINK_SKIP_KINDS.has(d.kind),
+    ),
+  ];
+  const out: TaskModelLookup[] = [];
+  const seen = new Set<string>();
+  for (const dest of ranked) {
+    const key = (dest.url || dest.name).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ ...dest, name: shortModelLinkName(dest), note: "" });
+    if (out.length >= JOB_CARD_MODEL_LINK_CAP) break;
+  }
+  return out;
+}
+
 function normalizeTaskModels(raw?: MatchTaskModelIn[] | null): RequiredTaskModel[] {
   const out: RequiredTaskModel[] = [];
   for (const row of raw || []) {
@@ -140,16 +196,10 @@ function normalizeTaskModels(raw?: MatchTaskModelIn[] | null): RequiredTaskModel
       vertical: (row.vertical || "").trim(),
       presence,
       hardwareNotEnough: (row.hardware_not_enough || "").trim(),
-      candidateFamilies: (row.candidate_families || []).map(s => s.trim()).filter(Boolean),
-      whereToLook: mapLookups(row.where_to_look),
-      qualifyFilters: (row.qualify_filters || [])
-        .map(f => ({
-          id: (f.id || "").trim(),
-          label: (f.label || f.name || "").trim(),
-          note: (f.note || "").trim(),
-        }))
-        .filter(f => f.label),
-      pricingLookups: mapLookups(row.pricing_lookups),
+      candidateFamilies: [],
+      whereToLook: [],
+      qualifyFilters: [],
+      pricingLookups: [],
     });
   }
   return out;
@@ -169,10 +219,13 @@ export function robotJobCardFromMatch(job: {
   required_task_models?: MatchTaskModelIn[] | null;
 }): RobotJobCardView {
   const taskModels = normalizeTaskModels(job.required_task_models);
+  const modelLinks = cardModelLinks(
+    (job.required_task_models || []).flatMap(row => mapLookups(row.where_to_look)),
+  );
   const open = unique([
     ...(job.still_unknown || []),
     ...(job.unknowns || []),
-  ]);
+  ]).slice(0, JOB_CARD_OPEN_QUESTION_CAP);
   const qualification = qualificationFromVerdict(
     job.verdict,
     job.blockers,
@@ -184,7 +237,7 @@ export function robotJobCardFromMatch(job: {
     workplace: emptyToNull(job.locality),
     jobTitle: title,
     work: title,
-    requirements: [...(job.why || [])],
+    requirements: (job.why || []).filter(w => !TASK_MODEL_WHY_HOLE.test(w)),
     workVolume: null,
     currentLabor: null,
     evidence: emptyToNull(job.text) || (job.why?.[0] ?? null),
@@ -194,6 +247,7 @@ export function robotJobCardFromMatch(job: {
     openQuestions: open,
     nextStep: ROBOT_JOB_CARD_NEXT_STEP,
     taskModels,
+    modelLinks,
   };
 }
 

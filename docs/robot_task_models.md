@@ -24,15 +24,16 @@ Channel (SI/dist)  →  can we commercially deliver both?
 
 ## Job Card contract
 
-Every Robot Job must answer:
+The expanded Job Card stays short:
 
-1. **What task models does this work require?** (slot + physical task)
-2. **Where would you look for them?** (OEM pack, VLA weights, surveys — search destinations)
-3. **Does this candidate carry one?** (`unknown` until named evidence)
-4. **How would you qualify a candidate?** (VLA vs chat LLM, commercial license, on-robot compute, site qualification)
-5. **Where is price?** (OEM quote, integrator SOW, physical-AI GPU hours, token APIs) — never invent a dollar figure
+1. Employer, workplace, work
+2. **Which task model this work needs** (slot + unknown/present/absent)
+3. **Three model links** (VLA / Isaac / OEM weights with URLs — not surveys, talent, or price maps)
+4. Why it is listed, **three** open questions, next step = site assessment
 
-If (3) is unknown, qualification is **conditional**, not Qualified.
+Qualify-a-candidate filters and pricing lookups stay in the ontology for a later workflow step. Do not dump them on the posting.
+
+If presence is unknown, qualification is **conditional**, not Qualified.
 
 ## Where we look
 
