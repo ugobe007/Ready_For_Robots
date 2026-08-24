@@ -24,14 +24,20 @@ const CARD_LINK_SKIP_KINDS = new Set([
   "integrator_sow",
 ]);
 
-const CARD_LINK_PREFER_KINDS = new Set([
-  "open_weights",
-  "sim_to_real",
-  "foundation_robotics",
-]);
+const CARD_LINK_PREFER_KINDS = new Set(["open_weights", "sim_to_real"]);
 
 const TASK_MODEL_WHY_HOLE =
   /hardware can enter the workplace|task model for this work is still unknown/i;
+
+function shortModelLinkName(dest: TaskModelLookup): string {
+  const url = (dest.url || "").toLowerCase();
+  if (url.includes("huggingface.co/lerobot")) return "LeRobot";
+  if (url.includes("search=openvla") || url.includes("openvla")) return "OpenVLA";
+  if (url.includes("huggingface.co")) return "Hugging Face robotics";
+  if (url.includes("nvidia.com/isaac") || url.includes("/isaac")) return "NVIDIA Isaac";
+  if (url.includes("physicalintelligence")) return "Physical Intelligence";
+  return dest.name.replace(/\s+[—–-]\s+.*$/, "").trim() || dest.name;
+}
 
 export type RobotJobQualification =
   | "qualified"
@@ -167,7 +173,7 @@ export function cardModelLinks(lookups: TaskModelLookup[]): TaskModelLookup[] {
     const key = (dest.url || dest.name).toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ ...dest, note: "" });
+    out.push({ ...dest, name: shortModelLinkName(dest), note: "" });
     if (out.length >= JOB_CARD_MODEL_LINK_CAP) break;
   }
   return out;

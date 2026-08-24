@@ -145,9 +145,11 @@ describe("robotJobCard", () => {
     expect(card.taskModels[0].whereToLook).toEqual([]);
     expect(card.modelLinks).toHaveLength(JOB_CARD_MODEL_LINK_CAP);
     expect(card.modelLinks.every(d => d.url)).toBe(true);
-    expect(card.modelLinks.map(d => d.name).join(" ")).toMatch(
-      /Hugging Face|Isaac|OpenVLA|LeRobot/i,
-    );
+    expect(card.modelLinks.map(d => d.name)).toEqual([
+      "NVIDIA Isaac",
+      "Hugging Face robotics",
+      "OpenVLA",
+    ]);
     expect(card.modelLinks.some(d => /Mercor|BenchLM|Argo-Robot/i.test(d.name))).toBe(
       false,
     );
