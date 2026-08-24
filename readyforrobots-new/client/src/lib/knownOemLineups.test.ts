@@ -19,4 +19,10 @@ describe("knownOemLineups", () => {
   it("returns null for unknown hosts", () => {
     expect(lookupKnownOem("https://unknown-oem.example/")).toBeNull();
   });
+
+  it("falls back from a product subdomain to the indexed registrable host", () => {
+    const hit = lookupKnownOem("https://shop.reflexrobotics.com/products");
+    expect(hit?.vendor_name).toMatch(/Reflex/i);
+    expect((hit?.robots.length || 0)).toBeGreaterThan(0);
+  });
 });
