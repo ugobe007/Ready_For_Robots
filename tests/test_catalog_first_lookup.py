@@ -242,7 +242,8 @@ def test_every_indexed_vendor_homepage_skips_live_fetch(monkeypatch):
         profile = P.build_robot_profile(url, timings=timings)
         assert timings.get("home_fetch") == "skipped", vendor.get("vendor_name")
         assert profile.products, vendor.get("vendor_name")
-        assert len(profile.products) <= 3, vendor.get("vendor_name")
+        hit = lookup_vendor_by_url(url)
+        assert [p.name for p in profile.products] == index_robot_names(hit)
         checked += 1
         if len(robots) > 1 and profile.needs_product_choice:
             homepage_sku_vendors += 1

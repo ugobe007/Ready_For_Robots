@@ -9,7 +9,8 @@ Live OEM crawl is a fallback for hosts that are not in the index. Indexed
 vendors skip guessed hub / Wayback fan-out.
 
 Industrial / commercial / jobs-seed lists append the same JSON shape
-(`list_category`). The jobs seed lists at most three robots per OEM.
+(`list_category`). Jobs seed lists every named robot from `primary_robots`.
+FIND still searches three robots at a time.
 """
 from __future__ import annotations
 

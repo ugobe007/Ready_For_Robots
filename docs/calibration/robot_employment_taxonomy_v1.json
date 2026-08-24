@@ -1,0 +1,291 @@
+{
+  "dataset_id": "robot_employment_taxonomy_v1",
+  "as_of": "2026-08-24",
+  "purpose": "Supply-side labor market for ReadyForRobots. Companies whose robots can plausibly be placed into work — not a robotics-technology directory.",
+  "north_star": "Robot candidates and the work they are qualified to do. Not a 500-company catalog.",
+  "spine": [
+    "company",
+    "robot",
+    "robot_class",
+    "work_families",
+    "capabilities",
+    "current_availability",
+    "geography",
+    "deployment_evidence",
+    "jobs_performed",
+    "jobs_rfr_can_find"
+  ],
+  "rule": "Category is a search lens. Match is robot capabilities ↔ job requirements. Never company → category → jobs. Never invent SKUs or specs.",
+  "target_companies": 200,
+  "employment_categories": [
+    {
+      "id": "humanoids",
+      "label": "Humanoids / general-purpose",
+      "companies": [
+        "Figure AI",
+        "Agility Robotics",
+        "Apptronik",
+        "1X",
+        "Sanctuary AI",
+        "NEURA Robotics",
+        "Unitree",
+        "UBTECH",
+        "Fourier Intelligence",
+        "AgiBot",
+        "RobotEra",
+        "LimX Dynamics",
+        "Galbot",
+        "Mentee Robotics",
+        "PAL Robotics",
+        "Rainbow Robotics"
+      ]
+    },
+    {
+      "id": "commercial_cleaning",
+      "label": "Commercial cleaning",
+      "companies": [
+        "Avidbots",
+        "Gausium",
+        "Pudu Robotics",
+        "LionsBot",
+        "Brain Corp",
+        "Tennant",
+        "Nilfisk",
+        "Kärcher",
+        "Cleanfix",
+        "CenoBots",
+        "Sparkoz"
+      ]
+    },
+    {
+      "id": "restaurant_hospitality",
+      "label": "Restaurant / hospitality service",
+      "companies": [
+        "Bear Robotics",
+        "Pudu Robotics",
+        "KEENON Robotics",
+        "Richtech Robotics",
+        "Relay Robotics",
+        {"name": "LG Electronics", "product_hint": "CLOi"},
+        "OrionStar"
+      ]
+    },
+    {
+      "id": "food_preparation",
+      "label": "Food preparation / kitchens",
+      "companies": [
+        "Miso Robotics",
+        "Chef Robotics",
+        "Gastronomous",
+        "Hyphen",
+        "Picnic Works",
+        "RoboBurger",
+        "Botrista",
+        "Dexai"
+      ]
+    },
+    {
+      "id": "warehouse_logistics",
+      "label": "Warehouse / logistics",
+      "companies": [
+        "Locus Robotics",
+        "Dexterity",
+        "Pickle Robot",
+        "Slip Robotics",
+        "Seegrid",
+        "Vecna Robotics",
+        "Geek+",
+        "Hai Robotics",
+        "Brightpick",
+        "Exotec",
+        "Mujin",
+        "RightHand Robotics",
+        {"name": "Boston Dynamics", "product_hint": "Stretch"}
+      ]
+    },
+    {
+      "id": "construction",
+      "label": "Construction",
+      "companies": [
+        "Dusty Robotics",
+        "Built Robotics",
+        "Advanced Construction Robotics",
+        "Canvas",
+        "Construction Robotics",
+        "KEWAZO",
+        "FBR",
+        "OKIBO",
+        "Cyphra Autonomy",
+        "Hyperion Robotics"
+      ]
+    },
+    {
+      "id": "agriculture",
+      "label": "Agriculture",
+      "companies": [
+        "Carbon Robotics",
+        "FarmWise",
+        "Burro",
+        "Naïo Technologies",
+        "Verdant Robotics",
+        "Bluewhite",
+        "Stout Industrial Technology",
+        "Harvest CROO",
+        "Tortuga AgTech",
+        "Saga Robotics",
+        "Farm-ng"
+      ]
+    },
+    {
+      "id": "healthcare_hospital",
+      "label": "Healthcare / hospital",
+      "companies": [
+        "Diligent Robotics",
+        "Mendaera",
+        "Noah Medical",
+        "Moon Surgical",
+        "CMR Surgical",
+        "Intuitive Surgical",
+        "Medtronic",
+        "Zimmer Biomet",
+        "Stryker",
+        "Kinova",
+        "Capsa Healthcare"
+      ]
+    },
+    {
+      "id": "inspection_maintenance",
+      "label": "Inspection / maintenance",
+      "companies": [
+        "Gecko Robotics",
+        "ANYbotics",
+        {"name": "Boston Dynamics", "product_hint": "Spot"},
+        "Energy Robotics",
+        "DEEP Robotics",
+        "Flyability",
+        "Eddyfi Technologies"
+      ]
+    },
+    {
+      "id": "security_patrol",
+      "label": "Security / patrol",
+      "companies": [
+        "Knightscope",
+        "Cobalt Robotics",
+        "SMP Robotics",
+        "DEEP Robotics",
+        "Ghost Robotics"
+      ]
+    },
+    {
+      "id": "manufacturing_machine_tending",
+      "label": "Manufacturing / machine tending",
+      "companies": [
+        "RobCo",
+        "Universal Robots",
+        "FANUC",
+        "ABB",
+        "KUKA",
+        "Yaskawa Motoman",
+        "Doosan Robotics",
+        "Techman Robot",
+        "Rethink Robotics",
+        "Standard Bots",
+        "Franka Robotics"
+      ]
+    },
+    {
+      "id": "retail",
+      "label": "Retail",
+      "companies": [
+        "Simbe Robotics",
+        "Badger Technologies",
+        "Brain Corp",
+        "Pudu Robotics",
+        "KEENON Robotics",
+        "Galbot"
+      ]
+    },
+    {
+      "id": "last_mile_delivery",
+      "label": "Last-mile / delivery",
+      "companies": [
+        "Starship Technologies",
+        "Serve Robotics",
+        "Cartken",
+        "Coco Robotics",
+        "Ottonomy",
+        "Nuro"
+      ]
+    },
+    {
+      "id": "airports_aviation",
+      "label": "Airports / aviation",
+      "companies": [
+        "Aurrigo",
+        "Vanderlande",
+        "Ottonomy",
+        "Pudu Robotics",
+        "WHILL",
+        "AeroVect"
+      ]
+    },
+    {
+      "id": "hotel_housekeeping",
+      "label": "Hotel / housekeeping",
+      "companies": [
+        "Relay Robotics",
+        "Pudu Robotics",
+        "KEENON Robotics",
+        "Richtech Robotics",
+        "Bear Robotics",
+        "LionsBot"
+      ]
+    },
+    {
+      "id": "waste_recycling",
+      "label": "Waste / recycling",
+      "companies": [
+        "AMP",
+        "Glacier",
+        "EverestLabs",
+        "ZenRobotics",
+        "Recycleye",
+        "Waste Robotics"
+      ]
+    },
+    {
+      "id": "mining_heavy_equipment",
+      "label": "Mining / heavy equipment",
+      "companies": [
+        "Caterpillar",
+        "Komatsu",
+        "Built Robotics",
+        "SafeAI",
+        "Pronto"
+      ]
+    },
+    {
+      "id": "solar_energy_field",
+      "label": "Solar / energy field work",
+      "companies": [
+        {"name": "AES", "product_hint": "Maximo"},
+        "Ecoppia",
+        "Airtouch Solar",
+        "SolarCleano",
+        "Gecko Robotics"
+      ]
+    },
+    {
+      "id": "marine_underwater",
+      "label": "Marine / underwater",
+      "companies": [
+        "Nauticus Robotics",
+        "Ocean Infinity",
+        "VideoRay",
+        "Blue Robotics",
+        "Greensea IQ"
+      ]
+    }
+  ]
+}

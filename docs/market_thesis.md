@@ -2,7 +2,7 @@
 
 Living document for the agent harness **intelligence loop**. Updated by research missions (`MarketIntel`, `FrictionMiner`, `ProductThesis`). Execution missions must align with active bets unless fixing a P0 blocker (empty pipeline, broken deploy).
 
-**Last updated:** 2026-08-22 (robot employment model)
+**Last updated:** 2026-08-24 (employment universe — supply-side roster)
 
 ---
 
@@ -11,6 +11,8 @@ Living document for the agent harness **intelligence loop**. Updated by research
 **Recruitment and placement infrastructure for robotic labor.** The unit of value is the Robot Job. Operating model: [robot_employment_model.md](./robot_employment_model.md).
 
 We win on **job requirements ↔ robot capabilities**, not company count. SIGNAL lead quality remains frozen infrastructure — not the product.
+
+Supply-side roster: [robot_employment_universe.md](./robot_employment_universe.md) — ~200 placeable OEM candidates across 19 employment categories. The 500-vendor seed is input, not the product. The ChatGPT workforce registry workbook is a researcher overlay ([audit](./calibration/robot_workforce_registry_v1_audit.md)), not catalog — 172 “available now” is not placement-ready. Humanoids are not one job family; Dusty FieldPrinter ≠ Figure.
 
 Hero: **Find jobs for your robot. Robots need jobs. We find the work.**
 

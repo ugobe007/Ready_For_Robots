@@ -1,9 +1,10 @@
 {
-  "generated_at": "2026-08-24T20:41:36+00:00",
+  "generated_at": "2026-08-24T23:30:39+00:00",
   "source": "docs/calibration/robot_vendor_seed_v1.json",
   "list_category": "jobs_seed",
   "notes": [
-    "FIND listing seed: robot company URL → top 3 product names.",
+    "FIND listing seed: robot company URL → named products (uncapped roster).",
+    "FIND surfaces three robots at a time; this file is not truncated to 3.",
     "Names come from primary_robots; description from work_type/industries.",
     "Specs are omitted unless a later pass has numbers — do not invent them.",
     "Vendors already in the humanoid or commercial index are skipped."
@@ -16,7 +17,7 @@
     "not_oem": 12
   },
   "vendor_count": 329,
-  "robot_count": 380,
+  "robot_count": 381,
   "vendors": [
     {
       "vendor_name": "MiR (Mobile Industrial Robots)",
@@ -3781,6 +3782,24 @@
               "predicate": "product_class",
               "value": "cobot",
               "evidence_span": "UR10e: collaborative arms. Used in Manufacturing."
+            }
+          ],
+          "specs": {}
+        },
+        {
+          "name": "Universal Robots UR20",
+          "model_slug": "universal-robots-universal-robots-ur20",
+          "product_url": "https://www.universal-robots.com",
+          "vendor_url": "https://www.universal-robots.com",
+          "primary_class": "cobot",
+          "status": "available",
+          "country": "Denmark",
+          "description": "Universal Robots UR20: collaborative arms. Used in Manufacturing.",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cobot",
+              "evidence_span": "Universal Robots UR20: collaborative arms. Used in Manufacturing."
             }
           ],
           "specs": {}

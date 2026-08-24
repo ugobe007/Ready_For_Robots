@@ -1,7 +1,10 @@
-"""FIND listing: robot company URL → top 3 product names, then blurbs, then specs.
+"""FIND listing: robot company URL → named robots, then blurbs, then specs.
 
-Jobs must not crawl a full SKU catalog. Indexed OEMs already skip live fetch.
-Unknown OEM pages still parse, but only three robots, in this order:
+Jobs must not crawl every SKU page. Indexed OEMs skip live fetch and keep the
+full named lineup. FIND *surfaces* three robots at a time (search pass / picker
+page). That is not a cap on how many robots a company may have.
+
+Unknown OEM homepages still parse names already on the page, in this order:
 
 1. product names
 2. a short description next to each name (if present)
@@ -15,7 +18,10 @@ import re
 from typing import Any
 from urllib.parse import urlparse
 
+# How many robots FIND searches / shows per pass. Not a company roster cap.
 FIND_PRODUCT_LIST_CAP = 3
+# Homepage parse ceiling for unknown OEMs (no SKU-page crawl). Catalogs are uncapped.
+FIND_LIVE_DISCOVERY_CAP = 24
 
 _GENERIC_LINE = re.compile(
     r"^(agvs?|amrs?|agv\s*/\s*amr|mobile robots?|cobots?|industrial robots?|"
@@ -56,7 +62,7 @@ def brand_token(company: str) -> str:
 
 
 def split_primary_robots(raw: str, company: str = "") -> list[str]:
-    """Turn a seed `primary_robots` string into at most three product names."""
+    """Turn a seed `primary_robots` string into named products (no company cap)."""
     text = re.sub(r"\s+", " ", (raw or "").strip())
     if not text or _GENERIC_LINE.fullmatch(text):
         return []
@@ -77,8 +83,6 @@ def split_primary_robots(raw: str, company: str = "") -> list[str]:
             continue
         seen.add(key)
         out.append(cleaned)
-        if len(out) >= FIND_PRODUCT_LIST_CAP:
-            break
     return out
 
 
@@ -157,8 +161,15 @@ def format_listing_blurb(row: dict[str, Any] | None) -> str | None:
     return desc or None
 
 
-def listing_from_catalog(vendor: dict[str, Any] | None, *, limit: int = FIND_PRODUCT_LIST_CAP) -> list[dict[str, Any]]:
-    """Top-N robots already stored for a vendor. Names first; keep description/specs if present."""
+def listing_from_catalog(
+    vendor: dict[str, Any] | None,
+    *,
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
+    """Named robots already stored for a vendor. Names first; keep description/specs if present.
+
+    `limit` is a FIND surface page, not a company cap. Omit it to return the lineup.
+    """
     rows: list[dict[str, Any]] = []
     seen: set[str] = set()
     for robot in (vendor or {}).get("robots") or []:
@@ -184,7 +195,7 @@ def listing_from_catalog(vendor: dict[str, Any] | None, *, limit: int = FIND_PRO
                 "specs": slim or None,
             }
         )
-        if len(rows) >= limit:
+        if limit is not None and len(rows) >= limit:
             break
     return rows
 
@@ -193,12 +204,13 @@ def listing_from_page(
     names: list[str],
     text: str,
     *,
-    limit: int = FIND_PRODUCT_LIST_CAP,
+    limit: int | None = None,
 ) -> list[dict[str, Any]]:
     """Attach nearby description then specs onto already-ranked product names."""
     blob = text or ""
     rows: list[dict[str, Any]] = []
-    for name in names[:limit]:
+    chosen = names if limit is None else names[:limit]
+    for name in chosen:
         window = _window_around(name, blob)
         rows.append(
             {
