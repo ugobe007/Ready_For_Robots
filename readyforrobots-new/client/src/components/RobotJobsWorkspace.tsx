@@ -33,7 +33,7 @@ import {
   fetchRobotJobSearch,
   type RobotJobSearchResult,
 } from "@/lib/robotJobSearch";
-import { fetchRobotProfile } from "@/lib/robotProfile";
+import { fetchOemListing, fetchRobotProfile } from "@/lib/robotProfile";
 import { fetchRobotJobMatch } from "@/lib/robotJobMatch";
 import {
   formatFactLine,
@@ -97,6 +97,7 @@ import {
   JOBS_PRODUCT_CAP_FREE,
   JOBS_PRODUCT_CAP_PAID,
   JOBS_LINEUP_DISPLAY_CAP,
+  OEM_LISTING_TIMEOUT_MS,
   ROBOT_PROFILE_TIMEOUT_MS,
   ROBOT_JOB_SEARCH_TIMEOUT_MS,
 } from "@/lib/jobsWorkflow";
@@ -839,6 +840,50 @@ export default function RobotJobsWorkspace() {
     const ac = new AbortController();
     researchAbortRef.current = ac;
     try {
+      try {
+        const listing = await fetchOemListing({
+          url: submitUrl,
+          signal: ac.signal,
+          timeoutMs: OEM_LISTING_TIMEOUT_MS,
+        });
+        if (listing.matched && listing.robots.length > 0) {
+          setCompanyName(listing.vendor_name || "");
+          const lineup = filterJobsLineupProducts(
+            listing.robots.map(p => ({
+              name: p.name,
+              displayClass: p.display_class,
+              description: p.description,
+            })),
+            JOBS_LINEUP_DISPLAY_CAP,
+          );
+          if (lineup.length > 1) {
+            setProducts(lineup);
+            setSelected([]);
+            setStage("select");
+            return;
+          }
+          const name = lineup[0]?.name || listing.robots[0]?.name || "";
+          const displayClass =
+            lineup[0]?.displayClass || listing.robots[0]?.display_class;
+          const cls = normalizeRobotClass(displayClass);
+          setResearchPhase("jobs");
+          const res = await fetchRobotJobSearch({
+            url: submitUrl,
+            product: name || undefined,
+            assertedClass: cls || undefined,
+            lookupGrain: cls ? "robot_type" : "product",
+            signal: ac.signal,
+            timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+          });
+          submissionIdRef.current =
+            res.robot_submission_id ?? submissionIdRef.current;
+          const analysis = analysisForSelectedSku(res, name, displayClass);
+          openJobsFromAnalyses([analysis], submitUrl, name ? [name] : []);
+          return;
+        }
+      } catch {
+        /* listing miss or timeout — fall through to full profile */
+      }
       const profile = await fetchRobotProfile({
         url: submitUrl,
         signal: ac.signal,

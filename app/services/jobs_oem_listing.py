@@ -266,3 +266,26 @@ def host_from_website(url: str | None) -> str:
 def slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", (value or "").lower()).strip("-")
     return slug[:80]
+
+
+def listing_payload_for_url(url: str) -> dict[str, Any]:
+    """Host-string OEM listing. No DNS, no live fetch, no Redis."""
+    from app.services.vendor_robot_lookup import lookup_vendor_by_url
+
+    vendor = lookup_vendor_by_url(url)
+    if not vendor or not (vendor.get("robots") or []):
+        return {
+            "matched": False,
+            "vendor_name": None,
+            "vendor_url": None,
+            "robots": [],
+        }
+    robots = listing_from_catalog(vendor)
+    for row in robots:
+        row["description"] = format_listing_blurb(row)
+    return {
+        "matched": True,
+        "vendor_name": (vendor.get("vendor_name") or "").strip() or None,
+        "vendor_url": (vendor.get("vendor_url") or "").strip() or None,
+        "robots": robots,
+    }

@@ -1,6 +1,7 @@
 """URL normalization and SSRF-safe fetch helpers for V1 robot analysis."""
 from __future__ import annotations
 
+import concurrent.futures
 import ipaddress
 import json
 import re
@@ -193,15 +194,24 @@ def _resolve_public_ips(host: str) -> list[ipaddress.IPv4Address | ipaddress.IPv
 
 
 def _system_resolve_ips(host: str) -> list[str]:
-    found: list[str] = []
-    for family in (socket.AF_INET, socket.AF_INET6):
-        try:
-            infos = _real_getaddrinfo(host, None, family)
-        except socket.gaierror:
-            continue
-        for info in infos:
-            found.append(info[4][0])
-    return found
+    """Platform DNS with a hard cap — getaddrinfo can block for tens of seconds."""
+
+    def _lookup() -> list[str]:
+        found: list[str] = []
+        for family in (socket.AF_INET, socket.AF_INET6):
+            try:
+                infos = _real_getaddrinfo(host, None, family)
+            except socket.gaierror:
+                continue
+            for info in infos:
+                found.append(info[4][0])
+        return found
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(_lookup).result(timeout=1.5)
+    except (concurrent.futures.TimeoutError, OSError):
+        return []
 
 
 def _doh_resolve_ips(host: str) -> list[str]:
