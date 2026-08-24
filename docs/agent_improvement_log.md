@@ -13,7 +13,7 @@ Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
 ### Ranked proposals
 
 1. **[done]** Fly deploy from this branch: tracks 8–10 on production OpenAPI; `loop.healthy` true. Merge PR #113 so `main` matches Fly. — owner: `deploy`
-2. **[L/L]** Optional: add `GOOGLE_API_KEY` in Hermes only if Gemini is wanted inside that TUI. Not required for RFR ingest.
+2. **[H/L]** Smoke tracks 8–10 dry_run on Fly (this cycle). Real buying-window/video overlays still need Mac crons. Do not flip `CAL_INCLUDE_BUYING_WINDOW`. — owner: `hermes`
 
 ## 2026-08-23 — Hermes workflow test (Sunday)
 

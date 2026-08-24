@@ -8,8 +8,8 @@ If the key is wrong, Fly returns 401/403 and this script exits 1 (the workflow
 breaks). GitHub Actions injects secrets.ADMIN_KEY as RFR_ADMIN_KEY — same string
 as Hermes ~/.hermes/.env RFR_ADMIN_KEY.
 
-  python3 scripts/hermes_auth_smoke.py           # cal-status + infer-qualify dry_run
-  python3 scripts/hermes_auth_smoke.py --apply   # persist overlays on public pipeline IDs
+  python3 scripts/hermes_auth_smoke.py           # cal-status + infer-qualify + tracks 8–10 dry_run
+  python3 scripts/hermes_auth_smoke.py --apply   # persist infer-qualify only (not fake 8–10 overlays)
 
 Mac:
   cd ~/Desktop/Ready_For_Robots && python3 scripts/hermes_auth_smoke.py --apply
@@ -32,6 +32,10 @@ CAL = f"{FLY}/api/v1/market-graph/cal-status"
 INFER = f"{FLY}/api/v1/market-graph/infer-qualify"
 PIPELINE = f"{FLY}/api/leads/pipeline"
 CACHE = f"{FLY}/api/admin/leads/refresh-pipeline-cache"
+BUYING = f"{FLY}/api/v1/market-graph/buying-window-overlay"
+VIDEO = f"{FLY}/api/v1/market-graph/video-evidence/ingest"
+VENDOR_VIDEO = f"{FLY}/api/v1/market-graph/vendor-video-evidence/ingest"
+SEEDS = f"{FLY}/api/v1/market-graph/video-evidence/seed-targets"
 KEY_NAMES = ("RFR_ADMIN_KEY", "ADMIN_KEY")
 
 
@@ -84,21 +88,29 @@ def _request(url: str, key: str | None, payload: dict | None) -> tuple[int, dict
         data = json.dumps(payload).encode()
         method = "POST"
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(req, timeout=90) as resp:
-            body = resp.read().decode()
+    last_err = "request_failed"
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=90) as resp:
+                body = resp.read().decode()
+                try:
+                    parsed: dict | str = json.loads(body)
+                except json.JSONDecodeError:
+                    parsed = body[:400]
+                return resp.status, parsed
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode()
             try:
-                parsed: dict | str = json.loads(body)
+                parsed = json.loads(body)
             except json.JSONDecodeError:
                 parsed = body[:400]
-            return resp.status, parsed
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode()
-        try:
-            parsed = json.loads(body)
-        except json.JSONDecodeError:
-            parsed = body[:400]
-        return exc.code, parsed
+            return exc.code, parsed
+        except (TimeoutError, urllib.error.URLError, OSError) as exc:
+            last_err = f"{type(exc).__name__}: {exc}"[:240]
+            if attempt < 2:
+                time.sleep(8)
+                continue
+    return 598, {"error": "timeout", "detail": last_err}
 
 
 def _safe_summary(body: dict | str) -> dict:
@@ -119,6 +131,7 @@ def _safe_summary(body: dict | str) -> dict:
         "dry_run",
         "status",
         "message",
+        "count",
     )
     out = {k: body[k] for k in keep if k in body}
     results = body.get("results")
@@ -176,6 +189,81 @@ def _pipeline_snapshot() -> dict:
         "hermes_qualify": qualify,
         "built_at": body.get("built_at"),
     }
+
+
+def tracks_8_10_dry_payloads(company_id: int) -> dict[str, dict]:
+    """Synthetic dry_run bodies. Never persist — GHA/Mac smoke only."""
+    return {
+        "buying_window": {
+            "dry_run": True,
+            "hermes_run_id": "hermes-tracks-8-10-dry",
+            "overlays": [
+                {
+                    "company_id": company_id,
+                    "urgency_0_100": 40,
+                    "window_label": "smoke dry_run (not a real window)",
+                    "factors": [{"type": "smoke", "note": "tracks 8-10 contract"}],
+                    "confidence": 0.1,
+                }
+            ],
+        },
+        "video": {
+            "dry_run": True,
+            "hermes_run_id": "hermes-tracks-8-10-dry",
+            "videos": [
+                {
+                    "company_id": company_id,
+                    "source_url": "https://example.com/rfr-smoke-customer-video",
+                    "platform": "example",
+                    "evidence_kind": "smoke",
+                    "title": "dry_run only",
+                    "confidence": 0.1,
+                }
+            ],
+        },
+        "vendor_video": {
+            "dry_run": True,
+            "hermes_run_id": "hermes-tracks-8-10-dry",
+            "videos": [
+                {
+                    "vendor_name": "Agility Robotics",
+                    "source_url": "https://example.com/rfr-smoke-vendor-video",
+                    "platform": "example",
+                    "evidence_kind": "smoke",
+                    "title": "dry_run only",
+                    "confidence": 0.1,
+                }
+            ],
+        },
+    }
+
+
+def _tracks_8_10_dry_run(key: str, company_ids: list[int]) -> dict:
+    cid = int(company_ids[0]) if company_ids else 1
+    payloads = tracks_8_10_dry_payloads(cid)
+    seed_url = f"{SEEDS}?kind=both&missing_only=true&limit=5"
+    seed_code, seed_body = _request(seed_url, key, None)
+    buy_code, buy_body = _request(BUYING, key, payloads["buying_window"])
+    vid_code, vid_body = _request(VIDEO, key, payloads["video"])
+    vend_code, vend_body = _request(VENDOR_VIDEO, key, payloads["vendor_video"])
+    report = {
+        "seed_targets": {"http": seed_code, **_safe_summary(seed_body)},
+        "buying_window_dry_run": {"http": buy_code, **_safe_summary(buy_body)},
+        "video_evidence_dry_run": {"http": vid_code, **_safe_summary(vid_body)},
+        "vendor_video_dry_run": {"http": vend_code, **_safe_summary(vend_body)},
+    }
+    ok = (
+        seed_code == 200
+        and buy_code == 200
+        and vid_code == 200
+        and vend_code == 200
+        and not (isinstance(seed_body, dict) and seed_body.get("error"))
+        and (not isinstance(buy_body, dict) or int(buy_body.get("accepted") or 0) >= 1)
+        and (not isinstance(vid_body, dict) or int(vid_body.get("accepted") or 0) >= 1)
+        and (not isinstance(vend_body, dict) or int(vend_body.get("accepted") or 0) >= 1)
+    )
+    report["ok"] = ok
+    return report
 
 
 def main() -> int:
@@ -240,6 +328,14 @@ def main() -> int:
     report["ok"] = cal_code == 200 and infer_code == 200
     if not report["ok"]:
         report["reason"] = "auth_or_contract_failed"
+        print(json.dumps(report, indent=2, default=str))
+        return 1
+
+    tracks = _tracks_8_10_dry_run(key, company_ids)
+    report["tracks_8_10"] = tracks
+    if not tracks.get("ok"):
+        report["ok"] = False
+        report["reason"] = "tracks_8_10_dry_run_failed"
         print(json.dumps(report, indent=2, default=str))
         return 1
 
