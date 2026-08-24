@@ -7,6 +7,7 @@ import { Link, useLocation } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { AUTH_UNAVAILABLE_MSG, supabase, supabaseOAuthRedirect } from "@/lib/supabase";
+import { authEmailRejectReason, normalizeAuthEmail, otpNoAccountMessage } from "@/lib/authEmail";
 import { getApiBase } from "@/lib/apiBase";
 import { readNextParam, peekPendingNext, postAuthRedirectTarget, storePendingNext, readPlanParam, storeCheckoutIntent, resolvePostAuthPath, navigateAfterAuth } from "@/lib/authNext";
 import { markJobsWorkspaceRestoreIfHome } from "@/lib/jobsWorkflow";
@@ -44,6 +45,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errMsg, setErrMsg] = useState("");
+  const [cooldown, setCooldown] = useState(0);
 
   const redirectTarget = () => postAuthRedirectTarget("/");
 
@@ -53,6 +55,12 @@ export default function Login() {
     const next = readNextParam();
     if (next) storePendingNext(next);
   }, []);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = window.setTimeout(() => setCooldown((n) => Math.max(0, n - 1)), 1000);
+    return () => window.clearTimeout(t);
+  }, [cooldown]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -139,19 +147,36 @@ export default function Login() {
       setErrMsg(AUTH_UNAVAILABLE_MSG);
       return;
     }
-    if (!email.trim()) return;
+    const reason = authEmailRejectReason(email);
+    if (reason) {
+      setStatus("error");
+      setErrMsg(reason);
+      return;
+    }
+    if (cooldown > 0) {
+      setStatus("error");
+      setErrMsg(`Wait ${cooldown}s before requesting another sign-in email.`);
+      return;
+    }
+    const normalized = normalizeAuthEmail(email);
+    if (!normalized) return;
     setStatus("sending");
     setErrMsg("");
     const redirectTo = supabaseOAuthRedirect(redirectTarget());
     const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: redirectTo },
+      email: normalized,
+      options: {
+        emailRedirectTo: redirectTo,
+        // Do not mint a new Auth user (and bounce a letter) from a login typo.
+        shouldCreateUser: false,
+      },
     });
     if (error) {
       setStatus("error");
-      setErrMsg(error.message);
+      setErrMsg(otpNoAccountMessage(error.message));
     } else {
       setStatus("sent");
+      setCooldown(60);
     }
   }
 
@@ -228,6 +253,9 @@ export default function Login() {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
+                  inputMode="email"
+                  spellCheck={false}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"

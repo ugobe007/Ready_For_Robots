@@ -7,6 +7,7 @@ import { Link, useLocation } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { AUTH_UNAVAILABLE_MSG, supabase, supabaseOAuthRedirect } from "@/lib/supabase";
+import { authEmailRejectReason, normalizeAuthEmail } from "@/lib/authEmail";
 import { getPublicReadApiBase } from "@/lib/apiBase";
 import { readSupplyAttribution, trackSupplyConversion, trackSignupStart } from "@/lib/siteAnalytics";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError } from "@/lib/authCallback";
@@ -417,11 +418,18 @@ export default function Signup() {
       setErrMsg(AUTH_UNAVAILABLE_MSG);
       return false;
     }
-    if (!email.trim()) return false;
+    const reason = authEmailRejectReason(email);
+    if (reason) {
+      setStatus("error");
+      setErrMsg(reason);
+      return false;
+    }
+    const normalized = normalizeAuthEmail(email);
+    if (!normalized) return false;
     storePendingNext(intendedPostAuthPath);
     const redirectTo = supabaseOAuthRedirect(intendedPostAuthPath);
     const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
+      email: normalized,
       options: { emailRedirectTo: redirectTo },
     });
     if (error) {
@@ -833,6 +841,9 @@ export default function Signup() {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
+                  inputMode="email"
+                  spellCheck={false}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@robotcompany.com"

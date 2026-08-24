@@ -73,3 +73,9 @@ Alternatively: Vercel dashboard → a Preview for the merge SHA → **Promote to
 | Live JS | Same `index-….js` | Unchanged (or a bad promote) | New hashed bundle |
 
 `python3 scripts/harness_compile_memory.py` labels skip-green `skipped_missing_secrets`.
+
+---
+
+## Supabase Auth mail (not Vercel)
+
+Magic-link bounces are **Supabase Auth**, not the Vercel bundle. Point Auth at Resend SMTP so we stop using the shared sender: [docs/supabase_auth_email.md](supabase_auth_email.md).
