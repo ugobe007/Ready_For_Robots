@@ -1,18 +1,18 @@
 {
   "ontology_id": "rfr_task_models_v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "product_term": "task_model",
   "internal_nickname": "certificate",
   "ui_term": "task model",
   "note": "A task model is a trained policy/skill pack for a specific physical job. Hardware capability is not enough. Do not call these certificates in product UI.",
   "presence_states": ["unknown", "present", "absent"],
   "honesty": "Chat LLMs (GPT, Claude, Gemini, Llama, Mistral) are not warehouse pick, hospital logistics, or CNC tending policies. Search vision-language-action families and OEM packs. Token API prices are not robot-policy prices.",
-  "candidate_families": ["OpenVLA", "Octo", "LeRobot", "ACT", "GR00T"],
+  "candidate_families": ["OpenVLA", "Octo", "LeRobot", "ACT", "GR00T", "π0.5"],
   "qualify_filters": [
     {
       "id": "task_family",
       "label": "Is it a robot policy (VLA / OEM pack), not a chat LLM?",
-      "note": "OpenVLA, Octo, LeRobot, ACT, GR00T, or an OEM application pack. GPT/Claude/Gemini/Llama text APIs do not pick cases or run hospital linens."
+      "note": "OpenVLA, π0.5, Octo, LeRobot, ACT, GR00T N1.5, or an OEM application pack. GPT/Claude/Gemini/Llama text APIs do not pick cases or run hospital linens."
     },
     {
       "id": "commercial_license",
@@ -88,15 +88,33 @@
   "shared_lookups": [
     {
       "kind": "open_weights",
+      "name": "OpenVLA",
+      "url": "https://openvla.github.io/",
+      "note": "7B open VLA pretrained on Open X-Embodiment. Project page and Hugging Face checkpoints. Presence on a candidate is unknown until named."
+    },
+    {
+      "kind": "foundation_robotics",
+      "name": "Physical Intelligence π0.5",
+      "url": "https://www.pi.website/blog/pi05",
+      "note": "VLA with open-world generalization (April 2025). Not a site-qualified warehouse or hospital pack."
+    },
+    {
+      "kind": "open_weights",
+      "name": "NVIDIA GR00T N1.5",
+      "url": "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
+      "note": "Open foundation VLA for generalist humanoid robots (NVIDIA GEAR). Weights on Hugging Face. Presence on a candidate is unknown."
+    },
+    {
+      "kind": "open_weights",
       "name": "Hugging Face robotics models",
       "url": "https://huggingface.co/models?pipeline_tag=robotics",
       "note": "Filter by robotics tasks. Then search OpenVLA, Octo, LeRobot. Presence on a candidate is unknown until named."
     },
     {
       "kind": "open_weights",
-      "name": "Hugging Face — OpenVLA / Octo / LeRobot",
+      "name": "Hugging Face — OpenVLA checkpoints",
       "url": "https://huggingface.co/models?search=openvla",
-      "note": "Embodied VLA families: vision + language → motor actions. Fine-tune and host yourself. Check commercial license and parameter size."
+      "note": "Downloadable OpenVLA weights. The project page is the canonical lookup; this is the checkpoint index."
     },
     {
       "kind": "open_weights",
@@ -164,16 +182,22 @@
           "note": "Ask the robot OEM which warehouse pick policy they ship for this SKU class."
         },
         {
-          "kind": "foundation_robotics",
-          "name": "Physical Intelligence (π-series) and similar robot foundation models",
-          "url": "https://www.physicalintelligence.company/",
-          "note": "Task-general robot policies; still must be qualified on this workplace."
+          "kind": "open_weights",
+          "name": "OpenVLA",
+          "url": "https://openvla.github.io/",
+          "note": "7B open VLA. Checkpoints on Hugging Face. Presence on a candidate is unknown until named."
         },
         {
-          "kind": "sim_to_real",
-          "name": "NVIDIA Isaac / GR00T",
-          "url": "https://developer.nvidia.com/isaac",
-          "note": "Simulation-trained policies; not proof that this job is done."
+          "kind": "foundation_robotics",
+          "name": "Physical Intelligence π0.5",
+          "url": "https://www.pi.website/blog/pi05",
+          "note": "Open-world VLA. Still must be qualified on this workplace."
+        },
+        {
+          "kind": "open_weights",
+          "name": "NVIDIA GR00T N1.5",
+          "url": "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
+          "note": "GEAR open foundation VLA. Not proof that this job is done."
         },
         {
           "kind": "open_weights",

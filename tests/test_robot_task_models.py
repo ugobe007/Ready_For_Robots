@@ -45,8 +45,13 @@ def test_warehouse_palletize_needs_pick_policy_unknown():
     questions = task_model_open_questions(models)
     assert any("pick-and-place" in q.lower() or "pick-and-place" in q.lower() for q in questions)
     names = {d["name"] for m in models for d in m["where_to_look"]}
+    urls = {d["url"] for m in models for d in m["where_to_look"] if d.get("url")}
     assert any("Hugging Face" in n for n in names)
     assert any("Argo-Robot" in n or "OpenVLA" in n for n in names)
+    assert "https://openvla.github.io/" in urls
+    assert "https://www.pi.website/blog/pi05" in urls
+    assert "https://research.nvidia.com/labs/gear/gr00t-n1_5/" in urls
+    assert all("utm_source" not in (u or "") and "curius" not in (u or "") for u in urls)
     assert any("Robotic Data" in n for n in names)
     assert any("World Labs" in n for n in names)
     assert any("Mercor" in n for n in names)
@@ -61,6 +66,7 @@ def test_warehouse_palletize_needs_pick_policy_unknown():
     assert any("BenchLM" in n for n in price_names)
     assert any("Axe Compute" in n for n in price_names)
     assert "OpenVLA" in models[0]["candidate_families"]
+    assert "π0.5" in models[0]["candidate_families"]
     assert any("chat LLM" in q.lower() or "vla" in q.lower() for q in questions)
     assert any("license" in q.lower() for q in questions)
     assert any("cost" in q.lower() or "price" in q.lower() or "token" in q.lower() for q in questions)
@@ -112,6 +118,10 @@ def test_opaque_job_still_asks_for_a_site_task_policy():
     )
     assert _ids(models) == {"site_task_policy"}
     assert models[0]["presence"] == "unknown"
+    urls = {d["url"] for d in models[0]["where_to_look"] if d.get("url")}
+    assert "https://openvla.github.io/" in urls
+    assert "https://www.pi.website/blog/pi05" in urls
+    assert "https://research.nvidia.com/labs/gear/gr00t-n1_5/" in urls
 
 
 def test_novolex_match_card_exposes_unknown_task_models():

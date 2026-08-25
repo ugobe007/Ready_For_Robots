@@ -24,19 +24,54 @@ const CARD_LINK_SKIP_KINDS = new Set([
   "integrator_sow",
 ]);
 
-const CARD_LINK_PREFER_KINDS = new Set(["open_weights", "sim_to_real"]);
+const CARD_LINK_PREFER_KINDS = new Set([
+  "open_weights",
+  "sim_to_real",
+  "foundation_robotics",
+]);
+
+/** Canonical VLA project pages — these three are the Job Card model links. */
+const CARD_LINK_PRIORITY = [
+  "openvla.github.io",
+  "pi.website/blog/pi05",
+  "gr00t-n1_5",
+];
 
 const TASK_MODEL_WHY_HOLE =
   /hardware can enter the workplace|task model for this work is still unknown/i;
 
 function shortModelLinkName(dest: TaskModelLookup): string {
   const url = (dest.url || "").toLowerCase();
+  if (url.includes("openvla.github.io") || url.includes("openvla")) return "OpenVLA";
+  if (url.includes("pi.website") || url.includes("physicalintelligence")) {
+    return "π0.5";
+  }
+  if (url.includes("gr00t")) return "GR00T N1.5";
   if (url.includes("huggingface.co/lerobot")) return "LeRobot";
-  if (url.includes("search=openvla") || url.includes("openvla")) return "OpenVLA";
   if (url.includes("huggingface.co")) return "Hugging Face robotics";
   if (url.includes("nvidia.com/isaac") || url.includes("/isaac")) return "NVIDIA Isaac";
-  if (url.includes("physicalintelligence")) return "Physical Intelligence";
   return dest.name.replace(/\s+[—–-]\s+.*$/, "").trim() || dest.name;
+}
+
+function canonicalModelUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.delete("utm_source");
+    parsed.searchParams.delete("utm_medium");
+    parsed.searchParams.delete("utm_campaign");
+    parsed.searchParams.delete("curius");
+    const query = parsed.searchParams.toString();
+    parsed.search = query;
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+function cardLinkRank(url: string): number {
+  const u = url.toLowerCase();
+  const idx = CARD_LINK_PRIORITY.findIndex(token => u.includes(token));
+  return idx === -1 ? CARD_LINK_PRIORITY.length : idx;
 }
 
 export type RobotJobQualification =
@@ -159,10 +194,13 @@ function mapLookups(raw?: MatchLookupIn[] | null): TaskModelLookup[] {
 /** Clickable model destinations for the Job Card — no catalogs, surveys, or price maps. */
 export function cardModelLinks(lookups: TaskModelLookup[]): TaskModelLookup[] {
   const withUrl = lookups.filter(d => d.url && d.name);
-  const ranked = [
-    ...withUrl.filter(
+  const preferred = withUrl
+    .filter(
       d => CARD_LINK_PREFER_KINDS.has(d.kind) && !CARD_LINK_SKIP_KINDS.has(d.kind),
-    ),
+    )
+    .sort((a, b) => cardLinkRank(a.url || "") - cardLinkRank(b.url || ""));
+  const ranked = [
+    ...preferred,
     ...withUrl.filter(
       d => !CARD_LINK_PREFER_KINDS.has(d.kind) && !CARD_LINK_SKIP_KINDS.has(d.kind),
     ),
@@ -173,7 +211,12 @@ export function cardModelLinks(lookups: TaskModelLookup[]): TaskModelLookup[] {
     const key = (dest.url || dest.name).toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ ...dest, name: shortModelLinkName(dest), note: "" });
+    out.push({
+      ...dest,
+      url: canonicalModelUrl(dest.url || ""),
+      name: shortModelLinkName(dest),
+      note: "",
+    });
     if (out.length >= JOB_CARD_MODEL_LINK_CAP) break;
   }
   return out;
