@@ -44,7 +44,7 @@ import {
 } from "@/lib/robotProfile";
 import type { ClassOption, MatchCapability, MatchJob } from "@/lib/robotJobMatch";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
-import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
+import { MARKET_TAPE_JOBS, uniqueTapeJobCount } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
@@ -146,7 +146,7 @@ type ProductChoice = {
 };
 type RestoreView = "review" | "jobs" | "portfolio";
 
-const MARKET_FOUND_BASE = 140;
+const MARKET_FOUND_BASE = uniqueTapeJobCount();
 const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
 const DEFAULT_CLASS_OPTIONS: ClassOption[] = [

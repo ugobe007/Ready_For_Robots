@@ -174,11 +174,14 @@ describe("jobsWorkflow", () => {
     );
     expect(tape).toMatch(/export const TAPE_VIEWPORT_PX = VISIBLE \* ROW_PX/);
     expect(tape).toMatch(/height: TAPE_VIEWPORT_PX/);
-    expect(tape).toMatch(/\$\{revealing\}:\$\{baseCount\}:\$\{corpus\.length\}/);
+    expect(tape).toMatch(/\$\{revealing\}:\$\{corpus\.length\}/);
     expect(tape).toMatch(/if \(seededKey\.current === key\) return;/);
     expect(tape).not.toMatch(/flex h-full min-h-0 flex-col/);
     expect(tape).not.toMatch(/min-h-0 flex-1 overflow-hidden/);
+    expect(tape).toMatch(/nextUnseenTapeJob/);
     expect(workspace).toMatch(/<LiveJobTape/);
+    expect(workspace).toMatch(/uniqueTapeJobCount/);
+    expect(workspace).not.toMatch(/const MARKET_FOUND_BASE = 140/);
     expect(workspace).not.toMatch(/min-h-\[28rem\]/);
   });
 
