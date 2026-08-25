@@ -64,7 +64,13 @@ const JOBS_SIGNUP_HREF = `/signup?src=${JOBS_ACTIVATE_SRC}`;
 export default function Intelligence() {
   const [stories, setStories] = useState<Story[]>([]);
   const [email, setEmail] = useState("");
-  const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
+  const [reportForm, setReportForm] = useState({
+    name: "",
+    email: "",
+    company: "",
+    robotCategory: "",
+    website: "",
+  });
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
 
@@ -246,7 +252,18 @@ export default function Intelligence() {
                   Briefing requested. We saved your request and queued the follow-up email.
                 </div>
               ) : (
-                <form onSubmit={requestReport} className="space-y-2.5">
+                <form onSubmit={requestReport} className="relative space-y-2.5">
+                  <label className="absolute -left-[10000px] h-px w-px overflow-hidden" aria-hidden="true">
+                    Website
+                    <input
+                      type="text"
+                      name="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={reportForm.website}
+                      onChange={(e) => setReportForm((current) => ({ ...current, website: e.target.value }))}
+                    />
+                  </label>
                   {[
                     ["name", "Name", "text"],
                     ["email", "Work email", "email"],

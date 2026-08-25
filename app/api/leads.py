@@ -42,6 +42,7 @@ from app.models.lead_rep_feedback import LeadRepFeedback
 from app.models.lead_research import LeadResearchUpdate
 from app.models.waitlist import WaitlistSignup
 from app.services.resend_email import ResendEmailError, send_email_via_resend
+from app.services.form_spam import report_download_spam_reason
 from app.services.lead_filter import (
     classify_lead,
     is_junk,
@@ -254,6 +255,7 @@ class ReportDownloadIn(BaseModel):
     name: Optional[str] = Field(None, max_length=200)
     company: Optional[str] = Field(None, max_length=240)
     robot_category: Optional[str] = Field(None, alias="robotCategory", max_length=160)
+    website: Optional[str] = Field(None, max_length=200)
 
 
 def _valid_capture_email(email: str) -> bool:
@@ -308,11 +310,32 @@ def _notify_report_owner(row: WaitlistSignup) -> dict:
         return {"sent": False, "reason": str(exc)}
 
 
+def _ignored_report_download(reason: str) -> dict:
+    logger.info("report_download ignored reason=%s", reason)
+    return {
+        "ok": True,
+        "ignored": True,
+        "lead": None,
+        "email": {"sent": False, "reason": "ignored"},
+        "ownerNotification": {"sent": False, "reason": "ignored"},
+    }
+
+
 @router.post("/report-download")
 def capture_report_download(body: ReportDownloadIn, db: Session = Depends(get_db)):
     email = body.email.lower().strip()
     if not _valid_capture_email(email):
         raise HTTPException(status_code=400, detail="Valid email is required")
+
+    spam_reason = report_download_spam_reason(
+        email=email,
+        name=body.name,
+        company=body.company,
+        robot_category=body.robot_category,
+        honeypot=body.website,
+    )
+    if spam_reason:
+        return _ignored_report_download(spam_reason)
 
     row = db.query(WaitlistSignup).filter(WaitlistSignup.email == email).first()
     if row is None:
