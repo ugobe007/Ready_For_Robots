@@ -191,7 +191,13 @@ export default function Login() {
             <div className="min-w-0">
               <p className="section-eyebrow mb-2">Sign in</p>
               <h1 className="font-display text-3xl font-bold tracking-tight text-slate-100">Welcome back</h1>
-              <p className="mt-2 text-base text-slate-300">Sign in to save jobs, run Pipeline, and work CRM.</p>
+              <p className="mt-2 text-base text-slate-300">
+                Sign in to save jobs, run Pipeline, and work CRM. Admin emails open{" "}
+                <Link href="/admin" className="text-emerald-400 underline-offset-2 hover:underline">
+                  /admin
+                </Link>{" "}
+                after sign-in.
+              </p>
             </div>
             <div className="shrink-0" aria-hidden="true">
               <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />

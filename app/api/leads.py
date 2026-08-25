@@ -86,6 +86,7 @@ from app.services.company_domain import (
     pick_canonical_company,
 )
 from app.services.outreach_email_inference import infer_outreach_emails
+from app.services.hermes_job_evidence import sanitize_hermes_pipeline_overlay
 from app.services.pipeline_cache_policy import (
     HOMEPAGE_SPOTLIGHT_ROTATION_SEC,
     PIPELINE_LEADS_ROTATION_SEC,
@@ -1694,15 +1695,10 @@ def _hermes_pipeline_fields(crm_meta: Optional[dict]) -> dict:
                     }
                 )
     return {
-        "hermes_qualify": (
+        "hermes_qualify": sanitize_hermes_pipeline_overlay(
             {
-                "automation_fit": qualify.get("automation_fit"),
-                "labor_intensity": qualify.get("labor_intensity"),
-                "facility_clarity": qualify.get("facility_clarity"),
-                "blockers": list(qualify.get("blockers") or [])[:8],
                 "rationale": (qualify.get("rationale") or "")[:500] or None,
                 "vendor_shortlist": vendor_shortlist,
-                "truth_state": qualify.get("truth_state") or "HERMES_OVERLAY",
                 "updated_at": qualify.get("updated_at"),
             }
             if qualify

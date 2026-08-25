@@ -24,6 +24,7 @@ import {
   type AdminSectionName,
 } from "@/lib/adminSnapshot";
 import { authHeader, getFreshAccessToken } from "@/lib/supabase";
+import { loginHref } from "@/lib/authNext";
 import { scrollToAdminSection } from "@/lib/adminNavigation";
 
 type AdminStats = {
@@ -2209,7 +2210,7 @@ export default function Admin() {
           <Shield className="mx-auto mb-4 h-7 w-7" style={{ color: "#FFB000" }} />
           <h1 className="text-2xl font-bold text-gray-900">Admin sign in required</h1>
           <p className="mt-3 text-sm text-gray-500">Sign in with an admin email to manage ReadyForRobots.</p>
-          <Link href="/login" className="mt-6 inline-flex rounded-xl border px-5 py-3 text-sm font-bold" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
+          <Link href={loginHref("/admin")} className="mt-6 inline-flex rounded-xl border px-5 py-3 text-sm font-bold" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
             Sign in
           </Link>
         </main>

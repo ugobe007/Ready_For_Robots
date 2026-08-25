@@ -31,6 +31,7 @@ import {
 import { marketInsightForIndustry } from "@/lib/industryContext";
 import { dealMatchesIndustrySearch, pipelineSearchSuggestions } from "@/lib/industrySearchLexicon";
 import { mapApiLeadToDeal, crmOutreachStageFromPipelineStage, type ApiLead } from "@/lib/pipelineLeadMap";
+import { pipelineHermesCard } from "@/lib/hermesJobEvidence";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
@@ -1234,7 +1235,6 @@ function WorkMatchBadge({
     | "workflowFamily"
     | "workHardBlockers"
     | "comparableDeployment"
-    | "hermesQualify"
   >;
   size?: "sm" | "lg";
 }) {
@@ -1254,9 +1254,6 @@ function WorkMatchBadge({
     wm != null ? `Work Match ${Math.round(wm)}%${deal.workMatchLabel ? ` (${deal.workMatchLabel})` : ""}` : null,
     family ? `Workflow: ${family}` : null,
     deal.workMatchManufacturer ? `Best robot: ${deal.workMatchManufacturer}` : null,
-    deal.hermesQualify?.automation_fit != null
-      ? `Hermes automation fit ${Math.round(Number(deal.hermesQualify.automation_fit))}`
-      : null,
     blocked ? `Blockers: ${blockers.join(", ")}` : null,
     deal.comparableDeployment?.robot
       ? `Evidence: ${deal.comparableDeployment.robot} @ ${deal.comparableDeployment.customer || "site"}`
@@ -5067,14 +5064,6 @@ export default function Pipeline() {
                               : ""}
                           </p>
                         )}
-                        {selected.hermesQualify?.automation_fit != null && (
-                          <p className="max-w-[11rem] text-right text-[10px] leading-snug text-sky-300">
-                            Hermes fit {Math.round(Number(selected.hermesQualify.automation_fit))}
-                            {selected.hermesQualify.vendor_shortlist?.[0]?.vendor
-                              ? ` · ${selected.hermesQualify.vendor_shortlist[0].vendor}`
-                              : ""}
-                          </p>
-                        )}
                         {isAdmin && (
                           <button
                             type="button"
@@ -5163,96 +5152,70 @@ export default function Pipeline() {
                     </div>
                   </div>
 
-                  {(selected.hermesQualify ||
-                    (selected.hermesJobTitles && selected.hermesJobTitles.length > 0) ||
-                    (selected.hermesDecisionMakers && selected.hermesDecisionMakers.length > 0) ||
-                    (selected.hermesVideoEvidence && selected.hermesVideoEvidence.length > 0)) && (
+                  {(() => {
+                    const hermesCard = pipelineHermesCard(selected);
+                    if (!hermesCard) return null;
+                    return (
                     <div className="pipeline-hermes px-5 py-4">
                       <p className="pipeline-hermes-kicker text-[10px] font-bold uppercase tracking-widest">
-                        Hermes intelligence
-                        {selected.hermesQualify?.truth_state ? (
-                          <span className="ml-1.5 font-semibold normal-case tracking-normal text-sky-200/80">
-                            · overlay (not CRM truth)
-                          </span>
-                        ) : null}
+                        On-site evidence
                       </p>
-                      {selected.hermesQualify?.automation_fit != null && (
-                        <p className="mt-1 text-[12px] leading-snug text-slate-100">
-                          Automation fit{" "}
-                          <span className="font-semibold">{Math.round(Number(selected.hermesQualify.automation_fit))}</span>
-                          {selected.hermesQualify.labor_intensity
-                            ? ` · labor ${selected.hermesQualify.labor_intensity}`
-                            : ""}
-                          {selected.hermesQualify.facility_clarity
-                            ? ` · facility ${selected.hermesQualify.facility_clarity}`
-                            : ""}
-                        </p>
-                      )}
-                      {selected.hermesQualify?.rationale && (
+                      {hermesCard.rationale ? (
                         <p className="mt-1 text-[11px] leading-relaxed text-slate-300">
-                          {selected.hermesQualify.rationale}
+                          {hermesCard.rationale}
                         </p>
-                      )}
-                      {(selected.hermesQualify?.vendor_shortlist || []).length > 0 && (
+                      ) : null}
+                      {hermesCard.vendors.length > 0 ? (
                         <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-200">
-                          {(selected.hermesQualify?.vendor_shortlist || []).slice(0, 3).map((v, i) => (
-                            <li key={`${v.vendor || "v"}-${i}`}>
+                          {hermesCard.vendors.slice(0, 3).map((v, i) => (
+                            <li key={`${v.vendor}-${i}`}>
                               <span className="font-medium">{v.vendor}</span>
                               {v.model ? ` · ${v.model}` : ""}
                               {v.why ? ` — ${v.why}` : ""}
                             </li>
                           ))}
                         </ul>
-                      )}
-                      {(selected.hermesQualify?.blockers || []).length > 0 && (
-                        <p className="mt-1 text-[11px] text-amber-200">
-                          Blockers: {(selected.hermesQualify?.blockers || []).join("; ")}
-                        </p>
-                      )}
-                      {(selected.hermesJobTitles || []).length > 0 && (
+                      ) : null}
+                      {hermesCard.jobTitles.length > 0 ? (
                         <p className="mt-1.5 text-[11px] text-slate-200">
                           <span className="font-semibold text-slate-100">Open roles: </span>
-                          {(selected.hermesJobTitles || []).slice(0, 3).join(" · ")}
+                          {hermesCard.jobTitles.join(" · ")}
                         </p>
-                      )}
-                      {(selected.hermesDecisionMakers || []).length > 0 && (
+                      ) : null}
+                      {hermesCard.decisionMakers.length > 0 ? (
                         <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-200">
-                          {(selected.hermesDecisionMakers || []).slice(0, 4).map((dm, i) => (
+                          {hermesCard.decisionMakers.map((dm, i) => (
                             <li key={`${dm.name || "dm"}-${i}`}>
                               <span className="font-medium">{dm.name}</span>
                               {dm.title ? ` · ${dm.title}` : ""}
                             </li>
                           ))}
                         </ul>
-                      )}
-                      {(selected.hermesVideoEvidence || []).length > 0 && (
+                      ) : null}
+                      {hermesCard.videos.length > 0 ? (
                         <div className="mt-2">
                           <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-300">
                             Customer use-case videos
                           </p>
                           <ul className="mt-1 space-y-1 text-[11px] text-slate-200">
-                            {(selected.hermesVideoEvidence || []).slice(0, 4).map((vid, i) => (
-                              <li key={`${vid.source_url}-${i}`} className="leading-snug">
+                            {hermesCard.videos.map((vid, i) => (
+                              <li key={`${vid.url}-${i}`} className="leading-snug">
                                 <a
-                                  href={vid.source_url}
+                                  href={vid.url}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="font-medium text-sky-300 underline-offset-2 hover:underline"
                                 >
-                                  {vid.title || vid.source_url}
+                                  {vid.title || vid.url}
                                 </a>
-                                <span className="text-slate-400">
-                                  {vid.platform ? ` · ${vid.platform}` : ""}
-                                  {vid.workflow_hint ? ` · ${vid.workflow_hint}` : ""}
-                                  {vid.robot_visible ? ` · ${vid.robot_visible}` : ""}
-                                </span>
                               </li>
                             ))}
                           </ul>
                         </div>
-                      )}
+                      ) : null}
                     </div>
-                  )}
+                    );
+                  })()}
 
                   <div className="flex flex-col">
                   {showFirstThreeActionsProgress && (

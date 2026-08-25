@@ -837,6 +837,8 @@ describe("jobsWorkflow", () => {
       "utf8",
     );
     expect(header).toMatch(/href=\{crmHref\}/);
+    expect(header).toMatch(/useIsAdmin/);
+    expect(header).toMatch(/href="\/admin"/);
     expect(header).toMatch(/showPipeline \? \(/);
     expect(header).toMatch(/h-14/);
     expect(header).toMatch(/sm:text-base/);
@@ -851,6 +853,10 @@ describe("jobsWorkflow", () => {
 
     const pipeline = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
     expect(pipeline).toMatch(/<ExperimentHeader/);
+    expect(pipeline).toMatch(/pipelineHermesCard/);
+    expect(pipeline).toMatch(/On-site evidence/);
+    expect(pipeline).not.toMatch(/overlay \(not CRM truth\)/);
+    expect(pipeline).not.toMatch(/Hermes intelligence/);
     expect(pipeline).toMatch(/PIPELINE_PAGE_HEADLINE/);
     expect(pipeline).not.toMatch(/from "@\/components\/Header"/);
     expect(pipeline).not.toMatch(/SIGNAL · Sales intelligence/);
