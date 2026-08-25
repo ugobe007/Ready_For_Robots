@@ -33,7 +33,7 @@ submit robot URL on /
   → if several SKUs, ask which robot to find jobs for
   → one SKU: picker confirm goes straight to jobs for that product (no profile / second Find jobs)
   → several / all: resolve the search without blocking next steps (type-first, one match per class)
-  → 01 robot → 02 jobs → 03 CRM are always navigational links
+  → 01 robot → 02 jobs → 03 Place are always navigational links
   → see Robot Jobs (step 2)
        one robot: 5 jobs, each tagged `Job ##### is for {SKU}`
        several robots: 1 sample job per SKU, tagged; run each robot individually for five jobs
@@ -41,7 +41,7 @@ submit robot URL on /
   → check the jobs to take forward (all five start checked)
   → Next → /pipeline?src=jobs_activate (signup first if signed out)
   → CRM desk shows 5 unlocked job opportunities (free)
-  → Apply to jobs: models, PoC, monthly rental you will charge, then track follow-up
+  → Place: quote the rental you will charge, apply, track follow-up
   → run the next robot the same way
 ```
 

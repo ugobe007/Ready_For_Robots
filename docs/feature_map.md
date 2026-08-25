@@ -14,7 +14,7 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 |---------|-------|------------------------|
 | Jobs terminal | `/` (`/jobs/:slug` same workspace) | Paste robot URL, inspect Job Cards |
 | About | `/intelligence` | Jobs loop explainer; Start jobs → `/?new=1` |
-| Jobs CRM | `/pipeline?src=jobs_activate` | Keep 5 unlocked jobs (free); Apply rectify |
+| Jobs CRM | `/pipeline?src=jobs_activate` | Place: quote rental → apply (5 jobs on free) |
 | Compare | `/compare` | Jobs vs sales-list framing |
 | SIGNAL pipeline | `/pipeline` | Buyer queue — **not** the Jobs path |
 | Admin | `/admin` | Cal / ops — not Jobs activation |
@@ -58,9 +58,9 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 |------|-------|-----|
 | 01 | Show us your robot | `Start jobs →` |
 | 02 | Here are its jobs | `See jobs →` |
-| 03 | CRM | `Next →` |
+| 03 | Place the robot | `Next →` |
 
-01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. No Place-buyer screen.
+01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is the money moment (Place), not a SIGNAL dump.
 
 ---
 
@@ -102,8 +102,7 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
   → optional SKU pick
   → Job Cards (QUALIFY / inspect + check)
   → Next → /pipeline?src=jobs_activate  (signup first if signed out)
-  → 5 unlocked jobs on the CRM desk
-  → Apply to jobs → rectify credentials → track follow-up
+  → Place: quote rental → apply (5 jobs). Process bar stays 01 / 02 / 03.
   → run the next robot the same way
 ```
 

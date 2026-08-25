@@ -7,6 +7,8 @@ import {
   jobCredentialGaps,
   placementOutreachDraft,
   placementWorkflowStrategy,
+  placementAgentBrief,
+  placementMoneyLane,
 } from "./jobsApply";
 import type { MatchJob } from "./robotJobMatch";
 
@@ -99,5 +101,29 @@ describe("jobsApply", () => {
     expect(placementWorkflowStrategy(jobCredentialGaps(job, ready), ready)).toMatch(
       /Credentials are complete/,
     );
+  });
+
+  it("makes Place a money moment: context, then pack → quote → apply", () => {
+    const empty = emptyApplyRecord("cnc-1");
+    const emptyGaps = jobCredentialGaps(job, empty);
+    expect(placementMoneyLane(emptyGaps, empty)).toBe("pack");
+    expect(placementAgentBrief(job, empty, "Dexmate Vega")).toMatch(
+      /Fulcrum Technologies has work: Load parts into CNC/,
+    );
+    expect(placementAgentBrief(job, empty, "Dexmate Vega")).toMatch(/Your move: confirm the task-library pack/);
+    const quoted = {
+      ...empty,
+      packAcknowledged: true,
+      pocEvidence: "Cell demo video from integrator SOW",
+    };
+    expect(placementMoneyLane(jobCredentialGaps(job, quoted), quoted)).toBe("quote");
+    expect(placementAgentBrief(job, quoted, "Dexmate Vega")).toMatch(/quote the monthly rental/);
+    expect(placementAgentBrief(job, quoted, "Dexmate Vega")).toMatch(/do not invent/i);
+    const ready = {
+      ...quoted,
+      monthlyRental: "4800 / month RaaS",
+    };
+    expect(placementMoneyLane(jobCredentialGaps(job, ready), ready)).toBe("apply");
+    expect(placementAgentBrief(job, ready, "Dexmate Vega")).toMatch(/money moment/i);
   });
 });

@@ -7,7 +7,9 @@ import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
 
 export const JOBS_APPLY_STORAGE_KEY = "rfr_job_apply_v1";
-export const JOBS_APPLY_CTA = "Apply to jobs →";
+export const JOBS_APPLY_CTA = "Place this job →";
+
+export type PlacementLane = "pack" | "quote" | "apply" | "track";
 
 export type JobApplyStatus = "blocked" | "ready" | "applied" | "follow_up";
 
@@ -146,6 +148,69 @@ export function placementWorkflowStrategy(
     return `Do not apply yet. Missing: ${missing.join(", ")}. Close every gap, then send the outreach draft.`;
   }
   return "Credentials are complete. Send the outreach draft, then Apply so we can track the submission and follow-up.";
+}
+
+export function placementMoneyLane(
+  gaps: CredentialGap[],
+  record: JobApplyRecord,
+): PlacementLane {
+  if (record.status === "applied" || record.status === "follow_up") return "track";
+  const byId = Object.fromEntries(gaps.map(g => [g.id, g.met]));
+  if (!byId.model_pack) return "pack";
+  if (!byId.poc_evidence || !byId.monthly_rental) return "quote";
+  return "apply";
+}
+
+export function placementLaneLabel(lane: PlacementLane): string {
+  if (lane === "pack") return "Pack";
+  if (lane === "quote") return "Quote";
+  if (lane === "apply") return "Apply";
+  return "Tracking";
+}
+
+export function placementAgentBrief(
+  job: MatchJob,
+  record: JobApplyRecord,
+  robotName: string,
+): string {
+  const card = robotJobCardFromMatch(job);
+  const who = (robotName || "this robot").trim() || "this robot";
+  const employer = card.employer || "This employer";
+  const work = card.jobTitle || "this work";
+  const place = card.workplace ? ` at ${card.workplace}` : "";
+  const known = `${employer} has work: ${work}${place}. ${who} is a possible match.`;
+  const gaps = jobCredentialGaps(job, record);
+  const lane = placementMoneyLane(gaps, record);
+  if (lane === "track") {
+    return `${known} Application is in. Your move: follow up — site assessment, pack license, and whether they accepted the monthly rental.`;
+  }
+  if (lane === "apply") {
+    return `${known} Pack, proof, and your monthly quote are in. This is the money moment. Apply.`;
+  }
+  if (lane === "quote") {
+    return `${known} Your move: quote the monthly rental you will charge ${employer}. That quote is how revenue on this job becomes predictable. We do not invent it.`;
+  }
+  return `${known} Your move: confirm the task-library pack. Hardware in the room is not enough.`;
+}
+
+export function placementBoardStats(
+  jobs: MatchJob[],
+): { applied: number; quoted: number; total: number; quotes: string[] } {
+  const quotes: string[] = [];
+  let applied = 0;
+  let quoted = 0;
+  for (const job of jobs) {
+    const rec = loadJobApplyRecord(job.job_key);
+    const gaps = jobCredentialGaps(job, rec);
+    const rent = gaps.find(g => g.id === "monthly_rental");
+    if (rent?.met) {
+      quoted += 1;
+      const t = (rec.monthlyRental || "").trim();
+      if (t) quotes.push(t);
+    }
+    if (rec.status === "applied" || rec.status === "follow_up") applied += 1;
+  }
+  return { applied, quoted, total: jobs.length, quotes };
 }
 
 export function followUpNextStep(record: JobApplyRecord): string {

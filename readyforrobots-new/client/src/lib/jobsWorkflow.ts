@@ -489,11 +489,11 @@ export const JOBS_RAIL_LINK_CLASS =
 
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT =
-  "This is your CRM desk. Free unlocks 5 job opportunities from the rows you kept. Apply to jobs opens outreach, credential rectify, and follow-up — not a SIGNAL buyer list.";
+  "Jobs you keep stay jobs. Quote the monthly rental you will charge, then apply. We do not invent a number.";
 export const CRM_HOW_TO_STEPS = [
-  "Kept jobs land on this desk. All five example rows start checked on Jobs.",
-  "Apply to jobs: close models, PoC evidence, and the monthly rental you will charge the employer.",
-  "When credentials are met, apply and track follow-up here. We do not invent a rental number.",
+  "The jobs you checked on FIND land on Place — not a SIGNAL buyer list.",
+  "One job at a time: pack, quote, apply. The agent names your move.",
+  "Follow up after apply. Revenue is the rental you typed.",
 ] as const;
 export const CRM_SUBHEAD_CLASS =
   "mt-2 max-w-2xl text-lg leading-relaxed text-slate-200 sm:text-xl";
@@ -575,9 +575,9 @@ export function jobsListHint(opts: {
   productName: string;
 }): string {
   if (opts.robotCount > 1) {
-    return "One sample job per robot. Sample rows start checked. Run each robot by itself for five jobs, then Next to the CRM desk.";
+    return "One sample job per robot. Sample rows start checked. Run each robot by itself for five jobs, then Next to Place.";
   }
-  return `Five example jobs ${opts.productName} can do. Each row names the policy layer and typical training time — expand for the placement steps. All five start checked (Keep). Uncheck any you do not want. Next opens the CRM desk with those jobs.`;
+  return `Five example jobs ${opts.productName} can do. Each row names the policy layer and typical training time — expand for the placement steps. All five start checked (Keep). Uncheck any you do not want. Next is Place: quote the rental, then apply.`;
 }
 
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
@@ -679,7 +679,7 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = "Next →";
 export const JOBS_NEXT_HINT =
-  "All five start checked. Uncheck any you do not want. Next opens the CRM desk with your kept jobs.";
+  "All five start checked. Uncheck any you do not want. Next is the money moment: Place — quote the rental, then apply.";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
@@ -701,7 +701,7 @@ export const JOBS_PROCESS_STEPS = [
   {
     id: "activate" as const,
     n: "03",
-    label: "CRM",
+    label: "Place the robot",
     linkLabel: JOBS_NEXT_CTA,
   },
 ];
@@ -851,8 +851,8 @@ export function defaultCheckedKeysForLineup<T extends { job_key: string }>(
 export const RAIL_STEP_HINT = {
   find: FIND_JOBS_HOME_SUBHEAD,
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
-  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each — run each SKU by itself, then Next to the CRM desk.",
-  pipeline: "CRM unlocks 5 job opportunities on this desk. Apply to jobs rectifies credentials, then tracks follow-up.",
+  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each — run each SKU by itself, then Next to Place.",
+  pipeline: "Place is the money moment: quote the rental you will charge, apply, track follow-up.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */

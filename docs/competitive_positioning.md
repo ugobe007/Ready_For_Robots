@@ -44,6 +44,10 @@ They will also hear from **“Revenue Operating System”** vendors — especial
 | **When they win** | Enterprise replacing Salesforce + Outreach + point tools | N/A — different buyer job |
 | **When we win** | Rep needs *which robot to pitch* and *who is buying now*, not another CRM | Always for robot sales teams |
 
+**What we take from Reevo / Monaco (UX, not category):** they make revenue feel predictable because every screen has **full context of the object** and **one next action**. Monaco is 1→2→3… ending in conversion. Reevo’s punchline is “Revenue should feel predictable.” We do **not** become a sales CRM, TAM builder, or sequence engine — that is their category, and Cal-as-core stays frozen.
+
+Our object is the **Robot Job**. Step 03 must feel like their command center: what we already know (employer, work, model), what the user hasn’t closed (pack, PoC, **monthly rental they will charge**), and the money move (**Place**). Invented forecasts are a Pinto. A user-typed rental on a named job is the Ferrari.
+
 **Vs Reevo / revenue OS:**
 > “They sell one platform for every B2B team. We sell the **robot buyer pipeline** — live intent, SKU-level pitch actions, and deals advancing in HubSpot. Keep your CRM; add SIGNAL.”
 
