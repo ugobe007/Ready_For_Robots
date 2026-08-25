@@ -81,7 +81,7 @@ Structured `next_mission` slugs the compiler already understands:
 readyforrobots.com /
   → header has no Pipeline
   → known OEM URL (e.g. Fourier) → Job Cards (Conditional until review)
-  → Next → /pipeline?src=jobs_activate (5 jobs on the CRM desk, no SIGNAL OEMs)
+  → Place these jobs → /pipeline?src=jobs_activate (5 jobs on the CRM desk, no SIGNAL OEMs)
   → Fly /api + database snapshot reachable
   → Vercel production is a real --prod (not a 7s GHA skip)
 ```

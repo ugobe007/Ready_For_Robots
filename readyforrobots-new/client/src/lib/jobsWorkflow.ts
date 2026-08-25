@@ -677,7 +677,7 @@ export const FIND_JOBS_SUBHEAD_CLASS =
   "mt-4 max-w-3xl text-lg leading-snug text-slate-300 sm:text-xl";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
-export const JOBS_NEXT_CTA = "Next →";
+export const JOBS_NEXT_CTA = "Place these jobs →";
 export const JOBS_NEXT_HINT =
   "All five start checked. Uncheck any you do not want. Next is the money moment: Place — quote the rental, then apply.";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";

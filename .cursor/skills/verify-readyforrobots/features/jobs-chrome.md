@@ -21,7 +21,7 @@ Preconditions:
 - Doctor healthy.
 
 - **Header.** On `/`, nav includes Jobs and About. Pipeline is absent. Signed-out Sign In stays. Signed-in CRM href is `/pipeline?src=jobs_activate`.
-- Process bar. `aria-label="Jobs process"`. Actions: FIND `Start jobs →`, list `Next →`. Step 03 label is Place the robot.
+- Process bar. `aria-label="Jobs process"`. Actions: FIND `Start jobs →`, list `Place these jobs →`. Step 03 label is Place the robot.
 - **JS canary (CI).** Run `python3 scripts/agent_verify.py drive --feature jobs-chrome --evidence "$EVIDENCE"`. Expect `Find jobs for your robot`, `Show us your robot`, `Here are its jobs`, `Start jobs`, `jobs_activate` in the shipped bundle.
 - **Proof.** `drive-jobs-chrome.json` hits are all true. Browser: screenshot of `/` with header + FIND, Pipeline not in the header.
 

@@ -39,7 +39,7 @@ submit robot URL on /
        several robots: 1 sample job per SKU, tagged; run each robot individually for five jobs
   → inspect Robot Job Cards (employer, workplace, work, qualification, open questions)
   → check the jobs to take forward (all five start checked)
-  → Next → /pipeline?src=jobs_activate (signup first if signed out)
+  → Place these jobs → /pipeline?src=jobs_activate (signup first if signed out)
   → CRM desk shows 5 unlocked job opportunities (free)
   → Place: quote the rental you will charge, apply, track follow-up
   → run the next robot the same way
@@ -51,7 +51,7 @@ The picker already decides one vs several. **One robot → jobs for that robot o
 
 **Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Next uses `src=jobs_activate` on `/pipeline` so the destination is the CRM desk with 5 unlocked job opportunities, not a SIGNAL lead feed. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 
-Step 2 inspects. Checkboxes select. **Start jobs →** (FIND) and **Next →** (job list) sit in the process bar, at the top of the job list, and in the page footer — not only under the tape or under the cards. The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
+Step 2 inspects. Checkboxes select. **Start jobs →** (FIND) and **Place these jobs →** (job list) sit in the process bar, at the top of the job list, and in the page footer — not only under the tape or under the cards. The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
 
 ---
 
@@ -83,7 +83,7 @@ Chrome is **rectilinear**: panels, buttons, cards, and inputs have square corner
 | **One robot** | 5 example jobs | `Job 00001 is for Fourier N1` |
 | **Several / all** | 1 sample job per robot | `Job 00002 is for Fourier GR-1` |
 
-The ideal motion is **one robot at a time**: five jobs → Next → save that list to CRM → run the next SKU. A lineup preview is a sampler, not a dump of unlabeled work. **Run one robot for 5 jobs →** returns to the picker.
+The ideal motion is **one robot at a time**: five jobs → Place these jobs → quote rental and apply → run the next SKU. A lineup preview is a sampler, not a dump of unlabeled work. **Run one robot for 5 jobs →** returns to the picker.
 
 **Retention loop (next, not this surface):** saved CRM jobs are watched. When news or requirements change, email the user and bring them back to respond. Do not build that email loop until this Jobs tagging path is clean.
 

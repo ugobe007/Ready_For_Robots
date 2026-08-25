@@ -6,12 +6,12 @@ Step 03 is **Place** — the money moment. Kept Job Cards land on `/pipeline?src
 
 - `crm-activate` Next from the job list goes to `/pipeline?src=jobs_activate`.
 - `crm-unlock` free users see 5 unlocked jobs from the handoff.
-- `crm-place` Punchline: Place {robot}. Process bar 01/02/03 continues. Agent brief + Pack/Quote/Apply lanes. Apply is disabled until pack, PoC, and a user-entered monthly rental are in.
+- `crm-place` Punchline: Place {robot}. Process bar 01/02/03 continues. One next action (Confirm pack → Lock this quote → Place this job). Apply is disabled until pack, PoC, and a user-entered monthly rental are in.
 - `crm-auth` signed-out users hit signup/login with Jobs `src`, then return to the desk.
 
 ## How to get to it (user POV)
 
-- Click `Next →` on the job list. All five example jobs start Keep-checked.
+- Click `Place these jobs →` on the job list. All five example jobs start Keep-checked.
 - Open header CRM while on Jobs chrome.
 - After signup from Jobs, land on `/pipeline?src=jobs_activate`.
 - Bookmarks to `/crm?src=jobs_activate` redirect to the same desk.
