@@ -316,6 +316,7 @@ def _run_worker_startup() -> None:
         return
 
     _start_scheduled_scraper()
+    _start_scheduled_job_board()
     _start_scheduled_secondary_pipeline()
     _start_scheduled_data_quality()
     _start_scheduled_cal_autonomy()
@@ -670,9 +671,66 @@ def _start_scheduled_scraper():
     if os.getenv("ENABLE_SCHEDULED_SCRAPER", "").strip().lower() in ("0", "false", "no"):
         logger.info("In-app scheduled scraper disabled (ENABLE_SCHEDULED_SCRAPER=0)")
         return
-    t = threading.Thread(target=_scheduled_scraper_loop, daemon=True)
+    t = threading.Thread(target=_scheduled_scraper_loop, daemon=True, name="intelligence-scraper")
     t.start()
     logger.info("In-app scheduled scraper thread started (every %s hours)", os.getenv("RUN_SCRAPER_EVERY_HOURS", "6"))
+
+
+def _scheduled_job_board_loop():
+    """Robot Job boards on Fly worker. Isolated from the intelligence news loop."""
+    from app.services.job_board_scraper_runner import run_scheduled_job_board_cycle
+
+    first_delay_min = int(os.getenv("JOB_BOARD_FIRST_RUN_DELAY_MINUTES", "12"))
+    interval_hours = float(os.getenv("JOB_BOARD_EVERY_HOURS", "6"))
+    if interval_hours <= 0:
+        return
+    logger.info(
+        "Scheduled job-board scraper armed first_run_min=%s interval_hours=%s",
+        first_delay_min,
+        interval_hours,
+    )
+    time.sleep(max(60, first_delay_min * 60))
+    while True:
+        try:
+            logger.info("Scheduled job-board scraper starting (in-app thread)")
+            result = run_scheduled_job_board_cycle()
+            logger.info("Scheduled job-board scraper finished: %s", result)
+        except Exception as exc:
+            logger.exception("Scheduled job-board scraper failed: %s", exc)
+        time.sleep(max(3600, int(interval_hours * 3600)))
+
+
+def _start_scheduled_job_board():
+    """Start job-board Robot Job ingest when Celery Beat is not running (worker machine)."""
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app scheduled job-board scraper skipped on web process")
+        return
+    if os.getenv("ENABLE_SCHEDULED_JOB_BOARD", "1").strip().lower() in ("0", "false", "no"):
+        logger.info("In-app scheduled job-board scraper disabled (ENABLE_SCHEDULED_JOB_BOARD=0)")
+        return
+    skip_celery = os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
+    has_broker = bool(os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL"))
+    if has_broker and not skip_celery:
+        logger.info(
+            "In-app scheduled job-board scraper skipped: Celery Beat + worker expected (broker configured)"
+        )
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_JOB_BOARD", "").lower() in ("1", "true", "yes")
+        or skip_celery
+    )
+    if not enabled:
+        return
+    t = threading.Thread(target=_scheduled_job_board_loop, daemon=True, name="job-board-scraper")
+    t.start()
+    logger.info(
+        "In-app scheduled job-board thread started (every %s hours, first run in %s min)",
+        os.getenv("JOB_BOARD_EVERY_HOURS", "6"),
+        os.getenv("JOB_BOARD_FIRST_RUN_DELAY_MINUTES", "12"),
+    )
 
 
 def _scheduled_secondary_pipeline_loop():

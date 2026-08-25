@@ -21,3 +21,8 @@ def is_web_process() -> bool:
 
 def is_worker_process() -> bool:
     return process_role() == "worker"
+
+
+def celery_disabled() -> bool:
+    """True on Fly worker/web when SKIP_CELERY=1 — Beat tasks are not consumed."""
+    return os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")

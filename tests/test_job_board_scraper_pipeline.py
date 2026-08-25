@@ -1,0 +1,199 @@
+"""Job-board Robot Job pipeline — Fly worker loop + industry URL resolution."""
+from unittest.mock import MagicMock, patch
+
+from app.runtime_role import celery_disabled
+from app.scrapers.job_board_scraper_enhanced import EnhancedJobBoardScraper
+from app.scrapers.scrape_targets import get_urls
+from app.services.job_board_scraper_runner import (
+    DEFAULT_INDUSTRY_ROTATION,
+    job_board_urls,
+    run_job_board_scraper_sync,
+    scheduled_industries,
+)
+
+
+def test_job_board_urls_match_lowercase_beat_kwargs():
+    assert len(get_urls("job_board", industry="hospitality")) >= 8
+    assert len(get_urls("job_board", industry="Hospitality")) == len(
+        get_urls("job_board", industry="hospitality")
+    )
+    assert len(get_urls("job_board", industry="logistics")) >= 8
+    assert len(get_urls("job_board", industry="healthcare")) >= 8
+    assert get_urls("job_board", industry="hospitality") == job_board_urls(industry="hospitality")
+
+
+def test_scheduled_rotation_covers_core_verticals(monkeypatch):
+    monkeypatch.delenv("JOB_BOARD_INDUSTRIES", raising=False)
+    industries = scheduled_industries()
+    assert industries == list(DEFAULT_INDUSTRY_ROTATION)
+    for name in industries:
+        assert job_board_urls(industry=name), name
+
+
+def test_scheduled_cycle_continues_after_one_industry_fails(monkeypatch):
+    monkeypatch.setenv("JOB_BOARD_INDUSTRIES", "Hospitality,Logistics")
+    calls = []
+
+    def fake_sync(*, industry=None, urls=None):
+        calls.append(industry)
+        if industry == "Hospitality":
+            raise RuntimeError("indeed blocked")
+        return {"status": "ok", "industry": industry, "urls": 3}
+
+    monkeypatch.setattr(
+        "app.services.job_board_scraper_runner.run_job_board_scraper_sync",
+        fake_sync,
+    )
+    from app.services.job_board_scraper_runner import run_scheduled_job_board_cycle
+
+    result = run_scheduled_job_board_cycle()
+    assert calls == ["Hospitality", "Logistics"]
+    assert result["failed"] == 1
+    assert result["ok"] == 1
+    assert result["status"] == "completed"
+
+
+def test_empty_url_list_does_not_launch_playwright():
+    with patch(
+        "app.scrapers.job_board_scraper_enhanced.EnhancedJobBoardScraper.run"
+    ) as run:
+        result = run_job_board_scraper_sync(urls=[])
+    run.assert_not_called()
+    assert result["status"] == "skipped"
+    assert result["reason"] == "no_urls"
+
+
+def test_rejected_company_does_not_abort_remaining_postings():
+    html = """
+    <div class="job_seen_beacon">
+      <h2>Warehouse Associate - Order Picker</h2>
+      <div class="companyName">Junk Headline</div>
+      <div class="companyLocation">Memphis, TN</div>
+      <div class="job-snippet">Night shift order picker. Immediate hire. Multiple openings.</div>
+    </div>
+    <div class="job_seen_beacon">
+      <h2>Warehouse Associate - Order Picker</h2>
+      <div class="companyName">Acme Fulfillment LLC</div>
+      <div class="companyLocation">Memphis, TN</div>
+      <div class="job-snippet">Night shift order picker. Immediate hire. Multiple openings. $18 an hour.</div>
+    </div>
+    """
+    scraper = EnhancedJobBoardScraper()
+    scraper.db = MagicMock()
+    saved = []
+
+    def save_company(data):
+        if "Junk" in data["name"]:
+            return None
+        company = MagicMock()
+        company.id = 42
+        saved.append(data["name"])
+        return company
+
+    scraper.save_company = save_company
+    scraper.save_signal = MagicMock()
+    with patch(
+        "app.scrapers.job_board_scraper_enhanced.upsert_robot_job_from_extract",
+        return_value=MagicMock(),
+    ), patch(
+        "app.scrapers.job_board_scraper_enhanced.calculate_job_relevancy_score",
+        return_value=0.5,
+    ):
+        scraper.parse(html, "https://www.indeed.com/jobs?q=warehouse+associate")
+    assert saved == ["Acme Fulfillment LLC"]
+    scraper.save_signal.assert_called_once()
+    assert scraper.save_signal.call_args[0][0] == 42
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
+
+
+def test_job_board_scheduler_starts_beside_intelligence(monkeypatch):
+    started = []
+
+    class FakeThread:
+        def __init__(self, target=None, daemon=None, name=None):
+            self.target = target
+            self.name = name
+
+        def start(self):
+            started.append(self.name)
+
+    monkeypatch.setenv("SKIP_CELERY", "1")
+    monkeypatch.setenv("FLY_APP_NAME", "ready-2-robot")
+    monkeypatch.setenv("ENABLE_SCHEDULED_SCRAPER", "1")
+    monkeypatch.setenv("ENABLE_SCHEDULED_JOB_BOARD", "1")
+    monkeypatch.setattr("app.runtime_role.is_worker_process", lambda: True)
+    monkeypatch.setattr("app.main.threading.Thread", FakeThread)
+    from app.main import _start_scheduled_job_board, _start_scheduled_scraper
+
+    _start_scheduled_scraper()
+    _start_scheduled_job_board()
+    assert "intelligence-scraper" in started
+    assert "job-board-scraper" in started
+
+
+def test_job_board_scheduler_skipped_on_web(monkeypatch):
+    started = []
+
+    class FakeThread:
+        def __init__(self, target=None, daemon=None, name=None):
+            self.name = name
+
+        def start(self):
+            started.append(self.name)
+
+    monkeypatch.setenv("SKIP_CELERY", "1")
+    monkeypatch.setenv("FLY_APP_NAME", "ready-2-robot")
+    monkeypatch.setattr("app.runtime_role.is_worker_process", lambda: False)
+    monkeypatch.setattr("app.main.threading.Thread", FakeThread)
+    from app.main import _start_scheduled_job_board
+
+    _start_scheduled_job_board()
+    assert started == []
+
+
+def test_job_board_kill_switch_leaves_intelligence(monkeypatch):
+    started = []
+
+    class FakeThread:
+        def __init__(self, target=None, daemon=None, name=None):
+            self.name = name
+
+        def start(self):
+            started.append(self.name)
+
+    monkeypatch.setenv("SKIP_CELERY", "1")
+    monkeypatch.setenv("FLY_APP_NAME", "ready-2-robot")
+    monkeypatch.setenv("ENABLE_SCHEDULED_SCRAPER", "1")
+    monkeypatch.setenv("ENABLE_SCHEDULED_JOB_BOARD", "0")
+    monkeypatch.setattr("app.runtime_role.is_worker_process", lambda: True)
+    monkeypatch.setattr("app.main.threading.Thread", FakeThread)
+    from app.main import _start_scheduled_job_board, _start_scheduled_scraper
+
+    _start_scheduled_scraper()
+    _start_scheduled_job_board()
+    assert "intelligence-scraper" in started
+    assert "job-board-scraper" not in started
+
+
+def test_run_job_boards_uses_in_process_when_celery_skipped(monkeypatch):
+    monkeypatch.setenv("SKIP_CELERY", "1")
+    assert celery_disabled() is True
+    called = {}
+
+    def fake_sync(*args, **kwargs):
+        called["ran"] = True
+
+    monkeypatch.setattr(
+        "app.api.scraper_control._run_job_board_scraper_sync", fake_sync
+    )
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    with TestClient(app) as client:
+        res = client.post("/api/scraper/run/job_boards")
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["mode"] == "in_process"
+    assert body["scraper_type"] == "job_boards"
+    assert called.get("ran") is True

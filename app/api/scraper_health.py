@@ -27,6 +27,49 @@ from app.scrapers.scraper_watchdog import get_watchdog
 router = APIRouter()
 
 
+def _robot_jobs_activity(db: Session) -> dict:
+    """Live Robot Job ingest — survives watchdog reset. Fail-open if table missing."""
+    empty = {
+        "total": 0,
+        "last_24h": 0,
+        "last_7d": 0,
+        "latest_at": None,
+        "signals_last_24h": 0,
+    }
+    try:
+        row = db.execute(
+            text(
+                """
+                SELECT COUNT(*) AS total,
+                       COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours') AS last_24h,
+                       COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') AS last_7d,
+                       MAX(created_at) AS latest
+                FROM robot_jobs
+                """
+            )
+        ).mappings().first()
+        sig_24h = (
+            db.query(func.count(Signal.id))
+            .filter(
+                Signal.signal_type == "robot_job",
+                Signal.created_at >= datetime.utcnow() - timedelta(hours=24),
+            )
+            .scalar()
+            or 0
+        )
+        latest = row["latest"] if row else None
+        return {
+            "total": int(row["total"] or 0) if row else 0,
+            "last_24h": int(row["last_24h"] or 0) if row else 0,
+            "last_7d": int(row["last_7d"] or 0) if row else 0,
+            "latest_at": latest.isoformat() if latest is not None else None,
+            "signals_last_24h": int(sig_24h),
+        }
+    except Exception:
+        db.rollback()
+        return empty
+
+
 @router.get("/scraper-health")
 def scraper_health(db: Session = Depends(get_db)):
     """Full watchdog health report — run history, circuit breakers, active runs."""
@@ -67,6 +110,7 @@ def scraper_health(db: Session = Depends(get_db)):
         "signals_last_24h": int(signals_last_24h),
         "latest_company_at": latest_company_at.isoformat() if latest_company_at else None,
         "latest_signal_at": latest_signal_at.isoformat() if latest_signal_at else None,
+        "robot_jobs": _robot_jobs_activity(db),
         "note": "DB activity tracks real ingestion regardless of watchdog reset on redeploy.",
     }
     return data
@@ -210,4 +254,5 @@ def pipeline_stats(db: Session = Depends(get_db)):
             "recent_run":      recent_run,
             "note": "Watchdog log resets on each redeploy. DB stats above are always live.",
         },
+        "robot_jobs": _robot_jobs_activity(db),
     }

@@ -83,7 +83,18 @@ python3 app/scrapers/orchestrator.py
 
 ### Production (Fly.io)
 
-The system runs automatically via Celery Beat schedule. No manual intervention needed.
+Fly runs **`SKIP_CELERY=1`**. Celery Beat is **not consumed**. The worker process (`scripts/start_worker.sh`) starts in-app threads:
+
+| Thread | What it does |
+|--------|----------------|
+| `intelligence-scraper` | News/lead discovery every `RUN_SCRAPER_EVERY_HOURS` (default 6h) |
+| `job-board-scraper` | Robot Job extract onto `robot_jobs` every `JOB_BOARD_EVERY_HOURS` (default 6h), 12 min after boot |
+
+Do not assume Beat is running. Kill switch: `ENABLE_SCHEDULED_JOB_BOARD=0` (does not stop intelligence).
+
+Manual trigger on Fly: `POST /api/scraper/run/job_boards` (in-process when `SKIP_CELERY=1`).
+
+Live yield: `GET /api/pipeline-stats` → `robot_jobs` (`total`, `last_24h`, `last_7d`).
 
 ## Schedule Overview
 
@@ -91,7 +102,7 @@ The system runs automatically via Celery Beat schedule. No manual intervention n
 |---------|-----------|------------|
 | News (General) | Every 2h | 6am, 8am, 10am, 12pm, 2pm, 4pm |
 | Manufacturing News | 2x daily | 7:30am, 3:30pm |
-| Job Boards | Every 6h | By industry |
+| Job Boards | Every 6h (Fly in-app worker thread) | Hospitality, Logistics, Healthcare, Food Service |
 | RSS Feeds | Every 4h | :30 minutes |
 | Hotel Directory | Daily | 3am |
 | Logistics Directory | Daily | 4am |

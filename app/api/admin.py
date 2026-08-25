@@ -829,6 +829,34 @@ class TriggerScrapePayload(BaseModel):
 @router.post("/scrape/trigger")
 def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTasks):
     """Queue a scraper run. Returns immediately; work happens in background."""
+    from app.runtime_role import celery_disabled
+
+    if celery_disabled() and payload.scraper in ("all", "news", "intelligence", "job_board"):
+        if payload.scraper in ("all", "news", "intelligence"):
+            from app.api.scraper_control import _run_intelligence_scraper_sync
+
+            background_tasks.add_task(
+                _run_intelligence_scraper_sync,
+                articles_per_query=15,
+                max_queries=20,
+                enrich=True,
+            )
+        if payload.scraper in ("all", "job_board"):
+            from app.api.scraper_control import _run_job_board_scraper_sync
+
+            background_tasks.add_task(
+                _run_job_board_scraper_sync,
+                industry=payload.industry,
+                urls=payload.urls,
+            )
+        return {
+            "status": "started",
+            "scraper": payload.scraper,
+            "industry": payload.industry,
+            "mode": "in_process",
+            "message": "Scraper running in-process (SKIP_CELERY=1).",
+        }
+
     try:
         from worker.tasks import (
             run_all_scrapers_task,
@@ -866,11 +894,11 @@ def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTa
     except ImportError:
         pass
     except Exception as exc:
-        # Celery broker up but worker down — fall back to in-process intelligence for "all"/news.
-        if payload.scraper not in ("all", "news", "intelligence"):
+        # Celery broker up but worker down — fall back to in-process intelligence / job boards.
+        if payload.scraper not in ("all", "news", "intelligence", "job_board"):
             return {
                 "status": "skipped",
-                "reason": f"Celery unavailable ({exc}) — only intelligence can run in-process.",
+                "reason": f"Celery unavailable ({exc}) — only intelligence and job_board can run in-process.",
             }
 
     if payload.scraper in ("all", "news", "intelligence"):
@@ -882,11 +910,27 @@ def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTa
             max_queries=20,
             enrich=True,
         )
+        if payload.scraper != "all":
+            return {
+                "status": "started",
+                "scraper": payload.scraper,
+                "mode": "in_process",
+                "message": "Intelligence scraper running in-process (Celery worker not available).",
+            }
+
+    if payload.scraper in ("all", "job_board"):
+        from app.api.scraper_control import _run_job_board_scraper_sync
+
+        background_tasks.add_task(
+            _run_job_board_scraper_sync,
+            industry=payload.industry,
+            urls=payload.urls,
+        )
         return {
             "status": "started",
             "scraper": payload.scraper,
             "mode": "in_process",
-            "message": "Intelligence scraper running in-process (Celery worker not available).",
+            "message": "Scraper running in-process (Celery worker not available).",
         }
 
     return {
