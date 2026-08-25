@@ -98,6 +98,8 @@ def _cors_allowed_origins() -> list[str]:
         "https://ready-for-robots-ax5i.vercel.app",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
         # Vite (readyforrobots_new_web) and other dev servers
         "http://localhost:5173",
         "http://127.0.0.1:5173",
