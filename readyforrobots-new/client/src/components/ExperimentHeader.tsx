@@ -6,6 +6,7 @@
  */
 import { Link, useRoute, useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { loginHref, clearPendingNext } from "@/lib/authNext";
 import { supabase } from "@/lib/supabase";
 import PixelIcon from "@/components/PixelIcon";
@@ -22,6 +23,7 @@ const navActive = "border-b-2 border-emerald-400 pb-0.5 text-emerald-400";
 
 export default function ExperimentHeader() {
   const { session } = useAuth();
+  const isAdmin = useIsAdmin();
   const [location] = useLocation();
   const search = useSearch();
   const [onJobsSlug] = useRoute("/jobs/:slug");
@@ -29,6 +31,7 @@ export default function ExperimentHeader() {
   const pipelineActive = location.startsWith("/pipeline");
   const crmActive = location.startsWith("/crm");
   const aboutActive = location.startsWith("/intelligence");
+  const adminActive = location.startsWith("/admin");
   const jobsSrc = new URLSearchParams(search).get("src");
   const showPipeline = showSignalPipelineNav({ pathname: location, src: jobsSrc });
   const crmHref = jobsHeaderCrmHref(location, jobsSrc);
@@ -77,6 +80,11 @@ export default function ExperimentHeader() {
               <Link href={crmHref} className={crmActive ? navActive : navIdle}>
                 CRM
               </Link>
+              {isAdmin ? (
+                <Link href="/admin" className={adminActive ? navActive : navIdle}>
+                  Admin
+                </Link>
+              ) : null}
               <button type="button" onClick={() => void signOut()} className={navIdle}>
                 Sign Out
               </button>

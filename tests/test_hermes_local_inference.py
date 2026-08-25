@@ -21,8 +21,8 @@ def test_overlay_from_dossier_maps_labor_and_fit():
     assert overlay["labor_intensity"] == "high"
     assert overlay["facility_clarity"] == "named_site"
     assert overlay["blockers"] == []
-    assert overlay["vendor_shortlist"][0]["vendor"] == "amr"
-    assert overlay["rationale"].startswith("[rfr_inference_v1]")
+    assert overlay["vendor_shortlist"] == []
+    assert overlay["rationale"] == "Labor shortage in the warehouse"
 
 
 def test_overlay_from_dossier_junk_sets_blocker():

@@ -6,6 +6,8 @@ from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
+from app.services.hermes_job_evidence import humanize_overlay_rationale, is_real_vendor_name
+
 logger = logging.getLogger(__name__)
 
 _LABOR_HIGH = ("labor", "shortage", "staffing", "turnover", "hire", "overtime")
@@ -50,12 +52,13 @@ def overlay_from_dossier(dossier: Any, *, work_summary: Optional[dict] = None) -
         fit = 0
     reasons = ([problem] if problem else []) + why[:4]
     family = (work_summary or {}).get("workflow_family")
-    if family:
+    if family and str(family).strip().lower() != "unknown":
         reasons.append(f"work family: {family}")
-    rationale = "[rfr_inference_v1] " + "; ".join(r for r in reasons if r)
+    rationale = humanize_overlay_rationale("; ".join(r for r in reasons if r))
     vendors = [
         {"vendor": c, "model": None, "source": "lead_inference_engine"}
         for c in robots[:6]
+        if is_real_vendor_name(str(c))
     ]
     blockers: list[str] = []
     if not getattr(dossier, "is_lead", True):
