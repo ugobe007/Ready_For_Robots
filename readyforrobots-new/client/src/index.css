@@ -295,7 +295,7 @@
     pointer-events: none;
     position: absolute;
     inset: 0;
-    z-index: 50;
+    z-index: 1;
     background-image: repeating-linear-gradient(
       0deg,
       transparent,
@@ -1299,6 +1299,7 @@
     :where(
       .bg-slate-50,
       .bg-slate-50\/70,
+      .bg-slate-50\/80,
       .bg-slate-50\/85,
       .bg-slate-100,
       .bg-slate-100\/80,
@@ -1310,8 +1311,10 @@
       .bg-emerald-50\/60,
       .bg-emerald-50\/70,
       .bg-amber-50,
+      .bg-amber-50\/70,
       .bg-amber-50\/80,
       .bg-emerald-100,
+      .bg-emerald-100\/90,
       .bg-sky-50,
       .bg-sky-50\/60,
       .bg-sky-50\/70
@@ -1626,6 +1629,10 @@
   .pipeline-hermes-kicker {
     color: #7dd3fc !important;
     letter-spacing: 0.16em;
+  }
+
+  .pipeline-outreach-card {
+    color: #e2e8f0;
   }
 
   .pipeline-score-badge {

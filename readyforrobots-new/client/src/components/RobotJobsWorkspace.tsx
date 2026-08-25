@@ -242,14 +242,14 @@ function JobsProcessNav({
               ? onJobs
               : onActivate;
         const className = page
-          ? `flex min-w-0 flex-1 items-center justify-between gap-2 px-3 py-3 text-left ${JOBS_PROCESS_NAV_CLASS} transition ${
+          ? `flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 px-3 py-3 text-left ${JOBS_PROCESS_NAV_CLASS} transition disabled:cursor-not-allowed ${
               isCurrent
                 ? "border-b-2 border-emerald-400 bg-emerald-400/5 text-emerald-300"
                 : onClick
                   ? "border-b-2 border-transparent text-slate-400 hover:text-slate-200"
                   : "border-b-2 border-transparent text-slate-600"
             }`
-          : `flex w-full items-center justify-between border-l-2 px-3 py-2 text-left ${JOBS_PROCESS_NAV_CLASS} transition ${
+          : `flex w-full cursor-pointer items-center justify-between border-l-2 px-3 py-2 text-left ${JOBS_PROCESS_NAV_CLASS} transition disabled:cursor-not-allowed ${
               isCurrent
                 ? "border-emerald-400 bg-emerald-400/5 text-emerald-300"
                 : onClick
@@ -257,15 +257,15 @@ function JobsProcessNav({
                   : "border-transparent text-slate-600"
             }`;
         const label = `${step.n} ${step.label}`;
-        if (!onClick) {
-          return (
-            <p key={step.id} className={className}>
-              {label}
-            </p>
-          );
-        }
         return (
-          <button key={step.id} type="button" onClick={onClick} className={className}>
+          <button
+            key={step.id}
+            type="button"
+            onClick={onClick}
+            disabled={!onClick}
+            aria-current={isCurrent ? "step" : undefined}
+            className={className}
+          >
             <span>{label}</span>
             {!page ? (
               <span className={isCurrent ? "text-emerald-400/80" : "text-slate-500"}>
@@ -1333,9 +1333,7 @@ export default function RobotJobsWorkspace() {
       list_count: jobs.length,
     });
     const dest = jobsActivateHref(submissionIdRef.current);
-    window.location.href = session
-      ? dest
-      : jobsSignupHref(dest, JOBS_ACTIVATE_SRC);
+    setLocation(session ? dest : jobsSignupHref(dest, JOBS_ACTIVATE_SRC));
   }
 
   function applyCheckedKeys(jobs: MatchJob[], saved?: string[]) {
@@ -1561,6 +1559,7 @@ export default function RobotJobsWorkspace() {
 
   function startJobs() {
     const field = document.getElementById("robot-url") as HTMLInputElement | null;
+    field?.scrollIntoView({ behavior: "smooth", block: "center" });
     field?.focus();
     const u = (field?.value || url).trim();
     if (!u) return;
@@ -1691,16 +1690,15 @@ export default function RobotJobsWorkspace() {
     stage === "select"
       ? newRobot
       : stage === "find" || stage === "research"
-        ? undefined
+        ? () => window.scrollTo({ top: 0, behavior: "smooth" })
         : openProfileStep;
   const processOnJobs =
-    stage === "find"
-      ? startJobs
-      : stage === "research" || stage === "jobs"
-        ? undefined
+    stage === "jobs" || stage === "portfolio"
+      ? () => document.getElementById("jobs-list")?.scrollIntoView({ behavior: "smooth" })
+      : stage === "find" || stage === "research"
+        ? startJobs
         : openJobsStep;
-  const processOnActivate =
-    stage === "jobs" || stage === "portfolio" ? goToActivate : undefined;
+  const processOnActivate = goToActivate;
   const processActionLabel = jobsProcessActionLabel(processCurrent);
   const processOnAction =
     processCurrent === "jobs"
@@ -1715,7 +1713,7 @@ export default function RobotJobsWorkspace() {
 
   return (
     <div className="rfr-jobs-page-shell border border-slate-600 bg-[#0b162f]">
-      <div className="sticky top-14 z-40 border-b border-slate-600 bg-[#0b162f]">
+      <div className="sticky top-14 z-[60] border-b border-slate-600 bg-[#0b162f]">
         <JobsProcessNav
           layout="page"
           current={processCurrent}
@@ -1867,7 +1865,7 @@ export default function RobotJobsWorkspace() {
         )}
       </section>
       </div>
-      <div className="rfr-jobs-page-footer border-t border-slate-600 bg-[#0b162f]">
+      <div className="rfr-jobs-page-footer relative z-[60] pointer-events-auto border-t border-slate-600 bg-[#0b162f]">
         <JobsProcessNav
           layout="page"
           current={processCurrent}
@@ -2722,7 +2720,7 @@ function JobsPanel({
   ).length;
 
   return (
-    <div className="p-6 sm:p-8">
+    <div id="jobs-list" className="p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
           {heading}

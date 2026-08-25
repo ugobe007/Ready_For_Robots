@@ -198,7 +198,7 @@ export default function LeadShareBar({ lead, compact = false, panel = false, cla
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-800">Amplify to your network</p>
             <p className="mt-0.5 text-[11px] leading-relaxed text-gray-600">
-              Share this SIGNAL lead with colleagues — post to social, email your team, or copy a ready-made blurb.
+              Share this job with colleagues — post to social, email your team, or copy a ready-made blurb.
             </p>
           </div>
         </div>

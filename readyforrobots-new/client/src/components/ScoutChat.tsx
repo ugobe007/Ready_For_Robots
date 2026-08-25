@@ -61,6 +61,9 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
   const onPipeline = location === "/pipeline" || location.startsWith("/admin/prospects");
   const hideFab =
     showJobsSiteChrome({ pathname: location, search }) ||
+    onPipeline ||
+    location === "/crm" ||
+    location.startsWith("/crm?") ||
     location === "/experiment" ||
     location.startsWith("/experiment?");
 
