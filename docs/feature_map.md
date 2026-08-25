@@ -58,7 +58,7 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 |------|-------|-----|
 | 01 | Show us your robot | `Start jobs →` |
 | 02 | Here are its jobs | `See jobs →` |
-| 03 | Place the robot | `Next →` |
+| 03 | Place the robot | `Place these jobs →` |
 
 01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is the money moment (Place), not a SIGNAL dump.
 
@@ -101,7 +101,7 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
   → paste robot URL (FIND)
   → optional SKU pick
   → Job Cards (QUALIFY / inspect + check)
-  → Next → /pipeline?src=jobs_activate  (signup first if signed out)
+  → Place these jobs → /pipeline?src=jobs_activate  (signup first if signed out)
   → Place: quote rental → apply (5 jobs). Process bar stays 01 / 02 / 03.
   → run the next robot the same way
 ```

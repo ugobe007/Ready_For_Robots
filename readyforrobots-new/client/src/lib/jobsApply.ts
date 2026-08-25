@@ -18,6 +18,7 @@ export type JobApplyRecord = {
   pocEvidence: string;
   monthlyRental: string;
   packAcknowledged: boolean;
+  quoteCommitted: boolean;
   status: JobApplyStatus;
   appliedAt?: string;
   followUpAt?: string;
@@ -35,6 +36,7 @@ const EMPTY: JobApplyRecord = {
   pocEvidence: "",
   monthlyRental: "",
   packAcknowledged: false,
+  quoteCommitted: false,
   status: "blocked",
 };
 
@@ -157,15 +159,35 @@ export function placementMoneyLane(
   if (record.status === "applied" || record.status === "follow_up") return "track";
   const byId = Object.fromEntries(gaps.map(g => [g.id, g.met]));
   if (!byId.model_pack) return "pack";
-  if (!byId.poc_evidence || !byId.monthly_rental) return "quote";
+  if (!byId.poc_evidence || !byId.monthly_rental || !record.quoteCommitted) {
+    return "quote";
+  }
   return "apply";
 }
 
 export function placementLaneLabel(lane: PlacementLane): string {
   if (lane === "pack") return "Pack";
   if (lane === "quote") return "Quote";
-  if (lane === "apply") return "Apply";
-  return "Tracking";
+  if (lane === "apply") return "Place";
+  return "Live";
+}
+
+/** One primary action on the selected job — not a nested 1–2–3 form. */
+export function placementNextActionLabel(
+  job: MatchJob,
+  record: JobApplyRecord,
+): string {
+  const lane = placementMoneyLane(jobCredentialGaps(job, record), record);
+  if (lane === "pack") return "Confirm pack";
+  if (lane === "quote") return "Lock this quote";
+  if (lane === "apply") return JOBS_APPLY_CTA;
+  return "Track follow-up";
+}
+
+export function canLockQuote(gaps: CredentialGap[], record: JobApplyRecord): boolean {
+  if (record.quoteCommitted) return false;
+  const byId = Object.fromEntries(gaps.map(g => [g.id, g.met]));
+  return Boolean(byId.poc_evidence && byId.monthly_rental);
 }
 
 export function placementAgentBrief(
@@ -248,7 +270,8 @@ function writeStore(store: Store): void {
 
 export function loadJobApplyRecord(jobKey: string): JobApplyRecord {
   const hit = readStore()[jobKey];
-  return hit?.jobKey ? hit : emptyApplyRecord(jobKey);
+  if (!hit?.jobKey) return emptyApplyRecord(jobKey);
+  return { ...emptyApplyRecord(jobKey), ...hit, jobKey };
 }
 
 export function saveJobApplyRecord(record: JobApplyRecord): void {

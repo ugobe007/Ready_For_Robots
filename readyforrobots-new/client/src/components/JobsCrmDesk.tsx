@@ -20,6 +20,7 @@ import {
   JOBS_APPLY_CTA,
   applyStatusFromGaps,
   canApplyToJob,
+  canLockQuote,
   followUpNextStep,
   jobCredentialGaps,
   loadJobApplyRecord,
@@ -27,10 +28,10 @@ import {
   placementBoardStats,
   placementLaneLabel,
   placementMoneyLane,
+  placementNextActionLabel,
   placementOutreachDraft,
   saveJobApplyRecord,
   type JobApplyRecord,
-  type PlacementLane,
 } from "@/lib/jobsApply";
 
 const eyebrow = JOBS_EYEBROW_CLASS;
@@ -51,8 +52,6 @@ export default function JobsCrmDesk({
   void tick;
   const stats = placementBoardStats(jobs);
   const activeRec = active ? loadJobApplyRecord(active.job_key) : null;
-  const activeGaps = active && activeRec ? jobCredentialGaps(active, activeRec) : [];
-  const lane = active && activeRec ? placementMoneyLane(activeGaps, activeRec) : "pack";
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
@@ -109,7 +108,9 @@ export default function JobsCrmDesk({
           {" · "}
           Quoted {stats.quoted} of {stats.total}
           {stats.quotes[0] ? ` · Live quote ${stats.quotes[0]}` : ""}
-          {active ? ` · Your move: ${placementLaneLabel(lane)}` : ""}
+          {active && activeRec
+            ? ` · Your move: ${placementNextActionLabel(active, activeRec)}`
+            : ""}
         </p>
       ) : null}
 
@@ -188,7 +189,6 @@ function ApplyPanel({
     setRecord(loadJobApplyRecord(job.job_key));
   }, [job.job_key]);
   const gaps = useMemo(() => jobCredentialGaps(job, record), [job, record]);
-  const status = applyStatusFromGaps(gaps, record);
   const ready = canApplyToJob(gaps, record);
   const draft = placementOutreachDraft(job, record, robotName);
   const brief = placementAgentBrief(job, record, robotName);
@@ -228,80 +228,35 @@ function ApplyPanel({
     });
   }
 
-  const lanes: PlacementLane[] = ["pack", "quote", "apply"];
+  const nextLabel = placementNextActionLabel(job, record);
+  const quoteReady = canLockQuote(gaps, record);
 
   return (
     <section
       id="jobs-apply"
       className="mt-8 border border-emerald-400/40 bg-[#0b162f] px-4 py-6 sm:px-6"
     >
-      <p className={`${eyebrow} text-emerald-400`}>This job</p>
-      <h2 className="mt-2 font-display text-3xl font-bold text-white">
-        {card.jobTitle}
-      </h2>
-      <p className="mt-1 text-base text-slate-300">
-        {[card.employer, card.workplace].filter(Boolean).join(" · ")}
+      <p className={`${eyebrow} text-emerald-400`}>
+        {card.employer || "This employer"} · {card.workplace || "site TBD"}
       </p>
+      <h2 className="mt-2 font-display text-3xl font-bold text-white sm:text-4xl">
+        Your move: {nextLabel.replace(/ →$/, "")}
+      </h2>
+      <p className="mt-2 text-lg leading-relaxed text-slate-200">{brief}</p>
       {modelLine ? (
-        <p className="mt-1 font-mono text-sm text-slate-400">{modelLine}</p>
+        <p className="mt-2 font-mono text-sm text-slate-400">{modelLine}</p>
       ) : null}
 
-      <div className="mt-5 border border-emerald-400/30 bg-emerald-400/5 px-4 py-4">
-        <p className={`${eyebrow} text-emerald-300`}>Your move</p>
-        <p className="mt-2 text-base leading-relaxed text-slate-100">{brief}</p>
-      </div>
-
-      <ol className="mt-5 grid grid-cols-3 gap-2">
-        {lanes.map((id, i) => {
-          const on = lane === id || (lane === "track" && id === "apply");
-          const done =
-            (id === "pack" && gaps.find(g => g.id === "model_pack")?.met) ||
-            (id === "quote" &&
-              gaps.find(g => g.id === "poc_evidence")?.met &&
-              gaps.find(g => g.id === "monthly_rental")?.met) ||
-            (id === "apply" && (status === "applied" || status === "follow_up"));
-          return (
-            <li
-              key={id}
-              className={`border px-3 py-2 ${
-                on
-                  ? "border-emerald-400 bg-emerald-400/10 text-emerald-200"
-                  : done
-                    ? "border-slate-600 text-emerald-400/80"
-                    : "border-slate-700 text-slate-500"
-              }`}
-            >
-              <span className={`${eyebrow} block`}>
-                0{i + 1} {id === "pack" ? "Pack" : id === "quote" ? "Quote" : "Apply"}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-
       {lane === "pack" ? (
-        <label className="mt-6 flex cursor-pointer items-start gap-3 border border-slate-600 bg-[#081126] px-4 py-4">
-          <input
-            type="checkbox"
-            className="mt-1 h-5 w-5 accent-emerald-400"
-            checked={record.packAcknowledged}
-            onChange={e => patch({ packAcknowledged: e.target.checked })}
-          />
-          <span>
-            <span className="block font-display text-lg font-bold text-white">
-              Confirm the pack
-            </span>
-            <span className="mt-1 block text-sm leading-relaxed text-slate-300">
-              {gaps.find(g => g.id === "model_pack")?.howToFix}
-            </span>
-          </span>
-        </label>
+        <p className="mt-6 max-w-2xl text-sm leading-relaxed text-slate-400">
+          {gaps.find(g => g.id === "model_pack")?.howToFix}
+        </p>
       ) : null}
 
       {lane === "quote" ? (
-        <div className="mt-6 space-y-4">
+        <div className="mt-6 max-w-2xl space-y-5">
           <label className="block">
-            <span className="block font-display text-lg font-bold text-white">
+            <span className="block font-display text-2xl font-bold text-white">
               Monthly rental you will charge
             </span>
             <span className="mt-1 block text-sm text-slate-400">
@@ -309,9 +264,9 @@ function ApplyPanel({
             </span>
             <input
               type="text"
-              className="mt-3 w-full border border-emerald-400/50 bg-[#081126] px-4 py-3 text-lg text-slate-100"
+              className="mt-4 w-full border border-emerald-400/50 bg-[#081126] px-4 py-4 text-xl text-slate-100"
               value={record.monthlyRental}
-              onChange={e => patch({ monthlyRental: e.target.value })}
+              onChange={e => patch({ monthlyRental: e.target.value, quoteCommitted: false })}
               placeholder="e.g. your RaaS / lease quote per month"
             />
           </label>
@@ -321,7 +276,7 @@ function ApplyPanel({
               className="mt-1 w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100"
               rows={3}
               value={record.pocEvidence}
-              onChange={e => patch({ pocEvidence: e.target.value })}
+              onChange={e => patch({ pocEvidence: e.target.value, quoteCommitted: false })}
               placeholder="Site demo, video, or written proof of concept"
             />
           </label>
@@ -329,16 +284,37 @@ function ApplyPanel({
       ) : null}
 
       {lane === "apply" || lane === "track" ? (
-        <div className="mt-6">
+        <div className="mt-6 max-w-3xl">
           <p className={`${eyebrow} text-slate-400`}>Outreach ready to send</p>
           <pre className="mt-2 whitespace-pre-wrap border border-slate-700 bg-[#081126] px-4 py-4 text-sm leading-relaxed text-slate-300">
             {draft}
           </pre>
-          <p className="mt-3 text-sm text-slate-300">{followUpNextStep(record)}</p>
+          {lane === "track" ? (
+            <p className="mt-3 text-sm text-slate-300">{followUpNextStep(record)}</p>
+          ) : null}
         </div>
       ) : null}
 
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        {lane === "pack" ? (
+          <button
+            type="button"
+            onClick={() => patch({ packAcknowledged: true })}
+            className="inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+          >
+            {nextLabel}
+          </button>
+        ) : null}
+        {lane === "quote" ? (
+          <button
+            type="button"
+            onClick={() => patch({ quoteCommitted: true })}
+            disabled={!quoteReady}
+            className="inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {nextLabel}
+          </button>
+        ) : null}
         {lane === "apply" ? (
           <button
             type="button"
@@ -355,7 +331,7 @@ function ApplyPanel({
             onClick={followUp}
             className="inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
           >
-            Track follow-up
+            {nextLabel}
           </button>
         ) : null}
         {!signedIn ? (

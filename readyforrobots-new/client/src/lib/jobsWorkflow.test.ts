@@ -492,7 +492,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/FIND_JOBS_HOME_SUBHEAD/);
     expect(workspace).toMatch(/text-emerald-400">jobs/);
     expect(workspace).not.toMatch(/Paste the manufacturer URL/);
-    expect(JOBS_NEXT_CTA).toBe("Next →");
+    expect(JOBS_NEXT_CTA).toBe("Place these jobs →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
     expect(JOBS_NEXT_HINT).toMatch(/start checked/i);
     expect(JOBS_NEXT_HINT).toMatch(/money moment/i);
@@ -578,6 +578,9 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/placementAgentBrief/);
     expect(desk).toMatch(/aria-label="Jobs process"/);
     expect(desk).toMatch(/the money moment/);
+    expect(desk).toMatch(/Your move:/);
+    expect(desk).toMatch(/quoteCommitted: true/);
+    expect(desk).not.toMatch(/grid-cols-3/);
     expect(desk).not.toMatch(/vendor_shortlist/);
     expect(desk).toMatch(/Not a SIGNAL buyer list/);
     expect(handoff).toMatch(/Opening CRM/);

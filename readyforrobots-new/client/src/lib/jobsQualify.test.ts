@@ -88,7 +88,7 @@ describe("jobForNextStep", () => {
   });
 
   it("labels the jobs-list advance Next, not Qualify this job", () => {
-    expect(JOBS_NEXT_CTA).toBe("Next →");
+    expect(JOBS_NEXT_CTA).toBe("Place these jobs →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
   });
 });
