@@ -94,17 +94,17 @@ CELERYBEAT_SCHEDULE = {
     'job-board-hospitality': {
         'task': 'worker.tasks.run_job_scraper_task',
         'schedule': crontab(hour='*/6', minute=15),
-        'kwargs': {'industry': 'hospitality'},
+        'kwargs': {'industry': 'Hospitality'},
     },
     'job-board-logistics': {
         'task': 'worker.tasks.run_job_scraper_task',
         'schedule': crontab(hour='1,7,13,19', minute=15),
-        'kwargs': {'industry': 'logistics'},
+        'kwargs': {'industry': 'Logistics'},
     },
     'job-board-healthcare': {
         'task': 'worker.tasks.run_job_scraper_task',
         'schedule': crontab(hour='2,8,14,20', minute=15),
-        'kwargs': {'industry': 'healthcare'},
+        'kwargs': {'industry': 'Healthcare'},
     },
     
     # ── RSS FEEDS ── Press releases, trade publications, regulatory/news triggers

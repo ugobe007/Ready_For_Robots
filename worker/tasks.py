@@ -57,21 +57,15 @@ def run_hotel_scraper_task(self, urls=None):
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def run_job_scraper_task(self, urls=None, industry=None):
-    from app.scrapers.job_board_scraper_enhanced import EnhancedJobBoardScraper
+    from app.services.job_board_scraper_runner import run_job_board_scraper_sync
 
-    max_urls = int(os.getenv("JOB_SCRAPER_MAX_URLS_PER_RUN", "18"))
-    urls = (urls or get_urls("job_board", industry=industry))[:max_urls]
-    db = get_db()
     try:
-        scraper = EnhancedJobBoardScraper()
-        scraper.db = db
-        scraper.run(urls)
-        logger.info("Job scraper completed for %d URLs", len(urls))
+        result = run_job_board_scraper_sync(industry=industry, urls=urls)
+        logger.info("Job scraper completed: %s", result)
+        return result
     except Exception as exc:
         logger.error("Job scraper failed: %s", exc)
         raise self.retry(exc=exc)
-    finally:
-        db.close()
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)

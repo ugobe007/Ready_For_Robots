@@ -361,6 +361,12 @@ class EnhancedJobBoardScraper(BaseScraper):
                 "location_country": "US",
                 "source": url,
             })
+            if company is None:
+                logger.debug(
+                    "[JobBoardScraper] company rejected, posting skipped: %s",
+                    company_name[:80],
+                )
+                continue
 
             self.save_signal(company.id, {
                 "signal_type": sig_type,
@@ -384,7 +390,12 @@ class EnhancedJobBoardScraper(BaseScraper):
                         evidence_text=desc,
                     )
                     apply_closeout_to_job(row, close)
+                    self.db.commit()
                 except Exception:
                     logger.exception("[JobBoardScraper] robot_jobs persist skipped for %s", title[:80])
+                    try:
+                        self.db.rollback()
+                    except Exception:
+                        pass
 
         logger.info(f"[JobBoardScraper] Session stats: {self.request_count} requests, {len(self.session_seen_fingerprints)} unique jobs seen")

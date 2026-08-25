@@ -1852,7 +1852,12 @@ def get_targets(
     if scraper:
         result = [t for t in result if t.scraper == scraper]
     if industry:
-        result = [t for t in result if industry in t.industries]
+        needle = str(industry).strip().lower()
+        result = [
+            t
+            for t in result
+            if any(str(tag).strip().lower() == needle for tag in t.industries)
+        ]
     return result
 
 

@@ -118,6 +118,16 @@ def _run_intelligence_scraper_sync(
         db.close()
 
 
+def _run_job_board_scraper_sync(
+    industry: Optional[str] = None,
+    urls: Optional[list] = None,
+):
+    """Run job-board Robot Job ingest in-process (Fly SKIP_CELERY path)."""
+    from app.services.job_board_scraper_runner import run_job_board_scraper_sync
+
+    return run_job_board_scraper_sync(industry=industry, urls=urls)
+
+
 @router.get("/cron/run-intelligence")
 async def cron_run_intelligence(
     background_tasks: BackgroundTasks,
@@ -456,7 +466,8 @@ async def run_all_scrapers(
     """
     Manually trigger buyer scrapers (no OEM / StageGate vendor sync).
     ALWAYS runs intelligence scraper in-process (no Redis needed) — guarantees new leads.
-    Also queues Celery tasks for job boards, news, RSS, company→news, enrich, etc.
+    On Fly (SKIP_CELERY=1) also runs job boards in-process so Robot Jobs are not queued
+    onto a broker nobody consumes. When Celery Beat is live, job boards still queue as before.
 
     For OEM/XBOT discovery use POST /api/scraper/run-oem instead.
     """
@@ -467,6 +478,20 @@ async def run_all_scrapers(
         max_queries=20,
         enrich=True,
     )
+
+    from app.runtime_role import celery_disabled
+
+    if celery_disabled():
+        background_tasks.add_task(_run_job_board_scraper_sync)
+        return {
+            "status": "scrapers_started",
+            "intelligence": "running_in_process",
+            "job_boards": "running_in_process",
+            "tasks": {"celery": "skipped_SKIP_CELERY"},
+            "estimated_completion": "20-30 minutes",
+            "check_status": "/api/scraper/status",
+            "check_leads": "/api/leads/summary",
+        }
 
     # 2. Queue Celery tasks (job boards, news, RSS, company→news, enrich, etc.)
     tasks = {}
@@ -499,7 +524,8 @@ async def run_all_scrapers(
         }
     except Exception:
         # Celery/Redis may be down — intelligence still runs in-process
-        tasks = {"celery": "unavailable"}
+        background_tasks.add_task(_run_job_board_scraper_sync)
+        tasks = {"celery": "unavailable", "job_boards": "running_in_process"}
 
     return {
         "status": "scrapers_started",
@@ -519,7 +545,8 @@ async def run_specific_scraper(
 ) -> Dict[str, Any]:
     """
     Run a specific scraper: intelligence, job_boards, hotels, news, serp, logistics, rfp_marketplace.
-    For 'intelligence' runs in-process (no Redis). Others queue to Celery.
+    For 'intelligence' runs in-process (no Redis). Job boards also run in-process
+    when SKIP_CELERY=1 so Fly actually extracts Robot Jobs.
     """
     if scraper_type == "intelligence":
         background_tasks.add_task(
@@ -533,6 +560,17 @@ async def run_specific_scraper(
             "scraper_type": "intelligence",
             "message": "Buyer intelligence scraper running (20 queries, ~15 min). Check /api/leads/summary.",
             "check_leads": "/api/leads/summary",
+        }
+    from app.runtime_role import celery_disabled
+
+    if scraper_type == "job_boards" and celery_disabled():
+        background_tasks.add_task(_run_job_board_scraper_sync)
+        return {
+            "status": "scraper_started",
+            "scraper_type": "job_boards",
+            "mode": "in_process",
+            "message": "Job-board Robot Job scraper running in-process.",
+            "estimated_completion": "5-15 minutes",
         }
     try:
         from worker.tasks import (
