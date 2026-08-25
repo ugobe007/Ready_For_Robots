@@ -5527,6 +5527,7 @@ export default function Pipeline() {
                       hasSession={false}
                       copied={copied}
                       onCopy={copyDraft}
+                      tone="dark"
                     />
                   )}
 

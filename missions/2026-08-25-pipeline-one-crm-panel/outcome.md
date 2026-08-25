@@ -12,7 +12,8 @@
 - Job workspace grows with the page (`items-start`, overflow visible) instead of a `100vh` inner-scroll clamp.
 - Jobs 02 → 03 uses wouter `setLocation` instead of a full document reload.
 - Top and bottom process nav are always `<button>`s (current step included); footer sits above the scanline overlay.
-- Outreach draft / checklist / contact / proposal are dark-native. CalLeadDrop SIGNAL recommendation and Re-run SIGNAL are gone from Pipeline.
+- Unsigned Cal draft (`PipelineOutreachValuePanel`) uses `tone="dark"` so the Accor outreach body is light on navy, not white-on-beige.
+- Footer 03 CRM is always a real navigation (even on empty FIND). 02 focuses the robot URL field when empty.
 
 ## Tests
 

@@ -242,14 +242,14 @@ function JobsProcessNav({
               ? onJobs
               : onActivate;
         const className = page
-          ? `flex min-w-0 flex-1 items-center justify-between gap-2 px-3 py-3 text-left ${JOBS_PROCESS_NAV_CLASS} transition ${
+          ? `flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 px-3 py-3 text-left ${JOBS_PROCESS_NAV_CLASS} transition disabled:cursor-not-allowed ${
               isCurrent
                 ? "border-b-2 border-emerald-400 bg-emerald-400/5 text-emerald-300"
                 : onClick
                   ? "border-b-2 border-transparent text-slate-400 hover:text-slate-200"
                   : "border-b-2 border-transparent text-slate-600"
             }`
-          : `flex w-full items-center justify-between border-l-2 px-3 py-2 text-left ${JOBS_PROCESS_NAV_CLASS} transition ${
+          : `flex w-full cursor-pointer items-center justify-between border-l-2 px-3 py-2 text-left ${JOBS_PROCESS_NAV_CLASS} transition disabled:cursor-not-allowed ${
               isCurrent
                 ? "border-emerald-400 bg-emerald-400/5 text-emerald-300"
                 : onClick
@@ -1559,6 +1559,7 @@ export default function RobotJobsWorkspace() {
 
   function startJobs() {
     const field = document.getElementById("robot-url") as HTMLInputElement | null;
+    field?.scrollIntoView({ behavior: "smooth", block: "center" });
     field?.focus();
     const u = (field?.value || url).trim();
     if (!u) return;
@@ -1697,10 +1698,7 @@ export default function RobotJobsWorkspace() {
       : stage === "find" || stage === "research"
         ? startJobs
         : openJobsStep;
-  const processOnActivate =
-    stage === "jobs" || stage === "portfolio" || (active?.jobs || []).length > 0
-      ? goToActivate
-      : startJobs;
+  const processOnActivate = goToActivate;
   const processActionLabel = jobsProcessActionLabel(processCurrent);
   const processOnAction =
     processCurrent === "jobs"
@@ -1867,7 +1865,7 @@ export default function RobotJobsWorkspace() {
         )}
       </section>
       </div>
-      <div className="rfr-jobs-page-footer relative z-[60] border-t border-slate-600 bg-[#0b162f]">
+      <div className="rfr-jobs-page-footer relative z-[60] pointer-events-auto border-t border-slate-600 bg-[#0b162f]">
         <JobsProcessNav
           layout="page"
           current={processCurrent}
