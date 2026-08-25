@@ -566,41 +566,41 @@ function FirstThreeActionsProgress({
         : "Completed";
 
   return (
-    <div className="mb-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2.5">
-      <div className="mb-2 flex items-center justify-between gap-2">
+    <div className="mb-3 rounded-xl border border-emerald-400/40 bg-[#0d1a33] px-4 py-4">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">First 3 actions</p>
-          <p className="text-[11px] text-emerald-900/80">Continue where you left off: {nextStep}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-300">First 3 actions</p>
+          <p className="text-[12px] text-slate-200">Continue where you left off: {nextStep}</p>
         </div>
         <button
           type="button"
           onClick={onDismiss}
-          className="text-[10px] font-semibold text-emerald-700 hover:text-emerald-900"
+          className="text-[10px] font-semibold text-emerald-300 hover:text-emerald-100"
         >
           Hide
         </button>
       </div>
 
-      <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-emerald-100">
-        <div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${pct}%` }} />
+      <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-emerald-950">
+        <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${pct}%` }} />
       </div>
 
-      <div className="grid grid-cols-3 gap-2 text-[10px] text-gray-700">
-        <span className={state.saved ? "font-semibold text-emerald-700" : ""}>1. Save lead</span>
+      <div className="grid grid-cols-3 gap-2 text-[11px] text-slate-300">
+        <span className={state.saved ? "font-semibold text-emerald-300" : ""}>1. Save lead</span>
         <button
           type="button"
           onClick={onCopyDraft}
           disabled={state.copied}
-          className={`text-left ${state.copied ? "font-semibold text-emerald-700" : "hover:text-emerald-800"}`}
+          className={`text-left ${state.copied ? "font-semibold text-emerald-300" : "hover:text-emerald-200"}`}
         >
           2. Copy draft
         </button>
-        <span className={state.sent ? "font-semibold text-emerald-700" : ""}>3. Send outreach</span>
+        <span className={state.sent ? "font-semibold text-emerald-300" : ""}>3. Send outreach</span>
       </div>
 
       {!state.sent && (
-        <div className="mt-2 rounded-lg border border-emerald-200/80 bg-white/80 px-2.5 py-2">
-          <p className="text-[10px] text-gray-600">{helperText}</p>
+        <div className="mt-3 rounded-lg border border-emerald-400/30 bg-[#081126] px-3 py-3">
+          <p className="text-[12px] leading-relaxed text-slate-300">{helperText}</p>
           <button
             type="button"
             disabled={primaryActionDisabled}
@@ -4152,7 +4152,6 @@ export default function Pipeline() {
 
             {session?.access_token && (
               <WorkspaceQuickLinks
-                savedCount={savedLeadCount}
                 hubspotConnected={hubspotIntegration?.connected}
                 queuedActions={queuedActivations}
                 variant="dark"
@@ -4383,12 +4382,12 @@ export default function Pipeline() {
             <div className="pipeline-page-header">
                   <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="min-w-0 flex-1">
-                  <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-900">
+                  <span className="inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">
                     Search jobs
                   </span>
                   <p className="mt-1 text-base font-semibold text-white sm:text-lg">Find jobs by industry, company, or the work itself.</p>
                   {session?.access_token && (
-                    <p className="mt-1 text-[12px] font-medium text-emerald-900">
+                    <p className="mt-1 text-[12px] font-medium text-slate-300">
                       Welcome back, {sessionDisplayName}. Your sales workspace is active.
                     </p>
                   )}
@@ -4422,8 +4421,8 @@ export default function Pipeline() {
                       ) : null}
                     </div>
                   )}
-                  {/* One instruction rail lives in the Step 5 banner above — don't duplicate it here. */}
-                  {!(arrivedFromResultsScan && build25Started) ? (
+                  {/* Signed-in CRM lives in PipelineCrmMotion — don't duplicate a how-to here. */}
+                  {!isSignedIn && !arrivedFromResultsScan ? (
                   <div className="mt-2 w-full rounded-xl border border-emerald-700/80 bg-[#0b162f] px-4 py-4 text-[13px] text-slate-100 shadow-sm sm:px-5 sm:py-5 sm:text-sm">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-300 sm:text-sm">{nextStepsTitle}</p>
                     <p className="mt-2 text-lg font-bold text-white sm:text-xl">
@@ -4437,70 +4436,15 @@ export default function Pipeline() {
                       ))}
                     </ol>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {!isSignedIn && !arrivedFromResultsScan ? (
-                        <span className="inline-flex items-center gap-2">
-                          <FaceCue />
-                          <Link
-                            href={startFreeWorkspaceHref}
-                            className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-4 py-2.5 text-sm font-extrabold text-slate-950 hover:bg-amber-300"
-                          >
-                            {nextStepPrimaryLabel}
-                          </Link>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-2">
-                          <FaceCue />
-                          <button
-                            type="button"
-                            onClick={runNextStepPrimary}
-                            disabled={
-                              arrivedFromResultsScan && (!build25Started || !selected)
-                                ? false
-                                : isSignedIn && !selected && !canCopySelectedDraft
-                            }
-                            className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-4 py-2.5 text-sm font-extrabold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {nextStepPrimaryLabel}
-                          </button>
-                        </span>
-                      )}
-                      {isSignedIn && canCopySelectedDraft && canSaveSelected ? (
-                        <span className="inline-flex items-center gap-2">
-                          <FaceCue />
-                          <button
-                            type="button"
-                            onClick={copyDraft}
-                            className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10"
-                          >
-                            {copied ? "Copied draft" : "Copy draft"}
-                          </button>
-                        </span>
-                      ) : null}
-                      {canOpenSelectedDraft ? (
-                        <button
-                          type="button"
-                          onClick={spotlightOutreachDraft}
-                          className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10"
+                      <span className="inline-flex items-center gap-2">
+                        <FaceCue />
+                        <Link
+                          href={startFreeWorkspaceHref}
+                          className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-4 py-2.5 text-sm font-extrabold text-slate-950 hover:bg-amber-300"
                         >
-                          Open selected lead
-                        </button>
-                      ) : null}
-                      {isSignedIn ? (
-                        <>
-                          <Link
-                            href="/crm"
-                            className="inline-flex items-center justify-center rounded-lg border border-emerald-400/50 bg-emerald-400/10 px-2.5 py-1.5 text-[11px] font-bold text-emerald-100 hover:bg-emerald-400/20"
-                          >
-                            Open native CRM
-                          </Link>
-                          <Link
-                            href="/integrations/hubspot"
-                            className="inline-flex items-center justify-center rounded-lg border border-amber-400/40 bg-amber-400/10 px-2.5 py-1.5 text-[11px] font-bold text-amber-100 hover:bg-amber-400/20"
-                          >
-                            {hubspotIntegration?.connected ? "HubSpot connected" : "Connect HubSpot"}
-                          </Link>
-                        </>
-                      ) : null}
+                          {nextStepPrimaryLabel}
+                        </Link>
+                      </span>
                     </div>
                   </div>
                   ) : null}
@@ -4790,10 +4734,10 @@ export default function Pipeline() {
           )}
 
           {/* ── Two-panel layout ── */}
-          <div id="pipeline-leads" className="pipeline-deals-layout flex min-h-0 flex-col gap-2 p-2 sm:p-3 lg:min-h-[calc(100vh-200px)] lg:flex-row">
+          <div id="pipeline-leads" className="pipeline-deals-layout flex flex-col gap-2 p-2 sm:p-3 lg:flex-row lg:items-start">
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
-            <div className="pipeline-list-shell flex min-w-0 flex-1 flex-col gap-1 overflow-y-auto">
+            <div className="pipeline-list-shell flex max-h-none min-w-0 flex-1 flex-col gap-1 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
               {loadUiVisible ? <PipelineLeadsLoadingStrip secondsLeft={loadCountdown} jobsMode={arrivedFromJobs} /> : null}
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-3 py-2">
                 <div>
@@ -5087,10 +5031,10 @@ export default function Pipeline() {
 
             {/* RIGHT: selected lead detail */}
             <div
-              className="pipeline-detail-shell flex h-auto max-h-none w-full shrink-0 flex-col overflow-hidden lg:sticky lg:top-20 lg:h-[calc(100vh-100px)] lg:max-h-[calc(100vh-100px)] lg:w-[440px] xl:w-[480px]"
+              className="pipeline-detail-shell flex min-h-[36rem] w-full shrink-0 flex-col lg:min-h-[calc(100vh-5rem)] lg:w-[440px] xl:w-[480px]"
             >
               {selected ? (
-                <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                <div className="flex min-h-0 flex-1 flex-col">
                   {/* Detail header */}
                   <div className="pipeline-detail-header">
                     <div className="pipeline-detail-header-inner">
@@ -5126,7 +5070,7 @@ export default function Pipeline() {
                           </p>
                         )}
                         {selected.hermesQualify?.automation_fit != null && (
-                          <p className="max-w-[11rem] text-right text-[10px] leading-snug text-sky-700">
+                          <p className="max-w-[11rem] text-right text-[10px] leading-snug text-sky-300">
                             Hermes fit {Math.round(Number(selected.hermesQualify.automation_fit))}
                             {selected.hermesQualify.vendor_shortlist?.[0]?.vendor
                               ? ` · ${selected.hermesQualify.vendor_shortlist[0].vendor}`
@@ -5225,17 +5169,17 @@ export default function Pipeline() {
                     (selected.hermesJobTitles && selected.hermesJobTitles.length > 0) ||
                     (selected.hermesDecisionMakers && selected.hermesDecisionMakers.length > 0) ||
                     (selected.hermesVideoEvidence && selected.hermesVideoEvidence.length > 0)) && (
-                    <div className="border-b border-slate-100 bg-sky-50/60 px-5 py-3">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-sky-900">
+                    <div className="pipeline-hermes px-5 py-4">
+                      <p className="pipeline-hermes-kicker text-[10px] font-bold uppercase tracking-widest">
                         Hermes intelligence
                         {selected.hermesQualify?.truth_state ? (
-                          <span className="ml-1.5 font-semibold normal-case tracking-normal text-sky-700/80">
+                          <span className="ml-1.5 font-semibold normal-case tracking-normal text-sky-200/80">
                             · overlay (not CRM truth)
                           </span>
                         ) : null}
                       </p>
                       {selected.hermesQualify?.automation_fit != null && (
-                        <p className="mt-1 text-[12px] leading-snug text-slate-800">
+                        <p className="mt-1 text-[12px] leading-snug text-slate-100">
                           Automation fit{" "}
                           <span className="font-semibold">{Math.round(Number(selected.hermesQualify.automation_fit))}</span>
                           {selected.hermesQualify.labor_intensity
@@ -5247,12 +5191,12 @@ export default function Pipeline() {
                         </p>
                       )}
                       {selected.hermesQualify?.rationale && (
-                        <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-300">
                           {selected.hermesQualify.rationale}
                         </p>
                       )}
                       {(selected.hermesQualify?.vendor_shortlist || []).length > 0 && (
-                        <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-700">
+                        <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-200">
                           {(selected.hermesQualify?.vendor_shortlist || []).slice(0, 3).map((v, i) => (
                             <li key={`${v.vendor || "v"}-${i}`}>
                               <span className="font-medium">{v.vendor}</span>
@@ -5263,18 +5207,18 @@ export default function Pipeline() {
                         </ul>
                       )}
                       {(selected.hermesQualify?.blockers || []).length > 0 && (
-                        <p className="mt-1 text-[11px] text-amber-800">
+                        <p className="mt-1 text-[11px] text-amber-200">
                           Blockers: {(selected.hermesQualify?.blockers || []).join("; ")}
                         </p>
                       )}
                       {(selected.hermesJobTitles || []).length > 0 && (
-                        <p className="mt-1.5 text-[11px] text-slate-700">
-                          <span className="font-semibold text-slate-800">Open roles: </span>
+                        <p className="mt-1.5 text-[11px] text-slate-200">
+                          <span className="font-semibold text-slate-100">Open roles: </span>
                           {(selected.hermesJobTitles || []).slice(0, 3).join(" · ")}
                         </p>
                       )}
                       {(selected.hermesDecisionMakers || []).length > 0 && (
-                        <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-700">
+                        <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-200">
                           {(selected.hermesDecisionMakers || []).slice(0, 4).map((dm, i) => (
                             <li key={`${dm.name || "dm"}-${i}`}>
                               <span className="font-medium">{dm.name}</span>
@@ -5285,21 +5229,21 @@ export default function Pipeline() {
                       )}
                       {(selected.hermesVideoEvidence || []).length > 0 && (
                         <div className="mt-2">
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-800">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-300">
                             Customer use-case videos
                           </p>
-                          <ul className="mt-1 space-y-1 text-[11px] text-slate-700">
+                          <ul className="mt-1 space-y-1 text-[11px] text-slate-200">
                             {(selected.hermesVideoEvidence || []).slice(0, 4).map((vid, i) => (
                               <li key={`${vid.source_url}-${i}`} className="leading-snug">
                                 <a
                                   href={vid.source_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="font-medium text-sky-800 underline-offset-2 hover:underline"
+                                  className="font-medium text-sky-300 underline-offset-2 hover:underline"
                                 >
                                   {vid.title || vid.source_url}
                                 </a>
-                                <span className="text-slate-500">
+                                <span className="text-slate-400">
                                   {vid.platform ? ` · ${vid.platform}` : ""}
                                   {vid.workflow_hint ? ` · ${vid.workflow_hint}` : ""}
                                   {vid.robot_visible ? ` · ${vid.robot_visible}` : ""}
@@ -5312,9 +5256,9 @@ export default function Pipeline() {
                     </div>
                   )}
 
-                  <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col">
+                  <div className="flex flex-col">
                   {showFirstThreeActionsProgress && (
-                    <div className="px-5 pt-3">
+                    <div className="px-5 py-4">
                       <FirstThreeActionsProgress
                         state={firstThreeActions}
                         onCopyDraft={copyDraft}

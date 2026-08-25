@@ -43,8 +43,7 @@ export default function PipelineCrmMotion({
 }: Props) {
   if (!hasSession) return null;
 
-  const company = (selectedCompany || (jobsAutomate ? "this job" : "this buyer")).trim()
-    || (jobsAutomate ? "this job" : "this buyer");
+  const company = (selectedCompany || "this job").trim() || "this job";
   const crmLive = savedCount > 0;
 
   if (!crmLive) {
@@ -99,7 +98,7 @@ export default function PipelineCrmMotion({
           <p className="pipeline-crm-motion-body">
             {jobsAutomate
               ? "CRM automation is applying to these jobs. Open a row to keep landing the robot, or open CRM for the full list."
-              : "Work saved buyers here, then open the full CRM to advance stages and track replies."}
+              : "Work saved jobs here, then open the full CRM to advance stages and track replies."}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">

@@ -904,6 +904,22 @@ describe("jobsWorkflow", () => {
     expect(pipelineSrc).not.toMatch(/Buyer workspace · preview/);
     expect(pipelineSrc).not.toMatch(/save this buyer/);
 
+    const quickLinks = readFileSync(
+      join(here, "../components/pipeline/WorkspaceQuickLinks.tsx"),
+      "utf8",
+    );
+    expect(quickLinks).not.toMatch(/Everything happens on this page/i);
+    expect(quickLinks).not.toMatch(/Activate CRM by saving/i);
+    expect(pipelineSrc).toMatch(/Signed-in CRM lives in PipelineCrmMotion/);
+    expect(pipelineSrc).toMatch(/!isSignedIn && !arrivedFromResultsScan/);
+    expect(pipelineSrc).toMatch(/pipeline-hermes/);
+    expect(pipelineSrc).not.toMatch(/bg-sky-50\/60/);
+    expect(pipelineSrc).not.toMatch(/lg:h-\[calc\(100vh-100px\)\]/);
+    expect(pipelineSrc).not.toMatch(/overflow-y-auto overscroll-contain/);
+    expect(pipelineSrc).not.toMatch(/lg:min-h-\[calc\(100vh-200px\)\]/);
+    expect(pipelineSrc).toMatch(/lg:min-h-\[calc\(100vh-5rem\)\]/);
+    expect(pipelineSrc).toMatch(/lg:items-start/);
+
     const cardSrc = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
