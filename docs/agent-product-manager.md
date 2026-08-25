@@ -26,7 +26,7 @@ Success is a compiled next mission grounded in production truth (Vercel HTML, Fl
 | Owner of the **product integrity loop** | A second Orchestrator (Orchestrator still spawns specialists) |
 | Tester of `/` → cards → CRM on **production** | A swarm that merges PRs hourly |
 | Compiler consumer: reads `reports/compiled_memory_latest.json` first | Memory. Chat is not memory |
-| Allowed to open **one** Jobs-path PR per daily cycle | Auto-merge to `main` |
+| Opens **one** Jobs-path PR per daily cycle | Hourly merge; skip-green Vercel merge |
 | Fail the cycle if Vercel production did not actually deploy | A SIGNAL/Cal expansion agent |
 
 Hourly: **observe only**. Daily: **one act**. Weekly: thesis rank (ProductThesis).
@@ -70,7 +70,7 @@ Structured `next_mission` slugs the compiler already understands:
 - **Jobs language:** Employer, Workplace, Work, Conditional, site assessment. Never Lead / Prospect / Closed-won on the Jobs path.
 - **Do not invent** FTE, payback, or jobs to hit a round number.
 - **Freeze** SIGNAL / Cal / matcher as core.
-- **Hourly does not merge.**
+- **Hourly does not merge.** Daily `cursor/*` PRs auto-merge only after agent-verify is green.
 - If production Vercel SHA is stale, **that is the mission.**
 
 ---

@@ -1,0 +1,36 @@
+# Find jobs
+
+Find jobs lets an OEM or distributor paste a robot product URL on `/` and see named Robot Jobs before signup.
+
+## Sub-features
+
+- `find-open` shows FIND on `/` with headline and URL field.
+- `find-submit` runs research + match for one URL.
+- `find-lineup` asks which SKU when the page has several robots.
+- `find-api` is the same path the UI calls (`POST /api/robot-job-match`).
+
+## How to get to it (user POV)
+
+- Open `https://readyforrobots.com/` (or `/?new=1` for a fresh FIND).
+- Click Jobs in the Jobs header (returns to empty FIND).
+- Click Start jobs → on About (`/intelligence`).
+- Submit the FIND form labeled `Find jobs for your robot`.
+
+## Driving it with verify-readyforrobots
+
+Preconditions:
+
+- Doctor reports `worth_driving: true`.
+- Do not use SIGNAL `/pipeline` as the entry.
+
+- **Open FIND.** Load `/`. In a browser the heading is `Find jobs for your robot.` and a url field placeholder is `Paste robot product URL`. The form name is `Find jobs for your robot`.
+- **Submit a known robot.** Paste `https://www.dexmate.ai/` (or Fourier) and start Find jobs. One SKU continues to jobs on the same click; several SKUs must keep 01/02/03 as links.
+- **API entry (CI).** Run `python3 scripts/agent_verify.py drive --feature find-jobs --evidence "$EVIDENCE"`. Expect HTTP 200, `state` `matches` or `thin_corpus`, `job_count > 0`, and job titles. When `matcher` is `requirement_v1`, at least one `company_name` is present.
+- **Proof.** `drive-find-jobs.json` lists titles (and employers for requirement_v1). A homepage screenshot alone is not proof.
+
+## Gotchas
+
+- `/?new=1` resets FIND; do not remount-loop the workspace.
+- Chip-only match may omit `required_task_models` — use a Understanding profile (Vega fixture) for cards.
+- Do not hop the result onto `/pipeline`. Next is Jobs CRM, not SIGNAL buyers.
+- Local Vite without `VITE_PUBLIC_API_URL` will not hit Fly; doctor production instead.
