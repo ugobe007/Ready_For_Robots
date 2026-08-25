@@ -189,6 +189,11 @@ describe("robotJobCard", () => {
     expect(card.modelContract?.headline).toBe("To place this job");
     expect(card.modelContract?.layer).toMatch(/task library/i);
     expect(card.modelContract?.fieldFeedback).toMatch(/do not automatically reduce/i);
+    expect(card.modelContract?.listLine).toMatch(/Task library/);
+    expect(card.modelContract?.listLine).toMatch(/2–8 weeks|2-8 weeks/);
+    expect(card.modelContract?.steps.map(s => s.n)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(card.modelContract?.steps[0].body).toMatch(/pick-and-place/i);
+    expect(card.modelContract?.steps[5].body).toMatch(/do not automatically reduce/i);
     expect(card.modelLinks).toHaveLength(JOB_CARD_MODEL_LINK_CAP);
     expect(card.modelLinks.every(d => d.url)).toBe(true);
     expect(card.modelLinks.map(d => d.name)).toEqual([
@@ -348,6 +353,10 @@ describe("robotJobCard", () => {
     expect(cardSrc).toMatch(/Why this is listed/);
     expect(cardSrc).toMatch(/card.modelLinks/);
     expect(cardSrc).toMatch(/Task models/);
+    expect(cardSrc).toMatch(/card.modelContract/);
+    expect(cardSrc).toMatch(/listLine/);
+    expect(cardSrc).toMatch(/card.modelContract.steps/);
+    expect(cardSrc).toMatch(/Name the slot|step.label/);
     expect(cardSrc).not.toMatch(/How we qualify a candidate/);
     expect(cardSrc).not.toMatch(/Where to find price/);
     expect(cardSrc).not.toMatch(/Where to look:/);

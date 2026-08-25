@@ -99,7 +99,7 @@ Do not promise “the robot will get cheaper as it learns.” Ask for that claus
 Short. No price indexes.
 
 - Which task model the work needs (slot + unknown/present/absent)
-- **To place this job:** layer, who trains, typical time, data you provide
+- **To place this job** (collapsed list: layer · typical time · who trains; expanded: six numbered steps)
 - Field traces do not automatically reduce the model price
 - Three VLA project links (OpenVLA, π0.5, GR00T N1.5)
 

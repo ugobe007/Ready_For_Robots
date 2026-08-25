@@ -5,7 +5,7 @@ Jobs CRM is step 03: keep checked Job Cards in native CRM as 3 unlocked job oppo
 ## Sub-features
 
 - `crm-activate` Next from the job list goes to `/crm?src=jobs_activate`.
-- `crm-unlock` signed-in free users see 3 unlocked jobs from the handoff.
+- `crm-unlock` signed-in free users see 3 unlocked jobs from the handoff. Unlocked rows carry the same model `list_line` as QUALIFY (layer · time · who trains).
 - `crm-auth` signed-out users hit signup/login with Jobs `src`, then return to CRM.
 - `crm-watch` optional watch when work changes (email) — do not require it for a pass.
 

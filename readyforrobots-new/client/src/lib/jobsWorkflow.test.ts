@@ -298,6 +298,9 @@ describe("jobsWorkflow", () => {
     expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
       /Five example jobs Fourier N1/,
     );
+    expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
+      /policy layer/i,
+    );
     expect(jobsListHint({ robotCount: 5, productName: "Fourier N1" })).toMatch(
       /one sample job per robot/i,
     );
@@ -569,6 +572,7 @@ describe("jobsWorkflow", () => {
     expect(signup).not.toMatch(/The pipeline is where more than 5 live/);
     expect(signup).toMatch(/readJobsHandoffSnapshot/);
     expect(signup).toMatch(/tasteJobs/);
+    expect(signup).toMatch(/jobModelListLine/);
     expect(signup).toMatch(/robotJobsIntent\) return/);
     expect(signup).toMatch(/liveProof && !robotJobsIntent/);
     expect(signup).toMatch(/job opportunities for/);
@@ -882,6 +886,7 @@ describe("jobsWorkflow", () => {
     expect(hero).toMatch(/CRM_HOW_TO_STEPS/);
     expect(hero).toMatch(/tasteJobs/);
     expect(hero).toMatch(/CRM_UNLOCKED_JOBS/);
+    expect(hero).toMatch(/jobModelListLine/);
 
     const intel = readFileSync(join(here, "../pages/Intelligence.tsx"), "utf8");
     expect(intel).toMatch(/ExperimentHeader/);

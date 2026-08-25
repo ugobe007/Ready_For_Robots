@@ -2969,6 +2969,9 @@ function JobCard({
             <span className={JOBS_META_CLASS}>
               {jobIsForLabel(index, robotName)} · {card.qualificationLabel}
             </span>
+            {card.modelContract?.listLine ? (
+              <span className={JOBS_PLACE_CLASS}>{card.modelContract.listLine}</span>
+            ) : null}
           </span>
           <span className="font-mono text-xs text-slate-500">
             {selected ? "−" : "+"}
@@ -3024,13 +3027,30 @@ function JobCard({
               {card.modelContract ? (
                 <div className="mt-2 space-y-0.5 text-[13px] leading-snug text-slate-300">
                   <p className="text-slate-200">{card.modelContract.headline}</p>
-                  {card.modelContract.layer ? <p>{card.modelContract.layer}</p> : null}
-                  {card.modelContract.whoTrains ? <p>{card.modelContract.whoTrains}</p> : null}
-                  {card.modelContract.time ? <p>{card.modelContract.time}</p> : null}
-                  {card.modelContract.youProvide ? <p>{card.modelContract.youProvide}</p> : null}
-                  {card.modelContract.fieldFeedback ? (
-                    <p className="text-slate-400">{card.modelContract.fieldFeedback}</p>
-                  ) : null}
+                  {card.modelContract.steps.length ? (
+                    <ol className="mt-1 space-y-1">
+                      {card.modelContract.steps.map(step => (
+                        <li key={`${step.n}-${step.label}`}>
+                          <span className="font-mono text-emerald-400">{step.n}.</span>{" "}
+                          <span className="text-slate-200">{step.label}.</span> {step.body}
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <>
+                      {card.modelContract.layer ? <p>{card.modelContract.layer}</p> : null}
+                      {card.modelContract.whoTrains ? (
+                        <p>{card.modelContract.whoTrains}</p>
+                      ) : null}
+                      {card.modelContract.time ? <p>{card.modelContract.time}</p> : null}
+                      {card.modelContract.youProvide ? (
+                        <p>{card.modelContract.youProvide}</p>
+                      ) : null}
+                      {card.modelContract.fieldFeedback ? (
+                        <p className="text-slate-400">{card.modelContract.fieldFeedback}</p>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               ) : null}
               {card.modelLinks.length ? (

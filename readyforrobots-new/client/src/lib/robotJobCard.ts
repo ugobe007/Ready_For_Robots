@@ -95,6 +95,12 @@ export type TaskModelQualifyFilter = {
   note: string;
 };
 
+export type TaskModelPlacementStep = {
+  n: number;
+  label: string;
+  body: string;
+};
+
 export type TaskModelCardContract = {
   headline: string;
   layer: string;
@@ -102,6 +108,8 @@ export type TaskModelCardContract = {
   time: string;
   youProvide: string;
   fieldFeedback: string;
+  listLine: string;
+  steps: TaskModelPlacementStep[];
 };
 
 export type RequiredTaskModel = {
@@ -191,14 +199,20 @@ type MatchTaskModelIn = {
     note?: string | null;
   }[] | null;
   pricing_lookups?: MatchLookupIn[] | null;
-  card_contract?: {
-    headline?: string | null;
-    layer?: string | null;
-    who_trains?: string | null;
-    time?: string | null;
-    you_provide?: string | null;
-    field_feedback?: string | null;
-  } | null;
+    card_contract?: {
+      headline?: string | null;
+      layer?: string | null;
+      who_trains?: string | null;
+      time?: string | null;
+      you_provide?: string | null;
+      field_feedback?: string | null;
+      list_line?: string | null;
+      steps?: {
+        n?: number | null;
+        label?: string | null;
+        body?: string | null;
+      }[] | null;
+    } | null;
 };
 
 function mapLookups(raw?: MatchLookupIn[] | null): TaskModelLookup[] {
@@ -241,20 +255,118 @@ export function cardModelLinks(lookups: TaskModelLookup[]): TaskModelLookup[] {
   return out;
 }
 
+function stripPrefix(value: string, prefix: RegExp): string {
+  return value.replace(prefix, "").trim();
+}
+
+function shortLayer(layer: string): string {
+  const t = stripPrefix(layer, /^Layer:\s*/i);
+  if (/site-adapted/i.test(t)) return "Site-adapted";
+  if (/task library/i.test(t)) return "Task library";
+  if (/foundation/i.test(t)) return "Foundation VLA";
+  return t.split("/")[0].trim() || t;
+}
+
+function shortTime(time: string): string {
+  const t = stripPrefix(time, /^Typical time:\s*/i);
+  const m = t.match(
+    /(\d+\s*[–-]\s*\d+\s*weeks|Days to ~2 weeks|Months to years)/i,
+  );
+  if (m) return m[1].replace(/-/g, "–");
+  return t.split(" after")[0].trim();
+}
+
+function shortWho(who: string): string {
+  return stripPrefix(who, /^Who trains:\s*/i);
+}
+
+function defaultPlacementSteps(opts: {
+  slotLabel: string;
+  who: string;
+  time: string;
+  youProvide: string;
+  fieldFeedback: string;
+}): TaskModelPlacementStep[] {
+  const provide = stripPrefix(opts.youProvide, /^You provide:\s*/i);
+  const rebate =
+    opts.fieldFeedback ||
+    "Field traces do not automatically reduce the model price unless the OEM contract says so.";
+  return [
+    { n: 1, label: "Name the slot", body: opts.slotLabel || "this work" },
+    {
+      n: 2,
+      label: "License a task-library pack",
+      body: "Ask the OEM which pack covers this SKU class. Do not train a foundation VLA.",
+    },
+    {
+      n: 3,
+      label: "Budget site adapt",
+      body: `${opts.who || "OEM / integrator"} · typical ${opts.time || "2–8 weeks"}`,
+    },
+    {
+      n: 4,
+      label: "Bring workplace data",
+      body: provide || "site map, object geometry, demo traces, SOP",
+    },
+    {
+      n: 5,
+      label: "Qualify on this workplace",
+      body: "A checkpoint is not qualified until this site says so.",
+    },
+    { n: 6, label: "Write the field-data clause", body: rebate },
+  ];
+}
+
+function mapPlacementSteps(
+  raw: MatchTaskModelIn["card_contract"],
+  fallback: TaskModelPlacementStep[],
+): TaskModelPlacementStep[] {
+  const steps = (raw?.steps || [])
+    .map(row => ({
+      n: Number(row.n) || 0,
+      label: (row.label || "").trim(),
+      body: (row.body || "").trim(),
+    }))
+    .filter(row => row.label && row.body);
+  return steps.length ? steps : fallback;
+}
+
 function mapCardContract(
   raw?: MatchTaskModelIn["card_contract"],
+  slotLabel = "",
 ): TaskModelCardContract | null {
   if (!raw) return null;
   const headline = (raw.headline || "").trim();
   const layer = (raw.layer || "").trim();
   if (!headline && !layer) return null;
+  const whoTrains = (raw.who_trains || "").trim();
+  const time = (raw.time || "").trim();
+  const youProvide = (raw.you_provide || "").trim();
+  const fieldFeedback = (raw.field_feedback || "").trim();
+  const who = shortWho(whoTrains);
+  const timeShort = shortTime(time);
+  const listLine =
+    (raw.list_line || "").trim() ||
+    [shortLayer(layer), timeShort, who].filter(Boolean).join(" · ");
+  const steps = mapPlacementSteps(
+    raw,
+    defaultPlacementSteps({
+      slotLabel,
+      who,
+      time: timeShort,
+      youProvide,
+      fieldFeedback,
+    }),
+  );
   return {
     headline: headline || "To place this job",
     layer,
-    whoTrains: (raw.who_trains || "").trim(),
-    time: (raw.time || "").trim(),
-    youProvide: (raw.you_provide || "").trim(),
-    fieldFeedback: (raw.field_feedback || "").trim(),
+    whoTrains,
+    time,
+    youProvide,
+    fieldFeedback,
+    listLine,
+    steps,
   };
 }
 
@@ -279,7 +391,7 @@ function normalizeTaskModels(raw?: MatchTaskModelIn[] | null): RequiredTaskModel
       whereToLook: [],
       qualifyFilters: [],
       pricingLookups: [],
-      cardContract: mapCardContract(row.card_contract),
+      cardContract: mapCardContract(row.card_contract, label || id),
     });
   }
   return out;
@@ -330,6 +442,13 @@ export function robotJobCardFromMatch(job: {
     modelLinks,
     modelContract: taskModels.find(m => m.cardContract)?.cardContract || null,
   };
+}
+
+/** Collapsed list / CRM taste — training burden without inventing a price. */
+export function jobModelListLine(
+  job: Parameters<typeof robotJobCardFromMatch>[0],
+): string {
+  return robotJobCardFromMatch(job).modelContract?.listLine || "";
 }
 
 export type RobcoJobCard = (typeof robcoPack)["jobs"][number];
