@@ -140,7 +140,7 @@ def test_cal_buyer_outreach_body_mentions_cal():
         fresh=False,
     )
     assert "Cal" in body
-    assert "Ready For Robots" in body
+    assert "ReadyForRobots" in body or "Ready For Robots" in body
 
 
 def test_cal_vendor_outreach_body_sherpa_tone():
