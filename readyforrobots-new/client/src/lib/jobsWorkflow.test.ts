@@ -492,10 +492,10 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/FIND_JOBS_HOME_SUBHEAD/);
     expect(workspace).toMatch(/text-emerald-400">jobs/);
     expect(workspace).not.toMatch(/Paste the manufacturer URL/);
-    expect(JOBS_NEXT_CTA).toBe("Next →");
+    expect(JOBS_NEXT_CTA).toBe("Place these jobs →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
     expect(JOBS_NEXT_HINT).toMatch(/start checked/i);
-    expect(JOBS_NEXT_HINT).toMatch(/kept jobs/i);
+    expect(JOBS_NEXT_HINT).toMatch(/money moment/i);
     expect(JOBS_NEXT_HINT).not.toMatch(/buyer/i);
     expect(JOBS_PLACE_CTA).toBe("Activate job list →");
     expect(workspace).toMatch(/JOBS_NEXT_CTA/);
@@ -575,8 +575,14 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/JOBS_APPLY_CTA/);
     expect(desk).toMatch(/jobCredentialGaps/);
     expect(desk).toMatch(/placementOutreachDraft/);
+    expect(desk).toMatch(/placementAgentBrief/);
+    expect(desk).toMatch(/aria-label="Jobs process"/);
+    expect(desk).toMatch(/the money moment/);
+    expect(desk).toMatch(/Your move:/);
+    expect(desk).toMatch(/quoteCommitted: true/);
+    expect(desk).not.toMatch(/grid-cols-3/);
     expect(desk).not.toMatch(/vendor_shortlist/);
-    expect(desk).toMatch(/No SIGNAL buyers/);
+    expect(desk).toMatch(/Not a SIGNAL buyer list/);
     expect(handoff).toMatch(/Opening CRM/);
     expect(handoff).toMatch(/jobsActivateHref/);
     expect(handoff).toMatch(/isJobsAutomateSrc/);
@@ -600,7 +606,7 @@ describe("jobsWorkflow", () => {
     expect(signup).toMatch(/!resultsIntent && !robotJobsIntent/);
     expect(pipeline).toMatch(/arrivedFromPlace/);
     expect(pipeline).toMatch(/isPlaceSrc/);
-    expect(JOBS_PROCESS_STEPS[2].label).toBe("CRM");
+    expect(JOBS_PROCESS_STEPS[2].label).toBe("Place the robot");
   });
 
   it("Jobs CRM src keeps 5 jobs and hides SIGNAL pipeline chrome", () => {
@@ -846,8 +852,8 @@ describe("jobsWorkflow", () => {
     expect(JOBS_EYEBROW_CLASS).toMatch(/text-sm/);
     expect(CRM_PAGE_HEADLINE).toBe("CRM");
     expect(PIPELINE_PAGE_HEADLINE).toBe("Pipeline");
-    expect(CRM_PAGE_NEXT).toMatch(/this is your CRM desk/i);
-    expect(CRM_PAGE_NEXT).toMatch(/apply to jobs/i);
+    expect(CRM_PAGE_NEXT).toMatch(/jobs you keep stay jobs/i);
+    expect(CRM_PAGE_NEXT).toMatch(/quote the monthly rental/i);
     expect(CRM_SUBHEAD_CLASS).toMatch(/text-lg/);
     expect(CRM_SUBHEAD_CLASS).toMatch(/sm:text-xl/);
     expect(PIPELINE_PAGE_NEXT).toMatch(/live list/i);

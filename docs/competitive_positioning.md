@@ -2,7 +2,7 @@
 
 **For ProductSurface, MarketIntel, Orchestrator, and sales copy.**
 
-**Last updated:** 2026-08-22
+**Last updated:** 2026-08-25
 
 ---
 
@@ -43,6 +43,18 @@ They will also hear from **“Revenue Operating System”** vendors — especial
 | **Moat** | Capital, unified product surface, horizontal scale | Vertical junk gates, ontology, URL buyer scan, humanoid catalog |
 | **When they win** | Enterprise replacing Salesforce + Outreach + point tools | N/A — different buyer job |
 | **When we win** | Rep needs *which robot to pitch* and *who is buying now*, not another CRM | Always for robot sales teams |
+
+**How Reevo / Monaco actually feel inevitable (steal the motion, not the category):**
+
+Reevo’s line is “Revenue should feel predictable.” They do it with one **memory layer** (every call, email, and deal compounds), a numbered motion (**Find → Connect → Sell → Manage**), and an agent that always names **one next action** on the full context of the object. Monaco is the same pattern as a 1→6 product page: TAM → signals → sequences → capture → pipeline → Ask Monaco (the conversion copilot). The pipeline “manages itself” because the system captures activity; the user does not maintain a CRM dump.
+
+Cal is the opposite: a fragment that guesses without the whole job. We do **not** turn Cal back on, and we do **not** build TAM sourcing, sequences, forecasting, or a generic sales CRM.
+
+**What we take (UX):** every Jobs screen has **full context of the Robot Job** and **one next action**. FIND → jobs → Place. Place itself is one move at a time (Confirm pack → Lock this quote → Place this job). Predictable revenue is the **monthly rental the OEM/distributor types** on a named employer — not an invented forecast.
+
+**What we leave on the table (honest):** we do not yet capture sent outreach or employer replies into a compounding memory, and apply state lives in the browser session until they sign in. That is the Reevo gap. Close it on **jobs**, never by hopping onto SIGNAL buyers.
+
+Our object is the **Robot Job**. Step 03 must feel like their command center: what we already know (employer, work, model), what the user hasn’t closed (pack, PoC, **monthly rental they will charge**), and the money move (**Place**). Invented forecasts are a Pinto. A user-typed rental on a named job is the Ferrari.
 
 **Vs Reevo / revenue OS:**
 > “They sell one platform for every B2B team. We sell the **robot buyer pipeline** — live intent, SKU-level pitch actions, and deals advancing in HubSpot. Keep your CRM; add SIGNAL.”

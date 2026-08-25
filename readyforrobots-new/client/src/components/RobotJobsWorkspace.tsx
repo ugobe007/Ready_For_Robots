@@ -7,7 +7,7 @@
  *
  *   FIND → SELECT (several SKUs) → one robot: jobs for that product
  *                              → several/all: type-first match (faster) → jobs
- *   Process: 01 robot → 02 jobs → 03 CRM (top and bottom of the page).
+ *   Process: 01 robot → 02 jobs → Place (top and bottom of the page).
 
 
  *

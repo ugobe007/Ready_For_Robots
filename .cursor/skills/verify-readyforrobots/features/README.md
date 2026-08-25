@@ -42,5 +42,5 @@ Each feature file starts with an H1 and one paragraph, then exactly four H2s:
 - [Find jobs](./find-jobs.md) — paste a robot URL, get Job Cards.
 - [Job Cards](./job-cards.md) — employer, workplace, work, qualification, task model.
 - [Jobs chrome](./jobs-chrome.md) — header, process bar, no Pipeline hop.
-- [Jobs CRM](./jobs-crm.md) — Next → `/pipeline?src=jobs_activate`, 5 unlocked jobs, Apply rectify.
+- [Jobs CRM](./jobs-crm.md) — Place these jobs → `/pipeline?src=jobs_activate`, 5 unlocked jobs, one next action.
 - [About](./about.md) — `/intelligence` is the Jobs loop, not SIGNAL.

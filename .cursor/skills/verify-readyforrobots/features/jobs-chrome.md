@@ -1,11 +1,11 @@
 # Jobs chrome
 
-Jobs chrome is the page frame for FIND → cards → CRM: dark header, process bar, scrolling document. Pipeline is SIGNAL-only and must not appear on `/`.
+Jobs chrome is the page frame for FIND → cards → Place: dark header, process bar, scrolling document. Pipeline is SIGNAL-only and must not appear on `/`.
 
 ## Sub-features
 
 - `chrome-header` Jobs / About / Sign in; wordmark goes to `/?new=1`.
-- `chrome-process` 01 Show us your robot → 02 Here are its jobs → 03 CRM, as links, top and bottom.
+- `chrome-process` 01 Show us your robot → 02 Here are its jobs → 03 Place the robot, as links, top and bottom.
 - `chrome-no-pipeline` no Pipeline nav, no SIGNAL FAB on Jobs pages.
 - `chrome-scroll` the document scrolls; no `100vh` + `overflow: hidden` trap.
 
@@ -21,7 +21,7 @@ Preconditions:
 - Doctor healthy.
 
 - **Header.** On `/`, nav includes Jobs and About. Pipeline is absent. Signed-out Sign In stays. Signed-in CRM href is `/pipeline?src=jobs_activate`.
-- **Process bar.** `aria-label="Jobs process"`. Actions: FIND `Start jobs →`, list `Next →`.
+- Process bar. `aria-label="Jobs process"`. Actions: FIND `Start jobs →`, list `Place these jobs →`. Step 03 label is Place the robot.
 - **JS canary (CI).** Run `python3 scripts/agent_verify.py drive --feature jobs-chrome --evidence "$EVIDENCE"`. Expect `Find jobs for your robot`, `Show us your robot`, `Here are its jobs`, `Start jobs`, `jobs_activate` in the shipped bundle.
 - **Proof.** `drive-jobs-chrome.json` hits are all true. Browser: screenshot of `/` with header + FIND, Pipeline not in the header.
 
