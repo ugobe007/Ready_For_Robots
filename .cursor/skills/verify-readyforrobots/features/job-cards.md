@@ -7,6 +7,7 @@ A Robot Job Card is the unit of value: named employer, workplace, work, qualific
 - `card-identity` shows employer / workplace / work (not Lead / Prospect).
 - `card-qualify` stays Conditional until a site assessment and a named task model.
 - `card-models` names the required task-model slot and lookups (OpenVLA, π0.5, GR00T).
+- `card-contract` collapsed rows show `list_line` (layer · typical time · who trains). Expanded cards walk six placement steps. No invented dollars.
 - `card-select` checkboxes choose jobs for Next; there is no Next on the card.
 
 ## How to get to it (user POV)
@@ -22,8 +23,8 @@ Preconditions:
 - Find-jobs drive returned at least one job title.
 - Doctor still healthy.
 
-- **List.** After FIND, the page heading includes `Jobs for your robot` and example jobs are capped at 5 before signup.
-- **Expand.** Open a card. Employer and work are visible. Qualification is Conditional / pending robot — never a fake Qualified or invented FTE dollars.
+- **List.** After FIND, the page heading includes `Jobs for your robot` and example jobs are capped at 5 before signup. Collapsed rows may show a model burden line (`Site-adapted · 4–12 weeks · integrator`).
+- **Expand.** Open a card. Employer and work are visible. Qualification is Conditional / pending robot — never a fake Qualified or invented FTE dollars. **To place this job** is a numbered walk (slot → license pack → site adapt → data → workplace qualify → field-data clause).
 - **API.** The find-jobs payload’s jobs may include `required_task_models`. When present, presence starts `unknown`. Do not invent “this SKU runs GR00T”.
 - **Proof.** `python3 scripts/agent_verify.py drive --feature job-cards --evidence "$EVIDENCE"` plus `drive-find-jobs.json` titles. Browser: screenshot of an expanded card that shows employer + work.
 

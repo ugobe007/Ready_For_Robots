@@ -20,6 +20,8 @@ import {
   jobsFreshHomeHref,
   onJobsFreshHomeClick,
 } from "@/lib/jobsWorkflow";
+import { jobModelListLine } from "@/lib/robotJobCard";
+import type { MatchJob } from "@/lib/robotJobMatch";
 
 export type JobsWatchStatus = {
   opted_in: boolean;
@@ -42,10 +44,8 @@ export type JobsWatchStatus = {
   free_taste?: boolean;
 };
 
-export type CrmTasteJob = {
-  title?: string | null;
-  company_name?: string | null;
-  forRobot?: string | null;
+export type CrmTasteJob = Pick<MatchJob, "title" | "company_name" | "forRobot"> & {
+  required_task_models?: MatchJob["required_task_models"];
 };
 
 type Props = {
@@ -120,12 +120,18 @@ export default function CrmHero({
             <p className="mt-1 text-sm text-slate-400">{tasteProduct}</p>
           ) : null}
           <ul className="mt-3 space-y-1.5">
-            {unlocked.map((job, i) => (
-              <li key={`${job.title || "job"}-${i}`} className="text-sm text-slate-200">
-                • {job.title}
-                {job.company_name ? ` · ${job.company_name}` : ""}
-              </li>
-            ))}
+            {unlocked.map((job, i) => {
+              const modelLine = jobModelListLine(job);
+              return (
+                <li key={`${job.title || "job"}-${i}`} className="text-sm text-slate-200">
+                  • {job.title}
+                  {job.company_name ? ` · ${job.company_name}` : ""}
+                  {modelLine ? (
+                    <span className="block text-slate-400">{modelLine}</span>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}

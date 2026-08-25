@@ -577,7 +577,7 @@ export function jobsListHint(opts: {
   if (opts.robotCount > 1) {
     return "One sample job per robot. Run each robot by itself for five jobs, then Next to CRM.";
   }
-  return `Five example jobs ${opts.productName} can do. Expand a card to inspect. Check the jobs you want — Next opens CRM with ${CRM_UNLOCKED_JOBS}.`;
+  return `Five example jobs ${opts.productName} can do. Each row names the policy layer and typical training time — expand for the placement steps. Check the jobs you want — Next opens CRM with ${CRM_UNLOCKED_JOBS}.`;
 }
 
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";

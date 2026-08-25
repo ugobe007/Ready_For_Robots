@@ -73,6 +73,8 @@ export type MatchJob = {
       time: string;
       you_provide: string;
       field_feedback: string;
+      list_line?: string;
+      steps?: { n: number; label: string; body: string }[];
     };
   }[];
   /** SKU this card is for. Set on the Jobs terminal, carried onto the pipeline list. */

@@ -70,8 +70,8 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 |-------|------|
 | FIND form | `aria-label="Find jobs for your robot"`. URL field: `Paste robot product URL`. Optional catalog / known OEM lineup. |
 | SKU picker | Several products on the URL → ask which robot. One SKU → jobs on the same click (no second Find jobs). |
-| Job list | Up to 5 example jobs before signup. Checkboxes select. Tag `Job # is for {SKU}`. |
-| Job Card (expanded) | Employer, workplace, work, qualification (usually Conditional), open questions, task models, Next is **not** here. |
+| Job list | Up to 5 example jobs before signup. Checkboxes select. Tag `Job # is for {SKU}`. Collapsed row shows model `list_line` (layer · time · who trains) so QUALIFY happens before the check. |
+| Job Card (expanded) | Employer, workplace, work, qualification (usually Conditional), open questions, task models, numbered placement steps, Next is **not** here. |
 | Research console | Stage labels while Understanding + match run. Not the result. |
 | Live job tape | Ambient listings; not a substitute for named Job Cards. |
 
@@ -85,7 +85,7 @@ SIGNAL-only panels (activity feed, next actions, Cal queue, lead share) stay off
 |--------|-------------|
 | Job Card | Named employer + real work. No invented FTE/payback. |
 | Qualification | Conditional until site assessment + task model evidence. Hardware in the room is not enough. |
-| Task model | Slot + unknown/present/absent. Lookups, not fake “this SKU has GR00T”. |
+| Task model | Slot + unknown/present/absent. List line names layer / typical time / who trains. Expanded card walks placement steps. Lookups, not fake “this SKU has GR00T”. |
 | Lineup | One robot → 5 jobs. Several → sample per SKU / type; run each robot for five. |
 | Empty / thin | Tell the truth (`could_not_understand`, `thin_corpus`). Do not pad with SIGNAL HOT buyers. |
 | CRM unlock | 3 jobs on free after `src=jobs_activate`. |

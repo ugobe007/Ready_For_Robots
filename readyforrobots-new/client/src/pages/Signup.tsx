@@ -36,6 +36,7 @@ import {
 } from "@/lib/signupWorkflowPath";
 import { isJobsHandoffSrc, CRM_UNLOCKED_JOBS } from "@/lib/jobsWorkflow";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
+import { jobModelListLine } from "@/lib/robotJobCard";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
@@ -616,14 +617,20 @@ export default function Signup() {
                 </p>
                 {tasteJobs.length > 0 ? (
                   <ul className="mt-3 space-y-2">
-                    {tasteJobs.map((job, i) => (
+                    {tasteJobs.map((job, i) => {
+                      const modelLine = jobModelListLine(job);
+                      return (
                       <li key={job.job_key || `${job.title}-${i}`} className="text-sm text-slate-200">
                         • {job.title}
                         {job.company_name ? (
                           <span className="text-slate-400"> · {job.company_name}</span>
                         ) : null}
+                        {modelLine ? (
+                          <span className="block text-slate-400">{modelLine}</span>
+                        ) : null}
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
                 ) : (
                   <p className="mt-2 text-sm text-slate-300">

@@ -84,6 +84,13 @@ def test_warehouse_palletize_needs_pick_policy_unknown():
     assert card["layer"].startswith("Layer:")
     assert "2–8 weeks" in card["time"] or "2-8" in card["time"]
     assert "do not automatically reduce" in card["field_feedback"].lower()
+    assert "Task library" in card["list_line"]
+    assert "2–8 weeks" in card["list_line"] or "2-8" in card["list_line"]
+    assert [s["n"] for s in card["steps"]] == [1, 2, 3, 4, 5, 6]
+    assert card["steps"][0]["label"] == "Name the slot"
+    assert "pick" in card["steps"][0]["body"].lower()
+    assert "foundation VLA" in card["steps"][1]["body"]
+    assert "automatically reduce" in card["steps"][5]["body"].lower()
 
 
 def test_warehouse_tote_move_is_amr_nav_not_hospital():
@@ -127,6 +134,8 @@ def test_cnc_tending_needs_machine_tending_policy():
     assert "integrator" in tending["contract"]["who_trains"]
     assert tending["contract"]["time_band"]["id"] == "4_to_12_weeks"
     assert "4–12 weeks" in tending["card_contract"]["time"] or "4-12" in tending["card_contract"]["time"]
+    assert "Site-adapted" in tending["card_contract"]["list_line"]
+    assert "integrator" in tending["card_contract"]["list_line"]
 
 
 def test_opaque_job_still_asks_for_a_site_task_policy():

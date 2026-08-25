@@ -186,26 +186,73 @@ def _contract(slot: dict[str, Any], ont: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def format_task_model_contract(slot_or_model: dict[str, Any]) -> dict[str, str]:
-    """Short Job Card copy. No invented dollars."""
+_LAYER_LIST_LABEL = {
+    "foundation_vla": "Foundation VLA",
+    "task_library": "Task library",
+    "site_adapted": "Site-adapted",
+}
+
+
+def format_task_model_contract(slot_or_model: dict[str, Any]) -> dict[str, Any]:
+    """Job Card copy: list burden + placement steps. No invented dollars."""
     contract = slot_or_model.get("contract") or {}
     layer = contract.get("layer") or {}
     time_band = contract.get("time_band") or {}
     who = [w.replace("_", " ") for w in (contract.get("who_trains") or []) if w]
     provide = [row.get("label") for row in (contract.get("you_provide") or []) if row.get("label")]
     who_s = " + ".join(who) if who else "OEM / integrator"
+    layer_id = str(layer.get("id") or "")
+    layer_short = _LAYER_LIST_LABEL.get(layer_id) or (layer.get("label") or "Task model").split("/")[0].strip()
+    time_label = time_band.get("label") or "2–8 weeks"
+    slot_label = (slot_or_model.get("label") or "").strip() or "this work"
+    provide_s = ", ".join(provide).lower() if provide else "site map, object geometry, demo traces, SOP"
+    rebate = "Field traces do not automatically reduce the model price unless the OEM contract says so."
     return {
         "headline": "To place this job",
         "layer": f"Layer: {(layer.get('label') or 'Task model').strip()}",
         "who_trains": f"Who trains: {who_s}",
-        "time": f"Typical time: {time_band.get('label') or '2–8 weeks'} after a map and demo traces exist",
-        "you_provide": "You provide: " + (", ".join(provide).lower() if provide else "site map, object geometry, demo traces, SOP"),
-        "field_feedback": "Field traces do not automatically reduce the model price unless the OEM contract says so.",
+        "time": f"Typical time: {time_label} after a map and demo traces exist",
+        "you_provide": f"You provide: {provide_s}",
+        "field_feedback": rebate,
+        "list_line": f"{layer_short} · {time_label} · {who_s}",
+        "steps": [
+            {
+                "n": 1,
+                "label": "Name the slot",
+                "body": slot_label,
+            },
+            {
+                "n": 2,
+                "label": "License a task-library pack",
+                "body": "Ask the OEM which pack covers this SKU class. Do not train a foundation VLA.",
+            },
+            {
+                "n": 3,
+                "label": "Budget site adapt",
+                "body": f"{who_s} · typical {time_label}",
+            },
+            {
+                "n": 4,
+                "label": "Bring workplace data",
+                "body": provide_s,
+            },
+            {
+                "n": 5,
+                "label": "Qualify on this workplace",
+                "body": "A checkpoint is not qualified until this site says so.",
+            },
+            {
+                "n": 6,
+                "label": "Write the field-data clause",
+                "body": rebate,
+            },
+        ],
     }
 
 
 def _serialize_slot(slot: dict[str, Any], *, presence: str = "unknown") -> dict[str, Any]:
     ont = load_task_model_ontology()
+    contract = _contract(slot, ont)
     return {
         "id": slot.get("id") or "",
         "label": slot.get("label") or "",
@@ -219,8 +266,10 @@ def _serialize_slot(slot: dict[str, Any], *, presence: str = "unknown") -> dict[
         "where_to_look": _lookups(slot),
         "qualify_filters": [_filter(r) for r in _catalog("qualify_filters")],
         "pricing_lookups": [_dest(r) for r in _catalog("pricing_lookups")],
-        "contract": _contract(slot, ont),
-        "card_contract": format_task_model_contract({"contract": _contract(slot, ont)}),
+        "contract": contract,
+        "card_contract": format_task_model_contract(
+            {"label": slot.get("label") or "", "contract": contract}
+        ),
     }
 
 
