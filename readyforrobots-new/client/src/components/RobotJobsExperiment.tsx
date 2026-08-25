@@ -35,6 +35,7 @@ import { MacWindow, macAccent, macInk, macRule } from "@/components/jobs/MacChro
 import {
   demoJobsToTape,
   MARKET_TAPE_JOBS,
+  uniqueTapeJobCount,
   type TapeJob,
 } from "@/lib/jobsTapeCorpus";
 import {
@@ -166,7 +167,7 @@ function MatchExplanation({ match }: { match?: MatchJob | null }) {
 
 const PREVIEW_FREE = 5;
 /** Independent discovery counter seed — not tied to visible row count. */
-const MARKET_FOUND_BASE = 140;
+const MARKET_FOUND_BASE = uniqueTapeJobCount();
 /** Persist discovery across signup so auth return restores personal jobs. */
 const JOBS_SESSION_KEY = "rfr_jobs_discovery";
 

@@ -1,7 +1,8 @@
 /**
- * Live job-tape corpus — real discoveries from RDD demos + content experiments.
+ * Live job-tape corpus — named-employer jobs from the match corpus.
  * Short titles / paths for the terminal board (not marketing cards).
  */
+import tapeJson from "@/lib/market_tape_jobs.json";
 import {
   KARE_CART,
   KARE_GRIPPER,
@@ -126,233 +127,65 @@ export const TAPE_ICONS_ACTIVE: Record<TapeFamily, PixelMap> = {
   gripper: KARE_GRIPPER,
 };
 
-/** Market tape — surprising discoveries first, then breadth. */
-export const MARKET_TAPE_JOBS: TapeJob[] = [
-  {
-    key: "curascript_totes",
-    title: "Return empty pharma totes",
-    industry: "Specialty pharma",
-    path: "PACK → OPERATING AREA",
-    family: "transport",
-  },
-  {
-    key: "hospital_med_carts",
-    title: "Deliver medication carts",
-    industry: "Healthcare",
-    path: "PHARMACY → PATIENT UNITS",
-    family: "cart",
-  },
-  {
-    key: "aerospace_kits",
-    title: "Move aircraft production kits",
-    industry: "Aerospace",
-    path: "KITTING → PRODUCTION LINE",
-    family: "transport",
-  },
-  {
-    key: "return_empty_carts",
-    title: "Return empty carts to pack",
-    industry: "Pharmacy DC",
-    path: "SHIP → PACK",
-    family: "cart",
-  },
-  {
-    key: "par_carts",
-    title: "Deliver hospital par carts",
-    industry: "Hospital",
-    path: "SUPPLY → PATIENT FLOOR",
-    family: "cart",
-  },
-  {
-    key: "unifi_terminal",
-    title: "Scrub airport concourses overnight",
-    industry: "Airport",
-    path: "CONCOURSE · OVERNIGHT",
-    family: "scrub",
-  },
-  {
-    key: "lbj_scrub",
-    title: "Scrub hospital corridors",
-    industry: "Healthcare",
-    path: "EVS · NIGHT ROUTES",
-    family: "scrub",
-  },
-  {
-    key: "intuitive_pou",
-    title: "Replenish point-of-use",
-    industry: "Med device",
-    path: "STORES → PRODUCTION",
-    family: "transport",
-  },
-  {
-    key: "sanmar_pick_carts",
-    title: "Move pick carts to pack",
-    industry: "Apparel fulfillment",
-    path: "PICK MODULE → PACK",
-    family: "transport",
-  },
-  {
-    key: "moa_scrub",
-    title: "Scrub mall common areas",
-    industry: "Retail",
-    path: "CONCOURSE · OVERNIGHT",
-    family: "scrub",
-  },
-  {
-    key: "novolex_cases",
-    title: "Stack finished cases",
-    industry: "Manufacturing",
-    path: "CONVEYOR → PALLET",
-    family: "pallet",
-  },
-  {
-    key: "cnc_load",
-    title: "Load parts into CNC",
-    industry: "Machine shop",
-    path: "STAGING → SPINDLE",
-    family: "gripper",
-  },
-  {
-    key: "inspect_gauges",
-    title: "Inspect gauges",
-    industry: "Industrial",
-    path: "ROUTE → EQUIPMENT",
-    family: "inspect",
-  },
-  {
-    key: "inspect_electrical",
-    title: "Inspect electrical panels",
-    industry: "Utilities",
-    path: "PLANT → PANEL",
-    family: "inspect",
-  },
-  {
-    key: "cnc_unload",
-    title: "Unload finished parts",
-    industry: "Machine shop",
-    path: "SPINDLE → BIN",
-    family: "gripper",
-  },
-  {
-    key: "staging_orders",
-    title: "Move orders to staging",
-    industry: "Fulfillment",
-    path: "PACK → STAGING",
-    family: "transport",
-  },
-  {
-    key: "return_process_line",
-    title: "Return empty totes",
-    industry: "Manufacturing",
-    path: "PROCESS LINE → SUPPLY",
-    family: "transport",
-  },
-  {
-    key: "napa_orders",
-    title: "Move completed orders",
-    industry: "Auto parts DC",
-    path: "PICK → SHIPPING",
-    family: "cart",
-  },
-  {
-    key: "replacement_parts_totes",
-    title: "Move shipping totes",
-    industry: "Auto parts",
-    path: "ZONE → ZONE",
-    family: "transport",
-  },
-  {
-    key: "jhu_scrub",
-    title: "Scrub campus floors",
-    industry: "Education",
-    path: "HARD FLOOR · RECURRING",
-    family: "scrub",
-  },
-  {
-    key: "industrial_scrub",
-    title: "Scrub production floors",
-    industry: "Industrial",
-    path: "WAREHOUSE · PRODUCTION",
-    family: "scrub",
-  },
-  {
-    key: "build_outbound",
-    title: "Build outbound pallets",
-    industry: "Fulfillment",
-    path: "PACK → DOCK",
-    family: "pallet",
-  },
-  {
-    key: "plant_inspect",
-    title: "Run plant inspection routes",
-    industry: "Manufacturing",
-    path: "RECURRING · FACILITY",
-    family: "inspect",
-  },
-  {
-    key: "pack_mod_totes",
-    title: "Move completed totes",
-    industry: "Apparel",
-    path: "PACK-MOD → PACKING",
-    family: "transport",
-  },
-  {
-    key: "fru_kits",
-    title: "Move system carts",
-    industry: "Med device",
-    path: "KITTING → LINE",
-    family: "cart",
-  },
-  {
-    key: "case_wrap_pull",
-    title: "Stack cases onto pallets",
-    industry: "Packaging plant",
-    path: "CASE → PALLET",
-    family: "pallet",
-  },
-  {
-    key: "hospital_supply",
-    title: "Move supply carts",
-    industry: "Hospital",
-    path: "CENTRAL SUPPLY → UNITS",
-    family: "cart",
-  },
-  {
-    key: "food_court_scrub",
-    title: "Scrub food-court floors",
-    industry: "Retail",
-    path: "HARD SURFACE · CLOSE",
-    family: "scrub",
-  },
-  {
-    key: "terminal_routes",
-    title: "Scrub high-traffic routes",
-    industry: "Airport",
-    path: "TERMINAL · OVERNIGHT",
-    family: "scrub",
-  },
-  {
-    key: "gauge_rounds",
-    title: "Inspect plant gauges",
-    industry: "Process plant",
-    path: "ROUND → READOUT",
-    family: "inspect",
-  },
-  {
-    key: "kit_to_line",
-    title: "Deliver kits to line",
-    industry: "Aerospace",
-    path: "KITTING → POINT OF USE",
-    family: "transport",
-  },
-  {
-    key: "pallet_wrap",
-    title: "Build wrapped pallets",
-    industry: "CPG",
-    path: "LINE → WRAP",
-    family: "pallet",
-  },
-];
+const TAPE_FAMILIES = new Set<TapeFamily>([
+  "transport",
+  "cart",
+  "pallet",
+  "scrub",
+  "inspect",
+  "gripper",
+]);
+
+/** Named-employer market tape. Drops anonymous source=tape shorts that repeated the same work. */
+export const MARKET_TAPE_JOBS: TapeJob[] = (tapeJson.jobs || []).flatMap((raw) => {
+  const family = raw.family as TapeFamily;
+  const key = String(raw.key || "").trim();
+  const title = String(raw.title || "").trim();
+  if (!key || !title || !TAPE_FAMILIES.has(family)) return [];
+  return [
+    {
+      key,
+      title,
+      industry: String(raw.industry || "").trim(),
+      path: String(raw.path || "WORKSITE → WORKSITE").trim(),
+      family,
+    },
+  ];
+});
+
+export function uniqueTapeJobCount(jobs: TapeJob[] = MARKET_TAPE_JOBS): number {
+  return new Set(jobs.map((j) => j.key)).size;
+}
+
+export function shuffleTapeJobs<T>(items: T[], rng: () => number = Math.random): T[] {
+  const out = items.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/** Next job that is not currently on the 12-row board. Reshuffle by wrapping. */
+export function nextUnseenTapeJob(
+  order: TapeJob[],
+  cursor: number,
+  visibleKeys: Set<string>,
+): { job: TapeJob; nextCursor: number; wrapped: boolean } | null {
+  const n = order.length;
+  if (!n) return null;
+  for (let i = 0; i < n; i++) {
+    const idx = (cursor + i) % n;
+    const job = order[idx];
+    if (!visibleKeys.has(job.key) || n <= visibleKeys.size) {
+      const nextCursor = (idx + 1) % n;
+      return { job, nextCursor, wrapped: nextCursor === 0 };
+    }
+  }
+  const job = order[cursor % n];
+  const nextCursor = (cursor + 1) % n;
+  return { job, nextCursor, wrapped: nextCursor === 0 };
+}
 
 export function demoJobsToTape(
   jobs: Array<{

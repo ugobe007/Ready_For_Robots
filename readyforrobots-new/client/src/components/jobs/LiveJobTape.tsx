@@ -10,6 +10,8 @@ import { FACE_EMERALD } from "@/lib/kareIcons";
 import {
   TAPE_ICONS,
   TAPE_ICONS_ACTIVE,
+  nextUnseenTapeJob,
+  shuffleTapeJobs,
   type TapeJob,
 } from "@/lib/jobsTapeCorpus";
 
@@ -92,22 +94,31 @@ export default function LiveJobTape({
   selectedKey,
 }: Props) {
   const revealing = typeof revealTarget === "number" && revealTarget > 0;
-  const [rows, setRows] = useState<Row[]>(() => (revealing ? [] : seedRows(corpus, baseCount)));
-  const [foundCount, setFoundCount] = useState(revealing ? 0 : baseCount);
+  const orderRef = useRef<TapeJob[]>([]);
+  const cursorRef = useRef(0);
+  const [rows, setRows] = useState<Row[]>(() => {
+    if (revealing) return [];
+    orderRef.current = shuffleTapeJobs(corpus);
+    const seeded = seedRows(orderRef.current, corpus.length);
+    cursorRef.current = seeded.length % Math.max(orderRef.current.length, 1);
+    return seeded;
+  });
+  const [foundCount, setFoundCount] = useState(revealing ? 0 : corpus.length);
   const [offsetY, setOffsetY] = useState(0);
   const [animate, setAnimate] = useState(false);
   const [iconActive, setIconActive] = useState(false);
-  const cursorRef = useRef(0);
-  const seqRef = useRef(revealing ? 0 : baseCount);
+  const seqRef = useRef(revealing ? 0 : corpus.length);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const arriving = useRef(false);
   const revealDone = useRef(false);
-  const seededKey = useRef(`${revealing}:${baseCount}:${corpus.length}`);
+  const rowsRef = useRef<Row[]>([]);
+  rowsRef.current = rows;
+  const seededKey = useRef(`${revealing}:${corpus.length}`);
   const onRevealCompleteRef = useRef(onRevealComplete);
   onRevealCompleteRef.current = onRevealComplete;
 
   useEffect(() => {
-    const key = `${revealing}:${baseCount}:${corpus.length}`;
+    const key = `${revealing}:${corpus.length}`;
     if (seededKey.current === key) return;
     seededKey.current = key;
     if (revealing) {
@@ -115,15 +126,18 @@ export default function LiveJobTape({
       setFoundCount(0);
       seqRef.current = 0;
       cursorRef.current = 0;
+      orderRef.current = shuffleTapeJobs(corpus);
       revealDone.current = false;
       setOffsetY(0);
       setAnimate(false);
       return;
     }
-    setRows(seedRows(corpus, baseCount));
-    setFoundCount(baseCount);
-    seqRef.current = baseCount;
-    cursorRef.current = VISIBLE % Math.max(corpus.length, 1);
+    orderRef.current = shuffleTapeJobs(corpus);
+    const seeded = seedRows(orderRef.current, corpus.length);
+    setRows(seeded);
+    setFoundCount(corpus.length);
+    seqRef.current = corpus.length;
+    cursorRef.current = seeded.length % Math.max(orderRef.current.length, 1);
     setOffsetY(0);
     setAnimate(false);
     // Seed once per reveal/count/corpus size. Do not re-seed on mount.
@@ -199,14 +213,24 @@ export default function LiveJobTape({
     if (!fromReveal && arriving.current) return;
     if (!fromReveal) arriving.current = true;
 
-    const job = corpus[cursorRef.current % corpus.length];
-    cursorRef.current = (cursorRef.current + 1) % corpus.length;
+    const jobPick = nextUnseenTapeJob(
+      orderRef.current.length ? orderRef.current : corpus,
+      cursorRef.current,
+      new Set(rowsRef.current.map((r) => r.key)),
+    );
+    if (!jobPick) return;
+    if (jobPick.wrapped) {
+      orderRef.current = shuffleTapeJobs(corpus);
+    }
+    cursorRef.current = jobPick.wrapped ? 0 : jobPick.nextCursor;
+    const job = jobPick.job;
     const nextSeq = forcedSeq ?? seqRef.current + 1;
     seqRef.current = nextSeq;
     const instanceId = `${job.key}_${nextSeq}_${Date.now()}`;
 
     setIconActive(true);
-    setFoundCount(nextSeq);
+    if (fromReveal) setFoundCount(nextSeq);
+    else setFoundCount(corpus.length);
 
     setAnimate(false);
     setOffsetY(-ROW_PX);
