@@ -21,7 +21,7 @@ Never lead with account creation or pricing when the user has not seen a Robot J
 | **Anonymous Jobs** | "Is this real work?" | A Robot Job Card: employer, workplace, work being performed |
 | **Card expanded** | "Would I send a robot here?" | Requirements, open questions, site assessment as next step |
 | **URL scan** | "Does this fit my machine?" | Explainable qualification (✓ / △ / ✕), never a % |
-| **Free signup** | "Did signing up change anything?" | 3 unlocked jobs in CRM |
+| **Free signup** | "Did signing up change anything?" | 5 unlocked jobs in CRM |
 | **Upgrade ask** | "Is Pro worth it?" | Watching more SKUs / more jobs — after they have kept 3 |
 
 Proof is **jobs for the robot**, not a HOT buyer or outreach draft.

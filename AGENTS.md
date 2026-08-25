@@ -18,7 +18,7 @@ Read `docs/product_market_fit.md`, **`docs/value_first_principle.md`**, and **`d
 
 **All agents optimize toward this outcome:**
 
-> ReadyForRobots is **recruitment and placement infrastructure for robotic labor**. The unit of value is the **Robot Job**. Customers register a robot as available for work and receive jobs it is qualified to perform. They keep those jobs in **native CRM** (`/crm?src=jobs_activate`) or HubSpot. A sale is an outcome of placement — not the object we optimize.
+> ReadyForRobots is **recruitment and placement infrastructure for robotic labor**. The unit of value is the **Robot Job**. Customers register a robot as available for work and receive jobs it is qualified to perform. They keep those jobs in **native CRM** (`/pipeline?src=jobs_activate`) or HubSpot. A sale is an outcome of placement — not the object we optimize.
 
 | Lens | Question every mission must answer |
 |------|-----------------------------------|

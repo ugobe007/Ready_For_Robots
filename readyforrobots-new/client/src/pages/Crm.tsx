@@ -15,7 +15,7 @@ import {
   CRM_UNLOCKED_JOBS,
   JOBS_ACTIVATE_SRC,
   isJobsHandoffSrc,
-  jobsAutomateHref,
+  jobsActivateHref,
   jobsSignupHref,
 } from "@/lib/jobsWorkflow";
 
@@ -111,7 +111,7 @@ export default function Crm() {
   const jobsSrc = new URLSearchParams(search).get("src");
   const fromJobs = isJobsHandoffSrc(jobsSrc);
   const submissionId = Number(new URLSearchParams(search).get("submission"));
-  const jobsAutomatePath = jobsAutomateHref(
+  const jobsDeskHref = jobsActivateHref(
     Number.isFinite(submissionId) && submissionId > 0 ? submissionId : null,
   );
   const crmReturnHref = (() => {
@@ -120,6 +120,11 @@ export default function Crm() {
     const q = params.toString();
     return q ? `/crm?${q}` : "/crm";
   })();
+
+  useEffect(() => {
+    if (!fromJobs) return;
+    setLocation(jobsDeskHref);
+  }, [fromJobs, jobsDeskHref, setLocation]);
 
   const authFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -448,6 +453,17 @@ export default function Crm() {
     }
   };
 
+  if (fromJobs) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#081126] pt-14">
+        <ExperimentHeader />
+        <p className="px-6 py-16 text-center font-mono text-sm uppercase tracking-[0.08em] text-slate-400">
+          Opening CRM desk…
+        </p>
+      </div>
+    );
+  }
+
   if (!supabase) {
     return (
       <div className="pipeline-page-bg min-h-screen px-4 pt-16 text-slate-100">
@@ -468,7 +484,6 @@ export default function Crm() {
             footer="Loading CRM…"
             tasteJobs={tasteJobs}
             tasteProduct={tasteProduct}
-            activateHref={fromJobs ? jobsAutomatePath : undefined}
           />
         </div>
       </div>
@@ -483,7 +498,6 @@ export default function Crm() {
           <CrmHero
             tasteJobs={tasteJobs}
             tasteProduct={tasteProduct}
-            activateHref={fromJobs ? jobsAutomatePath : undefined}
             actions={
               <Link
                 href={jobsSignupHref(crmReturnHref, jobsSrc || JOBS_ACTIVATE_SRC)}
@@ -511,7 +525,6 @@ export default function Crm() {
           onOptIn={optInWatch}
           tasteJobs={tasteJobs}
           tasteProduct={tasteProduct}
-          activateHref={fromJobs ? jobsAutomatePath : undefined}
           actions={
             fromJobs ? (
               <Link

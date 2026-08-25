@@ -38,9 +38,10 @@ submit robot URL on /
        one robot: 5 jobs, each tagged `Job ##### is for {SKU}`
        several robots: 1 sample job per SKU, tagged; run each robot individually for five jobs
   → inspect Robot Job Cards (employer, workplace, work, qualification, open questions)
-  → check the jobs to take forward
-  → Next → /crm?src=jobs_activate (signup first if signed out)
-  → CRM shows 3 unlocked job opportunities (free)
+  → check the jobs to take forward (all five start checked)
+  → Next → /pipeline?src=jobs_activate (signup first if signed out)
+  → CRM desk shows 5 unlocked job opportunities (free)
+  → Apply to jobs: models, PoC, monthly rental you will charge, then track follow-up
   → run the next robot the same way
 ```
 
@@ -48,7 +49,7 @@ Do not hop Jobs traffic onto SIGNAL buyers. Current experiment: Job Cards as emp
 
 The picker already decides one vs several. **One robot → jobs for that robot on the same click** — do not open the profile checkpoint and ask Find jobs again. Several/all is slower, so we resolve with a type-level match instead of N SKU scrapes. **Independent of that resolution, every stage keeps process nav** (01 Show us your robot → 02 Here are its jobs → 03 CRM). Fourier empty portfolio failed because 02/03 were not links. Picking N1 then hitting a second Find jobs with Activate buried below the fold is the same break: the process stops at step 2.
 
-**Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Next uses `src=jobs_activate` on `/crm` so the destination is 3 unlocked job opportunities, not a pipeline confirmation that restates the list. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
+**Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Next uses `src=jobs_activate` on `/pipeline` so the destination is the CRM desk with 5 unlocked job opportunities, not a SIGNAL lead feed. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 
 Step 2 inspects. Checkboxes select. **Start jobs →** (FIND) and **Next →** (job list) sit in the process bar, at the top of the job list, and in the page footer — not only under the tape or under the cards. The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
 
@@ -65,7 +66,7 @@ Content (two columns are layout, not a clipping box)
 Process bar repeated at the bottom of the page
 ```
 
-Jobs chrome and Jobs CRM (`src=jobs_activate`) do not show Pipeline. Signed-in header CRM on those pages is `/crm?src=jobs_activate`, not bare `/crm`. SIGNAL `/pipeline` and `/crm` without a Jobs `src` still show Pipeline. Jobs footer and the Signal FAB match the header: no Pipeline / SIGNAL on `/`, About, Jobs CRM, or Jobs signup/login. About (`/intelligence`) body is the Jobs loop — Start jobs on `/?new=1`, signup `src=jobs_activate` — not a second product hop.
+Jobs chrome and Jobs CRM (`src=jobs_activate` on `/pipeline`) do not show SIGNAL Pipeline nav. Signed-in header CRM on those pages is `/pipeline?src=jobs_activate`, not bare `/crm`. SIGNAL `/pipeline` and `/crm` without a Jobs `src` still show Pipeline. Jobs footer and the Signal FAB match the header: no SIGNAL on `/`, About, Jobs CRM, or Jobs signup/login. About (`/intelligence`) body is the Jobs loop — Start jobs on `/?new=1`, signup `src=jobs_activate` — not a second product hop.
 
 **Do not** set `100vh` + `overflow: hidden` on the Jobs workspace. Chrome then cannot scroll below the fold, so step 03 sits in a cut-off box. Pinning Activate inside that box is a patch, not a fix.
 

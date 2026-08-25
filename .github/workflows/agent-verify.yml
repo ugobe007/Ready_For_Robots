@@ -85,7 +85,8 @@ jobs:
           pnpm install --frozen-lockfile -C readyforrobots-new
           pnpm --dir readyforrobots-new exec vitest run \
             client/src/lib/jobsWorkflow.test.ts \
-            client/src/lib/robotJobCard.test.ts
+            client/src/lib/robotJobCard.test.ts \
+            client/src/lib/jobsApply.test.ts
 
       - name: Upload evidence
         if: always()

@@ -11,8 +11,8 @@ Jobs chrome is the page frame for FIND → cards → CRM: dark header, process b
 
 ## How to get to it (user POV)
 
-- Any Jobs page: `/`, `/jobs/:slug`, About `/intelligence`, Jobs CRM `/crm?src=jobs_activate`, Jobs signup/login.
-- Not SIGNAL `/pipeline`, `/signals`, or bare `/crm`.
+- Any Jobs page: `/`, `/jobs/:slug`, About `/intelligence`, Jobs CRM `/pipeline?src=jobs_activate`, Jobs signup/login.
+- Not SIGNAL `/pipeline` (no Jobs `src`), `/signals`, or bare `/crm`.
 
 ## Driving it with verify-readyforrobots
 
@@ -20,7 +20,7 @@ Preconditions:
 
 - Doctor healthy.
 
-- **Header.** On `/`, nav includes Jobs and About. Pipeline is absent. Signed-out Sign In stays. Signed-in CRM href is `/crm?src=jobs_activate`.
+- **Header.** On `/`, nav includes Jobs and About. Pipeline is absent. Signed-out Sign In stays. Signed-in CRM href is `/pipeline?src=jobs_activate`.
 - **Process bar.** `aria-label="Jobs process"`. Actions: FIND `Start jobs →`, list `Next →`.
 - **JS canary (CI).** Run `python3 scripts/agent_verify.py drive --feature jobs-chrome --evidence "$EVIDENCE"`. Expect `Find jobs for your robot`, `Show us your robot`, `Here are its jobs`, `Start jobs`, `jobs_activate` in the shipped bundle.
 - **Proof.** `drive-jobs-chrome.json` hits are all true. Browser: screenshot of `/` with header + FIND, Pipeline not in the header.

@@ -516,7 +516,7 @@ export default function Signup() {
               {hubspotIntent
                 ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
                 : robotJobsIntent
-                  ? "Free account unlocks 3 job opportunities in CRM. Opt in and we watch the robot URL."
+                  ? "Free account unlocks 5 job opportunities in CRM. Opt in and we watch the robot URL."
                 : pipelineIntent
                   ? buyerCo
                     ? `Free workspace: land back on ${buyerCo}, save it in one click, copy the outreach draft SIGNAL wrote for them, and sync to HubSpot when you are ready.`
@@ -634,7 +634,7 @@ export default function Signup() {
                   </ul>
                 ) : (
                   <p className="mt-2 text-sm text-slate-300">
-                    Sign up and CRM keeps the jobs you checked — 3 on free.
+                    Sign up and CRM keeps the jobs you checked — 5 on free.
                   </p>
                 )}
               </div>
@@ -684,7 +684,7 @@ export default function Signup() {
                 {pipelineIntent && buyerCo
                   ? `back on ${buyerCo}, ready to save and copy the draft.`
                   : robotJobsIntent
-                    ? "in CRM, with 3 job opportunities unlocked."
+                    ? "in CRM, with 5 job opportunities unlocked."
                     : "in your pipeline, ready to save your first lead and copy the outreach draft."}
               </p>
               {(() => {
@@ -749,7 +749,7 @@ export default function Signup() {
                 {hubspotIntent
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
                   : robotJobsIntent
-                    ? "Create an account to keep 3 job opportunities in CRM. After you sign up, you land on CRM — not a second job list."
+                    ? "Create an account to keep 5 job opportunities in CRM. After you sign up, you land on CRM — not a second job list."
                   : matchedUnlockIntent
                     ? "Confirm company name, robot category, and ICP — then create your account to unlock 15 matched sales leads."
                     : resultsIntent

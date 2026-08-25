@@ -55,6 +55,8 @@ import {
   FIND_JOBS_SUBHEAD_CLASS,
   JOBS_NEXT_CTA,
   JOBS_NEXT_HINT,
+  JOBS_KEEP_LABEL,
+  JOBS_SKIP_LABEL,
   JOBS_PIPELINE_CAP,
   JOBS_ACTIVATE_SRC,
   CRM_UNLOCKED_JOBS,
@@ -2741,7 +2743,10 @@ function JobsPanel({
           {jobsListHint({
             robotCount,
             productName: analysis.productName,
-          })}
+          })}{" "}
+          <span className="font-semibold text-emerald-200">
+            {JOBS_KEEP_LABEL} is on. Uncheck a row to skip it.
+          </span>
         </p>
       )}
       <JobsActivateBar
@@ -2941,21 +2946,28 @@ function JobCard({
   return (
     <li
       className={`border bg-[#081126] ${
-        selected ? "border-emerald-400/60" : "border-slate-600"
+        checked || selected ? "border-emerald-400/70" : "border-slate-600"
       }`}
     >
       <div className="flex items-start">
         <label
-          className="flex shrink-0 cursor-pointer items-start px-3 pt-4"
+          className="flex shrink-0 cursor-pointer flex-col items-center gap-1 px-3 pt-4"
           onClick={e => e.stopPropagation()}
         >
           <input
             type="checkbox"
             checked={checked}
             onChange={onToggle}
-            aria-label={`Include ${card.jobTitle} in the job list`}
-            className="mt-0.5 h-4 w-4 accent-emerald-400"
+            aria-label={`${checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL} ${card.jobTitle} on the CRM desk`}
+            className="h-5 w-5 accent-emerald-400"
           />
+          <span
+            className={`font-mono text-xs font-bold uppercase tracking-[0.08em] ${
+              checked ? "text-emerald-300" : "text-slate-500"
+            }`}
+          >
+            {checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL}
+          </span>
         </label>
         <button
           type="button"
