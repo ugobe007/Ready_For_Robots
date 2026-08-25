@@ -281,7 +281,7 @@ export const JOBS_PIPELINE_CAP = 15;
 /** Live list after Activate: checked jobs first, then fill to this cap. */
 export const JOBS_ACTIVATE_CAP = 15;
 /** Free CRM taste — keep in sync with `JOBS_WATCH_FREE_VISIBLE_EVENTS`. */
-export const CRM_UNLOCKED_JOBS = 3;
+export const CRM_UNLOCKED_JOBS = 5;
 /** Free / anonymous: search this many SKUs per FIND. Paid unlocks five. */
 export const JOBS_PRODUCT_CAP_FREE = 3;
 export const JOBS_PRODUCT_CAP_PAID = 5;
@@ -489,11 +489,11 @@ export const JOBS_RAIL_LINK_CLASS =
 
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT =
-  "This is your CRM. Free unlocks 3 job opportunities from the list you just checked. Activate jobs so we can apply and land them with CRM automation.";
+  "This is your CRM desk. Free unlocks 5 job opportunities from the rows you kept. Apply to jobs opens outreach, credential rectify, and follow-up — not a SIGNAL buyer list.";
 export const CRM_HOW_TO_STEPS = [
-  "The 3 unlocked jobs are the ones you checked on Jobs.",
-  "Opt in to email. We watch your robot URL on the cron and tell you when jobs change or new work shows up.",
-  "Activate jobs to open Pipeline. CRM automation applies to those jobs and helps land the robot.",
+  "Kept jobs land on this desk. All five example rows start checked on Jobs.",
+  "Apply to jobs: close models, PoC evidence, and the monthly rental you will charge the employer.",
+  "When credentials are met, apply and track follow-up here. We do not invent a rental number.",
 ] as const;
 export const CRM_SUBHEAD_CLASS =
   "mt-2 max-w-2xl text-lg leading-relaxed text-slate-200 sm:text-xl";
@@ -575,15 +575,17 @@ export function jobsListHint(opts: {
   productName: string;
 }): string {
   if (opts.robotCount > 1) {
-    return "One sample job per robot. Run each robot by itself for five jobs, then Next to CRM.";
+    return "One sample job per robot. Sample rows start checked. Run each robot by itself for five jobs, then Next to the CRM desk.";
   }
-  return `Five example jobs ${opts.productName} can do. Each row names the policy layer and typical training time — expand for the placement steps. Check the jobs you want — Next opens CRM with ${CRM_UNLOCKED_JOBS}.`;
+  return `Five example jobs ${opts.productName} can do. Each row names the policy layer and typical training time — expand for the placement steps. All five start checked (Keep). Uncheck any you do not want. Next opens the CRM desk with those jobs.`;
 }
 
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
 export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
-  "Free CRM unlocks 3 job opportunities. Next opens that list — there is no extra save page.";
+  "Free CRM unlocks 5 job opportunities. Next opens that desk on Pipeline — not a SIGNAL buyer list.";
+export const JOBS_KEEP_LABEL = "Keep";
+export const JOBS_SKIP_LABEL = "Skip";
 
 /** Jobs / results `src` values that continue the Jobs terminal. */
 export function isJobsHandoffSrc(src: string | null | undefined): boolean {
@@ -676,7 +678,8 @@ export const FIND_JOBS_SUBHEAD_CLASS =
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = "Next →";
-export const JOBS_NEXT_HINT = "Next opens CRM with your checked jobs — 3 opportunities on free";
+export const JOBS_NEXT_HINT =
+  "All five start checked. Uncheck any you do not want. Next opens the CRM desk with your kept jobs.";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
@@ -786,12 +789,12 @@ export function isJobsAutomateSrc(src: string | null | undefined): boolean {
   return (src || "").trim() === JOBS_AUTOMATE_SRC;
 }
 
-/** CRM is step 3 — never a second pipeline confirmation, never the OEM as `url=`. */
+/** CRM desk lives on Pipeline with Jobs src — never SIGNAL buyers, never the OEM as `url=`. */
 export function jobsActivateHref(submissionId?: number | null): string {
   const params = new URLSearchParams();
   params.set("src", JOBS_ACTIVATE_SRC);
   if (submissionId && submissionId > 0) params.set("submission", String(submissionId));
-  return `/crm?${params.toString()}`;
+  return `/pipeline?${params.toString()}`;
 }
 
 /** CRM → Pipeline: apply and land the unlocked jobs with CRM automation. */
@@ -848,8 +851,8 @@ export function defaultCheckedKeysForLineup<T extends { job_key: string }>(
 export const RAIL_STEP_HINT = {
   find: FIND_JOBS_HOME_SUBHEAD,
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
-  jobs: "Each job is tagged with its robot. One SKU shows five jobs. Several robots show one each — run each SKU by itself, then Next to CRM.",
-  pipeline: "CRM unlocks 3 job opportunities. There is no extra activate page.",
+  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each — run each SKU by itself, then Next to the CRM desk.",
+  pipeline: "CRM unlocks 5 job opportunities on this desk. Apply to jobs rectifies credentials, then tracks follow-up.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */

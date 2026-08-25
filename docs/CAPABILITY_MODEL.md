@@ -65,10 +65,10 @@ ROBOT / PORTFOLIO / SOLUTION CAPABILITIES
 ```
 Show us your robot.
 Here are its jobs.
-Next opens CRM with 3 unlocked Job Cards (free).
+Next opens the CRM desk with 5 unlocked Job Cards (free).
 ```
 
-Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **One robot → five jobs, each tagged `Job ##### is for {SKU}`.** Several robots → one tagged sample each, plus **Run one robot for 5 jobs**. Checkboxes + Next → in the process bar. FIND is **Start jobs →**. After Next, CRM shows 3 unlocked jobs. The document scrolls. Do not put Next on the card. Do not insert a Place buyer/outreach screen. Do not mix unlabeled jobs across a lineup.
+Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **One robot → five jobs, each tagged `Job ##### is for {SKU}`.** Several robots → one tagged sample each, plus **Run one robot for 5 jobs**. Checkboxes + Next → in the process bar. FIND is **Start jobs →**. After Next, the CRM desk on `/pipeline?src=jobs_activate` shows 5 unlocked jobs. The document scrolls. Do not put Next on the card. Do not insert a Place buyer/outreach screen. Do not mix unlabeled jobs across a lineup.
 
 Everything underneath exists to make those interactions trustworthy.
 

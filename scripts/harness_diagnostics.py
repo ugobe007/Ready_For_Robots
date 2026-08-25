@@ -165,7 +165,7 @@ def check_site_health(*, api_base: str = FLY_API) -> dict[str, Any]:
         "pricing": _page_probe("/pricing"),
         "pipeline": _page_probe("/pipeline"),
         "signup": _page_probe("/signup"),
-        "jobs_crm": _page_probe("/crm?src=jobs_activate"),
+        "jobs_crm": _page_probe("/pipeline?src=jobs_activate"),
     }
 
     if not fly_robots.get("ok"):

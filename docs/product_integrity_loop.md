@@ -33,7 +33,7 @@ Center is **JOBS_WORKFLOW**, not a backlog of tickets.
 ```
 FIND (robot URL)
     → JOB CARDS (employer / workplace / work / Conditional)
-        → CRM (3 unlocked jobs, src=jobs_activate)
+        → CRM (5 unlocked jobs, src=jobs_activate on /pipeline)
             → WATCH (email when work changes)
 ```
 
@@ -41,7 +41,7 @@ Surrounding nodes the Product Manager must see:
 
 | Family | What |
 |--------|------|
-| **SURFACE** | `/`, `/crm?src=jobs_activate`, header chrome, Vercel HTML |
+| **SURFACE** | `/`, `/pipeline?src=jobs_activate`, header chrome, Vercel HTML |
 | **DEPLOY** | Vercel production (custom domain), Fly API, GitHub Actions *actual* steps |
 | **DATABASE** | snapshot telemetry, pipeline cache, jobs-watch |
 | **MISSION** | `missions/*/brief.md` + `outcome.md` |
@@ -87,7 +87,7 @@ OBSERVE HEALTH → COMPILE MEMORY → PICK ONE MISSION
 readyforrobots.com /
   → header has no Pipeline
   → paste a known OEM URL (Fourier) → Job Cards
-  → Next → /crm?src=jobs_activate (3 jobs, no Back to pipeline)
+  → Next → /pipeline?src=jobs_activate (5 jobs on the CRM desk, no SIGNAL OEMs)
   → Fly /api health + database snapshot reachable
   → Vercel production SHA == origin/main (not a skipped 7s GHA)
 ```

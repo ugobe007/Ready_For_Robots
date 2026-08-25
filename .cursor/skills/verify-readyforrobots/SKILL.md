@@ -66,7 +66,7 @@ python3 scripts/agent_verify.py ci --evidence "$EVIDENCE"
 | find-jobs | `POST /api/robot-job-match` (Vega profile or chip) | `state=matches`, `job_count>0`, job titles; requirement matcher has named `company_name` |
 | job-cards | same payload | cards exist (title + employer); expand in UI shows employer / workplace / work / Conditional |
 | jobs-chrome | homepage JS | `Show us your robot`, `Here are its jobs`, `Start jobs`, `jobs_activate` |
-| jobs-crm | `/crm?src=jobs_activate` | bundle has activate src; unlocked 3 jobs need a session — do not call login a pass |
+| jobs-crm | `/pipeline?src=jobs_activate` | bundle has activate src; unlocked 5 jobs need a snapshot/session — do not call login a pass |
 | about | `/intelligence` | 200 and JS has the route; body is the Jobs loop, not SIGNAL |
 
 Stable UI handles (browser):
@@ -75,7 +75,7 @@ Stable UI handles (browser):
 - Process bar: `aria-label="Jobs process"`; steps 01 / 02 / 03
 - Jobs header: wordmark → `/?new=1`; nav **Jobs** / **About**; **no Pipeline** on `/`
 - Next: `Next →` on the list, not on the card
-- Activate: `/crm?src=jobs_activate`
+- Activate: `/pipeline?src=jobs_activate`
 
 Helpers: `.cursor/skills/verify-readyforrobots/scripts/drive`
 

@@ -57,14 +57,13 @@ import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import PixelIcon from "@/components/PixelIcon";
-import JobsHandoffBoard from "@/components/JobsHandoffBoard";
+import JobsCrmDesk from "@/components/JobsCrmDesk";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
   isJobsHandoffSrc,
   isJobsAutomateSrc,
   isPlaceSrc,
   buyerLeadsToShow,
-  JOBS_ACTIVATE_CAP,
   JOBS_PIPELINE_CAP,
   JOBS_EYEBROW_CLASS,
   JOBS_AUTOMATE_JOBS_CTA,
@@ -4038,16 +4037,12 @@ export default function Pipeline() {
     };
   }, [showFirstThreeActionsProgress, nextFirstThreeStep, firstThreeActions, selected]);
 
-  if (arrivedFromJobs && !arrivedFromJobsAutomate) {
+  if (arrivedFromJobs) {
     return (
       <div className="flex min-h-screen flex-col bg-[#081126] pt-14">
         <ExperimentHeader />
-        <JobsHandoffBoard
-          robotUrl={submittedUrlFromQuery}
-          cap={JOBS_ACTIVATE_CAP}
-          src={submittedSrcFromQuery}
+        <JobsCrmDesk
           signedIn={isSignedIn}
-          variant="pipeline"
           submissionId={submissionIdFromQuery}
         />
       </div>

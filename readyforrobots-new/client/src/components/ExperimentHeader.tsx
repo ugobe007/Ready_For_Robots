@@ -1,7 +1,7 @@
 /**
  * Top panel for product front door — Kare face + ReadyForRobots, dark brand chrome.
  * JOBS selected on / and /jobs/:slug; ABOUT links to /intelligence.
- * Jobs chrome hides Pipeline. CRM on Jobs is `/crm?src=jobs_activate`.
+ * Jobs chrome hides Pipeline. CRM on Jobs is `/pipeline?src=jobs_activate`.
  * SIGNAL `/pipeline` and `/crm` still show Pipeline.
  */
 import { Link, useRoute, useLocation, useSearch } from "wouter";
@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
+  isJobsHandoffSrc,
   jobsFreshHomeHref,
   jobsHeaderCrmHref,
   onJobsFreshHomeClick,
@@ -28,11 +29,14 @@ export default function ExperimentHeader() {
   const search = useSearch();
   const [onJobsSlug] = useRoute("/jobs/:slug");
   const jobsActive = location === "/" || location.startsWith("/?") || Boolean(onJobsSlug);
-  const pipelineActive = location.startsWith("/pipeline");
-  const crmActive = location.startsWith("/crm");
+  const jobsSrc = new URLSearchParams(search).get("src");
+  const pipelineActive =
+    location.startsWith("/pipeline") && !isJobsHandoffSrc(jobsSrc);
+  const crmActive =
+    location.startsWith("/crm") ||
+    (location.startsWith("/pipeline") && isJobsHandoffSrc(jobsSrc));
   const aboutActive = location.startsWith("/intelligence");
   const adminActive = location.startsWith("/admin");
-  const jobsSrc = new URLSearchParams(search).get("src");
   const showPipeline = showSignalPipelineNav({ pathname: location, src: jobsSrc });
   const crmHref = jobsHeaderCrmHref(location, jobsSrc);
 

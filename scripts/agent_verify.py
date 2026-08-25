@@ -282,7 +282,7 @@ def drive_about(*, origin: str | None = None) -> dict[str, Any]:
 def drive_jobs_crm(*, origin: str | None = None) -> dict[str, Any]:
     """Activate URL is reachable. Unlocked job list needs a session — report that honestly."""
     site = (origin or SITE).rstrip("/")
-    dest = f"{site}/crm?src=jobs_activate"
+    dest = f"{site}/pipeline?src=jobs_activate"
     code, html, url = _get(dest, timeout=20)
     text = html.decode("utf-8", "replace") if html else ""
     # SPA always 200; prove src is in the bundle and the path exists.
@@ -292,14 +292,14 @@ def drive_jobs_crm(*, origin: str | None = None) -> dict[str, Any]:
     if js_m:
         _, js, _ = _get(f"{site}{js_m.group(0)}", timeout=30)
         js_text = js.decode("utf-8", "replace") if js else ""
-    ok = code == 200 and JOBS_ACTIVATE in js_text and "/crm" in js_text
+    ok = code == 200 and JOBS_ACTIVATE in js_text and "/pipeline" in js_text
     return {
         "ok": ok,
         "feature": "jobs-crm",
         "status": code,
         "url": url,
         "unlocked_jobs_visible": False,
-        "prerequisite": "Signed-in session required to see 3 unlocked jobs. Anonymous gets signup/login, not Pipeline.",
+        "prerequisite": "Jobs handoff snapshot (and usually a signed-in session) required to see 5 unlocked jobs. Anonymous without a snapshot must not land on SIGNAL Pipeline.",
         "js_has_activate": JOBS_ACTIVATE in js_text,
         "html_len": len(text),
     }

@@ -12,7 +12,7 @@ The CRM copilot helps a *customer* run outreach. ProductManager helps *us* run R
 Keep the Jobs terminal honest and shipping:
 
 ```
-robot URL → Job Cards → /crm?src=jobs_activate → watch
+robot URL → Job Cards → /pipeline?src=jobs_activate → apply / watch
 ```
 
 Success is a compiled next mission grounded in production truth (Vercel HTML, Fly API, database, Jobs smoke) — not another “find a bug” chat.
@@ -81,7 +81,7 @@ Structured `next_mission` slugs the compiler already understands:
 readyforrobots.com /
   → header has no Pipeline
   → known OEM URL (e.g. Fourier) → Job Cards (Conditional until review)
-  → Next → /crm?src=jobs_activate (3 jobs, no Back to pipeline)
+  → Next → /pipeline?src=jobs_activate (5 jobs on the CRM desk, no SIGNAL OEMs)
   → Fly /api + database snapshot reachable
   → Vercel production is a real --prod (not a 7s GHA skip)
 ```

@@ -40,7 +40,7 @@ const rows: {
   {
     dimension: "Output",
     other: "Records to sort. You still invent the pitch.",
-    rfr: "Named employers and specific work. Keep three jobs in CRM on free.",
+    rfr: "Named employers and specific work. Keep five jobs in CRM on free.",
   },
   {
     dimension: "Best for",
