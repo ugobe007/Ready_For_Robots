@@ -257,15 +257,15 @@ function JobsProcessNav({
                   : "border-transparent text-slate-600"
             }`;
         const label = `${step.n} ${step.label}`;
-        if (!onClick) {
-          return (
-            <p key={step.id} className={className}>
-              {label}
-            </p>
-          );
-        }
         return (
-          <button key={step.id} type="button" onClick={onClick} className={className}>
+          <button
+            key={step.id}
+            type="button"
+            onClick={onClick}
+            disabled={!onClick}
+            aria-current={isCurrent ? "step" : undefined}
+            className={className}
+          >
             <span>{label}</span>
             {!page ? (
               <span className={isCurrent ? "text-emerald-400/80" : "text-slate-500"}>
@@ -1333,9 +1333,7 @@ export default function RobotJobsWorkspace() {
       list_count: jobs.length,
     });
     const dest = jobsActivateHref(submissionIdRef.current);
-    window.location.href = session
-      ? dest
-      : jobsSignupHref(dest, JOBS_ACTIVATE_SRC);
+    setLocation(session ? dest : jobsSignupHref(dest, JOBS_ACTIVATE_SRC));
   }
 
   function applyCheckedKeys(jobs: MatchJob[], saved?: string[]) {
@@ -1691,16 +1689,18 @@ export default function RobotJobsWorkspace() {
     stage === "select"
       ? newRobot
       : stage === "find" || stage === "research"
-        ? undefined
+        ? () => window.scrollTo({ top: 0, behavior: "smooth" })
         : openProfileStep;
   const processOnJobs =
-    stage === "find"
-      ? startJobs
-      : stage === "research" || stage === "jobs"
-        ? undefined
+    stage === "jobs" || stage === "portfolio"
+      ? () => document.getElementById("jobs-list")?.scrollIntoView({ behavior: "smooth" })
+      : stage === "find" || stage === "research"
+        ? startJobs
         : openJobsStep;
   const processOnActivate =
-    stage === "jobs" || stage === "portfolio" ? goToActivate : undefined;
+    stage === "jobs" || stage === "portfolio" || (active?.jobs || []).length > 0
+      ? goToActivate
+      : startJobs;
   const processActionLabel = jobsProcessActionLabel(processCurrent);
   const processOnAction =
     processCurrent === "jobs"
@@ -1715,7 +1715,7 @@ export default function RobotJobsWorkspace() {
 
   return (
     <div className="rfr-jobs-page-shell border border-slate-600 bg-[#0b162f]">
-      <div className="sticky top-14 z-40 border-b border-slate-600 bg-[#0b162f]">
+      <div className="sticky top-14 z-[60] border-b border-slate-600 bg-[#0b162f]">
         <JobsProcessNav
           layout="page"
           current={processCurrent}
@@ -1867,7 +1867,7 @@ export default function RobotJobsWorkspace() {
         )}
       </section>
       </div>
-      <div className="rfr-jobs-page-footer border-t border-slate-600 bg-[#0b162f]">
+      <div className="rfr-jobs-page-footer relative z-[60] border-t border-slate-600 bg-[#0b162f]">
         <JobsProcessNav
           layout="page"
           current={processCurrent}
@@ -2722,7 +2722,7 @@ function JobsPanel({
   ).length;
 
   return (
-    <div className="p-6 sm:p-8">
+    <div id="jobs-list" className="p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
           {heading}

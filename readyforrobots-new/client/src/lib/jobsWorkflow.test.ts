@@ -919,11 +919,35 @@ describe("jobsWorkflow", () => {
     expect(pipelineSrc).not.toMatch(/lg:min-h-\[calc\(100vh-200px\)\]/);
     expect(pipelineSrc).toMatch(/lg:min-h-\[calc\(100vh-5rem\)\]/);
     expect(pipelineSrc).toMatch(/lg:items-start/);
+    expect(pipelineSrc).not.toMatch(/CalLeadDrop/);
+    expect(pipelineSrc).not.toMatch(/Re-run SIGNAL/);
+    expect(pipelineSrc).not.toMatch(/SIGNAL bulk queue/);
+    expect(pipelineSrc).not.toMatch(/SIGNAL recommendation/);
+    expect(pipelineSrc).toMatch(/pipeline-outreach-card/);
+    expect(pipelineSrc).toMatch(/Generate outreach draft/);
+    expect(pipelineSrc).toMatch(/Outreach queue/);
+
+    const cssSrc = readFileSync(join(here, "../index.css"), "utf8");
+    expect(cssSrc).toMatch(/\.rfr-jobs-page-shell::after[\s\S]{0,180}z-index: 1;/);
+    expect(cssSrc).toMatch(/\.pipeline-outreach-card/);
+    expect(cssSrc).toMatch(/\.bg-slate-50\\\/80/);
+    expect(cssSrc).toMatch(/\.bg-amber-50\\\/70/);
+
+    const scoutChat = readFileSync(
+      join(here, "../components/ScoutChat.tsx"),
+      "utf8",
+    );
+    expect(scoutChat).toMatch(/onPipeline \|\|/);
 
     const cardSrc = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
     );
+    expect(cardSrc).toMatch(/setLocation\(session \? dest/);
+    expect(cardSrc).not.toMatch(/window\.location\.href = session/);
+    expect(cardSrc).toMatch(/id="jobs-list"/);
+    expect(cardSrc).toMatch(/rfr-jobs-page-footer relative z-\[60\]/);
+    expect(cardSrc).not.toMatch(/if \(!onClick\) \{/);
     expect(cardSrc).toMatch(/robotJobCardFromMatch/);
     expect(cardSrc).toMatch(/Employer/);
     expect(cardSrc).toMatch(/Task models/);

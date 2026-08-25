@@ -52,7 +52,6 @@ import LeadShareBar from "@/components/LeadShareBar";
 import PipelineCrmMotion from "@/components/pipeline/PipelineCrmMotion";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
-import CalLeadDrop, { dealToCalDrop } from "@/components/pipeline/CalLeadDrop";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
@@ -842,20 +841,20 @@ const scoutVerdictForDeal = (deal: Pick<Deal, "score">) => {
   if (deal.score >= 85) {
     return {
       headline: "High-confidence opportunity",
-      detail: "SIGNAL rates timing, signal strength, and industry fit as strong — worth prioritizing now.",
+      detail: "Timing, fit, and evidence look strong — worth prioritizing now.",
       color: "#34d399",
     };
   }
   if (deal.score >= 65) {
     return {
       headline: "Meaningful buying pressure",
-      detail: "SIGNAL sees real automation intent. Qualify and monitor before full outreach.",
+      detail: "There is real automation intent. Qualify and monitor before full outreach.",
       color: "#FFB000",
     };
   }
   return {
-    headline: "Early signal — SIGNAL is watching",
-    detail: "Activity is building. SIGNAL will flag when corroboration strengthens the case.",
+    headline: "Early movement",
+    detail: "Activity is building. More evidence will strengthen the case.",
     color: "#10b981",
   };
 };
@@ -3833,7 +3832,6 @@ export default function Pipeline() {
   const sendChecklistAssignedVariant = selected && selected.id % 2 === 0 ? "a" : "b";
   const sendChecklistVariant = checklistVariantOverride || sendChecklistAssignedVariant;
   const sendChecklistVariantLabel = sendChecklistVariant === "a" ? "Variant A" : "Variant B";
-  const sendChecklistVariantAutoPromoted = checklistVariantOverride === sendChecklistVariant;
   const sendChecklistItems = sendChecklistVariant === "a"
     ? [
         {
@@ -5275,11 +5273,11 @@ export default function Pipeline() {
                     {!isAdmin && (() => {
                       const verdict = scoutVerdictForDeal(selected);
                       return (
-                        <p className="mb-1.5 flex items-center gap-1.5 text-[11px] leading-snug text-gray-700">
+                        <p className="mb-1.5 flex items-center gap-1.5 text-[11px] leading-snug text-slate-300">
                           <Zap className="h-3 w-3 shrink-0" style={{ color: verdict.color }} />
-                          <span className="font-semibold text-gray-900">SIGNAL · {verdict.headline}</span>
-                          <span className="text-gray-400">—</span>
-                          <span className="text-gray-600">{verdict.detail}</span>
+                          <span className="font-semibold text-slate-100">{verdict.headline}</span>
+                          <span className="text-slate-500">—</span>
+                          <span className="text-slate-400">{verdict.detail}</span>
                         </p>
                       );
                     })()}
@@ -5523,20 +5521,6 @@ export default function Pipeline() {
                   <PipelineRobotPriorityPanel deal={selected} />
                   <PipelineContactIntelligencePanel deal={selected} />
 
-                  {selected && ["HOT", "WARM"].includes((selected.priorityTier || "").toUpperCase()) && (
-                    <CalLeadDrop
-                      drop={dealToCalDrop(selected)}
-                      variant="compact"
-                      showDraft={Boolean(session?.access_token)}
-                      onMoveNow={
-                        session?.access_token
-                          ? () => void developLeadWithScout(selected)
-                          : undefined
-                      }
-                      pipelineHref={`/pipeline?lead=${selected.id}`}
-                    />
-                  )}
-
                   {!session?.access_token && selected && (
                     <PipelineOutreachValuePanel
                       deal={selected}
@@ -5686,17 +5670,17 @@ export default function Pipeline() {
                   <div
                     ref={outreachDraftRef}
                     tabIndex={-1}
-                    className={`shrink-0 scroll-mt-24 px-5 py-3 outline-none transition-all duration-500 ${outreachDraftSpotlight ? "rounded-2xl bg-emerald-100/90 ring-4 ring-emerald-400 shadow-[0_0_0_10px_rgba(16,185,129,0.18)]" : ""}`}
+                    className={`shrink-0 scroll-mt-24 px-5 py-3 outline-none transition-all duration-500 ${outreachDraftSpotlight ? "rounded-2xl bg-emerald-400/10 ring-4 ring-emerald-400 shadow-[0_0_0_10px_rgba(16,185,129,0.18)]" : ""}`}
                   >
                     {outreachDraftSpotlight && (
-                      <div className="mb-2 inline-flex items-center rounded-full border border-emerald-300 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-900 shadow-sm">
+                      <div className="mb-2 inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200">
                         Draft ready below
                       </div>
                     )}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
-                        <Mail className="h-3.5 w-3.5" style={{ color: "#059669" }} />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                        <Mail className="h-3.5 w-3.5" style={{ color: "#34d399" }} />
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                           Outreach draft
                         </p>
                       </div>
@@ -5704,9 +5688,9 @@ export default function Pipeline() {
                         <button
                           type="button"
                           onClick={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
-                          className="text-[10px] font-semibold text-emerald-700 underline-offset-2 hover:underline"
+                          className="text-[10px] font-semibold text-emerald-300 underline-offset-2 hover:underline"
                         >
-                          SIGNAL bulk queue
+                          Outreach queue
                         </button>
                       )}
                       <div className="flex items-center gap-1.5">
@@ -5739,34 +5723,29 @@ export default function Pipeline() {
                         <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>
                           <Send className="h-2.5 w-2.5" /> Sent
                         </span>
-                        <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full text-gray-600 bg-gray-100 border border-gray-200">
+                        <span className="flex items-center gap-1 rounded-full border border-slate-600 bg-[#081126] px-2 py-1 text-[10px] font-semibold text-slate-300">
                           <Eye className="h-2.5 w-2.5" /> Tracking active
                         </span>
                       </div>
                     )}
 
-                    <div className="mb-2 rounded-lg border border-slate-200 bg-slate-50/80 p-2.5">
+                    <div className="pipeline-outreach-card mb-2 rounded-lg border border-slate-600 bg-[#0d1a33] p-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-700">Pre-send checklist</p>
-                        <span className="rounded-full border border-slate-300 bg-white px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-600">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-200">Pre-send checklist</p>
+                        <span className="rounded-full border border-slate-500 bg-[#081126] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-300">
                           {sendChecklistVariantLabel}
                         </span>
                       </div>
-                      {sendChecklistVariantAutoPromoted && (
-                        <p className="mt-1 text-[10px] font-semibold text-emerald-700">
-                          SIGNAL auto-promotion active for this variant.
-                        </p>
-                      )}
-                      <p className="mt-1 text-[10px] text-slate-600">
+                      <p className="mt-1 text-[10px] text-slate-400">
                         {sendChecklistVariant === "a"
                           ? "Checklist order: contact, draft, send status."
                           : "Checklist order: send status first, then contact and draft."}
                       </p>
-                      <div className="mt-1.5 grid gap-1 text-[10px] text-gray-700 md:grid-cols-3">
+                      <div className="mt-1.5 grid gap-1 text-[10px] text-slate-300 md:grid-cols-3">
                         {sendChecklistItems.map((item) => (
                           <span
                             key={item.key}
-                            className={item.ready ? "font-semibold text-emerald-700" : (item.key === "status" ? "text-slate-600" : "text-amber-800")}
+                            className={item.ready ? "font-semibold text-emerald-300" : (item.key === "status" ? "text-slate-400" : "text-amber-200")}
                           >
                             {item.ready ? "✓" : "•"} {item.ready ? item.readyLabel : item.blockedLabel}
                           </span>
@@ -5782,42 +5761,29 @@ export default function Pipeline() {
                     )}
 
                     {selected.outreachBody ? (
-                      <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-                        <pre className="whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-gray-500">
+                      <div className="pipeline-outreach-card rounded-lg border border-slate-600 bg-[#081126] p-3">
+                        <pre className="whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-slate-200">
                           {selected.outreachBody}
                         </pre>
                       </div>
                     ) : (
-                      <div className="rounded-lg border border-dashed border-gray-200 px-3 py-4">
-                        <p className="text-[11px] leading-relaxed text-gray-400 mb-3">
-                          No draft yet. Run SIGNAL on this lead to refresh inference and generate outreach.
+                      <div className="rounded-lg border border-dashed border-slate-600 px-3 py-4">
+                        <p className="mb-3 text-[11px] leading-relaxed text-slate-400">
+                          No draft yet. Generate one from this job, then copy and send.
                         </p>
                         <button
                           type="button"
                           disabled={developingLeadId === selected.id}
                           onClick={() => void developLeadWithScout(selected)}
-                          className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-[11px] font-bold border transition-all disabled:opacity-50"
-                          style={{ background: "rgba(3,218,197,0.08)", borderColor: "rgba(3,218,197,0.28)", color: "#047857" }}
+                          className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-400/10 py-2.5 text-[11px] font-bold text-emerald-200 transition-all hover:bg-emerald-400/20 disabled:opacity-50"
                         >
                           {developingLeadId === selected.id
                             ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
                             : <Zap className="h-3.5 w-3.5" />
                           }
-                          {developingLeadId === selected.id ? "SIGNAL developing…" : "Develop lead with SIGNAL"}
+                          {developingLeadId === selected.id ? "Writing draft…" : "Generate outreach draft"}
                         </button>
                       </div>
-                    )}
-
-                    {selected.outreachBody && showWorkspaceTools && (
-                      <button
-                        type="button"
-                        disabled={developingLeadId === selected.id}
-                        onClick={() => void developLeadWithScout(selected)}
-                        className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg py-2 text-[10px] font-semibold border transition-all disabled:opacity-50"
-                        style={{ borderColor: "rgba(3,218,197,0.2)", color: "rgba(3,218,197,0.85)" }}
-                      >
-                        {developingLeadId === selected.id ? "Refreshing…" : "Re-run SIGNAL development"}
-                      </button>
                     )}
 
                     {selected.contact && selected.outreachBody && selected.stage !== "Outreach Sent" && session?.access_token && (
@@ -5825,8 +5791,7 @@ export default function Pipeline() {
                         type="button"
                         disabled={sendingLeadId === selected.id}
                         onClick={() => void sendOneLead(selected)}
-                        className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-[11px] font-bold border transition-all disabled:opacity-50"
-                        style={{ background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.35)", color: "#047857" }}
+                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/35 bg-emerald-400/12 py-2.5 text-[11px] font-bold text-emerald-200 transition-all disabled:opacity-50"
                       >
                         {sendingLeadId === selected.id
                           ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -5836,9 +5801,9 @@ export default function Pipeline() {
                       </button>
                     )}
                     {!selected.contact && selected.outreachBody && (
-                      <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 p-2.5">
-                        <p className="text-[10px] text-amber-900">
-                          Add a contact email to send now. This removes the top step-3 blocker.
+                      <div className="pipeline-outreach-card mt-2 rounded-lg border border-amber-400/35 bg-[#14100a] p-3">
+                        <p className="text-[10px] text-amber-100">
+                          Add a contact email to send now.
                         </p>
                         <div className="mt-2 flex items-center gap-2">
                           <input
@@ -5846,13 +5811,13 @@ export default function Pipeline() {
                             value={capturedContactEmail}
                             onChange={(e) => setCapturedContactEmail(e.target.value)}
                             placeholder="name@company.com"
-                            className="h-8 flex-1 rounded-md border border-amber-200 bg-white px-2 text-[11px] text-gray-800 outline-none ring-0 focus:border-emerald-400"
+                            className="h-8 flex-1 rounded-md border border-slate-600 bg-[#081126] px-2 text-[11px] text-slate-100 outline-none ring-0 placeholder:text-slate-500 focus:border-emerald-400"
                           />
                           <button
                             type="button"
                             disabled={sendingLeadId === selected.id}
                             onClick={runContactAssistSend}
-                            className="inline-flex h-8 items-center gap-1 rounded-md border border-emerald-300 bg-emerald-100 px-2.5 text-[10px] font-semibold text-emerald-800 disabled:opacity-60"
+                            className="inline-flex h-8 items-center gap-1 rounded-md border border-emerald-400/40 bg-emerald-400 px-2.5 text-[10px] font-semibold text-slate-950 disabled:opacity-60"
                           >
                             <Send className="h-3 w-3" />
                             {sendingLeadId === selected.id ? "Sending..." : "Send now"}
@@ -5883,31 +5848,31 @@ export default function Pipeline() {
                   )}
 
                   {showWorkspaceTools && selected && (
-                    <div className="shrink-0 px-5 py-3 border-t border-gray-100">
+                    <div className="pipeline-outreach-card shrink-0 border-t border-slate-700 px-5 py-3">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1.5">
                           <FileText className="h-3.5 w-3.5" style={{ color: "#fbbf24" }} />
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Proposal</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Proposal</p>
                         </div>
                         <button
                           type="button"
                           disabled={proposalBusy}
                           onClick={() => void generateProposalForDeal(selected)}
-                          className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded transition-all disabled:opacity-50"
-                          style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}
+                          className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-semibold text-amber-200 transition-all disabled:opacity-50"
+                          style={{ background: "rgba(251,191,36,0.12)" }}
                         >
                           {proposalBusy ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                           {proposalBusy ? "Generating…" : "Generate"}
                         </button>
                       </div>
-                      <p className="text-[11px] text-gray-500 leading-relaxed">
-                        SCOUT writes a structured proposal from this lead&apos;s signal, score, and industry — then preview or download PDF.
+                      <p className="text-[11px] leading-relaxed text-slate-400">
+                        Write a structured proposal from this job&apos;s evidence, then preview or download PDF.
                       </p>
                       {proposalData && (
                         <button
                           type="button"
                           onClick={() => setProposalOpen(true)}
-                          className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-800 underline"
+                          className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-200 underline"
                         >
                           <Download className="h-3 w-3" />
                           Open last proposal preview
@@ -6012,10 +5977,8 @@ export default function Pipeline() {
                       : hasActiveSearch && displayedDeals.length === 0 && !serverSearchLoading
                       ? `No leads match "${activeSearchQuery}". Try food service, hospitality, logistics, or a company name.`
                       : isAdmin
-                        ? isAdmin
-                          ? "Select a deal to review signal detail and SIGNAL outreach"
-                          : "Select a deal to review signal detail and outreach draft"
-                        : "Select a lead to review signals, research, and SIGNAL scoring"}
+                        ? "Select a deal to review signal detail and outreach"
+                        : "Select a job to review evidence, research, and the outreach draft"}
                   </p>
                   {pendingDeepLink && deepLinkLoadFailed ? (
                     <button
