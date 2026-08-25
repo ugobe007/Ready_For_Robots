@@ -1311,7 +1311,10 @@
       .bg-emerald-50\/70,
       .bg-amber-50,
       .bg-amber-50\/80,
-      .bg-emerald-100
+      .bg-emerald-100,
+      .bg-sky-50,
+      .bg-sky-50\/60,
+      .bg-sky-50\/70
     ) {
     background-color: #0d1a33 !important;
   }
@@ -1330,7 +1333,9 @@
       .text-emerald-900,
       .text-emerald-900\/80,
       .text-emerald-800,
-      .text-amber-800
+      .text-amber-800,
+      .text-sky-900,
+      .text-sky-800
     ) {
     color: #e2e8f0 !important;
   }
@@ -1348,7 +1353,9 @@
       .text-stone-500,
       .text-stone-400,
       .text-emerald-700,
-      .text-amber-900
+      .text-amber-900,
+      .text-sky-700,
+      .text-sky-700\/80
     ) {
     color: #94a3b8 !important;
   }
@@ -1556,7 +1563,7 @@
   }
 
   .pipeline-detail-shell {
-    @apply shrink-0 overflow-hidden rounded-md border border-slate-700 bg-[#0b162f] shadow-[0_16px_30px_-22px_rgba(0,0,0,0.7)];
+    @apply shrink-0 overflow-visible rounded-md border border-slate-700 bg-[#0b162f] shadow-[0_16px_30px_-22px_rgba(0,0,0,0.7)];
   }
 
   .pipeline-detail-header {
@@ -1601,7 +1608,7 @@
   }
 
   .pipeline-crm-activate {
-    @apply border-b border-slate-700 bg-[#10203d] px-4 py-4;
+    @apply border-b border-slate-700 bg-[#10203d] px-4 py-5;
   }
 
   .pipeline-crm-activate-kicker {
@@ -1610,6 +1617,15 @@
 
   .pipeline-crm-activate-title {
     @apply mt-1 text-base font-semibold leading-snug text-white sm:text-lg;
+  }
+
+  .pipeline-hermes {
+    @apply shrink-0 border-b border-slate-700 bg-[#10253a] text-slate-200;
+  }
+
+  .pipeline-hermes-kicker {
+    color: #7dd3fc !important;
+    letter-spacing: 0.16em;
   }
 
   .pipeline-score-badge {
