@@ -3021,6 +3021,18 @@ function JobCard({
                   ))}
                 </ul>
               ) : null}
+              {card.modelContract ? (
+                <div className="mt-2 space-y-0.5 text-[13px] leading-snug text-slate-300">
+                  <p className="text-slate-200">{card.modelContract.headline}</p>
+                  {card.modelContract.layer ? <p>{card.modelContract.layer}</p> : null}
+                  {card.modelContract.whoTrains ? <p>{card.modelContract.whoTrains}</p> : null}
+                  {card.modelContract.time ? <p>{card.modelContract.time}</p> : null}
+                  {card.modelContract.youProvide ? <p>{card.modelContract.youProvide}</p> : null}
+                  {card.modelContract.fieldFeedback ? (
+                    <p className="text-slate-400">{card.modelContract.fieldFeedback}</p>
+                  ) : null}
+                </div>
+              ) : null}
               {card.modelLinks.length ? (
                 <ul className="mt-1 space-y-0.5">
                   {card.modelLinks.map(dest => (

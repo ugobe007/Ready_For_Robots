@@ -95,6 +95,15 @@ export type TaskModelQualifyFilter = {
   note: string;
 };
 
+export type TaskModelCardContract = {
+  headline: string;
+  layer: string;
+  whoTrains: string;
+  time: string;
+  youProvide: string;
+  fieldFeedback: string;
+};
+
 export type RequiredTaskModel = {
   id: string;
   label: string;
@@ -106,6 +115,7 @@ export type RequiredTaskModel = {
   whereToLook: TaskModelLookup[];
   qualifyFilters: TaskModelQualifyFilter[];
   pricingLookups: TaskModelLookup[];
+  cardContract: TaskModelCardContract | null;
 };
 
 export type RobotJobCardView = {
@@ -124,6 +134,7 @@ export type RobotJobCardView = {
   nextStep: string;
   taskModels: RequiredTaskModel[];
   modelLinks: TaskModelLookup[];
+  modelContract: TaskModelCardContract | null;
 };
 
 export const QUALIFICATION_LABEL: Record<RobotJobQualification, string> = {
@@ -180,6 +191,14 @@ type MatchTaskModelIn = {
     note?: string | null;
   }[] | null;
   pricing_lookups?: MatchLookupIn[] | null;
+  card_contract?: {
+    headline?: string | null;
+    layer?: string | null;
+    who_trains?: string | null;
+    time?: string | null;
+    you_provide?: string | null;
+    field_feedback?: string | null;
+  } | null;
 };
 
 function mapLookups(raw?: MatchLookupIn[] | null): TaskModelLookup[] {
@@ -222,6 +241,23 @@ export function cardModelLinks(lookups: TaskModelLookup[]): TaskModelLookup[] {
   return out;
 }
 
+function mapCardContract(
+  raw?: MatchTaskModelIn["card_contract"],
+): TaskModelCardContract | null {
+  if (!raw) return null;
+  const headline = (raw.headline || "").trim();
+  const layer = (raw.layer || "").trim();
+  if (!headline && !layer) return null;
+  return {
+    headline: headline || "To place this job",
+    layer,
+    whoTrains: (raw.who_trains || "").trim(),
+    time: (raw.time || "").trim(),
+    youProvide: (raw.you_provide || "").trim(),
+    fieldFeedback: (raw.field_feedback || "").trim(),
+  };
+}
+
 function normalizeTaskModels(raw?: MatchTaskModelIn[] | null): RequiredTaskModel[] {
   const out: RequiredTaskModel[] = [];
   for (const row of raw || []) {
@@ -243,6 +279,7 @@ function normalizeTaskModels(raw?: MatchTaskModelIn[] | null): RequiredTaskModel
       whereToLook: [],
       qualifyFilters: [],
       pricingLookups: [],
+      cardContract: mapCardContract(row.card_contract),
     });
   }
   return out;
@@ -291,6 +328,7 @@ export function robotJobCardFromMatch(job: {
     nextStep: ROBOT_JOB_CARD_NEXT_STEP,
     taskModels,
     modelLinks,
+    modelContract: taskModels.find(m => m.cardContract)?.cardContract || null,
   };
 }
 

@@ -1,13 +1,118 @@
 {
   "ontology_id": "rfr_task_models_v1",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "product_term": "task_model",
   "internal_nickname": "certificate",
   "ui_term": "task model",
   "note": "A task model is a trained policy/skill pack for a specific physical job. Hardware capability is not enough. Do not call these certificates in product UI.",
   "presence_states": ["unknown", "present", "absent"],
-  "honesty": "Chat LLMs (GPT, Claude, Gemini, Llama, Mistral) are not warehouse pick, hospital logistics, or CNC tending policies. Search vision-language-action families and OEM packs. Token API prices are not robot-policy prices.",
+  "honesty": "Chat LLMs (GPT, Claude, Gemini, Llama, Mistral) are not warehouse pick, hospital logistics, or CNC tending policies. Search vision-language-action families and OEM packs. Token API prices are not robot-policy prices. Field traces do not automatically cut the model price.",
   "candidate_families": ["OpenVLA", "Octo", "LeRobot", "ACT", "GR00T", "π0.5"],
+  "model_layers": [
+    {
+      "id": "foundation_vla",
+      "label": "Foundation VLA / generalist policy",
+      "who_trains": ["lab", "oem"],
+      "typical_time_band": "months_to_years",
+      "note": "OpenVLA, π0.5, GR00T, Octo, ACT, LeRobot. Pretrained on many robots and tasks. Not qualified for this workplace. Distributors do not train this layer."
+    },
+    {
+      "id": "task_library",
+      "label": "Task library / skill pack",
+      "who_trains": ["oem"],
+      "typical_time_band": "licensed_days_to_weeks",
+      "note": "OEM application store: warehouse pick, hospital linen, floor scrub, kitchen dish. Specific libraries for specific tasks. Usually licensed, not trained from scratch by the distributor."
+    },
+    {
+      "id": "site_adapted",
+      "label": "Site-adapted policy",
+      "who_trains": ["integrator", "oem_field", "customer_ops"],
+      "typical_time_band": "2_to_8_weeks",
+      "note": "Fine-tune or program this floorplate, SKU mix, fixture, SOP. This is the unpaid hole when a channel only resells the chassis."
+    }
+  ],
+  "training_time_bands": [
+    {
+      "id": "licensed_days_to_weeks",
+      "label": "Days to ~2 weeks",
+      "meaning": "Install and license an existing OEM pack; mapping and smoke test. Not greenfield training."
+    },
+    {
+      "id": "1_to_4_weeks",
+      "label": "1–4 weeks",
+      "meaning": "Site map, coverage program, or a small fine-tune when demonstration traces already exist."
+    },
+    {
+      "id": "2_to_8_weeks",
+      "label": "2–8 weeks",
+      "meaning": "Collect demos, fine-tune, evaluate, and qualify on this cell. Typical pick/AMR adapt."
+    },
+    {
+      "id": "4_to_12_weeks",
+      "label": "4–12 weeks",
+      "meaning": "Custom cell, fixture, clinical SOP, or kitchen menu. Integrator SOW, not a download."
+    },
+    {
+      "id": "months_to_years",
+      "label": "Months to years",
+      "meaning": "Foundation VLA pretrain. Lab/OEM compute. Not the distributor's job."
+    }
+  ],
+  "data_contract": {
+    "summary": "The robot company or distributor must bring workplace evidence. A SKU URL is not enough to train or qualify a policy.",
+    "you_provide": [
+      {
+        "id": "site_map",
+        "label": "Site map / layout",
+        "examples": "CAD, BIM, fleet map, aisle widths, keep-out zones"
+      },
+      {
+        "id": "work_objects",
+        "label": "Work objects",
+        "examples": "SKU list, tote/case dimensions, payload, fixture drawings, menu/dish mix"
+      },
+      {
+        "id": "demonstrations",
+        "label": "Demonstration traces",
+        "examples": "Teleop or human videos of the successful task; hours of episodes, not a brochure"
+      },
+      {
+        "id": "failures",
+        "label": "Failure cases",
+        "examples": "Drops, collisions, occlusions, night-shift lighting, wet floors"
+      },
+      {
+        "id": "sop_safety",
+        "label": "SOP and safety envelope",
+        "examples": "Who shares the aisle, infection-control rules, e-stop, payload limits"
+      }
+    ],
+    "you_do_not_owe": [
+      "A foundation VLA pretrain dataset — that is the lab/OEM layer",
+      "Invented wages or FTE economics for the Job Card"
+    ]
+  },
+  "pricing_contract": {
+    "honesty": "Do not invent dollars. Token API list prices are not OEM pack prices and not GPU hours for a cell policy.",
+    "who_pays": [
+      {
+        "layer": "foundation_vla",
+        "typical": "Research weights are often free; commercial use needs a license. Training this layer is not a distributor line item."
+      },
+      {
+        "layer": "task_library",
+        "typical": "OEM quotes a pack per robot, per site, or per fleet. Usually not on a public price list."
+      },
+      {
+        "layer": "site_adapted",
+        "typical": "Integrator SOW is often the largest cost. Channel partners who only resell hardware leave this unpaid."
+      }
+    ],
+    "field_feedback": {
+      "automatic_rebate": false,
+      "note": "In-field traces usually improve the OEM's library, not the customer's invoice. A price cut happens only if the contract says so (data-for-license, reduced support, or a written rebate). Do not promise a discount because the robot learned on site."
+    }
+  },
   "qualify_filters": [
     {
       "id": "task_family",
@@ -170,6 +275,9 @@
       "id": "warehouse_pick_place_policy",
       "label": "Warehouse pick-and-place policy",
       "vertical": "warehouse",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
       "physical_task": "Pick, place, and stow SKUs or totes in a fulfillment cell",
       "tape_families": ["gripper", "pallet", "transport"],
       "keywords": ["warehouse", "fulfillment", "distribution center", "asin", "pick station", "pallet", "case", "carton", "conveyor", "palletiz"],
@@ -211,6 +319,9 @@
       "id": "warehouse_amr_fleet_nav",
       "label": "Warehouse AMR navigation / fleet policy",
       "vertical": "warehouse",
+      "layer": "task_library",
+      "who_trains": ["oem", "customer_ops"],
+      "typical_time_band": "1_to_4_weeks",
       "physical_task": "Navigate aisles, docks, and human traffic while moving goods",
       "tape_families": ["transport", "cart"],
       "keywords": ["amr", "agv", "warehouse", "fulfillment", "dock", "tote", "cart", "aisle", "zone"],
@@ -234,6 +345,9 @@
       "id": "machine_tending_load_unload",
       "label": "Machine-tending load/unload policy",
       "vertical": "manufacturing",
+      "layer": "site_adapted",
+      "who_trains": ["integrator"],
+      "typical_time_band": "4_to_12_weeks",
       "physical_task": "Load and unload parts on CNC / process machines without crashing the fixture",
       "tape_families": ["gripper"],
       "keywords": ["cnc", "machine tend", "machine-tend", "lathe", "mill", "workpiece", "fixture", "load/unload", "tending"],
@@ -257,6 +371,9 @@
       "id": "hospital_logistics_transport",
       "label": "Hospital logistics transport policy",
       "vertical": "healthcare",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "4_to_12_weeks",
       "physical_task": "Move linens, meals, meds, or samples through clinical corridors under hospital rules",
       "tape_families": ["transport", "cart"],
       "keywords": ["hospital", "clinic", "nursing", "patient", "pharmacy", "linen", "or suite"],
@@ -280,6 +397,9 @@
       "id": "floor_cleaning_policy",
       "label": "Autonomous floor-cleaning policy",
       "vertical": "commercial",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
       "physical_task": "Cover and reclean floors to a specified soil standard without colliding with people",
       "tape_families": ["scrub"],
       "keywords": ["scrub", "floor clean", "janitorial", "custodial"],
@@ -297,6 +417,9 @@
       "id": "inspection_route_policy",
       "label": "Inspection-route policy",
       "vertical": "utilities",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "2_to_8_weeks",
       "physical_task": "Follow a route and capture the right observations (leak, thermal, visual)",
       "tape_families": ["inspect"],
       "keywords": ["inspect", "patrol", "thermal", "leak"],
@@ -314,6 +437,9 @@
       "id": "hospitality_kitchen_policy",
       "label": "Kitchen / hospitality task policy",
       "vertical": "hospitality",
+      "layer": "site_adapted",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "4_to_12_weeks",
       "physical_task": "Prepare food or drinks, run dishes, or clean up a kitchen under that site's rules",
       "tape_families": ["serve", "food_prep", "beverage"],
       "keywords": [
@@ -352,6 +478,9 @@
       "id": "restroom_cleaning_policy",
       "label": "Restroom cleaning policy",
       "vertical": "commercial",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
       "physical_task": "Clean restroom fixtures and floors to that facility's standard",
       "tape_families": ["restroom"],
       "keywords": ["restroom", "bathroom", "toilet", "urinal"],
@@ -369,6 +498,9 @@
       "id": "site_task_policy",
       "label": "Site-specific task policy",
       "vertical": "any",
+      "layer": "site_adapted",
+      "who_trains": ["integrator", "oem_field"],
+      "typical_time_band": "4_to_12_weeks",
       "physical_task": "Perform this job's physical tasks under this workplace's rules",
       "tape_families": [],
       "keywords": [],

@@ -141,6 +141,69 @@ def _filter(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _time_band(ont: dict[str, Any], band_id: str) -> dict[str, Any]:
+    for row in ont.get("training_time_bands") or []:
+        if row.get("id") == band_id:
+            return {
+                "id": row.get("id") or "",
+                "label": row.get("label") or "",
+                "meaning": row.get("meaning") or "",
+            }
+    return {"id": band_id or "", "label": band_id or "", "meaning": ""}
+
+
+def _layer(ont: dict[str, Any], layer_id: str) -> dict[str, Any]:
+    for row in ont.get("model_layers") or []:
+        if row.get("id") == layer_id:
+            return {
+                "id": row.get("id") or "",
+                "label": row.get("label") or "",
+                "note": row.get("note") or "",
+            }
+    return {"id": layer_id or "", "label": layer_id or "", "note": ""}
+
+
+def _contract(slot: dict[str, Any], ont: dict[str, Any]) -> dict[str, Any]:
+    data = ont.get("data_contract") or {}
+    pricing = ont.get("pricing_contract") or {}
+    field = pricing.get("field_feedback") or {}
+    you_provide = [
+        {"id": row.get("id") or "", "label": row.get("label") or "", "examples": row.get("examples") or ""}
+        for row in (data.get("you_provide") or [])
+        if isinstance(row, dict)
+    ]
+    layer_id = slot.get("layer") or "site_adapted"
+    band_id = slot.get("typical_time_band") or "2_to_8_weeks"
+    return {
+        "layer": _layer(ont, str(layer_id)),
+        "who_trains": list(slot.get("who_trains") or []),
+        "time_band": _time_band(ont, str(band_id)),
+        "you_provide": you_provide,
+        "field_feedback": {
+            "automatic_rebate": bool(field.get("automatic_rebate")),
+            "note": field.get("note") or "",
+        },
+    }
+
+
+def format_task_model_contract(slot_or_model: dict[str, Any]) -> dict[str, str]:
+    """Short Job Card copy. No invented dollars."""
+    contract = slot_or_model.get("contract") or {}
+    layer = contract.get("layer") or {}
+    time_band = contract.get("time_band") or {}
+    who = [w.replace("_", " ") for w in (contract.get("who_trains") or []) if w]
+    provide = [row.get("label") for row in (contract.get("you_provide") or []) if row.get("label")]
+    who_s = " + ".join(who) if who else "OEM / integrator"
+    return {
+        "headline": "To place this job",
+        "layer": f"Layer: {(layer.get('label') or 'Task model').strip()}",
+        "who_trains": f"Who trains: {who_s}",
+        "time": f"Typical time: {time_band.get('label') or '2–8 weeks'} after a map and demo traces exist",
+        "you_provide": "You provide: " + (", ".join(provide).lower() if provide else "site map, object geometry, demo traces, SOP"),
+        "field_feedback": "Field traces do not automatically reduce the model price unless the OEM contract says so.",
+    }
+
+
 def _serialize_slot(slot: dict[str, Any], *, presence: str = "unknown") -> dict[str, Any]:
     ont = load_task_model_ontology()
     return {
@@ -156,6 +219,8 @@ def _serialize_slot(slot: dict[str, Any], *, presence: str = "unknown") -> dict[
         "where_to_look": _lookups(slot),
         "qualify_filters": [_filter(r) for r in _catalog("qualify_filters")],
         "pricing_lookups": [_dest(r) for r in _catalog("pricing_lookups")],
+        "contract": _contract(slot, ont),
+        "card_contract": format_task_model_contract({"contract": _contract(slot, ont)}),
     }
 
 
@@ -188,9 +253,9 @@ def required_task_models_for_job(
 
 _SHARED_OPEN_QUESTIONS = (
     "Is a candidate policy a robot VLA or OEM pack — not a chat LLM?",
+    "Which task-library pack covers this work, and who trains the site-adapted layer?",
     "Does the license allow commercial placement on this robot?",
-    "Can it run on this SKU / at the edge, or is it cloud-only?",
-    "What does it cost — OEM license, integrator SOW, GPU training, or a token API?",
+    "Will you provide a site map, object geometry, and demo traces? Field data does not automatically cut the model price.",
 )
 
 
