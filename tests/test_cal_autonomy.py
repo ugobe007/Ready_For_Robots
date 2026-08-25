@@ -8,7 +8,9 @@ import pytest
 from app.services.cal_autonomy import (
     _cal_buyer_eligible,
     cal_buyer_outreach_body,
+    cal_buyer_sales_enabled,
     format_cal_draft_storage,
+    get_cal_autonomy_status,
     get_cal_review_email,
     outreach_template_fingerprint,
     prioritize_unsent,
@@ -138,7 +140,7 @@ def test_cal_buyer_outreach_body_mentions_cal():
         fresh=False,
     )
     assert "Cal" in body
-    assert "Ready For Robots" in body
+    assert "ReadyForRobots" in body or "Ready For Robots" in body
 
 
 def test_cal_vendor_outreach_body_sherpa_tone():
@@ -151,3 +153,23 @@ def test_cal_vendor_outreach_body_sherpa_tone():
     assert "DexMate Robotics" in body
     assert "PoC" in body or "PoCs" in body or "pilot" in body.lower()
     assert "engineer-led" in body.lower() or "guide" in body.lower()
+
+
+def test_cal_buyer_sales_disabled_by_default(monkeypatch):
+    monkeypatch.delenv("CAL_BUYER_SALES_ENABLED", raising=False)
+    assert cal_buyer_sales_enabled() is False
+    status = get_cal_autonomy_status()
+    assert status["buyer_sales_enabled"] is False
+    assert status["send_limit"] == 0
+    assert status["draft_batch"] == 0
+
+
+def test_cal_buyer_sales_enabled_when_flagged(monkeypatch):
+    monkeypatch.setenv("CAL_BUYER_SALES_ENABLED", "1")
+    monkeypatch.setenv("CAL_AUTONOMY_SEND_LIMIT", "25")
+    monkeypatch.setenv("CAL_AUTONOMY_DRAFT_BATCH", "100")
+    assert cal_buyer_sales_enabled() is True
+    status = get_cal_autonomy_status()
+    assert status["buyer_sales_enabled"] is True
+    assert status["send_limit"] == 25
+    assert status["draft_batch"] == 100

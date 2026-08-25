@@ -26,6 +26,9 @@ def test_ontology_loads_task_model_slots():
     assert data.get("shared_lookups")
     assert data.get("qualify_filters")
     assert data.get("pricing_lookups")
+    assert data.get("model_layers")
+    assert data.get("data_contract")
+    assert data.get("pricing_contract", {}).get("field_feedback", {}).get("automatic_rebate") is False
     blob = json.dumps(data).lower()
     # Chat LLMs may be named as a counterexample, never as the job policy.
     assert "not warehouse pick" in blob or "not a chat llm" in blob or "not warehouse" in blob
@@ -69,7 +72,18 @@ def test_warehouse_palletize_needs_pick_policy_unknown():
     assert "π0.5" in models[0]["candidate_families"]
     assert any("chat LLM" in q.lower() or "vla" in q.lower() for q in questions)
     assert any("license" in q.lower() for q in questions)
-    assert any("cost" in q.lower() or "price" in q.lower() or "token" in q.lower() for q in questions)
+    assert any("task-library" in q.lower() or "site-adapted" in q.lower() for q in questions)
+    assert any("field data" in q.lower() or "demo traces" in q.lower() for q in questions)
+    contract = models[0]["contract"]
+    assert contract["layer"]["id"] == "task_library"
+    assert "oem" in contract["who_trains"]
+    assert contract["time_band"]["id"] == "2_to_8_weeks"
+    assert contract["field_feedback"]["automatic_rebate"] is False
+    card = models[0]["card_contract"]
+    assert card["headline"] == "To place this job"
+    assert card["layer"].startswith("Layer:")
+    assert "2–8 weeks" in card["time"] or "2-8" in card["time"]
+    assert "do not automatically reduce" in card["field_feedback"].lower()
 
 
 def test_warehouse_tote_move_is_amr_nav_not_hospital():
@@ -108,7 +122,11 @@ def test_cnc_tending_needs_machine_tending_policy():
         path="machine-tend",
         text="load workpieces into CNC fixtures",
     )
-    assert "machine_tending_load_unload" in _ids(models)
+    tending = next(m for m in models if m["id"] == "machine_tending_load_unload")
+    assert tending["contract"]["layer"]["id"] == "site_adapted"
+    assert "integrator" in tending["contract"]["who_trains"]
+    assert tending["contract"]["time_band"]["id"] == "4_to_12_weeks"
+    assert "4–12 weeks" in tending["card_contract"]["time"] or "4-12" in tending["card_contract"]["time"]
 
 
 def test_opaque_job_still_asks_for_a_site_task_policy():

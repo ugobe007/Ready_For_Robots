@@ -73,6 +73,11 @@ def cal_autonomy_enabled() -> bool:
     return _cal_autonomy_env_default()
 
 
+def cal_buyer_sales_enabled() -> bool:
+    """Robot-sales intros to operating companies. Default off — Cal places jobs."""
+    return os.getenv("CAL_BUYER_SALES_ENABLED", "0").strip().lower() in ("1", "true", "yes")
+
+
 def _redis_client():
     url = (os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or "").strip()
     if not url:
@@ -799,8 +804,15 @@ def run_cal_autonomy_cycle(
 
     use_apollo = (os.getenv("CAL_USE_APOLLO") or "0").strip().lower() in ("1", "true", "yes")
 
+    buyer_sales = cal_buyer_sales_enabled()
     draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
     send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
+    if not buyer_sales:
+        draft_limit = 0
+        send_limit = 0
+        logger.info(
+            "[cal-autonomy] buyer-sales intros skipped — Cal works Robot Jobs, not robot sales"
+        )
     # Angle rotation: only draft with angles that haven't been auto-retired.
     allowed_variants = active_buyer_variants(db)
     # Daily cap across all cycles — resume auto-send throttled low.
@@ -817,25 +829,28 @@ def run_cal_autonomy_cycle(
     stale_days = int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7")
     stale_before = datetime.now(timezone.utc) - timedelta(days=max(stale_days, 1))
 
-    companies = _hot_warm_companies(db, limit=max(pool_limit, draft_limit, 100))
-    company_ids = [c.id for c, _, _ in companies]
     existing: dict[int, CrmAccount] = {}
-    if company_ids:
-        for acct in db.query(CrmAccount).filter(
-            CrmAccount.company_id.in_(company_ids),
-            CrmAccount.team_id == team.id,
-        ).all():
-            if acct.company_id:
-                existing[acct.company_id] = acct
+    if buyer_sales:
+        companies = _hot_warm_companies(db, limit=max(pool_limit, draft_limit, 100))
+        company_ids = [c.id for c, _, _ in companies]
+        if company_ids:
+            for acct in db.query(CrmAccount).filter(
+                CrmAccount.company_id.in_(company_ids),
+                CrmAccount.team_id == team.id,
+            ).all():
+                if acct.company_id:
+                    existing[acct.company_id] = acct
 
-    # Prioritise never-sent buyers so the draft batch and send loop reach
-    # actionable runway first (incl. accounts reset after a bounce-era send).
-    companies = prioritize_unsent(companies, existing)
-    # Then prefer Hermes-qualified buyers (automation_fit overlays from ingest).
-    companies = prioritize_hermes_qualified(companies)
-    # Optional: prefer timing urgency (FY / shows / peer proof) when flagged.
-    if _cal_include_buying_window():
-        companies = prioritize_buying_window(companies)
+        # Prioritise never-sent buyers so the draft batch and send loop reach
+        # actionable runway first (incl. accounts reset after a bounce-era send).
+        companies = prioritize_unsent(companies, existing)
+        # Then prefer Hermes-qualified buyers (automation_fit overlays from ingest).
+        companies = prioritize_hermes_qualified(companies)
+        # Optional: prefer timing urgency (FY / shows / peer proof) when flagged.
+        if _cal_include_buying_window():
+            companies = prioritize_buying_window(companies)
+    else:
+        companies = []
 
     drafted = 0
     refreshed = 0
@@ -1165,6 +1180,7 @@ def run_cal_autonomy_cycle(
         "active_variants": allowed_variants,
         "daily_cap": daily_cap,
         "daily_sent": cal_daily_sent_count(),
+        "buyer_sales_enabled": buyer_sales,
     }
 
 
@@ -1181,6 +1197,7 @@ def get_cal_autonomy_status() -> dict[str, Any]:
     return {
         "heartbeat": heartbeat,
         "enabled": cal_autonomy_enabled(),
+        "buyer_sales_enabled": cal_buyer_sales_enabled(),
         "env_enabled": _cal_autonomy_env_default(),
         "runtime_override": get_cal_autonomy_runtime_override(),
         "runtime_toggle_available": _redis_client() is not None,
@@ -1190,9 +1207,17 @@ def get_cal_autonomy_status() -> dict[str, Any]:
         "template_fingerprint": outreach_template_fingerprint(),
         "stored_fingerprint": _stored_template_fingerprint(),
         "template_version": os.getenv("CAL_TEMPLATE_VERSION") or "2",
-        "send_limit": int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25"),
+        "send_limit": (
+            int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
+            if cal_buyer_sales_enabled()
+            else 0
+        ),
         "followup_limit": int(os.getenv("CAL_AUTONOMY_FOLLOWUP_LIMIT", "25") or "25"),
-        "draft_batch": int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100"),
+        "draft_batch": (
+            int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
+            if cal_buyer_sales_enabled()
+            else 0
+        ),
         "pool_window": int(os.getenv("CAL_AUTONOMY_POOL", "400") or "400"),
         "refresh_stale_days": int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7"),
         "every_hours": float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "3") or "3"),

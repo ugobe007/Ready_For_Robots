@@ -35,6 +35,8 @@ Qualify-a-candidate filters and pricing lookups stay in the ontology for a later
 
 If presence is unknown, qualification is **conditional**, not Qualified.
 
+**Buying and training the policy** (layers, who trains, time bands, data owed, no automatic field-data rebate): [`docs/robot_task_model_contract.md`](./robot_task_model_contract.md).
+
 ## Where we look
 
 | Kind | Destination |
@@ -91,4 +93,5 @@ Never: `robot has arms → warehouse jobs`.
 - Ranking jobs by a model-vendor partnership
 - SIGNAL / Cal surfaces
 
-Ontology: [`ontology/ROBOT_TASK_MODEL_ONTOLOGY.md`](../ontology/ROBOT_TASK_MODEL_ONTOLOGY.md)
+Ontology: [`ontology/ROBOT_TASK_MODEL_ONTOLOGY.md`](../ontology/ROBOT_TASK_MODEL_ONTOLOGY.md)  
+Contract (OEM / distributor): [`docs/robot_task_model_contract.md`](./robot_task_model_contract.md)

@@ -169,6 +169,15 @@ describe("robotJobCard", () => {
               note: "Token API list prices. Not a robot-policy price.",
             },
           ],
+          card_contract: {
+            headline: "To place this job",
+            layer: "Layer: Task library / skill pack",
+            who_trains: "Who trains: oem + integrator",
+            time: "Typical time: 2–8 weeks after a map and demo traces exist",
+            you_provide: "You provide: site map / layout, work objects, demonstration traces",
+            field_feedback:
+              "Field traces do not automatically reduce the model price unless the OEM contract says so.",
+          },
         },
       ],
     });
@@ -177,6 +186,9 @@ describe("robotJobCard", () => {
     expect(card.taskModels[0].presence).toBe("unknown");
     expect(card.taskModels[0].label).toMatch(/pick-and-place/i);
     expect(card.taskModels[0].whereToLook).toEqual([]);
+    expect(card.modelContract?.headline).toBe("To place this job");
+    expect(card.modelContract?.layer).toMatch(/task library/i);
+    expect(card.modelContract?.fieldFeedback).toMatch(/do not automatically reduce/i);
     expect(card.modelLinks).toHaveLength(JOB_CARD_MODEL_LINK_CAP);
     expect(card.modelLinks.every(d => d.url)).toBe(true);
     expect(card.modelLinks.map(d => d.name)).toEqual([

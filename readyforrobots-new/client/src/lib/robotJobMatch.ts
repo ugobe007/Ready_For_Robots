@@ -66,6 +66,14 @@ export type MatchJob = {
       url: string | null;
       note: string;
     }[];
+    card_contract?: {
+      headline: string;
+      layer: string;
+      who_trains: string;
+      time: string;
+      you_provide: string;
+      field_feedback: string;
+    };
   }[];
   /** SKU this card is for. Set on the Jobs terminal, carried onto the pipeline list. */
   forRobot?: string;

@@ -26,7 +26,8 @@ def test_cal_signature_includes_role():
 def test_persona_payload_exports_voice_rules():
     payload = cal_persona_payload()
     assert payload["title"] == CAL_TITLE
-    assert "automation opportunities" in payload["identity"].lower() or "find robots" in payload["identity"].lower()
+    ident = payload["identity"].lower()
+    assert "jobs advisor" in ident or "robot jobs" in ident or "automation opportunities" in ident
     assert "problem" in payload["identity"].lower() or "task" in payload["mission"].lower()
     assert len(payload["always"]) == len(CAL_ALWAYS)
     assert len(payload["never"]) >= len(CAL_NEVER)
