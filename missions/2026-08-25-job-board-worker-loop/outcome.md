@@ -17,8 +17,15 @@ Intelligence news, Jobs UI, and SIGNAL CRM are unchanged. Kill switch: `ENABLE_S
 
 `PYTHONPATH=/workspace pytest tests/test_job_board_scraper_pipeline.py tests/test_robot_job_extract.py tests/test_scraper_food_automation_queries.py` — 17 passed.
 
+## Deploy (Fly `ready-2-robot`)
+
+- Image `deployment-01M0WT1CQ2JVVVPPET3ET1KQG1`. Web + worker started.
+- Worker boot: intelligence thread still starts; **job-board thread started** (`every 6 hours, first run in 12 min`).
+- Jobs match API unchanged: Locus URL → `state=matches`, `job_count=26`.
+- `/api/pipeline-stats` now includes `robot_jobs` (still 0 until Indeed HTML yields postings — datacenter IPs often get a challenge page).
+- One-shot worker run `industry=Hospitality` with 1 URL returned `{status: ok, urls: 1}` without crashing the worker.
+
 ## Follow-ups
 
-- After deploy: worker log `In-app scheduled job-board thread started`; first cycle ~12 min later.
-- Watch `GET /api/pipeline-stats` → `robot_jobs.last_24h` (Indeed may still block datacenter IPs).
-- Hotel / RSS / SERP still Celery-only on Fly (out of scope).
+- Watch `robot_jobs.last_24h` after the 12-minute first cycle. If still 0, Indeed anti-bot is the next yield problem (pipeline is no longer idle).
+- Hotel / RSS / SERP remain Celery-only on Fly (out of scope).
