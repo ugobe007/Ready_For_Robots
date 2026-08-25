@@ -35,10 +35,14 @@ def job_board_urls(
     industry: Optional[str] = None,
     max_urls: Optional[int] = None,
 ) -> list[str]:
-    from app.scrapers.scrape_targets import get_urls
+    from app.scrapers.scrape_targets import get_targets
 
     cap = int(max_urls) if max_urls is not None else job_scraper_max_urls()
-    return get_urls("job_board", industry=industry)[:cap]
+    targets = get_targets("job_board", industry=industry)
+    robot_first = [t for t in targets if "robot_job" in (t.signal_types or [])]
+    seen = {id(t) for t in robot_first}
+    rest = [t for t in targets if id(t) not in seen]
+    return [t.url for t in (robot_first + rest)][:cap]
 
 
 def run_job_board_scraper_sync(
