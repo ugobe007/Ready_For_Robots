@@ -96,14 +96,20 @@ def calculate_job_relevancy_score(title: str, description: str) -> float:
     # BOOST: Buyer persona matches
     buyer_matches = 0
     for keyword in BUYER_KEYWORDS:
-        if isinstance(keyword, str):
+        if isinstance(keyword, str) and any(ch in keyword for ch in ".{?*+"):
+            if re.search(keyword, combined, re.I):
+                buyer_matches += 1
+        elif isinstance(keyword, str):
             if keyword.lower() in combined:
                 buyer_matches += 1
-        else:  # regex pattern
-            if re.search(keyword, combined):
-                buyer_matches += 1
+        elif re.search(keyword, combined):
+            buyer_matches += 1
+    if any(p.search(title or "") for p in BUYER_PERSONA_PATTERNS):
+        buyer_matches = max(buyer_matches, 1)
+    if any(p.search(title or "") for p in AUTOMATION_INTENT_PATTERNS):
+        buyer_matches = max(buyer_matches, 1)
     
-    # BOOST: Labor pain signals
+    # BOOST: Labor pain signals (ontology)
     pain_matches = 0
     for keyword in PAIN_KEYWORDS:
         if isinstance(keyword, str):
@@ -112,11 +118,16 @@ def calculate_job_relevancy_score(title: str, description: str) -> float:
         else:  # regex pattern
             if re.search(keyword, combined):
                 pain_matches += 1
-    
-    # Score calculation
-    # Buyer persona = high signal (executives who approve budgets)
-    # Labor pain = medium signal (operational challenges = automation need)
-    score = min(1.0, (buyer_matches * 0.20) + (pain_matches * 0.10))
+
+    # BOOST: Operational Robot Job titles (housekeeper, line cook, picker).
+    # Ontology PAIN_KEYWORDS alone scored these 0.00–0.10 and dropped every listing.
+    labor_matches = sum(1 for kw in LABOR_PAIN_KEYWORDS if kw in combined)
+
+    # Buyer persona = high signal; operational title = Robot Job; ontology pain = extra
+    score = min(
+        1.0,
+        (buyer_matches * 0.20) + (pain_matches * 0.10) + (labor_matches * 0.25),
+    )
     return score
 
 # ─── DUPLICATE DETECTION ───────────────────────────────────────────────────────
@@ -157,6 +168,8 @@ LABOR_PAIN_KEYWORDS = [
     "patient transport", "environmental services", "sterile processing",
     "pharmacy technician", "dietary aide", "hospital aide", "EVS tech",
     "linen service", "supply chain tech",
+    "picker", "stocker", "housekeeping", "food service worker",
+    "patient transporter",
 ]
 
 PAIN_SIGNALS = [
@@ -245,20 +258,11 @@ class EnhancedJobBoardScraper(BaseScraper):
         return False
 
     def _is_relevant(self, title: str, description: str, threshold: float = 0.15) -> bool:
-        """
-        Filter out irrelevant job postings using ontology-based scoring.
-        
-        Filters out:
-        - Robotics engineers, robot builders (NOT buyers)
-        - Unrelated industries
-        - Low labor pain signals
-        """
+        """Keep operational Robot Jobs and buyer hires; drop robot-builder roles."""
         score = calculate_job_relevancy_score(title, description)
         is_relevant = score >= threshold
-        
         if not is_relevant:
             logger.debug(f"[JobBoardScraper] Filtered (score={score:.2f}): {title[:60]}...")
-        
         return is_relevant
 
     def parse(self, html: str, url: str):
@@ -269,20 +273,38 @@ class EnhancedJobBoardScraper(BaseScraper):
         
         soup = BeautifulSoup(html, "html.parser")
 
-        postings = (
-            soup.select("div.job_seen_beacon")      # Indeed
-            or soup.select("div.base-card")          # LinkedIn
-            or soup.select("article.jobsearch-result")
-            or soup.select(".job-listing, .result, .posting")
+        postings = soup.select(
+            "div.job_seen_beacon, "
+            "div.base-card, "
+            "article.jobsearch-result, "
+            ".SerpJob-jobCard, "
+            "div.SerpJob, "
+            "[data-testid='searchSerpJob'], "
+            "[data-testid='jobCard'], "
+            ".job-listing, "
+            "article.posting"
         )
+        if not postings:
+            postings = soup.select(".result, .posting")
 
         logger.info(f"[JobBoardScraper] Found {len(postings)} job postings from {url}")
+        skipped_no_company = skipped_relevancy = skipped_no_pain = 0
+        kept_robot_job = kept_hire = 0
 
         for post in postings:
-            title_el    = post.select_one("h2, h3, .jobTitle, .job-title")
-            company_el  = post.select_one(".companyName, .company, .org, [data-testid='company-name']")
-            location_el = post.select_one(".companyLocation, .location, [data-testid='text-location']")
-            desc_el     = post.select_one(".job-snippet, .description, p")
+            title_el    = post.select_one(
+                "h2, h3, .jobTitle, .job-title, .jobposting-title, a.jcs-JobTitle"
+            )
+            company_el  = post.select_one(
+                ".companyName, .company, .org, .jobposting-company, "
+                "[data-testid='company-name'], [data-testid='companyName']"
+            )
+            location_el = post.select_one(
+                ".companyLocation, .location, .jobposting-location, [data-testid='text-location']"
+            )
+            desc_el     = post.select_one(
+                ".job-snippet, .jobposting-snippet, .description, [data-testid='job-snippet']"
+            )
 
             title        = title_el.get_text(strip=True) if title_el else ""
             company_name = company_el.get_text(strip=True) if company_el else None
@@ -291,6 +313,7 @@ class EnhancedJobBoardScraper(BaseScraper):
             full_text    = f"{title} {desc}".lower()
 
             if not company_name:
+                skipped_no_company += 1
                 continue
 
             # --- DUPLICATE CHECK ---
@@ -299,6 +322,7 @@ class EnhancedJobBoardScraper(BaseScraper):
 
             # --- RELEVANCY CHECK (Filter out robotics engineers!) ---
             if not self._is_relevant(title, desc):
+                skipped_relevancy += 1
                 continue
 
             # --- Buyer persona hire (operations decision-maker) — SIGNAL leftover ---
@@ -320,6 +344,7 @@ class EnhancedJobBoardScraper(BaseScraper):
                 urgency_score = sum(1 for p in PAIN_SIGNALS if p in full_text)
 
                 if pain_score == 0:
+                    skipped_no_pain += 1
                     continue
 
                 job = extract_robot_job(
@@ -362,10 +387,33 @@ class EnhancedJobBoardScraper(BaseScraper):
                 "source": url,
             })
             if company is None:
-                logger.debug(
-                    "[JobBoardScraper] company rejected, posting skipped: %s",
-                    company_name[:80],
-                )
+                skipped_no_company += 1
+                if robot_job_extract is not None:
+                    try:
+                        row = upsert_robot_job_from_extract(
+                            self.db,
+                            company_id=None,
+                            extract=robot_job_extract,
+                            source_url=url,
+                        )
+                        close = status_from_evidence(
+                            employer=company_name,
+                            job_title=title,
+                            job_function=robot_job_extract.get("job_function"),
+                            evidence_text=desc,
+                        )
+                        apply_closeout_to_job(row, close)
+                        self.db.commit()
+                        kept_robot_job += 1
+                    except Exception:
+                        logger.exception(
+                            "[JobBoardScraper] robot_jobs persist skipped for %s",
+                            title[:80],
+                        )
+                        try:
+                            self.db.rollback()
+                        except Exception:
+                            pass
                 continue
 
             self.save_signal(company.id, {
@@ -374,6 +422,10 @@ class EnhancedJobBoardScraper(BaseScraper):
                 "signal_strength": strength,
                 "source_url": url,
             })
+            if robot_job_extract is not None:
+                kept_robot_job += 1
+            else:
+                kept_hire += 1
 
             if robot_job_extract is not None:
                 try:
@@ -398,4 +450,19 @@ class EnhancedJobBoardScraper(BaseScraper):
                     except Exception:
                         pass
 
-        logger.info(f"[JobBoardScraper] Session stats: {self.request_count} requests, {len(self.session_seen_fingerprints)} unique jobs seen")
+        logger.info(
+            "[JobBoardScraper] page yield found=%d robot_jobs=%d hires=%d "
+            "skipped_relevancy=%d skipped_no_company=%d skipped_no_pain=%d url=%s",
+            len(postings),
+            kept_robot_job,
+            kept_hire,
+            skipped_relevancy,
+            skipped_no_company,
+            skipped_no_pain,
+            url,
+        )
+        logger.info(
+            "[JobBoardScraper] Session stats: %s requests, %s unique jobs seen",
+            self.request_count,
+            len(self.session_seen_fingerprints),
+        )

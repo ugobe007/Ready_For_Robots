@@ -52,3 +52,5 @@ News queries in `scrape_targets.NEWS_QUERIES` hunt deployment evidence so the sa
 | `JOB_SCRAPER_MAX_URLS_PER_RUN` | `18` | Cap per industry |
 
 Industry URL lookup is case-insensitive (`hospitality` == `Hospitality`). Yield: `GET /api/pipeline-stats` → `robot_jobs`.
+
+Relevancy scoring includes operational titles (`LABOR_PAIN_KEYWORDS`: housekeeper, line cook, picker). Robot-builder roles (`robotics engineer`, …) still score 0. Page logs: `page yield found= robot_jobs= skipped_relevancy=`.
