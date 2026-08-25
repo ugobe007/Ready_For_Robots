@@ -18,4 +18,20 @@ Jobs UI, matcher ranking, and intelligence news loop unchanged.
 
 ## Tests
 
-`pytest tests/test_job_board_scraper_pipeline.py tests/test_robot_job_extract.py`
+`pytest tests/test_job_board_scraper_pipeline.py tests/test_robot_job_extract.py` — 23 passed.
+
+## Production (Fly, 2026-08-25 ~18:56 UTC)
+
+`GET /api/pipeline-stats` `robot_jobs`: **0 → 77** (still climbing mid-cycle).
+
+Sample page yields after the stem + persist fix:
+
+- freight/dock: found=16 robot_jobs=9
+- inventory/shipping: found=16 robot_jobs=6
+- hotel bell/valet: found=16 robot_jobs=15
+- hotel front desk: found=16 robot_jobs=15
+- line cook / dishwasher: found=16 robot_jobs=13
+
+Jobs match smoke: Locus URL still returns `state=matches` (12 jobs).
+
+Indeed still serves challenge pages on some URLs (housekeeper, food runner, EVS, patient transport). Those log `challenge/empty` and yield 0 for that URL; they do not abort the cycle.
