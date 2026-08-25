@@ -1,9 +1,8 @@
 """
 Cal Seller Brief — OEM-facing conversion artifact.
 
-BuyerCal writes notes *to* operating companies.
-Seller Brief is Cal talking *to the robot OEM* about a buyer:
-why this account fits their robot, why now, what to pitch, next step.
+Seller Brief is Cal talking *to the robot OEM* about jobs that robot
+can do at a named employer. It is not a buyer-sales pitch.
 
 Without this as the primary pre-signup proof, OEMs only see a sample
 outbound email and have no reason to create an account.
@@ -25,34 +24,40 @@ def build_cal_seller_brief(
     hermes_job_title: str = "",
 ) -> dict[str, str]:
     """Return a compact OEM brief. All fields are plain language, no hype."""
-    name = (company_name or "This buyer").strip() or "This buyer"
-    ind = (industry or "their operations").strip() or "their operations"
+    name = (company_name or "This employer").strip() or "This employer"
+    ind = (industry or "this workplace").strip() or "this workplace"
     robots = [r.strip() for r in (robot_types or []) if (r or "").strip()]
-    robot_line = ", ".join(robots[:3]) if robots else "the robot class you sell"
+    robot_line = ", ".join(robots[:3]) if robots else "this robot"
     why = (share_summary or signal_text or "").strip()
     if hermes_job_title.strip():
-        why_now = f"{name} is hiring for {hermes_job_title.strip()} — timing that usually means operational load is already rising."
+        why_now = (
+            f"{name} has work a robot could be hired to do "
+            f"({hermes_job_title.strip()}). That is a Robot Job, not a buyer lead."
+        )
     elif why:
         clip = " ".join(why.split())
         if len(clip) > 180:
             clip = clip[:177].rstrip() + "…"
         why_now = clip
     elif signal_type:
-        why_now = f"Active {signal_type.replace('_', ' ')} signal in {ind}."
+        why_now = f"Observed work in {ind} — qualify the robot against this job, do not pitch a sale."
     else:
-        why_now = f"Live buying pressure in {ind} — worth a first conversation this week."
+        why_now = f"Named work in {ind}. Next step is a Job Card, not a robot-sales intro."
 
     pitch = (pipeline_action or "").strip()
     if not pitch:
-        pitch = f"Lead with how {robot_line} removes a concrete workflow bottleneck — not a generic automation pitch."
+        pitch = (
+            f"Show {robot_line} against this job: hardware + the task model this work needs. "
+            "Do not lead with a generic automation pitch."
+        )
 
     return {
-        "headline": f"Why {name} is a fit for your robot",
+        "headline": f"Jobs {robot_line} can do at {name}",
         "why_now": why_now,
         "pitch": pitch,
         "robot_fit": robot_line,
-        "next_step": f"Save {name} → copy the outreach note → start the conversation",
-        "for_whom": "oem",  # seller brief, not buyer email
+        "next_step": f"Keep this Job Card → site assessment for {name}",
+        "for_whom": "oem",
     }
 
 

@@ -14,12 +14,11 @@ def test_seller_brief_is_oem_facing():
     )
     assert brief["for_whom"] == "oem"
     assert "Accor" in brief["headline"]
-    assert "your robot" in brief["headline"].lower()
-    assert "Housekeeping" in brief["why_now"]
-    assert "overnight cleaning" in brief["pitch"].lower()
+    assert "Jobs" in brief["headline"]
+    assert "Housekeeping" in brief["why_now"] or "Robot Job" in brief["why_now"]
+    assert "task model" in brief["pitch"].lower() or "overnight cleaning" in brief["pitch"].lower()
     assert "service cleaning" in brief["robot_fit"]
-    assert brief["next_step"].startswith("Save Accor")
-    # Must not read like a buyer email
+    assert "Job Card" in brief["next_step"]
     assert not brief["why_now"].lower().startswith("hi ")
     assert "dear" not in brief["pitch"].lower()
 

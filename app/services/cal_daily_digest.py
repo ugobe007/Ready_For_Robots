@@ -278,9 +278,8 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
 
     if intro_sent == 0 and hot > 0 and sendable > 0:
         needs_you.append(
-            "  • Queue stall: 0 new intros in the last "
-            f"{period_hours}h with {hot} HOT prospects and {sendable} drafts ready. "
-            "Check verification/enrichment and send gating."
+            "  • No action: 0 robot-sales intros is expected. Cal places robots into "
+            "jobs. The HOT buyer queue is not his send list."
         )
 
     # Deliverability (trailing 7d) — makes the bounce trend visible and signals when
@@ -386,14 +385,14 @@ def render_cal_daily_digest_text(
         f"Cal daily update — {day_label}",
         "",
         "What Cal did (last {0}h)".format(period_hours),
-        f"  • Buyer intro emails sent: {activity.get('intro_sent', 0)}",
+        f"  • Robot-sales intros sent: {activity.get('intro_sent', 0)} (should stay 0)",
         f"  • Follow-up emails sent: {activity.get('followup_sent', 0)}",
         f"  • Inbound replies received: {activity.get('replies', 0)}",
         f"  • Drafts created or refreshed: {activity.get('drafts_touched', 0)}",
         "",
         "Queue right now",
-        f"  • HOT / WARM prospects in Cal queue: {hot} / {warm}",
-        f"  • Drafts ready to send: {sendable}",
+        f"  • HOT / WARM SIGNAL rows still in the old Cal queue: {hot} / {warm}",
+        f"  • Frozen sales drafts (not a send list): {sendable}",
         f"  • Drafts waiting (unsent): {unsent}",
         f"  • Active follow-up sequences: {activity.get('enroll_active', 0)} "
         f"({activity.get('enroll_due', 0)} due now)",
@@ -436,10 +435,9 @@ def render_cal_daily_digest_text(
     if int(activity.get("intro_sent") or 0) == 0 and (sendable > 0 or hot > 0):
         lines.extend([
             "Why 0 new intros",
-            "  • Cal only emails verified contacts. Ready drafts without a verified "
-            "email wait for enrichment; the rest of the HOT/WARM pool is already "
-            "contacted and is now in follow-up. New intros resume as fresh, verified "
-            "buyers land in the queue.",
+            "  • Expected. Cal works Robot Jobs, not robot sales. He does not email "
+            "operating companies to sell them a robot. HOT/WARM SIGNAL drafts stay "
+            "frozen. New work is Job Cards for OEMs and distributors (task model + site).",
             "",
         ])
 
@@ -456,12 +454,12 @@ def render_cal_daily_digest_text(
     if needs_you:
         lines.extend(["Needs you", *needs_you[:8], ""])
     else:
-        lines.extend(["Needs you", "  • Nothing urgent — Cal is running.", ""])
+        lines.extend(["Needs you", "  • Nothing urgent — Cal is not waiting on a robot-sales send.", ""])
 
     if auto_filtered:
         lines.extend([
             "Auto-filtered by Cal (FYI — no action needed)",
-            "  These were skipped as OEMs/vendors, not buyers. Cal did not email them.",
+            "  These were skipped as OEMs/vendors. Cal does not treat them as robot buyers.",
             *auto_filtered[:6],
             "",
         ])

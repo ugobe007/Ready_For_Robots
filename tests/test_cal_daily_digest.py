@@ -44,9 +44,9 @@ def test_render_cal_daily_digest_text_includes_sections():
         needs_you=["  • Book meeting: Acme demo"],
     )
     assert "Cal daily update — 2026-06-16" in text
-    assert "Buyer intro emails sent: 3" in text
+    assert "Robot-sales intros sent: 3" in text
     assert "Autopilot: ON" in text
-    assert "Drafts ready to send: 17" in text
+    assert "Frozen sales drafts (not a send list): 17" in text
     assert "Book meeting: Acme demo" in text
 
 
@@ -74,7 +74,8 @@ def test_render_explains_zero_intros_when_drafts_ready():
     )
     assert "Follow-up emails sent: 10" in text
     assert "Why 0 new intros" in text
-    assert "verified contacts" in text
+    assert "Robot Jobs, not robot sales" in text
+    assert "verified contacts" not in text
 
 
 def test_render_no_zero_intro_note_when_intros_sent():
@@ -168,4 +169,5 @@ def test_build_cal_daily_digest_without_db_context(monkeypatch):
     digest = build_cal_daily_digest(FakeDB())
     assert digest["subject"].startswith("Cal daily update")
     assert "ugobe07@gmail.com" in digest["recipients"]
-    assert "Buyer intro emails sent: 0" in digest["body_text"]
+    assert "Robot-sales intros sent: 0" in digest["body_text"]
+    assert "not waiting on a robot-sales send" in digest["body_text"]
