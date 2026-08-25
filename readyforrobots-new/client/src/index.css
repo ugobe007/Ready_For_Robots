@@ -1236,7 +1236,7 @@
   }
 
   .pipeline-workspace {
-    @apply overflow-hidden rounded-2xl border border-slate-700 bg-[#081126] text-slate-100 antialiased shadow-[0_14px_40px_-20px_rgba(0,0,0,0.7)];
+    @apply overflow-visible rounded-2xl border border-slate-700 bg-[#081126] text-slate-100 antialiased shadow-[0_14px_40px_-20px_rgba(0,0,0,0.7)];
     color-scheme: dark;
   }
 

@@ -916,7 +916,9 @@ describe("jobsWorkflow", () => {
     expect(pipelineSrc).not.toMatch(/bg-sky-50\/60/);
     expect(pipelineSrc).not.toMatch(/lg:h-\[calc\(100vh-100px\)\]/);
     expect(pipelineSrc).not.toMatch(/overflow-y-auto overscroll-contain/);
+    expect(pipelineSrc).not.toMatch(/lg:min-h-\[calc\(100vh-200px\)\]/);
     expect(pipelineSrc).toMatch(/lg:min-h-\[calc\(100vh-5rem\)\]/);
+    expect(pipelineSrc).toMatch(/lg:items-start/);
 
     const cardSrc = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),

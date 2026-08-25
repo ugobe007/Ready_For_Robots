@@ -4734,10 +4734,10 @@ export default function Pipeline() {
           )}
 
           {/* ── Two-panel layout ── */}
-          <div id="pipeline-leads" className="pipeline-deals-layout flex min-h-0 flex-col gap-2 p-2 sm:p-3 lg:min-h-[calc(100vh-200px)] lg:flex-row">
+          <div id="pipeline-leads" className="pipeline-deals-layout flex flex-col gap-2 p-2 sm:p-3 lg:flex-row lg:items-start">
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
-            <div className="pipeline-list-shell flex min-w-0 flex-1 flex-col gap-1 overflow-y-auto">
+            <div className="pipeline-list-shell flex max-h-none min-w-0 flex-1 flex-col gap-1 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
               {loadUiVisible ? <PipelineLeadsLoadingStrip secondsLeft={loadCountdown} jobsMode={arrivedFromJobs} /> : null}
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-700 bg-[#0d1a33] px-3 py-2">
                 <div>
