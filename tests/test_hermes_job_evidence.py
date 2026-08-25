@@ -61,6 +61,9 @@ def test_sanitize_keeps_named_vendors():
     ]
     assert "automation_fit" not in cleaned
     assert "truth_state" not in cleaned
+
+
+def test_sanitize_hides_card_when_nothing_human_remains():
     overlay = {
         "automation_fit": 98,
         "rationale": "12 signals; work family: unknown",
