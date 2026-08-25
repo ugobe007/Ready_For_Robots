@@ -25,7 +25,8 @@
           "catalog_claims": [
             {"predicate": "product_class", "value": "service_robot", "evidence_span": "ADAM is Richtech's autonomous bar and F&B robot."},
             {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Hospitality and food-service deployments."},
-            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Wheeled indoor service platform."}
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Wheeled indoor service platform."},
+            {"predicate": "claims_beverage_prep", "value": true, "evidence_span": "ADAM is Richtech's autonomous bar and F&B robot."}
           ]
         },
         {
@@ -39,7 +40,8 @@
           "catalog_claims": [
             {"predicate": "product_class", "value": "service_robot", "evidence_span": "Autonomous food and amenity delivery."},
             {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Hotels and restaurants."},
-            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."},
+            {"predicate": "claims_item_delivery", "value": true, "evidence_span": "Autonomous food and amenity delivery."}
           ]
         },
         {
@@ -53,7 +55,8 @@
           "catalog_claims": [
             {"predicate": "product_class", "value": "service_robot", "evidence_span": "High-capacity food and cargo delivery."},
             {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Banquet and restaurant service."},
-            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."},
+            {"predicate": "claims_item_delivery", "value": true, "evidence_span": "High-capacity food and cargo delivery."}
           ]
         },
         {
@@ -67,7 +70,8 @@
           "catalog_claims": [
             {"predicate": "product_class", "value": "service_robot", "evidence_span": "Matradee L delivery robot."},
             {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Hospitality delivery."},
-            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."},
+            {"predicate": "claims_item_delivery", "value": true, "evidence_span": "Matradee L delivery robot."}
           ]
         },
         {
@@ -81,7 +85,8 @@
           "catalog_claims": [
             {"predicate": "product_class", "value": "service_robot", "evidence_span": "Delivery robot with secured drawers."},
             {"predicate": "operating_environment", "value": "healthcare", "evidence_span": "Healthcare and hospitality logistics."},
-            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."},
+            {"predicate": "claims_item_delivery", "value": true, "evidence_span": "Delivery robot with secured drawers."}
           ]
         },
         {
@@ -95,7 +100,8 @@
           "catalog_claims": [
             {"predicate": "product_class", "value": "service_robot", "evidence_span": "Hospital-grade autonomous delivery."},
             {"predicate": "operating_environment", "value": "healthcare", "evidence_span": "Hospitals and clinics."},
-            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."},
+            {"predicate": "claims_item_delivery", "value": true, "evidence_span": "Hospital-grade autonomous delivery."}
           ]
         },
         {
@@ -174,7 +180,8 @@
           "catalog_claims": [
             {"predicate": "product_class", "value": "service_robot", "evidence_span": "Restaurant food-running robot."},
             {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Food service and hospitality floors."},
-            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."},
+            {"predicate": "claims_item_delivery", "value": true, "evidence_span": "Restaurant food-running robot."}
           ]
         },
         {
@@ -189,7 +196,8 @@
           "catalog_claims": [
             {"predicate": "product_class", "value": "service_robot", "evidence_span": "All-floor restaurant delivery robot."},
             {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Restaurants, hotels, and banquets."},
-            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."}
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Indoor delivery AMR."},
+            {"predicate": "claims_item_delivery", "value": true, "evidence_span": "All-floor restaurant delivery robot."}
           ]
         },
         {
@@ -346,6 +354,31 @@
             {"predicate": "operating_environment", "value": "warehouse", "evidence_span": "Trailer unload and warehouse handling."},
             {"predicate": "has_mobile_base", "value": true, "evidence_span": "Mobile warehouse platform."},
             {"predicate": "claims_load_unload", "value": true, "evidence_span": "Case unload from trailers."}
+          ]
+        }
+      ]
+    },
+    {
+      "vendor_name": "Sunday Robotics",
+      "domains": ["sunday.ai"],
+      "vendor_url": "https://www.sunday.ai/",
+      "list_category": "commercial",
+      "robots": [
+        {
+          "name": "Memo",
+          "model_slug": "sunday-memo",
+          "product_url": "https://www.sunday.ai/",
+          "vendor_url": "https://www.sunday.ai/",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "USA",
+          "description": "Helpful home robot for kitchen chores — dishes, dishwasher, espresso — wheeled home helper, not an office biped.",
+          "catalog_claims": [
+            {"predicate": "product_class", "value": "service_robot", "evidence_span": "Sunday Memo is a helpful home robot for kitchen chores."},
+            {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Home kitchens and the same dish, dishwasher, and espresso work in corporate kitchens."},
+            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Wheeled base with passive stability."},
+            {"predicate": "claims_food_prep", "value": true, "evidence_span": "Kitchen chores: clear the table, scrape plates, and load the dishwasher."},
+            {"predicate": "claims_beverage_prep", "value": true, "evidence_span": "Memo makes espresso."}
           ]
         }
       ]

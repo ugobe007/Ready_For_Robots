@@ -106,7 +106,7 @@ import {
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
-import { robotJobCardFromMatch } from "@/lib/robotJobCard";
+import { isNamedRobotJob, robotJobCardFromMatch } from "@/lib/robotJobCard";
 
 /* ------------------------------------------------------------------ */
 /* Types + constants                                                   */
@@ -422,8 +422,8 @@ function searchToAnalysis(res: RobotJobSearchResult): RobotAnalysis {
     profile,
     matched: true,
     capabilities: res.capabilities || [],
-    jobs: res.jobs || [],
-    jobCount: res.job_count || (res.jobs || []).length,
+    jobs: (res.jobs || []).filter(isNamedRobotJob),
+    jobCount: (res.jobs || []).filter(isNamedRobotJob).length,
     zeroReason: res.zero_reason ?? null,
     needsClassChoice: Boolean(res.needs_class_choice),
     classOptions: res.class_options || [],
@@ -2938,6 +2938,7 @@ function JobCard({
   onToggle: () => void;
 }) {
   const card = robotJobCardFromMatch(job);
+  if (!card.employer || !card.workplace) return null;
   const place = [card.employer, card.workplace].filter(Boolean).join(" · ");
   return (
     <li
@@ -2982,11 +2983,11 @@ function JobCard({
           <dl className="grid gap-2 text-[13px] leading-snug text-slate-200">
             <div>
               <dt className={eyebrow}>Employer</dt>
-              <dd className="mt-0.5">{card.employer || "Unknown"}</dd>
+              <dd className="mt-0.5">{card.employer}</dd>
             </div>
             <div>
               <dt className={eyebrow}>Workplace</dt>
-              <dd className="mt-0.5">{card.workplace || "Unknown"}</dd>
+              <dd className="mt-0.5">{card.workplace}</dd>
             </div>
             <div>
               <dt className={eyebrow}>Work being performed</dt>
@@ -3013,7 +3014,7 @@ function JobCard({
                         {" "}
                         ·{" "}
                         {model.presence === "unknown"
-                          ? "Unknown"
+                          ? "Not yet confirmed"
                           : model.presence === "present"
                             ? "Present"
                             : "Absent"}

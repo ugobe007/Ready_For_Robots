@@ -124,6 +124,19 @@ def test_opaque_job_still_asks_for_a_site_task_policy():
     assert "https://research.nvidia.com/labs/gear/gr00t-n1_5/" in urls
 
 
+def test_kitchen_jobs_use_hospitality_policy_not_opaque_site_task():
+    models = required_task_models_for_job(
+        tape_family="food_prep",
+        industry="Corporate dining",
+        title="Clear dishware and load dishwashers in a corporate kitchen",
+        path="DISH RETURN → DISHWASHER",
+        text="clear tables scrape plates bus dishware load dishwasher kitchen chores",
+    )
+    assert "hospitality_kitchen_policy" in _ids(models)
+    assert "site_task_policy" not in _ids(models)
+    assert all(m["presence"] == "unknown" for m in models)
+
+
 def test_novolex_match_card_exposes_unknown_task_models():
     from pathlib import Path
 

@@ -319,6 +319,30 @@ export function robcoPackHonesty(pack = robcoPack): string[] {
   return errors;
 }
 
+const PLACEHOLDER_JOB_NAMES = new Set([
+  "unknown",
+  "[unknown]",
+  "n/a",
+  "na",
+  "none",
+  "tbd",
+  "—",
+  "-",
+]);
+
+/** A Robot Job is named employer + workplace. Incomplete rows are not jobs. */
+export function isNamedRobotJob(job: {
+  company_name?: string | null;
+  locality?: string | null;
+}): boolean {
+  const company = (job.company_name || "").trim();
+  const place = (job.locality || "").trim();
+  if (!company || !place) return false;
+  if (PLACEHOLDER_JOB_NAMES.has(company.toLowerCase())) return false;
+  if (PLACEHOLDER_JOB_NAMES.has(place.toLowerCase())) return false;
+  return true;
+}
+
 function emptyToNull(value?: string | null): string | null {
   const t = (value || "").trim();
   return t ? t : null;

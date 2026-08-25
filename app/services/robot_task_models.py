@@ -32,6 +32,10 @@ _VERTICAL_TOKENS: dict[str, tuple[str, ...]] = {
         "hospital", "clinic", "patient", "nursing", "linen", "or suite",
         "clinical", "pharmacy",
     ),
+    "hospitality": (
+        "kitchen", "restaurant", "cafe", "hotel", "dining", "espresso",
+        "barista", "dishwasher", "hospitality", "cafeteria",
+    ),
     "commercial": ("scrub", "janitorial", "custodial", "floor clean"),
     "utilities": ("inspect", "patrol", "thermal", "leak"),
 }
