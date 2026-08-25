@@ -7,13 +7,16 @@ Improvements over original:
 3. Duplicate Detection: URL + title fingerprinting
 4. Better Entity Extraction: Use ontology to validate buyer personas
 """
+import json
 import re
 import time
 import random
 import hashlib
 import logging
-from typing import Set, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Set
 from bs4 import BeautifulSoup
+from playwright.sync_api import TimeoutError as PWTimeout
+from playwright.sync_api import sync_playwright
 
 from app.scrapers.base_scraper import BaseScraper
 from app.services.ontology import CONCEPTS
@@ -75,6 +78,77 @@ def build_automation_pain_keywords() -> List[str]:
 BUYER_KEYWORDS = build_buyer_persona_keywords()
 PAIN_KEYWORDS = build_automation_pain_keywords()
 
+BUILDER_ROLE_NEEDLES = (
+    "robotics engineer",
+    "robot engineer",
+    "automation engineer",
+    "controls engineer",
+    "mechatronics",
+    "robot programmer",
+    "robot technician",
+    "robot builder",
+    "robotics developer",
+    "firmware engineer",
+    "embedded engineer",
+    "plc programmer",
+)
+
+# Indeed titles are often stems ("Cook", "Server", "Warehouse Worker", "EVS")
+# not the long phrases in LABOR_PAIN_KEYWORDS. Phrase AND stem must both count.
+OPERATIONAL_TITLE_PATTERNS = [
+    re.compile(r"\b((?:line|prep|fry|grill|sous|breakfast|am|pm)\s+)?cooks?\b", re.I),
+    re.compile(r"\b(dish\s?washers?|kitchen (?:staff|helper|worker)|food service)\b", re.I),
+    re.compile(r"\b(crew members?|team members?|baristas?|cashiers?)\b", re.I),
+    re.compile(
+        r"\b(food runners?|bussers?|servers?|host(?:ess|es)?|waitstaff|waiters?)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(housekeep(?:er|ing)?|room attendants?|housepersons?|housemen)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(laundry attendants?|linen|bell(?:man|hop|staff)?|valets?|porters?|"
+        r"concierge|front desk|night audit(?:or)?)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(warehouse (?:worker|associate|clerk|operator)|pickers?|packers?|"
+        r"stockers?|material handlers?|forklift|dock workers?|freight handlers?|"
+        r"fulfillment|receiving|shipping associate)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(patient transporters?|evs|environmental services|dietary aides?|"
+        r"pharmacy technicians?|sterile processing|hospital aides?)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(palletiz(?:er|ing)|pack(?:aging|out|-out|in|-in)(?: line)? operators?)\b",
+        re.I,
+    ),
+]
+
+
+def _is_builder_role(title: str, description: str = "") -> bool:
+    combined = f"{title or ''} {description or ''}".lower()
+    return any(needle in combined for needle in BUILDER_ROLE_NEEDLES)
+
+
+def operational_labor_hits(title: str, description: str = "") -> int:
+    """Phrase keywords plus title stems. Cook / Server / EVS must count."""
+    combined = f"{title or ''} {description or ''}".lower()
+    phrase = sum(1 for kw in LABOR_PAIN_KEYWORDS if kw in combined)
+    stems = sum(1 for pattern in OPERATIONAL_TITLE_PATTERNS if pattern.search(combined))
+    return phrase + stems
+
+
+def is_operational_robot_job(title: str, description: str = "") -> bool:
+    if _is_builder_role(title, description):
+        return False
+    return operational_labor_hits(title, description) > 0
+
+
 def calculate_job_relevancy_score(title: str, description: str) -> float:
     """
     Score job posting relevancy from 0.0-1.0.
@@ -82,28 +156,27 @@ def calculate_job_relevancy_score(title: str, description: str) -> float:
     LOW score = robotics engineer, robot builder (filter these out!)
     """
     combined = f"{title} {description}".lower()
-    
-    # FILTER OUT: Engineering/builder roles (these are NOT buyers)
-    engineering_patterns = [
-        'robotics engineer', 'robot engineer', 'automation engineer',
-        'controls engineer', 'mechatronics', 'robot programmer',
-        'robot technician', 'robot builder', 'robotics developer',
-        'firmware engineer', 'embedded engineer', 'plc programmer',
-    ]
-    if any(pattern in combined for pattern in engineering_patterns):
-        return 0.0  # REJECT: These are builders, not buyers
-    
+
+    if _is_builder_role(title, description):
+        return 0.0
+
     # BOOST: Buyer persona matches
     buyer_matches = 0
     for keyword in BUYER_KEYWORDS:
-        if isinstance(keyword, str):
+        if isinstance(keyword, str) and any(ch in keyword for ch in ".{?*+"):
+            if re.search(keyword, combined, re.I):
+                buyer_matches += 1
+        elif isinstance(keyword, str):
             if keyword.lower() in combined:
                 buyer_matches += 1
-        else:  # regex pattern
-            if re.search(keyword, combined):
-                buyer_matches += 1
-    
-    # BOOST: Labor pain signals
+        elif re.search(keyword, combined):
+            buyer_matches += 1
+    if any(p.search(title or "") for p in BUYER_PERSONA_PATTERNS):
+        buyer_matches = max(buyer_matches, 1)
+    if any(p.search(title or "") for p in AUTOMATION_INTENT_PATTERNS):
+        buyer_matches = max(buyer_matches, 1)
+
+    # BOOST: Labor pain signals (ontology)
     pain_matches = 0
     for keyword in PAIN_KEYWORDS:
         if isinstance(keyword, str):
@@ -112,11 +185,15 @@ def calculate_job_relevancy_score(title: str, description: str) -> float:
         else:  # regex pattern
             if re.search(keyword, combined):
                 pain_matches += 1
-    
-    # Score calculation
-    # Buyer persona = high signal (executives who approve budgets)
-    # Labor pain = medium signal (operational challenges = automation need)
-    score = min(1.0, (buyer_matches * 0.20) + (pain_matches * 0.10))
+
+    # BOOST: Operational Robot Job titles — phrases and stems (Cook, EVS, …)
+    labor_matches = operational_labor_hits(title, description)
+
+    # Buyer persona = high signal; operational title = Robot Job; ontology pain = extra
+    score = min(
+        1.0,
+        (buyer_matches * 0.20) + (pain_matches * 0.10) + (labor_matches * 0.25),
+    )
     return score
 
 # ─── DUPLICATE DETECTION ───────────────────────────────────────────────────────
@@ -157,6 +234,10 @@ LABOR_PAIN_KEYWORDS = [
     "patient transport", "environmental services", "sterile processing",
     "pharmacy technician", "dietary aide", "hospital aide", "EVS tech",
     "linen service", "supply chain tech",
+    "picker", "stocker", "housekeeping", "food service worker",
+    "patient transporter",
+    "warehouse worker", "night auditor", "houseperson",
+    "palletizer", "packaging line",
 ]
 
 PAIN_SIGNALS = [
@@ -190,6 +271,128 @@ def _is_buyer_persona(title: str) -> bool:
 def _is_automation_intent(title: str) -> bool:
     """Senior ops/efficiency exec who will champion an automation initiative."""
     return any(p.search(title) for p in AUTOMATION_INTENT_PATTERNS)
+
+
+CHALLENGE_MARKERS = (
+    "just a moment",
+    "unusual traffic",
+    "enable javascript",
+    "captcha",
+    "verify you are human",
+    "blocked",
+)
+
+JOB_CARD_SELECTORS = (
+    "div.job_seen_beacon, "
+    "div.base-card, "
+    "article.jobsearch-result, "
+    ".SerpJob-jobCard, "
+    "div.SerpJob, "
+    "[data-testid='searchSerpJob'], "
+    "[data-testid='jobCard'], "
+    ".job-listing, "
+    "article.posting"
+)
+
+
+def _text(el) -> str:
+    if el is None:
+        return ""
+    attr = (el.get("title") or el.get("aria-label") or "").strip()
+    body = el.get_text(" ", strip=True)
+    return attr or body
+
+
+def _jsonld_locality(location: Any) -> str:
+    if isinstance(location, list) and location:
+        location = location[0]
+    if not isinstance(location, dict):
+        return ""
+    address = location.get("address") or location
+    if isinstance(address, list) and address:
+        address = address[0]
+    if not isinstance(address, dict):
+        return str(location.get("name") or "")
+    city = (address.get("addressLocality") or "").strip()
+    region = (address.get("addressRegion") or "").strip()
+    return ", ".join(part for part in (city, region) if part)
+
+
+def iter_jsonld_job_postings(soup: BeautifulSoup) -> Iterable[dict]:
+    for script in soup.select("script[type='application/ld+json']"):
+        raw = script.string or script.get_text() or ""
+        if not raw.strip():
+            continue
+        try:
+            data = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        items: List[Any]
+        if isinstance(data, list):
+            items = data
+        elif isinstance(data, dict) and "@graph" in data:
+            graph = data.get("@graph")
+            items = graph if isinstance(graph, list) else [graph]
+        else:
+            items = [data]
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            types = item.get("@type")
+            type_list = types if isinstance(types, list) else [types]
+            if "JobPosting" not in type_list:
+                continue
+            yield item
+
+
+def jsonld_card(item: dict) -> Optional[Dict[str, str]]:
+    title = (item.get("title") or "").strip()
+    if not title:
+        return None
+    org = item.get("hiringOrganization") or {}
+    if isinstance(org, list):
+        org = org[0] if org else {}
+    company = ""
+    if isinstance(org, dict):
+        company = (org.get("name") or "").strip()
+    elif isinstance(org, str):
+        company = org.strip()
+    desc_html = item.get("description") or ""
+    desc = BeautifulSoup(str(desc_html), "html.parser").get_text(" ", strip=True)
+    return {
+        "title": title,
+        "company": company,
+        "location": _jsonld_locality(item.get("jobLocation")),
+        "desc": desc,
+        "url": (item.get("url") or "").strip(),
+    }
+
+
+def card_fields_from_element(post) -> Dict[str, str]:
+    title_el = post.select_one(
+        "h2.jobTitle span[title], a.jcs-JobTitle span[title], a.jcs-JobTitle, "
+        ".jobposting-title, [data-testid='jobTitle'], h2.jobTitle, "
+        "h2, h3, .jobTitle, .job-title"
+    )
+    company_el = post.select_one(
+        "[data-testid='company-name'], [data-testid='companyName'], "
+        "[data-testid='searchSerpJob-companyName'], "
+        ".companyName, span.companyName, .jobposting-company, .company, .org"
+    )
+    location_el = post.select_one(
+        "[data-testid='text-location'], .companyLocation, "
+        ".jobposting-location, .location"
+    )
+    desc_el = post.select_one(
+        "[data-testid='job-snippet'], .job-snippet, .jobposting-snippet, .description"
+    )
+    return {
+        "title": _text(title_el),
+        "company": _text(company_el),
+        "location": _text(location_el),
+        "desc": _text(desc_el),
+        "url": "",
+    }
 
 
 class EnhancedJobBoardScraper(BaseScraper):
@@ -245,89 +448,170 @@ class EnhancedJobBoardScraper(BaseScraper):
         return False
 
     def _is_relevant(self, title: str, description: str, threshold: float = 0.15) -> bool:
-        """
-        Filter out irrelevant job postings using ontology-based scoring.
-        
-        Filters out:
-        - Robotics engineers, robot builders (NOT buyers)
-        - Unrelated industries
-        - Low labor pain signals
-        """
+        """Keep operational Robot Jobs and buyer hires; drop robot-builder roles."""
         score = calculate_job_relevancy_score(title, description)
         is_relevant = score >= threshold
-        
         if not is_relevant:
             logger.debug(f"[JobBoardScraper] Filtered (score={score:.2f}): {title[:60]}...")
-        
         return is_relevant
+
+    def _run_bare(self, start_urls: list):
+        """Wait for mosaic cards / JSON-LD so Indeed SPA HTML is actually present."""
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=self.headless)
+            context = browser.new_context(user_agent=self._random_user_agent())
+            for url in start_urls:
+                try:
+                    def visit():
+                        page = context.new_page()
+                        page.goto(url, timeout=45000)
+                        try:
+                            page.wait_for_selector(
+                                "div.job_seen_beacon, .SerpJob-jobCard, "
+                                "script[type='application/ld+json']",
+                                timeout=8000,
+                            )
+                        except PWTimeout:
+                            logger.warning(
+                                "[JobBoardScraper] no job cards/jsonld within 8s url=%s",
+                                url,
+                            )
+                        content = page.content()
+                        page.close()
+                        return content
+
+                    html = self._retry(visit)
+                    self.parse(html, url)
+                except PWTimeout:
+                    logger.error("Timeout visiting %s", url)
+                except Exception as e:
+                    logger.exception("Error scraping %s: %s", url, e)
+            browser.close()
+
+    def _collect_cards(self, soup: BeautifulSoup, page_url: str) -> List[Dict[str, str]]:
+        postings = soup.select(JOB_CARD_SELECTORS)
+        if not postings:
+            postings = soup.select(".result, .posting")
+        css_cards = [card_fields_from_element(post) for post in postings]
+        jsonld_cards = [
+            card for card in (jsonld_card(item) for item in iter_jsonld_job_postings(soup)) if card
+        ]
+        by_title = {
+            normalize_job_title(card["title"]): card
+            for card in jsonld_cards
+            if card.get("title")
+        }
+        for card in css_cards:
+            if card.get("company"):
+                continue
+            match = by_title.get(normalize_job_title(card.get("title") or ""))
+            if match and match.get("company"):
+                card["company"] = match["company"]
+                if not card.get("location"):
+                    card["location"] = match.get("location") or ""
+                if not card.get("desc"):
+                    card["desc"] = match.get("desc") or ""
+        cards = css_cards
+        if not cards:
+            cards = jsonld_cards
+            for card in cards:
+                if not card.get("url"):
+                    card["url"] = page_url
+        if not cards:
+            blob = soup.get_text(" ", strip=True).lower()
+            if any(marker in blob for marker in CHALLENGE_MARKERS):
+                logger.warning("[JobBoardScraper] challenge/empty page url=%s", page_url)
+        return cards
+
+    def _persist_robot_job(
+        self,
+        *,
+        extract: dict,
+        company_id: Optional[int],
+        company_name: str,
+        title: str,
+        desc: str,
+        source_url: str,
+    ) -> bool:
+        try:
+            row = upsert_robot_job_from_extract(
+                self.db,
+                company_id=company_id,
+                extract=extract,
+                source_url=source_url,
+            )
+            if row is None:
+                logger.warning(
+                    "[JobBoardScraper] robot_jobs upsert returned none for %s",
+                    title[:80],
+                )
+                return False
+            close = status_from_evidence(
+                employer=company_name,
+                job_title=title,
+                job_function=extract.get("job_function"),
+                evidence_text=desc,
+            )
+            apply_closeout_to_job(row, close)
+            self.db.commit()
+            return True
+        except Exception:
+            logger.exception("[JobBoardScraper] robot_jobs persist skipped for %s", title[:80])
+            try:
+                self.db.rollback()
+            except Exception:
+                pass
+            return False
 
     def parse(self, html: str, url: str):
         """
         Enhanced parsing with relevancy filtering and duplicate detection.
         """
         self._rate_limit()
-        
+
         soup = BeautifulSoup(html, "html.parser")
+        cards = self._collect_cards(soup, url)
 
-        postings = (
-            soup.select("div.job_seen_beacon")      # Indeed
-            or soup.select("div.base-card")          # LinkedIn
-            or soup.select("article.jobsearch-result")
-            or soup.select(".job-listing, .result, .posting")
-        )
+        logger.info(f"[JobBoardScraper] Found {len(cards)} job postings from {url}")
+        skipped_no_company = skipped_relevancy = skipped_no_pain = 0
+        kept_robot_job = kept_hire = 0
 
-        logger.info(f"[JobBoardScraper] Found {len(postings)} job postings from {url}")
-
-        for post in postings:
-            title_el    = post.select_one("h2, h3, .jobTitle, .job-title")
-            company_el  = post.select_one(".companyName, .company, .org, [data-testid='company-name']")
-            location_el = post.select_one(".companyLocation, .location, [data-testid='text-location']")
-            desc_el     = post.select_one(".job-snippet, .description, p")
-
-            title        = title_el.get_text(strip=True) if title_el else ""
-            company_name = company_el.get_text(strip=True) if company_el else None
-            location     = location_el.get_text(strip=True) if location_el else ""
-            desc         = desc_el.get_text(strip=True) if desc_el else ""
-            full_text    = f"{title} {desc}".lower()
+        for card in cards:
+            title = card.get("title") or ""
+            company_name = (card.get("company") or "").strip() or None
+            location = card.get("location") or ""
+            desc = card.get("desc") or ""
+            source_url = card.get("url") or url
 
             if not company_name:
+                skipped_no_company += 1
                 continue
 
-            # --- DUPLICATE CHECK ---
             if self._is_duplicate(title, company_name):
                 continue
 
-            # --- RELEVANCY CHECK (Filter out robotics engineers!) ---
             if not self._is_relevant(title, desc):
+                skipped_relevancy += 1
                 continue
 
-            # --- Buyer persona hire (operations decision-maker) — SIGNAL leftover ---
             robot_job_extract = None
             if _is_buyer_persona(title):
                 strength = 0.80
                 sig_type = "strategic_hire"
                 summary_text = f"Buyer persona hire: {title}"
-
-            # --- Automation intent hire (efficiency / digital transformation exec) ---
             elif _is_automation_intent(title):
                 strength = 0.72
                 sig_type = "automation_intent"
                 summary_text = f"Automation intent hire: {title}"
-
-            # --- Operational work = Robot Job (title, pay, specs when evidenced) ---
-            else:
-                pain_score   = sum(1 for kw in LABOR_PAIN_KEYWORDS if kw in full_text)
-                urgency_score = sum(1 for p in PAIN_SIGNALS if p in full_text)
-
-                if pain_score == 0:
-                    continue
-
+            elif is_operational_robot_job(title, desc):
+                pain_score = operational_labor_hits(title, desc)
+                urgency_score = sum(1 for p in PAIN_SIGNALS if p in f"{title} {desc}".lower())
                 job = extract_robot_job(
                     title=title,
                     description=desc,
                     company=company_name,
                     locality=location,
-                    source_url=url,
+                    source_url=source_url,
                 )
                 posting_state = status_from_posting_text(desc)
                 job["status"] = posting_state["status"]
@@ -335,14 +619,18 @@ class EnhancedJobBoardScraper(BaseScraper):
                 sig_type = "robot_job"
                 summary_text = format_robot_job_signal(job)
                 robot_job_extract = job
+            else:
+                # Relevancy passed via ontology/buyer keywords, but this is not
+                # operational work (e.g. generic GM). Do not invent a Robot Job.
+                skipped_no_pain += 1
+                continue
 
             parts = location.split(",")
-            city  = parts[0].strip() if parts else location
+            city = parts[0].strip() if parts else location
             state = parts[1].strip() if len(parts) > 1 else ""
 
-            # Infer industry from the URL query we used to find this posting
             industry = "Unknown"
-            url_lower = url.lower()
+            url_lower = source_url.lower()
             if any(w in url_lower for w in ["hotel", "hospitality", "resort", "housekeep", "valet", "bell"]):
                 industry = "Hospitality"
             elif any(w in url_lower for w in ["warehouse", "fulfillment", "logistics", "supply", "distribution", "dock"]):
@@ -359,43 +647,52 @@ class EnhancedJobBoardScraper(BaseScraper):
                 "location_city": city,
                 "location_state": state,
                 "location_country": "US",
-                "source": url,
+                "source": source_url,
             })
             if company is None:
-                logger.debug(
-                    "[JobBoardScraper] company rejected, posting skipped: %s",
-                    company_name[:80],
-                )
+                skipped_no_company += 1
+                if robot_job_extract is not None and self._persist_robot_job(
+                    extract=robot_job_extract,
+                    company_id=None,
+                    company_name=company_name,
+                    title=title,
+                    desc=desc,
+                    source_url=source_url,
+                ):
+                    kept_robot_job += 1
                 continue
 
             self.save_signal(company.id, {
                 "signal_type": sig_type,
                 "signal_text": summary_text,
                 "signal_strength": strength,
-                "source_url": url,
+                "source_url": source_url,
             })
+            if robot_job_extract is None:
+                kept_hire += 1
+            elif self._persist_robot_job(
+                extract=robot_job_extract,
+                company_id=company.id,
+                company_name=company_name,
+                title=title,
+                desc=desc,
+                source_url=source_url,
+            ):
+                kept_robot_job += 1
 
-            if robot_job_extract is not None:
-                try:
-                    row = upsert_robot_job_from_extract(
-                        self.db,
-                        company_id=company.id,
-                        extract=robot_job_extract,
-                        source_url=url,
-                    )
-                    close = status_from_evidence(
-                        employer=company_name,
-                        job_title=title,
-                        job_function=robot_job_extract.get("job_function"),
-                        evidence_text=desc,
-                    )
-                    apply_closeout_to_job(row, close)
-                    self.db.commit()
-                except Exception:
-                    logger.exception("[JobBoardScraper] robot_jobs persist skipped for %s", title[:80])
-                    try:
-                        self.db.rollback()
-                    except Exception:
-                        pass
-
-        logger.info(f"[JobBoardScraper] Session stats: {self.request_count} requests, {len(self.session_seen_fingerprints)} unique jobs seen")
+        logger.info(
+            "[JobBoardScraper] page yield found=%d robot_jobs=%d hires=%d "
+            "skipped_relevancy=%d skipped_no_company=%d skipped_no_pain=%d url=%s",
+            len(cards),
+            kept_robot_job,
+            kept_hire,
+            skipped_relevancy,
+            skipped_no_company,
+            skipped_no_pain,
+            url,
+        )
+        logger.info(
+            "[JobBoardScraper] Session stats: %s requests, %s unique jobs seen",
+            self.request_count,
+            len(self.session_seen_fingerprints),
+        )

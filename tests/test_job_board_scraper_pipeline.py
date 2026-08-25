@@ -2,7 +2,10 @@
 from unittest.mock import MagicMock, patch
 
 from app.runtime_role import celery_disabled
-from app.scrapers.job_board_scraper_enhanced import EnhancedJobBoardScraper
+from app.scrapers.job_board_scraper_enhanced import (
+    EnhancedJobBoardScraper,
+    calculate_job_relevancy_score,
+)
 from app.scrapers.scrape_targets import get_urls
 from app.services.job_board_scraper_runner import (
     DEFAULT_INDUSTRY_ROTATION,
@@ -19,7 +22,17 @@ def test_job_board_urls_match_lowercase_beat_kwargs():
     )
     assert len(get_urls("job_board", industry="logistics")) >= 8
     assert len(get_urls("job_board", industry="healthcare")) >= 8
-    assert get_urls("job_board", industry="hospitality") == job_board_urls(industry="hospitality")
+    hospitality = set(get_urls("job_board", industry="hospitality"))
+    assert set(job_board_urls(industry="hospitality")) <= hospitality
+
+
+def test_job_board_urls_prefer_robot_job_targets():
+    urls = job_board_urls(industry="Hospitality")
+    assert "housekeeper" in urls[0]
+    simplyhired = [u for u in urls if "simplyhired.com" in u and "housekeeper" in u]
+    vp = [u for u in urls if "VP+Director+rooms" in u or "VP+Director+operations" in u]
+    if simplyhired and vp:
+        assert urls.index(simplyhired[0]) < urls.index(vp[0])
 
 
 def test_scheduled_rotation_covers_core_verticals(monkeypatch):
@@ -63,6 +76,82 @@ def test_empty_url_list_does_not_launch_playwright():
     assert result["reason"] == "no_urls"
 
 
+def test_operational_titles_pass_relevancy_and_builders_fail():
+    assert calculate_job_relevancy_score("Line Cook", "Immediate hire. Multiple openings.") >= 0.15
+    assert calculate_job_relevancy_score(
+        "Hotel Housekeeper / Room Attendant", "Hiring now."
+    ) >= 0.15
+    assert calculate_job_relevancy_score(
+        "Warehouse Associate - Order Picker", "Night shift."
+    ) >= 0.15
+    assert calculate_job_relevancy_score(
+        "Patient Transporter", "Hospital environmental services."
+    ) >= 0.15
+    assert calculate_job_relevancy_score("Cook", "Immediate hire.") >= 0.15
+    assert calculate_job_relevancy_score("Server", "Multiple openings.") >= 0.15
+    assert calculate_job_relevancy_score("Warehouse Worker", "Night shift.") >= 0.15
+    assert calculate_job_relevancy_score("EVS Technician", "Hospital floors.") >= 0.15
+    assert calculate_job_relevancy_score("Palletizer Operator", "Packaging line.") >= 0.15
+    assert calculate_job_relevancy_score(
+        "Robotics Engineer", "Build AMR firmware for our robot."
+    ) == 0.0
+    assert calculate_job_relevancy_score(
+        "VP of Operations", "Distribution network."
+    ) >= 0.15
+
+
+def test_line_cook_parse_persists_robot_job_without_relevancy_patch():
+    html = """
+    <div class="job_seen_beacon">
+      <h2>Line Cook</h2>
+      <div class="companyName">Chipotle</div>
+      <div class="companyLocation">Austin, TX</div>
+      <div class="job-snippet">Prep cook. Immediate hire. Multiple openings. $18 an hour.</div>
+    </div>
+    """
+    scraper = EnhancedJobBoardScraper()
+    scraper.db = MagicMock()
+    company = MagicMock()
+    company.id = 7
+    scraper.save_company = MagicMock(return_value=company)
+    scraper.save_signal = MagicMock()
+    with patch(
+        "app.scrapers.job_board_scraper_enhanced.upsert_robot_job_from_extract",
+        return_value=MagicMock(),
+    ) as upsert:
+        scraper.parse(html, "https://www.indeed.com/jobs?q=line+cook")
+    scraper.save_signal.assert_called_once()
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
+    upsert.assert_called_once()
+
+
+def test_simplyhired_card_is_parsed():
+    html = """
+    <div class="SerpJob-jobCard">
+      <h3 class="jobposting-title">Hotel Housekeeper</h3>
+      <span class="jobposting-company">Hilton</span>
+      <p class="jobposting-snippet">Room attendant. Immediate hire. Multiple openings.</p>
+    </div>
+    """
+    scraper = EnhancedJobBoardScraper()
+    scraper.db = MagicMock()
+    company = MagicMock()
+    company.id = 9
+    scraper.save_company = MagicMock(return_value=company)
+    scraper.save_signal = MagicMock()
+    with patch(
+        "app.scrapers.job_board_scraper_enhanced.upsert_robot_job_from_extract",
+        return_value=MagicMock(),
+    ) as upsert:
+        scraper.parse(
+            html,
+            "https://www.simplyhired.com/search?q=housekeeper+room+attendant+hotel",
+        )
+    scraper.save_signal.assert_called_once()
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
+    upsert.assert_called_once()
+
+
 def test_rejected_company_does_not_abort_remaining_postings():
     html = """
     <div class="job_seen_beacon">
@@ -95,15 +184,14 @@ def test_rejected_company_does_not_abort_remaining_postings():
     with patch(
         "app.scrapers.job_board_scraper_enhanced.upsert_robot_job_from_extract",
         return_value=MagicMock(),
-    ), patch(
-        "app.scrapers.job_board_scraper_enhanced.calculate_job_relevancy_score",
-        return_value=0.5,
-    ):
+    ) as upsert:
         scraper.parse(html, "https://www.indeed.com/jobs?q=warehouse+associate")
     assert saved == ["Acme Fulfillment LLC"]
     scraper.save_signal.assert_called_once()
     assert scraper.save_signal.call_args[0][0] == 42
     assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
+    # Rejected name still upserts a Robot Job with no company_id; valid name follows.
+    assert upsert.call_count == 2
 
 
 def test_job_board_scheduler_starts_beside_intelligence(monkeypatch):
@@ -197,3 +285,107 @@ def test_run_job_boards_uses_in_process_when_celery_skipped(monkeypatch):
     assert body["mode"] == "in_process"
     assert body["scraper_type"] == "job_boards"
     assert called.get("ran") is True
+
+
+def _parse_with_upsert(html: str, url: str):
+    scraper = EnhancedJobBoardScraper()
+    scraper.db = MagicMock()
+    company = MagicMock()
+    company.id = 7
+    scraper.save_company = MagicMock(return_value=company)
+    scraper.save_signal = MagicMock()
+    upsert = MagicMock(return_value=MagicMock())
+    with patch(
+        "app.scrapers.job_board_scraper_enhanced.upsert_robot_job_from_extract",
+        upsert,
+    ):
+        scraper.parse(html, url)
+    return scraper, upsert
+
+
+def test_short_operational_titles_persist_as_robot_jobs():
+    html = """
+    <div class="job_seen_beacon">
+      <h2>Cook</h2>
+      <div class="companyName">Local Diner</div>
+      <div class="companyLocation">Austin, TX</div>
+      <div class="job-snippet">Immediate hire. Multiple openings.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(html, "https://www.indeed.com/jobs?q=line+cook")
+    scraper.save_signal.assert_called_once()
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
+    upsert.assert_called_once()
+
+
+def test_palletizer_does_not_die_on_second_pain_gate():
+    html = """
+    <div class="job_seen_beacon">
+      <h2>Palletizer Operator</h2>
+      <div class="companyName">Acme Foods</div>
+      <div class="companyLocation">Memphis, TN</div>
+      <div class="job-snippet">Packaging line. Immediate hire.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=palletizer+operator"
+    )
+    scraper.save_signal.assert_called_once()
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
+    upsert.assert_called_once()
+
+
+def test_jsonld_jobposting_persists_without_css_cards():
+    html = """
+    <script type="application/ld+json">
+    {
+      "@type": "JobPosting",
+      "title": "Warehouse Worker",
+      "description": "Night shift picker. Immediate hire.",
+      "hiringOrganization": {"@type": "Organization", "name": "GXO Logistics"},
+      "jobLocation": {
+        "@type": "Place",
+        "address": {"addressLocality": "Allentown", "addressRegion": "PA"}
+      }
+    }
+    </script>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=warehouse+associate"
+    )
+    scraper.save_signal.assert_called_once()
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
+    upsert.assert_called_once()
+
+
+def test_indeed_testid_company_is_parsed():
+    html = """
+    <div class="job_seen_beacon">
+      <h2 class="jobTitle"><a class="jcs-JobTitle"><span title="Server">Server</span></a></h2>
+      <span data-testid="company-name">Hilton</span>
+      <div data-testid="text-location">Dallas, TX</div>
+      <div data-testid="job-snippet">Food runner. Multiple openings.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=food+runner+busser+server"
+    )
+    scraper.save_signal.assert_called_once()
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
+    upsert.assert_called_once()
+
+
+def test_generic_gm_is_not_a_robot_job():
+    html = """
+    <div class="job_seen_beacon">
+      <h2>General Manager</h2>
+      <div class="companyName">Acme Holdings LLC</div>
+      <div class="companyLocation">Austin, TX</div>
+      <div class="job-snippet">Lead the business unit.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=General+Manager"
+    )
+    upsert.assert_not_called()
+    scraper.save_signal.assert_not_called()
