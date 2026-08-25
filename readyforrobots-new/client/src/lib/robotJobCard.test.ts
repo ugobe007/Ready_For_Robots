@@ -7,6 +7,7 @@ import {
   robcoJobCards,
   robcoPackHonesty,
   robotJobCardFromMatch,
+  isNamedRobotJob,
   JOB_CARD_MODEL_LINK_CAP,
   JOB_CARD_OPEN_QUESTION_CAP,
   cardModelLinks,
@@ -37,6 +38,21 @@ describe("robotJobCard", () => {
     expect(card.currentLabor).toBeNull();
     expect(card.openQuestions).toEqual(["How much of role is tend vs program"]);
     expect(card.nextStep).toMatch(/Site assessment/i);
+  });
+
+  it("rejects incomplete rows that are not Robot Jobs", () => {
+    expect(
+      isNamedRobotJob({ company_name: null, locality: "Seattle, WA" }),
+    ).toBe(false);
+    expect(
+      isNamedRobotJob({ company_name: "Starbucks", locality: "Unknown" }),
+    ).toBe(false);
+    expect(
+      isNamedRobotJob({
+        company_name: "Starbucks",
+        locality: "Seattle, WA",
+      }),
+    ).toBe(true);
   });
 
   it("does not score a matcher hit as Qualified without user or employer feedback", () => {
@@ -328,5 +344,7 @@ describe("robotJobCard", () => {
     expect(cardSrc).toMatch(/qualificationHint/);
     expect(cardSrc).not.toMatch(/Possible match/);
     expect(cardSrc).not.toMatch(/>Qualified</);
+    expect(cardSrc).not.toMatch(/\|\| "Unknown"/);
+    expect(cardSrc).toMatch(/Not yet confirmed/);
   });
 });

@@ -175,6 +175,36 @@ def load_corpus() -> tuple[dict[str, Any], ...]:
     return tuple(data.get("jobs") or [])
 
 
+_PLACEHOLDER_JOB_NAMES = frozenset(
+    {"", "unknown", "[unknown]", "n/a", "na", "none", "tbd", "—", "-"}
+)
+
+
+def is_named_robot_job(
+    company_name: str | None = None,
+    locality: str | None = None,
+    *,
+    card: JobMatchCard | None = None,
+    row: dict[str, Any] | None = None,
+) -> bool:
+    """A Robot Job is named employer + workplace. Templates are not jobs."""
+    if card is not None:
+        company_name = card.company_name
+        locality = card.locality
+    elif row is not None:
+        company_name = row.get("company_name")
+        locality = row.get("locality")
+    company = str(company_name or "").strip()
+    place = str(locality or "").strip()
+    if not company or not place:
+        return False
+    if company.lower() in _PLACEHOLDER_JOB_NAMES:
+        return False
+    if place.lower() in _PLACEHOLDER_JOB_NAMES:
+        return False
+    return True
+
+
 def _cap(caps: dict[str, DerivedCapability], key: str) -> DerivedCapability:
     return caps.get(key) or DerivedCapability(key, key, False, "explicit")
 
@@ -875,7 +905,11 @@ def match_jobs_from_profile(
             }
         cards.append(evaluate_job(profile, spec, corpus_row=row))
 
-    possible = [c for c in cards if c.verdict == VERDICT_POSSIBLE]
+    possible = [
+        c
+        for c in cards
+        if c.verdict == VERDICT_POSSIBLE and is_named_robot_job(card=c)
+    ]
     gold_keys = set(load_gold_jobs())
 
     def rank_key(c: JobMatchCard) -> tuple:

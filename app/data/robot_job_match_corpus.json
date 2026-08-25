@@ -230,8 +230,8 @@
       "title": "Return empty pharma totes",
       "industry": "Specialty pharma",
       "path": "PACK → OPERATING AREA",
-      "company_name": null,
-      "locality": null,
+      "company_name": "CuraScript SD",
+      "locality": "Tempe, AZ",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -248,8 +248,8 @@
       "title": "Deliver medication carts",
       "industry": "Healthcare",
       "path": "PHARMACY → PATIENT UNITS",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Mercy General Hospital",
+      "locality": "Columbus, OH",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -266,8 +266,8 @@
       "title": "Move aircraft production kits",
       "industry": "Aerospace",
       "path": "KITTING → PRODUCTION LINE",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Intuitive Surgical",
+      "locality": "United States (med-device mfg)",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -284,8 +284,8 @@
       "title": "Return empty carts to pack",
       "industry": "Pharmacy DC",
       "path": "SHIP → PACK",
-      "company_name": null,
-      "locality": null,
+      "company_name": "CuraScript SD",
+      "locality": "Tempe, AZ",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -302,8 +302,8 @@
       "title": "Deliver hospital par carts",
       "industry": "Hospital",
       "path": "SUPPLY → PATIENT FLOOR",
-      "company_name": null,
-      "locality": null,
+      "company_name": "St. Anne Medical Center",
+      "locality": "Toledo, OH",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -320,8 +320,8 @@
       "title": "Scrub airport concourses overnight",
       "industry": "Airport",
       "path": "CONCOURSE · OVERNIGHT",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Unifi (airport floor tech)",
+      "locality": "ATL — Atlanta, GA",
       "families": [
         "floor_scrub"
       ],
@@ -337,8 +337,8 @@
       "title": "Scrub hospital corridors",
       "industry": "Healthcare",
       "path": "EVS · NIGHT ROUTES",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Harris Health — LBJ Hospital",
+      "locality": "Houston, TX",
       "families": [
         "floor_scrub"
       ],
@@ -354,8 +354,8 @@
       "title": "Replenish point-of-use",
       "industry": "Med device",
       "path": "STORES → PRODUCTION",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Intuitive Surgical",
+      "locality": "United States (med-device mfg)",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -372,8 +372,8 @@
       "title": "Move pick carts to pack",
       "industry": "Apparel fulfillment",
       "path": "PICK MODULE → PACK",
-      "company_name": null,
-      "locality": null,
+      "company_name": "SanMar",
+      "locality": "Avondale, AZ",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -390,8 +390,8 @@
       "title": "Scrub mall common areas",
       "industry": "Retail",
       "path": "CONCOURSE · OVERNIGHT",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Mall of America",
+      "locality": "Bloomington, MN",
       "families": [
         "floor_scrub"
       ],
@@ -407,8 +407,8 @@
       "title": "Stack finished cases",
       "industry": "Manufacturing",
       "path": "CONVEYOR → PALLET",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Novolex (Pactiv Evergreen)",
+      "locality": "Kinston, NC",
       "families": [
         "manipulator",
         "mobile_manipulation"
@@ -425,8 +425,8 @@
       "title": "Load parts into CNC",
       "industry": "Machine shop",
       "path": "STAGING → SPINDLE",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Fulcrum Technologies",
+      "locality": "Tualatin, OR",
       "families": [
         "manipulator",
         "mobile_manipulation"
@@ -443,8 +443,8 @@
       "title": "Inspect gauges",
       "industry": "Industrial",
       "path": "ROUTE → EQUIPMENT",
-      "company_name": null,
-      "locality": null,
+      "company_name": "OFI",
+      "locality": "Lenoir City, TN",
       "families": [
         "inspection_mobile"
       ],
@@ -460,8 +460,8 @@
       "title": "Inspect electrical panels",
       "industry": "Utilities",
       "path": "PLANT → PANEL",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Siemens Energy",
+      "locality": "Charlotte, NC",
       "families": [
         "inspection_mobile"
       ],
@@ -477,8 +477,8 @@
       "title": "Unload finished parts",
       "industry": "Machine shop",
       "path": "SPINDLE → BIN",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Industrial Metal Supply",
+      "locality": "Riverside, CA",
       "families": [
         "manipulator",
         "mobile_manipulation"
@@ -495,8 +495,8 @@
       "title": "Move orders to staging",
       "industry": "Fulfillment",
       "path": "PACK → STAGING",
-      "company_name": null,
-      "locality": null,
+      "company_name": "SanMar",
+      "locality": "Avondale, AZ",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -513,8 +513,8 @@
       "title": "Return empty totes",
       "industry": "Manufacturing",
       "path": "PROCESS LINE → SUPPLY",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Novolex (Pactiv Evergreen)",
+      "locality": "Kinston, NC",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -531,8 +531,8 @@
       "title": "Move completed orders",
       "industry": "Auto parts DC",
       "path": "PICK → SHIPPING",
-      "company_name": null,
-      "locality": null,
+      "company_name": "NAPA Auto Parts",
+      "locality": "Duncansville, PA",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -549,8 +549,8 @@
       "title": "Move shipping totes",
       "industry": "Auto parts",
       "path": "ZONE → ZONE",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Replacement Parts / Crow Burlingame",
+      "locality": "Little Rock, AR",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -567,8 +567,8 @@
       "title": "Scrub campus floors",
       "industry": "Education",
       "path": "HARD FLOOR · RECURRING",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Johns Hopkins University",
+      "locality": "Baltimore, MD",
       "families": [
         "floor_scrub"
       ],
@@ -584,8 +584,8 @@
       "title": "Scrub production floors",
       "industry": "Industrial",
       "path": "WAREHOUSE · PRODUCTION",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Industrial facility (via Surge Staffing)",
+      "locality": "Joliet, IL",
       "families": [
         "floor_scrub"
       ],
@@ -601,8 +601,8 @@
       "title": "Build outbound pallets",
       "industry": "Fulfillment",
       "path": "PACK → DOCK",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Piedmont Candy Company",
+      "locality": "Lexington, NC",
       "families": [
         "manipulator",
         "mobile_manipulation"
@@ -619,8 +619,8 @@
       "title": "Run plant inspection routes",
       "industry": "Manufacturing",
       "path": "RECURRING · FACILITY",
-      "company_name": null,
-      "locality": null,
+      "company_name": "OFI",
+      "locality": "Lenoir City, TN",
       "families": [
         "inspection_mobile"
       ],
@@ -636,8 +636,8 @@
       "title": "Move completed totes",
       "industry": "Apparel",
       "path": "PACK-MOD → PACKING",
-      "company_name": null,
-      "locality": null,
+      "company_name": "SanMar",
+      "locality": "Avondale, AZ",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -654,8 +654,8 @@
       "title": "Move system carts",
       "industry": "Med device",
       "path": "KITTING → LINE",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Intuitive Surgical",
+      "locality": "United States (med-device mfg)",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -672,8 +672,8 @@
       "title": "Stack cases onto pallets",
       "industry": "Packaging plant",
       "path": "CASE → PALLET",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Attindas Hygiene Partners",
+      "locality": "Greenville, NC",
       "families": [
         "manipulator",
         "mobile_manipulation"
@@ -690,8 +690,8 @@
       "title": "Move supply carts",
       "industry": "Hospital",
       "path": "CENTRAL SUPPLY → UNITS",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Lakeside Regional Hospital",
+      "locality": "Kenosha, WI",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -708,8 +708,8 @@
       "title": "Scrub food-court floors",
       "industry": "Retail",
       "path": "HARD SURFACE · CLOSE",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Mall of America",
+      "locality": "Bloomington, MN",
       "families": [
         "floor_scrub"
       ],
@@ -725,8 +725,8 @@
       "title": "Scrub high-traffic routes",
       "industry": "Airport",
       "path": "TERMINAL · OVERNIGHT",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Unifi (airport floor tech)",
+      "locality": "ATL — Atlanta, GA",
       "families": [
         "floor_scrub"
       ],
@@ -742,8 +742,8 @@
       "title": "Inspect plant gauges",
       "industry": "Process plant",
       "path": "ROUND → READOUT",
-      "company_name": null,
-      "locality": null,
+      "company_name": "OFI",
+      "locality": "Lenoir City, TN",
       "families": [
         "inspection_mobile"
       ],
@@ -759,8 +759,8 @@
       "title": "Deliver kits to line",
       "industry": "Aerospace",
       "path": "KITTING → POINT OF USE",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Intuitive Surgical",
+      "locality": "United States (med-device mfg)",
       "families": [
         "transport_amr",
         "mobile_manipulation"
@@ -777,8 +777,8 @@
       "title": "Build wrapped pallets",
       "industry": "CPG",
       "path": "LINE → WRAP",
-      "company_name": null,
-      "locality": null,
+      "company_name": "MDI Distribution (Alex Lee)",
+      "locality": "Hickory, NC",
       "families": [
         "manipulator",
         "mobile_manipulation"
@@ -1027,8 +1027,8 @@
       "title": "Run food and drinks to dining tables",
       "industry": "Restaurant",
       "path": "KITCHEN → DINING ROOM",
-      "company_name": null,
-      "locality": null,
+      "company_name": "The Cheesecake Factory",
+      "locality": "Calabasas, CA",
       "families": [],
       "actions": [],
       "text": "run food and drinks to tables restaurant dining room table service food running",
@@ -1044,8 +1044,8 @@
       "title": "Run room-service orders to guest rooms",
       "industry": "Hotel",
       "path": "KITCHEN → GUEST ROOMS",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Marriott International",
+      "locality": "Bethesda, MD",
       "families": [],
       "actions": [],
       "text": "deliver room service food and drinks to guest rooms hotel hospitality",
@@ -1061,8 +1061,8 @@
       "title": "Bus tables and return dishware to the kitchen",
       "industry": "Restaurant",
       "path": "DINING ROOM → KITCHEN",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Darden Restaurants",
+      "locality": "Orlando, FL",
       "families": [],
       "actions": [],
       "text": "bus tables return dishes dishware to kitchen restaurant serving",
@@ -1077,8 +1077,8 @@
       "title": "Deliver guest luggage to hotel rooms",
       "industry": "Hotel",
       "path": "LOBBY → GUEST ROOMS",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Hilton Worldwide",
+      "locality": "McLean, VA",
       "families": [],
       "actions": [],
       "text": "deliver guest luggage baggage to hotel rooms bellhop hospitality",
@@ -1094,8 +1094,8 @@
       "title": "Operate the fry station during peak service",
       "industry": "Quick-service restaurant",
       "path": "FRY STATION",
-      "company_name": null,
-      "locality": null,
+      "company_name": "White Castle",
+      "locality": "Columbus, OH",
       "families": [],
       "actions": [],
       "text": "operate fry station cook fried menu during peak service kitchen",
@@ -1111,8 +1111,8 @@
       "title": "Assemble salads and grain bowls to order",
       "industry": "Fast-casual restaurant",
       "path": "PREP LINE",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Chipotle Mexican Grill",
+      "locality": "Newport Beach, CA",
       "families": [],
       "actions": [],
       "text": "assemble salads and grain bowls to order prepare food ingredients",
@@ -1128,8 +1128,8 @@
       "title": "Cook burgers on the grill line",
       "industry": "Quick-service restaurant",
       "path": "GRILL LINE",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Shake Shack",
+      "locality": "New York, NY",
       "families": [],
       "actions": [],
       "text": "cook grill burgers patties on the grill line kitchen food preparation",
@@ -1144,8 +1144,8 @@
       "title": "Prepare and serve espresso drinks at the coffee bar",
       "industry": "Cafe",
       "path": "COFFEE BAR",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Starbucks",
+      "locality": "Seattle, WA",
       "families": [],
       "actions": [],
       "text": "prepare and serve espresso coffee latte drinks at the coffee bar barista",
@@ -1161,8 +1161,8 @@
       "title": "Mix and serve cocktails at the bar",
       "industry": "Hotel bar",
       "path": "BAR",
-      "company_name": null,
-      "locality": null,
+      "company_name": "Hyatt Hotels",
+      "locality": "Chicago, IL",
       "families": [],
       "actions": [],
       "text": "mix and serve cocktails drinks beverages at the bar bartender",
@@ -1173,12 +1173,46 @@
       ]
     },
     {
+      "job_key": "foodprep_corporate_dishwasher",
+      "title": "Clear dishware and load dishwashers in a corporate kitchen",
+      "industry": "Corporate dining",
+      "path": "DISH RETURN → DISHWASHER",
+      "company_name": "Compass Group",
+      "locality": "Charlotte, NC",
+      "families": [],
+      "actions": [],
+      "text": "clear tables scrape plates bus dishware load dishwasher kitchen chores corporate cafeteria dining",
+      "source": "hospitality_seed",
+      "tape_family": "food_prep",
+      "unknowns": [
+        "Dish load weight",
+        "Kitchen layout"
+      ]
+    },
+    {
+      "job_key": "foodprep_household_kitchen_chores",
+      "title": "Household kitchen chores — dishes, dishwasher, meal cleanup",
+      "industry": "Home",
+      "path": "HOUSEHOLD KITCHEN",
+      "company_name": "Sunrise Senior Living",
+      "locality": "McLean, VA",
+      "families": [],
+      "actions": [],
+      "text": "household kitchen chores dishes dishwasher meal cleanup home kitchen residential dining",
+      "source": "hospitality_seed",
+      "tape_family": "food_prep",
+      "unknowns": [
+        "Kitchen layout",
+        "Dish mix"
+      ]
+    },
+    {
       "job_key": "restroom_office_clean",
       "title": "Clean office-building restrooms (toilets, urinals, floors)",
       "industry": "Facilities",
       "path": "RESTROOMS",
-      "company_name": null,
-      "locality": null,
+      "company_name": "CBRE",
+      "locality": "Dallas, TX",
       "families": [],
       "actions": [],
       "text": "clean office building restrooms toilets urinals sinks floors fixtures",
@@ -1194,8 +1228,8 @@
       "title": "Clean high-traffic airport restrooms",
       "industry": "Airport",
       "path": "RESTROOMS",
-      "company_name": null,
-      "locality": null,
+      "company_name": "HMSHost",
+      "locality": "DFW Airport, TX",
       "families": [],
       "actions": [],
       "text": "clean high traffic airport restrooms toilets urinals floors fixtures commercial cleaning",

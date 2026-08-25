@@ -24,4 +24,11 @@ describe("knownOemLineups", () => {
     expect(hit?.vendor_name).toMatch(/Reflex/i);
     expect((hit?.robots.length || 0)).toBeGreaterThan(0);
   });
+
+  it("maps Sunday Robotics Memo without a network call", () => {
+    const hit = lookupKnownOem("https://www.sunday.ai/");
+    expect(hit?.vendor_name).toMatch(/Sunday/i);
+    expect(hit?.robots.map(r => r.name)).toEqual(["Memo"]);
+    expect(hit?.robots[0]?.display_class).toBe("service_robot");
+  });
 });

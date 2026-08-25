@@ -311,6 +311,61 @@
       ]
     },
     {
+      "id": "hospitality_kitchen_policy",
+      "label": "Kitchen / hospitality task policy",
+      "vertical": "hospitality",
+      "physical_task": "Prepare food or drinks, run dishes, or clean up a kitchen under that site's rules",
+      "tape_families": ["serve", "food_prep", "beverage"],
+      "keywords": [
+        "kitchen", "restaurant", "cafe", "hotel", "dining", "espresso",
+        "barista", "dishwasher", "hospitality", "cafeteria", "cocktail"
+      ],
+      "hardware_not_enough": "A kitchen-capable chassis is not a trained policy for this site's menu, dish mix, or layout.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "OEM kitchen / hospitality skill pack",
+          "url": null,
+          "note": "Ask which food, drink, or dish policy they ship for this workplace — not only which robot."
+        },
+        {
+          "kind": "open_weights",
+          "name": "OpenVLA",
+          "url": "https://openvla.github.io/",
+          "note": "Open VLA. Presence on a candidate is unknown until named."
+        },
+        {
+          "kind": "foundation_robotics",
+          "name": "Physical Intelligence π0.5",
+          "url": "https://www.pi.website/blog/pi05",
+          "note": "Open-world VLA. Still must be qualified on this kitchen."
+        },
+        {
+          "kind": "open_weights",
+          "name": "NVIDIA GR00T N1.5",
+          "url": "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
+          "note": "Humanoid foundation model. Presence on this SKU is unknown until named."
+        }
+      ]
+    },
+    {
+      "id": "restroom_cleaning_policy",
+      "label": "Restroom cleaning policy",
+      "vertical": "commercial",
+      "physical_task": "Clean restroom fixtures and floors to that facility's standard",
+      "tape_families": ["restroom"],
+      "keywords": ["restroom", "bathroom", "toilet", "urinal"],
+      "hardware_not_enough": "A mobile cleaner is not the restroom coverage policy for this floorplate.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Cleaning OEM autonomy stack",
+          "url": null,
+          "note": "Ask which restroom program they ship for this workplace."
+        }
+      ]
+    },
+    {
       "id": "site_task_policy",
       "label": "Site-specific task policy",
       "vertical": "any",
