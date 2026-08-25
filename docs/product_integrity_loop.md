@@ -22,7 +22,7 @@ Founders who get remarkable results from agents do three unglamorous things:
 2. **Compiled memory** — a file the next agent *must* read. Chat is not memory. Outcome.md scattered across `missions/` is not memory until a compiler folds it.
 3. **Honest gates** — tests, Vercel *production* truth (not a 7-second GitHub skip), Fly, database, Jobs smoke. Merge is a privilege those gates grant.
 
-Hourly **observe**. Daily **one act**. Weekly **learn**. Auto-merge to `main` stays off until Vercel production deploys are real.
+Hourly **observe**. Daily **one act**. Weekly **learn**. Auto-merge to `main` is allowed **only** after `.github/workflows/agent-verify.yml` (Fly + Vercel JS canaries + Jobs drive) is green — never after a skip-green frontend deploy, never from hourly observe.
 
 ---
 

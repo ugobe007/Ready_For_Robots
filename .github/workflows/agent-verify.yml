@@ -1,0 +1,149 @@
+# Agent verification on PRs. Honest Jobs proof (Fly + Vercel JS canaries),
+# then squash auto-merge for cursor/* (or label automerge-after-verify).
+#
+# Hourly observe must not use this workflow. Skip-green Vercel fails verify.
+# Label do-not-merge blocks auto-merge.
+name: Agent verify
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+    branches: [main]
+
+concurrency:
+  group: agent-verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+
+jobs:
+  verify:
+    name: Jobs path + chrome
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      skip_green: ${{ steps.summary.outputs.skip_green }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: python3 -m pip install pytest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.4.1
+
+      - name: Feature map shape
+        run: python3 scripts/agent_verify.py map
+
+      - name: Doctor + drive (production)
+        id: verify
+        run: |
+          mkdir -p verify-artifacts
+          python3 scripts/agent_verify.py ci --evidence verify-artifacts
+        env:
+          RFR_SITE: https://readyforrobots.com
+          RFR_FLY_API: https://ready-2-robot.fly.dev
+          RFR_VERIFY_EVIDENCE: ${{ github.workspace }}/verify-artifacts
+
+      - name: Record skip-green
+        id: summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          p = pathlib.Path("verify-artifacts")
+          files = sorted(p.glob("*/summary.json")) + sorted(p.glob("summary.json"))
+          skip = "false"
+          if files:
+              data = json.loads(files[-1].read_text())
+              skip = "true" if data.get("skip_green") else "false"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"skip_green={skip}\n")
+          print("skip_green", skip)
+          PY
+
+      - name: Targeted pytest
+        run: python3 -m pytest tests/test_agent_verify.py -q --tb=short
+
+      - name: Frontend deps + vitest (Jobs chrome)
+        run: |
+          pnpm install --frozen-lockfile -C readyforrobots-new
+          pnpm --dir readyforrobots-new exec vitest run \
+            client/src/lib/jobsWorkflow.test.ts \
+            client/src/lib/robotJobCard.test.ts
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-verify-${{ github.event.pull_request.number }}
+          path: verify-artifacts
+          if-no-files-found: warn
+
+  automerge:
+    name: Auto-merge after verify
+    needs: verify
+    if: |
+      success() &&
+      github.event.pull_request.draft == false &&
+      needs.verify.outputs.skip_green != 'true' &&
+      !contains(github.event.pull_request.labels.*.name, 'do-not-merge') &&
+      (
+        startsWith(github.head_ref, 'cursor/') ||
+        contains(github.event.pull_request.labels.*.name, 'automerge-after-verify')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Enable squash auto-merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const title = (pr.title || "").toLowerCase();
+            if (title.includes("[wip]") || title.includes("do not merge")) {
+              core.info("Title blocks auto-merge");
+              return;
+            }
+            try {
+              await github.graphql(
+                `mutation($id: ID!) {
+                  enablePullRequestAutoMerge(input: {
+                    pullRequestId: $id,
+                    mergeMethod: SQUASH
+                  }) { pullRequest { number } }
+                }`,
+                { id: pr.node_id }
+              );
+              core.info("Auto-merge enabled (squash).");
+            } catch (err) {
+              core.warning(`enablePullRequestAutoMerge failed: ${err.message}`);
+              try {
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  merge_method: "squash",
+                });
+                core.info("Squash-merged immediately (repo auto-merge not enabled).");
+              } catch (mergeErr) {
+                core.setFailed(`Could not merge: ${mergeErr.message}`);
+              }
+            }

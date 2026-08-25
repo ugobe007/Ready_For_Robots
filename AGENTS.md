@@ -117,6 +117,8 @@ python3 scripts/harness_snapshot.py
 python3 scripts/harness_diagnostics.py --check all   # site + code + conversion
 ```
 
+**Agent verification (PRs + missions):** [`.cursor/skills/verify-readyforrobots/SKILL.md`](.cursor/skills/verify-readyforrobots/SKILL.md) — doctor, drive FIND / Job Cards / chrome, evidence. Feature map (nav, process bar, panels, results): [`docs/feature_map.md`](docs/feature_map.md). CI: `.github/workflows/agent-verify.yml`. Auto-merge `cursor/*` only after that job is green (not skip-green). Hourly observe does not merge.
+
 **Daily operator report** (email + `reports/harness_daily_report_latest.md`):
 
 | Section | Agent role | What it covers |
@@ -212,4 +214,5 @@ Legacy `frontend/nextjs/` — avoid new product work unless explicitly requested
 - [docs/conversion_agent_challenges.md](docs/conversion_agent_challenges.md)
 - [docs/lead_quality_north_star.md](docs/lead_quality_north_star.md)
 - [docs/pipeline_process_and_scripts.md](docs/pipeline_process_and_scripts.md)
+- [docs/feature_map.md](docs/feature_map.md) — Jobs chrome (nav, process bar, panels, results)
 - [docs/agent-spec.md](docs/agent-spec.md) — CRM copilot (separate from harness Orchestrator)

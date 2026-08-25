@@ -32,6 +32,13 @@ tests:
       - PipelineHealth
       - ProductSurface
 
+  agent_verify:
+    command: python3 scripts/agent_verify.py ci
+    required_for:
+      - ProductSurface
+      - Deploy
+      - ProductManager
+
 pre_commit:
   block_paths:
     - reports/
