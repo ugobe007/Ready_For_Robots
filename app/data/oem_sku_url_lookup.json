@@ -490,6 +490,470 @@
       "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar1440",
       "host": "motoman.com",
       "status_code": 200
+    },
+    {
+      "slug": "1x-neo",
+      "name": "Neo",
+      "company": "1X",
+      "url": "https://www.1x.tech/neo",
+      "host": "1x.tech",
+      "status_code": 200
+    },
+    {
+      "slug": "aethon-t3-robot",
+      "name": "T3 Robot",
+      "company": "Aethon",
+      "url": "https://aethon.com/t3/",
+      "host": "aethon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "apptronik-apollo",
+      "name": "Apollo",
+      "company": "Apptronik",
+      "url": "https://apptronik.com/apollo/apollo-2",
+      "host": "apptronik.com",
+      "status_code": 200
+    },
+    {
+      "slug": "bear-robotics-carti-100",
+      "name": "Carti 100",
+      "company": "Bear Robotics",
+      "url": "https://www.bearrobotics.ai/carti100",
+      "host": "bearrobotics.ai",
+      "status_code": 200
+    },
+    {
+      "slug": "boston-dynamics-stretch",
+      "name": "Stretch",
+      "company": "Boston Dynamics",
+      "url": "https://bostondynamics.com/products/stretch/",
+      "host": "bostondynamics.com",
+      "status_code": 200
+    },
+    {
+      "slug": "figure-ai-figure-03",
+      "name": "FIGURE 03",
+      "company": "Figure AI",
+      "url": "https://www.figure.ai/figure",
+      "host": "figure.ai",
+      "status_code": 200
+    },
+    {
+      "slug": "ecovacs-deebot-x12s",
+      "name": "Deebot X12S",
+      "company": "Ecovacs",
+      "url": "https://www.ecovacs.com/us/deebot-robotic-vacuum-cleaner/deebot-x12s",
+      "host": "ecovacs.com",
+      "status_code": 200
+    },
+    {
+      "slug": "gausium-scrubber-75",
+      "name": "Scrubber 75",
+      "company": "Gausium",
+      "url": "https://gausium.com/products/scrubber-75",
+      "host": "gausium.com",
+      "status_code": 200
+    },
+    {
+      "slug": "gausium-cd-01",
+      "name": "CD-01",
+      "company": "Gausium",
+      "url": "https://gausium.com/products/cd-01",
+      "host": "gausium.com",
+      "status_code": 200
+    },
+    {
+      "slug": "gausium-cd-04",
+      "name": "CD-04",
+      "company": "Gausium",
+      "url": "https://gausium.com/products/cd-04",
+      "host": "gausium.com",
+      "status_code": 200
+    },
+    {
+      "slug": "gausium-ws-01",
+      "name": "WS-01",
+      "company": "Gausium",
+      "url": "https://gausium.com/products/ws-01",
+      "host": "gausium.com",
+      "status_code": 200
+    },
+    {
+      "slug": "gausium-ws-02",
+      "name": "WS-02",
+      "company": "Gausium",
+      "url": "https://gausium.com/products/ws-02",
+      "host": "gausium.com",
+      "status_code": 200
+    },
+    {
+      "slug": "gausium-ws-03",
+      "name": "WS-03",
+      "company": "Gausium",
+      "url": "https://gausium.com/products/ws-03",
+      "host": "gausium.com",
+      "status_code": 200
+    },
+    {
+      "slug": "keenon-robotics-c55",
+      "name": "C55",
+      "company": "Keenon Robotics",
+      "url": "https://www.keenon.com/en/product/C55",
+      "host": "keenon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "keenon-robotics-c40",
+      "name": "C40",
+      "company": "Keenon Robotics",
+      "url": "https://www.keenon.com/en/product/C40",
+      "host": "keenon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "keenon-robotics-c20",
+      "name": "C20",
+      "company": "Keenon Robotics",
+      "url": "https://www.keenon.com/en/product/C20",
+      "host": "keenon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "keenon-robotics-t11",
+      "name": "T11",
+      "company": "Keenon Robotics",
+      "url": "https://www.keenon.com/en/product/T11",
+      "host": "keenon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "keenon-robotics-t8-optimized-compact-design",
+      "name": "T8 Optimized Compact Design",
+      "company": "Keenon Robotics",
+      "url": "https://www.keenon.com/en/product/T8",
+      "host": "keenon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "keenon-robotics-t9-high-load-capacity",
+      "name": "T9 High-load Capacity",
+      "company": "Keenon Robotics",
+      "url": "https://www.keenon.com/en/product/T9",
+      "host": "keenon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "keenon-robotics-t3-safe-and-hygienic",
+      "name": "T3 Safe and Hygienic",
+      "company": "Keenon Robotics",
+      "url": "https://www.keenon.com/en/product/T3",
+      "host": "keenon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "keenon-robotics-w3-hot-private-and-multi-floor-service",
+      "name": "W3 HOT Private and Multi-Floor Service",
+      "company": "Keenon Robotics",
+      "url": "https://www.keenon.com/en/product/W3",
+      "host": "keenon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "keenon-robotics-s300",
+      "name": "S300",
+      "company": "Keenon Robotics",
+      "url": "https://www.keenon.com/en/product/S300",
+      "host": "keenon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "keenon-robotics-s100-heavy-load-courier-robot",
+      "name": "S100 Heavy-Load Courier Robot",
+      "company": "Keenon Robotics",
+      "url": "https://www.keenon.com/en/product/S100",
+      "host": "keenon.com",
+      "status_code": 200
+    },
+    {
+      "slug": "otto-motors-otto-1200",
+      "name": "OTTO 1200",
+      "company": "OTTO Motors",
+      "url": "https://ottomotors.com/1200/",
+      "host": "ottomotors.com",
+      "status_code": 200
+    },
+    {
+      "slug": "pudu-robotics-d9",
+      "name": "D9",
+      "company": "Pudu Robotics",
+      "url": "https://www.pudurobotics.com/en/products/d9",
+      "host": "pudurobotics.com",
+      "status_code": 200
+    },
+    {
+      "slug": "pudu-robotics-pudua1",
+      "name": "PUDUA1",
+      "company": "Pudu Robotics",
+      "url": "https://www.pudurobotics.com/en/products/puduA1",
+      "host": "pudurobotics.com",
+      "status_code": 200
+    },
+    {
+      "slug": "pudu-robotics-pudud1",
+      "name": "PUDUD1",
+      "company": "Pudu Robotics",
+      "url": "https://www.pudurobotics.com/en/products/puduD1",
+      "host": "pudurobotics.com",
+      "status_code": 200
+    },
+    {
+      "slug": "pudu-robotics-pudush1",
+      "name": "PUDUSH1",
+      "company": "Pudu Robotics",
+      "url": "https://www.pudurobotics.com/en/products/puduSH1",
+      "host": "pudurobotics.com",
+      "status_code": 200
+    },
+    {
+      "slug": "seegrid-lift-el1-amr",
+      "name": "Lift EL1 Amr",
+      "company": "Seegrid",
+      "url": "https://seegrid.com/autonomous-mobile-robots/lift-el1-amr/",
+      "host": "seegrid.com",
+      "status_code": 200
+    },
+    {
+      "slug": "seegrid-lift-rs1-amr",
+      "name": "Lift RS1 Amr",
+      "company": "Seegrid",
+      "url": "https://seegrid.com/autonomous-mobile-robots/lift-rs1-amr/",
+      "host": "seegrid.com",
+      "status_code": 200
+    },
+    {
+      "slug": "seegrid-lift-cr1-amr",
+      "name": "Lift CR1 Amr",
+      "company": "Seegrid",
+      "url": "https://seegrid.com/autonomous-mobile-robots/lift-cr1-amr/",
+      "host": "seegrid.com",
+      "status_code": 200
+    },
+    {
+      "slug": "seegrid-tow-tractor-s7-amr",
+      "name": "Tow Tractor S7 Amr",
+      "company": "Seegrid",
+      "url": "https://seegrid.com/autonomous-mobile-robots/tow-tractor-s7-amr/",
+      "host": "seegrid.com",
+      "status_code": 200
+    },
+    {
+      "slug": "simbe-robotics-simbe-at-euroshop-2026",
+      "name": "Simbe At Euroshop 2026",
+      "company": "Simbe Robotics",
+      "url": "https://www.simberobotics.com/simbe-at-euroshop-2026",
+      "host": "simberobotics.com",
+      "status_code": 200
+    },
+    {
+      "slug": "ubtech-walker-s2",
+      "name": "Walker S2",
+      "company": "UBTECH",
+      "url": "https://www.ubtrobot.com/en/humanoid/products/walker-s2",
+      "host": "ubtrobot.com",
+      "status_code": 200
+    },
+    {
+      "slug": "ubtech-alpha-1e",
+      "name": "Alpha 1E",
+      "company": "UBTECH",
+      "url": "https://www.ubtrobot.com/en/consumer/humanoid-robots/alpha-series/alpha-1e",
+      "host": "ubtrobot.com",
+      "status_code": 200
+    },
+    {
+      "slug": "ubtech-walker",
+      "name": "Walker",
+      "company": "UBTECH",
+      "url": "https://www.ubtrobot.com/en/humanoid/products/walker",
+      "host": "ubtrobot.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-as2",
+      "name": "AS2",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/As2/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-go2",
+      "name": "GO2",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/go2/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-go1",
+      "name": "GO1",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/go1/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-a1",
+      "name": "A1",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/A1/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-a2",
+      "name": "A2",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/A2/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-b2",
+      "name": "B2",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/b2/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-b1",
+      "name": "B1",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/b1/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-z1",
+      "name": "Z1",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/z1/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-l2",
+      "name": "L2",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/L2/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-h2",
+      "name": "H2",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/H2/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-r1",
+      "name": "R1",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/R1/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "unitree-robotics-h2-d",
+      "name": "H2-D",
+      "company": "Unitree Robotics",
+      "url": "https://www.unitree.com/H2-D/",
+      "host": "unitree.com",
+      "status_code": 200
+    },
+    {
+      "slug": "yaskawa-motoman-gp4",
+      "name": "GP4",
+      "company": "Yaskawa Motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp4",
+      "host": "motoman.com",
+      "status_code": 200
+    },
+    {
+      "slug": "yaskawa-motoman-gp7",
+      "name": "GP7",
+      "company": "Yaskawa Motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp7",
+      "host": "motoman.com",
+      "status_code": 200
+    },
+    {
+      "slug": "yaskawa-motoman-gp8l",
+      "name": "GP8L",
+      "company": "Yaskawa Motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp8l",
+      "host": "motoman.com",
+      "status_code": 200
+    },
+    {
+      "slug": "yaskawa-motoman-gp10",
+      "name": "GP10",
+      "company": "Yaskawa Motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp10",
+      "host": "motoman.com",
+      "status_code": 200
+    },
+    {
+      "slug": "yaskawa-motoman-gp12",
+      "name": "GP12",
+      "company": "Yaskawa Motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp12",
+      "host": "motoman.com",
+      "status_code": 200
+    },
+    {
+      "slug": "yaskawa-motoman-gp20hl",
+      "name": "GP20HL",
+      "company": "Yaskawa Motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp20hl",
+      "host": "motoman.com",
+      "status_code": 200
+    },
+    {
+      "slug": "yaskawa-motoman-gp35l",
+      "name": "GP35L",
+      "company": "Yaskawa Motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp35l",
+      "host": "motoman.com",
+      "status_code": 200
+    },
+    {
+      "slug": "yaskawa-motoman-gp50",
+      "name": "GP50",
+      "company": "Yaskawa Motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp50",
+      "host": "motoman.com",
+      "status_code": 200
+    },
+    {
+      "slug": "yaskawa-motoman-gp70l",
+      "name": "GP70L",
+      "company": "Yaskawa Motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp70l",
+      "host": "motoman.com",
+      "status_code": 200
+    },
+    {
+      "slug": "yaskawa-motoman-gp88",
+      "name": "GP88",
+      "company": "Yaskawa Motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp88",
+      "host": "motoman.com",
+      "status_code": 200
     }
   ],
   "skipped": [
@@ -927,10 +1391,9 @@
   ],
   "queued": [],
   "counts": {
-    "verified": 61,
+    "verified": 119,
     "skipped": 25,
     "failed": 47,
-    "queued": 0,
-    "fetches": 9
+    "queued": 0
   }
 }

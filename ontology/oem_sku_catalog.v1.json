@@ -1,7 +1,7 @@
 {
   "ontology_id": "oem_sku_catalog_v1",
-  "version": "1.0.0",
-  "generated_at": "2026-08-26T20:12:45+00:00",
+  "version": "1.1.0",
+  "generated_at": "2026-08-26T21:19:16+00:00",
   "source": "docs/reference/readyforrobots_companies_and_robots.xlsx",
   "rule": "COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES",
   "notes": [
@@ -9,10 +9,11 @@
     "Empty specs stay UNKNOWN — do not invent payload, reach, or price.",
     "Quote required is not a spec.",
     "product_url / lookup_host are set only after a live fetch verifies the page.",
-    "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored."
+    "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
+    "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
   "company_count": 61,
-  "product_count": 133,
+  "product_count": 188,
   "skipped": [],
   "companies": [
     {
@@ -54,7 +55,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "EVE",
@@ -79,11 +81,37 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "Neo",
+          "slug": "1x-neo",
+          "company_name": "1X",
+          "company_slug": "1x",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Norway / United States",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.1x.tech/neo"
+          ],
+          "product_url": "https://www.1x.tech/neo",
+          "lookup_host": "1x.tech",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
       ],
       "verified_urls": [
-        "https://www.1x.tech/"
+        "https://www.1x.tech/",
+        "https://www.1x.tech/neo"
       ]
     },
     {
@@ -125,7 +153,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "GoFa",
@@ -150,7 +179,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "SWIFTI",
@@ -175,7 +205,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "IRB 1200",
@@ -200,7 +231,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "IRB 6700",
@@ -225,7 +257,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -268,7 +301,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "ANYmal X",
@@ -293,7 +327,8 @@
           "capability_confidence": "UNKNOWN",
           "flags": [
             "wrong_product_url"
-          ]
+          ],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -339,7 +374,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Radixact",
@@ -364,7 +400,8 @@
           "capability_confidence": "UNKNOWN",
           "flags": [
             "wrong_product_url"
-          ]
+          ],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -410,11 +447,37 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "T3",
+          "slug": "aethon-t3-robot",
+          "company_name": "Aethon",
+          "company_slug": "aethon",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "United States / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://aethon.com/t3/"
+          ],
+          "product_url": "https://aethon.com/t3/",
+          "lookup_host": "aethon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
       ],
       "verified_urls": [
-        "https://aethon.com/tug/"
+        "https://aethon.com/tug/",
+        "https://aethon.com/t3/"
       ]
     },
     {
@@ -456,7 +519,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -502,7 +566,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Sequoia",
@@ -527,7 +592,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Sparrow",
@@ -552,7 +618,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Hercules",
@@ -577,7 +644,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -615,13 +683,17 @@
           "candidate_sources": [
             "https://apptronik.com/apollo"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://apptronik.com/apollo/apollo-2",
+          "lookup_host": "apptronik.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
+      ],
+      "verified_urls": [
+        "https://apptronik.com/apollo/apollo-2"
       ]
     },
     {
@@ -663,7 +735,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Servi Plus",
@@ -688,7 +761,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Carti",
@@ -713,7 +787,32 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "Carti 100",
+          "slug": "bear-robotics-carti-100",
+          "company_name": "Bear Robotics",
+          "company_slug": "bear-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "United States / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.bearrobotics.ai/carti100"
+          ],
+          "product_url": "https://www.bearrobotics.ai/carti100",
+          "lookup_host": "bearrobotics.ai",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
       ],
       "verified_urls": [
@@ -763,7 +862,8 @@
           "capability_confidence": "UNKNOWN",
           "flags": [
             "descriptive_name"
-          ]
+          ],
+          "source": "workbook"
         }
       ]
     },
@@ -808,7 +908,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Stretch",
@@ -826,14 +927,15 @@
             "https://bostondynamics.com/products/spot/"
           ],
           "candidate_sources": [],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://bostondynamics.com/products/stretch/",
+          "lookup_host": "bostondynamics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": [
             "wrong_product_url"
-          ]
+          ],
+          "source": "workbook"
         },
         {
           "name": "Atlas",
@@ -858,11 +960,13 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
         "https://bostondynamics.com/products/spot/",
+        "https://bostondynamics.com/products/stretch/",
         "https://bostondynamics.com/products/atlas/"
       ]
     },
@@ -905,7 +1009,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -951,8 +1056,36 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "Deebot X12S",
+          "slug": "ecovacs-deebot-x12s",
+          "company_name": "Ecovacs",
+          "company_slug": "ecovacs",
+          "primary_class": "cleaning_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.ecovacs.com/us/deebot-robotic-vacuum-cleaner/deebot-x12s"
+          ],
+          "product_url": "https://www.ecovacs.com/us/deebot-robotic-vacuum-cleaner/deebot-x12s",
+          "lookup_host": "ecovacs.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
+      ],
+      "verified_urls": [
+        "https://www.ecovacs.com/us/deebot-robotic-vacuum-cleaner/deebot-x12s"
       ]
     },
     {
@@ -994,7 +1127,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Ekso EVO",
@@ -1019,7 +1153,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -1066,7 +1201,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "CRX-20iA/L",
@@ -1091,7 +1227,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "LR Mate 200iD",
@@ -1116,7 +1253,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "M-20iD",
@@ -1141,7 +1279,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "R-2000iD",
@@ -1166,7 +1305,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -1213,7 +1353,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -1256,8 +1397,36 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "FIGURE 03",
+          "slug": "figure-ai-figure-03",
+          "company_name": "Figure AI",
+          "company_slug": "figure-ai",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "United States",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.figure.ai/figure"
+          ],
+          "product_url": "https://www.figure.ai/figure",
+          "lookup_host": "figure.ai",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
+      ],
+      "verified_urls": [
+        "https://www.figure.ai/figure"
       ]
     },
     {
@@ -1299,7 +1468,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -1344,7 +1514,8 @@
           "capability_confidence": "UNKNOWN",
           "flags": [
             "descriptive_name"
-          ]
+          ],
+          "source": "workbook"
         }
       ]
     },
@@ -1387,7 +1558,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Vacuum 40",
@@ -1412,7 +1584,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Scrubber 50",
@@ -1437,12 +1610,163 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "Scrubber 75",
+          "slug": "gausium-scrubber-75",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://gausium.com/products/scrubber-75"
+          ],
+          "product_url": "https://gausium.com/products/scrubber-75",
+          "lookup_host": "gausium.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "CD-01",
+          "slug": "gausium-cd-01",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://gausium.com/products/cd-01"
+          ],
+          "product_url": "https://gausium.com/products/cd-01",
+          "lookup_host": "gausium.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "CD-04",
+          "slug": "gausium-cd-04",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://gausium.com/products/cd-04"
+          ],
+          "product_url": "https://gausium.com/products/cd-04",
+          "lookup_host": "gausium.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "WS-01",
+          "slug": "gausium-ws-01",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://gausium.com/products/ws-01"
+          ],
+          "product_url": "https://gausium.com/products/ws-01",
+          "lookup_host": "gausium.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "WS-02",
+          "slug": "gausium-ws-02",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://gausium.com/products/ws-02"
+          ],
+          "product_url": "https://gausium.com/products/ws-02",
+          "lookup_host": "gausium.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "WS-03",
+          "slug": "gausium-ws-03",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://gausium.com/products/ws-03"
+          ],
+          "product_url": "https://gausium.com/products/ws-03",
+          "lookup_host": "gausium.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
       ],
       "verified_urls": [
         "https://gausium.com/products/phantas",
-        "https://gausium.com/products/vacuum40"
+        "https://gausium.com/products/vacuum40",
+        "https://gausium.com/products/scrubber-75",
+        "https://gausium.com/products/cd-01",
+        "https://gausium.com/products/cd-04",
+        "https://gausium.com/products/ws-01",
+        "https://gausium.com/products/ws-02",
+        "https://gausium.com/products/ws-03"
       ]
     },
     {
@@ -1484,7 +1808,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "ButlerBot",
@@ -1509,7 +1834,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -1552,7 +1878,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -1595,7 +1922,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "da Vinci X",
@@ -1620,7 +1948,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "da Vinci SP",
@@ -1645,7 +1974,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -1688,7 +2018,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "LBR iiwa",
@@ -1713,7 +2044,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "KR AGILUS",
@@ -1738,7 +2070,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "KR FORTEC",
@@ -1763,7 +2096,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -1809,7 +2143,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -1852,7 +2187,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Dinerbot T5",
@@ -1877,7 +2213,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Butlerbot W3",
@@ -1902,7 +2239,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Keenon C30",
@@ -1927,7 +2265,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Keenon M2",
@@ -1952,12 +2291,263 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "C55",
+          "slug": "keenon-robotics-c55",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.keenon.com/en/product/C55"
+          ],
+          "product_url": "https://www.keenon.com/en/product/C55",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "C40",
+          "slug": "keenon-robotics-c40",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.keenon.com/en/product/C40"
+          ],
+          "product_url": "https://www.keenon.com/en/product/C40",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "C20",
+          "slug": "keenon-robotics-c20",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.keenon.com/en/product/C20"
+          ],
+          "product_url": "https://www.keenon.com/en/product/C20",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "T11",
+          "slug": "keenon-robotics-t11",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.keenon.com/en/product/T11"
+          ],
+          "product_url": "https://www.keenon.com/en/product/T11",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "T8",
+          "slug": "keenon-robotics-t8-optimized-compact-design",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.keenon.com/en/product/T8"
+          ],
+          "product_url": "https://www.keenon.com/en/product/T8",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "T9",
+          "slug": "keenon-robotics-t9-high-load-capacity",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.keenon.com/en/product/T9"
+          ],
+          "product_url": "https://www.keenon.com/en/product/T9",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "T3",
+          "slug": "keenon-robotics-t3-safe-and-hygienic",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.keenon.com/en/product/T3"
+          ],
+          "product_url": "https://www.keenon.com/en/product/T3",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "W3",
+          "slug": "keenon-robotics-w3-hot-private-and-multi-floor-service",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.keenon.com/en/product/W3"
+          ],
+          "product_url": "https://www.keenon.com/en/product/W3",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "S300",
+          "slug": "keenon-robotics-s300",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.keenon.com/en/product/S300"
+          ],
+          "product_url": "https://www.keenon.com/en/product/S300",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "S100",
+          "slug": "keenon-robotics-s100-heavy-load-courier-robot",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.keenon.com/en/product/S100"
+          ],
+          "product_url": "https://www.keenon.com/en/product/S100",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
       ],
       "verified_urls": [
         "https://www.keenon.com/en/news/k2",
-        "https://www.keenon.com/"
+        "https://www.keenon.com/",
+        "https://www.keenon.com/en/product/C55",
+        "https://www.keenon.com/en/product/C40",
+        "https://www.keenon.com/en/product/C20",
+        "https://www.keenon.com/en/product/T11",
+        "https://www.keenon.com/en/product/T8",
+        "https://www.keenon.com/en/product/T9",
+        "https://www.keenon.com/en/product/T3",
+        "https://www.keenon.com/en/product/W3",
+        "https://www.keenon.com/en/product/S300",
+        "https://www.keenon.com/en/product/S100"
       ]
     },
     {
@@ -1999,7 +2589,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "CLOi ServeBot",
@@ -2024,7 +2615,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "CLOi CartBot",
@@ -2049,7 +2641,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -2092,7 +2685,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Locus Vector",
@@ -2117,7 +2711,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Locus Max",
@@ -2142,7 +2737,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Locus Flex",
@@ -2167,7 +2763,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -2210,7 +2807,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -2253,7 +2851,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -2296,7 +2895,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Flippy Wings",
@@ -2321,7 +2921,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -2364,7 +2965,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -2410,7 +3012,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "MiR600",
@@ -2435,7 +3038,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "MiR1200 Pallet Jack",
@@ -2460,7 +3064,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "MiR1350",
@@ -2485,7 +3090,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "MiR1000",
@@ -2510,7 +3116,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "MiR500",
@@ -2535,7 +3142,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -2586,7 +3194,8 @@
           "capability_confidence": "UNKNOWN",
           "flags": [
             "descriptive_name"
-          ]
+          ],
+          "source": "workbook"
         }
       ]
     },
@@ -2629,7 +3238,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -2675,7 +3285,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -2718,7 +3329,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "OTTO 600",
@@ -2743,7 +3355,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "OTTO 1500",
@@ -2768,13 +3381,39 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "OTTO 1200",
+          "slug": "otto-motors-otto-1200",
+          "company_name": "OTTO Motors",
+          "company_slug": "otto-motors",
+          "primary_class": "amr",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Canada / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://ottomotors.com/1200/"
+          ],
+          "product_url": "https://ottomotors.com/1200/",
+          "lookup_host": "ottomotors.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
       ],
       "verified_urls": [
         "https://ottomotors.com/100/",
         "https://ottomotors.com/600/",
-        "https://ottomotors.com/1500/"
+        "https://ottomotors.com/1500/",
+        "https://ottomotors.com/1200/"
       ]
     },
     {
@@ -2816,7 +3455,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -2862,7 +3502,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "TALOS",
@@ -2887,7 +3528,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -2934,7 +3576,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -2979,7 +3622,8 @@
           "capability_confidence": "UNKNOWN",
           "flags": [
             "descriptive_name"
-          ]
+          ],
+          "source": "workbook"
         }
       ]
     },
@@ -3022,7 +3666,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -3068,7 +3713,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -3111,7 +3757,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "HolaBot",
@@ -3136,7 +3783,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "KettyBot",
@@ -3161,7 +3809,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "FlashBot",
@@ -3186,7 +3835,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "CC1",
@@ -3211,7 +3861,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "MT1",
@@ -3236,7 +3887,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "PUDU T300",
@@ -3261,11 +3913,112 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "D9",
+          "slug": "pudu-robotics-d9",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.pudurobotics.com/en/products/d9"
+          ],
+          "product_url": "https://www.pudurobotics.com/en/products/d9",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "PUDUA1",
+          "slug": "pudu-robotics-pudua1",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.pudurobotics.com/en/products/puduA1"
+          ],
+          "product_url": "https://www.pudurobotics.com/en/products/puduA1",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "PUDUD1",
+          "slug": "pudu-robotics-pudud1",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.pudurobotics.com/en/products/puduD1"
+          ],
+          "product_url": "https://www.pudurobotics.com/en/products/puduD1",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "PUDUSH1",
+          "slug": "pudu-robotics-pudush1",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.pudurobotics.com/en/products/puduSH1"
+          ],
+          "product_url": "https://www.pudurobotics.com/en/products/puduSH1",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
       ],
       "verified_urls": [
-        "https://www.pudurobotics.com/en"
+        "https://www.pudurobotics.com/en",
+        "https://www.pudurobotics.com/en/products/d9",
+        "https://www.pudurobotics.com/en/products/puduA1",
+        "https://www.pudurobotics.com/en/products/puduD1",
+        "https://www.pudurobotics.com/en/products/puduSH1"
       ]
     },
     {
@@ -3307,7 +4060,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Scotty",
@@ -3332,7 +4086,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -3375,7 +4130,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -3421,7 +4177,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -3464,7 +4221,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Palion Lift",
@@ -3489,7 +4247,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "GP8",
@@ -3514,8 +4273,111 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "Lift EL1 Amr",
+          "slug": "seegrid-lift-el1-amr",
+          "company_name": "Seegrid",
+          "company_slug": "seegrid",
+          "primary_class": "amr",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "United States / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://seegrid.com/autonomous-mobile-robots/lift-el1-amr/"
+          ],
+          "product_url": "https://seegrid.com/autonomous-mobile-robots/lift-el1-amr/",
+          "lookup_host": "seegrid.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "Lift RS1 Amr",
+          "slug": "seegrid-lift-rs1-amr",
+          "company_name": "Seegrid",
+          "company_slug": "seegrid",
+          "primary_class": "amr",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "United States / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://seegrid.com/autonomous-mobile-robots/lift-rs1-amr/"
+          ],
+          "product_url": "https://seegrid.com/autonomous-mobile-robots/lift-rs1-amr/",
+          "lookup_host": "seegrid.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "Lift CR1 Amr",
+          "slug": "seegrid-lift-cr1-amr",
+          "company_name": "Seegrid",
+          "company_slug": "seegrid",
+          "primary_class": "amr",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "United States / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://seegrid.com/autonomous-mobile-robots/lift-cr1-amr/"
+          ],
+          "product_url": "https://seegrid.com/autonomous-mobile-robots/lift-cr1-amr/",
+          "lookup_host": "seegrid.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "Tow Tractor S7 Amr",
+          "slug": "seegrid-tow-tractor-s7-amr",
+          "company_name": "Seegrid",
+          "company_slug": "seegrid",
+          "primary_class": "amr",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "United States / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://seegrid.com/autonomous-mobile-robots/tow-tractor-s7-amr/"
+          ],
+          "product_url": "https://seegrid.com/autonomous-mobile-robots/tow-tractor-s7-amr/",
+          "lookup_host": "seegrid.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
+      ],
+      "verified_urls": [
+        "https://seegrid.com/autonomous-mobile-robots/lift-el1-amr/",
+        "https://seegrid.com/autonomous-mobile-robots/lift-rs1-amr/",
+        "https://seegrid.com/autonomous-mobile-robots/lift-cr1-amr/",
+        "https://seegrid.com/autonomous-mobile-robots/tow-tractor-s7-amr/"
       ]
     },
     {
@@ -3557,7 +4419,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -3600,7 +4463,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -3645,7 +4509,8 @@
           "capability_confidence": "UNKNOWN",
           "flags": [
             "descriptive_name"
-          ]
+          ],
+          "source": "workbook"
         }
       ]
     },
@@ -3688,7 +4553,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -3731,7 +4597,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "TS2-40",
@@ -3756,7 +4623,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "HEM4",
@@ -3781,7 +4649,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -3826,7 +4695,8 @@
           "capability_confidence": "UNKNOWN",
           "flags": [
             "descriptive_name"
-          ]
+          ],
+          "source": "workbook"
         },
         {
           "name": "Symbotic palletizing robot",
@@ -3853,7 +4723,8 @@
           "capability_confidence": "UNKNOWN",
           "flags": [
             "descriptive_name"
-          ]
+          ],
+          "source": "workbook"
         }
       ]
     },
@@ -3896,7 +4767,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -3939,7 +4811,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "Walker X",
@@ -3964,12 +4837,87 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "Walker S2",
+          "slug": "ubtech-walker-s2",
+          "company_name": "UBTECH",
+          "company_slug": "ubtech",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.ubtrobot.com/en/humanoid/products/walker-s2"
+          ],
+          "product_url": null,
+          "lookup_host": "ubtrobot.com",
+          "url_status": "unverified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "Alpha 1E",
+          "slug": "ubtech-alpha-1e",
+          "company_name": "UBTECH",
+          "company_slug": "ubtech",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.ubtrobot.com/en/consumer/humanoid-robots/alpha-series/alpha-1e"
+          ],
+          "product_url": "https://www.ubtrobot.com/en/consumer/humanoid-robots/alpha-series/alpha-1e",
+          "lookup_host": "ubtrobot.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "Walker",
+          "slug": "ubtech-walker",
+          "company_name": "UBTECH",
+          "company_slug": "ubtech",
+          "primary_class": "service_robot",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.ubtrobot.com/en/humanoid/products/walker"
+          ],
+          "product_url": "https://www.ubtrobot.com/en/humanoid/products/walker",
+          "lookup_host": "ubtrobot.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
       ],
       "verified_urls": [
         "https://www.ubtrobot.com/en/humanoid/products/cruzr-s2",
-        "https://www.ubtrobot.com/"
+        "https://www.ubtrobot.com/",
+        "https://www.ubtrobot.com/en/consumer/humanoid-robots/alpha-series/alpha-1e",
+        "https://www.ubtrobot.com/en/humanoid/products/walker"
       ]
     },
     {
@@ -4011,7 +4959,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "H1",
@@ -4036,11 +4985,312 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "AS2",
+          "slug": "unitree-robotics-as2",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/As2/"
+          ],
+          "product_url": "https://www.unitree.com/As2/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GO2",
+          "slug": "unitree-robotics-go2",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/go2/"
+          ],
+          "product_url": "https://www.unitree.com/go2/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GO1",
+          "slug": "unitree-robotics-go1",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/go1/"
+          ],
+          "product_url": "https://www.unitree.com/go1/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "A1",
+          "slug": "unitree-robotics-a1",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/A1/"
+          ],
+          "product_url": "https://www.unitree.com/A1/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "A2",
+          "slug": "unitree-robotics-a2",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/A2/"
+          ],
+          "product_url": "https://www.unitree.com/A2/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "B2",
+          "slug": "unitree-robotics-b2",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/b2/"
+          ],
+          "product_url": "https://www.unitree.com/b2/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "B1",
+          "slug": "unitree-robotics-b1",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/b1/"
+          ],
+          "product_url": "https://www.unitree.com/b1/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "Z1",
+          "slug": "unitree-robotics-z1",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/z1/"
+          ],
+          "product_url": "https://www.unitree.com/z1/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "L2",
+          "slug": "unitree-robotics-l2",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/L2/"
+          ],
+          "product_url": "https://www.unitree.com/L2/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "H2",
+          "slug": "unitree-robotics-h2",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/H2/"
+          ],
+          "product_url": "https://www.unitree.com/H2/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "R1",
+          "slug": "unitree-robotics-r1",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/R1/"
+          ],
+          "product_url": "https://www.unitree.com/R1/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "H2-D",
+          "slug": "unitree-robotics-h2-d",
+          "company_name": "Unitree Robotics",
+          "company_slug": "unitree-robotics",
+          "primary_class": "humanoid",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "China / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.unitree.com/H2-D/"
+          ],
+          "product_url": "https://www.unitree.com/H2-D/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
       ],
       "verified_urls": [
-        "https://www.unitree.com/"
+        "https://www.unitree.com/",
+        "https://www.unitree.com/As2/",
+        "https://www.unitree.com/go2/",
+        "https://www.unitree.com/go1/",
+        "https://www.unitree.com/A1/",
+        "https://www.unitree.com/A2/",
+        "https://www.unitree.com/b2/",
+        "https://www.unitree.com/b1/",
+        "https://www.unitree.com/z1/",
+        "https://www.unitree.com/L2/",
+        "https://www.unitree.com/H2/",
+        "https://www.unitree.com/R1/",
+        "https://www.unitree.com/H2-D/"
       ]
     },
     {
@@ -4082,7 +5332,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "UR7e",
@@ -4107,7 +5358,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "UR12e",
@@ -4132,7 +5384,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "UR16e",
@@ -4157,7 +5410,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "UR20",
@@ -4182,7 +5436,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "UR30",
@@ -4207,7 +5462,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "UR15",
@@ -4232,7 +5488,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "UR18",
@@ -4257,7 +5514,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "UR8 Long",
@@ -4282,7 +5540,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ],
       "verified_urls": [
@@ -4336,7 +5595,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "GP8",
@@ -4361,7 +5621,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "GP25",
@@ -4386,7 +5647,8 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "AR1440",
@@ -4411,14 +5673,265 @@
           "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
+        },
+        {
+          "name": "GP4",
+          "slug": "yaskawa-motoman-gp4",
+          "company_name": "Yaskawa Motoman",
+          "company_slug": "yaskawa-motoman",
+          "primary_class": "industrial_arm",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Japan / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp4"
+          ],
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp4",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GP7",
+          "slug": "yaskawa-motoman-gp7",
+          "company_name": "Yaskawa Motoman",
+          "company_slug": "yaskawa-motoman",
+          "primary_class": "industrial_arm",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Japan / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp7"
+          ],
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp7",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GP8L",
+          "slug": "yaskawa-motoman-gp8l",
+          "company_name": "Yaskawa Motoman",
+          "company_slug": "yaskawa-motoman",
+          "primary_class": "industrial_arm",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Japan / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp8l"
+          ],
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp8l",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GP10",
+          "slug": "yaskawa-motoman-gp10",
+          "company_name": "Yaskawa Motoman",
+          "company_slug": "yaskawa-motoman",
+          "primary_class": "industrial_arm",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Japan / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp10"
+          ],
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp10",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GP12",
+          "slug": "yaskawa-motoman-gp12",
+          "company_name": "Yaskawa Motoman",
+          "company_slug": "yaskawa-motoman",
+          "primary_class": "industrial_arm",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Japan / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp12"
+          ],
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp12",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GP20HL",
+          "slug": "yaskawa-motoman-gp20hl",
+          "company_name": "Yaskawa Motoman",
+          "company_slug": "yaskawa-motoman",
+          "primary_class": "industrial_arm",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Japan / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp20hl"
+          ],
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp20hl",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GP35L",
+          "slug": "yaskawa-motoman-gp35l",
+          "company_name": "Yaskawa Motoman",
+          "company_slug": "yaskawa-motoman",
+          "primary_class": "industrial_arm",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Japan / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp35l"
+          ],
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp35l",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GP50",
+          "slug": "yaskawa-motoman-gp50",
+          "company_name": "Yaskawa Motoman",
+          "company_slug": "yaskawa-motoman",
+          "primary_class": "industrial_arm",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Japan / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp50"
+          ],
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp50",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GP70L",
+          "slug": "yaskawa-motoman-gp70l",
+          "company_name": "Yaskawa Motoman",
+          "company_slug": "yaskawa-motoman",
+          "primary_class": "industrial_arm",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Japan / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp70l"
+          ],
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp70l",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
+        },
+        {
+          "name": "GP88",
+          "slug": "yaskawa-motoman-gp88",
+          "company_name": "Yaskawa Motoman",
+          "company_slug": "yaskawa-motoman",
+          "primary_class": "industrial_arm",
+          "category": null,
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "status": null,
+          "region": "Japan / Global",
+          "spreadsheet_sources": [],
+          "candidate_sources": [
+            "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp88"
+          ],
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp88",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "oem_listing"
         }
       ],
       "verified_urls": [
         "https://www.motoman.com/en-us/products/robots/collaborative/hc-series/hc10dtp",
         "https://www.motoman.com/en-us/products/robots",
         "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp25",
-        "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar1440"
+        "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar1440",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp4",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp7",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp8l",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp10",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp12",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp20hl",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp35l",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp50",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp70l",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp88"
       ]
     },
     {
@@ -4460,7 +5973,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "ROSA ONE",
@@ -4485,7 +5999,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     },
@@ -4528,7 +6043,8 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         },
         {
           "name": "temi V3",
@@ -4553,9 +6069,11 @@
           "url_status": "unverified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
-          "flags": []
+          "flags": [],
+          "source": "workbook"
         }
       ]
     }
-  ]
+  ],
+  "discovered_added": 55
 }

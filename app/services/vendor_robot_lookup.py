@@ -292,6 +292,81 @@ def reload_vendor_robots_index() -> None:
     load_vendor_robots_index.cache_clear()
 
 
+def sku_name_aliases(name: str, slug: str = "") -> set[str]:
+    """Identity keys for one named SKU (UR20 / Universal Robots UR20)."""
+    keys: set[str] = set()
+    nkey = _name_key(name)
+    if nkey:
+        keys.add(nkey)
+    tokens = re.findall(r"[a-z0-9]+", (name or "").lower())
+    if tokens and len(tokens[-1]) >= 2:
+        keys.add(tokens[-1])
+    short = (slug or "").split("-")[-1]
+    if short and len(short) >= 2:
+        keys.add(_name_key(short))
+    return {k for k in keys if k}
+
+
+def names_are_same_sku(left: str, right: str, *, slug_left: str = "", slug_right: str = "") -> bool:
+    """True when two labels are the same product, not siblings (Servi vs Servi Plus)."""
+    a = _name_key(left)
+    b = _name_key(right)
+    if not a or not b:
+        return False
+    if a == b:
+        return True
+    longer, shorter = (a, b) if len(a) >= len(b) else (b, a)
+    if longer.endswith(shorter) and len(shorter) >= 3:
+        prefix = longer[: -len(shorter)]
+        if prefix.isalpha() and len(prefix) >= 3:
+            return True
+    aliases = sku_name_aliases(left, slug_left) & sku_name_aliases(right, slug_right)
+    return any(len(k) >= 4 and (a.endswith(k) or b.endswith(k)) for k in aliases)
+
+
+def _is_sku_path(path: str) -> bool:
+    p = (path or "").rstrip("/").lower() or "/"
+    if p in _GENERIC_PRODUCT_PATHS:
+        return False
+    if _LOCALE_ONLY_PATH.match(p):
+        return False
+    return True
+
+
+def prefer_product_url(incoming: str | None, existing: str | None) -> str | None:
+    """Keep a SKU path over a vendor homepage. Never invent a URL."""
+    inc = (incoming or "").strip() or None
+    ex = (existing or "").strip() or None
+    if not inc:
+        return ex
+    if not ex:
+        return inc
+    inc_sku = _is_sku_path(urlparse(inc).path)
+    ex_sku = _is_sku_path(urlparse(ex).path)
+    if inc_sku and not ex_sku:
+        return inc
+    return ex
+
+
+def _overlay_colliding_robot(robots: list[dict[str, Any]], robot: dict[str, Any]) -> bool:
+    """If this SKU is already indexed, keep the richer row and pin a better URL."""
+    name = str(robot.get("name") or "")
+    slug = str(robot.get("model_slug") or "")
+    for existing in robots:
+        if not names_are_same_sku(
+            name,
+            str(existing.get("name") or ""),
+            slug_left=slug,
+            slug_right=str(existing.get("model_slug") or ""),
+        ):
+            continue
+        better = prefer_product_url(robot.get("product_url"), existing.get("product_url"))
+        if better and better != (existing.get("product_url") or ""):
+            existing["product_url"] = better
+        return True
+    return False
+
+
 def _vendor_domain_map(index: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
     data = index or load_vendor_robots_index()
     out: dict[str, dict[str, Any]] = {}
@@ -314,6 +389,8 @@ def _vendor_domain_map(index: dict[str, Any] | None = None) -> dict[str, dict[st
                 slug = robot.get("model_slug")
                 nkey = _name_key(str(robot.get("name") or ""))
                 short = (slug or "").split("-")[-1]
+                if _overlay_colliding_robot(robots, robot):
+                    continue
                 if slug and slug in seen:
                     continue
                 if nkey and nkey in seen_names:
@@ -370,15 +447,33 @@ _GENERIC_PRODUCT_PATHS = frozenset(
     }
 )
 _LOCALE_ONLY_PATH = re.compile(r"^/(?:en|zh|ja|ko|de|fr|es|it|pt)(?:-[a-z]{2,4})?$", re.I)
-
-
-def _is_sku_path(path: str) -> bool:
-    p = (path or "").rstrip("/").lower() or "/"
-    if p in _GENERIC_PRODUCT_PATHS:
-        return False
-    if _LOCALE_ONLY_PATH.match(p):
-        return False
-    return True
+_GENERIC_PATH_TOKENS = frozenset(
+    {
+        "robots",
+        "robot",
+        "products",
+        "product",
+        "cobot",
+        "cobots",
+        "industrial",
+        "collaborative",
+        "amr",
+        "amrs",
+        "agv",
+        "agvs",
+        "models",
+        "series",
+        "family",
+        "overview",
+        "index",
+        "home",
+        "en",
+        "zh",
+        "solutions",
+        "hardware",
+        "platform",
+    }
+)
 
 
 def select_index_robot(url: str | None, vendor: dict[str, Any]) -> Optional[dict[str, Any]]:
@@ -410,6 +505,15 @@ def select_index_robot(url: str | None, vendor: dict[str, Any]) -> Optional[dict
         short = slug.split("-")[-1] if slug else ""
         if short and len(short) >= 2 and path and short == slug_from_path:
             return robot
+    token = _name_key(slug_from_path)
+    if token and len(token) >= 3 and token not in _GENERIC_PATH_TOKENS and _is_sku_path(path):
+        for robot in robots:
+            if names_are_same_sku(
+                str(robot.get("name") or ""),
+                slug_from_path,
+                slug_left=str(robot.get("model_slug") or ""),
+            ):
+                return robot
     return None
 
 

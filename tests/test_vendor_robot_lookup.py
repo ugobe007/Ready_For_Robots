@@ -179,6 +179,86 @@ def test_shipped_index_resolves_oem_homepages_without_guessing():
     assert lookup_vendor_by_url("https://www.tmcnet.com/usubmit/keenon") is None
 
 
+def test_jobs_seed_name_collision_still_pins_ur20_url():
+    from app.services.vendor_robot_lookup import names_are_same_sku
+
+    assert names_are_same_sku("UR20", "Universal Robots UR20")
+    assert not names_are_same_sku("Servi", "Servi Plus")
+    jobs = {
+        "vendor_name": "Universal Robots",
+        "domains": ["universal-robots.com"],
+        "robots": [
+            {
+                "name": "Universal Robots UR20",
+                "model_slug": "universal-robots-universal-robots-ur20",
+                "product_url": "https://www.universal-robots.com",
+                "catalog_claims": [{"predicate": "product_class", "value": "cobot"}],
+            }
+        ],
+    }
+    oem = {
+        "vendor_name": "Universal Robots",
+        "domains": ["universal-robots.com"],
+        "robots": [
+            {
+                "name": "UR20",
+                "model_slug": "universal-robots-ur20",
+                "product_url": "https://www.universal-robots.com/products/ur20/",
+                "catalog_claims": [],
+                "specs": {},
+            }
+        ],
+    }
+    merged = lookup_vendor_by_url(
+        "https://www.universal-robots.com/products/ur20/",
+        index={"vendors": [jobs, oem]},
+    )
+    assert merged is not None
+    assert len(merged["robots"]) == 1
+    assert merged["robots"][0]["name"] == "Universal Robots UR20"
+    assert merged["robots"][0]["product_url"].rstrip("/").endswith("/ur20")
+    sku = select_index_robot("https://www.universal-robots.com/products/ur20/", merged)
+    assert sku is not None
+    assert "UR20" in sku["name"]
+
+
+def test_vega_and_stretch_keep_richer_rows_on_merge():
+    dexmate = {
+        "vendor_name": "Dexmate",
+        "domains": ["dexmate.ai"],
+        "robots": [
+            {
+                "name": "Dexmate Vega",
+                "model_slug": "dexmate-vega",
+                "product_url": "https://www.dexmate.ai/product/vega",
+                "catalog_claims": [{"predicate": "product_class", "value": "mobile_manipulator"}],
+                "specs": {"payload_kg": 10},
+            }
+        ],
+    }
+    thin = {
+        "vendor_name": "Dexmate",
+        "domains": ["dexmate.ai"],
+        "robots": [
+            {
+                "name": "Vega",
+                "model_slug": "dexmate-vega-thin",
+                "product_url": "https://www.dexmate.ai/",
+                "catalog_claims": [],
+                "specs": {},
+            }
+        ],
+    }
+    hit = lookup_vendor_by_url("https://www.dexmate.ai/product/vega", index={"vendors": [dexmate, thin]})
+    assert hit is not None
+    assert len(hit["robots"]) == 1
+    assert hit["robots"][0]["name"] == "Dexmate Vega"
+    assert hit["robots"][0]["specs"]["payload_kg"] == 10
+    sku = select_index_robot("https://www.dexmate.ai/product/vega", hit)
+    assert sku is not None
+    assert "Vega" in sku["name"]
+
+
 def test_profile_from_specs_is_identity_not_a_guess():
     profile = profile_from_specs(
         robot_name="Unitree G1",

@@ -190,3 +190,98 @@ def test_ontology_loader_sees_catalog_identity():
     }
     assert "universal-robots-ur20" in slugs
     assert "boston-dynamics-stretch" in slugs
+
+
+def test_discover_indexes_named_skus_and_rejects_series_blobs():
+    from app.services.oem_sku_discover import (
+        discover_skus,
+        is_junk_sku_name,
+        looks_like_named_sku,
+        merge_discovered_skus,
+    )
+
+    assert is_junk_sku_name("UR Series")
+    assert is_junk_sku_name("Collaborative robots")
+    assert is_junk_sku_name("Privacy Policy")
+    assert is_junk_sku_name("Skip to content")
+    assert is_junk_sku_name("Machine Tending")
+    assert not is_junk_sku_name("UR30")
+    assert not looks_like_named_sku("Investor Relations")
+    assert looks_like_named_sku("UR30")
+    assert looks_like_named_sku("FIGURE 03")
+
+    catalog = {
+        "ontology_id": "oem_sku_catalog_v1",
+        "version": "1.0.0",
+        "notes": [],
+        "companies": [
+            {
+                "name": "Universal Robots",
+                "slug": "universal-robots",
+                "domains": ["universal-robots.com"],
+                "source_urls": ["https://www.universal-robots.com/products/"],
+                "products": [
+                    {
+                        "name": "UR20",
+                        "slug": "universal-robots-ur20",
+                        "primary_class": "cobot",
+                        "product_url": "https://www.universal-robots.com/products/ur20/",
+                    }
+                ],
+            }
+        ],
+    }
+    pages = {
+        "https://www.universal-robots.com/products/": SimpleNamespace(
+            status_code=200,
+            title="UR cobots",
+            text="Universal Robots product lineup.",
+            links=[
+                ("https://www.universal-robots.com/products/ur30/", "UR30"),
+                ("https://www.universal-robots.com/products/ur-series/", "UR Series"),
+                ("https://www.universal-robots.com/products/collaborative-robots/", "Collaborative robots"),
+            ],
+            final_url="https://www.universal-robots.com/products/",
+        ),
+        "https://www.universal-robots.com/products/ur30/": SimpleNamespace(
+            status_code=200,
+            title="UR30 cobot",
+            text="The UR30 from Universal Robots handles heavy payloads.",
+            links=[],
+            final_url="https://www.universal-robots.com/products/ur30/",
+        ),
+    }
+
+    def fake_fetch(url, allow_archive=False):
+        if url in pages:
+            return pages[url]
+        if url.rstrip("/").endswith("/ur30"):
+            return pages["https://www.universal-robots.com/products/ur30/"]
+        if "universal-robots.com" in url and "ur-series" not in url and "collaborative" not in url:
+            return pages["https://www.universal-robots.com/products/"]
+        return SimpleNamespace(status_code=404, title="", text="", links=[], final_url=url)
+
+    def fake_text(url):
+        return (404, "")
+
+    result = discover_skus(
+        catalog,
+        fetch_page=fake_fetch,
+        fetch_text=fake_text,
+        rate_limit_s=0,
+        sleep=lambda _s: None,
+        max_listings_per_oem=2,
+    )
+    names = {row["name"] for row in result["verified"]}
+    assert "UR30" in names
+    assert "UR Series" not in names
+    assert "Collaborative robots" not in names
+    merge_discovered_skus(catalog, result)
+    product_names = [p["name"] for p in catalog["companies"][0]["products"]]
+    assert "UR20" in product_names
+    assert "UR30" in product_names
+    assert "UR Series" not in product_names
+    ur30 = next(p for p in catalog["companies"][0]["products"] if p["name"] == "UR30")
+    assert ur30["specs"] == {}
+    assert ur30["capability_confidence"] == "UNKNOWN"
+    assert ur30["source"] == "oem_listing"
