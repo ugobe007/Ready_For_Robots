@@ -751,6 +751,10 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/crmCollectedCountLabel/);
     expect(desk).toMatch(/crmSelectAllKeys/);
     expect(desk).toMatch(/Keep all collected jobs/);
+    expect(desk).toMatch(/JOBS_KEEP_JOBS_CTA/);
+    expect(desk).toMatch(/JobsKeepStatusBar/);
+    expect(desk).toMatch(/JobsCrmNextSteps/);
+    expect(desk).toMatch(/JobsCrmInbox/);
     expect(desk).toMatch(/aria-label="Collected jobs"/);
     expect(desk).toMatch(/CRM_EMPLOYER_NAME_CLASS/);
     expect(desk).toMatch(/\{card\.jobTitle\}/);

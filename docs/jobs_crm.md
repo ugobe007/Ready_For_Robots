@@ -109,9 +109,21 @@ Primary deal action on an **opened** collected job: **Place this job →** (pack
 
 Default desk is a **listing** of collected jobs (cap 5 on free). Select-all keeps all five. Expanding a row inspects the Job Card (employer, workplace, work, qualification, open questions, task-model burden). Place / pack / quote is the second beat. Acting on one job does not deselect the others.
 
-### F6 — Pipeline activity on the same job record (ship, local)
+### F6 — Pipeline activity on the same job record (ship, account)
 
-Actions taken on FIND / QUALIFY (keep, Open CRM) and on the desk (Place, apply) append to a **pipeline activity** log on the job’s CRM record so the user can review them later. v1 may be `localStorage` keyed per browser; account persistence is next. Collect / inspect / place language on the desk maps onto these same events. Do not add points or badges.
+Actions taken on FIND / QUALIFY (keep, Open CRM) and on the desk (Place, apply) append to a **pipeline activity** log on the job’s CRM record so the user can review them later. Signed-in activity is stored on the account (`jobs_crm_activity`). `rfr_pipeline_activity_v1` remains a local bridge for unsigned handoff. Collect / inspect / place language on the desk maps onto these same events. Do not add points or badges.
+
+### F10 — Keep jobs on the account (ship)
+
+Authenticated **Keep jobs** upserts selected Job Cards onto the user (`user_kept_jobs`). Schema: user, job identity (employer, work title, source ids), robot/submission, timestamps, free TTL/entitlement. Unsigned users still hit the wall; after signup, kept jobs restore. Click shows a status bar “N jobs saved” plus a CRM link only when the user is not already on the desk.
+
+### F11 — Next steps offer → apply outreach (ship)
+
+After keep, **Next steps** collects robot name, catalogued OEM SKUs, skippable PoC, and the **user’s proposed monthly price**. Apply persists `job_applications` and sends employer outreach only when a real contact email is on the card. No invented emails. No invented rental dollars.
+
+### F12 — Employer inbox on the desk (ship)
+
+Employer replies live in `application_messages` (inbound/outbound). The CRM desk shows thread state (sent / awaiting reply / replied) and a Reply composer. If inbound MX is not wired, users can paste a reply. Access is on the kept job — not a sidecar spreadsheet.
 
 ### F7 — 7-day free TTL + 15/month (spec now, enforce next)
 
@@ -188,7 +200,7 @@ Matcher retune, Cal, invented dollars, HubSpot OAuth export UI, cron expiry job,
 
 ## Next missions (ranked)
 
-1. Persist pipeline activity + dumped jobs on the **account** (not only `localStorage`).
-2. Enforce F7 on the API (TTL + monthly dump count).
+1. Wire Resend inbound MX/DNS so employer replies land automatically (`jobs+{token}@` domain).
+2. Enforce F7 cron expiry job in production (`alembic upgrade` leftover until Fly runs it).
 3. Paid F8: list all matching jobs, not only the last FIND dump.
 4. F9: HubSpot + CSV export of Robot Jobs.
