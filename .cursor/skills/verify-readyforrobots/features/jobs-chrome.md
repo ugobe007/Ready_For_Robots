@@ -8,6 +8,7 @@ Jobs chrome is the page frame for FIND → cards → CRM: dark header, process b
 - `chrome-process` 01 Show us your robot → 02 Here are its jobs → 03 CRM, as links, top and bottom.
 - `chrome-no-pipeline` no Pipeline nav, no SIGNAL FAB on Jobs pages.
 - `chrome-scroll` the document scrolls; no `100vh` + `overflow: hidden` trap.
+- `chrome-pstack` Jobs agent protocol module (`aria-label="Jobs agent protocol"`). Matcher is `POST /api/robot-job-match`. How / Act / Critic. Not a chatbot.
 
 ## How to get to it (user POV)
 

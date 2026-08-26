@@ -30,7 +30,7 @@ Read `docs/product_market_fit.md`, **`docs/value_first_principle.md`**, and **`d
 
 Lead-quality north star (below) is **SIGNAL infrastructure**, not the product. Fix junk on that path; do not hop Jobs traffic onto HOT buyers.
 
-**Hermes is retired (2026-08-26).** Do not spawn Hermes for FIND or Jobs. Do not follow [`docs/hermes_intelligence_bridge.md`](docs/hermes_intelligence_bridge.md) as production. The product loop is robot URL → Job Cards (`POST /api/robot-job-match`). Cursor **pstack** is IDE model routing only — never on readyforrobots.com, Vite, Vercel, or Fly. See [`docs/hermes_retired.md`](docs/hermes_retired.md) and [`docs/pstack_jobs.md`](docs/pstack_jobs.md). `.cursor/rules/pstack-jobs.mdc` + `.cursor/rules/pstack-rfr.mdc`.
+**Hermes is retired (2026-08-26).** Do not spawn Hermes for FIND or Jobs. Do not follow [`docs/hermes_intelligence_bridge.md`](docs/hermes_intelligence_bridge.md) as production. The product loop is robot URL → Job Cards (`POST /api/robot-job-match`). Cursor **pstack** is the site agent protocol plus IDE routing (How / Act / Critic). It is not a customer chatbot and not the matcher. See [`docs/hermes_retired.md`](docs/hermes_retired.md) and [`docs/pstack_jobs.md`](docs/pstack_jobs.md). `.cursor/rules/pstack-jobs.mdc` + `.cursor/rules/pstack-rfr.mdc`. Chrome: `JobsPstackProtocol`.
 
 ## North star (strict priority)
 
@@ -80,7 +80,7 @@ Snapshot `intelligence` slice (junk reasons, gap frequency, industry deltas) dri
 | **Deploy** | git, pytest subset, Fly deploy, smoke checks | `DEPLOYMENT.md`, `SCRIPTS.md` |
 | **ScraperOps** | Source drift, blocklist, orchestrator stats | `SCRAPER_SYSTEM.md` |
 
-pstack role map (IDE only): Orchestrator = parent; ProductSurface = frontend; LeadQuality = critics on names; Deploy = verify-readyforrobots. There is no Hermes pstack role.
+pstack role map (site protocol + IDE): Orchestrator = parent; ProductSurface = Act / frontend; LeadQuality = critics on names; Deploy = Critic / verify-readyforrobots. There is no Hermes pstack role.
 
 Subagents get **minimal tools** for their scope. The Orchestrator does not implement code directly when a specialist exists.
 
@@ -226,5 +226,5 @@ Legacy `frontend/nextjs/` — avoid new product work unless explicitly requested
 - [docs/jobs_crm.md](docs/jobs_crm.md) — Jobs CRM spec (signup wall, free 5 / 15×month / 7-day, export)
 - [docs/agent-spec.md](docs/agent-spec.md) — CRM copilot (not Hermes; Hermes retired)
 - [docs/hermes_retired.md](docs/hermes_retired.md) — Hermes is not a Jobs agent
-- [docs/pstack_jobs.md](docs/pstack_jobs.md) — Cursor pstack is IDE-only
+- [docs/pstack_jobs.md](docs/pstack_jobs.md) — pstack is site protocol + IDE routing
 - [docs/vercel_agent_spend.md](docs/vercel_agent_spend.md) — agents must not meter Vercel Preview / AI Gateway

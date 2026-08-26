@@ -111,6 +111,7 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { isNamedRobotJob, robotJobCardFromMatch } from "@/lib/robotJobCard";
+import JobsPstackProtocol from "@/components/JobsPstackProtocol";
 
 /* ------------------------------------------------------------------ */
 /* Types + constants                                                   */
@@ -1937,6 +1938,9 @@ export default function RobotJobsWorkspace() {
           />
         )}
       </section>
+      </div>
+      <div className="relative z-[60] mt-6">
+        <JobsPstackProtocol />
       </div>
       <div className="rfr-jobs-page-footer relative z-[60] pointer-events-auto border-t border-slate-600 bg-[#0b162f]">
         <JobsProcessNav

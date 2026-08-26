@@ -7,7 +7,7 @@ description: Drive ReadyForRobots Jobs the way a user does — FIND on `/`, Job 
 
 Primary surface: **Jobs web UI** on `https://readyforrobots.com` (`readyforrobots-new/`, Vite + wouter). API: `https://ready-2-robot.fly.dev`. Other routes (SIGNAL `/pipeline`, Cal admin) exist; they are not the product. Do not hop Jobs traffic onto HOT buyers.
 
-**Hermes is retired.** Do not smoke `/experiment` as FIND. FIND is `/`. Jobs proof is this skill plus `POST /api/robot-job-match`. pstack is IDE routing only.
+**Hermes is retired.** Do not smoke `/experiment` as FIND. FIND is `/`. Jobs proof is this skill plus `POST /api/robot-job-match`. **Critic is pstack.** How / Act / Critic live in `pstackSite.ts` and `pstack_protocol.py`. pstack is site protocol plus IDE routing, not a customer chatbot.
 
 You are reading this cold. Production is the honest instance. A local Vite shell is optional chrome. A 7-second “Deploy frontend” skip is not proof.
 

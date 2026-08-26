@@ -27,6 +27,6 @@ Ingest endpoints stay in the API so we do not force a migration. They return **4
 
 Robot URL on `/` → Job Cards → signup wall → CRM.
 
-Cursor **pstack** is IDE model routing only. It does not run on readyforrobots.com, Vite, Vercel, or Fly. See [`pstack_jobs.md`](pstack_jobs.md).
+Cursor **pstack** is the site agent protocol plus IDE routing (How / Act / Critic). It does not replace the matcher and is not a customer chatbot. See [`pstack_jobs.md`](pstack_jobs.md).
 
 Historical bridge notes: [`hermes_intelligence_bridge.md`](hermes_intelligence_bridge.md) (retired).

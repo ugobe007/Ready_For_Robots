@@ -8,6 +8,7 @@ About (`/intelligence`) explains the Jobs loop and sends the user back to FIND. 
 - `about-cta` Start jobs → goes to `/?new=1`.
 - `about-chrome` Jobs header (no Pipeline).
 - `about-signup` signup carries `src=jobs_activate`.
+- `about-pstack` Jobs agent protocol (`#jobs-protocol`): matcher owns jobs; How / Act / Critic inspect.
 
 ## How to get to it (user POV)
 
