@@ -82,6 +82,12 @@ def task_model_ontology() -> dict[str, Any]:
     return _load("task_model_ontology.v1.json")
 
 
+@lru_cache(maxsize=1)
+def oem_sku_catalog() -> dict[str, Any]:
+    """Operator OEM → named SKU identity catalog. Fail-open to {}."""
+    return _load("oem_sku_catalog.v1.json")
+
+
 # ── Accessors used by the pipeline (each fails open to the baked-in default) ──
 
 def confidence_states() -> tuple[str, ...]:

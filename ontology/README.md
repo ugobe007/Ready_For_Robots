@@ -71,6 +71,7 @@ workflow via `app/services/robot_ontology.py`:
 - [`vertical_ontology.v1.json`](vertical_ontology.v1.json) — operating environments / verticals (healthcare, eldercare, hospitality, …). The extractor emits `operating_environment` = a vertical key.
 - [`inference_rules.v1.json`](inference_rules.v1.json) — structured R1–R21 with status.
 - [`task_model_ontology.v1.json`](task_model_ontology.v1.json) — per-job required task-model slots + where to look. Presence starts unknown.
+- [`oem_sku_catalog.v1.json`](oem_sku_catalog.v1.json) — operator OEM → named SKU identity seed (COMPANY → PRODUCT). Empty specs stay `UNKNOWN`. Rebuild: `PYTHONPATH=. python3 scripts/ingest_oem_sku_catalog.py`. FIND loads the compiled `app/data/vendor_robots_oem_sku_seed.json` via `vendor_robot_lookup`.
 
 Pre-existing companions:
 - [`primitives.v1.json`](primitives.v1.json) — frozen WORK primitive codes (IDs never renamed).

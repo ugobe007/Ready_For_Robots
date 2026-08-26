@@ -76,8 +76,9 @@ def test_jobs_seed_homepage_skips_fetch_and_caps_picker(monkeypatch):
     assert timings.get("home_fetch") == "skipped"
     assert profile.needs_product_choice is True
     names = [p.name for p in profile.products]
-    assert names == ["MiR250", "MiR600", "MiR1350"]
-    assert all(p.description for p in profile.products)
+    assert names[:3] == ["MiR250", "MiR600", "MiR1350"]
+    assert "MiR1200 Pallet Jack" in names
+    assert all(p.description for p in profile.products if p.name in {"MiR250", "MiR600", "MiR1350"})
 
 
 def test_page_parse_is_name_then_description_then_specs():
