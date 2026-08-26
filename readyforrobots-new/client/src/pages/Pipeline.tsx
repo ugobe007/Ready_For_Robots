@@ -4045,6 +4045,7 @@ export default function Pipeline() {
         <JobsCrmDesk
           signedIn={isSignedIn}
           authReady={!authLoading}
+          accessToken={session?.access_token || null}
           submissionId={submissionIdFromQuery}
         />
         <SiteFooter />

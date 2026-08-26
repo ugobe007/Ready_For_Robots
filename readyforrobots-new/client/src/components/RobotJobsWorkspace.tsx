@@ -28,6 +28,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
+import {
+  JOBS_KEEP_JOBS_CTA,
+  JOBS_NEXT_STEPS_CTA,
+  jobsCrmOfferHref,
+  keepJobsOnAccount,
+} from "@/lib/jobsCrmAccount";
 import { trackRobotJobsFunnel } from "@/lib/siteAnalytics";
 import {
   fetchRobotJobSearch,
@@ -629,6 +636,7 @@ export default function RobotJobsWorkspace() {
   const [railTab, setRailTab] = useState<RailTab>("jobs");
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [checkedJobKeys, setCheckedJobKeys] = useState<string[]>([]);
+  const [keepSavedCount, setKeepSavedCount] = useState(0);
   const [showAllJobs, setShowAllJobs] = useState(false);
   const [lineupPreview, setLineupPreview] = useState(false);
 
@@ -1384,7 +1392,27 @@ export default function RobotJobsWorkspace() {
       selected_count: jobs.length,
       list_count: jobs.length,
     });
+    void persistKeptJobs(jobs);
     setLocation(jobsCrmOpenHref(Boolean(session), submissionIdRef.current));
+  }
+
+  async function persistKeptJobs(jobs: MatchJob[]) {
+    const pool = jobs.filter(job => job?.job_key);
+    if (!pool.length) return;
+    setKeepSavedCount(pool.length);
+    const token = session?.access_token;
+    if (!token) return;
+    try {
+      const result = await keepJobsOnAccount(token, {
+        jobs: pool,
+        robotName: active?.productName || companyName,
+        robotUrl: submittedUrlRef.current,
+        submissionId: submissionIdRef.current,
+      });
+      setKeepSavedCount(result.saved_count);
+    } catch {
+      /* handoff still holds the rows */
+    }
   }
 
   function applyCheckedKeys(jobs: MatchJob[], saved?: string[]) {
@@ -1688,6 +1716,8 @@ export default function RobotJobsWorkspace() {
         checkedJobKeys: next,
       });
       writeCrmHandoff(next);
+      const pool = crmPool().filter(job => next.includes(job.job_key));
+      void persistKeptJobs(pool);
       return next;
     });
   }
@@ -1929,6 +1959,15 @@ export default function RobotJobsWorkspace() {
             onSelectJob={selectJob}
             onToggleJob={toggleCheckedJob}
             onActivate={goToActivate}
+            onKeepJobs={() => {
+              const pool = crmPool();
+              const jobs = jobsForCrmDesk(pool, checkedJobKeys, CRM_UNLOCKED_JOBS);
+              writeCrmHandoff(checkedJobKeys, pool, undefined, jobs);
+              void persistKeptJobs(jobs);
+            }}
+            keepSavedCount={keepSavedCount}
+            signedIn={Boolean(session)}
+            submissionId={submissionIdRef.current}
             onSeeAll={seeAllJobs}
             onRunOneRobot={runOneRobot}
             robotCount={lineupPreview ? portfolio.length : 1}
@@ -2756,6 +2795,10 @@ function JobsPanel({
   onSelectJob,
   onToggleJob,
   onActivate,
+  onKeepJobs,
+  keepSavedCount = 0,
+  signedIn = false,
+  submissionId = null,
   onSeeAll,
   onRunOneRobot,
   robotCount = 1,
@@ -2772,6 +2815,10 @@ function JobsPanel({
   onSelectJob: (job: MatchJob) => void;
   onToggleJob: (job: MatchJob) => void;
   onActivate: () => void;
+  onKeepJobs?: () => void;
+  keepSavedCount?: number;
+  signedIn?: boolean;
+  submissionId?: number | null;
   onSeeAll: () => void;
   onRunOneRobot: () => void;
   robotCount?: number;
@@ -2830,6 +2877,36 @@ function JobsPanel({
           </span>
         </p>
       )}
+      <div className="mt-4 space-y-3">
+        {keepSavedCount > 0 ? (
+          <JobsKeepStatusBar
+            savedCount={keepSavedCount}
+            onCrmDesk={false}
+            signedIn={signedIn}
+            submissionId={submissionId}
+          />
+        ) : null}
+        {keepSavedCount > 0 ? (
+          <a
+            href={jobsCrmOfferHref(signedIn, submissionId)}
+            className="inline-flex items-center justify-center border border-emerald-400/50 bg-emerald-400/10 px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300"
+          >
+            {JOBS_NEXT_STEPS_CTA}
+          </a>
+        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {onKeepJobs ? (
+            <button
+              type="button"
+              onClick={onKeepJobs}
+              aria-label={JOBS_KEEP_JOBS_CTA}
+              className="inline-flex items-center justify-center border border-emerald-400/50 bg-emerald-400 px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a]"
+            >
+              {JOBS_KEEP_JOBS_CTA}
+            </button>
+          ) : null}
+        </div>
+      </div>
       <JobsActivateBar
         onActivate={onActivate}
         checkedCount={checkedCount}

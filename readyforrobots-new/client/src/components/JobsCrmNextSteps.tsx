@@ -1,0 +1,214 @@
+import { useEffect, useState } from "react";
+import {
+  JOBS_APPLY_OFFER_CTA,
+  JOBS_MODEL_SELECT_HINT,
+  JOBS_MODEL_SELECT_LABEL,
+  JOBS_NEXT_STEPS_HINT,
+  JOBS_PROPOSED_PRICE_HINT,
+  JOBS_PROPOSED_PRICE_LABEL,
+  applyJobOnAccount,
+  canSubmitNextStepsOffer,
+  fetchCatalogSkus,
+  type CatalogSku,
+  type JobsCrmApplication,
+} from "@/lib/jobsCrmAccount";
+import {
+  JOBS_POC_PREFER_HINT,
+  JOBS_POC_SKIP_CTA,
+} from "@/lib/jobsApply";
+import { JOBS_EYEBROW_CLASS } from "@/lib/jobsWorkflow";
+import type { MatchJob } from "@/lib/robotJobMatch";
+import { robotJobCardFromMatch } from "@/lib/robotJobCard";
+
+export default function JobsCrmNextSteps({
+  job,
+  robotName,
+  robotUrl,
+  token,
+  onApplied,
+}: {
+  job: MatchJob;
+  robotName: string;
+  robotUrl?: string;
+  token: string;
+  onApplied: (app: JobsCrmApplication) => void;
+}) {
+  const card = robotJobCardFromMatch(job);
+  const [skus, setSkus] = useState<CatalogSku[]>([]);
+  const [models, setModels] = useState<string[]>([]);
+  const [monthlyPrice, setMonthlyPrice] = useState("");
+  const [pocEvidence, setPocEvidence] = useState("");
+  const [pocSkipped, setPocSkipped] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const ready = canSubmitNextStepsOffer({
+    monthlyPrice,
+    selectedModels: models,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCatalogSkus(token, {
+      url: robotUrl,
+      company: robotName,
+    })
+      .then(rows => {
+        if (!cancelled) setSkus(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setSkus([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, robotUrl, robotName]);
+
+  function toggleModel(name: string, on: boolean) {
+    setModels(prev => {
+      const set = new Set(prev);
+      if (on) set.add(name);
+      else set.delete(name);
+      return [...set];
+    });
+  }
+
+  async function apply() {
+    if (!ready || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const app = await applyJobOnAccount(token, {
+        jobKey: job.job_key,
+        robotName,
+        selectedModels: models,
+        monthlyPrice,
+        pocEvidence,
+        pocSkipped: pocSkipped || !pocEvidence.trim(),
+        job,
+      });
+      onApplied(app);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not apply.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section
+      id="jobs-next-steps"
+      aria-label="Next steps"
+      className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-6 sm:px-6"
+    >
+      <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>Next steps</p>
+      <h2 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">
+        Offer for {card.jobTitle}
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed text-slate-300">
+        {JOBS_NEXT_STEPS_HINT}
+      </p>
+
+      <label className="mt-6 block">
+        <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>Robot name</span>
+        <input
+          type="text"
+          readOnly
+          value={robotName}
+          aria-label="Robot name"
+          className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-slate-100"
+        />
+      </label>
+
+      <fieldset className="mt-6">
+        <legend className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+          {JOBS_MODEL_SELECT_LABEL}
+        </legend>
+        <p className="mt-1 text-sm text-slate-400">{JOBS_MODEL_SELECT_HINT}</p>
+        {skus.length === 0 ? (
+          <p className="mt-3 text-sm text-amber-200/90">
+            No catalogued SKUs for this OEM. We will not invent a model. Apply
+            stays gated until a listed SKU is available.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {skus.map(sku => (
+              <li key={sku.slug || sku.name}>
+                <label className="flex items-center gap-2 text-sm text-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={models.includes(sku.name)}
+                    onChange={e => toggleModel(sku.name, e.target.checked)}
+                    className="h-4 w-4 accent-emerald-400"
+                  />
+                  {sku.name}
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+      </fieldset>
+
+      <label className="mt-6 block">
+        <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+          PoC proof if available
+        </span>
+        <span className="mt-1 block text-sm text-slate-400">
+          {JOBS_POC_PREFER_HINT}
+        </span>
+        <textarea
+          className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100"
+          rows={3}
+          value={pocEvidence}
+          onChange={e => {
+            setPocEvidence(e.target.value);
+            setPocSkipped(false);
+          }}
+          placeholder="Site demo, video, or written proof of concept — optional"
+        />
+      </label>
+      {!pocSkipped && !pocEvidence.trim() ? (
+        <button
+          type="button"
+          onClick={() => setPocSkipped(true)}
+          className="mt-2 border border-slate-600 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-slate-300"
+        >
+          {JOBS_POC_SKIP_CTA}
+        </button>
+      ) : pocSkipped ? (
+        <p className="mt-2 font-mono text-xs uppercase tracking-[0.08em] text-slate-500">
+          PoC skipped. Employers still prefer proof.
+        </p>
+      ) : null}
+
+      <label className="mt-6 block">
+        <span className="block font-display text-xl font-bold text-white">
+          {JOBS_PROPOSED_PRICE_LABEL}
+        </span>
+        <span className="mt-1 block text-sm text-slate-400">
+          {JOBS_PROPOSED_PRICE_HINT}
+        </span>
+        <input
+          type="text"
+          aria-label={JOBS_PROPOSED_PRICE_LABEL}
+          className="mt-3 w-full border border-emerald-400/50 bg-[#081126] px-4 py-3 text-lg text-slate-100"
+          value={monthlyPrice}
+          onChange={e => setMonthlyPrice(e.target.value)}
+          placeholder="e.g. your RaaS / lease quote per month"
+        />
+      </label>
+
+      {error ? (
+        <p className="mt-4 text-sm text-amber-200">{error}</p>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={() => void apply()}
+        disabled={!ready || busy}
+        className="mt-6 inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {busy ? "Applying…" : JOBS_APPLY_OFFER_CTA}
+      </button>
+    </section>
+  );
+}
