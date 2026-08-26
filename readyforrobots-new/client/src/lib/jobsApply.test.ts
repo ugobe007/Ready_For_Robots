@@ -11,6 +11,9 @@ import {
   placementMoneyLane,
   placementNextActionLabel,
   canLockQuote,
+  lockQuoteUpdate,
+  JOBS_POC_PREFER_HINT,
+  JOBS_POC_SKIP_CTA,
 } from "./jobsApply";
 import type { MatchJob } from "./robotJobMatch";
 
@@ -45,7 +48,7 @@ const job: MatchJob = {
 };
 
 describe("jobsApply", () => {
-  it("blocks apply until pack, PoC, and monthly rental are present", () => {
+  it("blocks apply until pack and monthly rental are present; PoC is skippable", () => {
     const empty = emptyApplyRecord("cnc-1");
     const gaps = jobCredentialGaps(job, empty);
     expect(gaps.map(g => g.id)).toEqual([
@@ -53,10 +56,17 @@ describe("jobsApply", () => {
       "poc_evidence",
       "monthly_rental",
     ]);
+    expect(gaps.find(g => g.id === "poc_evidence")?.required).toBe(false);
+    expect(gaps.find(g => g.id === "model_pack")?.required).toBe(true);
+    expect(gaps.find(g => g.id === "monthly_rental")?.required).toBe(true);
     expect(gaps.every(g => !g.met)).toBe(true);
     expect(applyStatusFromGaps(gaps, empty)).toBe("blocked");
     expect(canApplyToJob(gaps, empty)).toBe(false);
     expect(gaps.find(g => g.id === "monthly_rental")?.howToFix).toMatch(/Do not invent/i);
+    expect(gaps.find(g => g.id === "poc_evidence")?.howToFix).toMatch(/prefer proof/i);
+    expect(JOBS_POC_SKIP_CTA).toMatch(/Skip PoC/i);
+    expect(JOBS_POC_PREFER_HINT).toMatch(/prefer proof of concept/i);
+    expect(JOBS_POC_PREFER_HINT).toMatch(/skip/i);
   });
 
   it("is ready when the OEM/distributor can license the pack and quoted rental", () => {
@@ -117,7 +127,6 @@ describe("jobsApply", () => {
     const quoted = {
       ...empty,
       packAcknowledged: true,
-      pocEvidence: "Cell demo video from integrator SOW",
     };
     expect(placementMoneyLane(jobCredentialGaps(job, quoted), quoted)).toBe("quote");
     expect(placementNextActionLabel(job, quoted)).toBe("Lock this quote");
@@ -129,9 +138,61 @@ describe("jobsApply", () => {
     };
     expect(placementMoneyLane(jobCredentialGaps(job, filled), filled)).toBe("quote");
     expect(canLockQuote(jobCredentialGaps(job, filled), filled)).toBe(true);
+    expect(canApplyToJob(jobCredentialGaps(job, filled), filled)).toBe(true);
+    expect(applyStatusFromGaps(jobCredentialGaps(job, filled), filled)).toBe("ready");
+    const skipped = { ...filled, pocSkipped: true };
+    expect(canLockQuote(jobCredentialGaps(job, skipped), skipped)).toBe(true);
     const ready = { ...filled, quoteCommitted: true };
     expect(placementMoneyLane(jobCredentialGaps(job, ready), ready)).toBe("apply");
     expect(placementNextActionLabel(job, ready)).toBe("Place this job →");
     expect(placementAgentBrief(job, ready, "Dexmate Vega")).toMatch(/money moment/i);
+    expect(placementAgentBrief(job, ready, "Dexmate Vega")).toMatch(/prefer proof of concept/i);
+    expect(placementOutreachDraft(job, ready, "Dexmate Vega")).toMatch(/skipped/i);
+    expect(placementOutreachDraft(job, ready, "Dexmate Vega")).not.toMatch(/do not apply yet/i);
+  });
+
+  it("does not invent rental dollars when PoC is empty", () => {
+    const record = {
+      ...emptyApplyRecord("cnc-1"),
+      packAcknowledged: true,
+      monthlyRental: "4800 / month RaaS",
+      quoteCommitted: true,
+    };
+    const draft = placementOutreachDraft(job, record, "Dexmate Vega");
+    expect(draft).toMatch(/4800 \/ month RaaS/);
+    expect(draft).not.toMatch(/\$\d{3,}/);
+    expect(canLockQuote(jobCredentialGaps(job, { ...record, quoteCommitted: false }), {
+      ...record,
+      quoteCommitted: false,
+    })).toBe(true);
+  });
+
+  it("locks a quote with empty PoC and a filled monthly rental; PoC is never a required gap", () => {
+    const record = {
+      ...emptyApplyRecord("cnc-1"),
+      packAcknowledged: true,
+      pocEvidence: "",
+      pocSkipped: false,
+      monthlyRental: "4800 / month RaaS",
+    };
+    const gaps = jobCredentialGaps(job, record);
+    const poc = gaps.find(g => g.id === "poc_evidence" || g.id === "poc");
+    expect(poc?.required).toBe(false);
+    expect(poc?.id).toBe("poc_evidence");
+    expect(canLockQuote(gaps, record)).toBe(true);
+    expect(canApplyToJob(gaps, record)).toBe(true);
+    expect(applyStatusFromGaps(gaps, record)).toBe("ready");
+    expect(lockQuoteUpdate(record)).toEqual({
+      quoteCommitted: true,
+      pocSkipped: true,
+    });
+    const locked = { ...record, ...lockQuoteUpdate(record) };
+    expect(placementMoneyLane(jobCredentialGaps(job, locked), locked)).toBe("apply");
+    expect(placementNextActionLabel(job, locked)).toBe("Place this job →");
+    expect(canApplyToJob(jobCredentialGaps(job, locked), locked)).toBe(true);
+    expect(JOBS_POC_PREFER_HINT).toMatch(/optional/i);
+    expect(JOBS_POC_PREFER_HINT).toMatch(/does not block/i);
+    const noRent = { ...record, monthlyRental: "" };
+    expect(canLockQuote(jobCredentialGaps(job, noRent), noRent)).toBe(false);
   });
 });

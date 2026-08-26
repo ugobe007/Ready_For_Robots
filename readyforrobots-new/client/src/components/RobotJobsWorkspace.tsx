@@ -77,10 +77,11 @@ import {
   JOBS_PROCESS_NAV_CLASS,
   JOBS_RAIL_LINK_CLASS,
   JOBS_ROBOT_NAME_CLASS,
-  jobsActivateHref,
+  jobsCrmOpenHref,
   jobsCountEyebrow,
   jobsDumpedToCrm,
   jobsForCrmDesk,
+  recordPipelineActivity,
   jobsHeading,
   jobsListHint,
   jobsProcessActionLabel,
@@ -1356,13 +1357,22 @@ export default function RobotJobsWorkspace() {
     const pool = crmPool();
     const jobs = jobsForCrmDesk(pool, checkedJobKeys, CRM_UNLOCKED_JOBS);
     writeCrmHandoff(checkedJobKeys, pool, undefined, jobs);
+    for (const job of jobs) {
+      recordPipelineActivity({
+        kind: "dump",
+        label: "Kept from FIND",
+        jobKey: job.job_key,
+        company: job.company || undefined,
+      });
+    }
+    recordPipelineActivity({ kind: "open_crm", label: "Opened CRM" });
     trackRobotJobsFunnel("jobs_list_activated", {
       ...funnelBase(),
       robot_name: active?.productName,
       selected_count: jobs.length,
       list_count: jobs.length,
     });
-    setLocation(jobsActivateHref(submissionIdRef.current));
+    setLocation(jobsCrmOpenHref(Boolean(session), submissionIdRef.current));
   }
 
   function applyCheckedKeys(jobs: MatchJob[], saved?: string[]) {

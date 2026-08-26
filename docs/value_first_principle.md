@@ -11,6 +11,7 @@
 > **Show → Believe → Act → Pay**
 
 Never lead with account creation or pricing when the user has not seen a Robot Job Card.
+The signup wall belongs **after** Job Cards, **in front of** the CRM desk. See [jobs_crm.md](jobs_crm.md).
 
 ---
 

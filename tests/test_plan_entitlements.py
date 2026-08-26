@@ -8,8 +8,15 @@ from app.services.plan_entitlements import (
     PIPELINE_LIMIT_PREVIEW,
     JOBS_PRODUCT_LIMIT_FREE,
     JOBS_PRODUCT_LIMIT_PAID,
+    JOBS_CRM_FREE_BATCH,
+    JOBS_CRM_FREE_BATCHES_PER_MONTH,
+    JOBS_CRM_FREE_MONTHLY_CAP,
+    JOBS_CRM_FREE_TTL_DAYS,
     apply_pipeline_entitlements,
     jobs_product_limit_for_plan,
+    jobs_crm_unlocked_limit,
+    jobs_crm_monthly_cap,
+    jobs_crm_ttl_days,
     pipeline_limit_for_plan,
     resolve_plan_tier,
     sanitize_lead_for_plan,
@@ -47,6 +54,20 @@ def test_jobs_product_limits():
     assert jobs_product_limit_for_plan(PLAN_PAID) == JOBS_PRODUCT_LIMIT_PAID
     assert JOBS_PRODUCT_LIMIT_FREE == 3
     assert JOBS_PRODUCT_LIMIT_PAID == 5
+
+
+def test_jobs_crm_free_entitlements():
+    assert JOBS_CRM_FREE_BATCH == 5
+    assert JOBS_CRM_FREE_BATCHES_PER_MONTH == 3
+    assert JOBS_CRM_FREE_MONTHLY_CAP == 15
+    assert JOBS_CRM_FREE_TTL_DAYS == 7
+    assert jobs_crm_unlocked_limit(PLAN_ANONYMOUS) == 5
+    assert jobs_crm_unlocked_limit(PLAN_FREE) == 5
+    assert jobs_crm_unlocked_limit(PLAN_PAID) is None
+    assert jobs_crm_monthly_cap(PLAN_FREE) == 15
+    assert jobs_crm_monthly_cap(PLAN_PAID) is None
+    assert jobs_crm_ttl_days(PLAN_FREE) == 7
+    assert jobs_crm_ttl_days(PLAN_PAID) is None
 
 
 def test_trim_pipeline_leads_free_tier_caps_at_fifteen():

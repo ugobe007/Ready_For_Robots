@@ -14,7 +14,7 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 |---------|-------|------------------------|
 | Jobs terminal | `/` (`/jobs/:slug` same workspace) | Paste robot URL, inspect Job Cards |
 | About | `/intelligence` | Jobs loop explainer; Start jobs → `/?new=1` |
-| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: kept jobs, quote rental, Place this job |
+| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: collected listing, inspect, quote rental, Place this job |
 | Compare | `/compare` | Jobs vs sales-list framing |
 | SIGNAL pipeline | `/pipeline` | Buyer queue — **not** the Jobs path |
 | Admin | `/admin` | Cal / ops — not Jobs activation |
@@ -88,7 +88,7 @@ SIGNAL-only panels (activity feed, next actions, Cal queue, lead share) stay off
 | Task model | Slot + unknown/present/absent. List line names layer / typical time / who trains. Expanded card walks placement steps. Lookups, not fake “this SKU has GR00T”. |
 | Lineup | One robot → 5 jobs. Several → sample per SKU / type; run each robot for five. |
 | Empty / thin | Tell the truth (`could_not_understand`, `thin_corpus`). Do not pad with SIGNAL HOT buyers. |
-| CRM unlock | 5 jobs on free after `src=jobs_activate`. Apply requires pack, PoC, and a user-entered monthly rental. |
+| CRM unlock | 5 jobs on free after `src=jobs_activate`. Listing first. Place requires pack and a user-entered monthly rental. PoC is preferred, skippable. |
 
 API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadApiBase()` on the marketing domain.
 
@@ -101,8 +101,9 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
   → paste robot URL (FIND)
   → optional SKU pick
   → Job Cards (QUALIFY / inspect + check — checking dumps the row into CRM)
-  → Open CRM → /pipeline?src=jobs_activate  (desk is visible before signup)
-  → CRM: quote rental → Place this job (5 jobs). Process bar stays 01 / 02 / 03.
+  → Open CRM → /signup?next=/pipeline?src=jobs_activate&src=jobs_activate
+  → after auth, CRM desk with 5 kept jobs (no robot OEMs)
+  → CRM: collect listing (Keep all 5) → inspect an egg → quote rental → Place this job. Process bar stays 01 / 02 / 03.
   → run the next robot the same way
 ```
 

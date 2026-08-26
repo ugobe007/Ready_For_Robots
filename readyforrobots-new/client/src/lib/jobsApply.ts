@@ -8,6 +8,9 @@ import type { MatchJob } from "@/lib/robotJobMatch";
 
 export const JOBS_APPLY_STORAGE_KEY = "rfr_job_apply_v1";
 export const JOBS_APPLY_CTA = "Place this job →";
+export const JOBS_POC_SKIP_CTA = "Skip PoC for now";
+export const JOBS_POC_PREFER_HINT =
+  "Employers prefer proof of concept. Optional — you can skip. Empty PoC does not block quote lock or Place this job. Monthly rental is what locks the quote. We do not invent a number.";
 
 export type PlacementLane = "pack" | "quote" | "apply" | "track";
 
@@ -19,6 +22,7 @@ export type JobApplyRecord = {
   monthlyRental: string;
   packAcknowledged: boolean;
   quoteCommitted: boolean;
+  pocSkipped: boolean;
   status: JobApplyStatus;
   appliedAt?: string;
   followUpAt?: string;
@@ -29,6 +33,7 @@ export type CredentialGap = {
   label: string;
   howToFix: string;
   met: boolean;
+  required: boolean;
 };
 
 const EMPTY: JobApplyRecord = {
@@ -37,6 +42,7 @@ const EMPTY: JobApplyRecord = {
   monthlyRental: "",
   packAcknowledged: false,
   quoteCommitted: false,
+  pocSkipped: false,
   status: "blocked",
 };
 
@@ -72,22 +78,29 @@ export function jobCredentialGaps(
         ? `Ask the OEM which pack covers “${slot}”. Distributors license it — they do not train a foundation VLA. Check this box when you can license or already carry it.`
         : "Named pack is on the card. Confirm the license allows commercial placement.",
       met: Boolean(record.packAcknowledged),
+      required: true,
     },
     {
       id: "poc_evidence",
       label: "PoC evidence",
       howToFix:
-        "Attach what you will show the employer: site demo, video, or a written proof-of-concept. A SKU URL is not evidence.",
-      met: hasPoc(record.pocEvidence),
+        "Employers prefer proof of concept: site demo, video, or a written note. A SKU URL is not evidence. You can skip this.",
+      met: hasPoc(record.pocEvidence) || Boolean(record.pocSkipped),
+      required: false,
     },
     {
       id: "monthly_rental",
       label: "Monthly rental you will charge",
       howToFix:
-        "Enter the monthly amount you plan to charge this employer (RaaS / lease). Do not invent a number — quote your own.",
+        "Enter the monthly amount you plan to charge this employer (RaaS / lease). Do not invent a number. Quote your own.",
       met: hasMonthlyRental(record.monthlyRental),
+      required: true,
     },
   ];
+}
+
+export function requiredCredentialGaps(gaps: CredentialGap[]): CredentialGap[] {
+  return gaps.filter(g => g.required);
 }
 
 export function applyStatusFromGaps(
@@ -96,12 +109,12 @@ export function applyStatusFromGaps(
 ): JobApplyStatus {
   if (record.status === "follow_up") return "follow_up";
   if (record.status === "applied") return "applied";
-  return gaps.every(g => g.met) ? "ready" : "blocked";
+  return requiredCredentialGaps(gaps).every(g => g.met) ? "ready" : "blocked";
 }
 
 export function canApplyToJob(gaps: CredentialGap[], record: JobApplyRecord): boolean {
   if (record.status === "applied" || record.status === "follow_up") return false;
-  return gaps.every(g => g.met);
+  return requiredCredentialGaps(gaps).every(g => g.met);
 }
 
 export function placementOutreachDraft(
@@ -114,7 +127,12 @@ export function placementOutreachDraft(
   const work = card.jobTitle;
   const place = card.workplace || "";
   const model = jobModelListLine(job) || slotLine(card);
-  const poc = (record.pocEvidence || "").trim() || "(missing — do not apply yet)";
+  const pocRaw = (record.pocEvidence || "").trim();
+  const poc = pocRaw
+    ? pocRaw
+    : record.pocSkipped
+      ? "skipped (employers prefer proof of concept)"
+      : "(skipped — employers prefer proof of concept)";
   const rent = (record.monthlyRental || "").trim() || "(missing — you must quote this)";
   const who = (robotName || "this robot").trim() || "this robot";
   return [
@@ -126,7 +144,7 @@ export function placementOutreachDraft(
     `PoC evidence: ${poc}`,
     `Monthly rental we would charge: ${rent}`,
     "",
-    "We apply only when the pack, proof, and monthly quote are in hand. Hardware in the room is not enough.",
+    "We apply when the pack and monthly quote are in hand. Employers prefer proof of concept. Hardware in the room is not enough.",
   ].join("\n");
 }
 
@@ -145,9 +163,15 @@ export function placementWorkflowStrategy(
   if (record.status === "applied") {
     return "Application is recorded. Next: send or confirm the outreach draft, then track follow-up.";
   }
-  const missing = gaps.filter(g => !g.met).map(g => g.label);
+  const missing = requiredCredentialGaps(gaps)
+    .filter(g => !g.met)
+    .map(g => g.label);
   if (missing.length) {
-    return `Do not apply yet. Missing: ${missing.join(", ")}. Close every gap, then send the outreach draft.`;
+    return `Do not apply yet. Missing: ${missing.join(", ")}. Close every required gap, then send the outreach draft.`;
+  }
+  const poc = gaps.find(g => g.id === "poc_evidence");
+  if (poc && !poc.met) {
+    return "Pack and monthly quote are in. Employers prefer proof of concept, but you can skip it. Send the outreach draft, then Apply.";
   }
   return "Credentials are complete. Send the outreach draft, then Apply so we can track the submission and follow-up.";
 }
@@ -159,7 +183,7 @@ export function placementMoneyLane(
   if (record.status === "applied" || record.status === "follow_up") return "track";
   const byId = Object.fromEntries(gaps.map(g => [g.id, g.met]));
   if (!byId.model_pack) return "pack";
-  if (!byId.poc_evidence || !byId.monthly_rental || !record.quoteCommitted) {
+  if (!byId.monthly_rental || !record.quoteCommitted) {
     return "quote";
   }
   return "apply";
@@ -186,8 +210,17 @@ export function placementNextActionLabel(
 
 export function canLockQuote(gaps: CredentialGap[], record: JobApplyRecord): boolean {
   if (record.quoteCommitted) return false;
-  const byId = Object.fromEntries(gaps.map(g => [g.id, g.met]));
-  return Boolean(byId.poc_evidence && byId.monthly_rental);
+  const rental = gaps.find(g => g.id === "monthly_rental");
+  return Boolean(rental?.met || hasMonthlyRental(record.monthlyRental));
+}
+
+/** Commit the monthly quote. Empty / short PoC is skipped automatically. */
+export function lockQuoteUpdate(record: JobApplyRecord): Partial<JobApplyRecord> {
+  const hasEvidence = hasPoc(record.pocEvidence);
+  return {
+    quoteCommitted: true,
+    pocSkipped: Boolean(record.pocSkipped) || !hasEvidence,
+  };
 }
 
 export function placementAgentBrief(
@@ -207,7 +240,11 @@ export function placementAgentBrief(
     return `${known} Application is in. Your move: follow up — site assessment, pack license, and whether they accepted the monthly rental.`;
   }
   if (lane === "apply") {
-    return `${known} Pack, proof, and your monthly quote are in. This is the money moment. Apply.`;
+    const pocMet = gaps.find(g => g.id === "poc_evidence")?.met;
+    if (pocMet) {
+      return `${known} Pack, proof, and your monthly quote are in. This is the money moment. Apply.`;
+    }
+    return `${known} Pack and your monthly quote are in. Employers prefer proof of concept; you can skip. This is the money moment. Apply.`;
   }
   if (lane === "quote") {
     return `${known} Your move: quote the monthly rental you will charge ${employer}. That quote is how revenue on this job becomes predictable. We do not invent it.`;
