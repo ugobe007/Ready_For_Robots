@@ -69,6 +69,17 @@ import {
   jobsToActivate,
   jobsDumpedToCrm,
   jobsForCrmDesk,
+  crmDeskJobKeys,
+  crmSelectAllKeys,
+  crmToggleSelectedKey,
+  crmActingKeepsSelection,
+  crmCollectedCountLabel,
+  crmSelectAllLabel,
+  CRM_EMPLOYER_NAME_CLASS,
+  CRM_SELECT_ALL_LABEL,
+  CRM_LISTING_EYEBROW,
+  CRM_INSPECT_HINT,
+  CRM_PLACE_EGG_HINT,
   jobsSignupHref,
   jobsCrmOpenHref,
   jobsWorkspaceRestoreHref,
@@ -591,16 +602,30 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/placementAgentBrief/);
     expect(desk).toMatch(/aria-label="Jobs process"/);
     expect(desk).toMatch(/Step 03 · CRM/);
-    expect(desk).toMatch(/Place \{product\}/);
+    expect(desk).toMatch(/Collect jobs for \{product\}/);
+    expect(desk).toMatch(/crmCollectedCountLabel/);
+    expect(desk).toMatch(/crmSelectAllKeys/);
+    expect(desk).toMatch(/Keep all collected jobs/);
+    expect(desk).toMatch(/aria-label="Collected jobs"/);
+    expect(desk).toMatch(/CRM_EMPLOYER_NAME_CLASS/);
+    expect(desk).toMatch(/Inspecting this egg/);
+    expect(desk).toMatch(/JOBS_POC_SKIP_CTA/);
+    expect(desk).toMatch(/JOBS_POC_PREFER_HINT/);
     expect(desk).toMatch(/Your move:/);
     expect(desk).toMatch(/quoteCommitted: true/);
+    expect(desk).toMatch(/pocSkipped: true/);
     expect(desk).not.toMatch(/grid-cols-3/);
     expect(desk).not.toMatch(/vendor_shortlist/);
+    expect(desk).not.toMatch(/7-day|7 days|15.month|CRM_FREE_TTL/);
+    expect(desk).not.toMatch(/badge|points|leaderboard/i);
     expect(desk).toMatch(/Not a SIGNAL buyer list/);
     expect(desk).toMatch(/jobsCrmOpenHref\(false/);
     expect(desk).toMatch(/Opening CRM/);
     expect(desk).toMatch(/Pipeline activity/);
     expect(desk).toMatch(/recordPipelineActivity/);
+    expect(desk).toMatch(/setExpandedKey/);
+    expect(desk).toMatch(/crmToggleSelectedKey/);
+    expect(desk).not.toMatch(/setActiveKey/);
     expect(handoff).toMatch(/Opening CRM/);
     expect(handoff).toMatch(/jobsCrmOpenHref/);
     expect(handoff).toMatch(/isJobsAutomateSrc/);
@@ -710,6 +735,40 @@ describe("jobsWorkflow", () => {
     expect(handoff).toMatch(/jobsCrmOpenHref\(props\.signedIn/);
     expect(JOBS_PROCESS_STEPS[2].label).toBe("CRM");
     expect(JOBS_NEXT_CTA).toBe("Open CRM →");
+  });
+
+  it("lets the desk keep all 5 collected jobs and count eggs in the basket", () => {
+    const keys = ["a", "b", "c", "d", "e"];
+    expect(crmDeskJobKeys(keys.map(job_key => ({ job_key })))).toEqual(keys);
+    expect(crmSelectAllKeys(keys)).toEqual(keys);
+    expect(crmSelectAllKeys(["a", "a", "", "b"])).toEqual(["a", "b"]);
+    expect(crmSelectAllLabel(5)).toBe(CRM_SELECT_ALL_LABEL);
+    expect(crmSelectAllLabel(3)).toBe("Keep all 3");
+    expect(crmCollectedCountLabel(5)).toBe("5 of 5 eggs in the basket");
+    expect(crmCollectedCountLabel(1)).toBe("1 of 5 eggs in the basket");
+    expect(crmCollectedCountLabel(3)).toBe("3 of 5 eggs in the basket");
+    const kept = crmToggleSelectedKey(keys, "c", false);
+    expect(kept).toEqual(["a", "b", "d", "e"]);
+    expect(crmActingKeepsSelection(kept, "c")).toEqual(["a", "b", "d", "e", "c"]);
+    expect(crmToggleSelectedKey(["a"], "b", true)).toEqual(["a", "b"]);
+    expect(CRM_EMPLOYER_NAME_CLASS).toMatch(/text-emerald-400/);
+    expect(CRM_EMPLOYER_NAME_CLASS).toMatch(/font-display/);
+    expect(CRM_LISTING_EYEBROW).toBe("Collected jobs");
+    expect(CRM_INSPECT_HINT).toMatch(/Inspect a collected egg/i);
+    expect(CRM_PLACE_EGG_HINT).toMatch(/hatches a collected egg/i);
+    expect(CRM_HOW_TO_STEPS[1]).toMatch(/Collect several jobs/i);
+    expect(CRM_PAGE_NEXT).toMatch(/Collect several/i);
+    const desk = readFileSync(
+      join(here, "../components/JobsCrmDesk.tsx"),
+      "utf8",
+    );
+    expect(desk).toMatch(/crmSelectAllKeys\(allKeys\)/);
+    expect(desk).toMatch(/useState<string \| null>\(null\)/);
+    expect(desk).toMatch(/CollectedJobInspect/);
+    expect(desk).toMatch(/Work being performed/);
+    expect(desk).toMatch(/Open questions/);
+    expect(desk).toMatch(/Task models/);
+    expect(desk).not.toMatch(/setSelectedKeys\(\[\]\)/);
   });
 
   it("looks up a lineup once per robot type, not once per SKU", () => {

@@ -1,14 +1,25 @@
 /**
- * Step 03 CRM desk — kept Job Cards from step 02, Place as the money action.
+ * Step 03 CRM desk — collected Job Cards from step 02.
+ * Hunt on FIND, collect here, enjoy Place this job when ready.
  * Not SIGNAL buyers. Not robot OEM shortlists.
  */
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import {
+  CRM_EMPLOYER_NAME_CLASS,
+  CRM_INSPECT_HINT,
+  CRM_LISTING_EYEBROW,
+  CRM_PLACE_EGG_HINT,
   CRM_UNLOCKED_JOBS,
   JOBS_EYEBROW_CLASS,
+  JOBS_KEEP_LABEL,
   JOBS_PROCESS_NAV_CLASS,
   JOBS_PROCESS_STEPS,
+  crmCollectedCountLabel,
+  crmDeskJobKeys,
+  crmSelectAllKeys,
+  crmSelectAllLabel,
+  crmToggleSelectedKey,
   jobsCrmOpenHref,
   jobsFreshHomeHref,
   jobsWorkspaceRestoreHref,
@@ -22,6 +33,8 @@ import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
 import {
   JOBS_APPLY_CTA,
+  JOBS_POC_PREFER_HINT,
+  JOBS_POC_SKIP_CTA,
   applyStatusFromGaps,
   canApplyToJob,
   canLockQuote,
@@ -56,12 +69,16 @@ export default function JobsCrmDesk({
   const snap = readJobsHandoffSnapshot();
   const jobs = (snap?.jobs || []).slice(0, CRM_UNLOCKED_JOBS);
   const product = snap?.productName || "your robot";
-  const [activeKey, setActiveKey] = useState(jobs[0]?.job_key || "");
+  const allKeys = crmDeskJobKeys(jobs);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>(() =>
+    crmSelectAllKeys(allKeys),
+  );
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
-  const active = jobs.find(j => j.job_key === activeKey) || jobs[0] || null;
   void tick;
   const stats = placementBoardStats(jobs);
-  const activeRec = active ? loadJobApplyRecord(active.job_key) : null;
+  const selected = selectedKeys.filter(key => allKeys.includes(key));
+  const expanded = jobs.find(j => j.job_key === expandedKey) || null;
 
   if (!signedIn) {
     return (
@@ -115,22 +132,24 @@ export default function JobsCrmDesk({
         CRM
       </h1>
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
-        Place {product}. {jobs.length} job{jobs.length === 1 ? "" : "s"} from
-        the rows you kept. Quote the monthly rental you will charge, then Place
-        this job. Revenue is the number you type — we do not invent it.
-        Not a SIGNAL buyer list. Not an OEM roster.
+        Collect jobs for {product}. Inspect an egg, then Place this job when you
+        are ready. Quote the monthly rental you will charge. We do not invent
+        it. Employers prefer proof of concept; you can skip it. Not a SIGNAL
+        buyer list. Not an OEM roster.
       </p>
       {jobs.length > 0 ? (
         <p className="mt-3 font-mono text-sm uppercase tracking-[0.08em] text-emerald-300">
+          {crmCollectedCountLabel(selected.length)}
+          {" · "}
           Applied {stats.applied} of {stats.total}
           {" · "}
           Quoted {stats.quoted} of {stats.total}
           {stats.quotes[0] ? ` · Live quote ${stats.quotes[0]}` : ""}
-          {active && activeRec
-            ? ` · Your move: ${placementNextActionLabel(active, activeRec)}`
-            : ""}
         </p>
       ) : null}
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+        {CRM_INSPECT_HINT}
+      </p>
 
       {jobs.length === 0 ? (
         <p className="mt-6 border border-slate-600 bg-[#081126] px-4 py-4 text-sm text-slate-300">
@@ -138,52 +157,233 @@ export default function JobsCrmDesk({
           then Open CRM.
         </p>
       ) : (
-        <ul className="mt-6 flex gap-2 overflow-x-auto pb-1">
-          {jobs.map((job, i) => {
-            const card = robotJobCardFromMatch(job);
-            const rec = loadJobApplyRecord(job.job_key);
-            const gaps = jobCredentialGaps(job, rec);
-            const chipLane = placementMoneyLane(gaps, rec);
-            const on = job.job_key === active?.job_key;
-            return (
-              <li key={job.job_key} className="min-w-[10.5rem] flex-1">
-                <button
-                  type="button"
-                  onClick={() => setActiveKey(job.job_key)}
-                  className={`flex h-full w-full flex-col items-start border px-3 py-3 text-left ${
-                    on
-                      ? "border-emerald-400 bg-emerald-400/10"
-                      : "border-slate-600 bg-[#081126]"
+        <div className="mt-6">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <p className={`${eyebrow} text-emerald-400`}>{CRM_LISTING_EYEBROW}</p>
+            <button
+              type="button"
+              onClick={() => setSelectedKeys(crmSelectAllKeys(allKeys))}
+              aria-label="Keep all collected jobs"
+              className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
+            >
+              {crmSelectAllLabel(jobs.length)}
+            </button>
+          </div>
+          <ul className="space-y-3" aria-label="Collected jobs">
+            {jobs.map((job, i) => {
+              const card = robotJobCardFromMatch(job);
+              const rec = loadJobApplyRecord(job.job_key);
+              const gaps = jobCredentialGaps(job, rec);
+              const chipLane = placementMoneyLane(gaps, rec);
+              const on = selected.includes(job.job_key);
+              const open = expanded?.job_key === job.job_key;
+              return (
+                <li
+                  key={job.job_key}
+                  className={`border bg-[#081126] ${
+                    open
+                      ? "border-emerald-400"
+                      : on
+                        ? "border-emerald-400/70"
+                        : "border-slate-600"
                   }`}
                 >
-                  <span className="font-mono text-xs text-emerald-400">
-                    {String(i + 1).padStart(2, "0")} · {placementLaneLabel(chipLane)}
-                  </span>
-                  <span className="mt-1 font-display text-base font-bold leading-snug text-white">
-                    {card.employer || card.jobTitle}
-                  </span>
-                  <span className="mt-0.5 line-clamp-2 text-sm text-slate-400">
-                    {card.jobTitle}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                  <div className="flex items-start">
+                    <label
+                      className="flex shrink-0 cursor-pointer flex-col items-center gap-1 px-3 pt-4"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        onChange={e =>
+                          setSelectedKeys(keys =>
+                            crmToggleSelectedKey(
+                              keys,
+                              job.job_key,
+                              e.target.checked,
+                            ),
+                          )
+                        }
+                        aria-label={`${JOBS_KEEP_LABEL} ${card.employer || card.jobTitle} in the basket`}
+                        className="h-5 w-5 accent-emerald-400"
+                      />
+                      <span
+                        className={`font-mono text-xs font-bold uppercase tracking-[0.08em] ${
+                          on ? "text-emerald-300" : "text-slate-500"
+                        }`}
+                      >
+                        {on ? JOBS_KEEP_LABEL : "Out"}
+                      </span>
+                    </label>
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      aria-label={`${open ? "Collapse" : "Inspect"} ${card.employer || card.jobTitle}`}
+                      onClick={() =>
+                        setExpandedKey(open ? null : job.job_key)
+                      }
+                      className="flex min-w-0 flex-1 items-start gap-3 py-4 pr-4 text-left"
+                    >
+                      <span className="flex-1">
+                        <span className="font-mono text-xs text-slate-500">
+                          {String(i + 1).padStart(2, "0")} ·{" "}
+                          {placementLaneLabel(chipLane)}
+                        </span>
+                        <span className={`mt-1 block ${CRM_EMPLOYER_NAME_CLASS}`}>
+                          {card.employer || card.jobTitle}
+                        </span>
+                        <span className="mt-0.5 block font-display text-base font-bold leading-snug text-slate-100">
+                          {card.jobTitle}
+                        </span>
+                        <span className="mt-1 block text-sm text-slate-400">
+                          {[card.workplace, card.qualificationLabel]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                        {jobModelListLine(job) ? (
+                          <span className="mt-1 block font-mono text-sm text-slate-500">
+                            {jobModelListLine(job)}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="font-mono text-xs text-slate-500">
+                        {open ? "−" : "+"}
+                      </span>
+                    </button>
+                  </div>
+                  {open ? (
+                    <div className="border-t border-slate-700 px-4 pb-5 pt-4">
+                      <CollectedJobInspect job={job} />
+                      <ApplyPanel
+                        key={job.job_key}
+                        job={job}
+                        robotName={product}
+                        signedIn={signedIn}
+                        onSaved={() => setTick(n => n + 1)}
+                      />
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
-
-      {active ? (
-        <ApplyPanel
-          key={active.job_key}
-          job={active}
-          robotName={product}
-          signedIn={signedIn}
-          onSaved={() => setTick(n => n + 1)}
-        />
-      ) : null}
 
       {submissionId ? (
         <p className="mt-6 font-mono text-xs text-slate-600">Submission {submissionId}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function CollectedJobInspect({ job }: { job: MatchJob }) {
+  const card = robotJobCardFromMatch(job);
+  return (
+    <div>
+      <p className={`${eyebrow} text-slate-400`}>Inspecting this egg</p>
+      <dl className="mt-3 grid gap-2 text-[13px] leading-snug text-slate-200">
+        <div>
+          <dt className={eyebrow}>Employer</dt>
+          <dd className={`mt-0.5 ${CRM_EMPLOYER_NAME_CLASS}`}>
+            {card.employer || "Unnamed employer"}
+          </dd>
+        </div>
+        <div>
+          <dt className={eyebrow}>Workplace</dt>
+          <dd className="mt-0.5">{card.workplace || "Site TBD"}</dd>
+        </div>
+        <div>
+          <dt className={eyebrow}>Work being performed</dt>
+          <dd className="mt-0.5">{card.work}</dd>
+        </div>
+        <div>
+          <dt className={eyebrow}>{card.qualificationLabel}</dt>
+          <dd className="mt-0.5 text-slate-300">{card.qualificationHint}</dd>
+        </div>
+      </dl>
+
+      {card.taskModels.length || card.modelLinks.length ? (
+        <div className="mt-3">
+          <p className={eyebrow}>Task models</p>
+          {card.taskModels.length ? (
+            <ul className="mt-1 space-y-0.5">
+              {card.taskModels.map(model => (
+                <li
+                  key={model.id}
+                  className="text-[13px] leading-snug text-slate-200"
+                >
+                  {model.label}
+                  <span className="text-slate-400">
+                    {" "}
+                    ·{" "}
+                    {model.presence === "unknown"
+                      ? "Not yet confirmed"
+                      : model.presence === "present"
+                        ? "Present"
+                        : "Absent"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {card.modelContract ? (
+            <div className="mt-2 space-y-0.5 text-[13px] leading-snug text-slate-300">
+              <p className="text-slate-200">{card.modelContract.headline}</p>
+              {card.modelContract.steps.length ? (
+                <ol className="mt-1 space-y-1">
+                  {card.modelContract.steps.map(step => (
+                    <li key={`${step.n}-${step.label}`}>
+                      <span className="font-mono text-emerald-400">{step.n}.</span>{" "}
+                      <span className="text-slate-200">{step.label}.</span> {step.body}
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <>
+                  {card.modelContract.layer ? <p>{card.modelContract.layer}</p> : null}
+                  {card.modelContract.whoTrains ? (
+                    <p>{card.modelContract.whoTrains}</p>
+                  ) : null}
+                  {card.modelContract.time ? <p>{card.modelContract.time}</p> : null}
+                  {card.modelContract.youProvide ? (
+                    <p>{card.modelContract.youProvide}</p>
+                  ) : null}
+                  {card.modelContract.fieldFeedback ? (
+                    <p className="text-slate-400">{card.modelContract.fieldFeedback}</p>
+                  ) : null}
+                </>
+              )}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {card.openQuestions.length ? (
+        <div className="mt-3">
+          <p className={eyebrow}>Open questions</p>
+          <ul className="mt-1 space-y-0.5">
+            {card.openQuestions.map(w => (
+              <li key={w} className="text-[13px] leading-snug text-amber-200/80">
+                ? {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {card.requirements.length ? (
+        <div className="mt-3">
+          <p className={eyebrow}>Why this is listed</p>
+          <ul className="mt-1 space-y-0.5">
+            {card.requirements.map(w => (
+              <li key={w} className="text-[13px] leading-snug text-slate-200">
+                <span className="text-emerald-400">✓</span> {w}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
     </div>
   );
@@ -239,6 +439,9 @@ function ApplyPanel({
     if (next.quoteCommitted && !record.quoteCommitted) {
       note("place", "Locked quote");
     }
+    if (next.pocSkipped && !record.pocSkipped) {
+      note("place", "Skipped PoC");
+    }
     persist({ ...merged, status: nextStatus });
   }
 
@@ -269,18 +472,23 @@ function ApplyPanel({
   return (
     <section
       id="jobs-apply"
-      className="mt-8 border border-emerald-400/40 bg-[#0b162f] px-4 py-6 sm:px-6"
+      className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-6 sm:px-6"
     >
-      <p className={`${eyebrow} text-emerald-400`}>
-        {card.employer || "This employer"} · {card.workplace || "site TBD"}
+      <p className={`${eyebrow} text-slate-400`}>Place this collected egg</p>
+      <p className={`mt-2 ${CRM_EMPLOYER_NAME_CLASS}`}>
+        {card.employer || "This employer"}
       </p>
-      <h2 className="mt-2 font-display text-3xl font-bold text-white sm:text-4xl">
+      <p className="mt-1 text-sm text-slate-400">
+        {card.workplace || "site TBD"}
+      </p>
+      <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
         Your move: {nextLabel.replace(/ →$/, "")}
       </h2>
       <p className="mt-2 text-lg leading-relaxed text-slate-200">{brief}</p>
       {modelLine ? (
         <p className="mt-2 font-mono text-sm text-slate-400">{modelLine}</p>
       ) : null}
+      <p className="mt-2 text-sm text-slate-500">{CRM_PLACE_EGG_HINT}</p>
 
       {lane === "pack" ? (
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-slate-400">
@@ -295,26 +503,50 @@ function ApplyPanel({
               Monthly rental you will charge
             </span>
             <span className="mt-1 block text-sm text-slate-400">
-              This is the money. Your quote — never a number we invent.
+              This is the money. Your quote, never a number we invent.
             </span>
             <input
               type="text"
               className="mt-4 w-full border border-emerald-400/50 bg-[#081126] px-4 py-4 text-xl text-slate-100"
               value={record.monthlyRental}
-              onChange={e => patch({ monthlyRental: e.target.value, quoteCommitted: false })}
+              onChange={e =>
+                patch({ monthlyRental: e.target.value, quoteCommitted: false })
+              }
               placeholder="e.g. your RaaS / lease quote per month"
             />
           </label>
           <label className="block">
             <span className={`${eyebrow} text-slate-400`}>PoC evidence</span>
+            <span className="mt-1 block text-sm text-slate-400">
+              {JOBS_POC_PREFER_HINT}
+            </span>
             <textarea
-              className="mt-1 w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100"
+              className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100"
               rows={3}
               value={record.pocEvidence}
-              onChange={e => patch({ pocEvidence: e.target.value, quoteCommitted: false })}
+              onChange={e =>
+                patch({
+                  pocEvidence: e.target.value,
+                  pocSkipped: false,
+                  quoteCommitted: false,
+                })
+              }
               placeholder="Site demo, video, or written proof of concept"
             />
           </label>
+          {!record.pocSkipped && !(record.pocEvidence || "").trim() ? (
+            <button
+              type="button"
+              onClick={() => patch({ pocSkipped: true })}
+              className="border border-slate-600 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-slate-300 transition hover:border-slate-400"
+            >
+              {JOBS_POC_SKIP_CTA}
+            </button>
+          ) : record.pocSkipped ? (
+            <p className="font-mono text-xs uppercase tracking-[0.08em] text-slate-500">
+              PoC skipped. Employers still prefer proof.
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -396,7 +628,11 @@ function PipelineActivity({
             className="font-mono text-sm text-slate-400"
           >
             {event.label}
-            {event.company ? ` · ${event.company}` : ""}
+            {event.company ? (
+              <span className="text-emerald-400"> · {event.company}</span>
+            ) : (
+              ""
+            )}
             <span className="text-slate-600">
               {" · "}
               {formatActivityWhen(event.at)}
