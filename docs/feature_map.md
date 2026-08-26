@@ -14,7 +14,7 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 |---------|-------|------------------------|
 | Jobs terminal | `/` (`/jobs/:slug` same workspace) | Paste robot URL, inspect Job Cards |
 | About | `/intelligence` | Jobs loop explainer; Start jobs → `/?new=1` |
-| Jobs CRM | `/pipeline?src=jobs_activate` | Place: quote rental → apply (5 jobs on free) |
+| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: kept jobs, quote rental, Place this job |
 | Compare | `/compare` | Jobs vs sales-list framing |
 | SIGNAL pipeline | `/pipeline` | Buyer queue — **not** the Jobs path |
 | Admin | `/admin` | Cal / ops — not Jobs activation |
@@ -34,7 +34,7 @@ Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (empty FIND).
 | Jobs | Selected on `/` and `/jobs/:slug`. Same fresh-home href. |
 | About | `/intelligence` |
 | Pipeline | **Hidden** on Jobs chrome and Jobs CRM |
-| CRM | Signed-in only. On Jobs chrome: `/pipeline?src=jobs_activate`. On SIGNAL `/pipeline` or bare `/crm`: `/crm` |
+| CRM | On Jobs chrome (signed in or out): `/pipeline?src=jobs_activate`. On SIGNAL `/pipeline` or bare `/crm`: `/crm` (signed-in) |
 | Admin | Signed-in admin only |
 | Sign In / Sign Out | Sign In when anonymous; Sign Out when session |
 
@@ -58,9 +58,9 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 |------|-------|-----|
 | 01 | Show us your robot | `Start jobs →` |
 | 02 | Here are its jobs | `See jobs →` |
-| 03 | Place the robot | `Place these jobs →` |
+| 03 | CRM | `Open CRM →` |
 
-01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is the money moment (Place), not a SIGNAL dump.
+01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM.
 
 ---
 
@@ -100,9 +100,9 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
 /?new=1
   → paste robot URL (FIND)
   → optional SKU pick
-  → Job Cards (QUALIFY / inspect + check)
-  → Place these jobs → /pipeline?src=jobs_activate  (signup first if signed out)
-  → Place: quote rental → apply (5 jobs). Process bar stays 01 / 02 / 03.
+  → Job Cards (QUALIFY / inspect + check — checking dumps the row into CRM)
+  → Open CRM → /pipeline?src=jobs_activate  (desk is visible before signup)
+  → CRM: quote rental → Place this job (5 jobs). Process bar stays 01 / 02 / 03.
   → run the next robot the same way
 ```
 

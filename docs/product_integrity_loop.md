@@ -87,7 +87,7 @@ OBSERVE HEALTH → COMPILE MEMORY → PICK ONE MISSION
 readyforrobots.com /
   → header has no Pipeline
   → paste a known OEM URL (Fourier) → Job Cards
-  → Place these jobs → /pipeline?src=jobs_activate (5 jobs on the CRM desk, no SIGNAL OEMs)
+  → Open CRM → /pipeline?src=jobs_activate (5 jobs on the CRM desk, no SIGNAL OEMs)
   → Fly /api health + database snapshot reachable
   → Vercel production SHA == origin/main (not a skipped 7s GHA)
 ```

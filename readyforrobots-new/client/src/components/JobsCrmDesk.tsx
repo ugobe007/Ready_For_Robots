@@ -1,6 +1,6 @@
 /**
- * Step 03 Place desk — money moment for kept Job Cards.
- * Not SIGNAL buyers. Not robot OEM shortlists. Not a stale CRM dump.
+ * Step 03 CRM desk — kept Job Cards from step 02, Place as the money action.
+ * Not SIGNAL buyers. Not robot OEM shortlists.
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
@@ -92,15 +92,15 @@ export default function JobsCrmDesk({
         })}
       </nav>
 
-      <p className={`${eyebrow} text-emerald-400`}>Step 03 · the money moment</p>
+      <p className={`${eyebrow} text-emerald-400`}>Step 03 · CRM</p>
       <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-        Place {product}.
+        CRM
       </h1>
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
-        {jobs.length} employer{jobs.length === 1 ? "" : "s"} have named work.
-        Quote the monthly rental you will charge. Apply. Revenue on these jobs
-        is the number you type — we do not invent it. Not a SIGNAL buyer list.
-        Not an OEM roster.
+        Place {product}. {jobs.length} job{jobs.length === 1 ? "" : "s"} from
+        the rows you kept. Quote the monthly rental you will charge, then Place
+        this job. Revenue is the number you type — we do not invent it.
+        Not a SIGNAL buyer list. Not an OEM roster.
       </p>
       {jobs.length > 0 ? (
         <p className="mt-3 font-mono text-sm uppercase tracking-[0.08em] text-emerald-300">
@@ -116,8 +116,8 @@ export default function JobsCrmDesk({
 
       {jobs.length === 0 ? (
         <p className="mt-6 border border-slate-600 bg-[#081126] px-4 py-4 text-sm text-slate-300">
-          No jobs to place yet. Find jobs for your robot, keep the rows checked,
-          then Next.
+          No jobs in CRM yet. Find jobs for your robot, keep the rows checked,
+          then Open CRM.
         </p>
       ) : (
         <ul className="mt-6 flex gap-2 overflow-x-auto pb-1">

@@ -65,10 +65,10 @@ ROBOT / PORTFOLIO / SOLUTION CAPABILITIES
 ```
 Show us your robot.
 Here are its jobs.
-Place these jobs opens the desk with 5 unlocked Job Cards (free).
+Open CRM — 5 unlocked Job Cards (free). Place this job is the money action.
 ```
 
-Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **One robot → five jobs, each tagged `Job ##### is for {SKU}`.** Several robots → one tagged sample each, plus **Run one robot for 5 jobs**. Checkboxes + **Place these jobs →** in the process bar. FIND is **Start jobs →**. After that CTA, the CRM desk on `/pipeline?src=jobs_activate` shows 5 unlocked jobs. The document scrolls. Do not put the list CTA on the card. Do not insert a Place buyer/outreach screen. Do not mix unlabeled jobs across a lineup.
+Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **One robot → five jobs, each tagged `Job ##### is for {SKU}`.** Several robots → one tagged sample each, plus **Run one robot for 5 jobs**. Checkboxes dump into CRM; **Open CRM →** in the process bar. FIND is **Start jobs →**. The CRM desk on `/pipeline?src=jobs_activate` shows 5 unlocked jobs before signup. The document scrolls. Do not put the list CTA on the card. Do not insert a Place buyer/outreach screen. Do not mix unlabeled jobs across a lineup.
 
 Everything underneath exists to make those interactions trustworthy.
 
