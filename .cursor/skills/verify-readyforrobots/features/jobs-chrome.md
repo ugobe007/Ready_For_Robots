@@ -5,7 +5,7 @@ Jobs chrome is the page frame for FIND → cards → CRM: dark header, process b
 ## Sub-features
 
 - `chrome-header` Jobs / About / CRM; wordmark goes to `/?new=1`.
-- `chrome-process` 01 Show us your robot → 02 Here are its jobs → 03 CRM, as links, top and bottom.
+- `chrome-process` 01 Show us your robot → 02 Available jobs → 03 CRM, as links, top and bottom.
 - `chrome-no-pipeline` no Pipeline nav, no SIGNAL FAB on Jobs pages.
 - `chrome-scroll` the document scrolls; no `100vh` + `overflow: hidden` trap.
 - `chrome-pstack` Jobs agent protocol module (`aria-label="Jobs agent protocol"`). Matcher is `POST /api/robot-job-match`. How / Act / Critic. Not a chatbot.
@@ -23,7 +23,7 @@ Preconditions:
 
 - **Header.** On `/`, nav includes Jobs, About, and CRM. Pipeline is absent. Signed-out Sign In stays. Signed-out CRM href is the signup wall with `next=/pipeline?src=jobs_activate`.
 - Process bar. `aria-label="Jobs process"`. Actions: FIND `Start jobs →`, list `Open CRM →`. Step 03 label is CRM.
-- **JS canary (CI).** Run `python3 scripts/agent_verify.py drive --feature jobs-chrome --evidence "$EVIDENCE"`. Expect `Find jobs for your robot`, `Show us your robot`, `Here are its jobs`, `Start jobs`, `jobs_activate` in the shipped bundle.
+- **JS canary (CI).** Run `python3 scripts/agent_verify.py drive --feature jobs-chrome --evidence "$EVIDENCE"`. Expect `Find jobs for your robot`, `Show us your robot`, `Available jobs`, `Start jobs`, `jobs_activate` in the shipped bundle.
 - **Proof.** `drive-jobs-chrome.json` hits are all true. Browser: screenshot of `/` with header + FIND, Pipeline not in the header.
 
 ## Gotchas

@@ -152,6 +152,11 @@ describe("jobsWorkflow", () => {
 
   it("always names the three process steps as navigational links", () => {
     expect(JOBS_PROCESS_STEPS.map(s => s.id)).toEqual(["find", "jobs", "activate"]);
+    expect(JOBS_PROCESS_STEPS.map(s => s.label)).toEqual([
+      "Show us your robot",
+      "Available jobs",
+      "CRM",
+    ]);
     expect(JOBS_SEE_JOBS_CTA).toBe("See jobs →");
     expect(jobsProcessStepFromStage("select")).toBe("find");
     expect(jobsProcessStepFromStage("review")).toBe("find");
@@ -735,6 +740,8 @@ describe("jobsWorkflow", () => {
       "utf8",
     );
     expect(processChrome).toMatch(/aria-label="Jobs process"/);
+    expect(processChrome).toMatch(/JOBS_PROCESS_STEPS/);
+    expect(processChrome).not.toMatch(/Here are its jobs/);
     expect(processChrome).toMatch(/jobsCrmNextHref/);
     expect(processChrome).toMatch(/jobsFreshHomeHref/);
     expect(processChrome).toMatch(/jobsWorkspaceRestoreHref/);
@@ -901,6 +908,8 @@ describe("jobsWorkflow", () => {
       "utf8",
     );
     expect(chrome).toMatch(/aria-label="Jobs process"/);
+    expect(chrome).toMatch(/JOBS_PROCESS_STEPS/);
+    expect(chrome).not.toMatch(/Here are its jobs/);
     expect(chrome).toMatch(/jobsCrmNextLabel/);
     expect(chrome).not.toMatch(/SIGNAL/);
     const pipelinePage = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
