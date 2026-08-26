@@ -492,12 +492,21 @@ export const JOBS_PROCESS_NAV_CLASS =
 export const JOBS_RAIL_LINK_CLASS =
   "block text-left font-mono text-sm font-semibold uppercase tracking-[0.08em] text-slate-400 transition hover:text-slate-200";
 
+/** Employer names on the CRM desk. Emerald, display font, not body copy. */
+export const CRM_EMPLOYER_NAME_CLASS =
+  "font-display text-lg font-bold leading-snug tracking-tight text-emerald-400 sm:text-xl";
+export const CRM_SELECT_ALL_LABEL = "Keep all 5";
+export const CRM_LISTING_EYEBROW = "Collected jobs";
+export const CRM_INSPECT_HINT =
+  "Inspect a collected egg for the Job Card. Place this job when you are ready. The others stay in the basket.";
+export const CRM_PLACE_EGG_HINT =
+  "Place this job hatches a collected egg. The rest stay in the basket.";
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT =
-  "Jobs you keep stay jobs. Quote the monthly rental you will charge, then apply. We do not invent a number.";
+  "Jobs you keep stay jobs. Collect several, inspect one, then quote the monthly rental you will charge and Place this job. We do not invent a number.";
 export const CRM_HOW_TO_STEPS = [
   "Sign in to save the jobs you checked. The desk is those jobs — not a SIGNAL buyer list.",
-  "One job at a time: pack, quote, apply. Pipeline actions stay on the job.",
+  "Collect several jobs (up to 5). Inspect an egg, then Place this job when you are ready.",
   "Follow up after apply. Export if you must; native CRM is the default.",
 ] as const;
 export const CRM_SUBHEAD_CLASS =
@@ -685,7 +694,7 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = JOBS_SAVE_TO_CRM_CTA;
 export const JOBS_NEXT_HINT =
-  "All five start checked and dump into CRM. Uncheck any you do not want. Open CRM is step 03 — sign in to keep the desk, quote the rental, then Place this job.";
+  "All five start checked and dump into CRM. Uncheck any you do not want. Open CRM is step 03 — sign in to keep the desk, collect jobs, then Place this job.";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
@@ -861,6 +870,58 @@ export function jobsForCrmDesk<T extends { job_key: string }>(
   return dumped.length > 0 ? dumped : jobsToActivate([], pool, cap);
 }
 
+export function crmDeskJobKeys<T extends { job_key: string }>(jobs: T[]): string[] {
+  return jobs.map(job => job.job_key).filter(Boolean);
+}
+
+/** Keep every collected job. Acting on one job must not clear the rest. */
+export function crmSelectAllKeys(poolKeys: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const key of poolKeys) {
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(key);
+  }
+  return out;
+}
+
+export function crmToggleSelectedKey(
+  selected: string[],
+  jobKey: string,
+  on: boolean,
+): string[] {
+  if (!jobKey) return crmSelectAllKeys(selected);
+  const set = new Set(selected.filter(Boolean));
+  if (on) set.add(jobKey);
+  else set.delete(jobKey);
+  return [...set];
+}
+
+export function crmActingKeepsSelection(
+  selected: string[],
+  actedJobKey: string,
+): string[] {
+  return crmToggleSelectedKey(selected, actedJobKey, true);
+}
+
+export function crmSelectAllLabel(
+  count: number,
+  cap = CRM_UNLOCKED_JOBS,
+): string {
+  const n = Math.max(0, count);
+  return n >= cap ? CRM_SELECT_ALL_LABEL : `Keep all ${n || cap}`;
+}
+
+export function crmCollectedCountLabel(
+  collected: number,
+  cap = CRM_UNLOCKED_JOBS,
+): string {
+  const n = Math.min(Math.max(0, collected), cap);
+  const noun = n === 1 ? "egg" : "eggs";
+  return `${n} of ${cap} ${noun} in the basket`;
+}
+
 export function defaultCheckedJobKeys<T extends { job_key: string }>(
   jobs: T[],
   cap = JOBS_EXAMPLE_CAP,
@@ -878,7 +939,7 @@ export const RAIL_STEP_HINT = {
   find: FIND_JOBS_HOME_SUBHEAD,
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
   jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked into CRM. Several robots show one each — run each SKU by itself, then Open CRM.",
-  pipeline: "CRM is step 03: quote the rental you will charge, Place this job, track follow-up.",
+  pipeline: "CRM is step 03: collect jobs, inspect an egg, quote the rental you will charge, Place this job.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */
