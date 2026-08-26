@@ -11,6 +11,7 @@ import {
   placementMoneyLane,
   placementNextActionLabel,
   canLockQuote,
+  lockQuoteUpdate,
   JOBS_POC_PREFER_HINT,
   JOBS_POC_SKIP_CTA,
 } from "./jobsApply";
@@ -164,5 +165,34 @@ describe("jobsApply", () => {
       ...record,
       quoteCommitted: false,
     })).toBe(true);
+  });
+
+  it("locks a quote with empty PoC and a filled monthly rental; PoC is never a required gap", () => {
+    const record = {
+      ...emptyApplyRecord("cnc-1"),
+      packAcknowledged: true,
+      pocEvidence: "",
+      pocSkipped: false,
+      monthlyRental: "4800 / month RaaS",
+    };
+    const gaps = jobCredentialGaps(job, record);
+    const poc = gaps.find(g => g.id === "poc_evidence" || g.id === "poc");
+    expect(poc?.required).toBe(false);
+    expect(poc?.id).toBe("poc_evidence");
+    expect(canLockQuote(gaps, record)).toBe(true);
+    expect(canApplyToJob(gaps, record)).toBe(true);
+    expect(applyStatusFromGaps(gaps, record)).toBe("ready");
+    expect(lockQuoteUpdate(record)).toEqual({
+      quoteCommitted: true,
+      pocSkipped: true,
+    });
+    const locked = { ...record, ...lockQuoteUpdate(record) };
+    expect(placementMoneyLane(jobCredentialGaps(job, locked), locked)).toBe("apply");
+    expect(placementNextActionLabel(job, locked)).toBe("Place this job →");
+    expect(canApplyToJob(jobCredentialGaps(job, locked), locked)).toBe(true);
+    expect(JOBS_POC_PREFER_HINT).toMatch(/optional/i);
+    expect(JOBS_POC_PREFER_HINT).toMatch(/does not block/i);
+    const noRent = { ...record, monthlyRental: "" };
+    expect(canLockQuote(jobCredentialGaps(job, noRent), noRent)).toBe(false);
   });
 });

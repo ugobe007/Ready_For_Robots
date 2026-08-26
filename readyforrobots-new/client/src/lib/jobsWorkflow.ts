@@ -898,6 +898,21 @@ export function crmToggleSelectedKey(
   return [...set];
 }
 
+/**
+ * Default: every dumped job is kept. If the pool is new (no overlap), keep all.
+ * Unchecking one job leaves the rest. Does not touch which row is expanded.
+ */
+export function crmSyncSelectedKeys(
+  prev: string[],
+  poolKeys: string[],
+): string[] {
+  const pool = crmSelectAllKeys(poolKeys);
+  if (pool.length === 0) return [];
+  const kept = prev.filter(key => pool.includes(key));
+  if (kept.length === 0) return pool;
+  return pool.filter(key => kept.includes(key));
+}
+
 export function crmActingKeepsSelection(
   selected: string[],
   actedJobKey: string,

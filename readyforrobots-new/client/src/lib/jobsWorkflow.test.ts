@@ -72,6 +72,7 @@ import {
   crmDeskJobKeys,
   crmSelectAllKeys,
   crmToggleSelectedKey,
+  crmSyncSelectedKeys,
   crmActingKeepsSelection,
   crmCollectedCountLabel,
   crmSelectAllLabel,
@@ -612,7 +613,8 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/JOBS_POC_SKIP_CTA/);
     expect(desk).toMatch(/JOBS_POC_PREFER_HINT/);
     expect(desk).toMatch(/Your move:/);
-    expect(desk).toMatch(/quoteCommitted: true/);
+    expect(desk).toMatch(/lockQuoteUpdate/);
+    expect(desk).toMatch(/PoC evidence \(optional\)/);
     expect(desk).toMatch(/pocSkipped: true/);
     expect(desk).not.toMatch(/grid-cols-3/);
     expect(desk).not.toMatch(/vendor_shortlist/);
@@ -751,6 +753,15 @@ describe("jobsWorkflow", () => {
     expect(kept).toEqual(["a", "b", "d", "e"]);
     expect(crmActingKeepsSelection(kept, "c")).toEqual(["a", "b", "d", "e", "c"]);
     expect(crmToggleSelectedKey(["a"], "b", true)).toEqual(["a", "b"]);
+    expect(crmSyncSelectedKeys([], keys)).toEqual(keys);
+    expect(crmSyncSelectedKeys(keys, keys)).toEqual(keys);
+    expect(crmSyncSelectedKeys(["a", "b", "d", "e"], keys)).toEqual([
+      "a",
+      "b",
+      "d",
+      "e",
+    ]);
+    expect(crmSyncSelectedKeys(["old"], keys)).toEqual(keys);
     expect(CRM_EMPLOYER_NAME_CLASS).toMatch(/text-emerald-400/);
     expect(CRM_EMPLOYER_NAME_CLASS).toMatch(/font-display/);
     expect(CRM_LISTING_EYEBROW).toBe("Collected jobs");
@@ -763,6 +774,12 @@ describe("jobsWorkflow", () => {
       "utf8",
     );
     expect(desk).toMatch(/crmSelectAllKeys\(allKeys\)/);
+    expect(desk).toMatch(/crmSyncSelectedKeys/);
+    expect(desk).toMatch(/type="checkbox"/);
+    expect(desk).toMatch(/data-crm-select="inspect-only"/);
+    expect(desk).toMatch(/setExpandedKey\(open \? null : job\.job_key\)/);
+    expect(desk).not.toMatch(/setSelectedKeys\(\[job\.job_key\]\)/);
+    expect(desk).not.toMatch(/setActiveKey/);
     expect(desk).toMatch(/useState<string \| null>\(null\)/);
     expect(desk).toMatch(/CollectedJobInspect/);
     expect(desk).toMatch(/Work being performed/);

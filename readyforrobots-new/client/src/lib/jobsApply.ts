@@ -10,7 +10,7 @@ export const JOBS_APPLY_STORAGE_KEY = "rfr_job_apply_v1";
 export const JOBS_APPLY_CTA = "Place this job →";
 export const JOBS_POC_SKIP_CTA = "Skip PoC for now";
 export const JOBS_POC_PREFER_HINT =
-  "Employers prefer proof of concept. You can skip. Monthly rental is what locks the quote. We do not invent a number.";
+  "Employers prefer proof of concept. Optional — you can skip. Empty PoC does not block quote lock or Place this job. Monthly rental is what locks the quote. We do not invent a number.";
 
 export type PlacementLane = "pack" | "quote" | "apply" | "track";
 
@@ -210,8 +210,17 @@ export function placementNextActionLabel(
 
 export function canLockQuote(gaps: CredentialGap[], record: JobApplyRecord): boolean {
   if (record.quoteCommitted) return false;
-  const byId = Object.fromEntries(gaps.map(g => [g.id, g.met]));
-  return Boolean(byId.monthly_rental);
+  const rental = gaps.find(g => g.id === "monthly_rental");
+  return Boolean(rental?.met || hasMonthlyRental(record.monthlyRental));
+}
+
+/** Commit the monthly quote. Empty / short PoC is skipped automatically. */
+export function lockQuoteUpdate(record: JobApplyRecord): Partial<JobApplyRecord> {
+  const hasEvidence = hasPoc(record.pocEvidence);
+  return {
+    quoteCommitted: true,
+    pocSkipped: Boolean(record.pocSkipped) || !hasEvidence,
+  };
 }
 
 export function placementAgentBrief(

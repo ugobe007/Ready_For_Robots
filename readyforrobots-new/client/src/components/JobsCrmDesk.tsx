@@ -19,6 +19,7 @@ import {
   crmDeskJobKeys,
   crmSelectAllKeys,
   crmSelectAllLabel,
+  crmSyncSelectedKeys,
   crmToggleSelectedKey,
   jobsCrmOpenHref,
   jobsFreshHomeHref,
@@ -38,6 +39,7 @@ import {
   applyStatusFromGaps,
   canApplyToJob,
   canLockQuote,
+  lockQuoteUpdate,
   followUpNextStep,
   jobCredentialGaps,
   loadJobApplyRecord,
@@ -70,12 +72,17 @@ export default function JobsCrmDesk({
   const jobs = (snap?.jobs || []).slice(0, CRM_UNLOCKED_JOBS);
   const product = snap?.productName || "your robot";
   const allKeys = crmDeskJobKeys(jobs);
+  const allKeySig = allKeys.join("\0");
   const [selectedKeys, setSelectedKeys] = useState<string[]>(() =>
     crmSelectAllKeys(allKeys),
   );
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
   void tick;
+  useEffect(() => {
+    const pool = allKeySig ? allKeySig.split("\0") : [];
+    setSelectedKeys(prev => crmSyncSelectedKeys(prev, pool));
+  }, [allKeySig]);
   const stats = placementBoardStats(jobs);
   const selected = selectedKeys.filter(key => allKeys.includes(key));
   const expanded = jobs.find(j => j.job_key === expandedKey) || null;
@@ -180,16 +187,12 @@ export default function JobsCrmDesk({
                 <li
                   key={job.job_key}
                   className={`border bg-[#081126] ${
-                    open
-                      ? "border-emerald-400"
-                      : on
-                        ? "border-emerald-400/70"
-                        : "border-slate-600"
-                  }`}
+                    on ? "border-emerald-400" : "border-slate-600"
+                  } ${open ? "bg-emerald-400/5" : ""}`}
                 >
                   <div className="flex items-start">
                     <label
-                      className="flex shrink-0 cursor-pointer flex-col items-center gap-1 px-3 pt-4"
+                      className="flex shrink-0 cursor-pointer flex-col items-center gap-1 self-stretch border-r border-slate-700 px-3 py-4"
                       onClick={e => e.stopPropagation()}
                     >
                       <input
@@ -222,6 +225,7 @@ export default function JobsCrmDesk({
                       onClick={() =>
                         setExpandedKey(open ? null : job.job_key)
                       }
+                      data-crm-select="inspect-only"
                       className="flex min-w-0 flex-1 items-start gap-3 py-4 pr-4 text-left"
                     >
                       <span className="flex-1">
@@ -515,7 +519,9 @@ function ApplyPanel({
             />
           </label>
           <label className="block">
-            <span className={`${eyebrow} text-slate-400`}>PoC evidence</span>
+            <span className={`${eyebrow} text-slate-400`}>
+              PoC evidence (optional)
+            </span>
             <span className="mt-1 block text-sm text-slate-400">
               {JOBS_POC_PREFER_HINT}
             </span>
@@ -530,7 +536,7 @@ function ApplyPanel({
                   quoteCommitted: false,
                 })
               }
-              placeholder="Site demo, video, or written proof of concept"
+              placeholder="Site demo, video, or written proof of concept — optional"
             />
           </label>
           {!record.pocSkipped && !(record.pocEvidence || "").trim() ? (
@@ -574,7 +580,7 @@ function ApplyPanel({
         {lane === "quote" ? (
           <button
             type="button"
-            onClick={() => patch({ quoteCommitted: true })}
+            onClick={() => patch(lockQuoteUpdate(record))}
             disabled={!quoteReady}
             className="inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
           >
