@@ -918,8 +918,7 @@ export function crmCollectedCountLabel(
   cap = CRM_UNLOCKED_JOBS,
 ): string {
   const n = Math.min(Math.max(0, collected), cap);
-  const noun = n === 1 ? "egg" : "eggs";
-  return `${n} of ${cap} ${noun} in the basket`;
+  return `${n} of ${cap} eggs in the basket`;
 }
 
 export function defaultCheckedJobKeys<T extends { job_key: string }>(
