@@ -448,7 +448,8 @@ describe("jobsWorkflow", () => {
       join(here, "../components/JobsHandoffBoard.tsx"),
       "utf8",
     );
-    expect(workspace).toMatch(/jobIsForLabel/);
+    expect(workspace).toMatch(/jobIndexLabel/);
+    expect(workspace).not.toMatch(/jobIsForLabel/);
     expect(workspace).toMatch(/JOBS_RUN_ONE_ROBOT_CTA/);
     expect(workspace).toMatch(/lineupPreview/);
     expect(handoff).toMatch(/Opening CRM/);
@@ -726,6 +727,8 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/Keep all collected jobs/);
     expect(desk).toMatch(/aria-label="Collected jobs"/);
     expect(desk).toMatch(/CRM_EMPLOYER_NAME_CLASS/);
+    expect(desk).toMatch(/\{card\.jobTitle\}/);
+    expect(desk).toMatch(/\{card\.employer\}/);
     expect(desk).toMatch(/Inspecting this egg/);
     expect(desk).toMatch(/JOBS_POC_SKIP_CTA/);
     expect(desk).toMatch(/JOBS_POC_PREFER_HINT/);
@@ -1127,9 +1130,12 @@ describe("jobsWorkflow", () => {
       "utf8",
     );
     const card = workspace.slice(workspace.indexOf("function JobCard"));
-    expect(card).toMatch(/JOBS_ROBOT_NAME_CLASS/);
-    expect(card).toMatch(/JOBS_JOB_TITLE_CLASS/);
-    expect(card).toMatch(/jobIsForLabel/);
+    expect(card).toMatch(/JOBS_ROBOT_NAME_CLASS\}>\{card\.jobTitle\}/);
+    expect(card).not.toMatch(/JOBS_ROBOT_NAME_CLASS\}>\{robotName\}/);
+    expect(card).not.toMatch(/JOBS_JOB_TITLE_CLASS/);
+    expect(card).not.toMatch(/jobIsForLabel/);
+    expect(card).toMatch(/jobIndexLabel\(index\)/);
+    expect(card).not.toMatch(/robotName/);
     expect(card).toMatch(/JOBS_KEEP_LABEL/);
     expect(card).toMatch(/JOBS_SKIP_LABEL/);
     expect(card).not.toMatch(/text-\[10px\]/);

@@ -207,7 +207,7 @@ export default function JobsCrmDesk({
                             ),
                           )
                         }
-                        aria-label={`${JOBS_KEEP_LABEL} ${card.employer || card.jobTitle} in the basket`}
+                        aria-label={`${JOBS_KEEP_LABEL} ${card.jobTitle} in the basket`}
                         className="h-5 w-5 accent-emerald-400"
                       />
                       <span
@@ -221,7 +221,7 @@ export default function JobsCrmDesk({
                     <button
                       type="button"
                       aria-expanded={open}
-                      aria-label={`${open ? "Collapse" : "Inspect"} ${card.employer || card.jobTitle}`}
+                      aria-label={`${open ? "Collapse" : "Inspect"} ${card.jobTitle}`}
                       onClick={() =>
                         setExpandedKey(open ? null : job.job_key)
                       }
@@ -233,12 +233,14 @@ export default function JobsCrmDesk({
                           {String(i + 1).padStart(2, "0")} ·{" "}
                           {placementLaneLabel(chipLane)}
                         </span>
-                        <span className={`mt-1 block ${CRM_EMPLOYER_NAME_CLASS}`}>
-                          {card.employer || card.jobTitle}
-                        </span>
-                        <span className="mt-0.5 block font-display text-base font-bold leading-snug text-slate-100">
+                        <span className="mt-1 block font-display text-lg font-bold leading-snug tracking-tight text-white sm:text-xl">
                           {card.jobTitle}
                         </span>
+                        {card.employer ? (
+                          <span className={`mt-0.5 block ${CRM_EMPLOYER_NAME_CLASS}`}>
+                            {card.employer}
+                          </span>
+                        ) : null}
                         <span className="mt-1 block text-sm text-slate-400">
                           {[card.workplace, card.qualificationLabel]
                             .filter(Boolean)

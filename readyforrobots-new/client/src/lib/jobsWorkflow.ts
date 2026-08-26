@@ -480,6 +480,7 @@ export function jobIsForLabel(index: number, robotName: string): string {
 /** Readable 1970s terminal type — identity is never 10px. */
 export const JOBS_EYEBROW_CLASS =
   "font-mono text-sm font-semibold uppercase tracking-[0.12em] text-slate-400";
+/** Job Card title — the work (`jobTitle`), not the robot SKU. */
 export const JOBS_ROBOT_NAME_CLASS =
   "block font-display text-xl font-bold leading-tight tracking-tight text-white sm:text-2xl";
 export const JOBS_JOB_TITLE_CLASS =

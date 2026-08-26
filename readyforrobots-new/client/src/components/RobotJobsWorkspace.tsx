@@ -72,9 +72,8 @@ import {
   exampleJobsForLineup,
   isJobsFreshQuery,
   stripJobsFreshQuery,
-  jobIsForLabel,
+  jobIndexLabel,
   JOBS_EYEBROW_CLASS,
-  JOBS_JOB_TITLE_CLASS,
   JOBS_META_CLASS,
   JOBS_PLACE_CLASS,
   JOBS_PROCESS_NAV_CLASS,
@@ -2864,7 +2863,6 @@ function JobsPanel({
               key={`${job.forRobot}:${job.job_key}`}
               index={i + 1}
               job={job}
-              robotName={job.forRobot || analysis.productName}
               selected={expandedJob === job.job_key}
               checked={checkedJobKeys.includes(job.job_key)}
               onSelect={() => onSelectJob(job)}
@@ -3004,7 +3002,6 @@ function ZeroState({
 function JobCard({
   index,
   job,
-  robotName,
   selected,
   checked,
   onSelect,
@@ -3012,7 +3009,6 @@ function JobCard({
 }: {
   index: number;
   job: MatchJob;
-  robotName: string;
   selected: boolean;
   checked: boolean;
   onSelect: () => void;
@@ -3053,11 +3049,10 @@ function JobCard({
           className="flex min-w-0 flex-1 items-start gap-3 py-4 pr-4 text-left"
         >
           <span className="flex-1">
-            <span className={JOBS_ROBOT_NAME_CLASS}>{robotName}</span>
-            <span className={JOBS_JOB_TITLE_CLASS}>{card.jobTitle}</span>
+            <span className={JOBS_ROBOT_NAME_CLASS}>{card.jobTitle}</span>
             {place ? <span className={JOBS_PLACE_CLASS}>{place}</span> : null}
             <span className={JOBS_META_CLASS}>
-              {jobIsForLabel(index, robotName)} · {card.qualificationLabel}
+              {jobIndexLabel(index)} · {card.qualificationLabel}
             </span>
             {card.modelContract?.listLine ? (
               <span className={JOBS_PLACE_CLASS}>{card.modelContract.listLine}</span>
