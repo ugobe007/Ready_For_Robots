@@ -8,6 +8,8 @@
 
 > Historical name: “EXPERIMENT MODE.” The experiment **became the product**. The live surface is **`/`** (Jobs terminal). `/experiment` is obsolete — treat remaining links/events as legacy aliases until cleaned up.
 
+**Hermes is retired.** Do not spawn Hermes for FIND or Jobs. Do not run Mac cron or Fly ingest as the product loop. FIND is `/` via `POST /api/robot-job-match`. Cursor pstack is IDE-only. See [`hermes_retired.md`](hermes_retired.md).
+
 ---
 
 ## Category & entries

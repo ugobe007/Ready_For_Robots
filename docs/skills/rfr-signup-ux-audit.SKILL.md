@@ -13,7 +13,9 @@ metadata:
 
 # ReadyForRobots Signup UX Audit
 
-Weekly **read-only** audit of signup conversion paths in `readyforrobots-new`. Write ranked recommendations to `docs/ux_signup_audit.md`. **No UI code changes** in this skill.
+**RETIRED 2026-08-26.** Hermes is not a Jobs agent. Do not cron this. FIND is `/`, not `/experiment`. See [`hermes_retired.md`](../hermes_retired.md).
+
+Historical weekly **read-only** audit of signup conversion paths in `readyforrobots-new`. **No UI code changes** in this skill.
 
 ## Operating priority (2026-08-15)
 

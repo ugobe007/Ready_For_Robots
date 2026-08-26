@@ -1,5 +1,7 @@
 # Sales plan agent — specification
 
+This is the **CRM copilot** spec. It is not Hermes. Hermes is retired ([`hermes_retired.md`](hermes_retired.md)). FIND does not call this agent.
+
 This document defines the **role**, **inputs/outputs**, **guardrails**, and **implementation split** for the Ready For Robots CRM copilot. It aligns with these product decisions:
 
 - **Org model:** **Teams** — all CRM entities are scoped to a `team_id` (or workspace); RLS and APIs enforce membership.

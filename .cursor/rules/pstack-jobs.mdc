@@ -1,0 +1,31 @@
+---
+description: pstack protocol for ReadyForRobots Jobs (IDE routing only; never the website)
+alwaysApply: true
+---
+
+# pstack — Jobs protocol
+
+pstack is Cursor IDE model routing. Never add pstack to Vite, Vercel, Fly, or readyforrobots.com. No npm pstack dependency. No API that calls pstack.
+
+Hermes is retired. Do not spawn Hermes for FIND or Jobs. Do not follow `docs/hermes_intelligence_bridge.md` as production. Product loop is robot URL on `/` → Job Cards. FIND is `POST /api/robot-job-match`.
+
+## Before Jobs UI or API edits
+
+Use `how` for ownership and layering. Do not invent a second matcher. The matcher is `app/services/robot_job_matcher.py`. Ontology stays. CRM copilot (`docs/agent-spec.md`) is not Hermes.
+
+## After Jobs UI copy
+
+Run `unslop` on user-visible strings.
+
+## PRs that change Jobs
+
+If the diff touches `readyforrobots-new/` or the matcher, route through `.cursor/skills/verify-readyforrobots/SKILL.md`. FIND is `/`. Do not smoke `/experiment` as FIND.
+
+## Harness roster → pstack roles
+
+- Orchestrator = parent
+- ProductSurface = frontend
+- LeadQuality = critics on names
+- Deploy = verify
+
+Do not invent a Hermes pstack role. Do not use Vercel AI Gateway.

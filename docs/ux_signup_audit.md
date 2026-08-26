@@ -30,4 +30,4 @@ First-pass read-only audit of `readyforrobots-new` signup conversion. Continuity
 
 ### Out of scope this pass
 
-No UI code changes (plan decision 2A). Hermes weekly skill `rfr-signup-ux-audit` should refresh this file each Monday.
+No UI code changes (plan decision 2A). Hermes weekly skill `rfr-signup-ux-audit` is **retired** — do not cron it. FIND is `/`.

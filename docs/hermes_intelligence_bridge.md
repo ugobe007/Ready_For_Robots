@@ -1,18 +1,23 @@
 # Hermes ↔ ReadyForRobots Intelligence Bridge
 
-**Operating priority (2026-08-15):** Traffic experiment on `/experiment` beats research expansion.  
+> **RETIRED 2026-08-26.** Hermes is not a product agent. FIND does not call it.
+> Production is `/` Jobs (`POST /api/robot-job-match`), not `/experiment`.
+> Do not run Mac cron or Fly ingest for Jobs. Do not follow this document as production.
+> See [`hermes_retired.md`](hermes_retired.md).
+
+**Historical (do not operate):** Traffic experiment on `/experiment` once beat research expansion.  
 Read [`CAPABILITY_MODEL.md`](./CAPABILITY_MODEL.md) · [`EXPERIMENT_MODE.md`](./EXPERIMENT_MODE.md) · [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md).
 
-| | |
-|--|--|
-| Production | `/experiment` live |
-| Promise | Find Jobs for Robots |
-| Engine | `CAPABILITIES → FIND WORK` |
-| Audience | OEM · Distributor · Integrator |
-| Primary behavior | `rdd_see_all_clicked` |
-| Decision source | observed behavior |
+| | Historical | Production now |
+|--|--|--|
+| Surface | `/experiment` | `/` Jobs |
+| Promise | Find Jobs for Robots | Find jobs for your robot |
+| Engine | Hermes cron + ingest | `POST /api/robot-job-match` |
+| Audience | OEM · Distributor · Integrator | same |
+| Primary behavior | `rdd_see_all_clicked` | Job Cards → signup wall → CRM |
+| Decision source | observed behavior | same |
 
-**Traffic vs product:** Hermes may find prospects, draft **discovery content** from scored jobs (not promo spam), build outreach cohorts, monitor `rdd_*`, and report. Hermes must **not** respond to weak early numbers by changing the experiment (features, crawls, scoring). Soft traffic → better discoveries, not product rewrite. After enough behavior: *Who wants this most — and what kind of work makes them want more?*
+**Traffic vs product (retired):** Hermes used to draft discovery content and feed Cal. That is not Jobs. Soft traffic is not a reason to revive Mac cron. After enough behavior: *Who wants this most — and what kind of work makes them want more?*
 
 Acquisition: [`DISCOVERY_CONTENT.md`](./DISCOVERY_CONTENT.md) · first sprint [`CONTENT_SPRINT.md`](./CONTENT_SPRINT.md) — editorial = **work**; content = sensor; Content→Work funnel by `src`.
 

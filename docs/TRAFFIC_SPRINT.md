@@ -19,7 +19,9 @@ After enough behavior, the first real question is **not** “What should we buil
 
 > Who wants this most — and what kind of work makes them want more?
 
-### Traffic vs product (Hermes + humans)
+### Traffic vs product (historical; Hermes retired)
+
+Hermes is retired. Do not cron this as FIND. Production is `/` Jobs. See [`hermes_retired.md`](hermes_retired.md).
 
 | Allowed (operate) | Forbidden (while frozen) |
 |-------------------|--------------------------|

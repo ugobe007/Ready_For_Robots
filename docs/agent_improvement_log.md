@@ -1,6 +1,8 @@
 # Agent Improvement Log
 
-Proposals from Hermes `rfr-workflow-improve` (and manual reviews). Newest first.
+**Hermes is retired (2026-08-26).** Entries below are historical. Do not run `rfr-workflow-improve` or Mac cron as Jobs. See [`hermes_retired.md`](hermes_retired.md).
+
+Proposals from the retired Hermes skill `rfr-workflow-improve` (and manual reviews). Newest first.
 
 ## 2026-08-24 — Mac Hermes status (proceed)
 

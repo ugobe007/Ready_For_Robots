@@ -1,5 +1,12 @@
 """Tests for Hermes intelligence ingest APIs (auth + dry_run, no DB writes required)."""
+import pytest
 from fastapi.testclient import TestClient
+
+
+@pytest.fixture(autouse=True)
+def enable_legacy_hermes_ingest(monkeypatch):
+    """Historical ingest tests require the override. Default-off is test_hermes_retired."""
+    monkeypatch.setenv("HERMES_INGEST_ENABLED", "1")
 
 
 def test_job_signals_ingest_requires_auth(monkeypatch):

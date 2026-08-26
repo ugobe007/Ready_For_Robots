@@ -2,7 +2,9 @@
 
 **Canonical PMF statement for all harness agents, Cursor sessions, and mission briefs.**
 
-**Last updated:** 2026-08-22
+**Last updated:** 2026-08-26
+
+**Hermes is retired.** Do not run Hermes as the Jobs agent. The product loop is robot URL → Job Cards (`POST /api/robot-job-match`). See [`hermes_retired.md`](hermes_retired.md).
 
 **Operating model:** [`robot_employment_model.md`](./robot_employment_model.md)
 
@@ -127,3 +129,5 @@ Full comparison: [competitive_positioning.md](competitive_positioning.md).
 - [conversion_agent_challenges.md](conversion_agent_challenges.md) — funnel challenges for ProductSurface
 - [readyforrobots-ux.md](readyforrobots-ux.md) — Detect → Qualify → Engage → Advance
 - [AGENTS.md](../AGENTS.md) — harness constitution
+- [hermes_retired.md](hermes_retired.md) — Hermes is not the Jobs agent
+- [pstack_jobs.md](pstack_jobs.md) — Cursor pstack is IDE-only

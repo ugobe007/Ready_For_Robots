@@ -1,6 +1,9 @@
 # Hermes → ReadyForRobots Deployment Evidence Bridge
 
-Concrete integration: Hermes crawls public OEM/customer deployment news nightly; RFR stores structured **Deployment Evidence** (not live telemetry).
+> **RETIRED 2026-08-26.** Do not run this crawler for Jobs. Ingest returns 410 unless `HERMES_INGEST_ENABLED=1`.
+> Production FIND is `/` via `POST /api/robot-job-match`. See [`hermes_retired.md`](hermes_retired.md).
+
+Historical note: Hermes crawled public OEM/customer deployment news; RFR stored structured **Deployment Evidence** (not live telemetry).
 
 ```
 ┌─────────────────────────┐         POST /api/v1/market-graph/

@@ -1,5 +1,11 @@
 """Tests for Hermes → RFR deployment evidence ingest API (auth + dry_run, no DB)."""
+import pytest
 from fastapi.testclient import TestClient
+
+
+@pytest.fixture(autouse=True)
+def enable_legacy_hermes_ingest(monkeypatch):
+    monkeypatch.setenv("HERMES_INGEST_ENABLED", "1")
 
 
 def test_deployment_ingest_requires_auth(monkeypatch):

@@ -2,7 +2,9 @@
 
 Living document for the agent harness **intelligence loop**. Updated by research missions (`MarketIntel`, `FrictionMiner`, `ProductThesis`). Execution missions must align with active bets unless fixing a P0 blocker (empty pipeline, broken deploy).
 
-**Last updated:** 2026-08-24 (employment universe — supply-side roster)
+**Last updated:** 2026-08-26 (Hermes retired; Jobs matcher + harness)
+
+**Hermes is retired.** Do not run Mac cron or Fly ingest as Jobs. Retarget research to the matcher and harness ProductManager. See [`hermes_retired.md`](hermes_retired.md).
 
 ---
 
@@ -84,6 +86,7 @@ Active bets the Orchestrator should prefer when choosing build missions:
 - **Volume over quality** — more pipeline rows while `built_at` fresh but names broken
 - **Dashboard parity** with Salesforce/HubSpot — we win on intent + autonomy
 - **Horizontal GTM data parity** — Explee/Apollo-style company & people search at 100M+ scale ([competitive_positioning.md](competitive_positioning.md)); we win on robot pipeline outcomes, not list size
+- **Hermes as Jobs** — Mac cron, Fly ingest, or Cal outreach treated as FIND. FIND is `/` via the matcher.
 
 ---
 

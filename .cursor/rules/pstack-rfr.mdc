@@ -1,0 +1,14 @@
+---
+description: Checked-in pstack defaults for Cloud agents (no home-dir model rule required)
+alwaysApply: true
+---
+
+# pstack — ReadyForRobots Cloud defaults
+
+Cloud agents often have no `~/.cursor/rules/pstack-models.mdc`. Use inherit-parent / auto unless the operator has a local setup-pstack rule.
+
+Jobs work uses `how` (ownership) plus verify-readyforrobots. After UI copy, unslop.
+
+Never Hermes. Never Vercel AI Gateway. Never put pstack on the website.
+
+FIND is `/`. Matcher is `POST /api/robot-job-match`. See `docs/pstack_jobs.md` and `docs/hermes_retired.md`.

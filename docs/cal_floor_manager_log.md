@@ -1,6 +1,6 @@
 # Cal Floor Manager Log
 
-Hourly coach ticks from Hermes skill `rfr-sales-floor-manager`. Newest first.
+**Hermes is retired (2026-08-26).** Historical hourly coach ticks from retired skill `rfr-sales-floor-manager`. Newest first. Do not cron this as Jobs.
 
 Spec: [docs/skills/rfr-sales-floor-manager.SKILL.md](./skills/rfr-sales-floor-manager.SKILL.md)
 
