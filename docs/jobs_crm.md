@@ -170,7 +170,8 @@ Hunt on FIND. Collect on the CRM listing. Enjoy Place this job when the user is 
 5. **Never invent** rental economics on the card; Place this job is the quote path.
 6. **Never claim** 7-day / 15-month limits in UI before the API enforces them.
 7. **Never require** PoC evidence to lock a quote or Place this job. Prefer it; allow skip.
-8. Change this file (and tests) if the workflow changes — do not “fix” CRM from a one-line chat prompt.
+8. **Never remount FIND while researching.** One Start jobs click = one match. Do not `location.assign` / `reload` / `/?new=1` bounce, and do not require SIGNAL `.pipeline-detail-shell` on `/`.
+9. Change this file (and tests) if the workflow changes — do not “fix” CRM from a one-line chat prompt.
 
 ---
 

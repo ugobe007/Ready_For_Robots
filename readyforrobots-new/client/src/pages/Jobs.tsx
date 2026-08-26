@@ -4,8 +4,9 @@
  * Slug may stay in the URL for marketing; the product surface is always the
  * Jobs workspace — never the old Qualify / See-all-jobs experiment overlay.
  *
- * `/?new=1` resets FIND inside the workspace. Do not remount the tree when
- * the query is stripped — that double-mount flashes the job list.
+ * `/?new=1` resets FIND inside the workspace. Strip the query in an effect
+ * after paint. Do not remount the tree, and do not resetToFind while
+ * research is in flight — that is the submit loop.
  */
 import ExperimentHeader from "@/components/ExperimentHeader";
 import RobotJobsWorkspace from "@/components/RobotJobsWorkspace";

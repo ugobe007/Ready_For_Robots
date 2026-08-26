@@ -25,8 +25,8 @@
  *
  * Matcher / Understanding are frozen (M2) — this only presents their output.
  */
-import { useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { trackRobotJobsFunnel } from "@/lib/siteAnalytics";
 import {
@@ -64,11 +64,14 @@ import {
   JOBS_RUN_ONE_ROBOT_CTA,
   JOBS_SEE_JOBS_CTA,
   RAIL_STEP_HINT,
+  JOBS_FRESH_HOME_EVENT,
+  canStartFindSubmit,
   consumeJobsWorkspaceRestoreOnce,
   defaultCheckedJobKeys,
   defaultCheckedKeysForLineup,
   exampleJobsForLineup,
   isJobsFreshQuery,
+  stripJobsFreshQuery,
   jobIsForLabel,
   JOBS_EYEBROW_CLASS,
   JOBS_JOB_TITLE_CLASS,
@@ -578,12 +581,12 @@ function pickSelectedJobKey(
 
 export default function RobotJobsWorkspace() {
   const { session } = useAuth();
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
+  const search = useSearch();
   const [stage, setStage] = useState<Stage>(() => {
     if (typeof window === "undefined") return "find";
     if (isJobsFreshQuery(window.location.search)) {
       try {
-        window.history.replaceState({}, "", "/");
         window.sessionStorage.removeItem(WORKSPACE_SESSION_KEY);
         window.sessionStorage.removeItem(JOBS_RESTORE_ONCE_KEY);
       } catch {
@@ -642,6 +645,7 @@ export default function RobotJobsWorkspace() {
   const restoredRef = useRef(false);
   const researchAbortRef = useRef<AbortController | null>(null);
   const matchAbortRef = useRef<(() => void) | null>(null);
+  const findInFlightRef = useRef(false);
 
   const funnelBase = () => ({
     session_id: sessionId.current,
@@ -727,27 +731,33 @@ export default function RobotJobsWorkspace() {
     restoredRef.current = true;
     submittedUrlRef.current = "";
     submissionIdRef.current = null;
+    findInFlightRef.current = false;
     clearWorkspaceSession();
-    if (replaceHome && isJobsFreshQuery(window.location.search)) {
-      window.history.replaceState({}, "", "/");
-      setLocation("/", { replace: true });
+    if (replaceHome) {
+      stripJobsFreshQuery();
     }
   }
 
-  /* Wordmark / Jobs nav: `/?new=1` dumps in-progress work. Strip the query
-     without remounting — a second FIND paint is the flash. */
+  /* Strip `/?new=1` after paint. Never replaceState during render — wouter
+     patches history and that remounts FIND. Never resetToFind here: a typed
+     URL or in-flight research must not be aborted by the fresh-query flag. */
+  useLayoutEffect(() => {
+    stripJobsFreshQuery();
+  }, []);
+
   useEffect(() => {
-    if (!isJobsFreshQuery(window.location.search)) {
+    if (!isJobsFreshQuery(search) && !isJobsFreshQuery(window.location.search)) {
       return;
     }
-    if (stage === "find" && !url && portfolio.length === 0) {
-      window.history.replaceState({}, "", "/");
-      setLocation("/", { replace: true });
-      return;
-    }
-    resetToFind(true);
+    stripJobsFreshQuery();
+  }, [search]);
+
+  useEffect(() => {
+    const onFresh = () => resetToFind(true);
+    window.addEventListener(JOBS_FRESH_HOME_EVENT, onFresh);
+    return () => window.removeEventListener(JOBS_FRESH_HOME_EVENT, onFresh);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location]);
+  }, []);
 
   /* Restore only on refresh, back/forward, or an auth one-shot.
      A normal revisit of `/` must show FIND — not replay the last robot URL. */
@@ -755,7 +765,7 @@ export default function RobotJobsWorkspace() {
     if (restoredRef.current) return;
     restoredRef.current = true;
     if (isJobsFreshQuery(window.location.search)) {
-      resetToFind(true);
+      stripJobsFreshQuery();
       return;
     }
     const saved = readWorkspaceSession();
@@ -972,6 +982,8 @@ export default function RobotJobsWorkspace() {
         ),
       );
       setStage("find");
+    } finally {
+      findInFlightRef.current = false;
     }
   }
 
@@ -1600,6 +1612,7 @@ export default function RobotJobsWorkspace() {
 
   function onSubmitFind(e: React.FormEvent) {
     e.preventDefault();
+    e.stopPropagation();
     startJobs();
   }
 
@@ -1608,7 +1621,17 @@ export default function RobotJobsWorkspace() {
     field?.scrollIntoView({ behavior: "smooth", block: "center" });
     field?.focus();
     const u = (field?.value || url).trim();
-    if (!u) return;
+    if (
+      !canStartFindSubmit({
+        url: u,
+        inFlight: findInFlightRef.current,
+        stage,
+      })
+    ) {
+      return;
+    }
+    setUrl(u);
+    findInFlightRef.current = true;
     void submitFind(u);
   }
 
@@ -1742,17 +1765,21 @@ export default function RobotJobsWorkspace() {
   const processOnJobs =
     stage === "jobs" || stage === "portfolio"
       ? () => document.getElementById("jobs-list")?.scrollIntoView({ behavior: "smooth" })
-      : stage === "find" || stage === "research"
-        ? startJobs
-        : openJobsStep;
+      : stage === "research"
+        ? undefined
+        : stage === "find"
+          ? startJobs
+          : openJobsStep;
   const processOnActivate = goToActivate;
   const processActionLabel = jobsProcessActionLabel(processCurrent);
   const processOnAction =
     processCurrent === "jobs"
       ? goToActivate
-      : stage === "find" || stage === "research"
-        ? startJobs
-        : openJobsStep;
+      : stage === "research"
+        ? undefined
+        : stage === "find"
+          ? startJobs
+          : openJobsStep;
 
   /* -------------------------------------------------------------- */
   /* Render                                                          */
@@ -1969,7 +1996,13 @@ function FindRail({
         </p>
       )}
 
-      <form onSubmit={onSubmit} className="mt-6">
+      <form
+        aria-label="Find jobs for your robot"
+        action="/"
+        method="get"
+        onSubmit={onSubmit}
+        className="mt-6"
+      >
         <label className={eyebrow} htmlFor="robot-url">
           Robot product URL
         </label>
