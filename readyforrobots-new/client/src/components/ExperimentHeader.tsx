@@ -68,7 +68,7 @@ export default function ExperimentHeader() {
             {jobsActive ? <span className="rfr-led" aria-hidden="true" /> : null}
             Jobs
           </a>
-          <Link href="/intelligence" className={`${aboutActive ? navActive : navIdle} max-sm:hidden`}>
+          <Link href="/intelligence" className={`${aboutActive ? navActive : navIdle}`}>
             About
           </Link>
           {showPipeline ? (

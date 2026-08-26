@@ -88,6 +88,12 @@ import {
   CRM_PLACE_EGG_HINT,
   jobsSignupHref,
   jobsCrmOpenHref,
+  jobsCrmHasRestore,
+  jobsCrmLeaveHref,
+  jobsCrmLeaveLabel,
+  jobsCrmNextHref,
+  jobsCrmNextLabel,
+  CRM_SIGNUP_NEXT_CTA,
   jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
   lineupJobLookups,
@@ -721,7 +727,18 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/placementOutreachDraft/);
     expect(desk).toMatch(/placementAgentBrief/);
     expect(desk).toMatch(/<JobsPstackProtocol compact/);
-    expect(desk).toMatch(/aria-label="Jobs process"/);
+    expect(desk).toMatch(/<JobsProcessChrome/);
+    expect(desk).toMatch(/CRM_SIGNUP_NEXT_CTA/);
+    expect(desk).toMatch(/aria-label="CRM next"/);
+    const processChrome = readFileSync(
+      join(here, "../components/JobsProcessChrome.tsx"),
+      "utf8",
+    );
+    expect(processChrome).toMatch(/aria-label="Jobs process"/);
+    expect(processChrome).toMatch(/jobsCrmNextHref/);
+    expect(processChrome).toMatch(/jobsFreshHomeHref/);
+    expect(processChrome).toMatch(/jobsWorkspaceRestoreHref/);
+    expect(processChrome).toMatch(/rfr-jobs-process-action/);
     expect(desk).toMatch(/Step 03 · CRM/);
     expect(desk).toMatch(/Collect jobs for \{product\}/);
     expect(desk).toMatch(/crmCollectedCountLabel/);
@@ -757,9 +774,11 @@ describe("jobsWorkflow", () => {
     expect(handoff).not.toMatch(/5 checked/);
     expect(handoff).not.toMatch(/function JobRow/);
     expect(crm).toMatch(/Opening CRM desk/);
-    expect(crm).toMatch(/jobsActivateHref/);
+    expect(crm).toMatch(/jobsCrmOpenHref/);
     expect(crm).toMatch(/CRM_UNLOCKED_JOBS/);
-    expect(crm).toMatch(/setLocation\(jobsDeskHref\)/);
+    expect(crm).toMatch(/jobsCrmOpenHref\(Boolean\(session\)/);
+    expect(crm).toMatch(/<JobsProcessChrome/);
+    expect(crm).toMatch(/CRM_SIGNUP_NEXT_CTA/);
     const signup = readFileSync(join(here, "../pages/Signup.tsx"), "utf8");
     expect(signup).toMatch(/5 job opportunities in CRM/);
     expect(signup).not.toMatch(/The pipeline is where more than 5 live/);
@@ -788,7 +807,9 @@ describe("jobsWorkflow", () => {
     expect(crm).toMatch(/CrmHero/);
     expect(crm).toMatch(/tasteJobs/);
     expect(crm).toMatch(/Opening CRM desk/);
-    expect(crm).toMatch(/setLocation\(jobsDeskHref\)/);
+    expect(crm).toMatch(/jobsCrmOpenHref\(Boolean\(session\)/);
+    expect(crm).toMatch(/<JobsProcessChrome/);
+    expect(crm).toMatch(/CRM_SIGNUP_NEXT_CTA/);
     const back = crm.indexOf("← Back to pipeline");
     const fork = crm.indexOf("<CrmPathFork");
     const outreach = crm.indexOf("Job outreach checkpoint");
@@ -859,6 +880,38 @@ describe("jobsWorkflow", () => {
     expect(handoff).toMatch(/jobsCrmOpenHref\(props\.signedIn/);
     expect(JOBS_PROCESS_STEPS[2].label).toBe("CRM");
     expect(JOBS_NEXT_CTA).toBe("Open CRM →");
+    expect(jobsCrmHasRestore({ submissionId: 42 })).toBe(true);
+    expect(jobsCrmHasRestore({ jobCount: 3 })).toBe(true);
+    expect(jobsCrmHasRestore({})).toBe(false);
+    expect(jobsCrmLeaveHref({ submissionId: 42 })).toBe("/?restore=1");
+    expect(jobsCrmLeaveHref({ jobCount: 2 })).toBe("/?restore=1");
+    expect(jobsCrmLeaveHref({})).toBe("/?new=1");
+    expect(jobsCrmLeaveLabel({ submissionId: 9 })).toBe(JOBS_SEE_JOBS_CTA);
+    expect(jobsCrmLeaveLabel({})).toBe(FIND_JOBS_CTA);
+    expect(jobsCrmNextHref(false, 42)).toBe(
+      jobsSignupHref("/pipeline?src=jobs_activate&submission=42", "jobs_activate"),
+    );
+    expect(jobsCrmNextHref(true, 42)).toBe("/?restore=1");
+    expect(jobsCrmNextHref(true)).toBe("/?new=1");
+    expect(jobsCrmNextLabel(false)).toBe(CRM_SIGNUP_NEXT_CTA);
+    expect(jobsCrmNextLabel(true, { jobCount: 1 })).toBe(JOBS_SEE_JOBS_CTA);
+    expect(jobsCrmNextLabel(true)).toBe(FIND_JOBS_CTA);
+    const chrome = readFileSync(
+      join(here, "../components/JobsProcessChrome.tsx"),
+      "utf8",
+    );
+    expect(chrome).toMatch(/aria-label="Jobs process"/);
+    expect(chrome).toMatch(/jobsCrmNextLabel/);
+    expect(chrome).not.toMatch(/SIGNAL/);
+    const pipelinePage = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
+    expect(pipelinePage).toMatch(/authReady=\{!authLoading\}/);
+    expect(pipelinePage).toMatch(/<SiteFooter/);
+    const headerNav = readFileSync(
+      join(here, "../components/ExperimentHeader.tsx"),
+      "utf8",
+    );
+    expect(headerNav).toMatch(/href="\/intelligence"/);
+    expect(headerNav).not.toMatch(/max-sm:hidden/);
   });
 
   it("lets the desk keep all 5 collected jobs and count eggs in the basket", () => {

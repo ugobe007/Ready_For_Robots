@@ -11,11 +11,14 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
 import CrmHero, { type JobsWatchStatus } from "@/components/crm/CrmHero";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
+import JobsProcessChrome from "@/components/JobsProcessChrome";
 import {
+  CRM_SIGNUP_NEXT_CTA,
   CRM_UNLOCKED_JOBS,
+  CRM_WALL_LEAD,
   JOBS_ACTIVATE_SRC,
   isJobsHandoffSrc,
-  jobsActivateHref,
+  jobsCrmOpenHref,
   jobsSignupHref,
 } from "@/lib/jobsWorkflow";
 
@@ -111,9 +114,6 @@ export default function Crm() {
   const jobsSrc = new URLSearchParams(search).get("src");
   const fromJobs = isJobsHandoffSrc(jobsSrc);
   const submissionId = Number(new URLSearchParams(search).get("submission"));
-  const jobsDeskHref = jobsActivateHref(
-    Number.isFinite(submissionId) && submissionId > 0 ? submissionId : null,
-  );
   const crmReturnHref = (() => {
     const params = new URLSearchParams(search);
     if (!isJobsHandoffSrc(params.get("src"))) params.set("src", JOBS_ACTIVATE_SRC);
@@ -122,9 +122,10 @@ export default function Crm() {
   })();
 
   useEffect(() => {
-    if (!fromJobs) return;
-    setLocation(jobsDeskHref);
-  }, [fromJobs, jobsDeskHref, setLocation]);
+    if (!fromJobs || loading) return;
+    const dest = jobsCrmOpenHref(Boolean(session), Number.isFinite(submissionId) && submissionId > 0 ? submissionId : null);
+    setLocation(dest);
+  }, [fromJobs, loading, session, submissionId, setLocation]);
 
   const authFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -456,12 +457,40 @@ export default function Crm() {
   };
 
   if (fromJobs) {
+    const deskSignedIn = Boolean(session);
+    const deskSubmission =
+      Number.isFinite(submissionId) && submissionId > 0 ? submissionId : null;
+    const nextHref = jobsCrmOpenHref(deskSignedIn, deskSubmission);
     return (
       <div className="flex min-h-screen flex-col bg-[#081126] pt-14">
         <ExperimentHeader />
-        <p className="px-6 py-16 text-center font-mono text-sm uppercase tracking-[0.08em] text-slate-400">
-          Opening CRM desk…
-        </p>
+        <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
+          <div className="mb-6">
+            <JobsProcessChrome
+              signedIn={deskSignedIn}
+              submissionId={deskSubmission}
+            />
+          </div>
+          <p className="font-mono text-sm font-semibold uppercase tracking-[0.12em] text-emerald-400">
+            Step 03 · CRM
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
+            CRM
+          </h1>
+          <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
+            {loading
+              ? "Opening CRM desk…"
+              : deskSignedIn
+                ? "Opening CRM desk…"
+                : CRM_WALL_LEAD}
+          </p>
+          <a
+            href={nextHref}
+            className="mt-6 inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+          >
+            {deskSignedIn ? "Open CRM →" : CRM_SIGNUP_NEXT_CTA}
+          </a>
+        </div>
       </div>
     );
   }
