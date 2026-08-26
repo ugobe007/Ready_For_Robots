@@ -177,6 +177,10 @@ Run `scripts/harness_notify.py --mission <path>`. Writes `reports/harness_notifi
 - Change secrets or commit `.env` files
 - Weaken fail-open behavior in Cursor/Harness hooks
 
+## Vercel is not an agent meter
+
+Frontend stays on Vercel; **API and LLMs stay on Fly**. Agents must not use Vercel as compute or an AI Gateway. `cursor/*` (and all Preview) Git builds are skipped via `vercel.json` `ignoreCommand`. Production HTML still ships through GitHub **Deploy frontend to Vercel** `--prod` when frontend paths change — never from hourly observe, never skip-green. Agent-verify reads `readyforrobots.com` HTML for skip-green and **Fly** for `/api`. Protocol: [`docs/vercel_agent_spend.md`](docs/vercel_agent_spend.md).
+
 ## Deploy verification
 
 After deploy to `ready-2-robot`:
@@ -217,3 +221,4 @@ Legacy `frontend/nextjs/` — avoid new product work unless explicitly requested
 - [docs/feature_map.md](docs/feature_map.md) — Jobs chrome (nav, process bar, panels, results)
 - [docs/jobs_crm.md](docs/jobs_crm.md) — Jobs CRM spec (signup wall, free 5 / 15×month / 7-day, export)
 - [docs/agent-spec.md](docs/agent-spec.md) — CRM copilot (separate from harness Orchestrator)
+- [docs/vercel_agent_spend.md](docs/vercel_agent_spend.md) — agents must not meter Vercel Preview / AI Gateway

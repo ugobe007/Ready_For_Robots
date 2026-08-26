@@ -6,4 +6,7 @@ def test_root_vercel_json_points_at_vite_output():
     data = json.loads(Path("vercel.json").read_text())
     assert data["outputDirectory"] == "readyforrobots-new/dist/public"
     assert data["framework"] is None
-    assert "ignoreCommand" not in data
+    cmd = data["ignoreCommand"]
+    assert "VERCEL_ENV" in cmd
+    assert "cursor/*" in cmd
+    assert len(cmd) <= 256

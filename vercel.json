@@ -4,6 +4,7 @@
   "installCommand": "npx --yes pnpm@10.4.1 install --frozen-lockfile -C readyforrobots-new",
   "buildCommand": "cd readyforrobots-new && VITE_PUBLIC_API_URL= npx --yes pnpm@10.4.1 exec vite build",
   "outputDirectory": "readyforrobots-new/dist/public",
+  "ignoreCommand": "[ \"$VERCEL_ENV\" != \"production\" ] || case \"$VERCEL_GIT_COMMIT_REF\" in cursor/*) true;; *) false;; esac",
   "rewrites": [
     {
       "source": "/api/:path*",
