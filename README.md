@@ -81,6 +81,7 @@ The Vercel project for `readyforrobots.com` must be a **static** deploy (0 serve
 - **Do not** set Root Directory to `frontend/nextjs` (legacy Next.js creates 12+ serverless routes on Hobby).
 - **Framework Preset:** Other (not Next.js / not Python).
 - API lives on Fly (`ready-2-robot.fly.dev`); `/api/*` is rewritten in `vercel.json`, not implemented on Vercel.
+- Git **Preview** builds for `cursor/*` and all non-production refs are skipped (`ignoreCommand`). Production is GitHub **Deploy frontend to Vercel**. See `docs/vercel_agent_spend.md`.
 
 If the build fails with “No more than 12 Serverless Functions”, the project is building server/API code on Vercel — fix Root Directory and redeploy.
 

@@ -60,7 +60,7 @@ The GitHub job **builds Vite in Actions**, packs `.vercel/output`, and runs `ver
 
 Framework Settings: leave **Other** and keep Override toggles **off**. Do not Save the `npm run build` / `public` placeholders.
 
-Alternatively: Vercel dashboard → a Preview for the merge SHA → **Promote to Production**.
+Alternatively: Vercel dashboard → a Preview for the merge SHA → **Promote to Production**. Agent `cursor/*` branches no longer get Previews (`vercel.json` `ignoreCommand`); do not rely on Promote for those PRs. Spend protocol: [vercel_agent_spend.md](vercel_agent_spend.md).
 
 ---
 
