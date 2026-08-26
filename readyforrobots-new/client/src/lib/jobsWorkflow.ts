@@ -280,8 +280,13 @@ export const BUYER_LEADS_ANON_CAP = 5;
 export const JOBS_PIPELINE_CAP = 15;
 /** Live list after Activate: checked jobs first, then fill to this cap. */
 export const JOBS_ACTIVATE_CAP = 15;
-/** Free CRM taste — keep in sync with `JOBS_WATCH_FREE_VISIBLE_EVENTS`. */
+/** Free CRM taste — keep in sync with `JOBS_CRM_FREE_BATCH` in plan_entitlements. */
 export const CRM_UNLOCKED_JOBS = 5;
+/** Free FIND dump size. Paid skips the cap. Spec: docs/jobs_crm.md */
+export const CRM_FREE_BATCH = CRM_UNLOCKED_JOBS;
+export const CRM_FREE_BATCHES_PER_MONTH = 3;
+export const CRM_FREE_MONTHLY_CAP = CRM_FREE_BATCH * CRM_FREE_BATCHES_PER_MONTH;
+export const CRM_FREE_TTL_DAYS = 7;
 /** Free / anonymous: search this many SKUs per FIND. Paid unlocks five. */
 export const JOBS_PRODUCT_CAP_FREE = 3;
 export const JOBS_PRODUCT_CAP_PAID = 5;
@@ -491,9 +496,9 @@ export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT =
   "Jobs you keep stay jobs. Quote the monthly rental you will charge, then apply. We do not invent a number.";
 export const CRM_HOW_TO_STEPS = [
-  "The jobs you checked on FIND land on Place — not a SIGNAL buyer list.",
-  "One job at a time: pack, quote, apply. The agent names your move.",
-  "Follow up after apply. Revenue is the rental you typed.",
+  "Sign in to save the jobs you checked. The desk is those jobs — not a SIGNAL buyer list.",
+  "One job at a time: pack, quote, apply. Pipeline actions stay on the job.",
+  "Follow up after apply. Export if you must; native CRM is the default.",
 ] as const;
 export const CRM_SUBHEAD_CLASS =
   "mt-2 max-w-2xl text-lg leading-relaxed text-slate-200 sm:text-xl";
@@ -583,7 +588,7 @@ export function jobsListHint(opts: {
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
 export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
-  "Checking a job dumps it into CRM. Open CRM is step 03 — quote, Place this job, follow-up. Not a SIGNAL buyer list.";
+  "Checking a job dumps it into CRM. Open CRM is step 03 — sign in to save the desk, then quote, Place this job, follow-up. Not a SIGNAL buyer list.";
 export const JOBS_KEEP_LABEL = "Keep";
 export const JOBS_SKIP_LABEL = "Skip";
 
@@ -621,9 +626,10 @@ export function showSignalPipelineNav(opts: {
 export function jobsHeaderCrmHref(
   pathname: string,
   src?: string | null,
+  signedIn = true,
 ): string {
   if (showSignalPipelineNav({ pathname, src })) return "/crm";
-  return jobsActivateHref();
+  return jobsCrmOpenHref(signedIn);
 }
 
 function queryParams(search?: string | null): URLSearchParams {
@@ -679,7 +685,7 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = JOBS_SAVE_TO_CRM_CTA;
 export const JOBS_NEXT_HINT =
-  "All five start checked and dump into CRM. Uncheck any you do not want. Open CRM is step 03 — quote the rental, then Place this job.";
+  "All five start checked and dump into CRM. Uncheck any you do not want. Open CRM is step 03 — sign in to keep the desk, quote the rental, then Place this job.";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
@@ -940,6 +946,74 @@ export function persistJobsHandoffSrc(src: string | null | undefined): string {
 
 export function jobsSignupHref(nextHref: string, src: string): string {
   return `/signup?next=${encodeURIComponent(nextHref)}&src=${encodeURIComponent(src)}`;
+}
+
+/**
+ * Only entry to the CRM desk. Signed-out users hit the signup wall
+ * (`next` = desk). Job Cards on step 02 stay anonymous. Spec: docs/jobs_crm.md.
+ */
+export function jobsCrmOpenHref(
+  signedIn: boolean,
+  submissionId?: number | null,
+): string {
+  const dest = jobsActivateHref(submissionId);
+  return signedIn ? dest : jobsSignupHref(dest, JOBS_ACTIVATE_SRC);
+}
+
+export type PipelineActivityKind =
+  | "dump"
+  | "open_crm"
+  | "place"
+  | "apply"
+  | "follow_up";
+
+export type PipelineActivityEvent = {
+  at: string;
+  kind: PipelineActivityKind;
+  label: string;
+  jobKey?: string;
+  company?: string;
+};
+
+export const PIPELINE_ACTIVITY_KEY = "rfr_pipeline_activity_v1";
+const PIPELINE_ACTIVITY_CAP = 40;
+
+/** Pipeline / FIND actions land on the CRM job record for later review. */
+export function recordPipelineActivity(
+  event: Omit<PipelineActivityEvent, "at">,
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    const next: PipelineActivityEvent = {
+      ...event,
+      at: new Date().toISOString(),
+    };
+    const list = [next, ...readPipelineActivity()].slice(0, PIPELINE_ACTIVITY_CAP);
+    window.localStorage.setItem(PIPELINE_ACTIVITY_KEY, JSON.stringify(list));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function readPipelineActivity(): PipelineActivityEvent[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(PIPELINE_ACTIVITY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? (parsed as PipelineActivityEvent[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Desk-level events (no jobKey) plus events for this job. */
+export function pipelineActivityForJob(
+  jobKey?: string | null,
+): PipelineActivityEvent[] {
+  const all = readPipelineActivity();
+  if (!jobKey) return all;
+  return all.filter(event => !event.jobKey || event.jobKey === jobKey);
 }
 
 /** Auth / leftover-link return to the Jobs workspace on `/`. */

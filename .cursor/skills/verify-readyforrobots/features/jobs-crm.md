@@ -4,15 +4,15 @@ Step 03 is **CRM**. Checking a job on step 02 dumps it into this desk. Kept Job 
 
 ## Sub-features
 
-- `crm-activate` Open CRM from the job list goes to `/pipeline?src=jobs_activate` without a signup wall.
-- `crm-unlock` free users see 5 unlocked jobs from the handoff (checks dump live).
+- `crm-activate` Open CRM from the job list uses `jobsCrmOpenHref`. Signed-out users hit `/signup?next=/pipeline?src=jobs_activate`.
+- `crm-unlock` free users see 5 unlocked jobs from the handoff after signup (checks dump live).
 - `crm-place` Headline **CRM**. Process bar 03 current. One next action (Confirm pack → Lock this quote → Place this job). Apply is disabled until pack, PoC, and a user-entered monthly rental are in.
-- `crm-auth` signed-out users see the desk first; signup is a keep-this-desk link.
+- `crm-auth` signed-out users cannot use the desk; a direct `/pipeline?src=jobs_activate` hit redirects through signup.
 
 ## How to get to it (user POV)
 
-- Click `Open CRM →` on the job list. All five example jobs start Keep-checked and are already in CRM.
-- Open header **CRM** on Jobs chrome (signed in or out).
+- Click `Open CRM →` on the job list. All five example jobs start Keep-checked. Signed-out users sign up, then land on the desk.
+- Open header **CRM** on Jobs chrome (visible signed out; click hits the wall).
 - After signup from Jobs, land on `/pipeline?src=jobs_activate`.
 - Bookmarks to `/crm?src=jobs_activate` redirect to the same desk.
 
@@ -32,3 +32,4 @@ Preconditions:
 - Bare `/crm` and bare `/pipeline` are SIGNAL.
 - Do not invent a monthly rental.
 - Do not treat a login wall as 5 placed jobs.
+- The signup wall in front of the desk is required. Spec: `docs/jobs_crm.md`.

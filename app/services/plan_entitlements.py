@@ -61,6 +61,13 @@ SAVED_LEADS_LIMIT_FREE = 5
 JOBS_PRODUCT_LIMIT_FREE = 3
 JOBS_PRODUCT_LIMIT_PAID = 5
 
+# Jobs CRM free entitlements. Paid skips all three.
+# Spec: docs/jobs_crm.md. API expiry is a follow-up; constants are the contract.
+JOBS_CRM_FREE_BATCH = 5
+JOBS_CRM_FREE_BATCHES_PER_MONTH = 3
+JOBS_CRM_FREE_MONTHLY_CAP = JOBS_CRM_FREE_BATCH * JOBS_CRM_FREE_BATCHES_PER_MONTH
+JOBS_CRM_FREE_TTL_DAYS = 7
+
 
 def _is_admin_email(email: str) -> bool:
     from app.api.auth_deps import _is_admin
@@ -197,6 +204,27 @@ def jobs_product_limit_for_plan(plan: str) -> int:
     if plan == PLAN_PAID:
         return JOBS_PRODUCT_LIMIT_PAID
     return JOBS_PRODUCT_LIMIT_FREE
+
+
+def jobs_crm_unlocked_limit(plan: str) -> Optional[int]:
+    """Jobs shown on the CRM desk per FIND dump. None = paid unlimited."""
+    if plan == PLAN_PAID:
+        return None
+    return JOBS_CRM_FREE_BATCH
+
+
+def jobs_crm_monthly_cap(plan: str) -> Optional[int]:
+    """Max jobs persisted per calendar month. None = paid unlimited."""
+    if plan == PLAN_PAID:
+        return None
+    return JOBS_CRM_FREE_MONTHLY_CAP
+
+
+def jobs_crm_ttl_days(plan: str) -> Optional[int]:
+    """Days until un-acted free jobs drop. None = paid, no expiry."""
+    if plan == PLAN_PAID:
+        return None
+    return JOBS_CRM_FREE_TTL_DAYS
 
 
 def saved_leads_limit_for_plan(plan: str) -> Optional[int]:
