@@ -86,7 +86,8 @@ jobs:
           pnpm --dir readyforrobots-new exec vitest run \
             client/src/lib/jobsWorkflow.test.ts \
             client/src/lib/robotJobCard.test.ts \
-            client/src/lib/jobsApply.test.ts
+            client/src/lib/jobsApply.test.ts \
+            client/src/lib/pstackSite.test.ts
 
       - name: Upload evidence
         if: always()

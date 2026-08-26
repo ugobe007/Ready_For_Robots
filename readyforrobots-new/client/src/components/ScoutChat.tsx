@@ -1,10 +1,15 @@
 /**
- * SIGNAL chat shell — light emerald theme, matches site redesign.
+ * SIGNAL chat shell. Frozen.
+ *
+ * Jobs agents use the pstack protocol (`pstackSite.ts` / `pstack_protocol.py`).
+ * Do not turn this FAB into a pstack chatbot. Do not call Vercel AI Gateway.
+ * Do not resurrect Hermes. Hidden on Jobs chrome via showJobsSiteChrome.
  */
 import { createContext, useCallback, useContext, useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { MessageSquare, X, Zap } from "lucide-react";
 import { showJobsSiteChrome } from "@/lib/jobsWorkflow";
+import { PSTACK_CUSTOMER_CHAT_FORBIDDEN } from "@/lib/pstackSite";
 
 type ScoutChatCtx = { openChat: () => void };
 const ScoutChatContext = createContext<ScoutChatCtx>({ openChat: () => {} });
@@ -51,6 +56,10 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
       </div>
     </div>
   );
+}
+
+if (!PSTACK_CUSTOMER_CHAT_FORBIDDEN) {
+  throw new Error("pstack customer chat is forbidden");
 }
 
 export function ScoutChat({ children }: { children: React.ReactNode }) {

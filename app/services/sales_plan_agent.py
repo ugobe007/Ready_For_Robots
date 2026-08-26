@@ -14,6 +14,7 @@ from app.models.company import Company
 from app.models.crm import AgentRun, CrmAccount, CrmEngagement, CrmNote, CrmTask
 from app.models.signal import Signal
 from app.services.crm_engagement_sync import ensure_engagement_for_opportunity, serialize_engagement, sync_account_stage_to_engagement
+from app.services.pstack_protocol import crm_copilot_intent, refuse_gateway, wrap_site_agent
 from app.services.sales_learning_agent import crm_workflow_intelligence
 
 logger = logging.getLogger(__name__)
@@ -83,6 +84,12 @@ def _fallback_plan(account: CrmAccount, company: Company | None, signals: list[S
 
 
 def _openai_plan(account: CrmAccount, company: Company | None, signals: list[Signal], intel: dict[str, Any]) -> dict[str, Any] | None:
+    # Frozen on OpenAI (server-side). pstack roles wrap the call.
+    # Do not set SCOUT_PLAN_PROVIDER=ai-gateway. Do not call Hermes.
+    blocked = refuse_gateway(os.getenv("SCOUT_PLAN_PROVIDER"))
+    if blocked:
+        logger.warning("pstack refused CRM plan provider: %s", blocked["detail"])
+        return None
     api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
     if not api_key:
         return None
@@ -141,8 +148,14 @@ def generate_sales_plan(
             signals = sorted(company.signals, key=lambda s: s.detected_at or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
 
     intel = crm_workflow_intelligence(db, account)
+    how = crm_copilot_intent()
     plan = _openai_plan(account, company, signals, intel) or _fallback_plan(account, company, signals, intel)
     engagement = sync_account_stage_to_engagement(db, account)
+    pstack = wrap_site_agent(
+        role="act",
+        surface="crm_generate_plan",
+        payload={"how": how, "signal_count": len(signals)},
+    )
 
     run = AgentRun(
         team_id=account.team_id,
@@ -156,6 +169,7 @@ def generate_sales_plan(
             "company_id": account.company_id,
             "signal_count": len(signals),
             "workflow_intelligence": intel,
+            "pstack": pstack,
         },
         output_json=plan,
     )
@@ -208,4 +222,5 @@ def generate_sales_plan(
         "agent_run_id": str(run.id),
         "engagement": serialize_engagement(engagement) if engagement else None,
         "tasks": created_tasks,
+        "pstack": pstack,
     }

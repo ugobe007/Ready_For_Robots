@@ -176,6 +176,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/rfr-led/);
     expect(workspace).not.toMatch(/rounded-full/);
     expect(workspace).toMatch(/rfr-jobs-process-bar/);
+    expect(workspace).toMatch(/<JobsPstackProtocol/);
     expect(workspace).toMatch(/rfr-jobs-page-footer/);
     expect(workspace).toMatch(/layout="page"/);
     expect(workspace).toMatch(/rfr-jobs-process-action/);
@@ -719,6 +720,7 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/jobCredentialGaps/);
     expect(desk).toMatch(/placementOutreachDraft/);
     expect(desk).toMatch(/placementAgentBrief/);
+    expect(desk).toMatch(/<JobsPstackProtocol compact/);
     expect(desk).toMatch(/aria-label="Jobs process"/);
     expect(desk).toMatch(/Step 03 · CRM/);
     expect(desk).toMatch(/Collect jobs for \{product\}/);
@@ -1199,6 +1201,7 @@ describe("jobsWorkflow", () => {
     expect(intel).toMatch(/JOBS_ACTIVATE_SRC/);
     expect(intel).toMatch(/JOBS_PROCESS_STEPS/);
     expect(intel).toMatch(/JOBS_FOR_YOUR_ROBOT_HEADING/);
+    expect(intel).toMatch(/JobsPstackProtocol/);
     expect(intel).not.toMatch(/Activate SIGNAL/);
     expect(intel).not.toMatch(/Lead scoring model/);
     expect(intel).not.toMatch(/buying signals/);

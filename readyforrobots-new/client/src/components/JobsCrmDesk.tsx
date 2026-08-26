@@ -29,6 +29,7 @@ import {
   recordPipelineActivity,
   type PipelineActivityEvent,
 } from "@/lib/jobsWorkflow";
+import JobsPstackProtocol from "@/components/JobsPstackProtocol";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
@@ -156,6 +157,9 @@ export default function JobsCrmDesk({
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
         {CRM_INSPECT_HINT}
       </p>
+      <div className="mt-4">
+        <JobsPstackProtocol compact />
+      </div>
 
       {jobs.length === 0 ? (
         <p className="mt-6 border border-slate-600 bg-[#081126] px-4 py-4 text-sm text-slate-300">

@@ -395,6 +395,8 @@ export default function Crm() {
   };
 
   const generatePlan = async () => {
+    // CRM copilot: pstack act via app/services/pstack_protocol.py.
+    // Do not retarget this POST to Vercel AI Gateway or Hermes ingest.
     if (!selectedAccount) return;
     setBusy(true);
     setMsg("");

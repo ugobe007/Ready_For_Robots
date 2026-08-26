@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Building2, FileText, Mail, Search } from "lucide-react";
 import { Link } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
+import JobsPstackProtocol from "@/components/JobsPstackProtocol";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import PixelIcon from "@/components/PixelIcon";
@@ -213,6 +214,10 @@ export default function Intelligence() {
                 </div>
               </div>
             </div>
+          </section>
+
+          <section className="mb-12">
+            <JobsPstackProtocol aboutLink={false} />
           </section>
 
           <section id="report" className="mb-12 grid grid-cols-1 gap-px overflow-hidden border border-slate-600 lg:grid-cols-[1fr_360px] bg-[#081126]">
