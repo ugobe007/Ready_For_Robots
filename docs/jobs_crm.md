@@ -27,7 +27,7 @@ FIND (URL) → QUALIFY (Job Cards, anonymous OK) → signup wall → CRM desk
 | 01 FIND | `/` | Anonymous | Robot URL → understood robot |
 | 02 QUALIFY | `/` results | Anonymous | Job Cards. Value is proven **here**. |
 | — wall | `/signup?next=/pipeline?src=jobs_activate&src=jobs_activate` | Required | Account before the desk. |
-| 03 CRM | `/pipeline?src=jobs_activate` | Signed in | Checked jobs as **deals**. Place this job lives **inside** the desk. |
+| 03 CRM | `/pipeline?src=jobs_activate` | Signed in | Collected jobs as an expandable **listing**. Place this job lives **inside** an opened egg, not as the only screen. |
 
 Process bar CTA after results: **`Open CRM →`**. That CTA always runs `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
 
@@ -101,11 +101,15 @@ Free desk lists at most `CRM_UNLOCKED_JOBS` (5) from the dump. Copy must not cla
 
 ### F5 — Place this job inside CRM (ship)
 
-Primary deal action: **Place this job →** (pack → quote rental → apply). Not a fourth process-bar step.
+Primary deal action on an **opened** collected job: **Place this job →** (pack → quote rental → apply). Not a fourth process-bar step. Not the default screen. Monthly rental is required to lock a quote. PoC is preferred and skippable.
+
+### F5a — Collect then act (ship)
+
+Default desk is a **listing** of collected jobs (cap 5 on free). Select-all keeps all five. Expanding a row inspects the Job Card (employer, workplace, work, qualification, open questions, task-model burden). Place / pack / quote is the second beat. Acting on one job does not deselect the others.
 
 ### F6 — Pipeline activity on the same job record (ship, local)
 
-Actions taken on FIND / QUALIFY (keep, Open CRM) and on the desk (Place, apply) append to a **pipeline activity** log on the job’s CRM record so the user can review them later. v1 may be `localStorage` keyed per browser; account persistence is next.
+Actions taken on FIND / QUALIFY (keep, Open CRM) and on the desk (Place, apply) append to a **pipeline activity** log on the job’s CRM record so the user can review them later. v1 may be `localStorage` keyed per browser; account persistence is next. Collect / inspect / place language on the desk maps onto these same events. Do not add points or badges.
 
 ### F7 — 7-day free TTL + 15/month (spec now, enforce next)
 
@@ -125,11 +129,17 @@ Users may export **Robot Job** leads (not SIGNAL companies) to HubSpot or CSV. E
 
 The desk must feel like **keeping work**, not like being marched through a gate.
 
+Hunt on FIND. Collect on the CRM listing. Enjoy Place this job when the user is ready.
+
 | Do | Do not |
 |----|--------|
-| One column of job deals the user already checked | Empty desk that asks them to search again |
+| One listing of jobs the user already checked, expandable for details | A forced single-job action form as the first screen |
+| Select-all / keep all 5 collected jobs; acting on one leaves the others selected | Chip-as-single-active (“one job or nothing”) |
+| Employer names in emerald display type (`text-emerald-400`) | Employer names as body copy |
 | Activity on each job (“Kept from FIND”, “Opened CRM”, “Placed”) | A second product (SIGNAL) pretending to be CRM |
-| Place this job on the deal they are looking at | Rename the process step to Place and hide CRM |
+| Place this job on an inspected egg, after peruse | Rename the process step to Place and hide CRM |
+| Honest “employers prefer proof of concept”; skip is allowed | Block quote lock / Place because PoC is empty |
+| Light collect / inspect / hatch copy (N of 5 eggs in the basket) | Points, badges, 7-day meters before the API enforces them, invented rental dollars |
 | Signup copy: save these jobs to your CRM | Signup copy: unlock HOT buyers / Cal / analytics |
 | Export as a quiet action | Force HubSpot as the only way to keep jobs |
 | Header CRM visible on Jobs chrome; click hits the wall if signed out | Hide CRM until after signup (users will not find the desk) |
@@ -144,6 +154,8 @@ The desk must feel like **keeping work**, not like being marched through a gate.
 | `jobsSignupHref` | `jobsWorkflow.ts` | `/signup?next=&src=` |
 | `jobsCrmOpenHref` | `jobsWorkflow.ts` | **Only** CTA/header/handoff/unsigned-desk entry |
 | `jobsForCrmDesk` | `jobsWorkflow.ts` | Checked-first, cap 5 |
+| `crmSelectAllKeys` / `crmCollectedCountLabel` | `jobsWorkflow.ts` | Keep all collected jobs; basket count |
+| `canLockQuote` | `jobsApply.ts` | Monthly rental required. PoC not required. |
 | `jobs_crm_unlocked_limit` | `plan_entitlements.py` | Server 5 vs unlimited |
 | `JOBS_CRM_FREE_*` | `plan_entitlements.py` | Batch 5, 3×/month, TTL 7 |
 
@@ -157,7 +169,8 @@ The desk must feel like **keeping work**, not like being marched through a gate.
 4. **Never rename** process step 03 away from **CRM**.
 5. **Never invent** rental economics on the card; Place this job is the quote path.
 6. **Never claim** 7-day / 15-month limits in UI before the API enforces them.
-7. Change this file (and tests) if the workflow changes — do not “fix” CRM from a one-line chat prompt.
+7. **Never require** PoC evidence to lock a quote or Place this job. Prefer it; allow skip.
+8. Change this file (and tests) if the workflow changes — do not “fix” CRM from a one-line chat prompt.
 
 ---
 
