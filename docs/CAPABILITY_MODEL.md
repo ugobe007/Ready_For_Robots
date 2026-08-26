@@ -64,7 +64,7 @@ ROBOT / PORTFOLIO / SOLUTION CAPABILITIES
 
 ```
 Show us your robot.
-Here are its jobs.
+Available jobs.
 Open CRM — 5 unlocked Job Cards (free). Place this job is the money action.
 ```
 

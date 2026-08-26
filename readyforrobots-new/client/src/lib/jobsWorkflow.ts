@@ -718,7 +718,7 @@ export const JOBS_PROCESS_STEPS = [
   {
     id: "jobs" as const,
     n: "02",
-    label: "Here are its jobs",
+    label: "Available jobs",
     linkLabel: JOBS_SEE_JOBS_CTA,
   },
   {

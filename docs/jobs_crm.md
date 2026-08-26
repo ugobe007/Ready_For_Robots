@@ -25,13 +25,13 @@ FIND (URL) → QUALIFY (Job Cards, anonymous OK) → signup wall → CRM desk
 | Step | Surface | Auth | What the user sees |
 |------|---------|------|--------------------|
 | 01 FIND | `/` | Anonymous | Robot URL → understood robot |
-| 02 QUALIFY | `/` results | Anonymous | Job Cards. Value is proven **here**. |
+| 02 QUALIFY | `/` results | Anonymous | Process chrome: **Available jobs**. Job Cards. Value is proven **here**. |
 | — wall | `/signup?next=/pipeline?src=jobs_activate&src=jobs_activate` | Required | Account before the desk. |
 | 03 CRM | `/pipeline?src=jobs_activate` | Signed in | Collected jobs as an expandable **listing**. Place this job lives **inside** an opened egg, not as the only screen. |
 
-Process bar CTA after results: **`Open CRM →`**. That CTA always runs `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
+Process bar: **01 Show us your robot → 02 Available jobs → 03 CRM**. CTA after results: **`Open CRM →`**. That CTA always runs `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
 
-**Do not** rename step 03 to Place, Pipeline, or Activate in chrome. Place is the money action **on a deal**, not the process step.
+**Do not** rename step 03 to Place, Pipeline, or Activate in chrome. Place is the money action **on a deal**, not the process step. Step 02 chrome is **Available jobs** (renamed from “Here are its jobs”).
 
 ---
 

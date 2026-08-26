@@ -50,7 +50,7 @@ submit robot URL on /
 
 Do not hop Jobs traffic onto SIGNAL buyers. Current experiment: Job Cards as employment opportunities — [`robot_employment_model.md`](./robot_employment_model.md) · [`experiments/robco_job_cards.md`](./experiments/robco_job_cards.md).
 
-The picker already decides one vs several. **One robot → jobs for that robot on the same click** — do not open the profile checkpoint and ask Find jobs again. Several/all is slower, so we resolve with a type-level match instead of N SKU scrapes. **Independent of that resolution, every stage keeps process nav** (01 Show us your robot → 02 Here are its jobs → 03 CRM). Fourier empty portfolio failed because 02/03 were not links. Picking N1 then hitting a second Find jobs with Activate buried below the fold is the same break: the process stops at step 2.
+The picker already decides one vs several. **One robot → jobs for that robot on the same click** — do not open the profile checkpoint and ask Find jobs again. Several/all is slower, so we resolve with a type-level match instead of N SKU scrapes. **Independent of that resolution, every stage keeps process nav** (01 Show us your robot → 02 Available jobs → 03 CRM). Fourier empty portfolio failed because 02/03 were not links. Picking N1 then hitting a second Find jobs with Activate buried below the fold is the same break: the process stops at step 2.
 
 **Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Next uses `src=jobs_activate` on `/pipeline` so the destination is the CRM desk with 5 unlocked job opportunities, not a SIGNAL lead feed. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 
