@@ -699,6 +699,25 @@ async def resend_inbound_webhook(
                     "sales_agent_action_id": str(agent_action.id),
                     "sales_agent_action_status": agent_action.status,
                 }
+            from app.services.jobs_crm import capture_inbound_message, find_application_by_reply_token
+
+            jobs_app = find_application_by_reply_token(db, token)
+            if jobs_app:
+                inbound = capture_inbound_message(
+                    db,
+                    jobs_app,
+                    body=data.get("text") or data.get("body") or data.get("html") or "",
+                    from_email=(_extract_addresses(data.get("from")) or [None])[0],
+                    to_email=", ".join(to_addresses) if to_addresses else None,
+                    subject=data.get("subject"),
+                    provider_id=str(data.get("email_id") or data.get("id") or svix_id or "") or None,
+                )
+                db.commit()
+                return {
+                    "ok": True,
+                    "job_application_id": str(jobs_app.id),
+                    "application_message_id": str(inbound.id),
+                }
             return {"ok": True, "ignored": "unknown_reply_token"}
         account = db.query(CrmAccount).filter(CrmAccount.id == msg.crm_account_id).first()
         reply = OutreachReply(

@@ -38,6 +38,20 @@ import JobsPstackProtocol from "@/components/JobsPstackProtocol";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
+import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
+import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
+import JobsCrmInbox from "@/components/JobsCrmInbox";
+import {
+  JOBS_KEEP_JOBS_CTA,
+  JOBS_NEXT_STEPS_CTA,
+  fetchKeptJobs,
+  isJobsCrmOfferQuery,
+  keepJobsOnAccount,
+  keptRowsToMatchJobs,
+  postJobsCrmActivity,
+  type JobsCrmApplication,
+  type KeptJobRow,
+} from "@/lib/jobsCrmAccount";
 import {
   JOBS_APPLY_CTA,
   JOBS_POC_PREFER_HINT,
@@ -64,10 +78,12 @@ const eyebrow = JOBS_EYEBROW_CLASS;
 export default function JobsCrmDesk({
   signedIn = false,
   authReady = true,
+  accessToken = null,
   submissionId = null,
 }: {
   signedIn?: boolean;
   authReady?: boolean;
+  accessToken?: string | null;
   submissionId?: number | null;
 }) {
   const [, setLocation] = useLocation();
@@ -81,8 +97,46 @@ export default function JobsCrmDesk({
   }, [authReady, signedIn, submissionId, setLocation]);
 
   const snap = readJobsHandoffSnapshot();
-  const jobs = (snap?.jobs || []).slice(0, CRM_UNLOCKED_JOBS);
-  const product = snap?.productName || "your robot";
+  const [accountRows, setAccountRows] = useState<KeptJobRow[]>([]);
+  const [savedCount, setSavedCount] = useState(0);
+  const [showNextSteps, setShowNextSteps] = useState(() =>
+    typeof window !== "undefined"
+      ? isJobsCrmOfferQuery(window.location.search)
+      : false,
+  );
+  const [applications, setApplications] = useState<
+    Record<string, JobsCrmApplication>
+  >({});
+  useEffect(() => {
+    if (!accessToken) return;
+    let cancelled = false;
+    fetchKeptJobs(accessToken)
+      .then(rows => {
+        if (cancelled) return;
+        setAccountRows(rows);
+        setSavedCount(rows.length);
+        const apps: Record<string, JobsCrmApplication> = {};
+        for (const row of rows) {
+          if (row.application) apps[row.job_key] = row.application;
+        }
+        setApplications(apps);
+      })
+      .catch(() => {
+        /* handoff still paints */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
+  const accountJobs = keptRowsToMatchJobs(accountRows);
+  const handoffJobs = (snap?.jobs || []).slice(0, CRM_UNLOCKED_JOBS);
+  const jobs = (accountJobs.length ? accountJobs : handoffJobs).slice(
+    0,
+    CRM_UNLOCKED_JOBS,
+  );
+  const product =
+    accountRows[0]?.robot_name || snap?.productName || "your robot";
+  const robotUrl = accountRows[0]?.robot_url || snap?.url || "";
   const allKeys = crmDeskJobKeys(jobs);
   const allKeySig = allKeys.join("\0");
   const [selectedKeys, setSelectedKeys] = useState<string[]>(() =>
@@ -99,6 +153,40 @@ export default function JobsCrmDesk({
   const selected = selectedKeys.filter(key => allKeys.includes(key));
   const expanded = jobs.find(j => j.job_key === expandedKey) || null;
   const jobCount = jobs.length;
+  const offerJob = expanded || jobs.find(j => selected.includes(j.job_key)) || jobs[0] || null;
+
+  async function persistKeptJobs(keys: string[] = selected) {
+    const picked = jobs.filter(j => keys.includes(j.job_key));
+    const pool = picked.length ? picked : jobs;
+    if (!pool.length) return;
+    for (const job of pool) {
+      recordPipelineActivity({
+        kind: "dump",
+        label: "Kept from FIND",
+        jobKey: job.job_key,
+        company: robotJobCardFromMatch(job).employer || undefined,
+      });
+    }
+    if (!accessToken) {
+      setSavedCount(pool.length);
+      setShowNextSteps(true);
+      return;
+    }
+    try {
+      const result = await keepJobsOnAccount(accessToken, {
+        jobs: pool,
+        robotName: product,
+        robotUrl,
+        submissionId,
+      });
+      setSavedCount(result.saved_count);
+      setAccountRows(result.jobs);
+      setShowNextSteps(true);
+    } catch {
+      setSavedCount(pool.length);
+      setShowNextSteps(true);
+    }
+  }
   const leaveHref = jobsCrmLeaveHref({ submissionId, jobCount });
   const leaveLabel = jobsCrmLeaveLabel({ submissionId, jobCount });
   const wallHref = jobsCrmNextHref(false, submissionId, jobCount);
@@ -166,6 +254,14 @@ export default function JobsCrmDesk({
           {stats.quotes[0] ? ` · Live quote ${stats.quotes[0]}` : ""}
         </p>
       ) : null}
+      <div className="mt-4">
+        <JobsKeepStatusBar
+          savedCount={savedCount || selected.length}
+          onCrmDesk
+          signedIn={signedIn}
+          submissionId={submissionId}
+        />
+      </div>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
         {CRM_INSPECT_HINT}
       </p>
@@ -190,14 +286,32 @@ export default function JobsCrmDesk({
         <div className="mt-6">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className={`${eyebrow} text-emerald-400`}>{CRM_LISTING_EYEBROW}</p>
-            <button
-              type="button"
-              onClick={() => setSelectedKeys(crmSelectAllKeys(allKeys))}
-              aria-label="Keep all collected jobs"
-              className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
-            >
-              {crmSelectAllLabel(jobs.length)}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedKeys(crmSelectAllKeys(allKeys))}
+                aria-label="Keep all collected jobs"
+                className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
+              >
+                {crmSelectAllLabel(jobs.length)}
+              </button>
+              <button
+                type="button"
+                onClick={() => void persistKeptJobs()}
+                aria-label={JOBS_KEEP_JOBS_CTA}
+                className="border border-emerald-400/50 bg-emerald-400 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a] transition hover:bg-emerald-300"
+              >
+                {JOBS_KEEP_JOBS_CTA}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowNextSteps(true)}
+                aria-label="Next steps"
+                className="border border-slate-500 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-slate-200 transition hover:border-slate-300"
+              >
+                {JOBS_NEXT_STEPS_CTA}
+              </button>
+            </div>
           </div>
           <ul className="space-y-3" aria-label="Collected jobs">
             {jobs.map((job, i) => {
@@ -289,8 +403,16 @@ export default function JobsCrmDesk({
                         job={job}
                         robotName={product}
                         signedIn={signedIn}
+                        accessToken={accessToken}
                         onSaved={() => setTick(n => n + 1)}
                       />
+                      {applications[job.job_key] && accessToken ? (
+                        <JobsCrmInbox
+                          applicationId={applications[job.job_key].id}
+                          token={accessToken}
+                          initial={applications[job.job_key]}
+                        />
+                      ) : null}
                     </div>
                   ) : null}
                 </li>
@@ -299,6 +421,23 @@ export default function JobsCrmDesk({
           </ul>
         </div>
       )}
+
+      {showNextSteps && offerJob && accessToken ? (
+        <JobsCrmNextSteps
+          job={offerJob}
+          robotName={product}
+          robotUrl={robotUrl}
+          token={accessToken}
+          onApplied={app => {
+            setApplications(prev => ({ ...prev, [app.job_key]: app }));
+            setExpandedKey(app.job_key);
+          }}
+        />
+      ) : showNextSteps && offerJob ? (
+        <p className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-4 text-sm text-slate-200">
+          Sign in to store this offer on your account, then apply.
+        </p>
+      ) : null}
 
       <nav
         aria-label="CRM next"
@@ -444,11 +583,13 @@ function ApplyPanel({
   job,
   robotName,
   signedIn: _signedIn,
+  accessToken = null,
   onSaved,
 }: {
   job: MatchJob;
   robotName: string;
   signedIn: boolean;
+  accessToken?: string | null;
   onSaved: () => void;
 }) {
   const [record, setRecord] = useState<JobApplyRecord>(() =>
@@ -466,12 +607,21 @@ function ApplyPanel({
   const modelLine = jobModelListLine(job);
 
   function note(kind: PipelineActivityEvent["kind"], label: string) {
+    const company = robotJobCardFromMatch(job).employer || undefined;
     recordPipelineActivity({
       kind,
       label,
       jobKey: job.job_key,
-      company: robotJobCardFromMatch(job).employer || undefined,
+      company,
     });
+    if (accessToken) {
+      void postJobsCrmActivity(accessToken, {
+        kind,
+        label,
+        jobKey: job.job_key,
+        company,
+      });
+    }
   }
 
   function persist(saved: JobApplyRecord) {
