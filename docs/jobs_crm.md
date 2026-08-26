@@ -87,6 +87,8 @@ Server source of truth: `app/services/plan_entitlements.py` (`JOBS_CRM_FREE_*`).
 
 Wire this in: process CTA, header CRM on Jobs chrome, handoff “Open CRM”, and an unsigned desk redirect.
 
+Unsigned `/pipeline?src=jobs_activate` still redirects through signup. The wall is **not** a dead end: process chrome (01 FIND / 02 Job Cards / 03 CRM) and a **Sign up to open CRM →** next stay visible. Header Jobs / About stay on screen. Do not show the working desk unsigned.
+
 ### F2 — Dump checked jobs into CRM (ship)
 
 Keep-check writes `rfr_jobs_handoff_v1` immediately. After signup, the desk hydrates from that handoff (plus `?submission=`). The user does not re-check jobs on the desk.
@@ -143,6 +145,7 @@ Hunt on FIND. Collect on the CRM listing. Enjoy Place this job when the user is 
 | Signup copy: save these jobs to your CRM | Signup copy: unlock HOT buyers / Cal / analytics |
 | Export as a quiet action | Force HubSpot as the only way to keep jobs |
 | Header CRM visible on Jobs chrome; click hits the wall if signed out | Hide CRM until after signup (users will not find the desk) |
+| Process bar + leave-desk next on the wall and the signed desk | A CRM page with no next step and no navigation links |
 
 ---
 
@@ -153,6 +156,8 @@ Hunt on FIND. Collect on the CRM listing. Enjoy Place this job when the user is 
 | `jobsActivateHref` | `jobsWorkflow.ts` | Desk URL |
 | `jobsSignupHref` | `jobsWorkflow.ts` | `/signup?next=&src=` |
 | `jobsCrmOpenHref` | `jobsWorkflow.ts` | **Only** CTA/header/handoff/unsigned-desk entry |
+| `jobsCrmNextHref` / `jobsCrmLeaveHref` | `jobsWorkflow.ts` | Wall next = signup; signed next = Job Cards (`/?restore=1`) or FIND (`/?new=1`) |
+| `JobsProcessChrome` | `JobsProcessChrome.tsx` | 01 / 02 / 03 + next on CRM wall and desk |
 | `jobsForCrmDesk` | `jobsWorkflow.ts` | Checked-first, cap 5 |
 | `crmSelectAllKeys` / `crmCollectedCountLabel` | `jobsWorkflow.ts` | Keep all collected jobs; basket count |
 | `canLockQuote` | `jobsApply.ts` | Monthly rental required. PoC not required. |
@@ -173,6 +178,7 @@ Hunt on FIND. Collect on the CRM listing. Enjoy Place this job when the user is 
 8. **Never remount FIND while researching.** One Start jobs click = one match. Do not `location.assign` / `reload` / `/?new=1` bounce, and do not require SIGNAL `.pipeline-detail-shell` on `/`.
 9. Change this file (and tests) if the workflow changes — do not “fix” CRM from a one-line chat prompt.
 10. Site agents follow pstack How / Act / Critic. Do not replace the matcher with an LLM. Do not remove the signup wall.
+11. Never render Jobs CRM (`/pipeline?src=jobs_activate` or `/crm?src=jobs_*`) without process chrome and a next step.
 
 ---
 

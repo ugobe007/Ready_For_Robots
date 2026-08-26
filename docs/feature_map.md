@@ -62,6 +62,8 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 
 01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM.
 
+On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and signed desk). Unsigned next is **Sign up to open CRM →**. Signed next leaves the desk: **See jobs →** when they have a submission or collected cards, otherwise **Start jobs →**. Header **About** stays visible on all widths.
+
 ---
 
 ## Panels (Jobs)

@@ -58,6 +58,7 @@ import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import RobotWorkspaceProfileFields from "@/components/pipeline/RobotWorkspaceProfileFields";
 import PixelIcon from "@/components/PixelIcon";
 import JobsCrmDesk from "@/components/JobsCrmDesk";
+import SiteFooter from "@/components/layout/SiteFooter";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
   isJobsHandoffSrc,
@@ -4043,8 +4044,10 @@ export default function Pipeline() {
         <ExperimentHeader />
         <JobsCrmDesk
           signedIn={isSignedIn}
+          authReady={!authLoading}
           submissionId={submissionIdFromQuery}
         />
+        <SiteFooter />
       </div>
     );
   }

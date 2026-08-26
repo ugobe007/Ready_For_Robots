@@ -7,28 +7,33 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import {
   CRM_EMPLOYER_NAME_CLASS,
+  CRM_EMPTY_FIND_HINT,
   CRM_INSPECT_HINT,
+  CRM_LEAVE_HINT,
   CRM_LISTING_EYEBROW,
   CRM_PLACE_EGG_HINT,
+  CRM_SIGNUP_NEXT_CTA,
   CRM_UNLOCKED_JOBS,
+  CRM_WALL_LEAD,
   JOBS_EYEBROW_CLASS,
   JOBS_KEEP_LABEL,
-  JOBS_PROCESS_NAV_CLASS,
-  JOBS_PROCESS_STEPS,
   crmCollectedCountLabel,
   crmDeskJobKeys,
   crmSelectAllKeys,
   crmSelectAllLabel,
   crmSyncSelectedKeys,
   crmToggleSelectedKey,
+  jobsCrmLeaveHref,
+  jobsCrmLeaveLabel,
+  jobsCrmNextHref,
   jobsCrmOpenHref,
-  jobsFreshHomeHref,
-  jobsWorkspaceRestoreHref,
   onJobsFreshHomeClick,
   pipelineActivityForJob,
   recordPipelineActivity,
   type PipelineActivityEvent,
 } from "@/lib/jobsWorkflow";
+import ExperimentHeader from "@/components/ExperimentHeader";
+import JobsProcessChrome from "@/components/JobsProcessChrome";
 import JobsPstackProtocol from "@/components/JobsPstackProtocol";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
@@ -58,16 +63,22 @@ const eyebrow = JOBS_EYEBROW_CLASS;
 
 export default function JobsCrmDesk({
   signedIn = false,
+  authReady = true,
   submissionId = null,
 }: {
   signedIn?: boolean;
+  authReady?: boolean;
   submissionId?: number | null;
 }) {
   const [, setLocation] = useLocation();
   useEffect(() => {
-    if (signedIn) return;
-    setLocation(jobsCrmOpenHref(false, submissionId));
-  }, [signedIn, submissionId, setLocation]);
+    if (!authReady || signedIn) return;
+    const dest = jobsCrmOpenHref(false, submissionId);
+    setLocation(dest);
+    if (typeof window !== "undefined") {
+      window.location.assign(dest);
+    }
+  }, [authReady, signedIn, submissionId, setLocation]);
 
   const snap = readJobsHandoffSnapshot();
   const jobs = (snap?.jobs || []).slice(0, CRM_UNLOCKED_JOBS);
@@ -87,53 +98,54 @@ export default function JobsCrmDesk({
   const stats = placementBoardStats(jobs);
   const selected = selectedKeys.filter(key => allKeys.includes(key));
   const expanded = jobs.find(j => j.job_key === expandedKey) || null;
+  const jobCount = jobs.length;
+  const leaveHref = jobsCrmLeaveHref({ submissionId, jobCount });
+  const leaveLabel = jobsCrmLeaveLabel({ submissionId, jobCount });
+  const wallHref = jobsCrmNextHref(false, submissionId, jobCount);
+  const process = (
+    <JobsProcessChrome
+      signedIn={signedIn}
+      submissionId={submissionId}
+      jobCount={jobCount}
+    />
+  );
 
   if (!signedIn) {
     return (
-      <p className="px-6 py-16 text-center font-mono text-sm uppercase tracking-[0.08em] text-slate-400">
-        Opening CRM…
-      </p>
+      <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
+        <div className="mb-6">{process}</div>
+        <p className={`${eyebrow} text-emerald-400`}>Step 03 · CRM</p>
+        <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
+          CRM
+        </h1>
+        <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
+          {authReady ? CRM_WALL_LEAD : "Opening CRM…"}
+        </p>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <a
+            href={wallHref}
+            className="inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+          >
+            {CRM_SIGNUP_NEXT_CTA}
+          </a>
+          <a
+            href={leaveHref}
+            onClick={
+              leaveHref.startsWith("/?new=") ? onJobsFreshHomeClick : undefined
+            }
+            className="inline-flex items-center justify-center border border-slate-500 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-slate-200 transition hover:border-slate-300 hover:text-white"
+          >
+            {leaveLabel}
+          </a>
+        </div>
+        <div className="mt-10">{process}</div>
+      </div>
     );
   }
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
-      <nav
-        aria-label="Jobs process"
-        className="rfr-jobs-process-bar mb-6 flex flex-wrap items-stretch border border-slate-600"
-      >
-        {JOBS_PROCESS_STEPS.map(step => {
-          const current = step.id === "activate";
-          const href =
-            step.id === "find"
-              ? jobsFreshHomeHref()
-              : step.id === "jobs"
-                ? jobsWorkspaceRestoreHref()
-                : undefined;
-          const className = `flex min-w-0 flex-1 items-center px-3 py-3 ${JOBS_PROCESS_NAV_CLASS} ${
-            current
-              ? "border-b-2 border-emerald-400 bg-emerald-400/5 text-emerald-300"
-              : "border-b-2 border-transparent text-slate-400 hover:text-slate-200"
-          }`;
-          if (href) {
-            return (
-              <a
-                key={step.id}
-                href={href}
-                onClick={step.id === "find" ? onJobsFreshHomeClick : undefined}
-                className={className}
-              >
-                {step.n} {step.label}
-              </a>
-            );
-          }
-          return (
-            <span key={step.id} aria-current="step" className={className}>
-              {step.n} {step.label}
-            </span>
-          );
-        })}
-      </nav>
+      <div className="mb-6">{process}</div>
 
       <p className={`${eyebrow} text-emerald-400`}>Step 03 · CRM</p>
       <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
@@ -163,8 +175,16 @@ export default function JobsCrmDesk({
 
       {jobs.length === 0 ? (
         <p className="mt-6 border border-slate-600 bg-[#081126] px-4 py-4 text-sm text-slate-300">
-          No jobs in CRM yet. Find jobs for your robot, keep the rows checked,
-          then Open CRM.
+          {CRM_EMPTY_FIND_HINT}{" "}
+          <a
+            href={leaveHref}
+            onClick={
+              leaveHref.startsWith("/?new=") ? onJobsFreshHomeClick : undefined
+            }
+            className="font-bold text-emerald-300 underline decoration-emerald-400/50 underline-offset-2 hover:text-emerald-200"
+          >
+            {leaveLabel}
+          </a>
         </p>
       ) : (
         <div className="mt-6">
@@ -280,9 +300,31 @@ export default function JobsCrmDesk({
         </div>
       )}
 
+      <nav
+        aria-label="CRM next"
+        className="mt-8 border border-emerald-400/40 bg-[#0b162f] px-4 py-5 sm:px-6"
+      >
+        <p className={`${eyebrow} text-emerald-400`}>Next</p>
+        <p className="mt-2 max-w-3xl text-base leading-relaxed text-slate-200">
+          {CRM_LEAVE_HINT}
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <a
+            href={leaveHref}
+            onClick={
+              leaveHref.startsWith("/?new=") ? onJobsFreshHomeClick : undefined
+            }
+            className="inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+          >
+            {leaveLabel}
+          </a>
+        </div>
+      </nav>
+
       {submissionId ? (
         <p className="mt-6 font-mono text-xs text-slate-600">Submission {submissionId}</p>
       ) : null}
+      <div className="mt-10">{process}</div>
     </div>
   );
 }
@@ -664,10 +706,12 @@ function formatActivityWhen(iso: string): string {
 /** Used when a leftover import still names a full-page desk. */
 export function JobsCrmDeskPage(props: {
   signedIn?: boolean;
+  authReady?: boolean;
   submissionId?: number | null;
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-[#081126] pt-14">
+      <ExperimentHeader />
       <JobsCrmDesk {...props} />
     </div>
   );

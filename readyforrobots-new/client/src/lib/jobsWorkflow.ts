@@ -502,6 +502,13 @@ export const CRM_INSPECT_HINT =
   "Inspect a collected egg for the Job Card. Place this job when you are ready. The others stay in the basket.";
 export const CRM_PLACE_EGG_HINT =
   "Place this job hatches a collected egg. The rest stay in the basket.";
+export const CRM_SIGNUP_NEXT_CTA = "Sign up to open CRM →";
+export const CRM_WALL_LEAD =
+  "Save these jobs to your CRM. Sign up to open the desk. You can still go back to Job Cards or FIND without an account.";
+export const CRM_LEAVE_HINT =
+  "Place this job stays on this desk. Next is Job Cards if you have a submission, or FIND for another robot.";
+export const CRM_EMPTY_FIND_HINT =
+  "No jobs in CRM yet. Find jobs for your robot, keep the rows checked, then Open CRM.";
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT =
   "Jobs you keep stay jobs. Collect several, inspect one, then quote the monthly rental you will charge and Place this job. We do not invent a number.";
@@ -1085,6 +1092,52 @@ export function jobsCrmOpenHref(
 ): string {
   const dest = jobsActivateHref(submissionId);
   return signedIn ? dest : jobsSignupHref(dest, JOBS_ACTIVATE_SRC);
+}
+
+/** True when leaving the desk should restore Job Cards instead of empty FIND. */
+export function jobsCrmHasRestore(opts: {
+  submissionId?: number | null;
+  jobCount?: number | null;
+} = {}): boolean {
+  if (opts.submissionId && opts.submissionId > 0) return true;
+  return (opts.jobCount || 0) > 0;
+}
+
+/** Leave the CRM desk: Job Cards when they have a run, otherwise FIND home. */
+export function jobsCrmLeaveHref(opts: {
+  submissionId?: number | null;
+  jobCount?: number | null;
+} = {}): string {
+  return jobsCrmHasRestore(opts)
+    ? jobsWorkspaceRestoreHref()
+    : jobsFreshHomeHref();
+}
+
+export function jobsCrmLeaveLabel(opts: {
+  submissionId?: number | null;
+  jobCount?: number | null;
+} = {}): string {
+  return jobsCrmHasRestore(opts) ? JOBS_SEE_JOBS_CTA : FIND_JOBS_CTA;
+}
+
+/**
+ * Desk / wall next step. Unsigned always hits the signup wall.
+ * Signed-in next leaves the desk — Place stays inside an opened egg.
+ */
+export function jobsCrmNextHref(
+  signedIn: boolean,
+  submissionId?: number | null,
+  jobCount?: number | null,
+): string {
+  if (!signedIn) return jobsCrmOpenHref(false, submissionId);
+  return jobsCrmLeaveHref({ submissionId, jobCount });
+}
+
+export function jobsCrmNextLabel(
+  signedIn: boolean,
+  opts: { submissionId?: number | null; jobCount?: number | null } = {},
+): string {
+  return signedIn ? jobsCrmLeaveLabel(opts) : CRM_SIGNUP_NEXT_CTA;
 }
 
 export type PipelineActivityKind =
