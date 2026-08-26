@@ -36,6 +36,9 @@ INDUSTRIAL_SEED_PATH = (
 JOBS_SEED_PATH = (
     Path(__file__).resolve().parents[1] / "data" / "vendor_robots_jobs_seed.json"
 )
+OEM_SKU_SEED_PATH = (
+    Path(__file__).resolve().parents[1] / "data" / "vendor_robots_oem_sku_seed.json"
+)
 
 # Press / CDN hosts that appear as product_url on thin catalog rows.
 JUNK_LOOKUP_HOSTS = frozenset(
@@ -253,7 +256,12 @@ def load_vendor_robots_index(path: str | None = None) -> dict[str, Any]:
     target = Path(path) if path else INDEX_PATH
     data = _read_index_file(target)
     if path is None:
-        for extra in (COMMERCIAL_SEED_PATH, INDUSTRIAL_SEED_PATH, JOBS_SEED_PATH):
+        for extra in (
+            COMMERCIAL_SEED_PATH,
+            INDUSTRIAL_SEED_PATH,
+            JOBS_SEED_PATH,
+            OEM_SKU_SEED_PATH,
+        ):
             extra_data = _read_index_file(extra)
             extras = extra_data.get("vendors") or []
             if extras:
@@ -299,12 +307,26 @@ def _vendor_domain_map(index: dict[str, Any] | None = None) -> dict[str, dict[st
             if existing is vendor:
                 continue
             robots = list(existing.get("robots") or [])
-            seen = {r.get("model_slug") for r in robots}
+            seen = {r.get("model_slug") for r in robots if r.get("model_slug")}
+            seen_names = {_name_key(str(r.get("name") or "")) for r in robots}
+            seen_names.update({str(s).split("-")[-1] for s in seen if s})
             for robot in vendor.get("robots") or []:
                 slug = robot.get("model_slug")
-                if slug and slug not in seen:
-                    robots.append(robot)
+                nkey = _name_key(str(robot.get("name") or ""))
+                short = (slug or "").split("-")[-1]
+                if slug and slug in seen:
+                    continue
+                if nkey and nkey in seen_names:
+                    continue
+                if short and len(short) >= 3 and short in seen_names:
+                    continue
+                robots.append(robot)
+                if slug:
                     seen.add(slug)
+                if nkey:
+                    seen_names.add(nkey)
+                if short:
+                    seen_names.add(short)
             domains = list(existing.get("domains") or [])
             for host in vendor.get("domains") or []:
                 if host not in domains:

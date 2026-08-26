@@ -1,0 +1,2621 @@
+{
+  "generated_at": "2026-08-26T20:07:46+00:00",
+  "source": "docs/reference/readyforrobots_companies_and_robots.xlsx",
+  "list_category": "oem_sku",
+  "notes": [
+    "Named SKUs only. Family blobs skipped.",
+    "Empty specs stay UNKNOWN — do not invent payload, reach, or price.",
+    "Quote required is not a spec.",
+    "product_url / lookup_host are set only after a live fetch verifies the page.",
+    "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored."
+  ],
+  "vendor_count": 61,
+  "robot_count": 133,
+  "vendors": [
+    {
+      "vendor_name": "1X",
+      "domains": [
+        "1x.tech"
+      ],
+      "vendor_url": "https://1x.tech",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "NEO Gamma",
+          "model_slug": "1x-neo-gamma",
+          "product_url": null,
+          "vendor_url": "https://1x.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "Norway / United States",
+          "description": "NEO Gamma: General-purpose household and service tasks. Homes · service environments.",
+          "lookup_host": "1x.tech",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "EVE",
+          "model_slug": "1x-eve",
+          "product_url": null,
+          "vendor_url": "https://1x.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "Norway / United States",
+          "description": "EVE: Mobile manipulation and logistics. Warehouses · service environments.",
+          "lookup_host": "1x.tech",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "ABB Robotics",
+      "domains": [
+        "abb.com"
+      ],
+      "vendor_url": "https://abb.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "YuMi",
+          "model_slug": "abb-robotics-yumi",
+          "product_url": null,
+          "vendor_url": "https://abb.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Switzerland / Global",
+          "description": "YuMi: Small-parts assembly. Electronics · light industry.",
+          "lookup_host": "abb.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "GoFa",
+          "model_slug": "abb-robotics-gofa",
+          "product_url": null,
+          "vendor_url": "https://abb.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Switzerland / Global",
+          "description": "GoFa: Collaborative handling. Factories.",
+          "lookup_host": "abb.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "SWIFTI",
+          "model_slug": "abb-robotics-swifti",
+          "product_url": null,
+          "vendor_url": "https://abb.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Switzerland / Global",
+          "description": "SWIFTI: Fast collaborative assembly. Factories.",
+          "lookup_host": "abb.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "IRB 1200",
+          "model_slug": "abb-robotics-irb-1200",
+          "product_url": null,
+          "vendor_url": "https://abb.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Switzerland / Global",
+          "description": "IRB 1200: Compact industrial assembly. Factories.",
+          "lookup_host": "abb.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "IRB 6700",
+          "model_slug": "abb-robotics-irb-6700",
+          "product_url": null,
+          "vendor_url": "https://abb.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Switzerland / Global",
+          "description": "IRB 6700: Heavy industrial handling. Automotive · manufacturing.",
+          "lookup_host": "abb.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "ANYbotics",
+      "domains": [
+        "anybotics.com"
+      ],
+      "vendor_url": "https://anybotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "ANYmal",
+          "model_slug": "anybotics-anymal",
+          "product_url": null,
+          "vendor_url": "https://anybotics.com",
+          "primary_class": "quadruped",
+          "status": "available",
+          "country": "Switzerland / Global",
+          "description": "ANYmal: Autonomous industrial inspection. Energy · process industry.",
+          "lookup_host": "anybotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "ANYmal X",
+          "model_slug": "anybotics-anymal-x",
+          "product_url": null,
+          "vendor_url": "https://anybotics.com",
+          "primary_class": "quadruped",
+          "status": "available",
+          "country": "Switzerland / Global",
+          "description": "ANYmal X: Explosion-protected inspection. Hazardous industrial sites.",
+          "lookup_host": "anybotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Accuray",
+      "domains": [
+        "accuray.com"
+      ],
+      "vendor_url": "https://accuray.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "CyberKnife",
+          "model_slug": "accuray-cyberknife",
+          "product_url": null,
+          "vendor_url": "https://accuray.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "CyberKnife: Image-guided radiotherapy. Cancer treatment centers.",
+          "lookup_host": "accuray.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Radixact",
+          "model_slug": "accuray-radixact",
+          "product_url": null,
+          "vendor_url": "https://accuray.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Radixact: Helical radiotherapy. Cancer treatment centers.",
+          "lookup_host": "accuray.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Aethon",
+      "domains": [
+        "aethon.com"
+      ],
+      "vendor_url": "https://aethon.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "TUG",
+          "model_slug": "aethon-tug",
+          "product_url": null,
+          "vendor_url": "https://aethon.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "TUG: Hospital materials and medication transport. Hospitals.",
+          "lookup_host": "aethon.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Agility Robotics",
+      "domains": [
+        "agilityrobotics.com"
+      ],
+      "vendor_url": "https://agilityrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Digit",
+          "model_slug": "agility-robotics-digit",
+          "product_url": null,
+          "vendor_url": "https://agilityrobotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Digit: Tote movement and facility work. Warehouses · factories.",
+          "lookup_host": "agilityrobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Amazon Robotics",
+      "domains": [
+        "aboutamazon.com"
+      ],
+      "vendor_url": "https://aboutamazon.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Proteus",
+          "model_slug": "amazon-robotics-proteus",
+          "product_url": null,
+          "vendor_url": "https://aboutamazon.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Proteus: Autonomous package movement. Fulfillment centers.",
+          "lookup_host": "aboutamazon.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Sequoia",
+          "model_slug": "amazon-robotics-sequoia",
+          "product_url": null,
+          "vendor_url": "https://aboutamazon.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Sequoia: Inventory storage and retrieval. Fulfillment centers.",
+          "lookup_host": "aboutamazon.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Sparrow",
+          "model_slug": "amazon-robotics-sparrow",
+          "product_url": null,
+          "vendor_url": "https://aboutamazon.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Sparrow: Robotic item handling. Fulfillment centers.",
+          "lookup_host": "aboutamazon.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Hercules",
+          "model_slug": "amazon-robotics-hercules",
+          "product_url": null,
+          "vendor_url": "https://aboutamazon.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Hercules: Mobile inventory transport. Fulfillment centers.",
+          "lookup_host": "aboutamazon.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Apptronik",
+      "domains": [
+        "apptronik.com"
+      ],
+      "vendor_url": "https://apptronik.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Apollo",
+          "model_slug": "apptronik-apollo",
+          "product_url": null,
+          "vendor_url": "https://apptronik.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "United States",
+          "description": "Apollo: Palletizing and material handling. Warehouses · manufacturing.",
+          "lookup_host": "apptronik.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Bear Robotics",
+      "domains": [
+        "bearrobotics.ai"
+      ],
+      "vendor_url": "https://bearrobotics.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Servi",
+          "model_slug": "bear-robotics-servi",
+          "product_url": null,
+          "vendor_url": "https://bearrobotics.ai",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Servi: Restaurant food and beverage delivery. Restaurants.",
+          "lookup_host": "bearrobotics.ai",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Servi Plus",
+          "model_slug": "bear-robotics-servi-plus",
+          "product_url": null,
+          "vendor_url": "https://bearrobotics.ai",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Servi Plus: High-capacity food delivery. Restaurants · hospitality.",
+          "lookup_host": "bearrobotics.ai",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Carti",
+          "model_slug": "bear-robotics-carti",
+          "product_url": null,
+          "vendor_url": "https://bearrobotics.ai",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Carti: Autonomous cart transport. Restaurants · hotels.",
+          "lookup_host": "bearrobotics.ai",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Bossa Nova Robotics",
+      "domains": [
+        "bossanova.ai"
+      ],
+      "vendor_url": "https://bossanova.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Bossa Nova inventory robot",
+          "model_slug": "bossa-nova-robotics-bossa-nova-inventory-robot",
+          "product_url": null,
+          "vendor_url": "https://bossanova.ai",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Bossa Nova inventory robot: Shelf auditing. Supermarkets.",
+          "lookup_host": "bossanova.ai",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Boston Dynamics",
+      "domains": [
+        "bostondynamics.com"
+      ],
+      "vendor_url": "https://bostondynamics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Spot",
+          "model_slug": "boston-dynamics-spot",
+          "product_url": null,
+          "vendor_url": "https://bostondynamics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Spot: Inspection and remote observation. Industrial sites · energy.",
+          "lookup_host": "bostondynamics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Stretch",
+          "model_slug": "boston-dynamics-stretch",
+          "product_url": null,
+          "vendor_url": "https://bostondynamics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Stretch: Trailer unloading and case handling. Warehouses.",
+          "lookup_host": "bostondynamics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Atlas",
+          "model_slug": "boston-dynamics-atlas",
+          "product_url": null,
+          "vendor_url": "https://bostondynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "United States",
+          "description": "Atlas: Dynamic handling and manipulation. Industrial R&D · factories.",
+          "lookup_host": "bostondynamics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Diligent Robotics",
+      "domains": [
+        "diligentrobots.com"
+      ],
+      "vendor_url": "https://diligentrobots.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Moxi",
+          "model_slug": "diligent-robotics-moxi",
+          "product_url": null,
+          "vendor_url": "https://diligentrobots.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Moxi: Supplies, samples, PPE, medications. Hospitals.",
+          "lookup_host": "diligentrobots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Ecovacs",
+      "domains": [
+        "ecovacs.com"
+      ],
+      "vendor_url": "https://ecovacs.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "WINBOT W2 OMNI",
+          "model_slug": "ecovacs-winbot-w2-omni",
+          "product_url": null,
+          "vendor_url": "https://ecovacs.com",
+          "primary_class": "cleaning_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "WINBOT W2 OMNI: Window cleaning. Commercial · residential buildings.",
+          "lookup_host": "ecovacs.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Ekso Bionics",
+      "domains": [
+        "eksobionics.com"
+      ],
+      "vendor_url": "https://eksobionics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "EksoNR",
+          "model_slug": "ekso-bionics-eksonr",
+          "product_url": null,
+          "vendor_url": "https://eksobionics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "EksoNR: Rehabilitation and gait training. Clinics · rehabilitation.",
+          "lookup_host": "eksobionics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Ekso EVO",
+          "model_slug": "ekso-bionics-ekso-evo",
+          "product_url": null,
+          "vendor_url": "https://eksobionics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Ekso EVO: Lower-limb assistance. Rehabilitation.",
+          "lookup_host": "eksobionics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "FANUC",
+      "domains": [
+        "fanucamerica.com"
+      ],
+      "vendor_url": "https://fanucamerica.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "CRX-10iA",
+          "model_slug": "fanuc-crx-10ia",
+          "product_url": null,
+          "vendor_url": "https://fanucamerica.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "CRX-10iA: Collaborative handling and assembly. Factories.",
+          "lookup_host": "fanucamerica.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "CRX-20iA/L",
+          "model_slug": "fanuc-crx-20ia-l",
+          "product_url": null,
+          "vendor_url": "https://fanucamerica.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "CRX-20iA/L: Collaborative handling. Factories.",
+          "lookup_host": "fanucamerica.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "LR Mate 200iD",
+          "model_slug": "fanuc-lr-mate-200id",
+          "product_url": null,
+          "vendor_url": "https://fanucamerica.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "LR Mate 200iD: Small-parts handling. Factories.",
+          "lookup_host": "fanucamerica.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "M-20iD",
+          "model_slug": "fanuc-m-20id",
+          "product_url": null,
+          "vendor_url": "https://fanucamerica.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "M-20iD: Material handling. Factories.",
+          "lookup_host": "fanucamerica.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "R-2000iD",
+          "model_slug": "fanuc-r-2000id",
+          "product_url": null,
+          "vendor_url": "https://fanucamerica.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "R-2000iD: Heavy payload handling. Automotive · manufacturing.",
+          "lookup_host": "fanucamerica.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Fellow Robots",
+      "domains": [
+        "fellowrobots.com"
+      ],
+      "vendor_url": "https://fellowrobots.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "NAVii",
+          "model_slug": "fellow-robots-navii",
+          "product_url": null,
+          "vendor_url": "https://fellowrobots.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "NAVii: Customer guidance and product location. Retail stores.",
+          "lookup_host": "fellowrobots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Figure AI",
+      "domains": [
+        "figure.ai"
+      ],
+      "vendor_url": "https://figure.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Figure 02",
+          "model_slug": "figure-ai-figure-02",
+          "product_url": null,
+          "vendor_url": "https://figure.ai",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "United States",
+          "description": "Figure 02: Material handling and industrial tasks. Factories · logistics.",
+          "lookup_host": "figure.ai",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Fourier Intelligence",
+      "domains": [
+        "fftai.com"
+      ],
+      "vendor_url": "https://fftai.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "GR-1",
+          "model_slug": "fourier-intelligence-gr-1",
+          "product_url": null,
+          "vendor_url": "https://fftai.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "Singapore / Global",
+          "description": "GR-1: Humanoid mobility and rehabilitation research. Healthcare · research.",
+          "lookup_host": "fftai.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Fujitsu",
+      "domains": [
+        "fujitsu.com"
+      ],
+      "vendor_url": "https://fujitsu.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Robotic shelf scanner",
+          "model_slug": "fujitsu-robotic-shelf-scanner",
+          "product_url": null,
+          "vendor_url": "https://fujitsu.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "Japan",
+          "description": "Robotic shelf scanner: Inventory visibility. Retail stores.",
+          "lookup_host": "fujitsu.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Gausium",
+      "domains": [
+        "gausium.com"
+      ],
+      "vendor_url": "https://gausium.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Phantas",
+          "model_slug": "gausium-phantas",
+          "product_url": null,
+          "vendor_url": "https://gausium.com",
+          "primary_class": "cleaning_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "Phantas: Commercial vacuum cleaning. Shopping centers · offices.",
+          "lookup_host": "gausium.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Vacuum 40",
+          "model_slug": "gausium-vacuum-40",
+          "product_url": null,
+          "vendor_url": "https://gausium.com",
+          "primary_class": "cleaning_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "Vacuum 40: Autonomous vacuuming. Commercial floors.",
+          "lookup_host": "gausium.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Scrubber 50",
+          "model_slug": "gausium-scrubber-50",
+          "product_url": null,
+          "vendor_url": "https://gausium.com",
+          "primary_class": "cleaning_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "Scrubber 50: Autonomous scrubbing. Commercial floors.",
+          "lookup_host": "gausium.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "GreyOrange",
+      "domains": [
+        "greyorange.com"
+      ],
+      "vendor_url": "https://greyorange.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Ranger Assist",
+          "model_slug": "greyorange-ranger-assist",
+          "product_url": null,
+          "vendor_url": "https://greyorange.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Singapore / Global",
+          "description": "Ranger Assist: Goods-to-person picking. Warehouses.",
+          "lookup_host": "greyorange.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "ButlerBot",
+          "model_slug": "greyorange-butlerbot",
+          "product_url": null,
+          "vendor_url": "https://greyorange.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Singapore / Global",
+          "description": "ButlerBot: Storage and retrieval. Warehouses.",
+          "lookup_host": "greyorange.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Hanson Robotics",
+      "domains": [
+        "hansonrobotics.com"
+      ],
+      "vendor_url": "https://hansonrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Sophia",
+          "model_slug": "hanson-robotics-sophia",
+          "product_url": null,
+          "vendor_url": "https://hansonrobotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "Hong Kong / Global",
+          "description": "Sophia: Social interaction and public engagement. Events · education · research.",
+          "lookup_host": "hansonrobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Intuitive",
+      "domains": [
+        "intuitive.com"
+      ],
+      "vendor_url": "https://intuitive.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "da Vinci Xi",
+          "model_slug": "intuitive-da-vinci-xi",
+          "product_url": null,
+          "vendor_url": "https://intuitive.com",
+          "primary_class": "surgical_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "da Vinci Xi: Robot-assisted minimally invasive surgery. Operating rooms.",
+          "lookup_host": "intuitive.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "da Vinci X",
+          "model_slug": "intuitive-da-vinci-x",
+          "product_url": null,
+          "vendor_url": "https://intuitive.com",
+          "primary_class": "surgical_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "da Vinci X: Robot-assisted surgery. Operating rooms.",
+          "lookup_host": "intuitive.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "da Vinci SP",
+          "model_slug": "intuitive-da-vinci-sp",
+          "product_url": null,
+          "vendor_url": "https://intuitive.com",
+          "primary_class": "surgical_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "da Vinci SP: Single-port surgery. Operating rooms.",
+          "lookup_host": "intuitive.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "KUKA",
+      "domains": [
+        "kuka.com"
+      ],
+      "vendor_url": "https://kuka.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "KR QUANTEC",
+          "model_slug": "kuka-kr-quantec",
+          "product_url": null,
+          "vendor_url": "https://kuka.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Germany / Global",
+          "description": "KR QUANTEC: Welding and material handling. Automotive · industry.",
+          "lookup_host": "kuka.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "LBR iiwa",
+          "model_slug": "kuka-lbr-iiwa",
+          "product_url": null,
+          "vendor_url": "https://kuka.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Germany / Global",
+          "description": "LBR iiwa: Sensitive collaborative assembly. Factories.",
+          "lookup_host": "kuka.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "KR AGILUS",
+          "model_slug": "kuka-kr-agilus",
+          "product_url": null,
+          "vendor_url": "https://kuka.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Germany / Global",
+          "description": "KR AGILUS: High-speed small-part handling. Factories.",
+          "lookup_host": "kuka.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "KR FORTEC",
+          "model_slug": "kuka-kr-fortec",
+          "product_url": null,
+          "vendor_url": "https://kuka.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Germany / Global",
+          "description": "KR FORTEC: Heavy industrial handling. Factories.",
+          "lookup_host": "kuka.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Karakuri",
+      "domains": [
+        "karakuri.com"
+      ],
+      "vendor_url": "https://karakuri.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Karakuri meal assembly system",
+          "model_slug": "karakuri-karakuri-meal-assembly-system",
+          "product_url": null,
+          "vendor_url": "https://karakuri.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United Kingdom",
+          "description": "Karakuri meal assembly system: Personalized meal assembly. Commercial kitchens.",
+          "lookup_host": "karakuri.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Keenon Robotics",
+      "domains": [
+        "keenon.com"
+      ],
+      "vendor_url": "https://keenon.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Dinerbot T10",
+          "model_slug": "keenon-robotics-dinerbot-t10",
+          "product_url": null,
+          "vendor_url": "https://keenon.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "Dinerbot T10: Food and beverage service. Restaurants · hotels.",
+          "lookup_host": "keenon.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Dinerbot T5",
+          "model_slug": "keenon-robotics-dinerbot-t5",
+          "product_url": null,
+          "vendor_url": "https://keenon.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "Dinerbot T5: Table delivery and reception. Restaurants.",
+          "lookup_host": "keenon.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Butlerbot W3",
+          "model_slug": "keenon-robotics-butlerbot-w3",
+          "product_url": null,
+          "vendor_url": "https://keenon.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "Butlerbot W3: Hotel room-service delivery. Hotels.",
+          "lookup_host": "keenon.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Keenon C30",
+          "model_slug": "keenon-robotics-keenon-c30",
+          "product_url": null,
+          "vendor_url": "https://keenon.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "Keenon C30: Commercial cleaning. Public buildings.",
+          "lookup_host": "keenon.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Keenon M2",
+          "model_slug": "keenon-robotics-keenon-m2",
+          "product_url": null,
+          "vendor_url": "https://keenon.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "Keenon M2: Delivery and reception. Hospitality · retail.",
+          "lookup_host": "keenon.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "LG",
+      "domains": [
+        "lg.com"
+      ],
+      "vendor_url": "https://lg.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "CLOi GuideBot",
+          "model_slug": "lg-cloi-guidebot",
+          "product_url": null,
+          "vendor_url": "https://lg.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "South Korea / Global",
+          "description": "CLOi GuideBot: Wayfinding and information. Retail · public spaces.",
+          "lookup_host": "lg.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "CLOi ServeBot",
+          "model_slug": "lg-cloi-servebot",
+          "product_url": null,
+          "vendor_url": "https://lg.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "South Korea / Global",
+          "description": "CLOi ServeBot: Delivery and service. Retail · hospitality.",
+          "lookup_host": "lg.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "CLOi CartBot",
+          "model_slug": "lg-cloi-cartbot",
+          "product_url": null,
+          "vendor_url": "https://lg.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "South Korea / Global",
+          "description": "CLOi CartBot: Autonomous cart and checkout assistance. Retail stores.",
+          "lookup_host": "lg.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Locus Robotics",
+      "domains": [
+        "locusrobotics.com"
+      ],
+      "vendor_url": "https://locusrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Locus Origin",
+          "model_slug": "locus-robotics-locus-origin",
+          "product_url": null,
+          "vendor_url": "https://locusrobotics.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Locus Origin: Pick-assist tote transport. Fulfillment centers.",
+          "lookup_host": "locusrobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Locus Vector",
+          "model_slug": "locus-robotics-locus-vector",
+          "product_url": null,
+          "vendor_url": "https://locusrobotics.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Locus Vector: Heavy goods movement. Warehouses.",
+          "lookup_host": "locusrobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Locus Max",
+          "model_slug": "locus-robotics-locus-max",
+          "product_url": null,
+          "vendor_url": "https://locusrobotics.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Locus Max: Large-item fulfillment. Warehouses.",
+          "lookup_host": "locusrobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Locus Flex",
+          "model_slug": "locus-robotics-locus-flex",
+          "product_url": null,
+          "vendor_url": "https://locusrobotics.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Locus Flex: Flexible pick assistance. Distribution centers.",
+          "lookup_host": "locusrobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Lowe's Innovation Labs",
+      "domains": [
+        "lowesinnovationlabs.com"
+      ],
+      "vendor_url": "https://lowesinnovationlabs.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "LoweBot",
+          "model_slug": "lowes-innovation-labs-lowebot",
+          "product_url": null,
+          "vendor_url": "https://lowesinnovationlabs.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "LoweBot: Product location and guidance. Home improvement stores.",
+          "lookup_host": "lowesinnovationlabs.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Medtronic",
+      "domains": [
+        "medtronic.com"
+      ],
+      "vendor_url": "https://medtronic.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Hugo RAS",
+          "model_slug": "medtronic-hugo-ras",
+          "product_url": null,
+          "vendor_url": "https://medtronic.com",
+          "primary_class": "surgical_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Hugo RAS: Robot-assisted surgery. Operating rooms.",
+          "lookup_host": "medtronic.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Miso Robotics",
+      "domains": [
+        "misorobotics.com"
+      ],
+      "vendor_url": "https://misorobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Flippy 2",
+          "model_slug": "miso-robotics-flippy-2",
+          "product_url": null,
+          "vendor_url": "https://misorobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Flippy 2: Frying and food handling. Commercial kitchens.",
+          "lookup_host": "misorobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Flippy Wings",
+          "model_slug": "miso-robotics-flippy-wings",
+          "product_url": null,
+          "vendor_url": "https://misorobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Flippy Wings: Wing frying and handling. Restaurants.",
+          "lookup_host": "misorobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Misty Robotics",
+      "domains": [
+        "mistyrobotics.com"
+      ],
+      "vendor_url": "https://mistyrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Misty II",
+          "model_slug": "misty-robotics-misty-ii",
+          "product_url": null,
+          "vendor_url": "https://mistyrobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Misty II: Guidance and information. Retail · museums · offices.",
+          "lookup_host": "mistyrobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Mobile Industrial Robots",
+      "domains": [
+        "mobile-industrial-robots.com"
+      ],
+      "vendor_url": "https://mobile-industrial-robots.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "MiR250",
+          "model_slug": "mobile-industrial-robots-mir250",
+          "product_url": null,
+          "vendor_url": "https://mobile-industrial-robots.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "MiR250: Internal material transport. Factories · warehouses.",
+          "lookup_host": "mobile-industrial-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "MiR600",
+          "model_slug": "mobile-industrial-robots-mir600",
+          "product_url": null,
+          "vendor_url": "https://mobile-industrial-robots.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "MiR600: Pallet transport. Factories · warehouses.",
+          "lookup_host": "mobile-industrial-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "MiR1200 Pallet Jack",
+          "model_slug": "mobile-industrial-robots-mir1200-pallet-jack",
+          "product_url": null,
+          "vendor_url": "https://mobile-industrial-robots.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "MiR1200 Pallet Jack: Autonomous pallet movement. Distribution centers.",
+          "lookup_host": "mobile-industrial-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "MiR1350",
+          "model_slug": "mobile-industrial-robots-mir1350",
+          "product_url": null,
+          "vendor_url": "https://mobile-industrial-robots.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "MiR1350: Heavy internal transport. Factories · logistics.",
+          "lookup_host": "mobile-industrial-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "MiR1000",
+          "model_slug": "mobile-industrial-robots-mir1000",
+          "product_url": null,
+          "vendor_url": "https://mobile-industrial-robots.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "MiR1000: Heavy pallet transport. Warehouses.",
+          "lookup_host": "mobile-industrial-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "MiR500",
+          "model_slug": "mobile-industrial-robots-mir500",
+          "product_url": null,
+          "vendor_url": "https://mobile-industrial-robots.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "MiR500: Pallet and cart transport. Factories.",
+          "lookup_host": "mobile-industrial-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Moley Robotics",
+      "domains": [
+        "moley.com"
+      ],
+      "vendor_url": "https://moley.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Moley Robotic Kitchen",
+          "model_slug": "moley-robotics-moley-robotic-kitchen",
+          "product_url": null,
+          "vendor_url": "https://moley.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United Kingdom",
+          "description": "Moley Robotic Kitchen: Recipe-based cooking. Professional · residential kitchens.",
+          "lookup_host": "moley.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Nala Robotics",
+      "domains": [
+        "nalarobotics.com"
+      ],
+      "vendor_url": "https://nalarobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Nala Chef",
+          "model_slug": "nala-robotics-nala-chef",
+          "product_url": null,
+          "vendor_url": "https://nalarobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Nala Chef: Recipe-based cooking. Restaurants · foodservice.",
+          "lookup_host": "nalarobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Nymble",
+      "domains": [
+        "nymble.com"
+      ],
+      "vendor_url": "https://nymble.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Nymble",
+          "model_slug": "nymble-nymble",
+          "product_url": null,
+          "vendor_url": "https://nymble.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Nymble: Automated meal preparation. Kitchens.",
+          "lookup_host": "nymble.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "OTTO Motors",
+      "domains": [
+        "ottomotors.com"
+      ],
+      "vendor_url": "https://ottomotors.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "OTTO 100",
+          "model_slug": "otto-motors-otto-100",
+          "product_url": null,
+          "vendor_url": "https://ottomotors.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Canada / Global",
+          "description": "OTTO 100: Small-load material transport. Factories.",
+          "lookup_host": "ottomotors.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "OTTO 600",
+          "model_slug": "otto-motors-otto-600",
+          "product_url": null,
+          "vendor_url": "https://ottomotors.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Canada / Global",
+          "description": "OTTO 600: Pallet and cart transport. Factories · warehouses.",
+          "lookup_host": "ottomotors.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "OTTO 1500",
+          "model_slug": "otto-motors-otto-1500",
+          "product_url": null,
+          "vendor_url": "https://ottomotors.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Canada / Global",
+          "description": "OTTO 1500: Heavy pallet transport. Industrial sites.",
+          "lookup_host": "ottomotors.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "OhmniLabs",
+      "domains": [
+        "ohmnilabs.com"
+      ],
+      "vendor_url": "https://ohmnilabs.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Ohmni",
+          "model_slug": "ohmnilabs-ohmni",
+          "product_url": null,
+          "vendor_url": "https://ohmnilabs.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Ohmni: Remote presence and teleoperation. Healthcare · education.",
+          "lookup_host": "ohmnilabs.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "PAL Robotics",
+      "domains": [
+        "pal-robotics.com"
+      ],
+      "vendor_url": "https://pal-robotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "TIAGo",
+          "model_slug": "pal-robotics-tiago",
+          "product_url": null,
+          "vendor_url": "https://pal-robotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "Spain / Global",
+          "description": "TIAGo: Mobile manipulation and research. Research · healthcare.",
+          "lookup_host": "pal-robotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "TALOS",
+          "model_slug": "pal-robotics-talos",
+          "product_url": null,
+          "vendor_url": "https://pal-robotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "Spain / Global",
+          "description": "TALOS: Whole-body humanoid research. Industrial R&D · research.",
+          "lookup_host": "pal-robotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "PARO Robots",
+      "domains": [
+        "parorobots.com"
+      ],
+      "vendor_url": "https://parorobots.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "PARO",
+          "model_slug": "paro-robots-paro",
+          "product_url": null,
+          "vendor_url": "https://parorobots.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "PARO: Companionship and sensory stimulation. Care facilities · therapy.",
+          "lookup_host": "parorobots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Pensa Systems",
+      "domains": [
+        "pensasystems.com"
+      ],
+      "vendor_url": "https://pensasystems.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Pensa autonomous shelf scanner",
+          "model_slug": "pensa-systems-pensa-autonomous-shelf-scanner",
+          "product_url": null,
+          "vendor_url": "https://pensasystems.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Pensa autonomous shelf scanner: Shelf auditing and inventory. Retail stores.",
+          "lookup_host": "pensasystems.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Picnic Works",
+      "domains": [
+        "picnicworks.com"
+      ],
+      "vendor_url": "https://picnicworks.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Picnic Pizza Station",
+          "model_slug": "picnic-works-picnic-pizza-station",
+          "product_url": null,
+          "vendor_url": "https://picnicworks.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Picnic Pizza Station: Pizza assembly. Foodservice kitchens.",
+          "lookup_host": "picnicworks.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Pizzabot",
+      "domains": [
+        "pizzabot.com"
+      ],
+      "vendor_url": "https://pizzabot.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Pizzabot",
+          "model_slug": "pizzabot-pizzabot",
+          "product_url": null,
+          "vendor_url": "https://pizzabot.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "Norway / Global",
+          "description": "Pizzabot: Pizza preparation and topping. Pizzerias · foodservice.",
+          "lookup_host": "pizzabot.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Pudu Robotics",
+      "domains": [
+        "pudurobotics.com"
+      ],
+      "vendor_url": "https://pudurobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "BellaBot",
+          "model_slug": "pudu-robotics-bellabot",
+          "product_url": null,
+          "vendor_url": "https://pudurobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "BellaBot: Tray delivery and guest interaction. Restaurants · hotels.",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "HolaBot",
+          "model_slug": "pudu-robotics-holabot",
+          "product_url": null,
+          "vendor_url": "https://pudurobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "HolaBot: Tray delivery and dish return. Restaurants · hospitality.",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "KettyBot",
+          "model_slug": "pudu-robotics-kettybot",
+          "product_url": null,
+          "vendor_url": "https://pudurobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "KettyBot: Front-of-house delivery and greeting. Restaurants · cafés.",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "FlashBot",
+          "model_slug": "pudu-robotics-flashbot",
+          "product_url": null,
+          "vendor_url": "https://pudurobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "FlashBot: Elevator-enabled room delivery. Hotels · hospitals.",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "CC1",
+          "model_slug": "pudu-robotics-cc1",
+          "product_url": null,
+          "vendor_url": "https://pudurobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "CC1: Vacuuming, scrubbing, mopping. Commercial floors.",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "MT1",
+          "model_slug": "pudu-robotics-mt1",
+          "product_url": null,
+          "vendor_url": "https://pudurobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "MT1: Outdoor sweeping and cleaning. Campuses · public spaces.",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "PUDU T300",
+          "model_slug": "pudu-robotics-pudu-t300",
+          "product_url": null,
+          "vendor_url": "https://pudurobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "PUDU T300: Commercial floor cleaning. Public · commercial floors.",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Richtech Robotics",
+      "domains": [
+        "richtechrobotics.com"
+      ],
+      "vendor_url": "https://richtechrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "ADAM",
+          "model_slug": "richtech-robotics-adam",
+          "product_url": null,
+          "vendor_url": "https://richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "ADAM: Beverage and cocktail preparation. Restaurants · bars.",
+          "lookup_host": "richtechrobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Scotty",
+          "model_slug": "richtech-robotics-scotty",
+          "product_url": null,
+          "vendor_url": "https://richtechrobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Scotty: Food and beverage delivery. Restaurants.",
+          "lookup_host": "richtechrobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Sanctuary AI",
+      "domains": [
+        "sanctuary.ai"
+      ],
+      "vendor_url": "https://sanctuary.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Phoenix",
+          "model_slug": "sanctuary-ai-phoenix",
+          "product_url": null,
+          "vendor_url": "https://sanctuary.ai",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "Canada",
+          "description": "Phoenix: General-purpose dexterous work. Factories · warehouses.",
+          "lookup_host": "sanctuary.ai",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Savioke",
+      "domains": [
+        "savioke.com"
+      ],
+      "vendor_url": "https://savioke.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Relay+",
+          "model_slug": "savioke-relay",
+          "product_url": null,
+          "vendor_url": "https://savioke.com",
+          "primary_class": "delivery_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Relay+: Secure indoor item delivery. Hotels · hospitals.",
+          "lookup_host": "savioke.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Seegrid",
+      "domains": [
+        "seegrid.com"
+      ],
+      "vendor_url": "https://seegrid.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Palion Tow Tractor",
+          "model_slug": "seegrid-palion-tow-tractor",
+          "product_url": null,
+          "vendor_url": "https://seegrid.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Palion Tow Tractor: Autonomous towing. Factories · warehouses.",
+          "lookup_host": "seegrid.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Palion Lift",
+          "model_slug": "seegrid-palion-lift",
+          "product_url": null,
+          "vendor_url": "https://seegrid.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Palion Lift: Pallet movement. Warehouses.",
+          "lookup_host": "seegrid.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "GP8",
+          "model_slug": "seegrid-gp8",
+          "product_url": null,
+          "vendor_url": "https://seegrid.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "GP8: Pallet transport. Distribution centers.",
+          "lookup_host": "seegrid.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Simbe Robotics",
+      "domains": [
+        "simberobotics.com"
+      ],
+      "vendor_url": "https://simberobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Tally",
+          "model_slug": "simbe-robotics-tally",
+          "product_url": null,
+          "vendor_url": "https://simberobotics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Tally: Shelf scanning and inventory analytics. Grocery · big-box retail.",
+          "lookup_host": "simberobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "SoftBank Robotics",
+      "domains": [
+        "softbankrobotics.com"
+      ],
+      "vendor_url": "https://softbankrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Pepper",
+          "model_slug": "softbank-robotics-pepper",
+          "product_url": null,
+          "vendor_url": "https://softbankrobotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "Pepper: Reception, guidance, engagement. Retail · events · public spaces.",
+          "lookup_host": "softbankrobotics.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Starship Technologies",
+      "domains": [
+        "starship.xyz"
+      ],
+      "vendor_url": "https://starship.xyz",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Starship delivery robot",
+          "model_slug": "starship-technologies-starship-delivery-robot",
+          "product_url": null,
+          "vendor_url": "https://starship.xyz",
+          "primary_class": "delivery_robot",
+          "status": "available",
+          "country": "Estonia / Global",
+          "description": "Starship delivery robot: Sidewalk food and parcel delivery. Campuses · neighborhoods.",
+          "lookup_host": "starship.xyz",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Stryker",
+      "domains": [
+        "stryker.com"
+      ],
+      "vendor_url": "https://stryker.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Mako SmartRobotics",
+          "model_slug": "stryker-mako-smartrobotics",
+          "product_url": null,
+          "vendor_url": "https://stryker.com",
+          "primary_class": "surgical_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "Mako SmartRobotics: Orthopedic surgical assistance. Operating rooms.",
+          "lookup_host": "stryker.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Stäubli Robotics",
+      "domains": [
+        "staubli.com"
+      ],
+      "vendor_url": "https://staubli.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "TX2-60",
+          "model_slug": "staubli-robotics-tx2-60",
+          "product_url": null,
+          "vendor_url": "https://staubli.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Switzerland / Global",
+          "description": "TX2-60: Precision assembly. Factories · labs.",
+          "lookup_host": "staubli.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "TS2-40",
+          "model_slug": "staubli-robotics-ts2-40",
+          "product_url": null,
+          "vendor_url": "https://staubli.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Switzerland / Global",
+          "description": "TS2-40: High-speed assembly. Factories.",
+          "lookup_host": "staubli.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "HEM4",
+          "model_slug": "staubli-robotics-hem4",
+          "product_url": null,
+          "vendor_url": "https://staubli.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Switzerland / Global",
+          "description": "HEM4: Hygienic handling. Food · pharma manufacturing.",
+          "lookup_host": "staubli.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Symbotic",
+      "domains": [
+        "symbotic.com"
+      ],
+      "vendor_url": "https://symbotic.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Symbotic storage robot",
+          "model_slug": "symbotic-symbotic-storage-robot",
+          "product_url": null,
+          "vendor_url": "https://symbotic.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States",
+          "description": "Symbotic storage robot: High-density case movement. Distribution centers.",
+          "lookup_host": "symbotic.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Symbotic palletizing robot",
+          "model_slug": "symbotic-symbotic-palletizing-robot",
+          "product_url": null,
+          "vendor_url": "https://symbotic.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States",
+          "description": "Symbotic palletizing robot: Pallet building and movement. Distribution centers.",
+          "lookup_host": "symbotic.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Tesla",
+      "domains": [
+        "tesla.com"
+      ],
+      "vendor_url": "https://tesla.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Optimus",
+          "model_slug": "tesla-optimus",
+          "product_url": null,
+          "vendor_url": "https://tesla.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "United States",
+          "description": "Optimus: General-purpose manipulation. Factories · R&D.",
+          "lookup_host": "tesla.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "UBTECH",
+      "domains": [
+        "ubtrobot.com"
+      ],
+      "vendor_url": "https://ubtrobot.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Cruzr",
+          "model_slug": "ubtech-cruzr",
+          "product_url": null,
+          "vendor_url": "https://ubtrobot.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "Cruzr: Reception, guidance, engagement. Hotels · public spaces.",
+          "lookup_host": "ubtrobot.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "Walker X",
+          "model_slug": "ubtech-walker-x",
+          "product_url": null,
+          "vendor_url": "https://ubtrobot.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "China / Global",
+          "description": "Walker X: Bipedal service and interaction. Hospitality · public spaces.",
+          "lookup_host": "ubtrobot.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Unitree Robotics",
+      "domains": [
+        "unitree.com"
+      ],
+      "vendor_url": "https://unitree.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "G1",
+          "model_slug": "unitree-robotics-g1",
+          "product_url": null,
+          "vendor_url": "https://unitree.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "China / Global",
+          "description": "G1: Bipedal research and manipulation. Research · education.",
+          "lookup_host": "unitree.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "H1",
+          "model_slug": "unitree-robotics-h1",
+          "product_url": null,
+          "vendor_url": "https://unitree.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "China / Global",
+          "description": "H1: Bipedal research platform. Research · industrial R&D.",
+          "lookup_host": "unitree.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Universal Robots",
+      "domains": [
+        "universal-robots.com"
+      ],
+      "vendor_url": "https://universal-robots.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "UR3e",
+          "model_slug": "universal-robots-ur3e",
+          "product_url": null,
+          "vendor_url": "https://universal-robots.com",
+          "primary_class": "cobot",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "UR3e: Light assembly and handling. Factories · labs.",
+          "lookup_host": "universal-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "UR7e",
+          "model_slug": "universal-robots-ur7e",
+          "product_url": null,
+          "vendor_url": "https://universal-robots.com",
+          "primary_class": "cobot",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "UR7e: Flexible collaborative handling. Factories.",
+          "lookup_host": "universal-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "UR12e",
+          "model_slug": "universal-robots-ur12e",
+          "product_url": null,
+          "vendor_url": "https://universal-robots.com",
+          "primary_class": "cobot",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "UR12e: Assembly and machine tending. Factories.",
+          "lookup_host": "universal-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "UR16e",
+          "model_slug": "universal-robots-ur16e",
+          "product_url": null,
+          "vendor_url": "https://universal-robots.com",
+          "primary_class": "cobot",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "UR16e: Heavy-duty collaborative handling. Factories.",
+          "lookup_host": "universal-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "UR20",
+          "model_slug": "universal-robots-ur20",
+          "product_url": null,
+          "vendor_url": "https://universal-robots.com",
+          "primary_class": "cobot",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "UR20: Palletizing and welding. Factories.",
+          "lookup_host": "universal-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "UR30",
+          "model_slug": "universal-robots-ur30",
+          "product_url": null,
+          "vendor_url": "https://universal-robots.com",
+          "primary_class": "cobot",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "UR30: Heavy payload handling. Factories.",
+          "lookup_host": "universal-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "UR15",
+          "model_slug": "universal-robots-ur15",
+          "product_url": null,
+          "vendor_url": "https://universal-robots.com",
+          "primary_class": "cobot",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "UR15: Machine tending and handling. Factories.",
+          "lookup_host": "universal-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "UR18",
+          "model_slug": "universal-robots-ur18",
+          "product_url": null,
+          "vendor_url": "https://universal-robots.com",
+          "primary_class": "cobot",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "UR18: Compact high-payload handling. Factories.",
+          "lookup_host": "universal-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "UR8 Long",
+          "model_slug": "universal-robots-ur8-long",
+          "product_url": null,
+          "vendor_url": "https://universal-robots.com",
+          "primary_class": "cobot",
+          "status": "available",
+          "country": "Denmark / Global",
+          "description": "UR8 Long: Long-reach collaborative handling. Factories.",
+          "lookup_host": "universal-robots.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Yaskawa Motoman",
+      "domains": [
+        "motoman.com"
+      ],
+      "vendor_url": "https://motoman.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "HC10DTP",
+          "model_slug": "yaskawa-motoman-hc10dtp",
+          "product_url": null,
+          "vendor_url": "https://motoman.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "HC10DTP: Collaborative handling. Factories.",
+          "lookup_host": "motoman.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "GP8",
+          "model_slug": "yaskawa-motoman-gp8",
+          "product_url": null,
+          "vendor_url": "https://motoman.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "GP8: Fast handling and assembly. Factories.",
+          "lookup_host": "motoman.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "GP25",
+          "model_slug": "yaskawa-motoman-gp25",
+          "product_url": null,
+          "vendor_url": "https://motoman.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "GP25: Material handling. Factories.",
+          "lookup_host": "motoman.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "AR1440",
+          "model_slug": "yaskawa-motoman-ar1440",
+          "product_url": null,
+          "vendor_url": "https://motoman.com",
+          "primary_class": "industrial_arm",
+          "status": "available",
+          "country": "Japan / Global",
+          "description": "AR1440: Arc welding. Factories.",
+          "lookup_host": "motoman.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Zimmer Biomet",
+      "domains": [
+        "zimmerbiomet.com"
+      ],
+      "vendor_url": "https://zimmerbiomet.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "ROSA Knee",
+          "model_slug": "zimmer-biomet-rosa-knee",
+          "product_url": null,
+          "vendor_url": "https://zimmerbiomet.com",
+          "primary_class": "surgical_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "ROSA Knee: Robotic knee surgery assistance. Operating rooms.",
+          "lookup_host": "zimmerbiomet.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "ROSA ONE",
+          "model_slug": "zimmer-biomet-rosa-one",
+          "product_url": null,
+          "vendor_url": "https://zimmerbiomet.com",
+          "primary_class": "surgical_robot",
+          "status": "available",
+          "country": "United States / Global",
+          "description": "ROSA ONE: Neurosurgical assistance. Operating rooms.",
+          "lookup_host": "zimmerbiomet.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "temi",
+      "domains": [
+        "robotemi.com"
+      ],
+      "vendor_url": "https://robotemi.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "temi Classic",
+          "model_slug": "temi-temi-classic",
+          "product_url": null,
+          "vendor_url": "https://robotemi.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "Israel / Global",
+          "description": "temi Classic: Telepresence and guided interaction. Healthcare · education.",
+          "lookup_host": "robotemi.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        },
+        {
+          "name": "temi V3",
+          "model_slug": "temi-temi-v3",
+          "product_url": null,
+          "vendor_url": "https://robotemi.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": "Israel / Global",
+          "description": "temi V3: Telepresence and service. Business · hospitality.",
+          "lookup_host": "robotemi.com",
+          "url_status": "unverified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    }
+  ]
+}
