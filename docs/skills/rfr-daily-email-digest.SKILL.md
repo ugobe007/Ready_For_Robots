@@ -13,6 +13,8 @@ metadata:
 
 # ReadyForRobots daily email digest — RETIRED ON HERMES
 
+**Hermes is retired (2026-08-26).** Do not schedule this skill. FIND is `/`. See [`hermes_retired.md`](../hermes_retired.md).
+
 **Do not schedule this skill on Hermes.** The previous Hermes cron used `--provider ai-gateway` and failed HTTP 402 before any `curl` ran. That cron is retired.
 
 ## Who sends the digest now (Hermes is not in this path)

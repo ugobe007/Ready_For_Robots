@@ -170,10 +170,11 @@ Also still segment: OEM vs distributor vs integrator **and** content topic → s
 
 ---
 
-## Hermes role
+## Hermes role (retired)
 
-**May:** draft the three formats from ledgers; assign `src`; report Content → Work funnel by `src`; note which work categories create curiosity.  
-**Must not:** invent findings; batch-write the whole sprint before publishing; automate publishing before voice is proven; change `/experiment` because a post underperformed; treat likes as the north star.
+**RETIRED 2026-08-26.** Do not run Hermes for discovery or FIND. Production is `/` Jobs. See [`hermes_retired.md`](hermes_retired.md).
+
+Historical: draft the three formats from ledgers; assign `src`; report Content → Work funnel by `src`. Must not invent findings or change the product because a post underperformed.
 
 Soft story performance → better topic selection / sharper stories — **not** product rewrite.
 

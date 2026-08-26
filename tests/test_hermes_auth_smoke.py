@@ -19,6 +19,7 @@ def _load_smoke():
 
 def _run(extra: dict[str, str]) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k not in ("RFR_ADMIN_KEY", "ADMIN_KEY")}
+    env["HERMES_RETIRED_OVERRIDE"] = "1"
     env.update(extra)
     return subprocess.run(
         [sys.executable, str(SCRIPT)],

@@ -247,4 +247,4 @@ That is the critical distinction. Heuristic keyword patches are not integrity wo
 
 **Decision rule:** Expansion and GTM wedges come from **behavior**. Understanding accuracy comes from **evidence + blind eval**, not from fixture echo.
 
-See [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) · [`robot_understanding_v1.md`](./robot_understanding_v1.md) · [`EXPERIMENT_MODE.md`](./EXPERIMENT_MODE.md) · [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md) · [`hermes_intelligence_bridge.md`](./hermes_intelligence_bridge.md)
+See [`readyforrobots_v1_milestones.md`](./readyforrobots_v1_milestones.md) · [`robot_understanding_v1.md`](./robot_understanding_v1.md) · [`EXPERIMENT_MODE.md`](./EXPERIMENT_MODE.md) · [`TRAFFIC_SPRINT.md`](./TRAFFIC_SPRINT.md) · [`hermes_retired.md`](./hermes_retired.md) (Hermes bridge is retired)

@@ -13,7 +13,9 @@ metadata:
 
 # ReadyForRobots Workflow Improve
 
-Weekly meta-pass: inspect recent Hermes cron outputs + RFR market-graph status, then append concrete improvement proposals to Ready_For_Robots `docs/agent_improvement_log.md`. **Do not auto-edit production code** unless the user explicitly asks in-session.
+**RETIRED 2026-08-26.** Hermes is not a Jobs agent. Do not cron this. FIND is `/`. See [`hermes_retired.md`](../hermes_retired.md).
+
+Historical weekly meta-pass: inspect retired Hermes cron outputs + RFR market-graph status. **Do not auto-edit production code** unless the user explicitly asks in-session.
 
 ## Operating priority (2026-08-15)
 

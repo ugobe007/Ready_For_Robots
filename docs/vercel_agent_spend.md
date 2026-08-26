@@ -17,7 +17,7 @@ See also: [`vercel_production_secrets.md`](vercel_production_secrets.md) (the Gi
 | **Vercel Git Preview** | **Yes — this is the agent-unique meter** | GitHub check `Vercel` / `Vercel Preview Comments` on `cursor/*` PRs. Full pnpm+Vite build per push. |
 | **GHA `vercel deploy --prod`** | Yes | `.github/workflows/deploy-frontend.yml` on `main` when frontend paths change. Necessary. |
 | **Fluid compute / function GB-hours** | Unlikely as the $20 line | Project is static (0 serverless). `/api/*` is a **rewrite** to Fly, not a Vercel function. Rewrites can still count as **Edge Requests / Fast Data Transfer** if clients hit `readyforrobots.com/api`. |
-| **Hermes `--provider ai-gateway`** | Mac leftover, not GHA | Skills forbid it; 2026-08-20 leftover cron **402**. If the team later enabled AI Gateway billing, that **would** show as token spend — confirm in Vercel **Usage → AI Gateway**. Not invoked from this repo’s workflows. |
+| **Hermes `--provider ai-gateway` (retired)** | Mac leftover, dead | Hermes is retired (`hermes_retired.md`). 2026-08-20 leftover cron **402**. Do not re-enable AI Gateway for Hermes. |
 
 If the dashboard line item is literally **AI Gateway tokens**, the operator must cap or disable Gateway in the Vercel team (this PR cannot see that UI). Nothing in GitHub Actions calls it.
 
@@ -35,7 +35,7 @@ Hobby/Pro seat ($20/month) can look like “$20” but is not agent-unique; 2026
 |----------|------------------------|--------------|
 | CI | 31 | No |
 | Harness hourly observe | 22 | **Yes** — `harness_diagnostics.py` GETs `https://readyforrobots.com/` pages **and** `/api/humanoid/robots` (rewrite → Fly). |
-| Hermes Fly workflow | 22 | No (Fly) |
+| Hermes Fly workflow (retired; skip-by-default) | 22 (historical) | No (Fly) |
 | Agent verify | 8 (added mid-day in #139) | **HTML/JS** from `readyforrobots.com`; **API** from `https://ready-2-robot.fly.dev` (`drive_find_jobs` POSTs Fly). |
 | Deploy frontend to Vercel | **8** (full list for that workflow) | **Yes — real `--prod`**, ~50–80s, not skip-green. |
 | Deploy to Fly.io | 8 | No |
@@ -73,5 +73,5 @@ Agent-verify does **not** spawn a Preview; it reads production HTML for skip-gre
 
 1. Open [Vercel Usage](https://vercel.com/ugobe07-gmailcoms-projects/ready-for-robots) for **2026-08-25** and read the line items: AI Gateway vs Build Minutes vs Fast Data Transfer vs Edge Requests.
 2. Project **Settings → Git**: confirm Ignored Build Step is not overriding `ignoreCommand` with a blank/always-build command. Optional: turn **off automatic Production deploys from Git** so only GHA `--prod` ships (stops a second production build on every merge).
-3. If **AI Gateway** is enabled on the team: disable it or set a spend cap; remove leftover Mac Hermes `--provider ai-gateway`.
+3. If **AI Gateway** is enabled on the team: disable it or set a spend cap. Hermes is retired; do not re-pin crons to `--provider ai-gateway`.
 4. Do not add `AI_GATEWAY_API_KEY` to the Vercel project.

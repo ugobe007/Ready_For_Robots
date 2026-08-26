@@ -1,6 +1,9 @@
 # Hermes ↔ Cal (and local RFR agents)
 
-How external Hermes research correlates with in-app agents like **Cal** (buyer outreach), Scout, and Pipeline.
+> **RETIRED 2026-08-26.** Hermes is not a product agent. Cal buyer outreach is not Jobs.
+> `CAL_AUTONOMY_ENABLED=0` in `fly.toml`. See [`hermes_retired.md`](hermes_retired.md).
+
+Historical note: how Hermes research used to correlate with **Cal** (buyer outreach), Scout, and Pipeline.
 
 ```
 Hermes (Mac cron)                    ReadyForRobots (Fly)

@@ -90,10 +90,8 @@ Pipeline cards surface Work Match % and optional comparable deployment evidence.
 
 Per robot: commercial sites, named customers, pilots vs production, expansions, reported hours, metrics coverage.
 
-## Hermes bridge (nightly crawler)
+## Hermes bridge (retired)
 
-External crawler path: Hermes skill `rfr-deployment-evidence` →  
-`POST /api/v1/market-graph/deployment-evidence/ingest`  
-See [`docs/hermes_deployment_bridge.md`](hermes_deployment_bridge.md).
+**RETIRED 2026-08-26.** Do not run the Hermes crawler for Jobs. Ingest returns 410 unless `HERMES_INGEST_ENABLED=1`. See [`hermes_retired.md`](hermes_retired.md).
 
-Seed examples (Digit/GXO, Figure/BMW, Figure/Catalyst agreement) still load from the market-graph loop. Full ~500-vendor fan-out is incremental via the Hermes watchlist.
+Historical path: Hermes skill `rfr-deployment-evidence` → `POST /api/v1/market-graph/deployment-evidence/ingest`. Seed examples (Digit/GXO, Figure/BMW) still load from the market-graph loop.

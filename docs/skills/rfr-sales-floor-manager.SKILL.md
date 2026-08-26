@@ -13,7 +13,9 @@ metadata:
 
 # ReadyForRobots Sales Floor Manager
 
-This skill **does not** call OpenAI, Anthropic, or Vercel AI Gateway. Read Fly APIs with `curl`. Daily email is `rfr-daily-email-digest` (POST `/api/v1/market-graph/daily-digest-send`), not an LLM draft.
+**RETIRED 2026-08-26.** Hermes is not a Jobs agent. Do not cron this as Cal-as-product. See [`hermes_retired.md`](../hermes_retired.md).
+
+This skill **does not** call OpenAI, Anthropic, or Vercel AI Gateway. Daily email is Fly + GHA, not Hermes.
 
 Division of labor: [docs/hermes_cal_bridge.md](../../docs/hermes_cal_bridge.md) · OemCal UI copy: `readyforrobots-new/client/src/lib/oemCalCopy.ts`
 

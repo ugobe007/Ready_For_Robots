@@ -30,6 +30,8 @@ Read `docs/product_market_fit.md`, **`docs/value_first_principle.md`**, and **`d
 
 Lead-quality north star (below) is **SIGNAL infrastructure**, not the product. Fix junk on that path; do not hop Jobs traffic onto HOT buyers.
 
+**Hermes is retired (2026-08-26).** Do not spawn Hermes for FIND or Jobs. Do not follow [`docs/hermes_intelligence_bridge.md`](docs/hermes_intelligence_bridge.md) as production. The product loop is robot URL → Job Cards (`POST /api/robot-job-match`). Cursor **pstack** is IDE model routing only — never on readyforrobots.com, Vite, Vercel, or Fly. See [`docs/hermes_retired.md`](docs/hermes_retired.md) and [`docs/pstack_jobs.md`](docs/pstack_jobs.md). `.cursor/rules/pstack-jobs.mdc` + `.cursor/rules/pstack-rfr.mdc`.
+
 ## North star (strict priority)
 
 From `docs/lead_quality_north_star.md` — optimize in this order:
@@ -74,9 +76,11 @@ Snapshot `intelligence` slice (junk reasons, gap frequency, industry deltas) dri
 | **ProductThesis** | Synthesize intel + friction → update thesis backlog ranks | `docs/market_thesis.md` |
 | **PipelineHealth** | Cache freshness, empty feed, tier mix, refresh scripts | `docs/pipeline_process_and_scripts.md` |
 | **LeadQuality** | `lead_filter`, quarantine, cleanup scripts, tests | `docs/lead_quality_north_star.md`, `docs/lead_quality_pipeline.md` |
-| **ProductSurface** | `readyforrobots-new/` UI, experiment page, home hero | `docs/readyforrobots-ux.md` |
+| **ProductSurface** | `readyforrobots-new/` UI, Jobs `/`, home hero | `docs/readyforrobots-ux.md` |
 | **Deploy** | git, pytest subset, Fly deploy, smoke checks | `DEPLOYMENT.md`, `SCRIPTS.md` |
 | **ScraperOps** | Source drift, blocklist, orchestrator stats | `SCRAPER_SYSTEM.md` |
+
+pstack role map (IDE only): Orchestrator = parent; ProductSurface = frontend; LeadQuality = critics on names; Deploy = verify-readyforrobots. There is no Hermes pstack role.
 
 Subagents get **minimal tools** for their scope. The Orchestrator does not implement code directly when a specialist exists.
 
@@ -220,5 +224,7 @@ Legacy `frontend/nextjs/` — avoid new product work unless explicitly requested
 - [docs/pipeline_process_and_scripts.md](docs/pipeline_process_and_scripts.md)
 - [docs/feature_map.md](docs/feature_map.md) — Jobs chrome (nav, process bar, panels, results)
 - [docs/jobs_crm.md](docs/jobs_crm.md) — Jobs CRM spec (signup wall, free 5 / 15×month / 7-day, export)
-- [docs/agent-spec.md](docs/agent-spec.md) — CRM copilot (separate from harness Orchestrator)
+- [docs/agent-spec.md](docs/agent-spec.md) — CRM copilot (not Hermes; Hermes retired)
+- [docs/hermes_retired.md](docs/hermes_retired.md) — Hermes is not a Jobs agent
+- [docs/pstack_jobs.md](docs/pstack_jobs.md) — Cursor pstack is IDE-only
 - [docs/vercel_agent_spend.md](docs/vercel_agent_spend.md) — agents must not meter Vercel Preview / AI Gateway

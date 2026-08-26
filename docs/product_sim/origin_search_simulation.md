@@ -3,7 +3,7 @@
 **Date:** 2026-08-15  
 **Input (assumed):** Locus Origin capability envelope (public)  
 **Method:** Rank live RFR pipeline + logistics leads with Origin-oriented heuristics, then **manual filter** of junk names.  
-**This is a simulation**, not a shipped ranking model.
+**This is a simulation**, not a shipped ranking model. “Hermes fit” scores below are historical labels, not a live Jobs agent. Hermes is retired.
 
 ---
 

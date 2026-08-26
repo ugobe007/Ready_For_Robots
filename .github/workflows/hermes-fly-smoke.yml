@@ -1,22 +1,18 @@
-name: Hermes Fly workflow
+name: Hermes Fly workflow (retired)
 
-# Runs the Hermes qualify tick against production Fly using GitHub ADMIN_KEY
-# (same string as Hermes ~/.hermes/.env RFR_ADMIN_KEY). Never prints the secret.
-# Always dry-runs tracks 8–10 (buying-window, video ingest, seed-targets).
-# --apply persists infer-qualify only — never fake buying-window/video overlays.
+# RETIRED 2026-08-26. Hermes is not a Jobs agent.
+# Do not schedule this. Do not --apply ingest to Fly.
+# FIND is POST /api/robot-job-match.
+# Skip-by-default: only workflow_dispatch with hermes_retired_override=1 runs,
+# and it never passes --apply.
 
 on:
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - "**/*.md"
-      - "missions/**"
   workflow_dispatch:
     inputs:
-      apply:
-        description: Persist infer-qualify on public pipeline IDs (triggers cache rebuild)
-        type: boolean
-        default: false
+      hermes_retired_override:
+        description: Must be 1 to run this retired smoke. Jobs does not use Hermes.
+        type: string
+        default: "0"
 
 concurrency:
   group: hermes-fly-smoke
@@ -24,7 +20,8 @@ concurrency:
 
 jobs:
   infer-qualify:
-    name: Auth smoke + tracks 8-10 dry_run
+    name: Retired smoke (no apply)
+    if: github.event.inputs.hermes_retired_override == '1'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -36,18 +33,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run Hermes workflow against Fly
+      - name: Refuse unless override (no --apply)
         env:
+          HERMES_RETIRED_OVERRIDE: "1"
           RFR_ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
         run: |
           set -euo pipefail
+          echo "Hermes is retired — Jobs uses POST /api/robot-job-match"
+          echo "This job does not pass --apply."
           if [ -z "${RFR_ADMIN_KEY:-}${ADMIN_KEY:-}" ]; then
-            echo "GitHub secret ADMIN_KEY is empty. Set it to Hermes RFR_ADMIN_KEY."
-            exit 1
+            echo "ADMIN_KEY empty; skip retired smoke."
+            exit 0
           fi
-          extra=()
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.apply }}" = "true" ]; then
-            extra+=(--apply)
-          fi
-          python3 scripts/hermes_auth_smoke.py "${extra[@]}"
+          python3 scripts/hermes_auth_smoke.py

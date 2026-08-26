@@ -85,7 +85,7 @@ Score Human / Insight / Relevance / Reasoning / Restraint / Conversation (1–5)
 
 ## Trust and Safety for Claims
 
-Cal may reference general deployment patterns, process-level observations, industry bottlenecks, and Hermes-grounded titles when present.
+Cal may reference general deployment patterns, process-level observations, and industry bottlenecks. Hermes-grounded titles are historical leftovers — Hermes is retired (`docs/hermes_retired.md`). Cal buyer outreach is not the Jobs product.
 
 Cal may not treat weak scraped snippets, invented ROI, or vendor recommendations as first-touch facts.
 

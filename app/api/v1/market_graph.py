@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
@@ -176,6 +177,20 @@ class VendorVideoEvidenceIngestBody(BaseModel):
     dry_run: bool = False
 
 
+HERMES_INGEST_RETIRED_DETAIL = (
+    "Hermes ingest retired. Jobs uses POST /api/robot-job-match."
+)
+
+
+def hermes_ingest_enabled() -> bool:
+    return os.getenv("HERMES_INGEST_ENABLED", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 def _require_ingest_auth(
     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
     token: str = Query("", description="SCRAPER_CRON_TOKEN alternative"),
@@ -189,6 +204,16 @@ def _require_ingest_auth(
             _reject_misleading_admin_key(x_admin_key)
         raise HTTPException(status_code=403, detail="Invalid X-Admin-Key or token")
     return {"auth": "admin_key" if ok_admin else "cron_token"}
+
+
+def _require_hermes_ingest(
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    token: str = Query("", description="SCRAPER_CRON_TOKEN alternative"),
+) -> dict[str, str]:
+    """Hermes ingest is retired. Refuse unless HERMES_INGEST_ENABLED=1."""
+    if not hermes_ingest_enabled():
+        raise HTTPException(status_code=410, detail=HERMES_INGEST_RETIRED_DETAIL)
+    return _require_ingest_auth(x_admin_key, token)
 
 
 @router.get("/status")
@@ -340,7 +365,7 @@ def market_graph_deployment_evidence(
 def market_graph_deployment_evidence_ingest(
     body: DeploymentIngestBody,
     db: Session = Depends(get_db),
-    _auth: dict = Depends(_require_ingest_auth),
+    _auth: dict = Depends(_require_hermes_ingest),
 ) -> dict[str, Any]:
     """
     Hermes → RFR bridge: ingest public deployment claims into Deployment Evidence.
@@ -410,7 +435,7 @@ def market_graph_deployment_evidence_ingest(
 def market_graph_job_signals_ingest(
     body: JobSignalsIngestBody,
     db: Session = Depends(get_db),
-    _auth: dict = Depends(_require_ingest_auth),
+    _auth: dict = Depends(_require_hermes_ingest),
 ) -> dict[str, Any]:
     """Hermes → RFR: open job orders correlated to robot automation."""
     from app.services.hermes_intelligence_ingest import ingest_job_signal
@@ -458,7 +483,7 @@ def market_graph_job_signals_ingest(
 def market_graph_qualify_overlay(
     body: QualifyOverlayBody,
     db: Session = Depends(get_db),
-    _auth: dict = Depends(_require_ingest_auth),
+    _auth: dict = Depends(_require_hermes_ingest),
 ) -> dict[str, Any]:
     """Hermes qualification overlay (not customer-confirmed CRM truth)."""
     from app.services.hermes_intelligence_ingest import apply_qualify_overlay
@@ -517,7 +542,7 @@ class InferQualifyBody(BaseModel):
 def market_graph_infer_qualify(
     body: InferQualifyBody,
     db: Session = Depends(get_db),
-    _auth: dict = Depends(_require_ingest_auth),
+    _auth: dict = Depends(_require_hermes_ingest),
 ) -> dict[str, Any]:
     """Qualify pipeline companies with the local inference engine (no OpenAI/Anthropic)."""
     from app.services.hermes_local_inference import infer_qualify_companies
@@ -567,7 +592,7 @@ def market_graph_daily_digest_send(
 def market_graph_contacts_ingest(
     body: ContactsIngestBody,
     db: Session = Depends(get_db),
-    _auth: dict = Depends(_require_ingest_auth),
+    _auth: dict = Depends(_require_hermes_ingest),
 ) -> dict[str, Any]:
     """Hermes → RFR: public-sourced decision-maker contacts."""
     from app.services.hermes_intelligence_ingest import ingest_contact
@@ -619,7 +644,7 @@ def market_graph_contacts_ingest(
 def market_graph_vendor_news_ingest(
     body: VendorNewsIngestBody,
     db: Session = Depends(get_db),
-    _auth: dict = Depends(_require_ingest_auth),
+    _auth: dict = Depends(_require_hermes_ingest),
 ) -> dict[str, Any]:
     """Hermes → RFR: vendor capability/pricing/model news + customer signals."""
     from app.services.hermes_intelligence_ingest import ingest_vendor_news
@@ -706,7 +731,7 @@ def market_graph_vendor_news_list(
 def market_graph_buying_window_overlay(
     body: BuyingWindowOverlayBody,
     db: Session = Depends(get_db),
-    _auth: dict = Depends(_require_ingest_auth),
+    _auth: dict = Depends(_require_hermes_ingest),
 ) -> dict[str, Any]:
     """Hermes buying-window overlay (timing urgency ≠ automation fit)."""
     from app.services.hermes_intelligence_ingest import apply_buying_window_overlay
@@ -754,7 +779,7 @@ def market_graph_buying_window_overlay(
 def market_graph_video_evidence_ingest(
     body: VideoEvidenceIngestBody,
     db: Session = Depends(get_db),
-    _auth: dict = Depends(_require_ingest_auth),
+    _auth: dict = Depends(_require_hermes_ingest),
 ) -> dict[str, Any]:
     """Hermes customer use-case videos → crm_metadata.hermes_video_evidence."""
     from app.services.hermes_intelligence_ingest import ingest_video_evidence
@@ -809,7 +834,7 @@ def market_graph_video_evidence_ingest(
 def market_graph_vendor_video_evidence_ingest(
     body: VendorVideoEvidenceIngestBody,
     db: Session = Depends(get_db),
-    _auth: dict = Depends(_require_ingest_auth),
+    _auth: dict = Depends(_require_hermes_ingest),
 ) -> dict[str, Any]:
     """Hermes OEM demo / field videos → robot_companies.market_intelligence."""
     from app.services.hermes_intelligence_ingest import ingest_vendor_video_evidence
@@ -859,9 +884,9 @@ def market_graph_video_evidence_seed_targets(
     missing_only: bool = Query(True),
     limit: int = Query(40, ge=1, le=80),
     db: Session = Depends(get_db),
-    _auth: dict = Depends(_require_ingest_auth),
+    _auth: dict = Depends(_require_hermes_ingest),
 ) -> dict[str, Any]:
-    """Seed list for customer/vendor video crons (auth required)."""
+    """RETIRED Hermes seed list. 410 unless HERMES_INGEST_ENABLED=1."""
     from app.services.hermes_intelligence_ingest import list_video_seed_targets
 
     try:

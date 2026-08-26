@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
-"""Run the Hermes qualify tick against Fly using Hermes/GitHub ADMIN_KEY.
+"""RETIRED Hermes qualify smoke. Refuses unless HERMES_RETIRED_OVERRIDE=1.
 
-Never prints the secret. Loads (first hit wins): env RFR_ADMIN_KEY / ADMIN_KEY,
-then ~/.hermes/.env, then repo .env.
+Hermes is retired — Jobs uses POST /api/robot-job-match.
+Do not --apply infer-qualify onto Fly as product.
+Leftover --provider ai-gateway (HTTP 402) is dead; this script never used it.
 
-If the key is wrong, Fly returns 401/403 and this script exits 1 (the workflow
-breaks). GitHub Actions injects secrets.ADMIN_KEY as RFR_ADMIN_KEY — same string
-as Hermes ~/.hermes/.env RFR_ADMIN_KEY.
-
-  python3 scripts/hermes_auth_smoke.py           # cal-status + infer-qualify + tracks 8–10 dry_run
-  python3 scripts/hermes_auth_smoke.py --apply   # persist infer-qualify only (not fake 8–10 overlays)
-
-Mac:
-  cd ~/Desktop/Ready_For_Robots && python3 scripts/hermes_auth_smoke.py --apply
-
-Cursor Cloud has no ~/.hermes/.env unless GHA/env injects RFR_ADMIN_KEY.
+Historical: loaded RFR_ADMIN_KEY / ADMIN_KEY, then ~/.hermes/.env, then repo .env.
 """
 from __future__ import annotations
 
@@ -267,13 +258,19 @@ def _tracks_8_10_dry_run(key: str, company_ids: list[int]) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Hermes ↔ Fly ADMIN_KEY smoke")
+    parser = argparse.ArgumentParser(
+        description="RETIRED Hermes smoke. Refuses unless HERMES_RETIRED_OVERRIDE=1."
+    )
     parser.add_argument(
         "--apply",
         action="store_true",
-        help="After a 200 dry_run, persist infer-qualify on the public pipeline company IDs.",
+        help="RETIRED. Persist infer-qualify. Still requires HERMES_RETIRED_OVERRIDE=1.",
     )
     args = parser.parse_args()
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from hermes_retired import refuse_unless_overridden
+
+    refuse_unless_overridden()
 
     key, source = load_admin_key()
     if not key:

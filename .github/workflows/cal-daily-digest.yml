@@ -1,7 +1,7 @@
 name: Cal daily digest
 
-# Fly in-process + Celery Beat own this send. This Action is the backup so a
-# Hermes AI Gateway cron (HTTP 402) cannot be the only path.
+# Fly in-process + Celery Beat own this send. This Action is the backup.
+# Hermes is retired (2026-08-26). Do not cron digest on Hermes / AI Gateway.
 # Secrets: ADMIN_KEY and/or SCRAPER_CRON_TOKEN (same as harness-daily).
 
 on:

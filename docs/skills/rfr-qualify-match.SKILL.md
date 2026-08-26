@@ -13,7 +13,9 @@ metadata:
 
 # ReadyForRobots qualify + match
 
-Score automation fit from **stored signals** using ReadyForRobots `lead_inference_engine` (rules + evidence). **Do not** look up companies on OpenAI or Anthropic.
+**RETIRED 2026-08-26.** Hermes is not a Jobs agent. Do not cron this. FIND is `/` via `POST /api/robot-job-match`. See [`hermes_retired.md`](../hermes_retired.md).
+
+Historical: score automation fit from **stored signals** using ReadyForRobots `lead_inference_engine` (rules + evidence). **Do not** look up companies on OpenAI or Anthropic.
 
 ## Forbidden
 

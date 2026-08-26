@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-"""Public probe: is Hermes research reaching ReadyForRobots?
+"""RETIRED Hermes overlay probe. Refuses unless HERMES_RETIRED_OVERRIDE=1.
 
-Hermes (Nous agent on the Mac) curls Fly ingest with X-Admin-Key. This script
-does not need that key. It reports overlay coverage on the public pipeline,
-market-graph snapshot freshness, and the unauthenticated ingest contract.
-
-  python3 scripts/hermes_health_probe.py
+Hermes is retired — Jobs uses POST /api/robot-job-match.
+Leftover --provider ai-gateway (HTTP 402) is dead; do not revive Mac cron.
 """
 from __future__ import annotations
 
@@ -187,6 +184,12 @@ def documented_routes(openapi: dict[str, Any]) -> dict[str, Any]:
 
 
 def main() -> int:
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from hermes_retired import refuse_unless_overridden
+
+    refuse_unless_overridden()
     pipe = _get(PIPELINE)
     leads = list(pipe.get("leads") or [])
     counts = overlay_counts(leads)
@@ -224,14 +227,8 @@ def main() -> int:
     exit_code = 0
     if counts["leads"] and counts["any_overlay"] == 0:
         print(
-            "\nHermes overlays are empty on the public pipeline. "
-            "Mac crons are not reaching Fly ingest (gateway down, leftover "
-            "--provider ai-gateway 402, or RFR_ADMIN_KEY ≠ Fly ADMIN_KEY).",
-            file=sys.stderr,
-        )
-        print(
-            "On the Mac: hermes doctor --fix && hermes gateway start && "
-            "hermes cron list  # jobs must be terminal curl, not ai-gateway",
+            "\nHermes is retired — Jobs uses POST /api/robot-job-match. "
+            "Do not revive Mac cron or leftover --provider ai-gateway (HTTP 402).",
             file=sys.stderr,
         )
         exit_code = 1
