@@ -134,8 +134,7 @@ export default function JobsCrmDesk({
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
         Collect jobs for {product}. Inspect an egg, then Place this job when you
         are ready. Quote the monthly rental you will charge. We do not invent
-        it. Employers prefer proof of concept; you can skip it. Not a SIGNAL
-        buyer list. Not an OEM roster.
+        it. Employers prefer proof of concept; you can skip it. Not a SIGNAL buyer list. Not an OEM roster.
       </p>
       {jobs.length > 0 ? (
         <p className="mt-3 font-mono text-sm uppercase tracking-[0.08em] text-emerald-300">
