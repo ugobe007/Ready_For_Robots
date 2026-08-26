@@ -43,6 +43,7 @@ from app.services.oem_sku_discover import (  # noqa: E402
     discover_skus,
     merge_discovered_skus,
     merge_lookup_rows,
+    scrub_discovery,
 )
 
 
@@ -87,6 +88,9 @@ def main() -> int:
             f"wrote {LOOKUP_PATH.relative_to(ROOT)}",
         )
     discovery = _load_json(DISCOVERY_PATH)
+    if discovery:
+        discovery = scrub_discovery(discovery)
+        write_json(DISCOVERY_PATH, discovery)
     if args.discover_skus:
         discovery = discover_skus(
             catalog,

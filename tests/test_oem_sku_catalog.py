@@ -196,12 +196,19 @@ def test_discover_indexes_named_skus_and_rejects_series_blobs():
     from app.services.oem_sku_discover import (
         discover_skus,
         is_junk_sku_name,
+        looks_like_named_sku,
         merge_discovered_skus,
     )
 
     assert is_junk_sku_name("UR Series")
     assert is_junk_sku_name("Collaborative robots")
+    assert is_junk_sku_name("Privacy Policy")
+    assert is_junk_sku_name("Skip to content")
+    assert is_junk_sku_name("Machine Tending")
     assert not is_junk_sku_name("UR30")
+    assert not looks_like_named_sku("Investor Relations")
+    assert looks_like_named_sku("UR30")
+    assert looks_like_named_sku("FIGURE 03")
 
     catalog = {
         "ontology_id": "oem_sku_catalog_v1",

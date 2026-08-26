@@ -80,9 +80,58 @@ _JUNK_SKU = re.compile(
     r"book a demo|request( a)? (quote|demo)|watch|download|brochure|"
     r"industrial robots?|collaborative robots?|mobile robots?|amrs?|agvs?|"
     r"cobots?|humanoids?|products?|solutions?|robots?|robotics|"
-    r"platform|automation|systems?|series)$",
+    r"platform|automation|systems?|series|skip to content|"
+    r"privacy( & cookies| policy| notice)?|terms( of use| & conditions)?|"
+    r"about( us)?|investors?( relations)?|cookie policy|careers?|"
+    r"industries|services|locations|patients|healthcare|pharmacy|"
+    r"factory|stories|order|logs|models|our robots)$",
     re.I,
 )
+_LONG_MARKETING = re.compile(
+    r"(tv|tvs|laptop|monitor|refrigerator|buying guide|recap|world record|"
+    r"minimum wage|industrie|indications|collections|inch)",
+    re.I,
+)
+_NAV_NAME = re.compile(
+    r"\b(privacy|cookie|terms|policy|investor|webinar|onboarding|sitemap|"
+    r"skip to|about us|careers?|contact|blog|press|news|ethics|trademark|"
+    r"accessibility|culture|master plan|glossary|leadership|sustainability|"
+    r"community|entertainment|devices|account|rewards|referral|consultation|"
+    r"customer support|request information|find a center|join (us|our team)|"
+    r"case studies|site map|see all|explore all|happy hour|beyond the hype|"
+    r"in the news|press releases|general inquiry|responsible disclosure|"
+    r"veterans|medicare|multiple sclerosis|acquired brain|stroke|"
+    r"laser (applications|cutting)|machine tending|material (handling|removal)|"
+    r"palletizing|spot welding|all industries|aerospace|packout|kitting|"
+    r"goods-to-person|person to goods|3pl|retail|manufacturing|"
+    r"automate inspection|data insights|robot capabilities|robot demo|"
+    r"let's talk|chemicals|industries|onboarding|patents|hotline|"
+    r"idms|veterinary|cybersecurity|locations|patients|services|"
+    r"trade-in|refer & earn|my rewards|ecovacs points|free consultation|"
+    r"andrea |vivian |join our|terms &|privacy policy|helicopter|"
+    r"levels t3|to l5|washtower|nrf|calculator|imts|education k12|euroshop)\b",
+    re.I,
+)
+_BAD_PATH = re.compile(
+    r"/(applications?|industries|solutions?|content|privacy|terms|about|"
+    r"blog|category|shop|webinar|press|news|careers?|legal|cookie|policy|"
+    r"accessibility|culture|master-plan|signin|account|veterans|medicare|"
+    r"centers|support|contact|demo|onboarding|patents|disclosure|glossary|"
+    r"general|latest-press|in-the-news|who-we-are|software|services|"
+    r"upgrade|ecovacs-club|vip|callback|ethicspoint|trademarks|"
+    r"get-updates|investor|discover|manufacturing|robot-fleet|logs|"
+    r"get-started|webinars|responsible|site-map|more-from|stores-|"
+    r"amazon-news|entertainment|sustainability|community|leadership|"
+    r"join-our|andrea-|vivian-|case-studies|press-releases|"
+    r"payload|extras|orbit|inspection|thermal|visual|acoustic|perimeter|"
+    r"safety|arm/|videos|impact|collections|indications|cta|"
+    r"future-production|4-door|4k-tvs|inch-tvs|monitors|laptops|"
+    r"washers-dryers|tradeshow|campaign|education-k12|controllers|"
+    r"calculator|nrf)(/|$)",
+    re.I,
+)
+_INDUSTRY_DIGIT = re.compile(r"^(3pl|2d|3d|4d|5g|\d+)$", re.I)
+_COMPACT_SKU = re.compile(r"^[A-Za-z]{1,4}\d+[A-Za-z0-9/]*$")
 _SITEMAP_LOC = re.compile(r"<loc>\s*([^<\s]+)\s*</loc>", re.I)
 _SITEMAP_LINE = re.compile(r"(?im)^sitemap:\s*(\S+)")
 
@@ -135,7 +184,11 @@ def is_junk_sku_name(name: str) -> bool:
         return True
     if _JUNK_SKU.fullmatch(raw) or _FAMILY_BLOB.search(raw) or _GENERIC_NAME.search(raw):
         return True
-    if raw.lower() in {"series", "family", "line", "platform"}:
+    if _NAV_NAME.search(raw) or _LONG_MARKETING.search(raw):
+        return True
+    if len(raw.split()) > 5:
+        return True
+    if raw.lower() in {"series", "family", "line", "platform", "ai", "us", "arm", "orbit", "cta4"}:
         return True
     if not re.search(r"[A-Za-z]", raw):
         return True
@@ -143,18 +196,29 @@ def is_junk_sku_name(name: str) -> bool:
 
 
 def looks_like_named_sku(name: str) -> bool:
+    """Named model only: digits, known SKU word, or compact code. No nav titles."""
     raw = re.sub(r"\s+", " ", (name or "").strip())
     if is_junk_sku_name(raw):
         return False
+    if _INDUSTRY_DIGIT.fullmatch(name_key(raw)):
+        return False
     if re.search(r"\d", raw):
         return True
-    key = name_key(raw)
-    if key in _KNOWN_SKU_WORDS:
+    if name_key(raw) in _KNOWN_SKU_WORDS:
         return True
     tokens = [t for t in re.split(r"\s+", raw) if t]
-    if 1 <= len(tokens) <= 3 and raw[0].isupper() and not _JUNK_SKU.fullmatch(raw):
+    if len(tokens) == 1 and _COMPACT_SKU.fullmatch(tokens[0]):
         return True
     return False
+
+
+def canonical_sku_name(name: str, url: str) -> str:
+    """Prefer a compact path SKU (C55, T10) over a marketing headline."""
+    last = (urlparse(url).path or "").rstrip("/").rsplit("/", 1)[-1]
+    compact = last.replace("_", "-")
+    if _COMPACT_SKU.fullmatch(compact) and looks_like_named_sku(compact.upper()):
+        return compact.upper()
+    return name
 
 
 def _slug_to_name(slug: str) -> str:
@@ -240,7 +304,7 @@ def candidates_from_page(
         if host and link_host and link_host != host:
             continue
         path = urlparse(full).path or ""
-        if _path_is_nav(path):
+        if _path_is_nav(path) or _BAD_PATH.search(path):
             continue
         last = path.rstrip("/").rsplit("/", 1)[-1] if path else ""
         label = re.sub(r"\s+", " ", (anchor or "").strip())
@@ -249,7 +313,9 @@ def candidates_from_page(
             name = label
         elif looks_like_named_sku(_slug_to_name(last)):
             name = _slug_to_name(last)
-        if not name or is_junk_sku_name(name):
+        if name:
+            name = canonical_sku_name(name, full)
+        if not name or is_junk_sku_name(name) or not looks_like_named_sku(name):
             continue
         if is_wrong_product_url(name, full, sibling_names=siblings + [c["name"] for c in found]):
             continue
@@ -338,6 +404,34 @@ def make_discovered_product(company: dict[str, Any], name: str, url: str | None)
         "flags": [],
         "source": "oem_listing",
     }
+
+
+def scrub_discovery(discovery: dict[str, Any]) -> dict[str, Any]:
+    """Drop nav/marketing rows that slipped past an earlier loose extractor."""
+    kept: list[dict[str, Any]] = []
+    dropped = 0
+    for row in discovery.get("verified") or []:
+        url = row.get("url") or ""
+        path = urlparse(url).path or ""
+        name = canonical_sku_name(row.get("name") or "", url)
+        if (
+            is_junk_sku_name(name)
+            or not looks_like_named_sku(name)
+            or _BAD_PATH.search(path)
+            or re.search(r"indication|washer|tradeshow|calculator|nrf|education-k12|controllers", path, re.I)
+        ):
+            dropped += 1
+            continue
+        row = dict(row)
+        row["name"] = name
+        kept.append(row)
+    discovery["verified"] = kept
+    discovery["counts"] = {
+        **(discovery.get("counts") or {}),
+        "verified": len(kept),
+        "scrubbed": dropped,
+    }
+    return discovery
 
 
 def merge_discovered_skus(catalog: dict[str, Any], discovery: dict[str, Any]) -> dict[str, Any]:
@@ -619,6 +713,11 @@ def discover_skus(
                 q.get("company") == company["name"] for q in queued
             ) else "partial"
         oems[slug] = rec
+        print(
+            f"discover {company['name']}: status={rec['status']} "
+            f"new={rec['discovered']} listings={len(tried)} fetches={fetches}",
+            flush=True,
+        )
 
     complete = sum(1 for r in oems.values() if r.get("status") == "complete")
     partial = sum(1 for r in oems.values() if r.get("status") == "partial")
@@ -684,4 +783,5 @@ __all__ = [
     "looks_like_named_sku",
     "merge_discovered_skus",
     "merge_lookup_rows",
+    "scrub_discovery",
 ]
