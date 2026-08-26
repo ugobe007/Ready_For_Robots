@@ -3,10 +3,14 @@
 
   PYTHONPATH=. python3 scripts/ingest_oem_sku_catalog.py
   PYTHONPATH=. python3 scripts/ingest_oem_sku_catalog.py --lookup-urls
+  PYTHONPATH=. python3 scripts/ingest_oem_sku_catalog.py --discover-skus
   PYTHONPATH=. python3 scripts/ingest_oem_sku_catalog.py --apply
 
 `--lookup-urls` fetches candidate pages with the Understanding fetcher
 (rate-limited). Only verified URLs are stored. Stretch-on-Spot is skipped.
+
+`--discover-skus` walks official product listing pages on verified OEM hosts
+and indexes additional named SKUs. Resume-friendly. Does not invent SKUs.
 
 `--apply` upserts manufacturers + robot_models (FIND catalog tables).
 Requires DATABASE_URL or HARNESS_DATABASE_URL. Does not invent credentials.
@@ -23,6 +27,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app.services.oem_sku_catalog import (  # noqa: E402
+    DISCOVERY_PATH,
     LOOKUP_PATH,
     ONTOLOGY_PATH,
     SEED_PATH,
@@ -34,24 +39,40 @@ from app.services.oem_sku_catalog import (  # noqa: E402
     parse_workbook,
     write_json,
 )
+from app.services.oem_sku_discover import (  # noqa: E402
+    discover_skus,
+    merge_discovered_skus,
+    merge_lookup_rows,
+)
+
+
+def _load_json(path: Path) -> dict | None:
+    if not path.is_file():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--xlsx", default=str(XLSX_PATH))
     parser.add_argument("--lookup-urls", action="store_true", help="Fetch/verify product URLs")
-    parser.add_argument("--rate-limit", type=float, default=0.5)
+    parser.add_argument(
+        "--discover-skus",
+        action="store_true",
+        help="Discover named SKUs from official OEM listing pages",
+    )
+    parser.add_argument("--oem", default=None, help="Limit discovery to one company slug")
+    parser.add_argument("--rate-limit", type=float, default=0.45)
     parser.add_argument("--max-fetches", type=int, default=None)
+    parser.add_argument("--max-new-per-oem", type=int, default=16)
     parser.add_argument("--apply", action="store_true", help="Upsert manufacturers + robot_models")
     args = parser.parse_args()
 
     catalog = parse_workbook(Path(args.xlsx))
-    lookup = None
-    if LOOKUP_PATH.is_file():
-        try:
-            lookup = json.loads(LOOKUP_PATH.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            lookup = None
+    lookup = _load_json(LOOKUP_PATH)
     if args.lookup_urls:
         lookup = lookup_urls(
             catalog,
@@ -65,6 +86,26 @@ def main() -> int:
             lookup.get("counts"),
             f"wrote {LOOKUP_PATH.relative_to(ROOT)}",
         )
+    discovery = _load_json(DISCOVERY_PATH)
+    if args.discover_skus:
+        discovery = discover_skus(
+            catalog,
+            rate_limit_s=args.rate_limit,
+            max_fetches=args.max_fetches,
+            max_new_per_oem=args.max_new_per_oem,
+            oem_slug=args.oem,
+            prior=discovery,
+        )
+        write_json(DISCOVERY_PATH, discovery)
+        print(
+            "SKU discovery",
+            discovery.get("counts"),
+            f"wrote {DISCOVERY_PATH.relative_to(ROOT)}",
+        )
+        lookup = merge_lookup_rows(lookup, discovery)
+        write_json(LOOKUP_PATH, lookup)
+    if discovery:
+        merge_discovered_skus(catalog, discovery)
     if lookup:
         apply_verified_urls(catalog, lookup)
     write_json(ONTOLOGY_PATH, catalog)

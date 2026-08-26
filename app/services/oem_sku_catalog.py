@@ -27,6 +27,7 @@ XLSX_PATH = ROOT / "docs" / "reference" / "readyforrobots_companies_and_robots.x
 ONTOLOGY_PATH = ROOT / "ontology" / "oem_sku_catalog.v1.json"
 SEED_PATH = ROOT / "app" / "data" / "vendor_robots_oem_sku_seed.json"
 LOOKUP_PATH = ROOT / "app" / "data" / "oem_sku_url_lookup.json"
+DISCOVERY_PATH = ROOT / "app" / "data" / "oem_sku_discovery.json"
 
 _NS = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 _SPLIT_URLS = re.compile(r"[\n\r|;]+")
@@ -257,6 +258,7 @@ def parse_workbook(path: Path | None = None) -> dict[str, Any]:
             "specs": {},
             "capability_confidence": "UNKNOWN",
             "flags": flags,
+            "source": "workbook",
         }
         company["products"].append(product)
         products.append(product)
