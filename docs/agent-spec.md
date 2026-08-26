@@ -1,6 +1,6 @@
 # Sales plan agent — specification
 
-This is the **CRM copilot** spec. It is not Hermes. Hermes is retired ([`hermes_retired.md`](hermes_retired.md)). FIND does not call this agent.
+This is the **CRM copilot** spec. It is not Hermes. Hermes is retired ([`hermes_retired.md`](hermes_retired.md)). FIND does not call this agent. Site agents wrap this path with **pstack Act** (`app/services/pstack_protocol.py`). How-check: this copilot is not `robot_job_capability_match.py`. Do not call Vercel AI Gateway.
 
 This document defines the **role**, **inputs/outputs**, **guardrails**, and **implementation split** for the Ready For Robots CRM copilot. It aligns with these product decisions:
 
@@ -119,3 +119,4 @@ This keeps cost predictable and makes behavior testable without calling the mode
 | Version | Date | Notes |
 |---------|------|--------|
 | 1 | 2026-04-04 | Initial spec: teams, SSOT company + engagements, OpenAI + inference split |
+| 2 | 2026-08-26 | pstack Act wraps generate-plan; How-check says this is not the matcher |

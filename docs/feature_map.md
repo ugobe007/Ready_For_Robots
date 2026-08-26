@@ -74,6 +74,7 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 | Job Card (expanded) | Employer, workplace, work, qualification (usually Conditional), open questions, task models, numbered placement steps, Next is **not** here. |
 | Research console | Stage labels while Understanding + match run. Not the result. |
 | Live job tape | Ambient listings; not a substitute for named Job Cards. |
+| pstack protocol | `JobsPstackProtocol` on `/`, About, Jobs CRM. How / Act / Critic. Jobs still come from `POST /api/robot-job-match`. Not a chatbot. |
 
 SIGNAL-only panels (activity feed, next actions, Cal queue, lead share) stay off the Jobs path.
 

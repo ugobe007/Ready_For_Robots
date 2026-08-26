@@ -172,6 +172,7 @@ Hunt on FIND. Collect on the CRM listing. Enjoy Place this job when the user is 
 7. **Never require** PoC evidence to lock a quote or Place this job. Prefer it; allow skip.
 8. **Never remount FIND while researching.** One Start jobs click = one match. Do not `location.assign` / `reload` / `/?new=1` bounce, and do not require SIGNAL `.pipeline-detail-shell` on `/`.
 9. Change this file (and tests) if the workflow changes — do not “fix” CRM from a one-line chat prompt.
+10. Site agents follow pstack How / Act / Critic. Do not replace the matcher with an LLM. Do not remove the signup wall.
 
 ---
 
