@@ -1,8 +1,8 @@
 /**
  * Top panel for product front door — Kare face + ReadyForRobots, dark brand chrome.
  * JOBS selected on / and /jobs/:slug; ABOUT links to /intelligence.
- * Jobs chrome hides Pipeline. CRM on Jobs is `/pipeline?src=jobs_activate`.
- * SIGNAL `/pipeline` and `/crm` still show Pipeline.
+ * Jobs chrome hides Pipeline. CRM is step 03 (`/pipeline?src=jobs_activate`)
+ * and is in the header on Jobs chrome even when signed out.
  */
 import { Link, useRoute, useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
@@ -79,11 +79,13 @@ export default function ExperimentHeader() {
               Pipeline
             </Link>
           ) : null}
+          {session || !showPipeline ? (
+            <Link href={crmHref} className={crmActive ? navActive : navIdle}>
+              CRM
+            </Link>
+          ) : null}
           {session ? (
             <>
-              <Link href={crmHref} className={crmActive ? navActive : navIdle}>
-                CRM
-              </Link>
               {isAdmin ? (
                 <Link href="/admin" className={adminActive ? navActive : navIdle}>
                   Admin

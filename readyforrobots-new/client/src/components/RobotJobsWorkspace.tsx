@@ -7,7 +7,7 @@
  *
  *   FIND → SELECT (several SKUs) → one robot: jobs for that product
  *                              → several/all: type-first match (faster) → jobs
- *   Process: 01 robot → 02 jobs → Place (top and bottom of the page).
+ *   Process: 01 robot → 02 jobs → 03 CRM (top and bottom of the page).
 
 
  *
@@ -58,7 +58,6 @@ import {
   JOBS_KEEP_LABEL,
   JOBS_SKIP_LABEL,
   JOBS_PIPELINE_CAP,
-  JOBS_ACTIVATE_SRC,
   CRM_UNLOCKED_JOBS,
   JOBS_PROCESS_STEPS,
   JOBS_RESTORE_ONCE_KEY,
@@ -79,14 +78,14 @@ import {
   JOBS_RAIL_LINK_CLASS,
   JOBS_ROBOT_NAME_CLASS,
   jobsActivateHref,
-  jobsSignupHref,
   jobsCountEyebrow,
+  jobsDumpedToCrm,
+  jobsForCrmDesk,
   jobsHeading,
   jobsListHint,
   jobsProcessActionLabel,
   jobsProcessStepFromStage,
   jobsProductLimitForPlan,
-  jobsToActivate,
   lineupJobLookups,
   lineupSegments,
   usesLineupSegments,
@@ -1274,6 +1273,10 @@ export default function RobotJobsWorkspace() {
       selectedJobKey: pickSelectedJobKey(a.jobs, expandedJob) || undefined,
       checkedJobKeys: checks,
     });
+    writeCrmHandoff(checks, a.jobs.map(job => ({
+      ...job,
+      forRobot: a.productName || "",
+    })), a.productName);
     trackRobotJobsFunnel("discovery_complete", {
       ...funnelBase(),
       robot_name: a.productName,
@@ -1303,6 +1306,14 @@ export default function RobotJobsWorkspace() {
       selectedJobKey: selectedKey || undefined,
       checkedJobKeys: nextChecks,
     });
+    writeCrmHandoff(
+      nextChecks,
+      (a?.jobs || []).map(job => ({
+        ...job,
+        forRobot: a?.productName || "",
+      })),
+      a?.productName,
+    );
     trackRobotJobsFunnel("discovery_complete", {
       ...funnelBase(),
       robot_name: a?.productName,
@@ -1310,38 +1321,61 @@ export default function RobotJobsWorkspace() {
     });
   }
 
-  function goToActivate() {
-    const tagged = lineupPreview
+  function crmPool(): MatchJob[] {
+    return lineupPreview
       ? exampleJobsForLineup(portfolio)
       : (active?.jobs || []).map(job => ({
           ...job,
           forRobot: active?.productName || "",
         }));
-    const pool = tagged;
-    const selected = pool.filter(job => checkedJobKeys.includes(job.job_key));
-    const jobs = jobsToActivate(selected, pool, CRM_UNLOCKED_JOBS);
+  }
+
+  function writeCrmHandoff(
+    checks: string[],
+    pool = crmPool(),
+    productName?: string,
+    jobsOverride?: MatchJob[],
+  ) {
+    const url = submittedUrlRef.current;
+    if (!url || (pool.length === 0 && !jobsOverride?.length)) return;
+    const jobs =
+      jobsOverride ?? jobsDumpedToCrm(pool, checks, CRM_UNLOCKED_JOBS);
     saveJobsHandoffSnapshot({
-      url: submittedUrlRef.current,
-      productName: lineupPreview
-        ? companyName || active?.companyName || ""
-        : active?.productName || "",
+      url,
+      productName:
+        productName ||
+        (lineupPreview
+          ? companyName || active?.companyName || ""
+          : active?.productName || ""),
       jobs,
-      selectedCount: Math.min(selected.length || jobs.length, CRM_UNLOCKED_JOBS),
+      selectedCount: jobs.length,
     });
+  }
+
+  function goToActivate() {
+    const pool = crmPool();
+    const jobs = jobsForCrmDesk(pool, checkedJobKeys, CRM_UNLOCKED_JOBS);
+    writeCrmHandoff(checkedJobKeys, pool, undefined, jobs);
     trackRobotJobsFunnel("jobs_list_activated", {
       ...funnelBase(),
       robot_name: active?.productName,
-      selected_count: selected.length || jobs.length,
+      selected_count: jobs.length,
       list_count: jobs.length,
     });
-    const dest = jobsActivateHref(submissionIdRef.current);
-    setLocation(session ? dest : jobsSignupHref(dest, JOBS_ACTIVATE_SRC));
+    setLocation(jobsActivateHref(submissionIdRef.current));
   }
 
   function applyCheckedKeys(jobs: MatchJob[], saved?: string[]) {
     const fromSaved = (saved || []).filter(k => jobs.some(j => j.job_key === k));
     const next = fromSaved.length ? fromSaved : defaultCheckedJobKeys(jobs);
     setCheckedJobKeys(next);
+    writeCrmHandoff(
+      next,
+      jobs.map(job => ({
+        ...job,
+        forRobot: active?.productName || "",
+      })),
+    );
     return next;
   }
 
@@ -1620,6 +1654,7 @@ export default function RobotJobsWorkspace() {
         selectedJobKey: expandedJob || job.job_key,
         checkedJobKeys: next,
       });
+      writeCrmHandoff(next);
       return next;
     });
   }

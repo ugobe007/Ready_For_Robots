@@ -33,15 +33,15 @@ submit robot URL on /
   → if several SKUs, ask which robot to find jobs for
   → one SKU: picker confirm goes straight to jobs for that product (no profile / second Find jobs)
   → several / all: resolve the search without blocking next steps (type-first, one match per class)
-  → 01 robot → 02 jobs → 03 Place are always navigational links
+  → 01 robot → 02 jobs → 03 CRM are always navigational links
   → see Robot Jobs (step 2)
        one robot: 5 jobs, each tagged `Job ##### is for {SKU}`
        several robots: 1 sample job per SKU, tagged; run each robot individually for five jobs
   → inspect Robot Job Cards (employer, workplace, work, qualification, open questions)
-  → check the jobs to take forward (all five start checked)
-  → Place these jobs → /pipeline?src=jobs_activate (signup first if signed out)
+  → check the jobs to take forward (all five start checked and dump into CRM)
+  → Open CRM → /pipeline?src=jobs_activate (desk is visible before signup)
   → CRM desk shows 5 unlocked job opportunities (free)
-  → Place: quote the rental you will charge, apply, track follow-up
+  → Place this job: quote the rental you will charge, apply, track follow-up
   → run the next robot the same way
 ```
 
@@ -51,7 +51,7 @@ The picker already decides one vs several. **One robot → jobs for that robot o
 
 **Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Next uses `src=jobs_activate` on `/pipeline` so the destination is the CRM desk with 5 unlocked job opportunities, not a SIGNAL lead feed. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 
-Step 2 inspects. Checkboxes select. **Start jobs →** (FIND) and **Place these jobs →** (job list) sit in the process bar, at the top of the job list, and in the page footer — not only under the tape or under the cards. The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
+Step 2 inspects. Checkboxes dump rows into CRM. **Start jobs →** (FIND) and **Open CRM →** (job list) sit in the process bar, at the top of the job list, and in the page footer — not only under the tape or under the cards. The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
 
 ---
 
@@ -61,12 +61,12 @@ Jobs is a **three-step process on a normal web page**. It is not a viewport-lock
 
 ```
 Site header (Jobs / About / Sign in). Pipeline is SIGNAL-only.
-Process bar — 01 robot → 02 jobs → 03 activate + Start jobs / Next
+Process bar — 01 robot → 02 jobs → 03 CRM + Start jobs / Open CRM
 Content (two columns are layout, not a clipping box)
 Process bar repeated at the bottom of the page
 ```
 
-Jobs chrome and Jobs CRM (`src=jobs_activate` on `/pipeline`) do not show SIGNAL Pipeline nav. Signed-in header CRM on those pages is `/pipeline?src=jobs_activate`, not bare `/crm`. SIGNAL `/pipeline` and `/crm` without a Jobs `src` still show Pipeline. Jobs footer and the Signal FAB match the header: no SIGNAL on `/`, About, Jobs CRM, or Jobs signup/login. About (`/intelligence`) body is the Jobs loop — Start jobs on `/?new=1`, signup `src=jobs_activate` — not a second product hop.
+Jobs chrome and Jobs CRM (`src=jobs_activate` on `/pipeline`) do not show SIGNAL Pipeline nav. Header CRM on those pages is `/pipeline?src=jobs_activate` (visible signed-out too), not bare `/crm`. SIGNAL `/pipeline` and `/crm` without a Jobs `src` still show Pipeline. Jobs footer and the Signal FAB match the header: no SIGNAL on `/`, About, Jobs CRM, or Jobs signup/login. About (`/intelligence`) body is the Jobs loop — Start jobs on `/?new=1`, signup `src=jobs_activate` — not a second product hop.
 
 **Do not** set `100vh` + `overflow: hidden` on the Jobs workspace. Chrome then cannot scroll below the fold, so step 03 sits in a cut-off box. Pinning Activate inside that box is a patch, not a fix.
 
@@ -83,7 +83,7 @@ Chrome is **rectilinear**: panels, buttons, cards, and inputs have square corner
 | **One robot** | 5 example jobs | `Job 00001 is for Fourier N1` |
 | **Several / all** | 1 sample job per robot | `Job 00002 is for Fourier GR-1` |
 
-The ideal motion is **one robot at a time**: five jobs → Place these jobs → quote rental and apply → run the next SKU. A lineup preview is a sampler, not a dump of unlabeled work. **Run one robot for 5 jobs →** returns to the picker.
+The ideal motion is **one robot at a time**: five jobs → Open CRM → quote rental and Place this job → run the next SKU. A lineup preview is a sampler, not a dump of unlabeled work. **Run one robot for 5 jobs →** returns to the picker.
 
 **Retention loop (next, not this surface):** saved CRM jobs are watched. When news or requirements change, email the user and bring them back to respond. Do not build that email loop until this Jobs tagging path is clean.
 

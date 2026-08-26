@@ -4,10 +4,8 @@
  */
 import { useEffect } from "react";
 import {
-  JOBS_ACTIVATE_SRC,
   isJobsAutomateSrc,
   jobsActivateHref,
-  jobsSignupHref,
 } from "@/lib/jobsWorkflow";
 
 export default function JobsHandoffBoard(props: {
@@ -20,11 +18,8 @@ export default function JobsHandoffBoard(props: {
 }) {
   useEffect(() => {
     if (isJobsAutomateSrc(props.src)) return;
-    const dest = jobsActivateHref(props.submissionId);
-    window.location.replace(
-      props.signedIn ? dest : jobsSignupHref(dest, props.src || JOBS_ACTIVATE_SRC),
-    );
-  }, [props.signedIn, props.src, props.submissionId]);
+    window.location.replace(jobsActivateHref(props.submissionId));
+  }, [props.src, props.submissionId]);
 
   return (
     <p className="px-6 py-16 text-center font-mono text-sm uppercase tracking-[0.08em] text-slate-400">

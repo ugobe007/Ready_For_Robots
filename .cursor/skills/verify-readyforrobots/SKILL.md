@@ -74,7 +74,7 @@ Stable UI handles (browser):
 - FIND form: `aria-label="Find jobs for your robot"`; url input placeholder `Paste robot product URL`
 - Process bar: `aria-label="Jobs process"`; steps 01 / 02 / 03
 - Jobs header: wordmark → `/?new=1`; nav **Jobs** / **About**; **no Pipeline** on `/`
-- Next: `Place these jobs →` on the list, not on the card
+- Next: `Open CRM →` on the list, not on the card
 - Activate: `/pipeline?src=jobs_activate`
 
 Helpers: `.cursor/skills/verify-readyforrobots/scripts/drive`

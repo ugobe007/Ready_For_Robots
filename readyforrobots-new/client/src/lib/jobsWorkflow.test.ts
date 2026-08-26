@@ -63,6 +63,8 @@ import {
   jobsProcessStepFromStage,
   jobsProductLimitForPlan,
   jobsToActivate,
+  jobsDumpedToCrm,
+  jobsForCrmDesk,
   jobsSignupHref,
   jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
@@ -492,10 +494,10 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/FIND_JOBS_HOME_SUBHEAD/);
     expect(workspace).toMatch(/text-emerald-400">jobs/);
     expect(workspace).not.toMatch(/Paste the manufacturer URL/);
-    expect(JOBS_NEXT_CTA).toBe("Place these jobs →");
+    expect(JOBS_NEXT_CTA).toBe("Open CRM →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
     expect(JOBS_NEXT_HINT).toMatch(/start checked/i);
-    expect(JOBS_NEXT_HINT).toMatch(/money moment/i);
+    expect(JOBS_NEXT_HINT).toMatch(/dump into CRM/i);
     expect(JOBS_NEXT_HINT).not.toMatch(/buyer/i);
     expect(JOBS_PLACE_CTA).toBe("Activate job list →");
     expect(workspace).toMatch(/JOBS_NEXT_CTA/);
@@ -563,7 +565,10 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/jobsPlaceHref\(robotUrl/);
     expect(workspace).not.toMatch(/PipelineOutreachValuePanel/);
     expect(workspace).toMatch(/CRM_UNLOCKED_JOBS/);
-    expect(workspace).toMatch(/jobsSignupHref/);
+    expect(workspace).toMatch(/writeCrmHandoff/);
+    expect(workspace).toMatch(/jobsForCrmDesk/);
+    expect(workspace).toMatch(/setLocation\(jobsActivateHref/);
+    expect(workspace).not.toMatch(/jobsSignupHref/);
     expect(workspace).toMatch(/JOBS_KEEP_LABEL/);
     expect(pipeline).toMatch(/JobsCrmDesk/);
     expect(pipeline).toMatch(/if \(arrivedFromJobs\)/);
@@ -577,7 +582,8 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/placementOutreachDraft/);
     expect(desk).toMatch(/placementAgentBrief/);
     expect(desk).toMatch(/aria-label="Jobs process"/);
-    expect(desk).toMatch(/the money moment/);
+    expect(desk).toMatch(/Step 03 · CRM/);
+    expect(desk).toMatch(/Place \{product\}/);
     expect(desk).toMatch(/Your move:/);
     expect(desk).toMatch(/quoteCommitted: true/);
     expect(desk).not.toMatch(/grid-cols-3/);
@@ -606,7 +612,7 @@ describe("jobsWorkflow", () => {
     expect(signup).toMatch(/!resultsIntent && !robotJobsIntent/);
     expect(pipeline).toMatch(/arrivedFromPlace/);
     expect(pipeline).toMatch(/isPlaceSrc/);
-    expect(JOBS_PROCESS_STEPS[2].label).toBe("Place the robot");
+    expect(JOBS_PROCESS_STEPS[2].label).toBe("CRM");
   });
 
   it("Jobs CRM src keeps 5 jobs and hides SIGNAL pipeline chrome", () => {
@@ -644,6 +650,45 @@ describe("jobsWorkflow", () => {
     );
     expect(header).toMatch(/isJobsHandoffSrc\(jobsSrc\)/);
     expect(header).toMatch(/location.startsWith\("\/pipeline"\) && isJobsHandoffSrc/);
+    expect(header).toMatch(/session \|\| !showPipeline/);
+  });
+
+  it("dumps checked jobs into CRM and opens the desk without a signup wall", () => {
+    const pool = [
+      { job_key: "a" },
+      { job_key: "b" },
+      { job_key: "c" },
+      { job_key: "d" },
+      { job_key: "e" },
+    ];
+    expect(jobsDumpedToCrm(pool, ["a", "c"]).map(j => j.job_key)).toEqual([
+      "a",
+      "c",
+    ]);
+    expect(jobsDumpedToCrm(pool, []).map(j => j.job_key)).toEqual([]);
+    expect(jobsForCrmDesk(pool, ["b"]).map(j => j.job_key)).toEqual(["b"]);
+    expect(jobsForCrmDesk(pool, []).map(j => j.job_key)).toEqual([
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+    ]);
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    expect(workspace).toMatch(/writeCrmHandoff\(next\)/);
+    expect(workspace).toMatch(/setLocation\(jobsActivateHref\(submissionIdRef\.current\)\)/);
+    expect(workspace).not.toMatch(/jobsSignupHref\(dest/);
+    const handoff = readFileSync(
+      join(here, "../components/JobsHandoffBoard.tsx"),
+      "utf8",
+    );
+    expect(handoff).toMatch(/window\.location\.replace\(jobsActivateHref/);
+    expect(handoff).not.toMatch(/jobsSignupHref/);
+    expect(JOBS_PROCESS_STEPS[2].label).toBe("CRM");
+    expect(JOBS_NEXT_CTA).toBe("Open CRM →");
   });
 
   it("looks up a lineup once per robot type, not once per SKU", () => {
@@ -1001,7 +1046,8 @@ describe("jobsWorkflow", () => {
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
     );
-    expect(cardSrc).toMatch(/setLocation\(session \? dest/);
+    expect(cardSrc).toMatch(/setLocation\(jobsActivateHref\(submissionIdRef\.current\)\)/);
+    expect(cardSrc).not.toMatch(/setLocation\(session \? dest/);
     expect(cardSrc).not.toMatch(/window\.location\.href = session/);
     expect(cardSrc).toMatch(/id="jobs-list"/);
     expect(cardSrc).toMatch(/const processOnActivate = goToActivate/);

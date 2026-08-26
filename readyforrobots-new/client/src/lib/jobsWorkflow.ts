@@ -1,9 +1,9 @@
 /**
  * Jobs submit workflow — FIND on `/`.
  *
- * Step 1 PROFILE → step 2 JOBS → activate the job list (live pipeline).
- * Inspect cards (why / unknowns / blockers). Check the jobs to take
- * forward. Process chrome lives on the page (01 → 02 → 03). The document
+ * Step 01 FIND → step 02 JOBS → step 03 CRM.
+ * Checking a job dumps it into CRM. Next / 03 opens the CRM desk
+ * (quote → Place this job). Process chrome lives on the page. The document
  * scrolls. Do not trap the next step inside a clipped 100vh box.
  *
  * Cap: 5 example jobs on `/`. Activate fills the live list to 15.
@@ -575,15 +575,15 @@ export function jobsListHint(opts: {
   productName: string;
 }): string {
   if (opts.robotCount > 1) {
-    return "One sample job per robot. Sample rows start checked. Run each robot by itself for five jobs, then Next to Place.";
+    return "One sample job per robot. Sample rows start checked — checking dumps the row into CRM. Run each robot by itself for five jobs, then Open CRM.";
   }
-  return `Five example jobs ${opts.productName} can do. Each row names the policy layer and typical training time — expand for the placement steps. All five start checked (Keep). Uncheck any you do not want. Next is Place: quote the rental, then apply.`;
+  return `Five example jobs ${opts.productName} can do. Each row names the policy layer and typical training time — expand for the placement steps. All five start checked (Keep) and land in CRM. Uncheck any you do not want. Open CRM to quote the rental, then Place this job.`;
 }
 
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
 export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
-  "Free CRM unlocks 5 job opportunities. Next opens that desk on Pipeline — not a SIGNAL buyer list.";
+  "Checking a job dumps it into CRM. Open CRM is step 03 — quote, Place this job, follow-up. Not a SIGNAL buyer list.";
 export const JOBS_KEEP_LABEL = "Keep";
 export const JOBS_SKIP_LABEL = "Skip";
 
@@ -677,9 +677,9 @@ export const FIND_JOBS_SUBHEAD_CLASS =
   "mt-4 max-w-3xl text-lg leading-snug text-slate-300 sm:text-xl";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
-export const JOBS_NEXT_CTA = "Place these jobs →";
+export const JOBS_NEXT_CTA = JOBS_SAVE_TO_CRM_CTA;
 export const JOBS_NEXT_HINT =
-  "All five start checked. Uncheck any you do not want. Next is the money moment: Place — quote the rental, then apply.";
+  "All five start checked and dump into CRM. Uncheck any you do not want. Open CRM is step 03 — quote the rental, then Place this job.";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
@@ -701,7 +701,7 @@ export const JOBS_PROCESS_STEPS = [
   {
     id: "activate" as const,
     n: "03",
-    label: "Place the robot",
+    label: "CRM",
     linkLabel: JOBS_NEXT_CTA,
   },
 ];
@@ -835,6 +835,26 @@ export function jobsToActivate<T extends { job_key: string }>(
   return jobsForActivatedPipeline(seed, pool, cap);
 }
 
+/** Checked rows only — this is what the CRM desk shows as the user checks. */
+export function jobsDumpedToCrm<T extends { job_key: string }>(
+  pool: T[],
+  checkedKeys: string[],
+  cap = CRM_UNLOCKED_JOBS,
+): T[] {
+  const keys = new Set((checkedKeys || []).filter(Boolean));
+  return pool.filter(job => job?.job_key && keys.has(job.job_key)).slice(0, cap);
+}
+
+/** Open CRM: checked jobs, or the example cap so step 03 is never empty. */
+export function jobsForCrmDesk<T extends { job_key: string }>(
+  pool: T[],
+  checkedKeys: string[],
+  cap = CRM_UNLOCKED_JOBS,
+): T[] {
+  const dumped = jobsDumpedToCrm(pool, checkedKeys, cap);
+  return dumped.length > 0 ? dumped : jobsToActivate([], pool, cap);
+}
+
 export function defaultCheckedJobKeys<T extends { job_key: string }>(
   jobs: T[],
   cap = JOBS_EXAMPLE_CAP,
@@ -851,8 +871,8 @@ export function defaultCheckedKeysForLineup<T extends { job_key: string }>(
 export const RAIL_STEP_HINT = {
   find: FIND_JOBS_HOME_SUBHEAD,
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
-  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each — run each SKU by itself, then Next to Place.",
-  pipeline: "Place is the money moment: quote the rental you will charge, apply, track follow-up.",
+  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked into CRM. Several robots show one each — run each SKU by itself, then Open CRM.",
+  pipeline: "CRM is step 03: quote the rental you will charge, Place this job, track follow-up.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */
