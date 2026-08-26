@@ -215,4 +215,5 @@ Legacy `frontend/nextjs/` — avoid new product work unless explicitly requested
 - [docs/lead_quality_north_star.md](docs/lead_quality_north_star.md)
 - [docs/pipeline_process_and_scripts.md](docs/pipeline_process_and_scripts.md)
 - [docs/feature_map.md](docs/feature_map.md) — Jobs chrome (nav, process bar, panels, results)
+- [docs/jobs_crm.md](docs/jobs_crm.md) — Jobs CRM spec (signup wall, free 5 / 15×month / 7-day, export)
 - [docs/agent-spec.md](docs/agent-spec.md) — CRM copilot (separate from harness Orchestrator)

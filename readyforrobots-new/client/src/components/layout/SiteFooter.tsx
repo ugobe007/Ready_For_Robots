@@ -4,8 +4,9 @@
  * Jobs chrome (header-matched) has no Pipeline / SIGNAL.
  */
 import { Link, useLocation, useSearch } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
 import {
-  jobsActivateHref,
+  jobsCrmOpenHref,
   jobsFreshHomeHref,
   showJobsSiteChrome,
 } from "@/lib/jobsWorkflow";
@@ -33,20 +34,22 @@ const COMPANY_LINKS = [
   { label: "Privacy Policy", href: "/privacy" },
 ];
 
-const JOBS_LINKS = {
-  Product: [
-    { label: "Jobs", href: jobsFreshHomeHref() },
-    { label: "CRM", href: jobsActivateHref() },
-    { label: "Job site sketch", href: "/vendor/design" },
-    { label: "About", href: "/intelligence" },
-    { label: "Start free workspace", href: "/signup?src=jobs_activate" },
-    { label: "Robots", href: "/robots" },
-    { label: "Humanoid Report", href: "/robots/report" },
-    { label: "Newsletter", href: "/newsletter" },
-  ],
-  Support: SUPPORT_LINKS,
-  Company: COMPANY_LINKS,
-};
+function jobsProductLinks(signedIn: boolean) {
+  return {
+    Product: [
+      { label: "Jobs", href: jobsFreshHomeHref() },
+      { label: "CRM", href: jobsCrmOpenHref(signedIn) },
+      { label: "Job site sketch", href: "/vendor/design" },
+      { label: "About", href: "/intelligence" },
+      { label: "Start free workspace", href: "/signup?src=jobs_activate" },
+      { label: "Robots", href: "/robots" },
+      { label: "Humanoid Report", href: "/robots/report" },
+      { label: "Newsletter", href: "/newsletter" },
+    ],
+    Support: SUPPORT_LINKS,
+    Company: COMPANY_LINKS,
+  };
+}
 
 const SIGNAL_LINKS = {
   Product: [
@@ -69,8 +72,9 @@ export default function SiteFooter({
 }: Props) {
   const [pathname] = useLocation();
   const search = useSearch();
+  const { session } = useAuth();
   const jobsChrome = showJobsSiteChrome({ pathname, search });
-  const links = jobsChrome ? JOBS_LINKS : SIGNAL_LINKS;
+  const links = jobsChrome ? jobsProductLinks(Boolean(session)) : SIGNAL_LINKS;
   const showNewsletter = Boolean(onNewsletterSubmit && onEmailChange);
   const homeHref = jobsChrome ? jobsFreshHomeHref() : "/";
   const signupHref = jobsChrome ? "/signup?src=jobs_activate" : "/signup";

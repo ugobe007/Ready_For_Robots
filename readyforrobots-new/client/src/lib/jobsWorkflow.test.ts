@@ -30,6 +30,10 @@ import {
   CRM_WATCH_FREE_HINT,
   CRM_WATCH_OPT_IN_LABEL,
   CRM_UNLOCKED_JOBS,
+  CRM_FREE_BATCH,
+  CRM_FREE_BATCHES_PER_MONTH,
+  CRM_FREE_MONTHLY_CAP,
+  CRM_FREE_TTL_DAYS,
   PIPELINE_PAGE_HEADLINE,
   PIPELINE_PAGE_NEXT,
   buyerLeadsHref,
@@ -66,6 +70,7 @@ import {
   jobsDumpedToCrm,
   jobsForCrmDesk,
   jobsSignupHref,
+  jobsCrmOpenHref,
   jobsWorkspaceRestoreHref,
   landingStageAfterConfirm,
   lineupJobLookups,
@@ -344,6 +349,9 @@ describe("jobsWorkflow", () => {
     expect(showSignalPipelineNav({ pathname: "/crm" })).toBe(true);
     expect(isJobsChromePath("/")).toBe(true);
     expect(jobsHeaderCrmHref("/")).toBe("/pipeline?src=jobs_activate");
+    expect(jobsHeaderCrmHref("/", null, false)).toBe(
+      jobsSignupHref("/pipeline?src=jobs_activate", "jobs_activate"),
+    );
     expect(jobsHeaderCrmHref("/crm")).toBe("/crm");
     expect(jobsHeaderCrmHref("/crm", "jobs_activate")).toBe(
       "/pipeline?src=jobs_activate",
@@ -360,7 +368,7 @@ describe("jobsWorkflow", () => {
       "utf8",
     );
     expect(header).toMatch(/showSignalPipelineNav/);
-    expect(header).toMatch(/jobsHeaderCrmHref/);
+    expect(header).toMatch(/jobsHeaderCrmHref\(location, jobsSrc, Boolean\(session\)\)/);
     expect(header).toMatch(/showPipeline/);
     expect(header).toMatch(/useSearch/);
   });
@@ -411,16 +419,16 @@ describe("jobsWorkflow", () => {
       "utf8",
     );
     expect(footer).toMatch(/showJobsSiteChrome/);
-    expect(footer).toMatch(/const JOBS_LINKS/);
+    expect(footer).toMatch(/function jobsProductLinks/);
     expect(footer).toMatch(/const SIGNAL_LINKS/);
-    expect(footer).toMatch(/jobsChrome \? JOBS_LINKS : SIGNAL_LINKS/);
+    expect(footer).toMatch(/jobsChrome \? jobsProductLinks\(Boolean\(session\)\) : SIGNAL_LINKS/);
     expect(footer).toMatch(/jobsChrome \? "JOBS" : "SIGNAL"/);
     const jobsLinks = footer.slice(
-      footer.indexOf("const JOBS_LINKS"),
+      footer.indexOf("function jobsProductLinks"),
       footer.indexOf("const SIGNAL_LINKS"),
     );
     expect(jobsLinks).toMatch(/jobsFreshHomeHref/);
-    expect(jobsLinks).toMatch(/jobsActivateHref/);
+    expect(jobsLinks).toMatch(/jobsCrmOpenHref/);
     expect(jobsLinks).not.toMatch(/\/pipeline/);
     expect(jobsLinks).not.toMatch(/Signals/);
     expect(footer).not.toMatch(/rounded-lg/);
@@ -567,8 +575,8 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/CRM_UNLOCKED_JOBS/);
     expect(workspace).toMatch(/writeCrmHandoff/);
     expect(workspace).toMatch(/jobsForCrmDesk/);
-    expect(workspace).toMatch(/setLocation\(jobsActivateHref/);
-    expect(workspace).not.toMatch(/jobsSignupHref/);
+    expect(workspace).toMatch(/jobsCrmOpenHref/);
+    expect(workspace).toMatch(/recordPipelineActivity/);
     expect(workspace).toMatch(/JOBS_KEEP_LABEL/);
     expect(pipeline).toMatch(/JobsCrmDesk/);
     expect(pipeline).toMatch(/if \(arrivedFromJobs\)/);
@@ -589,8 +597,12 @@ describe("jobsWorkflow", () => {
     expect(desk).not.toMatch(/grid-cols-3/);
     expect(desk).not.toMatch(/vendor_shortlist/);
     expect(desk).toMatch(/Not a SIGNAL buyer list/);
+    expect(desk).toMatch(/jobsCrmOpenHref\(false/);
+    expect(desk).toMatch(/Opening CRM/);
+    expect(desk).toMatch(/Pipeline activity/);
+    expect(desk).toMatch(/recordPipelineActivity/);
     expect(handoff).toMatch(/Opening CRM/);
-    expect(handoff).toMatch(/jobsActivateHref/);
+    expect(handoff).toMatch(/jobsCrmOpenHref/);
     expect(handoff).toMatch(/isJobsAutomateSrc/);
     expect(handoff).not.toMatch(/Save this job list to CRM/i);
     expect(handoff).not.toMatch(/5 checked/);
@@ -653,7 +665,7 @@ describe("jobsWorkflow", () => {
     expect(header).toMatch(/session \|\| !showPipeline/);
   });
 
-  it("dumps checked jobs into CRM and opens the desk without a signup wall", () => {
+  it("dumps checked jobs into CRM and opens the desk behind the signup wall", () => {
     const pool = [
       { job_key: "a" },
       { job_key: "b" },
@@ -679,14 +691,23 @@ describe("jobsWorkflow", () => {
       "utf8",
     );
     expect(workspace).toMatch(/writeCrmHandoff\(next\)/);
-    expect(workspace).toMatch(/setLocation\(jobsActivateHref\(submissionIdRef\.current\)\)/);
-    expect(workspace).not.toMatch(/jobsSignupHref\(dest/);
+    expect(workspace).toMatch(/setLocation\(jobsCrmOpenHref\(Boolean\(session\), submissionIdRef\.current\)\)/);
+    expect(jobsCrmOpenHref(false, 42)).toBe(
+      jobsSignupHref("/pipeline?src=jobs_activate&submission=42", "jobs_activate"),
+    );
+    expect(jobsCrmOpenHref(true, 42)).toBe(
+      "/pipeline?src=jobs_activate&submission=42",
+    );
+    expect(CRM_FREE_BATCH).toBe(5);
+    expect(CRM_FREE_BATCHES_PER_MONTH).toBe(3);
+    expect(CRM_FREE_MONTHLY_CAP).toBe(15);
+    expect(CRM_FREE_TTL_DAYS).toBe(7);
     const handoff = readFileSync(
       join(here, "../components/JobsHandoffBoard.tsx"),
       "utf8",
     );
-    expect(handoff).toMatch(/window\.location\.replace\(jobsActivateHref/);
-    expect(handoff).not.toMatch(/jobsSignupHref/);
+    expect(handoff).toMatch(/window\.location\.replace\(jobsCrmOpenHref/);
+    expect(handoff).toMatch(/jobsCrmOpenHref\(props\.signedIn/);
     expect(JOBS_PROCESS_STEPS[2].label).toBe("CRM");
     expect(JOBS_NEXT_CTA).toBe("Open CRM →");
   });
@@ -1046,7 +1067,7 @@ describe("jobsWorkflow", () => {
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
     );
-    expect(cardSrc).toMatch(/setLocation\(jobsActivateHref\(submissionIdRef\.current\)\)/);
+    expect(cardSrc).toMatch(/setLocation\(jobsCrmOpenHref\(Boolean\(session\), submissionIdRef\.current\)\)/);
     expect(cardSrc).not.toMatch(/setLocation\(session \? dest/);
     expect(cardSrc).not.toMatch(/window\.location\.href = session/);
     expect(cardSrc).toMatch(/id="jobs-list"/);

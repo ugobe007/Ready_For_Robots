@@ -38,7 +38,7 @@ export default function ExperimentHeader() {
   const aboutActive = location.startsWith("/intelligence");
   const adminActive = location.startsWith("/admin");
   const showPipeline = showSignalPipelineNav({ pathname: location, src: jobsSrc });
-  const crmHref = jobsHeaderCrmHref(location, jobsSrc);
+  const crmHref = jobsHeaderCrmHref(location, jobsSrc, Boolean(session));
 
   async function signOut() {
     clearPendingNext();

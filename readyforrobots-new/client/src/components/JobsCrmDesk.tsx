@@ -3,15 +3,19 @@
  * Not SIGNAL buyers. Not robot OEM shortlists.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import {
   CRM_UNLOCKED_JOBS,
   JOBS_EYEBROW_CLASS,
   JOBS_PROCESS_NAV_CLASS,
   JOBS_PROCESS_STEPS,
+  jobsCrmOpenHref,
   jobsFreshHomeHref,
   jobsWorkspaceRestoreHref,
   onJobsFreshHomeClick,
+  pipelineActivityForJob,
+  recordPipelineActivity,
+  type PipelineActivityEvent,
 } from "@/lib/jobsWorkflow";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
@@ -43,6 +47,12 @@ export default function JobsCrmDesk({
   signedIn?: boolean;
   submissionId?: number | null;
 }) {
+  const [, setLocation] = useLocation();
+  useEffect(() => {
+    if (signedIn) return;
+    setLocation(jobsCrmOpenHref(false, submissionId));
+  }, [signedIn, submissionId, setLocation]);
+
   const snap = readJobsHandoffSnapshot();
   const jobs = (snap?.jobs || []).slice(0, CRM_UNLOCKED_JOBS);
   const product = snap?.productName || "your robot";
@@ -52,6 +62,14 @@ export default function JobsCrmDesk({
   void tick;
   const stats = placementBoardStats(jobs);
   const activeRec = active ? loadJobApplyRecord(active.job_key) : null;
+
+  if (!signedIn) {
+    return (
+      <p className="px-6 py-16 text-center font-mono text-sm uppercase tracking-[0.08em] text-slate-400">
+        Opening CRM…
+      </p>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
@@ -174,7 +192,7 @@ export default function JobsCrmDesk({
 function ApplyPanel({
   job,
   robotName,
-  signedIn,
+  signedIn: _signedIn,
   onSaved,
 }: {
   job: MatchJob;
@@ -196,6 +214,15 @@ function ApplyPanel({
   const card = robotJobCardFromMatch(job);
   const modelLine = jobModelListLine(job);
 
+  function note(kind: PipelineActivityEvent["kind"], label: string) {
+    recordPipelineActivity({
+      kind,
+      label,
+      jobKey: job.job_key,
+      company: robotJobCardFromMatch(job).employer || undefined,
+    });
+  }
+
   function persist(saved: JobApplyRecord) {
     setRecord(saved);
     saveJobApplyRecord(saved);
@@ -206,11 +233,18 @@ function ApplyPanel({
     const merged = { ...record, jobKey: job.job_key, ...next };
     const nextGaps = jobCredentialGaps(job, merged);
     const nextStatus = applyStatusFromGaps(nextGaps, merged);
+    if (next.packAcknowledged && !record.packAcknowledged) {
+      note("place", "Confirmed pack");
+    }
+    if (next.quoteCommitted && !record.quoteCommitted) {
+      note("place", "Locked quote");
+    }
     persist({ ...merged, status: nextStatus });
   }
 
   function apply() {
     if (!ready) return;
+    note("apply", "Applied");
     persist({
       ...record,
       jobKey: job.job_key,
@@ -220,6 +254,7 @@ function ApplyPanel({
   }
 
   function followUp() {
+    note("follow_up", "Followed up");
     persist({
       ...record,
       jobKey: job.job_key,
@@ -334,17 +369,49 @@ function ApplyPanel({
             {nextLabel}
           </button>
         ) : null}
-        {!signedIn ? (
-          <Link
-            href="/signup?src=jobs_activate&next=/pipeline?src=jobs_activate"
-            className="inline-flex items-center font-mono text-sm font-semibold uppercase tracking-[0.08em] text-slate-400 hover:text-slate-200"
-          >
-            Sign in to keep this desk
-          </Link>
-        ) : null}
       </div>
+
+      <PipelineActivity jobKey={job.job_key} tick={record.status} />
     </section>
   );
+}
+
+function PipelineActivity({
+  jobKey,
+  tick,
+}: {
+  jobKey: string;
+  tick: string;
+}) {
+  void tick;
+  const events = pipelineActivityForJob(jobKey).slice(0, 8);
+  if (events.length === 0) return null;
+  return (
+    <div className="mt-8 border-t border-slate-700 pt-5">
+      <p className={`${eyebrow} text-slate-400`}>Pipeline activity</p>
+      <ul className="mt-2 space-y-1.5">
+        {events.map((event, i) => (
+          <li
+            key={`${event.at}-${event.kind}-${i}`}
+            className="font-mono text-sm text-slate-400"
+          >
+            {event.label}
+            {event.company ? ` · ${event.company}` : ""}
+            <span className="text-slate-600">
+              {" · "}
+              {formatActivityWhen(event.at)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function formatActivityWhen(iso: string): string {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return iso;
+  return new Date(t).toLocaleString();
 }
 
 /** Used when a leftover import still names a full-page desk. */

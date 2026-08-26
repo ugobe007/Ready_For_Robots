@@ -5,7 +5,7 @@
 import { useEffect } from "react";
 import {
   isJobsAutomateSrc,
-  jobsActivateHref,
+  jobsCrmOpenHref,
 } from "@/lib/jobsWorkflow";
 
 export default function JobsHandoffBoard(props: {
@@ -18,7 +18,7 @@ export default function JobsHandoffBoard(props: {
 }) {
   useEffect(() => {
     if (isJobsAutomateSrc(props.src)) return;
-    window.location.replace(jobsActivateHref(props.submissionId));
+    window.location.replace(jobsCrmOpenHref(props.signedIn, props.submissionId));
   }, [props.src, props.submissionId]);
 
   return (
