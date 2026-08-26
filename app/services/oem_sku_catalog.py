@@ -317,16 +317,11 @@ def compile_vendor_seed(catalog: dict[str, Any]) -> dict[str, Any]:
         if not domains:
             continue
         robots: list[dict[str, Any]] = []
+        vendor_url = f"https://{domains[0]}"
         for product in company.get("products") or []:
             if "wrong_product_url" in (product.get("flags") or []) and not product.get("product_url"):
                 # Keep the named SKU for company identity; omit the bad URL.
                 pass
-            vendor_url = ""
-            for url in company.get("verified_urls") or []:
-                vendor_url = url
-                break
-            if not vendor_url:
-                vendor_url = f"https://{domains[0]}"
             product_url = product.get("product_url") or ""
             robots.append(
                 {
@@ -351,7 +346,7 @@ def compile_vendor_seed(catalog: dict[str, Any]) -> dict[str, Any]:
             {
                 "vendor_name": company["name"],
                 "domains": domains,
-                "vendor_url": (company.get("verified_urls") or [None])[0] or f"https://{domains[0]}",
+                "vendor_url": vendor_url,
                 "list_category": "oem_sku",
                 "robots": robots,
             }
@@ -434,6 +429,7 @@ def lookup_urls(
     rate_limit_s: float = 0.5,
     max_fetches: int | None = None,
     sleep: Callable[[float], None] = time.sleep,
+    prior: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Fetch candidate pages with the Understanding fetcher. Store only verified URLs."""
     if fetch_page is None:
@@ -441,10 +437,16 @@ def lookup_urls(
 
         fetch_page = _fetch
 
-    verified: list[dict[str, Any]] = []
-    skipped: list[dict[str, Any]] = []
-    failed: list[dict[str, Any]] = []
+    verified: list[dict[str, Any]] = list((prior or {}).get("verified") or [])
+    skipped: list[dict[str, Any]] = list((prior or {}).get("skipped") or [])
+    failed: list[dict[str, Any]] = list((prior or {}).get("failed") or [])
     queued: list[dict[str, Any]] = []
+    done = {
+        row.get("slug")
+        for bucket in (verified, skipped, failed)
+        for row in bucket
+        if row.get("slug")
+    }
     cache: dict[str, Any] = {}
     fetches = 0
 
@@ -469,6 +471,8 @@ def lookup_urls(
         siblings = [p["name"] for p in company.get("products") or []]
         company_host = (company.get("domains") or [""])[0]
         for product in company.get("products") or []:
+            if product.get("slug") in done:
+                continue
             candidates = list(product.get("candidate_sources") or [])
             if not candidates:
                 skipped.append(

@@ -47,7 +47,7 @@ def main() -> int:
 
     catalog = parse_workbook(Path(args.xlsx))
     lookup = None
-    if LOOKUP_PATH.is_file() and not args.lookup_urls:
+    if LOOKUP_PATH.is_file():
         try:
             lookup = json.loads(LOOKUP_PATH.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
@@ -57,6 +57,7 @@ def main() -> int:
             catalog,
             rate_limit_s=args.rate_limit,
             max_fetches=args.max_fetches,
+            prior=lookup,
         )
         write_json(LOOKUP_PATH, lookup)
         print(

@@ -1,7 +1,7 @@
 {
   "ontology_id": "oem_sku_catalog_v1",
   "version": "1.0.0",
-  "generated_at": "2026-08-26T20:07:46+00:00",
+  "generated_at": "2026-08-26T20:12:45+00:00",
   "source": "docs/reference/readyforrobots_companies_and_robots.xlsx",
   "rule": "COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES",
   "notes": [
@@ -74,13 +74,16 @@
           "candidate_sources": [
             "https://www.1x.tech/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.1x.tech/",
+          "lookup_host": "1x.tech",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.1x.tech/"
       ]
     },
     {
@@ -260,9 +263,9 @@
           "candidate_sources": [
             "https://www.anybotics.com/anymal/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.anybotics.com/robotics/anymal/",
+          "lookup_host": "anybotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -292,6 +295,9 @@
             "wrong_product_url"
           ]
         }
+      ],
+      "verified_urls": [
+        "https://www.anybotics.com/robotics/anymal/"
       ]
     },
     {
@@ -328,9 +334,9 @@
           "candidate_sources": [
             "https://www.accuray.com/cyberknife/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.accuray.com/cyberknife/",
+          "lookup_host": "accuray.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -360,6 +366,9 @@
             "wrong_product_url"
           ]
         }
+      ],
+      "verified_urls": [
+        "https://www.accuray.com/cyberknife/"
       ]
     },
     {
@@ -396,13 +405,16 @@
           "candidate_sources": [
             "https://aethon.com/tug/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://aethon.com/tug/",
+          "lookup_host": "aethon.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://aethon.com/tug/"
       ]
     },
     {
@@ -439,13 +451,16 @@
           "candidate_sources": [
             "https://www.agilityrobotics.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.agilityrobotics.com/sales",
+          "lookup_host": "agilityrobotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.agilityrobotics.com/sales"
       ]
     },
     {
@@ -643,9 +658,9 @@
           "candidate_sources": [
             "https://www.bearrobotics.ai/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.bearrobotics.ai/servi",
+          "lookup_host": "bearrobotics.ai",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -668,9 +683,9 @@
           "candidate_sources": [
             "https://www.bearrobotics.ai/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.bearrobotics.ai/",
+          "lookup_host": "bearrobotics.ai",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -693,13 +708,18 @@
           "candidate_sources": [
             "https://www.bearrobotics.ai/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.bearrobotics.ai/carti100",
+          "lookup_host": "bearrobotics.ai",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.bearrobotics.ai/servi",
+        "https://www.bearrobotics.ai/",
+        "https://www.bearrobotics.ai/carti100"
       ]
     },
     {
@@ -783,9 +803,9 @@
           "candidate_sources": [
             "https://bostondynamics.com/products/spot/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://bostondynamics.com/products/spot/",
+          "lookup_host": "bostondynamics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -833,13 +853,17 @@
           "candidate_sources": [
             "https://bostondynamics.com/atlas/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://bostondynamics.com/products/atlas/",
+          "lookup_host": "bostondynamics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://bostondynamics.com/products/spot/",
+        "https://bostondynamics.com/products/atlas/"
       ]
     },
     {
@@ -876,13 +900,16 @@
           "candidate_sources": [
             "https://www.diligentrobots.com/moxi"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.diligentrobots.com/moxi",
+          "lookup_host": "diligentrobots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.diligentrobots.com/moxi"
       ]
     },
     {
@@ -962,9 +989,9 @@
           "candidate_sources": [
             "https://eksobionics.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://eksobionics.com/eksonr/",
+          "lookup_host": "eksobionics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -987,13 +1014,17 @@
           "candidate_sources": [
             "https://eksobionics.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://eksobionics.com/ekso-evo/",
+          "lookup_host": "eksobionics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://eksobionics.com/eksonr/",
+        "https://eksobionics.com/ekso-evo/"
       ]
     },
     {
@@ -1030,9 +1061,9 @@
           "candidate_sources": [
             "https://www.fanucamerica.com/products/robots"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.fanucamerica.com/products/robot/crx-10ia",
+          "lookup_host": "fanucamerica.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -1055,9 +1086,9 @@
           "candidate_sources": [
             "https://www.fanucamerica.com/products/robots"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.fanucamerica.com/products/robot/crx-20ia-l",
+          "lookup_host": "fanucamerica.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -1137,6 +1168,10 @@
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.fanucamerica.com/products/robot/crx-10ia",
+        "https://www.fanucamerica.com/products/robot/crx-20ia-l"
       ]
     },
     {
@@ -1347,9 +1382,9 @@
           "candidate_sources": [
             "https://gausium.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://gausium.com/products/phantas",
+          "lookup_host": "gausium.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -1372,9 +1407,9 @@
           "candidate_sources": [
             "https://gausium.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://gausium.com/products/vacuum40",
+          "lookup_host": "gausium.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -1404,6 +1439,10 @@
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://gausium.com/products/phantas",
+        "https://gausium.com/products/vacuum40"
       ]
     },
     {
@@ -1644,9 +1683,9 @@
           "candidate_sources": [
             "https://www.kuka.com/en-us/products/robotics-systems/industrial-robots"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.kuka.com/en-us/products/robotics-systems/industrial-robots",
+          "lookup_host": "kuka.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -1669,9 +1708,9 @@
           "candidate_sources": [
             "https://www.kuka.com/en-us/products/robotics-systems/industrial-robots"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.kuka.com/en-us/products/robotics-systems/industrial-robots",
+          "lookup_host": "kuka.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -1694,9 +1733,9 @@
           "candidate_sources": [
             "https://www.kuka.com/en-us/products/robotics-systems/industrial-robots"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.kuka.com/en-us/products/robotics-systems/industrial-robots",
+          "lookup_host": "kuka.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -1719,13 +1758,16 @@
           "candidate_sources": [
             "https://www.kuka.com/en-us/products/robotics-systems/industrial-robots"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.kuka.com/en-us/products/robotics-systems/industrial-robots",
+          "lookup_host": "kuka.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.kuka.com/en-us/products/robotics-systems/industrial-robots"
       ]
     },
     {
@@ -1805,9 +1847,9 @@
           "candidate_sources": [
             "https://www.keenon.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.keenon.com/en/news/k2",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -1855,9 +1897,9 @@
           "candidate_sources": [
             "https://www.keenon.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.keenon.com/",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -1912,6 +1954,10 @@
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.keenon.com/en/news/k2",
+        "https://www.keenon.com/"
       ]
     },
     {
@@ -2313,13 +2359,16 @@
           "candidate_sources": [
             "https://www.mistyrobotics.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.mistyrobotics.com/misty-ii",
+          "lookup_host": "mistyrobotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.mistyrobotics.com/misty-ii"
       ]
     },
     {
@@ -2356,9 +2405,9 @@
           "candidate_sources": [
             "https://mobile-industrial-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir250",
+          "lookup_host": "mobile-industrial-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -2381,9 +2430,9 @@
           "candidate_sources": [
             "https://mobile-industrial-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir600",
+          "lookup_host": "mobile-industrial-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -2406,9 +2455,9 @@
           "candidate_sources": [
             "https://mobile-industrial-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir1200-pallet-jack",
+          "lookup_host": "mobile-industrial-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -2431,9 +2480,9 @@
           "candidate_sources": [
             "https://mobile-industrial-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir1350",
+          "lookup_host": "mobile-industrial-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -2488,6 +2537,12 @@
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://mobile-industrial-robots.com/products/robots/mir250",
+        "https://mobile-industrial-robots.com/products/robots/mir600",
+        "https://mobile-industrial-robots.com/products/robots/mir1200-pallet-jack",
+        "https://mobile-industrial-robots.com/products/robots/mir1350"
       ]
     },
     {
@@ -2569,13 +2624,16 @@
           "candidate_sources": [
             "https://nalarobotics.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://nalarobotics.com/nala-chef.html",
+          "lookup_host": "nalarobotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://nalarobotics.com/nala-chef.html"
       ]
     },
     {
@@ -2655,9 +2713,9 @@
           "candidate_sources": [
             "https://ottomotors.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://ottomotors.com/100/",
+          "lookup_host": "ottomotors.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -2680,9 +2738,9 @@
           "candidate_sources": [
             "https://ottomotors.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://ottomotors.com/600/",
+          "lookup_host": "ottomotors.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -2705,13 +2763,18 @@
           "candidate_sources": [
             "https://ottomotors.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://ottomotors.com/1500/",
+          "lookup_host": "ottomotors.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://ottomotors.com/100/",
+        "https://ottomotors.com/600/",
+        "https://ottomotors.com/1500/"
       ]
     },
     {
@@ -2748,13 +2811,16 @@
           "candidate_sources": [
             "https://ohmnilabs.com/products/ohmni-telepresence-robot/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://ohmnilabs.com/products/ohmni-telepresence-robot/",
+          "lookup_host": "ohmnilabs.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://ohmnilabs.com/products/ohmni-telepresence-robot/"
       ]
     },
     {
@@ -2791,9 +2857,9 @@
           "candidate_sources": [
             "https://pal-robotics.com/robots/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://pal-robotics.com/robot/tiago-pro/",
+          "lookup_host": "pal-robotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -2816,13 +2882,17 @@
           "candidate_sources": [
             "https://pal-robotics.com/robots/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://pal-robotics.com/robot/talos/",
+          "lookup_host": "pal-robotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://pal-robotics.com/robot/tiago-pro/",
+        "https://pal-robotics.com/robot/talos/"
       ]
     },
     {
@@ -2947,13 +3017,16 @@
           "candidate_sources": [
             "https://www.picnicworks.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.picnicworks.com/",
+          "lookup_host": "picnicworks.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.picnicworks.com/"
       ]
     },
     {
@@ -3033,9 +3106,9 @@
           "candidate_sources": [
             "https://www.pudurobotics.com/en"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.pudurobotics.com/en",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -3058,9 +3131,9 @@
           "candidate_sources": [
             "https://www.pudurobotics.com/en"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.pudurobotics.com/en",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -3083,9 +3156,9 @@
           "candidate_sources": [
             "https://www.pudurobotics.com/en"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.pudurobotics.com/en",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -3108,9 +3181,9 @@
           "candidate_sources": [
             "https://www.pudurobotics.com/en"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.pudurobotics.com/en",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -3133,9 +3206,9 @@
           "candidate_sources": [
             "https://www.pudurobotics.com/en"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.pudurobotics.com/en",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -3158,9 +3231,9 @@
           "candidate_sources": [
             "https://www.pudurobotics.com/en"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.pudurobotics.com/en",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -3183,13 +3256,16 @@
           "candidate_sources": [
             "https://www.pudurobotics.com/en"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.pudurobotics.com/en",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.pudurobotics.com/en"
       ]
     },
     {
@@ -3294,13 +3370,16 @@
           "candidate_sources": [
             "https://sanctuary.ai/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://sanctuary.ai/",
+          "lookup_host": "sanctuary.ai",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://sanctuary.ai/"
       ]
     },
     {
@@ -3855,9 +3934,9 @@
           "candidate_sources": [
             "https://www.ubtrobot.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.ubtrobot.com/en/humanoid/products/cruzr-s2",
+          "lookup_host": "ubtrobot.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -3880,13 +3959,17 @@
           "candidate_sources": [
             "https://www.ubtrobot.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.ubtrobot.com/",
+          "lookup_host": "ubtrobot.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.ubtrobot.com/en/humanoid/products/cruzr-s2",
+        "https://www.ubtrobot.com/"
       ]
     },
     {
@@ -3923,9 +4006,9 @@
           "candidate_sources": [
             "https://www.unitree.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.unitree.com/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -3948,13 +4031,16 @@
           "candidate_sources": [
             "https://www.unitree.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.unitree.com/",
+          "lookup_host": "unitree.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.unitree.com/"
       ]
     },
     {
@@ -3991,9 +4077,9 @@
           "candidate_sources": [
             "https://www.universal-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.universal-robots.com/products/ur3e/",
+          "lookup_host": "universal-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4016,9 +4102,9 @@
           "candidate_sources": [
             "https://www.universal-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.universal-robots.com/products/ur7e/",
+          "lookup_host": "universal-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4041,9 +4127,9 @@
           "candidate_sources": [
             "https://www.universal-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.universal-robots.com/products/ur12e/",
+          "lookup_host": "universal-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4066,9 +4152,9 @@
           "candidate_sources": [
             "https://www.universal-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.universal-robots.com/products/ur16e/",
+          "lookup_host": "universal-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4091,9 +4177,9 @@
           "candidate_sources": [
             "https://www.universal-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.universal-robots.com/products/ur20/",
+          "lookup_host": "universal-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4116,9 +4202,9 @@
           "candidate_sources": [
             "https://www.universal-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.universal-robots.com/products/ur30/",
+          "lookup_host": "universal-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4141,9 +4227,9 @@
           "candidate_sources": [
             "https://www.universal-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.universal-robots.com/products/ur15/",
+          "lookup_host": "universal-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4166,9 +4252,9 @@
           "candidate_sources": [
             "https://www.universal-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.universal-robots.com/products/ur18/",
+          "lookup_host": "universal-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4191,13 +4277,24 @@
           "candidate_sources": [
             "https://www.universal-robots.com/"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.universal-robots.com/products/ur8-long/",
+          "lookup_host": "universal-robots.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.universal-robots.com/products/ur3e/",
+        "https://www.universal-robots.com/products/ur7e/",
+        "https://www.universal-robots.com/products/ur12e/",
+        "https://www.universal-robots.com/products/ur16e/",
+        "https://www.universal-robots.com/products/ur20/",
+        "https://www.universal-robots.com/products/ur30/",
+        "https://www.universal-robots.com/products/ur15/",
+        "https://www.universal-robots.com/products/ur18/",
+        "https://www.universal-robots.com/products/ur8-long/"
       ]
     },
     {
@@ -4234,9 +4331,9 @@
           "candidate_sources": [
             "https://www.motoman.com/en-us/products/robots"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.motoman.com/en-us/products/robots/collaborative/hc-series/hc10dtp",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4259,9 +4356,9 @@
           "candidate_sources": [
             "https://www.motoman.com/en-us/products/robots"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.motoman.com/en-us/products/robots",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4284,9 +4381,9 @@
           "candidate_sources": [
             "https://www.motoman.com/en-us/products/robots"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp25",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
@@ -4309,13 +4406,19 @@
           "candidate_sources": [
             "https://www.motoman.com/en-us/products/robots"
           ],
-          "product_url": null,
-          "lookup_host": null,
-          "url_status": "unverified",
+          "product_url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar1440",
+          "lookup_host": "motoman.com",
+          "url_status": "verified",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": []
         }
+      ],
+      "verified_urls": [
+        "https://www.motoman.com/en-us/products/robots/collaborative/hc-series/hc10dtp",
+        "https://www.motoman.com/en-us/products/robots",
+        "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp25",
+        "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar1440"
       ]
     },
     {
