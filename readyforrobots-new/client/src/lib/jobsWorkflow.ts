@@ -747,6 +747,51 @@ export function isJobsFreshQuery(search: string | null | undefined): boolean {
   return new URLSearchParams(search || "").get(JOBS_FRESH_QUERY) === "1";
 }
 
+/** In-page reset on Jobs home. Wordmark must not `location.assign("/")` while already on `/`. */
+export const JOBS_FRESH_HOME_EVENT = "rfr:jobs-fresh";
+
+export function isJobsHomePath(pathname: string | null | undefined): boolean {
+  const path = (pathname || "").trim().split("?")[0] || "";
+  return path === "/" || path === "" || path === "/jobs" || path.startsWith("/jobs/");
+}
+
+/**
+ * Drop `new=1` from the current URL without a document reload or wouter
+ * `setLocation`. Wouter patches `history.replaceState`, so callers must not
+ * run this during render (useState initializer) — only in an effect.
+ * Returns true when the URL actually changed.
+ */
+export function stripJobsFreshQuery(): boolean {
+  if (typeof window === "undefined") return false;
+  if (!isJobsFreshQuery(window.location.search)) return false;
+  const params = new URLSearchParams(window.location.search);
+  params.delete(JOBS_FRESH_QUERY);
+  const next = params.toString();
+  const path = window.location.pathname || "/";
+  const hash = window.location.hash || "";
+  const url = `${path}${next ? `?${next}` : ""}${hash}`;
+  window.history.replaceState(window.history.state, "", url);
+  return true;
+}
+
+/**
+ * FIND submit never navigates. One Start jobs click stays on this document:
+ * research → Job Cards. No `location.assign`, no reload, no `/?new=1` bounce.
+ */
+export function findSubmitNavigationTarget(_url?: string | null): null {
+  return null;
+}
+
+export function canStartFindSubmit(opts: {
+  url?: string | null;
+  inFlight?: boolean;
+  stage?: string | null;
+}): boolean {
+  if (opts.inFlight) return false;
+  if (opts.stage === "research") return false;
+  return (opts.url || "").trim().length > 0;
+}
+
 /** Drop in-progress FIND state. Used by the wordmark before leaving the page. */
 export function clearJobsWorkspaceSession(): void {
   if (typeof window === "undefined") return;
@@ -760,13 +805,19 @@ export function clearJobsWorkspaceSession(): void {
 
 /**
  * Wordmark / Jobs home. Wouter Link to `/` is a no-op while already on `/`
- * (jobs, picker) — same pathname — so the chrome looks dead. Hard-load `/`
- * after clearing session. Do not bounce through `/?new=1` (that paints FIND,
- * then strips the query and paints again).
+ * (jobs, picker) — same pathname — so the chrome looks dead. Reset in place
+ * on Jobs home. Hard-load `/` only when leaving another route. Do not bounce
+ * through `/?new=1` (that paints FIND, then strips the query and paints again).
  */
 export function goJobsFreshHome(): void {
   clearJobsWorkspaceSession();
   if (typeof window === "undefined") return;
+  const path = window.location.pathname || "/";
+  if (isJobsHomePath(path)) {
+    stripJobsFreshQuery();
+    window.dispatchEvent(new Event(JOBS_FRESH_HOME_EVENT));
+    return;
+  }
   window.location.assign("/");
 }
 

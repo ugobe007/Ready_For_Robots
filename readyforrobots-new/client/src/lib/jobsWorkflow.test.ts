@@ -56,6 +56,11 @@ import {
   jobsForActivatedPipeline,
   jobsFreshHomeHref,
   goJobsFreshHome,
+  JOBS_FRESH_HOME_EVENT,
+  canStartFindSubmit,
+  findSubmitNavigationTarget,
+  isJobsHomePath,
+  stripJobsFreshQuery,
   jobsHeading,
   jobIndexLabel,
   jobIsForLabel,
@@ -219,6 +224,118 @@ describe("jobsWorkflow", () => {
     expect(chrome).toMatch(/onJobsFreshHomeClick/);
     const workflow = readFileSync(join(here, "./jobsWorkflow.ts"), "utf8");
     expect(workflow).toMatch(/location\.assign\("\/"\)/);
+    expect(workflow).toMatch(/isJobsHomePath\(path\)/);
+    expect(workflow).toMatch(/dispatchEvent\(new Event\(JOBS_FRESH_HOME_EVENT\)\)/);
+  });
+
+  it("FIND submit does not remount the workspace or require SIGNAL CRM shell", () => {
+    expect(findSubmitNavigationTarget("https://www.dexmate.ai/")).toBeNull();
+    expect(
+      canStartFindSubmit({
+        url: "https://www.dexmate.ai/",
+        inFlight: false,
+        stage: "find",
+      }),
+    ).toBe(true);
+    expect(
+      canStartFindSubmit({
+        url: "https://www.dexmate.ai/",
+        inFlight: true,
+        stage: "find",
+      }),
+    ).toBe(false);
+    expect(
+      canStartFindSubmit({
+        url: "https://www.dexmate.ai/",
+        inFlight: false,
+        stage: "research",
+      }),
+    ).toBe(false);
+    expect(canStartFindSubmit({ url: "   ", inFlight: false, stage: "find" })).toBe(
+      false,
+    );
+    expect(isJobsHomePath("/")).toBe(true);
+    expect(isJobsHomePath("/jobs/dexmate")).toBe(true);
+    expect(isJobsHomePath("/intelligence")).toBe(false);
+
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    expect(workspace).not.toMatch(/pipeline-detail-shell/);
+    expect(workspace).not.toMatch(/diagnoseCRM/);
+    expect(workspace).not.toMatch(/RFR DIAG/);
+    expect(workspace).not.toMatch(/setLocation\("\/", \{ replace: true \}\)/);
+    expect(workspace).toMatch(/canStartFindSubmit/);
+    expect(workspace).toMatch(/JOBS_FRESH_HOME_EVENT/);
+    expect(workspace).toMatch(/aria-label="Find jobs for your robot"/);
+    const startJobs = workspace.slice(
+      workspace.indexOf("function startJobs"),
+      workspace.indexOf("function toggleProduct"),
+    );
+    expect(startJobs).not.toMatch(/location\.assign/);
+    expect(startJobs).not.toMatch(/location\.reload/);
+    expect(startJobs).not.toMatch(/setLocation/);
+    const submitFind = workspace.slice(
+      workspace.indexOf("async function submitFind"),
+      workspace.indexOf("async function confirmSelection"),
+    );
+    expect(submitFind).not.toMatch(/location\.assign/);
+    expect(submitFind).not.toMatch(/location\.reload/);
+    expect(submitFind).not.toMatch(/setLocation/);
+    expect(submitFind).not.toMatch(/pipeline-detail-shell/);
+  });
+
+  it("strips ?new=1 and resets Jobs home without a document reload", () => {
+    const assigns: string[] = [];
+    const replaced: string[] = [];
+    const events: string[] = [];
+    const loc = { pathname: "/", search: "?new=1", hash: "" };
+    const fakeWindow = {
+      location: {
+        get pathname() {
+          return loc.pathname;
+        },
+        get search() {
+          return loc.search;
+        },
+        get hash() {
+          return loc.hash;
+        },
+        assign: (url: string) => {
+          assigns.push(url);
+        },
+      },
+      history: {
+        state: null,
+        replaceState: (_state: unknown, _title: string, url: string) => {
+          replaced.push(String(url));
+          const qIndex = String(url).indexOf("?");
+          loc.search = qIndex >= 0 ? String(url).slice(qIndex) : "";
+        },
+      },
+      sessionStorage: {
+        removeItem: () => undefined,
+      },
+      dispatchEvent: (event: Event) => {
+        events.push(event.type);
+        return true;
+      },
+    };
+    Object.defineProperty(globalThis, "window", {
+      value: fakeWindow,
+      configurable: true,
+    });
+    expect(stripJobsFreshQuery()).toBe(true);
+    expect(replaced).toEqual(["/"]);
+    expect(stripJobsFreshQuery()).toBe(false);
+    goJobsFreshHome();
+    expect(assigns).toEqual([]);
+    expect(events).toEqual([JOBS_FRESH_HOME_EVENT]);
+    loc.pathname = "/intelligence";
+    loc.search = "";
+    goJobsFreshHome();
+    expect(assigns).toEqual(["/"]);
   });
 
   it("titles type-level jobs for the company group, product-level jobs for a SKU", () => {

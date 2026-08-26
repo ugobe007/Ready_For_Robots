@@ -27,7 +27,7 @@ Canonical frontend: `readyforrobots-new/client/`. API: `https://ready-2-robot.fl
 
 ### Jobs header (`ExperimentHeader`)
 
-Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (empty FIND).
+Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (empty FIND). While already on `/`, the click resets in place — it must not reload the document or abort an in-flight Start jobs.
 
 | Item | Behavior |
 |------|----------|
