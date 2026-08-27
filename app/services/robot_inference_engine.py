@@ -214,6 +214,12 @@ def _split_sentences(text: str) -> list[str]:
     return [s.strip() for s in re.split(r"[.!?\n]+", text) if s.strip()]
 
 
+_WEEDING_SENTENCE = re.compile(
+    r"\b(?:weed|weeding|laserweed|laser\s+weeder|crop\s+rows?|row\s+crops?|agricult)\b",
+    re.I,
+)
+
+
 def _detect_manipulation(text: str) -> list[tuple[str, Any, str]]:
     """Return (predicate, value, evidence) manipulation groundings from robot actions
     or food prep. Skips human-in-the-loop pick sentences. Sentence-scoped."""
@@ -221,6 +227,8 @@ def _detect_manipulation(text: str) -> list[tuple[str, Any, str]]:
     for s in _split_sentences(text):
         if _HUMAN_IN_LOOP.search(s):
             continue  # the worker picks, not the robot
+        if _WEEDING_SENTENCE.search(s):
+            continue  # crop weeding lasers are not shop-floor grippers
         window = re.sub(r"\s+", " ", s)[:240]
         # Robot manipulation action on objects (grab/pick items off shelf, telescoping retrieve).
         if _MANIP_ACTION.search(s) and _MANIP_OBJECT.search(s):

@@ -247,6 +247,19 @@ def score_job(profile: CapabilityProfile, job: dict[str, Any]) -> tuple[float, l
         score -= 2.0
         notes.append("Machine tending not confirmed for this robot — needs stronger evidence.")
 
+    # R31: weeding laser ≠ shop-floor cutting laser. LaserWeeder must not
+    # score CNC / laser/plasma load-unload from the token "laser".
+    name_blob = f"{profile.robot_name or ''} {profile.robot_class or ''}"
+    if re.search(r"laserweeder|laser\s+weeder|laser[- ]weed|farmdroid|weeding|agricult", name_blob, re.I):
+        if re.search(
+            r"laser\s*/\s*plasma|plasma\s+cut|cnc\s+laser|laser\s+cut|"
+            r"cutting\s+machines|\bcnc\b|machine\s+tend",
+            text,
+            re.I,
+        ):
+            score -= 10.0
+            notes.append("Weeding laser is not a cutting-laser or CNC tend cell.")
+
     return score, notes
 
 

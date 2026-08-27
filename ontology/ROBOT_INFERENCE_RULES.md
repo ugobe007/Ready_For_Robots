@@ -149,6 +149,10 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   FIND-tile `agriculture` / `construction` is the work-kind **union**. A named
   SKU only grounds the work its listed_class/task claims. Never
   `company → category → jobs`.
+- **R31 ✅** Weeding laser ≠ cutting laser. `LaserWeeder` / FarmDroid /
+  `claims_weeding` must exercise `agriculture_weed`. Shop-floor
+  laser/plasma CNC load-unload, pack, and cobot machine-tend cannot fill
+  leftover slots. The token `laser` on a weeder is not `machine: laser_plasma`.
 
 ## Worked examples
 

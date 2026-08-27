@@ -430,16 +430,13 @@ function typeMatchToAnalysis(
   };
 }
 
-/** One picker SKU: keep the product name, use class match when we already know it. */
+/** One named SKU: MATCH the configuration (catalog work-kind), not the FIND tile. */
 function analysisForSelectedSku(
   res: RobotJobSearchResult,
   name: string,
   displayClass?: string | null,
 ): RobotAnalysis {
-  const cls = configurationClassForLookup(displayClass);
-  if (cls) {
-    return { ...typeMatchToAnalysis(res, name, cls), productName: name };
-  }
+  void displayClass;
   return { ...searchToAnalysis(res), productName: name, lookupGrain: "product" };
 }
 
@@ -857,7 +854,7 @@ export default function RobotJobsWorkspace() {
             url: submitUrl,
             product: name || undefined,
             assertedClass: cls || undefined,
-            lookupGrain: cls ? "robot_type" : "product",
+            lookupGrain: "product",
             signal: ac.signal,
             timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
           });
@@ -898,7 +895,7 @@ export default function RobotJobsWorkspace() {
             url: submitUrl,
             product: name || undefined,
             assertedClass: cls || undefined,
-            lookupGrain: cls ? "robot_type" : "product",
+            lookupGrain: "product",
             signal: ac.signal,
             timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
           });
@@ -944,7 +941,7 @@ export default function RobotJobsWorkspace() {
         url: submitUrl,
         product: name || undefined,
         assertedClass: cls || undefined,
-        lookupGrain: cls ? "robot_type" : "product",
+        lookupGrain: "product",
         signal: ac.signal,
         timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
       });
@@ -988,7 +985,7 @@ export default function RobotJobsWorkspace() {
           url: submitUrl,
           product: names[0],
           assertedClass: cls || undefined,
-          lookupGrain: cls ? "robot_type" : "product",
+          lookupGrain: "product",
           signal: ac.signal,
           timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
         });
@@ -1421,21 +1418,19 @@ export default function RobotJobsWorkspace() {
         const cls = a.robotClass || configurationClassForLookup(
           products.find(p => p.name === a.productName)?.displayClass,
         );
-        const search = cls
-          ? await fetchRobotJobSearch({
-              url: submitUrl,
-              assertedClass: cls,
-              lookupGrain: "robot_type",
-            })
-          : await fetchRobotJobSearch({
-              url: submitUrl,
-              product: a.productName,
-            });
+        const search = await fetchRobotJobSearch({
+          url: submitUrl,
+          product: a.productName,
+          assertedClass: cls || undefined,
+          lookupGrain: "product",
+        });
         submissionIdRef.current =
           search.robot_submission_id ?? submissionIdRef.current;
-        const merged = cls
-          ? typeMatchToAnalysis(search, a.productName, cls)
-          : { ...searchToAnalysis(search), productName: a.productName };
+        const merged = {
+          ...searchToAnalysis(search),
+          productName: a.productName,
+          lookupGrain: "product" as const,
+        };
         setPortfolio(prev => prev.map((p, i) => (i === idx ? merged : p)));
         setCompanyName(merged.companyName);
         setLineupPreview(false);
