@@ -79,6 +79,11 @@ class JobApplication(Base):
     interview_at = Column(DateTime(timezone=True), nullable=True)
     interview_note = Column(Text, nullable=True)
     interview_mode = Column(String(32), nullable=True)
+    held_at = Column(DateTime(timezone=True), nullable=True)
+    hold_expires_at = Column(DateTime(timezone=True), nullable=True)
+    slot_start = Column(DateTime(timezone=True), nullable=True)
+    slot_end = Column(DateTime(timezone=True), nullable=True)
+    oem_hold_token = Column(String(80), nullable=True, unique=True, index=True)
     oem_email = Column(String(320), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     updated_at = Column(

@@ -655,6 +655,9 @@ def application_payload(row: JobApplication, *, include_messages: bool = False) 
         from app.services.jobs_crm_recruiter import employer_decision_url
 
         payload["employer_decision_url"] = employer_decision_url(token)
+    from app.services.jobs_crm_recruiter import hold_fields_for_payload
+
+    payload.update(hold_fields_for_payload(row))
     return payload
 
 
