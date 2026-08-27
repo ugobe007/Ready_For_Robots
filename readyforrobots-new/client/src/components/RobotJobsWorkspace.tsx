@@ -2897,19 +2897,25 @@ function JobsPanel({
         ) : null}
         <div className="flex flex-wrap items-center gap-2">
           {onKeepJobs ? (
-            <>
+            <form
+              className="flex flex-wrap items-center gap-2"
+              onSubmit={event => {
+                event.preventDefault();
+                onKeepJobs();
+              }}
+            >
               <p className="font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300">
                 {keepTheseJobsPrompt(checkedCount)}
               </p>
               <button
-                type="button"
-                onClick={onKeepJobs}
-                aria-label={keepTheseJobsPrompt(checkedCount)}
+                type="submit"
+                data-jobs-keep-confirm="1"
+                aria-label={JOBS_KEEP_YES_CTA}
                 className="inline-flex items-center justify-center border border-emerald-400/50 bg-emerald-400 px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a]"
               >
                 {JOBS_KEEP_YES_CTA}
               </button>
-            </>
+            </form>
           ) : null}
         </div>
       </div>

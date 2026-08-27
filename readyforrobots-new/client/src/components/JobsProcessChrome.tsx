@@ -46,17 +46,11 @@ export default function JobsProcessChrome({
             ? "border-b-2 border-emerald-400 bg-emerald-400/5 text-emerald-300"
             : "border-b-2 border-transparent text-slate-400 hover:text-slate-200"
         }`;
-        if (isCurrent && step.id === "activate") {
-          return (
-            <span key={step.id} aria-current="step" className={className}>
-              {step.n} {step.label}
-            </span>
-          );
-        }
         return (
           <a
             key={step.id}
             href={href}
+            aria-current={isCurrent ? "step" : undefined}
             onClick={step.id === "find" ? onJobsFreshHomeClick : undefined}
             className={className}
           >

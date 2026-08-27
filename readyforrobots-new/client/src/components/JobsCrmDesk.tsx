@@ -21,7 +21,6 @@ import {
   crmDeskJobKeys,
   CRM_KEEP_YES_CTA,
   crmSelectAllKeys,
-  crmSelectAllLabel,
   crmSyncSelectedKeys,
   keepTheseJobsPrompt,
   crmToggleSelectedKey,
@@ -45,6 +44,7 @@ import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
 import JobsCrmInbox from "@/components/JobsCrmInbox";
 import {
   JOBS_APPLY_NEXT_CTA,
+  JOBS_APPLY_SEQUENCE,
   fetchKeptJobs,
   isJobsCrmOfferQuery,
   jobsCrmOfferHref,
@@ -308,39 +308,40 @@ export default function JobsCrmDesk({
         <div className="mt-6">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className={`${eyebrow} text-emerald-400`}>{CRM_LISTING_EYEBROW}</p>
-            <div className="flex flex-wrap items-center gap-2">
+            <form
+              className="flex flex-wrap items-center gap-2"
+              onSubmit={event => {
+                event.preventDefault();
+                void persistKeptJobs();
+              }}
+            >
               <p className="font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300">
                 {keepTheseJobsPrompt(selected.length || jobs.length)}
               </p>
               <button
-                type="button"
-                onClick={() =>
-                  setSelectedKeys(crmSelectAllKeys(allKeys))
-                }
-                aria-label={crmSelectAllLabel(jobs.length)}
-                className="border border-slate-600 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-slate-400 transition hover:border-slate-400 hover:text-slate-200"
-              >
-                {crmSelectAllLabel(jobs.length)}
-              </button>
-              <button
-                type="button"
-                onClick={() => void persistKeptJobs()}
-                aria-label={keepTheseJobsPrompt(selected.length || jobs.length)}
+                type="submit"
+                data-jobs-keep-confirm="1"
+                aria-label={CRM_KEEP_YES_CTA}
                 className="border border-emerald-400/50 bg-emerald-400 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a] transition hover:bg-emerald-300"
               >
                 {CRM_KEEP_YES_CTA}
               </button>
               {savedCount > 0 ? (
-                <a
-                  href={jobsCrmOfferHref(signedIn, submissionId)}
-                  onClick={openOfferForm}
-                  aria-label={JOBS_APPLY_NEXT_CTA}
-                  className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
-                >
-                  {JOBS_APPLY_NEXT_CTA}
-                </a>
+                <>
+                  <a
+                    href={jobsCrmOfferHref(signedIn, submissionId)}
+                    onClick={openOfferForm}
+                    aria-label={JOBS_APPLY_NEXT_CTA}
+                    className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
+                  >
+                    {JOBS_APPLY_NEXT_CTA}
+                  </a>
+                  <p className="basis-full text-sm leading-relaxed text-slate-400">
+                    {JOBS_APPLY_SEQUENCE}
+                  </p>
+                </>
               ) : null}
-            </div>
+            </form>
           </div>
           {showNextSteps && offerJob && accessToken ? (
             <JobsCrmNextSteps
@@ -814,14 +815,19 @@ function ApplyPanel({
           </button>
         ) : null}
         {lane === "apply" ? (
-          <button
-            type="button"
-            onClick={apply}
-            disabled={!ready}
-            className="inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {JOBS_APPLY_CTA}
-          </button>
+          <div className="space-y-2">
+            <p className="max-w-xl text-sm leading-relaxed text-slate-300">
+              {JOBS_APPLY_SEQUENCE}
+            </p>
+            <button
+              type="button"
+              onClick={apply}
+              disabled={!ready}
+              className="inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {JOBS_APPLY_CTA}
+            </button>
+          </div>
         ) : null}
         {lane === "track" ? (
           <button

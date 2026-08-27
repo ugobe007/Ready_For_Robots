@@ -4,7 +4,7 @@
  * Jobs chrome hides Pipeline. CRM is step 03 (`/pipeline?src=jobs_activate`)
  * and is in the header on Jobs chrome even when signed out.
  */
-import { Link, useRoute, useLocation, useSearch } from "wouter";
+import { useRoute, useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { loginHref, clearPendingNext } from "@/lib/authNext";
@@ -15,6 +15,7 @@ import {
   isJobsHandoffSrc,
   jobsFreshHomeHref,
   jobsHeaderCrmHref,
+  jobsWorkspaceRestoreHref,
   onJobsFreshHomeClick,
   showSignalPipelineNav,
 } from "@/lib/jobsWorkflow";
@@ -39,6 +40,11 @@ export default function ExperimentHeader() {
   const adminActive = location.startsWith("/admin");
   const showPipeline = showSignalPipelineNav({ pathname: location, src: jobsSrc });
   const crmHref = jobsHeaderCrmHref(location, jobsSrc, Boolean(session));
+  const onJobsCrmDesk =
+    location.startsWith("/pipeline") && isJobsHandoffSrc(jobsSrc);
+  const jobsHref = onJobsCrmDesk
+    ? jobsWorkspaceRestoreHref()
+    : jobsFreshHomeHref();
 
   async function signOut() {
     clearPendingNext();
@@ -61,44 +67,41 @@ export default function ExperimentHeader() {
         </a>
         <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 font-mono text-sm font-semibold uppercase tracking-[0.08em] sm:gap-x-5 sm:text-base">
           <a
-            href={jobsFreshHomeHref()}
+            href={jobsHref}
             className={`inline-flex items-center gap-1.5 ${jobsActive ? navActive : navIdle}`}
             onClick={onJobsFreshHomeClick}
           >
             {jobsActive ? <span className="rfr-led" aria-hidden="true" /> : null}
             Jobs
           </a>
-          <Link href="/intelligence" className={`${aboutActive ? navActive : navIdle}`}>
+          <a href="/intelligence" className={`${aboutActive ? navActive : navIdle}`}>
             About
-          </Link>
+          </a>
           {showPipeline ? (
-            <Link
-              href="/pipeline"
-              className={pipelineActive ? navActive : navIdle}
-            >
+            <a href="/pipeline" className={pipelineActive ? navActive : navIdle}>
               Pipeline
-            </Link>
+            </a>
           ) : null}
           {session || !showPipeline ? (
-            <Link href={crmHref} className={crmActive ? navActive : navIdle}>
+            <a href={crmHref} className={crmActive ? navActive : navIdle}>
               CRM
-            </Link>
+            </a>
           ) : null}
           {session ? (
             <>
               {isAdmin ? (
-                <Link href="/admin" className={adminActive ? navActive : navIdle}>
+                <a href="/admin" className={adminActive ? navActive : navIdle}>
                   Admin
-                </Link>
+                </a>
               ) : null}
               <button type="button" onClick={() => void signOut()} className={navIdle}>
                 Sign Out
               </button>
             </>
           ) : (
-            <Link href={loginHref("/")} className={navIdle}>
+            <a href={loginHref("/")} className={navIdle}>
               Sign In
-            </Link>
+            </a>
           )}
         </nav>
       </div>

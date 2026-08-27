@@ -497,7 +497,7 @@ export const JOBS_RAIL_LINK_CLASS =
 export const CRM_EMPLOYER_NAME_CLASS =
   "font-display text-lg font-bold leading-snug tracking-tight text-emerald-400 sm:text-xl";
 export const CRM_SELECT_ALL_LABEL = "Select all";
-export const CRM_KEEP_YES_CTA = "Yes";
+export const CRM_KEEP_YES_CTA = "Yes, keep them";
 export const CRM_LISTING_EYEBROW = "Collected jobs";
 export const CRM_INSPECT_HINT =
   "Inspect a collected egg for the Job Card. Place this job when you are ready. The others stay in the basket.";
@@ -830,6 +830,18 @@ export function goJobsFreshHome(): void {
   window.location.assign("/");
 }
 
+/**
+ * Only intercept the FIND / wordmark click when already on Jobs home.
+ * Wouter treats `/` → `/?new=1` as a no-op there, so we reset in place.
+ * Off home (`/pipeline?src=jobs_activate`, About), let the real href navigate.
+ * preventDefault on CRM is why 01 FIND / header Jobs looked dead.
+ */
+export function shouldInterceptJobsFreshHomeClick(
+  pathname?: string | null,
+): boolean {
+  return isJobsHomePath(pathname);
+}
+
 export function onJobsFreshHomeClick(event: {
   preventDefault: () => void;
   metaKey?: boolean;
@@ -847,6 +859,9 @@ export function onJobsFreshHomeClick(event: {
   );
   clearJobsWorkspaceSession();
   if (newTab) return;
+  const path =
+    typeof window !== "undefined" ? window.location.pathname || "/" : "/";
+  if (!shouldInterceptJobsFreshHomeClick(path)) return;
   event.preventDefault();
   goJobsFreshHome();
 }
@@ -991,7 +1006,7 @@ export function crmSelectAllLabel(
 /** One keep prompt. N is selected / kept count — never a hardcoded 5 when they kept 3. */
 export function keepTheseJobsPrompt(count: number): string {
   const n = Math.max(0, count);
-  return n === 1 ? "Keep this 1 job?" : `Keep these ${n} jobs?`;
+  return n === 1 ? "Keep 1 job?" : `Keep ${n} jobs?`;
 }
 
 export function crmCollectedCountLabel(

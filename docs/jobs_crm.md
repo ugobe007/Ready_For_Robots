@@ -107,7 +107,7 @@ Primary deal action on an **opened** collected job: **Place this job →** (pack
 
 ### F5a — Collect then act (ship)
 
-Default desk is a **listing** of collected jobs (cap 5 on free). One keep prompt: **Keep these N jobs?** (N = selected count). Yes persists the selected cards onto the account, then **Apply** opens the offer form. Expanding a row inspects the Job Card. Place / pack / quote stays the second beat on an opened egg. Acting on one job does not deselect the others.
+Default desk is a **listing** of collected jobs (cap 5 on free). One keep prompt: **Keep N jobs?** (N = selected count). **Yes, keep them** persists the selected cards onto the account, then **Apply** opens the offer form. Expanding a row inspects the Job Card. Place / pack / quote stays the second beat on an opened egg. Acting on one job does not deselect the others. Do not add a second **Select all N** control — that repeats the keep question.
 
 ### F6 — Pipeline activity on the same job record (ship, account)
 
@@ -115,7 +115,7 @@ Actions taken on FIND / QUALIFY (keep, Open CRM) and on the desk (Place, apply) 
 
 ### F10 — Keep jobs on the account (ship)
 
-Authenticated **Keep these N jobs?** upserts selected Job Cards onto the user (`user_kept_jobs`). N is the selected/kept count — not a hardcoded 5 when they kept 3. Schema: user, job identity (employer, work title, source ids), robot/submission, timestamps, free TTL/entitlement. Unsigned users still hit the wall; after signup, kept jobs restore. Yes shows a status bar “N jobs saved”. Off the desk the bar links to CRM; on the desk it links to **Apply**.
+Authenticated **Keep N jobs?** upserts selected Job Cards onto the user (`user_kept_jobs`). N is the selected/kept count — not a hardcoded 5 when they kept 3. Schema: user, job identity (employer, work title, source ids), robot/submission, timestamps, free TTL/entitlement. Unsigned users still hit the wall; after signup, kept jobs restore. **Yes, keep them** shows a status bar “N jobs saved”. Off the desk the bar links to CRM; on the desk it links to **Apply**. Apply copy: apply to the job → we help schedule interviews with the customer → they close.
 
 ### F11 — Next steps offer → apply outreach (ship)
 
@@ -160,7 +160,7 @@ Hunt on FIND. Collect on the CRM listing. Enjoy Place this job when the user is 
 | Do | Do not |
 |----|--------|
 | One listing of jobs the user already checked, expandable for details | A forced single-job action form as the first screen |
-| One **Keep these N jobs?** prompt, then Apply; acting on one leaves the others selected | Dual Keep all 5 / Keep jobs buttons that look the same |
+| One **Keep N jobs?** prompt + **Yes, keep them**, then Apply; acting on one leaves the others selected | Dual Keep all 5 / Select all N / Keep jobs buttons that ask the same question |
 | Employer names in emerald display type (`text-emerald-400`) | Employer names as body copy |
 | Activity on each job (“Kept from FIND”, “Opened CRM”, “Placed”) | A second product (SIGNAL) pretending to be CRM |
 | Place this job on an inspected egg, after peruse | Rename the process step to Place and hide CRM |
@@ -184,7 +184,7 @@ Hunt on FIND. Collect on the CRM listing. Enjoy Place this job when the user is 
 | `jobsCrmOfferHref` | `jobsCrmAccount.ts` | Desk Apply / Next steps → `?next=offer#jobs-next-steps` |
 | `JobsProcessChrome` | `JobsProcessChrome.tsx` | 01 / 02 / 03 + next on CRM wall and desk |
 | `jobsForCrmDesk` | `jobsWorkflow.ts` | Checked-first, cap 5 |
-| `keepTheseJobsPrompt` / `crmSelectAllKeys` | `jobsWorkflow.ts` | Keep these N jobs?; select-all helper |
+| `keepTheseJobsPrompt` / `crmSelectAllKeys` | `jobsWorkflow.ts` | Keep N jobs?; default-select helper (no Select all button) |
 | `canLockQuote` | `jobsApply.ts` | Monthly rental required. PoC not required. |
 | `jobs_crm_unlocked_limit` | `plan_entitlements.py` | Server 5 vs unlimited |
 | `JOBS_CRM_FREE_*` | `plan_entitlements.py` | Batch 5, 3×/month, TTL 7 |
