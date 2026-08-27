@@ -9,8 +9,12 @@ import SiteFooter from "@/components/layout/SiteFooter";
 import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 import {
   JOBS_EMPLOYER_ACCEPT_CTA,
+  JOBS_EMPLOYER_CONNECT_CTA,
+  JOBS_EMPLOYER_HOLD_CTA,
   JOBS_EMPLOYER_INTERVIEW_CTA,
+  JOBS_EMPLOYER_PROPOSE_CTA,
   applicationStatusLabel,
+  suggestedHoldSlots,
 } from "@/lib/jobsCrmAccount";
 import {
   JOBS_EYEBROW_CLASS,
@@ -27,10 +31,17 @@ type EmployerView = {
   status: string;
   interview_at?: string | null;
   interview_mode?: string | null;
+  slot_start?: string | null;
+  slot_end?: string | null;
+  slot_label?: string | null;
+  hold_expires_at?: string | null;
   documents?: Array<{ id: string; filename: string; kind?: string }>;
   can_accept?: boolean;
   can_interview?: boolean;
+  can_hold?: boolean;
 };
+
+type InterviewMode = "propose" | "hold";
 
 export default function EmployerDecision() {
   const [, params] = useRoute("/employer/:token");
@@ -42,8 +53,14 @@ export default function EmployerDecision() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [proposedAt, setProposedAt] = useState("");
+  const [slotStart, setSlotStart] = useState("");
+  const [slotEnd, setSlotEnd] = useState("");
   const [note, setNote] = useState("");
   const [showInterview, setShowInterview] = useState(action === "interview");
+  const [mode, setMode] = useState<InterviewMode>(
+    action === "hold" ? "hold" : "propose",
+  );
+  const offered = suggestedHoldSlots();
 
   useEffect(() => {
     let cancelled = false;
@@ -99,6 +116,13 @@ export default function EmployerDecision() {
     }
   }
 
+  const heldWindow = data?.slot_label
+    || (data?.slot_start
+      ? `${new Date(data.slot_start).toLocaleString()}${
+          data.slot_end ? ` – ${new Date(data.slot_end).toLocaleString()}` : ""
+        }`
+      : null);
+
   return (
     <div className={`flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
       <ExperimentHeader />
@@ -125,7 +149,14 @@ export default function EmployerDecision() {
             <p className="mt-2 font-mono text-xs uppercase tracking-[0.08em] text-emerald-300">
               {applicationStatusLabel(data.status)}
             </p>
-            {data.interview_at ? (
+            {data.status === "interview_held" && heldWindow ? (
+              <p className="mt-2 text-sm text-slate-200">
+                Held slot: {heldWindow}
+                {data.hold_expires_at
+                  ? ` · hold until ${new Date(data.hold_expires_at).toLocaleString()}`
+                  : ""}
+              </p>
+            ) : data.interview_at ? (
               <p className="mt-2 text-sm text-slate-200">
                 Interview: {new Date(data.interview_at).toLocaleString()}
               </p>
@@ -171,6 +202,18 @@ export default function EmployerDecision() {
                 className="mt-6 space-y-4 border border-emerald-400/40 bg-[#0b162f] px-4 py-5"
                 onSubmit={event => {
                   event.preventDefault();
+                  if (mode === "hold") {
+                    if (!slotStart) {
+                      setError("Pick a start time to hold this slot.");
+                      return;
+                    }
+                    void post("/hold", {
+                      slot_start: slotStart,
+                      slot_end: slotEnd || null,
+                      note: note || null,
+                    });
+                    return;
+                  }
                   void post("/interview", {
                     proposed_at: proposedAt || null,
                     note: note || null,
@@ -178,17 +221,92 @@ export default function EmployerDecision() {
                   });
                 }}
               >
-                <label className="block">
-                  <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
-                    Proposed interview time
-                  </span>
-                  <input
-                    type="datetime-local"
-                    value={proposedAt}
-                    onChange={e => setProposedAt(e.target.value)}
-                    className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-slate-100"
-                  />
-                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMode("propose")}
+                    className={
+                      mode === "propose"
+                        ? "border border-emerald-400 bg-emerald-400/15 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300"
+                        : "border border-slate-600 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-slate-300"
+                    }
+                  >
+                    Propose time
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("hold")}
+                    className={
+                      mode === "hold"
+                        ? "border border-emerald-400 bg-emerald-400/15 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300"
+                        : "border border-slate-600 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-slate-300"
+                    }
+                  >
+                    {JOBS_EMPLOYER_HOLD_CTA}
+                  </button>
+                </div>
+                {mode === "propose" ? (
+                  <label className="block">
+                    <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+                      Proposed interview time
+                    </span>
+                    <input
+                      type="datetime-local"
+                      value={proposedAt}
+                      onChange={e => setProposedAt(e.target.value)}
+                      className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-slate-100"
+                    />
+                  </label>
+                ) : (
+                  <>
+                    <div>
+                      <p className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+                        Offered slots
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {offered.map(slot => (
+                          <button
+                            key={slot.start}
+                            type="button"
+                            onClick={() => {
+                              setSlotStart(slot.start);
+                              setSlotEnd(slot.end);
+                            }}
+                            className={
+                              slotStart === slot.start
+                                ? "border border-emerald-400 bg-emerald-400/15 px-3 py-2 text-sm text-emerald-200"
+                                : "border border-slate-600 px-3 py-2 text-sm text-slate-200"
+                            }
+                          >
+                            {slot.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <label className="block">
+                      <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+                        Slot start
+                      </span>
+                      <input
+                        type="datetime-local"
+                        value={slotStart}
+                        onChange={e => setSlotStart(e.target.value)}
+                        className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-slate-100"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+                        Slot end
+                      </span>
+                      <input
+                        type="datetime-local"
+                        value={slotEnd}
+                        onChange={e => setSlotEnd(e.target.value)}
+                        className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-slate-100"
+                      />
+                    </label>
+                  </>
+                )}
                 <label className="block">
                   <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>Note</span>
                   <textarea
@@ -200,16 +318,20 @@ export default function EmployerDecision() {
                   />
                 </label>
                 <p className="text-sm text-slate-400">
-                  Leave the time blank to ask Ready For Robots to connect you with
-                  the robot company. We email both sides. This is not Cal sales
-                  autonomy.
+                  {mode === "hold"
+                    ? "We hold this window on the application and email both sides. The robot company can confirm or release. This is not Cal sales autonomy."
+                    : "Leave the time blank to ask Ready For Robots to connect you with the robot company. We email both sides. This is not Cal sales autonomy."}
                 </p>
                 <button
                   type="submit"
                   disabled={busy}
                   className="inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] disabled:opacity-40"
                 >
-                  {proposedAt ? "Propose this time" : "Connect us"}
+                  {mode === "hold"
+                    ? JOBS_EMPLOYER_HOLD_CTA
+                    : proposedAt
+                      ? JOBS_EMPLOYER_PROPOSE_CTA
+                      : JOBS_EMPLOYER_CONNECT_CTA}
                 </button>
               </form>
             ) : null}

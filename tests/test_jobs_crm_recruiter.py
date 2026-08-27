@@ -14,16 +14,25 @@ from app.database import Base
 from app.models.jobs_crm import ApplicationMessage, JobApplication, UserRobotDocument
 from app.services.jobs_crm import SEND_NOT_SENT_NO_EMAIL, apply_to_job, keep_jobs
 from app.services.jobs_crm_recruiter import (
+    HOLD_TTL_HOURS,
     STATUS_ACCEPTED,
     STATUS_APPLIED,
+    STATUS_INTERVIEW_CONFIRMED,
+    STATUS_INTERVIEW_HELD,
     STATUS_INTERVIEW_REQUESTED,
     STATUS_INTERVIEW_SCHEDULED,
     STATUS_SUCCESS,
     accept_application,
+    confirm_hold,
+    confirm_hold_by_token,
     employer_decision_url,
     employer_public_payload,
     find_application_by_employer_token,
+    find_application_by_oem_hold_token,
+    hold_slot,
     mark_application_outcome,
+    oem_hold_url,
+    release_hold,
     request_interview,
     store_user_document,
 )
@@ -174,6 +183,184 @@ def test_oem_status_email_on_apply_and_outcome(db_session, monkeypatch):
     marked = mark_application_outcome(db_session, _user(), app["id"], "success")
     assert marked["status"] == STATUS_SUCCESS
     assert any("success" in (item.get("subject") or "").lower() for item in sent)
+
+
+def _apply(db_session, *, email: str | None = None, send: bool = True):
+    keep_jobs(db_session, _user(), [_job(1, email=email)], robot_name="Spot")
+    return apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="Spot",
+        selected_models=["Spot"],
+        monthly_price="1200",
+        send=send,
+    )
+
+
+def test_hold_slot_persists_and_emails_both_sides(db_session, monkeypatch):
+    sent = []
+
+    def _fake_send(**kwargs):
+        sent.append(kwargs)
+        return {"resend_id": f"re_{len(sent)}", "from_email": "jobs@readyforrobots.com"}
+
+    monkeypatch.setattr("app.services.resend_email.send_email_via_resend", _fake_send)
+    _apply(db_session, email="ops@named-employer.com")
+    row = db_session.query(JobApplication).one()
+    held = hold_slot(
+        db_session,
+        row.employer_token,
+        slot_start="2026-09-08T15:00:00+00:00",
+        slot_end="2026-09-08T16:00:00+00:00",
+        note="Loading dock",
+    )
+    assert held["status"] == STATUS_INTERVIEW_HELD
+    assert held["can_confirm_hold"] is True
+    assert held["slot_start"]
+    assert "2026-09-08T15:00" in held["slot_start"]
+    assert "2026-09-08T16:00" in (held["slot_end"] or "")
+    db_session.refresh(row)
+    assert row.status == STATUS_INTERVIEW_HELD
+    assert row.interview_mode == "hold_slot"
+    assert row.held_at is not None
+    assert row.hold_expires_at is not None
+    assert (row.hold_expires_at - row.held_at).total_seconds() == HOLD_TTL_HOURS * 3600
+    assert row.oem_hold_token
+    assert find_application_by_oem_hold_token(db_session, row.oem_hold_token) is row
+    oem_hold = [item for item in sent if "slot held" in (item.get("subject") or "").lower()]
+    assert oem_hold, "OEM must get a recruiter slot-held email"
+    both = [
+        item
+        for item in sent
+        if isinstance(item.get("to_email"), list)
+        and "ops@named-employer.com" in item.get("to_email")
+    ]
+    assert both, "Both sides email requires a real employer address"
+    body = (both[-1].get("body_text") or "") + (oem_hold[-1].get("body_text") or "")
+    assert "Slot held for Employer 1 Tend line 1" in body
+    assert oem_hold_url(row.oem_hold_token) in body
+    assert "Cal sales autonomy" in body
+
+
+def test_hold_does_not_email_employer_without_email(db_session, monkeypatch):
+    sent = []
+
+    def _fake_send(**kwargs):
+        sent.append(kwargs)
+        return {"resend_id": f"re_{len(sent)}", "from_email": "jobs@readyforrobots.com"}
+
+    monkeypatch.setattr("app.services.resend_email.send_email_via_resend", _fake_send)
+    app = _apply(db_session)
+    assert app["send_status"] == SEND_NOT_SENT_NO_EMAIL
+    row = db_session.query(JobApplication).one()
+    assert not row.employer_email
+    held = hold_slot(
+        db_session,
+        row.employer_token,
+        slot_start="2026-09-09T10:00:00+00:00",
+    )
+    assert held["status"] == STATUS_INTERVIEW_HELD
+    db_session.refresh(row)
+    assert row.slot_end is not None
+    both = [
+        item
+        for item in sent
+        if isinstance(item.get("to_email"), list) and len(item.get("to_email") or []) > 1
+    ]
+    assert both == []
+    oem_only = [item for item in sent if item.get("to_email") == "oem@test.com"]
+    assert any("slot held" in (item.get("subject") or "").lower() for item in oem_only)
+
+
+def test_hold_rejects_inverted_window(db_session):
+    _apply(db_session)
+    row = db_session.query(JobApplication).one()
+    with pytest.raises(ValueError, match="end after it starts"):
+        hold_slot(
+            db_session,
+            row.employer_token,
+            slot_start="2026-09-09T16:00:00+00:00",
+            slot_end="2026-09-09T15:00:00+00:00",
+        )
+    with pytest.raises(ValueError, match="start time"):
+        hold_slot(db_session, row.employer_token, slot_start="")
+
+
+def test_propose_path_does_not_write_hold_columns(db_session, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.resend_email.send_email_via_resend",
+        lambda **kwargs: {"resend_id": "re_1", "from_email": "jobs@readyforrobots.com"},
+    )
+    _apply(db_session, email="ops@named-employer.com")
+    row = db_session.query(JobApplication).one()
+    proposed = request_interview(
+        db_session,
+        row.employer_token,
+        proposed_at="2026-09-04T15:00:00+00:00",
+    )
+    assert proposed["status"] == STATUS_INTERVIEW_SCHEDULED
+    assert proposed["can_confirm_hold"] is False
+    db_session.refresh(row)
+    assert row.held_at is None
+    assert row.slot_start is None
+    assert row.interview_mode == "proposed_time"
+
+
+def test_oem_confirm_and_release_hold(db_session, monkeypatch):
+    sent = []
+
+    def _fake_send(**kwargs):
+        sent.append(kwargs)
+        return {"resend_id": f"re_{len(sent)}", "from_email": "jobs@readyforrobots.com"}
+
+    monkeypatch.setattr("app.services.resend_email.send_email_via_resend", _fake_send)
+    app = _apply(db_session, email="ops@named-employer.com")
+    row = db_session.query(JobApplication).one()
+    hold_slot(
+        db_session,
+        row.employer_token,
+        slot_start="2026-09-10T13:00:00+00:00",
+        slot_end="2026-09-10T14:00:00+00:00",
+    )
+    confirmed = confirm_hold(db_session, _user(), app["id"])
+    assert confirmed["status"] == STATUS_INTERVIEW_CONFIRMED
+    db_session.refresh(row)
+    assert row.status == STATUS_INTERVIEW_CONFIRMED
+    assert any("confirmed" in (item.get("subject") or "").lower() for item in sent)
+
+    hold_slot(
+        db_session,
+        row.employer_token,
+        slot_start="2026-09-11T09:00:00+00:00",
+        slot_end="2026-09-11T10:00:00+00:00",
+    )
+    released = release_hold(db_session, _user(), app["id"])
+    assert released["status"] == STATUS_APPLIED
+    assert released["can_confirm_hold"] is False
+    db_session.refresh(row)
+    assert row.slot_start is None
+    assert row.held_at is None
+    assert any("released" in (item.get("subject") or "").lower() for item in sent)
+
+
+def test_oem_hold_token_confirm(db_session, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.resend_email.send_email_via_resend",
+        lambda **kwargs: {"resend_id": "re_tok", "from_email": "jobs@readyforrobots.com"},
+    )
+    _apply(db_session, email="ops@named-employer.com")
+    row = db_session.query(JobApplication).one()
+    hold_slot(
+        db_session,
+        row.employer_token,
+        slot_start="2026-09-12T11:00:00+00:00",
+        slot_end="2026-09-12T12:00:00+00:00",
+    )
+    db_session.refresh(row)
+    public = confirm_hold_by_token(db_session, row.oem_hold_token)
+    assert public["status"] == STATUS_INTERVIEW_CONFIRMED
+    assert public["can_confirm_hold"] is False
 
 
 def test_reject_non_pdf_image_upload(db_session):

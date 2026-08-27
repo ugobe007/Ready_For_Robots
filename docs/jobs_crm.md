@@ -131,11 +131,11 @@ Signed-in OEM uploads PDF/image specs (`user_robot_documents`, 8 MB, account-pri
 
 ### F14 — Employer evaluate (ship)
 
-Outreach (only with a real employer email) includes token **Accept** and **Set up interview**. `/employer/:token` needs no RFR account. Tokens write `application_messages` and status (`accepted` / `interview_requested` / `interview_scheduled`). v1 scheduling is a proposed time or “connect us” — not Cal.
+Outreach (only with a real employer email) includes token **Accept** and **Set up interview**. `/employer/:token` needs no RFR account. Tokens write `application_messages` and status (`accepted` / `interview_requested` / `interview_scheduled` / `interview_held`). Scheduling is **propose a time** (OEM confirms), **hold this slot** (concrete window persisted on the application), or “connect us”. Not Cal. `/calendar` is SIGNAL and stays unwired.
 
 ### F15 — Recruiter emails to the OEM (ship)
 
-On apply, accept, interview, and success/fail, email the signed-in OEM account. Confirm job + employer + status. Interview time lives on the application. Follow-up confirm email includes time/date when one exists.
+On apply, accept, interview, hold, confirm/release, and success/fail, email the signed-in OEM account. Confirm job + employer + status. A hold email names the employer, job, and held window, plus a confirm/release link (`/oem-hold/:token`). Both-sides interview email sends only when a real employer email exists. Interview time lives on the application.
 
 ### F7 — 7-day free TTL + 15/month (spec now, enforce next)
 

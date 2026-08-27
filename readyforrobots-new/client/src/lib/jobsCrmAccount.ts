@@ -24,6 +24,11 @@ export const JOBS_DOCS_HINT =
   "Upload a PDF or image spec for this robot. We attach what you select to the application — not a public dump.";
 export const JOBS_EMPLOYER_ACCEPT_CTA = "Accept";
 export const JOBS_EMPLOYER_INTERVIEW_CTA = "Set up interview";
+export const JOBS_EMPLOYER_PROPOSE_CTA = "Propose this time";
+export const JOBS_EMPLOYER_HOLD_CTA = "Hold this slot";
+export const JOBS_EMPLOYER_CONNECT_CTA = "Connect us";
+export const JOBS_OEM_CONFIRM_HOLD_CTA = "Confirm hold";
+export const JOBS_OEM_RELEASE_HOLD_CTA = "Release hold";
 export const JOBS_PROPOSED_PRICE_LABEL = "Proposed monthly price you will charge";
 export const JOBS_PROPOSED_PRICE_HINT =
   "Your proposed offer — not a rate this site invented. Employers see this as your quote.";
@@ -62,10 +67,24 @@ export type JobsCrmApplication = {
   interview_at?: string | null;
   interview_note?: string | null;
   interview_mode?: string | null;
+  held_at?: string | null;
+  hold_expires_at?: string | null;
+  slot_start?: string | null;
+  slot_end?: string | null;
+  slot_label?: string | null;
+  can_confirm_hold?: boolean;
+  can_release_hold?: boolean;
+  hold_url?: string | null;
   oem_email?: string | null;
   employer_decision_url?: string | null;
   documents?: RobotDocument[];
   messages?: JobsCrmMessage[];
+};
+
+export type HoldSlotOption = {
+  start: string;
+  end: string;
+  label: string;
 };
 
 export type RobotDocument = {
@@ -331,6 +350,28 @@ export async function confirmInterviewOnAccount(
   );
 }
 
+export async function confirmHoldOnAccount(
+  token: string,
+  applicationId: string,
+): Promise<JobsCrmApplication> {
+  return jobsCrmFetch<JobsCrmApplication>(
+    `/api/jobs-crm/applications/${applicationId}/confirm-hold`,
+    token,
+    { method: "POST" },
+  );
+}
+
+export async function releaseHoldOnAccount(
+  token: string,
+  applicationId: string,
+): Promise<JobsCrmApplication> {
+  return jobsCrmFetch<JobsCrmApplication>(
+    `/api/jobs-crm/applications/${applicationId}/release-hold`,
+    token,
+    { method: "POST" },
+  );
+}
+
 export async function markApplicationOutcome(
   token: string,
   applicationId: string,
@@ -425,10 +466,46 @@ export function applicationStatusLabel(status: string | null | undefined): strin
   if (key === "accepted") return "Accepted";
   if (key === "interview_requested") return "Interview requested";
   if (key === "interview_scheduled") return "Interview scheduled";
+  if (key === "interview_held") return "Interview slot held";
   if (key === "interview_confirmed") return "Interview confirmed";
+  if (key === "hold_released") return "Hold released";
   if (key === "success") return "Succeeded";
   if (key === "failed") return "Unsuccessful";
   if (key === "declined") return "Declined";
   if (key === "applied") return "Applied";
   return key ? key.replace(/_/g, " ") : "Stored";
+}
+
+export function toDatetimeLocalValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export function suggestedHoldSlots(now: Date = new Date()): HoldSlotOption[] {
+  const atHour = (base: Date, hours: number, minutes = 0) => {
+    const stamp = new Date(base);
+    stamp.setHours(hours, minutes, 0, 0);
+    return stamp;
+  };
+  const addDays = (base: Date, days: number) => {
+    const stamp = new Date(base);
+    stamp.setDate(stamp.getDate() + days);
+    return stamp;
+  };
+  const windowFor = (start: Date, label: string): HoldSlotOption => {
+    const end = new Date(start);
+    end.setHours(end.getHours() + 1);
+    return {
+      start: toDatetimeLocalValue(start),
+      end: toDatetimeLocalValue(end),
+      label,
+    };
+  };
+  const tomorrow = addDays(now, 1);
+  const twoOut = addDays(now, 2);
+  return [
+    windowFor(atHour(tomorrow, 10), "Tomorrow 10:00–11:00"),
+    windowFor(atHour(tomorrow, 14), "Tomorrow 14:00–15:00"),
+    windowFor(atHour(twoOut, 10), "In two days 10:00–11:00"),
+  ];
 }

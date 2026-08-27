@@ -26,13 +26,20 @@ from app.services.jobs_crm import (
 from app.services.jobs_crm_recruiter import (
     MAX_DOC_BYTES,
     accept_application,
+    confirm_hold,
+    confirm_hold_by_token,
     confirm_interview,
     documents_for_application,
     employer_public_payload,
     find_application_by_employer_token,
+    find_application_by_oem_hold_token,
     get_user_document,
+    hold_slot,
     list_user_documents,
     mark_application_outcome,
+    oem_hold_public_payload,
+    release_hold,
+    release_hold_by_token,
     request_interview,
     store_user_document,
 )
@@ -71,6 +78,12 @@ class InterviewBody(BaseModel):
     proposed_at: Optional[str] = Field(default=None, max_length=80)
     note: Optional[str] = Field(default=None, max_length=2000)
     connect_you: bool = False
+
+
+class HoldSlotBody(BaseModel):
+    slot_start: str = Field(..., min_length=1, max_length=80)
+    slot_end: Optional[str] = Field(default=None, max_length=80)
+    note: Optional[str] = Field(default=None, max_length=2000)
 
 
 class OutcomeBody(BaseModel):
@@ -247,6 +260,34 @@ def post_confirm_interview(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+@router.post("/applications/{application_id}/confirm-hold")
+def post_confirm_hold(
+    application_id: UUID,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return confirm_hold(db, user, str(application_id))
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Application not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/applications/{application_id}/release-hold")
+def post_release_hold(
+    application_id: UUID,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return release_hold(db, user, str(application_id))
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Application not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @router.post("/applications/{application_id}/outcome")
 def post_application_outcome(
     application_id: UUID,
@@ -296,6 +337,54 @@ def post_employer_interview(
         )
     except KeyError:
         raise HTTPException(status_code=404, detail="This application link is not valid.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/employer/{token}/hold")
+def post_employer_hold(
+    token: str,
+    body: HoldSlotBody,
+    db: Session = Depends(get_db),
+):
+    try:
+        return hold_slot(
+            db,
+            token,
+            slot_start=body.slot_start,
+            slot_end=body.slot_end,
+            note=body.note,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="This application link is not valid.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/oem-hold/{token}")
+def get_oem_hold(token: str, db: Session = Depends(get_db)):
+    row = find_application_by_oem_hold_token(db, token)
+    if not row:
+        raise HTTPException(status_code=404, detail="This hold link is not valid.")
+    return oem_hold_public_payload(db, row)
+
+
+@router.post("/oem-hold/{token}/confirm")
+def post_oem_hold_confirm(token: str, db: Session = Depends(get_db)):
+    try:
+        return confirm_hold_by_token(db, token)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="This hold link is not valid.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/oem-hold/{token}/release")
+def post_oem_hold_release(token: str, db: Session = Depends(get_db)):
+    try:
+        return release_hold_by_token(db, token)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="This hold link is not valid.")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

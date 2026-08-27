@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import os
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
 from uuid import UUID
@@ -33,10 +33,26 @@ STATUS_APPLIED = "applied"
 STATUS_ACCEPTED = "accepted"
 STATUS_INTERVIEW_REQUESTED = "interview_requested"
 STATUS_INTERVIEW_SCHEDULED = "interview_scheduled"
+STATUS_INTERVIEW_HELD = "interview_held"
 STATUS_INTERVIEW_CONFIRMED = "interview_confirmed"
+STATUS_HOLD_RELEASED = "hold_released"
 STATUS_DECLINED = "declined"
 STATUS_SUCCESS = "success"
 STATUS_FAILED = "failed"
+
+INTERVIEW_MODE_PROPOSED = "proposed_time"
+INTERVIEW_MODE_CONNECT = "connect_you"
+INTERVIEW_MODE_HOLD = "hold_slot"
+HOLD_TTL_HOURS = 48
+DEFAULT_SLOT_MINUTES = 60
+
+_OPEN_FOR_ACCEPT = {
+    STATUS_APPLIED,
+    STATUS_INTERVIEW_REQUESTED,
+    STATUS_INTERVIEW_SCHEDULED,
+    STATUS_INTERVIEW_HELD,
+}
+_CLOSED_FOR_INTERVIEW = {STATUS_DECLINED, STATUS_SUCCESS, STATUS_FAILED}
 
 ALLOWED_DOC_MIME = frozenset(
     {
@@ -105,6 +121,48 @@ def oem_email_for_user(user: dict, db: Session | None = None) -> Optional[str]:
 
 def employer_decision_url(token: str) -> str:
     return f"{public_site_base()}/employer/{token}"
+
+
+def oem_hold_url(token: str) -> str:
+    return f"{public_site_base()}/oem-hold/{token}"
+
+
+def _iso(stamp: datetime | None) -> str | None:
+    return stamp.isoformat() if stamp else None
+
+
+def slot_window_label(application: JobApplication) -> str | None:
+    start = getattr(application, "slot_start", None) or getattr(application, "interview_at", None)
+    end = getattr(application, "slot_end", None)
+    if start and end:
+        return (
+            f"{start.strftime('%Y-%m-%d %H:%M UTC')} – {end.strftime('%Y-%m-%d %H:%M UTC')}"
+        )
+    if start:
+        return start.strftime("%Y-%m-%d %H:%M UTC")
+    return None
+
+
+def hold_fields_for_payload(
+    row: JobApplication,
+    *,
+    include_hold_url: bool = True,
+) -> dict[str, Any]:
+    status = row.status or STATUS_APPLIED
+    held = status == STATUS_INTERVIEW_HELD
+    token = getattr(row, "oem_hold_token", None)
+    fields: dict[str, Any] = {
+        "held_at": _iso(getattr(row, "held_at", None)),
+        "hold_expires_at": _iso(getattr(row, "hold_expires_at", None)),
+        "slot_start": _iso(getattr(row, "slot_start", None)),
+        "slot_end": _iso(getattr(row, "slot_end", None)),
+        "slot_label": slot_window_label(row),
+        "can_confirm_hold": held,
+        "can_release_hold": held,
+    }
+    if include_hold_url:
+        fields["hold_url"] = oem_hold_url(token) if token else None
+    return fields
 
 
 def employer_doc_url(token: str, document_id: str) -> str:
@@ -276,14 +334,15 @@ def find_application_by_employer_token(db: Session, token: str) -> JobApplicatio
 
 def employer_public_payload(db: Session, row: JobApplication) -> dict[str, Any]:
     docs = documents_for_application(db, row.id)
-    return {
+    status = row.status or STATUS_APPLIED
+    payload = {
         "employer_name": row.employer_name,
         "work_title": row.work_title,
         "workplace": row.workplace,
         "robot_name": row.robot_name,
         "selected_models": row.selected_models or [],
         "monthly_price": row.monthly_price,
-        "status": row.status or STATUS_APPLIED,
+        "status": status,
         "interview_at": row.interview_at.isoformat() if row.interview_at else None,
         "interview_mode": row.interview_mode,
         "documents": [
@@ -294,10 +353,32 @@ def employer_public_payload(db: Session, row: JobApplication) -> dict[str, Any]:
             }
             for doc in docs
         ],
-        "can_accept": (row.status or STATUS_APPLIED)
-        in {STATUS_APPLIED, STATUS_INTERVIEW_REQUESTED, STATUS_INTERVIEW_SCHEDULED},
-        "can_interview": (row.status or STATUS_APPLIED)
-        not in {STATUS_DECLINED, STATUS_SUCCESS, STATUS_FAILED},
+        "can_accept": status in _OPEN_FOR_ACCEPT,
+        "can_interview": status not in _CLOSED_FOR_INTERVIEW,
+        "can_hold": status not in _CLOSED_FOR_INTERVIEW,
+    }
+    payload.update(hold_fields_for_payload(row, include_hold_url=False))
+    return payload
+
+
+def find_application_by_oem_hold_token(db: Session, token: str) -> JobApplication | None:
+    cleaned = (token or "").strip()
+    if not cleaned:
+        return None
+    return db.query(JobApplication).filter(JobApplication.oem_hold_token == cleaned).first()
+
+
+def oem_hold_public_payload(db: Session, row: JobApplication) -> dict[str, Any]:
+    del db
+    status = row.status or STATUS_APPLIED
+    return {
+        "employer_name": row.employer_name,
+        "work_title": row.work_title,
+        "workplace": row.workplace,
+        "robot_name": row.robot_name,
+        "status": status,
+        "interview_note": row.interview_note,
+        **hold_fields_for_payload(row, include_hold_url=False),
     }
 
 
@@ -379,17 +460,15 @@ def compose_oem_status_email(
         "accepted": "accepted by the employer",
         "interview_requested": "interview requested",
         "interview_scheduled": "interview time proposed",
+        "interview_held": "slot held",
         "interview_confirmed": "interview confirmed",
+        "hold_released": "held slot released",
         "success": "marked success",
         "failed": "marked unsuccessful",
         "declined": "declined",
     }.get(event, event.replace("_", " "))
     subject = f"Application update: {application.work_title} at {application.employer_name} — {label}"
-    when = (
-        application.interview_at.strftime("%Y-%m-%d %H:%M UTC")
-        if application.interview_at
-        else None
-    )
+    when = slot_window_label(application)
     lines = [
         f"This is a recruiter confirmation for your robot company account.",
         "",
@@ -398,10 +477,14 @@ def compose_oem_status_email(
         f"Robot: {application.robot_name}",
         f"Status: {label}",
     ]
-    if when:
+    if event == STATUS_INTERVIEW_HELD and when:
+        lines.append(f"Slot held for {application.employer_name} {application.work_title} {when}")
+    elif when:
         lines.append(f"Interview time: {when}")
-    if application.interview_mode == "connect_you":
+    if application.interview_mode == INTERVIEW_MODE_CONNECT:
         lines.append("The employer asked us to connect you. Reply to arrange the meeting.")
+    if application.interview_mode == INTERVIEW_MODE_HOLD and event == STATUS_INTERVIEW_HELD:
+        lines.append("This is a held meeting window on the application — not Cal sales autonomy.")
     if application.interview_note:
         lines.append(f"Note: {application.interview_note}")
     if extra_lines:
@@ -466,7 +549,11 @@ def request_interview(
     if stamp:
         row.status = STATUS_INTERVIEW_SCHEDULED
         row.interview_at = stamp
-        row.interview_mode = "proposed_time"
+        row.interview_mode = INTERVIEW_MODE_PROPOSED
+        row.slot_start = None
+        row.slot_end = None
+        row.held_at = None
+        row.hold_expires_at = None
         when_label = stamp.strftime("%Y-%m-%d %H:%M UTC")
         body = (
             f"{row.employer_name} proposed an interview for {row.work_title} "
@@ -475,7 +562,11 @@ def request_interview(
         event = STATUS_INTERVIEW_SCHEDULED
     else:
         row.status = STATUS_INTERVIEW_REQUESTED
-        row.interview_mode = "connect_you"
+        row.interview_mode = INTERVIEW_MODE_CONNECT
+        row.slot_start = None
+        row.slot_end = None
+        row.held_at = None
+        row.hold_expires_at = None
         body = (
             f"{row.employer_name} asked Ready For Robots to connect them with "
             f"the robot company for {row.work_title}."
@@ -514,9 +605,190 @@ def request_interview(
     return employer_public_payload(db, row)
 
 
+def hold_slot(
+    db: Session,
+    token: str,
+    *,
+    slot_start: str | None,
+    slot_end: str | None = None,
+    note: str | None = None,
+) -> dict[str, Any]:
+    row = find_application_by_employer_token(db, token)
+    if not row:
+        raise KeyError("application_not_found")
+    if row.status in _CLOSED_FOR_INTERVIEW:
+        raise ValueError("This application is no longer open for interview.")
+    start = _parse_proposed_at(slot_start)
+    if not start:
+        raise ValueError("Pick a start time to hold this slot.")
+    end = _parse_proposed_at(slot_end)
+    if end is None:
+        end = start + timedelta(minutes=DEFAULT_SLOT_MINUTES)
+    if end <= start:
+        raise ValueError("The slot must end after it starts.")
+    now = _now()
+    note_clean = (note or "").strip()[:2000] or None
+    row.status = STATUS_INTERVIEW_HELD
+    row.interview_mode = INTERVIEW_MODE_HOLD
+    row.interview_at = start
+    row.slot_start = start
+    row.slot_end = end
+    row.held_at = now
+    row.hold_expires_at = now + timedelta(hours=HOLD_TTL_HOURS)
+    row.interview_note = note_clean
+    row.thread_state = THREAD_REPLIED
+    if not row.oem_hold_token:
+        row.oem_hold_token = secrets.token_urlsafe(18)
+    when_label = slot_window_label(row) or start.strftime("%Y-%m-%d %H:%M UTC")
+    body = (
+        f"{row.employer_name} held an interview slot for {row.work_title} "
+        f"with {row.robot_name}: {when_label}."
+    )
+    if note_clean:
+        body = f"{body}\n\nNote: {note_clean}"
+    _add_system_message(
+        db,
+        row,
+        body=body,
+        from_email=row.employer_email,
+        subject="Interview slot held",
+    )
+    hold_link = oem_hold_url(row.oem_hold_token)
+    extra = [
+        f"Slot held for {row.employer_name} {row.work_title} {when_label}.",
+        "Confirm or release this hold. We treat the hold as the booked meeting until you release it.",
+        f"Confirm or release: {hold_link}",
+    ]
+    notify_oem_status(db, None, row, STATUS_INTERVIEW_HELD, extra_lines=extra)
+    if row.employer_email and row.oem_email:
+        _email_interview_both_sides(row, when_label, kind="held", hold_url=hold_link)
+    record_activity(
+        db,
+        {"uid": str(row.user_id)},
+        kind="follow_up",
+        label="Interview slot held",
+        job_key=row.job_key,
+        company=row.employer_name,
+    )
+    db.commit()
+    return employer_public_payload(db, row)
+
+
+def confirm_hold(db: Session, user: dict, application_id: str) -> dict[str, Any]:
+    row = get_application(db, user, application_id)
+    _confirm_hold_row(db, row, user=user)
+    db.commit()
+    return application_with_thread(db, user, application_id)
+
+
+def release_hold(db: Session, user: dict, application_id: str) -> dict[str, Any]:
+    row = get_application(db, user, application_id)
+    _release_hold_row(db, row, user=user)
+    db.commit()
+    return application_with_thread(db, user, application_id)
+
+
+def confirm_hold_by_token(db: Session, token: str) -> dict[str, Any]:
+    row = find_application_by_oem_hold_token(db, token)
+    if not row:
+        raise KeyError("application_not_found")
+    _confirm_hold_row(db, row, user={"uid": str(row.user_id), "email": row.oem_email})
+    db.commit()
+    return oem_hold_public_payload(db, row)
+
+
+def release_hold_by_token(db: Session, token: str) -> dict[str, Any]:
+    row = find_application_by_oem_hold_token(db, token)
+    if not row:
+        raise KeyError("application_not_found")
+    _release_hold_row(db, row, user={"uid": str(row.user_id), "email": row.oem_email})
+    db.commit()
+    return oem_hold_public_payload(db, row)
+
+
+def _require_held_slot(row: JobApplication) -> None:
+    held = (row.status or "") == STATUS_INTERVIEW_HELD or row.interview_mode == INTERVIEW_MODE_HOLD
+    if not held or not (row.slot_start or row.interview_at):
+        raise ValueError("No held slot on this application.")
+
+
+def _confirm_hold_row(db: Session, row: JobApplication, *, user: dict | None) -> None:
+    _require_held_slot(row)
+    row.status = STATUS_INTERVIEW_CONFIRMED
+    if row.slot_start:
+        row.interview_at = row.slot_start
+    when = slot_window_label(row) or "to be arranged"
+    _add_system_message(
+        db,
+        row,
+        body=f"Robot company confirmed the held slot ({when}).",
+        direction="outbound",
+        to_email=row.employer_email,
+        subject="Interview hold confirmed",
+    )
+    notify_oem_status(
+        db,
+        user,
+        row,
+        STATUS_INTERVIEW_CONFIRMED,
+        extra_lines=[f"Confirmed held window: {when}"],
+    )
+    if row.employer_email and row.oem_email:
+        _email_interview_both_sides(row, when if (row.slot_start or row.interview_at) else None, kind="confirmed")
+    record_activity(
+        db,
+        user or {"uid": str(row.user_id)},
+        kind="follow_up",
+        label="Interview hold confirmed",
+        job_key=row.job_key,
+        company=row.employer_name,
+    )
+
+
+def _release_hold_row(db: Session, row: JobApplication, *, user: dict | None) -> None:
+    _require_held_slot(row)
+    when = slot_window_label(row)
+    row.status = STATUS_APPLIED
+    row.interview_mode = None
+    row.interview_at = None
+    row.slot_start = None
+    row.slot_end = None
+    row.held_at = None
+    row.hold_expires_at = None
+    body = "Robot company released the held interview slot."
+    if when:
+        body = f"{body} Previous window: {when}."
+    _add_system_message(
+        db,
+        row,
+        body=body,
+        direction="outbound",
+        to_email=row.employer_email,
+        subject="Interview hold released",
+    )
+    extra = ["The held window is released. The employer can propose or hold a new time."]
+    if when:
+        extra.append(f"Released window: {when}")
+    notify_oem_status(db, user, row, STATUS_HOLD_RELEASED, extra_lines=extra)
+    if row.employer_email and row.oem_email:
+        _email_interview_both_sides(row, when, kind="released")
+    record_activity(
+        db,
+        user or {"uid": str(row.user_id)},
+        kind="follow_up",
+        label="Interview hold released",
+        job_key=row.job_key,
+        company=row.employer_name,
+    )
+
+
 def confirm_interview(db: Session, user: dict, application_id: str) -> dict[str, Any]:
     row = get_application(db, user, application_id)
-    if not row.interview_at and row.interview_mode != "connect_you":
+    if (
+        not row.interview_at
+        and row.interview_mode not in {INTERVIEW_MODE_CONNECT, INTERVIEW_MODE_HOLD}
+        and not getattr(row, "slot_start", None)
+    ):
         raise ValueError("No interview time is on this application yet.")
     row.status = STATUS_INTERVIEW_CONFIRMED
     when = (
@@ -605,22 +877,32 @@ def _email_interview_both_sides(
     when_label: str | None,
     *,
     confirmed: bool = False,
+    kind: str | None = None,
+    hold_url: str | None = None,
 ) -> None:
     if not row.employer_email or not row.oem_email:
         return
-    verb = "confirmed" if confirmed else "proposed"
+    verb = kind or ("confirmed" if confirmed else "proposed")
     subject = f"Interview {verb}: {row.work_title} at {row.employer_name}"
+    if verb == "held":
+        subject = f"Interview slot held: {row.work_title} at {row.employer_name}"
+    elif verb == "released":
+        subject = f"Interview hold released: {row.work_title} at {row.employer_name}"
     lines = [
         f"Ready For Robots is connecting {row.employer_name} with the robot company for {row.work_title}.",
         "",
         f"Robot: {row.robot_name}",
     ]
-    if when_label:
+    if verb == "held" and when_label:
+        lines.append(f"Slot held for {row.employer_name} {row.work_title} {when_label}")
+    elif when_label:
         lines.append(f"Time/date: {when_label}")
     else:
         lines.append("Time/date: we will confirm after both sides reply.")
     if row.interview_note:
         lines.append(f"Note: {row.interview_note}")
+    if verb == "held" and hold_url:
+        lines.append(f"Robot company: confirm or release this hold at {hold_url}")
     lines.extend(
         [
             "",
@@ -656,5 +938,6 @@ def enrich_application_payload(
     payload["employer_decision_url"] = (
         employer_decision_url(row.employer_token) if row.employer_token else None
     )
+    payload.update(hold_fields_for_payload(row))
     payload["documents"] = [document_payload(doc) for doc in docs]
     return payload
