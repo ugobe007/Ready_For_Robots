@@ -535,10 +535,13 @@ def apply_to_job(
     db.add(application)
     db.flush()
     attached = attach_documents_to_application(db, user, application, document_ids)
-    snapshot["documents"] = [
-        {"id": str(doc.id), "filename": doc.original_name or doc.filename, "kind": doc.kind}
-        for doc in attached
-    ]
+    snapshot = {
+        **snapshot,
+        "documents": [
+            {"id": str(doc.id), "filename": doc.original_name or doc.filename, "kind": doc.kind}
+            for doc in attached
+        ],
+    }
     application.offer_snapshot = snapshot
     subject, body = _compose_offer_email(
         robot_name=robot,
