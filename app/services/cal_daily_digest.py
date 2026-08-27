@@ -70,6 +70,57 @@ def _mark_digest_sent(day: str) -> None:
         pass
 
 
+def _claim_digest_day(day: str) -> bool:
+    """Atomically claim today's send. First caller wins; others skip.
+
+    Web + worker used to both fire at 15:00 UTC and race the old get-then-set
+    mark. SET NX closes that window. On send failure, release the claim.
+    """
+    client = _redis_client()
+    if not client:
+        return not _digest_already_sent(day)
+    try:
+        claimed = client.set(_REDIS_DIGEST_KEY, day, nx=True, ex=60 * 60 * 48)
+        return bool(claimed)
+    except Exception:
+        return not _digest_already_sent(day)
+
+
+def _release_digest_day(day: str) -> None:
+    client = _redis_client()
+    if not client:
+        return
+    try:
+        current = str(client.get(_REDIS_DIGEST_KEY) or "")
+        if current == day:
+            client.delete(_REDIS_DIGEST_KEY)
+    except Exception:
+        pass
+
+
+def digest_in_process_owner() -> Optional[str]:
+    """Which process may start the in-app digest thread.
+
+    Worker owns the send. Web is opt-in backup only
+    (``CAL_DAILY_DIGEST_WEB_BACKUP=1``). Default off so SKIP_CELERY=1 on Fly
+    web no longer double-sends with the worker at 15:00 UTC.
+    """
+    if not cal_daily_digest_enabled():
+        return None
+    from app.runtime_role import is_web_process, is_worker_process
+
+    if is_worker_process():
+        return "worker"
+    web_backup = os.getenv("CAL_DAILY_DIGEST_WEB_BACKUP", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    if is_web_process() and web_backup:
+        return "web-backup"
+    return None
+
+
 def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, Any]:
     """Collect Cal queue stats + recent activity for the operator digest."""
     from app.models.calendar import CalendarEvent
@@ -136,15 +187,21 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
         .scalar()
         or 0
     )
-    drafts_touched = (
-        db.query(func.count(CrmAccount.id))
-        .filter(
-            CrmAccount.outreach_draft.isnot(None),
-            CrmAccount.updated_at >= since,
+    # Do not treat "CRM row updated_at" as a draft create/refresh. Any
+    # enrichment or pipeline touch on an account that happens to hold a
+    # leftover SIGNAL draft used to report as "Drafts created or refreshed".
+    drafts_touched = 0
+    if autopilot.get("enabled"):
+        drafts_touched = (
+            db.query(func.count(CrmAccount.id))
+            .filter(
+                CrmAccount.outreach_draft.isnot(None),
+                CrmAccount.outreach_stage.in_(("draft_ready", "draft_approved")),
+                CrmAccount.updated_at >= since,
+            )
+            .scalar()
+            or 0
         )
-        .scalar()
-        or 0
-    )
     enroll_due = (
         db.query(func.count(OutreachSequenceEnrollment.id))
         .filter(
@@ -303,6 +360,8 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
         except Exception:  # noqa: BLE001 — digest must never break on the canary lookup
             pass
 
+    jobs_activity = _jobs_path_activity(db, since=since)
+
     body = render_cal_daily_digest_text(
         day_label=day_label,
         period_hours=period_hours,
@@ -324,29 +383,12 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
         reply_lines=reply_lines,
         needs_you=needs_you,
         auto_filtered=auto_filtered,
+        jobs_activity=jobs_activity,
     )
-
-    try:
-        from app.services.industry_brief_service import build_industry_brief_payload
-
-        brief = build_industry_brief_payload(db, days=1, use_cache=True)
-        take = (brief.get("executive_take") or "").strip()
-        source = brief.get("source") or "heuristic"
-        if take:
-            body = (
-                body
-                + "\n\nIndustry brief (local inference — "
-                + source
-                + ", no paid LLM)\n"
-                + take
-                + "\n"
-            )
-    except Exception:
-        logger.debug("industry brief attach skipped", exc_info=True)
 
     return {
         "date": day_label,
-        "subject": f"Cal daily update — {day_label}",
+        "subject": f"ReadyForRobots daily — {day_label}",
         "body_text": body,
         "recipients": get_cal_digest_recipients(),
         "autopilot": autopilot,
@@ -357,7 +399,40 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
             "replies": replies,
             "drafts_touched": drafts_touched,
         },
+        "jobs_activity": jobs_activity,
     }
+
+
+def _jobs_path_activity(db: Session, *, since: datetime) -> dict[str, int]:
+    """FIND / keep / apply counts for the operator digest. Fail open."""
+    out = {"matcher_seen": 0, "jobs_kept": 0, "applications": 0}
+    try:
+        from app.models.robot_submission import RobotSubmission
+
+        out["matcher_seen"] = (
+            db.query(func.count(RobotSubmission.id))
+            .filter(RobotSubmission.last_seen_at >= since)
+            .scalar()
+            or 0
+        )
+    except Exception:
+        logger.debug("jobs digest: robot_submissions skipped", exc_info=True)
+    try:
+        from app.models.jobs_crm import JobApplication, KeptJob
+
+        out["jobs_kept"] = (
+            db.query(func.count(KeptJob.id)).filter(KeptJob.created_at >= since).scalar()
+            or 0
+        )
+        out["applications"] = (
+            db.query(func.count(JobApplication.id))
+            .filter(JobApplication.created_at >= since)
+            .scalar()
+            or 0
+        )
+    except Exception:
+        logger.debug("jobs digest: jobs_crm skipped", exc_info=True)
+    return out
 
 
 def render_cal_daily_digest_text(
@@ -371,36 +446,70 @@ def render_cal_daily_digest_text(
     reply_lines: list[str],
     needs_you: list[str],
     auto_filtered: list[str] | None = None,
+    jobs_activity: dict[str, Any] | None = None,
 ) -> str:
-    autopilot_line = "ON — Cal runs draft/send/follow-up cycles on the worker." if autopilot_on else (
-        "OFF — scheduled cycles paused (manual Run cycle still works in admin)."
-    )
+    if autopilot_on:
+        autopilot_line = "ON — Cal runs draft/send/follow-up cycles on the worker."
+    else:
+        autopilot_line = (
+            "OFF — scheduled cycles, draft create/refresh, and follow-ups are paused "
+            "(manual Run cycle still works in admin; it does not unfreeze HOT as a send list)."
+        )
     hot = int(queue_summary.get("hot") or 0)
     warm = int(queue_summary.get("warm") or 0)
     sendable = int(activity.get("sendable") or 0)
     unsent = int(activity.get("unsent_drafted") or 0)
     replied_total = int(activity.get("replied_total") or 0)
+    jobs = jobs_activity or {}
+    drafts_line = (
+        f"  • Drafts created or refreshed: {activity.get('drafts_touched', 0)}"
+        if autopilot_on
+        else "  • Scheduled drafts created or refreshed: 0 (paused)"
+    )
+    due = int(activity.get("enroll_due") or 0)
+    enroll_line = (
+        f"  • Active follow-up sequences: {activity.get('enroll_active', 0)} "
+        f"({due} due now)"
+        if autopilot_on
+        else (
+            f"  • Follow-up sequences still enrolled (not sending): "
+            f"{activity.get('enroll_active', 0)} ({due} due now — held)"
+        )
+    )
 
     lines = [
-        f"Cal daily update — {day_label}",
+        f"ReadyForRobots daily — {day_label}",
         "",
-        "What Cal did (last {0}h)".format(period_hours),
+    ]
+    if not autopilot_on:
+        lines.extend([
+            "Cal sales outreach is frozen. Autopilot is OFF. Scheduled draft "
+            "create/refresh is paused. The HOT buyer queue is not a send list. "
+            "Cal does not email operating companies to sell robots.",
+            "",
+        ])
+    lines.extend([
+        "Jobs path (last {0}h)".format(period_hours),
+        f"  • FIND / matcher submissions seen: {int(jobs.get('matcher_seen') or 0)}",
+        f"  • Jobs kept in CRM: {int(jobs.get('jobs_kept') or 0)}",
+        f"  • Applications stored: {int(jobs.get('applications') or 0)}",
+        "",
+        "Cal sales (must stay 0)",
         f"  • Robot-sales intros sent: {activity.get('intro_sent', 0)} (should stay 0)",
         f"  • Follow-up emails sent: {activity.get('followup_sent', 0)}",
         f"  • Inbound replies received: {activity.get('replies', 0)}",
-        f"  • Drafts created or refreshed: {activity.get('drafts_touched', 0)}",
+        drafts_line,
         "",
-        "Queue right now",
+        "Leftover SIGNAL queue (not a send list)",
         f"  • HOT / WARM SIGNAL rows still in the old Cal queue: {hot} / {warm}",
         f"  • Frozen sales drafts (not a send list): {sendable}",
         f"  • Drafts waiting (unsent): {unsent}",
-        f"  • Active follow-up sequences: {activity.get('enroll_active', 0)} "
-        f"({activity.get('enroll_due', 0)} due now)",
+        enroll_line,
         f"  • Total replied (all time in queue): {replied_total}",
         "",
         f"Autopilot: {autopilot_line}",
         "",
-    ]
+    ])
 
     deliverability = activity.get("deliverability") or {}
     if int(deliverability.get("sent") or 0) > 0:
@@ -466,13 +575,18 @@ def render_cal_daily_digest_text(
 
     lines.extend([
         "Links",
-        f"  • Admin (Cal control): {_SITE}/admin",
-        f"  • Replies inbox: {_SITE}/inbox",
-        f"  • Calendar (book meetings): {_SITE}/calendar",
+        f"  • Jobs (FIND): {_SITE}/",
+        f"  • Jobs CRM: {_SITE}/pipeline?src=jobs_activate",
+        f"  • Admin (Cal freeze control): {_SITE}/admin",
         "",
-        "You receive this once per day while Cal daily digest is enabled.",
-        "Reply to this email if you want Cal paused or the tone adjusted.",
     ])
+    if autopilot_on:
+        lines.append("You receive this once per day while the Jobs digest is enabled.")
+    else:
+        lines.append(
+            "You receive this once per day. Cal sales outreach stays frozen unless "
+            "CAL_AUTONOMY_ENABLED is turned on in production."
+        )
     return "\n".join(lines)
 
 
@@ -488,7 +602,7 @@ def send_cal_daily_digest(
         return {"sent": False, "reason": "No CAL_DAILY_DIGEST_EMAIL / ADMIN_EMAIL configured"}
 
     today = datetime.now(timezone.utc).date().isoformat()
-    if not force and _digest_already_sent(today):
+    if not force and not _claim_digest_day(today):
         return {"sent": False, "reason": "Already sent today", "date": today, "recipients": recipients}
 
     digest = build_cal_daily_digest(db, period_hours=period_hours)
@@ -499,14 +613,17 @@ def send_cal_daily_digest(
             to_email=recipients,
             subject=digest["subject"],
             body_text=digest["body_text"],
-            from_display_name="Ready For Robots · Cal ops",
+            from_display_name="Ready For Robots · Jobs ops",
             idempotency_key=f"cal-daily-digest-{today}",
         )
     except ResendEmailError as exc:
         logger.warning("Cal daily digest email failed: %s", exc)
+        if not force:
+            _release_digest_day(today)
         return {"sent": False, "reason": str(exc), "recipients": recipients}
 
-    _mark_digest_sent(today)
+    if force:
+        _mark_digest_sent(today)
     return {
         "sent": True,
         "date": today,

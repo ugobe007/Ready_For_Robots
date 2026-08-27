@@ -9,7 +9,7 @@ Hermes was a Nous agent on a Mac (`~/.hermes/`), plus research cron and Fly inge
 - Mac Hermes cron as if it were Jobs
 - Fly ingest as a Jobs feed (`/api/v1/market-graph/*ingest*`, qualify overlays, buying-window / video overlays)
 - Hermes Fly smoke that `--apply`s infer-qualify onto the public pipeline
-- Cal buyer outreach as a product path (`CAL_AUTONOMY_ENABLED=0` in `fly.toml`)
+- Cal buyer outreach as a product path (`CAL_AUTONOMY_ENABLED=0` and `ENABLE_SCHEDULED_CAL_AUTONOMY=0` in `fly.toml`). Scheduled draft create/refresh and due follow-ups stay paused with autopilot. The daily digest reports Jobs-path facts, not SIGNAL “opportunity signals.”
 - Treating `/experiment` or Hermes research as FIND
 - `--provider ai-gateway` leftovers (HTTP 402)
 

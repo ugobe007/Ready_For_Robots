@@ -668,7 +668,12 @@ def execute_activation(
             continue
 
         if not dry_run:
-            dev = develop_lead_brief(db, company_id, refresh_inference=True, include_draft=True)
+            from app.services.cal_autonomy import cal_scheduled_sales_work_enabled
+
+            include_draft = cal_scheduled_sales_work_enabled()
+            dev = develop_lead_brief(
+                db, company_id, refresh_inference=True, include_draft=include_draft
+            )
         else:
             dev = {"brief": {}, "recommended_action": "dry_run"}
 
@@ -694,7 +699,11 @@ def execute_activation(
             db.add(acct)
             db.flush()
         elif acct and not dry_run:
-            if brief.get("draft_body") and not acct.outreach_draft:
+            if (
+                brief.get("draft_body")
+                and not acct.outreach_draft
+                and include_draft
+            ):
                 acct.outreach_draft = brief["draft_body"]
             if brief.get("contact_email") and not acct.contact_email:
                 acct.contact_email = brief["contact_email"]

@@ -78,6 +78,17 @@ def cal_buyer_sales_enabled() -> bool:
     return os.getenv("CAL_BUYER_SALES_ENABLED", "0").strip().lower() in ("1", "true", "yes")
 
 
+def cal_scheduled_sales_work_enabled() -> bool:
+    """Scheduled draft create/refresh, intros, and follow-ups.
+
+    False when autopilot is off. Manual admin Run cycle may still call
+    ``run_cal_autonomy_cycle(manual=True)``; that path must pass
+    ``allow_when_paused=True`` into ``_draft_and_store`` and still must
+    not send buyer intros or due follow-ups unless those flags are on.
+    """
+    return cal_autonomy_enabled()
+
+
 def _redis_client():
     url = (os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or "").strip()
     if not url:
@@ -544,8 +555,14 @@ def _draft_and_store(
     regenerate: bool,
     stale_before: Optional[datetime],
     allowed_variants: Optional[list[str]] = None,
+    allow_when_paused: bool = False,
 ) -> tuple[bool, bool]:
     """Return (drafted, refreshed)."""
+    if not allow_when_paused and not cal_scheduled_sales_work_enabled():
+        logger.info(
+            "[cal-autonomy] scheduled draft create/refresh skipped — autopilot off"
+        )
+        return False, False
     from app.api.admin_extended import _cal_draft_for_company
 
     company_id = company.id
@@ -769,10 +786,30 @@ def run_cal_autonomy_cycle(
     dry_run: bool = False,
     admin_uid: Optional[uuid.UUID] = None,
     admin_email: str = "",
+    manual: bool = False,
 ) -> dict[str, Any]:
-    """Draft pending HOT+WARM leads, refresh stale copy, send up to limit, notify on format change."""
-    if not cal_autonomy_enabled():
-        return {"status": "disabled", "reason": "CAL_AUTONOMY_ENABLED / ENABLE_SCHEDULED_CAL_AUTONOMY off"}
+    """Draft pending HOT+WARM leads, refresh stale copy, send up to limit, notify on format change.
+
+    Scheduled worker ticks pass ``manual=False`` and no-op when autopilot is
+    off (including draft create/refresh). Admin ``POST /cal/autonomy-run``
+    passes ``manual=True`` so the button still works; buyer-sales and
+    follow-up sends stay gated by their own flags.
+    """
+    if not manual and not cal_autonomy_enabled():
+        return {
+            "status": "disabled",
+            "reason": "CAL_AUTONOMY_ENABLED / ENABLE_SCHEDULED_CAL_AUTONOMY off",
+            "drafted": 0,
+            "refreshed": 0,
+            "sent": 0,
+            "followups": {
+                "processed": 0,
+                "sent": 0,
+                "skipped": 0,
+                "failed": 0,
+                "status": "paused",
+            },
+        }
 
     if admin_uid is not None:
         from app.api.admin_extended import _admin_team
@@ -872,6 +909,7 @@ def run_cal_autonomy_cycle(
             regenerate=False,
             stale_before=stale_before,
             allowed_variants=allowed_variants,
+            allow_when_paused=manual,
         )
         if did_draft:
             drafted += 1
@@ -1141,13 +1179,22 @@ def run_cal_autonomy_cycle(
             errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
 
     followups: dict[str, Any] = {"processed": 0, "sent": 0, "skipped": 0, "failed": 0}
-    if not dry_run:
+    if not dry_run and cal_autonomy_enabled():
         try:
             from app.services.sequence_runner import process_due_enrollments
 
             followups = process_due_enrollments(db, limit=followup_limit)
         except Exception as exc:
             logger.warning("Cal follow-up cycle failed: %s", exc)
+    elif not dry_run:
+        followups = {
+            "processed": 0,
+            "sent": 0,
+            "skipped": 0,
+            "failed": 0,
+            "status": "paused",
+            "reason": "CAL_AUTONOMY_ENABLED off — due follow-ups are held",
+        }
 
     if not dry_run:
         db.commit()
@@ -1197,6 +1244,9 @@ def get_cal_autonomy_status() -> dict[str, Any]:
     return {
         "heartbeat": heartbeat,
         "enabled": cal_autonomy_enabled(),
+        "scheduled_sales_work_enabled": cal_scheduled_sales_work_enabled(),
+        "scheduled_drafts_paused": not cal_scheduled_sales_work_enabled(),
+        "followups_paused": not cal_autonomy_enabled(),
         "buyer_sales_enabled": cal_buyer_sales_enabled(),
         "env_enabled": _cal_autonomy_env_default(),
         "runtime_override": get_cal_autonomy_runtime_override(),

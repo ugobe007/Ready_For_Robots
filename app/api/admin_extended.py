@@ -1373,6 +1373,7 @@ def cal_autonomy_run(
         dry_run=body.dry_run,
         admin_uid=uuid.UUID(user["uid"]),
         admin_email=user.get("email") or "",
+        manual=True,
     )
 
 

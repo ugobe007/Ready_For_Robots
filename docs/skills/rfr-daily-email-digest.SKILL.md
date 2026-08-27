@@ -21,11 +21,13 @@ metadata:
 
 Fly and GitHub Actions own this email. A leftover Hermes job with `--provider ai-gateway` can 402; that failure does **not** block the digest. Do not add a Hermes cron for this skill.
 
-1. Fly in-process scheduler (`ENABLE_SCHEDULED_CAL_DAILY_DIGEST=1`, 15:00 UTC) on worker, and on web when `SKIP_CELERY=1`
-2. Celery Beat `cal-daily-digest` (15:00 UTC) when Celery is running
+1. Fly in-process scheduler (`ENABLE_SCHEDULED_CAL_DAILY_DIGEST=1`, 15:00 UTC) on the **worker only**
+2. Celery Beat `cal-daily-digest` (15:00 UTC) when Celery is running (Fly worker sets `SKIP_CELERY=1`)
 3. GitHub Action `.github/workflows/cal-daily-digest.yml` (15:05 UTC backup)
 
-All three call `send_cal_daily_digest`, which is idempotent per calendar day.
+Web does **not** start a digest thread unless `CAL_DAILY_DIGEST_WEB_BACKUP=1`. All senders call `send_cal_daily_digest`, which claims the calendar day with Redis SET NX before sending.
+
+Copy is Jobs-path (matcher / kept jobs / applications) plus a Cal-frozen one-liner. Do not attach the SIGNAL industry brief.
 
 ## Manual send (terminal only)
 

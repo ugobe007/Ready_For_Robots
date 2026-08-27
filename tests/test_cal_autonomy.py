@@ -157,9 +157,13 @@ def test_cal_vendor_outreach_body_sherpa_tone():
 
 def test_cal_buyer_sales_disabled_by_default(monkeypatch):
     monkeypatch.delenv("CAL_BUYER_SALES_ENABLED", raising=False)
+    monkeypatch.setenv("CAL_AUTONOMY_ENABLED", "0")
+    monkeypatch.setenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "0")
     assert cal_buyer_sales_enabled() is False
     status = get_cal_autonomy_status()
     assert status["buyer_sales_enabled"] is False
+    assert status["scheduled_drafts_paused"] is True
+    assert status["followups_paused"] is True
     assert status["send_limit"] == 0
     assert status["draft_batch"] == 0
 
