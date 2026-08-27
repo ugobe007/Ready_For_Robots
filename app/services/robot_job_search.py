@@ -148,9 +148,9 @@ def compose_robot_job_search(
     profile_dict: dict[str, Any] | None = None
 
     if grain == "robot_type":
-        from app.services.robot_class_qualify import normalize_class_id, thin_class_profile
+        from app.services.robot_class_qualify import lookup_class_id, thin_class_profile
 
-        class_id = normalize_class_id(asserted_class)
+        class_id = lookup_class_id(asserted_class)
         if class_id:
             company_name = _vendor_company_name(safe) or "your robot"
             profile_dict = thin_class_profile(company_name, class_id, source_url=safe)

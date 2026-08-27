@@ -106,6 +106,7 @@ import {
   searchNamesForSegment,
   skuFamilyStem,
   normalizeRobotClass,
+  configurationClassForLookup,
   portfolioShowsJobCounts,
   productClassesFromLineup,
   robotClassJobsLabel,
@@ -1045,6 +1046,12 @@ describe("jobsWorkflow", () => {
     expect(normalizeRobotClass("agriculture")).toBe("agriculture");
     expect(normalizeRobotClass("construction_robot")).toBe("construction");
     expect(normalizeRobotClass("drone")).toBe("avionics");
+    expect(normalizeRobotClass("evtol")).toBe("avionics");
+    expect(configurationClassForLookup("drone")).toBe("drone");
+    expect(configurationClassForLookup("evtol")).toBe("evtol");
+    expect(configurationClassForLookup("uav")).toBe("drone");
+    expect(robotClassTitle("evtol")).toBe("eVTOL");
+    expect(robotClassTitle("avionics")).toBe("Avionics");
     expect(normalizeRobotClass("aerospace_robot")).toBe("aerospace");
     expect(robotClassJobsLabel("humanoid")).toBe("humanoids");
     expect(robotClassTitle("agriculture")).toBe("Agriculture");
@@ -1083,6 +1090,12 @@ describe("jobsWorkflow", () => {
     expect(unknown).toEqual([
       { grain: "product", robotClass: null, productNames: ["MysteryBot"] },
     ]);
+    expect(
+      lineupJobLookups([
+        { name: "Joby eVTOL", displayClass: "evtol" },
+        { name: "X10", displayClass: "drone" },
+      ]).map(row => row.robotClass).sort(),
+    ).toEqual(["drone", "evtol"]);
     expect(
       productClassesFromLineup([
         { name: "Fourier GR-1", displayClass: "humanoid" },

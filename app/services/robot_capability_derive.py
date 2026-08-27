@@ -125,6 +125,11 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
     manipulate = bool(arm_count and arm_count >= 1) or bool(hands) or bool(effector_ok) or bool(
         manip_class
     )
+    # Domain configurations (eVTOL, drone, combine, Vulcan, …) are not factory
+    # cobots. Incidental "arm"/"gripper" language on an OEM page must not
+    # ground manipulate and open the CNC/pack corpus.
+    if classes & DOMAIN_WORK_CLASSES and not (classes & MANIP_CLASSES):
+        manipulate = False
     if manipulate:
         derived_from = []
         evidence_bits = []
