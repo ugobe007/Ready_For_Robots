@@ -77,6 +77,7 @@ _SCOPED_CAPABILITY_PREDS = {
     "claims_mining",
     "claims_marine",
     "claims_avionics",
+    "claims_aerospace",
 }
 # Proximity window: the subject name must appear within this many characters of
 # the capability evidence for the claim to attach to the selected product.
@@ -688,7 +689,8 @@ def _extract_from_page(
         add("product_class", "cobot_arm", span=m.group(0), confidence=0.9)
 
     for m in re.finditer(
-        r"\b((?:indoor\s+)?(?:inspection\s+)?drone|UAV|aerial\s+(?:robot|platform)|"
+        r"\b((?:indoor\s+)?(?:inspection\s+)?drone|UAV|eVTOL|e-VTOL|flying\s+cars?|"
+        r"autonomous\s+(?:aircraft|planes?)|aerial\s+(?:robot|platform)|"
         r"flying\s+robot|confined[- ]space\s+(?:drone|UAV))\b",
         text,
         re.I,
@@ -696,10 +698,14 @@ def _extract_from_page(
         if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
             continue
         add("product_class", "drone", span=m.group(0), confidence=0.9)
+        add("claims_avionics", True, span=m.group(0)[:120], confidence=0.85)
 
     for m in re.finditer(
         r"\b(construction\s+robot|drywall\s+(?:finishing|robot)|layout\s+printer|"
-        r"field\s*printer|jobsite\s+robot|construction\s+(?:layout|finishing)\s+robot)\b",
+        r"field\s*printer|jobsite\s+robot|construction\s+(?:layout|finishing)\s+robot|"
+        r"(?:home|house|residential)\s+(?:construction|building|framing)\s+robots?|"
+        r"3d\s+(?:print(?:ed|ing)?)\s+(?:homes?|houses?|buildings?)|"
+        r"brick[- ]lay(?:ing|er)\s+robots?|block[- ]laying\s+robots?)\b",
         text,
         re.I,
     ):
@@ -710,8 +716,8 @@ def _extract_from_page(
     for m in re.finditer(
         r"\b(agricultural\s+robot|farm(?:ing)?\s+robot|ag(?:ricultural)?\s*bot|"
         r"crop\s+(?:scouting|weeding)\s+robot|orchard\s+robot|"
-        r"autonomous\s+(?:tractor|harvester|weeder|sprayer)|"
-        r"laserweeder|laser\s+weeder|weeding\s+robot)\b",
+        r"autonomous\s+(?:tractor|combine|harvester|weeder|sprayer)|"
+        r"combine\s+harvest|laserweeder|laser\s+weeder|weeding\s+robot)\b",
         text,
         re.I,
     ):
@@ -748,6 +754,50 @@ def _extract_from_page(
             confidence=0.9,
         )
 
+    # Named OEM hosts — COMPANY → PRODUCT identity, not company → category → jobs.
+    _HOST_CLASS = (
+        (("deere.com", r"\b(x9|x series|combine|autonomous tractor|see\s*&\s*spray|see and spray)\b"),
+         "agricultural_robot", "claims_agriculture"),
+        (("monarchtractor.com", r"\b(mk-?v|tractor|electric tractor)\b"),
+         "agricultural_robot", "claims_agriculture"),
+        (("naio-technologies.com", r"\b(oz|ted|jo|weeding|vineyard)\b"),
+         "agricultural_robot", "claims_agriculture"),
+        (("iconbuild.com", r"\b(vulcan|3d print|home|house)\b"),
+         "construction_robot", "claims_construction"),
+        (("dustyrobotics.com", r"\b(fieldprinter|layout)\b"),
+         "construction_robot", "claims_construction"),
+        (("skydio.com", r"\b(x10|drone|uav|inspect)\b"),
+         "drone", "claims_avionics"),
+        (("jobyaviation.com", r"\b(evtol|aircraft|air taxi|flying)\b"),
+         "aviation_robot", "claims_avionics"),
+        (("zipline.com", r"\b(drone|delivery|zip)\b"),
+         "drone", "claims_avionics"),
+        (("astroscale.com", r"\b(elsa|adras|debris|servic|satellite)\b"),
+         "aerospace_robot", "claims_aerospace"),
+        (("clearspace.today", r"\b(clearspace|debris|capture|satellite)\b"),
+         "aerospace_robot", "claims_aerospace"),
+        (("starfishspace.com", r"\b(otter|servic|satellite)\b"),
+         "aerospace_robot", "claims_aerospace"),
+        (("gitai.tech", r"\b(s2|space|robot|inchworm)\b"),
+         "aerospace_robot", "claims_aerospace"),
+    )
+    for (_suffix, _rx), _cls, _claim in _HOST_CLASS:
+        if _host.endswith(_suffix) and re.search(_rx, _id_blob, re.I):
+            add("product_class", _cls, span=_suffix, confidence=0.9)
+            add(_claim, True, span=_suffix, confidence=0.88)
+
+    # Tractor/combine implement = configuration, not a fake attachment class.
+    if re.search(
+        r"\b(three[- ]point\s+hitch|implement\s+on\s+(?:a\s+)?(?:tractor|combine)|"
+        r"mounted\s+on\s+(?:a\s+)?(?:tractor|sprayer)|see\s*&\s*spray|"
+        r"see and spray|hitch[- ]mounted)\b",
+        _id_blob,
+        re.I,
+    ):
+        add("configuration_kind", "implement_on_host", span="implement on host", confidence=0.86)
+        add("host_platform", "tractor", span="tractor host", confidence=0.86)
+        add("claims_agriculture", True, span="tractor implement", confidence=0.84)
+
     for m in re.finditer(
         r"\b(marine\s+robots?|maritime\s+robots?|underwater\s+robots?|"
         r"hull\s+(?:inspect\w*|clean\w*|robots?)|port\s+robots?|"
@@ -769,6 +819,17 @@ def _extract_from_page(
         if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
             continue
         add("product_class", "aviation_robot", span=m.group(0), confidence=0.88)
+
+    for m in re.finditer(
+        r"\b(aerospace\s+robots?|space\s+robots?|satellite\s+servic\w*|"
+        r"orbital\s+debris|debris\s+(?:captur\w*|removal)|on[- ]orbit\s+servic\w*)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("product_class", "aerospace_robot", span=m.group(0), confidence=0.88)
+        add("claims_aerospace", True, span=m.group(0)[:120], confidence=0.85)
 
     for m in re.finditer(
         r"\b(mining\s+robot|underground\s+mining\s+robot|autonomous\s+(?:haul(?:age)?\s+truck|"
@@ -1138,9 +1199,10 @@ def _extract_from_page(
     # --- Tier 3: agriculture (recognized vertical; job matching now in scope) ---
     for m in re.finditer(
         r"\b(?:agricultural\s+robots?|farm\s+robots?|autonomous\s+tractors?|"
+        r"autonomous\s+combines?|combine\s+harvest|"
         r"laserweeder|laser\s+weed\w*|weeding\s+robots?|"
-        r"(?:weed\w*|harvest\w*|spray\w*|prune\w*|thin\w*|seed\w*)\s+"
-        r"(?:crops?|plants?|fields?|rows?|orchards?|produce|vineyards?))\b",
+        r"(?:weed\w*|harvest\w*|spray\w*|prune\w*|thin\w*|seed\w*|plant\w*)\s+"
+        r"(?:crops?|plants?|fields?|rows?|orchards?|produce|vineyards?|grain))\b",
         text,
         re.I,
     ):
@@ -1152,7 +1214,9 @@ def _extract_from_page(
     for m in re.finditer(
         r"\b(?:construction\s+robots?|drywall\s+(?:finish\w*|install\w*|robots?)|"
         r"layout\s+(?:robot|printer)|brick[-\s]?lay\w*|rebar\s+(?:tying|robots?)|"
-        r"autonomous\s+(?:excavat\w*|dozers?|graders?)|jobsite\s+robots?)\b",
+        r"autonomous\s+(?:excavat\w*|dozers?|graders?)|jobsite\s+robots?|"
+        r"(?:home|house|residential)\s+(?:construction|building|framing)|"
+        r"3d\s+(?:print(?:ed|ing)?)\s+(?:homes?|houses?|buildings?))\b",
         text,
         re.I,
     ):
@@ -1172,17 +1236,32 @@ def _extract_from_page(
             continue
         add("claims_marine", True, span=m.group(0)[:120], confidence=0.85)
 
-    # --- Avionics: hangar / airside aircraft work — not consumer drones ---
+    # --- Avionics: drones / eVTOL / autonomous aircraft (not satellites) ---
     for m in re.finditer(
         r"\b(?:hangar\s+(?:inspect\w*|robots?)|airside\s+(?:inspect\w*|robots?)|"
         r"aircraft\s+(?:inspect\w*|robots?)|fuselage\s+inspect\w*|"
-        r"aviation\s+(?:inspect\w*|robots?)|avionics\s+robots?)\b",
+        r"aviation\s+(?:inspect\w*|robots?)|avionics\s+robots?|"
+        r"(?:inspection\s+)?drones?|UAV\s+(?:inspect\w*|delivery)|"
+        r"eVTOL|e-VTOL|flying\s+cars?|autonomous\s+(?:aircraft|planes?|flight)|"
+        r"drone\s+delivery)\b",
         text,
         re.I,
     ):
         if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
             continue
         add("claims_avionics", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Aerospace: satellites / rockets / orbital debris — not drones ---
+    for m in re.finditer(
+        r"\b(?:satellite\s+servic\w*|on[- ]orbit\s+servic\w*|orbital\s+debris|"
+        r"space\s+debris|debris\s+(?:captur\w*|removal)|aerospace\s+robots?|"
+        r"space\s+robots?|rocket\s+ground\s+support)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_aerospace", True, span=m.group(0)[:120], confidence=0.85)
 
     # --- Tier 3: mining ---
     for m in re.finditer(
@@ -1264,7 +1343,8 @@ def _extract_from_page(
         r"pharmac(?:y|ies)|laborator(?:y|ies)|medical\s+cent(?:er|re)s?|"
         r"(?:hotels?|airports?|hospitals?|healthcare|retail|restaurants?|hospitality|"
         r"reception|warehouses?|factories?|jobsites?|construction\s+sites?|"
-        r"farms?|fields?|orchards?|hangars?|airsides?|harbou?rs?|ports?|shipyards?))\b",
+        r"farms?|fields?|orchards?|hangars?|airsides?|harbou?rs?|ports?|shipyards?|"
+        r"satellites?|orbital|aerospace|drones?|eVTOLs?))\b",
         text,
         re.I,
     ):
@@ -1290,7 +1370,9 @@ def _extract_from_page(
             val = "hospitality"
         elif re.search(r"restaurant", raw):
             val = "restaurant"
-        elif re.search(r"hangar|airside|aircraft", raw):
+        elif re.search(r"satellite|orbital|space debris|aerospace", raw):
+            val = "aerospace"
+        elif re.search(r"hangar|airside|aircraft|drone|evtol|uav", raw):
             val = "aviation"
         elif re.search(r"airport", raw):
             val = "airport"

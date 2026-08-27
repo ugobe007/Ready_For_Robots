@@ -23,10 +23,17 @@ TRANSPORT_CLASSES = frozenset({"amr"})
 INSPECT_CLASSES = frozenset({"quadruped"})
 AGRICULTURE_CLASSES = frozenset({"agriculture", "agricultural_robot", "farm_robot"})
 MARINE_CLASSES = frozenset({"marine", "marine_robot"})
-AVIONICS_CLASSES = frozenset({"avionics", "aviation_robot"})
+AVIONICS_CLASSES = frozenset(
+    {"avionics", "aviation_robot", "drone", "evtol", "uav", "autonomous_aircraft"}
+)
+AEROSPACE_CLASSES = frozenset({"aerospace", "aerospace_robot"})
 CONSTRUCTION_CLASSES = frozenset({"construction", "construction_robot"})
 DOMAIN_WORK_CLASSES = (
-    AGRICULTURE_CLASSES | MARINE_CLASSES | AVIONICS_CLASSES | CONSTRUCTION_CLASSES
+    AGRICULTURE_CLASSES
+    | MARINE_CLASSES
+    | AVIONICS_CLASSES
+    | AEROSPACE_CLASSES
+    | CONSTRUCTION_CLASSES
 )
 GRASP_EFFECTORS = frozenset({"dexterous_hand", "gripper", "vacuum", "suction"})
 
@@ -182,7 +189,7 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
         _truthy(facts, p)
         for p in (
             "claims_pallet_handling", "claims_agriculture", "claims_construction",
-            "claims_mining", "claims_marine", "claims_avionics",
+            "claims_mining", "claims_marine", "claims_avionics", "claims_aerospace",
             "claims_disinfection", "claims_goods_to_person",
         )
     )
@@ -346,7 +353,8 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
         ("construction_task", "claims_construction", "construction site work", CONSTRUCTION_CLASSES),
         ("mining_task", "claims_mining", "mining / haulage", frozenset()),
         ("marine_task", "claims_marine", "hull / port / underwater work", MARINE_CLASSES),
-        ("avionics_task", "claims_avionics", "hangar / airside aircraft work", AVIONICS_CLASSES),
+        ("avionics_task", "claims_avionics", "drone / eVTOL / autonomous aircraft work", AVIONICS_CLASSES),
+        ("aerospace_task", "claims_aerospace", "satellite / orbital / space-robot work", AEROSPACE_CLASSES),
     ):
         _fact = _truthy(facts, _pred)
         _class_hit = next((c for c in classes if c in _cls), None)
@@ -376,6 +384,29 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
                 derivation="explicit",
                 derived_from=[_pred, "product_class"],
             )
+
+    # R27: implement on a tractor/combine is a configuration, not a class.
+    if not caps.get("agriculture_task") or not caps["agriculture_task"].present:
+        kind = next((str(f.get("value") or "").lower() for f in _values(facts, "configuration_kind")), "")
+        host = next((str(f.get("value") or "").lower() for f in _values(facts, "host_platform")), "")
+        if kind == "implement_on_host" and host in {"tractor", "combine"}:
+            caps["agriculture_task"] = DerivedCapability(
+                key="agriculture_task",
+                label="agricultural field work",
+                present=True,
+                derivation="inferred",
+                derived_from=["configuration_kind", "host_platform"],
+                evidence=f"implement on {host}",
+            )
+            if not caps.get("mobile") or not caps["mobile"].present:
+                caps["mobile"] = DerivedCapability(
+                    key="mobile",
+                    label="mobile platform",
+                    present=True,
+                    derivation="inferred",
+                    derived_from=["host_platform"],
+                    evidence=f"{host} host",
+                )
 
     scrub = _truthy(facts, "supports_hard_floor_scrubbing")
     if scrub:

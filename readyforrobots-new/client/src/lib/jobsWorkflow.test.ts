@@ -1044,8 +1044,11 @@ describe("jobsWorkflow", () => {
     expect(normalizeRobotClass("agricultural_robot")).toBe("agriculture");
     expect(normalizeRobotClass("agriculture")).toBe("agriculture");
     expect(normalizeRobotClass("construction_robot")).toBe("construction");
+    expect(normalizeRobotClass("drone")).toBe("avionics");
+    expect(normalizeRobotClass("aerospace_robot")).toBe("aerospace");
     expect(robotClassJobsLabel("humanoid")).toBe("humanoids");
     expect(robotClassTitle("agriculture")).toBe("Agriculture");
+    expect(robotClassTitle("aerospace")).toBe("Aerospace");
     const fourier = lineupJobLookups([
       { name: "Fourier GR-1", displayClass: "humanoid" },
       { name: "Fourier GR-2", displayClass: "humanoid" },

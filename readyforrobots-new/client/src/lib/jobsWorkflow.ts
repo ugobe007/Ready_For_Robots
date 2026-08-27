@@ -42,6 +42,10 @@ const ROBOT_CLASS_ALIASES: Record<string, string> = {
   farm_robot: "agriculture",
   weeder: "agriculture",
   weeding: "agriculture",
+  combine: "agriculture",
+  tractor: "agriculture",
+  autonomous_tractor: "agriculture",
+  autonomous_combine: "agriculture",
   marine: "marine",
   marine_robot: "marine",
   maritime: "marine",
@@ -49,11 +53,27 @@ const ROBOT_CLASS_ALIASES: Record<string, string> = {
   avionics: "avionics",
   aviation: "avionics",
   aviation_robot: "avionics",
+  drone: "avionics",
+  uav: "avionics",
+  evtol: "avionics",
+  e_vtol: "avionics",
+  flying_car: "avionics",
+  autonomous_aircraft: "avionics",
+  autonomous_plane: "avionics",
   aircraft: "avionics",
   hangar: "avionics",
   airside: "avionics",
+  aerospace: "aerospace",
+  aerospace_robot: "aerospace",
+  satellite: "aerospace",
+  orbital: "aerospace",
+  space_robot: "aerospace",
+  space_debris: "aerospace",
+  rocket: "aerospace",
   construction: "construction",
   construction_robot: "construction",
+  homebuilding: "construction",
+  homebuilder: "construction",
 };
 
 const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
@@ -66,6 +86,7 @@ const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
   agriculture: "agriculture robots",
   marine: "marine robots",
   avionics: "avionics robots",
+  aerospace: "aerospace robots",
   construction: "construction robots",
 };
 
@@ -79,6 +100,7 @@ const ROBOT_CLASS_TITLE: Record<string, string> = {
   agriculture: "Agriculture",
   marine: "Marine",
   avionics: "Avionics",
+  aerospace: "Aerospace",
   construction: "Construction",
 };
 

@@ -1,7 +1,7 @@
 {
   "ontology_id": "oem_sku_catalog_v1",
   "version": "1.1.0",
-  "generated_at": "2026-08-26T21:19:16+00:00",
+  "generated_at": "2026-08-27T19:55:45+00:00",
   "source": "docs/reference/readyforrobots_companies_and_robots.xlsx",
   "rule": "COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES",
   "notes": [
@@ -12,8 +12,8 @@
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
-  "company_count": 62,
-  "product_count": 189,
+  "company_count": 84,
+  "product_count": 216,
   "skipped": [],
   "companies": [
     {
@@ -6116,6 +6116,1245 @@
           "flags": [],
           "source": "mission-2026-08-27-ag-robot-classes"
         }
+      ]
+    },
+    {
+      "name": "John Deere",
+      "slug": "john-deere",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Agriculture"
+      ],
+      "source_urls": [
+        "https://www.deere.com/"
+      ],
+      "domains": [
+        "deere.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "X Series Combine",
+          "slug": "john-deere-x-series-combine",
+          "company_name": "John Deere",
+          "company_slug": "john-deere",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Autonomous combine",
+          "task": "Grain harvest with an X Series combine",
+          "setting": "Fields · grain harvest",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.deere.com/en/harvesting/x-series-combines/"
+          ],
+          "candidate_sources": [
+            "https://www.deere.com/en/harvesting/x-series-combines/"
+          ],
+          "product_url": "https://www.deere.com/en/harvesting/x-series-combines/",
+          "lookup_host": "deere.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        },
+        {
+          "name": "Autonomous Tractor",
+          "slug": "john-deere-autonomous-tractor",
+          "company_name": "John Deere",
+          "company_slug": "john-deere",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Autonomous tractor",
+          "task": "Autonomous tractor for planting and field work",
+          "setting": "Fields · planting · harvest support",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.deere.com/en/autonomous/"
+          ],
+          "candidate_sources": [
+            "https://www.deere.com/en/autonomous/"
+          ],
+          "product_url": "https://www.deere.com/en/autonomous/",
+          "lookup_host": "deere.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        },
+        {
+          "name": "See & Spray Ultimate",
+          "slug": "john-deere-see-spray-ultimate",
+          "company_name": "John Deere",
+          "company_slug": "john-deere",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Precision spray implement",
+          "task": "See-and-spray implement on a tractor/sprayer host",
+          "setting": "Fields · row crops",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.deere.com/en/sprayers/see-spray-ultimate/"
+          ],
+          "candidate_sources": [
+            "https://www.deere.com/en/sprayers/see-spray-ultimate/"
+          ],
+          "product_url": "https://www.deere.com/en/sprayers/see-spray-ultimate/",
+          "lookup_host": "deere.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "implement_on_host",
+          "host_platform": "tractor",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.deere.com/",
+        "https://www.deere.com/en/harvesting/x-series-combines/",
+        "https://www.deere.com/en/autonomous/",
+        "https://www.deere.com/en/sprayers/see-spray-ultimate/"
+      ]
+    },
+    {
+      "name": "Monarch Tractor",
+      "slug": "monarch-tractor",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Agriculture"
+      ],
+      "source_urls": [
+        "https://www.monarchtractor.com/"
+      ],
+      "domains": [
+        "monarchtractor.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "MK-V",
+          "slug": "monarch-tractor-mk-v",
+          "company_name": "Monarch Tractor",
+          "company_slug": "monarch-tractor",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Electric autonomous tractor",
+          "task": "Electric tractor for planting and field work",
+          "setting": "Vineyards · orchards · fields",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.monarchtractor.com/"
+          ],
+          "candidate_sources": [
+            "https://www.monarchtractor.com/"
+          ],
+          "product_url": "https://www.monarchtractor.com/",
+          "lookup_host": "monarchtractor.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.monarchtractor.com/"
+      ]
+    },
+    {
+      "name": "Naio Technologies",
+      "slug": "naio-technologies",
+      "vendor_role": "robot_oem",
+      "regions": "France",
+      "categories": [
+        "Agriculture"
+      ],
+      "source_urls": [
+        "https://www.naio-technologies.com/"
+      ],
+      "domains": [
+        "naio-technologies.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "Oz",
+          "slug": "naio-technologies-oz",
+          "company_name": "Naio Technologies",
+          "company_slug": "naio-technologies",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Weeding robot",
+          "task": "Mechanical weeding in vegetable rows",
+          "setting": "Fields · vegetable beds",
+          "status": "Deployed",
+          "region": "France",
+          "spreadsheet_sources": [
+            "https://www.naio-technologies.com/en/oz/"
+          ],
+          "candidate_sources": [
+            "https://www.naio-technologies.com/en/oz/"
+          ],
+          "product_url": "https://www.naio-technologies.com/en/oz/",
+          "lookup_host": "naio-technologies.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        },
+        {
+          "name": "Ted",
+          "slug": "naio-technologies-ted",
+          "company_name": "Naio Technologies",
+          "company_slug": "naio-technologies",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Vineyard weeding robot",
+          "task": "Mechanical weeding in vineyards",
+          "setting": "Vineyards",
+          "status": "Deployed",
+          "region": "France",
+          "spreadsheet_sources": [
+            "https://www.naio-technologies.com/en/ted/"
+          ],
+          "candidate_sources": [
+            "https://www.naio-technologies.com/en/ted/"
+          ],
+          "product_url": "https://www.naio-technologies.com/en/ted/",
+          "lookup_host": "naio-technologies.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        },
+        {
+          "name": "Jo",
+          "slug": "naio-technologies-jo",
+          "company_name": "Naio Technologies",
+          "company_slug": "naio-technologies",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Large-tool weeding robot",
+          "task": "Mechanical weeding with larger tools",
+          "setting": "Fields · vegetable beds",
+          "status": "Deployed",
+          "region": "France",
+          "spreadsheet_sources": [
+            "https://www.naio-technologies.com/en/jo/"
+          ],
+          "candidate_sources": [
+            "https://www.naio-technologies.com/en/jo/"
+          ],
+          "product_url": "https://www.naio-technologies.com/en/jo/",
+          "lookup_host": "naio-technologies.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.naio-technologies.com/",
+        "https://www.naio-technologies.com/en/oz/",
+        "https://www.naio-technologies.com/en/ted/",
+        "https://www.naio-technologies.com/en/jo/"
+      ]
+    },
+    {
+      "name": "Ecorobotix",
+      "slug": "ecorobotix",
+      "vendor_role": "robot_oem",
+      "regions": "Switzerland",
+      "categories": [
+        "Agriculture"
+      ],
+      "source_urls": [
+        "https://www.ecorobotix.com/"
+      ],
+      "domains": [
+        "ecorobotix.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "ARA",
+          "slug": "ecorobotix-ara",
+          "company_name": "Ecorobotix",
+          "company_slug": "ecorobotix",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Precision spray implement",
+          "task": "Ultra-high precision spray implement on a tractor host",
+          "setting": "Fields · row crops",
+          "status": "Deployed",
+          "region": "Switzerland",
+          "spreadsheet_sources": [
+            "https://www.ecorobotix.com/en/ara/"
+          ],
+          "candidate_sources": [
+            "https://www.ecorobotix.com/en/ara/"
+          ],
+          "product_url": "https://www.ecorobotix.com/en/ara/",
+          "lookup_host": "ecorobotix.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "implement_on_host",
+          "host_platform": "tractor",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.ecorobotix.com/",
+        "https://www.ecorobotix.com/en/ara/"
+      ]
+    },
+    {
+      "name": "Burro",
+      "slug": "burro",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Agriculture"
+      ],
+      "source_urls": [
+        "https://www.goburro.com/"
+      ],
+      "domains": [
+        "goburro.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "Burro",
+          "slug": "burro-burro",
+          "company_name": "Burro",
+          "company_slug": "burro",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Crop transport robot",
+          "task": "Follows crews and hauls harvest totes",
+          "setting": "Fields · orchards · nurseries",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.goburro.com/burro"
+          ],
+          "candidate_sources": [
+            "https://www.goburro.com/burro"
+          ],
+          "product_url": "https://www.goburro.com/burro",
+          "lookup_host": "goburro.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.goburro.com/",
+        "https://www.goburro.com/burro"
+      ]
+    },
+    {
+      "name": "CLAAS",
+      "slug": "claas",
+      "vendor_role": "robot_oem",
+      "regions": "Germany",
+      "categories": [
+        "Agriculture"
+      ],
+      "source_urls": [
+        "https://www.claas.com/"
+      ],
+      "domains": [
+        "claas.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "LEXION 8000-7000",
+          "slug": "claas-lexion-8000-7000",
+          "company_name": "CLAAS",
+          "company_slug": "claas",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Combine harvester",
+          "task": "Grain harvest with a LEXION combine",
+          "setting": "Fields · grain harvest",
+          "status": "Deployed",
+          "region": "Germany",
+          "spreadsheet_sources": [
+            "https://www.claas.com/en-us/products/combines/lexion-8000-7000"
+          ],
+          "candidate_sources": [
+            "https://www.claas.com/en-us/products/combines/lexion-8000-7000"
+          ],
+          "product_url": "https://www.claas.com/en-us/products/combines/lexion-8000-7000",
+          "lookup_host": "claas.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.claas.com/",
+        "https://www.claas.com/en-us/products/combines/lexion-8000-7000"
+      ]
+    },
+    {
+      "name": "Dusty Robotics",
+      "slug": "dusty-robotics",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Construction"
+      ],
+      "source_urls": [
+        "https://www.dustyrobotics.com/"
+      ],
+      "domains": [
+        "dustyrobotics.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "FieldPrinter",
+          "slug": "dusty-robotics-fieldprinter",
+          "company_name": "Dusty Robotics",
+          "company_slug": "dusty-robotics",
+          "primary_class": "construction_robot",
+          "category": "Construction",
+          "listed_class": "Jobsite layout printer",
+          "task": "Prints construction layout on the floor",
+          "setting": "Homes · buildings · jobsites",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.dustyrobotics.com/fieldprinter"
+          ],
+          "candidate_sources": [
+            "https://www.dustyrobotics.com/fieldprinter"
+          ],
+          "product_url": "https://www.dustyrobotics.com/fieldprinter",
+          "lookup_host": "dustyrobotics.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.dustyrobotics.com/",
+        "https://www.dustyrobotics.com/fieldprinter"
+      ]
+    },
+    {
+      "name": "ICON",
+      "slug": "icon",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Construction"
+      ],
+      "source_urls": [
+        "https://www.iconbuild.com/"
+      ],
+      "domains": [
+        "iconbuild.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "Vulcan",
+          "slug": "icon-vulcan",
+          "company_name": "ICON",
+          "company_slug": "icon",
+          "primary_class": "construction_robot",
+          "category": "Construction",
+          "listed_class": "3D home construction printer",
+          "task": "3D-prints walls for homes and buildings",
+          "setting": "Residential construction · community build",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.iconbuild.com/vulcan"
+          ],
+          "candidate_sources": [
+            "https://www.iconbuild.com/vulcan"
+          ],
+          "product_url": "https://www.iconbuild.com/vulcan",
+          "lookup_host": "iconbuild.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.iconbuild.com/",
+        "https://www.iconbuild.com/vulcan"
+      ]
+    },
+    {
+      "name": "COBOD",
+      "slug": "cobod",
+      "vendor_role": "robot_oem",
+      "regions": "Denmark",
+      "categories": [
+        "Construction"
+      ],
+      "source_urls": [
+        "https://cobod.com/"
+      ],
+      "domains": [
+        "cobod.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "BOD2",
+          "slug": "cobod-bod2",
+          "company_name": "COBOD",
+          "company_slug": "cobod",
+          "primary_class": "construction_robot",
+          "category": "Construction",
+          "listed_class": "3D construction printer",
+          "task": "3D-prints buildings on site",
+          "setting": "Building construction",
+          "status": "Deployed",
+          "region": "Denmark",
+          "spreadsheet_sources": [
+            "https://cobod.com/bod2/"
+          ],
+          "candidate_sources": [
+            "https://cobod.com/bod2/"
+          ],
+          "product_url": "https://cobod.com/bod2/",
+          "lookup_host": "cobod.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://cobod.com/",
+        "https://cobod.com/bod2/"
+      ]
+    },
+    {
+      "name": "FBR",
+      "slug": "fbr",
+      "vendor_role": "robot_oem",
+      "regions": "Australia",
+      "categories": [
+        "Construction"
+      ],
+      "source_urls": [
+        "https://www.fbr.com.au/"
+      ],
+      "domains": [
+        "fbr.com.au"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "Hadrian X",
+          "slug": "fbr-hadrian-x",
+          "company_name": "FBR",
+          "company_slug": "fbr",
+          "primary_class": "construction_robot",
+          "category": "Construction",
+          "listed_class": "Block-laying construction robot",
+          "task": "Lays blocks for buildings",
+          "setting": "Building construction",
+          "status": "Deployed",
+          "region": "Australia",
+          "spreadsheet_sources": [
+            "https://www.fbr.com.au/"
+          ],
+          "candidate_sources": [
+            "https://www.fbr.com.au/"
+          ],
+          "product_url": "https://www.fbr.com.au/",
+          "lookup_host": "fbr.com.au",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.fbr.com.au/"
+      ]
+    },
+    {
+      "name": "Advanced Construction Robotics",
+      "slug": "advanced-construction-robotics",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Construction"
+      ],
+      "source_urls": [
+        "https://www.constructionrobots.com/"
+      ],
+      "domains": [
+        "constructionrobots.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "TyBOT",
+          "slug": "advanced-construction-robotics-tybot",
+          "company_name": "Advanced Construction Robotics",
+          "company_slug": "advanced-construction-robotics",
+          "primary_class": "construction_robot",
+          "category": "Construction",
+          "listed_class": "Rebar tying robot",
+          "task": "Ties rebar on decks for buildings and civil work",
+          "setting": "Building construction · decks",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.constructionrobots.com/tybot/"
+          ],
+          "candidate_sources": [
+            "https://www.constructionrobots.com/tybot/"
+          ],
+          "product_url": "https://www.constructionrobots.com/tybot/",
+          "lookup_host": "constructionrobots.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.constructionrobots.com/",
+        "https://www.constructionrobots.com/tybot/"
+      ]
+    },
+    {
+      "name": "Skydio",
+      "slug": "skydio",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Avionics"
+      ],
+      "source_urls": [
+        "https://www.skydio.com/"
+      ],
+      "domains": [
+        "skydio.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "X10",
+          "slug": "skydio-x10",
+          "company_name": "Skydio",
+          "company_slug": "skydio",
+          "primary_class": "drone",
+          "category": "Avionics",
+          "listed_class": "Autonomous inspection drone",
+          "task": "Autonomous drone inspection of assets and airframes",
+          "setting": "Outdoor inspection · flight",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.skydio.com/x10"
+          ],
+          "candidate_sources": [
+            "https://www.skydio.com/x10"
+          ],
+          "product_url": "https://www.skydio.com/x10",
+          "lookup_host": "skydio.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.skydio.com/",
+        "https://www.skydio.com/x10"
+      ]
+    },
+    {
+      "name": "Joby Aviation",
+      "slug": "joby-aviation",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Avionics"
+      ],
+      "source_urls": [
+        "https://www.jobyaviation.com/"
+      ],
+      "domains": [
+        "jobyaviation.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "Joby eVTOL",
+          "slug": "joby-aviation-joby-evtol",
+          "company_name": "Joby Aviation",
+          "company_slug": "joby-aviation",
+          "primary_class": "evtol",
+          "category": "Avionics",
+          "listed_class": "eVTOL aircraft",
+          "task": "Electric vertical takeoff passenger aircraft",
+          "setting": "Urban air mobility",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.jobyaviation.com/aircraft/"
+          ],
+          "candidate_sources": [
+            "https://www.jobyaviation.com/aircraft/"
+          ],
+          "product_url": "https://www.jobyaviation.com/aircraft/",
+          "lookup_host": "jobyaviation.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.jobyaviation.com/",
+        "https://www.jobyaviation.com/aircraft/"
+      ]
+    },
+    {
+      "name": "Archer",
+      "slug": "archer",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Avionics"
+      ],
+      "source_urls": [
+        "https://www.archer.com/"
+      ],
+      "domains": [
+        "archer.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "Midnight",
+          "slug": "archer-midnight",
+          "company_name": "Archer",
+          "company_slug": "archer",
+          "primary_class": "evtol",
+          "category": "Avionics",
+          "listed_class": "eVTOL aircraft",
+          "task": "Electric vertical takeoff passenger aircraft",
+          "setting": "Urban air mobility",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.archer.com/aircraft"
+          ],
+          "candidate_sources": [
+            "https://www.archer.com/aircraft"
+          ],
+          "product_url": "https://www.archer.com/aircraft",
+          "lookup_host": "archer.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.archer.com/",
+        "https://www.archer.com/aircraft"
+      ]
+    },
+    {
+      "name": "Beta Technologies",
+      "slug": "beta-technologies",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Avionics"
+      ],
+      "source_urls": [
+        "https://www.beta.team/"
+      ],
+      "domains": [
+        "beta.team"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "ALIA",
+          "slug": "beta-technologies-alia",
+          "company_name": "Beta Technologies",
+          "company_slug": "beta-technologies",
+          "primary_class": "evtol",
+          "category": "Avionics",
+          "listed_class": "eVTOL / electric aircraft",
+          "task": "Electric aircraft for cargo and passenger routes",
+          "setting": "Regional flight",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.beta.team/aircraft/"
+          ],
+          "candidate_sources": [
+            "https://www.beta.team/aircraft/"
+          ],
+          "product_url": "https://www.beta.team/aircraft/",
+          "lookup_host": "beta.team",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.beta.team/",
+        "https://www.beta.team/aircraft/"
+      ]
+    },
+    {
+      "name": "Wisk Aero",
+      "slug": "wisk-aero",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Avionics"
+      ],
+      "source_urls": [
+        "https://wisk.aero/"
+      ],
+      "domains": [
+        "wisk.aero"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "Wisk Generation 6",
+          "slug": "wisk-aero-wisk-generation-6",
+          "company_name": "Wisk Aero",
+          "company_slug": "wisk-aero",
+          "primary_class": "evtol",
+          "category": "Avionics",
+          "listed_class": "Autonomous eVTOL",
+          "task": "Autonomous eVTOL passenger aircraft",
+          "setting": "Urban air mobility",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://wisk.aero/aircraft"
+          ],
+          "candidate_sources": [
+            "https://wisk.aero/aircraft"
+          ],
+          "product_url": "https://wisk.aero/aircraft",
+          "lookup_host": "wisk.aero",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://wisk.aero/",
+        "https://wisk.aero/aircraft"
+      ]
+    },
+    {
+      "name": "Zipline",
+      "slug": "zipline",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Avionics"
+      ],
+      "source_urls": [
+        "https://www.zipline.com/"
+      ],
+      "domains": [
+        "zipline.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "Zipline Platform 2",
+          "slug": "zipline-zipline-platform-2",
+          "company_name": "Zipline",
+          "company_slug": "zipline",
+          "primary_class": "drone",
+          "category": "Avionics",
+          "listed_class": "Delivery drone",
+          "task": "Autonomous drone delivery of medical and retail payloads",
+          "setting": "Delivery corridors",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.zipline.com/"
+          ],
+          "candidate_sources": [
+            "https://www.zipline.com/"
+          ],
+          "product_url": "https://www.zipline.com/",
+          "lookup_host": "zipline.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.zipline.com/"
+      ]
+    },
+    {
+      "name": "Shield AI",
+      "slug": "shield-ai",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Avionics"
+      ],
+      "source_urls": [
+        "https://shield.ai/"
+      ],
+      "domains": [
+        "shield.ai"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "V-BAT",
+          "slug": "shield-ai-v-bat",
+          "company_name": "Shield AI",
+          "company_slug": "shield-ai",
+          "primary_class": "drone",
+          "category": "Avionics",
+          "listed_class": "VTOL drone",
+          "task": "Autonomous VTOL drone for inspection and ISR flight",
+          "setting": "Flight · inspection",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://shield.ai/v-bat/"
+          ],
+          "candidate_sources": [
+            "https://shield.ai/v-bat/"
+          ],
+          "product_url": "https://shield.ai/v-bat/",
+          "lookup_host": "shield.ai",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://shield.ai/",
+        "https://shield.ai/v-bat/"
+      ]
+    },
+    {
+      "name": "Astroscale",
+      "slug": "astroscale",
+      "vendor_role": "robot_oem",
+      "regions": "Japan / United Kingdom",
+      "categories": [
+        "Aerospace"
+      ],
+      "source_urls": [
+        "https://astroscale.com/"
+      ],
+      "domains": [
+        "astroscale.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "ELSA-d",
+          "slug": "astroscale-elsa-d",
+          "company_name": "Astroscale",
+          "company_slug": "astroscale",
+          "primary_class": "aerospace_robot",
+          "category": "Aerospace",
+          "listed_class": "On-orbit servicing / debris demonstration",
+          "task": "Rendezvous and magnetic capture for end-of-life satellites",
+          "setting": "Low Earth orbit",
+          "status": "Deployed",
+          "region": "Japan / United Kingdom",
+          "spreadsheet_sources": [
+            "https://astroscale.com/missions/elsa-d/"
+          ],
+          "candidate_sources": [
+            "https://astroscale.com/missions/elsa-d/"
+          ],
+          "product_url": "https://astroscale.com/missions/elsa-d/",
+          "lookup_host": "astroscale.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        },
+        {
+          "name": "ADRAS-J",
+          "slug": "astroscale-adras-j",
+          "company_name": "Astroscale",
+          "company_slug": "astroscale",
+          "primary_class": "aerospace_robot",
+          "category": "Aerospace",
+          "listed_class": "Active debris inspection",
+          "task": "Inspects a large debris object on orbit",
+          "setting": "Low Earth orbit",
+          "status": "Deployed",
+          "region": "Japan / United Kingdom",
+          "spreadsheet_sources": [
+            "https://astroscale.com/missions/adras-j/"
+          ],
+          "candidate_sources": [
+            "https://astroscale.com/missions/adras-j/"
+          ],
+          "product_url": "https://astroscale.com/missions/adras-j/",
+          "lookup_host": "astroscale.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "implement_on_host",
+          "host_platform": "satellite",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://astroscale.com/",
+        "https://astroscale.com/missions/elsa-d/",
+        "https://astroscale.com/missions/adras-j/"
+      ]
+    },
+    {
+      "name": "ClearSpace",
+      "slug": "clearspace",
+      "vendor_role": "robot_oem",
+      "regions": "Switzerland",
+      "categories": [
+        "Aerospace"
+      ],
+      "source_urls": [
+        "https://clearspace.today/"
+      ],
+      "domains": [
+        "clearspace.today"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "ClearSpace-1",
+          "slug": "clearspace-clearspace-1",
+          "company_name": "ClearSpace",
+          "company_slug": "clearspace",
+          "primary_class": "aerospace_robot",
+          "category": "Aerospace",
+          "listed_class": "Orbital debris removal",
+          "task": "Captures and deorbits a debris object with a servicing satellite",
+          "setting": "Low Earth orbit",
+          "status": "Deployed",
+          "region": "Switzerland",
+          "spreadsheet_sources": [
+            "https://clearspace.today/"
+          ],
+          "candidate_sources": [
+            "https://clearspace.today/"
+          ],
+          "product_url": "https://clearspace.today/",
+          "lookup_host": "clearspace.today",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "implement_on_host",
+          "host_platform": "satellite",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://clearspace.today/"
+      ]
+    },
+    {
+      "name": "Starfish Space",
+      "slug": "starfish-space",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Aerospace"
+      ],
+      "source_urls": [
+        "https://www.starfishspace.com/"
+      ],
+      "domains": [
+        "starfishspace.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "Otter",
+          "slug": "starfish-space-otter",
+          "company_name": "Starfish Space",
+          "company_slug": "starfish-space",
+          "primary_class": "aerospace_robot",
+          "category": "Aerospace",
+          "listed_class": "Satellite servicing tug",
+          "task": "Rides along and services a client satellite",
+          "setting": "On orbit",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://www.starfishspace.com/"
+          ],
+          "candidate_sources": [
+            "https://www.starfishspace.com/"
+          ],
+          "product_url": "https://www.starfishspace.com/",
+          "lookup_host": "starfishspace.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://www.starfishspace.com/"
+      ]
+    },
+    {
+      "name": "GITAI",
+      "slug": "gitai",
+      "vendor_role": "robot_oem",
+      "regions": "Japan / United States",
+      "categories": [
+        "Aerospace"
+      ],
+      "source_urls": [
+        "https://gitai.tech/"
+      ],
+      "domains": [
+        "gitai.tech"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "GITAI S2",
+          "slug": "gitai-gitai-s2",
+          "company_name": "GITAI",
+          "company_slug": "gitai",
+          "primary_class": "aerospace_robot",
+          "category": "Aerospace",
+          "listed_class": "Space robot arm",
+          "task": "In-space work and satellite servicing",
+          "setting": "On orbit · space development",
+          "status": "Deployed",
+          "region": "Japan / United States",
+          "spreadsheet_sources": [
+            "https://gitai.tech/"
+          ],
+          "candidate_sources": [
+            "https://gitai.tech/"
+          ],
+          "product_url": "https://gitai.tech/",
+          "lookup_host": "gitai.tech",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "configuration_kind": "standalone",
+          "host_platform": "none",
+          "source": "mission-2026-08-27-vertical-robot-catalog"
+        }
+      ],
+      "verified_urls": [
+        "https://gitai.tech/"
       ]
     }
   ],

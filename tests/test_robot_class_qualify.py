@@ -228,15 +228,17 @@ def test_public_class_options_include_ten_classes():
         "agriculture",
         "marine",
         "avionics",
+        "aerospace",
         "construction",
     ]
-    assert len(rows) == 10
+    assert len(rows) == 11
     for row in rows:
         assert row["label"].strip()
         assert row["hint"].strip()
     by_id = {row["id"]: row for row in rows}
-    assert "weed" in by_id["agriculture"]["hint"].lower()
+    assert "tractor" in by_id["agriculture"]["hint"].lower() or "combine" in by_id["agriculture"]["hint"].lower()
     assert "hull" in by_id["marine"]["hint"].lower()
-    assert "hangar" in by_id["avionics"]["hint"].lower()
-    assert "consumer drone" in by_id["avionics"]["hint"].lower()
-    assert "jobsite" in by_id["construction"]["hint"].lower()
+    assert "drone" in by_id["avionics"]["hint"].lower()
+    assert "evtol" in by_id["avionics"]["hint"].lower()
+    assert "satellite" in by_id["aerospace"]["hint"].lower()
+    assert "home" in by_id["construction"]["hint"].lower() or "building" in by_id["construction"]["hint"].lower()

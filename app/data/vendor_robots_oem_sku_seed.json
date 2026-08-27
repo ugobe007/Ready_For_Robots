@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-26T21:19:16+00:00",
+  "generated_at": "2026-08-27T19:55:45+00:00",
   "source": "docs/reference/readyforrobots_companies_and_robots.xlsx",
   "list_category": "oem_sku",
   "notes": [
@@ -10,8 +10,8 @@
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
-  "vendor_count": 62,
-  "robot_count": 189,
+  "vendor_count": 84,
+  "robot_count": 216,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -33,8 +33,16 @@
           "lookup_host": "1x.tech",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "NEO Gamma: General-purpose household and service tasks. Homes · service environments."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "EVE",
@@ -48,8 +56,16 @@
           "lookup_host": "1x.tech",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "EVE: Mobile manipulation and logistics. Warehouses · service environments."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Neo",
@@ -63,8 +79,16 @@
           "lookup_host": "1x.tech",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Neo indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -88,8 +112,16 @@
           "lookup_host": "abb.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "YuMi: Small-parts assembly. Electronics · light industry."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GoFa",
@@ -103,8 +135,16 @@
           "lookup_host": "abb.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GoFa: Collaborative handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "SWIFTI",
@@ -118,8 +158,16 @@
           "lookup_host": "abb.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "SWIFTI: Fast collaborative assembly. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "IRB 1200",
@@ -133,8 +181,16 @@
           "lookup_host": "abb.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "IRB 1200: Compact industrial assembly. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "IRB 6700",
@@ -148,8 +204,16 @@
           "lookup_host": "abb.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "IRB 6700: Heavy industrial handling. Automotive · manufacturing."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -173,8 +237,16 @@
           "lookup_host": "anybotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "quadruped",
+              "evidence_span": "ANYmal: Autonomous industrial inspection. Energy · process industry."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "ANYmal X",
@@ -188,8 +260,16 @@
           "lookup_host": "anybotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "quadruped",
+              "evidence_span": "ANYmal X: Explosion-protected inspection. Hazardous industrial sites."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -213,8 +293,16 @@
           "lookup_host": "accuray.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "CyberKnife: Image-guided radiotherapy. Cancer treatment centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Radixact",
@@ -228,8 +316,16 @@
           "lookup_host": "accuray.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Radixact: Helical radiotherapy. Cancer treatment centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -253,8 +349,16 @@
           "lookup_host": "aethon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "TUG: Hospital materials and medication transport. Hospitals."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "T3",
@@ -268,8 +372,16 @@
           "lookup_host": "aethon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "T3 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -293,8 +405,16 @@
           "lookup_host": "agilityrobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Digit: Tote movement and facility work. Warehouses · factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -318,8 +438,16 @@
           "lookup_host": "aboutamazon.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Proteus: Autonomous package movement. Fulfillment centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Sequoia",
@@ -333,8 +461,16 @@
           "lookup_host": "aboutamazon.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Sequoia: Inventory storage and retrieval. Fulfillment centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Sparrow",
@@ -348,8 +484,16 @@
           "lookup_host": "aboutamazon.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Sparrow: Robotic item handling. Fulfillment centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Hercules",
@@ -363,8 +507,16 @@
           "lookup_host": "aboutamazon.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Hercules: Mobile inventory transport. Fulfillment centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -388,8 +540,16 @@
           "lookup_host": "apptronik.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Apollo: Palletizing and material handling. Warehouses · manufacturing."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -413,8 +573,16 @@
           "lookup_host": "bearrobotics.ai",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Servi: Restaurant food and beverage delivery. Restaurants."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Servi Plus",
@@ -428,8 +596,16 @@
           "lookup_host": "bearrobotics.ai",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Servi Plus: High-capacity food delivery. Restaurants · hospitality."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Carti",
@@ -443,8 +619,16 @@
           "lookup_host": "bearrobotics.ai",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Carti: Autonomous cart transport. Restaurants · hotels."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Carti 100",
@@ -458,8 +642,16 @@
           "lookup_host": "bearrobotics.ai",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Carti 100 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -483,8 +675,16 @@
           "lookup_host": "bossanova.ai",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Bossa Nova inventory robot: Shelf auditing. Supermarkets."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -508,8 +708,16 @@
           "lookup_host": "bostondynamics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Spot: Inspection and remote observation. Industrial sites · energy."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Stretch",
@@ -523,8 +731,16 @@
           "lookup_host": "bostondynamics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Stretch: Trailer unloading and case handling. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Atlas",
@@ -538,8 +754,16 @@
           "lookup_host": "bostondynamics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Atlas: Dynamic handling and manipulation. Industrial R&D · factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -563,8 +787,16 @@
           "lookup_host": "diligentrobots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Moxi: Supplies, samples, PPE, medications. Hospitals."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -588,8 +820,16 @@
           "lookup_host": "ecovacs.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "WINBOT W2 OMNI: Window cleaning. Commercial · residential buildings."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Deebot X12S",
@@ -603,8 +843,16 @@
           "lookup_host": "ecovacs.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "Deebot X12S indexed class cleaning_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -628,8 +876,16 @@
           "lookup_host": "eksobionics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "EksoNR: Rehabilitation and gait training. Clinics · rehabilitation."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Ekso EVO",
@@ -643,8 +899,16 @@
           "lookup_host": "eksobionics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Ekso EVO: Lower-limb assistance. Rehabilitation."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -668,8 +932,16 @@
           "lookup_host": "fanucamerica.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "CRX-10iA: Collaborative handling and assembly. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "CRX-20iA/L",
@@ -683,8 +955,16 @@
           "lookup_host": "fanucamerica.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "CRX-20iA/L: Collaborative handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "LR Mate 200iD",
@@ -698,8 +978,16 @@
           "lookup_host": "fanucamerica.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "LR Mate 200iD: Small-parts handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "M-20iD",
@@ -713,8 +1001,16 @@
           "lookup_host": "fanucamerica.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "M-20iD: Material handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "R-2000iD",
@@ -728,8 +1024,16 @@
           "lookup_host": "fanucamerica.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "R-2000iD: Heavy payload handling. Automotive · manufacturing."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -753,8 +1057,16 @@
           "lookup_host": "fellowrobots.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "NAVii: Customer guidance and product location. Retail stores."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -778,8 +1090,16 @@
           "lookup_host": "figure.ai",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Figure 02: Material handling and industrial tasks. Factories · logistics."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "FIGURE 03",
@@ -793,8 +1113,16 @@
           "lookup_host": "figure.ai",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "FIGURE 03 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -818,8 +1146,16 @@
           "lookup_host": "fftai.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "GR-1: Humanoid mobility and rehabilitation research. Healthcare · research."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -843,8 +1179,16 @@
           "lookup_host": "fujitsu.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Robotic shelf scanner: Inventory visibility. Retail stores."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -868,8 +1212,16 @@
           "lookup_host": "gausium.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "Phantas: Commercial vacuum cleaning. Shopping centers · offices."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Vacuum 40",
@@ -883,8 +1235,16 @@
           "lookup_host": "gausium.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "Vacuum 40: Autonomous vacuuming. Commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Scrubber 50",
@@ -898,8 +1258,16 @@
           "lookup_host": "gausium.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "Scrubber 50: Autonomous scrubbing. Commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Scrubber 75",
@@ -913,8 +1281,16 @@
           "lookup_host": "gausium.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "Scrubber 75 indexed class cleaning_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "CD-01",
@@ -928,8 +1304,16 @@
           "lookup_host": "gausium.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "CD-01 indexed class cleaning_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "CD-04",
@@ -943,8 +1327,16 @@
           "lookup_host": "gausium.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "CD-04 indexed class cleaning_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "WS-01",
@@ -958,8 +1350,16 @@
           "lookup_host": "gausium.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "WS-01 indexed class cleaning_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "WS-02",
@@ -973,8 +1373,16 @@
           "lookup_host": "gausium.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "WS-02 indexed class cleaning_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "WS-03",
@@ -988,8 +1396,16 @@
           "lookup_host": "gausium.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning_robot",
+              "evidence_span": "WS-03 indexed class cleaning_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1013,8 +1429,16 @@
           "lookup_host": "greyorange.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Ranger Assist: Goods-to-person picking. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "ButlerBot",
@@ -1028,8 +1452,16 @@
           "lookup_host": "greyorange.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "ButlerBot: Storage and retrieval. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1053,8 +1485,16 @@
           "lookup_host": "hansonrobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Sophia: Social interaction and public engagement. Events · education · research."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1078,8 +1518,16 @@
           "lookup_host": "intuitive.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "surgical_robot",
+              "evidence_span": "da Vinci Xi: Robot-assisted minimally invasive surgery. Operating rooms."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "da Vinci X",
@@ -1093,8 +1541,16 @@
           "lookup_host": "intuitive.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "surgical_robot",
+              "evidence_span": "da Vinci X: Robot-assisted surgery. Operating rooms."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "da Vinci SP",
@@ -1108,8 +1564,16 @@
           "lookup_host": "intuitive.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "surgical_robot",
+              "evidence_span": "da Vinci SP: Single-port surgery. Operating rooms."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1133,8 +1597,16 @@
           "lookup_host": "kuka.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "KR QUANTEC: Welding and material handling. Automotive · industry."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "LBR iiwa",
@@ -1148,8 +1620,16 @@
           "lookup_host": "kuka.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "LBR iiwa: Sensitive collaborative assembly. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "KR AGILUS",
@@ -1163,8 +1643,16 @@
           "lookup_host": "kuka.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "KR AGILUS: High-speed small-part handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "KR FORTEC",
@@ -1178,8 +1666,16 @@
           "lookup_host": "kuka.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "KR FORTEC: Heavy industrial handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1203,8 +1699,16 @@
           "lookup_host": "karakuri.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Karakuri meal assembly system: Personalized meal assembly. Commercial kitchens."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1228,8 +1732,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Dinerbot T10: Food and beverage service. Restaurants · hotels."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Dinerbot T5",
@@ -1243,8 +1755,16 @@
           "lookup_host": "keenon.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Dinerbot T5: Table delivery and reception. Restaurants."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Butlerbot W3",
@@ -1258,8 +1778,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Butlerbot W3: Hotel room-service delivery. Hotels."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Keenon C30",
@@ -1273,8 +1801,16 @@
           "lookup_host": "keenon.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Keenon C30: Commercial cleaning. Public buildings."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Keenon M2",
@@ -1288,8 +1824,16 @@
           "lookup_host": "keenon.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Keenon M2: Delivery and reception. Hospitality · retail."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "C55",
@@ -1303,8 +1847,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "C55 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "C40",
@@ -1318,8 +1870,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "C40 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "C20",
@@ -1333,8 +1893,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "C20 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "T11",
@@ -1348,8 +1916,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "T11 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "T8",
@@ -1363,8 +1939,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "T8 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "T9",
@@ -1378,8 +1962,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "T9 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "T3",
@@ -1393,8 +1985,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "T3 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "W3",
@@ -1408,8 +2008,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "W3 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "S300",
@@ -1423,8 +2031,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "S300 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "S100",
@@ -1438,8 +2054,16 @@
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "S100 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1463,8 +2087,16 @@
           "lookup_host": "lg.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "CLOi GuideBot: Wayfinding and information. Retail · public spaces."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "CLOi ServeBot",
@@ -1478,8 +2110,16 @@
           "lookup_host": "lg.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "CLOi ServeBot: Delivery and service. Retail · hospitality."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "CLOi CartBot",
@@ -1493,8 +2133,16 @@
           "lookup_host": "lg.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "CLOi CartBot: Autonomous cart and checkout assistance. Retail stores."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1518,8 +2166,16 @@
           "lookup_host": "locusrobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Locus Origin: Pick-assist tote transport. Fulfillment centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Locus Vector",
@@ -1533,8 +2189,16 @@
           "lookup_host": "locusrobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Locus Vector: Heavy goods movement. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Locus Max",
@@ -1548,8 +2212,16 @@
           "lookup_host": "locusrobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Locus Max: Large-item fulfillment. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Locus Flex",
@@ -1563,8 +2235,16 @@
           "lookup_host": "locusrobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Locus Flex: Flexible pick assistance. Distribution centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1588,8 +2268,16 @@
           "lookup_host": "lowesinnovationlabs.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "LoweBot: Product location and guidance. Home improvement stores."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1613,8 +2301,16 @@
           "lookup_host": "medtronic.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "surgical_robot",
+              "evidence_span": "Hugo RAS: Robot-assisted surgery. Operating rooms."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1638,8 +2334,16 @@
           "lookup_host": "misorobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Flippy 2: Frying and food handling. Commercial kitchens."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Flippy Wings",
@@ -1653,8 +2357,16 @@
           "lookup_host": "misorobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Flippy Wings: Wing frying and handling. Restaurants."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1678,8 +2390,16 @@
           "lookup_host": "mistyrobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Misty II: Guidance and information. Retail · museums · offices."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1703,8 +2423,16 @@
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "MiR250: Internal material transport. Factories · warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "MiR600",
@@ -1718,8 +2446,16 @@
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "MiR600: Pallet transport. Factories · warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "MiR1200 Pallet Jack",
@@ -1733,8 +2469,16 @@
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "MiR1200 Pallet Jack: Autonomous pallet movement. Distribution centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "MiR1350",
@@ -1748,8 +2492,16 @@
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "MiR1350: Heavy internal transport. Factories · logistics."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "MiR1000",
@@ -1763,8 +2515,16 @@
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "MiR1000: Heavy pallet transport. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "MiR500",
@@ -1778,8 +2538,16 @@
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "MiR500: Pallet and cart transport. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1803,8 +2571,16 @@
           "lookup_host": "moley.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Moley Robotic Kitchen: Recipe-based cooking. Professional · residential kitchens."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1828,8 +2604,16 @@
           "lookup_host": "nalarobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Nala Chef: Recipe-based cooking. Restaurants · foodservice."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1853,8 +2637,16 @@
           "lookup_host": "nymble.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Nymble: Automated meal preparation. Kitchens."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1878,8 +2670,16 @@
           "lookup_host": "ottomotors.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "OTTO 100: Small-load material transport. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "OTTO 600",
@@ -1893,8 +2693,16 @@
           "lookup_host": "ottomotors.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "OTTO 600: Pallet and cart transport. Factories · warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "OTTO 1500",
@@ -1908,8 +2716,16 @@
           "lookup_host": "ottomotors.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "OTTO 1500: Heavy pallet transport. Industrial sites."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "OTTO 1200",
@@ -1923,8 +2739,16 @@
           "lookup_host": "ottomotors.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "OTTO 1200 indexed class amr."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1948,8 +2772,16 @@
           "lookup_host": "ohmnilabs.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Ohmni: Remote presence and teleoperation. Healthcare · education."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -1973,8 +2805,16 @@
           "lookup_host": "pal-robotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "TIAGo: Mobile manipulation and research. Research · healthcare."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "TALOS",
@@ -1988,8 +2828,16 @@
           "lookup_host": "pal-robotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "TALOS: Whole-body humanoid research. Industrial R&D · research."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2013,8 +2861,16 @@
           "lookup_host": "parorobots.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "PARO: Companionship and sensory stimulation. Care facilities · therapy."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2038,8 +2894,16 @@
           "lookup_host": "pensasystems.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Pensa autonomous shelf scanner: Shelf auditing and inventory. Retail stores."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2063,8 +2927,16 @@
           "lookup_host": "picnicworks.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Picnic Pizza Station: Pizza assembly. Foodservice kitchens."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2088,8 +2960,16 @@
           "lookup_host": "pizzabot.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Pizzabot: Pizza preparation and topping. Pizzerias · foodservice."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2113,8 +2993,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "BellaBot: Tray delivery and guest interaction. Restaurants · hotels."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "HolaBot",
@@ -2128,8 +3016,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "HolaBot: Tray delivery and dish return. Restaurants · hospitality."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "KettyBot",
@@ -2143,8 +3039,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "KettyBot: Front-of-house delivery and greeting. Restaurants · cafés."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "FlashBot",
@@ -2158,8 +3062,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "FlashBot: Elevator-enabled room delivery. Hotels · hospitals."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "CC1",
@@ -2173,8 +3085,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "CC1: Vacuuming, scrubbing, mopping. Commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "MT1",
@@ -2188,8 +3108,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "MT1: Outdoor sweeping and cleaning. Campuses · public spaces."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "PUDU T300",
@@ -2203,8 +3131,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "PUDU T300: Commercial floor cleaning. Public · commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "D9",
@@ -2218,8 +3154,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "D9 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "PUDUA1",
@@ -2233,8 +3177,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "PUDUA1 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "PUDUD1",
@@ -2248,8 +3200,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "PUDUD1 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "PUDUSH1",
@@ -2263,8 +3223,16 @@
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "PUDUSH1 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2288,8 +3256,16 @@
           "lookup_host": "richtechrobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "ADAM: Beverage and cocktail preparation. Restaurants · bars."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Scotty",
@@ -2303,8 +3279,16 @@
           "lookup_host": "richtechrobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Scotty: Food and beverage delivery. Restaurants."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2328,8 +3312,16 @@
           "lookup_host": "sanctuary.ai",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Phoenix: General-purpose dexterous work. Factories · warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2353,8 +3345,16 @@
           "lookup_host": "savioke.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "delivery_robot",
+              "evidence_span": "Relay+: Secure indoor item delivery. Hotels · hospitals."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2378,8 +3378,16 @@
           "lookup_host": "seegrid.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Palion Tow Tractor: Autonomous towing. Factories · warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Palion Lift",
@@ -2393,8 +3401,16 @@
           "lookup_host": "seegrid.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Palion Lift: Pallet movement. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP8",
@@ -2408,8 +3424,16 @@
           "lookup_host": "seegrid.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "GP8: Pallet transport. Distribution centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Lift EL1 Amr",
@@ -2423,8 +3447,16 @@
           "lookup_host": "seegrid.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Lift EL1 Amr indexed class amr."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Lift RS1 Amr",
@@ -2438,8 +3470,16 @@
           "lookup_host": "seegrid.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Lift RS1 Amr indexed class amr."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Lift CR1 Amr",
@@ -2453,8 +3493,16 @@
           "lookup_host": "seegrid.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Lift CR1 Amr indexed class amr."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Tow Tractor S7 Amr",
@@ -2468,8 +3516,16 @@
           "lookup_host": "seegrid.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Tow Tractor S7 Amr indexed class amr."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2493,8 +3549,16 @@
           "lookup_host": "simberobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Tally: Shelf scanning and inventory analytics. Grocery · big-box retail."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2518,8 +3582,16 @@
           "lookup_host": "softbankrobotics.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Pepper: Reception, guidance, engagement. Retail · events · public spaces."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2543,8 +3615,16 @@
           "lookup_host": "starship.xyz",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "delivery_robot",
+              "evidence_span": "Starship delivery robot: Sidewalk food and parcel delivery. Campuses · neighborhoods."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2568,8 +3648,16 @@
           "lookup_host": "stryker.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "surgical_robot",
+              "evidence_span": "Mako SmartRobotics: Orthopedic surgical assistance. Operating rooms."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2593,8 +3681,16 @@
           "lookup_host": "staubli.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "TX2-60: Precision assembly. Factories · labs."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "TS2-40",
@@ -2608,8 +3704,16 @@
           "lookup_host": "staubli.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "TS2-40: High-speed assembly. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "HEM4",
@@ -2623,8 +3727,16 @@
           "lookup_host": "staubli.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "HEM4: Hygienic handling. Food · pharma manufacturing."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2648,8 +3760,16 @@
           "lookup_host": "symbotic.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Symbotic storage robot: High-density case movement. Distribution centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Symbotic palletizing robot",
@@ -2663,8 +3783,16 @@
           "lookup_host": "symbotic.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Symbotic palletizing robot: Pallet building and movement. Distribution centers."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2688,8 +3816,16 @@
           "lookup_host": "tesla.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Optimus: General-purpose manipulation. Factories · R&D."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2713,8 +3849,16 @@
           "lookup_host": "ubtrobot.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Cruzr: Reception, guidance, engagement. Hotels · public spaces."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Walker X",
@@ -2728,8 +3872,16 @@
           "lookup_host": "ubtrobot.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Walker X: Bipedal service and interaction. Hospitality · public spaces."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Walker S2",
@@ -2743,8 +3895,16 @@
           "lookup_host": "ubtrobot.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Walker S2 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Alpha 1E",
@@ -2758,8 +3918,16 @@
           "lookup_host": "ubtrobot.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Alpha 1E indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Walker",
@@ -2773,8 +3941,16 @@
           "lookup_host": "ubtrobot.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Walker indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -2798,8 +3974,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "G1: Bipedal research and manipulation. Research · education."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "H1",
@@ -2813,8 +3997,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "H1: Bipedal research platform. Research · industrial R&D."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "AS2",
@@ -2828,8 +4020,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "AS2 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GO2",
@@ -2843,8 +4043,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "GO2 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GO1",
@@ -2858,8 +4066,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "GO1 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "A1",
@@ -2873,8 +4089,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "A1 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "A2",
@@ -2888,8 +4112,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "A2 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "B2",
@@ -2903,8 +4135,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "B2 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "B1",
@@ -2918,8 +4158,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "B1 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "Z1",
@@ -2933,8 +4181,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Z1 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "L2",
@@ -2948,8 +4204,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "L2 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "H2",
@@ -2963,8 +4227,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "H2 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "R1",
@@ -2978,8 +4250,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "R1 indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "H2-D",
@@ -2993,8 +4273,16 @@
           "lookup_host": "unitree.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "H2-D indexed class humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -3018,8 +4306,16 @@
           "lookup_host": "universal-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cobot",
+              "evidence_span": "UR3e: Light assembly and handling. Factories · labs."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "UR7e",
@@ -3033,8 +4329,16 @@
           "lookup_host": "universal-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cobot",
+              "evidence_span": "UR7e: Flexible collaborative handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "UR12e",
@@ -3048,8 +4352,16 @@
           "lookup_host": "universal-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cobot",
+              "evidence_span": "UR12e: Assembly and machine tending. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "UR16e",
@@ -3063,8 +4375,16 @@
           "lookup_host": "universal-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cobot",
+              "evidence_span": "UR16e: Heavy-duty collaborative handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "UR20",
@@ -3078,8 +4398,16 @@
           "lookup_host": "universal-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cobot",
+              "evidence_span": "UR20: Palletizing and welding. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "UR30",
@@ -3093,8 +4421,16 @@
           "lookup_host": "universal-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cobot",
+              "evidence_span": "UR30: Heavy payload handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "UR15",
@@ -3108,8 +4444,16 @@
           "lookup_host": "universal-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cobot",
+              "evidence_span": "UR15: Machine tending and handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "UR18",
@@ -3123,8 +4467,16 @@
           "lookup_host": "universal-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cobot",
+              "evidence_span": "UR18: Compact high-payload handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "UR8 Long",
@@ -3138,8 +4490,16 @@
           "lookup_host": "universal-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cobot",
+              "evidence_span": "UR8 Long: Long-reach collaborative handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -3163,8 +4523,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "HC10DTP: Collaborative handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP8",
@@ -3178,8 +4546,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP8: Fast handling and assembly. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP25",
@@ -3193,8 +4569,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP25: Material handling. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "AR1440",
@@ -3208,8 +4592,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "AR1440: Arc welding. Factories."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP4",
@@ -3223,8 +4615,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP4 indexed class industrial_arm."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP7",
@@ -3238,8 +4638,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP7 indexed class industrial_arm."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP8L",
@@ -3253,8 +4661,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP8L indexed class industrial_arm."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP10",
@@ -3268,8 +4684,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP10 indexed class industrial_arm."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP12",
@@ -3283,8 +4707,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP12 indexed class industrial_arm."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP20HL",
@@ -3298,8 +4730,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP20HL indexed class industrial_arm."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP35L",
@@ -3313,8 +4753,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP35L indexed class industrial_arm."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP50",
@@ -3328,8 +4776,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP50 indexed class industrial_arm."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP70L",
@@ -3343,8 +4799,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP70L indexed class industrial_arm."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "GP88",
@@ -3358,8 +4822,16 @@
           "lookup_host": "motoman.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "industrial_arm",
+              "evidence_span": "GP88 indexed class industrial_arm."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -3383,8 +4855,16 @@
           "lookup_host": "zimmerbiomet.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "surgical_robot",
+              "evidence_span": "ROSA Knee: Robotic knee surgery assistance. Operating rooms."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "ROSA ONE",
@@ -3398,8 +4878,16 @@
           "lookup_host": "zimmerbiomet.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "surgical_robot",
+              "evidence_span": "ROSA ONE: Neurosurgical assistance. Operating rooms."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -3423,8 +4911,16 @@
           "lookup_host": "robotemi.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "temi Classic: Telepresence and guided interaction. Healthcare · education."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         },
         {
           "name": "temi V3",
@@ -3438,8 +4934,16 @@
           "lookup_host": "robotemi.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [],
-          "specs": {}
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "temi V3: Telepresence and service. Business · hospitality."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     },
@@ -3459,7 +4963,7 @@
           "primary_class": "agricultural_robot",
           "status": "available",
           "country": "United States",
-          "description": "LaserWeeder: laser weeding of row crops. Used in Agriculture.",
+          "description": "LaserWeeder: Laser and mechanical weed removal in row crops. Fields · row crops · vegetable beds.",
           "lookup_host": "carbonrobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
@@ -3467,15 +4971,1263 @@
             {
               "predicate": "product_class",
               "value": "agricultural_robot",
-              "evidence_span": "LaserWeeder: laser weeding of row crops."
+              "evidence_span": "LaserWeeder: Laser and mechanical weed removal in row crops. Fields · row crops · vegetable beds."
             },
             {
               "predicate": "claims_agriculture",
               "value": true,
-              "evidence_span": "LaserWeeder: laser weeding of row crops."
+              "evidence_span": "LaserWeeder: Laser and mechanical weed removal in row crops. Fields · row crops · vegetable beds."
             }
           ],
-          "specs": {}
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "John Deere",
+      "domains": [
+        "deere.com"
+      ],
+      "vendor_url": "https://deere.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "X Series Combine",
+          "model_slug": "john-deere-x-series-combine",
+          "product_url": "https://www.deere.com/en/harvesting/x-series-combines/",
+          "vendor_url": "https://deere.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "X Series Combine: Grain harvest with an X Series combine. Fields · grain harvest.",
+          "lookup_host": "deere.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "X Series Combine: Grain harvest with an X Series combine. Fields · grain harvest."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "X Series Combine: Grain harvest with an X Series combine. Fields · grain harvest."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "X Series Combine configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "X Series Combine host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Autonomous Tractor",
+          "model_slug": "john-deere-autonomous-tractor",
+          "product_url": "https://www.deere.com/en/autonomous/",
+          "vendor_url": "https://deere.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Autonomous Tractor: Autonomous tractor for planting and field work. Fields · planting · harvest support.",
+          "lookup_host": "deere.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "Autonomous Tractor: Autonomous tractor for planting and field work. Fields · planting · harvest support."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "Autonomous Tractor: Autonomous tractor for planting and field work. Fields · planting · harvest support."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Autonomous Tractor configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Autonomous Tractor host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "See & Spray Ultimate",
+          "model_slug": "john-deere-see-spray-ultimate",
+          "product_url": "https://www.deere.com/en/sprayers/see-spray-ultimate/",
+          "vendor_url": "https://deere.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "See & Spray Ultimate: See-and-spray implement on a tractor/sprayer host. Fields · row crops.",
+          "lookup_host": "deere.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "See & Spray Ultimate: See-and-spray implement on a tractor/sprayer host. Fields · row crops."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "See & Spray Ultimate: See-and-spray implement on a tractor/sprayer host. Fields · row crops."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "implement_on_host",
+              "evidence_span": "See & Spray Ultimate configuration implement_on_host."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "tractor",
+              "evidence_span": "See & Spray Ultimate host platform tractor."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "implement_on_host",
+          "host_platform": "tractor"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Monarch Tractor",
+      "domains": [
+        "monarchtractor.com"
+      ],
+      "vendor_url": "https://monarchtractor.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "MK-V",
+          "model_slug": "monarch-tractor-mk-v",
+          "product_url": "https://www.monarchtractor.com/",
+          "vendor_url": "https://monarchtractor.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "MK-V: Electric tractor for planting and field work. Vineyards · orchards · fields.",
+          "lookup_host": "monarchtractor.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "MK-V: Electric tractor for planting and field work. Vineyards · orchards · fields."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "MK-V: Electric tractor for planting and field work. Vineyards · orchards · fields."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "MK-V configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "MK-V host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Naio Technologies",
+      "domains": [
+        "naio-technologies.com"
+      ],
+      "vendor_url": "https://naio-technologies.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Oz",
+          "model_slug": "naio-technologies-oz",
+          "product_url": "https://www.naio-technologies.com/en/oz/",
+          "vendor_url": "https://naio-technologies.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "France",
+          "description": "Oz: Mechanical weeding in vegetable rows. Fields · vegetable beds.",
+          "lookup_host": "naio-technologies.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "Oz: Mechanical weeding in vegetable rows. Fields · vegetable beds."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "Oz: Mechanical weeding in vegetable rows. Fields · vegetable beds."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Oz configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Oz host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Ted",
+          "model_slug": "naio-technologies-ted",
+          "product_url": "https://www.naio-technologies.com/en/ted/",
+          "vendor_url": "https://naio-technologies.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "France",
+          "description": "Ted: Mechanical weeding in vineyards. Vineyards.",
+          "lookup_host": "naio-technologies.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "Ted: Mechanical weeding in vineyards. Vineyards."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "Ted: Mechanical weeding in vineyards. Vineyards."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Ted configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Ted host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Jo",
+          "model_slug": "naio-technologies-jo",
+          "product_url": "https://www.naio-technologies.com/en/jo/",
+          "vendor_url": "https://naio-technologies.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "France",
+          "description": "Jo: Mechanical weeding with larger tools. Fields · vegetable beds.",
+          "lookup_host": "naio-technologies.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "Jo: Mechanical weeding with larger tools. Fields · vegetable beds."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "Jo: Mechanical weeding with larger tools. Fields · vegetable beds."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Jo configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Jo host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Ecorobotix",
+      "domains": [
+        "ecorobotix.com"
+      ],
+      "vendor_url": "https://ecorobotix.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "ARA",
+          "model_slug": "ecorobotix-ara",
+          "product_url": "https://www.ecorobotix.com/en/ara/",
+          "vendor_url": "https://ecorobotix.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "Switzerland",
+          "description": "ARA: Ultra-high precision spray implement on a tractor host. Fields · row crops.",
+          "lookup_host": "ecorobotix.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "ARA: Ultra-high precision spray implement on a tractor host. Fields · row crops."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "ARA: Ultra-high precision spray implement on a tractor host. Fields · row crops."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "implement_on_host",
+              "evidence_span": "ARA configuration implement_on_host."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "tractor",
+              "evidence_span": "ARA host platform tractor."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "implement_on_host",
+          "host_platform": "tractor"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Burro",
+      "domains": [
+        "goburro.com"
+      ],
+      "vendor_url": "https://goburro.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Burro",
+          "model_slug": "burro-burro",
+          "product_url": "https://www.goburro.com/burro",
+          "vendor_url": "https://goburro.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Burro: Follows crews and hauls harvest totes. Fields · orchards · nurseries.",
+          "lookup_host": "goburro.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "Burro: Follows crews and hauls harvest totes. Fields · orchards · nurseries."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "Burro: Follows crews and hauls harvest totes. Fields · orchards · nurseries."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Burro configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Burro host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "CLAAS",
+      "domains": [
+        "claas.com"
+      ],
+      "vendor_url": "https://claas.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "LEXION 8000-7000",
+          "model_slug": "claas-lexion-8000-7000",
+          "product_url": "https://www.claas.com/en-us/products/combines/lexion-8000-7000",
+          "vendor_url": "https://claas.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "Germany",
+          "description": "LEXION 8000-7000: Grain harvest with a LEXION combine. Fields · grain harvest.",
+          "lookup_host": "claas.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "LEXION 8000-7000: Grain harvest with a LEXION combine. Fields · grain harvest."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "LEXION 8000-7000: Grain harvest with a LEXION combine. Fields · grain harvest."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "LEXION 8000-7000 configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "LEXION 8000-7000 host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Dusty Robotics",
+      "domains": [
+        "dustyrobotics.com"
+      ],
+      "vendor_url": "https://dustyrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "FieldPrinter",
+          "model_slug": "dusty-robotics-fieldprinter",
+          "product_url": "https://www.dustyrobotics.com/fieldprinter",
+          "vendor_url": "https://dustyrobotics.com",
+          "primary_class": "construction_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "FieldPrinter: Prints construction layout on the floor. Homes · buildings · jobsites.",
+          "lookup_host": "dustyrobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "construction_robot",
+              "evidence_span": "FieldPrinter: Prints construction layout on the floor. Homes · buildings · jobsites."
+            },
+            {
+              "predicate": "claims_construction",
+              "value": true,
+              "evidence_span": "FieldPrinter: Prints construction layout on the floor. Homes · buildings · jobsites."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "FieldPrinter configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "FieldPrinter host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "ICON",
+      "domains": [
+        "iconbuild.com"
+      ],
+      "vendor_url": "https://iconbuild.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Vulcan",
+          "model_slug": "icon-vulcan",
+          "product_url": "https://www.iconbuild.com/vulcan",
+          "vendor_url": "https://iconbuild.com",
+          "primary_class": "construction_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Vulcan: 3D-prints walls for homes and buildings. Residential construction · community build.",
+          "lookup_host": "iconbuild.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "construction_robot",
+              "evidence_span": "Vulcan: 3D-prints walls for homes and buildings. Residential construction · community build."
+            },
+            {
+              "predicate": "claims_construction",
+              "value": true,
+              "evidence_span": "Vulcan: 3D-prints walls for homes and buildings. Residential construction · community build."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Vulcan configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Vulcan host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "COBOD",
+      "domains": [
+        "cobod.com"
+      ],
+      "vendor_url": "https://cobod.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "BOD2",
+          "model_slug": "cobod-bod2",
+          "product_url": "https://cobod.com/bod2/",
+          "vendor_url": "https://cobod.com",
+          "primary_class": "construction_robot",
+          "status": "available",
+          "country": "Denmark",
+          "description": "BOD2: 3D-prints buildings on site. Building construction.",
+          "lookup_host": "cobod.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "construction_robot",
+              "evidence_span": "BOD2: 3D-prints buildings on site. Building construction."
+            },
+            {
+              "predicate": "claims_construction",
+              "value": true,
+              "evidence_span": "BOD2: 3D-prints buildings on site. Building construction."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "BOD2 configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "BOD2 host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "FBR",
+      "domains": [
+        "fbr.com.au"
+      ],
+      "vendor_url": "https://fbr.com.au",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Hadrian X",
+          "model_slug": "fbr-hadrian-x",
+          "product_url": "https://www.fbr.com.au/",
+          "vendor_url": "https://fbr.com.au",
+          "primary_class": "construction_robot",
+          "status": "available",
+          "country": "Australia",
+          "description": "Hadrian X: Lays blocks for buildings. Building construction.",
+          "lookup_host": "fbr.com.au",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "construction_robot",
+              "evidence_span": "Hadrian X: Lays blocks for buildings. Building construction."
+            },
+            {
+              "predicate": "claims_construction",
+              "value": true,
+              "evidence_span": "Hadrian X: Lays blocks for buildings. Building construction."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Hadrian X configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Hadrian X host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Advanced Construction Robotics",
+      "domains": [
+        "constructionrobots.com"
+      ],
+      "vendor_url": "https://constructionrobots.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "TyBOT",
+          "model_slug": "advanced-construction-robotics-tybot",
+          "product_url": "https://www.constructionrobots.com/tybot/",
+          "vendor_url": "https://constructionrobots.com",
+          "primary_class": "construction_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "TyBOT: Ties rebar on decks for buildings and civil work. Building construction · decks.",
+          "lookup_host": "constructionrobots.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "construction_robot",
+              "evidence_span": "TyBOT: Ties rebar on decks for buildings and civil work. Building construction · decks."
+            },
+            {
+              "predicate": "claims_construction",
+              "value": true,
+              "evidence_span": "TyBOT: Ties rebar on decks for buildings and civil work. Building construction · decks."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "TyBOT configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "TyBOT host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Skydio",
+      "domains": [
+        "skydio.com"
+      ],
+      "vendor_url": "https://skydio.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "X10",
+          "model_slug": "skydio-x10",
+          "product_url": "https://www.skydio.com/x10",
+          "vendor_url": "https://skydio.com",
+          "primary_class": "drone",
+          "status": "available",
+          "country": "United States",
+          "description": "X10: Autonomous drone inspection of assets and airframes. Outdoor inspection · flight.",
+          "lookup_host": "skydio.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "drone",
+              "evidence_span": "X10: Autonomous drone inspection of assets and airframes. Outdoor inspection · flight."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "X10: Autonomous drone inspection of assets and airframes. Outdoor inspection · flight."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "X10 configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "X10 host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Joby Aviation",
+      "domains": [
+        "jobyaviation.com"
+      ],
+      "vendor_url": "https://jobyaviation.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Joby eVTOL",
+          "model_slug": "joby-aviation-joby-evtol",
+          "product_url": "https://www.jobyaviation.com/aircraft/",
+          "vendor_url": "https://jobyaviation.com",
+          "primary_class": "evtol",
+          "status": "available",
+          "country": "United States",
+          "description": "Joby eVTOL: Electric vertical takeoff passenger aircraft. Urban air mobility.",
+          "lookup_host": "jobyaviation.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "evtol",
+              "evidence_span": "Joby eVTOL: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "Joby eVTOL: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Joby eVTOL configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Joby eVTOL host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Archer",
+      "domains": [
+        "archer.com"
+      ],
+      "vendor_url": "https://archer.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Midnight",
+          "model_slug": "archer-midnight",
+          "product_url": "https://www.archer.com/aircraft",
+          "vendor_url": "https://archer.com",
+          "primary_class": "evtol",
+          "status": "available",
+          "country": "United States",
+          "description": "Midnight: Electric vertical takeoff passenger aircraft. Urban air mobility.",
+          "lookup_host": "archer.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "evtol",
+              "evidence_span": "Midnight: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "Midnight: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Midnight configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Midnight host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Beta Technologies",
+      "domains": [
+        "beta.team"
+      ],
+      "vendor_url": "https://beta.team",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "ALIA",
+          "model_slug": "beta-technologies-alia",
+          "product_url": "https://www.beta.team/aircraft/",
+          "vendor_url": "https://beta.team",
+          "primary_class": "evtol",
+          "status": "available",
+          "country": "United States",
+          "description": "ALIA: Electric aircraft for cargo and passenger routes. Regional flight.",
+          "lookup_host": "beta.team",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "evtol",
+              "evidence_span": "ALIA: Electric aircraft for cargo and passenger routes. Regional flight."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "ALIA: Electric aircraft for cargo and passenger routes. Regional flight."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "ALIA configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "ALIA host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Wisk Aero",
+      "domains": [
+        "wisk.aero"
+      ],
+      "vendor_url": "https://wisk.aero",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Wisk Generation 6",
+          "model_slug": "wisk-aero-wisk-generation-6",
+          "product_url": "https://wisk.aero/aircraft",
+          "vendor_url": "https://wisk.aero",
+          "primary_class": "evtol",
+          "status": "available",
+          "country": "United States",
+          "description": "Wisk Generation 6: Autonomous eVTOL passenger aircraft. Urban air mobility.",
+          "lookup_host": "wisk.aero",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "evtol",
+              "evidence_span": "Wisk Generation 6: Autonomous eVTOL passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "Wisk Generation 6: Autonomous eVTOL passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Wisk Generation 6 configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Wisk Generation 6 host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Zipline",
+      "domains": [
+        "zipline.com"
+      ],
+      "vendor_url": "https://zipline.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Zipline Platform 2",
+          "model_slug": "zipline-zipline-platform-2",
+          "product_url": "https://www.zipline.com/",
+          "vendor_url": "https://zipline.com",
+          "primary_class": "drone",
+          "status": "available",
+          "country": "United States",
+          "description": "Zipline Platform 2: Autonomous drone delivery of medical and retail payloads. Delivery corridors.",
+          "lookup_host": "zipline.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "drone",
+              "evidence_span": "Zipline Platform 2: Autonomous drone delivery of medical and retail payloads. Delivery corridors."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "Zipline Platform 2: Autonomous drone delivery of medical and retail payloads. Delivery corridors."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Zipline Platform 2 configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Zipline Platform 2 host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Shield AI",
+      "domains": [
+        "shield.ai"
+      ],
+      "vendor_url": "https://shield.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "V-BAT",
+          "model_slug": "shield-ai-v-bat",
+          "product_url": "https://shield.ai/v-bat/",
+          "vendor_url": "https://shield.ai",
+          "primary_class": "drone",
+          "status": "available",
+          "country": "United States",
+          "description": "V-BAT: Autonomous VTOL drone for inspection and ISR flight. Flight · inspection.",
+          "lookup_host": "shield.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "drone",
+              "evidence_span": "V-BAT: Autonomous VTOL drone for inspection and ISR flight. Flight · inspection."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "V-BAT: Autonomous VTOL drone for inspection and ISR flight. Flight · inspection."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "V-BAT configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "V-BAT host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Astroscale",
+      "domains": [
+        "astroscale.com"
+      ],
+      "vendor_url": "https://astroscale.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "ELSA-d",
+          "model_slug": "astroscale-elsa-d",
+          "product_url": "https://astroscale.com/missions/elsa-d/",
+          "vendor_url": "https://astroscale.com",
+          "primary_class": "aerospace_robot",
+          "status": "available",
+          "country": "Japan / United Kingdom",
+          "description": "ELSA-d: Rendezvous and magnetic capture for end-of-life satellites. Low Earth orbit.",
+          "lookup_host": "astroscale.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "aerospace_robot",
+              "evidence_span": "ELSA-d: Rendezvous and magnetic capture for end-of-life satellites. Low Earth orbit."
+            },
+            {
+              "predicate": "claims_aerospace",
+              "value": true,
+              "evidence_span": "ELSA-d: Rendezvous and magnetic capture for end-of-life satellites. Low Earth orbit."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "ELSA-d configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "ELSA-d host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "ADRAS-J",
+          "model_slug": "astroscale-adras-j",
+          "product_url": "https://astroscale.com/missions/adras-j/",
+          "vendor_url": "https://astroscale.com",
+          "primary_class": "aerospace_robot",
+          "status": "available",
+          "country": "Japan / United Kingdom",
+          "description": "ADRAS-J: Inspects a large debris object on orbit. Low Earth orbit.",
+          "lookup_host": "astroscale.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "aerospace_robot",
+              "evidence_span": "ADRAS-J: Inspects a large debris object on orbit. Low Earth orbit."
+            },
+            {
+              "predicate": "claims_aerospace",
+              "value": true,
+              "evidence_span": "ADRAS-J: Inspects a large debris object on orbit. Low Earth orbit."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "implement_on_host",
+              "evidence_span": "ADRAS-J configuration implement_on_host."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "satellite",
+              "evidence_span": "ADRAS-J host platform satellite."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "implement_on_host",
+          "host_platform": "satellite"
+        }
+      ]
+    },
+    {
+      "vendor_name": "ClearSpace",
+      "domains": [
+        "clearspace.today"
+      ],
+      "vendor_url": "https://clearspace.today",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "ClearSpace-1",
+          "model_slug": "clearspace-clearspace-1",
+          "product_url": "https://clearspace.today/",
+          "vendor_url": "https://clearspace.today",
+          "primary_class": "aerospace_robot",
+          "status": "available",
+          "country": "Switzerland",
+          "description": "ClearSpace-1: Captures and deorbits a debris object with a servicing satellite. Low Earth orbit.",
+          "lookup_host": "clearspace.today",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "aerospace_robot",
+              "evidence_span": "ClearSpace-1: Captures and deorbits a debris object with a servicing satellite. Low Earth orbit."
+            },
+            {
+              "predicate": "claims_aerospace",
+              "value": true,
+              "evidence_span": "ClearSpace-1: Captures and deorbits a debris object with a servicing satellite. Low Earth orbit."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "implement_on_host",
+              "evidence_span": "ClearSpace-1 configuration implement_on_host."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "satellite",
+              "evidence_span": "ClearSpace-1 host platform satellite."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "implement_on_host",
+          "host_platform": "satellite"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Starfish Space",
+      "domains": [
+        "starfishspace.com"
+      ],
+      "vendor_url": "https://starfishspace.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Otter",
+          "model_slug": "starfish-space-otter",
+          "product_url": "https://www.starfishspace.com/",
+          "vendor_url": "https://starfishspace.com",
+          "primary_class": "aerospace_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Otter: Rides along and services a client satellite. On orbit.",
+          "lookup_host": "starfishspace.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "aerospace_robot",
+              "evidence_span": "Otter: Rides along and services a client satellite. On orbit."
+            },
+            {
+              "predicate": "claims_aerospace",
+              "value": true,
+              "evidence_span": "Otter: Rides along and services a client satellite. On orbit."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Otter configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Otter host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "GITAI",
+      "domains": [
+        "gitai.tech"
+      ],
+      "vendor_url": "https://gitai.tech",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "GITAI S2",
+          "model_slug": "gitai-gitai-s2",
+          "product_url": "https://gitai.tech/",
+          "vendor_url": "https://gitai.tech",
+          "primary_class": "aerospace_robot",
+          "status": "available",
+          "country": "Japan / United States",
+          "description": "GITAI S2: In-space work and satellite servicing. On orbit · space development.",
+          "lookup_host": "gitai.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "aerospace_robot",
+              "evidence_span": "GITAI S2: In-space work and satellite servicing. On orbit · space development."
+            },
+            {
+              "predicate": "claims_aerospace",
+              "value": true,
+              "evidence_span": "GITAI S2: In-space work and satellite servicing. On orbit · space development."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "GITAI S2 configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "GITAI S2 host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
         }
       ]
     }

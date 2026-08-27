@@ -42,6 +42,8 @@ A robot's capabilities belong to a **specific product/configuration** grounded i
 | [`ROBOT_WORKFLOW_ONTOLOGY.md`](ROBOT_WORKFLOW_ONTOLOGY.md) | Workflow | What real jobs-of-work does it do? |
 | [`ROBOT_JOB_ONTOLOGY.md`](ROBOT_JOB_ONTOLOGY.md) | Job | Company + worksite + workflow + requirements + evidence |
 | [`ROBOT_VERTICAL_ONTOLOGY.md`](ROBOT_VERTICAL_ONTOLOGY.md) | Vertical | Operating environments (warehouse, healthcare, eldercare, hospitality, …) |
+| [`ROBOT_AVIONICS_AEROSPACE.md`](ROBOT_AVIONICS_AEROSPACE.md) | Split | Avionics (drone/eVTOL/aircraft) vs aerospace (satellite/rocket/debris) |
+| [`ROBOT_TRACTOR_IMPLEMENT.md`](ROBOT_TRACTOR_IMPLEMENT.md) | Config | Tractor/combine implements are configurations, not a class |
 | [`ROBOT_INFERENCE_RULES.md`](ROBOT_INFERENCE_RULES.md) | **Rules** | How to infer capabilities from hardware — rules, not vibes |
 
 ## Confidence vocabulary (flows end-to-end)
@@ -72,6 +74,7 @@ workflow via `app/services/robot_ontology.py`:
 - [`inference_rules.v1.json`](inference_rules.v1.json) — structured R1–R21 with status.
 - [`task_model_ontology.v1.json`](task_model_ontology.v1.json) — per-job required task-model slots + where to look. Presence starts unknown.
 - [`oem_sku_catalog.v1.json`](oem_sku_catalog.v1.json) — operator OEM → named SKU identity seed (COMPANY → PRODUCT). Empty specs stay `UNKNOWN`. Rebuild: `PYTHONPATH=. python3 scripts/ingest_oem_sku_catalog.py`. FIND loads the compiled `app/data/vendor_robots_oem_sku_seed.json` via `vendor_robot_lookup`.
+- [`vertical_oem_sku_catalog.v1.json`](vertical_oem_sku_catalog.v1.json) — verified agriculture / construction / avionics / aerospace named SKUs. Merged on ingest so workbook parse does not wipe them. Unverified URLs are omitted (Stretch-on-Spot).
 
 Pre-existing companions:
 - [`primitives.v1.json`](primitives.v1.json) — frozen WORK primitive codes (IDs never renamed).

@@ -71,13 +71,20 @@ _BOOL_DETECTORS: list[tuple[re.Pattern, str, Any, Optional[str], float]] = [
      "product_class", "autonomous_scrubber", None, CONF["HIGH"]),
     (_rx(r"\bmobile\s+manipulators?\b"), "product_class", "mobile_manipulator", None, CONF["HIGH"]),
     (_rx(r"\bautonomous\s+mobile\s+robot\b|\bamr\b"), "product_class", "amr", None, CONF["MEDIUM"]),
-    (_rx(r"\blaserweeder\b|\blaser\s+weeder\b|\bagricultural\s+robots?\b|\bweeding\s+robots?\b"),
+    (_rx(r"\blaserweeder\b|\blaser\s+weeder\b|\bagricultural\s+robots?\b|\bweeding\s+robots?\b|"
+         r"\bautonomous\s+(?:tractor|combine|harvester)\b|\bcombine\s+harvest"),
      "product_class", "agricultural_robot", None, CONF["HIGH"]),
     (_rx(r"\bmarine\s+robots?\b|\bhull\s+inspect\w*\b|\bunderwater\s+robots?\b"),
      "product_class", "marine_robot", None, CONF["HIGH"]),
-    (_rx(r"\bhangar\s+robots?\b|\bairside\s+robots?\b|\baircraft\s+inspect\w*\b|\bavionics\s+robots?\b"),
+    (_rx(r"\b(?:inspection\s+)?drones?\b|\buav\b|\bevtol\b|\bflying\s+cars?\b|"
+         r"\bautonomous\s+(?:aircraft|planes?)\b|\bavionics\s+robots?\b"),
      "product_class", "aviation_robot", None, CONF["HIGH"]),
-    (_rx(r"\bconstruction\s+robots?\b|\bjobsite\s+robots?\b"),
+    (_rx(r"\baerospace\s+robots?\b|\bspace\s+robots?\b|\bsatellite\s+servic\w*\b|"
+         r"\borbital\s+debris\b|\bdebris\s+(?:captur\w*|removal)\b"),
+     "product_class", "aerospace_robot", None, CONF["HIGH"]),
+    (_rx(r"\bconstruction\s+robots?\b|\bjobsite\s+robots?\b|"
+         r"\b(?:home|house|residential)\s+(?:construction|build|framing)\s+robots?\b|"
+         r"\b3d\s+(?:print(?:ed|ing)?)\s+(?:homes?|houses?|buildings?)\b"),
      "product_class", "construction_robot", None, CONF["HIGH"]),
     (_rx(r"\bdexterous\b(?:\s+\w+){0,3}?\s+hands?\b|\bhands?\b(?:\s+\w+){0,3}?\s+dexter"),
      "has_dexterous_hands", True, None, CONF["HIGH"]),
@@ -342,7 +349,8 @@ def _phase23_infer(grounded: dict[str, Observation]) -> list[Observation]:
         (("agricultural_robot", "agriculture"), "claims_agriculture"),
         (("construction_robot", "construction"), "claims_construction"),
         (("marine_robot", "marine"), "claims_marine"),
-        (("aviation_robot", "avionics"), "claims_avionics"),
+        (("aviation_robot", "avionics", "drone", "evtol"), "claims_avionics"),
+        (("aerospace_robot", "aerospace"), "claims_aerospace"),
     )
     for class_vals, claim in _class_claims:
         if claim in grounded:

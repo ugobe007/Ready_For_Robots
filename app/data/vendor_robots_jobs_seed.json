@@ -6361,14 +6361,14 @@
           "model_slug": "skydio-skydio-x10",
           "product_url": "https://www.skydio.com",
           "vendor_url": "https://www.skydio.com",
-          "primary_class": "quadruped",
+          "primary_class": "drone",
           "status": "available",
           "country": "USA",
           "description": "Skydio X10: inspection drones. Used in Energy, Defense.",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "quadruped",
+              "value": "drone",
               "evidence_span": "Skydio X10: inspection drones. Used in Energy, Defense."
             }
           ],

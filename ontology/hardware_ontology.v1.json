@@ -37,6 +37,9 @@
     {"predicate": "claims_mining", "category": "domain", "type": "bool"},
     {"predicate": "claims_marine", "category": "domain", "type": "bool"},
     {"predicate": "claims_avionics", "category": "domain", "type": "bool"},
+    {"predicate": "claims_aerospace", "category": "domain", "type": "bool"},
+    {"predicate": "configuration_kind", "category": "configuration"},
+    {"predicate": "host_platform", "category": "configuration"},
     {"predicate": "claims_food_prep", "category": "food", "type": "bool"},
     {"predicate": "claims_beverage_prep", "category": "food", "type": "bool"},
     {"predicate": "warehouse_or_factory_deployment", "category": "deployment", "type": "bool"}

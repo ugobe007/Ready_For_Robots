@@ -3,8 +3,10 @@
  * `app.services.robot_class_qualify.CLASS_OPTIONS`.
  *
  * Form-factor tiles (humanoid, AMR, …) plus work-domain / platform classes
- * the morphology list misses (agriculture, marine, avionics, construction).
- * Agriculture is a robot class, not a SIGNAL industry tag.
+ * the morphology list misses (agriculture, marine, avionics, aerospace,
+ * construction). Agriculture is a robot class, not a SIGNAL industry tag.
+ * Avionics = drones / eVTOL / autonomous aircraft. Aerospace = satellites /
+ * rockets / orbital debris. Tractor implements are configurations, not a tile.
  */
 import type { ClassOption } from "@/lib/robotJobMatch";
 
@@ -42,7 +44,7 @@ export const DEFAULT_CLASS_OPTIONS: ClassOption[] = [
   {
     id: "agriculture",
     label: "Agriculture",
-    hint: "Field and crop work — weeding, spraying, harvest",
+    hint: "Combines, tractors, weeding — implements mount on a tractor",
   },
   {
     id: "marine",
@@ -52,12 +54,17 @@ export const DEFAULT_CLASS_OPTIONS: ClassOption[] = [
   {
     id: "avionics",
     label: "Avionics",
-    hint: "Hangar and airside aircraft work — not a consumer drone",
+    hint: "Drones, eVTOL flying cars, autonomous aircraft",
+  },
+  {
+    id: "aerospace",
+    label: "Aerospace",
+    hint: "Satellites, rockets, orbital debris and space robots",
   },
   {
     id: "construction",
     label: "Construction",
-    hint: "Jobsite earthwork, layout, and finishing",
+    hint: "Homes and buildings — framing, print, jobsite finish",
   },
 ];
 

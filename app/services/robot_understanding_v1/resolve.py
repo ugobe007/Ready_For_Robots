@@ -1363,14 +1363,15 @@ def _hint_display_class(product_name: str, text: str) -> Optional[str]:
         return "cobot_arm"
     if re.search(
         r"\b(construction\s+robot|drywall|layout\s+printer|field\s*printer|"
-        r"jobsite\s+robot)\b",
+        r"jobsite\s+robot|3d\s+print(?:ed|ing)?\s+(?:home|house|building)|"
+        r"residential\s+(?:construction|framing))\b",
         window,
         re.I,
     ):
         return "construction"
     if re.search(
         r"\b(laserweeder|laser\s+weeder|agricultural\s+robot|weeding\s+robot|"
-        r"farm(?:ing)?\s+robot)\b",
+        r"farm(?:ing)?\s+robot|autonomous\s+(?:tractor|combine)|combine\s+harvest)\b",
         window,
         re.I,
     ):
@@ -1382,11 +1383,19 @@ def _hint_display_class(product_name: str, text: str) -> Optional[str]:
     ):
         return "marine"
     if re.search(
-        r"\b(avionics|hangar\s+robot|airside\s+robot|aircraft\s+inspect)\b",
+        r"\b(avionics|hangar\s+robot|airside\s+robot|aircraft\s+inspect|"
+        r"drone|uav|evtol|flying\s+car|autonomous\s+(?:aircraft|plane))\b",
         window,
         re.I,
     ):
         return "avionics"
+    if re.search(
+        r"\b(aerospace|satellite\s+servic|orbital\s+debris|space\s+debris|"
+        r"space\s+robot|debris\s+captur)\b",
+        window,
+        re.I,
+    ):
+        return "aerospace"
     if re.search(
         r"\b(service\s+robot|hospitality\s+robot|restaurant\s+(?:delivery\s+)?robot|"
         r"social\s+robot)\b",

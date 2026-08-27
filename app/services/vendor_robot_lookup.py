@@ -557,8 +557,13 @@ _CLASS_DOMAIN_CLAIMS: dict[str, tuple[str, str]] = {
     "construction_robot": ("claims_construction", "construction site work"),
     "marine": ("claims_marine", "hull / port / underwater work"),
     "marine_robot": ("claims_marine", "hull / port / underwater work"),
-    "avionics": ("claims_avionics", "hangar / airside aircraft work"),
-    "aviation_robot": ("claims_avionics", "hangar / airside aircraft work"),
+    "avionics": ("claims_avionics", "drone / eVTOL / autonomous aircraft work"),
+    "aviation_robot": ("claims_avionics", "drone / eVTOL / autonomous aircraft work"),
+    "drone": ("claims_avionics", "drone / eVTOL / autonomous aircraft work"),
+    "evtol": ("claims_avionics", "drone / eVTOL / autonomous aircraft work"),
+    "uav": ("claims_avionics", "drone / eVTOL / autonomous aircraft work"),
+    "aerospace": ("claims_aerospace", "satellite / orbital / space-robot work"),
+    "aerospace_robot": ("claims_aerospace", "satellite / orbital / space-robot work"),
 }
 
 
@@ -593,6 +598,29 @@ def _domain_claims_for_indexed_robot(
                     f"{name} is an agricultural weeding robot.",
                 )
             )
+    if re.search(r"\b(combine|x9|lexion|autonomous tractor|mk-?v)\b", blob):
+        if not any(p == "claims_agriculture" for p, _v, _s in out):
+            out.append(("claims_agriculture", True, f"{name}: combine/tractor field work."))
+    if re.search(r"\b(see\s*&\s*spray|see and spray|implement|three-point|hitch)\b", blob):
+        out.append(("configuration_kind", "implement_on_host", f"{name}: implement on a tractor host."))
+        out.append(("host_platform", "tractor", f"{name}: tractor host platform."))
+        if not any(p == "claims_agriculture" for p, _v, _s in out):
+            out.append(("claims_agriculture", True, f"{name}: tractor-implement field work."))
+    if re.search(r"\b(vulcan|3d print|fieldprinter|hadrian|bod2|tybot)\b", blob):
+        if not any(p == "claims_construction" for p, _v, _s in out):
+            out.append(("claims_construction", True, f"{name}: home/building construction work."))
+        if cls not in {"construction", "construction_robot"}:
+            out.append(("product_class", "construction_robot", f"{name} is a construction robot."))
+    if re.search(r"\b(x10|drone|uav|evtol|zipline|v-bat)\b", blob):
+        if not any(p == "claims_avionics" for p, _v, _s in out):
+            out.append(("claims_avionics", True, f"{name}: drone / eVTOL / flight work."))
+        if cls not in {"avionics", "aviation_robot", "drone", "evtol"}:
+            out.append(("product_class", "drone", f"{name} is an avionics flight robot."))
+    if re.search(r"\b(elsa|adras|clearspace|otter|debris|satellite)\b", blob):
+        if not any(p == "claims_aerospace" for p, _v, _s in out):
+            out.append(("claims_aerospace", True, f"{name}: satellite / orbital work."))
+        if cls not in {"aerospace", "aerospace_robot"}:
+            out.append(("product_class", "aerospace_robot", f"{name} is an aerospace robot."))
     return out
 
 
