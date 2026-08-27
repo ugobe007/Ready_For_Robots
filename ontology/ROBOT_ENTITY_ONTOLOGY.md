@@ -32,7 +32,8 @@ A named robot model. Capabilities are asserted **here**, not at the company.
   [inference rules](ROBOT_INFERENCE_RULES.md)). Observed values today:
   `humanoid`, `quadruped`, `mobile_manipulator`, `amr`, `autonomous_scrubber`,
   `cleaning_robot`, `service_robot`, `cobot_arm`, `drone`, `construction_robot`,
-  `autonomous_forklift`, `agricultural_robot`, `mining_robot`, `agv`.
+  `agriculture` / `agricultural_robot`, `marine` / `marine_robot`,
+  `avionics` / `aviation_robot`, `autonomous_forklift`, `mining_robot`, `agv`.
 
 ### CONFIGURATION
 A specific hardware build of a product. **Optional modules are configurations,

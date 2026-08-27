@@ -109,6 +109,7 @@ import {
   portfolioShowsJobCounts,
   productClassesFromLineup,
   robotClassJobsLabel,
+  robotClassTitle,
   isJobsHomeDest,
   persistJobsHandoffSrc,
   placeBuyersToShow,
@@ -986,6 +987,7 @@ describe("jobsWorkflow", () => {
     expect(keepTheseJobsPrompt(5)).toBe("Keep 5 jobs?");
     expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
     expect(keepTheseJobsPrompt(1)).toBe("Keep 1 job?");
+    expect(keepTheseJobsPrompt(0)).toBe("Keep 0 jobs?");
     expect(CRM_KEEP_YES_CTA).toBe("Yes, keep them");
     expect(crmCollectedCountLabel(5)).toBe("5 of 5 eggs in the basket");
     expect(crmCollectedCountLabel(1)).toBe("1 of 5 eggs in the basket");
@@ -1039,7 +1041,11 @@ describe("jobsWorkflow", () => {
 
   it("looks up a lineup once per robot type, not once per SKU", () => {
     expect(normalizeRobotClass("Humanoid")).toBe("humanoid");
+    expect(normalizeRobotClass("agricultural_robot")).toBe("agriculture");
+    expect(normalizeRobotClass("agriculture")).toBe("agriculture");
+    expect(normalizeRobotClass("construction_robot")).toBe("construction");
     expect(robotClassJobsLabel("humanoid")).toBe("humanoids");
+    expect(robotClassTitle("agriculture")).toBe("Agriculture");
     const fourier = lineupJobLookups([
       { name: "Fourier GR-1", displayClass: "humanoid" },
       { name: "Fourier GR-2", displayClass: "humanoid" },

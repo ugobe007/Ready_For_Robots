@@ -50,6 +50,7 @@ import {
   type RobotProfileResult,
 } from "@/lib/robotProfile";
 import type { ClassOption, MatchCapability, MatchJob } from "@/lib/robotJobMatch";
+import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import { MARKET_TAPE_JOBS, uniqueTapeJobCount } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
@@ -162,38 +163,6 @@ type RestoreView = "review" | "jobs" | "portfolio";
 const MARKET_FOUND_BASE = uniqueTapeJobCount();
 const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
-const DEFAULT_CLASS_OPTIONS: ClassOption[] = [
-  {
-    id: "humanoid",
-    label: "Humanoid",
-    hint: "Two legs, arms and hands — NEO, Unitree G1, Walker",
-  },
-  {
-    id: "amr",
-    label: "AMR / mobile robot",
-    hint: "Rolls on a base and moves materials or itself",
-  },
-  {
-    id: "mobile_manipulator",
-    label: "Mobile manipulator",
-    hint: "Rolling base with an arm that picks or places",
-  },
-  {
-    id: "cobot",
-    label: "Collaborative arm",
-    hint: "Stationary or cart-mounted arm beside a person",
-  },
-  {
-    id: "quadruped",
-    label: "Quadruped",
-    hint: "Four legs — inspection, patrol, unstructured ground",
-  },
-  {
-    id: "autonomous_scrubber",
-    label: "Floor scrubber",
-    hint: "Cleans floors on its own",
-  },
-];
 
 const eyebrow = JOBS_EYEBROW_CLASS;
 const ctaClass =
@@ -2995,7 +2964,7 @@ function ClassPicker({
   busy?: boolean;
   onSelect?: (classId: string) => void;
 }) {
-  const choices = options && options.length > 0 ? options : DEFAULT_CLASS_OPTIONS;
+  const choices = classOptionsOrDefault(options);
   return (
     <div className="mt-6 border border-emerald-500/30 bg-emerald-400/5 p-5">
       <p className={`${JOBS_EYEBROW_CLASS} text-emerald-300`}>

@@ -137,7 +137,7 @@ _DEFAULT_VERTICALS = frozenset(
     {
         "warehouse", "manufacturing", "retail", "hospitality", "restaurant",
         "healthcare", "eldercare", "airport", "commercial", "utilities",
-        "indoor", "construction", "mining", "agriculture",
+        "indoor", "construction", "mining", "agriculture", "marine", "aviation",
     }
 )
 

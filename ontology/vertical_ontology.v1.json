@@ -170,7 +170,36 @@
         "orchard",
         "greenhouse",
         "crop",
-        "dairy"
+        "dairy",
+        "field",
+        "weeding"
+      ]
+    },
+    {
+      "key": "marine",
+      "label": "Marine / port / underwater",
+      "in_scope": true,
+      "aliases": [
+        "marine",
+        "maritime",
+        "hull",
+        "port",
+        "harbor",
+        "underwater",
+        "shipyard"
+      ]
+    },
+    {
+      "key": "aviation",
+      "label": "Aviation / hangar / airside",
+      "in_scope": true,
+      "aliases": [
+        "aviation",
+        "avionics",
+        "hangar",
+        "airside",
+        "aircraft",
+        "ramp"
       ]
     }
   ]

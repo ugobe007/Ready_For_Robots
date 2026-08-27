@@ -26,6 +26,10 @@
     {"id": "R18", "status": "partial", "rule": "optional modules must be represented as configurations, not universal product capabilities"},
     {"id": "R19", "status": "implemented", "rule": "a job requirement is MATCHED only if the specific required capability is grounded; generic mobile is a gate"},
     {"id": "R20", "status": "implemented", "rule": "LIKELY requires a named derivation (LIKELY_DERIVATIONS)"},
-    {"id": "R21", "status": "implemented", "rule": "any required UNMET => NOT_A_MATCH; unknowns preserved, never guessed; no match percentage"}
+    {"id": "R21", "status": "implemented", "rule": "any required UNMET => NOT_A_MATCH; unknowns preserved, never guessed; no match percentage"},
+    {"id": "R22", "status": "implemented", "if": ["product_class in {agriculture, agricultural_robot} | claims_agriculture | LaserWeeder / carbonrobotics.com weeding evidence"], "then": "agriculture_task + mobile (named derivation; empty specs stay UNKNOWN)"},
+    {"id": "R23", "status": "implemented", "if": ["product_class in {marine, marine_robot} | claims_marine"], "then": "marine_task + mobile (hull/port/underwater — not a category dump)"},
+    {"id": "R24", "status": "implemented", "if": ["product_class in {avionics, aviation_robot} | claims_avionics"], "then": "avionics_task + mobile (hangar/airside aircraft work — not consumer drone)"},
+    {"id": "R25", "status": "implemented", "if": ["product_class in {construction, construction_robot} | claims_construction"], "then": "construction_task + mobile (jobsite earthwork/layout/finishing)"}
   ]
 }

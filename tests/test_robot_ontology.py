@@ -47,6 +47,8 @@ def _all_capabilities_profile() -> dict:
             f("claims_agriculture", True),              # agriculture_task
             f("claims_construction", True),             # construction_task
             f("claims_mining", True),                   # mining_task
+            f("claims_marine", True),                   # marine_task
+            f("claims_avionics", True),                 # avionics_task
             f("supports_hard_floor_scrubbing", True),   # hard_floor_scrub
             f("reach_or_workspace", 2.0, "m"),          # reach
             f("carrying_capacity", 50, "kg"),           # payload

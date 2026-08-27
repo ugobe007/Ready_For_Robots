@@ -34,8 +34,10 @@ category leakage.
 | `sortation` | `sortation` | Parcel sortation to destinations (put-to-wall) |
 | `disinfection` | `disinfect` | UV/surface disinfection of rooms (Xenex, UVD) |
 | `asrs` | `goods_to_person` | Store/retrieve goods to a picker (Exotec, AutoStore, Hai) |
-| `agriculture` | `agriculture_task` | Weeding/harvest/spray (Carbon Robotics, FarmWise) |
+| `agriculture` | `agriculture_task` | Weeding/harvest/spray (Carbon Robotics LaserWeeder, FarmWise) |
 | `construction` | `construction_task` | Layout/drywall/rebar/earthmoving (Dusty, Built) |
+| `marine` | `marine_task` | Hull inspect/clean, quay and underwater work |
+| `avionics` | `avionics_task` | Hangar / airside aircraft inspect — not consumer drones |
 | `mining` | `mining_task` | Haulage/drilling/loading |
 | `clinical_delivery` | `transport` (item delivery) | Deliver meds pharmacy→units, specimens→lab, supply/meal/linen delivery |
 | `resident_services` | `transport` (item delivery) | Eldercare meals/linens/amenities to resident rooms |

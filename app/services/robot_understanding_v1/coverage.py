@@ -26,6 +26,8 @@ Morphology = Literal[
     "autonomous_forklift",
     "agricultural_robot",
     "mining_robot",
+    "marine_robot",
+    "aviation_robot",
     "generic",
 ]
 
@@ -151,6 +153,20 @@ _CHECKLISTS: dict[Morphology, tuple[ChecklistSlot, ...]] = {
         ChecklistSlot("runtime", "Runtime / power", ("battery_runtime",)),
         ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
     ),
+    "marine_robot": (
+        ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
+        ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
+        ChecklistSlot("workflows", "Demonstrated workflows", ("claims_marine",)),
+        ChecklistSlot("environment", "Operating environment", ("operating_environment",)),
+        ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
+    ),
+    "aviation_robot": (
+        ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
+        ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
+        ChecklistSlot("workflows", "Demonstrated workflows", ("claims_avionics",)),
+        ChecklistSlot("environment", "Operating environment", ("operating_environment",)),
+        ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
+    ),
     "mining_robot": (
         ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
         ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
@@ -170,11 +186,28 @@ _CHECKLISTS: dict[Morphology, tuple[ChecklistSlot, ...]] = {
 }
 
 
+_DISPLAY_CLASS_ALIASES: dict[str, Morphology] = {
+    "agriculture": "agricultural_robot",
+    "agricultural_robot": "agricultural_robot",
+    "farm_robot": "agricultural_robot",
+    "construction": "construction_robot",
+    "construction_robot": "construction_robot",
+    "marine": "marine_robot",
+    "marine_robot": "marine_robot",
+    "avionics": "aviation_robot",
+    "aviation": "aviation_robot",
+    "aviation_robot": "aviation_robot",
+}
+
+
 def infer_morphology(facts: list[RobotFact], display_class: str | None = None) -> Morphology:
+    mapped = _DISPLAY_CLASS_ALIASES.get((display_class or "").strip().lower())
+    if mapped:
+        return mapped
     if display_class in _CHECKLISTS:
         return display_class  # type: ignore[return-value]
     classes = [
-        str(f.value).lower()
+        _DISPLAY_CLASS_ALIASES.get(str(f.value).lower(), str(f.value).lower())
         for f in facts
         if f.predicate == "product_class" and f.epistemic not in ("unknown",)
     ]
@@ -188,6 +221,8 @@ def infer_morphology(facts: list[RobotFact], display_class: str | None = None) -
         "cleaning_robot",
         "construction_robot",
         "agricultural_robot",
+        "marine_robot",
+        "aviation_robot",
         "mining_robot",
         "autonomous_forklift",
         "service_robot",

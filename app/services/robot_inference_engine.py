@@ -71,6 +71,14 @@ _BOOL_DETECTORS: list[tuple[re.Pattern, str, Any, Optional[str], float]] = [
      "product_class", "autonomous_scrubber", None, CONF["HIGH"]),
     (_rx(r"\bmobile\s+manipulators?\b"), "product_class", "mobile_manipulator", None, CONF["HIGH"]),
     (_rx(r"\bautonomous\s+mobile\s+robot\b|\bamr\b"), "product_class", "amr", None, CONF["MEDIUM"]),
+    (_rx(r"\blaserweeder\b|\blaser\s+weeder\b|\bagricultural\s+robots?\b|\bweeding\s+robots?\b"),
+     "product_class", "agricultural_robot", None, CONF["HIGH"]),
+    (_rx(r"\bmarine\s+robots?\b|\bhull\s+inspect\w*\b|\bunderwater\s+robots?\b"),
+     "product_class", "marine_robot", None, CONF["HIGH"]),
+    (_rx(r"\bhangar\s+robots?\b|\bairside\s+robots?\b|\baircraft\s+inspect\w*\b|\bavionics\s+robots?\b"),
+     "product_class", "aviation_robot", None, CONF["HIGH"]),
+    (_rx(r"\bconstruction\s+robots?\b|\bjobsite\s+robots?\b"),
+     "product_class", "construction_robot", None, CONF["HIGH"]),
     (_rx(r"\bdexterous\b(?:\s+\w+){0,3}?\s+hands?\b|\bhands?\b(?:\s+\w+){0,3}?\s+dexter"),
      "has_dexterous_hands", True, None, CONF["HIGH"]),
     # Bimanual / two-handed / dexterous manipulation are explicit dexterity claims
@@ -328,6 +336,19 @@ def _phase23_infer(grounded: dict[str, Observation]) -> list[Observation]:
     # Scrubber class implies hard-floor scrubbing.
     if _has(grounded, "product_class", "autonomous_scrubber") and "supports_hard_floor_scrubbing" not in grounded:
         add("supports_hard_floor_scrubbing", True, None, ["product_class=autonomous_scrubber"], CONF["HIGH"], "product_class")
+
+    # Work-domain classes ground their task claim (named derivation, not category→jobs).
+    _class_claims = (
+        (("agricultural_robot", "agriculture"), "claims_agriculture"),
+        (("construction_robot", "construction"), "claims_construction"),
+        (("marine_robot", "marine"), "claims_marine"),
+        (("aviation_robot", "avionics"), "claims_avionics"),
+    )
+    for class_vals, claim in _class_claims:
+        if claim in grounded:
+            continue
+        if any(_has(grounded, "product_class", cls) for cls in class_vals):
+            add(claim, True, None, [f"product_class={class_vals[0]}"], CONF["HIGH"], "product_class")
 
     return out
 

@@ -62,6 +62,15 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   manipulation (`end_effector`). By definition mobile **and** manipulates.
 - **R11 ✅** `autonomous_navigation` or `mobility_architecture` → `has_mobile_base`.
 - **R12 ✅** `product_class=autonomous_scrubber` → `hard_floor_scrub`.
+- **R22 ✅** `product_class` ∈ {`agriculture`, `agricultural_robot`} **or**
+  `claims_agriculture` **or** LaserWeeder / carbonrobotics.com weeding evidence →
+  `agriculture_task` + `mobile`. Empty specs stay `UNKNOWN`.
+- **R23 ✅** `product_class` ∈ {`marine`, `marine_robot`} **or** `claims_marine` →
+  `marine_task` + `mobile` (hull / port / underwater — not a category dump).
+- **R24 ✅** `product_class` ∈ {`avionics`, `aviation_robot`} **or** `claims_avionics` →
+  `avionics_task` + `mobile` (hangar / airside aircraft work — not a consumer drone).
+- **R25 ✅** `product_class` ∈ {`construction`, `construction_robot`} **or**
+  `claims_construction` → `construction_task` + `mobile`.
 - **R13 (humanoid nuance) ✅/🟡** `2 arms + 2 hands + vision + mobile body`
   ⇒ **likely mobile-manipulation platform** — grounds `manipulate` + `mobile`,
   but `payload`, `reach`, and `autonomy` still each require their own evidence
@@ -119,6 +128,7 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
 | Miso Flippy (fry) | fry station / cooking | food_prep | food_prep only |
 | Somatic (restroom) | bathroom cleaning, self-navigates | mobile, surface_clean | restroom only |
 | Avidbots Neo (scrubber) | autonomous scrubber | hard_floor_scrub, mobile | scrub only |
+| Carbon Robotics LaserWeeder | agricultural weeding robot, laser weeding | agriculture_task, mobile | weeding / crop / field only |
 
 ## Regression coverage
 `tests/test_robot_inference_engine.py`, `tests/test_facts_item_delivery.py`,

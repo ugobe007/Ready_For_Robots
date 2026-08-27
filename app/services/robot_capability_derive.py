@@ -21,6 +21,13 @@ MANIP_CLASSES = frozenset(
 SCRUB_CLASSES = frozenset({"autonomous_scrubber", "scrubber"})
 TRANSPORT_CLASSES = frozenset({"amr"})
 INSPECT_CLASSES = frozenset({"quadruped"})
+AGRICULTURE_CLASSES = frozenset({"agriculture", "agricultural_robot", "farm_robot"})
+MARINE_CLASSES = frozenset({"marine", "marine_robot"})
+AVIONICS_CLASSES = frozenset({"avionics", "aviation_robot"})
+CONSTRUCTION_CLASSES = frozenset({"construction", "construction_robot"})
+DOMAIN_WORK_CLASSES = (
+    AGRICULTURE_CLASSES | MARINE_CLASSES | AVIONICS_CLASSES | CONSTRUCTION_CLASSES
+)
 GRASP_EFFECTORS = frozenset({"dexterous_hand", "gripper", "vacuum", "suction"})
 
 
@@ -158,7 +165,16 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
     mobile_base = _truthy(facts, "has_mobile_base")
     nav = _truthy(facts, "autonomous_navigation")
     mobility_arch = _values(facts, "mobility_architecture")
-    mobile_class = bool(classes & (TRANSPORT_CLASSES | INSPECT_CLASSES | SCRUB_CLASSES | {"mobile_manipulator", "humanoid", "autonomous_forklift"}))
+    mobile_class = bool(
+        classes
+        & (
+            TRANSPORT_CLASSES
+            | INSPECT_CLASSES
+            | SCRUB_CLASSES
+            | DOMAIN_WORK_CLASSES
+            | {"mobile_manipulator", "humanoid", "autonomous_forklift"}
+        )
+    )
     # These Tier 1–3 domain functions are inherently mobile — a forklift, field,
     # jobsite, mining, room-disinfection, or ASRS robot traverses its worksite.
     # (Only the NEW capabilities — never in frozen fixtures — so boards are safe.)
@@ -166,7 +182,8 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
         _truthy(facts, p)
         for p in (
             "claims_pallet_handling", "claims_agriculture", "claims_construction",
-            "claims_mining", "claims_disinfection", "claims_goods_to_person",
+            "claims_mining", "claims_marine", "claims_avionics",
+            "claims_disinfection", "claims_goods_to_person",
         )
     )
     mobile = bool(mobile_base or nav or mobility_arch or mobile_class or domain_mobile)
@@ -318,26 +335,47 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
 
     # Tier 1–3 distinct capabilities (each grounded from its own claim, never
     # generic manipulate — keeps a forklift/sorter/UV robot out of unrelated work).
-    for _key, _pred, _label in (
-        ("pallet_move", "claims_pallet_handling", "pallet handling / forklift"),
-        ("trailer_unload", "claims_trailer_unload", "trailer / container unloading"),
-        ("pick_pack", "claims_piece_pick", "piece picking / pack"),
-        ("sortation", "claims_sortation", "parcel sortation"),
-        ("disinfect", "claims_disinfection", "UV / surface disinfection"),
-        ("goods_to_person", "claims_goods_to_person", "ASRS goods-to-person"),
-        ("agriculture_task", "claims_agriculture", "agricultural field work"),
-        ("construction_task", "claims_construction", "construction site work"),
-        ("mining_task", "claims_mining", "mining / haulage"),
+    for _key, _pred, _label, _cls in (
+        ("pallet_move", "claims_pallet_handling", "pallet handling / forklift", frozenset()),
+        ("trailer_unload", "claims_trailer_unload", "trailer / container unloading", frozenset()),
+        ("pick_pack", "claims_piece_pick", "piece picking / pack", frozenset()),
+        ("sortation", "claims_sortation", "parcel sortation", frozenset()),
+        ("disinfect", "claims_disinfection", "UV / surface disinfection", frozenset()),
+        ("goods_to_person", "claims_goods_to_person", "ASRS goods-to-person", frozenset()),
+        ("agriculture_task", "claims_agriculture", "agricultural field work", AGRICULTURE_CLASSES),
+        ("construction_task", "claims_construction", "construction site work", CONSTRUCTION_CLASSES),
+        ("mining_task", "claims_mining", "mining / haulage", frozenset()),
+        ("marine_task", "claims_marine", "hull / port / underwater work", MARINE_CLASSES),
+        ("avionics_task", "claims_avionics", "hangar / airside aircraft work", AVIONICS_CLASSES),
     ):
         _fact = _truthy(facts, _pred)
-        caps[_key] = DerivedCapability(
-            key=_key,
-            label=_label,
-            present=bool(_fact),
-            derivation="explicit",
-            derived_from=[_pred],
-            evidence=(_fact or {}).get("evidence_span") if _fact else None,
-        )
+        _class_hit = next((c for c in classes if c in _cls), None)
+        if _fact:
+            caps[_key] = DerivedCapability(
+                key=_key,
+                label=_label,
+                present=True,
+                derivation="explicit",
+                derived_from=[_pred],
+                evidence=_fact.get("evidence_span"),
+            )
+        elif _class_hit:
+            caps[_key] = DerivedCapability(
+                key=_key,
+                label=_label,
+                present=True,
+                derivation="inferred",
+                derived_from=["product_class"],
+                evidence=f"{_class_hit} class",
+            )
+        else:
+            caps[_key] = DerivedCapability(
+                key=_key,
+                label=_label,
+                present=False,
+                derivation="explicit",
+                derived_from=[_pred, "product_class"],
+            )
 
     scrub = _truthy(facts, "supports_hard_floor_scrubbing")
     if scrub:

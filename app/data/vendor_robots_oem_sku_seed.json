@@ -10,8 +10,8 @@
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
-  "vendor_count": 61,
-  "robot_count": 188,
+  "vendor_count": 62,
+  "robot_count": 189,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -3439,6 +3439,42 @@
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [],
+          "specs": {}
+        }
+      ]
+    },
+    {
+      "vendor_name": "Carbon Robotics",
+      "domains": [
+        "carbonrobotics.com"
+      ],
+      "vendor_url": "https://carbonrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "LaserWeeder",
+          "model_slug": "carbon-robotics-laserweeder",
+          "product_url": "https://carbonrobotics.com/",
+          "vendor_url": "https://carbonrobotics.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "LaserWeeder: laser weeding of row crops. Used in Agriculture.",
+          "lookup_host": "carbonrobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "LaserWeeder: laser weeding of row crops."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "LaserWeeder: laser weeding of row crops."
+            }
+          ],
           "specs": {}
         }
       ]

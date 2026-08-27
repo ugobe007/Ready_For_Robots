@@ -37,8 +37,10 @@ tool_use`
 | `sortation` | Parcel sortation | `claims_sortation` |
 | `disinfect` | UV / surface disinfection | `claims_disinfection` |
 | `goods_to_person` | ASRS goods-to-person | `claims_goods_to_person` |
-| `agriculture_task` | Agricultural field work | `claims_agriculture` |
-| `construction_task` | Construction site work | `claims_construction` |
+| `agriculture_task` | Agricultural field work | `claims_agriculture` \| agriculture class \| LaserWeeder |
+| `construction_task` | Construction site work | `claims_construction` \| construction class |
+| `marine_task` | Hull / port / underwater work | `claims_marine` \| marine class |
+| `avionics_task` | Hangar / airside aircraft work | `claims_avionics` \| avionics class |
 | `mining_task` | Mining / haulage | `claims_mining` |
 | `food_prep` | Food preparation / cooking | `claims_food_prep` |
 | `beverage_prep` | Drink / beverage preparation | `claims_beverage_prep` |
