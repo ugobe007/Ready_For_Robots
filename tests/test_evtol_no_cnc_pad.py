@@ -24,7 +24,7 @@ from app.services.vendor_robot_lookup import (
 )
 
 PAD_EMPLOYERS = ("groninger", "fulcrum", "industrial metal")
-PAD_TITLE_BITS = ("cnc", "tote", "warehouse", "pack station")
+PAD_TITLE_BITS = ("cnc", "tote", "warehouse", "pack station", "laser/plasma", "cutting machines")
 PAD_FAMILIES = frozenset(
     {"gripper", "pallet", "pick_pack", "pack", "transport", "cart"}
 )

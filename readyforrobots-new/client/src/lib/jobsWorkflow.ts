@@ -167,7 +167,13 @@ export function lineupJobLookups(products: LineupProduct[]): LineupJobLookup[] {
   }
   const out: LineupJobLookup[] = [];
   for (const [robotClass, productNames] of groups) {
-    out.push({ grain: "robot_type", robotClass, productNames });
+    // Several SKUs of one class share a type lookup. A single named SKU
+    // (LaserWeeder, Joby eVTOL) matches that configuration, not the FIND tile.
+    if (productNames.length === 1) {
+      out.push({ grain: "product", robotClass, productNames });
+    } else {
+      out.push({ grain: "robot_type", robotClass, productNames });
+    }
   }
   for (const name of unknown) {
     out.push({ grain: "product", robotClass: null, productNames: [name] });

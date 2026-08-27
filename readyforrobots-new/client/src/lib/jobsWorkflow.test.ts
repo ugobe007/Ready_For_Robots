@@ -141,7 +141,8 @@ describe("jobsWorkflow", () => {
     );
     expect(oneSku).toMatch(/openJobsFromAnalyses/);
     expect(oneSku).toMatch(/fetchRobotJobSearch/);
-    expect(oneSku).toMatch(/lookupGrain: cls \? "robot_type" : "product"/);
+    expect(oneSku).toMatch(/lookupGrain: "product"/);
+    expect(oneSku).not.toMatch(/lookupGrain: cls \? "robot_type" : "product"/);
     expect(oneSku).not.toMatch(/enterReview/);
     expect(oneSku).not.toMatch(/fetchRobotProfile/);
     const submitFind = workspace.slice(
@@ -1084,7 +1085,7 @@ describe("jobsWorkflow", () => {
       "mobile_manipulator",
       "quadruped",
     ]);
-    expect(mixed.every(row => row.grain === "robot_type")).toBe(true);
+    expect(mixed.every(row => row.grain === "product")).toBe(true);
     expect(mixed.every(row => row.productNames.length === 1)).toBe(true);
     const unknown = lineupJobLookups([{ name: "MysteryBot", displayClass: null }]);
     expect(unknown).toEqual([

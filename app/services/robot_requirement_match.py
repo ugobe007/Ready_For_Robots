@@ -17,13 +17,18 @@ This is relevance ranking, not a Digit rule and not a family quota.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
 from app.services import robot_ontology
-from app.services.robot_capability_derive import DerivedCapability, derive_capabilities
+from app.services.robot_capability_derive import (
+    DerivedCapability,
+    derive_capabilities,
+    weeding_configuration_identity,
+)
 from app.services.robot_task_models import (
     required_task_models_for_job,
     task_model_open_questions,
@@ -142,6 +147,21 @@ SPECIFIC_WORK_CAPABILITIES = (
 )
 CONFIGURATION_PAD_BLOCKER = (
     "this configuration's grounded work does not include this job"
+)
+# Shop-floor cutting-laser / plasma / CNC tend-cell copy. A weeding laser
+# (LaserWeeder) is not this work. Token "laser" must not leak across.
+_CUTTING_LASER_JOB = re.compile(
+    r"laser\s*/\s*plasma|plasma\s+cut|cnc\s+laser|laser\s+cut|"
+    r"cutting\s+machines|laser\s+operator|laser_plasma|machine:\s*[\"']?laser",
+    re.I,
+)
+_CNC_CELL_JOB = re.compile(
+    r"\bcnc\b|machine\s+tend|mills?/lathes?|workpiece\s+load|"
+    r"load\s+parts\s+into\s+cnc|tend\s+cnc",
+    re.I,
+)
+WEEDING_CUTTING_LASER_BLOCKER = (
+    "weeding laser is not a shop-floor laser/plasma cutting cell"
 )
 
 # Requirements satisfied simply by one grounded distinctive capability being
@@ -696,6 +716,56 @@ def _exercised_capabilities(results: list[RequirementResult]) -> set[str]:
     return exercised
 
 
+def _job_blob(job_spec: dict[str, Any], corpus_row: dict[str, Any] | None) -> str:
+    row = corpus_row or {}
+    return " ".join(
+        str(x or "")
+        for x in (
+            job_spec.get("title"),
+            job_spec.get("job_key"),
+            row.get("title"),
+            row.get("job_key"),
+            row.get("text"),
+            row.get("tape_family"),
+            " ".join(str(a) for a in (row.get("actions") or [])),
+        )
+    )
+
+
+def is_cutting_laser_or_cnc_cell_job(
+    job_spec: dict[str, Any],
+    corpus_row: dict[str, Any] | None = None,
+) -> bool:
+    """Shop-floor laser/plasma / CNC tend-cell work — not crop weeding."""
+    blob = _job_blob(job_spec, corpus_row)
+    row = corpus_row or {}
+    tape = str(row.get("tape_family") or job_spec.get("physics") or "").lower()
+    if _CUTTING_LASER_JOB.search(blob) or _CNC_CELL_JOB.search(blob):
+        return True
+    if tape == "gripper" and (
+        "machine_tending" in [str(a).lower() for a in (row.get("actions") or [])]
+        or "MACHINE" in str(row.get("path") or "")
+    ):
+        return True
+    return False
+
+
+def _weeding_cutting_laser_blocker(
+    profile: dict[str, Any],
+    caps: dict[str, DerivedCapability],
+    job_spec: dict[str, Any],
+    corpus_row: dict[str, Any] | None,
+) -> str | None:
+    """R31: weeding laser ≠ cutting laser. Never keyword-leak LaserWeeder onto CNC."""
+    if not (
+        weeding_configuration_identity(profile) or _cap(caps, "agriculture_weed").present
+    ):
+        return None
+    if is_cutting_laser_or_cnc_cell_job(job_spec, corpus_row):
+        return WEEDING_CUTTING_LASER_BLOCKER
+    return None
+
+
 def _configuration_pad_blocker(
     caps: dict[str, DerivedCapability],
     results: list[RequirementResult],
@@ -748,7 +818,8 @@ def evaluate_job(
     results = [_eval_requirement(req, caps) for req in job_spec.get("requirements") or []]
     verdict = _verdict(results)
     pad_blocker = _configuration_pad_blocker(caps, results)
-    if verdict == VERDICT_POSSIBLE and pad_blocker:
+    laser_blocker = _weeding_cutting_laser_blocker(profile, caps, job_spec, corpus_row)
+    if verdict == VERDICT_POSSIBLE and (pad_blocker or laser_blocker):
         verdict = VERDICT_NOT
     row = corpus_row or {}
     title = job_spec.get("title") or row.get("title") or ""
@@ -778,6 +849,8 @@ def evaluate_job(
     blockers = _blocker_lines(results, job_spec)
     if verdict == VERDICT_NOT and pad_blocker and pad_blocker not in blockers:
         blockers.append(pad_blocker)
+    if verdict == VERDICT_NOT and laser_blocker and laser_blocker not in blockers:
+        blockers.append(laser_blocker)
     return JobMatchCard(
         job_key=job_spec.get("job_key") or row.get("job_key") or "",
         title=title,

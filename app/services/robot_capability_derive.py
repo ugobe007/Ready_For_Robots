@@ -9,6 +9,7 @@ named derivation (documented below); it does not select a job family.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Optional
 
@@ -47,6 +48,13 @@ DOMAIN_WORK_CLASSES = (
     | CONSTRUCTION_CLASSES
 )
 GRASP_EFFECTORS = frozenset({"dexterous_hand", "gripper", "vacuum", "suction"})
+
+# Named weeding SKUs (LaserWeeder, FarmDroid). Identity is the configuration,
+# not a company → category dump and not a cobot because the page said "laser".
+_WEEDING_IDENTITY = re.compile(
+    r"laserweeder|laser\s+weeder|laser[- ]weed|farmdroid",
+    re.I,
+)
 
 
 @dataclass
@@ -100,6 +108,22 @@ def _classes(facts: Iterable[dict[str, Any]]) -> set[str]:
     return {str(f.get("value") or "").lower() for f in _values(facts, "product_class")}
 
 
+def weeding_configuration_identity(profile: dict[str, Any]) -> bool:
+    """True when this configuration is crop-weeding work.
+
+    LaserWeeder / FarmDroid must ground weeding even if Understanding missed
+    product_class. Incidental gripper/arm language must not open CNC.
+    """
+    facts = _grounded_facts(profile)
+    if _truthy(facts, "claims_weeding"):
+        return True
+    company = ((profile.get("company") or {}).get("name") or "")
+    product = ((profile.get("selected_product") or {}).get("name") or "")
+    url = str(profile.get("submitted_url") or profile.get("source_url") or "")
+    blob = f"{company} {product} {url}"
+    return bool(_WEEDING_IDENTITY.search(blob))
+
+
 def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]:
     """Return capability key → DerivedCapability from a frozen profile dict."""
     facts = _grounded_facts(profile)
@@ -129,10 +153,11 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
     manipulate = bool(arm_count and arm_count >= 1) or bool(hands) or bool(effector_ok) or bool(
         manip_class
     )
-    # Domain configurations (eVTOL, drone, combine, Vulcan, …) are not factory
-    # cobots. Incidental "arm"/"gripper" language on an OEM page must not
-    # ground manipulate and open the CNC/pack corpus.
-    if classes & DOMAIN_WORK_CLASSES and not (classes & MANIP_CLASSES):
+    weeding_identity = weeding_configuration_identity(profile)
+    # Domain configurations (eVTOL, drone, combine, Vulcan, LaserWeeder, …)
+    # are not factory cobots. Incidental "arm"/"gripper"/"laser" language on
+    # an OEM page must not ground manipulate and open the CNC/pack corpus.
+    if (classes & DOMAIN_WORK_CLASSES or weeding_identity) and not (classes & MANIP_CLASSES):
         manipulate = False
     if manipulate:
         derived_from = []
@@ -209,7 +234,9 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
             "claims_disinfection", "claims_goods_to_person",
         )
     )
-    mobile = bool(mobile_base or nav or mobility_arch or mobile_class or domain_mobile)
+    mobile = bool(
+        mobile_base or nav or mobility_arch or mobile_class or domain_mobile or weeding_identity
+    )
     if mobile:
         derived_from = []
         evidence_bits = []
@@ -489,6 +516,15 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
                     derived_from=["host_platform"],
                     evidence=f"{host} host",
                 )
+        elif weeding_identity:
+            caps["agriculture_task"] = DerivedCapability(
+                key="agriculture_task",
+                label="agricultural field work",
+                present=True,
+                derivation="inferred",
+                derived_from=["selected_product"],
+                evidence="named weeding SKU",
+            )
 
     scrub = _truthy(facts, "supports_hard_floor_scrubbing")
     if scrub:
@@ -596,10 +632,10 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
     generic_ag = bool(classes & GENERIC_AGRICULTURE_CLASSES)
     generic_con = bool(classes & GENERIC_CONSTRUCTION_CLASSES)
     for _key, _pred, _label, _union in (
-        ("agriculture_weed", "claims_weeding", "crop weeding", generic_ag),
-        ("agriculture_combine", "claims_combine_harvest", "combine grain harvest", generic_ag),
-        ("agriculture_spray", "claims_precision_spray", "precision crop spray", generic_ag),
-        ("agriculture_tractor", "claims_tractor_work", "autonomous tractor field work", generic_ag),
+        ("agriculture_weed", "claims_weeding", "crop weeding", generic_ag and not weeding_identity),
+        ("agriculture_combine", "claims_combine_harvest", "combine grain harvest", generic_ag and not weeding_identity),
+        ("agriculture_spray", "claims_precision_spray", "precision crop spray", generic_ag and not weeding_identity),
+        ("agriculture_tractor", "claims_tractor_work", "autonomous tractor field work", generic_ag and not weeding_identity),
         ("construction_print", "claims_construction_print", "3D-print home / building walls", generic_con),
         ("construction_block", "claims_construction_block", "block / brick laying", generic_con),
         ("construction_layout", "claims_construction_layout", "jobsite floor layout print", generic_con),
@@ -613,6 +649,15 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
                 derivation="explicit",
                 derived_from=[_pred],
                 evidence=_fact.get("evidence_span") or _pred,
+            )
+        elif _key == "agriculture_weed" and weeding_identity:
+            caps[_key] = DerivedCapability(
+                key=_key,
+                label=_label,
+                present=True,
+                derivation="inferred",
+                derived_from=["selected_product"],
+                evidence="named weeding SKU — not a cutting-laser cell",
             )
         elif _union:
             caps[_key] = DerivedCapability(

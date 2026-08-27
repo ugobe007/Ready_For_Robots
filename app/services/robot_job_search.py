@@ -124,6 +124,47 @@ def _vendor_company_name(url: str) -> str | None:
     return name or None
 
 
+_SKU_WORK_KIND_PREDICATES = frozenset(
+    {
+        "claims_weeding",
+        "claims_combine_harvest",
+        "claims_precision_spray",
+        "claims_tractor_work",
+        "claims_construction_print",
+        "claims_construction_block",
+        "claims_construction_layout",
+    }
+)
+
+
+def _indexed_work_kind_product(url: str, product: str | None) -> str | None:
+    """Named SKU with a work-kind claim — match the configuration, not the tile."""
+    try:
+        from app.services.vendor_robot_lookup import (
+            catalog_claim_facts,
+            index_robot_for_name,
+            index_robot_names,
+            lookup_vendor_by_url,
+        )
+
+        vendor = lookup_vendor_by_url(url)
+    except Exception:
+        return None
+    if not isinstance(vendor, dict):
+        return None
+    robot = index_robot_for_name(vendor, product) if product else None
+    if robot is None:
+        names = index_robot_names(vendor)
+        if len(names) == 1:
+            robot = index_robot_for_name(vendor, names[0])
+    if not robot:
+        return None
+    preds = {str(f.get("predicate") or "") for f in catalog_claim_facts(robot)}
+    if preds & _SKU_WORK_KIND_PREDICATES:
+        return str(robot.get("name") or product or "").strip() or None
+    return None
+
+
 def compose_robot_job_search(
     url: str,
     *,
@@ -150,11 +191,17 @@ def compose_robot_job_search(
     if grain == "robot_type":
         from app.services.robot_class_qualify import lookup_class_id, thin_class_profile
 
-        class_id = lookup_class_id(asserted_class)
-        if class_id:
-            company_name = _vendor_company_name(safe) or "your robot"
-            profile_dict = thin_class_profile(company_name, class_id, source_url=safe)
-            type_first = True
+        sku_name = _indexed_work_kind_product(safe, product_name)
+        if sku_name:
+            # LaserWeeder / Vulcan / combine: MATCH the SKU work-kind, not the
+            # FIND-tile union (and not CNC leftover from the tile).
+            product_name = sku_name
+        else:
+            class_id = lookup_class_id(asserted_class)
+            if class_id:
+                company_name = _vendor_company_name(safe) or "your robot"
+                profile_dict = thin_class_profile(company_name, class_id, source_url=safe)
+                type_first = True
 
     if not type_first:
         cached = resolve_cached_profile(safe, product_name)
@@ -182,7 +229,7 @@ def compose_robot_job_search(
                 except Exception:
                     logger.exception("robot_job_search shadow failed")
 
-        if asserted_class:
+        if asserted_class and not _indexed_work_kind_product(safe, product_name):
             from app.services.robot_class_qualify import apply_asserted_class
 
             profile_dict = apply_asserted_class(profile_dict, asserted_class)
