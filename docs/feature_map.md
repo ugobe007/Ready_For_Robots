@@ -106,7 +106,7 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
   → Job Cards (QUALIFY / inspect + check — checking dumps the row into CRM)
   → Open CRM → /signup?next=/pipeline?src=jobs_activate&src=jobs_activate
   → after auth, CRM desk with 5 kept jobs (no robot OEMs)
-  → CRM: collect listing (Keep all 5) → inspect an egg → quote rental → Place this job. Process bar stays 01 / 02 / 03.
+  → CRM: collect listing (Keep these N jobs?) → Apply (offer form) → inspect an egg → quote rental → Place this job. Process bar stays 01 / 02 / 03.
   → run the next robot the same way
 ```
 

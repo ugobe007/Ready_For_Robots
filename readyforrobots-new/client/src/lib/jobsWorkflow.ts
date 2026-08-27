@@ -496,7 +496,8 @@ export const JOBS_RAIL_LINK_CLASS =
 /** Employer names on the CRM desk. Emerald, display font, not body copy. */
 export const CRM_EMPLOYER_NAME_CLASS =
   "font-display text-lg font-bold leading-snug tracking-tight text-emerald-400 sm:text-xl";
-export const CRM_SELECT_ALL_LABEL = "Keep all 5";
+export const CRM_SELECT_ALL_LABEL = "Select all";
+export const CRM_KEEP_YES_CTA = "Yes";
 export const CRM_LISTING_EYEBROW = "Collected jobs";
 export const CRM_INSPECT_HINT =
   "Inspect a collected egg for the Job Card. Place this job when you are ready. The others stay in the basket.";
@@ -984,7 +985,13 @@ export function crmSelectAllLabel(
   cap = CRM_UNLOCKED_JOBS,
 ): string {
   const n = Math.max(0, count);
-  return n >= cap ? CRM_SELECT_ALL_LABEL : `Keep all ${n || cap}`;
+  return n >= cap ? `${CRM_SELECT_ALL_LABEL} ${cap}` : `${CRM_SELECT_ALL_LABEL} ${n || cap}`;
+}
+
+/** One keep prompt. N is selected / kept count — never a hardcoded 5 when they kept 3. */
+export function keepTheseJobsPrompt(count: number): string {
+  const n = Math.max(0, count);
+  return n === 1 ? "Keep this 1 job?" : `Keep these ${n} jobs?`;
 }
 
 export function crmCollectedCountLabel(

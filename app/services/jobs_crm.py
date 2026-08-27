@@ -408,24 +408,37 @@ def _compose_offer_email(
     employer: str,
     work: str,
     workplace: str | None,
+    accept_url: str | None = None,
+    interview_url: str | None = None,
+    document_lines: list[str] | None = None,
 ) -> tuple[str, str]:
     who = robot_name or "this robot"
     model_line = ", ".join(models) if models else "(no catalogued model selected)"
     place = f" at {workplace}" if workplace else ""
     subject = f"Applying {who} to {work} at {employer}"
-    body = "\n".join(
+    lines = [
+        f"We are applying {who} to {work}{place}.",
+        "",
+        f"Model(s) we will use: {model_line}",
+        f"PoC proof: {poc}",
+        f"Proposed monthly price we would charge (our offer, not a site rate): {monthly_price}",
+    ]
+    if document_lines:
+        lines.extend(["", *document_lines])
+    if accept_url or interview_url:
+        lines.extend(["", "Evaluate this application (no Ready For Robots account required):"])
+        if accept_url:
+            lines.append(f"Accept: {accept_url}")
+        if interview_url:
+            lines.append(f"Set up interview: {interview_url}")
+    lines.extend(
         [
-            f"We are applying {who} to {work}{place}.",
-            "",
-            f"Model(s) we will use: {model_line}",
-            f"PoC proof: {poc}",
-            f"Proposed monthly price we would charge (our offer, not a site rate): {monthly_price}",
             "",
             "This is a proposed placement offer from the robot operator. "
             "Reply to this email to continue. We do not invent employer contacts or rental dollars.",
         ]
     )
-    return subject, body
+    return subject, "\n".join(lines)
 
 
 def apply_to_job(
@@ -439,6 +452,7 @@ def apply_to_job(
     poc_evidence: str = "",
     poc_skipped: bool = False,
     job: dict[str, Any] | None = None,
+    document_ids: list[str] | None = None,
     send: bool = True,
 ) -> dict[str, Any]:
     uid = _uid(user)
@@ -480,16 +494,22 @@ def apply_to_job(
         "employer_email": email,
     }
     reply_token = secrets.token_urlsafe(18)
+    employer_token = secrets.token_urlsafe(18)
     reply_to = jobs_crm_reply_address(reply_token)
-    subject, body = _compose_offer_email(
-        robot_name=robot,
-        models=models,
-        poc=poc,
-        monthly_price=price,
-        employer=ident["employer_name"],
-        work=ident["work_title"],
-        workplace=ident["workplace"],
+    from app.services.jobs_crm_recruiter import (
+        attach_documents_to_application,
+        document_lines_for_email,
+        employer_decision_url,
+        oem_email_for_user,
+        notify_oem_status,
+        resend_attachments_for,
+        STATUS_APPLIED,
     )
+
+    oem_email = oem_email_for_user(user, db)
+    snapshot["document_ids"] = [str(x) for x in (document_ids or []) if str(x).strip()]
+    snapshot["employer_token"] = employer_token
+    decision = employer_decision_url(employer_token)
     application = JobApplication(
         user_id=uid,
         kept_job_id=kept.id if kept else None,
@@ -508,9 +528,30 @@ def apply_to_job(
         reply_token=reply_token,
         reply_to=reply_to,
         thread_state=THREAD_DRAFT,
+        employer_token=employer_token,
+        status=STATUS_APPLIED,
+        oem_email=oem_email,
     )
     db.add(application)
     db.flush()
+    attached = attach_documents_to_application(db, user, application, document_ids)
+    snapshot["documents"] = [
+        {"id": str(doc.id), "filename": doc.original_name or doc.filename, "kind": doc.kind}
+        for doc in attached
+    ]
+    application.offer_snapshot = snapshot
+    subject, body = _compose_offer_email(
+        robot_name=robot,
+        models=models,
+        poc=poc,
+        monthly_price=price,
+        employer=ident["employer_name"],
+        work=ident["work_title"],
+        workplace=ident["workplace"],
+        accept_url=f"{decision}?action=accept",
+        interview_url=f"{decision}?action=interview",
+        document_lines=document_lines_for_email(employer_token, attached),
+    )
 
     if kept:
         kept.acted_at = _now()
@@ -531,6 +572,7 @@ def apply_to_job(
                 body_text=body,
                 from_display_name="Ready For Robots Jobs",
                 reply_to=reply_to,
+                attachments=resend_attachments_for(attached) or None,
                 idempotency_key=f"jobs-crm-apply/{application.id}",
             )
             application.send_status = SEND_SENT
@@ -569,6 +611,7 @@ def apply_to_job(
         job_key=ident["job_key"],
         company=ident["employer_name"],
     )
+    notify_oem_status(db, user, application, "applied")
     db.commit()
     db.refresh(application)
     return application_payload(application, include_messages=True)
@@ -596,7 +639,19 @@ def application_payload(row: JobApplication, *, include_messages: bool = False) 
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "can_send": bool(row.employer_email),
         "no_email_reason": None if row.employer_email else _NO_EMAIL_REASON,
+        "status": getattr(row, "status", None) or "applied",
+        "interview_at": row.interview_at.isoformat() if getattr(row, "interview_at", None) else None,
+        "interview_note": getattr(row, "interview_note", None),
+        "interview_mode": getattr(row, "interview_mode", None),
+        "oem_email": getattr(row, "oem_email", None),
+        "employer_decision_url": None,
+        "documents": (row.offer_snapshot or {}).get("documents") or [],
     }
+    token = getattr(row, "employer_token", None)
+    if token:
+        from app.services.jobs_crm_recruiter import employer_decision_url
+
+        payload["employer_decision_url"] = employer_decision_url(token)
     return payload
 
 
@@ -637,6 +692,9 @@ def application_with_thread(db: Session, user: dict, application_id: str) -> dic
     row = get_application(db, user, application_id)
     payload = application_payload(row, include_messages=True)
     payload["messages"] = list_messages(db, row.id)
+    from app.services.jobs_crm_recruiter import documents_for_application, document_payload
+
+    payload["documents"] = [document_payload(doc) for doc in documents_for_application(db, row.id)]
     return payload
 
 

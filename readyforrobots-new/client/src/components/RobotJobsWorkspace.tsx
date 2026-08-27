@@ -30,7 +30,7 @@ import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import {
-  JOBS_KEEP_JOBS_CTA,
+  JOBS_KEEP_YES_CTA,
   JOBS_NEXT_STEPS_CTA,
   jobsCrmOfferHref,
   keepJobsOnAccount,
@@ -64,6 +64,7 @@ import {
   JOBS_NEXT_HINT,
   JOBS_KEEP_LABEL,
   JOBS_SKIP_LABEL,
+  keepTheseJobsPrompt,
   JOBS_PIPELINE_CAP,
   CRM_UNLOCKED_JOBS,
   JOBS_PROCESS_STEPS,
@@ -2896,14 +2897,19 @@ function JobsPanel({
         ) : null}
         <div className="flex flex-wrap items-center gap-2">
           {onKeepJobs ? (
-            <button
-              type="button"
-              onClick={onKeepJobs}
-              aria-label={JOBS_KEEP_JOBS_CTA}
-              className="inline-flex items-center justify-center border border-emerald-400/50 bg-emerald-400 px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a]"
-            >
-              {JOBS_KEEP_JOBS_CTA}
-            </button>
+            <>
+              <p className="font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300">
+                {keepTheseJobsPrompt(checkedCount)}
+              </p>
+              <button
+                type="button"
+                onClick={onKeepJobs}
+                aria-label={keepTheseJobsPrompt(checkedCount)}
+                className="inline-flex items-center justify-center border border-emerald-400/50 bg-emerald-400 px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a]"
+              >
+                {JOBS_KEEP_YES_CTA}
+              </button>
+            </>
           ) : null}
         </div>
       </div>

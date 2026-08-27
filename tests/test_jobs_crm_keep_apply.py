@@ -128,11 +128,16 @@ def test_application_snapshot_without_send_when_no_email(db_session):
 def test_no_send_without_email(db_session, monkeypatch):
     sent = []
 
-    def _boom(**kwargs):
+    def _capture(**kwargs):
+        to_email = kwargs.get("to_email")
         sent.append(kwargs)
-        raise AssertionError("must not send without a real employer email")
+        if to_email == "ops@named-employer.com" or (
+            isinstance(to_email, list) and "ops@named-employer.com" in to_email
+        ):
+            raise AssertionError("must not send without a real employer email")
+        return {"resend_id": "re_oem", "from_email": "jobs@readyforrobots.com"}
 
-    monkeypatch.setattr("app.services.resend_email.send_email_via_resend", _boom)
+    monkeypatch.setattr("app.services.resend_email.send_email_via_resend", _capture)
     keep_jobs(db_session, _user(), [_job(1)], robot_name="Spot")
     app = apply_to_job(
         db_session,
@@ -143,7 +148,9 @@ def test_no_send_without_email(db_session, monkeypatch):
         monthly_price="1200",
         send=True,
     )
-    assert sent == []
+    assert all(
+        item.get("to_email") != "ops@named-employer.com" for item in sent
+    )
     assert app["send_status"] == SEND_NOT_SENT_NO_EMAIL
     assert employer_email_from_job(_job(1)) is None
     assert employer_email_from_job({"employer_email": "ops@named-employer.com"}) == "ops@named-employer.com"

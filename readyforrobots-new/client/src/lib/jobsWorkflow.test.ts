@@ -81,7 +81,9 @@ import {
   crmActingKeepsSelection,
   crmCollectedCountLabel,
   crmSelectAllLabel,
+  keepTheseJobsPrompt,
   CRM_EMPLOYER_NAME_CLASS,
+  CRM_KEEP_YES_CTA,
   CRM_SELECT_ALL_LABEL,
   CRM_LISTING_EYEBROW,
   CRM_INSPECT_HINT,
@@ -750,8 +752,11 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/Collect jobs for \{product\}/);
     expect(desk).toMatch(/crmCollectedCountLabel/);
     expect(desk).toMatch(/crmSelectAllKeys/);
-    expect(desk).toMatch(/Keep all collected jobs/);
-    expect(desk).toMatch(/JOBS_KEEP_JOBS_CTA/);
+    expect(desk).toMatch(/keepTheseJobsPrompt/);
+    expect(desk).toMatch(/CRM_KEEP_YES_CTA/);
+    expect(desk).toMatch(/jobsCrmOfferHref/);
+    expect(desk).toMatch(/#jobs-next-steps|JOBS_APPLY_NEXT_CTA/);
+    expect(desk).not.toMatch(/JOBS_KEEP_JOBS_CTA/);
     expect(desk).toMatch(/JobsKeepStatusBar/);
     expect(desk).toMatch(/JobsCrmNextSteps/);
     expect(desk).toMatch(/JobsCrmInbox/);
@@ -932,8 +937,12 @@ describe("jobsWorkflow", () => {
     expect(crmDeskJobKeys(keys.map(job_key => ({ job_key })))).toEqual(keys);
     expect(crmSelectAllKeys(keys)).toEqual(keys);
     expect(crmSelectAllKeys(["a", "a", "", "b"])).toEqual(["a", "b"]);
-    expect(crmSelectAllLabel(5)).toBe(CRM_SELECT_ALL_LABEL);
-    expect(crmSelectAllLabel(3)).toBe("Keep all 3");
+    expect(crmSelectAllLabel(5)).toBe(`${CRM_SELECT_ALL_LABEL} 5`);
+    expect(crmSelectAllLabel(3)).toBe(`${CRM_SELECT_ALL_LABEL} 3`);
+    expect(keepTheseJobsPrompt(5)).toBe("Keep these 5 jobs?");
+    expect(keepTheseJobsPrompt(3)).toBe("Keep these 3 jobs?");
+    expect(keepTheseJobsPrompt(1)).toBe("Keep this 1 job?");
+    expect(CRM_KEEP_YES_CTA).toBe("Yes");
     expect(crmCollectedCountLabel(5)).toBe("5 of 5 eggs in the basket");
     expect(crmCollectedCountLabel(1)).toBe("1 of 5 eggs in the basket");
     expect(crmCollectedCountLabel(3)).toBe("3 of 5 eggs in the basket");

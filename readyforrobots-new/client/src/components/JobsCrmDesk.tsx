@@ -19,9 +19,11 @@ import {
   JOBS_KEEP_LABEL,
   crmCollectedCountLabel,
   crmDeskJobKeys,
+  CRM_KEEP_YES_CTA,
   crmSelectAllKeys,
   crmSelectAllLabel,
   crmSyncSelectedKeys,
+  keepTheseJobsPrompt,
   crmToggleSelectedKey,
   jobsCrmLeaveHref,
   jobsCrmLeaveLabel,
@@ -42,11 +44,12 @@ import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
 import JobsCrmInbox from "@/components/JobsCrmInbox";
 import {
-  JOBS_KEEP_JOBS_CTA,
-  JOBS_NEXT_STEPS_CTA,
+  JOBS_APPLY_NEXT_CTA,
   fetchKeptJobs,
   isJobsCrmOfferQuery,
+  jobsCrmOfferHref,
   keepJobsOnAccount,
+  openJobsCrmNextStepsForm,
   keptRowsToMatchJobs,
   postJobsCrmActivity,
   type JobsCrmApplication,
@@ -107,6 +110,11 @@ export default function JobsCrmDesk({
   const [applications, setApplications] = useState<
     Record<string, JobsCrmApplication>
   >({});
+  useEffect(() => {
+    if (!showNextSteps) return;
+    const timer = window.setTimeout(() => openJobsCrmNextStepsForm(), 40);
+    return () => window.clearTimeout(timer);
+  }, [showNextSteps]);
   useEffect(() => {
     if (!accessToken) return;
     let cancelled = false;
@@ -170,6 +178,7 @@ export default function JobsCrmDesk({
     if (!accessToken) {
       setSavedCount(pool.length);
       setShowNextSteps(true);
+      queueMicrotask(() => openJobsCrmNextStepsForm());
       return;
     }
     try {
@@ -182,10 +191,22 @@ export default function JobsCrmDesk({
       setSavedCount(result.saved_count);
       setAccountRows(result.jobs);
       setShowNextSteps(true);
+      queueMicrotask(() => openJobsCrmNextStepsForm());
     } catch {
       setSavedCount(pool.length);
       setShowNextSteps(true);
+      queueMicrotask(() => openJobsCrmNextStepsForm());
     }
+  }
+
+  function openOfferForm(event?: { preventDefault: () => void }) {
+    event?.preventDefault();
+    setShowNextSteps(true);
+    if (typeof window !== "undefined") {
+      const href = jobsCrmOfferHref(true, submissionId);
+      window.history.replaceState(null, "", href);
+    }
+    queueMicrotask(() => openJobsCrmNextStepsForm());
   }
   const leaveHref = jobsCrmLeaveHref({ submissionId, jobCount });
   const leaveLabel = jobsCrmLeaveLabel({ submissionId, jobCount });
@@ -256,10 +277,11 @@ export default function JobsCrmDesk({
       ) : null}
       <div className="mt-4">
         <JobsKeepStatusBar
-          savedCount={savedCount || selected.length}
+          savedCount={savedCount}
           onCrmDesk
           signedIn={signedIn}
           submissionId={submissionId}
+          onApplyClick={openOfferForm}
         />
       </div>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
@@ -286,33 +308,56 @@ export default function JobsCrmDesk({
         <div className="mt-6">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className={`${eyebrow} text-emerald-400`}>{CRM_LISTING_EYEBROW}</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300">
+                {keepTheseJobsPrompt(selected.length || jobs.length)}
+              </p>
               <button
                 type="button"
-                onClick={() => setSelectedKeys(crmSelectAllKeys(allKeys))}
-                aria-label="Keep all collected jobs"
-                className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
+                onClick={() =>
+                  setSelectedKeys(crmSelectAllKeys(allKeys))
+                }
+                aria-label={crmSelectAllLabel(jobs.length)}
+                className="border border-slate-600 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-slate-400 transition hover:border-slate-400 hover:text-slate-200"
               >
                 {crmSelectAllLabel(jobs.length)}
               </button>
               <button
                 type="button"
                 onClick={() => void persistKeptJobs()}
-                aria-label={JOBS_KEEP_JOBS_CTA}
+                aria-label={keepTheseJobsPrompt(selected.length || jobs.length)}
                 className="border border-emerald-400/50 bg-emerald-400 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a] transition hover:bg-emerald-300"
               >
-                {JOBS_KEEP_JOBS_CTA}
+                {CRM_KEEP_YES_CTA}
               </button>
-              <button
-                type="button"
-                onClick={() => setShowNextSteps(true)}
-                aria-label="Next steps"
-                className="border border-slate-500 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-slate-200 transition hover:border-slate-300"
-              >
-                {JOBS_NEXT_STEPS_CTA}
-              </button>
+              {savedCount > 0 ? (
+                <a
+                  href={jobsCrmOfferHref(signedIn, submissionId)}
+                  onClick={openOfferForm}
+                  aria-label={JOBS_APPLY_NEXT_CTA}
+                  className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
+                >
+                  {JOBS_APPLY_NEXT_CTA}
+                </a>
+              ) : null}
             </div>
           </div>
+          {showNextSteps && offerJob && accessToken ? (
+            <JobsCrmNextSteps
+              job={offerJob}
+              robotName={product}
+              robotUrl={robotUrl}
+              token={accessToken}
+              onApplied={app => {
+                setApplications(prev => ({ ...prev, [app.job_key]: app }));
+                setExpandedKey(app.job_key);
+              }}
+            />
+          ) : showNextSteps && offerJob ? (
+            <p className="mb-4 border border-emerald-400/40 bg-[#0b162f] px-4 py-4 text-sm text-slate-200">
+              Sign in to store this offer on your account, then apply.
+            </p>
+          ) : null}
           <ul className="space-y-3" aria-label="Collected jobs">
             {jobs.map((job, i) => {
               const card = robotJobCardFromMatch(job);
@@ -421,23 +466,6 @@ export default function JobsCrmDesk({
           </ul>
         </div>
       )}
-
-      {showNextSteps && offerJob && accessToken ? (
-        <JobsCrmNextSteps
-          job={offerJob}
-          robotName={product}
-          robotUrl={robotUrl}
-          token={accessToken}
-          onApplied={app => {
-            setApplications(prev => ({ ...prev, [app.job_key]: app }));
-            setExpandedKey(app.job_key);
-          }}
-        />
-      ) : showNextSteps && offerJob ? (
-        <p className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-4 text-sm text-slate-200">
-          Sign in to store this offer on your account, then apply.
-        </p>
-      ) : null}
 
       <nav
         aria-label="CRM next"

@@ -13,9 +13,17 @@ import {
 import type { MatchJob } from "@/lib/robotJobMatch";
 
 export const JOBS_KEEP_JOBS_CTA = "Keep jobs";
+export const JOBS_KEEP_YES_CTA = "Yes";
 export const JOBS_NEXT_STEPS_CTA = "Next steps →";
+export const JOBS_APPLY_NEXT_CTA = "Apply →";
+export const JOBS_NEXT_STEPS_ANCHOR = "jobs-next-steps";
 export const JOBS_NEXT_STEPS_HINT =
   "Next steps: name the robot, pick catalogued models, add PoC if you have it, then quote the monthly price you will charge.";
+export const JOBS_DOCS_HEADING = "Brochures and product specs";
+export const JOBS_DOCS_HINT =
+  "Upload a PDF or image spec for this robot. We attach what you select to the application — not a public dump.";
+export const JOBS_EMPLOYER_ACCEPT_CTA = "Accept";
+export const JOBS_EMPLOYER_INTERVIEW_CTA = "Set up interview";
 export const JOBS_PROPOSED_PRICE_LABEL = "Proposed monthly price you will charge";
 export const JOBS_PROPOSED_PRICE_HINT =
   "Your proposed offer — not a rate this site invented. Employers see this as your quote.";
@@ -50,7 +58,23 @@ export type JobsCrmApplication = {
   thread_state: string;
   can_send: boolean;
   no_email_reason?: string | null;
+  status?: string | null;
+  interview_at?: string | null;
+  interview_note?: string | null;
+  interview_mode?: string | null;
+  oem_email?: string | null;
+  employer_decision_url?: string | null;
+  documents?: RobotDocument[];
   messages?: JobsCrmMessage[];
+};
+
+export type RobotDocument = {
+  id: string;
+  filename: string;
+  mime_type?: string;
+  size_bytes?: number;
+  kind?: string;
+  created_at?: string | null;
 };
 
 export type JobsCrmMessage = {
@@ -104,7 +128,13 @@ export function keepJobsStatusBar(opts: {
   submissionId?: number | null;
 }): KeepJobsStatusBar {
   const text = keepJobsSavedLabel(opts.savedCount);
-  if (opts.onCrmDesk) return { text };
+  if (opts.onCrmDesk) {
+    return {
+      text,
+      href: jobsCrmOfferHref(true, opts.submissionId),
+      hrefLabel: JOBS_APPLY_NEXT_CTA,
+    };
+  }
   return {
     text,
     href: jobsCrmOpenHref(opts.signedIn, opts.submissionId),
@@ -129,7 +159,20 @@ export function jobsCrmOfferHref(
   const offer = dest.includes("next=offer")
     ? dest
     : `${dest}${dest.includes("?") ? "&" : "?"}next=offer`;
-  return signedIn ? offer : jobsSignupHref(offer, JOBS_ACTIVATE_SRC);
+  if (!signedIn) return jobsSignupHref(offer, JOBS_ACTIVATE_SRC);
+  return offer.includes("#") ? offer : `${offer}#${JOBS_NEXT_STEPS_ANCHOR}`;
+}
+
+export function openJobsCrmNextStepsForm(): void {
+  if (typeof document === "undefined") return;
+  const node = document.getElementById(JOBS_NEXT_STEPS_ANCHOR);
+  if (node) {
+    node.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  if (typeof window !== "undefined") {
+    window.location.hash = JOBS_NEXT_STEPS_ANCHOR;
+  }
 }
 
 export function isJobsCrmOfferQuery(search: string | null | undefined): boolean {
@@ -218,6 +261,7 @@ export async function applyJobOnAccount(
     pocEvidence?: string;
     pocSkipped?: boolean;
     job?: MatchJob;
+    documentIds?: string[];
   },
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>("/api/jobs-crm/apply", token, {
@@ -230,8 +274,73 @@ export async function applyJobOnAccount(
       poc_evidence: body.pocEvidence || "",
       poc_skipped: Boolean(body.pocSkipped),
       job: body.job || null,
+      document_ids: body.documentIds || [],
     }),
   });
+}
+
+export async function fetchRobotDocuments(token: string): Promise<RobotDocument[]> {
+  const data = await jobsCrmFetch<{ documents: RobotDocument[] }>(
+    "/api/jobs-crm/documents",
+    token,
+  );
+  return data.documents || [];
+}
+
+export async function uploadRobotDocument(
+  token: string,
+  file: File,
+  kind = "spec",
+): Promise<RobotDocument> {
+  const base = getApiBase();
+  const form = new FormData();
+  form.append("kind", kind);
+  form.append("file", file);
+  const res = await fetch(
+    `${base}/api/jobs-crm/documents`,
+    liveFetchInit({
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        ...(authHeader(token) as Record<string, string>),
+      },
+      body: form,
+    }),
+  );
+  if (!res.ok) {
+    let detail = `jobs-crm ${res.status}`;
+    try {
+      const body = (await res.json()) as { detail?: unknown };
+      if (typeof body.detail === "string") detail = body.detail;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(detail);
+  }
+  return (await res.json()) as RobotDocument;
+}
+
+export async function confirmInterviewOnAccount(
+  token: string,
+  applicationId: string,
+): Promise<JobsCrmApplication> {
+  return jobsCrmFetch<JobsCrmApplication>(
+    `/api/jobs-crm/applications/${applicationId}/confirm-interview`,
+    token,
+    { method: "POST" },
+  );
+}
+
+export async function markApplicationOutcome(
+  token: string,
+  applicationId: string,
+  outcome: "success" | "failed",
+): Promise<JobsCrmApplication> {
+  return jobsCrmFetch<JobsCrmApplication>(
+    `/api/jobs-crm/applications/${applicationId}/outcome`,
+    token,
+    { method: "POST", body: JSON.stringify({ outcome }) },
+  );
 }
 
 export async function fetchApplicationThread(
@@ -309,4 +418,17 @@ export function threadStateLabel(state: string | null | undefined): string {
   if (state === "awaiting_reply" || state === "sent") return "Awaiting reply";
   if (state === "draft") return "Stored";
   return state || "Stored";
+}
+
+export function applicationStatusLabel(status: string | null | undefined): string {
+  const key = (status || "").trim();
+  if (key === "accepted") return "Accepted";
+  if (key === "interview_requested") return "Interview requested";
+  if (key === "interview_scheduled") return "Interview scheduled";
+  if (key === "interview_confirmed") return "Interview confirmed";
+  if (key === "success") return "Succeeded";
+  if (key === "failed") return "Unsuccessful";
+  if (key === "declined") return "Declined";
+  if (key === "applied") return "Applied";
+  return key ? key.replace(/_/g, " ") : "Stored";
 }

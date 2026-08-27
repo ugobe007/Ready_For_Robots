@@ -5,11 +5,13 @@ export default function JobsKeepStatusBar({
   onCrmDesk,
   signedIn,
   submissionId = null,
+  onApplyClick,
 }: {
   savedCount: number;
   onCrmDesk: boolean;
   signedIn: boolean;
   submissionId?: number | null;
+  onApplyClick?: (event: { preventDefault: () => void }) => void;
 }) {
   if (savedCount <= 0) return null;
   const bar = keepJobsStatusBar({
@@ -31,6 +33,7 @@ export default function JobsKeepStatusBar({
       {bar.href ? (
         <a
           href={bar.href}
+          onClick={onCrmDesk ? onApplyClick : undefined}
           className="font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-200 underline decoration-emerald-400/50 underline-offset-2 hover:text-white"
         >
           {bar.hrefLabel}
