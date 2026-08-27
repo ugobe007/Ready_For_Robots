@@ -140,6 +140,15 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   when it exercises at least one of those primitives. Do not pad leftover
   slots from the cobot/CNC/pack/warehouse corpus. A short honest list (one
   LAWA eVTOL card) is correct. Never invent employers.
+- **R30 ✅** Agriculture / construction **SKU work-kind**. `claims_weeding` →
+  `agriculture_weed` (LaserWeeder is not a combine). `claims_combine_harvest`
+  → `agriculture_combine`. `claims_precision_spray` → `agriculture_spray`.
+  `claims_tractor_work` → `agriculture_tractor`. `claims_construction_print`
+  → `construction_print` (Vulcan). `claims_construction_block` →
+  `construction_block`. `claims_construction_layout` → `construction_layout`.
+  FIND-tile `agriculture` / `construction` is the work-kind **union**. A named
+  SKU only grounds the work its listed_class/task claims. Never
+  `company → category → jobs`.
 
 ## Worked examples
 

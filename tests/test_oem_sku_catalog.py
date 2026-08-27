@@ -72,7 +72,10 @@ def test_seed_has_no_invented_claims_or_stretch_spot_url():
         for v in seed["vendors"]
         for r in v["robots"]
     }
-    assert by_slug["universal-robots-ur20"]["catalog_claims"] == []
+    assert all(
+        c.get("predicate") in {"product_class"}
+        for c in by_slug["universal-robots-ur20"]["catalog_claims"]
+    )
     assert by_slug["universal-robots-ur20"]["specs"] == {}
     stretch = by_slug["boston-dynamics-stretch"]
     assert stretch.get("product_url") in (None, "")

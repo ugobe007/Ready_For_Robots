@@ -344,11 +344,36 @@ def merge_vertical_catalog(
             by_slug[slug] = company
             continue
         existing = by_slug[slug]
-        have = {p.get("slug") for p in existing.get("products") or []}
+        have = {p.get("slug"): p for p in existing.get("products") or [] if p.get("slug")}
         for product in company.get("products") or []:
-            if product.get("slug") and product["slug"] not in have:
+            pslug = product.get("slug")
+            if not pslug:
+                continue
+            if pslug not in have:
                 existing.setdefault("products", []).append(product)
-                have.add(product["slug"])
+                have[pslug] = product
+                continue
+            row = have[pslug]
+            for key in (
+                "listed_class",
+                "task",
+                "setting",
+                "product_url",
+                "lookup_host",
+                "url_status",
+                "primary_class",
+                "configuration_kind",
+                "host_platform",
+                "region",
+            ):
+                val = product.get(key)
+                if val in (None, ""):
+                    continue
+                if key in {"configuration_kind", "host_platform"} and val in {"standalone", "none"}:
+                    continue
+                row[key] = val
+            if product.get("product_url") and not row.get("product_url"):
+                row["product_url"] = product["product_url"]
         for domain in company.get("domains") or []:
             if domain and domain not in (existing.get("domains") or []):
                 existing.setdefault("domains", []).append(domain)
@@ -409,7 +434,39 @@ def _seed_catalog_claims(product: dict[str, Any]) -> list[dict[str, Any]]:
                 "evidence_span": f"{name} host platform {host}.",
             }
         )
+    claims.extend(_work_kind_claims(product, name, desc))
     return claims
+
+
+def _work_kind_claims(product: dict[str, Any], name: str, desc: str) -> list[dict[str, Any]]:
+    """SKU work-kind facts from listed_class/task — not company category."""
+    blob = " ".join(
+        str(product.get(k) or "")
+        for k in ("name", "listed_class", "task", "setting", "primary_class")
+    ).lower()
+    blob = f"{blob} {desc.lower()}".strip()
+    out: list[dict[str, Any]] = []
+
+    def add(pred: str, value: Any, span: str) -> None:
+        out.append({"predicate": pred, "value": value, "evidence_span": span})
+
+    if re.search(r"weed|laserweed|laser weeder", blob):
+        add("claims_weeding", True, f"{name}: weeding work on this configuration.")
+    if re.search(r"\b(combine|lexion|grain harvest|header)\b", blob):
+        add("claims_combine_harvest", True, f"{name}: combine grain harvest.")
+    if re.search(r"\b(spray|see\s*&\s*spray|see and spray|ara)\b", blob) and "micro-spray" not in blob:
+        add("claims_precision_spray", True, f"{name}: precision spray.")
+    if re.search(r"\b(autonomous tractor|tractor for planting|mk-?v)\b", blob) and "implement" not in blob:
+        add("claims_tractor_work", True, f"{name}: autonomous tractor field work.")
+    if re.search(r"\b(3d print|3d-print|vulcan|bod2)\b", blob):
+        add("claims_construction_print", True, f"{name}: 3D-print construction.")
+    if re.search(r"\b(block-lay|block laying|brick|hadrian)\b", blob):
+        add("claims_construction_block", True, f"{name}: block/brick laying.")
+    if re.search(r"\b(fieldprinter|layout printer|floor layout|siteprint)\b", blob):
+        add("claims_construction_layout", True, f"{name}: jobsite layout print.")
+    if re.search(r"\bautonomous\b", blob) and re.search(r"\b(evtol|e-vtol)\b", blob):
+        add("autonomy_mode", "autonomous", f"{name}: autonomous eVTOL configuration fact.")
+    return out
 
 
 def compile_vendor_seed(catalog: dict[str, Any]) -> dict[str, Any]:

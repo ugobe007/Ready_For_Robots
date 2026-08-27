@@ -67,7 +67,14 @@ REQUIREMENT_EXERCISES = {
     "disinfect_surfaces": frozenset({"disinfect"}),
     "goods_to_person": frozenset({"goods_to_person"}),
     "agriculture_task": frozenset({"agriculture_task"}),
+    "agriculture_weed": frozenset({"agriculture_weed"}),
+    "agriculture_combine": frozenset({"agriculture_combine"}),
+    "agriculture_spray": frozenset({"agriculture_spray"}),
+    "agriculture_tractor": frozenset({"agriculture_tractor"}),
     "construction_task": frozenset({"construction_task"}),
+    "construction_print": frozenset({"construction_print"}),
+    "construction_block": frozenset({"construction_block"}),
+    "construction_layout": frozenset({"construction_layout"}),
     "mining_task": frozenset({"mining_task"}),
     "marine_task": frozenset({"marine_task"}),
     "avionics_task": frozenset({"avionics_task"}),
@@ -96,11 +103,42 @@ CONFIGURATION_WORK_CAPABILITIES = frozenset(
         "drone_task",
         "autonomous_flight",
         "agriculture_task",
+        "agriculture_weed",
+        "agriculture_combine",
+        "agriculture_spray",
+        "agriculture_tractor",
         "construction_task",
+        "construction_print",
+        "construction_block",
+        "construction_layout",
         "marine_task",
         "mining_task",
         "aerospace_task",
     }
+)
+# SKU work-kinds. If any of these are grounded, leftover jobs must exercise
+# one of them. FIND-tile unions ground the whole group and may still match
+# generic domain leftover jobs.
+AG_WORK_KINDS = frozenset(
+    {
+        "agriculture_weed",
+        "agriculture_combine",
+        "agriculture_spray",
+        "agriculture_tractor",
+    }
+)
+CONSTRUCTION_WORK_KINDS = frozenset(
+    {
+        "construction_print",
+        "construction_block",
+        "construction_layout",
+    }
+)
+AVIONICS_WORK_KINDS = frozenset(
+    {"evtol_flight", "drone_task", "autonomous_flight"}
+)
+SPECIFIC_WORK_CAPABILITIES = (
+    AG_WORK_KINDS | CONSTRUCTION_WORK_KINDS | AVIONICS_WORK_KINDS
 )
 CONFIGURATION_PAD_BLOCKER = (
     "this configuration's grounded work does not include this job"
@@ -117,7 +155,14 @@ _SIMPLE_CAP_REQ = {
     "disinfect_surfaces": ("disinfect", "no grounded disinfection capability"),
     "goods_to_person": ("goods_to_person", "no grounded ASRS goods-to-person capability"),
     "agriculture_task": ("agriculture_task", "no grounded agricultural capability"),
+    "agriculture_weed": ("agriculture_weed", "no grounded crop-weeding capability"),
+    "agriculture_combine": ("agriculture_combine", "no grounded combine-harvest capability"),
+    "agriculture_spray": ("agriculture_spray", "no grounded precision-spray capability"),
+    "agriculture_tractor": ("agriculture_tractor", "no grounded autonomous-tractor capability"),
     "construction_task": ("construction_task", "no grounded construction capability"),
+    "construction_print": ("construction_print", "no grounded 3D-print construction capability"),
+    "construction_block": ("construction_block", "no grounded block/brick-laying capability"),
+    "construction_layout": ("construction_layout", "no grounded jobsite-layout capability"),
     "mining_task": ("mining_task", "no grounded mining capability"),
     "marine_task": ("marine_task", "no grounded marine capability"),
     "avionics_task": ("avionics_task", "no grounded aviation capability"),
@@ -576,7 +621,15 @@ def _why_lines(
         ("move_pallets", "pallet_move"), ("unload_trailer", "trailer_unload"),
         ("pick_and_pack", "pick_pack"), ("sort_parcels", "sortation"),
         ("disinfect_surfaces", "disinfect"), ("goods_to_person", "goods_to_person"),
-        ("agriculture_task", "agriculture_task"), ("construction_task", "construction_task"),
+        ("agriculture_task", "agriculture_task"),
+        ("agriculture_weed", "agriculture_weed"),
+        ("agriculture_combine", "agriculture_combine"),
+        ("agriculture_spray", "agriculture_spray"),
+        ("agriculture_tractor", "agriculture_tractor"),
+        ("construction_task", "construction_task"),
+        ("construction_print", "construction_print"),
+        ("construction_block", "construction_block"),
+        ("construction_layout", "construction_layout"),
         ("marine_task", "marine_task"), ("avionics_task", "avionics_task"),
         ("evtol_flight", "evtol_flight"), ("drone_task", "drone_task"),
         ("autonomous_flight", "autonomous_flight"),
@@ -651,15 +704,35 @@ def _configuration_pad_blocker(
 
     Ontology law: CONFIGURATION → CAPABILITIES → MATCH. Never pad a short
     eVTOL/ag/construction list with CNC or warehouse work just to fill slots.
+    A LaserWeeder that grounds weeding must not pick up combine harvest.
+    FIND-tile unions (all work-kinds in a domain) may still match leftover
+    generic field/jobsite cards.
     """
-    present = {
+    present_specific = {
+        key
+        for key in SPECIFIC_WORK_CAPABILITIES
+        if _cap(caps, key).present
+    }
+    present_domain = {
         key
         for key in CONFIGURATION_WORK_CAPABILITIES
         if _cap(caps, key).present
     }
-    if not present:
+    exercised = _exercised_capabilities(results)
+    if present_specific:
+        if exercised & present_specific:
+            return None
+        for group, leftover in (
+            (AG_WORK_KINDS, "agriculture_task"),
+            (CONSTRUCTION_WORK_KINDS, "construction_task"),
+            (AVIONICS_WORK_KINDS, "avionics_task"),
+        ):
+            if present_specific >= group and leftover in exercised:
+                return None
+        return CONFIGURATION_PAD_BLOCKER
+    if not present_domain:
         return None
-    if _exercised_capabilities(results) & present:
+    if exercised & present_domain:
         return None
     return CONFIGURATION_PAD_BLOCKER
 
@@ -831,10 +904,52 @@ _AGRICULTURE_REQS = [
     {"id": "agriculture_task", "label": "field task (weed/harvest/spray/seed)", "necessity": "required"},
     {"id": "mobility", "label": "mobility across the field", "necessity": "required"},
 ]
+_AG_WEED_REQS = [
+    {"id": "agriculture_weed", "label": "crop weeding in the field", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the field", "necessity": "required"},
+]
+_AG_COMBINE_REQS = [
+    {"id": "agriculture_combine", "label": "grain harvest with a combine", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the field", "necessity": "required"},
+]
+_AG_SPRAY_REQS = [
+    {"id": "agriculture_spray", "label": "precision spray of crop rows", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the field", "necessity": "required"},
+]
+_AG_TRACTOR_REQS = [
+    {"id": "agriculture_tractor", "label": "autonomous tractor plant or harvest support", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the field", "necessity": "required"},
+]
+_AG_JOB_REQS = {
+    "ag_laser_weeding": _AG_WEED_REQS,
+    "ag_mechanical_weeding": _AG_WEED_REQS,
+    "ag_implement_on_tractor": _AG_WEED_REQS,
+    "ag_combine_harvest": _AG_COMBINE_REQS,
+    "ag_spray": _AG_SPRAY_REQS,
+    "ag_tractor_plant": _AG_TRACTOR_REQS,
+    "ag_tractor_harvest": _AG_TRACTOR_REQS,
+}
 _CONSTRUCTION_REQS = [
     {"id": "construction_task", "label": "jobsite task (layout/drywall/rebar/earthmoving)", "necessity": "required"},
     {"id": "mobility", "label": "mobility across the jobsite", "necessity": "required"},
 ]
+_CONSTRUCTION_PRINT_REQS = [
+    {"id": "construction_print", "label": "3D-print walls for a house or building", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the jobsite", "necessity": "required"},
+]
+_CONSTRUCTION_BLOCK_REQS = [
+    {"id": "construction_block", "label": "lay block or brick for a building", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the jobsite", "necessity": "required"},
+]
+_CONSTRUCTION_LAYOUT_REQS = [
+    {"id": "construction_layout", "label": "print floor layout on the jobsite", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the jobsite", "necessity": "required"},
+]
+_CONSTRUCTION_JOB_REQS = {
+    "construction_home_print": _CONSTRUCTION_PRINT_REQS,
+    "construction_building_block": _CONSTRUCTION_BLOCK_REQS,
+    "construction_layout": _CONSTRUCTION_LAYOUT_REQS,
+}
 _MARINE_REQS = [
     {"id": "marine_task", "label": "hull / port / underwater task", "necessity": "required"},
     {"id": "mobility", "label": "mobility at the vessel or quay", "necessity": "required"},
@@ -939,6 +1054,11 @@ def requirements_for_corpus_job(row: dict[str, Any]) -> list[dict[str, Any]]:
         return list(_DISINFECT_REQS)
     if tape == "asrs":
         return list(_ASRS_REQS)
+    job_key = (row.get("job_key") or "").strip().lower()
+    if job_key in _AG_JOB_REQS:
+        return list(_AG_JOB_REQS[job_key])
+    if job_key in _CONSTRUCTION_JOB_REQS:
+        return list(_CONSTRUCTION_JOB_REQS[job_key])
     if tape == "agriculture":
         return list(_AGRICULTURE_REQS)
     if tape == "construction":
@@ -1079,7 +1199,10 @@ def match_jobs_from_profile(
     for key in ("dual_arm", "manipulate", "mobile", "reach", "tote_transport", "transport",
                 "food_prep", "beverage_prep", "surface_clean", "shelf_scan", "pallet_move",
                 "trailer_unload", "pick_pack", "sortation", "disinfect", "goods_to_person",
-                "agriculture_task", "construction_task", "mining_task",
+                "agriculture_task", "agriculture_weed", "agriculture_combine",
+                "agriculture_spray", "agriculture_tractor",
+                "construction_task", "construction_print", "construction_block",
+                "construction_layout", "mining_task",
                 "marine_task", "avionics_task", "evtol_flight", "drone_task",
                 "autonomous_flight", "aerospace_task",
                 "hard_floor_scrub", "inspect_route"):

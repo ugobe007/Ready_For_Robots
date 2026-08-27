@@ -35,6 +35,10 @@ AUTONOMOUS_AIRCRAFT_CLASSES = frozenset({"autonomous_aircraft"})
 GENERIC_AVIONICS_CLASSES = frozenset({"avionics", "aviation_robot"})
 AEROSPACE_CLASSES = frozenset({"aerospace", "aerospace_robot"})
 CONSTRUCTION_CLASSES = frozenset({"construction", "construction_robot"})
+# FIND-tile unions. Named SKUs use agricultural_robot / construction_robot plus
+# a work-kind claim — never company → category → jobs.
+GENERIC_AGRICULTURE_CLASSES = frozenset({"agriculture"})
+GENERIC_CONSTRUCTION_CLASSES = frozenset({"construction"})
 DOMAIN_WORK_CLASSES = (
     AGRICULTURE_CLASSES
     | MARINE_CLASSES
@@ -584,6 +588,49 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
             derivation="explicit",
             derived_from=["carrying_capacity"],
         )
+
+    # R30: SKU work-kind inside agriculture / construction. FIND tile
+    # (product_class=agriculture|construction) is the union. A named SKU only
+    # grounds the work its listed_class/task claims — LaserWeeder is weeding,
+    # not combine harvest; Vulcan is 3D-print home, not block-lay.
+    generic_ag = bool(classes & GENERIC_AGRICULTURE_CLASSES)
+    generic_con = bool(classes & GENERIC_CONSTRUCTION_CLASSES)
+    for _key, _pred, _label, _union in (
+        ("agriculture_weed", "claims_weeding", "crop weeding", generic_ag),
+        ("agriculture_combine", "claims_combine_harvest", "combine grain harvest", generic_ag),
+        ("agriculture_spray", "claims_precision_spray", "precision crop spray", generic_ag),
+        ("agriculture_tractor", "claims_tractor_work", "autonomous tractor field work", generic_ag),
+        ("construction_print", "claims_construction_print", "3D-print home / building walls", generic_con),
+        ("construction_block", "claims_construction_block", "block / brick laying", generic_con),
+        ("construction_layout", "claims_construction_layout", "jobsite floor layout print", generic_con),
+    ):
+        _fact = _truthy(facts, _pred)
+        if _fact:
+            caps[_key] = DerivedCapability(
+                key=_key,
+                label=_label,
+                present=True,
+                derivation="explicit",
+                derived_from=[_pred],
+                evidence=_fact.get("evidence_span") or _pred,
+            )
+        elif _union:
+            caps[_key] = DerivedCapability(
+                key=_key,
+                label=_label,
+                present=True,
+                derivation="inferred",
+                derived_from=["product_class"],
+                evidence="FIND-tile work union — not a SKU dump",
+            )
+        else:
+            caps[_key] = DerivedCapability(
+                key=_key,
+                label=_label,
+                present=False,
+                derivation="explicit",
+                derived_from=[_pred, "product_class"],
+            )
 
     load_unload = _truthy(facts, "claims_load_unload")
     caps["load_unload"] = DerivedCapability(

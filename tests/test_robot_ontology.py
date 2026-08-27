@@ -49,7 +49,14 @@ def _all_capabilities_profile() -> dict:
             f("claims_disinfection", True),             # disinfect
             f("claims_goods_to_person", True),          # goods_to_person
             f("claims_agriculture", True),              # agriculture_task
+            f("claims_weeding", True),                   # agriculture_weed
+            f("claims_combine_harvest", True),           # agriculture_combine
+            f("claims_precision_spray", True),           # agriculture_spray
+            f("claims_tractor_work", True),              # agriculture_tractor
             f("claims_construction", True),             # construction_task
+            f("claims_construction_print", True),        # construction_print
+            f("claims_construction_block", True),        # construction_block
+            f("claims_construction_layout", True),       # construction_layout
             f("claims_mining", True),                   # mining_task
             f("claims_marine", True),                   # marine_task
             f("claims_avionics", True),                 # avionics_task
