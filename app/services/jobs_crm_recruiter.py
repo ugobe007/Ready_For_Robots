@@ -23,9 +23,7 @@ from app.models.jobs_crm import (
 from app.models.user_profile import UserProfile
 from app.services.email_address import normalize_recipient_email
 from app.services.jobs_crm import (
-    THREAD_AWAITING,
     THREAD_REPLIED,
-    application_payload,
     application_with_thread,
     get_application,
     record_activity,
