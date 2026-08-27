@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   JOBS_APPLY_OFFER_CTA,
+  JOBS_DOCS_HEADING,
+  JOBS_DOCS_HINT,
   JOBS_MODEL_SELECT_HINT,
   JOBS_MODEL_SELECT_LABEL,
   JOBS_NEXT_STEPS_HINT,
@@ -9,8 +11,11 @@ import {
   applyJobOnAccount,
   canSubmitNextStepsOffer,
   fetchCatalogSkus,
+  fetchRobotDocuments,
+  uploadRobotDocument,
   type CatalogSku,
   type JobsCrmApplication,
+  type RobotDocument,
 } from "@/lib/jobsCrmAccount";
 import {
   JOBS_POC_PREFER_HINT,
@@ -39,6 +44,8 @@ export default function JobsCrmNextSteps({
   const [monthlyPrice, setMonthlyPrice] = useState("");
   const [pocEvidence, setPocEvidence] = useState("");
   const [pocSkipped, setPocSkipped] = useState(false);
+  const [docs, setDocs] = useState<RobotDocument[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ready = canSubmitNextStepsOffer({
@@ -57,6 +64,13 @@ export default function JobsCrmNextSteps({
       })
       .catch(() => {
         if (!cancelled) setSkus([]);
+      });
+    fetchRobotDocuments(token)
+      .then(rows => {
+        if (!cancelled) setDocs(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setDocs([]);
       });
     return () => {
       cancelled = true;
@@ -85,6 +99,7 @@ export default function JobsCrmNextSteps({
         pocEvidence,
         pocSkipped: pocSkipped || !pocEvidence.trim(),
         job,
+        documentIds: selectedDocs,
       });
       onApplied(app);
     } catch (err) {
@@ -179,6 +194,71 @@ export default function JobsCrmNextSteps({
           PoC skipped. Employers still prefer proof.
         </p>
       ) : null}
+
+      <fieldset className="mt-6">
+        <legend className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+          {JOBS_DOCS_HEADING}
+        </legend>
+        <p className="mt-1 text-sm text-slate-400">{JOBS_DOCS_HINT}</p>
+        <input
+          type="file"
+          accept="application/pdf,image/jpeg,image/png,image/webp,image/gif"
+          aria-label="Upload brochure or product spec"
+          className="mt-3 block w-full text-sm text-slate-300"
+          onChange={event => {
+            const file = event.target.files?.[0];
+            if (!file || busy) return;
+            setBusy(true);
+            setError(null);
+            void uploadRobotDocument(token, file, "spec")
+              .then(doc => {
+                setDocs(prev => [doc, ...prev]);
+                setSelectedDocs(prev =>
+                  prev.includes(doc.id) ? prev : [...prev, doc.id],
+                );
+              })
+              .catch(err => {
+                setError(
+                  err instanceof Error ? err.message : "Could not upload spec.",
+                );
+              })
+              .finally(() => setBusy(false));
+            event.target.value = "";
+          }}
+        />
+        {docs.length ? (
+          <ul className="mt-3 space-y-2">
+            {docs.map(doc => (
+              <li key={doc.id}>
+                <label className="flex items-center gap-2 text-sm text-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={selectedDocs.includes(doc.id)}
+                    onChange={e =>
+                      setSelectedDocs(prev =>
+                        e.target.checked
+                          ? [...prev, doc.id]
+                          : prev.filter(id => id !== doc.id),
+                      )
+                    }
+                    className="h-4 w-4 accent-emerald-400"
+                  />
+                  {doc.filename}
+                  {doc.kind ? (
+                    <span className="font-mono text-xs uppercase text-slate-500">
+                      {doc.kind}
+                    </span>
+                  ) : null}
+                </label>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-sm text-slate-500">
+            No specs on this account yet.
+          </p>
+        )}
+      </fieldset>
 
       <label className="mt-6 block">
         <span className="block font-display text-xl font-bold text-white">

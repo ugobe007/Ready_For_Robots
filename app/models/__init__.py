@@ -61,7 +61,14 @@ from app.models.waitlist import WaitlistSignup
 from app.models.robot_buyer_lead import RobotBuyerLead
 from app.models.robot_submission import RobotSubmission
 from app.models.jobs_watch import JobsWatch, JobsWatchEvent
-from app.models.jobs_crm import ApplicationMessage, JobApplication, JobsCrmActivity, KeptJob
+from app.models.jobs_crm import (
+    ApplicationDocument,
+    ApplicationMessage,
+    JobApplication,
+    JobsCrmActivity,
+    KeptJob,
+    UserRobotDocument,
+)
 from app.models.site_analytics_event import SiteAnalyticsEvent
 from app.models.humanoid_report_snapshot import HumanoidReportSnapshot
 from app.models.special_project import (

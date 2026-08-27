@@ -107,7 +107,7 @@ Primary deal action on an **opened** collected job: **Place this job →** (pack
 
 ### F5a — Collect then act (ship)
 
-Default desk is a **listing** of collected jobs (cap 5 on free). Select-all keeps all five. Expanding a row inspects the Job Card (employer, workplace, work, qualification, open questions, task-model burden). Place / pack / quote is the second beat. Acting on one job does not deselect the others.
+Default desk is a **listing** of collected jobs (cap 5 on free). One keep prompt: **Keep these N jobs?** (N = selected count). Yes persists the selected cards onto the account, then **Apply** opens the offer form. Expanding a row inspects the Job Card. Place / pack / quote stays the second beat on an opened egg. Acting on one job does not deselect the others.
 
 ### F6 — Pipeline activity on the same job record (ship, account)
 
@@ -115,15 +115,27 @@ Actions taken on FIND / QUALIFY (keep, Open CRM) and on the desk (Place, apply) 
 
 ### F10 — Keep jobs on the account (ship)
 
-Authenticated **Keep jobs** upserts selected Job Cards onto the user (`user_kept_jobs`). Schema: user, job identity (employer, work title, source ids), robot/submission, timestamps, free TTL/entitlement. Unsigned users still hit the wall; after signup, kept jobs restore. Click shows a status bar “N jobs saved” plus a CRM link only when the user is not already on the desk.
+Authenticated **Keep these N jobs?** upserts selected Job Cards onto the user (`user_kept_jobs`). N is the selected/kept count — not a hardcoded 5 when they kept 3. Schema: user, job identity (employer, work title, source ids), robot/submission, timestamps, free TTL/entitlement. Unsigned users still hit the wall; after signup, kept jobs restore. Yes shows a status bar “N jobs saved”. Off the desk the bar links to CRM; on the desk it links to **Apply**.
 
 ### F11 — Next steps offer → apply outreach (ship)
 
-After keep, **Next steps** collects robot name, catalogued OEM SKUs, skippable PoC, and the **user’s proposed monthly price**. Apply persists `job_applications` and sends employer outreach only when a real contact email is on the card. No invented emails. No invented rental dollars.
+After keep, **Apply** / **Next steps** is a real control: `/pipeline?src=jobs_activate&next=offer#jobs-next-steps`. The form collects robot name, catalogued OEM SKUs, skippable PoC, attached specs, and the **user’s proposed monthly price**. Apply persists `job_applications` and sends employer outreach only when a real contact email is on the card. No invented emails. No invented rental dollars. Do not skip the offer form.
 
 ### F12 — Employer inbox on the desk (ship)
 
-Employer replies live in `application_messages` (inbound/outbound). The CRM desk shows thread state (sent / awaiting reply / replied) and a Reply composer. If inbound MX is not wired, users can paste a reply. Access is on the kept job — not a sidecar spreadsheet.
+Employer replies live in `application_messages` (inbound/outbound). The CRM desk shows thread state (sent / awaiting reply / replied), interview time, and a Reply composer. If inbound MX is not wired, users can paste a reply. Access is on the kept job — not a sidecar spreadsheet.
+
+### F13 — Brochure / spec upload (ship)
+
+Signed-in OEM uploads PDF/image specs (`user_robot_documents`, 8 MB, account-private). Selected docs attach via `application_documents` and appear on the offer snapshot. Outreach includes hosted token URLs (Resend attachments when small). Not a public unauthenticated dump.
+
+### F14 — Employer evaluate (ship)
+
+Outreach (only with a real employer email) includes token **Accept** and **Set up interview**. `/employer/:token` needs no RFR account. Tokens write `application_messages` and status (`accepted` / `interview_requested` / `interview_scheduled`). v1 scheduling is a proposed time or “connect us” — not Cal.
+
+### F15 — Recruiter emails to the OEM (ship)
+
+On apply, accept, interview, and success/fail, email the signed-in OEM account. Confirm job + employer + status. Interview time lives on the application. Follow-up confirm email includes time/date when one exists.
 
 ### F7 — 7-day free TTL + 15/month (spec now, enforce next)
 
@@ -148,7 +160,7 @@ Hunt on FIND. Collect on the CRM listing. Enjoy Place this job when the user is 
 | Do | Do not |
 |----|--------|
 | One listing of jobs the user already checked, expandable for details | A forced single-job action form as the first screen |
-| Select-all / keep all 5 collected jobs; acting on one leaves the others selected | Chip-as-single-active (“one job or nothing”) |
+| One **Keep these N jobs?** prompt, then Apply; acting on one leaves the others selected | Dual Keep all 5 / Keep jobs buttons that look the same |
 | Employer names in emerald display type (`text-emerald-400`) | Employer names as body copy |
 | Activity on each job (“Kept from FIND”, “Opened CRM”, “Placed”) | A second product (SIGNAL) pretending to be CRM |
 | Place this job on an inspected egg, after peruse | Rename the process step to Place and hide CRM |
@@ -169,9 +181,10 @@ Hunt on FIND. Collect on the CRM listing. Enjoy Place this job when the user is 
 | `jobsSignupHref` | `jobsWorkflow.ts` | `/signup?next=&src=` |
 | `jobsCrmOpenHref` | `jobsWorkflow.ts` | **Only** CTA/header/handoff/unsigned-desk entry |
 | `jobsCrmNextHref` / `jobsCrmLeaveHref` | `jobsWorkflow.ts` | Wall next = signup; signed next = Job Cards (`/?restore=1`) or FIND (`/?new=1`) |
+| `jobsCrmOfferHref` | `jobsCrmAccount.ts` | Desk Apply / Next steps → `?next=offer#jobs-next-steps` |
 | `JobsProcessChrome` | `JobsProcessChrome.tsx` | 01 / 02 / 03 + next on CRM wall and desk |
 | `jobsForCrmDesk` | `jobsWorkflow.ts` | Checked-first, cap 5 |
-| `crmSelectAllKeys` / `crmCollectedCountLabel` | `jobsWorkflow.ts` | Keep all collected jobs; basket count |
+| `keepTheseJobsPrompt` / `crmSelectAllKeys` | `jobsWorkflow.ts` | Keep these N jobs?; select-all helper |
 | `canLockQuote` | `jobsApply.ts` | Monthly rental required. PoC not required. |
 | `jobs_crm_unlocked_limit` | `plan_entitlements.py` | Server 5 vs unlimited |
 | `JOBS_CRM_FREE_*` | `plan_entitlements.py` | Batch 5, 3×/month, TTL 7 |

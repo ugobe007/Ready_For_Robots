@@ -1,10 +1,12 @@
 """Jobs CRM account API — keep, next-steps SKUs, apply, inbox. Prefix: /api/jobs-crm."""
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -20,6 +22,19 @@ from app.services.jobs_crm import (
     paste_inbound_reply,
     record_activity,
     reply_on_application,
+)
+from app.services.jobs_crm_recruiter import (
+    MAX_DOC_BYTES,
+    accept_application,
+    confirm_interview,
+    documents_for_application,
+    employer_public_payload,
+    find_application_by_employer_token,
+    get_user_document,
+    list_user_documents,
+    mark_application_outcome,
+    request_interview,
+    store_user_document,
 )
 
 router = APIRouter()
@@ -40,6 +55,7 @@ class ApplyBody(BaseModel):
     poc_evidence: Optional[str] = None
     poc_skipped: bool = False
     job: Optional[dict[str, Any]] = None
+    document_ids: list[str] = Field(default_factory=list)
 
 
 class ReplyBody(BaseModel):
@@ -49,6 +65,16 @@ class ReplyBody(BaseModel):
 class PasteInboundBody(BaseModel):
     body: str = Field(..., min_length=1, max_length=20000)
     from_email: Optional[str] = Field(default=None, max_length=320)
+
+
+class InterviewBody(BaseModel):
+    proposed_at: Optional[str] = Field(default=None, max_length=80)
+    note: Optional[str] = Field(default=None, max_length=2000)
+    connect_you: bool = False
+
+
+class OutcomeBody(BaseModel):
+    outcome: str = Field(..., min_length=1, max_length=32)
 
 
 class ActivityBody(BaseModel):
@@ -111,6 +137,7 @@ def post_apply(
             poc_evidence=body.poc_evidence or "",
             poc_skipped=body.poc_skipped,
             job=body.job,
+            document_ids=body.document_ids,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -162,6 +189,134 @@ def post_paste_inbound(
         raise HTTPException(status_code=404, detail="Application not found.")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/documents")
+def get_documents(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
+    return {"documents": list_user_documents(db, user)}
+
+
+@router.post("/documents")
+def post_document(
+    kind: str = Form("spec"),
+    file: UploadFile = File(...),
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    raw = file.file.read(MAX_DOC_BYTES + 1)
+    try:
+        return store_user_document(
+            db,
+            user,
+            filename=file.filename or "upload.bin",
+            content=raw,
+            mime_type=file.content_type,
+            kind=kind,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/documents/{document_id}/file")
+def get_document_file(
+    document_id: UUID,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        row = get_user_document(db, user, str(document_id))
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Document not found.")
+    path = Path(row.storage_path)
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Document file is not on this host.")
+    return FileResponse(path, media_type=row.mime_type, filename=row.original_name or row.filename)
+
+
+@router.post("/applications/{application_id}/confirm-interview")
+def post_confirm_interview(
+    application_id: UUID,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return confirm_interview(db, user, str(application_id))
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Application not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/applications/{application_id}/outcome")
+def post_application_outcome(
+    application_id: UUID,
+    body: OutcomeBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return mark_application_outcome(db, user, str(application_id), body.outcome)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Application not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/employer/{token}")
+def get_employer_decision(token: str, db: Session = Depends(get_db)):
+    row = find_application_by_employer_token(db, token)
+    if not row:
+        raise HTTPException(status_code=404, detail="This application link is not valid.")
+    return employer_public_payload(db, row)
+
+
+@router.post("/employer/{token}/accept")
+def post_employer_accept(token: str, db: Session = Depends(get_db)):
+    try:
+        return accept_application(db, token)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="This application link is not valid.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/employer/{token}/interview")
+def post_employer_interview(
+    token: str,
+    body: InterviewBody,
+    db: Session = Depends(get_db),
+):
+    try:
+        return request_interview(
+            db,
+            token,
+            proposed_at=body.proposed_at,
+            note=body.note,
+            connect_you=body.connect_you,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="This application link is not valid.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/employer/{token}/documents/{document_id}/file")
+def get_employer_document_file(
+    token: str,
+    document_id: UUID,
+    db: Session = Depends(get_db),
+):
+    row = find_application_by_employer_token(db, token)
+    if not row:
+        raise HTTPException(status_code=404, detail="This application link is not valid.")
+    docs = {str(doc.id): doc for doc in documents_for_application(db, row.id)}
+    doc = docs.get(str(document_id))
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document is not attached to this application.")
+    path = Path(doc.storage_path)
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Document file is not on this host.")
+    return FileResponse(path, media_type=doc.mime_type, filename=doc.original_name or doc.filename)
 
 
 @router.get("/activity")

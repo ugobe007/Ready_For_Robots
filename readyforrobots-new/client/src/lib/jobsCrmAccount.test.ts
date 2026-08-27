@@ -3,9 +3,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  JOBS_APPLY_NEXT_CTA,
   JOBS_APPLY_OFFER_CTA,
-  JOBS_KEEP_JOBS_CTA,
+  JOBS_KEEP_YES_CTA,
   JOBS_MODEL_SELECT_LABEL,
+  JOBS_NEXT_STEPS_ANCHOR,
   JOBS_NEXT_STEPS_CTA,
   JOBS_PROPOSED_PRICE_LABEL,
   canSubmitNextStepsOffer,
@@ -13,6 +15,7 @@ import {
   keepJobsSavedLabel,
   keepJobsStatusBar,
 } from "./jobsCrmAccount";
+import { keepTheseJobsPrompt } from "./jobsWorkflow";
 import { jobsCrmOpenHref } from "./jobsWorkflow";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -22,9 +25,16 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(keepJobsSavedLabel(0)).toBe("0 jobs saved");
     expect(keepJobsSavedLabel(1)).toBe("1 job saved");
     expect(keepJobsSavedLabel(5)).toBe("5 jobs saved");
-    expect(
-      keepJobsStatusBar({ savedCount: 3, onCrmDesk: true, signedIn: true }),
-    ).toEqual({ text: "3 jobs saved" });
+    const onDesk = keepJobsStatusBar({
+      savedCount: 3,
+      onCrmDesk: true,
+      signedIn: true,
+    });
+    expect(onDesk.text).toBe("3 jobs saved");
+    expect(onDesk.href).toBe(jobsCrmOfferHref(true));
+    expect(onDesk.hrefLabel).toBe(JOBS_APPLY_NEXT_CTA);
+    expect(onDesk.href).toContain("next=offer");
+    expect(onDesk.href).toContain(JOBS_NEXT_STEPS_ANCHOR);
     const offDesk = keepJobsStatusBar({
       savedCount: 3,
       onCrmDesk: false,
@@ -61,9 +71,13 @@ describe("jobs CRM keep / next-steps / apply", () => {
   });
 
   it("next-steps offer href keeps process 03 on the CRM desk", () => {
-    expect(jobsCrmOfferHref(true)).toBe("/pipeline?src=jobs_activate&next=offer");
+    expect(jobsCrmOfferHref(true)).toBe(
+      `/pipeline?src=jobs_activate&next=offer#${JOBS_NEXT_STEPS_ANCHOR}`,
+    );
+    expect(jobsCrmOfferHref(true)).not.toMatch(/href="#"|#$/);
     expect(jobsCrmOfferHref(false)).toMatch(/next=/);
     expect(jobsCrmOfferHref(false)).toMatch(/src=jobs_activate/);
+    expect(jobsCrmOfferHref(false)).toMatch(/\/signup\?/);
   });
 
   it("desk and Job Cards expose keep status, next-steps fields, and apply gate", () => {
@@ -84,7 +98,10 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(status).toMatch(/data-jobs-keep-status/);
     expect(status).toMatch(/keepJobsStatusBar/);
     expect(desk).toMatch(/JobsKeepStatusBar/);
-    expect(desk).toMatch(/JOBS_KEEP_JOBS_CTA/);
+    expect(desk).toMatch(/keepTheseJobsPrompt/);
+    expect(desk).toMatch(/CRM_KEEP_YES_CTA/);
+    expect(desk).toMatch(/jobsCrmOfferHref/);
+    expect(desk).toMatch(/JOBS_APPLY_NEXT_CTA/);
     expect(desk).toMatch(/JobsCrmNextSteps/);
     expect(desk).toMatch(/JobsCrmInbox/);
     expect(desk).toMatch(/onCrmDesk/);
@@ -95,15 +112,29 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(next).toMatch(/canSubmitNextStepsOffer/);
     expect(next).toMatch(/JOBS_APPLY_OFFER_CTA/);
     expect(next).toMatch(/disabled=\{!ready/);
+    expect(next).toMatch(/JOBS_DOCS_HEADING/);
+    expect(next).toMatch(/uploadRobotDocument/);
+    expect(next).toMatch(/documentIds: selectedDocs/);
+    expect(next).toMatch(/id="jobs-next-steps"/);
     expect(inbox).toMatch(/JOBS_INBOX_HEADING/);
     expect(inbox).toMatch(/Paste employer reply/);
-    expect(workspace).toMatch(/JOBS_KEEP_JOBS_CTA/);
+    expect(workspace).toMatch(/keepTheseJobsPrompt/);
+    expect(workspace).toMatch(/JOBS_KEEP_YES_CTA/);
     expect(workspace).toMatch(/JobsKeepStatusBar/);
     expect(workspace).toMatch(/JOBS_NEXT_STEPS_CTA/);
-    expect(JOBS_KEEP_JOBS_CTA).toBe("Keep jobs");
+    expect(workspace).toMatch(/jobsCrmOfferHref/);
+    expect(keepTheseJobsPrompt(3)).toBe("Keep these 3 jobs?");
+    expect(JOBS_KEEP_YES_CTA).toBe("Yes");
+    expect(JOBS_APPLY_NEXT_CTA).toBe("Apply →");
     expect(JOBS_NEXT_STEPS_CTA).toMatch(/Next steps/);
     expect(JOBS_MODEL_SELECT_LABEL).toMatch(/Model/);
     expect(JOBS_PROPOSED_PRICE_LABEL).toMatch(/Proposed monthly/);
     expect(JOBS_APPLY_OFFER_CTA).toMatch(/Apply to the job/);
+    const appTsx = readFileSync(join(here, "../App.tsx"), "utf8");
+    const employer = readFileSync(join(here, "../pages/EmployerDecision.tsx"), "utf8");
+    expect(appTsx).toMatch(/\/employer\/:token/);
+    expect(employer).toMatch(/JOBS_EMPLOYER_ACCEPT_CTA/);
+    expect(employer).toMatch(/JOBS_EMPLOYER_INTERVIEW_CTA/);
+    expect(employer).toMatch(/datetime-local/);
   });
 });

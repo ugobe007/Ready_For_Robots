@@ -74,6 +74,12 @@ class JobApplication(Base):
     reply_token = Column(String(80), nullable=False, unique=True, index=True)
     reply_to = Column(String(320), nullable=True)
     thread_state = Column(String(32), nullable=False, server_default="draft", index=True)
+    employer_token = Column(String(80), nullable=True, unique=True, index=True)
+    status = Column(String(40), nullable=False, server_default="applied", index=True)
+    interview_at = Column(DateTime(timezone=True), nullable=True)
+    interview_note = Column(Text, nullable=True)
+    interview_mode = Column(String(32), nullable=True)
+    oem_email = Column(String(320), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
@@ -100,6 +106,46 @@ class ApplicationMessage(Base):
     to_email = Column(String(320), nullable=True)
     provider_id = Column(String(160), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+
+
+class UserRobotDocument(Base):
+    """OEM brochure / product spec stored on the signed-in account (not a public dump)."""
+
+    __tablename__ = "user_robot_documents"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    filename = Column(String(240), nullable=False)
+    original_name = Column(String(240), nullable=False)
+    mime_type = Column(String(120), nullable=False)
+    size_bytes = Column(Integer, nullable=False, server_default="0")
+    storage_path = Column(Text, nullable=False)
+    kind = Column(String(32), nullable=False, server_default="spec")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+
+
+class ApplicationDocument(Base):
+    """Join: which account docs were attached to one application snapshot."""
+
+    __tablename__ = "application_documents"
+    __table_args__ = (
+        UniqueConstraint("application_id", "document_id", name="uq_application_documents_app_doc"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    application_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("job_applications.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    document_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("user_robot_documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 class JobsCrmActivity(Base):

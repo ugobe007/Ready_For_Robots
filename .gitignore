@@ -66,6 +66,7 @@ celerybeat-schedule
 celerybeat.pid
 
 # Runtime cache (newsletter edition, etc.)
+uploads/jobs_crm/
 data/
 !app/data/
 !app/data/industry_sector_ontology.json
