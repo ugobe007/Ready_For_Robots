@@ -16,6 +16,7 @@ from app.services.robot_class_qualify import (
 )
 from app.services.robot_job_search import compose_robot_job_search
 from app.services.robot_profile_cache import clear_profile_cache_memory
+from app.services.robot_requirement_match import match_jobs_from_profile
 from app.services.vendor_robot_lookup import (
     index_robot_names,
     lookup_vendor_by_url,
@@ -87,7 +88,23 @@ def test_asserted_agricultural_robot_is_not_the_ag_union():
     assert "agricultural_robot" in classes
     assert "agriculture" not in classes
     caps = derive_capabilities(profile)
-    assert caps["agriculture_weed"].present is False
+    assert caps["agriculture_weed"].present is True
+    assert caps["agriculture_combine"].present is False
+    blob = _blob(match_jobs_from_profile(profile))
+    assert COMBINE not in blob
+    assert WEED in blob
+
+
+def test_generic_agricultural_robot_class_is_not_tile_union():
+    profile = apply_asserted_class(
+        {
+            "company": {"name": "Unknown farm OEM"},
+            "selected_product": {"name": "Field robot"},
+            "facts": [],
+        },
+        "agricultural_robot",
+    )
+    caps = derive_capabilities(profile)
     assert caps["agriculture_combine"].present is False
     blob = _blob(match_jobs_from_profile(profile))
     assert COMBINE not in blob
