@@ -430,7 +430,7 @@ function typeMatchToAnalysis(
   };
 }
 
-/** One named SKU: MATCH the configuration (catalog work-kind), not the FIND tile. */
+/** One named SKU: MATCH the configuration work-kind, not the FIND tile. */
 function analysisForSelectedSku(
   res: RobotJobSearchResult,
   name: string,

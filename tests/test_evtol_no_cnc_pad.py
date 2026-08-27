@@ -92,6 +92,8 @@ def test_lookup_class_keeps_evtol_and_drone_off_the_avionics_tile():
     assert lookup_class_id("drone") == "drone"
     assert lookup_class_id("uav") == "drone"
     assert lookup_class_id("avionics") == "avionics"
+    assert lookup_class_id("agricultural_robot") == "agricultural_robot"
+    assert lookup_class_id("construction_robot") == "construction_robot"
 
 
 def test_joby_catalog_is_one_evtol_job_not_cnc():

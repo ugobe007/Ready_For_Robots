@@ -149,9 +149,12 @@ def normalize_class_id(raw: str | None) -> str | None:
     return None
 
 
-# SKU configuration classes. The Avionics FIND tile is the flying-work union;
-# an eVTOL or drone SKU is not that union. Type-first lookup must stamp the
-# configuration, never company → category → jobs.
+# FIND tiles the operator picks with no SKU. A named SKU class is not a tile.
+FIND_TILE_CLASSES: frozenset[str] = frozenset(row["id"] for row in CLASS_OPTIONS)
+
+# SKU configuration classes. Type-first lookup must stamp the configuration,
+# never company → category → jobs. eVTOL stays eVTOL (not Avionics).
+# agricultural_robot / construction_robot stay themselves (not the parent tile).
 _CONFIGURATION_PRODUCT_CLASSES: dict[str, tuple[str, str]] = {
     "evtol": ("evtol", "eVTOL"),
     "e_vtol": ("evtol", "eVTOL"),
@@ -160,6 +163,20 @@ _CONFIGURATION_PRODUCT_CLASSES: dict[str, tuple[str, str]] = {
     "uav": ("drone", "Drone"),
     "autonomous_aircraft": ("autonomous_aircraft", "Autonomous aircraft"),
     "autonomous_plane": ("autonomous_aircraft", "Autonomous aircraft"),
+    "agricultural_robot": ("agricultural_robot", "Agricultural robot"),
+    "farm_robot": ("agricultural_robot", "Agricultural robot"),
+    "weeder": ("agricultural_robot", "Agricultural robot"),
+    "weeding": ("agricultural_robot", "Agricultural robot"),
+    "combine": ("agricultural_robot", "Agricultural robot"),
+    "tractor": ("agricultural_robot", "Agricultural robot"),
+    "autonomous_tractor": ("agricultural_robot", "Agricultural robot"),
+    "autonomous_combine": ("agricultural_robot", "Agricultural robot"),
+    "construction_robot": ("construction_robot", "Construction robot"),
+    "homebuilding": ("construction_robot", "Construction robot"),
+    "homebuilder": ("construction_robot", "Construction robot"),
+    "construction_print": ("construction_robot", "Construction robot"),
+    "construction_block": ("construction_robot", "Construction robot"),
+    "construction_layout": ("construction_robot", "Construction robot"),
 }
 
 
@@ -239,8 +256,9 @@ def thin_class_profile(
     Used when the operator listed a group of SKUs that share a class
     (Fourier GR-1/GR-2/GR-3 are all humanoid). Does not scrape a product
     page. The matcher still inspects requirements from product_class
-    derivations — this is not a family dump. eVTOL/drone SKUs keep their
-    configuration class; they are not remapped onto the Avionics tile.
+    derivations — this is not a family dump. Named SKU classes
+    (eVTOL, drone, agricultural_robot, construction_robot) stay
+    configuration; they are not remapped onto a FIND tile.
     """
     resolved = resolve_asserted_product_class(class_id)
     if not resolved:
