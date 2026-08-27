@@ -84,6 +84,7 @@ const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
   quadruped: "quadrupeds",
   autonomous_scrubber: "floor scrubbers",
   agriculture: "agriculture robots",
+  agricultural_robot: "agricultural robots",
   marine: "marine robots",
   avionics: "avionics robots",
   evtol: "eVTOL aircraft",
@@ -91,6 +92,7 @@ const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
   autonomous_aircraft: "autonomous aircraft",
   aerospace: "aerospace robots",
   construction: "construction robots",
+  construction_robot: "construction robots",
 };
 
 const ROBOT_CLASS_TITLE: Record<string, string> = {
@@ -101,6 +103,7 @@ const ROBOT_CLASS_TITLE: Record<string, string> = {
   quadruped: "Quadruped",
   autonomous_scrubber: "Floor scrubber",
   agriculture: "Agriculture",
+  agricultural_robot: "Agricultural robot",
   marine: "Marine",
   avionics: "Avionics",
   evtol: "eVTOL",
@@ -108,9 +111,25 @@ const ROBOT_CLASS_TITLE: Record<string, string> = {
   autonomous_aircraft: "Autonomous aircraft",
   aerospace: "Aerospace",
   construction: "Construction",
+  construction_robot: "Construction robot",
 };
 
-/** SKU configuration for FIND lookup. eVTOL/drone stay themselves — not the Avionics tile. */
+/** Operator-picked FIND tiles. A Joby/Carbon URL is a configuration, not a tile. */
+export const FIND_TILE_CLASSES = new Set([
+  "humanoid",
+  "amr",
+  "mobile_manipulator",
+  "cobot",
+  "quadruped",
+  "autonomous_scrubber",
+  "agriculture",
+  "marine",
+  "avionics",
+  "aerospace",
+  "construction",
+]);
+
+/** SKU configuration for FIND lookup. Named SKU classes stay themselves — not the parent tile. */
 const CONFIGURATION_CLASS_ALIASES: Record<string, string> = {
   ...ROBOT_CLASS_ALIASES,
   evtol: "evtol",
@@ -120,6 +139,17 @@ const CONFIGURATION_CLASS_ALIASES: Record<string, string> = {
   uav: "drone",
   autonomous_aircraft: "autonomous_aircraft",
   autonomous_plane: "autonomous_aircraft",
+  agricultural_robot: "agricultural_robot",
+  farm_robot: "agricultural_robot",
+  weeder: "agricultural_robot",
+  weeding: "agricultural_robot",
+  combine: "agricultural_robot",
+  tractor: "agricultural_robot",
+  autonomous_tractor: "agricultural_robot",
+  autonomous_combine: "agricultural_robot",
+  construction_robot: "construction_robot",
+  homebuilding: "construction_robot",
+  homebuilder: "construction_robot",
 };
 
 export function normalizeRobotClass(raw?: string | null): string | null {
@@ -132,6 +162,14 @@ export function configurationClassForLookup(raw?: string | null): string | null 
   const want = (raw || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
   if (!want) return null;
   return CONFIGURATION_CLASS_ALIASES[want] || null;
+}
+
+/** Catalog SKU URLs match the configuration work-kind. FIND tiles stay unions. */
+export function skuLookupGrain(displayClass?: string | null): JobLookupGrain {
+  const cls = configurationClassForLookup(displayClass);
+  if (!cls) return "product";
+  if (FIND_TILE_CLASSES.has(cls)) return "robot_type";
+  return "product";
 }
 
 export function robotClassTitle(classId?: string | null): string {
@@ -147,11 +185,13 @@ export function robotClassJobsLabel(classId?: string | null): string {
 }
 
 /**
- * One lookup per robot type (class), not per SKU.
- * Unknown class falls back to a product-level lookup so we never mix types.
+ * One lookup per robot type (class), not per SKU — except named SKU
+ * configurations (agricultural_robot, evtol, construction_robot). Those
+ * match catalog work-kind, not the parent FIND tile.
  */
 export function lineupJobLookups(products: LineupProduct[]): LineupJobLookup[] {
   const groups = new Map<string, string[]>();
+  const skuConfigs: LineupJobLookup[] = [];
   const unknown: string[] = [];
   for (const row of products) {
     const name = (row.name || "").trim();
@@ -161,11 +201,15 @@ export function lineupJobLookups(products: LineupProduct[]): LineupJobLookup[] {
       unknown.push(name);
       continue;
     }
+    if (skuLookupGrain(row.displayClass) === "product") {
+      skuConfigs.push({ grain: "product", robotClass: cls, productNames: [name] });
+      continue;
+    }
     const names = groups.get(cls) || [];
     names.push(name);
     groups.set(cls, names);
   }
-  const out: LineupJobLookup[] = [];
+  const out: LineupJobLookup[] = [...skuConfigs];
   for (const [robotClass, productNames] of groups) {
     // Several SKUs of one class share a type lookup. A single named SKU
     // (LaserWeeder, Joby eVTOL) matches that configuration, not the FIND tile.

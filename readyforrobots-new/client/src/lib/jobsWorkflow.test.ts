@@ -107,6 +107,7 @@ import {
   skuFamilyStem,
   normalizeRobotClass,
   configurationClassForLookup,
+  skuLookupGrain,
   portfolioShowsJobCounts,
   productClassesFromLineup,
   robotClassJobsLabel,
@@ -151,6 +152,8 @@ describe("jobsWorkflow", () => {
     );
     expect(submitFind).toMatch(/openJobsFromAnalyses/);
     expect(submitFind).not.toMatch(/enterReview/);
+    expect(submitFind).toMatch(/lookupGrain: "product"/);
+    expect(submitFind).not.toMatch(/lookupGrain: cls \? "robot_type" : "product"/);
     expect(workspace).toMatch(/rfr-jobs-activate-bar/);
     expect(workspace).not.toMatch(
       /enterReview\(profileToAnalysis\(profile\), submitUrl, names\)/,
@@ -1051,6 +1054,20 @@ describe("jobsWorkflow", () => {
     expect(configurationClassForLookup("drone")).toBe("drone");
     expect(configurationClassForLookup("evtol")).toBe("evtol");
     expect(configurationClassForLookup("uav")).toBe("drone");
+    expect(configurationClassForLookup("agricultural_robot")).toBe(
+      "agricultural_robot",
+    );
+    expect(configurationClassForLookup("construction_robot")).toBe(
+      "construction_robot",
+    );
+    expect(configurationClassForLookup("agriculture")).toBe("agriculture");
+    expect(configurationClassForLookup("construction")).toBe("construction");
+    expect(skuLookupGrain("agricultural_robot")).toBe("product");
+    expect(skuLookupGrain("construction_robot")).toBe("product");
+    expect(skuLookupGrain("evtol")).toBe("product");
+    expect(skuLookupGrain("drone")).toBe("product");
+    expect(skuLookupGrain("agriculture")).toBe("robot_type");
+    expect(skuLookupGrain("humanoid")).toBe("robot_type");
     expect(robotClassTitle("evtol")).toBe("eVTOL");
     expect(robotClassTitle("avionics")).toBe("Avionics");
     expect(normalizeRobotClass("aerospace_robot")).toBe("aerospace");
@@ -1097,6 +1114,43 @@ describe("jobsWorkflow", () => {
         { name: "X10", displayClass: "drone" },
       ]).map(row => row.robotClass).sort(),
     ).toEqual(["drone", "evtol"]);
+    expect(
+      lineupJobLookups([
+        { name: "Joby eVTOL", displayClass: "evtol" },
+        { name: "X10", displayClass: "drone" },
+      ]).every(row => row.grain === "product"),
+    ).toBe(true);
+    const carbon = lineupJobLookups([
+      { name: "LaserWeeder", displayClass: "agricultural_robot" },
+    ]);
+    expect(carbon).toEqual([
+      {
+        grain: "product",
+        robotClass: "agricultural_robot",
+        productNames: ["LaserWeeder"],
+      },
+    ]);
+    const deere = lineupJobLookups([
+      { name: "X Series Combine", displayClass: "agricultural_robot" },
+      { name: "Autonomous Tractor", displayClass: "agricultural_robot" },
+      { name: "See & Spray Ultimate", displayClass: "agricultural_robot" },
+    ]);
+    expect(deere.every(row => row.grain === "product")).toBe(true);
+    expect(deere.map(row => row.productNames[0]).sort()).toEqual([
+      "Autonomous Tractor",
+      "See & Spray Ultimate",
+      "X Series Combine",
+    ]);
+    const icon = lineupJobLookups([
+      { name: "Vulcan", displayClass: "construction_robot" },
+    ]);
+    expect(icon).toEqual([
+      {
+        grain: "product",
+        robotClass: "construction_robot",
+        productNames: ["Vulcan"],
+      },
+    ]);
     expect(
       productClassesFromLineup([
         { name: "Fourier GR-1", displayClass: "humanoid" },

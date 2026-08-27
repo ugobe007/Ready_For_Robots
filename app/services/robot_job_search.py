@@ -177,7 +177,9 @@ def compose_robot_job_search(
     """Build (or reuse) a Robot Profile and match jobs. Never streams partial jobs.
 
     `lookup_grain=robot_type` matches from product_class (the group) without
-    scraping a SKU page. `product` still researches one robot.
+    scraping a SKU page — only when there is no named product. A catalog SKU
+    (`product=LaserWeeder`) matches that configuration's work-kind even if
+    the client still sends the parent FIND tile.
     """
     t0 = time.perf_counter()
     safe = assert_public_http_url(url)
@@ -196,6 +198,9 @@ def compose_robot_job_search(
             # LaserWeeder / Vulcan / combine: MATCH the SKU work-kind, not the
             # FIND-tile union (and not CNC leftover from the tile).
             product_name = sku_name
+        elif product_name:
+            # Named SKU URL (Skydio drone, Carbon, ICON) is not a FIND tile.
+            pass
         else:
             class_id = lookup_class_id(asserted_class)
             if class_id:
@@ -229,7 +234,9 @@ def compose_robot_job_search(
                 except Exception:
                     logger.exception("robot_job_search shadow failed")
 
-        if asserted_class and not _indexed_work_kind_product(safe, product_name):
+        # Do not stamp the parent FIND tile onto a named SKU (LaserWeeder
+        # must stay weeding, not the agriculture union).
+        if asserted_class and not product_name:
             from app.services.robot_class_qualify import apply_asserted_class
 
             profile_dict = apply_asserted_class(profile_dict, asserted_class)

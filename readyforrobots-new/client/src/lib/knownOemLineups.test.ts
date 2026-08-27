@@ -29,9 +29,27 @@ describe("knownOemLineups", () => {
     const hit = lookupKnownOem("https://carbonrobotics.com/");
     expect(hit?.vendor_name).toMatch(/Carbon Robotics/i);
     expect(hit?.robots.map(r => r.name)).toEqual(["LaserWeeder"]);
+    expect(hit?.robots[0]?.display_class).toBe("agricultural_robot");
+  });
+
+  it("maps Skydio X10 as a drone, not a quadruped", () => {
+    const hit = lookupKnownOem("https://skydio.com/x10");
+    expect(hit?.vendor_name).toMatch(/Skydio/i);
+    expect(hit?.robots.some(r => /x10/i.test(r.name))).toBe(true);
+    const x10 = hit?.robots.find(r => /x10/i.test(r.name));
+    expect(x10?.display_class).toBe("drone");
+    expect(x10?.display_class).not.toBe("quadruped");
+  });
+
+  it("lists Deere combine, tractor, and See & Spray as separate products", () => {
+    const hit = lookupKnownOem("https://deere.com/en/harvesting/x-series-combines");
+    const names = (hit?.robots || []).map(r => r.name);
+    expect(names.some(n => /combine/i.test(n))).toBe(true);
+    expect(names.some(n => /tractor/i.test(n))).toBe(true);
+    expect(names.some(n => /see\s*&\s*spray|see and spray/i.test(n))).toBe(true);
+    expect(names.length).toBeGreaterThanOrEqual(3);
     expect(
-      hit?.robots[0]?.display_class === "agriculture" ||
-        hit?.robots[0]?.display_class === "agricultural_robot",
+      hit?.robots.every(r => r.display_class === "agricultural_robot"),
     ).toBe(true);
   });
 
