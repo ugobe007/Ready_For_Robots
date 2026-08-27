@@ -37,7 +37,8 @@ category leakage.
 | `agriculture` | `agriculture_task` | Weeding/harvest/spray (Carbon Robotics LaserWeeder, FarmWise) |
 | `construction` | `construction_task` | Layout/drywall/rebar/earthmoving (Dusty, Built) |
 | `marine` | `marine_task` | Hull inspect/clean, quay and underwater work |
-| `avionics` | `avionics_task` | Hangar / airside aircraft inspect — not consumer drones |
+| `avionics` | `avionics_task` | Drone inspection/delivery, eVTOL, autonomous flight |
+| `aerospace` | `aerospace_task` | Satellite servicing, orbital debris capture, launch ground support |
 | `mining` | `mining_task` | Haulage/drilling/loading |
 | `clinical_delivery` | `transport` (item delivery) | Deliver meds pharmacy→units, specimens→lab, supply/meal/linen delivery |
 | `resident_services` | `transport` (item delivery) | Eldercare meals/linens/amenities to resident rooms |

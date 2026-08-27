@@ -44,6 +44,7 @@ _WORK_CAPABILITIES = frozenset(
         "mining_task",
         "marine_task",
         "avionics_task",
+        "aerospace_task",
     }
 )
 
@@ -66,6 +67,7 @@ _CAPABILITY_FAMILIES = {
     "mining_task": frozenset({"mining"}),
     "marine_task": frozenset({"marine"}),
     "avionics_task": frozenset({"avionics"}),
+    "aerospace_task": frozenset({"aerospace"}),
 }
 
 

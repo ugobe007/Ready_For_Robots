@@ -67,10 +67,20 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   `agriculture_task` + `mobile`. Empty specs stay `UNKNOWN`.
 - **R23 ✅** `product_class` ∈ {`marine`, `marine_robot`} **or** `claims_marine` →
   `marine_task` + `mobile` (hull / port / underwater — not a category dump).
-- **R24 ✅** `product_class` ∈ {`avionics`, `aviation_robot`} **or** `claims_avionics` →
-  `avionics_task` + `mobile` (hangar / airside aircraft work — not a consumer drone).
+- **R24 ✅** `product_class` ∈ {`avionics`, `aviation_robot`, `drone`, `evtol`}
+  **or** `claims_avionics` → `avionics_task` + `mobile` (drones, eVTOL,
+  autonomous aircraft — not satellites). Hangar/airside inspection of an
+  airframe is avionics *work*, not the class definition.
 - **R25 ✅** `product_class` ∈ {`construction`, `construction_robot`} **or**
-  `claims_construction` → `construction_task` + `mobile`.
+  `claims_construction` → `construction_task` + `mobile` (homes, buildings,
+  plus jobsite earthwork / layout / finishing).
+- **R26 ✅** `product_class` ∈ {`aerospace`, `aerospace_robot`} **or**
+  `claims_aerospace` → `aerospace_task` + `mobile` (satellites, rockets,
+  orbital debris / space-exploration robots — not drones).
+- **R27 ✅** `configuration_kind=implement_on_host` **and**
+  `host_platform` ∈ {`tractor`, `combine`} → `agriculture_task` (`DERIVED`).
+  An attachment is hardware on a tractor or combine, **not** a FIND class
+  and not a company category. Empty specs stay `UNKNOWN`.
 - **R13 (humanoid nuance) ✅/🟡** `2 arms + 2 hands + vision + mobile body`
   ⇒ **likely mobile-manipulation platform** — grounds `manipulate` + `mobile`,
   but `payload`, `reach`, and `autonomy` still each require their own evidence
@@ -129,6 +139,9 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
 | Somatic (restroom) | bathroom cleaning, self-navigates | mobile, surface_clean | restroom only |
 | Avidbots Neo (scrubber) | autonomous scrubber | hard_floor_scrub, mobile | scrub only |
 | Carbon Robotics LaserWeeder | agricultural weeding robot, laser weeding | agriculture_task, mobile | weeding / crop / field only |
+| John Deere X Series Combine | autonomous combine harvest | agriculture_task, mobile | combine / harvest only |
+| Skydio X10 | drone / UAV | avionics_task, mobile | drone inspect / delivery / flight |
+| Astroscale ELSA-d | on-orbit servicing / debris | aerospace_task, mobile | satellite servicing / debris only |
 
 ## Regression coverage
 `tests/test_robot_inference_engine.py`, `tests/test_facts_item_delivery.py`,

@@ -28,6 +28,7 @@ Morphology = Literal[
     "mining_robot",
     "marine_robot",
     "aviation_robot",
+    "aerospace_robot",
     "generic",
 ]
 
@@ -167,6 +168,13 @@ _CHECKLISTS: dict[Morphology, tuple[ChecklistSlot, ...]] = {
         ChecklistSlot("environment", "Operating environment", ("operating_environment",)),
         ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
     ),
+    "aerospace_robot": (
+        ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
+        ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
+        ChecklistSlot("workflows", "Demonstrated workflows", ("claims_aerospace",)),
+        ChecklistSlot("environment", "Operating environment", ("operating_environment",)),
+        ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
+    ),
     "mining_robot": (
         ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
         ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
@@ -197,6 +205,10 @@ _DISPLAY_CLASS_ALIASES: dict[str, Morphology] = {
     "avionics": "aviation_robot",
     "aviation": "aviation_robot",
     "aviation_robot": "aviation_robot",
+    "drone": "drone",
+    "evtol": "aviation_robot",
+    "aerospace": "aerospace_robot",
+    "aerospace_robot": "aerospace_robot",
 }
 
 
@@ -223,6 +235,7 @@ def infer_morphology(facts: list[RobotFact], display_class: str | None = None) -
         "agricultural_robot",
         "marine_robot",
         "aviation_robot",
+        "aerospace_robot",
         "mining_robot",
         "autonomous_forklift",
         "service_robot",

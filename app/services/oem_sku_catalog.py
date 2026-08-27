@@ -25,6 +25,7 @@ from app.services.vendor_robot_lookup import (
 ROOT = Path(__file__).resolve().parents[2]
 XLSX_PATH = ROOT / "docs" / "reference" / "readyforrobots_companies_and_robots.xlsx"
 ONTOLOGY_PATH = ROOT / "ontology" / "oem_sku_catalog.v1.json"
+VERTICAL_CATALOG_PATH = ROOT / "ontology" / "vertical_oem_sku_catalog.v1.json"
 SEED_PATH = ROOT / "app" / "data" / "vendor_robots_oem_sku_seed.json"
 LOOKUP_PATH = ROOT / "app" / "data" / "oem_sku_url_lookup.json"
 DISCOVERY_PATH = ROOT / "app" / "data" / "oem_sku_discovery.json"
@@ -79,6 +80,16 @@ def map_primary_class(category: str, klass: str) -> str:
         return "delivery_robot"
     if "surgical" in blob:
         return "surgical_robot"
+    if "aerospace" in blob or "satellite" in blob or "orbital" in blob:
+        return "aerospace_robot"
+    if "avionics" in blob or "drone" in blob or "evtol" in blob or "eVTOL" in blob:
+        return "aviation_robot"
+    if "agriculture" in blob or "tractor" in blob or "combine" in blob or "weeder" in blob:
+        return "agricultural_robot"
+    if "construction" in blob or "jobsite" in blob:
+        return "construction_robot"
+    if "marine" in blob:
+        return "marine_robot"
     return "service_robot"
 
 
@@ -311,6 +322,96 @@ def apply_verified_urls(catalog: dict[str, Any], lookup: dict[str, Any]) -> dict
     return catalog
 
 
+def merge_vertical_catalog(
+    catalog: dict[str, Any],
+    vertical: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Merge verified vertical OEMs after workbook parse so they are not wiped."""
+    if vertical is None:
+        if not VERTICAL_CATALOG_PATH.is_file():
+            return catalog
+        try:
+            vertical = json.loads(VERTICAL_CATALOG_PATH.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return catalog
+    by_slug = {c.get("slug"): c for c in catalog.get("companies") or [] if c.get("slug")}
+    for company in vertical.get("companies") or []:
+        slug = company.get("slug")
+        if not slug:
+            continue
+        if slug not in by_slug:
+            catalog.setdefault("companies", []).append(company)
+            by_slug[slug] = company
+            continue
+        existing = by_slug[slug]
+        have = {p.get("slug") for p in existing.get("products") or []}
+        for product in company.get("products") or []:
+            if product.get("slug") and product["slug"] not in have:
+                existing.setdefault("products", []).append(product)
+                have.add(product["slug"])
+        for domain in company.get("domains") or []:
+            if domain and domain not in (existing.get("domains") or []):
+                existing.setdefault("domains", []).append(domain)
+        for url in company.get("source_urls") or []:
+            if url and url not in (existing.get("source_urls") or []):
+                existing.setdefault("source_urls", []).append(url)
+    catalog["company_count"] = len(catalog.get("companies") or [])
+    catalog["product_count"] = sum(len(c.get("products") or []) for c in catalog.get("companies") or [])
+    return catalog
+
+
+def _seed_catalog_claims(product: dict[str, Any]) -> list[dict[str, Any]]:
+    """Identity claims only. Empty specs stay UNKNOWN."""
+    cls = (product.get("primary_class") or "").strip()
+    name = product.get("name") or "SKU"
+    desc = _description(product)
+    claims: list[dict[str, Any]] = []
+    if cls:
+        claims.append(
+            {
+                "predicate": "product_class",
+                "value": cls,
+                "evidence_span": desc or f"{name} indexed class {cls}.",
+            }
+        )
+    class_claim = {
+        "agricultural_robot": ("claims_agriculture", True),
+        "agriculture": ("claims_agriculture", True),
+        "construction_robot": ("claims_construction", True),
+        "construction": ("claims_construction", True),
+        "aviation_robot": ("claims_avionics", True),
+        "avionics": ("claims_avionics", True),
+        "drone": ("claims_avionics", True),
+        "evtol": ("claims_avionics", True),
+        "aerospace_robot": ("claims_aerospace", True),
+        "aerospace": ("claims_aerospace", True),
+        "marine_robot": ("claims_marine", True),
+        "marine": ("claims_marine", True),
+    }.get(cls)
+    if class_claim:
+        pred, val = class_claim
+        claims.append({"predicate": pred, "value": val, "evidence_span": desc or f"{name}: {pred}."})
+    kind = product.get("configuration_kind")
+    host = product.get("host_platform")
+    if kind:
+        claims.append(
+            {
+                "predicate": "configuration_kind",
+                "value": kind,
+                "evidence_span": f"{name} configuration {kind}.",
+            }
+        )
+    if host:
+        claims.append(
+            {
+                "predicate": "host_platform",
+                "value": host,
+                "evidence_span": f"{name} host platform {host}.",
+            }
+        )
+    return claims
+
+
 def compile_vendor_seed(catalog: dict[str, Any]) -> dict[str, Any]:
     """FIND index shape. Hosts come from the spreadsheet; product_url only if verified."""
     vendors: list[dict[str, Any]] = []
@@ -338,8 +439,10 @@ def compile_vendor_seed(catalog: dict[str, Any]) -> dict[str, Any]:
                     "lookup_host": product.get("lookup_host") or domains[0],
                     "url_status": product.get("url_status") or "unverified",
                     "capability_confidence": "UNKNOWN",
-                    "catalog_claims": [],
+                    "catalog_claims": _seed_catalog_claims(product),
                     "specs": {},
+                    "configuration_kind": product.get("configuration_kind") or "standalone",
+                    "host_platform": product.get("host_platform") or "none",
                 }
             )
         if not robots:

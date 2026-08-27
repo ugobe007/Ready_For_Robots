@@ -17,7 +17,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures" / "m2_profiles"
 NEW_FAMILIES = {
     "shelf_scan", "pallet_move", "trailer_unload", "pick_pack", "sortation",
     "disinfection", "asrs", "agriculture", "construction", "mining",
-    "marine", "avionics",
+    "marine", "avionics", "aerospace",
 }
 
 # family -> the grounding claim predicate(s) for its distinct capability
@@ -33,6 +33,7 @@ FAMILY_CLAIM = {
     "mining": ["claims_mining"],
     "marine": ["claims_marine"],
     "avionics": ["claims_avionics"],
+    "aerospace": ["claims_aerospace"],
     "shelf_scan": ["claims_shelf_scan", "has_mobile_base"],
 }
 

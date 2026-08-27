@@ -1921,6 +1921,244 @@
       "unknowns": [
         "Rock type"
       ]
+    },
+    {
+      "job_key": "ag_combine_harvest",
+      "title": "Harvest grain with an autonomous combine",
+      "industry": "Agriculture",
+      "path": "FIELD COMBINE",
+      "company_name": "Heartland Grain Co-op",
+      "locality": "Ames, IA",
+      "families": [],
+      "actions": [],
+      "text": "autonomous combine harvest of grain with a combine header in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Crop moisture",
+        "Header width"
+      ]
+    },
+    {
+      "job_key": "ag_tractor_plant",
+      "title": "Plant rows with an autonomous tractor",
+      "industry": "Agriculture",
+      "path": "FIELD PLANT",
+      "company_name": "Prairie Seed Farms",
+      "locality": "Grand Island, NE",
+      "families": [],
+      "actions": [],
+      "text": "autonomous tractor planting crop rows in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Row spacing",
+        "Seed type"
+      ]
+    },
+    {
+      "job_key": "ag_tractor_harvest",
+      "title": "Support crop harvest with an autonomous tractor",
+      "industry": "Agriculture",
+      "path": "FIELD HARVEST",
+      "company_name": "River Bend Growers",
+      "locality": "Yuma, AZ",
+      "families": [],
+      "actions": [],
+      "text": "autonomous tractor for crop harvest support in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Crop type",
+        "Season"
+      ]
+    },
+    {
+      "job_key": "ag_implement_on_tractor",
+      "title": "Run a weeding implement on a tractor",
+      "industry": "Agriculture",
+      "path": "TRACTOR IMPLEMENT",
+      "company_name": "Green Valley Farms",
+      "locality": "Salinas, CA",
+      "families": [],
+      "actions": [],
+      "text": "tractor-implement weeding of vegetable crop rows in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Hitch class",
+        "Row spacing"
+      ]
+    },
+    {
+      "job_key": "construction_home_frame",
+      "title": "Frame a house on the residential site",
+      "industry": "Construction",
+      "path": "HOME FRAME",
+      "company_name": "Prairie Home Builders",
+      "locality": "Austin, TX",
+      "families": [],
+      "actions": [],
+      "text": "residential home framing robot on the house construction site",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Floorplan",
+        "Site access"
+      ]
+    },
+    {
+      "job_key": "construction_home_print",
+      "title": "3D-print walls for a house",
+      "industry": "Construction",
+      "path": "HOME PRINT",
+      "company_name": "Hill Country Homes",
+      "locality": "Georgetown, TX",
+      "families": [],
+      "actions": [],
+      "text": "3D print home walls for residential construction",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Mix design",
+        "Floorplan"
+      ]
+    },
+    {
+      "job_key": "construction_building_block",
+      "title": "Lay block for a commercial building",
+      "industry": "Construction",
+      "path": "BUILDING WALL",
+      "company_name": "Metro Commercial Builders",
+      "locality": "Perth, WA",
+      "families": [],
+      "actions": [],
+      "text": "block-laying robot builds a commercial building wall",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Block type",
+        "Site access"
+      ]
+    },
+    {
+      "job_key": "avionics_drone_inspect",
+      "title": "Inspect assets with an autonomous drone",
+      "industry": "Avionics",
+      "path": "FLIGHT INSPECT",
+      "company_name": "Pacific Grid Inspection",
+      "locality": "Redding, CA",
+      "families": [],
+      "actions": [],
+      "text": "autonomous drone inspection of utility and airframe assets",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Flight corridor",
+        "Sensor pack"
+      ]
+    },
+    {
+      "job_key": "avionics_drone_delivery",
+      "title": "Deliver payloads with a delivery drone",
+      "industry": "Avionics",
+      "path": "FLIGHT DELIVER",
+      "company_name": "Valley Medical Logistics",
+      "locality": "South San Francisco, CA",
+      "families": [],
+      "actions": [],
+      "text": "drone delivery of medical and retail payloads on a named corridor",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Payload weight",
+        "Drop zone"
+      ]
+    },
+    {
+      "job_key": "avionics_evtol",
+      "title": "Fly an eVTOL route between vertiports",
+      "industry": "Avionics",
+      "path": "EVTOL ROUTE",
+      "company_name": "Los Angeles World Airports",
+      "locality": "Los Angeles, CA",
+      "families": [],
+      "actions": [],
+      "text": "eVTOL flying-car class flight between vertiports",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Airspace rules",
+        "Vertiport slot"
+      ]
+    },
+    {
+      "job_key": "avionics_autonomous_flight",
+      "title": "Fly an autonomous airplane between airports",
+      "industry": "Avionics",
+      "path": "IFR PAIR",
+      "company_name": "Metro Airside Ops",
+      "locality": "Denver, CO",
+      "families": [],
+      "actions": [],
+      "text": "autonomous airplane-like robot flies an IFR airport pair",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Aircraft type",
+        "Crew rules"
+      ]
+    },
+    {
+      "job_key": "aerospace_sat_service",
+      "title": "Service a satellite on orbit",
+      "industry": "Aerospace",
+      "path": "ON ORBIT SERVICE",
+      "company_name": "NASA",
+      "locality": "Low Earth orbit",
+      "families": [],
+      "actions": [],
+      "text": "satellite servicing robot docks with a client satellite on orbit",
+      "source": "tier_seed",
+      "tape_family": "aerospace",
+      "unknowns": [
+        "Client interface",
+        "Orbit"
+      ]
+    },
+    {
+      "job_key": "aerospace_debris",
+      "title": "Capture orbital debris from a servicing satellite",
+      "industry": "Aerospace",
+      "path": "DEBRIS CAPTURE",
+      "company_name": "ESA",
+      "locality": "Low Earth orbit",
+      "families": [],
+      "actions": [],
+      "text": "orbital debris capture by a robot attached to a servicing satellite",
+      "source": "tier_seed",
+      "tape_family": "aerospace",
+      "unknowns": [
+        "Target object",
+        "Capture method"
+      ]
+    },
+    {
+      "job_key": "aerospace_launch_gse",
+      "title": "Support a launch vehicle on the pad",
+      "industry": "Aerospace",
+      "path": "PAD GSE",
+      "company_name": "NASA Kennedy Space Center",
+      "locality": "Merritt Island, FL",
+      "families": [],
+      "actions": [],
+      "text": "launch and rocket ground-support robot on the pad",
+      "source": "tier_seed",
+      "tape_family": "aerospace",
+      "unknowns": [
+        "Vehicle class",
+        "Range rules"
+      ]
     }
   ]
 }

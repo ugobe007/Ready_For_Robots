@@ -20,12 +20,13 @@ const EXPECTED_IDS = [
   "agriculture",
   "marine",
   "avionics",
+  "aerospace",
   "construction",
 ] as const;
 
 describe("robot class picker options", () => {
-  it("renders all 10 classes with a one-line work hint", () => {
-    expect(DEFAULT_CLASS_OPTIONS).toHaveLength(10);
+  it("renders all 11 classes with a one-line work hint", () => {
+    expect(DEFAULT_CLASS_OPTIONS).toHaveLength(11);
     expect(CLASS_OPTION_IDS).toEqual([...EXPECTED_IDS]);
     for (const row of DEFAULT_CLASS_OPTIONS) {
       expect(row.label.trim().length).toBeGreaterThan(2);
@@ -44,28 +45,30 @@ describe("robot class picker options", () => {
     ]);
   });
 
-  it("names the four work-domain classes the form-factor list misses", () => {
+  it("names the four domain tiles plus aerospace the form-factor list misses", () => {
     const byId = Object.fromEntries(DEFAULT_CLASS_OPTIONS.map(row => [row.id, row]));
     expect(byId.agriculture.label).toBe("Agriculture");
-    expect(byId.agriculture.hint).toMatch(/weed/i);
+    expect(byId.agriculture.hint).toMatch(/combine|tractor/i);
     expect(byId.marine.label).toBe("Marine");
     expect(byId.marine.hint).toMatch(/hull|port|underwater/i);
     expect(byId.avionics.label).toBe("Avionics");
-    expect(byId.avionics.hint).toMatch(/hangar|airside|aircraft/i);
-    expect(byId.avionics.hint).not.toMatch(/consumer drone as a class/i);
+    expect(byId.avionics.hint).toMatch(/drone|evtol|aircraft/i);
+    expect(byId.avionics.hint).not.toMatch(/hangar and airside only/i);
+    expect(byId.aerospace.label).toBe("Aerospace");
+    expect(byId.aerospace.hint).toMatch(/satellite|debris|rocket/i);
     expect(byId.construction.label).toBe("Construction");
-    expect(byId.construction.hint).toMatch(/jobsite|earthwork|layout/i);
+    expect(byId.construction.hint).toMatch(/home|building/i);
   });
 
-  it("falls back to the ten tiles when the API sends none", () => {
-    expect(classOptionsOrDefault(undefined)).toHaveLength(10);
+  it("falls back to the eleven tiles when the API sends none", () => {
+    expect(classOptionsOrDefault(undefined)).toHaveLength(11);
     expect(classOptionsOrDefault([])).toEqual(DEFAULT_CLASS_OPTIONS);
     expect(classOptionsOrDefault([{ id: "agriculture", label: "Ag", hint: "Field" }])).toEqual([
       { id: "agriculture", label: "Ag", hint: "Field" },
     ]);
   });
 
-  it("wires the picker and workspace fallback to the same 10 ids", () => {
+  it("wires the picker and workspace fallback to the same 11 ids", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",

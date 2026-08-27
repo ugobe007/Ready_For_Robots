@@ -71,6 +71,7 @@ REQUIREMENT_EXERCISES = {
     "mining_task": frozenset({"mining_task"}),
     "marine_task": frozenset({"marine_task"}),
     "avionics_task": frozenset({"avionics_task"}),
+    "aerospace_task": frozenset({"aerospace_task"}),
     "hard_floor_scrub": frozenset({"hard_floor_scrub"}),
     "inspect_route_mobility": frozenset({"inspect_route"}),
     "reach_envelope": frozenset({"reach"}),
@@ -96,6 +97,7 @@ _SIMPLE_CAP_REQ = {
     "mining_task": ("mining_task", "no grounded mining capability"),
     "marine_task": ("marine_task", "no grounded marine capability"),
     "avionics_task": ("avionics_task", "no grounded aviation capability"),
+    "aerospace_task": ("aerospace_task", "no grounded aerospace capability"),
 }
 
 LIKELY_DERIVATIONS = {
@@ -531,6 +533,7 @@ def _why_lines(
         ("disinfect_surfaces", "disinfect"), ("goods_to_person", "goods_to_person"),
         ("agriculture_task", "agriculture_task"), ("construction_task", "construction_task"),
         ("marine_task", "marine_task"), ("avionics_task", "avionics_task"),
+        ("aerospace_task", "aerospace_task"),
         ("mining_task", "mining_task"),
     ):
         if _rid in needed:
@@ -747,8 +750,12 @@ _MARINE_REQS = [
     {"id": "mobility", "label": "mobility at the vessel or quay", "necessity": "required"},
 ]
 _AVIONICS_REQS = [
-    {"id": "avionics_task", "label": "hangar / airside aircraft task", "necessity": "required"},
-    {"id": "mobility", "label": "mobility in the hangar or on the ramp", "necessity": "required"},
+    {"id": "avionics_task", "label": "drone / eVTOL / autonomous aircraft task", "necessity": "required"},
+    {"id": "mobility", "label": "flight or ground mobility for the aircraft", "necessity": "required"},
+]
+_AEROSPACE_REQS = [
+    {"id": "aerospace_task", "label": "satellite / orbital / space-robot task", "necessity": "required"},
+    {"id": "mobility", "label": "on-orbit or pad mobility", "necessity": "required"},
 ]
 _MINING_REQS = [
     {"id": "mining_task", "label": "mining task (haulage/drilling/loading)", "necessity": "required"},
@@ -820,6 +827,8 @@ def requirements_for_corpus_job(row: dict[str, Any]) -> list[dict[str, Any]]:
         return list(_MARINE_REQS)
     if tape == "avionics":
         return list(_AVIONICS_REQS)
+    if tape == "aerospace":
+        return list(_AEROSPACE_REQS)
     if tape == "mining":
         return list(_MINING_REQS)
     if tape == "clinical_delivery":
@@ -948,7 +957,7 @@ def match_jobs_from_profile(
                 "food_prep", "beverage_prep", "surface_clean", "shelf_scan", "pallet_move",
                 "trailer_unload", "pick_pack", "sortation", "disinfect", "goods_to_person",
                 "agriculture_task", "construction_task", "mining_task",
-                "marine_task", "avionics_task",
+                "marine_task", "avionics_task", "aerospace_task",
                 "hard_floor_scrub", "inspect_route"):
         c = caps.get(key)
         if c and c.present:

@@ -19,7 +19,7 @@ from app.services.vendor_robot_lookup import (
 
 def test_ten_class_options_include_work_domain_tiles():
     ids = [row["id"] for row in public_class_options()]
-    assert len(ids) == 10
+    assert len(ids) == 11
     assert ids[:6] == [
         "humanoid",
         "amr",
@@ -28,7 +28,7 @@ def test_ten_class_options_include_work_domain_tiles():
         "quadruped",
         "autonomous_scrubber",
     ]
-    assert ids[6:] == ["agriculture", "marine", "avionics", "construction"]
+    assert ids[6:] == ["agriculture", "marine", "avionics", "aerospace", "construction"]
 
 
 def test_normalize_maps_laserweeder_class_aliases():
@@ -37,6 +37,10 @@ def test_normalize_maps_laserweeder_class_aliases():
     assert normalize_class_id("construction_robot") == "construction"
     assert normalize_class_id("marine_robot") == "marine"
     assert normalize_class_id("aviation_robot") == "avionics"
+    assert normalize_class_id("drone") == "avionics"
+    assert normalize_class_id("evtol") == "avionics"
+    assert normalize_class_id("aerospace_robot") == "aerospace"
+    assert normalize_class_id("satellite") == "aerospace"
     assert normalize_class_id("humanoid") == "humanoid"
 
 

@@ -146,7 +146,11 @@
       "aliases": [
         "construction",
         "jobsite",
-        "construction site"
+        "construction site",
+        "homebuilding",
+        "residential construction",
+        "building construction",
+        "framing"
       ]
     },
     {
@@ -172,7 +176,10 @@
         "crop",
         "dairy",
         "field",
-        "weeding"
+        "weeding",
+        "combine",
+        "tractor",
+        "row crop"
       ]
     },
     {
@@ -191,15 +198,36 @@
     },
     {
       "key": "aviation",
-      "label": "Aviation / hangar / airside",
+      "label": "Avionics — drones, eVTOL, autonomous aircraft",
       "in_scope": true,
       "aliases": [
         "aviation",
         "avionics",
+        "drone",
+        "uav",
+        "evtol",
+        "eVTOL",
+        "flying car",
+        "autonomous aircraft",
+        "autonomous plane",
         "hangar",
         "airside",
         "aircraft",
         "ramp"
+      ]
+    },
+    {
+      "key": "aerospace",
+      "label": "Aerospace — satellites, rockets, orbital robots",
+      "in_scope": true,
+      "aliases": [
+        "aerospace",
+        "satellite",
+        "orbital",
+        "space debris",
+        "rocket",
+        "on-orbit",
+        "space robot"
       ]
     }
   ]

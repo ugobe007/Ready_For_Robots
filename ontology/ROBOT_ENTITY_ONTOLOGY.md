@@ -33,14 +33,23 @@ A named robot model. Capabilities are asserted **here**, not at the company.
   `humanoid`, `quadruped`, `mobile_manipulator`, `amr`, `autonomous_scrubber`,
   `cleaning_robot`, `service_robot`, `cobot_arm`, `drone`, `construction_robot`,
   `agriculture` / `agricultural_robot`, `marine` / `marine_robot`,
-  `avionics` / `aviation_robot`, `autonomous_forklift`, `mining_robot`, `agv`.
+  `avionics` / `aviation_robot` / `drone` / `evtol`,
+  `aerospace` / `aerospace_robot`, `autonomous_forklift`, `mining_robot`, `agv`.
 
 ### CONFIGURATION
 A specific hardware build of a product. **Optional modules are configurations,
 not universal product capabilities.** A Locus AMR with a telescoping grab is a
 *configuration*; the base AMR is another.
 
-- Fields: `slug`, `name`, `is_default`, `options`.
+- Fields: `slug`, `name`, `is_default`, `options`, `configuration_kind`,
+  `host_platform`.
+- `configuration_kind`: `standalone` (default) or `implement_on_host`.
+- `host_platform`: `tractor` | `combine` | `excavator` | `satellite` | `none`.
+- A LaserWeeder or See & Spray unit on a tractor is **implement-on-host**,
+  not a fake “attachment” product class. See
+  [`ROBOT_TRACTOR_IMPLEMENT.md`](ROBOT_TRACTOR_IMPLEMENT.md).
+- A debris-capture arm on a servicing satellite is a configuration of that
+  satellite product, not an aerospace-class dump onto every SKU.
 - Code: `RobotConfiguration` (default stub `{slug: "default", is_default: true}`).
 - Status: 🟡 configuration modeling exists in the catalog schema; the live
   Understanding path currently resolves one selected product and does not yet

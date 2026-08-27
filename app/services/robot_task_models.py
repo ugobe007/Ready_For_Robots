@@ -40,11 +40,20 @@ _VERTICAL_TOKENS: dict[str, tuple[str, ...]] = {
     "utilities": ("inspect", "patrol", "thermal", "leak"),
     "agriculture": (
         "field", "crop", "orchard", "weed", "weeding", "harvest", "spray",
-        "vineyard", "row",
+        "vineyard", "row", "combine", "tractor", "implement", "planting",
     ),
     "marine": ("hull", "port", "harbor", "underwater", "quay", "shipyard"),
-    "aviation": ("hangar", "airside", "aircraft", "fuselage", "ramp", "aviation"),
-    "construction": ("jobsite", "layout", "drywall", "earthwork", "rebar"),
+    "aviation": (
+        "hangar", "airside", "aircraft", "fuselage", "ramp", "aviation",
+        "drone", "uav", "evtol", "flying car",
+    ),
+    "aerospace": (
+        "satellite", "orbital", "debris", "aerospace", "on-orbit", "rocket",
+    ),
+    "construction": (
+        "jobsite", "layout", "drywall", "earthwork", "rebar", "home",
+        "house", "framing", "building",
+    ),
 }
 
 

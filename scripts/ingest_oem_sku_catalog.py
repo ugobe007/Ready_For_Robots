@@ -36,6 +36,7 @@ from app.services.oem_sku_catalog import (  # noqa: E402
     apply_verified_urls,
     compile_vendor_seed,
     lookup_urls,
+    merge_vertical_catalog,
     parse_workbook,
     write_json,
 )
@@ -73,6 +74,7 @@ def main() -> int:
     args = parser.parse_args()
 
     catalog = parse_workbook(Path(args.xlsx))
+    catalog = merge_vertical_catalog(catalog)
     lookup = _load_json(LOOKUP_PATH)
     if args.lookup_urls:
         lookup = lookup_urls(

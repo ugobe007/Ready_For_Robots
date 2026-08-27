@@ -45,6 +45,15 @@ subject-scoped (see [entity ontology](ROBOT_ENTITY_ONTOLOGY.md)).
 | Battery / runtime | `battery_runtime` | ✅ |
 | Ingress protection | `ingress_protection` (IPxx) | ✅ |
 
+### Host / implement (configuration, not a class)
+| Component | Predicate | Status |
+|-----------|-----------|--------|
+| How the SKU is built | `configuration_kind` ∈ {`standalone`,`implement_on_host`} | ✅ |
+| What it mounts on | `host_platform` ∈ {`tractor`,`combine`,`excavator`,`satellite`,`none`} | ✅ |
+
+A weeding implement on a tractor is hardware on that tractor configuration.
+Do not invent a `tractor_attachment` product class. Empty specs stay `UNKNOWN`.
+
 ### Load / transport interfaces
 | Component | Predicate | Status |
 |-----------|-----------|--------|
