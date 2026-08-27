@@ -14,7 +14,9 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 |---------|-------|------------------------|
 | Jobs terminal | `/` (`/jobs/:slug` same workspace) | Paste robot URL, inspect Job Cards |
 | About | `/intelligence` | Jobs loop explainer; Start jobs → `/?new=1` |
-| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: collected listing, inspect, quote rental, Place this job |
+| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: collected listing, inspect, quote rental, Place this job. Inbox confirm/release for a held interview slot. |
+| Employer evaluate | `/employer/:token` | Accept / propose time / hold a slot. No RFR account. |
+| OEM hold | `/oem-hold/:token` | Confirm or release a held interview window. |
 | Compare | `/compare` | Jobs vs sales-list framing |
 | SIGNAL pipeline | `/pipeline` | Buyer queue — **not** the Jobs path |
 | Admin | `/admin` | Cal / ops — not Jobs activation |

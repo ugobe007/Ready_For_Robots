@@ -5,11 +5,17 @@ import { describe, expect, it } from "vitest";
 import {
   JOBS_APPLY_NEXT_CTA,
   JOBS_APPLY_OFFER_CTA,
+  JOBS_EMPLOYER_HOLD_CTA,
+  JOBS_EMPLOYER_PROPOSE_CTA,
   JOBS_KEEP_YES_CTA,
   JOBS_MODEL_SELECT_LABEL,
   JOBS_NEXT_STEPS_ANCHOR,
   JOBS_NEXT_STEPS_CTA,
+  JOBS_OEM_CONFIRM_HOLD_CTA,
+  JOBS_OEM_RELEASE_HOLD_CTA,
   JOBS_PROPOSED_PRICE_LABEL,
+  applicationStatusLabel,
+  suggestedHoldSlots,
   canSubmitNextStepsOffer,
   jobsCrmOfferHref,
   keepJobsSavedLabel,
@@ -135,6 +141,23 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(appTsx).toMatch(/\/employer\/:token/);
     expect(employer).toMatch(/JOBS_EMPLOYER_ACCEPT_CTA/);
     expect(employer).toMatch(/JOBS_EMPLOYER_INTERVIEW_CTA/);
+    expect(employer).toMatch(/JOBS_EMPLOYER_HOLD_CTA/);
+    expect(employer).toMatch(/JOBS_EMPLOYER_PROPOSE_CTA/);
+    expect(employer).toMatch(/\/hold/);
     expect(employer).toMatch(/datetime-local/);
+    expect(inbox).toMatch(/JOBS_OEM_CONFIRM_HOLD_CTA/);
+    expect(inbox).toMatch(/JOBS_OEM_RELEASE_HOLD_CTA/);
+    expect(inbox).toMatch(/confirmHoldOnAccount/);
+    expect(inbox).toMatch(/releaseHoldOnAccount/);
+    expect(appTsx).toMatch(/\/oem-hold\/:token/);
+    expect(JOBS_EMPLOYER_HOLD_CTA).toBe("Hold this slot");
+    expect(JOBS_EMPLOYER_PROPOSE_CTA).toBe("Propose this time");
+    expect(JOBS_OEM_CONFIRM_HOLD_CTA).toBe("Confirm hold");
+    expect(JOBS_OEM_RELEASE_HOLD_CTA).toBe("Release hold");
+    expect(applicationStatusLabel("interview_held")).toBe("Interview slot held");
+    const slots = suggestedHoldSlots(new Date("2026-09-01T12:00:00"));
+    expect(slots).toHaveLength(3);
+    expect(slots[0].start).toMatch(/T10:00$/);
+    expect(slots[0].end).toMatch(/T11:00$/);
   });
 });
