@@ -134,6 +134,12 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   `inspect_from_quadruped`, `reach_documented`.
 - **R21 ✅** Any required `UNMET` → `NOT_A_MATCH`. Unknowns are preserved, never
   guessed. No match percentage.
+- **R29 ✅** If a configuration grounds a domain work primitive (`evtol_flight`,
+  `drone_task`, `autonomous_flight`, `agriculture_task`, `construction_task`,
+  `marine_task`, `mining_task`, `aerospace_task`), a job is eligible **only**
+  when it exercises at least one of those primitives. Do not pad leftover
+  slots from the cobot/CNC/pack/warehouse corpus. A short honest list (one
+  LAWA eVTOL card) is correct. Never invent employers.
 
 ## Worked examples
 

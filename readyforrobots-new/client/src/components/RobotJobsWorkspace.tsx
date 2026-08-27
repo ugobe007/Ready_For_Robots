@@ -102,7 +102,7 @@ import {
   lineupSegments,
   usesLineupSegments,
   searchNamesForSegment,
-  normalizeRobotClass,
+  configurationClassForLookup,
   portfolioShowsJobCounts,
   productClassesFromLineup,
   readNavigationType,
@@ -412,8 +412,8 @@ function searchToAnalysis(res: RobotJobSearchResult): RobotAnalysis {
     previewImageUrl: res.preview_image_url ?? null,
     lookupGrain: "product",
     robotClass:
-      normalizeRobotClass(res.robot_class) ||
-      normalizeRobotClass(profile?.selected_product?.display_class),
+      configurationClassForLookup(res.robot_class) ||
+      configurationClassForLookup(profile?.selected_product?.display_class),
   };
 }
 
@@ -436,7 +436,7 @@ function analysisForSelectedSku(
   name: string,
   displayClass?: string | null,
 ): RobotAnalysis {
-  const cls = normalizeRobotClass(displayClass);
+  const cls = configurationClassForLookup(displayClass);
   if (cls) {
     return { ...typeMatchToAnalysis(res, name, cls), productName: name };
   }
@@ -851,7 +851,7 @@ export default function RobotJobsWorkspace() {
         if (lineup.length === 1) {
           const name = lineup[0].name;
           const displayClass = lineup[0].displayClass;
-          const cls = normalizeRobotClass(displayClass);
+          const cls = configurationClassForLookup(displayClass);
           setResearchPhase("jobs");
           const res = await fetchRobotJobSearch({
             url: submitUrl,
@@ -892,7 +892,7 @@ export default function RobotJobsWorkspace() {
           const name = lineup[0]?.name || listing.robots[0]?.name || "";
           const displayClass =
             lineup[0]?.displayClass || listing.robots[0]?.display_class;
-          const cls = normalizeRobotClass(displayClass);
+          const cls = configurationClassForLookup(displayClass);
           setResearchPhase("jobs");
           const res = await fetchRobotJobSearch({
             url: submitUrl,
@@ -938,7 +938,7 @@ export default function RobotJobsWorkspace() {
         "";
       const displayClass =
         lineup[0]?.displayClass || profile.selected_product?.display_class;
-      const cls = normalizeRobotClass(displayClass);
+      const cls = configurationClassForLookup(displayClass);
       setResearchPhase("jobs");
       const res = await fetchRobotJobSearch({
         url: submitUrl,
@@ -983,7 +983,7 @@ export default function RobotJobsWorkspace() {
       setStage("research");
       try {
         const displayClass = products.find(p => p.name === names[0])?.displayClass;
-        const cls = normalizeRobotClass(displayClass);
+        const cls = configurationClassForLookup(displayClass);
         const res = await fetchRobotJobSearch({
           url: submitUrl,
           product: names[0],
@@ -1042,7 +1042,7 @@ export default function RobotJobsWorkspace() {
       );
 
       const analyses: RobotAnalysis[] = selectedProducts.map(row => {
-        const cls = normalizeRobotClass(row.displayClass);
+        const cls = configurationClassForLookup(row.displayClass);
         if (cls && classResults.has(cls)) {
           return typeMatchToAnalysis(classResults.get(cls)!, row.name, cls);
         }
@@ -1418,7 +1418,7 @@ export default function RobotJobsWorkspace() {
     setError(null);
     try {
       if (dest === "jobs") {
-        const cls = a.robotClass || normalizeRobotClass(
+        const cls = a.robotClass || configurationClassForLookup(
           products.find(p => p.name === a.productName)?.displayClass,
         );
         const search = cls
@@ -1536,7 +1536,7 @@ export default function RobotJobsWorkspace() {
             }),
           );
           const analyses = lineup.map(row => {
-            const cls = normalizeRobotClass(row.displayClass);
+            const cls = configurationClassForLookup(row.displayClass);
             if (cls && classResults.has(cls)) {
               return typeMatchToAnalysis(classResults.get(cls)!, row.name, cls);
             }

@@ -86,6 +86,9 @@ const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
   agriculture: "agriculture robots",
   marine: "marine robots",
   avionics: "avionics robots",
+  evtol: "eVTOL aircraft",
+  drone: "drones",
+  autonomous_aircraft: "autonomous aircraft",
   aerospace: "aerospace robots",
   construction: "construction robots",
 };
@@ -100,8 +103,23 @@ const ROBOT_CLASS_TITLE: Record<string, string> = {
   agriculture: "Agriculture",
   marine: "Marine",
   avionics: "Avionics",
+  evtol: "eVTOL",
+  drone: "Drone",
+  autonomous_aircraft: "Autonomous aircraft",
   aerospace: "Aerospace",
   construction: "Construction",
+};
+
+/** SKU configuration for FIND lookup. eVTOL/drone stay themselves — not the Avionics tile. */
+const CONFIGURATION_CLASS_ALIASES: Record<string, string> = {
+  ...ROBOT_CLASS_ALIASES,
+  evtol: "evtol",
+  e_vtol: "evtol",
+  flying_car: "evtol",
+  drone: "drone",
+  uav: "drone",
+  autonomous_aircraft: "autonomous_aircraft",
+  autonomous_plane: "autonomous_aircraft",
 };
 
 export function normalizeRobotClass(raw?: string | null): string | null {
@@ -110,14 +128,20 @@ export function normalizeRobotClass(raw?: string | null): string | null {
   return ROBOT_CLASS_ALIASES[want] || null;
 }
 
+export function configurationClassForLookup(raw?: string | null): string | null {
+  const want = (raw || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (!want) return null;
+  return CONFIGURATION_CLASS_ALIASES[want] || null;
+}
+
 export function robotClassTitle(classId?: string | null): string {
-  const id = normalizeRobotClass(classId);
+  const id = configurationClassForLookup(classId) || normalizeRobotClass(classId);
   if (!id) return "robot";
   return ROBOT_CLASS_TITLE[id] || id.replace(/_/g, " ");
 }
 
 export function robotClassJobsLabel(classId?: string | null): string {
-  const id = normalizeRobotClass(classId);
+  const id = configurationClassForLookup(classId) || normalizeRobotClass(classId);
   if (!id) return "this robot type";
   return ROBOT_CLASS_JOBS_LABEL[id] || `${id.replace(/_/g, " ")}s`;
 }
@@ -132,7 +156,7 @@ export function lineupJobLookups(products: LineupProduct[]): LineupJobLookup[] {
   for (const row of products) {
     const name = (row.name || "").trim();
     if (!name) continue;
-    const cls = normalizeRobotClass(row.displayClass);
+    const cls = configurationClassForLookup(row.displayClass);
     if (!cls) {
       unknown.push(name);
       continue;
@@ -156,7 +180,7 @@ export function productClassesFromLineup(
 ): Record<string, string> {
   const out: Record<string, string> = {};
   for (const row of products) {
-    const cls = normalizeRobotClass(row.displayClass);
+    const cls = configurationClassForLookup(row.displayClass);
     if (row.name && cls) out[row.name] = cls;
   }
   return out;

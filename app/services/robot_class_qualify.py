@@ -149,13 +149,46 @@ def normalize_class_id(raw: str | None) -> str | None:
     return None
 
 
-def apply_asserted_class(profile: dict[str, Any], class_id: str) -> dict[str, Any]:
-    """Stamp operator-selected product_class onto a profile dict and rematch."""
+# SKU configuration classes. The Avionics FIND tile is the flying-work union;
+# an eVTOL or drone SKU is not that union. Type-first lookup must stamp the
+# configuration, never company → category → jobs.
+_CONFIGURATION_PRODUCT_CLASSES: dict[str, tuple[str, str]] = {
+    "evtol": ("evtol", "eVTOL"),
+    "e_vtol": ("evtol", "eVTOL"),
+    "flying_car": ("evtol", "eVTOL"),
+    "drone": ("drone", "Drone"),
+    "uav": ("drone", "Drone"),
+    "autonomous_aircraft": ("autonomous_aircraft", "Autonomous aircraft"),
+    "autonomous_plane": ("autonomous_aircraft", "Autonomous aircraft"),
+}
+
+
+def lookup_class_id(raw: str | None) -> str | None:
+    """Class used to match jobs: SKU configuration over the parent FIND tile."""
+    want = (raw or "").strip().lower().replace(" ", "_").replace("-", "_")
+    if want in _CONFIGURATION_PRODUCT_CLASSES:
+        return _CONFIGURATION_PRODUCT_CLASSES[want][0]
+    return normalize_class_id(raw)
+
+
+def resolve_asserted_product_class(class_id: str | None) -> tuple[str, str] | None:
+    """Return ``(product_class, label)`` for a picker tile or a SKU configuration."""
+    want = (class_id or "").strip().lower().replace(" ", "_").replace("-", "_")
+    if want in _CONFIGURATION_PRODUCT_CLASSES:
+        return _CONFIGURATION_PRODUCT_CLASSES[want]
     nid = normalize_class_id(class_id)
     if not nid:
-        return profile
+        return None
     row = next(r for r in CLASS_OPTIONS if r["id"] == nid)
-    cls = row["product_class"]
+    return row["product_class"], row["label"]
+
+
+def apply_asserted_class(profile: dict[str, Any], class_id: str) -> dict[str, Any]:
+    """Stamp operator-selected product_class onto a profile dict and rematch."""
+    resolved = resolve_asserted_product_class(class_id)
+    if not resolved:
+        return profile
+    cls, label = resolved
     out = copy.deepcopy(profile)
     subject = (
         ((out.get("selected_product") or {}).get("name"))
@@ -178,7 +211,7 @@ def apply_asserted_class(profile: dict[str, Any], class_id: str) -> dict[str, An
             "epistemic": "explicit",
             "source_id": "operator_qualification",
             "confidence": 0.95,
-            "evidence_span": f"Operator selected robot class: {row['label']}",
+            "evidence_span": f"Operator selected robot class: {label}",
         },
     )
     out["facts"] = facts
@@ -206,10 +239,11 @@ def thin_class_profile(
     Used when the operator listed a group of SKUs that share a class
     (Fourier GR-1/GR-2/GR-3 are all humanoid). Does not scrape a product
     page. The matcher still inspects requirements from product_class
-    derivations — this is not a family dump.
+    derivations — this is not a family dump. eVTOL/drone SKUs keep their
+    configuration class; they are not remapped onto the Avionics tile.
     """
-    nid = normalize_class_id(class_id)
-    if not nid:
+    resolved = resolve_asserted_product_class(class_id)
+    if not resolved:
         return {
             "company": {"name": (company or "").strip() or "your robot"},
             "selected_product": None,
@@ -218,7 +252,7 @@ def thin_class_profile(
             "coverage_level": "low",
             "needs_product_choice": False,
         }
-    row = next(r for r in CLASS_OPTIONS if r["id"] == nid)
+    cls, label = resolved
     company_name = (company or "").strip() or "your robot"
     sources = []
     if source_url:
@@ -227,20 +261,20 @@ def thin_class_profile(
                 "id": "src_type_lookup",
                 "url": source_url,
                 "source_type": "other",
-                "title": f"{row['label']} type lookup",
+                "title": f"{label} type lookup",
                 "publisher_role": "operator",
                 "confidence": 0.9,
             }
         )
     base: dict[str, Any] = {
         "company": {"name": company_name},
-        "selected_product": {"name": row["label"], "display_class": nid},
+        "selected_product": {"name": label, "display_class": cls},
         "products": [],
         "facts": [],
         "sources": sources,
         "coverage_level": "medium",
         "profile_confidence": "B",
         "needs_product_choice": False,
-        "notes": [f"Type-first job lookup for {nid}."],
+        "notes": [f"Type-first job lookup for {cls}."],
     }
-    return apply_asserted_class(base, nid)
+    return apply_asserted_class(base, cls)

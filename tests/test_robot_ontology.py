@@ -27,6 +27,7 @@ def _all_capabilities_profile() -> dict:
         "selected_product": {"name": "Everything", "display_class": "mobile_manipulator"},
         "company": {"name": "Everything Robotics"},
         "facts": [
+            f("product_class", "mobile_manipulator"),  # manipulate morphology
             f("product_class", "quadruped"),          # inspect_route
             f("product_class", "evtol"),              # evtol_flight
             f("product_class", "drone"),              # drone_task

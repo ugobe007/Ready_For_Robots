@@ -86,6 +86,26 @@ REQUIREMENT_EXERCISES = {
 # when those primitives are grounded. Tote-only work does not.
 MANIPULATION_STACK = frozenset({"dual_arm", "reach", "load_unload"})
 
+# Distinctive work primitives that define a configuration. If any of these are
+# grounded, a job is eligible only when it exercises at least one of them.
+# Stops eVTOL/drone/ag/construction SKUs from filling leftover slots with
+# cobot CNC / pack / warehouse tote work.
+CONFIGURATION_WORK_CAPABILITIES = frozenset(
+    {
+        "evtol_flight",
+        "drone_task",
+        "autonomous_flight",
+        "agriculture_task",
+        "construction_task",
+        "marine_task",
+        "mining_task",
+        "aerospace_task",
+    }
+)
+CONFIGURATION_PAD_BLOCKER = (
+    "this configuration's grounded work does not include this job"
+)
+
 # Requirements satisfied simply by one grounded distinctive capability being
 # present (rid -> (capability_key, unmet_reason)). Each is a distinct capability,
 # so a robot only matches the family when it genuinely has that capability.
@@ -612,6 +632,38 @@ def _blocker_lines(results: list[RequirementResult], job: dict[str, Any]) -> lis
     return [r.reason or r.label for r in unmet]
 
 
+def _exercised_capabilities(results: list[RequirementResult]) -> set[str]:
+    exercised: set[str] = set()
+    for req in results:
+        if req.necessity not in {"required", "likely_ok"}:
+            continue
+        if req.state not in {MATCHED, LIKELY}:
+            continue
+        exercised |= REQUIREMENT_EXERCISES.get(req.id, frozenset())
+    return exercised
+
+
+def _configuration_pad_blocker(
+    caps: dict[str, DerivedCapability],
+    results: list[RequirementResult],
+) -> str | None:
+    """Reject unrelated corpus jobs when this configuration already has domain work.
+
+    Ontology law: CONFIGURATION → CAPABILITIES → MATCH. Never pad a short
+    eVTOL/ag/construction list with CNC or warehouse work just to fill slots.
+    """
+    present = {
+        key
+        for key in CONFIGURATION_WORK_CAPABILITIES
+        if _cap(caps, key).present
+    }
+    if not present:
+        return None
+    if _exercised_capabilities(results) & present:
+        return None
+    return CONFIGURATION_PAD_BLOCKER
+
+
 def evaluate_job(
     profile: dict[str, Any],
     job_spec: dict[str, Any],
@@ -622,6 +674,9 @@ def evaluate_job(
     product = (profile.get("selected_product") or {}).get("name") or "your robot"
     results = [_eval_requirement(req, caps) for req in job_spec.get("requirements") or []]
     verdict = _verdict(results)
+    pad_blocker = _configuration_pad_blocker(caps, results)
+    if verdict == VERDICT_POSSIBLE and pad_blocker:
+        verdict = VERDICT_NOT
     row = corpus_row or {}
     title = job_spec.get("title") or row.get("title") or ""
     industry = row.get("industry") or job_spec.get("locality") or job_spec.get("physics") or ""
@@ -647,6 +702,9 @@ def evaluate_job(
     for question in task_model_open_questions(models):
         if question not in unknowns:
             unknowns.append(question)
+    blockers = _blocker_lines(results, job_spec)
+    if verdict == VERDICT_NOT and pad_blocker and pad_blocker not in blockers:
+        blockers.append(pad_blocker)
     return JobMatchCard(
         job_key=job_spec.get("job_key") or row.get("job_key") or "",
         title=title,
@@ -659,7 +717,7 @@ def evaluate_job(
         robot_name=product,
         why=why,
         still_unknown=unknowns,
-        blockers=_blocker_lines(results, job_spec),
+        blockers=blockers,
         requirements=results,
         source="requirement_match",
         required_task_models=models,
