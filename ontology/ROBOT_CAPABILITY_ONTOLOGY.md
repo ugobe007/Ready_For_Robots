@@ -38,7 +38,14 @@ tool_use`
 | `disinfect` | UV / surface disinfection | `claims_disinfection` |
 | `goods_to_person` | ASRS goods-to-person | `claims_goods_to_person` |
 | `agriculture_task` | Agricultural field work | `claims_agriculture` \| agriculture class \| LaserWeeder |
+| `agriculture_weed` | Crop weeding | `claims_weeding` (FIND-tile agriculture is the union) |
+| `agriculture_combine` | Combine grain harvest | `claims_combine_harvest` |
+| `agriculture_spray` | Precision crop spray | `claims_precision_spray` |
+| `agriculture_tractor` | Autonomous tractor plant/harvest | `claims_tractor_work` |
 | `construction_task` | Construction site work | `claims_construction` \| construction class |
+| `construction_print` | 3D-print home/building walls | `claims_construction_print` |
+| `construction_block` | Block / brick laying | `claims_construction_block` |
+| `construction_layout` | Jobsite floor layout print | `claims_construction_layout` |
 | `marine_task` | Hull / port / underwater work | `claims_marine` \| marine class |
 | `avionics_task` | Drone / eVTOL / autonomous aircraft work | `claims_avionics` \| avionics / drone / eVTOL class |
 | `evtol_flight` | eVTOL passenger/cargo air-taxi flight | `product_class=evtol` (not ramp walking) |

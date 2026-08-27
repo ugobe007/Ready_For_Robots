@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27T19:55:45+00:00",
+  "generated_at": "2026-08-27T21:44:10+00:00",
   "source": "docs/reference/readyforrobots_companies_and_robots.xlsx",
   "list_category": "oem_sku",
   "notes": [
@@ -10,8 +10,8 @@
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
-  "vendor_count": 84,
-  "robot_count": 216,
+  "vendor_count": 108,
+  "robot_count": 241,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -4977,11 +4977,26 @@
               "predicate": "claims_agriculture",
               "value": true,
               "evidence_span": "LaserWeeder: Laser and mechanical weed removal in row crops. Fields · row crops · vegetable beds."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "implement_on_host",
+              "evidence_span": "LaserWeeder configuration implement_on_host."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "tractor",
+              "evidence_span": "LaserWeeder host platform tractor."
+            },
+            {
+              "predicate": "claims_weeding",
+              "value": true,
+              "evidence_span": "LaserWeeder: weeding work on this configuration."
             }
           ],
           "specs": {},
-          "configuration_kind": "standalone",
-          "host_platform": "none"
+          "configuration_kind": "implement_on_host",
+          "host_platform": "tractor"
         }
       ]
     },
@@ -5025,6 +5040,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "X Series Combine host platform none."
+            },
+            {
+              "predicate": "claims_combine_harvest",
+              "value": true,
+              "evidence_span": "X Series Combine: combine grain harvest."
             }
           ],
           "specs": {},
@@ -5063,6 +5083,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "Autonomous Tractor host platform none."
+            },
+            {
+              "predicate": "claims_tractor_work",
+              "value": true,
+              "evidence_span": "Autonomous Tractor: autonomous tractor field work."
             }
           ],
           "specs": {},
@@ -5101,6 +5126,11 @@
               "predicate": "host_platform",
               "value": "tractor",
               "evidence_span": "See & Spray Ultimate host platform tractor."
+            },
+            {
+              "predicate": "claims_precision_spray",
+              "value": true,
+              "evidence_span": "See & Spray Ultimate: precision spray."
             }
           ],
           "specs": {},
@@ -5149,6 +5179,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "MK-V host platform none."
+            },
+            {
+              "predicate": "claims_tractor_work",
+              "value": true,
+              "evidence_span": "MK-V: autonomous tractor field work."
             }
           ],
           "specs": {},
@@ -5197,6 +5232,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "Oz host platform none."
+            },
+            {
+              "predicate": "claims_weeding",
+              "value": true,
+              "evidence_span": "Oz: weeding work on this configuration."
             }
           ],
           "specs": {},
@@ -5235,6 +5275,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "Ted host platform none."
+            },
+            {
+              "predicate": "claims_weeding",
+              "value": true,
+              "evidence_span": "Ted: weeding work on this configuration."
             }
           ],
           "specs": {},
@@ -5273,6 +5318,54 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "Jo host platform none."
+            },
+            {
+              "predicate": "claims_weeding",
+              "value": true,
+              "evidence_span": "Jo: weeding work on this configuration."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Orio",
+          "model_slug": "naio-technologies-orio",
+          "product_url": "https://www.naio-technologies.com/en/orio-robot/",
+          "vendor_url": "https://naio-technologies.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "France",
+          "description": "Orio: Mechanical weeding and sowing in vegetable beds. Fields · vegetable beds.",
+          "lookup_host": "naio-technologies.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "Orio: Mechanical weeding and sowing in vegetable beds. Fields · vegetable beds."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "Orio: Mechanical weeding and sowing in vegetable beds. Fields · vegetable beds."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Orio configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Orio host platform none."
+            },
+            {
+              "predicate": "claims_weeding",
+              "value": true,
+              "evidence_span": "Orio: weeding work on this configuration."
             }
           ],
           "specs": {},
@@ -5321,6 +5414,11 @@
               "predicate": "host_platform",
               "value": "tractor",
               "evidence_span": "ARA host platform tractor."
+            },
+            {
+              "predicate": "claims_precision_spray",
+              "value": true,
+              "evidence_span": "ARA: precision spray."
             }
           ],
           "specs": {},
@@ -5417,6 +5515,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "LEXION 8000-7000 host platform none."
+            },
+            {
+              "predicate": "claims_combine_harvest",
+              "value": true,
+              "evidence_span": "LEXION 8000-7000: combine grain harvest."
             }
           ],
           "specs": {},
@@ -5465,6 +5568,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "FieldPrinter host platform none."
+            },
+            {
+              "predicate": "claims_construction_layout",
+              "value": true,
+              "evidence_span": "FieldPrinter: jobsite layout print."
             }
           ],
           "specs": {},
@@ -5513,6 +5621,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "Vulcan host platform none."
+            },
+            {
+              "predicate": "claims_construction_print",
+              "value": true,
+              "evidence_span": "Vulcan: 3D-print construction."
             }
           ],
           "specs": {},
@@ -5561,6 +5674,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "BOD2 host platform none."
+            },
+            {
+              "predicate": "claims_construction_print",
+              "value": true,
+              "evidence_span": "BOD2: 3D-print construction."
             }
           ],
           "specs": {},
@@ -5609,6 +5727,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "Hadrian X host platform none."
+            },
+            {
+              "predicate": "claims_construction_block",
+              "value": true,
+              "evidence_span": "Hadrian X: block/brick laying."
             }
           ],
           "specs": {},
@@ -5897,6 +6020,11 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "Wisk Generation 6 host platform none."
+            },
+            {
+              "predicate": "autonomy_mode",
+              "value": "autonomous",
+              "evidence_span": "Wisk Generation 6: autonomous eVTOL configuration fact."
             }
           ],
           "specs": {},
@@ -6223,6 +6351,1148 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "GITAI S2 host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "FarmDroid",
+      "domains": [
+        "farmdroid.com"
+      ],
+      "vendor_url": "https://farmdroid.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "FD20",
+          "model_slug": "farmdroid-fd20",
+          "product_url": "https://farmdroid.com/products/farmdroid-fd20/",
+          "vendor_url": "https://farmdroid.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "Denmark",
+          "description": "FD20: Solar-powered seeding and mechanical weeding in row crops. Fields · row crops.",
+          "lookup_host": "farmdroid.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "FD20: Solar-powered seeding and mechanical weeding in row crops. Fields · row crops."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "FD20: Solar-powered seeding and mechanical weeding in row crops. Fields · row crops."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "FD20 configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "FD20 host platform none."
+            },
+            {
+              "predicate": "claims_weeding",
+              "value": true,
+              "evidence_span": "FD20: weeding work on this configuration."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "AgXeed",
+      "domains": [
+        "agxeed.com"
+      ],
+      "vendor_url": "https://agxeed.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "AgBot",
+          "model_slug": "agxeed-agbot",
+          "product_url": "https://www.agxeed.com/agbot/",
+          "vendor_url": "https://agxeed.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "Netherlands",
+          "description": "AgBot: Autonomous tractor for planting and field work. Fields · planting.",
+          "lookup_host": "agxeed.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "AgBot: Autonomous tractor for planting and field work. Fields · planting."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "AgBot: Autonomous tractor for planting and field work. Fields · planting."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "AgBot configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "AgBot host platform none."
+            },
+            {
+              "predicate": "claims_tractor_work",
+              "value": true,
+              "evidence_span": "AgBot: autonomous tractor field work."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Agrobot",
+      "domains": [
+        "agrobot.com"
+      ],
+      "vendor_url": "https://agrobot.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "E-Series",
+          "model_slug": "agrobot-e-series",
+          "product_url": "https://www.agrobot.com/e-series",
+          "vendor_url": "https://agrobot.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "Spain",
+          "description": "E-Series: Harvests strawberries in the field. Fields · berry harvest.",
+          "lookup_host": "agrobot.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "E-Series: Harvests strawberries in the field. Fields · berry harvest."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "E-Series: Harvests strawberries in the field. Fields · berry harvest."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "E-Series configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "E-Series host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Verdant Robotics",
+      "domains": [
+        "verdantrobotics.com"
+      ],
+      "vendor_url": "https://verdantrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Sharp Shooter",
+          "model_slug": "verdant-robotics-sharp-shooter",
+          "product_url": "https://www.verdantrobotics.com/",
+          "vendor_url": "https://verdantrobotics.com",
+          "primary_class": "agricultural_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "Sharp Shooter: See-and-spray implement on a tractor host. Fields · row crops.",
+          "lookup_host": "verdantrobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "agricultural_robot",
+              "evidence_span": "Sharp Shooter: See-and-spray implement on a tractor host. Fields · row crops."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "Sharp Shooter: See-and-spray implement on a tractor host. Fields · row crops."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "implement_on_host",
+              "evidence_span": "Sharp Shooter configuration implement_on_host."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "tractor",
+              "evidence_span": "Sharp Shooter host platform tractor."
+            },
+            {
+              "predicate": "claims_precision_spray",
+              "value": true,
+              "evidence_span": "Sharp Shooter: precision spray."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "implement_on_host",
+          "host_platform": "tractor"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Construction Robotics",
+      "domains": [
+        "construction-robotics.com"
+      ],
+      "vendor_url": "https://construction-robotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "MULE",
+          "model_slug": "construction-robotics-mule",
+          "product_url": "https://www.construction-robotics.com/products/",
+          "vendor_url": "https://construction-robotics.com",
+          "primary_class": "construction_robot",
+          "status": "available",
+          "country": "United States",
+          "description": "MULE: Lifts and places material on the construction jobsite. Building construction.",
+          "lookup_host": "construction-robotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "construction_robot",
+              "evidence_span": "MULE: Lifts and places material on the construction jobsite. Building construction."
+            },
+            {
+              "predicate": "claims_construction",
+              "value": true,
+              "evidence_span": "MULE: Lifts and places material on the construction jobsite. Building construction."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "MULE configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "MULE host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Hilti",
+      "domains": [
+        "hilti.com"
+      ],
+      "vendor_url": "https://hilti.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Jaibot",
+          "model_slug": "hilti-jaibot",
+          "product_url": "https://www.hilti.com/content/hilti/W1/US/en/business/business/trends/jaibot.html",
+          "vendor_url": "https://hilti.com",
+          "primary_class": "construction_robot",
+          "status": "available",
+          "country": "Liechtenstein",
+          "description": "Jaibot: Autonomous overhead drilling on the construction jobsite. Building construction.",
+          "lookup_host": "hilti.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "construction_robot",
+              "evidence_span": "Jaibot: Autonomous overhead drilling on the construction jobsite. Building construction."
+            },
+            {
+              "predicate": "claims_construction",
+              "value": true,
+              "evidence_span": "Jaibot: Autonomous overhead drilling on the construction jobsite. Building construction."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Jaibot configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Jaibot host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Volocopter",
+      "domains": [
+        "volocopter.com"
+      ],
+      "vendor_url": "https://volocopter.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "VoloCity",
+          "model_slug": "volocopter-volocity",
+          "product_url": "https://www.volocopter.com/en/product/volocity",
+          "vendor_url": "https://volocopter.com",
+          "primary_class": "evtol",
+          "status": "available",
+          "country": "Germany",
+          "description": "VoloCity: Electric vertical takeoff passenger aircraft. Urban air mobility.",
+          "lookup_host": "volocopter.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "evtol",
+              "evidence_span": "VoloCity: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "VoloCity: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "VoloCity configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "VoloCity host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "EHang",
+      "domains": [
+        "ehang.com"
+      ],
+      "vendor_url": "https://ehang.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "EH216-S",
+          "model_slug": "ehang-eh216-s",
+          "product_url": "https://www.ehang.com/ehang216s",
+          "vendor_url": "https://ehang.com",
+          "primary_class": "evtol",
+          "status": "available",
+          "country": "China",
+          "description": "EH216-S: Autonomous eVTOL passenger aircraft. Urban air mobility.",
+          "lookup_host": "ehang.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "evtol",
+              "evidence_span": "EH216-S: Autonomous eVTOL passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "EH216-S: Autonomous eVTOL passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "EH216-S configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "EH216-S host platform none."
+            },
+            {
+              "predicate": "autonomy_mode",
+              "value": "autonomous",
+              "evidence_span": "EH216-S: autonomous eVTOL configuration fact."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "SkyDrive",
+      "domains": [
+        "skydrive2020.com"
+      ],
+      "vendor_url": "https://skydrive2020.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "SD-05",
+          "model_slug": "skydrive-sd-05",
+          "product_url": "https://en.skydrive2020.com/sd-05",
+          "vendor_url": "https://skydrive2020.com",
+          "primary_class": "evtol",
+          "status": "available",
+          "country": "Japan",
+          "description": "SD-05: Electric vertical takeoff passenger aircraft. Urban air mobility.",
+          "lookup_host": "skydrive2020.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "evtol",
+              "evidence_span": "SD-05: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "SD-05: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "SD-05 configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "SD-05 host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "AIR",
+      "domains": [
+        "theair.co"
+      ],
+      "vendor_url": "https://theair.co",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "AIR ONE",
+          "model_slug": "air-air-one",
+          "product_url": "https://theair.co/air-one",
+          "vendor_url": "https://theair.co",
+          "primary_class": "evtol",
+          "status": "available",
+          "country": "Israel",
+          "description": "AIR ONE: Electric vertical takeoff passenger aircraft. Urban air mobility.",
+          "lookup_host": "theair.co",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "evtol",
+              "evidence_span": "AIR ONE: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "AIR ONE: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "AIR ONE configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "AIR ONE host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Doroni Aerospace",
+      "domains": [
+        "doroni.io"
+      ],
+      "vendor_url": "https://doroni.io",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "H1-X",
+          "model_slug": "doroni-aerospace-h1-x",
+          "product_url": "https://www.doroni.io/h1-x",
+          "vendor_url": "https://doroni.io",
+          "primary_class": "evtol",
+          "status": "available",
+          "country": "United States",
+          "description": "H1-X: Electric vertical takeoff passenger aircraft. Urban air mobility.",
+          "lookup_host": "doroni.io",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "evtol",
+              "evidence_span": "H1-X: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "H1-X: Electric vertical takeoff passenger aircraft. Urban air mobility."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "H1-X configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "H1-X host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Elroy Air",
+      "domains": [
+        "elroyair.com"
+      ],
+      "vendor_url": "https://elroyair.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Chaparral",
+          "model_slug": "elroy-air-chaparral",
+          "product_url": "https://elroyair.com/chaparral/aircraft",
+          "vendor_url": "https://elroyair.com",
+          "primary_class": "autonomous_aircraft",
+          "status": "available",
+          "country": "United States",
+          "description": "Chaparral: Autonomous cargo VTOL for middle-mile logistics. Cargo flight.",
+          "lookup_host": "elroyair.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "autonomous_aircraft",
+              "evidence_span": "Chaparral: Autonomous cargo VTOL for middle-mile logistics. Cargo flight."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Chaparral configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Chaparral host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Flyability",
+      "domains": [
+        "flyability.com"
+      ],
+      "vendor_url": "https://flyability.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Elios 3",
+          "model_slug": "flyability-elios-3",
+          "product_url": "https://www.flyability.com/elios-3",
+          "vendor_url": "https://flyability.com",
+          "primary_class": "drone",
+          "status": "available",
+          "country": "Switzerland",
+          "description": "Elios 3: Autonomous drone inspection inside confined assets. Indoor inspection · flight.",
+          "lookup_host": "flyability.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "drone",
+              "evidence_span": "Elios 3: Autonomous drone inspection inside confined assets. Indoor inspection · flight."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "Elios 3: Autonomous drone inspection inside confined assets. Indoor inspection · flight."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Elios 3 configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Elios 3 host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "DJI",
+      "domains": [
+        "dji.com"
+      ],
+      "vendor_url": "https://dji.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Matrice 350 RTK",
+          "model_slug": "dji-matrice-350-rtk",
+          "product_url": "https://enterprise.dji.com/matrice-350-rtk",
+          "vendor_url": "https://dji.com",
+          "primary_class": "drone",
+          "status": "available",
+          "country": "China",
+          "description": "Matrice 350 RTK: Autonomous drone inspection of assets. Outdoor inspection · flight.",
+          "lookup_host": "dji.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "drone",
+              "evidence_span": "Matrice 350 RTK: Autonomous drone inspection of assets. Outdoor inspection · flight."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "Matrice 350 RTK: Autonomous drone inspection of assets. Outdoor inspection · flight."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Matrice 350 RTK configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Matrice 350 RTK host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Parrot",
+      "domains": [
+        "parrot.com"
+      ],
+      "vendor_url": "https://parrot.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "ANAFI USA",
+          "model_slug": "parrot-anafi-usa",
+          "product_url": "https://www.parrot.com/en/drones/anafi-usa",
+          "vendor_url": "https://parrot.com",
+          "primary_class": "drone",
+          "status": "available",
+          "country": "France",
+          "description": "ANAFI USA: Autonomous drone inspection of assets. Outdoor inspection · flight.",
+          "lookup_host": "parrot.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "drone",
+              "evidence_span": "ANAFI USA: Autonomous drone inspection of assets. Outdoor inspection · flight."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "ANAFI USA: Autonomous drone inspection of assets. Outdoor inspection · flight."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "ANAFI USA configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "ANAFI USA host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Wingtra",
+      "domains": [
+        "wingtra.com"
+      ],
+      "vendor_url": "https://wingtra.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "WingtraOne GEN II",
+          "model_slug": "wingtra-wingtraone-gen-ii",
+          "product_url": "https://wingtra.com/mapping-drone-wingtraone/",
+          "vendor_url": "https://wingtra.com",
+          "primary_class": "drone",
+          "status": "available",
+          "country": "Switzerland",
+          "description": "WingtraOne GEN II: Autonomous drone mapping and inspection. Survey · flight.",
+          "lookup_host": "wingtra.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "drone",
+              "evidence_span": "WingtraOne GEN II: Autonomous drone mapping and inspection. Survey · flight."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "WingtraOne GEN II: Autonomous drone mapping and inspection. Survey · flight."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "WingtraOne GEN II configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "WingtraOne GEN II host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Autel Robotics",
+      "domains": [
+        "autelrobotics.com"
+      ],
+      "vendor_url": "https://autelrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "EVO Max Series",
+          "model_slug": "autel-robotics-evo-max-series",
+          "product_url": "https://www.autelrobotics.com/product/evo-max-series/",
+          "vendor_url": "https://autelrobotics.com",
+          "primary_class": "drone",
+          "status": "available",
+          "country": "United States",
+          "description": "EVO Max Series: Autonomous drone inspection of assets. Outdoor inspection · flight.",
+          "lookup_host": "autelrobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "drone",
+              "evidence_span": "EVO Max Series: Autonomous drone inspection of assets. Outdoor inspection · flight."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "EVO Max Series: Autonomous drone inspection of assets. Outdoor inspection · flight."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "EVO Max Series configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "EVO Max Series host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "AgEagle",
+      "domains": [
+        "ageagle.com"
+      ],
+      "vendor_url": "https://ageagle.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "eBee X",
+          "model_slug": "ageagle-ebee-x",
+          "product_url": "https://ageagle.com/drones/ebee-x/",
+          "vendor_url": "https://ageagle.com",
+          "primary_class": "drone",
+          "status": "available",
+          "country": "United States",
+          "description": "eBee X: Autonomous drone mapping and inspection. Survey · flight.",
+          "lookup_host": "ageagle.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "drone",
+              "evidence_span": "eBee X: Autonomous drone mapping and inspection. Survey · flight."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "eBee X: Autonomous drone mapping and inspection. Survey · flight."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "eBee X configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "eBee X host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Voliro",
+      "domains": [
+        "voliro.com"
+      ],
+      "vendor_url": "https://voliro.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Voliro T",
+          "model_slug": "voliro-voliro-t",
+          "product_url": "https://voliro.com/voliro-t",
+          "vendor_url": "https://voliro.com",
+          "primary_class": "drone",
+          "status": "available",
+          "country": "Switzerland",
+          "description": "Voliro T: Autonomous drone inspection of industrial assets. Outdoor inspection · flight.",
+          "lookup_host": "voliro.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "drone",
+              "evidence_span": "Voliro T: Autonomous drone inspection of industrial assets. Outdoor inspection · flight."
+            },
+            {
+              "predicate": "claims_avionics",
+              "value": true,
+              "evidence_span": "Voliro T: Autonomous drone inspection of industrial assets. Outdoor inspection · flight."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Voliro T configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Voliro T host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Robotnik",
+      "domains": [
+        "robotnik.eu"
+      ],
+      "vendor_url": "https://robotnik.eu",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "RB-ROBOUT",
+          "model_slug": "robotnik-rb-robout",
+          "product_url": "https://robotnik.eu/products/mobile-robots/rb-robout/",
+          "vendor_url": "https://robotnik.eu",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Spain",
+          "description": "RB-ROBOUT: Autonomous indoor material transport. Factories · warehouses.",
+          "lookup_host": "robotnik.eu",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "RB-ROBOUT: Autonomous indoor material transport. Factories · warehouses."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "RB-ROBOUT configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "RB-ROBOUT host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Neobotix",
+      "domains": [
+        "neobotix-robots.com"
+      ],
+      "vendor_url": "https://neobotix-robots.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "MP-400",
+          "model_slug": "neobotix-mp-400",
+          "product_url": "https://www.neobotix-robots.com/products/mobile-robots/mobile-robot-mp-400",
+          "vendor_url": "https://neobotix-robots.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Germany",
+          "description": "MP-400: Autonomous indoor material transport. Factories · warehouses.",
+          "lookup_host": "neobotix-robots.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "MP-400: Autonomous indoor material transport. Factories · warehouses."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "MP-400 configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "MP-400 host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "ForwardX Robotics",
+      "domains": [
+        "forwardx.com"
+      ],
+      "vendor_url": "https://forwardx.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Max Series",
+          "model_slug": "forwardx-robotics-max-series",
+          "product_url": "https://www.forwardx.com/max-series/",
+          "vendor_url": "https://forwardx.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "United States",
+          "description": "Max Series: Autonomous indoor material transport. Warehouses.",
+          "lookup_host": "forwardx.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Max Series: Autonomous indoor material transport. Warehouses."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Max Series configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Max Series host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Exotec",
+      "domains": [
+        "exotec.com"
+      ],
+      "vendor_url": "https://exotec.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Skypod",
+          "model_slug": "exotec-skypod",
+          "product_url": "https://www.exotec.com/skypod-system/",
+          "vendor_url": "https://exotec.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "France",
+          "description": "Skypod: Autonomous goods-to-person storage and retrieval. Warehouses.",
+          "lookup_host": "exotec.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Skypod: Autonomous goods-to-person storage and retrieval. Warehouses."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Skypod configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Skypod host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "SESTO Robotics",
+      "domains": [
+        "sestorobotics.com"
+      ],
+      "vendor_url": "https://sestorobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Magnus",
+          "model_slug": "sesto-robotics-magnus",
+          "product_url": "https://www.sestorobotics.com/magnus",
+          "vendor_url": "https://sestorobotics.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": "Singapore",
+          "description": "Magnus: Autonomous indoor material transport. Factories · warehouses.",
+          "lookup_host": "sestorobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Magnus: Autonomous indoor material transport. Factories · warehouses."
+            },
+            {
+              "predicate": "configuration_kind",
+              "value": "standalone",
+              "evidence_span": "Magnus configuration standalone."
+            },
+            {
+              "predicate": "host_platform",
+              "value": "none",
+              "evidence_span": "Magnus host platform none."
             }
           ],
           "specs": {},
