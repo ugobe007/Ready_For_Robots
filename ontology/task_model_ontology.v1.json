@@ -495,6 +495,106 @@
       ]
     },
     {
+      "id": "crop_weeding_policy",
+      "label": "Crop weeding policy",
+      "vertical": "agriculture",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Remove weeds in row crops with laser or mechanical tools without damaging the crop",
+      "tape_families": ["agriculture"],
+      "keywords": ["weed", "weeding", "laserweed", "laser weeder", "row crop", "vegetable row", "field"],
+      "hardware_not_enough": "A field robot is not a trained weeding policy for that crop, spacing, and soil.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Agriculture OEM weeding pack",
+          "url": null,
+          "note": "Ask Carbon Robotics / FarmWise which weeding policy they ship for this crop and row spacing. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "crop_field_policy",
+      "label": "Field spray / harvest policy",
+      "vertical": "agriculture",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Spray, seed, or harvest a named crop under that field's map and season rules",
+      "tape_families": ["agriculture"],
+      "keywords": ["harvest", "spray", "seed", "orchard", "vineyard", "crop"],
+      "hardware_not_enough": "A tractor or gantry is not the spray/harvest policy for this crop mix.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Agriculture OEM application pack",
+          "url": null,
+          "note": "Ask which field policy they ship for this crop — not only which chassis."
+        }
+      ]
+    },
+    {
+      "id": "marine_hull_policy",
+      "label": "Hull / port / underwater work policy",
+      "vertical": "marine",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Inspect or clean a hull, quay, or underwater structure along a named route",
+      "tape_families": ["marine"],
+      "keywords": ["hull", "port", "underwater", "quay", "shipyard", "ballast"],
+      "hardware_not_enough": "A wet chassis is not a qualified hull-inspection or quay policy.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Marine OEM mission software",
+          "url": null,
+          "note": "Ask which hull/port mission they ship for this vessel class. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "aviation_hangar_policy",
+      "label": "Hangar / airside aircraft work policy",
+      "vertical": "aviation",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Inspect or service an aircraft in a hangar or on the ramp under airside rules",
+      "tape_families": ["avionics"],
+      "keywords": ["hangar", "airside", "aircraft", "fuselage", "ramp", "aviation"],
+      "hardware_not_enough": "A mobile platform is not an airside-qualified aircraft inspection policy. Consumer drones are not this class.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Aviation OEM hangar / NDT pack",
+          "url": null,
+          "note": "Ask which hangar or airside policy they ship for this airframe. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "construction_jobsite_policy",
+      "label": "Jobsite layout / earthwork / finishing policy",
+      "vertical": "construction",
+      "layer": "site_adapted",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Print layout, move earth, or finish surfaces on this jobsite under that GC's rules",
+      "tape_families": ["construction"],
+      "keywords": ["jobsite", "layout", "drywall", "earthwork", "rebar", "grade"],
+      "hardware_not_enough": "A construction chassis is not the layout or finishing policy for this floorplate.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Construction OEM jobsite pack",
+          "url": null,
+          "note": "Ask Dusty / Built / Canvas which site policy they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
       "id": "site_task_policy",
       "label": "Site-specific task policy",
       "vertical": "any",

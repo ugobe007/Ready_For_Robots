@@ -26,16 +26,19 @@ Loaded by `app/services/robot_ontology.py`; emitted by
 | `indoor` | Generic indoor | ✅ | — |
 | `construction` | Construction / jobsite | ✅ | Dusty, Canvas, Built |
 | `mining` | Mining / quarry | ✅ | autonomous haulage/drilling |
-| `agriculture` | Agriculture / farm | ✅ | Carbon Robotics, FarmWise |
+| `agriculture` | Agriculture / farm | ✅ | Carbon Robotics LaserWeeder, FarmWise |
+| `marine` | Marine / port / underwater | ✅ | Hull and quay work robots |
+| `aviation` | Aviation / hangar / airside | ✅ | Hangar and ramp aircraft work robots |
 
 ## Rules
 - The vertical is **descriptive context**, not a capability and not a job
   selector (same discipline as `product_class`). A hospital delivery robot
   matches transport/serve work via its **capabilities**, and the `healthcare`
   vertical labels *where*, not *what*.
-- Recognizing out-of-scope verticals (`construction`/`mining`/`agriculture`)
-  keeps the front door honest: the robot is understood and labeled even when we
-  don't yet carry its work in the corpus.
+- Recognizing work-domain verticals (`construction`/`mining`/`agriculture`/
+  `marine`/`aviation`) keeps the front door honest. They label *where*. Jobs
+  still match from grounded task capabilities, never from the vertical tag
+  and never from a SIGNAL industry hop.
 - Healthcare and eldercare are separated because their work differs (clinical
   delivery / specimen transport vs. resident services / meal & linen delivery),
   though both are served today by the same `transport`/`serve` capabilities.

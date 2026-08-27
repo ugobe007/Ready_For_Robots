@@ -39,6 +39,11 @@ _WORK_CAPABILITIES = frozenset(
         "inspect_route",
         "load_unload",
         "reach",
+        "agriculture_task",
+        "construction_task",
+        "mining_task",
+        "marine_task",
+        "avionics_task",
     }
 )
 
@@ -56,6 +61,11 @@ _CAPABILITY_FAMILIES = {
     "surface_clean": frozenset({"restroom"}),
     "hard_floor_scrub": frozenset({"scrub"}),
     "inspect_route": frozenset({"inspect"}),
+    "agriculture_task": frozenset({"agriculture"}),
+    "construction_task": frozenset({"construction"}),
+    "mining_task": frozenset({"mining"}),
+    "marine_task": frozenset({"marine"}),
+    "avionics_task": frozenset({"avionics"}),
 }
 
 

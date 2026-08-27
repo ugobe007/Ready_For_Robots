@@ -31,7 +31,7 @@ _PRODUCT_CANDIDATE = re.compile(
     r"Walker|Figure\s*\d+|G1|H1|B2|Go2|Cassie|Handle|Ranger|OTTO\s*\d+|"
     r"GoFa|Phoenix|Pepper|Whiz|TIAGo|ANYmal|Canvas|FieldPrinter|"
     r"Elios\s*\d*|Servi(?:\s*Plus|\+)?|P800|CRX[- ]?\d+\w*|"
-    r"Lift\s+RS\d+|T7AMR|A0509"
+    r"Lift\s+RS\d+|T7AMR|A0509|LaserWeeder"
     r")\b",
     re.I,
 )
@@ -1367,7 +1367,26 @@ def _hint_display_class(product_name: str, text: str) -> Optional[str]:
         window,
         re.I,
     ):
-        return "construction_robot"
+        return "construction"
+    if re.search(
+        r"\b(laserweeder|laser\s+weeder|agricultural\s+robot|weeding\s+robot|"
+        r"farm(?:ing)?\s+robot)\b",
+        window,
+        re.I,
+    ):
+        return "agriculture"
+    if re.search(
+        r"\b(marine\s+robot|hull\s+inspect|underwater\s+robot|port\s+robot)\b",
+        window,
+        re.I,
+    ):
+        return "marine"
+    if re.search(
+        r"\b(avionics|hangar\s+robot|airside\s+robot|aircraft\s+inspect)\b",
+        window,
+        re.I,
+    ):
+        return "avionics"
     if re.search(
         r"\b(service\s+robot|hospitality\s+robot|restaurant\s+(?:delivery\s+)?robot|"
         r"social\s+robot)\b",

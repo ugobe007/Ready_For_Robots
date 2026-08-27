@@ -1724,6 +1724,140 @@
       ]
     },
     {
+      "job_key": "ag_mechanical_weeding",
+      "title": "Mechanically weed vegetable rows",
+      "industry": "Agriculture",
+      "path": "FIELD ROWS",
+      "company_name": "Pacific Row Crops",
+      "locality": "Oxnard, CA",
+      "families": [],
+      "actions": [],
+      "text": "mechanical weeding of vegetable crop rows in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Row spacing",
+        "Crop type"
+      ]
+    },
+    {
+      "job_key": "ag_spray",
+      "title": "Spray crop rows in the field",
+      "industry": "Agriculture",
+      "path": "FIELD",
+      "company_name": "Central Valley Growers",
+      "locality": "Fresno, CA",
+      "families": [],
+      "actions": [],
+      "text": "robot sprays crop rows in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Chemical mix",
+        "Field size"
+      ]
+    },
+    {
+      "job_key": "ag_orchard",
+      "title": "Work orchard rows",
+      "industry": "Agriculture",
+      "path": "ORCHARD",
+      "company_name": "Sierra Orchard Co-op",
+      "locality": "Modesto, CA",
+      "families": [],
+      "actions": [],
+      "text": "orchard robot works crop rows for prune or thin tasks",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Canopy height",
+        "Season"
+      ]
+    },
+    {
+      "job_key": "marine_hull_inspect",
+      "title": "Inspect a ship hull at the quay",
+      "industry": "Marine",
+      "path": "QUAY → HULL",
+      "company_name": "Harbor Line Drydock",
+      "locality": "Norfolk, VA",
+      "families": [],
+      "actions": [],
+      "text": "hull inspection robot surveys the vessel at the quay",
+      "source": "tier_seed",
+      "tape_family": "marine",
+      "unknowns": [
+        "Vessel class",
+        "Water conditions"
+      ]
+    },
+    {
+      "job_key": "marine_underwater_clean",
+      "title": "Clean a hull underwater",
+      "industry": "Marine",
+      "path": "UNDERWATER HULL",
+      "company_name": "Bay Port Services",
+      "locality": "Oakland, CA",
+      "families": [],
+      "actions": [],
+      "text": "underwater robot cleans the ship hull below the waterline",
+      "source": "tier_seed",
+      "tape_family": "marine",
+      "unknowns": [
+        "Biofouling type"
+      ]
+    },
+    {
+      "job_key": "avionics_hangar_inspect",
+      "title": "Inspect an airframe in the hangar",
+      "industry": "Aviation",
+      "path": "HANGAR",
+      "company_name": "Westfield MRO",
+      "locality": "Tulsa, OK",
+      "families": [],
+      "actions": [],
+      "text": "hangar robot inspects the aircraft fuselage on the shop floor",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Airframe type",
+        "NDT method"
+      ]
+    },
+    {
+      "job_key": "avionics_airside",
+      "title": "Walk the airside ramp around parked aircraft",
+      "industry": "Aviation",
+      "path": "RAMP",
+      "company_name": "Metro Airside Ops",
+      "locality": "Denver, CO",
+      "families": [],
+      "actions": [],
+      "text": "airside robot inspects parked aircraft on the ramp",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Ramp traffic rules"
+      ]
+    },
+    {
+      "job_key": "construction_earthwork",
+      "title": "Grade earth on the jobsite",
+      "industry": "Construction",
+      "path": "JOBSITE GRADE",
+      "company_name": "Ridge Line Civil",
+      "locality": "Phoenix, AZ",
+      "families": [],
+      "actions": [],
+      "text": "earthwork robot grades the construction jobsite",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Soil type",
+        "Site access"
+      ]
+    },
+    {
       "job_key": "construction_layout",
       "title": "Print floor layout on the jobsite",
       "industry": "Construction",

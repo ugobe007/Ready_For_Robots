@@ -45,6 +45,30 @@ CLASS_OPTIONS: list[dict[str, str]] = [
         "label": "Floor scrubber",
         "hint": "Cleans floors on its own",
     },
+    {
+        "id": "agriculture",
+        "product_class": "agriculture",
+        "label": "Agriculture",
+        "hint": "Field and crop work — weeding, spraying, harvest",
+    },
+    {
+        "id": "marine",
+        "product_class": "marine",
+        "label": "Marine",
+        "hint": "Hull, port, and underwater work",
+    },
+    {
+        "id": "avionics",
+        "product_class": "avionics",
+        "label": "Avionics",
+        "hint": "Hangar and airside aircraft work — not a consumer drone",
+    },
+    {
+        "id": "construction",
+        "product_class": "construction",
+        "label": "Construction",
+        "hint": "Jobsite earthwork, layout, and finishing",
+    },
 ]
 
 
@@ -73,6 +97,23 @@ def normalize_class_id(raw: str | None) -> str | None:
         "scrubber": "autonomous_scrubber",
         "autonomous_scrubber": "autonomous_scrubber",
         "forklift": "amr",
+        "agriculture": "agriculture",
+        "agricultural_robot": "agriculture",
+        "farm_robot": "agriculture",
+        "weeder": "agriculture",
+        "weeding": "agriculture",
+        "marine": "marine",
+        "marine_robot": "marine",
+        "maritime": "marine",
+        "underwater": "marine",
+        "avionics": "avionics",
+        "aviation": "avionics",
+        "aviation_robot": "avionics",
+        "aircraft": "avionics",
+        "hangar": "avionics",
+        "airside": "avionics",
+        "construction": "construction",
+        "construction_robot": "construction",
     }
     mapped = aliases.get(want)
     if mapped:

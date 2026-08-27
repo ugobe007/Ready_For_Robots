@@ -37,6 +37,23 @@ const ROBOT_CLASS_ALIASES: Record<string, string> = {
   scrubber: "autonomous_scrubber",
   autonomous_scrubber: "autonomous_scrubber",
   forklift: "amr",
+  agriculture: "agriculture",
+  agricultural_robot: "agriculture",
+  farm_robot: "agriculture",
+  weeder: "agriculture",
+  weeding: "agriculture",
+  marine: "marine",
+  marine_robot: "marine",
+  maritime: "marine",
+  underwater: "marine",
+  avionics: "avionics",
+  aviation: "avionics",
+  aviation_robot: "avionics",
+  aircraft: "avionics",
+  hangar: "avionics",
+  airside: "avionics",
+  construction: "construction",
+  construction_robot: "construction",
 };
 
 const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
@@ -46,6 +63,10 @@ const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
   cobot: "collaborative arms",
   quadruped: "quadrupeds",
   autonomous_scrubber: "floor scrubbers",
+  agriculture: "agriculture robots",
+  marine: "marine robots",
+  avionics: "avionics robots",
+  construction: "construction robots",
 };
 
 const ROBOT_CLASS_TITLE: Record<string, string> = {
@@ -55,6 +76,10 @@ const ROBOT_CLASS_TITLE: Record<string, string> = {
   cobot: "Collaborative arm",
   quadruped: "Quadruped",
   autonomous_scrubber: "Floor scrubber",
+  agriculture: "Agriculture",
+  marine: "Marine",
+  avionics: "Avionics",
+  construction: "Construction",
 };
 
 export function normalizeRobotClass(raw?: string | null): string | null {

@@ -75,6 +75,8 @@ _SCOPED_CAPABILITY_PREDS = {
     "claims_agriculture",
     "claims_construction",
     "claims_mining",
+    "claims_marine",
+    "claims_avionics",
 }
 # Proximity window: the subject name must appear within this many characters of
 # the capability evidence for the claim to attach to the selected product.
@@ -708,13 +710,65 @@ def _extract_from_page(
     for m in re.finditer(
         r"\b(agricultural\s+robot|farm(?:ing)?\s+robot|ag(?:ricultural)?\s*bot|"
         r"crop\s+(?:scouting|weeding)\s+robot|orchard\s+robot|"
-        r"autonomous\s+(?:tractor|harvester|weeder|sprayer))\b",
+        r"autonomous\s+(?:tractor|harvester|weeder|sprayer)|"
+        r"laserweeder|laser\s+weeder|weeding\s+robot)\b",
         text,
         re.I,
     ):
         if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
             continue
         add("product_class", "agricultural_robot", span=m.group(0), confidence=0.88)
+
+    # Named SKU / host: Carbon Robotics LaserWeeder is agricultural weeding.
+    # COMPANY → PRODUCT identity, not company → category → jobs.
+    try:
+        from urllib.parse import urlparse as _urlparse
+
+        _host = (_urlparse(page_url or source.url or "").hostname or "").lower()
+        if _host.startswith("www."):
+            _host = _host[4:]
+    except Exception:
+        _host = ""
+    _id_blob = f"{subject} {page_title} {text[:1600]}"
+    _is_weeder = bool(re.search(r"laserweeder|laser\s+weeder|laser[- ]weed", _id_blob, re.I))
+    _is_carbon = _host.endswith("carbonrobotics.com")
+    if _is_weeder or (
+        _is_carbon and re.search(r"\b(weed|weeding|crop|agricult|field)\b", _id_blob, re.I)
+    ):
+        add(
+            "product_class",
+            "agricultural_robot",
+            span="LaserWeeder" if _is_weeder else "carbonrobotics.com",
+            confidence=0.92,
+        )
+        add(
+            "claims_agriculture",
+            True,
+            span="laser weeding" if _is_weeder else "agricultural weeding",
+            confidence=0.9,
+        )
+
+    for m in re.finditer(
+        r"\b(marine\s+robots?|maritime\s+robots?|underwater\s+robots?|"
+        r"hull\s+(?:inspect\w*|clean\w*|robots?)|port\s+robots?|"
+        r"shipyard\s+robots?|rov\s+inspect\w*)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("product_class", "marine_robot", span=m.group(0), confidence=0.88)
+
+    for m in re.finditer(
+        r"\b(avionics\s+robots?|aviation\s+robots?|hangar\s+robots?|"
+        r"airside\s+robots?|aircraft\s+(?:inspect\w*|robots?)|"
+        r"fuselage\s+inspect\w*)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("product_class", "aviation_robot", span=m.group(0), confidence=0.88)
 
     for m in re.finditer(
         r"\b(mining\s+robot|underground\s+mining\s+robot|autonomous\s+(?:haul(?:age)?\s+truck|"
@@ -1083,7 +1137,8 @@ def _extract_from_page(
 
     # --- Tier 3: agriculture (recognized vertical; job matching now in scope) ---
     for m in re.finditer(
-        r"\b(?:agricultural\s+robots?|farm\s+robots?|autonomous\s+tractors?|laser\s+weed\w*|"
+        r"\b(?:agricultural\s+robots?|farm\s+robots?|autonomous\s+tractors?|"
+        r"laserweeder|laser\s+weed\w*|weeding\s+robots?|"
         r"(?:weed\w*|harvest\w*|spray\w*|prune\w*|thin\w*|seed\w*)\s+"
         r"(?:crops?|plants?|fields?|rows?|orchards?|produce|vineyards?))\b",
         text,
@@ -1104,6 +1159,30 @@ def _extract_from_page(
         if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
             continue
         add("claims_construction", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Marine: hull / port / underwater work (not a category dump) ---
+    for m in re.finditer(
+        r"\b(?:hull\s+(?:inspect\w*|clean\w*|robots?)|underwater\s+(?:inspect\w*|robots?)|"
+        r"port\s+(?:inspect\w*|robots?)|maritime\s+(?:inspect\w*|robots?)|"
+        r"shipyard\s+robots?|quay\s+robots?)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_marine", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Avionics: hangar / airside aircraft work — not consumer drones ---
+    for m in re.finditer(
+        r"\b(?:hangar\s+(?:inspect\w*|robots?)|airside\s+(?:inspect\w*|robots?)|"
+        r"aircraft\s+(?:inspect\w*|robots?)|fuselage\s+inspect\w*|"
+        r"aviation\s+(?:inspect\w*|robots?)|avionics\s+robots?)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_avionics", True, span=m.group(0)[:120], confidence=0.85)
 
     # --- Tier 3: mining ---
     for m in re.finditer(
@@ -1184,7 +1263,8 @@ def _extract_from_page(
         r"surgery\s+cent(?:er|re)s?|surgical\s+cent(?:er|re)s?|clinics?|"
         r"pharmac(?:y|ies)|laborator(?:y|ies)|medical\s+cent(?:er|re)s?|"
         r"(?:hotels?|airports?|hospitals?|healthcare|retail|restaurants?|hospitality|"
-        r"reception|warehouses?|factories?|jobsites?|construction\s+sites?))\b",
+        r"reception|warehouses?|factories?|jobsites?|construction\s+sites?|"
+        r"farms?|fields?|orchards?|hangars?|airsides?|harbou?rs?|ports?|shipyards?))\b",
         text,
         re.I,
     ):
@@ -1210,8 +1290,14 @@ def _extract_from_page(
             val = "hospitality"
         elif re.search(r"restaurant", raw):
             val = "restaurant"
+        elif re.search(r"hangar|airside|aircraft", raw):
+            val = "aviation"
         elif re.search(r"airport", raw):
             val = "airport"
+        elif re.search(r"hull|harbor|harbour|shipyard|\bports?\b|underwater", raw):
+            val = "marine"
+        elif re.search(r"farm|orchard|\bfields?\b|crop", raw):
+            val = "agriculture"
         elif re.search(r"retail", raw):
             val = "retail"
         elif re.search(r"workplace|facility|reception", raw):

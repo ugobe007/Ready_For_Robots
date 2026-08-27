@@ -23,6 +23,10 @@ _CLASS_HINTS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\b(scrubber|floor\s+scrub|autonomous\s+cleaner)\b", re.I), "autonomous_scrubber"),
     (re.compile(r"\b(forklift|pallet\s+jack|reach\s+truck)\b", re.I), "amr"),
     (re.compile(r"\b(amr|agv|autonomous\s+mobile\s+robot|mobile\s+base)\b", re.I), "amr"),
+    (re.compile(r"\b(laserweeder|weeding\s+robot|agricultural\s+robot|crop\s+robot)\b", re.I), "agriculture"),
+    (re.compile(r"\b(hull\s+inspect|underwater\s+robot|marine\s+robot)\b", re.I), "marine"),
+    (re.compile(r"\b(hangar\s+robot|airside|aircraft\s+inspect|avionics)\b", re.I), "avionics"),
+    (re.compile(r"\b(construction\s+robot|jobsite\s+robot|layout\s+printer)\b", re.I), "construction"),
 ]
 
 

@@ -6770,6 +6770,11 @@
               "predicate": "product_class",
               "value": "agricultural_robot",
               "evidence_span": "LaserWeeder: laser weeding. Used in Agriculture."
+            },
+            {
+              "predicate": "claims_agriculture",
+              "value": true,
+              "evidence_span": "LaserWeeder: laser weeding of row crops."
             }
           ],
           "specs": {}

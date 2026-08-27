@@ -549,6 +549,53 @@ def index_robot_for_name(vendor: dict[str, Any] | None, name: str | None) -> Opt
     return None
 
 
+_CLASS_DOMAIN_CLAIMS: dict[str, tuple[str, str]] = {
+    "agriculture": ("claims_agriculture", "agricultural field work"),
+    "agricultural_robot": ("claims_agriculture", "agricultural field work"),
+    "farm_robot": ("claims_agriculture", "agricultural field work"),
+    "construction": ("claims_construction", "construction site work"),
+    "construction_robot": ("claims_construction", "construction site work"),
+    "marine": ("claims_marine", "hull / port / underwater work"),
+    "marine_robot": ("claims_marine", "hull / port / underwater work"),
+    "avionics": ("claims_avionics", "hangar / airside aircraft work"),
+    "aviation_robot": ("claims_avionics", "hangar / airside aircraft work"),
+}
+
+
+def _domain_claims_for_indexed_robot(
+    robot: dict[str, Any],
+    primary_class: str,
+) -> list[tuple[str, Any, str]]:
+    """COMPANY → PRODUCT facts from a named SKU. Empty specs stay UNKNOWN."""
+    out: list[tuple[str, Any, str]] = []
+    cls = (primary_class or "").strip().lower()
+    mapped = _CLASS_DOMAIN_CLAIMS.get(cls)
+    name = str(robot.get("name") or "")
+    desc = str(robot.get("description") or "")
+    blob = f"{name} {desc}".lower()
+    if mapped:
+        pred, label = mapped
+        out.append((pred, True, f"Indexed {cls} — {label}."))
+    if re.search(r"laserweeder|laser\s+weed|weeding", blob):
+        if not any(p == "claims_agriculture" for p, _v, _s in out):
+            out.append(
+                (
+                    "claims_agriculture",
+                    True,
+                    f"{name}: laser/mechanical weeding in row crops.",
+                )
+            )
+        if cls not in {"agriculture", "agricultural_robot", "farm_robot"}:
+            out.append(
+                (
+                    "product_class",
+                    "agricultural_robot",
+                    f"{name} is an agricultural weeding robot.",
+                )
+            )
+    return out
+
+
 def catalog_claim_facts(robot: dict[str, Any] | None) -> list[dict[str, Any]]:
     """Typed claims from the vendor index (not a live OEM crawl)."""
     if not robot:
@@ -586,6 +633,19 @@ def catalog_claim_facts(robot: dict[str, Any] | None) -> list[dict[str, Any]]:
             },
         )
         seen.add("product_class")
+    for pred, value, span in _domain_claims_for_indexed_robot(robot, primary):
+        if pred in seen:
+            continue
+        seen.add(pred)
+        out.append(
+            {
+                "predicate": pred,
+                "value": value,
+                "units": None,
+                "epistemic": "explicit",
+                "evidence_span": span,
+            }
+        )
     slim = slim_specs(robot.get("specs") if isinstance(robot.get("specs"), dict) else {})
     for spec_key, (predicate, units) in _CHECKLIST_SPEC_FACT.items():
         if spec_key not in slim or predicate in seen:

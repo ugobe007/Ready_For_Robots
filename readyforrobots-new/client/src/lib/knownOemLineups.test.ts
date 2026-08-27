@@ -25,6 +25,16 @@ describe("knownOemLineups", () => {
     expect((hit?.robots.length || 0)).toBeGreaterThan(0);
   });
 
+  it("maps Carbon Robotics LaserWeeder as agriculture without a network call", () => {
+    const hit = lookupKnownOem("https://carbonrobotics.com/");
+    expect(hit?.vendor_name).toMatch(/Carbon Robotics/i);
+    expect(hit?.robots.map(r => r.name)).toEqual(["LaserWeeder"]);
+    expect(
+      hit?.robots[0]?.display_class === "agriculture" ||
+        hit?.robots[0]?.display_class === "agricultural_robot",
+    ).toBe(true);
+  });
+
   it("maps Sunday Robotics Memo without a network call", () => {
     const hit = lookupKnownOem("https://www.sunday.ai/");
     expect(hit?.vendor_name).toMatch(/Sunday/i);

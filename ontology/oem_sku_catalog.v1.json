@@ -12,8 +12,8 @@
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
-  "company_count": 61,
-  "product_count": 188,
+  "company_count": 62,
+  "product_count": 189,
   "skipped": [],
   "companies": [
     {
@@ -6071,6 +6071,50 @@
           "capability_confidence": "UNKNOWN",
           "flags": [],
           "source": "workbook"
+        }
+      ]
+    },
+    {
+      "name": "Carbon Robotics",
+      "slug": "carbon-robotics",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Agriculture"
+      ],
+      "source_urls": [
+        "https://carbonrobotics.com/"
+      ],
+      "domains": [
+        "carbonrobotics.com"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "LaserWeeder",
+          "slug": "carbon-robotics-laserweeder",
+          "company_name": "Carbon Robotics",
+          "company_slug": "carbon-robotics",
+          "primary_class": "agricultural_robot",
+          "category": "Agriculture",
+          "listed_class": "Agricultural weeding robot",
+          "task": "Laser and mechanical weed removal in row crops",
+          "setting": "Fields · row crops · vegetable beds",
+          "status": "Deployed",
+          "region": "United States",
+          "spreadsheet_sources": [
+            "https://carbonrobotics.com/"
+          ],
+          "candidate_sources": [
+            "https://carbonrobotics.com/"
+          ],
+          "product_url": "https://carbonrobotics.com/",
+          "lookup_host": "carbonrobotics.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "mission-2026-08-27-ag-robot-classes"
         }
       ]
     }
