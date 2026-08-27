@@ -5,7 +5,7 @@ Step 03 is **CRM**. Checking a job on step 02 dumps it into this desk. Kept Job 
 ## Sub-features
 
 - `crm-activate` Open CRM from the job list uses `jobsCrmOpenHref`. Signed-out users hit `/signup?next=/pipeline?src=jobs_activate`.
-- `crm-unlock` free users see 5 unlocked jobs from the handoff after signup (checks dump live). One keep prompt: Keep these N jobs?
+- `crm-unlock` free users see 5 unlocked jobs from the handoff after signup (checks dump live). One keep prompt: Keep N jobs? Confirmation: Yes, keep them.
 - `crm-place` Headline **CRM**. Process bar 03 current. Default view is the expandable listing. Place / pack / quote is the second beat on an opened egg. Quote lock needs a user-entered monthly rental. PoC is preferred and skippable.
 - `crm-auth` signed-out users cannot use the desk; a direct `/pipeline?src=jobs_activate` hit redirects through signup.
 - `crm-pstack` compact Jobs agent protocol. Matcher owns the jobs. Signup wall stays.
@@ -25,7 +25,7 @@ Preconditions:
 - Unlocked job list requires a Jobs handoff snapshot. Without jobs in the snapshot, report `verified-unreachable` — do not pass via SIGNAL `/pipeline`.
 
 - **URL.** `python3 scripts/agent_verify.py drive --feature jobs-crm --evidence "$EVIDENCE"`. Homepage JS contains `jobs_activate` and `/pipeline`.
-- **Session path (browser).** Open `/pipeline?src=jobs_activate` with a handoff. Headline **CRM**. Process bar 03 current. Listing of collected jobs (not a forced single-job form). Employer names emerald. Keep these N jobs? then Apply (`next=offer#jobs-next-steps`). Expand inspects employer / workplace / work. Place is the second beat. No Hermes OEM list. No SIGNAL buyer feed.
+- **Session path (browser).** Open `/pipeline?src=jobs_activate` with a handoff. Headline **CRM**. Process bar 03 current. Listing of collected jobs (not a forced single-job form). Employer names emerald. Keep N jobs? then Yes, keep them, then Apply (`next=offer#jobs-next-steps`). Expand inspects employer / workplace / work. Place is the second beat. No Hermes OEM list. No SIGNAL buyer feed.
 - **Unsigned.** Direct desk URL still redirects through signup. Do not treat the wall as 5 placed jobs.
 - **Proof.** `drive-jobs-crm.json`.
 

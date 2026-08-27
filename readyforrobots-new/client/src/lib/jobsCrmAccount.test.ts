@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   JOBS_APPLY_NEXT_CTA,
+  JOBS_APPLY_SEQUENCE,
   JOBS_APPLY_OFFER_CTA,
   JOBS_EMPLOYER_HOLD_CTA,
   JOBS_EMPLOYER_PROPOSE_CTA,
@@ -106,6 +107,16 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(desk).toMatch(/JobsKeepStatusBar/);
     expect(desk).toMatch(/keepTheseJobsPrompt/);
     expect(desk).toMatch(/CRM_KEEP_YES_CTA/);
+    expect(desk).toMatch(/type="submit"/);
+    expect(desk).toMatch(/data-jobs-keep-confirm="1"/);
+    expect(desk).toMatch(/persistKeptJobs/);
+    expect(desk).not.toMatch(/href="#"/);
+    expect(desk).not.toMatch(/crmSelectAllLabel/);
+    expect(desk).not.toMatch(/Select all/);
+    expect(desk).not.toMatch(/Keep these/);
+    expect(desk).toMatch(/JOBS_APPLY_SEQUENCE/);
+    expect(next).toMatch(/JOBS_APPLY_SEQUENCE/);
+    expect(status).toMatch(/JOBS_APPLY_SEQUENCE/);
     expect(desk).toMatch(/jobsCrmOfferHref/);
     expect(desk).toMatch(/JOBS_APPLY_NEXT_CTA/);
     expect(desk).toMatch(/JobsCrmNextSteps/);
@@ -129,9 +140,14 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(workspace).toMatch(/JobsKeepStatusBar/);
     expect(workspace).toMatch(/JOBS_NEXT_STEPS_CTA/);
     expect(workspace).toMatch(/jobsCrmOfferHref/);
-    expect(keepTheseJobsPrompt(3)).toBe("Keep these 3 jobs?");
-    expect(JOBS_KEEP_YES_CTA).toBe("Yes");
+    expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
+    expect(keepTheseJobsPrompt(1)).toBe("Keep 1 job?");
+    expect(JOBS_KEEP_YES_CTA).toBe("Yes, keep them");
     expect(JOBS_APPLY_NEXT_CTA).toBe("Apply →");
+    expect(JOBS_APPLY_SEQUENCE).toMatch(/Apply to the job/);
+    expect(JOBS_APPLY_SEQUENCE).toMatch(/schedule interviews/);
+    expect(JOBS_APPLY_SEQUENCE).toMatch(/They close/);
+    expect(JOBS_APPLY_SEQUENCE).not.toMatch(/\$|rental we invent/i);
     expect(JOBS_NEXT_STEPS_CTA).toMatch(/Next steps/);
     expect(JOBS_MODEL_SELECT_LABEL).toMatch(/Model/);
     expect(JOBS_PROPOSED_PRICE_LABEL).toMatch(/Proposed monthly/);

@@ -13,12 +13,14 @@ import {
 import type { MatchJob } from "@/lib/robotJobMatch";
 
 export const JOBS_KEEP_JOBS_CTA = "Keep jobs";
-export const JOBS_KEEP_YES_CTA = "Yes";
+export const JOBS_KEEP_YES_CTA = "Yes, keep them";
 export const JOBS_NEXT_STEPS_CTA = "Next steps →";
 export const JOBS_APPLY_NEXT_CTA = "Apply →";
 export const JOBS_NEXT_STEPS_ANCHOR = "jobs-next-steps";
+export const JOBS_APPLY_SEQUENCE =
+  "Apply to the job. We help schedule interviews with the customer. They close.";
 export const JOBS_NEXT_STEPS_HINT =
-  "Next steps: name the robot, pick catalogued models, add PoC if you have it, then quote the monthly price you will charge.";
+  "Name the robot, pick catalogued models, add PoC if you have it, then quote the monthly price you will charge.";
 export const JOBS_DOCS_HEADING = "Brochures and product specs";
 export const JOBS_DOCS_HINT =
   "Upload a PDF or image spec for this robot. We attach what you select to the application — not a public dump.";

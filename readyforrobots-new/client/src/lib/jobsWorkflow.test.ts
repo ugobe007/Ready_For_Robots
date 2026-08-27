@@ -56,6 +56,8 @@ import {
   jobsForActivatedPipeline,
   jobsFreshHomeHref,
   goJobsFreshHome,
+  onJobsFreshHomeClick,
+  shouldInterceptJobsFreshHomeClick,
   JOBS_FRESH_HOME_EVENT,
   canStartFindSubmit,
   findSubmitNavigationTarget,
@@ -350,6 +352,48 @@ describe("jobsWorkflow", () => {
     loc.search = "";
     goJobsFreshHome();
     expect(assigns).toEqual(["/"]);
+  });
+
+  it("lets CRM process and header hrefs navigate; only intercepts FIND on Jobs home", () => {
+    expect(shouldInterceptJobsFreshHomeClick("/")).toBe(true);
+    expect(shouldInterceptJobsFreshHomeClick("/jobs")).toBe(true);
+    expect(shouldInterceptJobsFreshHomeClick("/pipeline")).toBe(false);
+    expect(shouldInterceptJobsFreshHomeClick("/intelligence")).toBe(false);
+    const loc = { pathname: "/pipeline", search: "?src=jobs_activate" };
+    Object.defineProperty(globalThis, "window", {
+      value: {
+        location: loc,
+        sessionStorage: { removeItem: () => undefined },
+      },
+      configurable: true,
+    });
+    let prevented = false;
+    onJobsFreshHomeClick({
+      preventDefault: () => {
+        prevented = true;
+      },
+    });
+    expect(prevented).toBe(false);
+    const chrome = readFileSync(
+      join(here, "../components/JobsProcessChrome.tsx"),
+      "utf8",
+    );
+    const header = readFileSync(
+      join(here, "../components/ExperimentHeader.tsx"),
+      "utf8",
+    );
+    expect(chrome).toMatch(/href=\{href\}/);
+    expect(chrome).toMatch(/jobsFreshHomeHref\(\)/);
+    expect(chrome).toMatch(/jobsWorkspaceRestoreHref\(\)/);
+    expect(chrome).toMatch(/jobsCrmOpenHref\(signedIn, submissionId\)/);
+    expect(chrome).not.toMatch(/<span key=\{step\.id\}/);
+    expect(chrome).not.toMatch(/href="#"/);
+    expect(header).toMatch(/href=\{jobsHref\}/);
+    expect(header).toMatch(/jobsWorkspaceRestoreHref\(\)/);
+    expect(header).toMatch(/href="\/intelligence"/);
+    expect(header).toMatch(/href=\{crmHref\}/);
+    expect(header).not.toMatch(/href="#"/);
+    expect(header).not.toMatch(/<Link /);
   });
 
   it("titles type-level jobs for the company group, product-level jobs for a SKU", () => {
@@ -939,10 +983,10 @@ describe("jobsWorkflow", () => {
     expect(crmSelectAllKeys(["a", "a", "", "b"])).toEqual(["a", "b"]);
     expect(crmSelectAllLabel(5)).toBe(`${CRM_SELECT_ALL_LABEL} 5`);
     expect(crmSelectAllLabel(3)).toBe(`${CRM_SELECT_ALL_LABEL} 3`);
-    expect(keepTheseJobsPrompt(5)).toBe("Keep these 5 jobs?");
-    expect(keepTheseJobsPrompt(3)).toBe("Keep these 3 jobs?");
-    expect(keepTheseJobsPrompt(1)).toBe("Keep this 1 job?");
-    expect(CRM_KEEP_YES_CTA).toBe("Yes");
+    expect(keepTheseJobsPrompt(5)).toBe("Keep 5 jobs?");
+    expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
+    expect(keepTheseJobsPrompt(1)).toBe("Keep 1 job?");
+    expect(CRM_KEEP_YES_CTA).toBe("Yes, keep them");
     expect(crmCollectedCountLabel(5)).toBe("5 of 5 eggs in the basket");
     expect(crmCollectedCountLabel(1)).toBe("1 of 5 eggs in the basket");
     expect(crmCollectedCountLabel(3)).toBe("3 of 5 eggs in the basket");
@@ -971,6 +1015,14 @@ describe("jobsWorkflow", () => {
       "utf8",
     );
     expect(desk).toMatch(/crmSelectAllKeys\(allKeys\)/);
+    expect(desk).not.toMatch(/crmSelectAllLabel/);
+    expect(desk).not.toMatch(/Select all/);
+    expect(desk).not.toMatch(/Keep these/);
+    expect(desk).toMatch(/type="submit"/);
+    expect(desk).toMatch(/data-jobs-keep-confirm="1"/);
+    expect(desk).toMatch(/persistKeptJobs/);
+    expect(desk).not.toMatch(/href="#"/);
+    expect(desk).toMatch(/JOBS_APPLY_SEQUENCE/);
     expect(desk).toMatch(/crmSyncSelectedKeys/);
     expect(desk).toMatch(/type="checkbox"/);
     expect(desk).toMatch(/data-crm-select="inspect-only"/);

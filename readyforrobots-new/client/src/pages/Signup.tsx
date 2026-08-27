@@ -503,7 +503,7 @@ export default function Signup() {
               {hubspotIntent
                 ? "Sign up, then SIGNAL links HubSpot automatically."
                 : robotJobsIntent
-                  ? "Keep these jobs for your robot."
+                  ? "Keep jobs for your robot."
                 : pipelineIntent
                   ? buyerCo
                     ? `Save ${buyerCo}. Copy the draft. Run your pipeline.`
@@ -740,7 +740,7 @@ export default function Signup() {
                 {hubspotIntent
                   ? "Sign up for HubSpot sync"
                   : robotJobsIntent
-                    ? "Keep these jobs for your robot"
+                    ? "Keep jobs for your robot"
                     : matchedUnlockIntent
                       ? "Company details + free account"
                       : "Start free"}

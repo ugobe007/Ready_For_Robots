@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   JOBS_APPLY_OFFER_CTA,
+  JOBS_APPLY_SEQUENCE,
   JOBS_DOCS_HEADING,
   JOBS_DOCS_HINT,
   JOBS_MODEL_SELECT_HINT,
@@ -281,11 +282,14 @@ export default function JobsCrmNextSteps({
         <p className="mt-4 text-sm text-amber-200">{error}</p>
       ) : null}
 
+      <p className="mt-6 max-w-xl text-sm leading-relaxed text-slate-300">
+        {JOBS_APPLY_SEQUENCE}
+      </p>
       <button
         type="button"
         onClick={() => void apply()}
         disabled={!ready || busy}
-        className="mt-6 inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+        className="mt-3 inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {busy ? "Applying…" : JOBS_APPLY_OFFER_CTA}
       </button>

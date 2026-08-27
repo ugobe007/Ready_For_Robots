@@ -1,4 +1,4 @@
-import { keepJobsStatusBar } from "@/lib/jobsCrmAccount";
+import { JOBS_APPLY_SEQUENCE, keepJobsStatusBar } from "@/lib/jobsCrmAccount";
 
 export default function JobsKeepStatusBar({
   savedCount,
@@ -38,6 +38,11 @@ export default function JobsKeepStatusBar({
         >
           {bar.hrefLabel}
         </a>
+      ) : null}
+      {onCrmDesk ? (
+        <p className="basis-full text-sm leading-relaxed text-emerald-100/80">
+          {JOBS_APPLY_SEQUENCE}
+        </p>
       ) : null}
     </div>
   );
