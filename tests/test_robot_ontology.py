@@ -28,6 +28,9 @@ def _all_capabilities_profile() -> dict:
         "company": {"name": "Everything Robotics"},
         "facts": [
             f("product_class", "quadruped"),          # inspect_route
+            f("product_class", "evtol"),              # evtol_flight
+            f("product_class", "drone"),              # drone_task
+            f("product_class", "autonomous_aircraft"),  # autonomous_flight
             f("arm_count", 2),                          # manipulate + dual_arm
             f("has_dexterous_hands", True),
             f("has_mobile_base", True),                 # mobile

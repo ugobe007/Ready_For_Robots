@@ -71,6 +71,14 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   **or** `claims_avionics` → `avionics_task` + `mobile` (drones, eVTOL,
   autonomous aircraft — not satellites). Hangar/airside inspection of an
   airframe is avionics *work*, not the class definition.
+- **R28 ✅** Avionics **configuration** splits work. `product_class=evtol` →
+  `evtol_flight` (air-taxi / flying-car routes). `drone`/`uav` → `drone_task`
+  (aerial inspect or delivery). `autonomous_aircraft` → `autonomous_flight`.
+  Hangar/airside *walking* jobs require `inspect_route` (quadruped) **or**
+  `drone_task` — never `evtol_flight`. An eVTOL is the aircraft on the ramp,
+  not the inspect robot walking around it. Generic `avionics` FIND-tile class
+  (or `claims_avionics` with no subclass) is the flying-work union, not a
+  dump of ramp-walk jobs onto every SKU.
 - **R25 ✅** `product_class` ∈ {`construction`, `construction_robot`} **or**
   `claims_construction` → `construction_task` + `mobile` (homes, buildings,
   plus jobsite earthwork / layout / finishing).
@@ -140,7 +148,8 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
 | Avidbots Neo (scrubber) | autonomous scrubber | hard_floor_scrub, mobile | scrub only |
 | Carbon Robotics LaserWeeder | agricultural weeding robot, laser weeding | agriculture_task, mobile | weeding / crop / field only |
 | John Deere X Series Combine | autonomous combine harvest | agriculture_task, mobile | combine / harvest only |
-| Skydio X10 | drone / UAV | avionics_task, mobile | drone inspect / delivery / flight |
+| Skydio X10 | drone / UAV | avionics_task, drone_task, mobile | drone inspect / delivery / hangar inspect |
+| Archer Midnight | eVTOL flying car | avionics_task, evtol_flight, mobile | eVTOL vertiport routes only — not ramp walking |
 | Astroscale ELSA-d | on-orbit servicing / debris | aerospace_task, mobile | satellite servicing / debris only |
 
 ## Regression coverage

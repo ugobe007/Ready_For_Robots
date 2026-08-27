@@ -26,6 +26,13 @@ MARINE_CLASSES = frozenset({"marine", "marine_robot"})
 AVIONICS_CLASSES = frozenset(
     {"avionics", "aviation_robot", "drone", "evtol", "uav", "autonomous_aircraft"}
 )
+# Configuration splits inside avionics. Generic avionics/aviation_robot (FIND
+# tile) is the flying-work union. A named SKU class is not that union:
+# eVTOL is air-taxi flight, not Spot-like ramp walking.
+EVTOL_CLASSES = frozenset({"evtol"})
+DRONE_CLASSES = frozenset({"drone", "uav"})
+AUTONOMOUS_AIRCRAFT_CLASSES = frozenset({"autonomous_aircraft"})
+GENERIC_AVIONICS_CLASSES = frozenset({"avionics", "aviation_robot"})
 AEROSPACE_CLASSES = frozenset({"aerospace", "aerospace_robot"})
 CONSTRUCTION_CLASSES = frozenset({"construction", "construction_robot"})
 DOMAIN_WORK_CLASSES = (
@@ -383,6 +390,72 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
                 present=False,
                 derivation="explicit",
                 derived_from=[_pred, "product_class"],
+            )
+
+    # R28: avionics configurations — eVTOL flight ≠ drone inspect ≠ airplane
+    # flight ≠ hangar/airside walking. claims_avionics without a subclass is
+    # the FIND-tile union of flying work, not a dump onto every SKU.
+    specific_avionics = classes & (EVTOL_CLASSES | DRONE_CLASSES | AUTONOMOUS_AIRCRAFT_CLASSES)
+    avionics_claim = _truthy(facts, "claims_avionics")
+    generic_avionics = bool(classes & GENERIC_AVIONICS_CLASSES) or (
+        bool(avionics_claim) and not specific_avionics
+    )
+    for _key, _label, _cls, _evidence in (
+        (
+            "evtol_flight",
+            "eVTOL passenger/cargo flight",
+            EVTOL_CLASSES,
+            "evtol class — air taxi / flying-car flight, not ramp walking",
+        ),
+        (
+            "drone_task",
+            "drone inspect / delivery flight",
+            DRONE_CLASSES,
+            "drone / UAV class — aerial inspect or delivery",
+        ),
+        (
+            "autonomous_flight",
+            "autonomous airplane-like flight",
+            AUTONOMOUS_AIRCRAFT_CLASSES,
+            "autonomous_aircraft class — airplane-like IFR flight",
+        ),
+    ):
+        _hit = next((c for c in classes if c in _cls), None)
+        if _hit or generic_avionics:
+            if _hit:
+                caps[_key] = DerivedCapability(
+                    key=_key,
+                    label=_label,
+                    present=True,
+                    derivation="inferred",
+                    derived_from=["product_class"],
+                    evidence=_evidence,
+                )
+            elif classes & GENERIC_AVIONICS_CLASSES:
+                caps[_key] = DerivedCapability(
+                    key=_key,
+                    label=_label,
+                    present=True,
+                    derivation="inferred",
+                    derived_from=["product_class"],
+                    evidence="avionics class — flying-vehicle configuration union",
+                )
+            else:
+                caps[_key] = DerivedCapability(
+                    key=_key,
+                    label=_label,
+                    present=True,
+                    derivation="explicit",
+                    derived_from=["claims_avionics"],
+                    evidence=(avionics_claim or {}).get("evidence_span") or "claims_avionics",
+                )
+        else:
+            caps[_key] = DerivedCapability(
+                key=_key,
+                label=_label,
+                present=False,
+                derivation="explicit",
+                derived_from=["product_class"],
             )
 
     # R27: implement on a tractor/combine is a configuration, not a class.

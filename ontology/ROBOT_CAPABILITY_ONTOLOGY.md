@@ -41,6 +41,9 @@ tool_use`
 | `construction_task` | Construction site work | `claims_construction` \| construction class |
 | `marine_task` | Hull / port / underwater work | `claims_marine` \| marine class |
 | `avionics_task` | Drone / eVTOL / autonomous aircraft work | `claims_avionics` \| avionics / drone / eVTOL class |
+| `evtol_flight` | eVTOL passenger/cargo air-taxi flight | `product_class=evtol` (not ramp walking) |
+| `drone_task` | Drone inspect / delivery flight | `product_class` ∈ {`drone`, `uav`} |
+| `autonomous_flight` | Autonomous airplane-like flight | `product_class=autonomous_aircraft` |
 | `aerospace_task` | Satellite / orbital / space-robot work | `claims_aerospace` \| aerospace class |
 | `mining_task` | Mining / haulage | `claims_mining` |
 | `food_prep` | Food preparation / cooking | `claims_food_prep` |
