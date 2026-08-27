@@ -19,6 +19,13 @@ avionics work a drone can do — it is not the definition of the class.
 **Capability:** `avionics_task` (from `claims_avionics` or product class
 `avionics` / `aviation_robot` / `drone` / `evtol`). Empty specs stay `UNKNOWN`.
 
+**Configuration (R28):** do not dump every avionics job onto every flying
+SKU. `evtol` grounds `evtol_flight` (passenger/cargo air taxi). `drone`/`uav`
+grounds `drone_task` (aerial inspect or delivery). Hangar or airside *walking*
+around parked aircraft is inspect work for a quadruped (`inspect_route`) or
+an inspect drone (`drone_task`). It is **not** work an eVTOL flying car
+performs — the flying car is the aircraft sitting on the ramp.
+
 ## Aerospace
 
 **In class:** satellites, rockets, robots for space exploration and

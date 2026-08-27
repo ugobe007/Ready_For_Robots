@@ -71,6 +71,10 @@ REQUIREMENT_EXERCISES = {
     "mining_task": frozenset({"mining_task"}),
     "marine_task": frozenset({"marine_task"}),
     "avionics_task": frozenset({"avionics_task"}),
+    "evtol_flight": frozenset({"evtol_flight"}),
+    "drone_task": frozenset({"drone_task"}),
+    "autonomous_flight": frozenset({"autonomous_flight"}),
+    "airframe_inspect": frozenset({"inspect_route", "drone_task"}),
     "aerospace_task": frozenset({"aerospace_task"}),
     "hard_floor_scrub": frozenset({"hard_floor_scrub"}),
     "inspect_route_mobility": frozenset({"inspect_route"}),
@@ -97,6 +101,9 @@ _SIMPLE_CAP_REQ = {
     "mining_task": ("mining_task", "no grounded mining capability"),
     "marine_task": ("marine_task", "no grounded marine capability"),
     "avionics_task": ("avionics_task", "no grounded aviation capability"),
+    "evtol_flight": ("evtol_flight", "no grounded eVTOL / air-taxi flight capability"),
+    "drone_task": ("drone_task", "no grounded drone inspect/delivery capability"),
+    "autonomous_flight": ("autonomous_flight", "no grounded autonomous-airplane flight capability"),
     "aerospace_task": ("aerospace_task", "no grounded aerospace capability"),
 }
 
@@ -460,6 +467,24 @@ def _eval_requirement(
             "no grounded inspection-route capability",
         )
 
+    if rid == "airframe_inspect":
+        drone_task = _cap(caps, "drone_task")
+        if inspect.present:
+            return RequirementResult(
+                rid, label, necessity, LIKELY if inspect.derivation == "inferred" else MATCHED,
+                inspect.evidence or inspect.label,
+                derivation="inspect_from_quadruped" if inspect.derivation == "inferred" else None,
+            )
+        if drone_task.present:
+            return RequirementResult(
+                rid, label, necessity, MATCHED,
+                drone_task.evidence or drone_task.label,
+            )
+        return RequirementResult(
+            rid, label, necessity, UNMET,
+            "hangar/airside inspect is ground or aerial inspect work, not eVTOL flight",
+        )
+
     if rid == "manipulate_part":
         if manip.present:
             return RequirementResult(rid, label, necessity, MATCHED, manip.evidence or manip.label)
@@ -533,6 +558,8 @@ def _why_lines(
         ("disinfect_surfaces", "disinfect"), ("goods_to_person", "goods_to_person"),
         ("agriculture_task", "agriculture_task"), ("construction_task", "construction_task"),
         ("marine_task", "marine_task"), ("avionics_task", "avionics_task"),
+        ("evtol_flight", "evtol_flight"), ("drone_task", "drone_task"),
+        ("autonomous_flight", "autonomous_flight"),
         ("aerospace_task", "aerospace_task"),
         ("mining_task", "mining_task"),
     ):
@@ -540,8 +567,13 @@ def _why_lines(
             add(_cap(caps, _capkey).label)
     if needed & {"hard_floor_scrub"}:
         add(_cap(caps, "hard_floor_scrub").label)
-    if needed & {"inspect_route_mobility"}:
-        add(_cap(caps, "inspect_route").label)
+    if needed & {"inspect_route_mobility", "airframe_inspect"}:
+        inspect_cap = _cap(caps, "inspect_route")
+        drone_task = _cap(caps, "drone_task")
+        if inspect_cap.present:
+            add(inspect_cap.label)
+        elif drone_task.present:
+            add(drone_task.label)
     if needed & {"mobility", "indoor_navigation"} and _cap(caps, "mobile").present:
         add(_cap(caps, "mobile").label)
     if needed & {"reach_envelope"} and _cap(caps, "reach").present:
@@ -753,6 +785,36 @@ _AVIONICS_REQS = [
     {"id": "avionics_task", "label": "drone / eVTOL / autonomous aircraft task", "necessity": "required"},
     {"id": "mobility", "label": "flight or ground mobility for the aircraft", "necessity": "required"},
 ]
+# Configuration-specific avionics work. eVTOL flying cars fly routes; they do
+# not walk the ramp around parked aircraft (they ARE the parked aircraft).
+_AIRSIDE_INSPECT_REQS = [
+    {"id": "airframe_inspect", "label": "walk or fly an inspection around a parked airframe", "necessity": "required"},
+    {"id": "mobility", "label": "mobility around parked aircraft", "necessity": "required"},
+]
+_EVTOL_FLIGHT_REQS = [
+    {"id": "evtol_flight", "label": "eVTOL passenger/cargo air-taxi flight", "necessity": "required"},
+    {"id": "mobility", "label": "flight between vertiports", "necessity": "required"},
+]
+_DRONE_INSPECT_REQS = [
+    {"id": "drone_task", "label": "autonomous drone inspection flight", "necessity": "required"},
+    {"id": "mobility", "label": "flight along the inspect corridor", "necessity": "required"},
+]
+_DRONE_DELIVERY_REQS = [
+    {"id": "drone_task", "label": "drone payload delivery flight", "necessity": "required"},
+    {"id": "mobility", "label": "flight along the delivery corridor", "necessity": "required"},
+]
+_AUTONOMOUS_FLIGHT_REQS = [
+    {"id": "autonomous_flight", "label": "autonomous airplane-like flight", "necessity": "required"},
+    {"id": "mobility", "label": "flight between airports", "necessity": "required"},
+]
+_AVIONICS_JOB_REQS = {
+    "avionics_airside": _AIRSIDE_INSPECT_REQS,
+    "avionics_hangar_inspect": _AIRSIDE_INSPECT_REQS,
+    "avionics_evtol": _EVTOL_FLIGHT_REQS,
+    "avionics_drone_inspect": _DRONE_INSPECT_REQS,
+    "avionics_drone_delivery": _DRONE_DELIVERY_REQS,
+    "avionics_autonomous_flight": _AUTONOMOUS_FLIGHT_REQS,
+}
 _AEROSPACE_REQS = [
     {"id": "aerospace_task", "label": "satellite / orbital / space-robot task", "necessity": "required"},
     {"id": "mobility", "label": "on-orbit or pad mobility", "necessity": "required"},
@@ -825,6 +887,9 @@ def requirements_for_corpus_job(row: dict[str, Any]) -> list[dict[str, Any]]:
         return list(_CONSTRUCTION_REQS)
     if tape == "marine":
         return list(_MARINE_REQS)
+    job_key = (row.get("job_key") or "").strip().lower()
+    if job_key in _AVIONICS_JOB_REQS:
+        return list(_AVIONICS_JOB_REQS[job_key])
     if tape == "avionics":
         return list(_AVIONICS_REQS)
     if tape == "aerospace":
@@ -957,7 +1022,8 @@ def match_jobs_from_profile(
                 "food_prep", "beverage_prep", "surface_clean", "shelf_scan", "pallet_move",
                 "trailer_unload", "pick_pack", "sortation", "disinfect", "goods_to_person",
                 "agriculture_task", "construction_task", "mining_task",
-                "marine_task", "avionics_task", "aerospace_task",
+                "marine_task", "avionics_task", "evtol_flight", "drone_task",
+                "autonomous_flight", "aerospace_task",
                 "hard_floor_scrub", "inspect_route"):
         c = caps.get(key)
         if c and c.present:
