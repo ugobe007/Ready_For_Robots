@@ -906,23 +906,41 @@ export default function RobotJobsWorkspace() {
           return;
         }
       } catch {
-        /* listing miss or timeout — fall through to full profile */
+        /* listing miss or timeout — one composed search, not profile then search */
       }
-      const profile = await fetchRobotProfile({
+      setResearchPhase("jobs");
+      const res = await fetchRobotJobSearch({
         url: submitUrl,
+        lookupGrain: "product",
         signal: ac.signal,
-        timeoutMs: ROBOT_PROFILE_TIMEOUT_MS,
+        timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
       });
-      submissionIdRef.current = profile.robot_submission_id ?? submissionIdRef.current;
-      setCompanyName(profile.company?.name || "");
+      submissionIdRef.current =
+        res.robot_submission_id ?? submissionIdRef.current;
+      setCompanyName(
+        res.company_name || res.profile?.company?.name || "",
+      );
+      const searchProducts =
+        (res.products && res.products.length
+          ? res.products
+          : res.profile?.products) || [];
       const lineup = filterJobsLineupProducts(
-        (profile.products || []).map(p => ({
+        searchProducts.map(p => ({
           name: p.name,
-          displayClass: p.display_class,
-          description: p.description,
+          displayClass:
+            ("display_class" in p ? p.display_class : null) ||
+            ("robot_class" in p ? p.robot_class : null) ||
+            null,
+          description:
+            "description" in p && typeof p.description === "string"
+              ? p.description
+              : undefined,
         })),
       );
-      if ((profile.needs_product_choice || lineup.length > 1) && lineup.length > 1) {
+      if (
+        (res.needs_product_choice || lineup.length > 1) &&
+        lineup.length > 1
+      ) {
         setProducts(lineup);
         setSelected([]);
         setStage("select");
@@ -930,23 +948,14 @@ export default function RobotJobsWorkspace() {
       }
       const name =
         lineup[0]?.name ||
-        profile.selected_product?.name ||
-        profile.company?.name ||
+        res.profile?.selected_product?.name ||
+        res.robot_name ||
+        res.company_name ||
         "";
       const displayClass =
-        lineup[0]?.displayClass || profile.selected_product?.display_class;
-      const cls = configurationClassForLookup(displayClass);
-      setResearchPhase("jobs");
-      const res = await fetchRobotJobSearch({
-        url: submitUrl,
-        product: name || undefined,
-        assertedClass: cls || undefined,
-        lookupGrain: "product",
-        signal: ac.signal,
-        timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
-      });
-      submissionIdRef.current =
-        res.robot_submission_id ?? submissionIdRef.current;
+        lineup[0]?.displayClass ||
+        res.profile?.selected_product?.display_class ||
+        res.robot_class;
       const analysis = analysisForSelectedSku(res, name, displayClass);
       openJobsFromAnalyses([analysis], submitUrl, name ? [name] : []);
     } catch (err) {
@@ -1457,6 +1466,7 @@ export default function RobotJobsWorkspace() {
       const profile = await fetchRobotProfile({
         url: submitUrl,
         product: a.productName,
+        timeoutMs: ROBOT_PROFILE_TIMEOUT_MS,
       });
       submissionIdRef.current =
         profile.robot_submission_id ?? submissionIdRef.current;
@@ -1561,7 +1571,11 @@ export default function RobotJobsWorkspace() {
           setStage("jobs");
           return;
         }
-        const profile = await fetchRobotProfile({ url: saved.url, product });
+        const profile = await fetchRobotProfile({
+          url: saved.url,
+          product,
+          timeoutMs: ROBOT_PROFILE_TIMEOUT_MS,
+        });
         submissionIdRef.current =
           profile.robot_submission_id ?? submissionIdRef.current;
         const a = profileToAnalysis(profile);
@@ -1588,7 +1602,11 @@ export default function RobotJobsWorkspace() {
         setStage("jobs");
         return;
       }
-      const profile = await fetchRobotProfile({ url: saved.url, product });
+      const profile = await fetchRobotProfile({
+        url: saved.url,
+        product,
+        timeoutMs: ROBOT_PROFILE_TIMEOUT_MS,
+      });
       submissionIdRef.current = profile.robot_submission_id ?? submissionIdRef.current;
       // Silent: restoring on reload / auth-return must not re-fire the funnel.
       enterReview(profileToAnalysis(profile), saved.url, saved.products, {

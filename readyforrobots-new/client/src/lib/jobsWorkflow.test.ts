@@ -157,6 +157,8 @@ describe("jobsWorkflow", () => {
     expect(submitFind).not.toMatch(/enterReview/);
     expect(submitFind).toMatch(/lookupGrain: "product"/);
     expect(submitFind).not.toMatch(/lookupGrain: cls \? "robot_type" : "product"/);
+    expect(submitFind).toMatch(/fetchRobotJobSearch/);
+    expect(submitFind).not.toMatch(/fetchRobotProfile/);
     expect(workspace).toMatch(/rfr-jobs-activate-bar/);
     expect(workspace).not.toMatch(
       /enterReview\(profileToAnalysis\(profile\), submitUrl, names\)/,

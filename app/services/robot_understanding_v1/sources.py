@@ -67,12 +67,16 @@ _SPEC_ANCHOR = re.compile(
     re.I,
 )
 
-# Paths that must not enter the primary research pack
+# Paths that must not enter the primary research pack — never FETCH these.
+# Includes marketing nav (farmers/story/invest) so unknown OEM homepages
+# cannot spend the FIND budget on pages that are not robots.
 _REJECT_PATH = re.compile(
     r"/(careers?|jobs?|privacy|terms|cookie|cookies|login|signin|sign-up|signup|"
-    r"investors?|sales|cart|checkout|legal|trust-center|dsar|terms-of-service|"
+    r"investors?|invest(?:ing|ment)?|sales|cart|checkout|legal|trust-center|"
+    r"dsar|terms-of-service|"
     r"contact(?:-us)?|leadership|team|board|about(?:-us)?|company/?$|"
-    r"newsletter|subscribe|"
+    r"newsletter|subscribe|farmers?|story|stories|our-story|mission|"
+    r"home/?$|"
     # Indexes (not articles): bare blog/news hubs
     r"blog/?$|blogs/?$|news/?$|press/?$|resources/?$)"
     r"(/|$|\?)",
@@ -173,6 +177,31 @@ def classify_source_type(url: str, anchor: str = "", title: str = "") -> tuple[S
 def should_reject_url(url: str) -> bool:
     path = urlparse(url).path or "/"
     return bool(_REJECT_PATH.search(path))
+
+
+def homepage_subject_hrefs(
+    home: FetchedPage, product_name: str | None
+) -> list[tuple[str, str]]:
+    """Same-host product links already on the submitted page.
+
+    FIND must follow these instead of guessing /products/{slug} and industry
+    hubs. Guessed 404s are how unknown OEMs (Greenfield) burned ~12s twice.
+    """
+    if not product_name:
+        return []
+    found: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for url, anchor in home.links:
+        if should_reject_url(url):
+            continue
+        if not page_supports_subject(url=url, title=anchor, product_name=product_name):
+            continue
+        key = url.rstrip("/").lower().split("?")[0]
+        if key in seen:
+            continue
+        seen.add(key)
+        found.append((url, anchor))
+    return found
 
 
 def is_unusable_page(page: FetchedPage) -> bool:
@@ -331,6 +360,9 @@ def collect_source_pack(
     origin = f"{urlparse(home.final_url).scheme}://{urlparse(home.final_url).netloc}"
     candidates: list[tuple[float, str, SourceType, float, str]] = []
     slug = _product_slug(product_name) if product_name else None
+    subject_links = homepage_subject_hrefs(home, product_name)
+    # Real manufacturer product hrefs beat cargo-cult /products and /robots guesses.
+    follow_evidence_only = bool(subject_links)
 
     def _add(url: str, score: float, stype: SourceType, conf: float, hint: str) -> None:
         if should_reject_url(url):
@@ -390,7 +422,11 @@ def collect_source_pack(
     # subject/type gates below. Skipped when the homepage already links plenty.
     same_domain_links = len(home.links)
     _deadline_ok = deadline_monotonic is None or time.monotonic() < deadline_monotonic
-    if same_domain_links < _THIN_HOMEPAGE_LINKS and _deadline_ok:
+    if (
+        same_domain_links < _THIN_HOMEPAGE_LINKS
+        and _deadline_ok
+        and not follow_evidence_only
+    ):
         for sm_url, sm_anchor in discover_from_sitemap(origin, product_name=product_name, deadline_monotonic=deadline_monotonic):
             if should_reject_url(sm_url):
                 continue
@@ -404,7 +440,10 @@ def collect_source_pack(
                 score += 50
             _add(sm_url, score, stype, conf, sm_anchor)
 
-    if slug:
+    # Guessed catalog paths and industry hubs only when the homepage did not
+    # already name the product. Greenfield links /bot-25; fetching /products,
+    # /robots, /specs/{slug} is 20+ Squarespace 404s (~12s) for no new evidence.
+    if slug and not follow_evidence_only:
         for path, stype, conf in (
             (f"/product/{slug}", "product", 0.92),
             (f"/products/{slug}", "product", 0.92),
@@ -419,30 +458,31 @@ def collect_source_pack(
         ):
             _add(origin + path, _HUB_BONUS.get(stype, 0) + 55, stype, conf, path)
 
-    for hub, stype, conf in (
-        ("/solutions", "solutions", 0.85),
-        ("/products", "product", 0.88),
-        ("/product", "product", 0.85),
-        ("/robots", "product", 0.88),
-        ("/specs", "specifications", 0.95),
-        ("/specifications", "specifications", 0.95),
-        ("/datasheets", "specifications", 0.95),
-        ("/datasheet", "specifications", 0.95),
-        ("/downloads", "documentation", 0.82),
-        ("/resources/datasheets", "specifications", 0.94),
-        ("/industries", "solutions", 0.8),
-        ("/use-cases", "solutions", 0.85),
-        ("/case-studies", "case_study", 0.88),
-        ("/documentation", "documentation", 0.88),
-        ("/docs", "documentation", 0.85),
-        ("/faq", "documentation", 0.7),
-    ):
-        # Generic hubs are weak when a subject is selected (except specs)
-        if stype == "specifications":
-            bonus = 18 if not product_name else 12
-        else:
-            bonus = 6 if not product_name else -5
-        _add(origin + hub, _HUB_BONUS.get(stype, 0) + bonus, stype, conf, hub)
+    if not follow_evidence_only:
+        for hub, stype, conf in (
+            ("/solutions", "solutions", 0.85),
+            ("/products", "product", 0.88),
+            ("/product", "product", 0.85),
+            ("/robots", "product", 0.88),
+            ("/specs", "specifications", 0.95),
+            ("/specifications", "specifications", 0.95),
+            ("/datasheets", "specifications", 0.95),
+            ("/datasheet", "specifications", 0.95),
+            ("/downloads", "documentation", 0.82),
+            ("/resources/datasheets", "specifications", 0.94),
+            ("/industries", "solutions", 0.8),
+            ("/use-cases", "solutions", 0.85),
+            ("/case-studies", "case_study", 0.88),
+            ("/documentation", "documentation", 0.88),
+            ("/docs", "documentation", 0.85),
+            ("/faq", "documentation", 0.7),
+        ):
+            # Generic hubs are weak when a subject is selected (except specs)
+            if stype == "specifications":
+                bonus = 18 if not product_name else 12
+            else:
+                bonus = 6 if not product_name else -5
+            _add(origin + hub, _HUB_BONUS.get(stype, 0) + bonus, stype, conf, hub)
 
     candidates.sort(key=lambda t: (-t[0], t[1]))
     out: list[CollectedSource] = []
@@ -527,14 +567,16 @@ def collect_source_pack(
             for url, stype, conf, hint in batch:
                 found[_norm(url)] = _try_fetch(url, stype, conf, hint)
             return found
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            futs = {
-                pool.submit(_try_fetch, url, stype, conf, hint): url
-                for url, stype, conf, hint in batch
-            }
-            wait_s = None
-            if deadline_monotonic is not None:
-                wait_s = max(0.05, deadline_monotonic - time.monotonic() + 0.15)
+        pool = ThreadPoolExecutor(max_workers=workers)
+        futs = {
+            pool.submit(_try_fetch, url, stype, conf, hint): url
+            for url, stype, conf, hint in batch
+        }
+        wait_s = None
+        if deadline_monotonic is not None:
+            wait_s = max(0.05, deadline_monotonic - time.monotonic() + 0.15)
+        timed_out = False
+        try:
             try:
                 for fut in as_completed(futs, timeout=wait_s):
                     url = futs[fut]
@@ -543,9 +585,13 @@ def collect_source_pack(
                     except Exception:
                         found[_norm(url)] = None
             except TimeoutError:
+                timed_out = True
                 for fut, url in futs.items():
                     if _norm(url) not in found:
                         found[_norm(url)] = None
+        finally:
+            # Do not block FIND on leftover 404s after the budget is spent.
+            pool.shutdown(wait=not timed_out, cancel_futures=timed_out)
         return found
 
     def _take_batch(
@@ -580,10 +626,14 @@ def collect_source_pack(
         out.append(item)
 
     prefetch_limit = min(_PREFETCH_CAP, max(max_sources * 2, 8))
+    if follow_evidence_only:
+        prefetch_limit = min(prefetch_limit, max(len(subject_links), 2))
     wave = _take_batch(candidates, skip_identity=True, limit=prefetch_limit)
     fetched = _run_wave(wave)
     for _score, url, stype, conf, hint in candidates:
-        if _past_deadline() and out:
+        # Stop even when the pack is still empty — otherwise guessed 404s
+        # run sequentially for the rest of the candidate list (~2 min).
+        if _past_deadline():
             break
         if len(out) >= max_sources:
             break
@@ -598,7 +648,7 @@ def collect_source_pack(
             item = None
         _keep(url, item)
 
-    if len(out) < max_sources:
+    if len(out) < max_sources and not _past_deadline():
         product_pages = [c for c in out if c.source.source_type == "product"]
         if product_pages:
             # Prefer the subject-supporting product page as hop seed
