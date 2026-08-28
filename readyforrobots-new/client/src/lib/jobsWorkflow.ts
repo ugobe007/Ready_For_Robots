@@ -654,7 +654,7 @@ export const CRM_EMPLOYER_NAME_CLASS =
   "font-display text-lg font-bold leading-snug tracking-tight text-emerald-400 sm:text-xl";
 export const CRM_SELECT_ALL_LABEL = "Select all";
 export const CRM_KEEP_YES_CTA = "Yes, keep them";
-export const CRM_LISTING_EYEBROW = "Collected jobs";
+export const CRM_LISTING_EYEBROW = "Saved jobs";
 /** Name that fills "Save jobs for your ______." */
 export function crmSaveJobsRobotLabel(productName?: string | null): string {
   const raw = String(productName || "").replace(/\s+/g, " ").trim();

@@ -34,7 +34,6 @@ import {
 } from "@/lib/jobsWorkflow";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import JobsProcessChrome from "@/components/JobsProcessChrome";
-import JobsPstackProtocol from "@/components/JobsPstackProtocol";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
@@ -49,7 +48,7 @@ import {
   jobsCrmOfferHref,
   keepJobsOnAccount,
   openJobsCrmNextStepsForm,
-  keptRowsToMatchJobs,
+  crmDeskForCurrentRobot,
   postJobsCrmActivity,
   type JobsCrmApplication,
   type KeptJobRow,
@@ -100,7 +99,7 @@ export default function JobsCrmDesk({
 
   const snap = readJobsHandoffSnapshot();
   const [accountRows, setAccountRows] = useState<KeptJobRow[]>([]);
-  const [savedCount, setSavedCount] = useState(0);
+  const [justSavedCount, setJustSavedCount] = useState(0);
   const [showNextSteps, setShowNextSteps] = useState(() =>
     typeof window !== "undefined"
       ? isJobsCrmOfferQuery(window.location.search)
@@ -121,7 +120,6 @@ export default function JobsCrmDesk({
       .then(rows => {
         if (cancelled) return;
         setAccountRows(rows);
-        setSavedCount(rows.length);
         const apps: Record<string, JobsCrmApplication> = {};
         for (const row of rows) {
           if (row.application) apps[row.job_key] = row.application;
@@ -135,15 +133,11 @@ export default function JobsCrmDesk({
       cancelled = true;
     };
   }, [accessToken]);
-  const accountJobs = keptRowsToMatchJobs(accountRows);
-  const handoffJobs = (snap?.jobs || []).slice(0, CRM_UNLOCKED_JOBS);
-  const jobs = (accountJobs.length ? accountJobs : handoffJobs).slice(
-    0,
-    CRM_UNLOCKED_JOBS,
-  );
-  const product =
-    accountRows[0]?.robot_name || snap?.productName || "your robot";
-  const robotUrl = accountRows[0]?.robot_url || snap?.url || "";
+  const desk = crmDeskForCurrentRobot({ snap, accountRows });
+  const jobs = desk.jobs.slice(0, CRM_UNLOCKED_JOBS);
+  const product = desk.product;
+  const robotUrl = desk.robotUrl;
+  const savedCount = Math.max(justSavedCount, desk.savedCount);
   const allKeys = crmDeskJobKeys(jobs);
   const allKeySig = allKeys.join("\0");
   const [selectedKeys, setSelectedKeys] = useState<string[]>(() =>
@@ -175,7 +169,7 @@ export default function JobsCrmDesk({
       });
     }
     if (!accessToken) {
-      setSavedCount(pool.length);
+      setJustSavedCount(pool.length);
       setShowNextSteps(true);
       queueMicrotask(() => openJobsCrmNextStepsForm());
       return;
@@ -187,12 +181,14 @@ export default function JobsCrmDesk({
         robotUrl,
         submissionId,
       });
-      setSavedCount(result.saved_count);
       setAccountRows(result.jobs);
+      setJustSavedCount(
+        crmDeskForCurrentRobot({ snap, accountRows: result.jobs }).savedCount,
+      );
       setShowNextSteps(true);
       queueMicrotask(() => openJobsCrmNextStepsForm());
     } catch {
-      setSavedCount(pool.length);
+      setJustSavedCount(pool.length);
       setShowNextSteps(true);
       queueMicrotask(() => openJobsCrmNextStepsForm());
     }
@@ -264,7 +260,7 @@ export default function JobsCrmDesk({
       </p>
       {jobs.length > 0 ? (
         <p className="mt-3 font-mono text-sm uppercase tracking-[0.08em] text-emerald-300">
-          {crmCollectedCountLabel(selected.length)}
+          {crmCollectedCountLabel(selected.length, jobCount || CRM_UNLOCKED_JOBS)}
           {" · "}
           Applied {stats.applied} of {stats.total}
           {" · "}
@@ -281,9 +277,6 @@ export default function JobsCrmDesk({
           onApplyClick={openOfferForm}
           blurb={crmSaveJobsBlurb(product)}
         />
-      </div>
-      <div className="mt-4">
-        <JobsPstackProtocol compact />
       </div>
 
       {jobs.length === 0 ? (
@@ -354,7 +347,7 @@ export default function JobsCrmDesk({
               Sign in to store this offer on your account, then apply.
             </p>
           ) : null}
-          <ul className="space-y-3" aria-label="Collected jobs">
+          <ul className="space-y-3" aria-label="Saved jobs">
             {jobs.map((job, i) => {
               const card = robotJobCardFromMatch(job);
               const rec = loadJobApplyRecord(job.job_key);

@@ -10,6 +10,10 @@ import {
   jobsCrmOpenHref,
   jobsSignupHref,
 } from "@/lib/jobsWorkflow";
+import {
+  sameRobotHandoffUrl,
+  type JobsHandoffSnapshot,
+} from "@/lib/jobsHandoffSnapshot";
 import type { MatchJob } from "@/lib/robotJobMatch";
 
 export const JOBS_KEEP_JOBS_CTA = "Keep jobs";
@@ -462,6 +466,82 @@ export function keptRowsToMatchJobs(rows: KeptJobRow[]): MatchJob[] {
       } satisfies MatchJob;
     })
     .filter(job => Boolean(job.job_key));
+}
+
+function normalizeRobotName(name?: string | null): string {
+  return String(name || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+/** Kept row belongs to the FIND robot currently on the desk — never a prior SKU. */
+export function keptRowMatchesRobot(
+  row: Pick<KeptJobRow, "robot_url" | "robot_name">,
+  current: { url?: string | null; name?: string | null },
+): boolean {
+  const currentUrl = (current.url || "").trim();
+  const rowUrl = (row.robot_url || "").trim();
+  if (currentUrl) {
+    if (rowUrl) return sameRobotHandoffUrl(rowUrl, currentUrl);
+    // Old saves without a URL must not leak onto a new FIND robot.
+    return false;
+  }
+  const currentName = normalizeRobotName(current.name);
+  const rowName = normalizeRobotName(row.robot_name);
+  return Boolean(currentName && rowName && currentName === rowName);
+}
+
+export type CrmDeskForRobot = {
+  product: string;
+  robotUrl: string;
+  rows: KeptJobRow[];
+  jobs: MatchJob[];
+  savedCount: number;
+};
+
+/**
+ * Desk identity + jobs for the robot FIND just ran.
+ * A signed-in strawberry tote list must not replace Greenfield / BOT#25.
+ */
+export function crmDeskForCurrentRobot(opts: {
+  snap: JobsHandoffSnapshot | null;
+  accountRows: KeptJobRow[];
+}): CrmDeskForRobot {
+  const snap = opts.snap;
+  if (snap?.url) {
+    const current = { url: snap.url, name: snap.productName };
+    const handoffJobs = snap.jobs || [];
+    const handoffKeys = new Set(
+      handoffJobs.map(job => job.job_key).filter(Boolean),
+    );
+    const rows = opts.accountRows.filter(row => {
+      if (!keptRowMatchesRobot(row, current)) return false;
+      if (!handoffJobs.length) return false;
+      return handoffKeys.has(row.job_key);
+    });
+    const accountJobs = keptRowsToMatchJobs(rows);
+    const jobs = handoffJobs.length
+      ? accountJobs.length
+        ? accountJobs
+        : handoffJobs
+      : [];
+    return {
+      product: snap.productName || "your robot",
+      robotUrl: snap.url,
+      rows: handoffJobs.length ? rows : [],
+      jobs,
+      savedCount: handoffJobs.length ? rows.length : 0,
+    };
+  }
+  const jobs = keptRowsToMatchJobs(opts.accountRows);
+  return {
+    product: opts.accountRows[0]?.robot_name || "your robot",
+    robotUrl: opts.accountRows[0]?.robot_url || "",
+    rows: opts.accountRows,
+    jobs,
+    savedCount: opts.accountRows.length,
+  };
 }
 
 export function threadStateLabel(state: string | null | undefined): string {

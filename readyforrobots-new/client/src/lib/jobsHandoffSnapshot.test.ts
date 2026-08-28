@@ -86,4 +86,32 @@ describe("jobsHandoffSnapshot", () => {
     expect(loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.selectedCount).toBe(3);
     expect(loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.jobs).toHaveLength(3);
   });
+
+  it("overwrites a prior strawberry robot even when the new FIND has no jobs", () => {
+    saveJobsHandoffSnapshot({
+      url: "https://www.agrobot.com/",
+      productName: "strawberry robot",
+      jobs: [
+        {
+          job_key: "orchard-rows",
+          title: "Work orchard rows",
+          industry: "agriculture",
+          path: "/jobs/orchard",
+          company_name: "Sierra Orchard Co-op",
+        },
+      ],
+    });
+    saveJobsHandoffSnapshot({
+      url: "https://www.greenfieldincorporated.com/",
+      productName: "BOT#25",
+      jobs: [],
+    });
+    expect(loadJobsHandoffSnapshot("https://www.agrobot.com/")).toBeNull();
+    const greenfield = loadJobsHandoffSnapshot(
+      "https://www.greenfieldincorporated.com/",
+    );
+    expect(greenfield?.productName).toBe("BOT#25");
+    expect(greenfield?.jobs).toEqual([]);
+    expect(greenfield?.url).toBe("https://www.greenfieldincorporated.com");
+  });
 });

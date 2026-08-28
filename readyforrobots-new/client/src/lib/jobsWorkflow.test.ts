@@ -800,7 +800,8 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/jobCredentialGaps/);
     expect(desk).toMatch(/placementOutreachDraft/);
     expect(desk).toMatch(/placementAgentBrief/);
-    expect(desk).toMatch(/<JobsPstackProtocol compact/);
+    expect(desk).not.toMatch(/<JobsPstackProtocol compact/);
+    expect(desk).not.toMatch(/JobsPstackProtocol/);
     expect(desk).toMatch(/<JobsProcessChrome/);
     expect(desk).toMatch(/CRM_SIGNUP_NEXT_CTA/);
     expect(desk).toMatch(/aria-label="CRM next"/);
@@ -830,7 +831,7 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/JobsKeepStatusBar/);
     expect(desk).toMatch(/JobsCrmNextSteps/);
     expect(desk).toMatch(/JobsCrmInbox/);
-    expect(desk).toMatch(/aria-label="Collected jobs"/);
+    expect(desk).toMatch(/aria-label="Saved jobs"/);
     expect(desk).toMatch(/CRM_EMPLOYER_NAME_CLASS/);
     expect(desk).toMatch(/\{card\.jobTitle\}/);
     expect(desk).toMatch(/\{card\.employer\}/);
@@ -1020,6 +1021,7 @@ describe("jobsWorkflow", () => {
     expect(crmCollectedCountLabel(5)).toBe("5 of 5 saved jobs");
     expect(crmCollectedCountLabel(1)).toBe("1 of 5 saved jobs");
     expect(crmCollectedCountLabel(3)).toBe("3 of 5 saved jobs");
+    expect(crmCollectedCountLabel(2, 2)).toBe("2 of 2 saved jobs");
     const kept = crmToggleSelectedKey(keys, "c", false);
     expect(kept).toEqual(["a", "b", "d", "e"]);
     expect(crmActingKeepsSelection(kept, "c")).toEqual(["a", "b", "d", "e", "c"]);
@@ -1035,7 +1037,9 @@ describe("jobsWorkflow", () => {
     expect(crmSyncSelectedKeys(["old"], keys)).toEqual(keys);
     expect(CRM_EMPLOYER_NAME_CLASS).toMatch(/text-emerald-400/);
     expect(CRM_EMPLOYER_NAME_CLASS).toMatch(/font-display/);
-    expect(CRM_LISTING_EYEBROW).toBe("Collected jobs");
+    expect(CRM_LISTING_EYEBROW).toBe("Saved jobs");
+    expect(crmSaveJobsBlurb("BOT#25")).toMatch(/^Save jobs for your BOT#25 robot\./);
+    expect(crmSaveJobsBlurb("BOT#25")).not.toMatch(/strawberry/i);
     expect(crmSaveJobsBlurb("strawberry robot")).toBe(
       "Save jobs for your strawberry robot. Then apply to each job. Employers prefer PoCs but this is optional. We discover real jobs for your robot and help you connect with real decision makers.",
     );

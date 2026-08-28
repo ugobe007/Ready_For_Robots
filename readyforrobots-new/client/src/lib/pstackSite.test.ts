@@ -76,7 +76,7 @@ describe("pstackSite protocol", () => {
 });
 
 describe("pstack site chrome", () => {
-  it("renders on FIND, About, and the CRM desk without a customer chat", () => {
+  it("renders on FIND and About, not as the CRM job source", () => {
     const chrome = readFileSync(join(here, "../components/JobsPstackProtocol.tsx"), "utf8");
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
@@ -94,14 +94,16 @@ describe("pstack site chrome", () => {
     expect(chrome).not.toMatch(/AI powered/i);
 
     expect(workspace).toMatch(/<JobsPstackProtocol/);
-    expect(workspace).toMatch(/fetchRobotJobMatch/);
+    expect(workspace).toMatch(/fetchRobotJobSearch/);
+    expect(workspace).not.toMatch(/fetchRobotJobMatch/);
     expect(workspace).toMatch(/jobsCrmOpenHref/);
 
     expect(about).toMatch(/<JobsPstackProtocol aboutLink=\{false\}/);
     expect(about).toMatch(/id="jobs-protocol"|JobsPstackProtocol/);
     expect(about).not.toMatch(/\bSIGNAL\b/);
 
-    expect(desk).toMatch(/<JobsPstackProtocol compact/);
+    expect(desk).not.toMatch(/JobsPstackProtocol/);
+    expect(desk).not.toMatch(/robot-job-match/);
     expect(desk).toMatch(/jobsCrmOpenHref\(false, submissionId\)/);
 
     expect(scout).toMatch(/PSTACK_CUSTOMER_CHAT_FORBIDDEN/);
