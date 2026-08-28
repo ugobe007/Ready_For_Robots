@@ -1024,6 +1024,22 @@ export default function RobotJobsWorkspace() {
               : undefined,
         })),
       );
+      if (lineup.length === 0) {
+        setCompanyName(
+          res.company_name || res.profile?.company?.name || "",
+        );
+        setProducts([]);
+        const analysis = {
+          ...searchToAnalysis(res),
+          productName: "",
+          jobs: [],
+          jobCount: 0,
+          needsClassChoice: true,
+          matched: true,
+        };
+        openJobsFromAnalyses([analysis], submitUrl, [], research);
+        return;
+      }
       if (
         (res.needs_product_choice || lineup.length > 1) &&
         lineup.length > 1

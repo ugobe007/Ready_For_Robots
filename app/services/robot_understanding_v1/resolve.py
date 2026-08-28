@@ -14,10 +14,16 @@ from app.services.jobs_oem_listing import (
     listing_from_page,
 )
 from app.services.oem_sku_discover import (
+    classify_href_candidate,
+    href_is_vehicle_path,
     is_junk_sku_name,
     is_site_chrome_name,
     is_site_chrome_slug,
+    jsonld_product_names,
     looks_like_named_sku,
+    looks_like_vehicle_model,
+    name_is_proven_product,
+    trademark_product_names,
 )
 from app.services.robot_understanding_v1.fetch import FetchedPage
 from app.services.robot_understanding_v1.models import RobotCompany, RobotProduct
@@ -633,7 +639,11 @@ def resolve_identity(
     """
     domain = _root_domain(home.final_url or submitted_url)
     catalog = lookup_vendor_by_url(submitted_url) or lookup_vendor_by_url(home.final_url)
-    catalog_names = index_robot_names(catalog) if catalog else []
+    catalog_names = []
+    if catalog:
+        from app.services.jobs_oem_listing import listing_from_catalog
+
+        catalog_names = [str(row["name"]) for row in listing_from_catalog(catalog) if row.get("name")]
     # Discover product candidates first so the company step can enforce the
     # negative invariant (product string ≠ company unless org evidence).
     discovered = _discover_product_names(home, product_hint=product_hint)
@@ -809,6 +819,12 @@ def _href_slug_is_product(slug: str) -> bool:
     s = (slug or "").strip().lower()
     if not s or is_site_chrome_slug(s) or s in _PRODUCT_HREF_NOISE or s in _CATEGORY_HUB_SLUGS:
         return False
+    if classify_href_candidate(f"https://example.invalid/{s}", s) in {
+        "chrome",
+        "hub",
+        "vehicle",
+    }:
+        return False
     if _LOCALE_PRODUCT_LABEL.fullmatch(s):
         return False
     if looks_like_named_sku(slug) or looks_like_named_sku(_display_from_slug(slug)):
@@ -819,6 +835,19 @@ def _href_slug_is_product(slug: str) -> bool:
         if re.search(r"\d", s):
             return True
         parts = [p for p in s.split("-") if p]
+        if parts and parts[0] in {
+            "join",
+            "find",
+            "sign",
+            "log",
+            "get",
+            "contact",
+            "book",
+            "see",
+            "learn",
+            "try",
+        }:
+            return False
         # Named models with a short suffix (matradee-l, dog-w), not mobile-robots.
         if (
             len(parts) == 2
@@ -1295,6 +1324,12 @@ def _display_from_slug(slug: str) -> str:
 
 def _sku_from_product_href(url: str) -> str | None:
     """SKU from a manufacturer product path, or None if the path is generic."""
+    if href_is_vehicle_path(url) or classify_href_candidate(url) in {
+        "chrome",
+        "hub",
+        "vehicle",
+    }:
+        return None
     path = (urlparse(url).path or "").rstrip("/")
     match = _PRODUCT_HREF.search(path)
     if match:
@@ -1518,6 +1553,11 @@ def _discover_product_names(
     for name, n in _named_robots_from_prose(blob, blocked=blocked).items():
         counts[name] = counts.get(name, 0) + n
 
+    for n in jsonld_product_names(home.html or ""):
+        counts[n] = counts.get(n, 0) + 4
+    for n in trademark_product_names(blob):
+        counts[n] = counts.get(n, 0) + 3
+
     if product_hint:
         hint = product_hint.strip()
         if hint:
@@ -1538,6 +1578,24 @@ def _discover_product_names(
             if not (product_hint and name.lower() == product_hint.strip().lower()):
                 continue
         if _is_noise_product_name(name):
+            continue
+        linked_product = False
+        for url, anchor in home.links:
+            href_name = _href_product_name(url, anchor)
+            if not href_name or _name_key(href_name) != _name_key(name):
+                continue
+            if classify_href_candidate(url, anchor) == "product":
+                linked_product = True
+                break
+        if looks_like_vehicle_model(
+            name, text=blob, title=home.title or "", links=home.links
+        ):
+            linked_product = False
+        if not linked_product and not name_is_proven_product(
+            name,
+            text=blob,
+            html=home.html or "",
+        ):
             continue
         out.append(name)
         if len(out) >= _MAX_DISCOVERED_PRODUCTS * 2:

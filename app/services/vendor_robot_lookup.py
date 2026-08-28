@@ -79,6 +79,10 @@ JUNK_LOOKUP_HOSTS = frozenset(
         "apple.com",
         "alibaba.com",
         "baidu.com",
+        # Vehicle OEM homepages — cars/investor pages are not FIND robots.
+        # Iron/humanoid only via live evidence on a robot page, never this host.
+        "xpeng.com",
+        "xiaopeng.com",
     }
 )
 
