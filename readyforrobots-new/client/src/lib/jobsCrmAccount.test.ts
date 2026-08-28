@@ -105,6 +105,8 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(status).toMatch(/data-jobs-keep-status/);
     expect(status).toMatch(/keepJobsStatusBar/);
     expect(desk).toMatch(/JobsKeepStatusBar/);
+    expect(desk).toMatch(/crmSaveJobsBlurb\(product\)/);
+    expect(desk).toMatch(/blurb=\{crmSaveJobsBlurb/);
     expect(desk).toMatch(/keepTheseJobsPrompt/);
     expect(desk).toMatch(/CRM_KEEP_YES_CTA/);
     expect(desk).toMatch(/type="submit"/);
@@ -116,12 +118,15 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(desk).not.toMatch(/Keep these/);
     expect(desk).toMatch(/JOBS_APPLY_SEQUENCE/);
     expect(next).toMatch(/JOBS_APPLY_SEQUENCE/);
-    expect(status).toMatch(/JOBS_APPLY_SEQUENCE/);
+    expect(status).toMatch(/blurb \|\| JOBS_APPLY_SEQUENCE/);
+    expect(status).toMatch(/blurb\?: string/);
     expect(desk).toMatch(/jobsCrmOfferHref/);
     expect(desk).toMatch(/JOBS_APPLY_NEXT_CTA/);
     expect(desk).toMatch(/JobsCrmNextSteps/);
     expect(desk).toMatch(/JobsCrmInbox/);
     expect(desk).toMatch(/onCrmDesk/);
+    expect(next).toMatch(/crmSaveJobsBlurb\(robotName\)/);
+    expect(next).not.toMatch(/JOBS_NEXT_STEPS_HINT/);
     expect(next).toMatch(/Robot name/);
     expect(next).toMatch(/JOBS_MODEL_SELECT_LABEL/);
     expect(next).toMatch(/JOBS_PROPOSED_PRICE_LABEL/);

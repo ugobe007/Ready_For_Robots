@@ -6,7 +6,6 @@ import {
   JOBS_DOCS_HINT,
   JOBS_MODEL_SELECT_HINT,
   JOBS_MODEL_SELECT_LABEL,
-  JOBS_NEXT_STEPS_HINT,
   JOBS_PROPOSED_PRICE_HINT,
   JOBS_PROPOSED_PRICE_LABEL,
   applyJobOnAccount,
@@ -22,7 +21,7 @@ import {
   JOBS_POC_PREFER_HINT,
   JOBS_POC_SKIP_CTA,
 } from "@/lib/jobsApply";
-import { JOBS_EYEBROW_CLASS } from "@/lib/jobsWorkflow";
+import { JOBS_EYEBROW_CLASS, crmSaveJobsBlurb } from "@/lib/jobsWorkflow";
 import type { MatchJob } from "@/lib/robotJobMatch";
 import { robotJobCardFromMatch } from "@/lib/robotJobCard";
 
@@ -121,7 +120,7 @@ export default function JobsCrmNextSteps({
         Offer for {card.jobTitle}
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-slate-300">
-        {JOBS_NEXT_STEPS_HINT}
+        {crmSaveJobsBlurb(robotName)}
       </p>
 
       <label className="mt-6 block">

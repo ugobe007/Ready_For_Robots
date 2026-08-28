@@ -620,8 +620,23 @@ export const CRM_EMPLOYER_NAME_CLASS =
 export const CRM_SELECT_ALL_LABEL = "Select all";
 export const CRM_KEEP_YES_CTA = "Yes, keep them";
 export const CRM_LISTING_EYEBROW = "Collected jobs";
-export const CRM_INSPECT_HINT =
-  "Inspect a collected egg for the Job Card. Place this job when you are ready. The others stay in the basket.";
+/** Name that fills "Save jobs for your ______." */
+export function crmSaveJobsRobotLabel(productName?: string | null): string {
+  const raw = String(productName || "").replace(/\s+/g, " ").trim();
+  if (!raw || /^your robot$/i.test(raw)) return "robot";
+  if (/\brobots?\b/i.test(raw)) return raw;
+  return `${raw} robot`;
+}
+
+export function crmSaveJobsBlurb(productName?: string | null): string {
+  return (
+    `Save jobs for your ${crmSaveJobsRobotLabel(productName)}. ` +
+    "Then apply to each job. Employers prefer PoCs but this is optional. " +
+    "We discover real jobs for your robot and help you connect with real decision makers."
+  );
+}
+
+export const CRM_INSPECT_HINT = crmSaveJobsBlurb();
 export const CRM_PLACE_EGG_HINT =
   "Place this job hatches a collected egg. The rest stay in the basket.";
 export const CRM_SIGNUP_NEXT_CTA = "Sign up to open CRM →";
@@ -632,11 +647,10 @@ export const CRM_LEAVE_HINT =
 export const CRM_EMPTY_FIND_HINT =
   "No jobs in CRM yet. Find jobs for your robot, keep the rows checked, then Open CRM.";
 export const CRM_PAGE_HEADLINE = "CRM";
-export const CRM_PAGE_NEXT =
-  "Jobs you keep stay jobs. Collect several, inspect one, then quote the monthly rental you will charge and Place this job. We do not invent a number.";
+export const CRM_PAGE_NEXT = crmSaveJobsBlurb();
 export const CRM_HOW_TO_STEPS = [
   "Sign in to save the jobs you checked. The desk is those jobs — not a SIGNAL buyer list.",
-  "Collect several jobs (up to 5). Inspect an egg, then Place this job when you are ready.",
+  "Save jobs for your robot. Then apply to each job. Employers prefer PoCs but this is optional.",
   "Follow up after apply. Export if you must; native CRM is the default.",
 ] as const;
 export const CRM_SUBHEAD_CLASS =
