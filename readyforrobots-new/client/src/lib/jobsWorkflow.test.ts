@@ -12,6 +12,7 @@ import {
   JOBS_NEXT_CTA,
   JOBS_NEXT_HINT,
   JOBS_PLACE_CTA,
+  JOBS_SAVE_TO_CRM_HINT,
   JOBS_PROCESS_STEPS,
   JOBS_PRODUCT_CAP_FREE,
   JOBS_PRODUCT_CAP_PAID,
@@ -90,7 +91,6 @@ import {
   CRM_SELECT_ALL_LABEL,
   CRM_LISTING_EYEBROW,
   CRM_INSPECT_HINT,
-  CRM_PLACE_EGG_HINT,
   jobsSignupHref,
   jobsCrmOpenHref,
   jobsCrmHasRestore,
@@ -120,6 +120,7 @@ import {
   showSignalPipelineNav,
   showJobsSiteChrome,
   armJobsWorkspaceRestore,
+  RAIL_STEP_HINT,
 } from "./jobsWorkflow";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -702,6 +703,12 @@ describe("jobsWorkflow", () => {
     expect(JOBS_NEXT_HINT).toMatch(/start checked/i);
     expect(JOBS_NEXT_HINT).toMatch(/dump into CRM/i);
     expect(JOBS_NEXT_HINT).not.toMatch(/buyer/i);
+    expect(JOBS_NEXT_HINT).not.toMatch(/collect jobs/i);
+    expect(JOBS_SAVE_TO_CRM_HINT).not.toMatch(/SIGNAL buyer list/i);
+    expect(JOBS_SAVE_TO_CRM_HINT).not.toMatch(/OEM roster/i);
+    expect(RAIL_STEP_HINT.pipeline).not.toMatch(/inspect an egg/i);
+    expect(RAIL_STEP_HINT.pipeline).not.toMatch(/collect jobs/i);
+    expect(RAIL_STEP_HINT.pipeline).toMatch(/save the jobs you checked/i);
     expect(JOBS_PLACE_CTA).toBe("Activate job list →");
     expect(workspace).toMatch(/JOBS_NEXT_CTA/);
     expect(workspace).toMatch(/JobsProcessNav/);
@@ -818,7 +825,10 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/CRM_EMPLOYER_NAME_CLASS/);
     expect(desk).toMatch(/\{card\.jobTitle\}/);
     expect(desk).toMatch(/\{card\.employer\}/);
-    expect(desk).toMatch(/Inspecting this egg/);
+    expect(desk).toMatch(/This saved job/);
+    expect(desk).not.toMatch(/Inspecting this egg/);
+    expect(desk).not.toMatch(/Place this collected egg/);
+    expect(desk).not.toMatch(/CRM_PLACE_EGG_HINT/);
     expect(desk).toMatch(/JOBS_POC_SKIP_CTA/);
     expect(desk).toMatch(/JOBS_POC_PREFER_HINT/);
     expect(desk).toMatch(/Your move:/);
@@ -986,7 +996,7 @@ describe("jobsWorkflow", () => {
     expect(headerNav).not.toMatch(/max-sm:hidden/);
   });
 
-  it("lets the desk keep all 5 collected jobs and count eggs in the basket", () => {
+  it("lets the desk keep all 5 saved jobs and count them on the desk", () => {
     const keys = ["a", "b", "c", "d", "e"];
     expect(crmDeskJobKeys(keys.map(job_key => ({ job_key })))).toEqual(keys);
     expect(crmSelectAllKeys(keys)).toEqual(keys);
@@ -998,9 +1008,9 @@ describe("jobsWorkflow", () => {
     expect(keepTheseJobsPrompt(1)).toBe("Keep 1 job?");
     expect(keepTheseJobsPrompt(0)).toBe("Keep 0 jobs?");
     expect(CRM_KEEP_YES_CTA).toBe("Yes, keep them");
-    expect(crmCollectedCountLabel(5)).toBe("5 of 5 eggs in the basket");
-    expect(crmCollectedCountLabel(1)).toBe("1 of 5 eggs in the basket");
-    expect(crmCollectedCountLabel(3)).toBe("3 of 5 eggs in the basket");
+    expect(crmCollectedCountLabel(5)).toBe("5 of 5 saved jobs");
+    expect(crmCollectedCountLabel(1)).toBe("1 of 5 saved jobs");
+    expect(crmCollectedCountLabel(3)).toBe("3 of 5 saved jobs");
     const kept = crmToggleSelectedKey(keys, "c", false);
     expect(kept).toEqual(["a", "b", "d", "e"]);
     expect(crmActingKeepsSelection(kept, "c")).toEqual(["a", "b", "d", "e", "c"]);
@@ -1030,12 +1040,29 @@ describe("jobsWorkflow", () => {
     expect(crmSaveJobsBlurb("your robot")).toMatch(/^Save jobs for your robot\./);
     expect(CRM_INSPECT_HINT).toBe(crmSaveJobsBlurb());
     expect(CRM_INSPECT_HINT).not.toMatch(/Inspect a collected egg/i);
-    expect(CRM_PLACE_EGG_HINT).toMatch(/hatches a collected egg/i);
+    expect(CRM_HOW_TO_STEPS[0]).toBe(
+      "Sign in to save the jobs you checked. Then apply from this desk.",
+    );
+    expect(CRM_HOW_TO_STEPS[1]).toBe(
+      "Save jobs for your robot. Then apply to each job. Employers prefer PoCs but this is optional.",
+    );
+    expect(CRM_HOW_TO_STEPS[2]).toBe(
+      "Follow up after apply. Export if you must; native CRM is the default.",
+    );
+    const howTo = CRM_HOW_TO_STEPS.join(" ");
+    expect(howTo).not.toMatch(/SIGNAL/i);
+    expect(howTo).not.toMatch(/OEM roster/i);
+    expect(howTo).not.toMatch(/inspect an egg/i);
+    expect(howTo).not.toMatch(/collect jobs/i);
     expect(CRM_HOW_TO_STEPS[1]).toMatch(/Save jobs for your robot/i);
     expect(CRM_HOW_TO_STEPS[1]).toMatch(/Then apply to each job/i);
     expect(CRM_HOW_TO_STEPS[1]).not.toMatch(/Inspect an egg/i);
     expect(CRM_PAGE_NEXT).toBe(crmSaveJobsBlurb());
     expect(CRM_PAGE_NEXT).not.toMatch(/Collect several/i);
+    const workflow = readFileSync(join(here, "./jobsWorkflow.ts"), "utf8");
+    expect(workflow).not.toMatch(/CRM_PLACE_EGG_HINT/);
+    expect(workflow).not.toMatch(/hatches a collected egg/i);
+    expect(workflow).not.toMatch(/not a SIGNAL buyer list/i);
     const desk = readFileSync(
       join(here, "../components/JobsCrmDesk.tsx"),
       "utf8",
@@ -1350,6 +1377,9 @@ describe("jobsWorkflow", () => {
     expect(PIPELINE_PAGE_NEXT).toMatch(/live list/i);
     expect(CRM_HEADLINE_CLASS).toMatch(/text-emerald-400/);
     expect(CRM_HOW_TO_STEPS).toHaveLength(3);
+    expect(CRM_HOW_TO_STEPS[0]).toMatch(/Sign in to save the jobs you checked/i);
+    expect(CRM_HOW_TO_STEPS[0]).toMatch(/Then apply from this desk/i);
+    expect(CRM_HOW_TO_STEPS[0]).not.toMatch(/SIGNAL/i);
     expect(CRM_HOW_TO_STEPS[2]).toMatch(/apply/i);
     expect(CRM_WATCH_OPT_IN_LABEL).toMatch(/email me when these jobs change/i);
     expect(CRM_WATCH_FREE_HINT).toMatch(/free watches 1 robot/i);
