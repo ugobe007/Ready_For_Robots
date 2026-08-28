@@ -330,8 +330,52 @@ def test_compose_does_not_cache_low_coverage(monkeypatch):
             "robot_class": None,
         },
     )
-    compose_robot_job_search("https://www.1x.tech/neo")
-    assert get_cached_profile("https://www.1x.tech/neo", None) is None
+def test_chrome_identity_is_worth_caching():
+    chrome = {
+        "company": {"name": "Agtonomy", "primary_domain": "agtonomy.com"},
+        "products": [],
+        "selected_product": None,
+        "needs_product_choice": False,
+        "facts": [],
+        "sources": [{"url": "https://www.agtonomy.com/", "source_type": "homepage"}],
+        "coverage_level": "low",
+        "profile_confidence": "C",
+        "notes": ["No named product resolved from homepage evidence"],
+    }
+    from app.services.robot_profile_cache import profile_is_chrome_identity
+
+    assert profile_is_chrome_identity(chrome) is True
+    assert profile_is_worth_caching(chrome) is True
+    set_cached_profile("https://www.agtonomy.com/", None, chrome)
+    hit = get_cached_profile("https://agtonomy.com/", None)
+    assert hit is not None
+    assert hit["company"]["name"] == "Agtonomy"
+
+
+def test_compose_reuses_chrome_identity_cache(monkeypatch):
+    """Second Agtonomy submit must not recrawl hubs."""
+    chrome = {
+        "company": {"name": "Agtonomy", "primary_domain": "agtonomy.com"},
+        "products": [],
+        "selected_product": None,
+        "needs_product_choice": False,
+        "facts": [],
+        "sources": [{"url": "https://www.agtonomy.com/", "source_type": "homepage"}],
+        "coverage_level": "low",
+        "profile_confidence": "C",
+        "notes": ["Homepage is site chrome — skipped hub crawl"],
+        "class_options": [],
+    }
+    set_cached_profile("https://www.agtonomy.com/", None, chrome)
+    built = MagicMock()
+    monkeypatch.setattr("app.services.robot_job_search.build_robot_profile", built)
+    monkeypatch.setattr("app.services.robot_job_search.assert_public_http_url", lambda u: u)
+    out = compose_robot_job_search("https://www.agtonomy.com/")
+    built.assert_not_called()
+    assert out["needs_class_choice"] is True
+    assert out["state"] == "qualify_robot"
+    assert out["job_count"] == 0
+    assert out["timings"]["cached"] is True
 
 
 def test_compose_robot_type_skips_sku_scrape(monkeypatch):

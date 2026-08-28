@@ -183,6 +183,37 @@ def should_reject_url(url: str) -> bool:
     return bool(_REJECT_PATH.search(path))
 
 
+def homepage_has_product_hrefs(home: FetchedPage) -> bool:
+    """True when the submitted page already names a product URL.
+
+    Chrome/nav/hub links do not count. Agtonomy's Next.js shell links
+    /about /news /faq — that is not a SKU, and must not start a hub crawl.
+    """
+    from app.services.oem_sku_discover import classify_href_candidate
+
+    for url, anchor in home.links or []:
+        if should_reject_url(url):
+            continue
+        if classify_href_candidate(url, anchor or "") == "product":
+            return True
+    return False
+
+
+def homepage_is_chrome_only(
+    home: FetchedPage, *, product_name: str | None = None
+) -> bool:
+    """JS shell / marketing nav with no product URL — fail fast, show the picker.
+
+    A named SKU hunt may still follow hubs. Incomplete identity is honest;
+    do not invent a Handle-class chrome SKU while waiting on /products 404s.
+    """
+    if (product_name or "").strip():
+        return False
+    if getattr(home, "fetch_degraded", False) and not (home.text or "").strip():
+        return True
+    return not homepage_has_product_hrefs(home)
+
+
 def homepage_subject_hrefs(
     home: FetchedPage, product_name: str | None
 ) -> list[tuple[str, str]]:
@@ -360,6 +391,12 @@ def collect_source_pack(
         # Challenge / empty interstitial — do not fan out to /adam, sitemap, or
         # Wayback copies of every hub (that is how Richtech took ~90s).
         return []
+
+    if homepage_is_chrome_only(home, product_name=product_name):
+        # Nav-only / JS homepage. Guessed /products and sitemap 404s are how
+        # Agtonomy sat on a spinner before "identity not fully verified".
+        wrapped = collected_from_page(home)
+        return [wrapped] if wrapped else []
 
     origin = f"{urlparse(home.final_url).scheme}://{urlparse(home.final_url).netloc}"
     candidates: list[tuple[float, str, SourceType, float, str]] = []

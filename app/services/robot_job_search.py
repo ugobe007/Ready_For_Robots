@@ -10,7 +10,11 @@ import logging
 import time
 from typing import Any
 
-from app.services.robot_profile_cache import get_cached_profile, set_cached_profile
+from app.services.robot_profile_cache import (
+    get_cached_profile,
+    profile_is_chrome_identity,
+    set_cached_profile,
+)
 from app.services.robot_requirement_match import match_jobs_from_profile
 from app.services.robot_understanding_v1 import build_robot_profile
 from app.services.robot_url_safety import assert_public_http_url
@@ -38,11 +42,16 @@ def profile_is_research_complete(profile: dict[str, Any] | None) -> bool:
 
 
 def profile_is_worth_caching(profile: dict[str, Any] | None) -> bool:
-    """Do not pin a 6-hour miss on a thin / low-coverage profile.
+    """Do not pin a 6-hour miss on a thin / low-coverage *product* profile.
 
     1X NEO's first pass extracted payload + IP only. Caching that C/low
     profile made every retry return insufficient evidence until TTL expired.
+
+    Chrome identity (no SKU, class picker next) is cached so Agtonomy-class
+    JS shells are not recrawled on every submit.
     """
+    if profile_is_chrome_identity(profile):
+        return True
     if not profile_is_research_complete(profile):
         return False
     assert isinstance(profile, dict)

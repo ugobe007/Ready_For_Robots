@@ -34,6 +34,7 @@ from app.services.robot_understanding_v1.sources import (
     CollectedSource,
     collect_source_pack,
     collected_from_page,
+    homepage_is_chrome_only,
 )
 from app.services.robot_url_safety import assert_public_http_url, normalize_product_url
 from app.services.vendor_robot_lookup import (
@@ -235,6 +236,21 @@ def build_robot_profile(
         if timings is not None:
             timings["sources_ms"] = 0
             timings["source_strategy"] = "blocked"
+    elif homepage_is_chrome_only(
+        home, product_name=selected.name if selected else product_name
+    ):
+        # Chrome/JS homepage, no product URL — skip sitemap and guessed hubs.
+        collected = []
+        home_src = collected_from_page(home)
+        if home_src:
+            collected.append(home_src)
+        if timings is not None:
+            timings["sources_ms"] = int((time.perf_counter() - t_sources) * 1000)
+            timings["source_strategy"] = "chrome"
+        notes_extra.append(
+            "Homepage is site chrome (JS shell / nav only) — skipped hub crawl; "
+            "class picker is next. Do not invent a SKU."
+        )
     else:
         collected = collect_source_pack(
             home,
@@ -251,7 +267,7 @@ def build_robot_profile(
             c.source.product_id = selected.id
 
     facts = extract_facts_from_sources(collected, subject=subject)
-    if not any(
+    if selected and not any(
         f.predicate == "product_class" and f.epistemic not in ("unknown", "contradicted")
         for f in facts
     ):

@@ -93,9 +93,40 @@ def _store_cached_profile(url: str, product: str | None, payload: dict[str, Any]
             _mem.pop(oldest, None)
 
 
+def profile_is_chrome_identity(payload: dict[str, Any] | None) -> bool:
+    """Unknown OEM homepage with no proven SKU — cache so FIND does not recrawl.
+
+    Distinct from a thin *product* profile (1X NEO): those must not pin a
+    6-hour low-coverage miss. Chrome identity is company + empty products.
+    Bot-challenge empties stay uncached.
+    """
+    if not isinstance(payload, dict):
+        return False
+    company = payload.get("company") or {}
+    if not isinstance(company, dict) or not str(company.get("name") or "").strip():
+        return False
+    if payload.get("needs_product_choice") and (payload.get("products") or []):
+        return False
+    named = [
+        p
+        for p in (payload.get("products") or [])
+        if isinstance(p, dict) and str(p.get("name") or "").strip()
+    ]
+    if named or payload.get("selected_product"):
+        return False
+    notes = " ".join(str(n) for n in (payload.get("notes") or [])).lower()
+    if "bot challenge" in notes:
+        return False
+    if "degraded" in notes and "chrome" not in notes:
+        return False
+    return True
+
+
 def _profile_is_cacheable(payload: dict[str, Any]) -> bool:
     """Do not pin a 6-hour miss when the OEM host challenged and we got nothing."""
     if payload.get("needs_product_choice") and (payload.get("products") or []):
+        return True
+    if profile_is_chrome_identity(payload):
         return True
     if (payload.get("coverage_level") or "").lower() == "low":
         return False
