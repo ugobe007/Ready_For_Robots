@@ -10,7 +10,6 @@ import {
   CRM_EMPTY_FIND_HINT,
   CRM_LEAVE_HINT,
   CRM_LISTING_EYEBROW,
-  CRM_PLACE_EGG_HINT,
   CRM_SIGNUP_NEXT_CTA,
   CRM_UNLOCKED_JOBS,
   CRM_WALL_LEAD,
@@ -497,7 +496,7 @@ function CollectedJobInspect({ job }: { job: MatchJob }) {
   const card = robotJobCardFromMatch(job);
   return (
     <div>
-      <p className={`${eyebrow} text-slate-400`}>Inspecting this egg</p>
+      <p className={`${eyebrow} text-slate-400`}>This saved job</p>
       <dl className="mt-3 grid gap-2 text-[13px] leading-snug text-slate-200">
         <div>
           <dt className={eyebrow}>Employer</dt>
@@ -700,7 +699,7 @@ function ApplyPanel({
       id="jobs-apply"
       className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-6 sm:px-6"
     >
-      <p className={`${eyebrow} text-slate-400`}>Place this collected egg</p>
+      <p className={`${eyebrow} text-slate-400`}>Place this job</p>
       <p className={`mt-2 ${CRM_EMPLOYER_NAME_CLASS}`}>
         {card.employer || "This employer"}
       </p>
@@ -714,8 +713,6 @@ function ApplyPanel({
       {modelLine ? (
         <p className="mt-2 font-mono text-sm text-slate-400">{modelLine}</p>
       ) : null}
-      <p className="mt-2 text-sm text-slate-500">{CRM_PLACE_EGG_HINT}</p>
-
       {lane === "pack" ? (
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-slate-400">
           {gaps.find(g => g.id === "model_pack")?.howToFix}

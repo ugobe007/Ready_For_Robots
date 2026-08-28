@@ -637,8 +637,6 @@ export function crmSaveJobsBlurb(productName?: string | null): string {
 }
 
 export const CRM_INSPECT_HINT = crmSaveJobsBlurb();
-export const CRM_PLACE_EGG_HINT =
-  "Place this job hatches a collected egg. The rest stay in the basket.";
 export const CRM_SIGNUP_NEXT_CTA = "Sign up to open CRM →";
 export const CRM_WALL_LEAD =
   "Save these jobs to your CRM. Sign up to open the desk. You can still go back to Job Cards or FIND without an account.";
@@ -649,7 +647,7 @@ export const CRM_EMPTY_FIND_HINT =
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT = crmSaveJobsBlurb();
 export const CRM_HOW_TO_STEPS = [
-  "Sign in to save the jobs you checked. The desk is those jobs — not a SIGNAL buyer list.",
+  "Sign in to save the jobs you checked. Then apply from this desk.",
   "Save jobs for your robot. Then apply to each job. Employers prefer PoCs but this is optional.",
   "Follow up after apply. Export if you must; native CRM is the default.",
 ] as const;
@@ -741,7 +739,7 @@ export function jobsListHint(opts: {
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
 export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
-  "Checking a job dumps it into CRM. Open CRM is step 03 — sign in to save the desk, then quote, Place this job, follow-up. Not a SIGNAL buyer list.";
+  "Checking a job dumps it into CRM. Open CRM is step 03. Sign in to save the desk, then apply and follow up.";
 export const JOBS_KEEP_LABEL = "Keep";
 export const JOBS_SKIP_LABEL = "Skip";
 
@@ -838,7 +836,7 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = JOBS_SAVE_TO_CRM_CTA;
 export const JOBS_NEXT_HINT =
-  "All five start checked and dump into CRM. Uncheck any you do not want. Open CRM is step 03 — sign in to keep the desk, collect jobs, then Place this job.";
+  "All five start checked and dump into CRM. Uncheck any you do not want. Open CRM is step 03. Sign in to keep the desk, save jobs, then apply.";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
@@ -1149,7 +1147,7 @@ export function crmCollectedCountLabel(
   cap = CRM_UNLOCKED_JOBS,
 ): string {
   const n = Math.min(Math.max(0, collected), cap);
-  return `${n} of ${cap} eggs in the basket`;
+  return `${n} of ${cap} saved jobs`;
 }
 
 export function defaultCheckedJobKeys<T extends { job_key: string }>(
@@ -1169,7 +1167,7 @@ export const RAIL_STEP_HINT = {
   find: FIND_JOBS_HOME_SUBHEAD,
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
   jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked into CRM. Several robots show one each — run each SKU by itself, then Open CRM.",
-  pipeline: "CRM is step 03: collect jobs, inspect an egg, quote the rental you will charge, Place this job.",
+  pipeline: "CRM is step 03: save the jobs you checked, then apply to each job.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */
