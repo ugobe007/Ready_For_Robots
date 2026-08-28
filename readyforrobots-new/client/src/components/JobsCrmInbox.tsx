@@ -16,6 +16,7 @@ import {
   type JobsCrmApplication,
 } from "@/lib/jobsCrmAccount";
 import { JOBS_EYEBROW_CLASS } from "@/lib/jobsWorkflow";
+import PocVideoWatch from "@/components/PocVideoWatch";
 
 export default function JobsCrmInbox({
   applicationId,
@@ -114,6 +115,10 @@ export default function JobsCrmInbox({
           Specs attached: {app.documents.map(doc => doc.filename).join(", ")}
         </p>
       ) : null}
+      {app.poc_evidence ? (
+        <p className="mt-2 text-sm text-slate-300">{app.poc_evidence}</p>
+      ) : null}
+      <PocVideoWatch url={app.poc_video_url} />
       {!app.can_send ? (
         <p className="mt-2 text-sm text-amber-200/90">
           {app.no_email_reason ||

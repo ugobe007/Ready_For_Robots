@@ -60,6 +60,7 @@ class ApplyBody(BaseModel):
     selected_models: list[str] = Field(default_factory=list)
     monthly_price: str = Field(..., min_length=1, max_length=160)
     poc_evidence: Optional[str] = None
+    poc_video_url: Optional[str] = Field(default=None, max_length=2000)
     poc_skipped: bool = False
     job: Optional[dict[str, Any]] = None
     document_ids: list[str] = Field(default_factory=list)
@@ -148,6 +149,7 @@ def post_apply(
             selected_models=body.selected_models,
             monthly_price=body.monthly_price,
             poc_evidence=body.poc_evidence or "",
+            poc_video_url=body.poc_video_url or "",
             poc_skipped=body.poc_skipped,
             job=body.job,
             document_ids=body.document_ids,

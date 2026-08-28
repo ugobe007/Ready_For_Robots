@@ -342,6 +342,8 @@ def employer_public_payload(db: Session, row: JobApplication) -> dict[str, Any]:
         "robot_name": row.robot_name,
         "selected_models": row.selected_models or [],
         "monthly_price": row.monthly_price,
+        "poc_evidence": row.poc_evidence,
+        "poc_video_url": getattr(row, "poc_video_url", None),
         "status": status,
         "interview_at": row.interview_at.isoformat() if row.interview_at else None,
         "interview_mode": row.interview_mode,

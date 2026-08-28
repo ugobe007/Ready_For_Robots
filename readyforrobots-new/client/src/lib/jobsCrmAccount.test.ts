@@ -131,6 +131,11 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(next).toMatch(/JOBS_MODEL_SELECT_LABEL/);
     expect(next).toMatch(/JOBS_PROPOSED_PRICE_LABEL/);
     expect(next).toMatch(/PoC proof if available/);
+    expect(next).toMatch(/JOBS_POC_VIDEO_LABEL/);
+    expect(next).toMatch(/JOBS_POC_VIDEO_SCRIPT_HEADING/);
+    expect(next).toMatch(/pocVideoScriptBeats/);
+    expect(next).toMatch(/pocVideoUrl/);
+    expect(next).toMatch(/data-poc-video-script="1"/);
     expect(next).toMatch(/canSubmitNextStepsOffer/);
     expect(next).toMatch(/JOBS_APPLY_OFFER_CTA/);
     expect(next).toMatch(/disabled=\{!ready/);
@@ -164,6 +169,10 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(employer).toMatch(/JOBS_EMPLOYER_INTERVIEW_CTA/);
     expect(employer).toMatch(/JOBS_EMPLOYER_HOLD_CTA/);
     expect(employer).toMatch(/JOBS_EMPLOYER_PROPOSE_CTA/);
+    expect(employer).toMatch(/PocVideoWatch/);
+    expect(employer).toMatch(/poc_video_url/);
+    expect(inbox).toMatch(/PocVideoWatch/);
+    expect(inbox).toMatch(/poc_video_url/);
     expect(employer).toMatch(/\/hold/);
     expect(employer).toMatch(/datetime-local/);
     expect(inbox).toMatch(/JOBS_OEM_CONFIRM_HOLD_CTA/);

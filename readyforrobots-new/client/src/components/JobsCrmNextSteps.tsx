@@ -21,6 +21,13 @@ import {
   JOBS_POC_PREFER_HINT,
   JOBS_POC_SKIP_CTA,
 } from "@/lib/jobsApply";
+import {
+  JOBS_POC_VIDEO_HINT,
+  JOBS_POC_VIDEO_LABEL,
+  JOBS_POC_VIDEO_SCRIPT_HEADING,
+  pocVideoScriptBeats,
+  pocVideoUrlIssue,
+} from "@/lib/pocVideoUrl";
 import { JOBS_EYEBROW_CLASS, crmSaveJobsBlurb } from "@/lib/jobsWorkflow";
 import type { MatchJob } from "@/lib/robotJobMatch";
 import { robotJobCardFromMatch } from "@/lib/robotJobCard";
@@ -43,15 +50,26 @@ export default function JobsCrmNextSteps({
   const [models, setModels] = useState<string[]>([]);
   const [monthlyPrice, setMonthlyPrice] = useState("");
   const [pocEvidence, setPocEvidence] = useState("");
+  const [pocVideoUrl, setPocVideoUrl] = useState("");
   const [pocSkipped, setPocSkipped] = useState(false);
   const [docs, setDocs] = useState<RobotDocument[]>([]);
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const ready = canSubmitNextStepsOffer({
-    monthlyPrice,
+  const videoIssue = pocVideoUrlIssue(pocVideoUrl);
+  const scriptBeats = pocVideoScriptBeats({
+    robotName,
     selectedModels: models,
+    employer: card.employer,
+    jobTitle: card.jobTitle,
+    work: card.work,
+    requirements: card.requirements,
   });
+  const ready =
+    canSubmitNextStepsOffer({
+      monthlyPrice,
+      selectedModels: models,
+    }) && !videoIssue;
 
   useEffect(() => {
     let cancelled = false;
@@ -97,7 +115,8 @@ export default function JobsCrmNextSteps({
         selectedModels: models,
         monthlyPrice,
         pocEvidence,
-        pocSkipped: pocSkipped || !pocEvidence.trim(),
+        pocVideoUrl,
+        pocSkipped: pocSkipped || (!pocEvidence.trim() && !pocVideoUrl.trim()),
         job,
         documentIds: selectedDocs,
       });
@@ -163,6 +182,22 @@ export default function JobsCrmNextSteps({
         )}
       </fieldset>
 
+      <div className="mt-6" data-poc-video-script="1">
+        <p className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+          {JOBS_POC_VIDEO_SCRIPT_HEADING}
+        </p>
+        <ol className="mt-3 space-y-3">
+          {scriptBeats.map(beat => (
+            <li key={beat.n} className="text-sm leading-relaxed text-slate-300">
+              <span className="font-mono text-xs uppercase tracking-[0.08em] text-emerald-300">
+                {String(beat.n).padStart(2, "0")} · {beat.title}
+              </span>
+              <span className="mt-1 block">{beat.body}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
       <label className="mt-6 block">
         <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
           PoC proof if available
@@ -178,10 +213,32 @@ export default function JobsCrmNextSteps({
             setPocEvidence(e.target.value);
             setPocSkipped(false);
           }}
-          placeholder="Site demo, video, or written proof of concept — optional"
+          placeholder="Written proof of concept — optional. Do not paste a video URL here."
         />
       </label>
-      {!pocSkipped && !pocEvidence.trim() ? (
+      <label className="mt-4 block">
+        <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+          {JOBS_POC_VIDEO_LABEL}
+        </span>
+        <span className="mt-1 block text-sm text-slate-400">
+          {JOBS_POC_VIDEO_HINT}
+        </span>
+        <input
+          type="url"
+          aria-label={JOBS_POC_VIDEO_LABEL}
+          className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100"
+          value={pocVideoUrl}
+          onChange={e => {
+            setPocVideoUrl(e.target.value);
+            setPocSkipped(false);
+          }}
+          placeholder="https://www.loom.com/share/… or YouTube / Vimeo"
+        />
+        {videoIssue ? (
+          <p className="mt-2 text-sm text-amber-200">{videoIssue}</p>
+        ) : null}
+      </label>
+      {!pocSkipped && !pocEvidence.trim() && !pocVideoUrl.trim() ? (
         <button
           type="button"
           onClick={() => setPocSkipped(true)}

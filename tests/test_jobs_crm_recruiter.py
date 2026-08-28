@@ -374,6 +374,25 @@ def test_reject_non_pdf_image_upload(db_session):
         )
 
 
+def test_reject_video_mime_on_spec_upload(db_session):
+    with pytest.raises(ValueError, match="PDF or image"):
+        store_user_document(
+            db_session,
+            _user(),
+            filename="demo.mp4",
+            content=b"\x00\x00\x00 ftypmp42",
+            mime_type="video/mp4",
+        )
+    with pytest.raises(ValueError, match="PDF or image"):
+        store_user_document(
+            db_session,
+            _user(),
+            filename="clip.webm",
+            content=b"\x1aE\xdf\xa3",
+            mime_type="video/webm",
+        )
+
+
 def test_attach_ignores_other_users_docs(db_session):
     keep_jobs(db_session, _user(), [_job(1)], robot_name="Spot")
     other = {"uid": str(uuid.uuid4()), "email": "other@test.com", "plan_tier": "free"}
@@ -395,3 +414,93 @@ def test_attach_ignores_other_users_docs(db_session):
         send=False,
     )
     assert app["documents"] == []
+
+
+def test_apply_stores_poc_video_url_on_employer_payload(db_session, monkeypatch):
+    sent = []
+
+    def _fake_send(**kwargs):
+        sent.append(kwargs)
+        return {"resend_id": f"re_{len(sent)}", "from_email": "jobs@readyforrobots.com"}
+
+    monkeypatch.setattr("app.services.resend_email.send_email_via_resend", _fake_send)
+    video = "https://www.loom.com/share/abcd1234efgh5678"
+    keep_jobs(
+        db_session,
+        _user(),
+        [_job(1, email="ops@named-employer.com")],
+        robot_name="Spot",
+    )
+    app = apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="Spot",
+        selected_models=["Spot"],
+        monthly_price="1200",
+        poc_evidence="Cell demo notes from the integrator.",
+        poc_video_url=video,
+        poc_skipped=False,
+        send=True,
+    )
+    assert app["poc_video_url"] == video
+    assert app["poc_evidence"] == "Cell demo notes from the integrator."
+    assert app["offer_snapshot"]["poc_video_url"] == video
+    row = db_session.query(JobApplication).one()
+    assert row.poc_video_url == video
+    public = employer_public_payload(db_session, row)
+    assert public["poc_video_url"] == video
+    assert public["poc_evidence"] == "Cell demo notes from the integrator."
+    employer_mail = [
+        item
+        for item in sent
+        if item.get("to_email") == "ops@named-employer.com"
+        or (
+            isinstance(item.get("to_email"), list)
+            and "ops@named-employer.com" in item.get("to_email")
+        )
+    ]
+    assert employer_mail, "Outreach should include the video URL when sending"
+    body = employer_mail[0].get("body_text") or ""
+    assert video in body
+    assert "Video résumé" in body
+
+
+def test_empty_poc_video_url_does_not_block_apply(db_session):
+    keep_jobs(db_session, _user(), [_job(1)], robot_name="Spot")
+    app = apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="Spot",
+        selected_models=["Spot"],
+        monthly_price="900",
+        poc_evidence="",
+        poc_video_url="",
+        poc_skipped=True,
+        send=False,
+    )
+    assert app["poc_video_url"] is None
+    assert app["poc_skipped"] is True
+    public = employer_public_payload(db_session, db_session.query(JobApplication).one())
+    assert public["poc_video_url"] is None
+
+
+def test_invalid_poc_video_url_rejects_without_echo(db_session):
+    keep_jobs(db_session, _user(), [_job(1)], robot_name="Spot")
+    sneaky = "https://evil.example/watch?v=not-a-video"
+    with pytest.raises(ValueError) as exc:
+        apply_to_job(
+            db_session,
+            _user(),
+            job_key="job-1",
+            robot_name="Spot",
+            selected_models=["Spot"],
+            monthly_price="900",
+            poc_video_url=sneaky,
+            send=False,
+        )
+    assert sneaky not in str(exc.value)
+    assert "evil.example" not in str(exc.value)
+    assert "not allowed" in str(exc.value).lower() or "HTTPS" in str(exc.value)
+

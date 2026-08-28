@@ -119,7 +119,7 @@ Authenticated **Keep N jobs?** upserts selected Job Cards onto the user (`user_k
 
 ### F11 — Next steps offer → apply outreach (ship)
 
-After keep, **Apply** / **Next steps** is a real control: `/pipeline?src=jobs_activate&next=offer#jobs-next-steps`. The form collects robot name, catalogued OEM SKUs, skippable PoC, attached specs, and the **user’s proposed monthly price**. Apply persists `job_applications` and sends employer outreach only when a real contact email is on the card. No invented emails. No invented rental dollars. Do not skip the offer form.
+After keep, **Apply** / **Next steps** is a real control: `/pipeline?src=jobs_activate&next=offer#jobs-next-steps`. The form collects robot name, catalogued OEM SKUs, skippable PoC (written note plus optional async video URL: Loom / YouTube / Vimeo embed, Google Drive as a link-out), attached specs, and the **user’s proposed monthly price**. Empty video URL does not block apply. Apply persists `job_applications` (`poc_evidence` + `poc_video_url`) and sends employer outreach only when a real contact email is on the card. No invented emails. No invented rental dollars. Do not skip the offer form. Do not accept video files on the specs upload path.
 
 ### F12 — Employer inbox on the desk (ship)
 
@@ -131,7 +131,7 @@ Signed-in OEM uploads PDF/image specs (`user_robot_documents`, 8 MB, account-pri
 
 ### F14 — Employer evaluate (ship)
 
-Outreach (only with a real employer email) includes token **Accept** and **Set up interview**. `/employer/:token` needs no RFR account. Tokens write `application_messages` and status (`accepted` / `interview_requested` / `interview_scheduled` / `interview_held`). Scheduling is **propose a time** (OEM confirms), **hold this slot** (concrete window persisted on the application), or “connect us”. Not Cal. `/calendar` is SIGNAL and stays unwired.
+Outreach (only with a real employer email) includes token **Accept** and **Set up interview**. `/employer/:token` needs no RFR account. The public payload includes `poc_video_url` when the OEM pasted an allowlisted link; the page embeds Loom/YouTube/Vimeo or shows **Watch demo**. Tokens write `application_messages` and status (`accepted` / `interview_requested` / `interview_scheduled` / `interview_held`). Scheduling is **propose a time** (OEM confirms), **hold this slot** (concrete window persisted on the application), or “connect us”. Not Cal. `/calendar` is SIGNAL and stays unwired.
 
 ### F15 — Recruiter emails to the OEM (ship)
 
@@ -214,6 +214,6 @@ Matcher retune, Cal, invented dollars, HubSpot OAuth export UI, cron expiry job,
 ## Next missions (ranked)
 
 1. Wire Resend inbound MX/DNS so employer replies land automatically (`jobs+{token}@` domain).
-2. Enforce F7 cron expiry job in production (`alembic upgrade` leftover until Fly runs it).
+2. Enforce F7 cron expiry job in production (`alembic upgrade` leftover until Fly runs it). Alembic `pvud0a1b2c3d4` adds `job_applications.poc_video_url` — Fly migrate may timeout; apply video URLs need that column in prod.
 3. Paid F8: list all matching jobs, not only the last FIND dump.
 4. F9: HubSpot + CSV export of Robot Jobs.
