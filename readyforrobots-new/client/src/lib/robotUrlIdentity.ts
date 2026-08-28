@@ -49,10 +49,12 @@ export function isCurrentRobotSubmit(
   return sameRobotUrl(currentUrl, submitUrl);
 }
 
-export function isAbortError(err: unknown): boolean {
+export function isAbortError(err: unknown, signal?: AbortSignal): boolean {
+  if (signal?.aborted) return true;
   if (!err || typeof err !== "object") return false;
   const name = "name" in err ? String((err as { name?: string }).name) : "";
   const message =
     "message" in err ? String((err as { message?: string }).message) : "";
+  if (name === "TimeoutError") return false;
   return name === "AbortError" || /aborted|abort/i.test(message);
 }

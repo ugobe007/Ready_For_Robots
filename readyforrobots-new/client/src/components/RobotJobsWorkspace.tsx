@@ -127,6 +127,15 @@ import {
   isCurrentRobotSubmit,
   sameRobotUrl,
 } from "@/lib/robotUrlIdentity";
+import {
+  beginFindResearch,
+  FIND_RESEARCH_INTERRUPTED_MESSAGE,
+  findResearchFailureMessage,
+  isLiveFindResearch,
+  shouldContinueAfterListingError,
+  shouldIgnoreStaleFindError,
+  type FindResearchHandle,
+} from "@/lib/findResearch";
 import { isNamedRobotJob, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import JobsPstackProtocol from "@/components/JobsPstackProtocol";
 
@@ -537,17 +546,7 @@ function differentiatedCounts(portfolio: RobotAnalysis[]): boolean {
 }
 
 function lookupFailedMessage(err: unknown, fallback: string): string {
-  if (
-    (err instanceof DOMException && err.name === "AbortError") ||
-    (err instanceof Error && /aborted|timeout/i.test(err.message))
-  ) {
-    return "Lookup took too long. Try again — a manufacturer homepage is fine if we already know their robots.";
-  }
-  const detail = err instanceof Error ? err.message.trim() : "";
-  if (detail && !/^robot-(profile|job-search)\s+\d+$/i.test(detail)) {
-    return `${fallback} ${detail}`;
-  }
-  return fallback;
+  return findResearchFailureMessage(err, fallback);
 }
 
 function pickSelectedJobKey(
@@ -629,6 +628,7 @@ export default function RobotJobsWorkspace() {
   const fired3Plus = useRef(false);
   const restoredRef = useRef(false);
   const researchAbortRef = useRef<AbortController | null>(null);
+  const researchHandleRef = useRef<FindResearchHandle | null>(null);
   const matchAbortRef = useRef<(() => void) | null>(null);
   const findInFlightRef = useRef(false);
 
@@ -689,6 +689,8 @@ export default function RobotJobsWorkspace() {
   }, [session?.access_token]);
 
   function resetToFind(replaceHome = false) {
+    researchHandleRef.current?.controller.abort();
+    researchHandleRef.current = null;
     if (researchAbortRef.current) {
       researchAbortRef.current.abort();
       researchAbortRef.current = null;
@@ -724,14 +726,13 @@ export default function RobotJobsWorkspace() {
     }
   }
 
-  /** New FIND URL: abort in-flight work and bind CRM to this URL (honest empty). */
-  function bindSubmittedRobot(submitUrl: string) {
+  /** New FIND URL: abort *previous* in-flight work and bind CRM (honest empty). */
+  function bindSubmittedRobot(submitUrl: string): FindResearchHandle {
     submittedUrlRef.current = submitUrl;
     submissionIdRef.current = null;
-    if (researchAbortRef.current) {
-      researchAbortRef.current.abort();
-      researchAbortRef.current = null;
-    }
+    const handle = beginFindResearch(researchHandleRef.current, submitUrl);
+    researchHandleRef.current = handle;
+    researchAbortRef.current = handle.controller;
     if (matchAbortRef.current) {
       matchAbortRef.current();
       matchAbortRef.current = null;
@@ -755,10 +756,19 @@ export default function RobotJobsWorkspace() {
       products: [],
       view: "jobs",
     });
+    return handle;
   }
 
-  function stillThisSubmit(submitUrl: string): boolean {
-    return isCurrentRobotSubmit(submittedUrlRef.current, submitUrl);
+  function stillThisSubmit(
+    submitUrl: string,
+    handle?: FindResearchHandle | null,
+  ): boolean {
+    const live = handle || researchHandleRef.current;
+    if (!live) return false;
+    return (
+      isLiveFindResearch(researchHandleRef.current, live) &&
+      isCurrentRobotSubmit(submittedUrlRef.current, submitUrl)
+    );
   }
 
   /* Strip `/?new=1` after paint. Never replaceState during render — wouter
@@ -821,8 +831,9 @@ export default function RobotJobsWorkspace() {
     analyses: RobotAnalysis[],
     submitUrl: string,
     names: string[],
+    handle?: FindResearchHandle | null,
   ) {
-    if (!stillThisSubmit(submitUrl)) return;
+    if (!stillThisSubmit(submitUrl, handle)) return;
     const first = analyses[0];
     if (!first) return;
     const company = first.companyName || companyName;
@@ -871,7 +882,8 @@ export default function RobotJobsWorkspace() {
   /** FIND submit — research identity first (no jobs yet). */
   async function submitFind(submitUrl: string) {
     setError(null);
-    bindSubmittedRobot(submitUrl);
+    const research = bindSubmittedRobot(submitUrl);
+    const ac = research.controller;
     setResearchPhase("identity");
     setStage("research");
     trackRobotJobsFunnel("robot_submitted", {
@@ -883,13 +895,11 @@ export default function RobotJobsWorkspace() {
       ...funnelBase(),
       url: submitUrl,
     });
-    researchAbortRef.current?.abort();
-    const ac = new AbortController();
-    researchAbortRef.current = ac;
+    const live = () => stillThisSubmit(submitUrl, research);
     try {
       const known = lookupKnownOem(submitUrl);
       if (known && known.robots.length > 0) {
-        if (!stillThisSubmit(submitUrl)) return;
+        if (!live()) return;
         setCompanyName(known.vendor_name || "");
         const lineup = filterJobsLineupProducts(
           known.robots.map(p => ({
@@ -917,11 +927,11 @@ export default function RobotJobsWorkspace() {
             signal: ac.signal,
             timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
           });
-          if (!stillThisSubmit(submitUrl)) return;
+          if (!live()) return;
           submissionIdRef.current =
             res.robot_submission_id ?? submissionIdRef.current;
           const analysis = analysisForSelectedSku(res, name, displayClass);
-          openJobsFromAnalyses([analysis], submitUrl, name ? [name] : []);
+          openJobsFromAnalyses([analysis], submitUrl, name ? [name] : [], research);
           return;
         }
       }
@@ -931,7 +941,7 @@ export default function RobotJobsWorkspace() {
           signal: ac.signal,
           timeoutMs: OEM_LISTING_TIMEOUT_MS,
         });
-        if (!stillThisSubmit(submitUrl)) return;
+        if (!live()) return;
         if (listing.matched && listing.robots.length > 0) {
           setCompanyName(listing.vendor_name || "");
           const lineup = filterJobsLineupProducts(
@@ -960,18 +970,30 @@ export default function RobotJobsWorkspace() {
             signal: ac.signal,
             timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
           });
-          if (!stillThisSubmit(submitUrl)) return;
+          if (!live()) return;
           submissionIdRef.current =
             res.robot_submission_id ?? submissionIdRef.current;
           const analysis = analysisForSelectedSku(res, name, displayClass);
-          openJobsFromAnalyses([analysis], submitUrl, name ? [name] : []);
+          openJobsFromAnalyses([analysis], submitUrl, name ? [name] : [], research);
           return;
         }
       } catch (listingErr) {
-        if (isAbortError(listingErr) || !stillThisSubmit(submitUrl)) return;
+        if (
+          shouldIgnoreStaleFindError({
+            current: researchHandleRef.current,
+            handle: research,
+          }) ||
+          !shouldContinueAfterListingError({
+            current: researchHandleRef.current,
+            handle: research,
+            err: listingErr,
+          })
+        ) {
+          return;
+        }
         /* listing miss or timeout — one composed search, not profile then search */
       }
-      if (!stillThisSubmit(submitUrl)) return;
+      if (!live()) return;
       setResearchPhase("jobs");
       const res = await fetchRobotJobSearch({
         url: submitUrl,
@@ -979,7 +1001,7 @@ export default function RobotJobsWorkspace() {
         signal: ac.signal,
         timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
       });
-      if (!stillThisSubmit(submitUrl)) return;
+      if (!live()) return;
       submissionIdRef.current =
         res.robot_submission_id ?? submissionIdRef.current;
       setCompanyName(
@@ -1022,9 +1044,21 @@ export default function RobotJobsWorkspace() {
         res.profile?.selected_product?.display_class ||
         res.robot_class;
       const analysis = analysisForSelectedSku(res, name, displayClass);
-      openJobsFromAnalyses([analysis], submitUrl, name ? [name] : []);
+      openJobsFromAnalyses([analysis], submitUrl, name ? [name] : [], research);
     } catch (err) {
-      if (isAbortError(err) || !stillThisSubmit(submitUrl)) return;
+      if (
+        shouldIgnoreStaleFindError({
+          current: researchHandleRef.current,
+          handle: research,
+        })
+      ) {
+        return;
+      }
+      if (research.controller.signal.aborted || isAbortError(err, ac.signal)) {
+        setError(FIND_RESEARCH_INTERRUPTED_MESSAGE);
+        setStage("find");
+        return;
+      }
       setError(
         lookupFailedMessage(
           err,
@@ -1033,7 +1067,7 @@ export default function RobotJobsWorkspace() {
       );
       setStage("find");
     } finally {
-      if (stillThisSubmit(submitUrl)) findInFlightRef.current = false;
+      if (live()) findInFlightRef.current = false;
     }
   }
 
@@ -1047,9 +1081,10 @@ export default function RobotJobsWorkspace() {
     if (names.length === 0) return;
     const submitUrl = submittedUrlRef.current || url;
 
-    researchAbortRef.current?.abort();
-    const ac = new AbortController();
-    researchAbortRef.current = ac;
+    const research = beginFindResearch(researchHandleRef.current, submitUrl);
+    researchHandleRef.current = research;
+    researchAbortRef.current = research.controller;
+    const ac = research.controller;
     setResearchPhase("jobs");
     if (names.length === 1) {
       setStage("research");
@@ -1066,14 +1101,23 @@ export default function RobotJobsWorkspace() {
         });
         submissionIdRef.current =
           res.robot_submission_id ?? submissionIdRef.current;
-        if (!stillThisSubmit(submitUrl)) return;
+        if (!stillThisSubmit(submitUrl, research)) return;
         openJobsFromAnalyses(
           [analysisForSelectedSku(res, names[0], displayClass)],
           submitUrl,
           names,
+          research,
         );
       } catch (err) {
-        if (isAbortError(err) || !stillThisSubmit(submitUrl)) return;
+        if (shouldIgnoreStaleFindError({
+          current: researchHandleRef.current,
+          handle: research,
+        })) return;
+        if (research.controller.signal.aborted || isAbortError(err, ac.signal)) {
+          setError(FIND_RESEARCH_INTERRUPTED_MESSAGE);
+          setStage("select");
+          return;
+        }
         setError(lookupFailedMessage(err, "Research failed for that robot."));
         setStage("select");
       }
@@ -1115,7 +1159,7 @@ export default function RobotJobsWorkspace() {
         }),
       );
 
-      if (!stillThisSubmit(submitUrl)) return;
+      if (!stillThisSubmit(submitUrl, research)) return;
       const analyses: RobotAnalysis[] = selectedProducts.map(row => {
         const cls = configurationClassForLookup(row.displayClass);
         if (cls && classResults.has(cls)) {
@@ -1144,9 +1188,17 @@ export default function RobotJobsWorkspace() {
           break;
         }
       }
-      openJobsFromAnalyses(withCompany, submitUrl, names);
+      openJobsFromAnalyses(withCompany, submitUrl, names, research);
     } catch (err) {
-      if (isAbortError(err) || !stillThisSubmit(submitUrl)) return;
+      if (shouldIgnoreStaleFindError({
+        current: researchHandleRef.current,
+        handle: research,
+      })) return;
+      if (research.controller.signal.aborted || isAbortError(err, ac.signal)) {
+        setError(FIND_RESEARCH_INTERRUPTED_MESSAGE);
+        setStage("select");
+        return;
+      }
       setError(lookupFailedMessage(err, "Research failed for those robots."));
       setStage("select");
     }
@@ -2083,8 +2135,6 @@ function FindRail({
 
       <form
         aria-label="Find jobs for your robot"
-        action="/"
-        method="get"
         onSubmit={onSubmit}
         className="mt-6"
       >

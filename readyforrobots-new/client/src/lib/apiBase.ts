@@ -175,6 +175,19 @@ export function writeSurfaceCache<T>(key: string, data: T): void {
   }
 }
 
+export class FetchTimeoutError extends Error {
+  override name = "TimeoutError";
+  timeoutMs: number;
+  constructor(timeoutMs: number) {
+    super(`Timed out after ${timeoutMs}ms`);
+    this.timeoutMs = timeoutMs;
+  }
+}
+
+function abortError(): DOMException {
+  return new DOMException("The operation was aborted.", "AbortError");
+}
+
 /** Abort slow proxy/API calls so pages can fall back instead of spinning forever. */
 export async function fetchWithTimeout(
   url: string,
@@ -182,15 +195,25 @@ export async function fetchWithTimeout(
   timeoutMs = 8_000,
   opts?: { publicCache?: boolean },
 ): Promise<Response> {
+  if (init.signal?.aborted) {
+    throw abortError();
+  }
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    ctrl.abort();
+  }, timeoutMs);
   const onParentAbort = () => ctrl.abort();
   init.signal?.addEventListener("abort", onParentAbort);
-  if (init.signal?.aborted) ctrl.abort();
   const { signal: _ignored, ...rest } = init;
   const baseInit = opts?.publicCache ? publicFetchInit(rest) : liveFetchInit(rest);
   try {
     return await fetch(url, { ...baseInit, signal: ctrl.signal });
+  } catch (err) {
+    if (init.signal?.aborted) throw abortError();
+    if (timedOut) throw new FetchTimeoutError(timeoutMs);
+    throw err;
   } finally {
     clearTimeout(timer);
     init.signal?.removeEventListener("abort", onParentAbort);
