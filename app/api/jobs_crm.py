@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.api.auth_deps import _require_user
 from app.database import get_db
 from app.services.jobs_crm import (
+    apply_selected_jobs,
     apply_to_job,
     application_with_thread,
     catalog_skus_for_oem,
@@ -22,6 +23,7 @@ from app.services.jobs_crm import (
     paste_inbound_reply,
     record_activity,
     reply_on_application,
+    set_application_meeting_url,
 )
 from app.services.jobs_crm_recruiter import (
     MAX_DOC_BYTES,
@@ -65,6 +67,27 @@ class ApplyBody(BaseModel):
     poc_skipped: bool = False
     job: Optional[dict[str, Any]] = None
     document_ids: list[str] = Field(default_factory=list)
+
+
+class ApplySelectedBody(BaseModel):
+    jobs: list[dict[str, Any]] = Field(default_factory=list)
+    robot_name: str = Field(..., min_length=1, max_length=240)
+    selected_models: list[str] = Field(default_factory=list)
+    monthly_price: str = Field(..., min_length=1, max_length=160)
+    poc_evidence: Optional[str] = None
+    poc_video_url: Optional[str] = Field(default=None, max_length=2000)
+    poc_skipped: bool = False
+    document_ids: list[str] = Field(default_factory=list)
+
+
+class MeetingUrlBody(BaseModel):
+    meeting_url: Optional[str] = Field(default=None, max_length=2000)
+
+
+class PresentationBody(BaseModel):
+    url: str = Field(..., min_length=3, max_length=2000)
+    company_name: Optional[str] = Field(default=None, max_length=240)
+    product_name: Optional[str] = Field(default=None, max_length=240)
 
 
 class ReplyBody(BaseModel):
@@ -160,6 +183,68 @@ def post_apply(
             job=body.job,
             document_ids=body.document_ids,
         )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/apply-selected")
+def post_apply_selected(
+    body: ApplySelectedBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return apply_selected_jobs(
+            db,
+            user,
+            jobs=body.jobs,
+            robot_name=body.robot_name,
+            selected_models=body.selected_models,
+            monthly_price=body.monthly_price,
+            poc_evidence=body.poc_evidence or "",
+            poc_video_url=body.poc_video_url or "",
+            poc_skipped=body.poc_skipped,
+            document_ids=body.document_ids,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/applications/{application_id}/meeting-url")
+def post_meeting_url(
+    application_id: UUID,
+    body: MeetingUrlBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return set_application_meeting_url(
+            db, user, str(application_id), body.meeting_url or ""
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Application not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/presentation")
+def post_presentation(
+    body: PresentationBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    from app.services.jobs_presentation import queue_presentation
+
+    try:
+        return queue_presentation(
+            db,
+            user,
+            url=body.url,
+            company_name=body.company_name,
+            product_name=body.product_name,
+        )
+    except PermissionError as exc:
+        raise HTTPException(status_code=402, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

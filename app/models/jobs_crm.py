@@ -67,6 +67,7 @@ class JobApplication(Base):
     poc_video_url = Column(Text, nullable=True)
     poc_skipped = Column(String(8), nullable=False, server_default="false")
     monthly_price = Column(String(160), nullable=False)
+    meeting_url = Column(Text, nullable=True)
     offer_snapshot = Column(JSONB, nullable=False, server_default="{}")
     employer_email = Column(String(320), nullable=True)
     send_status = Column(String(40), nullable=False, server_default="stored", index=True)

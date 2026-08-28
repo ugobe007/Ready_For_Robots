@@ -16,7 +16,7 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 
 describe("robotJobCard", () => {
-  it("maps a matched job into employment-model fields without inventing economics", () => {
+  it("maps a matched job into employment-model fields with a labeled pay estimate", () => {
     const card = robotJobCardFromMatch({
       title: "Tend CNC mills/lathes — workpiece load/unload around cycle",
       company_name: "groninger",
@@ -37,7 +37,27 @@ describe("robotJobCard", () => {
     expect(card.workVolume).toBeNull();
     expect(card.currentLabor).toBeNull();
     expect(card.openQuestions).toEqual(["How much of role is tend vs program"]);
+    expect(card.description).toBe("Payload in range");
+    expect(card.payEstimate.monthlyLow).toBe(5000);
+    expect(card.payEstimate.monthlyHigh).toBe(7500);
+    expect(card.payEstimate.annualLow).toBe(60000);
+    expect(card.payEstimate.annualHigh).toBe(90000);
+    expect(card.payEstimate.heading).toMatch(/Potential contract value/i);
+    expect(card.payEstimate.disclaimer).toMatch(/Estimate of robot pay/i);
+    expect(card.payEstimate.disclaimer).toMatch(/not an employer quote/i);
     expect(card.nextStep).toMatch(/Site assessment/i);
+  });
+
+  it("surfaces corpus job description on the card", () => {
+    const card = robotJobCardFromMatch({
+      title: "Tend CNC mills/lathes",
+      company_name: "groninger",
+      locality: "Charlotte, NC",
+      text: "Tend CNC mills/lathes — workpiece load/unload around cycle on the night shift.",
+    });
+    expect(card.description).toMatch(/workpiece load\/unload/);
+    expect(card.payEstimate.monthlyLabel).toMatch(/5,000/);
+    expect(card.payEstimate.annualLabel).toMatch(/60,000/);
   });
 
   it("rejects incomplete rows that are not Robot Jobs", () => {
@@ -367,5 +387,9 @@ describe("robotJobCard", () => {
     expect(cardSrc).not.toMatch(/>Qualified</);
     expect(cardSrc).not.toMatch(/\|\| "Unknown"/);
     expect(cardSrc).toMatch(/Not yet confirmed/);
+    expect(cardSrc).toMatch(/Job description/);
+    expect(cardSrc).toMatch(/card.payEstimate/);
+    expect(cardSrc).toMatch(/Potential contract value|card.payEstimate.heading/);
+    expect(cardSrc).not.toMatch(/Open questions/);
   });
 });

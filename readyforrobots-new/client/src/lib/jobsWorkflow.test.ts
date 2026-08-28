@@ -1164,7 +1164,9 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/useState<string \| null>\(null\)/);
     expect(desk).toMatch(/CollectedJobInspect/);
     expect(desk).toMatch(/Work being performed/);
-    expect(desk).toMatch(/Open questions/);
+    expect(desk).not.toMatch(/Open questions/);
+    expect(desk).toMatch(/Job description/);
+    expect(desk).toMatch(/payEstimate/);
     expect(desk).toMatch(/Task models/);
     expect(desk).not.toMatch(/setSelectedKeys\(\[\]\)/);
   });

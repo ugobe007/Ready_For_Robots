@@ -39,7 +39,7 @@ submit robot URL on /
   → see Robot Jobs (step 2)
        one robot: 5 jobs, each tagged `Job ##### is for {SKU}`
        several robots: 1 sample job per SKU, tagged; run each robot individually for five jobs
-  → inspect Robot Job Cards (employer, workplace, work, qualification, open questions)
+       → inspect Robot Job Cards (employer, workplace, work, job description, labeled pay estimate)
   → check the jobs to take forward (all five start checked and dump into CRM)
   → Open CRM → /signup?next=/pipeline?src=jobs_activate&src=jobs_activate
   → after auth, CRM desk with 5 unlocked jobs (free). No robot OEMs.

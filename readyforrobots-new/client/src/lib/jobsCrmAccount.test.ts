@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   JOBS_APPLY_NEXT_CTA,
+  JOBS_APPLY_SELECTED_CTA,
   JOBS_APPLY_SEQUENCE,
   JOBS_APPLY_OFFER_CTA,
   JOBS_EMPLOYER_HOLD_CTA,
@@ -155,7 +156,16 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(workspace).not.toMatch(/Yes, keep them/i);
     expect(workspace).toMatch(/JobsKeepStatusBar/);
     expect(workspace).toMatch(/JOBS_NEXT_STEPS_CTA/);
+    expect(workspace).toMatch(/JOBS_APPLY_SELECTED_CTA/);
     expect(workspace).toMatch(/jobsCrmOfferHref/);
+    expect(workspace).toMatch(/JobsPresentationOffer/);
+    expect(desk).toMatch(/JOBS_APPLY_SELECTED_CTA/);
+    expect(desk).toMatch(/applySelectedJobsOnAccount|jobs=\{jobs.filter/);
+    expect(next).toMatch(/applySelectedJobsOnAccount/);
+    expect(inbox).toMatch(/Save meeting URL/);
+    expect(inbox).toMatch(/scheduling_label/);
+    expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
+    expect(JOBS_APPLY_SELECTED_CTA).toMatch(/Apply to selected jobs/);
     expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
     expect(JOBS_KEEP_YES_CTA).toBe("Yes, keep them");
     expect(JOBS_APPLY_NEXT_CTA).toBe("Apply →");

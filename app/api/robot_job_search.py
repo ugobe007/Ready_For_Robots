@@ -48,6 +48,18 @@ def post_robot_job_search(
             correlation_id=correlation,
         )
 
+    # Persist the URL before research so incomplete identity (qualify_robot)
+    # and later compose failures still keep the submitted robot.
+    submission_id = None
+    try:
+        from app.services.robot_submission_service import record_robot_submission
+
+        row = record_robot_submission(db, url=body.url, source="robot_job_search")
+        if row is not None:
+            submission_id = row.id
+    except Exception:
+        logger.exception("robot_submission_hook_failed")
+
     try:
         result = compose_robot_job_search(
             body.url,
@@ -57,7 +69,6 @@ def post_robot_job_search(
             asserted_class=body.asserted_class,
             lookup_grain=body.lookup_grain,
         )
-        # Durable submitter ledger + funnel attribution (fail-open).
         try:
             from app.services.robot_submission_service import (
                 record_robot_submission,
@@ -72,9 +83,11 @@ def post_robot_job_search(
                 product_name=result.get("robot_name"),
                 robot_class=result.get("robot_class"),
                 profile_tier=profile_dict.get("profile_confidence"),
+                bump_count=False,
+                source="robot_job_search",
             )
             if row is not None:
-                result["robot_submission_id"] = row.id
+                submission_id = row.id
                 record_submission_match(
                     db,
                     url=body.url,
@@ -84,6 +97,8 @@ def post_robot_job_search(
                 )
         except Exception:
             logger.exception("robot_submission_hook_failed")
+        if submission_id is not None:
+            result["robot_submission_id"] = submission_id
         return result
     except UrlSafetyError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

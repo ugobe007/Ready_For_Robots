@@ -6,7 +6,8 @@
  * PROTOCOL back on the desk.
  *
  * Jobs still come from ontology + POST /api/robot-job-match.
- * pstack does not pick employers, invent rental dollars, or chat with customers.
+ * pstack does not pick employers, invent invoices, or chat with customers.
+ * Job Cards may show a labeled robot-pay estimate.
  * Do not call Vercel AI Gateway. Do not resurrect Hermes ingest.
  */
 
@@ -97,8 +98,8 @@ export const CRITIC_GATES: readonly CriticGate[] = [
   },
   {
     id: "job_cards",
-    prove: "named employer and real work",
-    fail: "invented rental dollars",
+    prove: "named employer, real work, labeled pay estimate",
+    fail: "fake invoices or unlabeled employer quotes",
   },
   {
     id: "wall",

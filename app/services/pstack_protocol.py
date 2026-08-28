@@ -64,7 +64,7 @@ CRITIC_GATES: tuple[dict[str, str], ...] = (
         "prove": "CRM after FIND B is B",
         "fail": "strawberry robot leftover on a new URL",
     },
-    {"id": "job_cards", "prove": "named employer and real work", "fail": "invented rental dollars"},
+    {"id": "job_cards", "prove": "named employer, real work, labeled pay estimate", "fail": "fake invoices or unlabeled employer quotes"},
     {"id": "wall", "prove": "signup before the CRM desk", "fail": "unsigned /pipeline?src=jobs_activate desk"},
     {"id": "matcher", "prove": "POST /api/robot-job-match", "fail": "LLM as the job source"},
     {

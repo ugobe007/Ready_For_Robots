@@ -47,13 +47,16 @@ def seeded(db_session):
     db_session.flush()
     db_session.add(TeamMember(team_id=team.id, user_id=user.id, role="owner"))
     sub = RobotSubmission(
+        canonical_url="https://relayrobotics.com",
         website_domain="relayrobotics.com",
+        host="relayrobotics.com",
         submitted_url="https://relayrobotics.com/",
         company_name="Relay Robotics",
         product_name="Relay",
         profile_tier="C",
         capabilities=["transport", "mobile"],
         submission_count=1,
+        research_snippets=[],
     )
     db_session.add(sub)
     db_session.flush()

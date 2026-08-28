@@ -16,6 +16,7 @@ from app.database import Base
 from app.models.jobs_crm import ApplicationMessage, JobApplication, KeptJob
 from app.services.jobs_crm import (
     SEND_NOT_SENT_NO_EMAIL,
+    apply_selected_jobs,
     apply_to_job,
     capture_inbound_message,
     employer_email_from_job,
@@ -23,6 +24,7 @@ from app.services.jobs_crm import (
     list_kept_jobs,
     list_messages,
     paste_inbound_reply,
+    set_application_meeting_url,
 )
 from app.services.plan_entitlements import JOBS_CRM_FREE_BATCH, JOBS_CRM_FREE_MONTHLY_CAP
 
@@ -228,3 +230,44 @@ def test_expired_unacted_free_jobs_drop(db_session):
     db_session.commit()
     listed = list_kept_jobs(db_session, _user())
     assert listed == []
+
+
+def test_apply_selected_jobs_path(db_session):
+    keep_jobs(db_session, _user(), [_job(1), _job(2)], robot_name="Spot")
+    result = apply_selected_jobs(
+        db_session,
+        _user(),
+        jobs=[_job(1), _job(2)],
+        robot_name="Spot",
+        selected_models=["Spot"],
+        monthly_price="6200 / month",
+        poc_skipped=True,
+    )
+    assert result["applied_count"] == 2
+    assert result["selected_count"] == 2
+    assert {row["job_key"] for row in result["applied"]} == {"job-1", "job-2"}
+    assert all(row["scheduling_state"] == "we_schedule_with_employer" for row in result["applied"])
+    rows = db_session.query(JobApplication).all()
+    assert len(rows) == 2
+
+
+def test_meeting_url_paste_is_honest_schedule(db_session):
+    keep_jobs(db_session, _user(), [_job(1)], robot_name="Spot")
+    app = apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="Spot",
+        selected_models=["Spot"],
+        monthly_price="6200 / month",
+        poc_skipped=True,
+    )
+    assert app["scheduling_state"] == "we_schedule_with_employer"
+    with pytest.raises(ValueError, match="https"):
+        set_application_meeting_url(db_session, _user(), app["id"], "meet.google.com/abc")
+    saved = set_application_meeting_url(
+        db_session, _user(), app["id"], "https://employer.example/interview"
+    )
+    assert saved["scheduling_state"] == "meeting_url"
+    assert saved["meeting_url"] == "https://employer.example/interview"
+

@@ -120,6 +120,42 @@ def normalize_product_url(raw: str | None) -> str | None:
     return urlunparse(cleaned)
 
 
+def canonical_robot_url(raw: str | None) -> str | None:
+    """Stable FIND/CRM key: scheme + host (no www) + path (no trailing slash) + query.
+
+    Different product paths stay different rows. Homepage variants of the same
+    host collapse so Agtonomy chrome identity is not lost, and is not mixed
+    with a previous robot on another URL.
+    """
+    try:
+        normalized = normalize_product_url(raw)
+    except UrlSafetyError:
+        return None
+    if not normalized:
+        return None
+    parsed = urlparse(normalized)
+    host = idna_hostname(parsed.hostname or "")
+    if host.startswith("www."):
+        host = host[4:]
+    if not host:
+        return None
+    path = (parsed.path or "").rstrip("/")
+    netloc = host
+    if parsed.port and parsed.port not in {80, 443}:
+        netloc = f"{host}:{parsed.port}"
+    scheme = (parsed.scheme or "https").lower()
+    return urlunparse((scheme, netloc, path, "", parsed.query, ""))
+
+
+def robot_url_host(raw: str | None) -> str | None:
+    """Hostname for the submitted robot URL (no www)."""
+    canonical = canonical_robot_url(raw)
+    if not canonical:
+        return None
+    host = urlparse(canonical).hostname or ""
+    return host[:240] or None
+
+
 def assert_public_http_url(url: str) -> str:
     """Normalize and reject private / link-local / metadata targets (SSRF)."""
     _install_getaddrinfo_hook()
