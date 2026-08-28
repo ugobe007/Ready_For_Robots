@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
+  beginJobsHandoffForUrl,
   loadJobsHandoffSnapshot,
   normalizeRobotHandoffUrl,
   saveJobsHandoffSnapshot,
@@ -113,5 +114,25 @@ describe("jobsHandoffSnapshot", () => {
     expect(greenfield?.productName).toBe("BOT#25");
     expect(greenfield?.jobs).toEqual([]);
     expect(greenfield?.url).toBe("https://www.greenfieldincorporated.com");
+  });
+
+  it("beginJobsHandoffForUrl flushes prior jobs at the start of a new FIND", () => {
+    saveJobsHandoffSnapshot({
+      url: "https://www.agrobot.com/",
+      productName: "strawberry robot",
+      jobs: [
+        {
+          job_key: "orchard-rows",
+          title: "Work orchard rows",
+          industry: "agriculture",
+          path: "/jobs/orchard",
+        },
+      ],
+    });
+    beginJobsHandoffForUrl("https://www.greenfieldincorporated.com/", "BOT#25");
+    expect(loadJobsHandoffSnapshot("https://www.agrobot.com/")).toBeNull();
+    expect(loadJobsHandoffSnapshot("https://www.greenfieldincorporated.com/")?.jobs).toEqual(
+      [],
+    );
   });
 });

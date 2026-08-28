@@ -8,6 +8,8 @@
  *
  * Cap: 5 example jobs on `/`. Activate fills the live list to 15.
  */
+import { clearJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
+import { sameRobotUrl } from "@/lib/robotUrlIdentity";
 
 export type JobsConfirmLanding = "review" | "jobs" | "portfolio";
 export type JobLookupGrain = "robot_type" | "product";
@@ -963,10 +965,17 @@ export function canStartFindSubmit(opts: {
   url?: string | null;
   inFlight?: boolean;
   stage?: string | null;
+  currentUrl?: string | null;
 }): boolean {
-  if (opts.inFlight) return false;
-  if (opts.stage === "research") return false;
-  return (opts.url || "").trim().length > 0;
+  const next = (opts.url || "").trim();
+  if (!next) return false;
+  const busy = Boolean(opts.inFlight) || opts.stage === "research";
+  if (!busy) return true;
+  const current = (opts.currentUrl || "").trim();
+  // Same URL already in flight — do not double-submit (#171).
+  if (!current || sameRobotUrl(next, current)) return false;
+  // A different URL must flush the previous robot immediately.
+  return true;
 }
 
 /** Drop in-progress FIND state. Used by the wordmark before leaving the page. */
@@ -978,6 +987,7 @@ export function clearJobsWorkspaceSession(): void {
   } catch {
     /* ignore */
   }
+  clearJobsHandoffSnapshot();
 }
 
 /**
@@ -1343,6 +1353,7 @@ export type PipelineActivityEvent = {
   label: string;
   jobKey?: string;
   company?: string;
+  robotUrl?: string;
 };
 
 export const PIPELINE_ACTIVITY_KEY = "rfr_pipeline_activity_v1";
@@ -1377,13 +1388,23 @@ export function readPipelineActivity(): PipelineActivityEvent[] {
   }
 }
 
-/** Desk-level events (no jobKey) plus events for this job. */
+/** Desk-level events (no jobKey) plus events for this job, scoped to FIND URL. */
 export function pipelineActivityForJob(
   jobKey?: string | null,
+  robotUrl?: string | null,
 ): PipelineActivityEvent[] {
   const all = readPipelineActivity();
-  if (!jobKey) return all;
-  return all.filter(event => !event.jobKey || event.jobKey === jobKey);
+  const currentUrl = (robotUrl || "").trim();
+  const scoped = currentUrl
+    ? all.filter(event => {
+        if (event.robotUrl) return sameRobotUrl(event.robotUrl, currentUrl);
+        // Legacy unscoped desk events must not leak onto another robot.
+        if (!event.jobKey) return false;
+        return !jobKey || event.jobKey === jobKey;
+      })
+    : all;
+  if (!jobKey) return scoped;
+  return scoped.filter(event => !event.jobKey || event.jobKey === jobKey);
 }
 
 /** Auth / leftover-link return to the Jobs workspace on `/`. */

@@ -279,6 +279,17 @@ describe("CRM desk binds to the FIND robot, not leftover totes", () => {
     expect(desk.jobs.map(job => job.title)).not.toContain("Return empty totes");
   });
 
+  it("does not fall back to accountRows[0] when FIND has not bound a URL", () => {
+    const desk = crmDeskForCurrentRobot({
+      snap: null,
+      accountRows: [orchard],
+    });
+    expect(desk.product).toBe("your robot");
+    expect(desk.jobs).toEqual([]);
+    expect(desk.savedCount).toBe(0);
+    expect(desk.product).not.toMatch(/strawberry/i);
+  });
+
   it("prefers incomplete Greenfield identity over robot-job-match totes from another robot", () => {
     const desk = crmDeskForCurrentRobot({
       snap: {
@@ -374,5 +385,10 @@ describe("CRM desk binds to the FIND robot, not leftover totes", () => {
       workspace.indexOf("function goToActivate"),
     );
     expect(writeHandoff).not.toMatch(/pool\.length === 0/);
+    const submitFind = workspace.slice(
+      workspace.indexOf("async function submitFind"),
+      workspace.indexOf("async function confirmSelection"),
+    );
+    expect(submitFind).toMatch(/bindSubmittedRobot\(submitUrl\)/);
   });
 });

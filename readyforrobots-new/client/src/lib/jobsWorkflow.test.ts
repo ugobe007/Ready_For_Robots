@@ -278,6 +278,14 @@ describe("jobsWorkflow", () => {
         stage: "research",
       }),
     ).toBe(false);
+    expect(
+      canStartFindSubmit({
+        url: "https://www.greenfieldincorporated.com/",
+        inFlight: true,
+        stage: "research",
+        currentUrl: "https://www.dexmate.ai/",
+      }),
+    ).toBe(true);
     expect(canStartFindSubmit({ url: "   ", inFlight: false, stage: "find" })).toBe(
       false,
     );

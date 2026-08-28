@@ -117,7 +117,16 @@ import {
 } from "@/lib/jobsWorkflow";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
-import { saveJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
+import {
+  beginJobsHandoffForUrl,
+  clearJobsHandoffSnapshot,
+  saveJobsHandoffSnapshot,
+} from "@/lib/jobsHandoffSnapshot";
+import {
+  isAbortError,
+  isCurrentRobotSubmit,
+  sameRobotUrl,
+} from "@/lib/robotUrlIdentity";
 import { isNamedRobotJob, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import JobsPstackProtocol from "@/components/JobsPstackProtocol";
 
@@ -347,6 +356,7 @@ function clearWorkspaceSession() {
   } catch {
     /* ignore */
   }
+  clearJobsHandoffSnapshot();
 }
 
 function srcFromQuery(): string | null {
@@ -565,6 +575,7 @@ export default function RobotJobsWorkspace() {
       } catch {
         /* ignore */
       }
+      clearJobsHandoffSnapshot();
       return "find";
     }
     const saved = readWorkspaceSession();
@@ -698,6 +709,7 @@ export default function RobotJobsWorkspace() {
     setActiveIdx(0);
     setExpandedJob(null);
     setCheckedJobKeys([]);
+    setKeepSavedCount(0);
     setShowAllJobs(false);
     setLineupPreview(false);
     viewedRef.current = new Set();
@@ -710,6 +722,43 @@ export default function RobotJobsWorkspace() {
     if (replaceHome) {
       stripJobsFreshQuery();
     }
+  }
+
+  /** New FIND URL: abort in-flight work and bind CRM to this URL (honest empty). */
+  function bindSubmittedRobot(submitUrl: string) {
+    submittedUrlRef.current = submitUrl;
+    submissionIdRef.current = null;
+    if (researchAbortRef.current) {
+      researchAbortRef.current.abort();
+      researchAbortRef.current = null;
+    }
+    if (matchAbortRef.current) {
+      matchAbortRef.current();
+      matchAbortRef.current = null;
+    }
+    setPortfolio([]);
+    setProducts([]);
+    setSelected([]);
+    setCompanyName("");
+    setActiveIdx(0);
+    setExpandedJob(null);
+    setCheckedJobKeys([]);
+    setKeepSavedCount(0);
+    setShowAllJobs(false);
+    setLineupPreview(false);
+    setMatchError(null);
+    viewedRef.current = new Set();
+    fired3Plus.current = false;
+    beginJobsHandoffForUrl(submitUrl);
+    saveWorkspaceSession({
+      url: submitUrl,
+      products: [],
+      view: "jobs",
+    });
+  }
+
+  function stillThisSubmit(submitUrl: string): boolean {
+    return isCurrentRobotSubmit(submittedUrlRef.current, submitUrl);
   }
 
   /* Strip `/?new=1` after paint. Never replaceState during render — wouter
@@ -773,6 +822,7 @@ export default function RobotJobsWorkspace() {
     submitUrl: string,
     names: string[],
   ) {
+    if (!stillThisSubmit(submitUrl)) return;
     const first = analyses[0];
     if (!first) return;
     const company = first.companyName || companyName;
@@ -821,7 +871,7 @@ export default function RobotJobsWorkspace() {
   /** FIND submit — research identity first (no jobs yet). */
   async function submitFind(submitUrl: string) {
     setError(null);
-    submittedUrlRef.current = submitUrl;
+    bindSubmittedRobot(submitUrl);
     setResearchPhase("identity");
     setStage("research");
     trackRobotJobsFunnel("robot_submitted", {
@@ -839,6 +889,7 @@ export default function RobotJobsWorkspace() {
     try {
       const known = lookupKnownOem(submitUrl);
       if (known && known.robots.length > 0) {
+        if (!stillThisSubmit(submitUrl)) return;
         setCompanyName(known.vendor_name || "");
         const lineup = filterJobsLineupProducts(
           known.robots.map(p => ({
@@ -866,6 +917,7 @@ export default function RobotJobsWorkspace() {
             signal: ac.signal,
             timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
           });
+          if (!stillThisSubmit(submitUrl)) return;
           submissionIdRef.current =
             res.robot_submission_id ?? submissionIdRef.current;
           const analysis = analysisForSelectedSku(res, name, displayClass);
@@ -879,6 +931,7 @@ export default function RobotJobsWorkspace() {
           signal: ac.signal,
           timeoutMs: OEM_LISTING_TIMEOUT_MS,
         });
+        if (!stillThisSubmit(submitUrl)) return;
         if (listing.matched && listing.robots.length > 0) {
           setCompanyName(listing.vendor_name || "");
           const lineup = filterJobsLineupProducts(
@@ -907,15 +960,18 @@ export default function RobotJobsWorkspace() {
             signal: ac.signal,
             timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
           });
+          if (!stillThisSubmit(submitUrl)) return;
           submissionIdRef.current =
             res.robot_submission_id ?? submissionIdRef.current;
           const analysis = analysisForSelectedSku(res, name, displayClass);
           openJobsFromAnalyses([analysis], submitUrl, name ? [name] : []);
           return;
         }
-      } catch {
+      } catch (listingErr) {
+        if (isAbortError(listingErr) || !stillThisSubmit(submitUrl)) return;
         /* listing miss or timeout — one composed search, not profile then search */
       }
+      if (!stillThisSubmit(submitUrl)) return;
       setResearchPhase("jobs");
       const res = await fetchRobotJobSearch({
         url: submitUrl,
@@ -923,6 +979,7 @@ export default function RobotJobsWorkspace() {
         signal: ac.signal,
         timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
       });
+      if (!stillThisSubmit(submitUrl)) return;
       submissionIdRef.current =
         res.robot_submission_id ?? submissionIdRef.current;
       setCompanyName(
@@ -967,6 +1024,7 @@ export default function RobotJobsWorkspace() {
       const analysis = analysisForSelectedSku(res, name, displayClass);
       openJobsFromAnalyses([analysis], submitUrl, name ? [name] : []);
     } catch (err) {
+      if (isAbortError(err) || !stillThisSubmit(submitUrl)) return;
       setError(
         lookupFailedMessage(
           err,
@@ -975,7 +1033,7 @@ export default function RobotJobsWorkspace() {
       );
       setStage("find");
     } finally {
-      findInFlightRef.current = false;
+      if (stillThisSubmit(submitUrl)) findInFlightRef.current = false;
     }
   }
 
@@ -1008,12 +1066,14 @@ export default function RobotJobsWorkspace() {
         });
         submissionIdRef.current =
           res.robot_submission_id ?? submissionIdRef.current;
+        if (!stillThisSubmit(submitUrl)) return;
         openJobsFromAnalyses(
           [analysisForSelectedSku(res, names[0], displayClass)],
           submitUrl,
           names,
         );
       } catch (err) {
+        if (isAbortError(err) || !stillThisSubmit(submitUrl)) return;
         setError(lookupFailedMessage(err, "Research failed for that robot."));
         setStage("select");
       }
@@ -1055,6 +1115,7 @@ export default function RobotJobsWorkspace() {
         }),
       );
 
+      if (!stillThisSubmit(submitUrl)) return;
       const analyses: RobotAnalysis[] = selectedProducts.map(row => {
         const cls = configurationClassForLookup(row.displayClass);
         if (cls && classResults.has(cls)) {
@@ -1085,6 +1146,7 @@ export default function RobotJobsWorkspace() {
       }
       openJobsFromAnalyses(withCompany, submitUrl, names);
     } catch (err) {
+      if (isAbortError(err) || !stillThisSubmit(submitUrl)) return;
       setError(lookupFailedMessage(err, "Research failed for those robots."));
       setStage("select");
     }
@@ -1346,9 +1408,14 @@ export default function RobotJobsWorkspace() {
         label: "Kept from FIND",
         jobKey: job.job_key,
         company: job.company || undefined,
+        robotUrl: submittedUrlRef.current,
       });
     }
-    recordPipelineActivity({ kind: "open_crm", label: "Opened CRM" });
+    recordPipelineActivity({
+      kind: "open_crm",
+      label: "Opened CRM",
+      robotUrl: submittedUrlRef.current,
+    });
     trackRobotJobsFunnel("jobs_list_activated", {
       ...funnelBase(),
       robot_name: active?.productName,
@@ -1624,6 +1691,7 @@ export default function RobotJobsWorkspace() {
         url: u,
         inFlight: findInFlightRef.current,
         stage,
+        currentUrl: submittedUrlRef.current,
       })
     ) {
       return;
@@ -1809,6 +1877,7 @@ export default function RobotJobsWorkspace() {
             onSubmit={onSubmitFind}
             companyName={companyName}
             error={error}
+            currentSubmitUrl={submittedUrlRef.current}
             onCancel={stage === "select" ? newRobot : undefined}
           />
         ) : stage === "portfolio" ? (
@@ -1977,6 +2046,7 @@ function FindRail({
   onSubmit,
   companyName,
   error,
+  currentSubmitUrl,
   onCancel,
 }: {
   stage: Stage;
@@ -1985,9 +2055,12 @@ function FindRail({
   onSubmit: (e: React.FormEvent) => void;
   companyName: string;
   error: string | null;
+  currentSubmitUrl?: string;
   onCancel?: () => void;
 }) {
   const researching = stage === "research";
+  const sameSubmit =
+    researching && Boolean(url.trim()) && sameRobotUrl(url, currentSubmitUrl || "");
   return (
     <div>
       <p className={eyebrow}>{researching || stage === "select" ? "Your robot" : "Find jobs"}</p>
@@ -2024,12 +2097,12 @@ function FindRail({
           value={url}
           onChange={e => setUrl(e.target.value)}
           placeholder="Paste robot product URL"
-          disabled={researching || stage === "select"}
+          disabled={stage === "select"}
           className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 font-mono text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500 disabled:opacity-50"
         />
         <button
           type="submit"
-          disabled={researching || stage === "select" || !url.trim()}
+          disabled={stage === "select" || !url.trim() || sameSubmit}
           className={`${ctaClass} mt-3 w-full`}
         >
           {researching ? "Researching…" : FIND_JOBS_CTA}
