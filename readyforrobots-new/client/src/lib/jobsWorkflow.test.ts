@@ -277,7 +277,7 @@ describe("jobsWorkflow", () => {
         inFlight: false,
         stage: "research",
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       canStartFindSubmit({
         url: "https://www.greenfieldincorporated.com/",
@@ -1673,7 +1673,9 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/lookupKnownOem/);
     expect(workspace).toMatch(/fetchOemListing/);
     expect(workspace).toMatch(/OEM_LISTING_TIMEOUT_MS/);
-    expect(workspace).toMatch(/Lookup took too long/);
+    expect(workspace).toMatch(/findResearchFailureMessage/);
+    const findResearch = readFileSync(join(here, "./findResearch.ts"), "utf8");
+    expect(findResearch).toMatch(/Lookup took too long/);
     expect(workspace).not.toMatch(/Paste a specific product URL/);
     expect(workspace).toMatch(/productCap/);
     expect(workspace).toMatch(/phase=\{researchPhase\}/);

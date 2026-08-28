@@ -2,7 +2,7 @@
  * POST /api/robot-profile — Understanding v1 Phases 1–3 research agent.
  * Identity → sources → facts → Robot Profile (no jobs).
  */
-import { getPublicReadApiBase, fetchWithTimeout } from "@/lib/apiBase";
+import { getApiBase, fetchWithTimeout } from "@/lib/apiBase";
 
 export type ProfileSourceType =
   | "product"
@@ -98,7 +98,7 @@ export async function fetchOemListing(opts: {
   signal?: AbortSignal;
   timeoutMs?: number;
 }): Promise<OemListingResult> {
-  const base = getPublicReadApiBase();
+  const base = getApiBase();
   const res = await fetchWithTimeout(
     `${base}/api/oem-listing?url=${encodeURIComponent(opts.url)}`,
     {
@@ -127,7 +127,7 @@ export async function fetchRobotProfile(opts: {
   signal?: AbortSignal;
   timeoutMs?: number;
 }): Promise<RobotProfileResult> {
-  const base = getPublicReadApiBase();
+  const base = getApiBase();
   const res = await fetchWithTimeout(
     `${base}/api/robot-profile`,
     {

@@ -969,8 +969,9 @@ export function canStartFindSubmit(opts: {
 }): boolean {
   const next = (opts.url || "").trim();
   if (!next) return false;
-  const busy = Boolean(opts.inFlight) || opts.stage === "research";
-  if (!busy) return true;
+  // inFlight is the source of truth. stage===research without inFlight is a
+  // leftover after abort/timeout — same-URL retry must still work.
+  if (!opts.inFlight) return true;
   const current = (opts.currentUrl || "").trim();
   // Same URL already in flight — do not double-submit (#171).
   if (!current || sameRobotUrl(next, current)) return false;
