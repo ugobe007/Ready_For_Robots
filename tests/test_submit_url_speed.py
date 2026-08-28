@@ -127,6 +127,10 @@ def test_should_reject_greenfield_nav_paths():
     assert should_reject_url(f"{origin}/home")
     assert not should_reject_url(f"{origin}/bot-25")
     assert not should_reject_url(f"{origin}/")
+    assert should_reject_url("https://www.organifarms.de/imprint")
+    assert should_reject_url("https://www.organifarms.de/agb")
+    assert should_reject_url("https://www.organifarms.de/datenschutz")
+    assert should_reject_url("https://www.example.de/impressum")
 
 
 def _greenfield_home() -> FetchedPage:

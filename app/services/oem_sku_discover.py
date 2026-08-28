@@ -73,16 +73,21 @@ _NAV_PATH = re.compile(
     r"investors?|invest(?:ing|ment)?|cart|checkout|search|events?|partners?|"
     r"resources?|download|webinar|whitepaper|case-stud|cookie|terms|team|"
     r"company|media|shop|store|pricing|demo|faq|newsletter|subscribe|"
-    r"farmers?|story|stories|our-story|mission|home)(/|$)",
+    r"farmers?|story|stories|our-story|mission|home|"
+    r"imprint|impressum|agb|datenschutz|disclaimer|"
+    r"terms-and-conditions|privacy-policy|cookie-policy|legal-notice|"
+    r"mentions-legales|aviso-legal|note-legali|cgu|cgv)(/|$)",
     re.I,
 )
 _JUNK_SKU = re.compile(
     r"^(learn more|contact( us)?|see all|view all|read more|get started|"
     r"book a demo|request( a)? (quote|demo)|watch|download|brochure|"
     r"industrial robots?|collaborative robots?|mobile robots?|amrs?|agvs?|"
-    r"cobots?|humanoids?|products?|solutions?|robots?|robotics|"
+    r"cobots?|humanoids?|products?|produkts?|produkte|solutions?|robots?|robotics|"
     r"platform|automation|systems?|series|skip to content|"
-    r"privacy( & cookies| policy| notice)?|terms( of use| & conditions)?|"
+    r"privacy( & cookies| policy| notice)?|"
+    r"terms( of use| & conditions| and conditions)?|"
+    r"view privacy( policy)?|imprint|impressum|agb|datenschutz|disclaimer|"
     r"about( us)?|investors?( relations)?|cookie policy|careers?|"
     r"industries|services|locations|patients|healthcare|pharmacy|"
     r"factory|stories|story|farmers?|invest(?:ing|ment|ors?)?|home|mission|"
@@ -112,7 +117,8 @@ _NAV_NAME = re.compile(
     r"trade-in|refer & earn|my rewards|ecovacs points|free consultation|"
     r"andrea |vivian |join our|terms &|privacy policy|helicopter|"
     r"levels t3|to l5|washtower|nrf|calculator|imts|education k12|euroshop|"
-    r"farmers?|stories|our story|\bstory\b|\binvest(?:ing|ment)?\b|mission)\b",
+    r"farmers?|stories|our story|\bstory\b|\binvest(?:ing|ment)?\b|mission|"
+    r"imprint|impressum|datenschutz|disclaimer|agb)\b",
     re.I,
 )
 _BAD_PATH = re.compile(
@@ -130,7 +136,9 @@ _BAD_PATH = re.compile(
     r"safety|arm/|videos|impact|collections|indications|cta|"
     r"future-production|4-door|4k-tvs|inch-tvs|monitors|laptops|"
     r"washers-dryers|tradeshow|campaign|education-k12|controllers|"
-    r"calculator|nrf|farmers?|story|stories|our-story|invest|mission)(/|$)",
+    r"calculator|nrf|farmers?|story|stories|our-story|invest|mission|"
+    r"imprint|impressum|agb|datenschutz|disclaimer|"
+    r"terms-and-conditions|privacy-policy|cookie-policy|legal-notice)(/|$)",
     re.I,
 )
 _INDUSTRY_DIGIT = re.compile(r"^(3pl|2d|3d|4d|5g|\d+)$", re.I)
@@ -180,10 +188,114 @@ _KNOWN_SKU_WORDS = frozenset(
     }
 )
 
+# Lone nav / legal / shop labels. Not SKUs. Compact codes with digits stay pickable.
+_CHROME_LABELS = frozenset(
+    {
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "shop",
+        "store",
+        "imprint",
+        "impressum",
+        "terms",
+        "terms and conditions",
+        "terms of use",
+        "terms of service",
+        "agb",
+        "privacy",
+        "privacy policy",
+        "view privacy",
+        "view privacy policy",
+        "datenschutz",
+        "cookies",
+        "cookie",
+        "cookie policy",
+        "legal",
+        "legal notice",
+        "disclaimer",
+        "mentions legales",
+        "aviso legal",
+        "note legali",
+        "cgu",
+        "cgv",
+        "your",
+        "our",
+        "more",
+        "menu",
+        "home",
+    }
+)
+_CHROME_SLUGS = frozenset(
+    {
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "shop",
+        "store",
+        "imprint",
+        "impressum",
+        "terms",
+        "terms-and-conditions",
+        "terms-of-use",
+        "terms-of-service",
+        "agb",
+        "privacy",
+        "privacy-policy",
+        "datenschutz",
+        "cookies",
+        "cookie",
+        "cookie-policy",
+        "legal",
+        "legal-notice",
+        "disclaimer",
+        "mentions-legales",
+        "aviso-legal",
+        "note-legali",
+        "cgu",
+        "cgv",
+    }
+)
+_CHROME_PHRASE = re.compile(
+    r"\b(terms\s+and\s+conditions|privacy\s+policy|view\s+privacy|"
+    r"imprint|impressum|datenschutz|disclaimer|"
+    r"allgemein(?:e|en)\s+geschae?ftsbedingungen)\b",
+    re.I,
+)
+
+
+def is_site_chrome_slug(slug: str) -> bool:
+    """True for path segments that are site chrome, not a robot SKU."""
+    s = (slug or "").strip().lower().strip("/")
+    s = re.sub(r"[?#].*$", "", s)
+    s = s.rsplit("/", 1)[-1]
+    if not s:
+        return False
+    return s in _CHROME_SLUGS or s in _CHROME_LABELS
+
+
+def is_site_chrome_name(name: str) -> bool:
+    """True for generic nav/legal labels that must never enter the FIND picker."""
+    raw = re.sub(r"\s+", " ", (name or "").strip(" .-"))
+    if not raw:
+        return True
+    low = raw.lower()
+    if low in _CHROME_LABELS or name_key(raw) in {name_key(x) for x in _CHROME_LABELS}:
+        return True
+    if is_site_chrome_slug(raw.replace(" ", "-")):
+        return True
+    if _CHROME_PHRASE.search(raw):
+        return True
+    return False
+
 
 def is_junk_sku_name(name: str) -> bool:
     raw = re.sub(r"\s+", " ", (name or "").strip(" .-"))
     if not raw or len(raw) < 2 or len(raw) > 40:
+        return True
+    if is_site_chrome_name(raw):
         return True
     if _JUNK_SKU.fullmatch(raw) or _FAMILY_BLOB.search(raw) or _GENERIC_NAME.search(raw):
         return True
@@ -799,6 +911,8 @@ __all__ = [
     "candidates_from_page",
     "discover_skus",
     "is_junk_sku_name",
+    "is_site_chrome_name",
+    "is_site_chrome_slug",
     "listing_urls_for_company",
     "looks_like_named_sku",
     "merge_discovered_skus",

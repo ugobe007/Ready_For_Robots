@@ -1638,6 +1638,21 @@ describe("jobsWorkflow", () => {
     expect(isJobsLineupNoiseName("STORY")).toBe(true);
     expect(isJobsLineupNoiseName("BOT#25")).toBe(false);
     expect(isJobsLineupNoiseName("BOT25")).toBe(false);
+    expect(isJobsLineupNoiseName("Product")).toBe(true);
+    expect(isJobsLineupNoiseName("Products")).toBe(true);
+    expect(isJobsLineupNoiseName("Imprint")).toBe(true);
+    expect(isJobsLineupNoiseName("Impressum")).toBe(true);
+    expect(isJobsLineupNoiseName("Terms and Conditions")).toBe(true);
+    expect(isJobsLineupNoiseName("AGB")).toBe(true);
+    expect(isJobsLineupNoiseName("Datenschutz")).toBe(true);
+    const organifarms = filterJobsLineupProducts([
+      { name: "BERRY" },
+      { name: "Product" },
+      { name: "Imprint" },
+      { name: "Terms and Conditions" },
+      { name: "View Privacy Policy" },
+    ]);
+    expect(organifarms.map(p => p.name)).toEqual(["BERRY"]);
     expect(pageJobsLineup(omron, 0).map(p => p.name)).toEqual([
       "LD-250",
       "HD-1500",

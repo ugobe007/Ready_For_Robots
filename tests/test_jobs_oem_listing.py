@@ -104,6 +104,14 @@ def test_page_parse_drops_nav_marketing_words():
     assert [r["name"] for r in rows] == ["BOT#25"]
 
 
+def test_page_parse_drops_organifarms_legal_nav():
+    rows = listing_from_page(
+        ["BERRY", "Product", "Imprint", "Terms and Conditions", "View Privacy Policy"],
+        "Meet BERRY. BERRY is a harvesting robot for strawberries. Imprint. AGB.",
+    )
+    assert [r["name"] for r in rows] == ["BERRY"]
+
+
 def test_greenfield_is_not_seeded_as_a_strawberry_robot():
     """CRM/FIND must not resolve greenfieldincorporated.com from Harvest CROO / Agrobot."""
     reload_vendor_robots_index()

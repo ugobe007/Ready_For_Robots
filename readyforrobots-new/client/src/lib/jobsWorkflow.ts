@@ -486,12 +486,29 @@ const JOBS_LINEUP_NOISE_NAMES = new Set([
   "subscribe",
   "cookie",
   "cookies",
+  "product",
+  "products",
+  "produkt",
+  "produkte",
+  "imprint",
+  "impressum",
+  "agb",
+  "datenschutz",
+  "disclaimer",
+  "terms and conditions",
+  "privacy policy",
+  "view privacy policy",
+  "legal notice",
 ]);
 
 const JOBS_LINEUP_NOISE_RE =
   /\b(discontinued|activate your|amr license|products?\s+overview|our\s+story)\b/i;
 const JOBS_LINEUP_LOCALE_RE =
   /^(deutsch|espa[nñ]ol|fran[cç]ais|english|italiano|nederlands|portugu[eê]s|日本語|中文|한국어|de|fr|es|en|zh|ja)$/i;
+const JOBS_LINEUP_GENERIC_RE =
+  /^(products?|produkts?|produkte|shop|store|home|menu|more)$/i;
+const JOBS_LINEUP_LEGAL_RE =
+  /^(imprint|impressum|agb|datenschutz|disclaimer|privacy(?:\s+policy)?|terms(?:\s+and\s+conditions|\s+of\s+use|\s+of\s+service)?|view\s+privacy(?:\s+policy)?|cookies?|legal(?:\s+notice)?)$/i;
 
 export function jobsProductLimitForPlan(plan?: string | null): number {
   return plan === "paid" ? JOBS_PRODUCT_CAP_PAID : JOBS_PRODUCT_CAP_FREE;
@@ -504,6 +521,8 @@ export function isJobsLineupNoiseName(name: string): boolean {
   if (JOBS_LINEUP_NOISE_NAMES.has(low)) return true;
   if (JOBS_LINEUP_LOCALE_RE.test(low)) return true;
   if (JOBS_LINEUP_NOISE_RE.test(low)) return true;
+  if (JOBS_LINEUP_GENERIC_RE.test(low)) return true;
+  if (JOBS_LINEUP_LEGAL_RE.test(low)) return true;
   if (low.startsWith("about ")) return true;
   return false;
 }
