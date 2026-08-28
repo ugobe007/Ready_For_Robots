@@ -13,6 +13,12 @@ from app.services.jobs_oem_listing import (
     listing_from_catalog,
     listing_from_page,
 )
+from app.services.oem_sku_discover import (
+    is_junk_sku_name,
+    is_site_chrome_name,
+    is_site_chrome_slug,
+    looks_like_named_sku,
+)
 from app.services.robot_understanding_v1.fetch import FetchedPage
 from app.services.robot_understanding_v1.models import RobotCompany, RobotProduct
 from app.services.robot_url_safety import registrable_domain
@@ -107,6 +113,24 @@ _PRODUCT_HREF_NOISE = frozenset(
         "data",
         "privacy-policy",
         "terms-and-conditions",
+        "terms-of-use",
+        "terms-of-service",
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "imprint",
+        "impressum",
+        "agb",
+        "datenschutz",
+        "disclaimer",
+        "legal-notice",
+        "cookie-policy",
+        "mentions-legales",
+        "aviso-legal",
+        "note-legali",
+        "cgu",
+        "cgv",
         "robot-rentals",
         "get-in-touch",
         "learn-more",
@@ -206,6 +230,10 @@ _NAME_FOLLOW = re.compile(
     r")\b",
     re.I,
 )
+_INTRO_ROBOT_NAME = re.compile(
+    r"\b(?:[Mm]eet|[Ii]ntroducing|[Ii]['’]m|[Ii]\s+am)\s+"
+    r"((?:[A-Z]{2,12})|(?:[A-Z][a-z]{2,16}))\b"
+)
 _PROSE_NAME_NOISE = frozenset(
     {
         "the",
@@ -300,6 +328,20 @@ _PROSE_NAME_NOISE = frozenset(
         "subscribe",
         "cookie",
         "cookies",
+        "imprint",
+        "impressum",
+        "agb",
+        "datenschutz",
+        "disclaimer",
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "your",
+        "our",
+        "more",
+        "menu",
+        "gmbh",
     }
 )
 
@@ -380,8 +422,19 @@ _NAV_PRODUCT_LABELS = frozenset(
         "career",
         "privacy",
         "privacy policy",
+        "view privacy policy",
         "terms",
+        "terms and conditions",
         "legal",
+        "imprint",
+        "impressum",
+        "agb",
+        "datenschutz",
+        "disclaimer",
+        "product",
+        "products",
+        "produkt",
+        "produkte",
         "press",
         "media",
         "team",
@@ -443,6 +496,18 @@ _CATEGORY_HUB_SLUGS = frozenset(
         "contact",
         "news",
         "about",
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "imprint",
+        "impressum",
+        "agb",
+        "datenschutz",
+        "disclaimer",
+        "terms-and-conditions",
+        "privacy-policy",
+        "legal-notice",
     }
 )
 
@@ -458,14 +523,16 @@ _ACCESSORY_PRODUCT_NAME = re.compile(
     re.I,
 )
 _CTA_PRODUCT_NAME = re.compile(
-    r"^(learn|see|get|contact|read|watch|explore|download)\s+\w+",
+    r"^(learn|see|get|contact|read|watch|explore|download|view)\s+\w+",
     re.I,
 )
 _PAGE_TITLE_SKU_NOISE = re.compile(
     r"^(our\s+)?(story|stories|farmers?|team|news|blog|careers?|contact|"
     r"privacy(?:\s+policy)?|about|invest(?:ing|ment|ors?)?|home|mission|"
-    r"press|media|legal|terms|cookies?|login|support|resources?|events?|"
-    r"partners?|shop|store|pricing|demo|faq|newsletter|subscribe)$",
+    r"press|media|legal|terms(?:\s+and\s+conditions)?|cookies?|login|"
+    r"support|resources?|events?|partners?|shop|store|pricing|demo|faq|"
+    r"newsletter|subscribe|imprint|impressum|agb|datenschutz|disclaimer|"
+    r"products?|produkts?|produkte|view\s+privacy(?:\s+policy)?)$",
     re.I,
 )
 
@@ -707,6 +774,8 @@ def _is_noise_product_name(name: str) -> bool:
     raw = re.sub(r"\s+", " ", (name or "").strip())
     if not raw:
         return True
+    if is_site_chrome_name(raw) or is_junk_sku_name(raw):
+        return True
     low = raw.lower()
     if low in _NAV_PRODUCT_LABELS or low in _PRODUCT_HREF_NOISE or low in _PROSE_NAME_NOISE:
         return True
@@ -732,12 +801,18 @@ def _is_noise_product_name(name: str) -> bool:
 
 
 def _href_slug_is_product(slug: str) -> bool:
-    """True when a path slug is a robot SKU, not a hub/nav/locale page."""
+    """True when a path slug is a robot SKU, not a hub/nav/locale page.
+
+    Bare alphabetic words (product, imprint, farmers, agb) are site chrome.
+    Digits, compact codes, known SKU words, and short hyphenated models stay.
+    """
     s = (slug or "").strip().lower()
-    if not s or s in _PRODUCT_HREF_NOISE or s in _CATEGORY_HUB_SLUGS:
+    if not s or is_site_chrome_slug(s) or s in _PRODUCT_HREF_NOISE or s in _CATEGORY_HUB_SLUGS:
         return False
     if _LOCALE_PRODUCT_LABEL.fullmatch(s):
         return False
+    if looks_like_named_sku(slug) or looks_like_named_sku(_display_from_slug(slug)):
+        return True
     if _looks_like_model_or_sku(slug):
         return True
     if "-" in s:
@@ -751,10 +826,11 @@ def _href_slug_is_product(slug: str) -> bool:
             and 3 <= len(parts[0]) <= 24
             and len(parts[1]) <= 2
             and parts[0] not in _PRODUCT_HREF_NOISE
+            and not is_site_chrome_slug(parts[0])
         ):
             return True
         return False
-    return bool(re.fullmatch(r"[a-z]{3,24}", s))
+    return False
 
 
 def _merge_catalog_names(catalog_names: list[str], discovered: list[str]) -> list[str]:
@@ -1235,12 +1311,12 @@ def _sku_from_product_href(url: str) -> str | None:
     locale = _LOCALE_PRODUCT_HREF.search(path)
     if locale:
         slug = locale.group(1)
+        if slug.lower() in _ROBOT_LINE_SLUGS:
+            return slug.replace("-", " ").title()
         if not _href_slug_is_product(slug):
             return None
         if _looks_like_model_or_sku(slug):
             return _canon_path_sku(slug) or slug.upper()
-        if slug.lower() in _ROBOT_LINE_SLUGS:
-            return slug.replace("-", " ").title()
         if re.fullmatch(r"[a-z]{2,10}-[a-z0-9]{1,8}", slug, re.I):
             return slug
         return None
@@ -1334,20 +1410,30 @@ def _dedupe_product_names(names: list[str]) -> list[str]:
 
 
 def _named_robots_from_prose(text: str, *, blocked: set[str] | None = None) -> dict[str, int]:
-    """ADAM serves / Scorpion shows — named robots without a SKU regex allowlist."""
+    """ADAM serves / Scorpion shows / Meet BERRY — named robots, not nav chrome."""
     counts: dict[str, int] = {}
     blocked_keys = {_name_key(x) for x in (blocked or set()) if x}
-    for m in _PROSE_NAME.finditer(text or ""):
+    blob = text or ""
+    for m in _PROSE_NAME.finditer(blob):
         name = m.group(1)
         low = name.lower()
         if low in _PROSE_NAME_NOISE or low in _PRODUCT_HREF_NOISE:
             continue
+        if _is_noise_product_name(name):
+            continue
         if _name_key(name) in blocked_keys:
             continue
-        after = (text or "")[m.end() : m.end() + 90]
+        after = blob[m.end() : m.end() + 90]
         if not _NAME_FOLLOW.search(after):
             continue
         counts[name] = counts.get(name, 0) + 2
+    for m in _INTRO_ROBOT_NAME.finditer(blob):
+        name = m.group(1)
+        if _is_noise_product_name(name) or _name_key(name) in blocked_keys:
+            continue
+        if name.lower() in _PROSE_NAME_NOISE or name.lower() in _PRODUCT_HREF_NOISE:
+            continue
+        counts[name] = counts.get(name, 0) + 3
     return counts
 
 
