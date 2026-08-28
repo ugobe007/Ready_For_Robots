@@ -29,7 +29,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
+import JobsPresentationOffer from "@/components/JobsPresentationOffer";
 import {
+  JOBS_APPLY_SELECTED_CTA,
   JOBS_NEXT_STEPS_CTA,
   jobsCrmOfferHref,
   keepJobsOnAccount,
@@ -607,6 +609,7 @@ export default function RobotJobsWorkspace() {
   const [products, setProducts] = useState<ProductChoice[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [productCap, setProductCap] = useState(JOBS_PRODUCT_CAP_FREE);
+  const [plan, setPlan] = useState<string>("anonymous");
   const [researchPhase, setResearchPhase] = useState<ResearchPhase>("identity");
 
   // Results
@@ -664,6 +667,7 @@ export default function RobotJobsWorkspace() {
     const token = session?.access_token;
     if (!token) {
       setProductCap(JOBS_PRODUCT_CAP_FREE);
+      setPlan("anonymous");
       return;
     }
     let cancelled = false;
@@ -675,6 +679,7 @@ export default function RobotJobsWorkspace() {
       .then(
         (data: { entitlements?: { plan?: string; jobs_product_limit?: number } } | null) => {
           if (cancelled) return;
+          setPlan(data?.entitlements?.plan || "free");
           const fromApi = data?.entitlements?.jobs_product_limit;
           if (typeof fromApi === "number" && fromApi > 0) {
             setProductCap(fromApi);
@@ -2110,6 +2115,9 @@ export default function RobotJobsWorkspace() {
             onActivate={goToActivate}
             keepSavedCount={keepSavedCount}
             signedIn={Boolean(session)}
+            plan={plan}
+            accessToken={session?.access_token || null}
+            robotUrl={submittedUrlRef.current}
             submissionId={submissionIdRef.current}
             onSeeAll={seeAllJobs}
             onRunOneRobot={runOneRobot}
@@ -2934,6 +2942,9 @@ function JobsPanel({
   onActivate,
   keepSavedCount = 0,
   signedIn = false,
+  plan = "anonymous",
+  accessToken = null,
+  robotUrl = "",
   submissionId = null,
   onSeeAll,
   onRunOneRobot,
@@ -2954,6 +2965,9 @@ function JobsPanel({
   onActivate: () => void;
   keepSavedCount?: number;
   signedIn?: boolean;
+  plan?: string;
+  accessToken?: string | null;
+  robotUrl?: string;
   submissionId?: number | null;
   onSeeAll: () => void;
   onRunOneRobot: () => void;
@@ -3038,6 +3052,14 @@ function JobsPanel({
             {JOBS_NEXT_STEPS_CTA}
           </a>
         ) : null}
+        {visible.length > 0 ? (
+          <a
+            href={jobsCrmOfferHref(signedIn, submissionId)}
+            className="inline-flex items-center justify-center border border-emerald-400/50 bg-emerald-400/10 px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300"
+          >
+            {JOBS_APPLY_SELECTED_CTA}
+          </a>
+        ) : null}
       </div>
       {showCrmCtas ? (
       <JobsActivateBar
@@ -3102,6 +3124,16 @@ function JobsPanel({
         checkedCount={checkedCount}
         className="mt-8 border-t border-slate-600 pt-6"
       />
+      ) : null}
+      {visible.length > 0 ? (
+        <JobsPresentationOffer
+          signedIn={signedIn}
+          plan={plan}
+          token={accessToken}
+          robotUrl={robotUrl || ""}
+          companyName={companyName || analysis.companyName}
+          productName={analysis.productName}
+        />
       ) : null}
     </div>
   );
@@ -3323,6 +3355,23 @@ function JobCard({
               <dt className={eyebrow}>Work being performed</dt>
               <dd className="mt-0.5">{card.work}</dd>
             </div>
+            {card.description ? (
+              <div>
+                <dt className={eyebrow}>Job description</dt>
+                <dd className="mt-0.5 text-slate-300">{card.description}</dd>
+              </div>
+            ) : null}
+            <div>
+              <dt className={eyebrow}>{card.payEstimate.heading}</dt>
+              <dd className="mt-0.5">
+                <span className="text-emerald-300">{card.payEstimate.monthlyLabel}</span>
+                {" · "}
+                <span className="text-emerald-300">{card.payEstimate.annualLabel}</span>
+                <span className="mt-0.5 block text-slate-400">
+                  {card.payEstimate.disclaimer}
+                </span>
+              </dd>
+            </div>
             <div>
               <dt className={eyebrow}>{card.qualificationLabel}</dt>
               <dd className="mt-0.5 text-slate-300">{card.qualificationHint}</dd>
@@ -3415,22 +3464,6 @@ function JobCard({
                     className="text-[13px] leading-snug text-slate-200"
                   >
                     <span className="text-emerald-400">✓</span> {w}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {card.openQuestions.length ? (
-            <div className="mt-3">
-              <p className={eyebrow}>Open questions</p>
-              <ul className="mt-1 space-y-0.5">
-                {card.openQuestions.map(w => (
-                  <li
-                    key={w}
-                    className="text-[13px] leading-snug text-amber-200/80"
-                  >
-                    ? {w}
                   </li>
                 ))}
               </ul>

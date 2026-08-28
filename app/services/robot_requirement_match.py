@@ -240,6 +240,7 @@ class JobMatchCard:
     requirements: list[RequirementResult] = field(default_factory=list)
     source: str = "requirement_match"
     required_task_models: list[dict[str, Any]] = field(default_factory=list)
+    text: str = ""
 
     def to_api_job(self) -> dict[str, Any]:
         return {
@@ -255,6 +256,7 @@ class JobMatchCard:
             "still_unknown": list(self.still_unknown),
             "blockers": list(self.blockers),
             "unknowns": list(self.still_unknown),
+            "text": self.text,
             "requirements": [r.to_dict() for r in self.requirements],
             "required_task_models": list(self.required_task_models),
             "source": self.source,
@@ -867,6 +869,7 @@ def evaluate_job(
         requirements=results,
         source="requirement_match",
         required_task_models=models,
+        text=str(row.get("text") or job_spec.get("text") or "").strip(),
     )
 
 

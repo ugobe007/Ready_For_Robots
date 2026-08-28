@@ -40,6 +40,7 @@ import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
 import JobsCrmInbox from "@/components/JobsCrmInbox";
 import {
   JOBS_APPLY_NEXT_CTA,
+  JOBS_APPLY_SELECTED_CTA,
   JOBS_APPLY_SEQUENCE,
   fetchKeptJobs,
   isJobsCrmOfferQuery,
@@ -316,10 +317,10 @@ export default function JobsCrmDesk({
               <a
                 href={jobsCrmOfferHref(signedIn, submissionId)}
                 onClick={openOfferForm}
-                aria-label={JOBS_APPLY_NEXT_CTA}
+                aria-label={JOBS_APPLY_SELECTED_CTA}
                 className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
               >
-                {JOBS_APPLY_NEXT_CTA}
+                {JOBS_APPLY_SELECTED_CTA}
               </a>
               <p className="basis-full text-sm leading-relaxed text-slate-400">
                 {JOBS_APPLY_SEQUENCE}
@@ -329,6 +330,7 @@ export default function JobsCrmDesk({
           {showNextSteps && offerJob && accessToken ? (
             <JobsCrmNextSteps
               job={offerJob}
+              jobs={jobs.filter(j => selected.includes(j.job_key))}
               robotName={product}
               robotUrl={robotUrl}
               token={accessToken}
@@ -501,6 +503,23 @@ function CollectedJobInspect({ job }: { job: MatchJob }) {
           <dt className={eyebrow}>Work being performed</dt>
           <dd className="mt-0.5">{card.work}</dd>
         </div>
+        {card.description ? (
+          <div>
+            <dt className={eyebrow}>Job description</dt>
+            <dd className="mt-0.5 text-slate-300">{card.description}</dd>
+          </div>
+        ) : null}
+        <div>
+          <dt className={eyebrow}>{card.payEstimate.heading}</dt>
+          <dd className="mt-0.5">
+            <span className="text-emerald-300">{card.payEstimate.monthlyLabel}</span>
+            {" · "}
+            <span className="text-emerald-300">{card.payEstimate.annualLabel}</span>
+            <span className="mt-0.5 block text-slate-400">
+              {card.payEstimate.disclaimer}
+            </span>
+          </dd>
+        </div>
         <div>
           <dt className={eyebrow}>{card.qualificationLabel}</dt>
           <dd className="mt-0.5 text-slate-300">{card.qualificationHint}</dd>
@@ -560,19 +579,6 @@ function CollectedJobInspect({ job }: { job: MatchJob }) {
               )}
             </div>
           ) : null}
-        </div>
-      ) : null}
-
-      {card.openQuestions.length ? (
-        <div className="mt-3">
-          <p className={eyebrow}>Open questions</p>
-          <ul className="mt-1 space-y-0.5">
-            {card.openQuestions.map(w => (
-              <li key={w} className="text-[13px] leading-snug text-amber-200/80">
-                ? {w}
-              </li>
-            ))}
-          </ul>
         </div>
       ) : null}
 

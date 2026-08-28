@@ -131,6 +131,7 @@ export type RobotJobCardView = {
   workplace: string | null;
   jobTitle: string;
   work: string;
+  description: string | null;
   requirements: string[];
   workVolume: string | null;
   currentLabor: string | null;
@@ -143,7 +144,66 @@ export type RobotJobCardView = {
   taskModels: RequiredTaskModel[];
   modelLinks: TaskModelLookup[];
   modelContract: TaskModelCardContract | null;
+  payEstimate: JobCardPayEstimate;
 };
+
+/** Operator formula for robot pay on a Job Card. Labeled estimate, not an employer quote. */
+export const JOB_CARD_PAY_MONTHLY_LOW = 5000;
+export const JOB_CARD_PAY_MONTHLY_HIGH = 7500;
+export const JOB_CARD_PAY_HEADING = "Potential contract value";
+export const JOB_CARD_PAY_DISCLAIMER =
+  "Estimate of robot pay — not an employer quote.";
+
+export type JobCardPayEstimate = {
+  monthlyLow: number;
+  monthlyHigh: number;
+  annualLow: number;
+  annualHigh: number;
+  monthlyLabel: string;
+  annualLabel: string;
+  heading: string;
+  disclaimer: string;
+};
+
+function usdBand(low: number, high: number): string {
+  const fmt = (n: number) =>
+    n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+  return `${fmt(low)}–${fmt(high)}`;
+}
+
+export function jobCardPayEstimate(): JobCardPayEstimate {
+  const monthlyLow = JOB_CARD_PAY_MONTHLY_LOW;
+  const monthlyHigh = JOB_CARD_PAY_MONTHLY_HIGH;
+  const annualLow = monthlyLow * 12;
+  const annualHigh = monthlyHigh * 12;
+  return {
+    monthlyLow,
+    monthlyHigh,
+    annualLow,
+    annualHigh,
+    monthlyLabel: `${usdBand(monthlyLow, monthlyHigh)} / month`,
+    annualLabel: `${usdBand(annualLow, annualHigh)} / year`,
+    heading: JOB_CARD_PAY_HEADING,
+    disclaimer: JOB_CARD_PAY_DISCLAIMER,
+  };
+}
+
+function jobDescriptionFromMatch(job: {
+  title?: string | null;
+  text?: string | null;
+  why?: string[] | null;
+}): string | null {
+  const title = (job.title || "").trim();
+  const raw = String(job.text || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (raw && raw.toLowerCase() !== title.toLowerCase()) {
+    if (raw.length <= 420) return raw;
+    return `${raw.slice(0, 420).replace(/\s+\S*$/, "").trim()}…`;
+  }
+  const why = (job.why || []).find(line => String(line || "").trim().length >= 12);
+  return why ? String(why).trim() : null;
+}
 
 export const QUALIFICATION_LABEL: Record<RobotJobQualification, string> = {
   qualified: "Qualified",
@@ -424,11 +484,13 @@ export function robotJobCardFromMatch(job: {
     taskModels,
   );
   const title = (job.title || "").trim() || "Untitled job";
+  const description = jobDescriptionFromMatch(job);
   return {
     employer: emptyToNull(job.company_name),
     workplace: emptyToNull(job.locality),
     jobTitle: title,
     work: title,
+    description,
     requirements: (job.why || []).filter(w => !TASK_MODEL_WHY_HOLE.test(w)),
     workVolume: null,
     currentLabor: null,
@@ -441,6 +503,7 @@ export function robotJobCardFromMatch(job: {
     taskModels,
     modelLinks,
     modelContract: taskModels.find(m => m.cardContract)?.cardContract || null,
+    payEstimate: jobCardPayEstimate(),
   };
 }
 

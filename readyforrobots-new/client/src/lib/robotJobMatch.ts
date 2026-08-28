@@ -77,6 +77,8 @@ export type MatchJob = {
       steps?: { n: number; label: string; body: string }[];
     };
   }[];
+  /** Real work text from the corpus. Surfaced on the Job Card; never invented. */
+  text?: string | null;
   /** SKU this card is for. Set on the Jobs terminal, carried onto the pipeline list. */
   forRobot?: string;
 };
