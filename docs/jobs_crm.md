@@ -131,11 +131,11 @@ Signed-in OEM uploads PDF/image specs (`user_robot_documents`, 8 MB, account-pri
 
 ### F14 — Employer evaluate (ship)
 
-Outreach (only with a real employer email) includes token **Accept** and **Set up interview**. `/employer/:token` needs no RFR account. The public payload includes `poc_video_url` when the OEM pasted an allowlisted link; the page embeds Loom/YouTube/Vimeo or shows **Watch demo**. Tokens write `application_messages` and status (`accepted` / `interview_requested` / `interview_scheduled` / `interview_held`). Scheduling is **propose a time** (OEM confirms), **hold this slot** (concrete window persisted on the application), or “connect us”. Not Cal. `/calendar` is SIGNAL and stays unwired.
+Outreach (only with a real employer email) includes token **Accept**, **Set up interview**, and **Decline**. `/employer/:token` needs no RFR account. The public payload includes `poc_video_url` when the OEM pasted an allowlisted link; the page embeds Loom/YouTube/Vimeo or shows **Watch demo**. Tokens write `application_messages` and status (`accepted` / `interview_requested` / `interview_scheduled` / `interview_held` / `declined`). Decline requires a task-model reason code (`work_mismatch` / `model_unproven` / `site_constraints` / `timing_budget` / `other`) plus optional note (`other` requires a note). Scheduling is **propose a time** (OEM confirms), **hold this slot** (concrete window persisted on the application), or “connect us”. Not Cal. `/calendar` is SIGNAL and stays unwired.
 
 ### F15 — Recruiter emails to the OEM (ship)
 
-On apply, accept, interview, hold, confirm/release, and success/fail, email the signed-in OEM account. Confirm job + employer + status. A hold email names the employer, job, and held window, plus a confirm/release link (`/oem-hold/:token`). Both-sides interview email sends only when a real employer email exists. Interview time lives on the application.
+On apply, accept, decline, interview, hold, confirm/release, and success/fail, email the signed-in OEM account. Confirm job + employer + status. A decline email names the reason code (why the robot/policy did not fit) and any note. A hold email names the employer, job, and held window, plus a confirm/release link (`/oem-hold/:token`). Both-sides interview email sends only when a real employer email exists. Interview time lives on the application.
 
 ### F7 — 7-day free TTL + 15/month (spec now, enforce next)
 
@@ -214,6 +214,6 @@ Matcher retune, Cal, invented dollars, HubSpot OAuth export UI, cron expiry job,
 ## Next missions (ranked)
 
 1. Wire Resend inbound MX/DNS so employer replies land automatically (`jobs+{token}@` domain).
-2. Enforce F7 cron expiry job in production (`alembic upgrade` leftover until Fly runs it). Alembic `pvud0a1b2c3d4` adds `job_applications.poc_video_url` — Fly migrate may timeout; apply video URLs need that column in prod.
+2. Enforce F7 cron expiry job in production (`alembic upgrade` leftover until Fly runs it). Alembic `edcl0a1b2c3d4` adds `job_applications.decline_reason_code` + `decline_note` (revises `pvud0a1b2c3d4`). Fly migrate may timeout; employer Decline needs those columns in prod.
 3. Paid F8: list all matching jobs, not only the last FIND dump.
 4. F9: HubSpot + CSV export of Robot Jobs.

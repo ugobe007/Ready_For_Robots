@@ -86,6 +86,8 @@ class JobApplication(Base):
     slot_end = Column(DateTime(timezone=True), nullable=True)
     oem_hold_token = Column(String(80), nullable=True, unique=True, index=True)
     oem_email = Column(String(320), nullable=True)
+    decline_reason_code = Column(String(40), nullable=True)
+    decline_note = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False

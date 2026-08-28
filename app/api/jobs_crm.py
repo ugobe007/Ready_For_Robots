@@ -26,6 +26,7 @@ from app.services.jobs_crm import (
 from app.services.jobs_crm_recruiter import (
     MAX_DOC_BYTES,
     accept_application,
+    decline_application,
     confirm_hold,
     confirm_hold_by_token,
     confirm_interview,
@@ -84,6 +85,11 @@ class InterviewBody(BaseModel):
 class HoldSlotBody(BaseModel):
     slot_start: str = Field(..., min_length=1, max_length=80)
     slot_end: Optional[str] = Field(default=None, max_length=80)
+    note: Optional[str] = Field(default=None, max_length=2000)
+
+
+class DeclineBody(BaseModel):
+    reason_code: Optional[str] = Field(default=None, max_length=40)
     note: Optional[str] = Field(default=None, max_length=2000)
 
 
@@ -317,6 +323,25 @@ def get_employer_decision(token: str, db: Session = Depends(get_db)):
 def post_employer_accept(token: str, db: Session = Depends(get_db)):
     try:
         return accept_application(db, token)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="This application link is not valid.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/employer/{token}/decline")
+def post_employer_decline(
+    token: str,
+    body: DeclineBody,
+    db: Session = Depends(get_db),
+):
+    try:
+        return decline_application(
+            db,
+            token,
+            reason_code=body.reason_code,
+            note=body.note,
+        )
     except KeyError:
         raise HTTPException(status_code=404, detail="This application link is not valid.")
     except ValueError as exc:

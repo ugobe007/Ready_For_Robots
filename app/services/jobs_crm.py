@@ -411,6 +411,7 @@ def _compose_offer_email(
     workplace: str | None,
     accept_url: str | None = None,
     interview_url: str | None = None,
+    decline_url: str | None = None,
     document_lines: list[str] | None = None,
     poc_video_url: str | None = None,
 ) -> tuple[str, str]:
@@ -429,12 +430,14 @@ def _compose_offer_email(
         lines.append(f"Video résumé (unlisted, this Job Card): {poc_video_url}")
     if document_lines:
         lines.extend(["", *document_lines])
-    if accept_url or interview_url:
+    if accept_url or interview_url or decline_url:
         lines.extend(["", "Evaluate this application (no Ready For Robots account required):"])
         if accept_url:
             lines.append(f"Accept: {accept_url}")
         if interview_url:
             lines.append(f"Set up interview: {interview_url}")
+        if decline_url:
+            lines.append(f"Decline: {decline_url}")
     lines.extend(
         [
             "",
@@ -566,6 +569,7 @@ def apply_to_job(
         workplace=ident["workplace"],
         accept_url=f"{decision}?action=accept",
         interview_url=f"{decision}?action=interview",
+        decline_url=f"{decision}?action=decline",
         document_lines=document_lines_for_email(employer_token, attached),
         poc_video_url=video_url,
     )
@@ -670,9 +674,10 @@ def application_payload(row: JobApplication, *, include_messages: bool = False) 
         from app.services.jobs_crm_recruiter import employer_decision_url
 
         payload["employer_decision_url"] = employer_decision_url(token)
-    from app.services.jobs_crm_recruiter import hold_fields_for_payload
+    from app.services.jobs_crm_recruiter import decline_fields_for_payload, hold_fields_for_payload
 
     payload.update(hold_fields_for_payload(row))
+    payload.update(decline_fields_for_payload(row))
     return payload
 
 

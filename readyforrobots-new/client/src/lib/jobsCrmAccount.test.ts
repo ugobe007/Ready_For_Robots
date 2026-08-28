@@ -8,6 +8,8 @@ import {
   JOBS_APPLY_OFFER_CTA,
   JOBS_EMPLOYER_HOLD_CTA,
   JOBS_EMPLOYER_PROPOSE_CTA,
+  JOBS_EMPLOYER_DECLINE_CTA,
+  JOBS_DECLINE_REASONS,
   JOBS_KEEP_YES_CTA,
   JOBS_MODEL_SELECT_LABEL,
   JOBS_NEXT_STEPS_ANCHOR,
@@ -16,6 +18,7 @@ import {
   JOBS_OEM_RELEASE_HOLD_CTA,
   JOBS_PROPOSED_PRICE_LABEL,
   applicationStatusLabel,
+  declineReasonLabel,
   suggestedHoldSlots,
   canSubmitNextStepsOffer,
   jobsCrmOfferHref,
@@ -166,13 +169,20 @@ describe("jobs CRM keep / next-steps / apply", () => {
     const employer = readFileSync(join(here, "../pages/EmployerDecision.tsx"), "utf8");
     expect(appTsx).toMatch(/\/employer\/:token/);
     expect(employer).toMatch(/JOBS_EMPLOYER_ACCEPT_CTA/);
+    expect(employer).toMatch(/JOBS_EMPLOYER_DECLINE_CTA/);
     expect(employer).toMatch(/JOBS_EMPLOYER_INTERVIEW_CTA/);
     expect(employer).toMatch(/JOBS_EMPLOYER_HOLD_CTA/);
     expect(employer).toMatch(/JOBS_EMPLOYER_PROPOSE_CTA/);
     expect(employer).toMatch(/PocVideoWatch/);
     expect(employer).toMatch(/poc_video_url/);
+    expect(employer).toMatch(/JOBS_DECLINE_REASONS/);
+    expect(employer).toMatch(/\/decline/);
+    expect(employer).toMatch(/reason_code/);
+    expect(employer).toMatch(/name="decline-reason"/);
     expect(inbox).toMatch(/PocVideoWatch/);
     expect(inbox).toMatch(/poc_video_url/);
+    expect(inbox).toMatch(/decline_reason_code/);
+    expect(inbox).toMatch(/declineReasonLabel/);
     expect(employer).toMatch(/\/hold/);
     expect(employer).toMatch(/datetime-local/);
     expect(inbox).toMatch(/JOBS_OEM_CONFIRM_HOLD_CTA/);
@@ -182,9 +192,20 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(appTsx).toMatch(/\/oem-hold\/:token/);
     expect(JOBS_EMPLOYER_HOLD_CTA).toBe("Hold this slot");
     expect(JOBS_EMPLOYER_PROPOSE_CTA).toBe("Propose this time");
+    expect(JOBS_EMPLOYER_DECLINE_CTA).toBe("Decline");
     expect(JOBS_OEM_CONFIRM_HOLD_CTA).toBe("Confirm hold");
     expect(JOBS_OEM_RELEASE_HOLD_CTA).toBe("Release hold");
     expect(applicationStatusLabel("interview_held")).toBe("Interview slot held");
+    expect(applicationStatusLabel("declined")).toBe("Declined");
+    expect(JOBS_DECLINE_REASONS.map(row => row.code)).toEqual([
+      "work_mismatch",
+      "model_unproven",
+      "site_constraints",
+      "timing_budget",
+      "other",
+    ]);
+    expect(declineReasonLabel("work_mismatch")).toMatch(/physical work/);
+    expect(declineReasonLabel("model_unproven")).toMatch(/task model/);
     const slots = suggestedHoldSlots(new Date("2026-09-01T12:00:00"));
     expect(slots).toHaveLength(3);
     expect(slots[0].start).toMatch(/T10:00$/);
