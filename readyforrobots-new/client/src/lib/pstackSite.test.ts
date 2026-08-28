@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   CRITIC_GATES,
+  CRITIC_HELDOUT_FIND_URLS,
   JOBS_MATCHER_SOURCE,
   PSTACK_CHROME_LEAD,
   PSTACK_CHROME_TITLE,
@@ -12,6 +13,7 @@ import {
   PSTACK_ROLE_IDS,
   PSTACK_ROLES,
   criticGateIds,
+  criticHeldoutFindUrls,
   crmWallRequired,
   isMatcherTheJobSource,
   jobsMatcherPath,
@@ -49,9 +51,15 @@ describe("pstackSite protocol", () => {
       "job_cards",
       "wall",
       "matcher",
+      "oem_extract",
     ]);
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.prove).toBe("FIND is /");
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.fail).toMatch(/experiment/);
+    expect(CRITIC_GATES.find(gate => gate.id === "oem_extract")?.fail).toMatch(/chrome/);
+    expect(criticHeldoutFindUrls()).toEqual([...CRITIC_HELDOUT_FIND_URLS]);
+    expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.xpeng.com/");
+    expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.greenfieldincorporated.com/");
+    expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.organifarms.de/");
     expect(crmWallRequired()).toBe(true);
     expect(PSTACK_CRM_WALL_REQUIRED).toBe(true);
     expect(jobsCrmOpenHref(false)).toMatch(/\/signup\?/);

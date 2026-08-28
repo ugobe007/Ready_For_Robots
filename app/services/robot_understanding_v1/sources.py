@@ -77,6 +77,10 @@ _REJECT_PATH = re.compile(
     r"contact(?:-us)?|leadership|team|board|about(?:-us)?|company/?$|"
     r"newsletter|subscribe|farmers?|story|stories|our-story|mission|"
     r"home/?$|"
+    r"imprint|impressum|agb|datenschutz|disclaimer|"
+    r"terms-and-conditions|privacy-policy|cookie-policy|legal-notice|"
+    r"mentions-legales|aviso-legal|note-legali|cgu|cgv|"
+    r"investors?|investor-relations|vehicles?|"
     # Indexes (not articles): bare blog/news hubs
     r"blog/?$|blogs/?$|news/?$|press/?$|resources/?$)"
     r"(/|$|\?)",

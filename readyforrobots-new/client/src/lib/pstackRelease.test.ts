@@ -151,17 +151,16 @@ describe("pstack release — #172 leftover CRM strawberry robot", () => {
 describe("pstack release authority is not FIND/CRM chrome", () => {
   it("does not require JobsPstackProtocol on FIND or CRM to merge", () => {
     expect(PSTACK_RELEASE_CHROME_REQUIRED).toBe(false);
-    expect(criticGateIds()).toEqual(
-      expect.arrayContaining([
-        "find",
-        "find_abort",
-        "find_identity",
-        "crm_leftover",
-        "job_cards",
-        "wall",
-        "matcher",
-      ]),
-    );
+    expect(criticGateIds()).toEqual([
+      "find",
+      "find_abort",
+      "find_identity",
+      "crm_leftover",
+      "job_cards",
+      "wall",
+      "matcher",
+      "oem_extract",
+    ]);
     const desk = readFileSync(
       join(here, "../components/JobsCrmDesk.tsx"),
       "utf8",

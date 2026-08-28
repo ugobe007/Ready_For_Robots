@@ -52,6 +52,9 @@ critic:
     prove: signup before the CRM desk
   - id: matcher
     prove: POST /api/robot-job-match is code
+  - id: oem_extract
+    prove: unknown OEM picker is evidence-only
+    fail: chrome names or another company's robot in the FIND picker
   - id: find_drive
     prove: POST /api/robot-job-search for a real OEM URL does not return Research failed
 

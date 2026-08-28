@@ -386,6 +386,27 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
             "CRM leftover strawberry robot fixture is required on Jobs PRs",
         )
     )
+    oem_discover = (
+        _read(ROOT / "app" / "services" / "oem_sku_discover.py")
+        if (ROOT / "app" / "services" / "oem_sku_discover.py").is_file()
+        else ""
+    )
+    oem_test = (
+        _read(ROOT / "tests" / "test_unknown_oem_extract.py")
+        if (ROOT / "tests" / "test_unknown_oem_extract.py").is_file()
+        else ""
+    )
+    checks.append(
+        _check(
+            "oem_extract",
+            "oem_extract" in site
+            and "oem_extract" in protocol
+            and "CRITIC_HELDOUT_FIND_URLS" in protocol
+            and "is_site_chrome_name" in oem_discover
+            and "CRITIC_HELDOUT_FIND_URLS" in oem_test,
+            "unknown OEM picker is evidence-only; chrome names are not SKUs",
+        )
+    )
 
     drives: list[dict[str, Any]] = []
     if local:

@@ -302,6 +302,13 @@ def listing_payload_for_url(url: str) -> dict[str, Any]:
     robots = listing_from_catalog(vendor)
     for row in robots:
         row["description"] = format_listing_blurb(row)
+    if not robots:
+        return {
+            "matched": False,
+            "vendor_name": None,
+            "vendor_url": None,
+            "robots": [],
+        }
     return {
         "matched": True,
         "vendor_name": (vendor.get("vendor_name") or "").strip() or None,

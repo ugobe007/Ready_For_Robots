@@ -20,8 +20,8 @@ from app.services.shared_api_cache import shared_cache_get, shared_cache_set
 
 logger = logging.getLogger(__name__)
 
-# v10: drop OEM hub/nav/locale labels from the Jobs picker.
-NAMESPACE = "robot_profile_v10"
+# v12: unknown-OEM evidence gate — drop chrome/vehicle/catalog-overlay SKUs.
+NAMESPACE = "robot_profile_v12"
 DEFAULT_TTL_SEC = 6 * 60 * 60  # 6 hours
 _MEM_MAX = 64
 _mem: dict[str, tuple[float, dict[str, Any]]] = {}

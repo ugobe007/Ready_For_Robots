@@ -67,6 +67,23 @@ CRITIC_GATES: tuple[dict[str, str], ...] = (
     {"id": "job_cards", "prove": "named employer and real work", "fail": "invented rental dollars"},
     {"id": "wall", "prove": "signup before the CRM desk", "fail": "unsigned /pipeline?src=jobs_activate desk"},
     {"id": "matcher", "prove": "POST /api/robot-job-match", "fail": "LLM as the job source"},
+    {
+        "id": "oem_extract",
+        "prove": "unknown OEM picker is evidence-only",
+        "fail": "chrome names or another company's robot in the FIND picker",
+    },
+)
+
+# Jobs PRs fail if FIND picker for these URLs contains chrome or a leftover robot.
+CRITIC_HELDOUT_FIND_URLS: tuple[str, ...] = (
+    "https://advanced.farm/",
+    "https://bedrockrobotics.com/",
+    "https://www.xpeng.com/",
+    "https://www.aandkrobotics.com/",
+    "https://www.avatarrobotics.com/",
+    "https://www.agtonomy.com/",
+    "https://www.greenfieldincorporated.com/",
+    "https://www.organifarms.de/",
 )
 
 FORBIDDEN: dict[SiteAgentRefusal, str] = {
@@ -88,6 +105,10 @@ def jobs_matcher_path() -> str:
 
 def critic_gate_ids() -> list[str]:
     return [gate["id"] for gate in CRITIC_GATES]
+
+
+def critic_heldout_find_urls() -> list[str]:
+    return list(CRITIC_HELDOUT_FIND_URLS)
 
 
 def refuse_site_agent(reason: SiteAgentRefusal) -> dict[str, Any]:

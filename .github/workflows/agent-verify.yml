@@ -149,7 +149,8 @@ jobs:
             client/src/lib/pstackRelease.test.ts \
             client/src/lib/jobsCrmAccount.test.ts \
             client/src/lib/jobsHandoffSnapshot.test.ts \
-            client/src/lib/robotUrlIdentity.test.ts
+            client/src/lib/robotUrlIdentity.test.ts \
+            client/src/lib/findResearch.test.ts
 
       - name: Upload evidence
         if: always()

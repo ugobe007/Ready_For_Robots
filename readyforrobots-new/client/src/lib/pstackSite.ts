@@ -34,7 +34,8 @@ export type CriticGate = {
     | "crm_leftover"
     | "job_cards"
     | "wall"
-    | "matcher";
+    | "matcher"
+    | "oem_extract";
   prove: string;
   fail: string;
 };
@@ -108,6 +109,22 @@ export const CRITIC_GATES: readonly CriticGate[] = [
     prove: "POST /api/robot-job-match",
     fail: "LLM as the job source",
   },
+  {
+    id: "oem_extract",
+    prove: "unknown OEM picker is evidence-only",
+    fail: "chrome names or another company's robot in the FIND picker",
+  },
+] as const;
+
+export const CRITIC_HELDOUT_FIND_URLS = [
+  "https://advanced.farm/",
+  "https://bedrockrobotics.com/",
+  "https://www.xpeng.com/",
+  "https://www.aandkrobotics.com/",
+  "https://www.avatarrobotics.com/",
+  "https://www.agtonomy.com/",
+  "https://www.greenfieldincorporated.com/",
+  "https://www.organifarms.de/",
 ] as const;
 
 export const PSTACK_CHROME_EYEBROW = "Jobs agent protocol";
@@ -135,6 +152,10 @@ export function jobsMatcherPath(): string {
 
 export function criticGateIds(): CriticGate["id"][] {
   return CRITIC_GATES.map(gate => gate.id);
+}
+
+export function criticHeldoutFindUrls(): string[] {
+  return [...CRITIC_HELDOUT_FIND_URLS];
 }
 
 export function crmWallRequired(): boolean {

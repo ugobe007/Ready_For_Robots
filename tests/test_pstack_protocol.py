@@ -3,9 +3,11 @@ from pathlib import Path
 
 from app.services.pstack_protocol import (
     CRM_WALL_REQUIRED,
+    CRITIC_HELDOUT_FIND_URLS,
     JOBS_MATCHER_SOURCE,
     ROLES,
     critic_gate_ids,
+    critic_heldout_find_urls,
     crm_copilot_intent,
     jobs_matcher_path,
     refuse_gateway,
@@ -29,8 +31,25 @@ def test_roles_and_matcher_source():
         "job_cards",
         "wall",
         "matcher",
+        "oem_extract",
     ]
     assert CRM_WALL_REQUIRED is True
+
+
+def test_critic_heldout_find_urls_cover_unknown_oems():
+    urls = critic_heldout_find_urls()
+    assert urls == list(CRITIC_HELDOUT_FIND_URLS)
+    for host in (
+        "advanced.farm",
+        "bedrockrobotics.com",
+        "xpeng.com",
+        "aandkrobotics.com",
+        "avatarrobotics.com",
+        "agtonomy.com",
+        "greenfieldincorporated.com",
+        "organifarms.de",
+    ):
+        assert any(host in u for u in urls)
 
 
 def test_refusals_block_gateway_hermes_and_chat():

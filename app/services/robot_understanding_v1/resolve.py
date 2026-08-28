@@ -13,6 +13,18 @@ from app.services.jobs_oem_listing import (
     listing_from_catalog,
     listing_from_page,
 )
+from app.services.oem_sku_discover import (
+    classify_href_candidate,
+    href_is_vehicle_path,
+    is_junk_sku_name,
+    is_site_chrome_name,
+    is_site_chrome_slug,
+    jsonld_product_names,
+    looks_like_named_sku,
+    looks_like_vehicle_model,
+    name_is_proven_product,
+    trademark_product_names,
+)
 from app.services.robot_understanding_v1.fetch import FetchedPage
 from app.services.robot_understanding_v1.models import RobotCompany, RobotProduct
 from app.services.robot_url_safety import registrable_domain
@@ -107,6 +119,24 @@ _PRODUCT_HREF_NOISE = frozenset(
         "data",
         "privacy-policy",
         "terms-and-conditions",
+        "terms-of-use",
+        "terms-of-service",
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "imprint",
+        "impressum",
+        "agb",
+        "datenschutz",
+        "disclaimer",
+        "legal-notice",
+        "cookie-policy",
+        "mentions-legales",
+        "aviso-legal",
+        "note-legali",
+        "cgu",
+        "cgv",
         "robot-rentals",
         "get-in-touch",
         "learn-more",
@@ -206,6 +236,10 @@ _NAME_FOLLOW = re.compile(
     r")\b",
     re.I,
 )
+_INTRO_ROBOT_NAME = re.compile(
+    r"\b(?:[Mm]eet|[Ii]ntroducing|[Ii]['’]m|[Ii]\s+am)\s+"
+    r"((?:[A-Z]{2,12})|(?:[A-Z][a-z]{2,16}))\b"
+)
 _PROSE_NAME_NOISE = frozenset(
     {
         "the",
@@ -300,6 +334,20 @@ _PROSE_NAME_NOISE = frozenset(
         "subscribe",
         "cookie",
         "cookies",
+        "imprint",
+        "impressum",
+        "agb",
+        "datenschutz",
+        "disclaimer",
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "your",
+        "our",
+        "more",
+        "menu",
+        "gmbh",
     }
 )
 
@@ -380,8 +428,19 @@ _NAV_PRODUCT_LABELS = frozenset(
         "career",
         "privacy",
         "privacy policy",
+        "view privacy policy",
         "terms",
+        "terms and conditions",
         "legal",
+        "imprint",
+        "impressum",
+        "agb",
+        "datenschutz",
+        "disclaimer",
+        "product",
+        "products",
+        "produkt",
+        "produkte",
         "press",
         "media",
         "team",
@@ -443,6 +502,18 @@ _CATEGORY_HUB_SLUGS = frozenset(
         "contact",
         "news",
         "about",
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "imprint",
+        "impressum",
+        "agb",
+        "datenschutz",
+        "disclaimer",
+        "terms-and-conditions",
+        "privacy-policy",
+        "legal-notice",
     }
 )
 
@@ -458,14 +529,16 @@ _ACCESSORY_PRODUCT_NAME = re.compile(
     re.I,
 )
 _CTA_PRODUCT_NAME = re.compile(
-    r"^(learn|see|get|contact|read|watch|explore|download)\s+\w+",
+    r"^(learn|see|get|contact|read|watch|explore|download|view)\s+\w+",
     re.I,
 )
 _PAGE_TITLE_SKU_NOISE = re.compile(
     r"^(our\s+)?(story|stories|farmers?|team|news|blog|careers?|contact|"
     r"privacy(?:\s+policy)?|about|invest(?:ing|ment|ors?)?|home|mission|"
-    r"press|media|legal|terms|cookies?|login|support|resources?|events?|"
-    r"partners?|shop|store|pricing|demo|faq|newsletter|subscribe)$",
+    r"press|media|legal|terms(?:\s+and\s+conditions)?|cookies?|login|"
+    r"support|resources?|events?|partners?|shop|store|pricing|demo|faq|"
+    r"newsletter|subscribe|imprint|impressum|agb|datenschutz|disclaimer|"
+    r"products?|produkts?|produkte|view\s+privacy(?:\s+policy)?)$",
     re.I,
 )
 
@@ -566,7 +639,11 @@ def resolve_identity(
     """
     domain = _root_domain(home.final_url or submitted_url)
     catalog = lookup_vendor_by_url(submitted_url) or lookup_vendor_by_url(home.final_url)
-    catalog_names = index_robot_names(catalog) if catalog else []
+    catalog_names = []
+    if catalog:
+        from app.services.jobs_oem_listing import listing_from_catalog
+
+        catalog_names = [str(row["name"]) for row in listing_from_catalog(catalog) if row.get("name")]
     # Discover product candidates first so the company step can enforce the
     # negative invariant (product string ≠ company unless org evidence).
     discovered = _discover_product_names(home, product_hint=product_hint)
@@ -707,6 +784,8 @@ def _is_noise_product_name(name: str) -> bool:
     raw = re.sub(r"\s+", " ", (name or "").strip())
     if not raw:
         return True
+    if is_site_chrome_name(raw) or is_junk_sku_name(raw):
+        return True
     low = raw.lower()
     if low in _NAV_PRODUCT_LABELS or low in _PRODUCT_HREF_NOISE or low in _PROSE_NAME_NOISE:
         return True
@@ -732,18 +811,43 @@ def _is_noise_product_name(name: str) -> bool:
 
 
 def _href_slug_is_product(slug: str) -> bool:
-    """True when a path slug is a robot SKU, not a hub/nav/locale page."""
+    """True when a path slug is a robot SKU, not a hub/nav/locale page.
+
+    Bare alphabetic words (product, imprint, farmers, agb) are site chrome.
+    Digits, compact codes, known SKU words, and short hyphenated models stay.
+    """
     s = (slug or "").strip().lower()
-    if not s or s in _PRODUCT_HREF_NOISE or s in _CATEGORY_HUB_SLUGS:
+    if not s or is_site_chrome_slug(s) or s in _PRODUCT_HREF_NOISE or s in _CATEGORY_HUB_SLUGS:
+        return False
+    if classify_href_candidate(f"https://example.invalid/{s}", s) in {
+        "chrome",
+        "hub",
+        "vehicle",
+    }:
         return False
     if _LOCALE_PRODUCT_LABEL.fullmatch(s):
         return False
+    if looks_like_named_sku(slug) or looks_like_named_sku(_display_from_slug(slug)):
+        return True
     if _looks_like_model_or_sku(slug):
         return True
     if "-" in s:
         if re.search(r"\d", s):
             return True
         parts = [p for p in s.split("-") if p]
+        if parts and parts[0] in {
+            "join",
+            "find",
+            "sign",
+            "log",
+            "get",
+            "contact",
+            "book",
+            "see",
+            "learn",
+            "try",
+        }:
+            return False
         # Named models with a short suffix (matradee-l, dog-w), not mobile-robots.
         if (
             len(parts) == 2
@@ -751,10 +855,11 @@ def _href_slug_is_product(slug: str) -> bool:
             and 3 <= len(parts[0]) <= 24
             and len(parts[1]) <= 2
             and parts[0] not in _PRODUCT_HREF_NOISE
+            and not is_site_chrome_slug(parts[0])
         ):
             return True
         return False
-    return bool(re.fullmatch(r"[a-z]{3,24}", s))
+    return False
 
 
 def _merge_catalog_names(catalog_names: list[str], discovered: list[str]) -> list[str]:
@@ -1219,6 +1324,12 @@ def _display_from_slug(slug: str) -> str:
 
 def _sku_from_product_href(url: str) -> str | None:
     """SKU from a manufacturer product path, or None if the path is generic."""
+    if href_is_vehicle_path(url) or classify_href_candidate(url) in {
+        "chrome",
+        "hub",
+        "vehicle",
+    }:
+        return None
     path = (urlparse(url).path or "").rstrip("/")
     match = _PRODUCT_HREF.search(path)
     if match:
@@ -1235,12 +1346,12 @@ def _sku_from_product_href(url: str) -> str | None:
     locale = _LOCALE_PRODUCT_HREF.search(path)
     if locale:
         slug = locale.group(1)
+        if slug.lower() in _ROBOT_LINE_SLUGS:
+            return slug.replace("-", " ").title()
         if not _href_slug_is_product(slug):
             return None
         if _looks_like_model_or_sku(slug):
             return _canon_path_sku(slug) or slug.upper()
-        if slug.lower() in _ROBOT_LINE_SLUGS:
-            return slug.replace("-", " ").title()
         if re.fullmatch(r"[a-z]{2,10}-[a-z0-9]{1,8}", slug, re.I):
             return slug
         return None
@@ -1334,20 +1445,30 @@ def _dedupe_product_names(names: list[str]) -> list[str]:
 
 
 def _named_robots_from_prose(text: str, *, blocked: set[str] | None = None) -> dict[str, int]:
-    """ADAM serves / Scorpion shows — named robots without a SKU regex allowlist."""
+    """ADAM serves / Scorpion shows / Meet BERRY — named robots, not nav chrome."""
     counts: dict[str, int] = {}
     blocked_keys = {_name_key(x) for x in (blocked or set()) if x}
-    for m in _PROSE_NAME.finditer(text or ""):
+    blob = text or ""
+    for m in _PROSE_NAME.finditer(blob):
         name = m.group(1)
         low = name.lower()
         if low in _PROSE_NAME_NOISE or low in _PRODUCT_HREF_NOISE:
             continue
+        if _is_noise_product_name(name):
+            continue
         if _name_key(name) in blocked_keys:
             continue
-        after = (text or "")[m.end() : m.end() + 90]
+        after = blob[m.end() : m.end() + 90]
         if not _NAME_FOLLOW.search(after):
             continue
         counts[name] = counts.get(name, 0) + 2
+    for m in _INTRO_ROBOT_NAME.finditer(blob):
+        name = m.group(1)
+        if _is_noise_product_name(name) or _name_key(name) in blocked_keys:
+            continue
+        if name.lower() in _PROSE_NAME_NOISE or name.lower() in _PRODUCT_HREF_NOISE:
+            continue
+        counts[name] = counts.get(name, 0) + 3
     return counts
 
 
@@ -1432,6 +1553,11 @@ def _discover_product_names(
     for name, n in _named_robots_from_prose(blob, blocked=blocked).items():
         counts[name] = counts.get(name, 0) + n
 
+    for n in jsonld_product_names(home.html or ""):
+        counts[n] = counts.get(n, 0) + 4
+    for n in trademark_product_names(blob):
+        counts[n] = counts.get(n, 0) + 3
+
     if product_hint:
         hint = product_hint.strip()
         if hint:
@@ -1452,6 +1578,24 @@ def _discover_product_names(
             if not (product_hint and name.lower() == product_hint.strip().lower()):
                 continue
         if _is_noise_product_name(name):
+            continue
+        linked_product = False
+        for url, anchor in home.links:
+            href_name = _href_product_name(url, anchor)
+            if not href_name or _name_key(href_name) != _name_key(name):
+                continue
+            if classify_href_candidate(url, anchor) == "product":
+                linked_product = True
+                break
+        if looks_like_vehicle_model(
+            name, text=blob, title=home.title or "", links=home.links
+        ):
+            linked_product = False
+        if not linked_product and not name_is_proven_product(
+            name,
+            text=blob,
+            html=home.html or "",
+        ):
             continue
         out.append(name)
         if len(out) >= _MAX_DISCOVERED_PRODUCTS * 2:

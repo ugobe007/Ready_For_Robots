@@ -5,10 +5,11 @@ Resume-friendly: prior discovery JSON is merged and already-seen URLs are skippe
 """
 from __future__ import annotations
 
+import json
 import re
 import time
 from datetime import datetime, timezone
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Literal, Optional
 from urllib.parse import urljoin, urlparse
 
 from app.services.oem_sku_catalog import (
@@ -73,16 +74,21 @@ _NAV_PATH = re.compile(
     r"investors?|invest(?:ing|ment)?|cart|checkout|search|events?|partners?|"
     r"resources?|download|webinar|whitepaper|case-stud|cookie|terms|team|"
     r"company|media|shop|store|pricing|demo|faq|newsletter|subscribe|"
-    r"farmers?|story|stories|our-story|mission|home)(/|$)",
+    r"farmers?|story|stories|our-story|mission|home|"
+    r"imprint|impressum|agb|datenschutz|disclaimer|"
+    r"terms-and-conditions|privacy-policy|cookie-policy|legal-notice|"
+    r"mentions-legales|aviso-legal|note-legali|cgu|cgv)(/|$)",
     re.I,
 )
 _JUNK_SKU = re.compile(
     r"^(learn more|contact( us)?|see all|view all|read more|get started|"
     r"book a demo|request( a)? (quote|demo)|watch|download|brochure|"
     r"industrial robots?|collaborative robots?|mobile robots?|amrs?|agvs?|"
-    r"cobots?|humanoids?|products?|solutions?|robots?|robotics|"
+    r"cobots?|humanoids?|products?|produkts?|produkte|solutions?|robots?|robotics|"
     r"platform|automation|systems?|series|skip to content|"
-    r"privacy( & cookies| policy| notice)?|terms( of use| & conditions)?|"
+    r"privacy( & cookies| policy| notice)?|"
+    r"terms( of use| & conditions| and conditions)?|"
+    r"view privacy( policy)?|imprint|impressum|agb|datenschutz|disclaimer|"
     r"about( us)?|investors?( relations)?|cookie policy|careers?|"
     r"industries|services|locations|patients|healthcare|pharmacy|"
     r"factory|stories|story|farmers?|invest(?:ing|ment|ors?)?|home|mission|"
@@ -112,7 +118,8 @@ _NAV_NAME = re.compile(
     r"trade-in|refer & earn|my rewards|ecovacs points|free consultation|"
     r"andrea |vivian |join our|terms &|privacy policy|helicopter|"
     r"levels t3|to l5|washtower|nrf|calculator|imts|education k12|euroshop|"
-    r"farmers?|stories|our story|\bstory\b|\binvest(?:ing|ment)?\b|mission)\b",
+    r"farmers?|stories|our story|\bstory\b|\binvest(?:ing|ment)?\b|mission|"
+    r"imprint|impressum|datenschutz|disclaimer|agb)\b",
     re.I,
 )
 _BAD_PATH = re.compile(
@@ -130,7 +137,9 @@ _BAD_PATH = re.compile(
     r"safety|arm/|videos|impact|collections|indications|cta|"
     r"future-production|4-door|4k-tvs|inch-tvs|monitors|laptops|"
     r"washers-dryers|tradeshow|campaign|education-k12|controllers|"
-    r"calculator|nrf|farmers?|story|stories|our-story|invest|mission)(/|$)",
+    r"calculator|nrf|farmers?|story|stories|our-story|invest|mission|"
+    r"imprint|impressum|agb|datenschutz|disclaimer|"
+    r"terms-and-conditions|privacy-policy|cookie-policy|legal-notice)(/|$)",
     re.I,
 )
 _INDUSTRY_DIGIT = re.compile(r"^(3pl|2d|3d|4d|5g|\d+)$", re.I)
@@ -180,10 +189,256 @@ _KNOWN_SKU_WORDS = frozenset(
     }
 )
 
+# Lone nav / legal / shop labels. Not SKUs. Compact codes with digits stay pickable.
+_CHROME_LABELS = frozenset(
+    {
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "shop",
+        "store",
+        "imprint",
+        "impressum",
+        "terms",
+        "terms and conditions",
+        "terms of use",
+        "terms of service",
+        "agb",
+        "privacy",
+        "privacy policy",
+        "view privacy",
+        "view privacy policy",
+        "datenschutz",
+        "cookies",
+        "cookie",
+        "cookie policy",
+        "legal",
+        "legal notice",
+        "disclaimer",
+        "mentions legales",
+        "aviso legal",
+        "note legali",
+        "cgu",
+        "cgv",
+        "your",
+        "our",
+        "more",
+        "menu",
+        "home",
+        "about",
+        "about us",
+        "news",
+        "blog",
+        "careers",
+        "career",
+        "contact",
+        "contact us",
+        "investors",
+        "investor",
+        "investor relations",
+        "vehicles",
+        "vehicle",
+        "models",
+        "model",
+        "charging",
+        "service",
+        "support",
+        "esg",
+        "events",
+        "company",
+        "find us",
+        "join us",
+        "join-us",
+        "find-us",
+        "sign in",
+        "log in",
+        "login",
+        "subscribe",
+    }
+)
+_CHROME_SLUGS = frozenset(
+    {
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "shop",
+        "store",
+        "imprint",
+        "impressum",
+        "terms",
+        "terms-and-conditions",
+        "terms-of-use",
+        "terms-of-service",
+        "agb",
+        "privacy",
+        "privacy-policy",
+        "datenschutz",
+        "cookies",
+        "cookie",
+        "cookie-policy",
+        "legal",
+        "legal-notice",
+        "disclaimer",
+        "mentions-legales",
+        "aviso-legal",
+        "note-legali",
+        "cgu",
+        "cgv",
+        "about",
+        "about-us",
+        "news",
+        "blog",
+        "careers",
+        "career",
+        "contact",
+        "contact-us",
+        "investors",
+        "investor",
+        "investor-relations",
+        "vehicles",
+        "vehicle",
+        "models",
+        "model",
+        "charging",
+        "service",
+        "support",
+        "esg",
+        "events",
+        "company",
+        "find-us",
+        "join-us",
+        "joinus",
+        "signin",
+        "login",
+        "subscribe",
+    }
+)
+_CHROME_PHRASE = re.compile(
+    r"\b(terms\s+and\s+conditions|privacy\s+policy|view\s+privacy|"
+    r"imprint|impressum|datenschutz|disclaimer|"
+    r"investor\s+relations|allgemein(?:e|en)\s+geschae?ftsbedingungen)\b",
+    re.I,
+)
+# Category / hub paths — fetch for names, never a FIND SKU.
+_HUB_SLUGS = frozenset(
+    {
+        "product",
+        "products",
+        "produkt",
+        "produkte",
+        "robots",
+        "robot",
+        "solutions",
+        "solution",
+        "platform",
+        "technology",
+        "hardware",
+        "industries",
+        "industry",
+        "applications",
+        "overview",
+    }
+)
+_VEHICLE_PATH = re.compile(
+    r"/(?:vehicles?|cars?|evs?|suvs?|mpvs?|charging|"
+    r"investor-relations|investors?)(?:/|$)",
+    re.I,
+)
+_VEHICLE_MODEL_PATH = re.compile(r"/model/[a-z0-9][a-z0-9+\-]*", re.I)
+_VEHICLE_PAGE = re.compile(
+    r"\b(suvs?|mpvs?|sedans?|hatchbacks?|electric vehicles?|"
+    r"smart electric|charging network|investor relations)\b",
+    re.I,
+)
+# G6 / P7 / X9 / L03 — car model codes, not robots, unless humanoid evidence.
+_VEHICLE_MODEL_CODE = re.compile(r"^[A-Z]{1,3}\d{1,2}\+?$", re.I)
+_CTA_HYPHEN_HEAD = frozenset(
+    {"join", "find", "sign", "log", "get", "contact", "book", "see", "learn", "try"}
+)
+# "apple harvester" / "delivery robots" — work category, not a named SKU.
+_CATEGORY_BLOB = re.compile(
+    r"^(?:the\s+)?(?:apple|strawberry|grape|cotton|berry|warehouse|delivery|"
+    r"floor|pallet)?\s*(?:harvest(?:er|ing)?|weeding|tractors?|robots?|"
+    r"systems?|platform|automation|equipment)\s*$",
+    re.I,
+)
+# Title-case verbs that collide with SKU words (Handle the Routine).
+_SKU_VERB_PHRASE = re.compile(
+    r"\b(handles?|rangers?|spots?|stretches?|origins?|walkers?)\s+"
+    r"(the|a|an|your|our|their|this|that|routine|work|tasks?|equipment)\b",
+    re.I,
+)
+_MEET_PROSE = re.compile(
+    r"\b(?:meet|introducing|i['’]m|i\s+am)\s+"
+    r"((?:[A-Z]{2,12})|(?:[A-Z][a-z0-9]{2,16})|(?:[A-Z][A-Za-z0-9#\-]+))\b"
+)
+_TRADEMARK_NAME = re.compile(
+    r"\b([A-Z][A-Za-z0-9]{2,16})[™®]|\b([A-Z][A-Za-z0-9]{2,16})\s*\(TM\)",
+    re.I,
+)
+_SPEC_NEAR = re.compile(
+    r"\b(payload|lidar|runtime|battery|dof|actuator|end[- ]effector|"
+    r"autonomous|humanoid|cobot|amr|harvest(?:er|ing)|excavator|"
+    r"specification|datasheet|kg|hours?)\b",
+    re.I,
+)
+_PROSE_FOLLOW = re.compile(
+    r"^\s*(?:the\s+)?(?:AI[- ]powered\s+)?"
+    r"(?:robot|humanoid|cobot|serves?|shows?|delivers?|works\b|"
+    r"helps?|makes?|mixes?|cleans?|navigates?|skyrockets?|automates?|"
+    r"bartender|barista|waiter|server|scrubber|vacuum|"
+    r"is\s+an?\s+(?:AI[- ]powered\s+)?(?:humanoid|service|delivery|cleaning))"
+    r"\b",
+    re.I,
+)
+_JSONLD_PRODUCT_TYPES = frozenset({"product", "individualproduct"})
+_JSONLD_VEHICLE_TYPES = frozenset(
+    {
+        "vehicle",
+        "car",
+        "motorizedbicycle",
+        "busorcoach",
+        "motorcycle",
+        "vehiclemake",
+        "vehiclemodel",
+    }
+)
+
+
+def is_site_chrome_slug(slug: str) -> bool:
+    """True for path segments that are site chrome, not a robot SKU."""
+    s = (slug or "").strip().lower().strip("/")
+    s = re.sub(r"[?#].*$", "", s)
+    s = s.rsplit("/", 1)[-1]
+    if not s:
+        return False
+    return s in _CHROME_SLUGS or s in _CHROME_LABELS
+
+
+def is_site_chrome_name(name: str) -> bool:
+    """True for generic nav/legal labels that must never enter the FIND picker."""
+    raw = re.sub(r"\s+", " ", (name or "").strip(" .-"))
+    if not raw:
+        return True
+    low = raw.lower()
+    if low in _CHROME_LABELS or name_key(raw) in {name_key(x) for x in _CHROME_LABELS}:
+        return True
+    if is_site_chrome_slug(raw.replace(" ", "-")):
+        return True
+    if _CHROME_PHRASE.search(raw):
+        return True
+    return False
+
 
 def is_junk_sku_name(name: str) -> bool:
     raw = re.sub(r"\s+", " ", (name or "").strip(" .-"))
     if not raw or len(raw) < 2 or len(raw) > 40:
+        return True
+    if is_site_chrome_name(raw):
+        return True
+    if _CATEGORY_BLOB.fullmatch(raw):
         return True
     if _JUNK_SKU.fullmatch(raw) or _FAMILY_BLOB.search(raw) or _GENERIC_NAME.search(raw):
         return True
@@ -208,6 +463,14 @@ def is_junk_sku_name(name: str) -> bool:
         "invest",
         "home",
         "mission",
+        "vehicles",
+        "vehicle",
+        "investors",
+        "about",
+        "news",
+        "blog",
+        "careers",
+        "contact",
     }:
         return True
     if not re.search(r"[A-Za-z]", raw):
@@ -222,14 +485,225 @@ def looks_like_named_sku(name: str) -> bool:
         return False
     if _INDUSTRY_DIGIT.fullmatch(name_key(raw)):
         return False
-    if re.search(r"\d", raw):
+    if re.search(r"\d", raw) or "#" in raw:
         return True
     if name_key(raw) in _KNOWN_SKU_WORDS:
         return True
     tokens = [t for t in re.split(r"\s+", raw) if t]
     if len(tokens) == 1 and _COMPACT_SKU.fullmatch(tokens[0]):
         return True
+    # LaserWeeder / FieldPrinter — concatenated proper noun, not "apple harvester".
+    if re.fullmatch(r"[A-Z][a-z]+(?:[A-Z][a-z0-9]+)+", raw):
+        return True
     return False
+
+
+CandidateKind = Literal["chrome", "hub", "vehicle", "product", "unknown"]
+
+
+def _path_slug(url: str) -> str:
+    path = (urlparse(url or "").path or "").rstrip("/")
+    return path.rsplit("/", 1)[-1].split(".", 1)[0].lower() if path else ""
+
+
+def href_is_vehicle_path(url: str) -> bool:
+    path = urlparse(url or "").path or "/"
+    return bool(_VEHICLE_PATH.search(path) or _VEHICLE_MODEL_PATH.search(path))
+
+
+def looks_like_vehicle_model(
+    name: str,
+    *,
+    text: str = "",
+    title: str = "",
+    links: list | None = None,
+) -> bool:
+    """G6/P7/X9 on a car OEM homepage — not a FIND robot."""
+    compact = re.sub(r"[^A-Za-z0-9+]", "", name or "")
+    if not _VEHICLE_MODEL_CODE.fullmatch(compact) and not _VEHICLE_MODEL_CODE.fullmatch(name or ""):
+        return False
+    blob = f"{title or ''} {text or ''}"
+    if _VEHICLE_PAGE.search(blob):
+        return True
+    for href, _anchor in links or []:
+        if href_is_vehicle_path(href):
+            return True
+    return False
+
+
+def classify_href_candidate(url: str, name: str = "") -> CandidateKind:
+    """chrome | hub | vehicle | product | unknown. Bare /product is never a SKU."""
+    label = re.sub(r"\s+", " ", (name or "").strip())
+    if label and (is_site_chrome_name(label) or is_site_chrome_slug(label)):
+        return "chrome"
+    if href_is_vehicle_path(url):
+        return "vehicle"
+    slug = _path_slug(url)
+    if is_site_chrome_slug(slug):
+        return "chrome"
+    if slug in _HUB_SLUGS:
+        return "hub"
+    if label.lower() in _HUB_SLUGS:
+        return "hub"
+    if looks_like_named_sku(label) or looks_like_named_sku(slug) or re.search(r"\d|#", slug):
+        return "product"
+    if "-" in slug and 3 <= len(slug) <= 24:
+        parts = [p for p in slug.split("-") if p]
+        if parts and parts[0] in _CTA_HYPHEN_HEAD:
+            return "chrome"
+        return "product"
+    return "unknown"
+
+
+def trademark_product_names(text: str) -> list[str]:
+    """Cruz™ / Name (TM) — named products, not nav labels."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for m in _TRADEMARK_NAME.finditer(text or ""):
+        token = (m.group(1) or m.group(2) or "").strip()
+        key = name_key(token)
+        if not token or not key or key in seen or is_site_chrome_name(token):
+            continue
+        seen.add(key)
+        out.append(token)
+    return out
+
+
+def jsonld_product_names(html: str) -> list[str]:
+    """schema.org Product names. Vehicle/Car nodes are not FIND robots."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for m in re.finditer(
+        r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+        html or "",
+        re.I | re.S,
+    ):
+        try:
+            data = json.loads(m.group(1))
+        except Exception:
+            continue
+        stack: list[Any] = data if isinstance(data, list) else [data]
+        while stack:
+            node = stack.pop()
+            if isinstance(node, list):
+                stack.extend(node)
+                continue
+            if not isinstance(node, dict):
+                continue
+            if isinstance(node.get("@graph"), list):
+                stack.extend(node["@graph"])
+            types = node.get("@type")
+            type_list = [types] if isinstance(types, str) else list(types or [])
+            lowered = {str(x).split("/")[-1].lower() for x in type_list}
+            if lowered & _JSONLD_VEHICLE_TYPES:
+                continue
+            if not (lowered & _JSONLD_PRODUCT_TYPES):
+                continue
+            n = node.get("name")
+            if not isinstance(n, str):
+                continue
+            cleaned = re.sub(r"\s+", " ", n).strip(" .-")
+            key = name_key(cleaned)
+            if not cleaned or not key or key in seen or is_site_chrome_name(cleaned):
+                continue
+            seen.add(key)
+            out.append(cleaned)
+    return out
+
+
+def product_evidence_kinds(
+    name: str,
+    *,
+    text: str = "",
+    html: str = "",
+    url: str = "",
+) -> list[str]:
+    """Evidence that `name` is a robot product on this page. Empty = unproven."""
+    raw = re.sub(r"\s+", " ", (name or "").strip())
+    if not raw or is_site_chrome_name(raw) or is_junk_sku_name(raw):
+        return []
+    if url and classify_href_candidate(url, raw) in {"chrome", "hub", "vehicle"}:
+        return []
+    blob = f"{text or ''} {html or ''}"
+    if _VEHICLE_MODEL_CODE.fullmatch(raw) and _VEHICLE_PAGE.search(blob):
+        window = _evidence_window(raw, blob)
+        if not re.search(r"\b(humanoid|robot|iron)\b", window, re.I):
+            return []
+    kinds: list[str] = []
+    key = name_key(raw)
+    for n in jsonld_product_names(html):
+        if name_key(n) == key:
+            kinds.append("jsonld_product")
+            break
+    if _MEET_PROSE.search(blob):
+        for m in _MEET_PROSE.finditer(blob):
+            if name_key(m.group(1) or "") == key:
+                kinds.append("meet_prose")
+                break
+    for m in _TRADEMARK_NAME.finditer(blob):
+        token = m.group(1) or m.group(2) or ""
+        if name_key(token) == key:
+            kinds.append("trademark_name")
+            break
+    if looks_like_named_sku(raw) and re.search(rf"\b{re.escape(raw)}\b", blob, re.I):
+        if re.search(r"\d|#", raw) or _COMPACT_SKU.fullmatch(re.sub(r"[\s_\-]", "", raw)):
+            kinds.append("model_code")
+        elif re.fullmatch(r"[A-Z][a-z]+(?:[A-Z][a-z0-9]+)+", raw):
+            kinds.append("model_code")
+        elif "-" in raw and 3 <= len(raw) <= 24:
+            kinds.append("hyphen_model")
+    window = _evidence_window(raw, blob)
+    idx = blob.lower().find(raw.lower())
+    if idx >= 0:
+        after = blob[idx + len(raw) : idx + len(raw) + 90]
+        if _PROSE_FOLLOW.search(after) and not _SKU_VERB_PHRASE.search(
+            blob[max(0, idx - 12) : idx + 80]
+        ):
+            kinds.append("named_robot_prose")
+    if window and _SPEC_NEAR.search(window) and not _SKU_VERB_PHRASE.search(window):
+        if re.search(
+            rf"\b{re.escape(raw)}\b.{{0,80}}\b(robot|humanoid|cobot|amr|harvester|"
+            rf"excavator|pods?|autonomous)\b",
+            window,
+            re.I,
+        ) or re.search(
+            rf"\b(robot|humanoid|cobot|amr|meet|introducing)\b.{{0,80}}\b{re.escape(raw)}\b",
+            window,
+            re.I,
+        ):
+            kinds.append("named_robot_prose")
+    # Deduplicate while preserving order
+    seen: set[str] = set()
+    out: list[str] = []
+    for k in kinds:
+        if k not in seen:
+            seen.add(k)
+            out.append(k)
+    return out
+
+
+def _evidence_window(name: str, blob: str, radius: int = 140) -> str:
+    if not name or not blob:
+        return ""
+    idx = blob.lower().find(name.lower())
+    if idx < 0:
+        return ""
+    return blob[max(0, idx - radius) : idx + len(name) + radius]
+
+
+def name_is_proven_product(
+    name: str,
+    *,
+    text: str = "",
+    html: str = "",
+    url: str = "",
+) -> bool:
+    """True when at least one on-page evidence kind supports this SKU."""
+    if _SKU_VERB_PHRASE.search(_evidence_window(name, text or html or "")):
+        # "Handle the Routine" is not the Handle robot.
+        kinds = product_evidence_kinds(name, text=text, html=html, url=url)
+        return any(k in {"jsonld_product", "meet_prose", "trademark_name", "model_code"} for k in kinds)
+    return bool(product_evidence_kinds(name, text=text, html=html, url=url))
 
 
 def canonical_sku_name(name: str, url: str) -> str:
@@ -799,6 +1273,15 @@ __all__ = [
     "candidates_from_page",
     "discover_skus",
     "is_junk_sku_name",
+    "is_site_chrome_name",
+    "is_site_chrome_slug",
+    "classify_href_candidate",
+    "href_is_vehicle_path",
+    "jsonld_product_names",
+    "looks_like_vehicle_model",
+    "name_is_proven_product",
+    "product_evidence_kinds",
+    "trademark_product_names",
     "listing_urls_for_company",
     "looks_like_named_sku",
     "merge_discovered_skus",

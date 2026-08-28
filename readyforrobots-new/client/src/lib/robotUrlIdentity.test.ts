@@ -288,6 +288,8 @@ describe("FIND / CRM source canaries — robot-job-match is not the desk", () =>
     );
     expect(submitFind).toMatch(/bindSubmittedRobot\(submitUrl\)/);
     expect(submitFind).toMatch(/stillThisSubmit/);
+    expect(submitFind).toMatch(/const research = bindSubmittedRobot\(submitUrl\)/);
+    expect(submitFind).not.toMatch(/researchAbortRef\.current\?\.abort\(\)/);
     expect(submitFind).toMatch(/fetchRobotJobSearch/);
     expect(submitFind).not.toMatch(/fetchRobotJobMatch/);
     expect(workspace).not.toMatch(/fetchRobotJobMatch/);

@@ -140,15 +140,16 @@ def test_href_label_keeps_hidden_sku():
 
 
 def test_profile_cache_namespace_busts_stale_engineai_identity():
-    assert NAMESPACE == "robot_profile_v10"
+    assert NAMESPACE == "robot_profile_v12"
 
 
 def test_sku_from_root_named_product_paths():
-    assert _sku_from_product_href("https://www.richtechrobotics.com/adam") == "ADAM"
+    assert _sku_from_product_href("https://www.richtechrobotics.com/adam") is None
     assert _sku_from_product_href("https://www.richtechrobotics.com/matradee-l")
-    assert _sku_from_product_href("https://www.richtechrobotics.com/scorpion") == "Scorpion"
+    assert _sku_from_product_href("https://www.richtechrobotics.com/scorpion") is None
     assert _sku_from_product_href("https://www.richtechrobotics.com/about") is None
     assert _sku_from_product_href("https://www.richtechrobotics.com/solutions") is None
+    assert _sku_from_product_href("https://www.richtechrobotics.com/product") is None
     assert _sku_from_product_href("https://www.agilityrobotics.com/robots/digit")
 
 
@@ -334,4 +335,110 @@ def test_sku_from_greenfield_nav_paths():
     assert _sku_from_product_href(f"{origin}/blog") is None
     assert _sku_from_product_href(f"{origin}/careers") is None
     assert _sku_from_product_href(f"{origin}/privacy") is None
+
+
+def test_generic_product_href_is_never_pickable():
+    origin = "https://www.example-robots.test"
+    home = _page(
+        title="Acme Robotics",
+        url=f"{origin}/",
+        text="Acme builds warehouse robots. Contact us.",
+        links=[
+            (f"{origin}/product", "Product"),
+            (f"{origin}/products", "Products"),
+            (f"{origin}/produkt", "Produkt"),
+            (f"{origin}/shop", "Shop"),
+        ],
+    )
+    assert _sku_from_product_href(f"{origin}/product") is None
+    assert _sku_from_product_href(f"{origin}/products") is None
+    names = _discover_product_names(home)
+    lowered = {n.lower() for n in names}
+    assert "product" not in lowered
+    assert "products" not in lowered
+    assert "produkt" not in lowered
+    assert "shop" not in lowered
+    resolved = resolve_identity(f"{origin}/", home)
+    found = {p.name.lower() for p in resolved.products}
+    assert "product" not in found
+    assert "products" not in found
+
+
+def test_german_legal_pages_are_not_pickable_robots():
+    origin = "https://www.example-gmbh.test"
+    home = _page(
+        title="Beispiel GmbH",
+        url=f"{origin}/",
+        text="Beispiel GmbH baut Ernte-Roboter. Impressum. AGB. Datenschutz.",
+        links=[
+            (f"{origin}/impressum", "Impressum"),
+            (f"{origin}/agb", "AGB"),
+            (f"{origin}/datenschutz", "Datenschutz"),
+            (f"{origin}/imprint", "Imprint"),
+            (f"{origin}/disclaimer", "Disclaimer"),
+        ],
+    )
+    for path in ("/impressum", "/agb", "/datenschutz", "/imprint", "/disclaimer"):
+        assert _sku_from_product_href(f"{origin}{path}") is None
+    lowered = {n.lower() for n in _discover_product_names(home)}
+    for noise in ("impressum", "agb", "datenschutz", "imprint", "disclaimer"):
+        assert noise not in lowered
+    found = {p.name.lower() for p in resolve_identity(f"{origin}/", home).products}
+    for noise in ("impressum", "agb", "datenschutz", "imprint", "disclaimer"):
+        assert noise not in found
+
+
+def test_organifarms_nav_legal_pages_are_not_pickable_robots():
+    """Live organifarms.de homepage chrome must not become the FIND picker."""
+    origin = "https://www.organifarms.de"
+    home = _page(
+        title="Organifarms I Harvesting Robots",
+        url=f"{origin}/",
+        text=(
+            "Harvesting the future One BERRY at a time Meet BERRY "
+            "Integrated Quality Control 24/7 Harvesting Weighing & Packaging "
+            "Autonomous Navigation. Organifarms develops harvesting robots "
+            "for horticultural systems. Your professional partner."
+        ),
+        links=[
+            (f"{origin}/product", "Product"),
+            (f"{origin}/company", "Company"),
+            (f"{origin}/career", "Career"),
+            (f"{origin}/news", "News"),
+            (f"{origin}/press", "Press"),
+            (f"{origin}/datenschutz", "View Privacy Policy"),
+            (f"{origin}/imprint", "Imprint"),
+            (f"{origin}/agb", "Terms and Conditions"),
+        ],
+    )
+    assert _sku_from_product_href(f"{origin}/product") is None
+    assert _sku_from_product_href(f"{origin}/imprint") is None
+    assert _sku_from_product_href(f"{origin}/agb") is None
+    assert _sku_from_product_href(f"{origin}/datenschutz") is None
+    names = _discover_product_names(home)
+    lowered = {n.lower() for n in names}
+    for noise in (
+        "product",
+        "imprint",
+        "terms and conditions",
+        "view privacy policy",
+        "company",
+        "career",
+        "news",
+        "press",
+        "your",
+    ):
+        assert noise not in lowered
+    assert any(n.upper() == "BERRY" for n in names)
+    resolved = resolve_identity(f"{origin}/", home)
+    found = {p.name.lower() for p in resolved.products}
+    for noise in (
+        "product",
+        "imprint",
+        "terms and conditions",
+        "view privacy policy",
+        "your",
+    ):
+        assert noise not in found
+    assert any(p.name.upper() == "BERRY" for p in resolved.products)
 

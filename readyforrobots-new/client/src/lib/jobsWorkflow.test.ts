@@ -159,6 +159,8 @@ describe("jobsWorkflow", () => {
     expect(submitFind).not.toMatch(/lookupGrain: cls \? "robot_type" : "product"/);
     expect(submitFind).toMatch(/fetchRobotJobSearch/);
     expect(submitFind).not.toMatch(/fetchRobotProfile/);
+    expect(submitFind).not.toMatch(/fetchRobotJobMatch/);
+    expect(submitFind).toMatch(/lineup.length === 0/);
     expect(workspace).toMatch(/rfr-jobs-activate-bar/);
     expect(workspace).not.toMatch(
       /enterReview\(profileToAnalysis\(profile\), submitUrl, names\)/,
@@ -277,7 +279,7 @@ describe("jobsWorkflow", () => {
         inFlight: false,
         stage: "research",
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       canStartFindSubmit({
         url: "https://www.greenfieldincorporated.com/",
@@ -1638,6 +1640,22 @@ describe("jobsWorkflow", () => {
     expect(isJobsLineupNoiseName("STORY")).toBe(true);
     expect(isJobsLineupNoiseName("BOT#25")).toBe(false);
     expect(isJobsLineupNoiseName("BOT25")).toBe(false);
+    expect(isJobsLineupNoiseName("Product")).toBe(true);
+    expect(isJobsLineupNoiseName("Products")).toBe(true);
+    expect(isJobsLineupNoiseName("Imprint")).toBe(true);
+    expect(isJobsLineupNoiseName("Impressum")).toBe(true);
+    expect(isJobsLineupNoiseName("Terms and Conditions")).toBe(true);
+    expect(isJobsLineupNoiseName("Vehicles")).toBe(true);
+    expect(isJobsLineupNoiseName("Investors")).toBe(true);
+    expect(isJobsLineupNoiseName("G6")).toBe(false);
+    const organifarms = filterJobsLineupProducts([
+      { name: "BERRY" },
+      { name: "Product" },
+      { name: "Imprint" },
+      { name: "Terms and Conditions" },
+      { name: "View Privacy Policy" },
+    ]);
+    expect(organifarms.map(p => p.name)).toEqual(["BERRY"]);
     expect(pageJobsLineup(omron, 0).map(p => p.name)).toEqual([
       "LD-250",
       "HD-1500",
@@ -1673,7 +1691,9 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/lookupKnownOem/);
     expect(workspace).toMatch(/fetchOemListing/);
     expect(workspace).toMatch(/OEM_LISTING_TIMEOUT_MS/);
-    expect(workspace).toMatch(/Lookup took too long/);
+    expect(workspace).toMatch(/findResearchFailureMessage/);
+    const findResearch = readFileSync(join(here, "./findResearch.ts"), "utf8");
+    expect(findResearch).toMatch(/Lookup took too long/);
     expect(workspace).not.toMatch(/Paste a specific product URL/);
     expect(workspace).toMatch(/productCap/);
     expect(workspace).toMatch(/phase=\{researchPhase\}/);

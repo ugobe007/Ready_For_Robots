@@ -31,6 +31,7 @@ def test_local_release_skips_fly_drive():
     critic_ids = [c["id"] for c in result["critic"]["checks"]]
     assert "find_abort" in critic_ids
     assert "crm_leftover" in critic_ids
+    assert "oem_extract" in critic_ids
     assert "find_drive" in critic_ids
 
 
@@ -43,6 +44,7 @@ def test_critic_gates_include_abort_and_leftover():
         "job_cards",
         "wall",
         "matcher",
+        "oem_extract",
     ]
 
 
