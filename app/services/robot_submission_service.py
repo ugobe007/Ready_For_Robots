@@ -1,8 +1,10 @@
-"""Fail-open persistence for submitted robots (durable, deduped entity ledger).
+"""Fail-open persistence for submitted robots (durable, URL-keyed entity ledger).
 
-Every robot URL pasted into the front door becomes a durable ``robot_submissions``
-row (one per normalized domain) with an integer ID + timestamps + a submission
-count. Enrichment (capabilities, matched real buyers) updates the same row.
+Every robot URL pasted into FIND becomes a durable ``robot_submissions`` row
+(one per canonical URL) with an integer ID + first/last seen + a submission
+count. Incomplete identity (Agtonomy qualify_robot) still writes the URL.
+Enrichment (capabilities, matched buyers, research snippets) updates the same
+row.
 
 All writes are best-effort: a persistence failure must never break the user's
 research / match request, so every public function swallows errors and rolls back.
@@ -10,6 +12,7 @@ research / match request, so every public function swallows errors and rolls bac
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -17,33 +20,48 @@ from sqlalchemy.orm import Session
 
 from app.models.robot_submission import RobotSubmission
 from app.services.company_domain import normalize_website_domain
+from app.services.robot_url_safety import canonical_robot_url, robot_url_host
 
 logger = logging.getLogger(__name__)
 
 
-def _domain_key(url: str | None) -> str | None:
-    """Stable dedupe key from a URL. Falls back to a bare-string normalization."""
-    if not url or not str(url).strip():
-        return None
-    dom = normalize_website_domain(url)
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _canonical_key(url: str | None) -> str | None:
+    key = canonical_robot_url(url)
+    if key:
+        return key[:2000]
+    return None
+
+
+def _host_key(url: str | None, canonical: str | None = None) -> str:
+    host = robot_url_host(canonical or url)
+    if host:
+        return host[:240]
+    dom = normalize_website_domain(url or "")
     if dom:
-        return dom[:240]
-    # No parseable host (e.g. a bare token) — still dedupe on a normalized form.
-    raw = str(url).strip().lower().split("://")[-1].strip("/")
-    return raw[:240] or None
+        return str(dom)[:240]
+    raw = str(url or "").strip().lower().split("://")[-1].strip("/")
+    return (raw.split("/")[0] if raw else "unknown")[:240]
 
 
-def _get_or_create(db: Session, domain: str, url: str) -> RobotSubmission:
+def _get_or_create(db: Session, canonical: str, url: str) -> RobotSubmission:
     row = (
         db.query(RobotSubmission)
-        .filter(RobotSubmission.website_domain == domain)
+        .filter(RobotSubmission.canonical_url == canonical)
         .one_or_none()
     )
     if row is None:
+        host = _host_key(url, canonical)
         row = RobotSubmission(
-            website_domain=domain,
-            submitted_url=url[:2000],
+            canonical_url=canonical,
+            website_domain=host,
+            host=host,
+            submitted_url=(url or canonical)[:2000],
             submission_count=0,
+            research_snippets=[],
         )
         db.add(row)
     return row
@@ -58,18 +76,28 @@ def record_robot_submission(
     robot_class: Optional[str] = None,
     profile_tier: Optional[str] = None,
     source: Optional[str] = None,
+    bump_count: bool = True,
 ) -> Optional[RobotSubmission]:
-    """Upsert the durable robot record for ``url``; increment submission count.
+    """Upsert the durable robot record for ``url``.
 
-    Returns the row (with its ``id``) or None on any failure. Fail-open.
+    Incomplete identity is fine — the canonical URL is the row. Returns the
+    row (with its ``id``) or None on any failure. Fail-open.
     """
-    domain = _domain_key(url)
-    if not domain:
+    canonical = _canonical_key(url)
+    if not canonical:
         return None
+    now = _now()
     try:
-        row = _get_or_create(db, domain, url)
+        row = _get_or_create(db, canonical, url)
         row.submitted_url = (url or row.submitted_url)[:2000]
-        row.submission_count = int(row.submission_count or 0) + 1
+        row.host = _host_key(url, canonical)
+        if not row.website_domain:
+            row.website_domain = row.host
+        if bump_count:
+            row.submission_count = int(row.submission_count or 0) + 1
+        if row.first_seen_at is None:
+            row.first_seen_at = now
+        row.last_seen_at = now
         if company_name:
             row.company_name = str(company_name)[:240]
         if product_name:
@@ -84,26 +112,27 @@ def record_robot_submission(
         db.refresh(row)
         return row
     except SQLAlchemyError:
-        # Likely a race on the unique domain — roll back, re-read, retry the bump once.
         db.rollback()
         try:
             row = (
                 db.query(RobotSubmission)
-                .filter(RobotSubmission.website_domain == domain)
+                .filter(RobotSubmission.canonical_url == canonical)
                 .one_or_none()
             )
             if row is not None:
-                row.submission_count = int(row.submission_count or 0) + 1
+                if bump_count:
+                    row.submission_count = int(row.submission_count or 0) + 1
+                row.last_seen_at = now
                 db.commit()
                 db.refresh(row)
                 return row
         except Exception:
             db.rollback()
-        logger.exception("record_robot_submission_failed domain=%s", domain)
+        logger.exception("record_robot_submission_failed url=%s", canonical)
         return None
     except Exception:
         db.rollback()
-        logger.exception("record_robot_submission_failed domain=%s", domain)
+        logger.exception("record_robot_submission_failed url=%s", canonical)
         return None
 
 
@@ -119,37 +148,38 @@ def record_submission_match(
 ) -> Optional[RobotSubmission]:
     """Enrich the robot record with capabilities + matched real buyers. Fail-open.
 
-    Creates the row if it does not exist yet (a match can be the first touch, e.g.
-    the /pipeline buyers surface). Does NOT bump submission_count.
+    Creates the row if it does not exist yet. Does NOT bump submission_count.
     """
-    domain = _domain_key(url)
-    if not domain:
+    canonical = _canonical_key(url)
+    if not canonical:
         return None
-    from datetime import datetime, timezone
+    now = _now()
 
     try:
-        row = _get_or_create(db, domain, url)
+        row = _get_or_create(db, canonical, url)
         if capabilities is not None:
-            # Store a compact, stable list of capability keys/labels.
             row.capabilities = _compact_caps(capabilities)
         if matched_company_ids is not None:
             ids = [int(x) for x in matched_company_ids if _is_int(x)][:100]
             row.matched_company_ids = ids
             row.last_match_count = len(ids) if match_count is None else int(match_count)
-            row.last_matched_at = datetime.now(timezone.utc)
+            row.last_matched_at = now
         elif match_count is not None:
             row.last_match_count = int(match_count)
-            row.last_matched_at = datetime.now(timezone.utc)
+            row.last_matched_at = now
         if job_count is not None:
             row.last_job_count = int(job_count)
         if source and not row.source:
             row.source = str(source)[:120]
+        if row.first_seen_at is None:
+            row.first_seen_at = now
+        row.last_seen_at = row.last_seen_at or now
         db.commit()
         db.refresh(row)
         return row
     except Exception:
         db.rollback()
-        logger.exception("record_submission_match_failed domain=%s", domain)
+        logger.exception("record_submission_match_failed url=%s", canonical)
         return None
 
 

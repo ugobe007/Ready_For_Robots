@@ -8,6 +8,7 @@ import pytest
 from app.services.robot_url_safety import (
     UrlSafetyError,
     assert_public_http_url,
+    canonical_robot_url,
     idna_hostname,
     normalize_product_url,
     registrable_domain,
@@ -56,6 +57,14 @@ def test_ssrf_still_rejects_loopback():
         assert_public_http_url("http://127.0.0.1/robot")
     with pytest.raises(UrlSafetyError):
         assert_public_http_url("http://localhost/product")
+
+
+def test_canonical_robot_url_strips_www_and_keeps_path():
+    assert canonical_robot_url("https://www.Agtonomy.com/") == "https://agtonomy.com"
+    assert canonical_robot_url("https://agtonomy.com/") == "https://agtonomy.com"
+    assert canonical_robot_url("https://unitree.com/products/b2") != canonical_robot_url(
+        "https://unitree.com/products/g1"
+    )
 
 
 def test_doh_fallback_when_system_dns_fails(monkeypatch):

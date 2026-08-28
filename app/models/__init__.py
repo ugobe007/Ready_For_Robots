@@ -59,7 +59,7 @@ from app.models.calendar import CalendarEvent
 from app.models.scout_chat import ScoutActivation, ScoutMessage, ScoutProfile, ScoutSession
 from app.models.waitlist import WaitlistSignup
 from app.models.robot_buyer_lead import RobotBuyerLead
-from app.models.robot_submission import RobotSubmission
+from app.models.robot_submission import RobotPresentationRequest, RobotSubmission
 from app.models.jobs_watch import JobsWatch, JobsWatchEvent
 from app.models.jobs_crm import (
     ApplicationDocument,
