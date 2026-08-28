@@ -56,3 +56,39 @@ export function isAbortError(err: unknown): boolean {
     "message" in err ? String((err as { message?: string }).message) : "";
   return name === "AbortError" || /aborted|abort/i.test(message);
 }
+
+function errorMessage(err: unknown): string {
+  if (!err) return "";
+  if (typeof err === "string") return err;
+  if (typeof err === "object" && "message" in err) {
+    return String((err as { message?: string }).message || "");
+  }
+  return String(err);
+}
+
+/**
+ * Self-abort of in-flight FIND (bindSubmittedRobot / new URL) must not paint
+ * "Research failed" or "Failed to fetch". Browsers often surface abort as
+ * TypeError Failed to fetch instead of AbortError.
+ */
+export function isSilentFindError(err: unknown): boolean {
+  if (isAbortError(err)) return true;
+  return /failed to fetch/i.test(errorMessage(err));
+}
+
+/** User-visible FIND error, or null when the request was aborted/superseded. */
+export function findUserFacingError(
+  err: unknown,
+  fallback: string,
+): string | null {
+  if (isSilentFindError(err)) return null;
+  const detail = errorMessage(err).trim();
+  if (/failed to fetch/i.test(detail)) return null;
+  if (/timeout/i.test(detail)) {
+    return "Lookup took too long. Try again — a manufacturer homepage is fine if we already know their robots.";
+  }
+  if (detail && !/^robot-(profile|job-search|oem-listing)\s+\d+$/i.test(detail)) {
+    return `${fallback} ${detail}`.trim();
+  }
+  return fallback;
+}

@@ -1,0 +1,71 @@
+# pstack How / Act / Critic on every PR (including drafts).
+# Protocol chrome on FIND/CRM is not a pass. Skip-green is not a pass.
+# cursor/* auto-merge is in agent-verify.yml and needs this check plus Jobs verify.
+name: pstack release
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+    branches: [main]
+
+concurrency:
+  group: pstack-release-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pstack-release:
+    name: How / Act / Critic
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: python3 -m pip install pytest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.4.1
+
+      - name: pstack How / Act / Critic
+        run: |
+          mkdir -p pstack-artifacts
+          python3 scripts/pstack_release.py --evidence pstack-artifacts
+        env:
+          RFR_FLY_API: https://ready-2-robot.fly.dev
+
+      - name: pstack pytest
+        run: python3 -m pytest tests/test_pstack_release.py tests/test_pstack_protocol.py tests/test_agent_verify.py -q --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: pstack vitest (FIND abort + leftover CRM)
+        run: |
+          pnpm install --frozen-lockfile -C readyforrobots-new
+          pnpm --dir readyforrobots-new exec vitest run \
+            client/src/lib/pstackRelease.test.ts \
+            client/src/lib/pstackSite.test.ts \
+            client/src/lib/robotUrlIdentity.test.ts \
+            client/src/lib/jobsCrmAccount.test.ts \
+            client/src/lib/jobsHandoffSnapshot.test.ts
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pstack-release-${{ github.event.pull_request.number }}
+          path: pstack-artifacts
+          if-no-files-found: warn

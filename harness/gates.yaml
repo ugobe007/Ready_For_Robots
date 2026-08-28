@@ -39,6 +39,13 @@ tests:
       - Deploy
       - ProductManager
 
+  pstack_release:
+    command: python3 scripts/pstack_release.py
+    required_for:
+      - ProductSurface
+      - Deploy
+      - ProductManager
+
 pre_commit:
   block_paths:
     - reports/

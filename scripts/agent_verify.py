@@ -7,6 +7,7 @@ surface — a local Vite shell is optional chrome, not a substitute for Fly.
 
   python3 scripts/agent_verify.py doctor
   python3 scripts/agent_verify.py drive --feature find-jobs
+  python3 scripts/agent_verify.py pstack
   python3 scripts/agent_verify.py ci
   python3 scripts/agent_verify.py launch   # print local Vite command; does not daemonize
 
@@ -179,6 +180,23 @@ def doctor(*, origin: str | None = None, fly: str | None = None) -> dict[str, An
     }
 
 
+def _pstack_mod():
+    import importlib.util
+
+    path = ROOT / "scripts" / "pstack_release.py"
+    spec = importlib.util.spec_from_file_location("pstack_release", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {path}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def drive_find_url(*, api: str | None = None, url: str = "https://www.dexmate.ai/") -> dict[str, Any]:
+    """FIND submit path: POST /api/robot-job-search for a real OEM URL."""
+    return _pstack_mod().drive_find_url(url, api=(api or FLY_API).rstrip("/"))
+
+
 def drive_find_jobs(*, api: str | None = None) -> dict[str, Any]:
     """User path: robot résumé → Job Cards. Uses the same match API the Jobs terminal calls."""
     base = (api or FLY_API).rstrip("/")
@@ -307,6 +325,7 @@ def drive_jobs_crm(*, origin: str | None = None) -> dict[str, Any]:
 
 DRIVERS = {
     "find-jobs": drive_find_jobs,
+    "find-url": drive_find_url,
     "job-cards": drive_find_jobs,  # same match payload; cards live on the jobs
     "jobs-chrome": drive_jobs_chrome,
     "jobs-crm": drive_jobs_crm,
@@ -336,6 +355,8 @@ def cmd_drive(args: argparse.Namespace) -> int:
         if args.feature == "job-cards":
             result["feature"] = "job-cards"
             result["ok"] = bool(result.get("ok") and (result.get("titles")))
+    elif args.feature == "find-url":
+        result = drive_find_url(api=args.fly)
     elif args.feature == "jobs-chrome":
         result = drive_jobs_chrome(origin=args.origin)
     elif args.feature == "about":
@@ -356,8 +377,10 @@ def cmd_ci(args: argparse.Namespace) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     doc = doctor(origin=args.origin, fly=args.fly)
     write_json(out_dir / "doctor.json", doc)
+    pstack = _pstack_mod().run_pstack_release(api=args.fly, local=True)
+    write_json(out_dir / "pstack-release.json", pstack)
     drives = {}
-    rc = 0 if doc.get("ok") else 1
+    rc = 0 if doc.get("ok") and pstack.get("ok") else 1
     for feat in ("find-jobs", "jobs-chrome", "about", "jobs-crm"):
         if feat == "find-jobs":
             drives[feat] = drive_find_jobs(api=args.fly)
@@ -374,16 +397,30 @@ def cmd_ci(args: argparse.Namespace) -> int:
         "ok": rc == 0,
         "skip_green": doc.get("skip_green"),
         "doctor": doc.get("ok"),
+        "pstack": pstack.get("ok"),
         "drives": {k: v.get("ok") for k, v in drives.items()},
         "alerts": doc.get("alerts"),
         "evidence": str(out_dir),
     }
     write_json(out_dir / "summary.json", summary)
     print(json.dumps(summary, indent=2, default=str))
+    if not pstack.get("ok"):
+        print("FAIL: pstack How / Act / Critic — do not auto-merge", file=sys.stderr)
+        return 1
     if doc.get("skip_green"):
         print("FAIL: skip-green Vercel JS — do not auto-merge", file=sys.stderr)
         return 1
     return rc
+
+
+def cmd_pstack(args: argparse.Namespace) -> int:
+    out_dir = Path(args.evidence) if args.evidence else evidence_dir()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    result = _pstack_mod().run_pstack_release(api=args.fly, local=bool(getattr(args, "local", False)))
+    write_json(out_dir / "pstack-release.json", result)
+    print(json.dumps(result, indent=2, default=str))
+    print(f"evidence: {out_dir / 'pstack-release.json'}")
+    return 0 if result.get("ok") else 1
 
 
 def cmd_launch(_args: argparse.Namespace) -> int:
@@ -432,6 +469,8 @@ def main() -> int:
     d = sub.add_parser("drive", parents=[shared])
     d.add_argument("--feature", required=True, choices=sorted(DRIVERS))
     sub.add_parser("ci", parents=[shared])
+    ps = sub.add_parser("pstack", parents=[shared])
+    ps.add_argument("--local", action="store_true", help="How + Act + fixtures; skip Fly FIND drive")
     sub.add_parser("launch", parents=[shared])
     sub.add_parser("map", parents=[shared])
     args = p.parse_args()
@@ -441,6 +480,8 @@ def main() -> int:
         return cmd_drive(args)
     if args.cmd == "ci":
         return cmd_ci(args)
+    if args.cmd == "pstack":
+        return cmd_pstack(args)
     if args.cmd == "launch":
         return cmd_launch(args)
     if args.cmd == "map":

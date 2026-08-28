@@ -5,8 +5,10 @@ import { fileURLToPath } from "node:url";
 import {
   canonicalRobotUrl,
   emptyRobotIdentity,
+  findUserFacingError,
   isAbortError,
   isCurrentRobotSubmit,
+  isSilentFindError,
   sameRobotUrl,
 } from "./robotUrlIdentity";
 import {
@@ -117,6 +119,21 @@ describe("robot URL identity", () => {
     );
     expect(isCurrentRobotSubmit(A_URL, "https://www.agrobot.com/")).toBe(true);
     expect(isAbortError({ name: "AbortError", message: "aborted" })).toBe(true);
+  });
+
+  it("does not map AbortError or Failed to fetch to Research failed", () => {
+    expect(isSilentFindError({ name: "AbortError", message: "aborted" })).toBe(
+      true,
+    );
+    expect(isSilentFindError({ name: "TypeError", message: "Failed to fetch" })).toBe(
+      true,
+    );
+    expect(
+      findUserFacingError(
+        { name: "TypeError", message: "Failed to fetch" },
+        "Research failed. Check the URL and try again.",
+      ),
+    ).toBeNull();
   });
 });
 

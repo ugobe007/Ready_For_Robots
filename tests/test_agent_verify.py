@@ -26,3 +26,11 @@ def test_canaries_are_jobs_not_signal():
     assert "Find jobs" in FIND_HEADLINE
     assert JOBS_ACTIVATE == "jobs_activate"
     assert STALE_JS.startswith("/assets/index-")
+
+
+def test_pstack_release_script_exists():
+    from scripts.pstack_release import run_pstack_release
+
+    result = run_pstack_release(local=True)
+    assert result["ok"], result
+    assert result["chrome_required"] is False
