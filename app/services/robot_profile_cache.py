@@ -20,8 +20,8 @@ from app.services.shared_api_cache import shared_cache_get, shared_cache_set
 
 logger = logging.getLogger(__name__)
 
-# v11: drop generic Product / legal chrome (Imprint, AGB) from the Jobs picker.
-NAMESPACE = "robot_profile_v11"
+# v12: unknown-OEM evidence gate — drop chrome/vehicle/catalog-overlay SKUs.
+NAMESPACE = "robot_profile_v12"
 DEFAULT_TTL_SEC = 6 * 60 * 60  # 6 hours
 _MEM_MAX = 64
 _mem: dict[str, tuple[float, dict[str, Any]]] = {}

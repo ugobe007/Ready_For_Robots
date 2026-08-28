@@ -499,6 +499,12 @@ const JOBS_LINEUP_NOISE_NAMES = new Set([
   "privacy policy",
   "view privacy policy",
   "legal notice",
+  "investors",
+  "investor",
+  "investor relations",
+  "vehicles",
+  "vehicle",
+  "models",
 ]);
 
 const JOBS_LINEUP_NOISE_RE =
@@ -506,7 +512,7 @@ const JOBS_LINEUP_NOISE_RE =
 const JOBS_LINEUP_LOCALE_RE =
   /^(deutsch|espa[nñ]ol|fran[cç]ais|english|italiano|nederlands|portugu[eê]s|日本語|中文|한국어|de|fr|es|en|zh|ja)$/i;
 const JOBS_LINEUP_GENERIC_RE =
-  /^(products?|produkts?|produkte|shop|store|home|menu|more)$/i;
+  /^(products?|produkts?|produkte|shop|store|home|menu|more|vehicles?|models?|investors?)$/i;
 const JOBS_LINEUP_LEGAL_RE =
   /^(imprint|impressum|agb|datenschutz|disclaimer|privacy(?:\s+policy)?|terms(?:\s+and\s+conditions|\s+of\s+use|\s+of\s+service)?|view\s+privacy(?:\s+policy)?|cookies?|legal(?:\s+notice)?)$/i;
 

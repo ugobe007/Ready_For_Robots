@@ -111,7 +111,11 @@ def build_robot_profile(
     # already list (Reflex, Richtech, …).
     normalized = normalize_product_url(url) or (url or "").strip()
     catalog = lookup_vendor_by_url(normalized) or lookup_vendor_by_url(url)
-    catalog_skus = bool(catalog and (catalog.get("robots") or []))
+    catalog_skus = False
+    if catalog and (catalog.get("robots") or []):
+        from app.services.jobs_oem_listing import listing_from_catalog
+
+        catalog_skus = bool(listing_from_catalog(catalog))
     if catalog_skus:
         safe = normalized
     else:

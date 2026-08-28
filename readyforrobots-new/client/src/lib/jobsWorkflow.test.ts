@@ -159,6 +159,8 @@ describe("jobsWorkflow", () => {
     expect(submitFind).not.toMatch(/lookupGrain: cls \? "robot_type" : "product"/);
     expect(submitFind).toMatch(/fetchRobotJobSearch/);
     expect(submitFind).not.toMatch(/fetchRobotProfile/);
+    expect(submitFind).not.toMatch(/fetchRobotJobMatch/);
+    expect(submitFind).toMatch(/lineup.length === 0/);
     expect(workspace).toMatch(/rfr-jobs-activate-bar/);
     expect(workspace).not.toMatch(
       /enterReview\(profileToAnalysis\(profile\), submitUrl, names\)/,
@@ -1643,8 +1645,9 @@ describe("jobsWorkflow", () => {
     expect(isJobsLineupNoiseName("Imprint")).toBe(true);
     expect(isJobsLineupNoiseName("Impressum")).toBe(true);
     expect(isJobsLineupNoiseName("Terms and Conditions")).toBe(true);
-    expect(isJobsLineupNoiseName("AGB")).toBe(true);
-    expect(isJobsLineupNoiseName("Datenschutz")).toBe(true);
+    expect(isJobsLineupNoiseName("Vehicles")).toBe(true);
+    expect(isJobsLineupNoiseName("Investors")).toBe(true);
+    expect(isJobsLineupNoiseName("G6")).toBe(false);
     const organifarms = filterJobsLineupProducts([
       { name: "BERRY" },
       { name: "Product" },
