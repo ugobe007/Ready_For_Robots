@@ -8,7 +8,6 @@ import { useLocation } from "wouter";
 import {
   CRM_EMPLOYER_NAME_CLASS,
   CRM_EMPTY_FIND_HINT,
-  CRM_INSPECT_HINT,
   CRM_LEAVE_HINT,
   CRM_LISTING_EYEBROW,
   CRM_PLACE_EGG_HINT,
@@ -18,6 +17,7 @@ import {
   JOBS_EYEBROW_CLASS,
   JOBS_KEEP_LABEL,
   crmCollectedCountLabel,
+  crmSaveJobsBlurb,
   crmDeskJobKeys,
   CRM_KEEP_YES_CTA,
   crmSelectAllKeys,
@@ -261,9 +261,7 @@ export default function JobsCrmDesk({
         CRM
       </h1>
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
-        Collect jobs for {product}. Inspect an egg, then Place this job when you
-        are ready. Quote the monthly rental you will charge. We do not invent
-        it. Employers prefer proof of concept; you can skip it. Not a SIGNAL buyer list. Not an OEM roster.
+        {crmSaveJobsBlurb(product)}
       </p>
       {jobs.length > 0 ? (
         <p className="mt-3 font-mono text-sm uppercase tracking-[0.08em] text-emerald-300">
@@ -282,11 +280,9 @@ export default function JobsCrmDesk({
           signedIn={signedIn}
           submissionId={submissionId}
           onApplyClick={openOfferForm}
+          blurb={crmSaveJobsBlurb(product)}
         />
       </div>
-      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-        {CRM_INSPECT_HINT}
-      </p>
       <div className="mt-4">
         <JobsPstackProtocol compact />
       </div>

@@ -6,12 +6,14 @@ export default function JobsKeepStatusBar({
   signedIn,
   submissionId = null,
   onApplyClick,
+  blurb,
 }: {
   savedCount: number;
   onCrmDesk: boolean;
   signedIn: boolean;
   submissionId?: number | null;
   onApplyClick?: (event: { preventDefault: () => void }) => void;
+  blurb?: string;
 }) {
   if (savedCount <= 0) return null;
   const bar = keepJobsStatusBar({
@@ -41,7 +43,7 @@ export default function JobsKeepStatusBar({
       ) : null}
       {onCrmDesk ? (
         <p className="basis-full text-sm leading-relaxed text-emerald-100/80">
-          {JOBS_APPLY_SEQUENCE}
+          {blurb || JOBS_APPLY_SEQUENCE}
         </p>
       ) : null}
     </div>
