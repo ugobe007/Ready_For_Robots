@@ -64,6 +64,7 @@ class JobApplication(Base):
     robot_name = Column(String(240), nullable=False)
     selected_models = Column(JSONB, nullable=False, server_default="[]")
     poc_evidence = Column(Text, nullable=True)
+    poc_video_url = Column(Text, nullable=True)
     poc_skipped = Column(String(8), nullable=False, server_default="false")
     monthly_price = Column(String(160), nullable=False)
     offer_snapshot = Column(JSONB, nullable=False, server_default="{}")

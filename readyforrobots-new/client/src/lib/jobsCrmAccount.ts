@@ -57,6 +57,7 @@ export type JobsCrmApplication = {
   robot_name: string;
   selected_models: string[];
   poc_evidence?: string | null;
+  poc_video_url?: string | null;
   poc_skipped: boolean;
   monthly_price: string;
   employer_email?: string | null;
@@ -280,6 +281,7 @@ export async function applyJobOnAccount(
     selectedModels: string[];
     monthlyPrice: string;
     pocEvidence?: string;
+    pocVideoUrl?: string;
     pocSkipped?: boolean;
     job?: MatchJob;
     documentIds?: string[];
@@ -293,6 +295,7 @@ export async function applyJobOnAccount(
       selected_models: body.selectedModels,
       monthly_price: body.monthlyPrice,
       poc_evidence: body.pocEvidence || "",
+      poc_video_url: body.pocVideoUrl || "",
       poc_skipped: Boolean(body.pocSkipped),
       job: body.job || null,
       document_ids: body.documentIds || [],

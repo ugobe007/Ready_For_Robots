@@ -19,6 +19,7 @@ from app.services.plan_entitlements import (
     jobs_crm_unlocked_limit,
     resolve_plan_tier,
 )
+from app.services.poc_video_url import normalize_poc_video_url
 
 SEND_NOT_SENT_NO_EMAIL = "not_sent_no_email"
 SEND_STORED = "stored"
@@ -411,6 +412,7 @@ def _compose_offer_email(
     accept_url: str | None = None,
     interview_url: str | None = None,
     document_lines: list[str] | None = None,
+    poc_video_url: str | None = None,
 ) -> tuple[str, str]:
     who = robot_name or "this robot"
     model_line = ", ".join(models) if models else "(no catalogued model selected)"
@@ -423,6 +425,8 @@ def _compose_offer_email(
         f"PoC proof: {poc}",
         f"Proposed monthly price we would charge (our offer, not a site rate): {monthly_price}",
     ]
+    if poc_video_url:
+        lines.append(f"Video résumé (unlisted, this Job Card): {poc_video_url}")
     if document_lines:
         lines.extend(["", *document_lines])
     if accept_url or interview_url:
@@ -450,6 +454,7 @@ def apply_to_job(
     selected_models: list[str],
     monthly_price: str,
     poc_evidence: str = "",
+    poc_video_url: str = "",
     poc_skipped: bool = False,
     job: dict[str, Any] | None = None,
     document_ids: list[str] | None = None,
@@ -477,14 +482,21 @@ def apply_to_job(
     email = employer_email_from_job(payload) or (kept.employer_email if kept else None)
     robot = (robot_name or (kept.robot_name if kept else "") or "this robot").strip()
     poc_raw = (poc_evidence or "").strip()
-    poc = poc_raw or (
-        "skipped (employers prefer proof of concept)" if poc_skipped else "(not provided)"
-    )
+    video_url = normalize_poc_video_url(poc_video_url)
+    if poc_raw:
+        poc = poc_raw
+    elif video_url:
+        poc = "video résumé (see URL below)"
+    elif poc_skipped:
+        poc = "skipped (employers prefer proof of concept)"
+    else:
+        poc = "(not provided)"
     snapshot = {
         "robot_name": robot,
         "selected_models": models,
         "poc_evidence": poc_raw,
-        "poc_skipped": bool(poc_skipped),
+        "poc_video_url": video_url,
+        "poc_skipped": bool(poc_skipped) and not bool(video_url) and not bool(poc_raw),
         "monthly_price": price,
         "price_label": "proposed_offer",
         "job_key": ident["job_key"],
@@ -520,7 +532,8 @@ def apply_to_job(
         robot_name=robot,
         selected_models=models,
         poc_evidence=poc_raw or None,
-        poc_skipped="true" if poc_skipped else "false",
+        poc_video_url=video_url,
+        poc_skipped="true" if (poc_skipped and not video_url and not poc_raw) else "false",
         monthly_price=price,
         offer_snapshot=snapshot,
         employer_email=email,
@@ -554,6 +567,7 @@ def apply_to_job(
         accept_url=f"{decision}?action=accept",
         interview_url=f"{decision}?action=interview",
         document_lines=document_lines_for_email(employer_token, attached),
+        poc_video_url=video_url,
     )
 
     if kept:
@@ -630,6 +644,7 @@ def application_payload(row: JobApplication, *, include_messages: bool = False) 
         "robot_name": row.robot_name,
         "selected_models": row.selected_models or [],
         "poc_evidence": row.poc_evidence,
+        "poc_video_url": getattr(row, "poc_video_url", None),
         "poc_skipped": _truthy(row.poc_skipped),
         "monthly_price": row.monthly_price,
         "offer_snapshot": row.offer_snapshot or {},

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRoute, useSearch } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
+import PocVideoWatch from "@/components/PocVideoWatch";
 import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 import {
   JOBS_EMPLOYER_ACCEPT_CTA,
@@ -28,6 +29,8 @@ type EmployerView = {
   robot_name: string;
   selected_models: string[];
   monthly_price: string;
+  poc_evidence?: string | null;
+  poc_video_url?: string | null;
   status: string;
   interview_at?: string | null;
   interview_mode?: string | null;
@@ -146,6 +149,10 @@ export default function EmployerDecision() {
             <p className="mt-2 text-sm text-slate-400">
               Proposed monthly price (their offer, not a site rate): {data.monthly_price}
             </p>
+            {data.poc_evidence ? (
+              <p className="mt-2 text-sm text-slate-300">{data.poc_evidence}</p>
+            ) : null}
+            <PocVideoWatch url={data.poc_video_url} />
             <p className="mt-2 font-mono text-xs uppercase tracking-[0.08em] text-emerald-300">
               {applicationStatusLabel(data.status)}
             </p>
