@@ -26,6 +26,7 @@ FLY_API = os.getenv("RFR_FLY_API", "https://ready-2-robot.fly.dev").rstrip("/")
 WORKSPACE = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "RobotJobsWorkspace.tsx"
 CRM_DESK = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "JobsCrmDesk.tsx"
 IDENTITY = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "robotUrlIdentity.ts"
+FIND_RESEARCH = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "findResearch.ts"
 CRM_ACCOUNT = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsCrmAccount.ts"
 HANDOFF = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsHandoffSnapshot.ts"
 PSTACK_SITE = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "pstackSite.ts"
@@ -116,6 +117,7 @@ def phase_how() -> dict[str, Any]:
         "workspace": WORKSPACE,
         "crm_desk": CRM_DESK,
         "identity": IDENTITY,
+        "find_research": FIND_RESEARCH,
         "crm_account": CRM_ACCOUNT,
         "handoff": HANDOFF,
         "pstack_site": PSTACK_SITE,
@@ -199,36 +201,46 @@ def phase_act() -> dict[str, Any]:
         )
     )
 
-    abort_return = bool(
-        re.search(
-            r"if\s*\(\s*isAbortError\(err\)\s*\|\|\s*!stillThisSubmit\(submitUrl\)\s*\)\s*return",
-            submit,
-        )
-    )
+    research = _read(FIND_RESEARCH) if FIND_RESEARCH.is_file() else ""
+    interrupt_slice = ""
+    interrupt_at = research.find("FIND_RESEARCH_INTERRUPTED_MESSAGE")
+    if interrupt_at >= 0:
+        interrupt_slice = research[interrupt_at : interrupt_at + 160]
     silent_helper = (
         "export function isSilentFindError" in identity
         and "export function findUserFacingError" in identity
         and "failed to fetch" in identity.lower()
+        and "isFailedToFetchError" in research
+        and "Research was interrupted" in research
+        and "Failed to fetch" not in interrupt_slice
+    )
+    abort_contract = (
+        "shouldIgnoreStaleFindError" in submit
+        and "isAbortError(err, ac.signal)" in submit
+        and "FIND_RESEARCH_INTERRUPTED_MESSAGE" in submit
+        and "lookupFailedMessage" in submit
     )
     checks.append(
         _check(
             "silent_abort",
-            abort_return and silent_helper,
-            "FIND catch returns on abort before setError; Failed to fetch is a silent find error",
+            abort_contract and silent_helper,
+            "FIND catch ignores stale gens; abort is interrupted copy, never Failed to fetch / Research failed",
         )
     )
 
     set_error_block = _slice(submit, "} catch (err)", "finally")
+    abort_at = set_error_block.find("isAbortError")
+    fail_at = set_error_block.find("lookupFailedMessage")
     leak = bool(
         set_error_block
         and "setError" in set_error_block
-        and not re.search(r"isAbortError\(err\)", set_error_block)
+        and (abort_at < 0 or fail_at < 0 or abort_at > fail_at)
     )
     checks.append(
         _check(
             "abort_before_set_error",
-            not leak and "lookupFailedMessage" in set_error_block,
-            "submitFind catch must not setError until abort is ruled out",
+            not leak and "FIND_RESEARCH_INTERRUPTED_MESSAGE" in set_error_block,
+            "submitFind catch must not paint lookupFailedMessage until abort is ruled out",
         )
     )
 

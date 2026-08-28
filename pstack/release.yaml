@@ -28,7 +28,7 @@ act:
   - id: bind_url
     prove: submitFind calls bindSubmittedRobot then stillThisSubmit
   - id: silent_abort
-    prove: FIND catch returns on abort before setError; Failed to fetch is a silent find error
+    prove: stale FIND returns; abort uses interrupted copy; Failed to fetch is not Research failed
     fail: AbortError or Failed to fetch mapped to Research failed
   - id: handoff
     prove: beginJobsHandoffForUrl overwrites the previous robot before search returns
@@ -69,6 +69,7 @@ jobs_paths:
   - readyforrobots-new/client/src/components/RobotJobsWorkspace.tsx
   - readyforrobots-new/client/src/components/JobsCrmDesk.tsx
   - readyforrobots-new/client/src/lib/robotUrlIdentity.ts
+  - readyforrobots-new/client/src/lib/findResearch.ts
   - readyforrobots-new/client/src/lib/jobsCrmAccount.ts
   - readyforrobots-new/client/src/lib/jobsHandoffSnapshot.ts
   - readyforrobots-new/client/src/lib/pstackRelease.ts

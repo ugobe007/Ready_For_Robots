@@ -62,11 +62,15 @@ def test_173_abort_contract_is_in_identity_module():
         )
     ]
     assert "bindSubmittedRobot(submitUrl)" in submit
-    assert "isAbortError(err)" in submit
+    assert "shouldIgnoreStaleFindError" in submit
+    assert "isAbortError(err, ac.signal)" in submit
     catch = submit[submit.rindex("} catch (err)") :]
-    abort_at = catch.index("isAbortError(err)")
+    abort_at = catch.index("isAbortError")
+    fail_at = catch.index("lookupFailedMessage")
     error_at = catch.index("setError")
     assert abort_at < error_at
+    assert abort_at < fail_at
+    assert "FIND_RESEARCH_INTERRUPTED_MESSAGE" in catch
 
 
 def test_172_strawberry_leftover_fixture_exists():

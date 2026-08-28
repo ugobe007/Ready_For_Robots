@@ -106,16 +106,16 @@ describe("pstack release — #173 self-abort FIND", () => {
       workspace.indexOf("async function confirmSelection"),
     );
     const catchBlock = submitFind.slice(submitFind.lastIndexOf("} catch (err)"));
-    expect(catchBlock).toMatch(
-      /isAbortError\(err\)\s*\|\|\s*!stillThisSubmit\(submitUrl\)\s*\)\s*return/,
-    );
-    const afterReturn = catchBlock.slice(
-      catchBlock.search(/isAbortError\(err\)/),
-    );
-    expect(afterReturn).toMatch(/setError/);
+    expect(catchBlock).toMatch(/shouldIgnoreStaleFindError/);
+    expect(catchBlock).toMatch(/isAbortError\(err,\s*ac\.signal\)/);
+    expect(catchBlock).toMatch(/FIND_RESEARCH_INTERRUPTED_MESSAGE/);
+    expect(catchBlock).not.toMatch(/Failed to fetch/i);
     expect(submitFind).toMatch(/bindSubmittedRobot\(submitUrl\)/);
-    const catchSetError = catchBlock.indexOf("setError");
-    expect(catchSetError).toBeGreaterThan(catchBlock.indexOf("isAbortError"));
+    const abortAt = catchBlock.indexOf("isAbortError");
+    const failAt = catchBlock.indexOf("lookupFailedMessage");
+    expect(abortAt).toBeGreaterThan(-1);
+    expect(failAt).toBeGreaterThan(abortAt);
+    expect(catchBlock.indexOf("setError")).toBeGreaterThan(abortAt);
   });
 });
 
