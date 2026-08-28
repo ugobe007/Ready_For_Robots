@@ -3,6 +3,7 @@ import {
   JOBS_INBOX_HEADING,
   JOBS_INBOX_PASTE_HINT,
   applicationStatusLabel,
+  declineReasonLabel,
   confirmHoldOnAccount,
   confirmInterviewOnAccount,
   fetchApplicationThread,
@@ -90,7 +91,15 @@ export default function JobsCrmInbox({
         {threadStateLabel(app.thread_state)}
         {app.send_status ? ` · ${app.send_status.replace(/_/g, " ")}` : ""}
       </p>
-      {app.status === "interview_held" && (app.slot_label || app.slot_start) ? (
+      {app.status === "declined" ? (
+        <p className="mt-2 text-sm text-slate-200">
+          Employer declined
+          {app.decline_reason_code
+            ? `: ${app.decline_reason_label || declineReasonLabel(app.decline_reason_code)}`
+            : ""}
+          {app.decline_note ? ` — ${app.decline_note}` : ""}
+        </p>
+      ) : app.status === "interview_held" && (app.slot_label || app.slot_start) ? (
         <p className="mt-2 text-sm text-slate-200">
           Held slot: {app.slot_label || new Date(app.slot_start || "").toLocaleString()}
           {app.hold_expires_at

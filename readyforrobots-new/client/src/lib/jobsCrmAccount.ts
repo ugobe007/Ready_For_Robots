@@ -25,6 +25,7 @@ export const JOBS_DOCS_HEADING = "Brochures and product specs";
 export const JOBS_DOCS_HINT =
   "Upload a PDF or image spec for this robot. We attach what you select to the application — not a public dump.";
 export const JOBS_EMPLOYER_ACCEPT_CTA = "Accept";
+export const JOBS_EMPLOYER_DECLINE_CTA = "Decline";
 export const JOBS_EMPLOYER_INTERVIEW_CTA = "Set up interview";
 export const JOBS_EMPLOYER_PROPOSE_CTA = "Propose this time";
 export const JOBS_EMPLOYER_HOLD_CTA = "Hold this slot";
@@ -80,6 +81,10 @@ export type JobsCrmApplication = {
   hold_url?: string | null;
   oem_email?: string | null;
   employer_decision_url?: string | null;
+  decline_reason_code?: string | null;
+  decline_reason_label?: string | null;
+  decline_note?: string | null;
+  can_decline?: boolean;
   documents?: RobotDocument[];
   messages?: JobsCrmMessage[];
 };
@@ -479,6 +484,39 @@ export function applicationStatusLabel(status: string | null | undefined): strin
   if (key === "declined") return "Declined";
   if (key === "applied") return "Applied";
   return key ? key.replace(/_/g, " ") : "Stored";
+}
+
+/** Task-model loop: why this robot/policy did not fit the job. Short list, not a novel. */
+export const JOBS_DECLINE_REASONS = [
+  {
+    code: "work_mismatch",
+    label: "This robot cannot do this physical work",
+  },
+  {
+    code: "model_unproven",
+    label: "Hardware maybe, task model / demo not convincing",
+  },
+  {
+    code: "site_constraints",
+    label: "Aisle, payload, SOP, safety, environment",
+  },
+  {
+    code: "timing_budget",
+    label: "Not now / budget / contract",
+  },
+  {
+    code: "other",
+    label: "Other (add a note)",
+  },
+] as const;
+
+export type JobsDeclineReasonCode = (typeof JOBS_DECLINE_REASONS)[number]["code"];
+
+export function declineReasonLabel(code: string | null | undefined): string {
+  const key = (code || "").trim();
+  const hit = JOBS_DECLINE_REASONS.find(row => row.code === key);
+  if (hit) return hit.label;
+  return key ? key.replace(/_/g, " ") : "";
 }
 
 export function toDatetimeLocalValue(date: Date): string {

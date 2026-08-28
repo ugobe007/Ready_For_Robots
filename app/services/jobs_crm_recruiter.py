@@ -46,6 +46,29 @@ INTERVIEW_MODE_HOLD = "hold_slot"
 HOLD_TTL_HOURS = 48
 DEFAULT_SLOT_MINUTES = 60
 
+# Task-model loop: why policy/job fit failed. Short list, not a novel.
+DECLINE_REASON_WORK_MISMATCH = "work_mismatch"
+DECLINE_REASON_MODEL_UNPROVEN = "model_unproven"
+DECLINE_REASON_SITE_CONSTRAINTS = "site_constraints"
+DECLINE_REASON_TIMING_BUDGET = "timing_budget"
+DECLINE_REASON_OTHER = "other"
+DECLINE_REASON_CODES = frozenset(
+    {
+        DECLINE_REASON_WORK_MISMATCH,
+        DECLINE_REASON_MODEL_UNPROVEN,
+        DECLINE_REASON_SITE_CONSTRAINTS,
+        DECLINE_REASON_TIMING_BUDGET,
+        DECLINE_REASON_OTHER,
+    }
+)
+DECLINE_REASON_LABELS = {
+    DECLINE_REASON_WORK_MISMATCH: "this robot cannot do this physical work",
+    DECLINE_REASON_MODEL_UNPROVEN: "hardware maybe, task model / demo not convincing",
+    DECLINE_REASON_SITE_CONSTRAINTS: "aisle, payload, SOP, safety, environment",
+    DECLINE_REASON_TIMING_BUDGET: "not now / budget / contract",
+    DECLINE_REASON_OTHER: "other",
+}
+
 _OPEN_FOR_ACCEPT = {
     STATUS_APPLIED,
     STATUS_INTERVIEW_REQUESTED,
@@ -53,6 +76,7 @@ _OPEN_FOR_ACCEPT = {
     STATUS_INTERVIEW_HELD,
 }
 _CLOSED_FOR_INTERVIEW = {STATUS_DECLINED, STATUS_SUCCESS, STATUS_FAILED}
+_CLOSED_FOR_DECLINE = {STATUS_DECLINED, STATUS_SUCCESS, STATUS_FAILED}
 
 ALLOWED_DOC_MIME = frozenset(
     {
@@ -129,6 +153,24 @@ def oem_hold_url(token: str) -> str:
 
 def _iso(stamp: datetime | None) -> str | None:
     return stamp.isoformat() if stamp else None
+
+
+def decline_reason_label(code: str | None) -> str:
+    cleaned = (code or "").strip().lower()
+    if not cleaned:
+        return ""
+    return DECLINE_REASON_LABELS.get(cleaned, cleaned.replace("_", " "))
+
+
+def decline_fields_for_payload(row: JobApplication) -> dict[str, Any]:
+    status = row.status or STATUS_APPLIED
+    code = getattr(row, "decline_reason_code", None)
+    return {
+        "decline_reason_code": code,
+        "decline_reason_label": decline_reason_label(code) if code else None,
+        "decline_note": getattr(row, "decline_note", None),
+        "can_decline": status not in _CLOSED_FOR_DECLINE,
+    }
 
 
 def slot_window_label(application: JobApplication) -> str | None:
@@ -360,6 +402,7 @@ def employer_public_payload(db: Session, row: JobApplication) -> dict[str, Any]:
         "can_hold": status not in _CLOSED_FOR_INTERVIEW,
     }
     payload.update(hold_fields_for_payload(row, include_hold_url=False))
+    payload.update(decline_fields_for_payload(row))
     return payload
 
 
@@ -487,6 +530,13 @@ def compose_oem_status_email(
         lines.append("The employer asked us to connect you. Reply to arrange the meeting.")
     if application.interview_mode == INTERVIEW_MODE_HOLD and event == STATUS_INTERVIEW_HELD:
         lines.append("This is a held meeting window on the application — not Cal sales autonomy.")
+    if event == STATUS_DECLINED:
+        code = getattr(application, "decline_reason_code", None)
+        if code:
+            lines.append(f"Decline reason: {decline_reason_label(code)} ({code})")
+        note = getattr(application, "decline_note", None)
+        if note:
+            lines.append(f"Decline note: {note}")
     if application.interview_note:
         lines.append(f"Note: {application.interview_note}")
     if extra_lines:
@@ -529,6 +579,55 @@ def accept_application(db: Session, token: str) -> dict[str, Any]:
         company=row.employer_name,
     )
     notify_oem_status(db, None, row, STATUS_ACCEPTED)
+    db.commit()
+    return employer_public_payload(db, row)
+
+
+def decline_application(
+    db: Session,
+    token: str,
+    *,
+    reason_code: str | None = None,
+    note: str | None = None,
+) -> dict[str, Any]:
+    row = find_application_by_employer_token(db, token)
+    if not row:
+        raise KeyError("application_not_found")
+    if row.status in _CLOSED_FOR_DECLINE:
+        raise ValueError("This application is no longer open.")
+    code = (reason_code or "").strip().lower()
+    if code not in DECLINE_REASON_CODES:
+        raise ValueError("Pick a decline reason.")
+    note_clean = (note or "").strip()[:2000] or None
+    if code == DECLINE_REASON_OTHER and not note_clean:
+        raise ValueError("Add a short note when the reason is other.")
+    row.status = STATUS_DECLINED
+    row.decline_reason_code = code
+    row.decline_note = note_clean
+    row.thread_state = THREAD_REPLIED
+    label = decline_reason_label(code)
+    body = (
+        f"{row.employer_name} declined the application for {row.robot_name} "
+        f"on {row.work_title}. Reason: {label} ({code})."
+    )
+    if note_clean:
+        body = f"{body}\n\nNote: {note_clean}"
+    _add_system_message(
+        db,
+        row,
+        body=body,
+        from_email=row.employer_email,
+        subject="Application declined",
+    )
+    record_activity(
+        db,
+        {"uid": str(row.user_id)},
+        kind="follow_up",
+        label=f"Employer declined ({code})",
+        job_key=row.job_key,
+        company=row.employer_name,
+    )
+    notify_oem_status(db, None, row, STATUS_DECLINED)
     db.commit()
     return employer_public_payload(db, row)
 
@@ -941,5 +1040,6 @@ def enrich_application_payload(
         employer_decision_url(row.employer_token) if row.employer_token else None
     )
     payload.update(hold_fields_for_payload(row))
+    payload.update(decline_fields_for_payload(row))
     payload["documents"] = [document_payload(doc) for doc in docs]
     return payload

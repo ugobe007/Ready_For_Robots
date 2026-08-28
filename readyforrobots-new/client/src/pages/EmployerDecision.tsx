@@ -1,5 +1,5 @@
 /**
- * Employer evaluate page — Accept / Set up interview.
+ * Employer evaluate page — Accept / Decline / Set up interview.
  * Token landing; the employer does not need a Ready For Robots account.
  */
 import { useEffect, useState } from "react";
@@ -11,10 +11,13 @@ import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 import {
   JOBS_EMPLOYER_ACCEPT_CTA,
   JOBS_EMPLOYER_CONNECT_CTA,
+  JOBS_EMPLOYER_DECLINE_CTA,
   JOBS_EMPLOYER_HOLD_CTA,
   JOBS_EMPLOYER_INTERVIEW_CTA,
   JOBS_EMPLOYER_PROPOSE_CTA,
+  JOBS_DECLINE_REASONS,
   applicationStatusLabel,
+  declineReasonLabel,
   suggestedHoldSlots,
 } from "@/lib/jobsCrmAccount";
 import {
@@ -42,6 +45,10 @@ type EmployerView = {
   can_accept?: boolean;
   can_interview?: boolean;
   can_hold?: boolean;
+  can_decline?: boolean;
+  decline_reason_code?: string | null;
+  decline_reason_label?: string | null;
+  decline_note?: string | null;
 };
 
 type InterviewMode = "propose" | "hold";
@@ -60,6 +67,9 @@ export default function EmployerDecision() {
   const [slotEnd, setSlotEnd] = useState("");
   const [note, setNote] = useState("");
   const [showInterview, setShowInterview] = useState(action === "interview");
+  const [showDecline, setShowDecline] = useState(action === "decline");
+  const [declineCode, setDeclineCode] = useState("");
+  const [declineNote, setDeclineNote] = useState("");
   const [mode, setMode] = useState<InterviewMode>(
     action === "hold" ? "hold" : "propose",
   );
@@ -156,7 +166,15 @@ export default function EmployerDecision() {
             <p className="mt-2 font-mono text-xs uppercase tracking-[0.08em] text-emerald-300">
               {applicationStatusLabel(data.status)}
             </p>
-            {data.status === "interview_held" && heldWindow ? (
+            {data.status === "declined" ? (
+              <p className="mt-2 text-sm text-slate-200">
+                Declined
+                {data.decline_reason_code
+                  ? `: ${data.decline_reason_label || declineReasonLabel(data.decline_reason_code)}`
+                  : ""}
+                {data.decline_note ? ` — ${data.decline_note}` : ""}
+              </p>
+            ) : data.status === "interview_held" && heldWindow ? (
               <p className="mt-2 text-sm text-slate-200">
                 Held slot: {heldWindow}
                 {data.hold_expires_at
@@ -203,7 +221,88 @@ export default function EmployerDecision() {
                   {JOBS_EMPLOYER_INTERVIEW_CTA}
                 </button>
               ) : null}
+              {data.can_decline ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setShowDecline(true)}
+                  className="inline-flex items-center justify-center border border-slate-500 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-slate-200 disabled:opacity-40"
+                >
+                  {JOBS_EMPLOYER_DECLINE_CTA}
+                </button>
+              ) : null}
             </div>
+            {showDecline && data.can_decline ? (
+              <form
+                className="mt-6 space-y-4 border border-slate-500/50 bg-[#0b162f] px-4 py-5"
+                onSubmit={event => {
+                  event.preventDefault();
+                  if (!declineCode) {
+                    setError("Pick a decline reason.");
+                    return;
+                  }
+                  if (declineCode === "other" && !declineNote.trim()) {
+                    setError("Add a short note when the reason is other.");
+                    return;
+                  }
+                  void post("/decline", {
+                    reason_code: declineCode,
+                    note: declineNote.trim() || null,
+                  });
+                }}
+              >
+                <p className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+                  Why this robot does not fit this job
+                </p>
+                <fieldset className="space-y-2">
+                  <legend className="sr-only">Decline reason</legend>
+                  {JOBS_DECLINE_REASONS.map(reason => (
+                    <label
+                      key={reason.code}
+                      className={
+                        declineCode === reason.code
+                          ? "flex cursor-pointer items-start gap-3 border border-emerald-400 bg-emerald-400/10 px-3 py-3 text-sm text-emerald-100"
+                          : "flex cursor-pointer items-start gap-3 border border-slate-600 px-3 py-3 text-sm text-slate-200"
+                      }
+                    >
+                      <input
+                        type="radio"
+                        name="decline-reason"
+                        value={reason.code}
+                        checked={declineCode === reason.code}
+                        onChange={() => setDeclineCode(reason.code)}
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="font-mono text-xs uppercase tracking-[0.08em] text-emerald-300">
+                          {reason.code}
+                        </span>
+                        <span className="mt-1 block">{reason.label}</span>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+                <label className="block">
+                  <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+                    {declineCode === "other" ? "Note (required)" : "Note (optional)"}
+                  </span>
+                  <textarea
+                    value={declineNote}
+                    onChange={e => setDeclineNote(e.target.value)}
+                    rows={3}
+                    className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100"
+                    placeholder="Optional — site constraint, missing demo, contract timing"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="inline-flex items-center justify-center border border-slate-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-slate-100 disabled:opacity-40"
+                >
+                  {JOBS_EMPLOYER_DECLINE_CTA}
+                </button>
+              </form>
+            ) : null}
             {showInterview && data.can_interview ? (
               <form
                 className="mt-6 space-y-4 border border-emerald-400/40 bg-[#0b162f] px-4 py-5"

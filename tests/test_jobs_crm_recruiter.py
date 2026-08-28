@@ -6,6 +6,7 @@ import uuid
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 os.environ.setdefault("COMPANY_URL_OPENAI_RESOLVE", "0")
 
@@ -17,6 +18,7 @@ from app.services.jobs_crm_recruiter import (
     HOLD_TTL_HOURS,
     STATUS_ACCEPTED,
     STATUS_APPLIED,
+    STATUS_DECLINED,
     STATUS_INTERVIEW_CONFIRMED,
     STATUS_INTERVIEW_HELD,
     STATUS_INTERVIEW_REQUESTED,
@@ -25,6 +27,7 @@ from app.services.jobs_crm_recruiter import (
     accept_application,
     confirm_hold,
     confirm_hold_by_token,
+    decline_application,
     employer_decision_url,
     employer_public_payload,
     find_application_by_employer_token,
@@ -43,7 +46,11 @@ TEST_USER_ID = uuid.UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
 @pytest.fixture()
 def db_session(tmp_path, monkeypatch):
     monkeypatch.setenv("JOBS_CRM_UPLOAD_DIR", str(tmp_path / "docs"))
-    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(bind=engine)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = SessionLocal()
@@ -503,4 +510,251 @@ def test_invalid_poc_video_url_rejects_without_echo(db_session):
     assert sneaky not in str(exc.value)
     assert "evil.example" not in str(exc.value)
     assert "not allowed" in str(exc.value).lower() or "HTTPS" in str(exc.value)
+
+
+def test_employer_decline_happy_path_reason_and_oem_email(db_session, monkeypatch):
+    sent = []
+
+    def _fake_send(**kwargs):
+        sent.append(kwargs)
+        return {"resend_id": f"re_{len(sent)}", "from_email": "jobs@readyforrobots.com"}
+
+    monkeypatch.setattr("app.services.resend_email.send_email_via_resend", _fake_send)
+    video = "https://www.loom.com/share/abcd1234efgh5678"
+    keep_jobs(
+        db_session,
+        _user(),
+        [_job(1, email="ops@named-employer.com")],
+        robot_name="Spot",
+    )
+    apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="Spot",
+        selected_models=["Spot"],
+        monthly_price="1200",
+        poc_video_url=video,
+        send=True,
+    )
+    row = db_session.query(JobApplication).one()
+    public = employer_public_payload(db_session, row)
+    assert public["can_decline"] is True
+    assert public["poc_video_url"] == video
+    declined = decline_application(
+        db_session,
+        row.employer_token,
+        reason_code="work_mismatch",
+        note="Cell is too tight for this base.",
+    )
+    assert declined["status"] == STATUS_DECLINED
+    assert declined["decline_reason_code"] == "work_mismatch"
+    assert declined["decline_reason_label"] == "this robot cannot do this physical work"
+    assert declined["decline_note"] == "Cell is too tight for this base."
+    assert declined["can_decline"] is False
+    assert declined["can_accept"] is False
+    assert declined["can_interview"] is False
+    assert declined["poc_video_url"] == video
+    db_session.refresh(row)
+    assert row.status == STATUS_DECLINED
+    assert row.decline_reason_code == "work_mismatch"
+    assert row.decline_note == "Cell is too tight for this base."
+    thread = db_session.query(ApplicationMessage).all()
+    assert any("work_mismatch" in (msg.body or "") for msg in thread)
+    oem_mails = [
+        item
+        for item in sent
+        if item.get("to_email") == "oem@test.com"
+        or (isinstance(item.get("to_email"), list) and "oem@test.com" in item.get("to_email"))
+    ]
+    decline_mail = [
+        item
+        for item in oem_mails
+        if "declined" in (item.get("subject") or "").lower()
+    ]
+    assert decline_mail, "OEM account email must get a recruiter confirmation on decline"
+    body = decline_mail[-1].get("body_text") or ""
+    assert "work_mismatch" in body
+    assert "this robot cannot do this physical work" in body
+    assert "Cell is too tight for this base." in body
+    invented = [
+        item
+        for item in sent
+        if "invent" in str(item.get("to_email") or "").lower()
+    ]
+    assert invented == []
+    apply_mail = [
+        item
+        for item in sent
+        if item.get("to_email") == "ops@named-employer.com"
+    ]
+    assert apply_mail
+    assert "Decline:" in (apply_mail[0].get("body_text") or "")
+
+
+def test_employer_decline_missing_reason_400(db_session, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.resend_email.send_email_via_resend",
+        lambda **kwargs: {"resend_id": "re_1", "from_email": "jobs@readyforrobots.com"},
+    )
+    _apply(db_session, email="ops@named-employer.com")
+    row = db_session.query(JobApplication).one()
+    with pytest.raises(ValueError, match="Pick a decline reason"):
+        decline_application(db_session, row.employer_token, reason_code="")
+    with pytest.raises(ValueError, match="Pick a decline reason"):
+        decline_application(db_session, row.employer_token, reason_code="novel_reason")
+    from fastapi import HTTPException
+
+    from app.api.jobs_crm import DeclineBody, post_employer_decline
+
+    with pytest.raises(HTTPException) as missing:
+        post_employer_decline(row.employer_token, DeclineBody(), db_session)
+    assert missing.value.status_code == 400
+    assert "Pick a decline reason" in str(missing.value.detail)
+    with pytest.raises(ValueError, match="short note"):
+        decline_application(db_session, row.employer_token, reason_code="other")
+    db_session.refresh(row)
+    assert row.status == STATUS_APPLIED
+    assert row.decline_reason_code is None
+
+
+def test_employer_decline_already_closed(db_session, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.resend_email.send_email_via_resend",
+        lambda **kwargs: {"resend_id": "re_1", "from_email": "jobs@readyforrobots.com"},
+    )
+    _apply(db_session, email="ops@named-employer.com")
+    row = db_session.query(JobApplication).one()
+    decline_application(
+        db_session,
+        row.employer_token,
+        reason_code="timing_budget",
+    )
+    with pytest.raises(ValueError, match="no longer open"):
+        decline_application(
+            db_session,
+            row.employer_token,
+            reason_code="site_constraints",
+        )
+    from fastapi import HTTPException
+
+    from app.api.jobs_crm import DeclineBody, post_employer_decline
+
+    with pytest.raises(HTTPException) as closed:
+        post_employer_decline(
+            row.employer_token,
+            DeclineBody(reason_code="site_constraints"),
+            db_session,
+        )
+    assert closed.value.status_code == 400
+    assert "no longer open" in str(closed.value.detail)
+    with pytest.raises(ValueError, match="no longer open"):
+        accept_application(db_session, row.employer_token)
+    db_session.refresh(row)
+    assert row.status == STATUS_DECLINED
+    assert row.decline_reason_code == "timing_budget"
+
+
+def test_employer_decline_does_not_invent_oem_email(db_session, monkeypatch):
+    sent = []
+
+    def _fake_send(**kwargs):
+        sent.append(kwargs)
+        return {"resend_id": f"re_{len(sent)}", "from_email": "jobs@readyforrobots.com"}
+
+    monkeypatch.setattr("app.services.resend_email.send_email_via_resend", _fake_send)
+    ghost = {"uid": str(uuid.uuid4()), "email": "", "plan_tier": "free"}
+    keep_jobs(db_session, ghost, [_job(1)], robot_name="Spot")
+    apply_to_job(
+        db_session,
+        ghost,
+        job_key="job-1",
+        robot_name="Spot",
+        selected_models=["Spot"],
+        monthly_price="900",
+        send=False,
+    )
+    row = db_session.query(JobApplication).one()
+    assert not row.oem_email
+    assert not row.employer_email
+    declined = decline_application(
+        db_session,
+        row.employer_token,
+        reason_code="model_unproven",
+    )
+    assert declined["status"] == STATUS_DECLINED
+    assert declined["decline_reason_code"] == "model_unproven"
+    assert sent == []
+
+
+def test_employer_decline_http_missing_reason_and_closed(db_session, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.resend_email.send_email_via_resend",
+        lambda **kwargs: {"resend_id": "re_http", "from_email": "jobs@readyforrobots.com"},
+    )
+    video = "https://www.youtube.com/watch?v=dQw4w9wgXcQ"
+    keep_jobs(
+        db_session,
+        _user(),
+        [_job(1, email="ops@named-employer.com")],
+        robot_name="Spot",
+    )
+    apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="Spot",
+        selected_models=["Spot"],
+        monthly_price="1200",
+        poc_video_url=video,
+        send=True,
+    )
+    row = db_session.query(JobApplication).one()
+    token = row.employer_token
+
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.api.jobs_crm import router as jobs_crm_router
+    from app.database import get_db
+
+    mini = FastAPI()
+    mini.include_router(jobs_crm_router, prefix="/api/jobs-crm")
+
+    def override_get_db():
+        yield db_session
+
+    mini.dependency_overrides[get_db] = override_get_db
+    with TestClient(mini, raise_server_exceptions=False) as client:
+        missing = client.post(
+            f"/api/jobs-crm/employer/{token}/decline",
+            json={},
+        )
+        assert missing.status_code == 400, missing.text
+        assert "Pick a decline reason" in missing.text
+        ok = client.post(
+            f"/api/jobs-crm/employer/{token}/decline",
+            json={
+                "reason_code": "site_constraints",
+                "note": "Aisle width below payload envelope.",
+            },
+        )
+        assert ok.status_code == 200, ok.text
+        payload = ok.json()
+        assert payload["status"] == STATUS_DECLINED
+        assert payload["decline_reason_code"] == "site_constraints"
+        assert payload["poc_video_url"] == video
+        assert payload["can_decline"] is False
+        closed = client.post(
+            f"/api/jobs-crm/employer/{token}/decline",
+            json={"reason_code": "work_mismatch"},
+        )
+        assert closed.status_code == 400, closed.text
+        assert "no longer open" in closed.text
+        shown = client.get(f"/api/jobs-crm/employer/{token}")
+        assert shown.status_code == 200
+        again = shown.json()
+        assert again["status"] == STATUS_DECLINED
+        assert again["poc_video_url"] == video
+        assert again["decline_reason_code"] == "site_constraints"
 
