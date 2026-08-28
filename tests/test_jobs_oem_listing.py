@@ -104,6 +104,23 @@ def test_page_parse_drops_nav_marketing_words():
     assert [r["name"] for r in rows] == ["BOT#25"]
 
 
+def test_greenfield_is_not_seeded_as_a_strawberry_robot():
+    """CRM/FIND must not resolve greenfieldincorporated.com from Harvest CROO / Agrobot."""
+    reload_vendor_robots_index()
+    assert lookup_vendor_by_url("https://www.greenfieldincorporated.com/") is None
+    assert lookup_vendor_by_url("https://www.greenfieldincorporated.com/bot-25") is None
+    agrobot = lookup_vendor_by_url("https://www.agrobot.com/")
+    harvest = lookup_vendor_by_url("https://harvestcroorobotics.com/")
+    for vendor in (agrobot, harvest):
+        if not vendor:
+            continue
+        host = str(vendor.get("vendor_url") or "").lower()
+        assert "greenfieldincorporated" not in host
+        names = [n.lower() for n in index_robot_names(vendor)]
+        assert "bot#25" not in names
+        assert "bot25" not in names
+
+
 def test_unknown_oem_discover_keeps_homepage_names(monkeypatch):
     import app.services.robot_understanding_v1.pipeline as P
     from app.services.robot_understanding_v1.fetch import FetchedPage

@@ -24,6 +24,8 @@ import {
   jobsCrmOfferHref,
   keepJobsSavedLabel,
   keepJobsStatusBar,
+  crmDeskForCurrentRobot,
+  keptRowMatchesRobot,
 } from "./jobsCrmAccount";
 import { keepTheseJobsPrompt } from "./jobsWorkflow";
 import { jobsCrmOpenHref } from "./jobsWorkflow";
@@ -210,5 +212,167 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(slots).toHaveLength(3);
     expect(slots[0].start).toMatch(/T10:00$/);
     expect(slots[0].end).toMatch(/T11:00$/);
+  });
+});
+
+describe("CRM desk binds to the FIND robot, not leftover totes", () => {
+  const orchard = {
+    id: "kept-orchard",
+    job_key: "orchard-rows",
+    employer_name: "Sierra Orchard Co-op",
+    work_title: "Work orchard rows",
+    workplace: "Modesto, CA",
+    robot_name: "strawberry robot",
+    robot_url: "https://www.agrobot.com/",
+    job: {
+      job_key: "orchard-rows",
+      title: "Work orchard rows",
+      industry: "agriculture",
+      path: "/jobs/orchard",
+      company_name: "Sierra Orchard Co-op",
+    },
+  };
+  const tote = {
+    id: "kept-tote",
+    job_key: "return-empty-totes",
+    employer_name: "Novolex (Pactiv Evergreen)",
+    work_title: "Return empty totes",
+    workplace: "Warehouse",
+    robot_name: "Greenfieldincorporated",
+    robot_url: "https://www.greenfieldincorporated.com/",
+    job: {
+      job_key: "return-empty-totes",
+      title: "Return empty totes",
+      industry: "logistics",
+      path: "/jobs/totes",
+      company_name: "Novolex (Pactiv Evergreen)",
+    },
+  };
+
+  it("does not keep strawberry identity after a Greenfield FIND with no jobs", () => {
+    expect(
+      keptRowMatchesRobot(orchard, {
+        url: "https://www.greenfieldincorporated.com/",
+        name: "BOT#25",
+      }),
+    ).toBe(false);
+    expect(
+      keptRowMatchesRobot(tote, {
+        url: "https://www.greenfieldincorporated.com/",
+        name: "BOT#25",
+      }),
+    ).toBe(true);
+
+    const desk = crmDeskForCurrentRobot({
+      snap: {
+        url: "https://www.greenfieldincorporated.com/",
+        productName: "BOT#25",
+        jobs: [],
+      },
+      accountRows: [orchard, tote],
+    });
+    expect(desk.product).toBe("BOT#25");
+    expect(desk.product).not.toMatch(/strawberry/i);
+    expect(desk.jobs).toEqual([]);
+    expect(desk.savedCount).toBe(0);
+    expect(desk.jobs.map(job => job.title)).not.toContain("Work orchard rows");
+    expect(desk.jobs.map(job => job.title)).not.toContain("Return empty totes");
+  });
+
+  it("prefers incomplete Greenfield identity over robot-job-match totes from another robot", () => {
+    const desk = crmDeskForCurrentRobot({
+      snap: {
+        url: "https://www.greenfieldincorporated.com/",
+        productName: "BOT#25",
+        jobs: [],
+      },
+      accountRows: [orchard],
+    });
+    expect(desk.product).toBe("BOT#25");
+    expect(desk.jobs).toEqual([]);
+    expect(desk.savedCount).toBe(0);
+    expect(desk.jobs.some(job => /orchard|strawberry/i.test(job.title))).toBe(
+      false,
+    );
+  });
+
+  it("does not treat match-endpoint tote jobs as the Greenfield desk when FIND saved none", () => {
+    const desk = crmDeskForCurrentRobot({
+      snap: {
+        url: "https://www.greenfieldincorporated.com/",
+        productName: "BOT#25",
+        jobs: [],
+      },
+      accountRows: [
+        {
+          ...tote,
+          robot_url: "https://harvestcroorobotics.com/",
+          robot_name: "strawberry robot",
+        },
+      ],
+    });
+    expect(desk.product).toBe("BOT#25");
+    expect(desk.jobs).toHaveLength(0);
+    expect(desk.savedCount).toBe(0);
+  });
+
+  it("uses FIND jobs for this robot and drops leftover strawberry rows", () => {
+    const greenfieldJob = {
+      job_key: "weed-between-rows",
+      title: "Weed between crop rows",
+      industry: "agriculture",
+      path: "/jobs/weed",
+      company_name: "Named Farm Co-op",
+    };
+    const desk = crmDeskForCurrentRobot({
+      snap: {
+        url: "https://www.greenfieldincorporated.com/",
+        productName: "BOT#25",
+        jobs: [greenfieldJob],
+      },
+      accountRows: [orchard, tote],
+    });
+    expect(desk.product).toBe("BOT#25");
+    expect(desk.jobs.map(job => job.title)).toEqual(["Weed between crop rows"]);
+    expect(desk.jobs.some(job => /orchard|strawberry/i.test(job.title))).toBe(
+      false,
+    );
+  });
+
+  it("desk copy and chrome stay on saved jobs for this robot, not the matcher banner", () => {
+    const desk = readFileSync(join(here, "../components/JobsCrmDesk.tsx"), "utf8");
+    expect(desk).toMatch(/crmDeskForCurrentRobot/);
+    expect(desk).toMatch(/crmSaveJobsBlurb\(product\)/);
+    expect(desk).not.toMatch(/JobsPstackProtocol/);
+    expect(desk).not.toMatch(/robot-job-match/);
+    expect(desk).toMatch(/aria-label="Saved jobs"/);
+    expect(desk).not.toMatch(/aria-label="Collected jobs"/);
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const findJobs = workspace.slice(
+      workspace.indexOf("async function findJobsForActive"),
+      workspace.indexOf("async function qualifyActive"),
+    );
+    expect(findJobs).toMatch(/fetchRobotJobSearch/);
+    expect(findJobs).not.toMatch(/fetchRobotJobMatch/);
+    const qualify = workspace.slice(
+      workspace.indexOf("async function qualifyActive"),
+      workspace.indexOf("function revealJobs"),
+    );
+    expect(qualify).toMatch(/fetchRobotJobSearch/);
+    expect(qualify).not.toMatch(/fetchRobotJobMatch/);
+    expect(workspace).not.toMatch(/fetchRobotJobMatch/);
+    const openJobs = workspace.slice(
+      workspace.indexOf("function openJobsFromAnalyses"),
+      workspace.indexOf("async function submitFind"),
+    );
+    expect(openJobs).toMatch(/writeCrmHandoff/);
+    const writeHandoff = workspace.slice(
+      workspace.indexOf("function writeCrmHandoff"),
+      workspace.indexOf("function goToActivate"),
+    );
+    expect(writeHandoff).not.toMatch(/pool\.length === 0/);
   });
 });

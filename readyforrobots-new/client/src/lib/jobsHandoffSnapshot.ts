@@ -27,9 +27,20 @@ export function normalizeRobotHandoffUrl(url: string): string {
   }
 }
 
+export function sameRobotHandoffUrl(
+  a?: string | null,
+  b?: string | null,
+): boolean {
+  const left = normalizeRobotHandoffUrl(a || "");
+  const right = normalizeRobotHandoffUrl(b || "");
+  return Boolean(left && right && left === right);
+}
+
 export function saveJobsHandoffSnapshot(snap: JobsHandoffSnapshot): void {
   if (typeof window === "undefined") return;
   const url = normalizeRobotHandoffUrl(snap.url);
+  // Empty jobs are valid: FIND may finish with incomplete identity.
+  // Still overwrite the previous robot so CRM cannot keep a stale SKU.
   if (!url || !Array.isArray(snap.jobs)) return;
   try {
     window.sessionStorage.setItem(

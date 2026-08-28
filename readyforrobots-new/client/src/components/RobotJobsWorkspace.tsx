@@ -42,7 +42,6 @@ import {
 } from "@/lib/robotJobSearch";
 import { fetchOemListing, fetchRobotProfile } from "@/lib/robotProfile";
 import { lookupKnownOem } from "@/lib/knownOemLineups";
-import { fetchRobotJobMatch } from "@/lib/robotJobMatch";
 import {
   formatFactLine,
   profileConfidenceCopy,
@@ -807,6 +806,15 @@ export default function RobotJobsWorkspace() {
       robots_analyzed: names.length,
       lookup_grain: first.lookupGrain || "product",
     });
+    writeCrmHandoff(
+      checks,
+      tagged.map(job => ({
+        ...job,
+        forRobot: first.productName || "",
+      })),
+      first.productName,
+      jobsDumpedToCrm(tagged, checks, CRM_UNLOCKED_JOBS),
+    );
     setStage("jobs");
   }
 
@@ -1165,22 +1173,17 @@ export default function RobotJobsWorkspace() {
       aborted = true;
     };
     try {
-      const res = await fetchRobotJobMatch({
+      const res = await fetchRobotJobSearch({
         url: submittedUrlRef.current,
-        productName: a.productName,
-        profile: a.profile,
+        product: a.productName,
+        assertedClass: a.robotClass || undefined,
+        lookupGrain: "product",
       });
       if (aborted) return;
       const merged: RobotAnalysis = {
-        ...a,
-        matched: true,
-        capabilities: res.capabilities || [],
-        jobs: res.jobs || [],
-        jobCount: res.job_count || (res.jobs || []).length,
-        zeroReason: res.zero_reason ?? null,
-        needsClassChoice: Boolean(res.needs_class_choice),
-        classOptions: res.class_options || [],
-        previewImageUrl: res.preview_image_url ?? a.previewImageUrl ?? null,
+        ...searchToAnalysis(res),
+        productName: a.productName,
+        profile: a.profile || searchToAnalysis(res).profile,
         lookupGrain: "product",
       };
       setPortfolio(prev => prev.map((p, i) => (i === activeIdx ? merged : p)));
@@ -1214,35 +1217,19 @@ export default function RobotJobsWorkspace() {
     setMatchError(null);
     try {
       const url = submittedUrlRef.current;
-      let merged: RobotAnalysis;
-      if (a.profile) {
-        const res = await fetchRobotJobMatch({
-          url,
-          productName: a.productName,
-          profile: a.profile,
-          assertedClass: classId,
-        });
-        merged = {
-          ...a,
-          matched: true,
-          capabilities: res.capabilities || [],
-          jobs: res.jobs || [],
-          jobCount: res.job_count || (res.jobs || []).length,
-          zeroReason: res.zero_reason ?? null,
-          needsClassChoice: Boolean(res.needs_class_choice),
-          classOptions: res.class_options || [],
-          previewImageUrl: res.preview_image_url ?? a.previewImageUrl ?? null,
-          lookupGrain: "product",
-          robotClass: classId,
-        };
-      } else {
-        const res = await fetchRobotJobSearch({
-          url,
-          product: a.productName,
-          assertedClass: classId,
-        });
-        merged = { ...searchToAnalysis(res), productName: a.productName };
-      }
+      const res = await fetchRobotJobSearch({
+        url,
+        product: a.productName,
+        assertedClass: classId,
+        lookupGrain: "product",
+      });
+      const merged: RobotAnalysis = {
+        ...searchToAnalysis(res),
+        productName: a.productName,
+        profile: a.profile || searchToAnalysis(res).profile,
+        lookupGrain: "product",
+        robotClass: classId,
+      };
       setPortfolio(prev => prev.map((p, i) => (i === activeIdx ? merged : p)));
       revealJobs(merged);
     } catch {
@@ -1334,7 +1321,7 @@ export default function RobotJobsWorkspace() {
     jobsOverride?: MatchJob[],
   ) {
     const url = submittedUrlRef.current;
-    if (!url || (pool.length === 0 && !jobsOverride?.length)) return;
+    if (!url) return;
     const jobs =
       jobsOverride ?? jobsDumpedToCrm(pool, checks, CRM_UNLOCKED_JOBS);
     saveJobsHandoffSnapshot({
