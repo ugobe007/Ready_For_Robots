@@ -1,0 +1,77 @@
+# pstack How / Act / Critic — executable in scripts/pstack_release.py
+# Chrome on FIND/CRM is not a gate. Do not require JobsPstackProtocol to merge.
+
+protocol: pstack
+surface: jobs
+find: /
+matcher:
+  method: POST
+  path: /api/robot-job-match
+  owner: app/services/robot_job_capability_match.py
+search:
+  method: POST
+  path: /api/robot-job-search
+  owner: app/api/robot_job_search.py
+  note: This is the FIND submit path. Critic drives this, not chip-only match.
+
+how:
+  - id: owners
+    prove: FIND / matcher / search / identity / CRM desk files exist and stay the owners
+  - id: find_route
+    prove: FIND is / via RobotJobsWorkspace on pages/Jobs.tsx
+    fail: smoking /experiment as FIND
+  - id: chrome_not_gate
+    prove: Jobs CRM has no JobsPstackProtocol; protocol chrome is not required to merge
+    fail: putting JOBS AGENT PROTOCOL back on FIND or the CRM desk as the release proof
+
+act:
+  - id: bind_url
+    prove: submitFind calls bindSubmittedRobot then stillThisSubmit
+  - id: silent_abort
+    prove: stale FIND returns; abort uses interrupted copy; Failed to fetch is not Research failed
+    fail: AbortError or Failed to fetch mapped to Research failed
+  - id: handoff
+    prove: beginJobsHandoffForUrl overwrites the previous robot before search returns
+  - id: crm_desk
+    prove: crmDeskForCurrentRobot keys the desk to the submitted URL
+  - id: no_signal_hop
+    prove: FIND workspace does not call fetchRobotJobMatch; CRM desk has no robot-job-match
+
+critic:
+  - id: find
+    prove: FIND is /
+  - id: find_abort
+    prove: AbortError and Failed to fetch do not become Research failed
+  - id: find_identity
+    prove: submitted URL is the identity key; Greenfield is not Agrobot/Harvest CROO
+  - id: crm_leftover
+    prove: CRM after FIND B is B, never leftover strawberry robot
+  - id: job_cards
+    prove: named employer and real work
+  - id: wall
+    prove: signup before the CRM desk
+  - id: matcher
+    prove: POST /api/robot-job-match is code
+  - id: oem_extract
+    prove: unknown OEM picker is evidence-only
+    fail: chrome names or another company's robot in the FIND picker
+  - id: find_drive
+    prove: POST /api/robot-job-search for a real OEM URL does not return Research failed
+
+find_urls:
+  - url: https://www.dexmate.ai/
+    expect_host: dexmate
+  - url: https://www.greenfieldincorporated.com/
+    expect_host: greenfieldincorporated
+    forbid: [strawberry, agrobot, harvestcroo, harvest croo]
+
+jobs_paths:
+  - readyforrobots-new/client/src/components/RobotJobsWorkspace.tsx
+  - readyforrobots-new/client/src/components/JobsCrmDesk.tsx
+  - readyforrobots-new/client/src/lib/robotUrlIdentity.ts
+  - readyforrobots-new/client/src/lib/findResearch.ts
+  - readyforrobots-new/client/src/lib/jobsCrmAccount.ts
+  - readyforrobots-new/client/src/lib/jobsHandoffSnapshot.ts
+  - readyforrobots-new/client/src/lib/pstackRelease.ts
+  - app/api/robot_job_search.py
+  - app/services/robot_job_capability_match.py

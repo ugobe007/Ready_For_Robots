@@ -27,6 +27,6 @@ Ingest endpoints stay in the API so we do not force a migration. They return **4
 
 Robot URL on `/` → Job Cards → signup wall → CRM.
 
-Cursor **pstack** is the site agent protocol plus IDE routing (How / Act / Critic). It does not replace the matcher and is not a customer chatbot. See [`pstack_jobs.md`](pstack_jobs.md).
+Cursor **pstack** is the Jobs **release gate** (How / Act / Critic). It does not replace the matcher, is not a customer chatbot, and is not protocol chrome on FIND/CRM. See [`pstack_jobs.md`](pstack_jobs.md) and [`pstack/README.md`](../pstack/README.md).
 
 Historical bridge notes: [`hermes_intelligence_bridge.md`](hermes_intelligence_bridge.md) (retired).

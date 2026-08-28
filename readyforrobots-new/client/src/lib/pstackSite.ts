@@ -1,5 +1,9 @@
 /**
- * pstack on the Jobs site: role routing for site agents.
+ * pstack on the Jobs site: role routing for site agents AND the release gate.
+ *
+ * How / Act / Critic merge authority lives in pstack/ + scripts/pstack_release.py.
+ * Protocol chrome on `/` or Jobs CRM is not a pass. Do not put JOBS AGENT
+ * PROTOCOL back on the desk.
  *
  * Jobs still come from ontology + POST /api/robot-job-match.
  * pstack does not pick employers, invent rental dollars, or chat with customers.
@@ -23,7 +27,15 @@ export type JobsMatcherSource = {
 };
 
 export type CriticGate = {
-  id: "find" | "job_cards" | "wall" | "matcher" | "oem_extract";
+  id:
+    | "find"
+    | "find_abort"
+    | "find_identity"
+    | "crm_leftover"
+    | "job_cards"
+    | "wall"
+    | "matcher"
+    | "oem_extract";
   prove: string;
   fail: string;
 };
@@ -57,7 +69,7 @@ export const PSTACK_ROLES: readonly PstackRole[] = [
   {
     id: "critic",
     label: "Critic",
-    job: "Prove FIND on /, named employers, the wall, and the matcher.",
+    job: "Drive a real OEM URL. Fail abort-as-failed, leftover CRM, and skip-green.",
   },
 ] as const;
 
@@ -66,6 +78,21 @@ export const CRITIC_GATES: readonly CriticGate[] = [
     id: "find",
     prove: "FIND is /",
     fail: "smoking /experiment as FIND",
+  },
+  {
+    id: "find_abort",
+    prove: "AbortError and Failed to fetch stay silent",
+    fail: "self-abort FIND shown as Research failed / Failed to fetch",
+  },
+  {
+    id: "find_identity",
+    prove: "submitted URL is the identity key",
+    fail: "Greenfield shown as another OEM / leftover robot",
+  },
+  {
+    id: "crm_leftover",
+    prove: "CRM after FIND B is B",
+    fail: "strawberry robot leftover on a new URL",
   },
   {
     id: "job_cards",

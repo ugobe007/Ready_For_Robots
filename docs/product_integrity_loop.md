@@ -20,9 +20,9 @@ Founders who get remarkable results from agents do three unglamorous things:
 
 1. **One owner per cycle** — a Product Manager agent that picks *one* mission, not twelve parallel “find a bug” chats.
 2. **Compiled memory** — a file the next agent *must* read. Chat is not memory. Outcome.md scattered across `missions/` is not memory until a compiler folds it.
-3. **Honest gates** — tests, Vercel *production* truth (not a 7-second GitHub skip), Fly, database, Jobs smoke. Merge is a privilege those gates grant.
+3. **Honest gates** — tests, Vercel *production* truth (not a 7-second GitHub skip), Fly, database, Jobs smoke, **pstack How / Act / Critic**. Merge is a privilege those gates grant. Draft PRs do not skip pstack.
 
-Hourly **observe**. Daily **one act**. Weekly **learn**. Auto-merge to `main` is allowed **only** after `.github/workflows/agent-verify.yml` (Fly + Vercel JS canaries + Jobs drive) is green — never after a skip-green frontend deploy, never from hourly observe.
+Hourly **observe**. Daily **one act**. Weekly **learn**. Auto-merge to `main` is allowed **only** after `.github/workflows/agent-verify.yml` job `pstack-release` (How / Act / Critic, including drafts) **and** Jobs verify (Fly + Vercel JS canaries + Jobs drive) are green — never after a skip-green frontend deploy, never from hourly observe, never because protocol chrome rendered.
 
 ---
 

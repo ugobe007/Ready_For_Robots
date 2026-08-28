@@ -8,7 +8,7 @@ Step 03 is **CRM**. Checking a job on step 02 dumps it into this desk. Kept Job 
 - `crm-unlock` free users see 5 unlocked jobs from the handoff after signup (checks dump live). One keep prompt: Keep N jobs? Confirmation: Yes, keep them.
 - `crm-place` Headline **CRM**. Process bar 03 current. Default view is the expandable listing. Place / pack / quote is the second beat on an opened egg. Quote lock needs a user-entered monthly rental. PoC is preferred and skippable.
 - `crm-auth` signed-out users cannot use the desk; a direct `/pipeline?src=jobs_activate` hit redirects through signup.
-- `crm-pstack` compact Jobs agent protocol. Matcher owns the jobs. Signup wall stays.
+- `crm-pstack` release gate, not desk chrome. Matcher owns the jobs. Signup wall stays. Do not render JOBS AGENT PROTOCOL on the CRM desk.
 
 ## How to get to it (user POV)
 

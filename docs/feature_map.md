@@ -78,7 +78,7 @@ On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and
 | Job Card (expanded) | Employer, workplace, work, qualification (usually Conditional), open questions, task models, numbered placement steps, Next is **not** here. |
 | Research console | Stage labels while Understanding + match run. Not the result. |
 | Live job tape | Ambient listings; not a substitute for named Job Cards. |
-| pstack protocol | `JobsPstackProtocol` on `/`, About, Jobs CRM. How / Act / Critic. Jobs still come from `POST /api/robot-job-match`. Not a chatbot. |
+| pstack release | How / Act / Critic in `pstack/` + `scripts/pstack_release.py`. Required to merge Jobs PRs. Not a chatbot. Not JOBS AGENT PROTOCOL chrome on `/` or CRM. |
 
 SIGNAL-only panels (activity feed, next actions, Cal queue, lead share) stay off the Jobs path.
 

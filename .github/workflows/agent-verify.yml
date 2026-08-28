@@ -1,6 +1,8 @@
 # Agent verification on PRs. Honest Jobs proof (Fly + Vercel JS canaries),
 # then squash auto-merge for cursor/* (or label automerge-after-verify).
 #
+# pstack How / Act / Critic is the Jobs release authority. It runs on drafts.
+# Draft-skip is how malformed FIND/CRM landed; do not restore it on pstack-release.
 # Hourly observe must not use this workflow. Skip-green Vercel fails verify.
 # Label do-not-merge blocks auto-merge.
 name: Agent verify
@@ -20,9 +22,63 @@ permissions:
   checks: read
 
 jobs:
+  pstack-release:
+    name: pstack How / Act / Critic
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: python3 -m pip install pytest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.4.1
+
+      - name: pstack How / Act / Critic
+        run: |
+          mkdir -p pstack-artifacts
+          python3 scripts/pstack_release.py --evidence pstack-artifacts
+        env:
+          RFR_FLY_API: https://ready-2-robot.fly.dev
+
+      - name: pstack pytest
+        run: python3 -m pytest tests/test_pstack_release.py tests/test_pstack_protocol.py -q --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: pstack vitest (FIND abort + leftover CRM)
+        run: |
+          pnpm install --frozen-lockfile -C readyforrobots-new
+          pnpm --dir readyforrobots-new exec vitest run \
+            client/src/lib/pstackRelease.test.ts \
+            client/src/lib/pstackSite.test.ts \
+            client/src/lib/robotUrlIdentity.test.ts \
+            client/src/lib/jobsCrmAccount.test.ts \
+            client/src/lib/jobsHandoffSnapshot.test.ts
+
+      - name: Upload pstack evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pstack-release-${{ github.event.pull_request.number }}
+          path: pstack-artifacts
+          if-no-files-found: warn
+
   verify:
     name: Jobs path + chrome
-    if: github.event.pull_request.draft == false
+    needs: pstack-release
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
@@ -78,7 +134,9 @@ jobs:
           PY
 
       - name: Targeted pytest
-        run: python3 -m pytest tests/test_agent_verify.py -q --tb=short
+        run: python3 -m pytest tests/test_agent_verify.py tests/test_pstack_release.py tests/test_pstack_protocol.py -q --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
       - name: Frontend deps + vitest (Jobs chrome)
         run: |
@@ -88,6 +146,7 @@ jobs:
             client/src/lib/robotJobCard.test.ts \
             client/src/lib/jobsApply.test.ts \
             client/src/lib/pstackSite.test.ts \
+            client/src/lib/pstackRelease.test.ts \
             client/src/lib/jobsCrmAccount.test.ts \
             client/src/lib/jobsHandoffSnapshot.test.ts \
             client/src/lib/robotUrlIdentity.test.ts \
@@ -103,7 +162,7 @@ jobs:
 
   automerge:
     name: Auto-merge after verify
-    needs: verify
+    needs: [pstack-release, verify]
     if: |
       success() &&
       github.event.pull_request.draft == false &&

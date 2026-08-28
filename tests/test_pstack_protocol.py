@@ -23,7 +23,16 @@ def test_roles_and_matcher_source():
     assert JOBS_MATCHER_SOURCE["kind"] == "matcher"
     assert JOBS_MATCHER_SOURCE["path"] == "/api/robot-job-match"
     assert jobs_matcher_path() == "POST /api/robot-job-match"
-    assert critic_gate_ids() == ["find", "job_cards", "wall", "matcher", "oem_extract"]
+    assert critic_gate_ids() == [
+        "find",
+        "find_abort",
+        "find_identity",
+        "crm_leftover",
+        "job_cards",
+        "wall",
+        "matcher",
+        "oem_extract",
+    ]
     assert CRM_WALL_REQUIRED is True
 
 

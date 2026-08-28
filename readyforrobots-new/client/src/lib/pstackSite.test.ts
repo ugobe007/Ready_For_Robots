@@ -43,7 +43,16 @@ describe("pstackSite protocol", () => {
   });
 
   it("critic gates cover FIND, Job Cards, the CRM wall, and the matcher", () => {
-    expect(criticGateIds()).toEqual(["find", "job_cards", "wall", "matcher", "oem_extract"]);
+    expect(criticGateIds()).toEqual([
+      "find",
+      "find_abort",
+      "find_identity",
+      "crm_leftover",
+      "job_cards",
+      "wall",
+      "matcher",
+      "oem_extract",
+    ]);
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.prove).toBe("FIND is /");
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.fail).toMatch(/experiment/);
     expect(CRITIC_GATES.find(gate => gate.id === "oem_extract")?.fail).toMatch(/chrome/);

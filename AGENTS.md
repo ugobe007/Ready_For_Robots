@@ -30,7 +30,7 @@ Read `docs/product_market_fit.md`, **`docs/value_first_principle.md`**, and **`d
 
 Lead-quality north star (below) is **SIGNAL infrastructure**, not the product. Fix junk on that path; do not hop Jobs traffic onto HOT buyers.
 
-**Hermes is retired (2026-08-26).** Do not spawn Hermes for FIND or Jobs. Do not follow [`docs/hermes_intelligence_bridge.md`](docs/hermes_intelligence_bridge.md) as production. The product loop is robot URL → Job Cards (`POST /api/robot-job-match`). Cursor **pstack** is the site agent protocol plus IDE routing (How / Act / Critic). It is not a customer chatbot and not the matcher. See [`docs/hermes_retired.md`](docs/hermes_retired.md) and [`docs/pstack_jobs.md`](docs/pstack_jobs.md). `.cursor/rules/pstack-jobs.mdc` + `.cursor/rules/pstack-rfr.mdc`. Chrome: `JobsPstackProtocol`.
+**Hermes is retired (2026-08-26).** Do not spawn Hermes for FIND or Jobs. Do not follow [`docs/hermes_intelligence_bridge.md`](docs/hermes_intelligence_bridge.md) as production. The product loop is robot URL → Job Cards (`POST /api/robot-job-match`). Cursor **pstack** is the **Jobs release authority** (How / Act / Critic in [`pstack/`](pstack/README.md) + `scripts/pstack_release.py`). It is not a customer chatbot, not the matcher, and not protocol chrome on `/` or Jobs CRM. See [`docs/hermes_retired.md`](docs/hermes_retired.md) and [`docs/pstack_jobs.md`](docs/pstack_jobs.md). `.cursor/rules/pstack-jobs.mdc` + `.cursor/rules/pstack-rfr.mdc`. **No Jobs product PR without pstack release checks.**
 
 ## North star (strict priority)
 
@@ -80,7 +80,7 @@ Snapshot `intelligence` slice (junk reasons, gap frequency, industry deltas) dri
 | **Deploy** | git, pytest subset, Fly deploy, smoke checks | `DEPLOYMENT.md`, `SCRIPTS.md` |
 | **ScraperOps** | Source drift, blocklist, orchestrator stats | `SCRAPER_SYSTEM.md` |
 
-pstack role map (site protocol + IDE): Orchestrator = parent; ProductSurface = Act / frontend; LeadQuality = critics on names; Deploy = Critic / verify-readyforrobots. There is no Hermes pstack role.
+pstack role map: Orchestrator = parent; ProductSurface = Act / frontend; LeadQuality = critics on names; Deploy = Critic / `scripts/pstack_release.py` + verify-readyforrobots. There is no Hermes pstack role. Protocol chrome on FIND/CRM is not a release pass.
 
 Subagents get **minimal tools** for their scope. The Orchestrator does not implement code directly when a specialist exists.
 
@@ -121,7 +121,7 @@ python3 scripts/harness_snapshot.py
 python3 scripts/harness_diagnostics.py --check all   # site + code + conversion
 ```
 
-**Agent verification (PRs + missions):** [`.cursor/skills/verify-readyforrobots/SKILL.md`](.cursor/skills/verify-readyforrobots/SKILL.md) — doctor, drive FIND / Job Cards / chrome, evidence. Feature map (nav, process bar, panels, results): [`docs/feature_map.md`](docs/feature_map.md). CI: `.github/workflows/agent-verify.yml`. Auto-merge `cursor/*` only after that job is green (not skip-green). Hourly observe does not merge.
+**Agent verification (PRs + missions):** [`.cursor/skills/verify-readyforrobots/SKILL.md`](.cursor/skills/verify-readyforrobots/SKILL.md) — doctor, drive FIND / Job Cards / chrome, evidence. Feature map (nav, process bar, panels, results): [`docs/feature_map.md`](docs/feature_map.md). **pstack release:** `python3 scripts/pstack_release.py` (How / Act / Critic). CI: `.github/workflows/pstack-release.yml` + `.github/workflows/agent-verify.yml` (pstack-release job runs on **drafts**; auto-merge still non-draft). Auto-merge `cursor/*` only after **both** pstack-release and Jobs verify are green (not skip-green). No Jobs FIND/CRM/matching PR without pstack checks. Hourly observe does not merge.
 
 **Daily operator report** (email + `reports/harness_daily_report_latest.md`):
 
@@ -226,5 +226,5 @@ Legacy `frontend/nextjs/` — avoid new product work unless explicitly requested
 - [docs/jobs_crm.md](docs/jobs_crm.md) — Jobs CRM spec (signup wall, free 5 / 15×month / 7-day, export)
 - [docs/agent-spec.md](docs/agent-spec.md) — CRM copilot (not Hermes; Hermes retired)
 - [docs/hermes_retired.md](docs/hermes_retired.md) — Hermes is not a Jobs agent
-- [docs/pstack_jobs.md](docs/pstack_jobs.md) — pstack is site protocol + IDE routing
+- [docs/pstack_jobs.md](docs/pstack_jobs.md) — pstack is the Jobs **release gate** (How / Act / Critic), not FIND/CRM protocol chrome
 - [docs/vercel_agent_spend.md](docs/vercel_agent_spend.md) — agents must not meter Vercel Preview / AI Gateway

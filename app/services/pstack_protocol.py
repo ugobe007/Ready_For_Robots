@@ -1,5 +1,8 @@
 """pstack protocol for site agents (How / Act / Critic).
 
+Release authority is ``pstack/`` + ``scripts/pstack_release.py``. Protocol
+chrome on FIND or Jobs CRM is not a merge pass.
+
 Jobs still come from ontology + POST /api/robot-job-match.
 This module routes agent *roles*. It does not pick employers, call Vercel AI
 Gateway, resurrect Hermes ingest, or replace ``robot_job_capability_match.py``.
@@ -40,12 +43,27 @@ ROLES: dict[PstackRoleId, dict[str, str]] = {
     "critic": {
         "id": "critic",
         "label": "Critic",
-        "job": "Prove FIND on /, named employers, the wall, and the matcher.",
+        "job": "Drive a real OEM URL. Fail abort-as-failed, leftover CRM, and skip-green.",
     },
 }
 
 CRITIC_GATES: tuple[dict[str, str], ...] = (
     {"id": "find", "prove": "FIND is /", "fail": "smoking /experiment as FIND"},
+    {
+        "id": "find_abort",
+        "prove": "AbortError and Failed to fetch stay silent",
+        "fail": "self-abort FIND shown as Research failed / Failed to fetch",
+    },
+    {
+        "id": "find_identity",
+        "prove": "submitted URL is the identity key",
+        "fail": "Greenfield shown as another OEM / leftover robot",
+    },
+    {
+        "id": "crm_leftover",
+        "prove": "CRM after FIND B is B",
+        "fail": "strawberry robot leftover on a new URL",
+    },
     {"id": "job_cards", "prove": "named employer and real work", "fail": "invented rental dollars"},
     {"id": "wall", "prove": "signup before the CRM desk", "fail": "unsigned /pipeline?src=jobs_activate desk"},
     {"id": "matcher", "prove": "POST /api/robot-job-match", "fail": "LLM as the job source"},
