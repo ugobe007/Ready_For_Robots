@@ -81,3 +81,17 @@ def test_no_dexmate_hostname_shortcut():
     keys = {c.key for c in profile.capabilities}
     assert "dual_arm" not in keys
     assert "dexterous" not in keys
+
+
+def test_scrape_error_does_not_invent_jobs_under_host_name():
+    """Failed scrape must not synthesize tote/AMR jobs as Greenfieldincorporated."""
+    result = match_robot_url(
+        "https://www.greenfieldincorporated.com/",
+        scraper=lambda _url: "Error scraping: timeout",
+    )
+    assert result["jobs"] == []
+    assert result["job_count"] == 0
+    blob = str(result).lower()
+    assert "tote" not in blob
+    assert "return empty" not in blob
+    assert result["state"] == "could_not_understand"

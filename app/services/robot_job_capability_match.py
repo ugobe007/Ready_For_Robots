@@ -502,7 +502,9 @@ def resolve_robot_ready_profile(
         scrape = scraper or scrape_robot_page
         text = scrape(safe)
         if (text or "").lower().startswith("error scraping"):
-            text = f"{domain} robotics automation solution from {domain}".strip()
+            # Honest empty: never synthesize "robotics automation solution"
+            # text that then invents tote/AMR jobs under a mangled host name.
+            text = ""
 
     analyze = analyzer or analyze_robot_capabilities
     caps = analyze(domain, text)

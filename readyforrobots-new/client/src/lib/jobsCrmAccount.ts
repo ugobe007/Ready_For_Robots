@@ -14,6 +14,7 @@ import {
   sameRobotHandoffUrl,
   type JobsHandoffSnapshot,
 } from "@/lib/jobsHandoffSnapshot";
+import { canonicalRobotUrl } from "@/lib/robotUrlIdentity";
 import type { MatchJob } from "@/lib/robotJobMatch";
 
 export const JOBS_KEEP_JOBS_CTA = "Keep jobs";
@@ -500,47 +501,48 @@ export type CrmDeskForRobot = {
   savedCount: number;
 };
 
+const EMPTY_CRM_DESK: CrmDeskForRobot = {
+  product: "your robot",
+  robotUrl: "",
+  rows: [],
+  jobs: [],
+  savedCount: 0,
+};
+
 /**
  * Desk identity + jobs for the robot FIND just ran.
- * A signed-in strawberry tote list must not replace Greenfield / BOT#25.
+ * The submitted URL is the only key. No snap URL → honest empty, never
+ * accountRows[0] / first saved robot / leftover class jobs.
  */
 export function crmDeskForCurrentRobot(opts: {
   snap: JobsHandoffSnapshot | null;
   accountRows: KeptJobRow[];
 }): CrmDeskForRobot {
-  const snap = opts.snap;
-  if (snap?.url) {
-    const current = { url: snap.url, name: snap.productName };
-    const handoffJobs = snap.jobs || [];
-    const handoffKeys = new Set(
-      handoffJobs.map(job => job.job_key).filter(Boolean),
-    );
-    const rows = opts.accountRows.filter(row => {
-      if (!keptRowMatchesRobot(row, current)) return false;
-      if (!handoffJobs.length) return false;
-      return handoffKeys.has(row.job_key);
-    });
-    const accountJobs = keptRowsToMatchJobs(rows);
-    const jobs = handoffJobs.length
-      ? accountJobs.length
-        ? accountJobs
-        : handoffJobs
-      : [];
-    return {
-      product: snap.productName || "your robot",
-      robotUrl: snap.url,
-      rows: handoffJobs.length ? rows : [],
-      jobs,
-      savedCount: handoffJobs.length ? rows.length : 0,
-    };
-  }
-  const jobs = keptRowsToMatchJobs(opts.accountRows);
+  const snapUrl = canonicalRobotUrl(opts.snap?.url || "");
+  if (!snapUrl) return EMPTY_CRM_DESK;
+  const snap = opts.snap as JobsHandoffSnapshot;
+  const current = { url: snapUrl, name: snap.productName };
+  const handoffJobs = snap.jobs || [];
+  const handoffKeys = new Set(
+    handoffJobs.map(job => job.job_key).filter(Boolean),
+  );
+  const rows = opts.accountRows.filter(row => {
+    if (!keptRowMatchesRobot(row, current)) return false;
+    if (!handoffJobs.length) return false;
+    return handoffKeys.has(row.job_key);
+  });
+  const accountJobs = keptRowsToMatchJobs(rows);
+  const jobs = handoffJobs.length
+    ? accountJobs.length
+      ? accountJobs
+      : handoffJobs
+    : [];
   return {
-    product: opts.accountRows[0]?.robot_name || "your robot",
-    robotUrl: opts.accountRows[0]?.robot_url || "",
-    rows: opts.accountRows,
+    product: snap.productName || "your robot",
+    robotUrl: snapUrl,
+    rows: handoffJobs.length ? rows : [],
     jobs,
-    savedCount: opts.accountRows.length,
+    savedCount: handoffJobs.length ? rows.length : 0,
   };
 }
 

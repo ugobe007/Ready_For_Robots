@@ -166,6 +166,7 @@ export default function JobsCrmDesk({
         label: "Kept from FIND",
         jobKey: job.job_key,
         company: robotJobCardFromMatch(job).employer || undefined,
+        robotUrl,
       });
     }
     if (!accessToken) {
@@ -436,6 +437,7 @@ export default function JobsCrmDesk({
                         key={job.job_key}
                         job={job}
                         robotName={product}
+                        robotUrl={robotUrl}
                         signedIn={signedIn}
                         accessToken={accessToken}
                         onSaved={() => setTick(n => n + 1)}
@@ -599,12 +601,14 @@ function CollectedJobInspect({ job }: { job: MatchJob }) {
 function ApplyPanel({
   job,
   robotName,
+  robotUrl,
   signedIn: _signedIn,
   accessToken = null,
   onSaved,
 }: {
   job: MatchJob;
   robotName: string;
+  robotUrl?: string;
   signedIn: boolean;
   accessToken?: string | null;
   onSaved: () => void;
@@ -630,6 +634,7 @@ function ApplyPanel({
       label,
       jobKey: job.job_key,
       company,
+      robotUrl,
     });
     if (accessToken) {
       void postJobsCrmActivity(accessToken, {
@@ -826,20 +831,26 @@ function ApplyPanel({
         ) : null}
       </div>
 
-      <PipelineActivity jobKey={job.job_key} tick={record.status} />
+      <PipelineActivity
+        jobKey={job.job_key}
+        robotUrl={robotUrl}
+        tick={record.status}
+      />
     </section>
   );
 }
 
 function PipelineActivity({
   jobKey,
+  robotUrl,
   tick,
 }: {
   jobKey: string;
+  robotUrl?: string;
   tick: string;
 }) {
   void tick;
-  const events = pipelineActivityForJob(jobKey).slice(0, 8);
+  const events = pipelineActivityForJob(jobKey, robotUrl).slice(0, 8);
   if (events.length === 0) return null;
   return (
     <div className="mt-8 border-t border-slate-700 pt-5">
