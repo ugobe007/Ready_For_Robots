@@ -72,6 +72,11 @@ CRITIC_GATES: tuple[dict[str, str], ...] = (
         "prove": "unknown OEM picker is evidence-only",
         "fail": "chrome names or another company's robot in the FIND picker",
     },
+    {
+        "id": "class_picker",
+        "prove": "class-picker click starts robot-job-search and settles jobs or empty",
+        "fail": "Agriculture click silently no-ops or dumps empty CRM as the only outcome",
+    },
 )
 
 # Jobs PRs fail if FIND picker for these URLs contains chrome or a leftover robot.

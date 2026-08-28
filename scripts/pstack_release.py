@@ -275,10 +275,34 @@ def phase_act() -> dict[str, Any]:
         )
     )
 
+    qualify = _slice(workspace, "async function qualifyActive", "function revealJobs")
+    class_picker_act = (
+        "fetchRobotJobSearch" in qualify
+        and "assertedClass: chosen" in qualify
+        and "qualifySearchLookupGrain" in qualify
+        and "lookupGrain: grain" in qualify
+        and "needsClassChoice: false" in qualify
+        and "if (!a) return" not in qualify
+        and "CLASS_PICKER_PROMPT" in workspace
+        and "What kind of robot is" not in workspace
+        and "kid of robot" not in workspace.lower()
+        and "classJobsEmptyCopy" in workspace
+        and "shouldShowClassPicker(active)" in workspace
+    )
+    checks.append(
+        _check(
+            "class_picker",
+            class_picker_act,
+            "Class-picker click starts robot-job-search and cannot silently no-op",
+        )
+    )
+
     checks.append(
         _check(
             "release_helpers",
-            "FIND_ABORT_FIXTURE" in release_ts and "CRM_LEFTOVER_FIXTURE" in release_ts,
+            "FIND_ABORT_FIXTURE" in release_ts
+            and "CRM_LEFTOVER_FIXTURE" in release_ts
+            and "CLASS_PICKER_FIXTURE" in release_ts,
             "pstackRelease.ts encodes the #173 abort and #172 leftover fixtures",
         )
     )
@@ -417,6 +441,25 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
             and "is_site_chrome_name" in oem_discover
             and "CRITIC_HELDOUT_FIND_URLS" in oem_test,
             "unknown OEM picker is evidence-only; chrome names are not SKUs",
+        )
+    )
+    workspace = _read(WORKSPACE) if WORKSPACE.is_file() else ""
+    qualify = _slice(workspace, "async function qualifyActive", "function revealJobs")
+    class_picker_src = (
+        "class_picker" in site
+        and "class_picker" in protocol
+        and "CLASS_PICKER_FIXTURE" in release_ts
+        and "CLASS_PICKER_PROMPT" in workspace
+        and "qualifySearchLookupGrain" in qualify
+        and "needsClassChoice: false" in qualify
+        and "if (!a) return" not in qualify
+        and "What kind of robot is" not in workspace
+    )
+    checks.append(
+        _check(
+            "class_picker",
+            class_picker_src,
+            "Class-picker click is not a no-op; Agriculture starts robot-job-search",
         )
     )
 

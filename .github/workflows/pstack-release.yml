@@ -58,6 +58,7 @@ jobs:
           pnpm --dir readyforrobots-new exec vitest run \
             client/src/lib/pstackRelease.test.ts \
             client/src/lib/pstackSite.test.ts \
+            client/src/lib/robotClassOptions.test.ts \
             client/src/lib/robotUrlIdentity.test.ts \
             client/src/lib/jobsCrmAccount.test.ts \
             client/src/lib/jobsHandoffSnapshot.test.ts

@@ -104,6 +104,10 @@ import {
   configurationClassForLookup,
   portfolioShowsJobCounts,
   productClassesFromLineup,
+  qualifySearchLookupGrain,
+  shouldShowClassPicker,
+  classJobsEmptyCopy,
+  CLASS_PICKER_PROMPT,
   readNavigationType,
   shouldRestoreJobsWorkspace,
   filterJobsLineupProducts,
@@ -1339,33 +1343,68 @@ export default function RobotJobsWorkspace() {
     }
   }
 
-  /** Operator names the morphology so Jobs can rematch from that class. */
+  /** Operator names the class so Jobs can search. Never a silent no-op. */
   async function qualifyActive(classId: string) {
-    const a = portfolio[activeIdx];
-    if (!a) return;
+    const chosen = String(classId || "").trim();
+    if (!chosen) {
+      setMatchError("Pick a robot type to search for jobs.");
+      return;
+    }
+    const url = submittedUrlRef.current;
+    if (!url) {
+      setMatchError("Paste a robot URL, then pick a type.");
+      return;
+    }
+    const prior = portfolio[activeIdx];
+    const productName = String(prior?.productName || "").trim();
+    const grain = qualifySearchLookupGrain(productName);
     setMatching(true);
     setMatchError(null);
+    setStage("jobs");
+    let aborted = false;
+    if (matchAbortRef.current) {
+      matchAbortRef.current();
+    }
+    matchAbortRef.current = () => {
+      aborted = true;
+    };
     try {
-      const url = submittedUrlRef.current;
       const res = await fetchRobotJobSearch({
         url,
-        product: a.productName,
-        assertedClass: classId,
-        lookupGrain: "product",
+        product: grain === "product" ? productName : undefined,
+        assertedClass: chosen,
+        lookupGrain: grain,
       });
+      if (aborted) return;
+      const next = searchToAnalysis(res);
       const merged: RobotAnalysis = {
-        ...searchToAnalysis(res),
-        productName: a.productName,
-        profile: a.profile || searchToAnalysis(res).profile,
-        lookupGrain: "product",
-        robotClass: classId,
+        ...next,
+        productName:
+          (grain === "product" && productName
+            ? productName
+            : prior?.productName || next.productName || companyName) ||
+          next.productName,
+        companyName: prior?.companyName || next.companyName || companyName,
+        profile: prior?.profile || next.profile,
+        lookupGrain: grain,
+        robotClass: chosen,
+        needsClassChoice: false,
       };
-      setPortfolio(prev => prev.map((p, i) => (i === activeIdx ? merged : p)));
+      setPortfolio(prev =>
+        prev.length
+          ? prev.map((p, i) => (i === activeIdx ? merged : p))
+          : [merged],
+      );
       revealJobs(merged);
     } catch {
-      setMatchError("Could not apply that robot class. Try again.");
+      if (!aborted) {
+        setMatchError("Could not find jobs for that robot type. Try again.");
+      }
     } finally {
-      setMatching(false);
+      matchAbortRef.current = null;
+      if (!aborted) {
+        setMatching(false);
+      }
     }
   }
 
@@ -1467,6 +1506,10 @@ export default function RobotJobsWorkspace() {
   }
 
   function goToActivate() {
+    if (active && shouldShowClassPicker(active)) {
+      document.getElementById("jobs-list")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
     const pool = crmPool();
     const jobs = jobsForCrmDesk(pool, checkedJobKeys, CRM_UNLOCKED_JOBS);
     writeCrmHandoff(checkedJobKeys, pool, undefined, jobs);
@@ -2080,6 +2123,7 @@ export default function RobotJobsWorkspace() {
             robotCount={lineupPreview ? portfolio.length : 1}
             companyName={companyName || active.companyName}
             qualifying={matching}
+            matchError={matchError}
             onSelectClass={id => void qualifyActive(id)}
           />
         )}
@@ -2860,16 +2904,7 @@ function ReviewPanel({
 /* ================================================================== */
 
 function shouldQualify(analysis: RobotAnalysis): boolean {
-  if (analysis.needsClassChoice) return true;
-  if (analysis.zeroReason === "insufficient_profile_evidence") return true;
-  if (
-    analysis.matched &&
-    (analysis.jobs || []).length === 0 &&
-    (analysis.capabilities || []).length === 0
-  ) {
-    return true;
-  }
-  return false;
+  return shouldShowClassPicker(analysis);
 }
 
 function JobsActivateBar({
@@ -2913,6 +2948,7 @@ function JobsPanel({
   robotCount = 1,
   companyName = "",
   qualifying = false,
+  matchError = null,
   onSelectClass,
 }: {
   analysis: RobotAnalysis;
@@ -2933,7 +2969,8 @@ function JobsPanel({
   robotCount?: number;
   companyName?: string;
   qualifying?: boolean;
-  onSelectClass?: (classId: string) => void;
+  matchError?: string | null;
+  onSelectClass: (classId: string) => void;
 }) {
   const sources = lineupPreview && lineup.length > 1 ? lineup : [analysis];
   const tagged = exampleJobsForLineup(sources);
@@ -2957,6 +2994,8 @@ function JobsPanel({
   const checkedCount = checkedJobKeys.filter(k =>
     visible.some(job => job.job_key === k),
   ).length;
+  const showPicker = shouldQualify(analysis);
+  const showCrmCtas = !showPicker && !qualifying;
 
   return (
     <div id="jobs-list" className="p-6 sm:p-8">
@@ -2986,6 +3025,11 @@ function JobsPanel({
           </span>
         </p>
       )}
+      {matchError ? (
+        <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
+          {matchError}
+        </p>
+      ) : null}
       <div className="mt-4 space-y-3">
         {keepSavedCount > 0 ? (
           <JobsKeepStatusBar
@@ -3003,6 +3047,7 @@ function JobsPanel({
             {JOBS_NEXT_STEPS_CTA}
           </a>
         ) : null}
+        {showCrmCtas ? (
         <div className="flex flex-wrap items-center gap-2">
           {onKeepJobs ? (
             <form
@@ -3026,12 +3071,15 @@ function JobsPanel({
             </form>
           ) : null}
         </div>
+        ) : null}
       </div>
+      {showCrmCtas ? (
       <JobsActivateBar
         onActivate={onActivate}
         checkedCount={checkedCount}
         className="mt-4"
       />
+      ) : null}
       {lineupPreview ? (
         <button
           type="button"
@@ -3043,7 +3091,7 @@ function JobsPanel({
       ) : null}
 
       {baseJobs.length === 0 && visible.length === 0 ? (
-        shouldQualify(analysis) ? (
+        showPicker ? (
           <ClassPicker
             robotName={analysis.productName}
             options={analysis.classOptions}
@@ -3055,6 +3103,7 @@ function JobsPanel({
           <ZeroState
             robotName={analysis.productName}
             reason={analysis.zeroReason}
+            robotClass={analysis.robotClass}
           />
         )
       ) : (
@@ -3081,11 +3130,13 @@ function JobsPanel({
           See all {Math.min(baseJobs.length, JOBS_PIPELINE_CAP)} jobs
         </button>
       ) : null}
+      {showCrmCtas ? (
       <JobsActivateBar
         onActivate={onActivate}
         checkedCount={checkedCount}
         className="mt-8 border-t border-slate-600 pt-6"
       />
+      ) : null}
     </div>
   );
 }
@@ -3101,7 +3152,7 @@ function ClassPicker({
   options?: ClassOption[];
   previewUrl?: string | null;
   busy?: boolean;
-  onSelect?: (classId: string) => void;
+  onSelect: (classId: string) => void;
 }) {
   const choices = classOptionsOrDefault(options);
   return (
@@ -3110,12 +3161,13 @@ function ClassPicker({
         Name the robot class
       </p>
       <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
-        What kind of robot is {robotName}?
+        {CLASS_PICKER_PROMPT}
       </h3>
       <p className="mt-2 text-[13px] leading-snug text-slate-300">
-        Photos and the product page were not enough to name the class. Pick the
-        closest match so we can find jobs — humanoids like NEO, Unitree, and
-        UBTech share the same work primitives.
+        Photos and the product page were not enough to name the class
+        {robotName ? ` for ${robotName}` : ""}. Pick the closest match so we
+        can find jobs — then we show Job Cards on Available jobs, or tell you
+        we do not have jobs for that type yet.
       </p>
       {previewUrl ? (
         <img
@@ -3124,13 +3176,19 @@ function ClassPicker({
           className="mt-4 max-h-40 border border-slate-700 object-contain"
         />
       ) : null}
+      {busy ? (
+        <p className="mt-3 font-mono text-sm font-semibold uppercase tracking-[0.08em] text-amber-300">
+          Finding jobs for that robot type…
+        </p>
+      ) : null}
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {choices.map(opt => (
           <button
             key={opt.id}
             type="button"
             disabled={busy}
-            onClick={() => onSelect?.(opt.id)}
+            data-jobs-class={opt.id}
+            onClick={() => onSelect(opt.id)}
             className="border border-slate-600 bg-[#081126] px-3 py-3 text-left transition hover:border-emerald-400/60 hover:bg-emerald-400/5 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <span className="block font-display text-sm font-bold text-slate-100">
@@ -3153,10 +3211,29 @@ function ClassPicker({
 function ZeroState({
   robotName,
   reason,
+  robotClass,
 }: {
   robotName: string;
   reason?: string | null;
+  robotClass?: string | null;
 }) {
+  if (robotClass) {
+    return (
+      <div className="mt-6 border border-slate-600 bg-[#081126] p-5">
+        <p className={JOBS_EYEBROW_CLASS}>
+          No jobs yet
+        </p>
+        <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
+          {classJobsEmptyCopy(robotClass, robotName)}
+        </h3>
+        <p className="mt-2 text-[13px] leading-snug text-slate-300">
+          We do not have work represented for this robot type yet. This is a
+          coverage gap on our side, not a limitation of the robot. CRM stays
+          empty until there are jobs to keep.
+        </p>
+      </div>
+    );
+  }
   const r = (reason || "") as ZeroReason | "";
   if (r === "corpus_gap") {
     return (

@@ -32,6 +32,7 @@ def test_roles_and_matcher_source():
         "wall",
         "matcher",
         "oem_extract",
+        "class_picker",
     ]
     assert CRM_WALL_REQUIRED is True
 

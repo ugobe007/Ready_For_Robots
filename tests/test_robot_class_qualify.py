@@ -188,6 +188,105 @@ def test_asserted_humanoid_profile_matches_jobs():
     assert any(c.get("key") == "manipulate" for c in out["capabilities"])
 
 
+def test_agtonomy_class_picker_agriculture_is_not_a_noop():
+    """Incomplete identity + Agriculture must search, not re-open the picker."""
+    out = compose_robot_job_search(
+        "https://www.agtonomy.com/",
+        asserted_class="agriculture",
+        lookup_grain="robot_type",
+    )
+    assert out["needs_class_choice"] is False
+    assert out["state"] != "qualify_robot"
+    if out.get("job_count"):
+        families = {j.get("tape_family") for j in out.get("jobs") or []}
+        assert "agriculture" in families
+        titles = " ".join(str(j.get("title") or "") for j in out.get("jobs") or []).lower()
+        assert "weed" in titles or "crop" in titles or "field" in titles or "harvest" in titles
+    else:
+        assert out.get("zero_reason")
+
+
+def test_incomplete_identity_asserted_agriculture_does_not_swallow(monkeypatch):
+    """Product-grain unknown OEM used to return qualify_robot and drop the class."""
+    thin = {
+        "company": {"name": "Agtonomy"},
+        "selected_product": None,
+        "products": [],
+        "needs_product_choice": False,
+        "facts": [],
+        "sources": [],
+        "coverage_level": "low",
+        "profile_confidence": "C",
+    }
+
+    class _Obj:
+        def to_dict(self):
+            return thin
+
+    monkeypatch.setattr(
+        "app.services.robot_job_search.build_robot_profile",
+        lambda *a, **k: _Obj(),
+    )
+    monkeypatch.setattr(
+        "app.services.robot_job_search.assert_public_http_url", lambda u: u
+    )
+    out = compose_robot_job_search(
+        "https://agtonomy.com/",
+        asserted_class="agriculture",
+        lookup_grain="product",
+    )
+    assert out["needs_class_choice"] is False
+    assert out["state"] != "qualify_robot"
+    assert (out.get("job_count") or 0) > 0 or out.get("zero_reason")
+
+
+def test_asserted_class_zero_jobs_does_not_reopen_picker(monkeypatch):
+    thin = {
+        "company": {"name": "Agtonomy"},
+        "selected_product": None,
+        "products": [],
+        "needs_product_choice": False,
+        "facts": [],
+        "sources": [],
+        "coverage_level": "low",
+        "profile_confidence": "C",
+    }
+
+    class _Obj:
+        def to_dict(self):
+            return thin
+
+    monkeypatch.setattr(
+        "app.services.robot_job_search.build_robot_profile",
+        lambda *a, **k: _Obj(),
+    )
+    monkeypatch.setattr(
+        "app.services.robot_job_search.assert_public_http_url", lambda u: u
+    )
+    monkeypatch.setattr(
+        "app.services.robot_job_search.match_jobs_from_profile",
+        lambda *a, **k: {
+            "state": "could_not_understand",
+            "robot_name": "Agtonomy",
+            "company_name": "Agtonomy",
+            "capabilities": [],
+            "families": [],
+            "jobs": [],
+            "job_count": 0,
+            "matcher": "requirement_v1",
+            "robot_class": "agriculture",
+        },
+    )
+    out = compose_robot_job_search(
+        "https://www.agtonomy.com/",
+        asserted_class="agriculture",
+        lookup_grain="product",
+    )
+    assert out["needs_class_choice"] is False
+    assert out["state"] != "qualify_robot"
+    assert out["job_count"] == 0
+
+
 def test_thin_humanoid_class_matches_jobs_without_sku():
     """Type-first: product_class is enough. Matcher still inspects requirements."""
     profile = thin_class_profile("Fourier Intelligence", "humanoid")
@@ -212,7 +311,9 @@ def test_jobs_ui_never_renders_insufficient_evidence_copy():
     assert "couldn't establish enough capability evidence" not in text.lower()
     assert "ClassPicker" in text
     assert "Name the robot class" in text
-    assert "What kind of robot is" in text
+    assert "CLASS_PICKER_PROMPT" in text
+    assert "What kind of robot is" not in text
+    assert "kid of robot" not in text.lower()
 
 
 def test_public_class_options_include_ten_classes():

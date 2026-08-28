@@ -9,7 +9,7 @@ Roles come from Cursor pstack (`how`, critics, prove-it-works). This folder **en
 ```
 How  → name the owner before editing FIND, Job Cards, CRM, or matching
 Act  → change the Jobs path only; keep the signup wall; no SIGNAL hop
-Critic → drive a real OEM URL; identity, abort, leftover CRM, matcher
+Critic → drive a real OEM URL; identity, abort, leftover CRM, matcher, class picker
 ```
 
 ## Run
@@ -30,6 +30,7 @@ CI: `.github/workflows/agent-verify.yml` job `pstack-release` and `.github/workf
 | CRM leftover strawberry robot (`#172`) | `crmDeskForCurrentRobot` after a Greenfield URL |
 | Identity not keyed to submitted URL (`#173`) | `canonicalRobotUrl` + `beginJobsHandoffForUrl` |
 | FIND is not `/` | critic gate `find` |
+| Class-picker click is a no-op (`Agtonomy` → Agriculture) | `qualifyActive` always POSTs `/api/robot-job-search`; empty is named |
 
 Live Critic posts `POST /api/robot-job-search` (the URL FIND actually calls), not a chip-only matcher stub.
 
