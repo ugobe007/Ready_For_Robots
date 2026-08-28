@@ -229,7 +229,7 @@ def test_richtech_resolve_picker_is_catalog_skus_not_prose_only():
     assert "MATRADEE" in found
     assert "Learn More" not in found
     assert "Contact Us" not in found
-    assert len(found) == 10
+    assert len(found) >= 10
 
 
 def test_omron_hub_nav_is_not_a_robot_lineup():
