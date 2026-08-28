@@ -45,6 +45,7 @@ import {
   exampleJobCap,
   exampleJobsForLineup,
   filterJobsLineupProducts,
+  isJobsLineupNoiseName,
   pageJobsLineup,
   isJobsHandoffSrc,
   isJobsChromePath,
@@ -690,11 +691,17 @@ describe("jobsWorkflow", () => {
       "We match your robots to specific jobs and models using your URL",
     );
     expect(FIND_JOBS_HOME_SUBHEAD).not.toMatch(/manufacturer URL|SKU we can prove/i);
-    expect(FIND_JOBS_HEADLINE_CLASS).toMatch(/text-5xl/);
-    expect(FIND_JOBS_HEADLINE_CLASS).toMatch(/sm:text-6xl/);
-    expect(FIND_JOBS_HEADLINE_CLASS).toMatch(/lg:text-7xl/);
+    expect(FIND_JOBS_HEADLINE_CLASS).toMatch(/rfr-find-headline/);
+    expect(FIND_JOBS_HEADLINE_CLASS).not.toMatch(/text-5xl/);
+    expect(FIND_JOBS_HEADLINE_CLASS).not.toMatch(/lg:text-7xl/);
     expect(FIND_JOBS_SUBHEAD_CLASS).toMatch(/text-lg/);
     expect(workspace).toMatch(/FIND_JOBS_HEADLINE_CLASS/);
+    expect(workspace).toMatch(/rfr-find-pane/);
+    const css = readFileSync(join(here, "../index.css"), "utf8");
+    expect(css).toMatch(/\.rfr-find-headline/);
+    expect(css).toMatch(/overflow-wrap:\s*anywhere/);
+    expect(css).toMatch(/8cqi/);
+    expect(css).toMatch(/container-type:\s*inline-size/);
     expect(workspace).toMatch(/FIND_JOBS_HOME_SUBHEAD/);
     expect(workspace).toMatch(/text-emerald-400">jobs/);
     expect(workspace).not.toMatch(/Paste the manufacturer URL/);
@@ -1604,6 +1611,19 @@ describe("jobsWorkflow", () => {
       "MD-650",
       "LD-90",
     ]);
+    const greenfield = filterJobsLineupProducts([
+      { name: "BOT#25" },
+      { name: "FARMERS" },
+      { name: "STORY" },
+      { name: "INVEST" },
+      { name: "CONTACT" },
+      { name: "HOME" },
+    ]);
+    expect(greenfield.map(p => p.name)).toEqual(["BOT#25"]);
+    expect(isJobsLineupNoiseName("Farmers")).toBe(true);
+    expect(isJobsLineupNoiseName("STORY")).toBe(true);
+    expect(isJobsLineupNoiseName("BOT#25")).toBe(false);
+    expect(isJobsLineupNoiseName("BOT25")).toBe(false);
     expect(pageJobsLineup(omron, 0).map(p => p.name)).toEqual([
       "LD-250",
       "HD-1500",

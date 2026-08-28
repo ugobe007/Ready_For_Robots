@@ -170,12 +170,16 @@ def listing_from_catalog(
 
     `limit` is a FIND surface page, not a company cap. Omit it to return the lineup.
     """
+    from app.services.oem_sku_discover import is_junk_sku_name, looks_like_named_sku
+
     rows: list[dict[str, Any]] = []
     seen: set[str] = set()
     for robot in (vendor or {}).get("robots") or []:
         name = str(robot.get("name") or "").strip()
         key = re.sub(r"[^a-z0-9]", "", name.lower())
         if not name or key in seen:
+            continue
+        if is_junk_sku_name(name) and not looks_like_named_sku(name):
             continue
         seen.add(key)
         desc = (robot.get("description") or "").strip()
@@ -207,9 +211,12 @@ def listing_from_page(
     limit: int | None = None,
 ) -> list[dict[str, Any]]:
     """Attach nearby description then specs onto already-ranked product names."""
+    from app.services.oem_sku_discover import is_junk_sku_name
+
     blob = text or ""
     rows: list[dict[str, Any]] = []
-    chosen = names if limit is None else names[:limit]
+    kept = [n for n in names if n and not is_junk_sku_name(n)]
+    chosen = kept if limit is None else kept[:limit]
     for name in chosen:
         window = _window_around(name, blob)
         rows.append(

@@ -290,6 +290,27 @@
       inset -1px -1px 0 rgba(0, 0, 0, 0.5);
   }
 
+  /* FIND panes are containers so identity headlines scale to the column, not the viewport. */
+  .rfr-find-pane {
+    container-type: inline-size;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .rfr-find-headline {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.08;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    /* Viewport fallback, then column-relative when the pane is a container. */
+    font-size: clamp(1.35rem, 3.2vw, 2.35rem);
+    font-size: clamp(1.35rem, 8cqi, 2.35rem);
+  }
+
   .rfr-jobs-page-shell::after {
     content: "";
     pointer-events: none;

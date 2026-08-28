@@ -449,10 +449,45 @@ const JOBS_LINEUP_NOISE_NAMES = new Set([
   "news",
   "company",
   "solutions",
+  "farmers",
+  "farmer",
+  "story",
+  "stories",
+  "our story",
+  "invest",
+  "investing",
+  "investment",
+  "investors",
+  "home",
+  "blog",
+  "careers",
+  "career",
+  "privacy",
+  "privacy policy",
+  "terms",
+  "legal",
+  "press",
+  "media",
+  "team",
+  "mission",
+  "login",
+  "support",
+  "resources",
+  "events",
+  "partners",
+  "shop",
+  "store",
+  "pricing",
+  "demo",
+  "faq",
+  "newsletter",
+  "subscribe",
+  "cookie",
+  "cookies",
 ]);
 
 const JOBS_LINEUP_NOISE_RE =
-  /\b(discontinued|activate your|amr license|products?\s+overview)\b/i;
+  /\b(discontinued|activate your|amr license|products?\s+overview|our\s+story)\b/i;
 const JOBS_LINEUP_LOCALE_RE =
   /^(deutsch|espa[nñ]ol|fran[cç]ais|english|italiano|nederlands|portugu[eê]s|日本語|中文|한국어|de|fr|es|en|zh|ja)$/i;
 
@@ -829,7 +864,7 @@ export const FIND_JOBS_HOME_HEADLINE = "Find jobs for your robot.";
 export const FIND_JOBS_HOME_SUBHEAD =
   "We match your robots to specific jobs and models using your URL";
 export const FIND_JOBS_HEADLINE_CLASS =
-  "mt-1 font-display text-5xl font-bold leading-[1.05] tracking-tight text-slate-100 sm:text-6xl lg:text-7xl";
+  "rfr-find-headline mt-1 text-slate-100";
 export const FIND_JOBS_SUBHEAD_CLASS =
   "mt-4 max-w-3xl text-lg leading-snug text-slate-300 sm:text-xl";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
