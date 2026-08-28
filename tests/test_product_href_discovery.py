@@ -1,6 +1,8 @@
 """Discover robot SKUs from manufacturer product URLs (not an OEM allowlist)."""
 from __future__ import annotations
 
+import re
+
 from app.services.robot_understanding_v1.fetch import FetchedPage
 from app.services.robot_understanding_v1.resolve import (
     _discover_product_names,
@@ -276,4 +278,60 @@ def test_omron_hub_nav_is_not_a_robot_lineup():
     assert any("hd-1500" in n.lower() or "hd1500" in n.lower() for n in names)
     assert _sku_from_product_href(f"{origin}/products/mobile-robots/") is None
     assert _sku_from_product_href(f"{origin}/products/ld-250") == "LD250"
+
+
+def test_greenfield_nav_words_are_not_pickable_robots():
+    origin = "https://www.greenfieldincorporated.com"
+    home = _page(
+        title="GREENFIELD ROBOTICS",
+        url=f"{origin}/",
+        text=(
+            "Greenfield Robotics BOT#25 agricultural weeding robot. "
+            "Robots replacing herbicides. Farm with us. "
+            "BOT#25 BOT25 weeding robot."
+        ),
+        links=[
+            (f"{origin}/", "HOME"),
+            (f"{origin}/invest", "INVEST"),
+            (f"{origin}/farmers", "FARMERS"),
+            (f"{origin}/bot25", "BOT#25"),
+            (f"{origin}/story", "STORY"),
+            (f"{origin}/contact", "CONTACT"),
+        ],
+    )
+    assert _sku_from_product_href(f"{origin}/farmers") is None
+    assert _sku_from_product_href(f"{origin}/story") is None
+    assert _sku_from_product_href(f"{origin}/invest") is None
+    assert _sku_from_product_href(f"{origin}/contact") is None
+    bot = _sku_from_product_href(f"{origin}/bot25")
+    assert bot is not None
+    assert re.sub(r"[^a-z0-9]", "", bot.lower()) == "bot25"
+    names = _discover_product_names(home)
+    lowered = {n.lower() for n in names}
+    assert "farmers" not in lowered
+    assert "story" not in lowered
+    assert "invest" not in lowered
+    assert "contact" not in lowered
+    assert "home" not in lowered
+    assert any(re.sub(r"[^a-z0-9]", "", n.lower()) == "bot25" for n in names)
+    resolved = resolve_identity(f"{origin}/", home)
+    found = {p.name for p in resolved.products}
+    found_keys = {re.sub(r"[^a-z0-9]", "", n.lower()) for n in found}
+    assert "farmers" not in found_keys
+    assert "story" not in found_keys
+    assert "bot25" in found_keys or any("bot" in n.lower() and "25" in n for n in found)
+    from app.services.robot_understanding_v1.resolve import _href_product_name
+
+    assert _href_product_name(f"{origin}/bot25", "BOT#25") == "BOT#25"
+
+
+def test_sku_from_greenfield_nav_paths():
+    origin = "https://www.greenfieldincorporated.com"
+    assert _sku_from_product_href(f"{origin}/farmers") is None
+    assert _sku_from_product_href(f"{origin}/story") is None
+    assert _sku_from_product_href(f"{origin}/about") is None
+    assert _sku_from_product_href(f"{origin}/news") is None
+    assert _sku_from_product_href(f"{origin}/blog") is None
+    assert _sku_from_product_href(f"{origin}/careers") is None
+    assert _sku_from_product_href(f"{origin}/privacy") is None
 

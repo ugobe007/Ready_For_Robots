@@ -17,6 +17,7 @@ describe("knownOemLineups", () => {
 
   it("returns null for unknown hosts", () => {
     expect(lookupKnownOem("https://unknown-oem.example/")).toBeNull();
+    expect(lookupKnownOem("https://www.greenfieldincorporated.com/")).toBeNull();
   });
 
   it("falls back from a product subdomain to the indexed registrable host", () => {

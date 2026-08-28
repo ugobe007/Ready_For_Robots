@@ -212,6 +212,16 @@ def test_discover_indexes_named_skus_and_rejects_series_blobs():
     assert not looks_like_named_sku("Investor Relations")
     assert looks_like_named_sku("UR30")
     assert looks_like_named_sku("FIGURE 03")
+    assert is_junk_sku_name("Farmers")
+    assert is_junk_sku_name("STORY")
+    assert is_junk_sku_name("Invest")
+    assert is_junk_sku_name("Contact")
+    assert not is_junk_sku_name("BOT25")
+    assert not is_junk_sku_name("BOT#25")
+    assert looks_like_named_sku("BOT25")
+    assert looks_like_named_sku("BOT#25")
+    assert not looks_like_named_sku("Farmers")
+    assert not looks_like_named_sku("Story")
 
     catalog = {
         "ontology_id": "oem_sku_catalog_v1",

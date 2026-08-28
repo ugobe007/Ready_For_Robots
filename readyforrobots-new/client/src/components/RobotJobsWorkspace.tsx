@@ -1795,7 +1795,7 @@ export default function RobotJobsWorkspace() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.34fr)_minmax(0,0.66fr)]">
       {/* ---------------- LEFT RAIL (context) ---------------- */}
-      <aside className="border-b border-slate-600 p-5 sm:p-6 lg:border-b-0 lg:border-r">
+      <aside className="rfr-find-pane min-w-0 overflow-x-clip border-b border-slate-600 p-5 sm:p-6 lg:border-b-0 lg:border-r">
         {stage === "find" || stage === "research" || stage === "select" ? (
           <FindRail
             stage={stage}
@@ -1841,7 +1841,7 @@ export default function RobotJobsWorkspace() {
       </aside>
 
       {/* ---------------- LARGE WORKSPACE ---------------- */}
-      <section>
+      <section className="rfr-find-pane min-w-0">
         {stage === "find" && (
           <div>
             <div className="rfr-jobs-start-bar border-b border-slate-600 px-6 py-4">
@@ -2068,7 +2068,7 @@ function PortfolioRail({
   return (
     <div>
       <p className={eyebrow}>Portfolio</p>
-      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">
+      <h2 className={FIND_JOBS_HEADLINE_CLASS}>
         {company}
       </h2>
       {!identityVerified ? (
@@ -2127,7 +2127,7 @@ function ContextRail({
   return (
     <div>
       <p className={eyebrow}>Your robot</p>
-      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-100">
+      <h2 className={FIND_JOBS_HEADLINE_CLASS}>
         {product}
       </h2>
       {company && company !== product ? (
@@ -2205,7 +2205,7 @@ function ResearchPanel({
   return (
     <div className="p-6 sm:p-8">
       <p className={eyebrow}>Researching your robot</p>
-      <h2 className="mt-1 font-display text-2xl font-bold text-slate-100">
+      <h2 className={FIND_JOBS_HEADLINE_CLASS}>
         {company || "Understanding your robot…"}
       </h2>
       <ul className="mt-8 space-y-4">
@@ -2277,7 +2277,7 @@ function SelectPanel({
   return (
     <div className="p-6 sm:p-8">
       <p className={eyebrow}>Select robot</p>
-      <h2 className="mt-1 font-display text-2xl font-bold text-slate-100">
+      <h2 className={FIND_JOBS_HEADLINE_CLASS}>
         {grouped
           ? `${products.length} robots in ${segments.length} groups`
           : `We found ${products.length} robots`}
@@ -2461,7 +2461,7 @@ function PortfolioPanel({
   return (
     <div className="p-6 sm:p-8">
       <p className={eyebrow}>{company}</p>
-      <h2 className="mt-1 font-display text-2xl font-bold text-slate-100">
+      <h2 className={FIND_JOBS_HEADLINE_CLASS}>
         {robots.length} robots
       </h2>
       <p className="mt-2 max-w-xl text-sm text-slate-400">
@@ -2557,7 +2557,7 @@ function ReviewPanel({
     <div className="p-6 sm:p-8">
       <p className={eyebrow}>Here's what we understood</p>
       <div className="mt-1 flex flex-wrap items-baseline gap-x-3">
-        <h2 className="font-display text-3xl font-bold tracking-tight text-slate-100">
+        <h2 className={FIND_JOBS_HEADLINE_CLASS}>
           {analysis.productName}
         </h2>
         {companyIdentity(analysis).label &&
@@ -2817,7 +2817,7 @@ function JobsPanel({
   return (
     <div id="jobs-list" className="p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+        <h2 className={`${FIND_JOBS_HEADLINE_CLASS} text-white`}>
           {heading}
         </h2>
         <span className="font-mono text-base font-bold text-emerald-300">

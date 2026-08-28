@@ -70,9 +70,10 @@ _LISTING_HINTS = {
 }
 _NAV_PATH = re.compile(
     r"/(about|careers?|contact|news|blog|press|support|login|privacy|legal|"
-    r"investors?|cart|checkout|search|events?|partners?|resources?|download|"
-    r"webinar|whitepaper|case-stud|cookie|terms|team|company|media|"
-    r"investors|shop|store|pricing|demo|faq|newsletter|subscribe)(/|$)",
+    r"investors?|invest(?:ing|ment)?|cart|checkout|search|events?|partners?|"
+    r"resources?|download|webinar|whitepaper|case-stud|cookie|terms|team|"
+    r"company|media|shop|store|pricing|demo|faq|newsletter|subscribe|"
+    r"farmers?|story|stories|our-story|mission|home)(/|$)",
     re.I,
 )
 _JUNK_SKU = re.compile(
@@ -84,7 +85,8 @@ _JUNK_SKU = re.compile(
     r"privacy( & cookies| policy| notice)?|terms( of use| & conditions)?|"
     r"about( us)?|investors?( relations)?|cookie policy|careers?|"
     r"industries|services|locations|patients|healthcare|pharmacy|"
-    r"factory|stories|order|logs|models|our robots)$",
+    r"factory|stories|story|farmers?|invest(?:ing|ment|ors?)?|home|mission|"
+    r"order|logs|models|our robots)$",
     re.I,
 )
 _LONG_MARKETING = re.compile(
@@ -109,7 +111,8 @@ _NAV_NAME = re.compile(
     r"idms|veterinary|cybersecurity|locations|patients|services|"
     r"trade-in|refer & earn|my rewards|ecovacs points|free consultation|"
     r"andrea |vivian |join our|terms &|privacy policy|helicopter|"
-    r"levels t3|to l5|washtower|nrf|calculator|imts|education k12|euroshop)\b",
+    r"levels t3|to l5|washtower|nrf|calculator|imts|education k12|euroshop|"
+    r"farmers?|stories|our story|\bstory\b|\binvest(?:ing|ment)?\b|mission)\b",
     re.I,
 )
 _BAD_PATH = re.compile(
@@ -127,7 +130,7 @@ _BAD_PATH = re.compile(
     r"safety|arm/|videos|impact|collections|indications|cta|"
     r"future-production|4-door|4k-tvs|inch-tvs|monitors|laptops|"
     r"washers-dryers|tradeshow|campaign|education-k12|controllers|"
-    r"calculator|nrf)(/|$)",
+    r"calculator|nrf|farmers?|story|stories|our-story|invest|mission)(/|$)",
     re.I,
 )
 _INDUSTRY_DIGIT = re.compile(r"^(3pl|2d|3d|4d|5g|\d+)$", re.I)
@@ -188,7 +191,24 @@ def is_junk_sku_name(name: str) -> bool:
         return True
     if len(raw.split()) > 5:
         return True
-    if raw.lower() in {"series", "family", "line", "platform", "ai", "us", "arm", "orbit", "cta4"}:
+    if raw.lower() in {
+        "series",
+        "family",
+        "line",
+        "platform",
+        "ai",
+        "us",
+        "arm",
+        "orbit",
+        "cta4",
+        "farmers",
+        "farmer",
+        "story",
+        "stories",
+        "invest",
+        "home",
+        "mission",
+    }:
         return True
     if not re.search(r"[A-Za-z]", raw):
         return True

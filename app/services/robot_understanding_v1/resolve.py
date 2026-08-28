@@ -163,6 +163,19 @@ _PRODUCT_HREF_NOISE = frozenset(
         "korean",
         "activate",
         "license",
+        "farmers",
+        "farmer",
+        "story",
+        "stories",
+        "our-story",
+        "invest",
+        "investing",
+        "investment",
+        "investments",
+        "home",
+        "mission",
+        "cookie",
+        "career",
     }
 )
 # Locale product pages (MagicLab /en/x1, /en/human, /en/app/g1).
@@ -256,6 +269,37 @@ _PROSE_NAME_NOISE = frozenset(
         "bringing",
         "bridging",
         "current",
+        "farmers",
+        "farmer",
+        "story",
+        "stories",
+        "invest",
+        "investing",
+        "investment",
+        "investors",
+        "home",
+        "mission",
+        "blog",
+        "careers",
+        "career",
+        "legal",
+        "press",
+        "media",
+        "team",
+        "login",
+        "support",
+        "resources",
+        "events",
+        "partners",
+        "shop",
+        "store",
+        "pricing",
+        "demo",
+        "faq",
+        "newsletter",
+        "subscribe",
+        "cookie",
+        "cookies",
     }
 )
 
@@ -320,6 +364,41 @@ _NAV_PRODUCT_LABELS = frozenset(
         "english",
         "italiano",
         "nederlands",
+        "farmers",
+        "farmer",
+        "story",
+        "stories",
+        "our story",
+        "invest",
+        "investing",
+        "investment",
+        "investors",
+        "home",
+        "mission",
+        "blog",
+        "careers",
+        "career",
+        "privacy",
+        "privacy policy",
+        "terms",
+        "legal",
+        "press",
+        "media",
+        "team",
+        "login",
+        "support",
+        "resources",
+        "events",
+        "partners",
+        "shop",
+        "store",
+        "pricing",
+        "demo",
+        "faq",
+        "newsletter",
+        "subscribe",
+        "cookie",
+        "cookies",
     }
 )
 
@@ -338,6 +417,32 @@ _CATEGORY_HUB_SLUGS = frozenset(
         "products-overview",
         "amr-license",
         "activate-license",
+        "farmers",
+        "farmer",
+        "story",
+        "stories",
+        "our-story",
+        "invest",
+        "investing",
+        "investment",
+        "home",
+        "mission",
+        "careers",
+        "privacy",
+        "blog",
+        "team",
+        "legal",
+        "press",
+        "media",
+        "login",
+        "support",
+        "resources",
+        "cookie",
+        "cookies",
+        "terms",
+        "contact",
+        "news",
+        "about",
     }
 )
 
@@ -354,6 +459,13 @@ _ACCESSORY_PRODUCT_NAME = re.compile(
 )
 _CTA_PRODUCT_NAME = re.compile(
     r"^(learn|see|get|contact|read|watch|explore|download)\s+\w+",
+    re.I,
+)
+_PAGE_TITLE_SKU_NOISE = re.compile(
+    r"^(our\s+)?(story|stories|farmers?|team|news|blog|careers?|contact|"
+    r"privacy(?:\s+policy)?|about|invest(?:ing|ment|ors?)?|home|mission|"
+    r"press|media|legal|terms|cookies?|login|support|resources?|events?|"
+    r"partners?|shop|store|pricing|demo|faq|newsletter|subscribe)$",
     re.I,
 )
 
@@ -609,6 +721,8 @@ def _is_noise_product_name(name: str) -> bool:
     if re.search(r"\bproducts?\s+overview\b", low) or low == "overview":
         return True
     if low == "about us" or low.startswith("about "):
+        return True
+    if _PAGE_TITLE_SKU_NOISE.fullmatch(low):
         return True
     if _ACCESSORY_PRODUCT_NAME.search(raw):
         return True
@@ -1158,7 +1272,10 @@ def _href_product_name(url: str, anchor: str) -> str | None:
         and not _is_noise_product_name(label)
     )
     if labeled:
-        if sku_canon.lower() not in label.lower() and _looks_like_model_or_sku(sku):
+        if (
+            _name_key(sku_canon) not in _name_key(label)
+            and _looks_like_model_or_sku(sku)
+        ):
             return f"{label} {sku_canon}".strip()
         return label
     return sku_canon

@@ -96,6 +96,14 @@ def test_page_parse_is_name_then_description_then_specs():
     assert rows[1]["specs"]["payload_kg"] == 750
 
 
+def test_page_parse_drops_nav_marketing_words():
+    rows = listing_from_page(
+        ["BOT#25", "FARMERS", "STORY", "INVEST", "CONTACT"],
+        "BOT#25 is a weeding robot. Farmers page. Story page.",
+    )
+    assert [r["name"] for r in rows] == ["BOT#25"]
+
+
 def test_unknown_oem_discover_keeps_homepage_names(monkeypatch):
     import app.services.robot_understanding_v1.pipeline as P
     from app.services.robot_understanding_v1.fetch import FetchedPage
