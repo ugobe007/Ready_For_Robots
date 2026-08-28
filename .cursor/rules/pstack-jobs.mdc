@@ -1,15 +1,17 @@
 ---
-description: pstack protocol for ReadyForRobots Jobs (site protocol + IDE routing)
+description: pstack protocol for ReadyForRobots Jobs (release gate + IDE routing)
 alwaysApply: true
 ---
 
-# pstack — Jobs protocol
+# pstack — Jobs release gate
 
-pstack is the site’s agent protocol and Cursor IDE model routing. Roles: How (ownership), Act (implement Jobs path only), Critic (verify-readyforrobots). It is not a customer chatbot and not the job matcher.
+pstack is How / Act / Critic for **merging** Jobs FIND / CRM / matching PRs. It is not a customer chatbot, not the job matcher, and not protocol chrome on `/` or Jobs CRM.
 
-Hermes is retired. Do not spawn Hermes for FIND or Jobs. Do not follow `docs/hermes_intelligence_bridge.md` as production. Product loop is robot URL on `/` → Job Cards. FIND is `POST /api/robot-job-match` (`app/services/robot_job_capability_match.py`).
+**No Jobs product PR without `python3 scripts/pstack_release.py`.** Draft PRs must not skip it. Critic drives a real OEM URL (`POST /api/robot-job-search`). Fail abort-as-Failed-to-fetch and leftover CRM identity.
 
-Checked-in runtime: `readyforrobots-new/client/src/lib/pstackSite.ts`, `app/services/pstack_protocol.py`, Jobs chrome `JobsPstackProtocol`. No npm pstack package. No Vercel AI Gateway.
+Hermes is retired. Do not spawn Hermes for FIND or Jobs. Do not follow `docs/hermes_intelligence_bridge.md` as production. Product loop is robot URL on `/` → Job Cards. FIND submit is `POST /api/robot-job-search`. Matcher remains `POST /api/robot-job-match` (`app/services/robot_job_capability_match.py`).
+
+Checked-in runtime: `pstack/`, `scripts/pstack_release.py`, `readyforrobots-new/client/src/lib/pstackSite.ts`, `pstackRelease.ts`, `app/services/pstack_protocol.py`. Do not put `JobsPstackProtocol` back on the CRM desk. No npm pstack package. No Vercel AI Gateway.
 
 ## Before Jobs UI or API edits
 
@@ -21,13 +23,13 @@ Run `unslop` on user-visible strings.
 
 ## PRs that change Jobs
 
-If the diff touches `readyforrobots-new/` or the matcher, route through `.cursor/skills/verify-readyforrobots/SKILL.md`. FIND is `/`. Critic is pstack. Do not smoke `/experiment` as FIND.
+If the diff touches `readyforrobots-new/` FIND/CRM or the matcher/search API, How / Act / Critic must run. Critic is `scripts/pstack_release.py` plus `.cursor/skills/verify-readyforrobots/SKILL.md`. FIND is `/`. Do not smoke `/experiment` as FIND.
 
 ## Harness roster → pstack roles
 
 - Orchestrator = parent
 - ProductSurface = frontend / Act
 - LeadQuality = critics on names
-- Deploy = Critic / verify-readyforrobots
+- Deploy = Critic / pstack_release.py + verify-readyforrobots
 
 Do not invent a Hermes pstack role. Do not use Vercel AI Gateway. Do not remove the CRM signup wall.

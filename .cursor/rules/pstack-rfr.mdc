@@ -31,11 +31,12 @@ RFR role map when the home rule is missing:
 
 - How = ownership before FIND / matcher / CRM edits (`pstackSite.ts` how)
 - Act = implement Jobs path only (`pstackSite.ts` act)
-- Critic = verify-readyforrobots gates: FIND `/`, Job Cards, signup wall, matcher
+- Critic = `scripts/pstack_release.py` + verify-readyforrobots: FIND `/`, real OEM URL, abort silent, leftover CRM, signup wall, matcher
 - unslop = Jobs UI copy
 
-Jobs work uses How plus verify-readyforrobots. After UI copy, unslop.
+Jobs work uses How plus pstack_release.py plus verify-readyforrobots. After UI copy, unslop.
 
-Never Hermes. Never Vercel AI Gateway. pstack is site protocol + IDE routing, not a Fly model API and not a customer chat.
+Never Hermes. Never Vercel AI Gateway. pstack is the Jobs **release gate**, not a Fly model API, not a customer chat, not protocol chrome on FIND/CRM.
 
-FIND is `/`. Matcher is `POST /api/robot-job-match`. See `docs/pstack_jobs.md` and `docs/hermes_retired.md`.
+FIND is `/`. Submit path is `POST /api/robot-job-search`. Matcher is `POST /api/robot-job-match`. See `docs/pstack_jobs.md` and `docs/hermes_retired.md`.
+**No Jobs product PR without pstack checks.**

@@ -7,7 +7,9 @@ description: Drive ReadyForRobots Jobs the way a user does — FIND on `/`, Job 
 
 Primary surface: **Jobs web UI** on `https://readyforrobots.com` (`readyforrobots-new/`, Vite + wouter). API: `https://ready-2-robot.fly.dev`. Other routes (SIGNAL `/pipeline`, Cal admin) exist; they are not the product. Do not hop Jobs traffic onto HOT buyers.
 
-**Hermes is retired.** Do not smoke `/experiment` as FIND. FIND is `/`. Jobs proof is this skill plus `POST /api/robot-job-match`. **Critic is pstack.** How / Act / Critic live in `pstackSite.ts` and `pstack_protocol.py`. pstack is site protocol plus IDE routing, not a customer chatbot.
+**Hermes is retired.** Do not smoke `/experiment` as FIND. FIND is `/`. Jobs proof is this skill plus `POST /api/robot-job-search` (submit) and `POST /api/robot-job-match` (cards). **Critic is pstack.** How / Act / Critic live in `pstack/`, `scripts/pstack_release.py`, `pstackSite.ts`, and `pstack_protocol.py`. pstack is the **release gate**, not a customer chatbot and not protocol chrome on `/` or Jobs CRM.
+
+**No Jobs product PR without pstack release checks.** Draft PRs must still run `.github/workflows/pstack-release.yml` and the `pstack-release` job in `agent-verify.yml`.
 
 You are reading this cold. Production is the honest instance. A local Vite shell is optional chrome. A 7-second “Deploy frontend” skip is not proof.
 
@@ -60,12 +62,15 @@ Recipe: HTTP the user path the Jobs terminal already uses. Prefer ARIA when a br
 
 ```bash
 python3 scripts/agent_verify.py drive --feature find-jobs --evidence "$EVIDENCE"
+python3 scripts/agent_verify.py drive --feature find-url --evidence "$EVIDENCE"
+python3 scripts/agent_verify.py pstack --evidence "$EVIDENCE"
 python3 scripts/agent_verify.py ci --evidence "$EVIDENCE"
 ```
 
 | Feature | Handle | Observable end state |
 |---------|--------|----------------------|
 | find-jobs | `POST /api/robot-job-match` (Vega profile or chip) | `state=matches`, `job_count>0`, job titles; requirement matcher has named `company_name` |
+| find-url | `POST /api/robot-job-search` (Dexmate + Greenfield) | not Research failed / Failed to fetch; identity is that URL’s company; Greenfield is not strawberry/Agrobot |
 | job-cards | same payload | cards exist (title + employer); expand in UI shows employer / workplace / work / Conditional |
 | jobs-chrome | homepage JS | `Show us your robot`, `Available jobs`, `Start jobs`, `jobs_activate` |
 | jobs-crm | `/pipeline?src=jobs_activate` | bundle has activate src; unlocked 5 jobs need a snapshot/session — do not call login a pass |
@@ -102,6 +107,7 @@ Remove Vite PIDs **this run started**. Do not kill Fly, Vercel, or leftover user
 ```bash
 python3 scripts/agent_verify.py doctor
 python3 scripts/agent_verify.py drive --feature find-jobs
+python3 scripts/pstack_release.py
 python3 scripts/agent_verify.py ci
 python3 scripts/agent_verify.py map
 python3 scripts/agent_verify.py launch
@@ -120,4 +126,4 @@ Upkeep: `/maintain-verification-skill` (pstack). Edit only this skill directory 
 
 ## Auto-merge (PRs)
 
-GitHub Action `.github/workflows/agent-verify.yml` runs `ci` + targeted vitest/pytest on non-draft PRs. If that job is green **and** the branch is `cursor/*` (or label `automerge-after-verify`) **and** skip-green is false, the workflow enables squash auto-merge. Hourly observe does not open or merge PRs. Label `do-not-merge` blocks it.
+GitHub Action `.github/workflows/agent-verify.yml` runs job **pstack How / Act / Critic** (including drafts) then `ci` + targeted vitest/pytest. `.github/workflows/pstack-release.yml` is the same gate on every PR, including drafts. If **both** pstack-release and verify are green **and** the branch is `cursor/*` (or label `automerge-after-verify`) **and** skip-green is false **and** the PR is not a draft, the workflow enables squash auto-merge. Hourly observe does not open or merge PRs. Label `do-not-merge` blocks it. Draft-skip on this gate is forbidden.

@@ -26,7 +26,8 @@ Preconditions:
 - **Open FIND.** Load `/`. In a browser the heading is `Find jobs for your robot.` and a url field placeholder is `Paste robot product URL`. The form name is `Find jobs for your robot`.
 - **Submit a known robot.** Paste `https://www.dexmate.ai/` (or Fourier) and start Find jobs. One SKU continues to jobs on the same click; several SKUs must keep 01/02/03 as links.
 - **API entry (CI).** Run `python3 scripts/agent_verify.py drive --feature find-jobs --evidence "$EVIDENCE"`. Expect HTTP 200, `state` `matches` or `thin_corpus`, `job_count > 0`, and job titles. When `matcher` is `requirement_v1`, at least one `company_name` is present.
-- **Proof.** `drive-find-jobs.json` lists titles (and employers for requirement_v1). A homepage screenshot alone is not proof.
+- **Real URL (pstack Critic).** Run `python3 scripts/pstack_release.py` (or `drive --feature find-url`). Posts `POST /api/robot-job-search` for Dexmate and Greenfield. Fail if the payload is Research failed / Failed to fetch, or if Greenfield identity looks like strawberry / Agrobot.
+- **Proof.** `drive-find-jobs.json` plus `pstack-release.json`. A homepage screenshot alone is not proof.
 
 ## Gotchas
 
