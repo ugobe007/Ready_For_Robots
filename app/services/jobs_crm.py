@@ -638,6 +638,101 @@ def apply_to_job(
     return application_payload(application, include_messages=True)
 
 
+def apply_selected_jobs(
+    db: Session,
+    user: dict,
+    *,
+    jobs: list[dict[str, Any]],
+    robot_name: str,
+    selected_models: list[str],
+    monthly_price: str,
+    poc_evidence: str = "",
+    poc_video_url: str = "",
+    poc_skipped: bool = False,
+    document_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    """Apply the same offer to every selected Job Card. Recruiter follow-up stays honest."""
+    picked = [j for j in (jobs or []) if isinstance(j, dict) and str(j.get("job_key") or "").strip()]
+    if not picked:
+        raise ValueError("Select at least one Job Card to apply.")
+    applied: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
+    for job in picked:
+        key = str(job.get("job_key") or "").strip()
+        try:
+            applied.append(
+                apply_to_job(
+                    db,
+                    user,
+                    job_key=key,
+                    robot_name=robot_name,
+                    selected_models=selected_models,
+                    monthly_price=monthly_price,
+                    poc_evidence=poc_evidence,
+                    poc_video_url=poc_video_url,
+                    poc_skipped=poc_skipped,
+                    job=job,
+                    document_ids=document_ids,
+                )
+            )
+        except ValueError as exc:
+            errors.append({"job_key": key, "error": str(exc)})
+    return {
+        "applied": applied,
+        "errors": errors,
+        "applied_count": len(applied),
+        "selected_count": len(picked),
+    }
+
+
+def scheduling_fields_for(row: JobApplication) -> dict[str, Any]:
+    meeting = (getattr(row, "meeting_url", None) or "").strip() or None
+    if meeting:
+        return {
+            "meeting_url": meeting,
+            "scheduling_state": "meeting_url",
+            "scheduling_label": "Meeting URL on file.",
+        }
+    if getattr(row, "slot_start", None) or getattr(row, "interview_at", None):
+        return {
+            "meeting_url": None,
+            "scheduling_state": "held_slot",
+            "scheduling_label": "Held interview window — we confirm with the employer.",
+        }
+    return {
+        "meeting_url": None,
+        "scheduling_state": "we_schedule_with_employer",
+        "scheduling_label": (
+            "We schedule with the employer. Paste a meeting URL when they send one. "
+            "We do not invent a calendar or Google Meet."
+        ),
+    }
+
+
+def set_application_meeting_url(
+    db: Session,
+    user: dict,
+    application_id: str,
+    meeting_url: str,
+) -> dict[str, Any]:
+    row = get_application(db, user, application_id)
+    text = (meeting_url or "").strip()
+    if text and not re.match(r"^https://", text, flags=re.I):
+        raise ValueError("Paste an https meeting URL, or leave it blank — we schedule with the employer.")
+    row.meeting_url = text or None
+    record_activity(
+        db,
+        user,
+        kind="schedule",
+        label="Meeting URL saved" if text else "Cleared meeting URL",
+        job_key=row.job_key,
+        company=row.employer_name,
+    )
+    db.commit()
+    db.refresh(row)
+    return application_payload(row)
+
+
 def application_payload(row: JobApplication, *, include_messages: bool = False) -> dict[str, Any]:
     payload = {
         "id": str(row.id),
@@ -669,6 +764,7 @@ def application_payload(row: JobApplication, *, include_messages: bool = False) 
         "employer_decision_url": None,
         "documents": (row.offer_snapshot or {}).get("documents") or [],
     }
+    payload.update(scheduling_fields_for(row))
     token = getattr(row, "employer_token", None)
     if token:
         from app.services.jobs_crm_recruiter import employer_decision_url

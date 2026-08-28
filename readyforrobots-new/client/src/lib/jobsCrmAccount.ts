@@ -21,6 +21,7 @@ export const JOBS_KEEP_JOBS_CTA = "Keep jobs";
 export const JOBS_KEEP_YES_CTA = "Yes, keep them";
 export const JOBS_NEXT_STEPS_CTA = "Next steps →";
 export const JOBS_APPLY_NEXT_CTA = "Apply →";
+export const JOBS_APPLY_SELECTED_CTA = "Apply to selected jobs →";
 export const JOBS_NEXT_STEPS_ANCHOR = "jobs-next-steps";
 export const JOBS_APPLY_SEQUENCE =
   "Apply to the job. We help schedule interviews with the customer. They close.";
@@ -92,6 +93,9 @@ export type JobsCrmApplication = {
   can_decline?: boolean;
   documents?: RobotDocument[];
   messages?: JobsCrmMessage[];
+  meeting_url?: string | null;
+  scheduling_state?: string | null;
+  scheduling_label?: string | null;
 };
 
 export type HoldSlotOption = {
@@ -311,6 +315,53 @@ export async function applyJobOnAccount(
       document_ids: body.documentIds || [],
     }),
   });
+}
+
+export async function applySelectedJobsOnAccount(
+  token: string,
+  body: {
+    jobs: MatchJob[];
+    robotName: string;
+    selectedModels: string[];
+    monthlyPrice: string;
+    pocEvidence?: string;
+    pocVideoUrl?: string;
+    pocSkipped?: boolean;
+    documentIds?: string[];
+  },
+): Promise<{
+  applied: JobsCrmApplication[];
+  errors: { job_key: string; error: string }[];
+  applied_count: number;
+}> {
+  return jobsCrmFetch("/api/jobs-crm/apply-selected", token, {
+    method: "POST",
+    body: JSON.stringify({
+      jobs: body.jobs,
+      robot_name: body.robotName,
+      selected_models: body.selectedModels,
+      monthly_price: body.monthlyPrice,
+      poc_evidence: body.pocEvidence || "",
+      poc_video_url: body.pocVideoUrl || "",
+      poc_skipped: Boolean(body.pocSkipped),
+      document_ids: body.documentIds || [],
+    }),
+  });
+}
+
+export async function saveApplicationMeetingUrl(
+  token: string,
+  applicationId: string,
+  meetingUrl: string,
+): Promise<JobsCrmApplication> {
+  return jobsCrmFetch(
+    `/api/jobs-crm/applications/${applicationId}/meeting-url`,
+    token,
+    {
+      method: "POST",
+      body: JSON.stringify({ meeting_url: meetingUrl }),
+    },
+  );
 }
 
 export async function fetchRobotDocuments(token: string): Promise<RobotDocument[]> {

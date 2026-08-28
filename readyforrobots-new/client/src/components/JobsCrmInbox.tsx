@@ -13,6 +13,7 @@ import {
   releaseHoldOnAccount,
   pasteInboundReply,
   replyOnApplication,
+  saveApplicationMeetingUrl,
   threadStateLabel,
   type JobsCrmApplication,
 } from "@/lib/jobsCrmAccount";
@@ -31,6 +32,7 @@ export default function JobsCrmInbox({
   const [app, setApp] = useState<JobsCrmApplication | null>(initial || null);
   const [reply, setReply] = useState("");
   const [paste, setPaste] = useState("");
+  const [meetingUrl, setMeetingUrl] = useState(initial?.meeting_url || "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,6 +121,53 @@ export default function JobsCrmInbox({
       {app.interview_note ? (
         <p className="mt-1 text-sm text-slate-400">{app.interview_note}</p>
       ) : null}
+      {app.scheduling_label ? (
+        <p className="mt-2 text-sm text-slate-300">{app.scheduling_label}</p>
+      ) : null}
+      {app.meeting_url ? (
+        <p className="mt-1 text-sm text-emerald-200">
+          Meeting URL:{" "}
+          <a
+            href={app.meeting_url}
+            className="underline decoration-emerald-400/50 underline-offset-2"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {app.meeting_url}
+          </a>
+        </p>
+      ) : null}
+      <label className="mt-3 block">
+        <span className={`${JOBS_EYEBROW_CLASS} text-slate-500`}>
+          Meeting URL (paste)
+        </span>
+        <input
+          type="url"
+          aria-label="Meeting URL"
+          className="mt-1 w-full border border-slate-600 bg-[#04122a] px-3 py-2 text-sm text-slate-100"
+          placeholder="https://… or leave blank — we schedule with the employer"
+          value={meetingUrl}
+          onChange={e => setMeetingUrl(e.target.value)}
+        />
+        <button
+          type="button"
+          className="mt-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300"
+          disabled={busy}
+          onClick={() => {
+            if (busy) return;
+            setBusy(true);
+            setError(null);
+            saveApplicationMeetingUrl(token, applicationId, meetingUrl.trim())
+              .then(row => setApp(row))
+              .catch(err =>
+                setError(err instanceof Error ? err.message : "Could not save meeting URL."),
+              )
+              .finally(() => setBusy(false));
+          }}
+        >
+          Save meeting URL
+        </button>
+      </label>
       {app.documents && app.documents.length ? (
         <p className="mt-2 text-sm text-slate-400">
           Specs attached: {app.documents.map(doc => doc.filename).join(", ")}

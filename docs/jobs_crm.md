@@ -131,7 +131,15 @@ Signed-in OEM uploads PDF/image specs (`user_robot_documents`, 8 MB, account-pri
 
 ### F14 — Employer evaluate (ship)
 
-Outreach (only with a real employer email) includes token **Accept**, **Set up interview**, and **Decline**. `/employer/:token` needs no RFR account. The public payload includes `poc_video_url` when the OEM pasted an allowlisted link; the page embeds Loom/YouTube/Vimeo or shows **Watch demo**. Tokens write `application_messages` and status (`accepted` / `interview_requested` / `interview_scheduled` / `interview_held` / `declined`). Decline requires a task-model reason code (`work_mismatch` / `model_unproven` / `site_constraints` / `timing_budget` / `other`) plus optional note (`other` requires a note). Scheduling is **propose a time** (OEM confirms), **hold this slot** (concrete window persisted on the application), or “connect us”. Not Cal. `/calendar` is SIGNAL and stays unwired.
+Outreach (only with a real employer email) includes token **Accept**, **Set up interview**, and **Decline**. `/employer/:token` needs no RFR account. The public payload includes `poc_video_url` when the OEM pasted an allowlisted link; the page embeds Loom/YouTube/Vimeo or shows **Watch demo**. Tokens write `application_messages` and status (`accepted` / `interview_requested` / `interview_scheduled` / `interview_held` / `declined`). Decline requires a task-model reason code (`work_mismatch` / `model_unproven` / `site_constraints` / `timing_budget` / `other`) plus optional note (`other` requires a note). Scheduling is **propose a time** (OEM confirms), **hold this slot** (concrete window persisted on the application), or paste a meeting URL. Empty meeting URL is **we schedule with the employer** — not Cal, not Google Meet. `/calendar` is SIGNAL and stays unwired.
+
+### F16 — Product presentation (ship, queue)
+
+After Job Cards (never in front of FIND): **Build a product presentation**. Requires **sign up and pay**. Provider interface (Manus / Replit / ChatGPT) is config-backed. No API key → queue the request; never fake a finished deck.
+
+### F17 — Apply selected jobs (ship)
+
+Click-to-apply the Job Cards the user kept. `POST /api/jobs-crm/apply-selected` applies one offer to every selected card. Recruiter follow-up is the existing employer-email path. Scheduling is paste/hold meeting URL or the honest “we schedule with the employer” state.
 
 ### F15 — Recruiter emails to the OEM (ship)
 

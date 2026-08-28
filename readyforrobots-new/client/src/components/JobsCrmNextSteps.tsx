@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   JOBS_APPLY_OFFER_CTA,
+  JOBS_APPLY_SELECTED_CTA,
   JOBS_APPLY_SEQUENCE,
   JOBS_DOCS_HEADING,
   JOBS_DOCS_HINT,
@@ -9,6 +10,7 @@ import {
   JOBS_PROPOSED_PRICE_HINT,
   JOBS_PROPOSED_PRICE_LABEL,
   applyJobOnAccount,
+  applySelectedJobsOnAccount,
   canSubmitNextStepsOffer,
   fetchCatalogSkus,
   fetchRobotDocuments,
@@ -34,17 +36,20 @@ import { robotJobCardFromMatch } from "@/lib/robotJobCard";
 
 export default function JobsCrmNextSteps({
   job,
+  jobs,
   robotName,
   robotUrl,
   token,
   onApplied,
 }: {
   job: MatchJob;
+  jobs?: MatchJob[];
   robotName: string;
   robotUrl?: string;
   token: string;
   onApplied: (app: JobsCrmApplication) => void;
 }) {
+  const selectedJobs = (jobs && jobs.length ? jobs : [job]).filter(j => j?.job_key);
   const card = robotJobCardFromMatch(job);
   const [skus, setSkus] = useState<CatalogSku[]>([]);
   const [models, setModels] = useState<string[]>([]);
@@ -109,18 +114,36 @@ export default function JobsCrmNextSteps({
     setBusy(true);
     setError(null);
     try {
-      const app = await applyJobOnAccount(token, {
-        jobKey: job.job_key,
-        robotName,
-        selectedModels: models,
-        monthlyPrice,
-        pocEvidence,
-        pocVideoUrl,
-        pocSkipped: pocSkipped || (!pocEvidence.trim() && !pocVideoUrl.trim()),
-        job,
-        documentIds: selectedDocs,
-      });
-      onApplied(app);
+      const skipped = pocSkipped || (!pocEvidence.trim() && !pocVideoUrl.trim());
+      if (selectedJobs.length > 1) {
+        const result = await applySelectedJobsOnAccount(token, {
+          jobs: selectedJobs,
+          robotName,
+          selectedModels: models,
+          monthlyPrice,
+          pocEvidence,
+          pocVideoUrl,
+          pocSkipped: skipped,
+          documentIds: selectedDocs,
+        });
+        for (const app of result.applied) onApplied(app);
+        if (!result.applied.length && result.errors[0]) {
+          setError(result.errors[0].error);
+        }
+      } else {
+        const app = await applyJobOnAccount(token, {
+          jobKey: job.job_key,
+          robotName,
+          selectedModels: models,
+          monthlyPrice,
+          pocEvidence,
+          pocVideoUrl,
+          pocSkipped: skipped,
+          job,
+          documentIds: selectedDocs,
+        });
+        onApplied(app);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not apply.");
     } finally {
@@ -136,7 +159,7 @@ export default function JobsCrmNextSteps({
     >
       <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>Next steps</p>
       <h2 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">
-        Offer for {card.jobTitle}
+        Offer for {selectedJobs.length > 1 ? `${selectedJobs.length} selected jobs` : card.jobTitle}
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-slate-300">
         {crmSaveJobsBlurb(robotName)}
@@ -347,7 +370,11 @@ export default function JobsCrmNextSteps({
         disabled={!ready || busy}
         className="mt-3 inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {busy ? "Applying…" : JOBS_APPLY_OFFER_CTA}
+        {busy
+          ? "Applying…"
+          : selectedJobs.length > 1
+            ? JOBS_APPLY_SELECTED_CTA
+            : JOBS_APPLY_OFFER_CTA}
       </button>
     </section>
   );
