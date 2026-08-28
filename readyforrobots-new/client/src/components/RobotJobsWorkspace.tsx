@@ -30,7 +30,6 @@ import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import {
-  JOBS_KEEP_YES_CTA,
   JOBS_NEXT_STEPS_CTA,
   jobsCrmOfferHref,
   keepJobsOnAccount,
@@ -64,7 +63,6 @@ import {
   JOBS_NEXT_HINT,
   JOBS_KEEP_LABEL,
   JOBS_SKIP_LABEL,
-  keepTheseJobsPrompt,
   JOBS_PIPELINE_CAP,
   CRM_UNLOCKED_JOBS,
   JOBS_PROCESS_STEPS,
@@ -118,6 +116,7 @@ import {
   OEM_LISTING_TIMEOUT_MS,
   ROBOT_PROFILE_TIMEOUT_MS,
   ROBOT_JOB_SEARCH_TIMEOUT_MS,
+  FIND_IDENTITY_TIMEOUT_MS,
 } from "@/lib/jobsWorkflow";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
@@ -1003,7 +1002,7 @@ export default function RobotJobsWorkspace() {
         url: submitUrl,
         lookupGrain: "product",
         signal: ac.signal,
-        timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+        timeoutMs: FIND_IDENTITY_TIMEOUT_MS,
       });
       if (!live()) return;
       submissionIdRef.current =
@@ -2109,12 +2108,6 @@ export default function RobotJobsWorkspace() {
             onSelectJob={selectJob}
             onToggleJob={toggleCheckedJob}
             onActivate={goToActivate}
-            onKeepJobs={() => {
-              const pool = crmPool();
-              const jobs = jobsForCrmDesk(pool, checkedJobKeys, CRM_UNLOCKED_JOBS);
-              writeCrmHandoff(checkedJobKeys, pool, undefined, jobs);
-              void persistKeptJobs(jobs);
-            }}
             keepSavedCount={keepSavedCount}
             signedIn={Boolean(session)}
             submissionId={submissionIdRef.current}
@@ -2939,7 +2932,6 @@ function JobsPanel({
   onSelectJob,
   onToggleJob,
   onActivate,
-  onKeepJobs,
   keepSavedCount = 0,
   signedIn = false,
   submissionId = null,
@@ -2960,7 +2952,6 @@ function JobsPanel({
   onSelectJob: (job: MatchJob) => void;
   onToggleJob: (job: MatchJob) => void;
   onActivate: () => void;
-  onKeepJobs?: () => void;
   keepSavedCount?: number;
   signedIn?: boolean;
   submissionId?: number | null;
@@ -3046,31 +3037,6 @@ function JobsPanel({
           >
             {JOBS_NEXT_STEPS_CTA}
           </a>
-        ) : null}
-        {showCrmCtas ? (
-        <div className="flex flex-wrap items-center gap-2">
-          {onKeepJobs ? (
-            <form
-              className="flex flex-wrap items-center gap-2"
-              onSubmit={event => {
-                event.preventDefault();
-                onKeepJobs();
-              }}
-            >
-              <p className="font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300">
-                {keepTheseJobsPrompt(checkedCount)}
-              </p>
-              <button
-                type="submit"
-                data-jobs-keep-confirm="1"
-                aria-label={JOBS_KEEP_YES_CTA}
-                className="inline-flex items-center justify-center border border-emerald-400/50 bg-emerald-400 px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a]"
-              >
-                {JOBS_KEEP_YES_CTA}
-              </button>
-            </form>
-          ) : null}
-        </div>
         ) : null}
       </div>
       {showCrmCtas ? (

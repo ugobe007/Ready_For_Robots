@@ -3,7 +3,7 @@
  * Hunt on FIND, collect here, enjoy Place this job when ready.
  * Not SIGNAL buyers. Not robot OEM shortlists.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import {
   CRM_EMPLOYER_NAME_CLASS,
@@ -18,10 +18,8 @@ import {
   crmCollectedCountLabel,
   crmSaveJobsBlurb,
   crmDeskJobKeys,
-  CRM_KEEP_YES_CTA,
   crmSelectAllKeys,
   crmSyncSelectedKeys,
-  keepTheseJobsPrompt,
   crmToggleSelectedKey,
   jobsCrmLeaveHref,
   jobsCrmLeaveLabel,
@@ -156,10 +154,14 @@ export default function JobsCrmDesk({
   const jobCount = jobs.length;
   const offerJob = expanded || jobs.find(j => selected.includes(j.job_key)) || jobs[0] || null;
 
-  async function persistKeptJobs(keys: string[] = selected) {
+  async function persistKeptJobs(
+    keys: string[] = selected,
+    opts: { openOffer?: boolean } = {},
+  ) {
     const picked = jobs.filter(j => keys.includes(j.job_key));
     const pool = picked.length ? picked : jobs;
     if (!pool.length) return;
+    const openOffer = opts.openOffer === true;
     for (const job of pool) {
       recordPipelineActivity({
         kind: "dump",
@@ -171,8 +173,10 @@ export default function JobsCrmDesk({
     }
     if (!accessToken) {
       setJustSavedCount(pool.length);
-      setShowNextSteps(true);
-      queueMicrotask(() => openJobsCrmNextStepsForm());
+      if (openOffer) {
+        setShowNextSteps(true);
+        queueMicrotask(() => openJobsCrmNextStepsForm());
+      }
       return;
     }
     try {
@@ -186,14 +190,25 @@ export default function JobsCrmDesk({
       setJustSavedCount(
         crmDeskForCurrentRobot({ snap, accountRows: result.jobs }).savedCount,
       );
-      setShowNextSteps(true);
-      queueMicrotask(() => openJobsCrmNextStepsForm());
+      if (openOffer) {
+        setShowNextSteps(true);
+        queueMicrotask(() => openJobsCrmNextStepsForm());
+      }
     } catch {
       setJustSavedCount(pool.length);
-      setShowNextSteps(true);
-      queueMicrotask(() => openJobsCrmNextStepsForm());
+      if (openOffer) {
+        setShowNextSteps(true);
+        queueMicrotask(() => openJobsCrmNextStepsForm());
+      }
     }
   }
+
+  const didPersistRef = useRef(false);
+  useEffect(() => {
+    if (!accessToken || jobs.length === 0 || didPersistRef.current) return;
+    didPersistRef.current = true;
+    void persistKeptJobs(selected, { openOffer: false });
+  }, [accessToken, jobs.length]);
 
   function openOfferForm(event?: { preventDefault: () => void }) {
     event?.preventDefault();
@@ -297,40 +312,19 @@ export default function JobsCrmDesk({
         <div className="mt-6">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className={`${eyebrow} text-emerald-400`}>{CRM_LISTING_EYEBROW}</p>
-            <form
-              className="flex flex-wrap items-center gap-2"
-              onSubmit={event => {
-                event.preventDefault();
-                void persistKeptJobs();
-              }}
-            >
-              <p className="font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300">
-                {keepTheseJobsPrompt(selected.length || jobs.length)}
-              </p>
-              <button
-                type="submit"
-                data-jobs-keep-confirm="1"
-                aria-label={CRM_KEEP_YES_CTA}
-                className="border border-emerald-400/50 bg-emerald-400 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a] transition hover:bg-emerald-300"
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={jobsCrmOfferHref(signedIn, submissionId)}
+                onClick={openOfferForm}
+                aria-label={JOBS_APPLY_NEXT_CTA}
+                className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
               >
-                {CRM_KEEP_YES_CTA}
-              </button>
-              {savedCount > 0 ? (
-                <>
-                  <a
-                    href={jobsCrmOfferHref(signedIn, submissionId)}
-                    onClick={openOfferForm}
-                    aria-label={JOBS_APPLY_NEXT_CTA}
-                    className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
-                  >
-                    {JOBS_APPLY_NEXT_CTA}
-                  </a>
-                  <p className="basis-full text-sm leading-relaxed text-slate-400">
-                    {JOBS_APPLY_SEQUENCE}
-                  </p>
-                </>
-              ) : null}
-            </form>
+                {JOBS_APPLY_NEXT_CTA}
+              </a>
+              <p className="basis-full text-sm leading-relaxed text-slate-400">
+                {JOBS_APPLY_SEQUENCE}
+              </p>
+            </div>
           </div>
           {showNextSteps && offerJob && accessToken ? (
             <JobsCrmNextSteps

@@ -17,6 +17,7 @@ import {
   JOBS_PRODUCT_CAP_FREE,
   JOBS_PRODUCT_CAP_PAID,
   JOBS_LINEUP_DISPLAY_CAP,
+  FIND_IDENTITY_TIMEOUT_MS,
   JOBS_SCAN_STEPS,
   JOBS_SEE_JOBS_CTA,
   JOBS_EYEBROW_CLASS,
@@ -181,7 +182,7 @@ describe("jobsWorkflow", () => {
     ]);
     expect(JOBS_SEE_JOBS_CTA).toBe("See jobs →");
     expect(CLASS_PICKER_PROMPT).toBe("What type of robot?");
-    expect(CRM_EMPTY_FIND_HINT).toMatch(/kept from Available jobs/);
+    expect(CRM_EMPTY_FIND_HINT).toMatch(/checked on Available jobs/);
     expect(CRM_EMPTY_FIND_HINT).toMatch(/desk stays empty/);
     expect(jobsProcessStepFromStage("select")).toBe("find");
     expect(jobsProcessStepFromStage("review")).toBe("find");
@@ -223,7 +224,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/classJobsEmptyCopy/);
     expect(workspace).toMatch(/shouldShowClassPicker\(active\)/);
     expect(workspace).toMatch(/Finding jobs for that robot type/);
-    expect(CRM_EMPTY_FIND_HINT).toMatch(/kept from Available jobs/);
+    expect(CRM_EMPTY_FIND_HINT).toMatch(/checked on Available jobs/);
   });
 
   it("is a scrolling process page, not a clipped two-pane box", () => {
@@ -548,7 +549,7 @@ describe("jobsWorkflow", () => {
       /Five example jobs Fourier N1/,
     );
     expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
-      /All five start checked/i,
+      /Rows start checked/i,
     );
     expect(jobsListHint({ robotCount: 5, productName: "Fourier N1" })).toMatch(
       /one sample job per robot/i,
@@ -753,8 +754,11 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/Paste the manufacturer URL/);
     expect(JOBS_NEXT_CTA).toBe("Open CRM →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
-    expect(JOBS_NEXT_HINT).toMatch(/start checked/i);
-    expect(JOBS_NEXT_HINT).toMatch(/dump into CRM/i);
+    expect(JOBS_NEXT_HINT).toMatch(/Uncheck a row/i);
+    expect(JOBS_NEXT_HINT).toMatch(/Open CRM is step 03/i);
+    expect(JOBS_NEXT_HINT).not.toMatch(/Keep \d+ jobs\?/i);
+    expect(JOBS_NEXT_HINT).not.toMatch(/Yes, keep them/i);
+    expect(JOBS_NEXT_HINT).not.toMatch(/dump into CRM/i);
     expect(JOBS_NEXT_HINT).not.toMatch(/buyer/i);
     expect(JOBS_NEXT_HINT).not.toMatch(/collect jobs/i);
     expect(JOBS_SAVE_TO_CRM_HINT).not.toMatch(/SIGNAL buyer list/i);
@@ -867,8 +871,11 @@ describe("jobsWorkflow", () => {
     expect(desk).not.toMatch(/Not an OEM roster/);
     expect(desk).toMatch(/crmCollectedCountLabel/);
     expect(desk).toMatch(/crmSelectAllKeys/);
-    expect(desk).toMatch(/keepTheseJobsPrompt/);
-    expect(desk).toMatch(/CRM_KEEP_YES_CTA/);
+    expect(desk).not.toMatch(/keepTheseJobsPrompt/);
+    expect(desk).not.toMatch(/CRM_KEEP_YES_CTA/);
+    expect(desk).not.toMatch(/Yes, keep them/i);
+    expect(desk).not.toMatch(/Keep \$\{/);
+    expect(desk).not.toMatch(/data-jobs-keep-confirm/);
     expect(desk).toMatch(/jobsCrmOfferHref/);
     expect(desk).toMatch(/#jobs-next-steps|JOBS_APPLY_NEXT_CTA/);
     expect(desk).not.toMatch(/JOBS_KEEP_JOBS_CTA/);
@@ -1058,10 +1065,25 @@ describe("jobsWorkflow", () => {
     expect(crmSelectAllLabel(5)).toBe(`${CRM_SELECT_ALL_LABEL} 5`);
     expect(crmSelectAllLabel(3)).toBe(`${CRM_SELECT_ALL_LABEL} 3`);
     expect(keepTheseJobsPrompt(5)).toBe("Keep 5 jobs?");
-    expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
-    expect(keepTheseJobsPrompt(1)).toBe("Keep 1 job?");
-    expect(keepTheseJobsPrompt(0)).toBe("Keep 0 jobs?");
     expect(CRM_KEEP_YES_CTA).toBe("Yes, keep them");
+    const workspaceKeep = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const deskKeep = readFileSync(
+      join(here, "../components/JobsCrmDesk.tsx"),
+      "utf8",
+    );
+    expect(workspaceKeep).not.toMatch(/Yes, keep them/i);
+    expect(workspaceKeep).not.toMatch(/Keep \$\{/);
+    expect(workspaceKeep).not.toMatch(/keepTheseJobsPrompt/);
+    expect(workspaceKeep).not.toMatch(/data-jobs-keep-confirm/);
+    expect(workspaceKeep).toMatch(/JOBS_NEXT_CTA/);
+    expect(deskKeep).not.toMatch(/Yes, keep them/i);
+    expect(deskKeep).not.toMatch(/Keep \$\{/);
+    expect(deskKeep).not.toMatch(/keepTheseJobsPrompt/);
+    expect(deskKeep).not.toMatch(/data-jobs-keep-confirm/);
+    expect(deskKeep).toMatch(/JOBS_APPLY_NEXT_CTA/);
     expect(crmCollectedCountLabel(5)).toBe("5 of 5 saved jobs");
     expect(crmCollectedCountLabel(1)).toBe("1 of 5 saved jobs");
     expect(crmCollectedCountLabel(3)).toBe("3 of 5 saved jobs");
@@ -1128,8 +1150,8 @@ describe("jobsWorkflow", () => {
     expect(desk).not.toMatch(/crmSelectAllLabel/);
     expect(desk).not.toMatch(/Select all/);
     expect(desk).not.toMatch(/Keep these/);
-    expect(desk).toMatch(/type="submit"/);
-    expect(desk).toMatch(/data-jobs-keep-confirm="1"/);
+    expect(desk).not.toMatch(/type="submit"/);
+    expect(desk).not.toMatch(/data-jobs-keep-confirm="1"/);
     expect(desk).toMatch(/persistKeptJobs/);
     expect(desk).not.toMatch(/href="#"/);
     expect(desk).toMatch(/JOBS_APPLY_SEQUENCE/);
@@ -1665,6 +1687,8 @@ describe("jobsWorkflow", () => {
     expect(jobsProductLimitForPlan("free")).toBe(3);
     expect(jobsProductLimitForPlan("paid")).toBe(JOBS_PRODUCT_CAP_PAID);
     expect(JOBS_LINEUP_DISPLAY_CAP).toBe(3);
+    expect(FIND_IDENTITY_TIMEOUT_MS).toBe(12_000);
+    expect(FIND_IDENTITY_TIMEOUT_MS).toBeLessThan(30_000);
     const omron = filterJobsLineupProducts([
       { name: "Products overview" },
       { name: "AMRs" },
@@ -1751,6 +1775,8 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/lookupKnownOem/);
     expect(workspace).toMatch(/fetchOemListing/);
     expect(workspace).toMatch(/OEM_LISTING_TIMEOUT_MS/);
+    expect(workspace).toMatch(/FIND_IDENTITY_TIMEOUT_MS/);
+    expect(workspace).toMatch(/timeoutMs: FIND_IDENTITY_TIMEOUT_MS/);
     expect(workspace).toMatch(/findResearchFailureMessage/);
     const findResearch = readFileSync(join(here, "./findResearch.ts"), "utf8");
     expect(findResearch).toMatch(/Lookup took too long/);

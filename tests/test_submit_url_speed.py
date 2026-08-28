@@ -251,3 +251,65 @@ def test_deadline_stops_when_pack_is_still_empty(monkeypatch):
     )
     elapsed = time.monotonic() - t0
     assert elapsed < 0.95
+
+
+def _agtonomy_chrome_home() -> FetchedPage:
+    origin = "https://www.agtonomy.com"
+    body = (
+        "Agtonomy Home About News Careers. Smart Automation Made Simple. "
+        "Let Automation Handle the Routine From mowing to hauling. "
+        "Trusted Equipment. About Us Contact Us FAQ News Careers."
+    )
+    return FetchedPage(
+        url=f"{origin}/",
+        final_url=f"{origin}/",
+        status_code=200,
+        title="Agtonomy",
+        text=body * 2,
+        html=f"<html><title>Agtonomy</title><body>{body}</body></html>",
+        links=[
+            (f"{origin}/", "Home"),
+            (f"{origin}/about", "About"),
+            (f"{origin}/news", "News"),
+            (f"{origin}/careers", "Careers"),
+            (f"{origin}/contact-us", "Contact Us"),
+            (f"{origin}/faq", "FAQ"),
+        ],
+    )
+
+
+def test_agtonomy_chrome_homepage_does_not_fetch_hubs(monkeypatch):
+    """JS/nav homepage must not crawl /products or sitemap. Class picker is next."""
+    from app.services.robot_understanding_v1.sources import (
+        homepage_is_chrome_only,
+    )
+
+    home = _agtonomy_chrome_home()
+    assert homepage_is_chrome_only(home, product_name=None) is True
+
+    def fake_fetch(url, timeout=(2.5, 6.0), **kw):
+        raise AssertionError(f"chrome homepage must not crawl {url}")
+
+    monkeypatch.setattr(
+        "app.services.robot_understanding_v1.sources.fetch_page", fake_fetch
+    )
+    t0 = time.monotonic()
+    pack = collect_source_pack(home, max_sources=6)
+    elapsed = time.monotonic() - t0
+    assert elapsed < 0.2
+    urls = [c.source.url for c in pack]
+    for url in urls:
+        path = url.split("agtonomy.com", 1)[-1].split("?")[0].rstrip("/") or "/"
+        assert path in {"/", ""}
+        assert "/products" not in url
+        assert "/robots" not in url
+        assert "/solutions" not in url
+        assert "/faq" not in url
+    assert "Handle" not in " ".join(urls)
+
+
+def test_greenfield_product_href_is_not_chrome_only():
+    from app.services.robot_understanding_v1.sources import homepage_is_chrome_only
+
+    assert homepage_is_chrome_only(_greenfield_home(), product_name=None) is False
+    assert homepage_is_chrome_only(_greenfield_home(), product_name="BOT#25") is False

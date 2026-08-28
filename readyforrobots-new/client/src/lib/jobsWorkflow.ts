@@ -473,6 +473,8 @@ export const JOBS_LINEUP_DISPLAY_CAP = 3;
 export const OEM_LISTING_TIMEOUT_MS = 5_000;
 export const ROBOT_PROFILE_TIMEOUT_MS = 22_000;
 export const ROBOT_JOB_SEARCH_TIMEOUT_MS = 30_000;
+/** Unknown-OEM identity (listing miss). Chrome/JS shells must fail fast. */
+export const FIND_IDENTITY_TIMEOUT_MS = 12_000;
 
 const JOBS_LINEUP_NOISE_NAMES = new Set([
   "about",
@@ -760,7 +762,7 @@ export const CRM_WALL_LEAD =
 export const CRM_LEAVE_HINT =
   "Place this job stays on this desk. Next is Job Cards if you have a submission, or FIND for another robot.";
 export const CRM_EMPTY_FIND_HINT =
-  "No jobs on this desk. CRM only lists jobs you kept from Available jobs. If you skipped keep — or we had no jobs for this robot — the desk stays empty.";
+  "No jobs on this desk. CRM only lists jobs you checked on Available jobs. If you unchecked every row — or we had no jobs for this robot — the desk stays empty.";
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT = crmSaveJobsBlurb();
 export const CRM_HOW_TO_STEPS = [
@@ -850,13 +852,13 @@ export function jobsListHint(opts: {
   if (opts.robotCount > 1) {
     return "One sample job per robot. Sample rows start checked — checking dumps the row into CRM. Run each robot by itself for five jobs, then Open CRM.";
   }
-  return `Five example jobs ${opts.productName} can do. Each row names the policy layer and typical training time — expand for the placement steps. All five start checked (Keep) and land in CRM. Uncheck any you do not want. Open CRM to quote the rental, then Place this job.`;
+  return `Five example jobs ${opts.productName} can do. Each row names the policy layer and typical training time — expand for the placement steps. Rows start checked. Uncheck any you do not want, then Open CRM.`;
 }
 
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
 export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
-  "Checking a job dumps it into CRM. Open CRM is step 03. Sign in to save the desk, then apply and follow up.";
+  "Checking a job sends it to CRM. Open CRM is step 03. Sign in to save the desk, then apply and follow up.";
 export const JOBS_KEEP_LABEL = "Keep";
 export const JOBS_SKIP_LABEL = "Skip";
 
@@ -953,7 +955,7 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = JOBS_SAVE_TO_CRM_CTA;
 export const JOBS_NEXT_HINT =
-  "All five start checked and dump into CRM. Uncheck any you do not want. Open CRM is step 03. Sign in to keep the desk, save jobs, then apply.";
+  "Uncheck a row to skip it. Open CRM is step 03. Sign in to save the desk, then apply.";
 export const JOBS_SEE_JOBS_CTA = "See jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
