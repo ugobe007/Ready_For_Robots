@@ -32,6 +32,7 @@ def test_local_release_skips_fly_drive():
     assert "find_abort" in critic_ids
     assert "crm_leftover" in critic_ids
     assert "oem_extract" in critic_ids
+    assert "class_picker" in critic_ids
     assert "find_drive" in critic_ids
 
 
@@ -45,6 +46,7 @@ def test_critic_gates_include_abort_and_leftover():
         "wall",
         "matcher",
         "oem_extract",
+        "class_picker",
     ]
 
 

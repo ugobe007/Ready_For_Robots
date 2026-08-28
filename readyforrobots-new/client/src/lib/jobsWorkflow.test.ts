@@ -114,6 +114,11 @@ import {
   productClassesFromLineup,
   robotClassJobsLabel,
   robotClassTitle,
+  qualifySearchLookupGrain,
+  shouldShowClassPicker,
+  classJobsEmptyCopy,
+  CLASS_PICKER_PROMPT,
+  CRM_EMPTY_FIND_HINT,
   isJobsHomeDest,
   persistJobsHandoffSrc,
   placeBuyersToShow,
@@ -175,6 +180,9 @@ describe("jobsWorkflow", () => {
       "CRM",
     ]);
     expect(JOBS_SEE_JOBS_CTA).toBe("See jobs →");
+    expect(CLASS_PICKER_PROMPT).toBe("What type of robot?");
+    expect(CRM_EMPTY_FIND_HINT).toMatch(/kept from Available jobs/);
+    expect(CRM_EMPTY_FIND_HINT).toMatch(/desk stays empty/);
     expect(jobsProcessStepFromStage("select")).toBe("find");
     expect(jobsProcessStepFromStage("review")).toBe("find");
     expect(jobsProcessStepFromStage("jobs")).toBe("jobs");
@@ -190,6 +198,32 @@ describe("jobsWorkflow", () => {
       "b",
     ]);
     expect(jobsToActivate([], [], 15)).toEqual([]);
+  });
+
+  it("class-picker click starts search and cannot silently no-op or dump CRM", () => {
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const qualify = workspace.slice(
+      workspace.indexOf("async function qualifyActive"),
+      workspace.indexOf("function revealJobs"),
+    );
+    expect(CLASS_PICKER_PROMPT).toBe("What type of robot?");
+    expect(workspace).toMatch(/CLASS_PICKER_PROMPT/);
+    expect(workspace).not.toMatch(/What kind of robot is/);
+    expect(workspace).not.toMatch(/kid of robot/i);
+    expect(qualify).toMatch(/fetchRobotJobSearch/);
+    expect(qualify).toMatch(/assertedClass: chosen/);
+    expect(qualify).toMatch(/qualifySearchLookupGrain/);
+    expect(qualify).toMatch(/needsClassChoice: false/);
+    expect(qualify).not.toMatch(/if \(!a\) return/);
+    expect(qualify).not.toMatch(/fetchRobotJobMatch/);
+    expect(qualify).not.toMatch(/prior\.jobs/);
+    expect(workspace).toMatch(/classJobsEmptyCopy/);
+    expect(workspace).toMatch(/shouldShowClassPicker\(active\)/);
+    expect(workspace).toMatch(/Finding jobs for that robot type/);
+    expect(CRM_EMPTY_FIND_HINT).toMatch(/kept from Available jobs/);
   });
 
   it("is a scrolling process page, not a clipped two-pane box", () => {
@@ -1143,6 +1177,32 @@ describe("jobsWorkflow", () => {
     expect(robotClassJobsLabel("humanoid")).toBe("humanoids");
     expect(robotClassTitle("agriculture")).toBe("Agriculture");
     expect(robotClassTitle("aerospace")).toBe("Aerospace");
+    expect(qualifySearchLookupGrain("")).toBe("robot_type");
+    expect(qualifySearchLookupGrain("Your robot")).toBe("robot_type");
+    expect(qualifySearchLookupGrain("NEO")).toBe("product");
+    expect(classJobsEmptyCopy("agriculture")).toBe(
+      "No agriculture jobs for this robot yet.",
+    );
+    expect(classJobsEmptyCopy("mining")).toMatch(/mining jobs for this robot yet/);
+    expect(shouldShowClassPicker({ needsClassChoice: true, jobs: [], capabilities: [] })).toBe(
+      true,
+    );
+    expect(
+      shouldShowClassPicker({
+        needsClassChoice: true,
+        robotClass: "agriculture",
+        jobs: [],
+        capabilities: [],
+      }),
+    ).toBe(false);
+    expect(
+      shouldShowClassPicker({
+        matched: true,
+        robotClass: "agriculture",
+        jobs: [],
+        capabilities: [],
+      }),
+    ).toBe(false);
     const fourier = lineupJobLookups([
       { name: "Fourier GR-1", displayClass: "humanoid" },
       { name: "Fourier GR-2", displayClass: "humanoid" },

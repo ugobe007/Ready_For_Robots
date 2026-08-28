@@ -73,3 +73,11 @@ export function bindUrlFlushesPriorRobot(): boolean {
       !/strawberry/i.test(snap.productName),
   );
 }
+
+export const CLASS_PICKER_FIXTURE = {
+  id: "class_picker",
+  url: "https://www.agtonomy.com/",
+  classId: "agriculture",
+  prompt: "What type of robot?",
+  emptyCopy: "No agriculture jobs for this robot yet.",
+} as const;

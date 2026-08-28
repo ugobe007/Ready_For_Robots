@@ -186,6 +186,61 @@ export function robotClassJobsLabel(classId?: string | null): string {
   return ROBOT_CLASS_JOBS_LABEL[id] || `${id.replace(/_/g, " ")}s`;
 }
 
+/** Class picker on incomplete identity — not a SKU URL. */
+export function qualifySearchLookupGrain(
+  productName?: string | null,
+): JobLookupGrain {
+  const name = String(productName || "").replace(/\s+/g, " ").trim();
+  if (!name || /^your robot$/i.test(name)) return "robot_type";
+  return "product";
+}
+
+export const CLASS_PICKER_PROMPT = "What type of robot?";
+
+export type ClassPickerAnalysis = {
+  needsClassChoice?: boolean;
+  robotClass?: string | null;
+  zeroReason?: string | null;
+  matched?: boolean;
+  jobs?: unknown[] | null;
+  capabilities?: unknown[] | null;
+};
+
+/**
+ * Show the class picker only until the operator names a type.
+ * After a click, jobs or honest empty — never the same picker as a no-op.
+ */
+export function shouldShowClassPicker(analysis: ClassPickerAnalysis): boolean {
+  const cls = String(analysis.robotClass || "").trim();
+  if (cls) return false;
+  if (analysis.needsClassChoice) return true;
+  if (analysis.zeroReason === "insufficient_profile_evidence") return true;
+  if (
+    analysis.matched &&
+    (analysis.jobs || []).length === 0 &&
+    (analysis.capabilities || []).length === 0
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** Honest empty after a class click that found no work. */
+export function classJobsEmptyCopy(
+  classId?: string | null,
+  robotName?: string | null,
+): string {
+  const raw = String(classId || "").trim();
+  const cls =
+    configurationClassForLookup(raw) || normalizeRobotClass(raw) || raw;
+  if (cls) {
+    const label = (ROBOT_CLASS_TITLE[cls] || cls.replace(/_/g, " ")).toLowerCase();
+    return `No ${label} jobs for this robot yet.`;
+  }
+  const name = String(robotName || "").replace(/\s+/g, " ").trim() || "this robot";
+  return `No matched jobs for ${name} yet.`;
+}
+
 /**
  * One lookup per robot type (class), not per SKU — except named SKU
  * configurations (agricultural_robot, evtol, construction_robot). Those
@@ -705,7 +760,7 @@ export const CRM_WALL_LEAD =
 export const CRM_LEAVE_HINT =
   "Place this job stays on this desk. Next is Job Cards if you have a submission, or FIND for another robot.";
 export const CRM_EMPTY_FIND_HINT =
-  "No jobs in CRM yet. Find jobs for your robot, keep the rows checked, then Open CRM.";
+  "No jobs on this desk. CRM only lists jobs you kept from Available jobs. If you skipped keep — or we had no jobs for this robot — the desk stays empty.";
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT = crmSaveJobsBlurb();
 export const CRM_HOW_TO_STEPS = [

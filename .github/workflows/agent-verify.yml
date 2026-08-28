@@ -134,7 +134,7 @@ jobs:
           PY
 
       - name: Targeted pytest
-        run: python3 -m pytest tests/test_agent_verify.py tests/test_pstack_release.py tests/test_pstack_protocol.py -q --tb=short
+        run: python3 -m pytest tests/test_agent_verify.py tests/test_pstack_release.py tests/test_pstack_protocol.py tests/test_robot_class_qualify.py -q --tb=short
         env:
           PYTHONPATH: ${{ github.workspace }}
 
@@ -143,6 +143,7 @@ jobs:
           pnpm install --frozen-lockfile -C readyforrobots-new
           pnpm --dir readyforrobots-new exec vitest run \
             client/src/lib/jobsWorkflow.test.ts \
+            client/src/lib/robotClassOptions.test.ts \
             client/src/lib/robotJobCard.test.ts \
             client/src/lib/jobsApply.test.ts \
             client/src/lib/pstackSite.test.ts \

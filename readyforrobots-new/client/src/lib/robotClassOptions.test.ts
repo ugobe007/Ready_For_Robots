@@ -75,8 +75,42 @@ describe("robot class picker options", () => {
     );
     expect(workspace).toMatch(/classOptionsOrDefault/);
     expect(workspace).toMatch(/Name the robot class/);
+    expect(workspace).toMatch(/CLASS_PICKER_PROMPT/);
+    expect(workspace).not.toMatch(/What kind of robot is/);
+    expect(workspace).not.toMatch(/kid of robot/i);
+    expect(workspace).toMatch(/Finding jobs for that robot type/);
     for (const id of EXPECTED_IDS) {
       expect(workspace + DEFAULT_CLASS_OPTIONS.map(r => r.id).join(" ")).toContain(id);
     }
+  });
+
+  it("class-picker click starts robot-job-search and cannot silently no-op", () => {
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const qualify = workspace.slice(
+      workspace.indexOf("async function qualifyActive"),
+      workspace.indexOf("function revealJobs"),
+    );
+    expect(qualify).toMatch(/fetchRobotJobSearch/);
+    expect(qualify).toMatch(/assertedClass: chosen/);
+    expect(qualify).toMatch(/qualifySearchLookupGrain/);
+    expect(qualify).toMatch(/lookupGrain: grain/);
+    expect(qualify).toMatch(/needsClassChoice: false/);
+    expect(qualify).not.toMatch(/if \(!a\) return/);
+    expect(qualify).not.toMatch(/lookupGrain: "product"/);
+    expect(qualify).not.toMatch(/prior\.jobs/);
+    expect(qualify).toMatch(/searchToAnalysis\(res\)/);
+    expect(workspace).toMatch(/beginJobsHandoffForUrl/);
+    expect(workspace).toMatch(/Finding jobs for that robot type/);
+    expect(workspace).toMatch(/shouldShowClassPicker/);
+    expect(workspace).toMatch(/classJobsEmptyCopy/);
+    expect(workspace).toMatch(/data-jobs-class/);
+    const goActivate = workspace.slice(
+      workspace.indexOf("function goToActivate"),
+      workspace.indexOf("async function persistKeptJobs"),
+    );
+    expect(goActivate).toMatch(/shouldShowClassPicker\(active\)/);
   });
 });

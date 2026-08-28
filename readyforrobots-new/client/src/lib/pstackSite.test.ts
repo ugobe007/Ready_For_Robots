@@ -52,7 +52,9 @@ describe("pstackSite protocol", () => {
       "wall",
       "matcher",
       "oem_extract",
+      "class_picker",
     ]);
+    expect(CRITIC_GATES.find(gate => gate.id === "class_picker")?.fail).toMatch(/no-op/);
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.prove).toBe("FIND is /");
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.fail).toMatch(/experiment/);
     expect(CRITIC_GATES.find(gate => gate.id === "oem_extract")?.fail).toMatch(/chrome/);
