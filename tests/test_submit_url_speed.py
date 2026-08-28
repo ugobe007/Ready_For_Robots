@@ -114,3 +114,136 @@ def test_cached_profile_aliases_selected_product():
     hit = get_cached_profile("https://www.agilityrobotics.com/", "Digit")
     assert hit is not None
     assert hit["selected_product"]["name"] == "Digit"
+
+
+def test_should_reject_greenfield_nav_paths():
+    from app.services.robot_understanding_v1.sources import should_reject_url
+
+    origin = "https://www.greenfieldincorporated.com"
+    assert should_reject_url(f"{origin}/farmers")
+    assert should_reject_url(f"{origin}/story")
+    assert should_reject_url(f"{origin}/invest")
+    assert should_reject_url(f"{origin}/contact")
+    assert should_reject_url(f"{origin}/home")
+    assert not should_reject_url(f"{origin}/bot-25")
+    assert not should_reject_url(f"{origin}/")
+
+
+def _greenfield_home() -> FetchedPage:
+    origin = "https://www.greenfieldincorporated.com"
+    body = (
+        "Greenfield Robotics BOT#25 agricultural weeding robot. "
+        "Robots replacing herbicides. BOT#25 BOT25 weeding robot. "
+    )
+    return FetchedPage(
+        url=f"{origin}/",
+        final_url=f"{origin}/",
+        status_code=200,
+        title="GREENFIELD ROBOTICS",
+        text=body * 3,
+        html=f"<html><title>GREENFIELD ROBOTICS</title><body>{body}</body></html>",
+        links=[
+            (f"{origin}/", "HOME"),
+            (f"{origin}/invest", "INVEST"),
+            (f"{origin}/farmers", "FARMERS"),
+            (f"{origin}/bot-25", "BOT#25"),
+            (f"{origin}/story", "STORY"),
+            (f"{origin}/contact", "CONTACT"),
+        ],
+    )
+
+
+def test_greenfield_source_pack_fetches_sku_not_nav_or_guessed_hubs(monkeypatch):
+    """Homepage already links /bot-25 — do not fetch Farmers/Story or /products 404s."""
+    fetched: list[str] = []
+
+    def fake_fetch(url, timeout=(2.5, 6.0), **kw):
+        fetched.append(url)
+        if url.rstrip("/").endswith("/bot-25"):
+            home = _greenfield_home()
+            return FetchedPage(
+                url=url,
+                final_url=url,
+                status_code=200,
+                title="BOT#25 - GREENFIELD ROBOTICS",
+                text="BOT#25 weeding robot crew for herbicide-free farms. " * 8,
+                html="<html><title>BOT#25</title><body>BOT#25 weeding robot</body></html>",
+                links=home.links,
+            )
+        return FetchedPage(
+            url=url,
+            final_url=url,
+            status_code=404,
+            title=None,
+            text="",
+            html="",
+            links=[],
+            fetch_degraded=True,
+        )
+
+    monkeypatch.setattr(
+        "app.services.robot_understanding_v1.sources.fetch_page", fake_fetch
+    )
+    pack = collect_source_pack(
+        _greenfield_home(), product_name="BOT#25", max_sources=6
+    )
+    assert fetched, "expected the linked SKU page to be fetched"
+    assert len(fetched) <= 3
+    for url in fetched:
+        path = url.split("greenfieldincorporated.com", 1)[-1]
+        assert path not in {
+            "/farmers",
+            "/story",
+            "/invest",
+            "/contact",
+            "/products",
+            "/robots",
+            "/solutions",
+            "/specs",
+        }
+        assert not path.startswith("/products/")
+        assert not path.startswith("/robots/")
+        assert "/farmers" not in url
+        assert "/story" not in url
+    assert any(u.rstrip("/").endswith("/bot-25") for u in fetched)
+    assert any("bot-25" in (c.source.url or "") for c in pack)
+
+
+def test_deadline_stops_when_pack_is_still_empty(monkeypatch):
+    """Guessed hubs that 404 must not run past the FIND budget just because out=[]."""
+
+    def fake_fetch(url, timeout=(2.5, 6.0), **kw):
+        time.sleep(0.12)
+        return FetchedPage(
+            url=url,
+            final_url=url,
+            status_code=404,
+            title=None,
+            text="",
+            html="",
+            links=[],
+            fetch_degraded=True,
+        )
+
+    monkeypatch.setattr(
+        "app.services.robot_understanding_v1.sources.fetch_page", fake_fetch
+    )
+    home = FetchedPage(
+        url="https://unknown-oem.example/",
+        final_url="https://unknown-oem.example/",
+        status_code=200,
+        title="Unknown OEM",
+        text="Unknown OEM builds robots for factories. " * 10,
+        html="<html><title>Unknown OEM</title><body>robots</body></html>",
+        links=[],
+    )
+    deadline = time.monotonic() + 0.35
+    t0 = time.monotonic()
+    collect_source_pack(
+        home,
+        product_name="BOT#25",
+        max_sources=6,
+        deadline_monotonic=deadline,
+    )
+    elapsed = time.monotonic() - t0
+    assert elapsed < 0.95
