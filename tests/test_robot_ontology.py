@@ -4,6 +4,9 @@ This is what makes the ontology *usable* (loaded by app/services/robot_ontology.
 and *updated* (drift between ontology JSON and code fails here). It loads the
 JSON ontologies and asserts they match the actual derive capabilities, matcher
 families/distinctive sets, and fact predicates.
+
+Source-only: pstack CI installs pytest only. Do not import
+robot_understanding_v1.facts (requests via fetch.py).
 """
 from __future__ import annotations
 
