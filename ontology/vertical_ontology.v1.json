@@ -11,9 +11,14 @@
       "aliases": [
         "warehouse",
         "fulfillment",
+        "fulfillment center",
         "distribution center",
         "3pl",
-        "dc"
+        "dc",
+        "pick station",
+        "tote",
+        "cross-dock",
+        "sortation"
       ]
     },
     {
@@ -25,7 +30,10 @@
         "factory",
         "production",
         "plant",
-        "assembly"
+        "assembly",
+        "machine tend",
+        "cnc",
+        "workpiece"
       ]
     },
     {
@@ -48,7 +56,10 @@
         "hospitality",
         "guest room",
         "resort",
-        "casino"
+        "casino",
+        "bellhop",
+        "room service",
+        "housekeeping"
       ]
     },
     {
@@ -170,7 +181,11 @@
         "mining",
         "mine",
         "quarry",
-        "underground"
+        "underground",
+        "haul truck",
+        "stope",
+        "longwall",
+        "haulage"
       ]
     },
     {

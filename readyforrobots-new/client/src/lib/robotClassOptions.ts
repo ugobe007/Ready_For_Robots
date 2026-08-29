@@ -4,8 +4,11 @@
  *
  * Form-factor tiles (humanoid, AMR, …) plus work-domain / platform classes
  * the morphology list misses (agriculture, marine, avionics, aerospace,
- * construction, healthcare). Agriculture is a robot class, not a SIGNAL industry tag.
+ * construction, healthcare, mining, warehouse, logistics, factory,
+ * hospitality). Agriculture is a robot class, not a SIGNAL industry tag.
  * Healthcare = hospital / clinical assistant work (Moxi), not a torso → humanoid tile.
+ * Hospitality = hotel / guest delivery / serving (a torso is not a humanoid tile).
+ * Warehouse / factory / logistics do not outrank a true humanoid.
  * Avionics = drones / eVTOL / autonomous aircraft. Aerospace = satellites /
  * rockets / orbital debris. Tractor implements are configurations, not a tile.
  */
@@ -71,6 +74,31 @@ export const DEFAULT_CLASS_OPTIONS: ClassOption[] = [
     id: "healthcare",
     label: "Healthcare",
     hint: "Hospital and clinical work — delivery, pharmacy, linen, nursing assist",
+  },
+  {
+    id: "mining",
+    label: "Mining",
+    hint: "Haulage, drilling, pit and underground work",
+  },
+  {
+    id: "warehouse",
+    label: "Warehouse",
+    hint: "Fulfillment, totes, pick stations, distribution centers",
+  },
+  {
+    id: "logistics",
+    label: "Logistics",
+    hint: "3PL, cross-dock, parcel sortation, inbound/outbound",
+  },
+  {
+    id: "factory",
+    label: "Factory",
+    hint: "Plant floor — machine tend, CNC load/unload, assembly line",
+  },
+  {
+    id: "hospitality",
+    label: "Hospitality",
+    hint: "Hotels and restaurants — guest delivery, serving, food prep",
   },
 ];
 

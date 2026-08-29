@@ -62,6 +62,10 @@ def _all_capabilities_profile() -> dict:
             f("claims_construction_block", True),        # construction_block
             f("claims_construction_layout", True),       # construction_layout
             f("claims_mining", True),                   # mining_task
+            f("claims_warehouse", True),                # warehouse_task
+            f("claims_logistics", True),                # logistics_task
+            f("claims_factory", True),                  # factory_task
+            f("claims_hospitality", True),              # hospitality_task
             f("claims_marine", True),                   # marine_task
             f("claims_avionics", True),                 # avionics_task
             f("claims_aerospace", True),                # aerospace_task

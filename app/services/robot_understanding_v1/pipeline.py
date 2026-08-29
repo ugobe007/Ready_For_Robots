@@ -381,6 +381,9 @@ def build_robot_profile(
                 "medical_robot",
                 "clinical_robot",
                 "hospital_robot",
+                "hospitality",
+                "hospitality_robot",
+                "hotel_robot",
                 "agriculture",
                 "agricultural_robot",
                 "construction",
@@ -391,9 +394,20 @@ def build_robot_profile(
                 "aviation_robot",
                 "aerospace",
                 "aerospace_robot",
+                "mining",
+                "mining_robot",
             }
             domain = [f for f in class_facts if str(f.value).lower() in domain_priority]
-            best = max(domain or class_facts, key=lambda f: f.confidence)
+            if domain:
+                best = max(domain, key=lambda f: f.confidence)
+            else:
+                morph_vals = {"humanoid", "semi-humanoid", "biped", "bipedal"}
+                morph = [
+                    f
+                    for f in class_facts
+                    if str(f.value).lower() in morph_vals
+                ]
+                best = max(morph or class_facts, key=lambda f: f.confidence)
             selected.display_class = str(best.value)
 
     facts, morphology, coverage_rate, coverage_level = apply_research_gaps(

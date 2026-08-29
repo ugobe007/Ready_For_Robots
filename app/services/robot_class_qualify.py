@@ -81,6 +81,36 @@ CLASS_OPTIONS: list[dict[str, str]] = [
         "label": "Healthcare",
         "hint": "Hospital and clinical work — delivery, pharmacy, linen, nursing assist",
     },
+    {
+        "id": "mining",
+        "product_class": "mining",
+        "label": "Mining",
+        "hint": "Haulage, drilling, pit and underground work",
+    },
+    {
+        "id": "warehouse",
+        "product_class": "warehouse",
+        "label": "Warehouse",
+        "hint": "Fulfillment, totes, pick stations, distribution centers",
+    },
+    {
+        "id": "logistics",
+        "product_class": "logistics",
+        "label": "Logistics",
+        "hint": "3PL, cross-dock, parcel sortation, inbound/outbound",
+    },
+    {
+        "id": "factory",
+        "product_class": "factory",
+        "label": "Factory",
+        "hint": "Plant floor — machine tend, CNC load/unload, assembly line",
+    },
+    {
+        "id": "hospitality",
+        "product_class": "hospitality",
+        "label": "Hospitality",
+        "hint": "Hotels and restaurants — guest delivery, serving, food prep",
+    },
 ]
 
 
@@ -156,6 +186,28 @@ def normalize_class_id(raw: str | None) -> str | None:
         "hospital_robot": "healthcare",
         "nursing": "healthcare",
         "pharmacy": "healthcare",
+        "mining": "mining",
+        "mining_robot": "mining",
+        "quarry": "mining",
+        "warehouse": "warehouse",
+        "warehouse_robot": "warehouse",
+        "fulfillment": "warehouse",
+        "logistics": "logistics",
+        "logistics_robot": "logistics",
+        "3pl": "logistics",
+        "cross_dock": "logistics",
+        "factory": "factory",
+        "factory_robot": "factory",
+        "manufacturing": "factory",
+        "hospitality": "hospitality",
+        "hospitality_robot": "hospitality",
+        "hotel": "hospitality",
+        "hotel_robot": "hospitality",
+        "serving": "hospitality",
+        "food_prep": "hospitality",
+        "food prep": "hospitality",
+        "table_service": "hospitality",
+        "guest_delivery": "hospitality",
     }
     mapped = aliases.get(want)
     if not mapped:

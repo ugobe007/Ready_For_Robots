@@ -25,11 +25,16 @@ MOXI = (
     "Moxi is a hospital robot assistant for clinical staff. "
     "Pharmacy delivery, nursing units, patient-care floors."
 )
+HOTEL = (
+    "Hotel delivery robot for guest-room amenities and luggage. "
+    "Bellhop room service on guest floors. Hospitality housekeeping cart."
+)
 FIGURE = (
     "Figure 02 is a commercially deployed bipedal humanoid robot with two "
     "arms, dexterous hands, and a torso. Built for warehouse palletizing "
     "and case pick on the factory floor."
 )
+WAREHOUSE_HUMANOID = FIGURE
 WEEDING = (
     "LaserWeeder removes weeds in row crops with lasers. Agricultural "
     "weeding robot for vegetable fields, tractors, and combine rows."
@@ -83,6 +88,12 @@ def test_every_claimed_industry_has_work_words_and_a_task_model():
         row = rows[industry_id]
         assert row.get("class_signals") or row.get("work_words"), industry_id
         assert row.get("task_model_ids"), industry_id
+    assert rows["mining"]["find_class"] == "mining"
+    assert rows["warehouse"]["find_class"] == "warehouse"
+    assert rows["hospitality"]["find_class"] == "hospitality"
+    assert rows["hotel"]["find_class"] == "hospitality"
+    assert rows["serving"]["find_class"] == "hospitality"
+    assert rows["food_prep"]["find_class"] in (None, "")
 
 
 def test_hospital_work_words_are_healthcare_not_humanoid():
@@ -105,7 +116,33 @@ def test_figure_style_humanoid_without_clinical_stays_unset():
     assert find_class_from_work_language(FIGURE) is None
     assert infer_class_from_work_language(FIGURE) is None
     assert find_class_from_work_language(FIGURE) != "healthcare"
+    assert find_class_from_work_language(FIGURE) != "warehouse"
+    assert find_class_from_work_language(FIGURE) != "factory"
     assert work_language_outranks_morphology(FIGURE, "humanoid") is False
+
+
+def test_hotel_work_outranks_torso_and_is_hospitality():
+    hit = match_work_language(HOTEL)
+    assert hit is not None
+    assert hit.industry_id in {"hotel", "hospitality"}
+    assert find_class_from_work_language(HOTEL) == "hospitality"
+    assert infer_class_from_work_language(HOTEL) == "hospitality"
+    assert work_language_outranks_morphology(HOTEL, "humanoid") is True
+    assert normalize_class_id("hotel") == "hospitality"
+    assert normalize_class_id("food_prep") == "hospitality"
+    assert normalize_class_id("mining") == "mining"
+
+
+def test_warehouse_and_factory_do_not_outrank_humanoid():
+    rows = {r["id"]: r for r in industry_work_rows()}
+    assert rows["warehouse"]["find_class"] == "warehouse"
+    assert rows["factory"]["find_class"] == "factory"
+    assert rows["logistics"]["find_class"] == "logistics"
+    assert not rows["warehouse"].get("outranks_morphology")
+    assert not rows["factory"].get("outranks_morphology")
+    assert not rows["logistics"].get("outranks_morphology")
+    assert work_language_outranks_morphology(WAREHOUSE_HUMANOID, "humanoid") is False
+    assert find_class_from_work_language(WAREHOUSE_HUMANOID) is None
 
 
 def test_agriculture_weeding_is_not_healthcare():

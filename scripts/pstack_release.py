@@ -494,7 +494,7 @@ def _named_healthcare_corpus_jobs() -> int:
 
 
 def healthcare_class_fixture() -> tuple[bool, str]:
-    """Source/fixture Critic: Diligent is healthcare, Healthcare is the 12th tile, named jobs exist."""
+    """Source/fixture Critic: Diligent is healthcare, Healthcare tile exists, named jobs exist."""
     misses: list[str] = []
     site = _read(PSTACK_SITE) if PSTACK_SITE.is_file() else ""
     protocol = _read(PROTOCOL_PY) if PROTOCOL_PY.is_file() else ""
@@ -522,10 +522,16 @@ def healthcare_class_fixture() -> tuple[bool, str]:
 
     ts_ids = _ts_class_option_ids(class_ts)
     py_ids = _py_class_option_ids(class_py)
-    if len(ts_ids) != 12 or ts_ids[-1] != "healthcare":
-        misses.append(f"class picker tiles={ts_ids}")
+    extra = ("mining", "warehouse", "logistics", "factory", "hospitality")
     if "healthcare" not in ts_ids or "healthcare" not in py_ids:
         misses.append("Healthcare class id missing")
+    for tile in extra:
+        if tile not in ts_ids or tile not in py_ids:
+            misses.append(f"{tile} class id missing")
+    if "food_prep" in ts_ids or "medical" in ts_ids or "hotel" in ts_ids:
+        misses.append(f"aliased industries leaked as FIND tiles={ts_ids}")
+    if len(ts_ids) != 17:
+        misses.append(f"class picker tiles={ts_ids}")
     if '"healthcare"' not in workflow or "healthcare" not in class_py:
         misses.append("FIND_TILE / workflow missing healthcare")
     if "No ${label} jobs for this robot yet." not in workflow:
@@ -575,9 +581,30 @@ REQUIRED_HEALTHCARE_ONTOLOGY_WORDS = (
     "unit-delivery",
 )
 
+# Distinctive industry work words. Missing any of these fails the critic
+# so we do not repeat the Diligent/humanoid miss when vocabulary is absent.
+REQUIRED_INDUSTRY_ONTOLOGY_WORDS = {
+    "mining": ("haul truck", "stope", "longwall", "overburden", "haulage"),
+    "warehouse": ("fulfillment", "pick station", "tote", "distribution center"),
+    "logistics": ("3pl", "cross-dock", "sortation"),
+    "factory": ("machine tend", "cnc", "workpiece", "assembly line"),
+    "hospitality": ("guest room", "bellhop", "room service", "concierge"),
+    "hotel": ("housekeeping", "luggage", "guest delivery"),
+    "food_prep": ("fry station", "fryer"),
+    "serving": ("table service", "bussing"),
+}
+
+REQUIRED_INDUSTRY_FIND_CLASSES = {
+    "mining": "mining",
+    "warehouse": "warehouse",
+    "logistics": "logistics",
+    "factory": "factory",
+    "hospitality": "hospitality",
+}
+
 
 def ontology_industry_language_fixture() -> tuple[bool, str]:
-    """Critic: healthcare work words and task models live in ontology files, not FIND-only lists."""
+    """Critic: industry work words and task models live in ontology files, not FIND-only lists."""
     misses: list[str] = []
     ont_lang = ROOT / "ontology" / "industry_work_language.v1.json"
     vertical = ROOT / "ontology" / "vertical_ontology.v1.json"
@@ -607,6 +634,54 @@ def ontology_industry_language_fixture() -> tuple[bool, str]:
         misses.append("FIND class qualify does not read ontology work language")
     if "industry_class_aliases" not in blob_qualify:
         misses.append("FIND class qualify does not read ontology aliases")
+    try:
+        data = json.loads(_read(ont_lang))
+    except json.JSONDecodeError:
+        return False, "industry_work_language.v1.json is not valid JSON"
+    rows = {str(r.get("id") or ""): r for r in (data.get("industries") or []) if isinstance(r, dict)}
+    for industry_id, words in REQUIRED_INDUSTRY_ONTOLOGY_WORDS.items():
+        row = rows.get(industry_id) or {}
+        blob = " ".join(
+            str(x).lower()
+            for x in list(row.get("work_words") or []) + list(row.get("class_signals") or [])
+        )
+        for word in words:
+            if word not in blob:
+                misses.append(f"{industry_id} missing work word {word}")
+        if not (row.get("task_model_ids") or []):
+            misses.append(f"{industry_id} missing task_model_ids")
+    for industry_id, find_class in REQUIRED_INDUSTRY_FIND_CLASSES.items():
+        row = rows.get(industry_id) or {}
+        if (row.get("find_class") or "") != find_class:
+            misses.append(f"{industry_id} find_class={row.get('find_class')} want {find_class}")
+    hotel = rows.get("hotel") or {}
+    if (hotel.get("find_class") or "") != "hospitality":
+        misses.append("hotel must alias find_class=hospitality")
+    serving = rows.get("serving") or {}
+    if (serving.get("find_class") or "") != "hospitality":
+        misses.append("serving must alias find_class=hospitality")
+    warehouse = rows.get("warehouse") or {}
+    if warehouse.get("outranks_morphology"):
+        misses.append("warehouse must not outrank humanoid morphology")
+    factory = rows.get("factory") or {}
+    if factory.get("outranks_morphology"):
+        misses.append("factory must not outrank humanoid morphology")
+    logistics = rows.get("logistics") or {}
+    if logistics.get("outranks_morphology"):
+        misses.append("logistics must not outrank humanoid morphology")
+    hc = rows.get("hospitality") or {}
+    if "humanoid" not in {str(x).lower() for x in (hc.get("outranks_morphology") or [])}:
+        misses.append("hospitality must outrank humanoid morphology")
+    if "mining_haulage_policy" not in blob_tasks:
+        misses.append("mining_haulage_policy task model missing")
+    if "warehouse_pick_place_policy" not in blob_tasks:
+        misses.append("warehouse_pick_place_policy task model missing")
+    if "hotel_guest_service_policy" not in blob_tasks:
+        misses.append("hotel_guest_service_policy task model missing")
+    if "machine_tending_load_unload" not in blob_tasks:
+        misses.append("machine_tending_load_unload task model missing")
+    if '"id": "mining"' not in blob_qualify:
+        misses.append("FIND class qualify missing mining tile")
     return (not misses, "; ".join(misses))
 
 
@@ -785,7 +860,7 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
         _check(
             "healthcare_class",
             fixture_ok,
-            "Diligent/Moxi is healthcare, Healthcare is the 12th tile, named hospital jobs exist",
+            "Diligent/Moxi is healthcare, Healthcare tile exists, named hospital jobs exist",
             fixture_detail,
         )
     )
@@ -794,7 +869,7 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
         _check(
             "ontology_industry_language",
             ont_ok,
-            "Healthcare work words live in ontology files and FIND qualify reads them",
+            "Healthcare work words live in ontology files and FIND qualify reads them; other industries keep distinctive words + find_class",
             ont_detail,
         )
     )

@@ -82,6 +82,10 @@ REQUIREMENT_EXERCISES = {
     "construction_block": frozenset({"construction_block"}),
     "construction_layout": frozenset({"construction_layout"}),
     "mining_task": frozenset({"mining_task"}),
+    "warehouse_task": frozenset({"warehouse_task"}),
+    "logistics_task": frozenset({"logistics_task"}),
+    "factory_task": frozenset({"factory_task"}),
+    "hospitality_task": frozenset({"hospitality_task"}),
     "marine_task": frozenset({"marine_task"}),
     "avionics_task": frozenset({"avionics_task"}),
     "evtol_flight": frozenset({"evtol_flight"}),
@@ -119,6 +123,10 @@ CONFIGURATION_WORK_CAPABILITIES = frozenset(
         "construction_layout",
         "marine_task",
         "mining_task",
+        "warehouse_task",
+        "logistics_task",
+        "factory_task",
+        "hospitality_task",
         "aerospace_task",
     }
 )
@@ -186,6 +194,10 @@ _SIMPLE_CAP_REQ = {
     "construction_block": ("construction_block", "no grounded block/brick-laying capability"),
     "construction_layout": ("construction_layout", "no grounded jobsite-layout capability"),
     "mining_task": ("mining_task", "no grounded mining capability"),
+    "warehouse_task": ("warehouse_task", "no grounded warehouse / fulfillment capability"),
+    "logistics_task": ("logistics_task", "no grounded 3PL / sortation capability"),
+    "factory_task": ("factory_task", "no grounded factory / plant capability"),
+    "hospitality_task": ("hospitality_task", "no grounded hotel / guest-delivery capability"),
     "marine_task": ("marine_task", "no grounded marine capability"),
     "avionics_task": ("avionics_task", "no grounded aviation capability"),
     "evtol_flight": ("evtol_flight", "no grounded eVTOL / air-taxi flight capability"),
@@ -659,6 +671,11 @@ def _why_lines(
         ("autonomous_flight", "autonomous_flight"),
         ("aerospace_task", "aerospace_task"),
         ("mining_task", "mining_task"),
+        ("warehouse_task", "warehouse_task"),
+        ("logistics_task", "logistics_task"),
+        ("factory_task", "factory_task"),
+        ("hospitality_task", "hospitality_task"),
+        ("healthcare_task", "healthcare_task"),
     ):
         if _rid in needed:
             add(_cap(caps, _capkey).label)
@@ -1074,6 +1091,25 @@ _MINING_REQS = [
     {"id": "mining_task", "label": "mining task (haulage/drilling/loading)", "necessity": "required"},
     {"id": "mobility", "label": "mobility across the site", "necessity": "required"},
 ]
+_WAREHOUSE_REQS = [
+    {"id": "warehouse_task", "label": "warehouse / fulfillment work", "necessity": "required"},
+    {"id": "indoor_navigation", "label": "navigate the DC (aisles, docks)", "necessity": "required"},
+    {"id": "mobility", "label": "mobility between pick stations", "necessity": "required"},
+]
+_LOGISTICS_REQS = [
+    {"id": "logistics_task", "label": "3PL / cross-dock / sortation work", "necessity": "required"},
+    {"id": "indoor_navigation", "label": "navigate the hub (inbound/outbound)", "necessity": "required"},
+    {"id": "mobility", "label": "mobility across the sort floor", "necessity": "required"},
+]
+_FACTORY_REQS = [
+    {"id": "factory_task", "label": "factory / plant machine-tend work", "necessity": "required"},
+    {"id": "mobility", "label": "mobility along the cell (optional)", "necessity": "not_required"},
+]
+_HOSPITALITY_REQS = [
+    {"id": "hospitality_task", "label": "hotel / guest / serving work", "necessity": "required"},
+    {"id": "indoor_navigation", "label": "navigate guest floors and service corridors", "necessity": "required"},
+    {"id": "mobility", "label": "mobility between rooms", "necessity": "required"},
+]
 
 # Retail — autonomous shelf / inventory scanning (Simbe Tally-class).
 _SHELF_SCAN_REQS = [
@@ -1153,6 +1189,14 @@ def requirements_for_corpus_job(row: dict[str, Any]) -> list[dict[str, Any]]:
         return list(_AEROSPACE_REQS)
     if tape == "mining":
         return list(_MINING_REQS)
+    if tape == "warehouse":
+        return list(_WAREHOUSE_REQS)
+    if tape == "logistics":
+        return list(_LOGISTICS_REQS)
+    if tape == "factory":
+        return list(_FACTORY_REQS)
+    if tape == "hospitality":
+        return list(_HOSPITALITY_REQS)
     if tape == "clinical_delivery":
         return list(_CLINICAL_REQS)
     if tape == "resident_services":
@@ -1282,6 +1326,7 @@ def match_jobs_from_profile(
                 "agriculture_spray", "agriculture_tractor", "healthcare_task",
                 "construction_task", "construction_print", "construction_block",
                 "construction_layout", "mining_task",
+                "warehouse_task", "logistics_task", "factory_task", "hospitality_task",
                 "marine_task", "avionics_task", "evtol_flight", "drone_task",
                 "autonomous_flight", "aerospace_task",
                 "hard_floor_scrub", "inspect_route"):

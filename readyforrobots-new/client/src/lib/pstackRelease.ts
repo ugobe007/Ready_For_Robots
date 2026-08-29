@@ -90,28 +90,33 @@ export const HEALTHCARE_CLASS_FIXTURE = {
   url: "https://www.diligentrobots.com/",
   productName: "Moxi",
   classId: "healthcare",
-  tileIndex: 11,
   emptyCopy: "No healthcare jobs for this robot yet.",
   forbidClass: "humanoid",
   forbidEmpty: "No humanoid jobs for this robot yet.",
+  extraTiles: ["mining", "warehouse", "logistics", "factory", "hospitality"],
 } as const;
 
-/** Critic fixture: Diligent/Moxi is healthcare, 12th tile exists, empty copy is not humanoid. */
+/** Critic fixture: Diligent/Moxi is healthcare, Healthcare tile exists, empty copy is not humanoid. */
 export function diligentMustNotBeHumanoidEmpty(): boolean {
   const listing = lookupKnownOem(HEALTHCARE_CLASS_FIXTURE.url);
   const moxi = listing?.robots.find(
     row => (row.name || "").toLowerCase() === "moxi",
   );
   const cls = String(moxi?.display_class || "").toLowerCase();
-  const twelfth = CLASS_OPTION_IDS[HEALTHCARE_CLASS_FIXTURE.tileIndex];
   const empty = classJobsEmptyCopy(HEALTHCARE_CLASS_FIXTURE.classId);
   const humanoidEmpty = classJobsEmptyCopy(HEALTHCARE_CLASS_FIXTURE.forbidClass);
+  const hasNewTiles = HEALTHCARE_CLASS_FIXTURE.extraTiles.every(id =>
+    CLASS_OPTION_IDS.includes(id),
+  );
   return (
     Boolean(listing?.vendor_name?.toLowerCase().includes("diligent")) &&
     cls === HEALTHCARE_CLASS_FIXTURE.classId &&
     cls !== HEALTHCARE_CLASS_FIXTURE.forbidClass &&
-    twelfth === "healthcare" &&
-    CLASS_OPTION_IDS.length === 12 &&
+    CLASS_OPTION_IDS.includes("healthcare") &&
+    hasNewTiles &&
+    CLASS_OPTION_IDS.length === 17 &&
+    !CLASS_OPTION_IDS.includes("food_prep") &&
+    !CLASS_OPTION_IDS.includes("medical") &&
     empty === HEALTHCARE_CLASS_FIXTURE.emptyCopy &&
     !empty.toLowerCase().includes("humanoid") &&
     humanoidEmpty === HEALTHCARE_CLASS_FIXTURE.forbidEmpty

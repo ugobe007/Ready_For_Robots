@@ -44,7 +44,7 @@ def _match_families(profile: dict) -> set[str]:
 
 def test_picker_has_aerospace_and_four_domain_tiles():
     ids = [row["id"] for row in public_class_options()]
-    assert len(ids) == 12
+    assert len(ids) == 17
     assert ids[6:] == [
         "agriculture",
         "marine",
@@ -52,6 +52,11 @@ def test_picker_has_aerospace_and_four_domain_tiles():
         "aerospace",
         "construction",
         "healthcare",
+        "mining",
+        "warehouse",
+        "logistics",
+        "factory",
+        "hospitality",
     ]
     by_id = {row["id"]: row for row in public_class_options()}
     assert "drone" in by_id["avionics"]["hint"].lower()

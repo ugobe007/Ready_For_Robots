@@ -84,8 +84,8 @@ CRITIC_GATES: tuple[dict[str, str], ...] = (
     },
     {
         "id": "ontology_industry_language",
-        "prove": "Healthcare work words live in the ontology and outrank humanoid morphology",
-        "fail": "hospital/clinical/pharmacy work words missing from ontology files",
+        "prove": "Industry work words live in the ontology and outrank humanoid morphology where R33 says so",
+        "fail": "hospital/hotel/mining/warehouse work words missing from ontology files",
     },
 )
 
