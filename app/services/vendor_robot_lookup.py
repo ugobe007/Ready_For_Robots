@@ -781,9 +781,6 @@ def catalog_claim_facts(robot: dict[str, Any] | None) -> list[dict[str, Any]]:
         )
         seen.add("product_class")
     for pred, value, span in _domain_claims_for_indexed_robot(robot, primary):
-        if pred == "product_class" and str(value).lower() == "healthcare":
-            out = [f for f in out if f.get("predicate") != "product_class"]
-            seen.discard("product_class")
         if pred in seen:
             continue
         seen.add(pred)
