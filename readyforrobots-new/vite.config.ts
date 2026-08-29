@@ -1,6 +1,7 @@
 import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, loadEnv, type Plugin, type ViteDevServer } from "vite";
@@ -29,6 +30,48 @@ function injectRfrApiMeta(): Plugin {
       const raw = (process.env.VITE_PUBLIC_API_URL || "").trim().replace(/\/$/, "");
       if (!raw) return html;
       return html.replace("<head>", `<head>\n    <meta name="rfr-api-base" content="${raw}" />`);
+    },
+  };
+}
+
+function rfrReleaseId(): string {
+  const envSha = (
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.GITHUB_SHA ||
+    process.env.VITE_RFR_RELEASE ||
+    ""
+  ).trim();
+  if (envSha) return `git-${envSha.slice(0, 12)}`;
+  try {
+    const sha = execSync("git rev-parse --short=12 HEAD", {
+      cwd: path.resolve(PROJECT_ROOT, ".."),
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (/^[0-9a-f]{7,12}$/i.test(sha)) return `git-${sha}`;
+  } catch {
+    /* git missing in the build image */
+  }
+  return "git-dev";
+}
+
+/** Homepage meta must move with the git SHA so production does not look frozen. */
+function injectRfrReleaseMeta(): Plugin {
+  return {
+    name: "inject-rfr-release-meta",
+    transformIndexHtml(html) {
+      const id = rfrReleaseId().replace(/[^a-zA-Z0-9._-]/g, "");
+      if (!id) return html;
+      if (html.includes('name="rfr-release"')) {
+        return html.replace(
+          /<meta\s+name="rfr-release"\s+content="[^"]*"\s*\/>/,
+          `<meta name="rfr-release" content="${id}" />`,
+        );
+      }
+      return html.replace(
+        "<head>",
+        `<head>\n    <meta name="rfr-release" content="${id}" />`,
+      );
     },
   };
 }
@@ -249,6 +292,7 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const plugins = [
   injectRfrApiMeta(),
+  injectRfrReleaseMeta(),
   requirePublicSupabaseEnv(),
   react(),
   tailwindcss(),
