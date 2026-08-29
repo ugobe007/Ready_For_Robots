@@ -9,7 +9,7 @@ Primary surface: **Jobs web UI** on `https://readyforrobots.com` (`readyforrobot
 
 **Hermes is retired.** Do not smoke `/experiment` as FIND. FIND is `/`. Jobs proof is this skill plus `POST /api/robot-job-search` (submit) and `POST /api/robot-job-match` (cards). **Critic is pstack.** How / Act / Critic live in `pstack/`, `scripts/pstack_release.py`, `pstackSite.ts`, and `pstack_protocol.py`. pstack is the **release gate**, not a customer chatbot and not protocol chrome on `/` or Jobs CRM.
 
-**No Jobs product PR without pstack release checks.** Draft PRs must still run `.github/workflows/pstack-release.yml` and the `pstack-release` job in `agent-verify.yml`.
+**No Jobs product PR without pstack release checks.** Draft PRs must still run `.github/workflows/pstack-release.yml` and the `pstack-release` job in `agent-verify.yml`. Critic `healthcare_class` fails if Diligent FIND is `robot_class=humanoid` or shows `No humanoid jobs for this robot yet.`
 
 You are reading this cold. Production is the honest instance. A local Vite shell is optional chrome. A 7-second “Deploy frontend” skip is not proof.
 

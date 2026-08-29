@@ -33,6 +33,7 @@ def test_roles_and_matcher_source():
         "matcher",
         "oem_extract",
         "class_picker",
+        "healthcare_class",
     ]
     assert CRM_WALL_REQUIRED is True
 
@@ -49,6 +50,7 @@ def test_critic_heldout_find_urls_cover_unknown_oems():
         "agtonomy.com",
         "greenfieldincorporated.com",
         "organifarms.de",
+        "diligentrobots.com",
     ):
         assert any(host in u for u in urls)
 

@@ -1612,7 +1612,8 @@ def _hint_display_class(product_name: str, text: str) -> Optional[str]:
         window = text[max(0, idx - 200) : idx + 400]
     if re.search(r"\bhumanoid\b|\bbipedal\b", window, re.I):
         if re.search(
-            r"\b(?:hospitals?|healthcare|clinical\s+assistant|hospital\s+assist|moxi)\b",
+            r"\b(?:moxi|diligent|clinical\s+assistant|nursing[- ]assist|"
+            r"pharmacy\s+deliver|hospital\s+(?:robot|assist))\b",
             window,
             re.I,
         ):

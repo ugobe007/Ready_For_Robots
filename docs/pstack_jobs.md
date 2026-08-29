@@ -20,7 +20,7 @@ python3 scripts/agent_verify.py pstack
 |------|--------|------------|
 | **How** | `pstack/README.md`, `pstackSite.ts` how, `pstack_protocol.py` | Name the owner. FIND is `/`. Matcher stays code. Chrome is not the gate. |
 | **Act** | FIND/CRM/matching diff | `bindSubmittedRobot`, URL identity, signup wall, no SIGNAL hop, no leftover robot. |
-| **Critic** | `scripts/pstack_release.py` + verify-readyforrobots | Real OEM URL on `POST /api/robot-job-search`. No Research failed / Failed to fetch from self-abort. Identity equals that URL. CRM is not a prior strawberry robot. |
+| **Critic** | `scripts/pstack_release.py` + verify-readyforrobots | Real OEM URL on `POST /api/robot-job-search`. No Research failed / Failed to fetch from self-abort. Identity equals that URL. CRM is not a prior strawberry robot. Diligent/Moxi is healthcare, not humanoid empty. |
 
 CI: `.github/workflows/pstack-release.yml` and job `pstack-release` in `.github/workflows/agent-verify.yml`. Both run on drafts. `cursor/*` auto-merge needs pstack-release **and** Jobs verify, skip-green false.
 

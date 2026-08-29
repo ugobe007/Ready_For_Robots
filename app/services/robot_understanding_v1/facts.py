@@ -608,7 +608,13 @@ def _extract_from_page(
         ctx = text[max(0, m.start() - 80) : m.end() + 40]
         if re.search(r"\b(honda|asimo|avatar|in\s+the\s+news|ieee)\b", ctx, re.I):
             continue
-        if _hospital_work:
+        # Skip only if humanoid mention is in close proximity to specific healthcare assistant work
+        if re.search(
+            r"\b(?:moxi|diligent|clinical\s+assistant|nursing[- ]assist|"
+            r"pharmacy\s+deliver|hospital\s+(?:robot|assist))\b",
+            ctx,
+            re.I,
+        ):
             continue
         add("product_class", "humanoid", span=m.group(0), confidence=0.9)
 

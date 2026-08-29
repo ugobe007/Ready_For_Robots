@@ -7,7 +7,7 @@ alwaysApply: true
 
 pstack is How / Act / Critic for **merging** Jobs FIND / CRM / matching PRs. It is not a customer chatbot, not the job matcher, and not protocol chrome on `/` or Jobs CRM.
 
-**No Jobs product PR without `python3 scripts/pstack_release.py`.** Draft PRs must not skip it. Critic drives a real OEM URL (`POST /api/robot-job-search`). Fail abort-as-Failed-to-fetch and leftover CRM identity.
+**No Jobs product PR without `python3 scripts/pstack_release.py`.** Draft PRs must not skip it. Critic drives a real OEM URL (`POST /api/robot-job-search`). Fail abort-as-Failed-to-fetch, leftover CRM identity, and Diligent-as-humanoid.
 
 Hermes is retired. Do not spawn Hermes for FIND or Jobs. Do not follow `docs/hermes_intelligence_bridge.md` as production. Product loop is robot URL on `/` → Job Cards. FIND submit is `POST /api/robot-job-search`. Matcher remains `POST /api/robot-job-match` (`app/services/robot_job_capability_match.py`).
 

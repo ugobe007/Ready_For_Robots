@@ -33,6 +33,8 @@ def test_local_release_skips_fly_drive():
     assert "crm_leftover" in critic_ids
     assert "oem_extract" in critic_ids
     assert "class_picker" in critic_ids
+    assert "healthcare_class" in critic_ids
+    assert "healthcare_class:live" in critic_ids
     assert "find_drive" in critic_ids
 
 
@@ -47,6 +49,7 @@ def test_critic_gates_include_abort_and_leftover():
         "matcher",
         "oem_extract",
         "class_picker",
+        "healthcare_class",
     ]
 
 
@@ -96,3 +99,23 @@ def test_crm_desk_has_no_protocol_chrome():
     readme = (ROOT / "pstack" / "README.md").read_text()
     assert "release gate" in readme.lower()
     assert "JOBS AGENT PROTOCOL" in readme
+
+
+def test_healthcare_class_fixture_fails_if_diligent_is_humanoid():
+    from scripts.pstack_release import DILIGENT, healthcare_class_fixture
+
+    ok, detail = healthcare_class_fixture()
+    assert ok, detail
+    seed = (ROOT / "app" / "data" / "vendor_robots_oem_sku_seed.json").read_text()
+    assert "diligentrobots.com" in seed
+    assert '"primary_class": "healthcare"' in seed
+    assert DILIGENT in (ROOT / "pstack" / "release.yaml").read_text()
+
+
+def test_rfr_release_meta_moves_with_git_not_frozen_handoff_id():
+    html = (ROOT / "readyforrobots-new" / "client" / "index.html").read_text()
+    assert 'name="rfr-release"' in html
+    assert "jobs-handoff-42087c03" not in html
+    vite = (ROOT / "readyforrobots-new" / "vite.config.ts").read_text()
+    assert "injectRfrReleaseMeta" in vite
+    assert "rfrReleaseId" in vite
