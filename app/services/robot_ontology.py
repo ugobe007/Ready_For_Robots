@@ -225,7 +225,7 @@ class WorkLanguageHit:
 def match_work_language(text: str) -> WorkLanguageHit | None:
     """Strongest industry work-language hit in product copy, or None.
 
-    Requires at least one class_signal (or two work_words). Does not invent
+    Requires at least two class_signals OR two work_words. Does not invent
     jobs. Hardware still comes first; this names the configuration class.
     """
     blob = text or ""
@@ -237,9 +237,10 @@ def match_work_language(text: str) -> WorkLanguageHit | None:
         if not words:
             continue
         unique = tuple(sorted({m.group(0).lower() for m in words if m.group(0)}))
-        signal = bool(sig_rx.search(blob))
-        if not signal and len(unique) < 2:
+        # Bug 2 fix: require at least 2 unique matched terms, even for class_signals
+        if len(unique) < 2:
             continue
+        signal = bool(sig_rx.search(blob))
         score = len(unique) + (2 if signal else 0)
         find_class = (row.get("find_class") or None) or None
         if isinstance(find_class, str):
@@ -288,6 +289,9 @@ def work_language_outranks_morphology(text: str, morphology: str | None = "human
     want = (morphology or "humanoid").strip().lower()
     hit = match_work_language(text)
     if not hit:
+        return False
+    # Only outrank when we have a FIND class to replace it with (Bug 1 fix)
+    if not hit.find_class:
         return False
     ranked = hit.outranks_morphology or tuple(_MORPHOLOGY_DEFAULT if hit.find_class else ())
     return want in {r.lower() for r in ranked}

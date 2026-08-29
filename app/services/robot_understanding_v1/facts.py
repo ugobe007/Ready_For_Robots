@@ -594,8 +594,17 @@ def _extract_from_page(
         work_language_outranks_morphology,
     )
 
-    _work_hit = match_work_language(text)
-    _work_class = find_class_from_work_language(text)
+    # Bug 3 fix: Only check work language on subject-relevant text
+    _work_text = text
+    if subject and len(subject) >= 2 and not page_about_subject:
+        # When page isn't about subject, narrow to subject-relevant sections
+        _work_text = ""
+        for idx in [m.start() for m in re.finditer(re.escape(subject.lower()), text.lower())]:
+            _work_text += " " + text[max(0, idx - 300) : idx + 300]
+        if not _work_text.strip():
+            _work_text = text[:800]  # fallback to page head
+    _work_hit = match_work_language(_work_text)
+    _work_class = find_class_from_work_language(_work_text)
     if _work_hit and _work_class:
         add("product_class", _work_class, span=_work_hit.matched_terms[0][:80], confidence=0.9)
         if _work_hit.claim_predicate:
@@ -617,8 +626,9 @@ def _extract_from_page(
         ctx = text[max(0, m.start() - 80) : m.end() + 40]
         if re.search(r"\b(honda|asimo|avatar|in\s+the\s+news|ieee)\b", ctx, re.I):
             continue
-        # R33: hospital / clinical work language beats torso → humanoid.
-        if work_language_outranks_morphology(text, "humanoid"):
+        # Bug 3 fix: Check work language in context window, not entire page
+        window = text[max(0, m.start() - 200) : m.end() + 200]
+        if work_language_outranks_morphology(window, "humanoid"):
             continue
         add("product_class", "humanoid", span=m.group(0), confidence=0.9)
 

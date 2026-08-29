@@ -287,11 +287,15 @@ def _phase1_detect(collected: list, subject: str = "") -> list[Observation]:
                 ):
                     from app.services.robot_ontology import work_language_outranks_morphology
 
-                    if work_language_outranks_morphology(text, "humanoid"):
+                    # Bug 3 fix: Check work language in context window, not entire page
+                    ctx_window = text[max(0, m.start() - 200) : m.end() + 200]
+                    if work_language_outranks_morphology(ctx_window, "humanoid"):
                         continue
                 obs.append(Observation(predicate, value, units, window, sid, conf, "explicit"))
         from app.services.robot_ontology import find_class_from_work_language, match_work_language
 
+        # Bug 3 fix: Only check work language on page that passed page_supports_subject
+        # (already gated above at line 271-277)
         work_cls = find_class_from_work_language(text)
         if work_cls:
             hit = match_work_language(text)
