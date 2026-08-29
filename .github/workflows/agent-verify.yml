@@ -252,6 +252,6 @@ jobs:
                 }
               }
               if (lastErr) {
-                core.warning(`Could not dispatch ${workflow_id}: ${lastErr.message}`);
+                core.setFailed(`Could not dispatch ${workflow_id}: ${lastErr.message}`);
               }
             }
