@@ -40,23 +40,76 @@ def test_healthcare_class_fixture_passes_on_this_tree():
     assert ok, detail
 
 
+def test_fixture_fails_when_diligent_catalog_is_humanoid(monkeypatch):
+    import scripts.pstack_release as rel
+
+    monkeypatch.setattr(rel, "_diligent_catalog_classes", lambda: ["humanoid"])
+    ok, detail = rel.healthcare_class_fixture()
+    assert ok is False
+    assert "humanoid" in detail.lower()
+
+
+def test_fixture_fails_when_healthcare_tile_missing(monkeypatch):
+    import scripts.pstack_release as rel
+
+    monkeypatch.setattr(
+        rel,
+        "_ts_class_option_ids",
+        lambda _src: [
+            "humanoid",
+            "amr",
+            "mobile_manipulator",
+            "cobot",
+            "quadruped",
+            "autonomous_scrubber",
+            "agriculture",
+            "marine",
+            "avionics",
+            "aerospace",
+            "construction",
+        ],
+    )
+    ok, detail = rel.healthcare_class_fixture()
+    assert ok is False
+    assert "tile" in detail.lower() or "healthcare" in detail.lower()
+
+
 def test_diligent_catalog_source_is_not_humanoid():
+    import json
+
     from scripts.pstack_release import _diligent_catalog_classes
 
     classes = _diligent_catalog_classes()
     assert classes
     assert "humanoid" not in classes
     assert any(c == "healthcare" for c in classes)
-    seed = (ROOT / "app" / "data" / "vendor_robots_oem_sku_seed.json").read_text(
-        encoding="utf-8"
+    seed = json.loads(
+        (ROOT / "app" / "data" / "vendor_robots_oem_sku_seed.json").read_text(
+            encoding="utf-8"
+        )
     )
-    lineup = (
-        ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "knownOemLineups.json"
-    ).read_text(encoding="utf-8")
-    assert "diligentrobots.com" in seed
-    assert '"primary_class": "healthcare"' in seed
-    assert '"display_class": "healthcare"' in lineup
-    diligent_slice = seed[seed.lower().index("diligent robotics") :]
-    diligent_slice = diligent_slice[: diligent_slice.find('"vendor_name"')]
-    assert "humanoid" not in diligent_slice.lower()
-    assert "Moxi" in diligent_slice
+    lineup = json.loads(
+        (
+            ROOT
+            / "readyforrobots-new"
+            / "client"
+            / "src"
+            / "lib"
+            / "knownOemLineups.json"
+        ).read_text(encoding="utf-8")
+    )
+    vendors = seed.get("vendors") if isinstance(seed, dict) else seed
+    diligent = next(
+        v
+        for v in vendors
+        if isinstance(v, dict)
+        and "diligentrobots.com" in " ".join(str(d) for d in (v.get("domains") or []))
+    )
+    moxi = next(r for r in diligent["robots"] if r.get("name") == "Moxi")
+    assert moxi.get("primary_class") == "healthcare"
+    assert moxi.get("primary_class") != "humanoid"
+    client = lineup["diligentrobots.com"]["robots"][0]
+    assert client.get("display_class") == "healthcare"
+    assert client.get("display_class") != "humanoid"
+    assert client.get("name") == "Moxi"
+
