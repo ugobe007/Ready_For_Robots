@@ -293,7 +293,7 @@ def work_language_outranks_morphology(text: str, morphology: str | None = "human
     # Only outrank when we have a FIND class to replace it with (Bug 1 fix)
     if not hit.find_class:
         return False
-    ranked = hit.outranks_morphology or tuple(_MORPHOLOGY_DEFAULT if hit.find_class else ())
+    ranked = hit.outranks_morphology
     return want in {r.lower() for r in ranked}
 
 
