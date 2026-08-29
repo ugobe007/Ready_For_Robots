@@ -1,0 +1,135 @@
+"""Source-only Critic: industry work language outranks morphology (R33).
+
+Agent-verify / pstack-release install pytest only. Do not import
+robot_understanding_v1.facts (pulls requests via fetch.py). Extractor
+proofs live in test_healthcare_class_jobs.py (full CI).
+"""
+from __future__ import annotations
+
+from app.services.robot_class_qualify import infer_class_from_work_language, normalize_class_id
+from app.services.robot_ontology import (
+    find_class_from_work_language,
+    healthcare_ontology_work_words,
+    industry_work_language,
+    industry_work_rows,
+    match_work_language,
+    work_language_outranks_morphology,
+)
+
+HOSPITAL = (
+    "Hospital delivery robot for clinical and pharmacy transport. "
+    "Nursing unit patient delivery. Operating room supply. "
+    "Med-surg linen cart."
+)
+MOXI = (
+    "Moxi is a hospital robot assistant for clinical staff. "
+    "Pharmacy delivery, nursing units, patient-care floors."
+)
+FIGURE = (
+    "Figure 02 is a commercially deployed bipedal humanoid robot with two "
+    "arms, dexterous hands, and a torso. Built for warehouse palletizing "
+    "and case pick on the factory floor."
+)
+WEEDING = (
+    "LaserWeeder removes weeds in row crops with lasers. Agricultural "
+    "weeding robot for vegetable fields, tractors, and combine rows."
+)
+TORSO_HOSPITAL = (
+    "Our robot uses a social torso, a face, and an arm on a rolling base. "
+    "It does hospital clinical delivery: pharmacy to nursing unit, linen "
+    "to med-surg, specimens to the lab, and unit-delivery of PPE."
+)
+
+
+def test_ontology_encodes_healthcare_work_words_and_task_model():
+    data = industry_work_language()
+    assert data.get("rule_id") == "R33"
+    assert data.get("inference_order") == ["hardware", "work_language_task_model", "morphology"]
+    rows = {r["id"]: r for r in industry_work_rows()}
+    hc = rows["healthcare"]
+    words = healthcare_ontology_work_words()
+    for term in (
+        "hospital",
+        "clinical",
+        "pharmacy",
+        "nursing",
+        "patient",
+        "med-surg",
+        "linen",
+        "unit-delivery",
+    ):
+        assert term in words, f"missing healthcare work word {term}"
+    assert any("operating room" in w or w == "or" for w in words)
+    assert "hospital_logistics_transport" in hc["task_model_ids"]
+    assert hc["find_class"] == "healthcare"
+    assert "humanoid" in {x.lower() for x in hc["outranks_morphology"]}
+
+
+def test_every_claimed_industry_has_work_words_and_a_task_model():
+    rows = {r["id"]: r for r in industry_work_rows()}
+    for industry_id in (
+        "healthcare",
+        "agriculture",
+        "construction",
+        "mining",
+        "warehouse",
+        "logistics",
+        "factory",
+        "hospitality",
+        "food_prep",
+        "serving",
+        "hotel",
+    ):
+        row = rows[industry_id]
+        assert row.get("class_signals") or row.get("work_words"), industry_id
+        assert row.get("task_model_ids"), industry_id
+
+
+def test_hospital_work_words_are_healthcare_not_humanoid():
+    hit = match_work_language(HOSPITAL)
+    assert hit is not None
+    assert hit.industry_id == "healthcare"
+    assert find_class_from_work_language(HOSPITAL) == "healthcare"
+    assert infer_class_from_work_language(HOSPITAL) == "healthcare"
+    assert work_language_outranks_morphology(HOSPITAL, "humanoid") is True
+    assert normalize_class_id("healthcare") == "healthcare"
+
+
+def test_moxi_page_language_is_healthcare_not_humanoid():
+    assert find_class_from_work_language(MOXI) == "healthcare"
+    assert infer_class_from_work_language(MOXI) == "healthcare"
+    assert work_language_outranks_morphology(MOXI, "humanoid") is True
+
+
+def test_figure_style_humanoid_without_clinical_stays_unset():
+    assert find_class_from_work_language(FIGURE) is None
+    assert infer_class_from_work_language(FIGURE) is None
+    assert find_class_from_work_language(FIGURE) != "healthcare"
+    assert work_language_outranks_morphology(FIGURE, "humanoid") is False
+
+
+def test_agriculture_weeding_is_not_healthcare():
+    hit = match_work_language(WEEDING)
+    assert hit is not None
+    assert hit.industry_id == "agriculture"
+    assert find_class_from_work_language(WEEDING) == "agriculture"
+    assert infer_class_from_work_language(WEEDING) == "agriculture"
+    assert work_language_outranks_morphology(WEEDING, "humanoid") is True
+
+
+def test_hospital_work_outranks_torso_face_arm_words():
+    assert find_class_from_work_language(TORSO_HOSPITAL) == "healthcare"
+    assert infer_class_from_work_language(TORSO_HOSPITAL) == "healthcare"
+    assert work_language_outranks_morphology(TORSO_HOSPITAL, "humanoid") is True
+
+
+def test_conjunction_or_alone_is_not_operating_room():
+    text = "Pick this or that SKU from the shelf."
+    assert find_class_from_work_language(text) is None
+    assert infer_class_from_work_language(text) is None
+
+
+def test_qualify_reads_ontology_healthcare_aliases():
+    assert normalize_class_id("clinical") == "healthcare"
+    assert normalize_class_id("hospital_robot") == "healthcare"
+    assert normalize_class_id("medical") == "healthcare"

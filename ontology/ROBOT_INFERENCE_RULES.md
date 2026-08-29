@@ -66,10 +66,21 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   `claims_agriculture` **or** LaserWeeder / carbonrobotics.com weeding evidence →
   `agriculture_task` + `mobile`. Empty specs stay `UNKNOWN`.
 - **R32 ✅** `product_class` ∈ {`healthcare`, `medical_robot`, `clinical_robot`,
-  `hospital_robot`} **or** `claims_healthcare` **or** Diligent Moxi / hospital
-  assistant evidence → `healthcare_task` + `mobile`. A social torso is not a
-  humanoid class. Empty specs stay `UNKNOWN`. FIND tile **Healthcare** (aliases
-  medical / clinical / hospital).
+  `hospital_robot`} **or** `claims_healthcare` **or** hospital / clinical
+  work-language from [`industry_work_language.v1.json`](industry_work_language.v1.json)
+  → `healthcare_task` + `mobile`. A social torso is not a humanoid class.
+  Empty specs stay `UNKNOWN`. FIND tile **Healthcare** (aliases medical /
+  clinical / hospital). Named SKU identity (Diligent Moxi) is COMPANY →
+  PRODUCT, not a FIND deny list.
+- **R33 ✅** **Work language outranks morphology.** Inference order:
+  hardware → work-language / task-model → morphology. When hospital /
+  clinical / pharmacy / nursing / patient / OR / med-surg / linen /
+  unit-delivery (or another industry row with `outranks_morphology`) fires
+  **and** generic humanoid morphology also fires, the configuration class is
+  the work-language class. A social torso, face, or arm does not override
+  hospital delivery work. Warehouse and factory verticals do **not** outrank
+  a true humanoid (Figure/Agility-style warehouse labor stays humanoid).
+  Vocabulary lives in the ontology, not a FIND-only word list.
 - **R23 ✅** `product_class` ∈ {`marine`, `marine_robot`} **or** `claims_marine` →
   `marine_task` + `mobile` (hull / port / underwater — not a category dump).
 - **R24 ✅** `product_class` ∈ {`avionics`, `aviation_robot`, `drone`, `evtol`}
@@ -170,7 +181,7 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
 | Miso Flippy (fry) | fry station / cooking | food_prep | food_prep only |
 | Somatic (restroom) | bathroom cleaning, self-navigates | mobile, surface_clean | restroom only |
 | Avidbots Neo (scrubber) | autonomous scrubber | hard_floor_scrub, mobile | scrub only |
-| Diligent Robotics Moxi | hospital / clinical assistant (not a humanoid torso) | healthcare_task, mobile | clinical delivery / resident services only |
+| Diligent Robotics Moxi | hospital / clinical assistant (work language; not a humanoid torso) | healthcare_task, mobile | clinical delivery / resident services only |
 | John Deere X Series Combine | autonomous combine harvest | agriculture_task, mobile | combine / harvest only |
 | Skydio X10 | drone / UAV | avionics_task, drone_task, mobile | drone inspect / delivery / hangar inspect |
 | Archer Midnight | eVTOL flying car | avionics_task, evtol_flight, mobile | eVTOL vertiport routes only — not ramp walking |

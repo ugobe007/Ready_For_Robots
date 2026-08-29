@@ -57,14 +57,8 @@ DOMAIN_WORK_CLASSES = (
     | CONSTRUCTION_CLASSES
     | HEALTHCARE_CLASSES
 )
-# Hospital / clinical assistant work — not a torso → humanoid class.
-_HEALTHCARE_WORK = re.compile(
-    r"\b(?:hospitals?|healthcare|clinical|nursing(?:\s+units?)?|pharmacy|"
-    r"medications?|lab\s+samples?|specimens?|patient\s+(?:units?|floors?|rooms?)|"
-    r"linens?|nursing[- ]assist|clinical\s+assistant|hospital\s+assistant|"
-    r"diligent(?:robots)?|moxi)\b",
-    re.I,
-)
+# Hospital / clinical assistant work — ontology work language, not a torso class.
+# SKU names are not the source; hospital/clinical terms live in the ontology.
 GRASP_EFFECTORS = frozenset({"dexterous_hand", "gripper", "vacuum", "suction"})
 
 # Named weeding SKUs (LaserWeeder, FarmDroid). Identity is the configuration,
@@ -146,8 +140,11 @@ def healthcare_work_identity(profile: dict[str, Any]) -> bool:
     """True when this configuration is hospital / clinical assistant work.
 
     Moxi is not a humanoid because it has a torso. Identity is the clinical
-    work (meds, specimens, linen, nursing assist), not morphology.
+    work (meds, specimens, linen, nursing assist), not morphology. Vocabulary
+    comes from ontology industry work language (R33), not a SKU deny list.
     """
+    from app.services.robot_ontology import match_work_language
+
     facts = _grounded_facts(profile)
     if _truthy(facts, "claims_healthcare"):
         return True
@@ -169,7 +166,8 @@ def healthcare_work_identity(profile: dict[str, Any]) -> bool:
         in {"claims_item_delivery", "operating_environment", "product_class"}
     )
     blob = f"{company} {product} {url} {spans}"
-    return bool(_HEALTHCARE_WORK.search(blob))
+    hit = match_work_language(blob)
+    return bool(hit and hit.industry_id == "healthcare")
 
 
 def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]:

@@ -7,14 +7,20 @@ test_healthcare_class_jobs.py.
 from pathlib import Path
 
 from app.services.pstack_protocol import critic_gate_ids, critic_heldout_find_urls
-from scripts.pstack_release import DILIGENT, REQUIRED_CRITIC_GATE_IDS, healthcare_class_fixture
+from scripts.pstack_release import (
+    DILIGENT,
+    REQUIRED_CRITIC_GATE_IDS,
+    healthcare_class_fixture,
+    ontology_industry_language_fixture,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_critic_gate_ids_keep_prior_gates_and_add_healthcare():
     assert tuple(critic_gate_ids()) == REQUIRED_CRITIC_GATE_IDS
-    assert critic_gate_ids()[-1] == "healthcare_class"
+    assert critic_gate_ids()[-1] == "ontology_industry_language"
+    assert "healthcare_class" in critic_gate_ids()
     for gate in (
         "find",
         "find_abort",
@@ -38,6 +44,23 @@ def test_heldout_includes_diligentrobots():
 def test_healthcare_class_fixture_passes_on_this_tree():
     ok, detail = healthcare_class_fixture()
     assert ok, detail
+
+
+def test_ontology_industry_language_fixture_passes_on_this_tree():
+    ok, detail = ontology_industry_language_fixture()
+    assert ok, detail
+
+
+def test_ontology_fixture_fails_when_healthcare_words_missing(tmp_path, monkeypatch):
+    import scripts.pstack_release as rel
+
+    empty = tmp_path / "industry_work_language.v1.json"
+    empty.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(rel, "ROOT", tmp_path)
+    # Missing file path under tmp ROOT
+    ok, detail = rel.ontology_industry_language_fixture()
+    assert ok is False
+    assert "missing" in detail.lower()
 
 
 def test_fixture_fails_when_diligent_catalog_is_humanoid(monkeypatch):

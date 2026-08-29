@@ -16,7 +16,7 @@ from app.services.robot_understanding_v1.sources import CollectedSource
 # Filenames / alts that name a morphology. Class words only — never SKU names
 # (Avidbots Neo is a scrubber; 1X NEO is a humanoid).
 _CLASS_HINTS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"\b(hospital\s+robot|clinical\s+assistant|healthcare\s+robot|moxi)\b", re.I), "healthcare"),
+    (re.compile(r"\b(hospital\s+robot|clinical\s+assistant|healthcare\s+robot)\b", re.I), "healthcare"),
     (re.compile(r"\b(humanoid|bipedal|two[- ]legged|android robot)\b", re.I), "humanoid"),
     (re.compile(r"\b(quadruped|four[- ]legged)\b", re.I), "quadruped"),
     (re.compile(r"\b(mobile\s+manipulator|manipulator\s+on\s+(?:a\s+)?base)\b", re.I), "mobile_manipulator"),
@@ -45,19 +45,17 @@ def classify_image_hints(images: list[tuple[str, str]], page_text: str = "") -> 
     blob = f"{_blob_for_images(images)} {page_text[:1500]}"
     if not blob.strip():
         return None
-    healthcare_assistant = bool(
-        re.search(
-            r"\b(?:moxi|diligent|clinical\s+assistant|nursing[- ]assist|"
-            r"pharmacy\s+deliver|hospital\s+(?:robot|assist))\b",
-            blob,
-            re.I,
-        )
-    )
+    from app.services.robot_class_qualify import infer_class_from_work_language
+    from app.services.robot_ontology import work_language_outranks_morphology
+
+    work_cls = infer_class_from_work_language(blob)
+    if work_cls:
+        return work_cls, "ontology work language"
     for rx, cls in _CLASS_HINTS:
         m = rx.search(blob)
         if not m:
             continue
-        if cls == "humanoid" and healthcare_assistant:
+        if cls == "humanoid" and work_language_outranks_morphology(blob, "humanoid"):
             continue
         return cls, m.group(0)
     return None

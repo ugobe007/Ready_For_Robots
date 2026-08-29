@@ -373,7 +373,9 @@ def build_robot_profile(
             if f.predicate == "product_class" and f.epistemic not in ("unknown", "contradicted")
         ]
         if class_facts:
-            domain_priority = {
+            from app.services.robot_ontology import domain_priority_classes
+
+            domain_priority = domain_priority_classes() | {
                 "healthcare",
                 "healthcare_robot",
                 "medical_robot",

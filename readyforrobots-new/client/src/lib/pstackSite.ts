@@ -38,7 +38,8 @@ export type CriticGate = {
     | "matcher"
     | "oem_extract"
     | "class_picker"
-    | "healthcare_class";
+    | "healthcare_class"
+    | "ontology_industry_language";
   prove: string;
   fail: string;
 };
@@ -126,6 +127,11 @@ export const CRITIC_GATES: readonly CriticGate[] = [
     id: "healthcare_class",
     prove: "Diligent/Moxi is healthcare; Healthcare tile exists; class search returns named employers",
     fail: "Diligent classified humanoid, empty humanoid copy, or missing Healthcare class tile",
+  },
+  {
+    id: "ontology_industry_language",
+    prove: "Healthcare work words live in the ontology and outrank humanoid morphology",
+    fail: "hospital/clinical/pharmacy work words missing from ontology files",
   },
 ] as const;
 

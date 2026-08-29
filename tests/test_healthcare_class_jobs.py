@@ -1,4 +1,9 @@
-"""Healthcare FIND class + Diligent Moxi is not a humanoid torso tile."""
+"""Healthcare FIND class + Diligent Moxi is not a humanoid torso tile.
+
+Full CI (requirements.txt). Do not list this file in pstack-release /
+agent-verify pytest — those jobs install pytest only and facts.py
+imports requests via fetch.py.
+"""
 from __future__ import annotations
 
 from app.services.robot_capability_derive import derive_capabilities
@@ -164,4 +169,97 @@ def test_moxi_page_text_is_healthcare_not_humanoid():
         for f in known
         if f.predicate == "product_class"
     }
+    assert "humanoid" not in classes
+
+
+def _extract_classes(text: str, *, subject: str, url: str, title: str):
+    from app.services.robot_understanding_v1 import facts as F
+    from app.services.robot_understanding_v1.coverage import infer_morphology
+    from app.services.robot_understanding_v1.models import RobotSource
+
+    src = RobotSource(
+        id="s",
+        url=url,
+        source_type="product",
+        fetched_at="t",
+        title=title,
+        confidence=0.85,
+    )
+    fs = F._extract_from_page(src, text, subject=subject, page_url=url, page_title=title)
+    known = [f for f in fs if f.epistemic != "unknown"]
+    classes = {
+        str(f.value).lower()
+        for f in known
+        if f.predicate == "product_class" and f.epistemic not in ("unknown", "contradicted")
+    }
+    return known, classes, infer_morphology(known)
+
+
+def test_hospital_delivery_without_moxi_is_healthcare():
+    text = (
+        "This wheeled clinical assistant delivers medications, lab samples, "
+        "and linen to nursing units and the pharmacy. Hospital unit-delivery "
+        "on med-surg floors and the operating room. A social torso and face "
+        "help staff recognize the robot; one arm opens doors."
+    )
+    assert "moxi" not in text.lower()
+    assert "diligent" not in text.lower()
+    known, classes, morph = _extract_classes(
+        text,
+        subject="Unit Delivery Robot",
+        url="https://www.example-hospital-robot.com/product",
+        title="Hospital unit delivery",
+    )
+    assert "healthcare" in classes
+    assert "humanoid" not in classes
+    assert morph == "healthcare"
+    claims = {f.predicate for f in known if f.value in (True, "true")}
+    assert "claims_healthcare" in claims
+
+
+def test_figure_style_humanoid_without_clinical_stays_humanoid():
+    text = (
+        "Figure 02 is a commercially deployed bipedal humanoid robot with two "
+        "arms, dexterous hands, and a torso. Built for warehouse palletizing "
+        "and case pick on the factory floor."
+    )
+    _, classes, morph = _extract_classes(
+        text,
+        subject="Figure 02",
+        url="https://www.figure.ai/",
+        title="Figure 02",
+    )
+    assert "humanoid" in classes
+    assert "healthcare" not in classes
+    assert morph == "humanoid"
+
+
+def test_agriculture_weeding_language_is_not_healthcare():
+    text = (
+        "LaserWeeder removes weeds in row crops with lasers. Agricultural "
+        "weeding robot for vegetable fields, tractors, and combine rows."
+    )
+    _, classes, morph = _extract_classes(
+        text,
+        subject="LaserWeeder",
+        url="https://carbonrobotics.com/laserweeder",
+        title="LaserWeeder",
+    )
+    assert "healthcare" not in classes
+    assert morph in {"agricultural_robot", "agriculture"}
+
+
+def test_torso_face_arm_do_not_override_hospital_work():
+    text = (
+        "Our robot uses a social torso, a face, and an arm on a rolling base. "
+        "It does hospital clinical delivery: pharmacy to nursing unit, linen "
+        "to med-surg, specimens to the lab, and unit-delivery of PPE."
+    )
+    _, classes, _morph = _extract_classes(
+        text,
+        subject="Clinical Runner",
+        url="https://example.com/clinical-runner",
+        title="Clinical Runner",
+    )
+    assert "healthcare" in classes
     assert "humanoid" not in classes

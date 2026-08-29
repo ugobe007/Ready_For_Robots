@@ -62,6 +62,7 @@ REQUIRED_CRITIC_GATE_IDS = (
     "oem_extract",
     "class_picker",
     "healthcare_class",
+    "ontology_industry_language",
 )
 CLASS_OPTIONS_TS = (
     ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "robotClassOptions.ts"
@@ -563,6 +564,52 @@ def healthcare_class_fixture() -> tuple[bool, str]:
     return (not misses, "; ".join(misses))
 
 
+REQUIRED_HEALTHCARE_ONTOLOGY_WORDS = (
+    "hospital",
+    "clinical",
+    "pharmacy",
+    "nursing",
+    "patient",
+    "linen",
+    "med-surg",
+    "unit-delivery",
+)
+
+
+def ontology_industry_language_fixture() -> tuple[bool, str]:
+    """Critic: healthcare work words and task models live in ontology files, not FIND-only lists."""
+    misses: list[str] = []
+    ont_lang = ROOT / "ontology" / "industry_work_language.v1.json"
+    vertical = ROOT / "ontology" / "vertical_ontology.v1.json"
+    tasks = ROOT / "ontology" / "task_model_ontology.v1.json"
+    rules_md = ROOT / "ontology" / "ROBOT_INFERENCE_RULES.md"
+    rules_json = ROOT / "ontology" / "inference_rules.v1.json"
+    qualify = ROOT / "app" / "services" / "robot_class_qualify.py"
+    if not ont_lang.is_file():
+        return False, "ontology/industry_work_language.v1.json missing"
+    blob_lang = _read(ont_lang).lower()
+    blob_vert = _read(vertical).lower() if vertical.is_file() else ""
+    blob_tasks = _read(tasks).lower() if tasks.is_file() else ""
+    blob_rules = (_read(rules_md) + _read(rules_json)).lower()
+    blob_qualify = _read(qualify) if qualify.is_file() else ""
+    for word in REQUIRED_HEALTHCARE_ONTOLOGY_WORDS:
+        if word not in blob_lang:
+            misses.append(f"industry_work_language missing {word}")
+        if word not in blob_vert and word not in blob_tasks:
+            misses.append(f"{word} missing from vertical_ontology and task_model_ontology")
+    if "hospital_logistics_transport" not in blob_tasks:
+        misses.append("hospital_logistics_transport task model missing")
+    if "r33" not in blob_rules:
+        misses.append("R33 missing from inference rules")
+    if "work_language_task_model" not in blob_lang:
+        misses.append("inference_order missing work_language_task_model")
+    if "infer_class_from_work_language" not in blob_qualify:
+        misses.append("FIND class qualify does not read ontology work language")
+    if "industry_class_aliases" not in blob_qualify:
+        misses.append("FIND class qualify does not read ontology aliases")
+    return (not misses, "; ".join(misses))
+
+
 def drive_diligent_healthcare(*, api: str) -> dict[str, Any]:
     """Live FIND: Diligent must not be a humanoid empty; Healthcare class returns named jobs."""
     base = api.rstrip("/")
@@ -740,6 +787,15 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
             fixture_ok,
             "Diligent/Moxi is healthcare, Healthcare is the 12th tile, named hospital jobs exist",
             fixture_detail,
+        )
+    )
+    ont_ok, ont_detail = ontology_industry_language_fixture()
+    checks.append(
+        _check(
+            "ontology_industry_language",
+            ont_ok,
+            "Healthcare work words live in ontology files and FIND qualify reads them",
+            ont_detail,
         )
     )
 

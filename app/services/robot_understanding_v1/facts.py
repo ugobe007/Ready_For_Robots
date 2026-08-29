@@ -586,17 +586,35 @@ def _extract_from_page(
         )
 
     # --- product class / form (explicit claims only) ---
-    # Hospital / clinical assistant work is a class (healthcare), not a
-    # humanoid tile because the robot has a torso or a social face (Moxi).
-    _hospital_work = bool(
-        re.search(
-            r"\b(?:hospitals?|healthcare|clinical\s+assistant|hospital\s+(?:robot|assist)|"
-            r"nursing[- ]assist|pharmacy\s+deliver|medications?\s+(?:and|,)|"
-            r"supplies?,?\s+samples)\b",
-            text,
-            re.I,
-        )
+    # R33: industry work language (ontology) outranks generic humanoid
+    # morphology. Hardware still comes first; this names the configuration.
+    from app.services.robot_ontology import (
+        find_class_from_work_language,
+        match_work_language,
+        work_language_outranks_morphology,
     )
+
+    # Bug 3 fix: Only check work language on subject-relevant text
+    _work_text = text
+    if subject and len(subject) >= 2 and not page_about_subject:
+        # When page isn't about subject, narrow to subject-relevant sections
+        _work_text = ""
+        for idx in [m.start() for m in re.finditer(re.escape(subject.lower()), text.lower())]:
+            _work_text += " " + text[max(0, idx - 300) : idx + 300]
+        if not _work_text.strip():
+            _work_text = text[:800]  # fallback to page head
+    _work_hit = match_work_language(_work_text)
+    _work_class = find_class_from_work_language(_work_text)
+    if _work_hit and _work_class:
+        add("product_class", _work_class, span=_work_hit.matched_terms[0][:80], confidence=0.9)
+        if _work_hit.claim_predicate:
+            add(
+                _work_hit.claim_predicate,
+                True,
+                span=_work_hit.matched_terms[0][:120],
+                confidence=0.88,
+            )
+
     for m in re.finditer(
         r"\b((?:commercially\s+deployed\s+)?humanoid(?:\s+robot)?|bipedal(?:\s+robot)?)\b",
         text,
@@ -608,13 +626,9 @@ def _extract_from_page(
         ctx = text[max(0, m.start() - 80) : m.end() + 40]
         if re.search(r"\b(honda|asimo|avatar|in\s+the\s+news|ieee)\b", ctx, re.I):
             continue
-        # Skip only if humanoid mention is in close proximity to specific healthcare assistant work
-        if re.search(
-            r"\b(?:moxi|diligent|clinical\s+assistant|nursing[- ]assist|"
-            r"pharmacy\s+deliver|hospital\s+(?:robot|assist))\b",
-            ctx,
-            re.I,
-        ):
+        # Bug 3 fix: Check work language in context window, not entire page
+        window = text[max(0, m.start() - 200) : m.end() + 200]
+        if work_language_outranks_morphology(window, "humanoid"):
             continue
         add("product_class", "humanoid", span=m.group(0), confidence=0.9)
 
@@ -773,7 +787,7 @@ def _extract_from_page(
         re.search(r"diligent\s+robots", _id_blob_hc, re.I)
     )
     if (_is_moxi or _is_diligent) and (
-        _hospital_work
+        (_work_hit and _work_hit.industry_id == "healthcare")
         or re.search(r"\b(hospital|healthcare|clinical|nursing|pharmacy|medication)\b", _id_blob_hc, re.I)
     ):
         add(
@@ -1274,19 +1288,28 @@ def _extract_from_page(
             continue
         add("claims_agriculture", True, span=m.group(0)[:120], confidence=0.85)
 
-    # --- Healthcare: hospital / clinical assistant work (not a humanoid torso) ---
-    for m in re.finditer(
-        r"\b(?:hospital\s+(?:robots?|assist|delivery)|clinical\s+(?:assistant|delivery)|"
-        r"healthcare\s+robots?|nursing[- ]assist|pharmacy\s+deliver|"
-        r"(?:deliver|transport|replenish)\w*\s+(?:[\w-]+\s+){0,4}?"
-        r"(?:medications?|medicines?|specimens?|lab\s+samples?|linens?|"
-        r"par[- ]level|nursing\s+units?|patient\s+(?:units?|floors?)))\b",
-        text,
-        re.I,
-    ):
-        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
-            continue
-        add("claims_healthcare", True, span=m.group(0)[:120], confidence=0.85)
+    # --- Healthcare: hospital / clinical assistant work (ontology work language) ---
+    if _work_hit and _work_hit.industry_id == "healthcare":
+        add(
+            "claims_healthcare",
+            True,
+            span=(_work_hit.matched_terms[0] if _work_hit.matched_terms else "healthcare")[:120],
+            confidence=0.85,
+        )
+    else:
+        for m in re.finditer(
+            r"\b(?:hospital\s+(?:robots?|assist|delivery)|clinical\s+(?:assistant|delivery)|"
+            r"healthcare\s+robots?|nursing[- ]assist|pharmacy\s+deliver|"
+            r"(?:deliver|transport|replenish)\w*\s+(?:[\w-]+\s+){0,4}?"
+            r"(?:medications?|medicines?|specimens?|lab\s+samples?|linens?|"
+            r"par[- ]level|nursing\s+units?|patient\s+(?:units?|floors?)))\b",
+            text,
+            re.I,
+        ):
+            if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+                continue
+            add("claims_healthcare", True, span=m.group(0)[:120], confidence=0.85)
+            break
 
     # --- Tier 3: construction ---
     for m in re.finditer(

@@ -158,11 +158,22 @@ def normalize_class_id(raw: str | None) -> str | None:
         "pharmacy": "healthcare",
     }
     mapped = aliases.get(want)
+    if not mapped:
+        from app.services.robot_ontology import industry_class_aliases
+
+        mapped = industry_class_aliases().get(want)
     if mapped:
         return mapped
     if any(row["id"] == want for row in CLASS_OPTIONS):
         return want
     return None
+
+
+def infer_class_from_work_language(text: str) -> str | None:
+    """FIND class from ontology industry work language (R33). Single source."""
+    from app.services.robot_ontology import find_class_from_work_language
+
+    return find_class_from_work_language(text)
 
 
 # FIND tiles the operator picks with no SKU. A named SKU class is not a tile.

@@ -54,7 +54,7 @@ jobs:
           RFR_FLY_API: https://ready-2-robot.fly.dev
 
       - name: pstack pytest
-        run: python3 -m pytest tests/test_pstack_release.py tests/test_pstack_protocol.py tests/test_class_picker_chrome.py tests/test_pstack_healthcare_class.py -q --tb=short
+        run: python3 -m pytest tests/test_pstack_release.py tests/test_pstack_protocol.py tests/test_class_picker_chrome.py tests/test_pstack_healthcare_class.py tests/test_ontology_industry_language.py tests/test_robot_ontology.py -q --tb=short
         env:
           PYTHONPATH: ${{ github.workspace }}
 
@@ -136,7 +136,7 @@ jobs:
           PY
 
       - name: Targeted pytest
-        run: python3 -m pytest tests/test_agent_verify.py tests/test_pstack_release.py tests/test_pstack_protocol.py tests/test_class_picker_chrome.py tests/test_pstack_healthcare_class.py -q --tb=short
+        run: python3 -m pytest tests/test_agent_verify.py tests/test_pstack_release.py tests/test_pstack_protocol.py tests/test_class_picker_chrome.py tests/test_pstack_healthcare_class.py tests/test_ontology_industry_language.py tests/test_robot_ontology.py -q --tb=short
         env:
           PYTHONPATH: ${{ github.workspace }}
 
