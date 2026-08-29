@@ -31,8 +31,8 @@ CI: `.github/workflows/agent-verify.yml` job `pstack-release` and `.github/workf
 | Identity not keyed to submitted URL (`#173`) | `canonicalRobotUrl` + `beginJobsHandoffForUrl` |
 | FIND is not `/` | critic gate `find` |
 | Class-picker click is a no-op (`Agtonomy` → Agriculture) | `qualifyActive` always POSTs `/api/robot-job-search`; empty is named |
-| Diligent/Moxi classified humanoid → empty FIND (`#182`) | critic gate `healthcare_class` — Healthcare 12th tile; named hospital jobs |
-| Healthcare work words missing from ontology | critic gate `ontology_industry_language` — hospital/clinical/pharmacy terms in ontology files |
+| Diligent/Moxi classified humanoid → empty FIND (`#182`) | critic gate `healthcare_class` — Healthcare tile; named hospital jobs |
+| Industry work words missing from ontology | critic gate `ontology_industry_language` — hospital/hotel/mining/warehouse terms in ontology files |
 
 Live Critic posts `POST /api/robot-job-search` (the URL FIND actually calls), not a chip-only matcher stub. Diligent (`https://www.diligentrobots.com/`) is a held-out URL: `robot_class` must not be `humanoid` and must not show `No humanoid jobs for this robot yet.`
 

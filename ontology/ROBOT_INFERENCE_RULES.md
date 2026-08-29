@@ -72,14 +72,16 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   Empty specs stay `UNKNOWN`. FIND tile **Healthcare** (aliases medical /
   clinical / hospital). Named SKU identity (Diligent Moxi) is COMPANY →
   PRODUCT, not a FIND deny list.
-- **R33 ✅** **Work language outranks morphology.** Inference order:
+-   **R33 ✅** **Work language outranks morphology.** Inference order:
   hardware → work-language / task-model → morphology. When hospital /
   clinical / pharmacy / nursing / patient / OR / med-surg / linen /
-  unit-delivery (or another industry row with `outranks_morphology`) fires
+  unit-delivery, **or hotel / guest-room / bellhop / room-service**
+  (or another industry row with `outranks_morphology`) fires
   **and** generic humanoid morphology also fires, the configuration class is
   the work-language class. A social torso, face, or arm does not override
-  hospital delivery work. Warehouse and factory verticals do **not** outrank
-  a true humanoid (Figure/Agility-style warehouse labor stays humanoid).
+  hospital or hotel delivery work. Warehouse, factory, and logistics verticals
+  do **not** outrank a true humanoid (Figure/Agility-style warehouse labor
+  stays humanoid).
   Vocabulary lives in the ontology, not a FIND-only word list.
 - **R23 ✅** `product_class` ∈ {`marine`, `marine_robot`} **or** `claims_marine` →
   `marine_task` + `mobile` (hull / port / underwater — not a category dump).

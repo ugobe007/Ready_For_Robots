@@ -332,8 +332,13 @@ def test_public_class_options_include_ten_classes():
         "aerospace",
         "construction",
         "healthcare",
+        "mining",
+        "warehouse",
+        "logistics",
+        "factory",
+        "hospitality",
     ]
-    assert len(rows) == 12
+    assert len(rows) == 17
     for row in rows:
         assert row["label"].strip()
         assert row["hint"].strip()
@@ -344,3 +349,7 @@ def test_public_class_options_include_ten_classes():
     assert "evtol" in by_id["avionics"]["hint"].lower()
     assert "satellite" in by_id["aerospace"]["hint"].lower()
     assert "home" in by_id["construction"]["hint"].lower() or "building" in by_id["construction"]["hint"].lower()
+    assert "hospital" in by_id["healthcare"]["hint"].lower()
+    assert "haul" in by_id["mining"]["hint"].lower() or "pit" in by_id["mining"]["hint"].lower()
+    assert "fulfillment" in by_id["warehouse"]["hint"].lower()
+    assert "hotel" in by_id["hospitality"]["hint"].lower()

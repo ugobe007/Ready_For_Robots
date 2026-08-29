@@ -38,7 +38,7 @@ def test_class_picker_click_starts_search_not_crm():
     assert "healthcare" in workflow
 
 
-def test_class_picker_includes_healthcare_as_twelfth_tile():
+def test_class_picker_includes_healthcare_and_industry_tiles():
     options = (
         ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "robotClassOptions.ts"
     ).read_text(encoding="utf-8")
@@ -57,15 +57,27 @@ def test_class_picker_includes_healthcare_as_twelfth_tile():
     for line in block.splitlines():
         if "id:" in line and '"' in line:
             ids.append(line.split('"')[1])
-    assert ids[-1] == "healthcare"
-    assert len(ids) == 12
+    assert "healthcare" in ids
+    for tile in ("mining", "warehouse", "logistics", "factory", "hospitality"):
+        assert tile in ids
+        assert f'id: "{tile}"' in options
+        assert f'"id": "{tile}"' in qualify
+    assert "food_prep" not in ids
+    assert "hotel" not in ids
+    assert "medical" not in ids
+    assert ids[-1] == "hospitality"
+    assert len(ids) == 17
     workflow = WORKFLOW.read_text(encoding="utf-8")
     assert "No ${label} jobs for this robot yet." in workflow
     assert 'healthcare: "Healthcare"' in workflow
+    assert 'mining: "Mining"' in workflow
+    assert 'hospitality: "Hospitality"' in workflow
     wf_test = (
         ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsWorkflow.test.ts"
     ).read_text(encoding="utf-8")
     assert "No healthcare jobs for this robot yet." in wf_test
+    assert "No mining jobs for this robot yet." in wf_test
+    assert "No hospitality jobs for this robot yet." in wf_test
 
 
 def test_jobs_ui_never_renders_insufficient_evidence_copy():

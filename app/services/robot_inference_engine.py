@@ -382,6 +382,15 @@ def _phase23_infer(grounded: dict[str, Observation]) -> list[Observation]:
         (("marine_robot", "marine"), "claims_marine"),
         (("aviation_robot", "avionics", "drone", "evtol"), "claims_avionics"),
         (("aerospace_robot", "aerospace"), "claims_aerospace"),
+        (("mining_robot", "mining"), "claims_mining"),
+        (("warehouse_robot", "warehouse"), "claims_warehouse"),
+        (("logistics_robot", "logistics"), "claims_logistics"),
+        (("factory_robot", "factory"), "claims_factory"),
+        (("hospitality_robot", "hospitality", "hotel_robot"), "claims_hospitality"),
+        (
+            ("healthcare", "healthcare_robot", "medical_robot", "clinical_robot", "hospital_robot"),
+            "claims_healthcare",
+        ),
     )
     for class_vals, claim in _class_claims:
         if claim in grounded:

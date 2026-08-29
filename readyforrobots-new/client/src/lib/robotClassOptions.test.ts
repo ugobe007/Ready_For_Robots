@@ -23,13 +23,20 @@ const EXPECTED_IDS = [
   "aerospace",
   "construction",
   "healthcare",
+  "mining",
+  "warehouse",
+  "logistics",
+  "factory",
+  "hospitality",
 ] as const;
 
 describe("robot class picker options", () => {
-  it("renders all 12 classes with a one-line work hint", () => {
-    expect(DEFAULT_CLASS_OPTIONS).toHaveLength(12);
+  it("renders work-domain tiles with a one-line work hint", () => {
+    expect(DEFAULT_CLASS_OPTIONS).toHaveLength(17);
     expect(CLASS_OPTION_IDS).toEqual([...EXPECTED_IDS]);
     expect(CLASS_OPTION_IDS).not.toContain("medical");
+    expect(CLASS_OPTION_IDS).not.toContain("food_prep");
+    expect(CLASS_OPTION_IDS).not.toContain("hotel");
     for (const row of DEFAULT_CLASS_OPTIONS) {
       expect(row.label.trim().length).toBeGreaterThan(2);
       expect(row.hint.trim().length).toBeGreaterThan(8);
@@ -62,17 +69,27 @@ describe("robot class picker options", () => {
     expect(byId.construction.hint).toMatch(/home|building/i);
     expect(byId.healthcare.label).toBe("Healthcare");
     expect(byId.healthcare.hint).toMatch(/hospital|clinical/i);
+    expect(byId.mining.label).toBe("Mining");
+    expect(byId.mining.hint).toMatch(/haul|pit|underground/i);
+    expect(byId.warehouse.label).toBe("Warehouse");
+    expect(byId.warehouse.hint).toMatch(/fulfillment|tote|pick/i);
+    expect(byId.logistics.label).toBe("Logistics");
+    expect(byId.logistics.hint).toMatch(/3pl|cross-dock|sort/i);
+    expect(byId.factory.label).toBe("Factory");
+    expect(byId.factory.hint).toMatch(/machine tend|cnc|assembly/i);
+    expect(byId.hospitality.label).toBe("Hospitality");
+    expect(byId.hospitality.hint).toMatch(/hotel|guest|serving/i);
   });
 
-  it("falls back to the twelve tiles when the API sends none", () => {
-    expect(classOptionsOrDefault(undefined)).toHaveLength(12);
+  it("falls back to the seventeen tiles when the API sends none", () => {
+    expect(classOptionsOrDefault(undefined)).toHaveLength(17);
     expect(classOptionsOrDefault([])).toEqual(DEFAULT_CLASS_OPTIONS);
     expect(classOptionsOrDefault([{ id: "agriculture", label: "Ag", hint: "Field" }])).toEqual([
       { id: "agriculture", label: "Ag", hint: "Field" },
     ]);
   });
 
-  it("wires the picker and workspace fallback to the same 12 ids", () => {
+  it("wires the picker and workspace fallback to the same 17 ids", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",

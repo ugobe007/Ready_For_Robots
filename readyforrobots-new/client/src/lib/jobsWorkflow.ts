@@ -86,6 +86,27 @@ const ROBOT_CLASS_ALIASES: Record<string, string> = {
   hospital_robot: "healthcare",
   nursing: "healthcare",
   pharmacy: "healthcare",
+  mining: "mining",
+  mining_robot: "mining",
+  quarry: "mining",
+  warehouse: "warehouse",
+  warehouse_robot: "warehouse",
+  fulfillment: "warehouse",
+  logistics: "logistics",
+  logistics_robot: "logistics",
+  "3pl": "logistics",
+  cross_dock: "logistics",
+  factory: "factory",
+  factory_robot: "factory",
+  manufacturing: "factory",
+  hospitality: "hospitality",
+  hospitality_robot: "hospitality",
+  hotel: "hospitality",
+  hotel_robot: "hospitality",
+  serving: "hospitality",
+  food_prep: "hospitality",
+  table_service: "hospitality",
+  guest_delivery: "hospitality",
 };
 
 const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
@@ -109,6 +130,12 @@ const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
   medical: "healthcare robots",
   clinical: "healthcare robots",
   hospital: "healthcare robots",
+  mining: "mining robots",
+  warehouse: "warehouse robots",
+  logistics: "logistics robots",
+  factory: "factory robots",
+  hospitality: "hospitality robots",
+  hotel: "hospitality robots",
 };
 
 const ROBOT_CLASS_TITLE: Record<string, string> = {
@@ -132,6 +159,12 @@ const ROBOT_CLASS_TITLE: Record<string, string> = {
   medical: "Healthcare",
   clinical: "Healthcare",
   hospital: "Healthcare",
+  mining: "Mining",
+  warehouse: "Warehouse",
+  logistics: "Logistics",
+  factory: "Factory",
+  hospitality: "Hospitality",
+  hotel: "Hospitality",
 };
 
 /** Operator-picked FIND tiles. A Joby/Carbon URL is a configuration, not a tile. */
@@ -148,6 +181,11 @@ export const FIND_TILE_CLASSES = new Set([
   "aerospace",
   "construction",
   "healthcare",
+  "mining",
+  "warehouse",
+  "logistics",
+  "factory",
+  "hospitality",
 ]);
 
 /** SKU configuration for FIND lookup. Named SKU classes stay themselves — not the parent tile. */

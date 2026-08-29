@@ -317,10 +317,14 @@ def industry_class_aliases() -> dict[str, str]:
 
 
 def domain_priority_classes() -> frozenset[str]:
-    """product_class values that outrank torso morphology (R33)."""
+    """product_class values that outrank torso morphology (R33).
+
+    Only industries with ``outranks_morphology`` belong here. Warehouse /
+    factory / logistics FIND classes must not steal Figure-style humanoids.
+    """
     out: set[str] = set()
     for row in industry_work_rows():
-        if not (row.get("outranks_morphology") or row.get("find_class")):
+        if not (row.get("outranks_morphology") or []):
             continue
         if row.get("find_class"):
             out.add(str(row["find_class"]).lower())

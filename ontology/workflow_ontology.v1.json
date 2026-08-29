@@ -26,6 +26,10 @@
     "avionics": {"required_any": ["avionics_task"],                "label": "avionics — drone / eVTOL / autonomous aircraft work"},
     "aerospace": {"required_any": ["aerospace_task"],              "label": "aerospace — satellite servicing / orbital debris / space robots"},
     "mining": {"required_any": ["mining_task"],                    "label": "mining — haulage/drilling"},
+    "warehouse": {"required_any": ["warehouse_task"],              "label": "warehouse — fulfillment / DC tote and pick work"},
+    "logistics": {"required_any": ["logistics_task"],              "label": "logistics — 3PL / cross-dock / sortation"},
+    "factory": {"required_any": ["factory_task"],                  "label": "factory — plant machine-tend / assembly-line work"},
+    "hospitality": {"required_any": ["hospitality_task"],          "label": "hospitality — hotel guest delivery / serving"},
     "clinical_delivery": {"required_any": ["healthcare_task"],     "label": "hospital clinical delivery (meds, specimens, supplies)"},
     "resident_services": {"required_any": ["healthcare_task"],     "label": "eldercare resident services (meals, linens, amenities)"},
     "restroom":  {"required_any": ["surface_clean"],               "label": "restroom / surface cleaning"}

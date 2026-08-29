@@ -1199,6 +1199,14 @@ describe("jobsWorkflow", () => {
     expect(skuLookupGrain("drone")).toBe("product");
     expect(skuLookupGrain("agriculture")).toBe("robot_type");
     expect(skuLookupGrain("healthcare")).toBe("robot_type");
+    expect(skuLookupGrain("mining")).toBe("robot_type");
+    expect(skuLookupGrain("warehouse")).toBe("robot_type");
+    expect(skuLookupGrain("logistics")).toBe("robot_type");
+    expect(skuLookupGrain("factory")).toBe("robot_type");
+    expect(skuLookupGrain("hospitality")).toBe("robot_type");
+    expect(normalizeRobotClass("hotel")).toBe("hospitality");
+    expect(normalizeRobotClass("food_prep")).toBe("hospitality");
+    expect(normalizeRobotClass("mining")).toBe("mining");
     expect(skuLookupGrain("humanoid")).toBe("robot_type");
     expect(robotClassTitle("evtol")).toBe("eVTOL");
     expect(robotClassTitle("avionics")).toBe("Avionics");
@@ -1216,7 +1224,24 @@ describe("jobsWorkflow", () => {
     expect(classJobsEmptyCopy("healthcare")).toBe(
       "No healthcare jobs for this robot yet.",
     );
-    expect(classJobsEmptyCopy("mining")).toMatch(/mining jobs for this robot yet/);
+    expect(classJobsEmptyCopy("mining")).toBe(
+      "No mining jobs for this robot yet.",
+    );
+    expect(classJobsEmptyCopy("warehouse")).toBe(
+      "No warehouse jobs for this robot yet.",
+    );
+    expect(classJobsEmptyCopy("logistics")).toBe(
+      "No logistics jobs for this robot yet.",
+    );
+    expect(classJobsEmptyCopy("factory")).toBe(
+      "No factory jobs for this robot yet.",
+    );
+    expect(classJobsEmptyCopy("hospitality")).toBe(
+      "No hospitality jobs for this robot yet.",
+    );
+    expect(classJobsEmptyCopy("hotel")).toBe(
+      "No hospitality jobs for this robot yet.",
+    );
     expect(shouldShowClassPicker({ needsClassChoice: true, jobs: [], capabilities: [] })).toBe(
       true,
     );

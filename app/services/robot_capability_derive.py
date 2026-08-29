@@ -45,6 +45,13 @@ HEALTHCARE_CLASSES = frozenset(
         "hospital_robot",
     }
 )
+MINING_CLASSES = frozenset({"mining", "mining_robot"})
+WAREHOUSE_CLASSES = frozenset({"warehouse", "warehouse_robot"})
+LOGISTICS_CLASSES = frozenset({"logistics", "logistics_robot"})
+FACTORY_CLASSES = frozenset({"factory", "factory_robot"})
+HOSPITALITY_CLASSES = frozenset(
+    {"hospitality", "hospitality_robot", "hotel_robot"}
+)
 # FIND-tile unions. Named SKUs use agricultural_robot / construction_robot plus
 # a work-kind claim — never company → category → jobs.
 GENERIC_AGRICULTURE_CLASSES = frozenset({"agriculture"})
@@ -56,6 +63,11 @@ DOMAIN_WORK_CLASSES = (
     | AEROSPACE_CLASSES
     | CONSTRUCTION_CLASSES
     | HEALTHCARE_CLASSES
+    | MINING_CLASSES
+    | WAREHOUSE_CLASSES
+    | LOGISTICS_CLASSES
+    | FACTORY_CLASSES
+    | HOSPITALITY_CLASSES
 )
 # Hospital / clinical assistant work — ontology work language, not a torso class.
 # SKU names are not the source; hospital/clinical terms live in the ontology.
@@ -281,7 +293,9 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
         for p in (
             "claims_pallet_handling", "claims_agriculture", "claims_healthcare",
             "claims_construction",
-            "claims_mining", "claims_marine", "claims_avionics", "claims_aerospace",
+            "claims_mining", "claims_warehouse", "claims_logistics", "claims_factory",
+            "claims_hospitality",
+            "claims_marine", "claims_avionics", "claims_aerospace",
             "claims_disinfection", "claims_goods_to_person",
         )
     )
@@ -447,7 +461,11 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
         ("agriculture_task", "claims_agriculture", "agricultural field work", AGRICULTURE_CLASSES),
         ("healthcare_task", "claims_healthcare", "hospital / clinical assistant work", HEALTHCARE_CLASSES),
         ("construction_task", "claims_construction", "construction site work", CONSTRUCTION_CLASSES),
-        ("mining_task", "claims_mining", "mining / haulage", frozenset()),
+        ("mining_task", "claims_mining", "mining / haulage", MINING_CLASSES),
+        ("warehouse_task", "claims_warehouse", "warehouse / fulfillment work", WAREHOUSE_CLASSES),
+        ("logistics_task", "claims_logistics", "3PL / cross-dock / sortation work", LOGISTICS_CLASSES),
+        ("factory_task", "claims_factory", "factory / plant machine-tend work", FACTORY_CLASSES),
+        ("hospitality_task", "claims_hospitality", "hotel / guest / serving work", HOSPITALITY_CLASSES),
         ("marine_task", "claims_marine", "hull / port / underwater work", MARINE_CLASSES),
         ("avionics_task", "claims_avionics", "drone / eVTOL / autonomous aircraft work", AVIONICS_CLASSES),
         ("aerospace_task", "claims_aerospace", "satellite / orbital / space-robot work", AEROSPACE_CLASSES),

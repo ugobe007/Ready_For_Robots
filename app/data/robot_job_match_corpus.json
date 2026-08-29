@@ -2193,6 +2193,205 @@
         "Vehicle class",
         "Range rules"
       ]
+    },
+    {
+      "job_key": "warehouse_tote_pick_stations",
+      "title": "Move totes between pick stations in a fulfillment DC",
+      "industry": "Warehouse",
+      "path": "PICK MODULE → PACK",
+      "company_name": "GXO Logistics",
+      "locality": "Greenwich, CT",
+      "families": [],
+      "actions": [],
+      "text": "fulfillment center tote transport between pick stations in a warehouse distribution center",
+      "source": "tier_seed",
+      "tape_family": "warehouse",
+      "unknowns": [
+        "Tote weight",
+        "Aisle width"
+      ]
+    },
+    {
+      "job_key": "warehouse_dc_aisle_cartons",
+      "title": "Move cartons from warehouse aisles to the dock",
+      "industry": "Warehouse",
+      "path": "AISLE → DOCK",
+      "company_name": "Prologis",
+      "locality": "San Francisco, CA",
+      "families": [],
+      "actions": [],
+      "text": "warehouse aisle carton moves to the dock in a fulfillment distribution center",
+      "source": "tier_seed",
+      "tape_family": "warehouse",
+      "unknowns": [
+        "Carton weight"
+      ]
+    },
+    {
+      "job_key": "warehouse_replenish_pick_totes",
+      "title": "Replenish pick-station totes in a regional DC",
+      "industry": "Warehouse",
+      "path": "RESERVE → PICK STATION",
+      "company_name": "Target",
+      "locality": "Minneapolis, MN",
+      "families": [],
+      "actions": [],
+      "text": "replenish pick-station totes in a regional warehouse fulfillment center",
+      "source": "tier_seed",
+      "tape_family": "warehouse",
+      "unknowns": [
+        "Tote mix",
+        "Slotting"
+      ]
+    },
+    {
+      "job_key": "logistics_crossdock_inbound",
+      "title": "Cross-dock inbound freight to outbound doors",
+      "industry": "Logistics",
+      "path": "INBOUND → OUTBOUND",
+      "company_name": "DHL Supply Chain",
+      "locality": "Westerville, OH",
+      "families": [],
+      "actions": [],
+      "text": "3PL cross-dock inbound freight to outbound doors logistics hub sortation",
+      "source": "tier_seed",
+      "tape_family": "logistics",
+      "unknowns": [
+        "Door assignment",
+        "Dwell time"
+      ]
+    },
+    {
+      "job_key": "logistics_parcel_inbound_sort",
+      "title": "Sort inbound parcels on the hub belt",
+      "industry": "Logistics",
+      "path": "INBOUND SORT",
+      "company_name": "FedEx Freight",
+      "locality": "Memphis, TN",
+      "families": [],
+      "actions": [],
+      "text": "parcel sortation on the inbound hub belt 3PL logistics sort",
+      "source": "tier_seed",
+      "tape_family": "logistics",
+      "unknowns": [
+        "Parcel size mix"
+      ]
+    },
+    {
+      "job_key": "logistics_outbound_hub_sort",
+      "title": "Sort outbound parcels at the hub",
+      "industry": "Logistics",
+      "path": "OUTBOUND SORT",
+      "company_name": "UPS",
+      "locality": "Atlanta, GA",
+      "families": [],
+      "actions": [],
+      "text": "outbound parcel sortation at a logistics hub 3PL cross-dock",
+      "source": "tier_seed",
+      "tape_family": "logistics",
+      "unknowns": [
+        "Sort window"
+      ]
+    },
+    {
+      "job_key": "factory_assembly_load_unload",
+      "title": "Load and unload workpieces on the assembly line",
+      "industry": "Factory",
+      "path": "LINE CELL",
+      "company_name": "Toyota Motor Manufacturing Kentucky",
+      "locality": "Georgetown, KY",
+      "families": [],
+      "actions": [],
+      "text": "factory assembly line workpiece load unload on the plant floor machine tend",
+      "source": "tier_seed",
+      "tape_family": "factory",
+      "unknowns": [
+        "Fixture geometry",
+        "Cycle time"
+      ]
+    },
+    {
+      "job_key": "factory_cnc_cell_tend",
+      "title": "Tend CNC fixtures on the plant floor",
+      "industry": "Factory",
+      "path": "CNC CELL",
+      "company_name": "Magna International",
+      "locality": "Troy, MI",
+      "families": [],
+      "actions": [],
+      "text": "factory CNC cell machine tending workpiece fixture load unload on the plant floor",
+      "source": "tier_seed",
+      "tape_family": "factory",
+      "unknowns": [
+        "Part family",
+        "Chuck change"
+      ]
+    },
+    {
+      "job_key": "factory_mill_lathe_tend",
+      "title": "Machine-tend mill and lathe cells in the factory",
+      "industry": "Factory",
+      "path": "MACHINING CELL",
+      "company_name": "Caterpillar",
+      "locality": "Peoria, IL",
+      "families": [],
+      "actions": [],
+      "text": "factory mill lathe machine tending production cell workpiece fixture",
+      "source": "tier_seed",
+      "tape_family": "factory",
+      "unknowns": [
+        "Tooling mix"
+      ]
+    },
+    {
+      "job_key": "hospitality_guest_amenities",
+      "title": "Deliver amenities to hotel guest rooms",
+      "industry": "Hotel",
+      "path": "HOUSEKEEPING → GUEST ROOMS",
+      "company_name": "Hilton",
+      "locality": "McLean, VA",
+      "families": [],
+      "actions": [],
+      "text": "hotel guest room amenity delivery hospitality bellhop room service",
+      "source": "tier_seed",
+      "tape_family": "hospitality",
+      "unknowns": [
+        "Load weight",
+        "Elevator access"
+      ]
+    },
+    {
+      "job_key": "hospitality_room_service_run",
+      "title": "Run room-service orders to guest floors",
+      "industry": "Hotel",
+      "path": "KITCHEN → GUEST FLOORS",
+      "company_name": "Hyatt",
+      "locality": "Chicago, IL",
+      "families": [],
+      "actions": [],
+      "text": "hotel room service delivery to guest floors hospitality concierge",
+      "source": "tier_seed",
+      "tape_family": "hospitality",
+      "unknowns": [
+        "Tray weight",
+        "Temperature hold"
+      ]
+    },
+    {
+      "job_key": "hospitality_bellhop_luggage",
+      "title": "Deliver guest luggage to hotel rooms",
+      "industry": "Hotel",
+      "path": "LOBBY → GUEST ROOMS",
+      "company_name": "Four Seasons",
+      "locality": "Toronto, ON",
+      "families": [],
+      "actions": [],
+      "text": "hotel bellhop luggage delivery to guest rooms hospitality housekeeping",
+      "source": "tier_seed",
+      "tape_family": "hospitality",
+      "unknowns": [
+        "Bag weight"
+      ]
     }
   ]
 }
