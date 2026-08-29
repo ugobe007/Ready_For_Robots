@@ -22,6 +22,8 @@ on:
       - "scripts/vercel_cli_preflight.py"
       - "scripts/vercel_pack_static_output.py"
       - "scripts/vercel_production_smoke.py"
+  # agent-verify automerge workflow_dispatch-es this: GITHUB_TOKEN squash
+  # does not start `push` jobs. Path filters do not apply to dispatch.
   workflow_dispatch:
 
 concurrency:
