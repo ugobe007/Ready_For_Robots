@@ -281,7 +281,28 @@ def _phase1_detect(collected: list, subject: str = "") -> list[Observation]:
                 window = _window(text, m.start(), m.end())
                 if _off_subject(window):
                     continue  # evidence names another SKU/module — not this product
+                if (
+                    predicate == "product_class"
+                    and str(value).lower() == "humanoid"
+                ):
+                    from app.services.robot_ontology import work_language_outranks_morphology
+
+                    if work_language_outranks_morphology(text, "humanoid"):
+                        continue
                 obs.append(Observation(predicate, value, units, window, sid, conf, "explicit"))
+        from app.services.robot_ontology import find_class_from_work_language, match_work_language
+
+        work_cls = find_class_from_work_language(text)
+        if work_cls:
+            hit = match_work_language(text)
+            span = (hit.matched_terms[0] if hit and hit.matched_terms else work_cls)
+            obs.append(
+                Observation("product_class", work_cls, None, span, sid, CONF["HIGH"], "explicit")
+            )
+            if hit and hit.claim_predicate:
+                obs.append(
+                    Observation(hit.claim_predicate, True, None, span, sid, CONF["HIGH"], "explicit")
+                )
         arm = _detect_arm_count(text)
         if arm and not _off_subject(arm[1]):
             obs.append(Observation("arm_count", arm[0], None, arm[1], sid, CONF["HIGH"], "explicit"))

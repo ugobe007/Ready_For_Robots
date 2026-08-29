@@ -1610,15 +1610,19 @@ def _hint_display_class(product_name: str, text: str) -> Optional[str]:
     idx = text.lower().find(product_name.lower())
     if idx >= 0:
         window = text[max(0, idx - 200) : idx + 400]
+    from app.services.robot_class_qualify import infer_class_from_work_language
+    from app.services.robot_ontology import work_language_outranks_morphology
+
+    work_cls = infer_class_from_work_language(window) or infer_class_from_work_language(text)
+    if work_cls:
+        return work_cls
     if re.search(r"\bhumanoid\b|\bbipedal\b", window, re.I):
-        if re.search(
-            r"\b(?:moxi|diligent|clinical\s+assistant|nursing[- ]assist|"
-            r"pharmacy\s+deliver|hospital\s+(?:robot|assist))\b",
-            window,
-            re.I,
+        if work_language_outranks_morphology(window, "humanoid") or work_language_outranks_morphology(
+            text, "humanoid"
         ):
-            return "healthcare"
-        return "humanoid"
+            pass
+        else:
+            return "humanoid"
     if re.search(r"\b(drone|uav|aerial\s+robot|inspection\s+drone)\b", window, re.I):
         return "drone"
     if re.search(r"\b(robot\s+vacuum|autonomous\s+vacuum|vacuum\s+cleaner)\b", window, re.I):
@@ -1646,7 +1650,7 @@ def _hint_display_class(product_name: str, text: str) -> Optional[str]:
         return "agriculture"
     if re.search(
         r"\b(healthcare\s+robot|hospital\s+robot|clinical\s+assistant|"
-        r"medical\s+service\s+robot|nursing[- ]assist|moxi)\b",
+        r"medical\s+service\s+robot|nursing[- ]assist)\b",
         window,
         re.I,
     ):

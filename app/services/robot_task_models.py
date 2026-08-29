@@ -19,6 +19,7 @@ _SPECIFIC_TAPES = frozenset({"scrub", "inspect", "pallet"})
 _FALLBACK_ID = "site_task_policy"
 
 # Extra tokens that confirm a vertical when tape is generic (transport/gripper/cart).
+# Filled from ontology industry work language when present (single source).
 _VERTICAL_TOKENS: dict[str, tuple[str, ...]] = {
     "warehouse": (
         "warehouse", "fulfillment", "distribution", "logistics", "pallet",
@@ -30,11 +31,12 @@ _VERTICAL_TOKENS: dict[str, tuple[str, ...]] = {
     ),
     "healthcare": (
         "hospital", "clinic", "patient", "nursing", "linen", "or suite",
-        "clinical", "pharmacy",
+        "clinical", "pharmacy", "med-surg", "unit-delivery", "operating room",
     ),
     "hospitality": (
         "kitchen", "restaurant", "cafe", "hotel", "dining", "espresso",
-        "barista", "dishwasher", "hospitality", "cafeteria",
+        "barista", "dishwasher", "hospitality", "cafeteria", "bellhop",
+        "room service", "guest room",
     ),
     "commercial": ("scrub", "janitorial", "custodial", "floor clean"),
     "utilities": ("inspect", "patrol", "thermal", "leak"),
@@ -53,6 +55,12 @@ _VERTICAL_TOKENS: dict[str, tuple[str, ...]] = {
     "construction": (
         "jobsite", "layout", "drywall", "earthwork", "rebar", "home",
         "house", "framing", "building",
+    ),
+    "mining": (
+        "mining", "mine", "quarry", "haul truck", "haulage", "stope", "longwall",
+    ),
+    "restaurant": (
+        "food prep", "fry station", "grill", "cooking", "kitchen", "fryer",
     ),
 }
 
