@@ -1,9 +1,19 @@
 name: Deploy to Fly.io
 
+# `push` from a GITHUB_TOKEN squash-merge (agent-verify automerge) does not
+# start this workflow. Automerge therefore workflow_dispatch-es it after merge.
+# Fly's GitHub App still builds the image on push; this job is the path that
+# restarts machines and can SSH-apply Alembic when release_command hangs.
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      ssh_migrate:
+        description: "After deploy, alembic upgrade via fly ssh (pending revisions, e.g. jruc0a1b2c3d4)"
+        type: boolean
+        default: true
 
 jobs:
   deploy:
@@ -31,9 +41,25 @@ jobs:
         id: migrate
         run: |
           set -euo pipefail
+          # workflow_dispatch has no github.event.before. Do not run Fly
+          # release_command (known hang waiting for `stopped`). SSH migrate
+          # after /health instead — applies revisions GITHUB_TOKEN merges skipped.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "skip_release=true" >> "$GITHUB_OUTPUT"
+            raw="${{ github.event.inputs.ssh_migrate }}"
+            if [ -z "$raw" ] || [ "$raw" = "true" ] || [ "$raw" = "True" ]; then
+              echo "ssh_migrate=true" >> "$GITHUB_OUTPUT"
+              echo "workflow_dispatch — skip release_command; ssh_migrate=true"
+            else
+              echo "ssh_migrate=false" >> "$GITHUB_OUTPUT"
+              echo "workflow_dispatch — skip release_command; ssh_migrate=false"
+            fi
+            exit 0
+          fi
           before="${{ github.event.before }}"
           if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
             echo "skip_release=false" >> "$GITHUB_OUTPUT"
+            echo "ssh_migrate=false" >> "$GITHUB_OUTPUT"
             echo "No previous SHA; running release_command."
             exit 0
           fi
@@ -42,9 +68,11 @@ jobs:
           fi
           if git diff --name-only "$before" "${{ github.sha }}" | grep -E '^migrations/' >/dev/null; then
             echo "skip_release=false" >> "$GITHUB_OUTPUT"
+            echo "ssh_migrate=false" >> "$GITHUB_OUTPUT"
             echo "migrations/ changed — running Alembic release_command."
           else
             echo "skip_release=true" >> "$GITHUB_OUTPUT"
+            echo "ssh_migrate=false" >> "$GITHUB_OUTPUT"
             echo "No migration files changed — skip release_command (known Fly hang waiting for stopped)."
           fi
 
@@ -135,6 +163,18 @@ jobs:
           done
           echo "::error::web /health did not return 200 after deploy"
           exit 1
+
+      # release_command often never reaches `stopped`. SSH onto the running
+      # image and upgrade in-place. Default on for workflow_dispatch so
+      # GITHUB_TOKEN merges still apply pending revisions (jruc0a1b2c3d4).
+      - name: Apply pending Alembic via SSH
+        if: ${{ !cancelled() && steps.setup_flyctl.outcome == 'success' && steps.migrate.outputs.ssh_migrate == 'true' }}
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "alembic upgrade via fly ssh (not release_command)"
+          flyctl ssh console -a ready-2-robot -C "alembic -c /code/alembic.ini upgrade head"
 
       - name: Setup Python for post-deploy cache refresh
         if: success()
