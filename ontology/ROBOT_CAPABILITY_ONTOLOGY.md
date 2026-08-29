@@ -38,6 +38,7 @@ tool_use`
 | `disinfect` | UV / surface disinfection | `claims_disinfection` |
 | `goods_to_person` | ASRS goods-to-person | `claims_goods_to_person` |
 | `agriculture_task` | Agricultural field work | `claims_agriculture` \| agriculture class \| LaserWeeder |
+| `healthcare_task` | Hospital / clinical assistant work | `claims_healthcare` \| healthcare class \| Diligent Moxi |
 | `agriculture_weed` | Crop weeding | `claims_weeding` (FIND-tile agriculture is the union) |
 | `agriculture_combine` | Combine grain harvest | `claims_combine_harvest` |
 | `agriculture_spray` | Precision crop spray | `claims_precision_spray` |

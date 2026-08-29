@@ -67,6 +67,7 @@ def test_lookup_class_keeps_sku_classes_off_parent_tiles():
     assert lookup_class_id("drone") == "drone"
     assert "agriculture" in FIND_TILE_CLASSES
     assert "construction" in FIND_TILE_CLASSES
+    assert "healthcare" in FIND_TILE_CLASSES
     assert lookup_class_id("agricultural_robot") not in FIND_TILE_CLASSES
     assert lookup_class_id("construction_robot") not in FIND_TILE_CLASSES
 

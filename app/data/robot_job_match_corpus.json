@@ -1359,6 +1359,40 @@
       ]
     },
     {
+      "job_key": "clinical_nursing_unit_errands",
+      "title": "Run nursing-unit errands and supply fetches",
+      "industry": "Hospital",
+      "path": "NURSING STATION → UNITS",
+      "company_name": "Parkland Health",
+      "locality": "Dallas, TX",
+      "families": [],
+      "actions": [],
+      "text": "run nursing-unit errands fetch supplies specimens and pharmacy items for floor nurses hospital clinical assistant",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Secure doors"
+      ]
+    },
+    {
+      "job_key": "clinical_pharmacy_restock",
+      "title": "Restock unit-dose medications from central pharmacy",
+      "industry": "Hospital",
+      "path": "PHARMACY → MED ROOMS",
+      "company_name": "UCSF Health",
+      "locality": "San Francisco, CA",
+      "families": [],
+      "actions": [],
+      "text": "restock unit-dose medications from central pharmacy to nursing med rooms hospital pharmacy delivery",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Secure handoff"
+      ]
+    },
+    {
       "job_key": "shelf_scan_grocery_oos",
       "title": "Scan grocery aisles for out-of-stocks and pricing",
       "industry": "Grocery",

@@ -33,6 +33,7 @@
     {"predicate": "claims_disinfection", "category": "cleaning", "type": "bool"},
     {"predicate": "claims_goods_to_person", "category": "load_interface", "type": "bool"},
     {"predicate": "claims_agriculture", "category": "domain", "type": "bool"},
+    {"predicate": "claims_healthcare", "category": "domain", "type": "bool"},
     {"predicate": "claims_weeding", "category": "domain", "type": "bool"},
     {"predicate": "claims_combine_harvest", "category": "domain", "type": "bool"},
     {"predicate": "claims_precision_spray", "category": "domain", "type": "bool"},

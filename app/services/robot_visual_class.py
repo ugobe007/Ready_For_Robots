@@ -16,6 +16,7 @@ from app.services.robot_understanding_v1.sources import CollectedSource
 # Filenames / alts that name a morphology. Class words only — never SKU names
 # (Avidbots Neo is a scrubber; 1X NEO is a humanoid).
 _CLASS_HINTS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\b(hospital\s+robot|clinical\s+assistant|healthcare\s+robot|moxi)\b", re.I), "healthcare"),
     (re.compile(r"\b(humanoid|bipedal|two[- ]legged|android robot)\b", re.I), "humanoid"),
     (re.compile(r"\b(quadruped|four[- ]legged)\b", re.I), "quadruped"),
     (re.compile(r"\b(mobile\s+manipulator|manipulator\s+on\s+(?:a\s+)?base)\b", re.I), "mobile_manipulator"),
@@ -44,10 +45,20 @@ def classify_image_hints(images: list[tuple[str, str]], page_text: str = "") -> 
     blob = f"{_blob_for_images(images)} {page_text[:1500]}"
     if not blob.strip():
         return None
+    hospital = bool(
+        re.search(
+            r"\b(?:hospitals?|healthcare|clinical\s+assistant|hospital\s+assist|moxi|diligent)\b",
+            blob,
+            re.I,
+        )
+    )
     for rx, cls in _CLASS_HINTS:
         m = rx.search(blob)
-        if m:
-            return cls, m.group(0)
+        if not m:
+            continue
+        if cls == "humanoid" and hospital:
+            continue
+        return cls, m.group(0)
     return None
 
 
@@ -65,10 +76,11 @@ def _vision_class(image_url: str) -> Optional[tuple[str, str]]:
         model = (os.getenv("ROBOT_VISUAL_CLASS_MODEL") or "gpt-4o-mini").strip()
         prompt = (
             "Look at this manufacturer product photo. Reply with one JSON object "
-            '{"class":"humanoid|amr|mobile_manipulator|cobot|quadruped|autonomous_scrubber|unknown",'
+            '{"class":"humanoid|amr|mobile_manipulator|cobot|quadruped|autonomous_scrubber|healthcare|unknown",'
             '"evidence":"short visual cue"}. Class is body morphology only: '
             "bipedal humanoid, wheeled AMR, arm on a mobile base, collaborative arm, "
-            "four-legged, or floor scrubber. If unsure, class=unknown. No other keys."
+            "four-legged, or floor scrubber. A hospital/clinical assistant with a "
+            "social torso (Moxi) is healthcare, not humanoid. If unsure, class=unknown. No other keys."
         )
         resp = client.chat.completions.create(
             model=model,
@@ -86,7 +98,7 @@ def _vision_class(image_url: str) -> Optional[tuple[str, str]]:
         )
         raw = (resp.choices[0].message.content or "").strip()
         m = re.search(
-            r'"class"\s*:\s*"(humanoid|amr|mobile_manipulator|cobot|quadruped|autonomous_scrubber|unknown)"',
+            r'"class"\s*:\s*"(humanoid|amr|mobile_manipulator|cobot|quadruped|autonomous_scrubber|healthcare|unknown)"',
             raw,
             re.I,
         )

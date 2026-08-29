@@ -73,6 +73,7 @@ _SCOPED_CAPABILITY_PREDS = {
     "claims_disinfection",
     "claims_goods_to_person",
     "claims_agriculture",
+    "claims_healthcare",
     "claims_construction",
     "claims_mining",
     "claims_marine",
@@ -585,6 +586,17 @@ def _extract_from_page(
         )
 
     # --- product class / form (explicit claims only) ---
+    # Hospital / clinical assistant work is a class (healthcare), not a
+    # humanoid tile because the robot has a torso or a social face (Moxi).
+    _hospital_work = bool(
+        re.search(
+            r"\b(?:hospitals?|healthcare|clinical\s+assistant|hospital\s+(?:robot|assist)|"
+            r"nursing[- ]assist|pharmacy\s+deliver|medications?\s+(?:and|,)|"
+            r"supplies?,?\s+samples)\b",
+            text,
+            re.I,
+        )
+    )
     for m in re.finditer(
         r"\b((?:commercially\s+deployed\s+)?humanoid(?:\s+robot)?|bipedal(?:\s+robot)?)\b",
         text,
@@ -595,6 +607,8 @@ def _extract_from_page(
         # Skip third-party news blurbs
         ctx = text[max(0, m.start() - 80) : m.end() + 40]
         if re.search(r"\b(honda|asimo|avatar|in\s+the\s+news|ieee)\b", ctx, re.I):
+            continue
+        if _hospital_work:
             continue
         add("product_class", "humanoid", span=m.group(0), confidence=0.9)
 
@@ -724,6 +738,50 @@ def _extract_from_page(
         if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
             continue
         add("product_class", "agricultural_robot", span=m.group(0), confidence=0.88)
+
+    for m in re.finditer(
+        r"\b(healthcare\s+robots?|hospital\s+robots?|clinical\s+(?:assistant|delivery)\s+robots?|"
+        r"medical\s+(?:service\s+)?robots?|nursing[- ]assist(?:ant)?\s+robots?|"
+        r"hospital\s+(?:delivery|assist)\s+robots?|clinical\s+assistant)\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("product_class", "healthcare", span=m.group(0), confidence=0.9)
+        add("claims_healthcare", True, span=m.group(0)[:120], confidence=0.88)
+
+    # Named SKU / host: Diligent Moxi is a hospital/clinical assistant.
+    # COMPANY → PRODUCT identity, not torso → humanoid.
+    _id_blob_hc = f"{subject} {page_title} {text[:1600]}"
+    try:
+        from urllib.parse import urlparse as _urlparse_hc
+
+        _host_hc = (_urlparse_hc(page_url or source.url or "").hostname or "").lower()
+        if _host_hc.startswith("www."):
+            _host_hc = _host_hc[4:]
+    except Exception:
+        _host_hc = ""
+    _is_moxi = bool(re.search(r"\bmoxi\b", _id_blob_hc, re.I))
+    _is_diligent = _host_hc.endswith("diligentrobots.com") or bool(
+        re.search(r"diligent\s+robots", _id_blob_hc, re.I)
+    )
+    if (_is_moxi or _is_diligent) and (
+        _hospital_work
+        or re.search(r"\b(hospital|healthcare|clinical|nursing|pharmacy|medication)\b", _id_blob_hc, re.I)
+    ):
+        add(
+            "product_class",
+            "healthcare",
+            span="Moxi" if _is_moxi else "diligentrobots.com",
+            confidence=0.92,
+        )
+        add(
+            "claims_healthcare",
+            True,
+            span="hospital / clinical assistant",
+            confidence=0.9,
+        )
 
     # Named SKU / host: Carbon Robotics LaserWeeder is agricultural weeding.
     # COMPANY → PRODUCT identity, not company → category → jobs.
@@ -1209,6 +1267,20 @@ def _extract_from_page(
         if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
             continue
         add("claims_agriculture", True, span=m.group(0)[:120], confidence=0.85)
+
+    # --- Healthcare: hospital / clinical assistant work (not a humanoid torso) ---
+    for m in re.finditer(
+        r"\b(?:hospital\s+(?:robots?|assist|delivery)|clinical\s+(?:assistant|delivery)|"
+        r"healthcare\s+robots?|nursing[- ]assist|pharmacy\s+deliver|"
+        r"(?:deliver|transport|replenish)\w*\s+(?:[\w-]+\s+){0,4}?"
+        r"(?:medications?|medicines?|specimens?|lab\s+samples?|linens?|"
+        r"par[- ]level|nursing\s+units?|patient\s+(?:units?|floors?)))\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_healthcare", True, span=m.group(0)[:120], confidence=0.85)
 
     # --- Tier 3: construction ---
     for m in re.finditer(

@@ -1611,6 +1611,12 @@ def _hint_display_class(product_name: str, text: str) -> Optional[str]:
     if idx >= 0:
         window = text[max(0, idx - 200) : idx + 400]
     if re.search(r"\bhumanoid\b|\bbipedal\b", window, re.I):
+        if re.search(
+            r"\b(?:hospitals?|healthcare|clinical\s+assistant|hospital\s+assist|moxi)\b",
+            window,
+            re.I,
+        ):
+            return "healthcare"
         return "humanoid"
     if re.search(r"\b(drone|uav|aerial\s+robot|inspection\s+drone)\b", window, re.I):
         return "drone"
@@ -1637,6 +1643,13 @@ def _hint_display_class(product_name: str, text: str) -> Optional[str]:
         re.I,
     ):
         return "agriculture"
+    if re.search(
+        r"\b(healthcare\s+robot|hospital\s+robot|clinical\s+assistant|"
+        r"medical\s+service\s+robot|nursing[- ]assist|moxi)\b",
+        window,
+        re.I,
+    ):
+        return "healthcare"
     if re.search(
         r"\b(marine\s+robot|hull\s+inspect|underwater\s+robot|port\s+robot)\b",
         window,

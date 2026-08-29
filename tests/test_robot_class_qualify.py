@@ -331,8 +331,9 @@ def test_public_class_options_include_ten_classes():
         "avionics",
         "aerospace",
         "construction",
+        "healthcare",
     ]
-    assert len(rows) == 11
+    assert len(rows) == 12
     for row in rows:
         assert row["label"].strip()
         assert row["hint"].strip()

@@ -613,6 +613,11 @@ _CLASS_DOMAIN_CLAIMS: dict[str, tuple[str, str]] = {
     "autonomous_aircraft": ("claims_avionics", "drone / eVTOL / autonomous aircraft work"),
     "aerospace": ("claims_aerospace", "satellite / orbital / space-robot work"),
     "aerospace_robot": ("claims_aerospace", "satellite / orbital / space-robot work"),
+    "healthcare": ("claims_healthcare", "hospital / clinical assistant work"),
+    "healthcare_robot": ("claims_healthcare", "hospital / clinical assistant work"),
+    "medical_robot": ("claims_healthcare", "hospital / clinical assistant work"),
+    "clinical_robot": ("claims_healthcare", "hospital / clinical assistant work"),
+    "hospital_robot": ("claims_healthcare", "hospital / clinical assistant work"),
 }
 
 
@@ -708,6 +713,33 @@ def _domain_claims_for_indexed_robot(
             out.append(("claims_aerospace", True, f"{name}: satellite / orbital work."))
         if cls not in {"aerospace", "aerospace_robot"}:
             out.append(("product_class", "aerospace_robot", f"{name} is an aerospace robot."))
+    if re.search(
+        r"\b(hospital|healthcare|clinical|nursing\s+assist|pharmacy|"
+        r"medications?|specimens?|linens?|moxi)\b",
+        blob,
+    ):
+        if not any(p == "claims_healthcare" for p, _v, _s in out):
+            out.append(
+                (
+                    "claims_healthcare",
+                    True,
+                    f"{name}: hospital / clinical assistant work.",
+                )
+            )
+        if cls not in {
+            "healthcare",
+            "healthcare_robot",
+            "medical_robot",
+            "clinical_robot",
+            "hospital_robot",
+        }:
+            out.append(
+                (
+                    "product_class",
+                    "healthcare",
+                    f"{name} is a hospital / clinical assistant robot.",
+                )
+            )
     return out
 
 
@@ -749,6 +781,9 @@ def catalog_claim_facts(robot: dict[str, Any] | None) -> list[dict[str, Any]]:
         )
         seen.add("product_class")
     for pred, value, span in _domain_claims_for_indexed_robot(robot, primary):
+        if pred == "product_class" and str(value).lower() == "healthcare":
+            out = [f for f in out if f.get("predicate") != "product_class"]
+            seen.discard("product_class")
         if pred in seen:
             continue
         seen.add(pred)

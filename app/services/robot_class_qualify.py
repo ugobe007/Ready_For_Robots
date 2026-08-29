@@ -75,6 +75,12 @@ CLASS_OPTIONS: list[dict[str, str]] = [
         "label": "Construction",
         "hint": "Homes and buildings — framing, print, jobsite finish",
     },
+    {
+        "id": "healthcare",
+        "product_class": "healthcare",
+        "label": "Healthcare",
+        "hint": "Hospital and clinical work — delivery, pharmacy, linen, nursing assist",
+    },
 ]
 
 
@@ -140,6 +146,16 @@ def normalize_class_id(raw: str | None) -> str | None:
         "construction_robot": "construction",
         "homebuilding": "construction",
         "homebuilder": "construction",
+        "healthcare": "healthcare",
+        "healthcare_robot": "healthcare",
+        "medical": "healthcare",
+        "medical_robot": "healthcare",
+        "clinical": "healthcare",
+        "clinical_robot": "healthcare",
+        "hospital": "healthcare",
+        "hospital_robot": "healthcare",
+        "nursing": "healthcare",
+        "pharmacy": "healthcare",
     }
     mapped = aliases.get(want)
     if mapped:

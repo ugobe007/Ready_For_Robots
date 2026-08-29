@@ -780,7 +780,7 @@
           "model_slug": "diligent-robotics-moxi",
           "product_url": "https://www.diligentrobots.com/moxi",
           "vendor_url": "https://diligentrobots.com",
-          "primary_class": "service_robot",
+          "primary_class": "healthcare",
           "status": "available",
           "country": "United States",
           "description": "Moxi: Supplies, samples, PPE, medications. Hospitals.",
@@ -790,7 +790,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "healthcare",
               "evidence_span": "Moxi: Supplies, samples, PPE, medications. Hospitals."
             }
           ],

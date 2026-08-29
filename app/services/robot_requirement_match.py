@@ -76,6 +76,7 @@ REQUIREMENT_EXERCISES = {
     "agriculture_combine": frozenset({"agriculture_combine"}),
     "agriculture_spray": frozenset({"agriculture_spray"}),
     "agriculture_tractor": frozenset({"agriculture_tractor"}),
+    "healthcare_task": frozenset({"healthcare_task"}),
     "construction_task": frozenset({"construction_task"}),
     "construction_print": frozenset({"construction_print"}),
     "construction_block": frozenset({"construction_block"}),
@@ -179,6 +180,7 @@ _SIMPLE_CAP_REQ = {
     "agriculture_combine": ("agriculture_combine", "no grounded combine-harvest capability"),
     "agriculture_spray": ("agriculture_spray", "no grounded precision-spray capability"),
     "agriculture_tractor": ("agriculture_tractor", "no grounded autonomous-tractor capability"),
+    "healthcare_task": ("healthcare_task", "no grounded hospital / clinical capability"),
     "construction_task": ("construction_task", "no grounded construction capability"),
     "construction_print": ("construction_print", "no grounded 3D-print construction capability"),
     "construction_block": ("construction_block", "no grounded block/brick-laying capability"),
@@ -1080,15 +1082,16 @@ _SHELF_SCAN_REQS = [
     {"id": "mobility", "label": "mobility along aisles", "necessity": "required"},
 ]
 # Healthcare — hospital clinical delivery (meds, specimens, supplies, meals, linens).
+# Requires the healthcare work primitive, not generic warehouse AMR transport.
 _CLINICAL_REQS = [
-    {"id": "deliver_items", "label": "deliver clinical items (meds/specimens/supplies)", "necessity": "required"},
+    {"id": "healthcare_task", "label": "hospital / clinical assistant work", "necessity": "required"},
     {"id": "indoor_navigation", "label": "navigate the hospital (elevators, secure doors)", "necessity": "required"},
     {"id": "mobility", "label": "mobility between departments", "necessity": "required"},
     {"id": "payload_vs_object_weight", "label": "payload \u2265 load weight", "necessity": "required", "job_value": None, "unknown_reason": "load weight"},
 ]
 # Eldercare — resident services (meals, linens, amenities, supplies to rooms).
 _RESIDENT_REQS = [
-    {"id": "deliver_items", "label": "deliver resident items (meals/linens/amenities)", "necessity": "required"},
+    {"id": "healthcare_task", "label": "eldercare / clinical resident services", "necessity": "required"},
     {"id": "indoor_navigation", "label": "navigate the community", "necessity": "required"},
     {"id": "mobility", "label": "mobility between resident rooms", "necessity": "required"},
     {"id": "payload_vs_object_weight", "label": "payload \u2265 load weight", "necessity": "required", "job_value": None, "unknown_reason": "load weight"},
@@ -1276,7 +1279,7 @@ def match_jobs_from_profile(
                 "food_prep", "beverage_prep", "surface_clean", "shelf_scan", "pallet_move",
                 "trailer_unload", "pick_pack", "sortation", "disinfect", "goods_to_person",
                 "agriculture_task", "agriculture_weed", "agriculture_combine",
-                "agriculture_spray", "agriculture_tractor",
+                "agriculture_spray", "agriculture_tractor", "healthcare_task",
                 "construction_task", "construction_print", "construction_block",
                 "construction_layout", "mining_task",
                 "marine_task", "avionics_task", "evtol_flight", "drone_task",

@@ -40,16 +40,18 @@ category leakage.
 | `avionics` | `avionics_task` | Drone inspection/delivery, eVTOL, autonomous flight |
 | `aerospace` | `aerospace_task` | Satellite servicing, orbital debris capture, launch ground support |
 | `mining` | `mining_task` | Haulage/drilling/loading |
-| `clinical_delivery` | `transport` (item delivery) | Deliver meds pharmacy→units, specimens→lab, supply/meal/linen delivery |
-| `resident_services` | `transport` (item delivery) | Eldercare meals/linens/amenities to resident rooms |
+| `clinical_delivery` | `healthcare_task` | Deliver meds pharmacy→units, specimens→lab, supply/meal/linen delivery |
+| `resident_services` | `healthcare_task` | Eldercare meals/linens/amenities to resident rooms |
 | `restroom` | `surface_clean` | Clean restrooms (toilets, urinals, floors) |
 
-> Healthcare (`clinical_delivery`) and eldercare (`resident_services`) require the
-> autonomous item-delivery `transport` capability — **not** warehouse
-> `tote_transport` — so a hospital/eldercare delivery robot (Aethon, Relay) matches
-> them while a warehouse tote-AMR (Origin) does not. The `healthcare`/`eldercare`
-> vertical ([`ROBOT_VERTICAL_ONTOLOGY.md`](ROBOT_VERTICAL_ONTOLOGY.md)) labels
-> *where*; these families are the *work*.
+> Healthcare (`clinical_delivery`) and eldercare (`resident_services`) require
+> the `healthcare_task` work primitive — **not** warehouse `tote_transport` and
+> **not** a humanoid torso class — so a hospital/clinical assistant (Moxi, Aethon,
+> Relay with hospital evidence) matches them while a warehouse tote-AMR (Origin)
+> does not. The `healthcare`/`eldercare` vertical
+> ([`ROBOT_VERTICAL_ONTOLOGY.md`](ROBOT_VERTICAL_ONTOLOGY.md)) labels *where*;
+> these families are the *work*. FIND class **Healthcare** (aliases:
+> medical / clinical / hospital) stamps `product_class=healthcare`.
 
 > Broader target workflows — trailer unloading, kitting, pick/pack (robot-side),
 > line replenishment as a distinct family, hospital delivery as a distinct family

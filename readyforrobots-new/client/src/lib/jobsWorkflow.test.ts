@@ -1176,6 +1176,10 @@ describe("jobsWorkflow", () => {
     expect(normalizeRobotClass("agricultural_robot")).toBe("agriculture");
     expect(normalizeRobotClass("agriculture")).toBe("agriculture");
     expect(normalizeRobotClass("construction_robot")).toBe("construction");
+    expect(normalizeRobotClass("healthcare")).toBe("healthcare");
+    expect(normalizeRobotClass("medical")).toBe("healthcare");
+    expect(normalizeRobotClass("clinical")).toBe("healthcare");
+    expect(normalizeRobotClass("hospital")).toBe("healthcare");
     expect(normalizeRobotClass("drone")).toBe("avionics");
     expect(normalizeRobotClass("evtol")).toBe("avionics");
     expect(configurationClassForLookup("drone")).toBe("drone");
@@ -1194,18 +1198,23 @@ describe("jobsWorkflow", () => {
     expect(skuLookupGrain("evtol")).toBe("product");
     expect(skuLookupGrain("drone")).toBe("product");
     expect(skuLookupGrain("agriculture")).toBe("robot_type");
+    expect(skuLookupGrain("healthcare")).toBe("robot_type");
     expect(skuLookupGrain("humanoid")).toBe("robot_type");
     expect(robotClassTitle("evtol")).toBe("eVTOL");
     expect(robotClassTitle("avionics")).toBe("Avionics");
     expect(normalizeRobotClass("aerospace_robot")).toBe("aerospace");
     expect(robotClassJobsLabel("humanoid")).toBe("humanoids");
     expect(robotClassTitle("agriculture")).toBe("Agriculture");
+    expect(robotClassTitle("healthcare")).toBe("Healthcare");
     expect(robotClassTitle("aerospace")).toBe("Aerospace");
     expect(qualifySearchLookupGrain("")).toBe("robot_type");
     expect(qualifySearchLookupGrain("Your robot")).toBe("robot_type");
     expect(qualifySearchLookupGrain("NEO")).toBe("product");
     expect(classJobsEmptyCopy("agriculture")).toBe(
       "No agriculture jobs for this robot yet.",
+    );
+    expect(classJobsEmptyCopy("healthcare")).toBe(
+      "No healthcare jobs for this robot yet.",
     );
     expect(classJobsEmptyCopy("mining")).toMatch(/mining jobs for this robot yet/);
     expect(shouldShowClassPicker({ needsClassChoice: true, jobs: [], capabilities: [] })).toBe(
