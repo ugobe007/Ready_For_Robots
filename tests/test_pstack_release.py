@@ -110,3 +110,12 @@ def test_healthcare_class_fixture_fails_if_diligent_is_humanoid():
     assert "diligentrobots.com" in seed
     assert '"primary_class": "healthcare"' in seed
     assert DILIGENT in (ROOT / "pstack" / "release.yaml").read_text()
+
+
+def test_rfr_release_meta_moves_with_git_not_frozen_handoff_id():
+    html = (ROOT / "readyforrobots-new" / "client" / "index.html").read_text()
+    assert 'name="rfr-release"' in html
+    assert "jobs-handoff-42087c03" not in html
+    vite = (ROOT / "readyforrobots-new" / "vite.config.ts").read_text()
+    assert "injectRfrReleaseMeta" in vite
+    assert "rfrReleaseId" in vite
