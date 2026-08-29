@@ -43,7 +43,7 @@ ROLES: dict[PstackRoleId, dict[str, str]] = {
     "critic": {
         "id": "critic",
         "label": "Critic",
-        "job": "Drive a real OEM URL. Fail abort-as-failed, leftover CRM, and skip-green.",
+        "job": "Drive a real OEM URL. Fail abort-as-failed, leftover CRM, Diligent-as-humanoid, and skip-green.",
     },
 }
 
@@ -77,9 +77,15 @@ CRITIC_GATES: tuple[dict[str, str], ...] = (
         "prove": "class-picker click starts robot-job-search and settles jobs or empty",
         "fail": "Agriculture click silently no-ops or dumps empty CRM as the only outcome",
     },
+    {
+        "id": "healthcare_class",
+        "prove": "Diligent/Moxi is healthcare; Healthcare tile exists; class search returns named employers",
+        "fail": "Diligent classified humanoid, empty humanoid copy, or missing Healthcare class tile",
+    },
 )
 
 # Jobs PRs fail if FIND picker for these URLs contains chrome or a leftover robot.
+# diligentrobots.com is the healthcare-class held-out: Moxi must not be a humanoid.
 CRITIC_HELDOUT_FIND_URLS: tuple[str, ...] = (
     "https://advanced.farm/",
     "https://bedrockrobotics.com/",
@@ -89,6 +95,7 @@ CRITIC_HELDOUT_FIND_URLS: tuple[str, ...] = (
     "https://www.agtonomy.com/",
     "https://www.greenfieldincorporated.com/",
     "https://www.organifarms.de/",
+    "https://www.diligentrobots.com/",
 )
 
 FORBIDDEN: dict[SiteAgentRefusal, str] = {

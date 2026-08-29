@@ -35,6 +35,37 @@ def test_class_picker_click_starts_search_not_crm():
     assert "Finding jobs for that robot type" in text
     assert "classJobsEmptyCopy" in workflow
     assert "jobs for this robot yet" in workflow
+    assert "healthcare" in workflow
+
+
+def test_class_picker_includes_healthcare_as_twelfth_tile():
+    options = (
+        ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "robotClassOptions.ts"
+    ).read_text(encoding="utf-8")
+    qualify = (ROOT / "app" / "services" / "robot_class_qualify.py").read_text(
+        encoding="utf-8"
+    )
+    assert 'id: "healthcare"' in options
+    assert 'label: "Healthcare"' in options
+    assert '"id": "healthcare"' in qualify
+    ids = []
+    block = options[
+        options.index("export const DEFAULT_CLASS_OPTIONS") : options.index(
+            "export const CLASS_OPTION_IDS"
+        )
+    ]
+    for line in block.splitlines():
+        if "id:" in line and '"' in line:
+            ids.append(line.split('"')[1])
+    assert ids[-1] == "healthcare"
+    assert len(ids) == 12
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+    assert "No ${label} jobs for this robot yet." in workflow
+    assert 'healthcare: "Healthcare"' in workflow
+    wf_test = (
+        ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsWorkflow.test.ts"
+    ).read_text(encoding="utf-8")
+    assert "No healthcare jobs for this robot yet." in wf_test
 
 
 def test_jobs_ui_never_renders_insufficient_evidence_copy():

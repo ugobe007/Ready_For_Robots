@@ -53,15 +53,18 @@ describe("pstackSite protocol", () => {
       "matcher",
       "oem_extract",
       "class_picker",
+      "healthcare_class",
     ]);
     expect(CRITIC_GATES.find(gate => gate.id === "class_picker")?.fail).toMatch(/no-op/);
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.prove).toBe("FIND is /");
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.fail).toMatch(/experiment/);
     expect(CRITIC_GATES.find(gate => gate.id === "oem_extract")?.fail).toMatch(/chrome/);
+    expect(CRITIC_GATES.find(gate => gate.id === "healthcare_class")?.fail).toMatch(/humanoid/);
     expect(criticHeldoutFindUrls()).toEqual([...CRITIC_HELDOUT_FIND_URLS]);
     expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.xpeng.com/");
     expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.greenfieldincorporated.com/");
     expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.organifarms.de/");
+    expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.diligentrobots.com/");
     expect(crmWallRequired()).toBe(true);
     expect(PSTACK_CRM_WALL_REQUIRED).toBe(true);
     expect(jobsCrmOpenHref(false)).toMatch(/\/signup\?/);

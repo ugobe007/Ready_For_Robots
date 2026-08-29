@@ -37,7 +37,8 @@ export type CriticGate = {
     | "wall"
     | "matcher"
     | "oem_extract"
-    | "class_picker";
+    | "class_picker"
+    | "healthcare_class";
   prove: string;
   fail: string;
 };
@@ -71,7 +72,7 @@ export const PSTACK_ROLES: readonly PstackRole[] = [
   {
     id: "critic",
     label: "Critic",
-    job: "Drive a real OEM URL. Fail abort-as-failed, leftover CRM, and skip-green.",
+    job: "Drive a real OEM URL. Fail abort-as-failed, leftover CRM, Diligent-as-humanoid, and skip-green.",
   },
 ] as const;
 
@@ -121,6 +122,11 @@ export const CRITIC_GATES: readonly CriticGate[] = [
     prove: "class-picker click starts robot-job-search and settles jobs or empty",
     fail: "Agriculture click silently no-ops or dumps empty CRM as the only outcome",
   },
+  {
+    id: "healthcare_class",
+    prove: "Diligent/Moxi is healthcare; Healthcare tile exists; class search returns named employers",
+    fail: "Diligent classified humanoid, empty humanoid copy, or missing Healthcare class tile",
+  },
 ] as const;
 
 export const CRITIC_HELDOUT_FIND_URLS = [
@@ -132,6 +138,7 @@ export const CRITIC_HELDOUT_FIND_URLS = [
   "https://www.agtonomy.com/",
   "https://www.greenfieldincorporated.com/",
   "https://www.organifarms.de/",
+  "https://www.diligentrobots.com/",
 ] as const;
 
 export const PSTACK_CHROME_EYEBROW = "Jobs agent protocol";
