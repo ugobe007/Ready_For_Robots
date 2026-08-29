@@ -45,9 +45,10 @@ def classify_image_hints(images: list[tuple[str, str]], page_text: str = "") -> 
     blob = f"{_blob_for_images(images)} {page_text[:1500]}"
     if not blob.strip():
         return None
-    hospital = bool(
+    healthcare_assistant = bool(
         re.search(
-            r"\b(?:hospitals?|healthcare|clinical\s+assistant|hospital\s+assist|moxi|diligent)\b",
+            r"\b(?:moxi|diligent|clinical\s+assistant|nursing[- ]assist|"
+            r"pharmacy\s+deliver|hospital\s+(?:robot|assist))\b",
             blob,
             re.I,
         )
@@ -56,7 +57,7 @@ def classify_image_hints(images: list[tuple[str, str]], page_text: str = "") -> 
         m = rx.search(blob)
         if not m:
             continue
-        if cls == "humanoid" and hospital:
+        if cls == "humanoid" and healthcare_assistant:
             continue
         return cls, m.group(0)
     return None
