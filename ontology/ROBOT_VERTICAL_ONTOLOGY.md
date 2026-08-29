@@ -18,7 +18,7 @@ Loaded by `app/services/robot_ontology.py`; emitted by
 | `retail` | Retail / grocery | ✅ | Simbe, shelf-scan AMRs |
 | `hospitality` | Hospitality — hotels | ✅ | Aethon (hotel), bellhop robots |
 | `restaurant` | Restaurant / foodservice | ✅ | Bear Servi, Keenon, Pudu, Miso, Richtech |
-| `healthcare` | Hospitals, clinics, surgery, pharmacy, lab | ✅ | Aethon TUG, Relay, Moxi |
+| `healthcare` | Hospitals, clinics, surgery, pharmacy, lab, nursing units, med-surg, OR, linen / unit-delivery | ✅ | Aethon TUG, Relay, Moxi |
 | `eldercare` | Nursing home, senior/assisted living, rehab, PT | ✅ | Relay, service/companion robots |
 | `airport` | Airport / transit hub | ✅ | cleaning + delivery AMRs |
 | `commercial` | Offices / reception / facilities | ✅ | reception & delivery robots |
@@ -48,6 +48,11 @@ Loaded by `app/services/robot_ontology.py`; emitted by
 - Healthcare and eldercare are separated because their work differs (clinical
   delivery / specimen transport vs. resident services / meal & linen delivery),
   though both are served today by the same `transport`/`serve` capabilities.
+- **Work language (R33).** Distinctive hospital / clinical / pharmacy /
+  nursing / patient / OR / med-surg / linen / unit-delivery terms live in
+  [`industry_work_language.v1.json`](industry_work_language.v1.json). They
+  classify the **configuration** after hardware. They do not invent Job Cards.
+  Work-language / task-model evidence outranks generic humanoid morphology.
 
 ## Example — Aethon TUG
 `autonomous mobile robots` → `product_class=amr` → `mobile`; "deliveries of

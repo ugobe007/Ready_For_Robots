@@ -1,6 +1,6 @@
 {
   "ontology_id": "rfr_task_models_v1",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "product_term": "task_model",
   "internal_nickname": "certificate",
   "ui_term": "task model",
@@ -280,7 +280,7 @@
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Pick, place, and stow SKUs or totes in a fulfillment cell",
       "tape_families": ["gripper", "pallet", "transport"],
-      "keywords": ["warehouse", "fulfillment", "distribution center", "asin", "pick station", "pallet", "case", "carton", "conveyor", "palletiz"],
+      "keywords": ["warehouse", "fulfillment", "distribution center", "asin", "pick station", "pallet", "case", "carton", "conveyor", "palletiz", "logistics", "3pl", "cross-dock"],
       "hardware_not_enough": "A mobile manipulator can exist in the DC and still lack the pick policy for that SKU mix.",
       "where_to_look": [
         {
@@ -324,7 +324,7 @@
       "typical_time_band": "1_to_4_weeks",
       "physical_task": "Navigate aisles, docks, and human traffic while moving goods",
       "tape_families": ["transport", "cart"],
-      "keywords": ["amr", "agv", "warehouse", "fulfillment", "dock", "tote", "cart", "aisle", "zone"],
+      "keywords": ["amr", "agv", "warehouse", "fulfillment", "dock", "tote", "cart", "aisle", "zone", "logistics", "3pl", "cross-dock"],
       "hardware_not_enough": "A drive base is not a site-qualified navigation model for that map and traffic mix.",
       "where_to_look": [
         {
@@ -350,7 +350,7 @@
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Load and unload parts on CNC / process machines without crashing the fixture",
       "tape_families": ["gripper"],
-      "keywords": ["cnc", "machine tend", "machine-tend", "lathe", "mill", "workpiece", "fixture", "load/unload", "tending"],
+      "keywords": ["cnc", "machine tend", "machine-tend", "lathe", "mill", "workpiece", "fixture", "load/unload", "tending", "factory", "assembly line", "plant"],
       "hardware_not_enough": "Reach and payload do not encode fixture geometry or cycle interlocks.",
       "where_to_look": [
         {
@@ -375,8 +375,26 @@
       "who_trains": ["oem"],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Move linens, meals, meds, or samples through clinical corridors under hospital rules",
-      "tape_families": ["transport", "cart"],
-      "keywords": ["hospital", "clinic", "nursing", "patient", "pharmacy", "linen", "or suite"],
+      "tape_families": ["clinical_delivery", "transport", "cart"],
+      "keywords": [
+        "hospital",
+        "healthcare",
+        "clinic",
+        "clinical",
+        "nursing",
+        "nursing unit",
+        "patient",
+        "pharmacy",
+        "linen",
+        "or suite",
+        "operating room",
+        "med-surg",
+        "unit-delivery",
+        "unit delivery",
+        "medication",
+        "specimen",
+        "lab sample"
+      ],
       "hardware_not_enough": "Indoor mobility is not a HIPAA/infection-control qualified clinical transport policy.",
       "where_to_look": [
         {
@@ -503,7 +521,7 @@
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Remove weeds in row crops with laser or mechanical tools without damaging the crop",
       "tape_families": ["agriculture"],
-      "keywords": ["weed", "weeding", "laserweed", "laser weeder", "row crop", "vegetable row", "field"],
+      "keywords": ["weed", "weeding", "laserweed", "laser weeder", "row crop", "vegetable row", "field", "agriculture", "crop"],
       "hardware_not_enough": "A field robot is not a trained weeding policy for that crop, spacing, and soil.",
       "where_to_look": [
         {
@@ -583,7 +601,7 @@
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Print layout, move earth, or finish surfaces on this jobsite under that GC's rules",
       "tape_families": ["construction"],
-      "keywords": ["jobsite", "layout", "drywall", "earthwork", "rebar", "grade"],
+      "keywords": ["jobsite", "layout", "drywall", "earthwork", "rebar", "grade", "framing", "construction", "bricklaying"],
       "hardware_not_enough": "A construction chassis is not the layout or finishing policy for this floorplate.",
       "where_to_look": [
         {
@@ -831,6 +849,99 @@
           "name": "GSE / pad OEM program",
           "url": null,
           "note": "Ask which pad policy they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "mining_haulage_policy",
+      "label": "Mine / quarry haulage policy",
+      "vertical": "mining",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Haul ore or overburden on a named pit, stope, or underground route under that mine's traffic rules",
+      "tape_families": ["mining"],
+      "keywords": [
+        "mining",
+        "mine",
+        "quarry",
+        "haul truck",
+        "haulage",
+        "underground mining",
+        "stope",
+        "longwall",
+        "ore",
+        "overburden"
+      ],
+      "hardware_not_enough": "A haul chassis is not the traffic and dump policy for this pit or stope.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Mining OEM autonomy pack",
+          "url": null,
+          "note": "Ask which haulage policy they ship for this pit or underground loop. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "hotel_guest_service_policy",
+      "label": "Hotel / guest delivery and serving policy",
+      "vertical": "hospitality",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Deliver amenities, luggage, or table items through hotel or dining floors under that property's guest rules",
+      "tape_families": ["serve", "cart"],
+      "keywords": [
+        "hotel",
+        "resort",
+        "guest room",
+        "guest delivery",
+        "bellhop",
+        "room service",
+        "housekeeping",
+        "table service",
+        "food running",
+        "bussing",
+        "serving",
+        "hospitality"
+      ],
+      "hardware_not_enough": "Indoor mobility is not a guest-service policy for this property's floors and SOPs.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Hospitality OEM guest-service pack",
+          "url": null,
+          "note": "Ask which hotel or serving policy they ship for this property — not only which chassis."
+        }
+      ]
+    },
+    {
+      "id": "food_prep_station_policy",
+      "label": "Food-prep station policy",
+      "vertical": "restaurant",
+      "layer": "site_adapted",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Cook or prep named menu items at a fry, grill, or prep station under that kitchen's recipes",
+      "tape_families": ["food_prep"],
+      "keywords": [
+        "food prep",
+        "food preparation",
+        "fry station",
+        "fryer",
+        "grill",
+        "cooking",
+        "cook",
+        "kitchen"
+      ],
+      "hardware_not_enough": "A kitchen-capable arm is not the recipe and station policy for this menu.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Food-prep OEM skill pack",
+          "url": null,
+          "note": "Ask which fry/grill/prep policy they ship for this station. Presence starts unknown."
         }
       ]
     },

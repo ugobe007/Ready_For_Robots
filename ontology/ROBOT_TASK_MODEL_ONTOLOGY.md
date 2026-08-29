@@ -9,7 +9,7 @@ A **task model** is the trained policy / skill pack that makes a robot actually 
 HARDWARE  →  CAPABILITIES  →  TASK MODELS  →  WORKFLOWS  →  JOB REQUIREMENTS  →  MATCH
 ```
 
-Hardware says the machine *can* move and grasp. A task model says it *knows this job* (this warehouse pick, this hospital linen run, this CNC fixture).
+Hardware says the machine *can* move and grasp. A task model says it *knows this job* (this warehouse pick, this hospital linen run, this CNC fixture). Industry work language that implies a task-model slot (hospital, clinical, pharmacy, nursing, …) lives in [`industry_work_language.v1.json`](industry_work_language.v1.json) and outranks generic humanoid morphology (R33).
 
 ## Why this exists
 

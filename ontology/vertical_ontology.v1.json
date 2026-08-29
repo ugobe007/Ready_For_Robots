@@ -73,11 +73,20 @@
         "hospital",
         "healthcare",
         "clinic",
+        "clinical",
         "surgery center",
         "surgical center",
         "pharmacy",
         "laboratory",
-        "medical center"
+        "medical center",
+        "nursing",
+        "nursing unit",
+        "patient",
+        "med-surg",
+        "linen",
+        "unit-delivery",
+        "operating room",
+        "or suite"
       ]
     },
     {
