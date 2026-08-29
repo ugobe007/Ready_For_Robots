@@ -38,8 +38,42 @@ SEARCH_API = ROOT / "app" / "api" / "robot_job_search.py"
 
 DEXMATE = "https://www.dexmate.ai/"
 GREENFIELD = "https://www.greenfieldincorporated.com/"
+DILIGENT = "https://www.diligentrobots.com/"
 RESEARCH_FAILED_RE = re.compile(r"research failed|failed to fetch", re.I)
 STRAWBERRY_RE = re.compile(r"strawberry|agrobot|harvest\s*croo|harvestcroo", re.I)
+HUMAN_EMPTY_RE = re.compile(r"no humanoid jobs for this robot yet", re.I)
+HEALTHCARE_CLASSES = frozenset(
+    {
+        "healthcare",
+        "healthcare_robot",
+        "medical_robot",
+        "clinical_robot",
+        "hospital_robot",
+    }
+)
+REQUIRED_CRITIC_GATE_IDS = (
+    "find",
+    "find_abort",
+    "find_identity",
+    "crm_leftover",
+    "job_cards",
+    "wall",
+    "matcher",
+    "oem_extract",
+    "class_picker",
+    "healthcare_class",
+)
+CLASS_OPTIONS_TS = (
+    ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "robotClassOptions.ts"
+)
+CLASS_QUALIFY = ROOT / "app" / "services" / "robot_class_qualify.py"
+WORKFLOW_TS = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsWorkflow.ts"
+WORKFLOW_TEST = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsWorkflow.test.ts"
+OEM_SKU_SEED = ROOT / "app" / "data" / "vendor_robots_oem_sku_seed.json"
+KNOWN_OEM_JSON = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "knownOemLineups.json"
+JOB_CORPUS = ROOT / "app" / "data" / "robot_job_match_corpus.json"
+HEALTHCARE_TEST = ROOT / "tests" / "test_healthcare_class_jobs.py"
+RELEASE_YAML = ROOT / "pstack" / "release.yaml"
 
 
 def _now() -> str:
@@ -302,8 +336,10 @@ def phase_act() -> dict[str, Any]:
             "release_helpers",
             "FIND_ABORT_FIXTURE" in release_ts
             and "CRM_LEFTOVER_FIXTURE" in release_ts
-            and "CLASS_PICKER_FIXTURE" in release_ts,
-            "pstackRelease.ts encodes the #173 abort and #172 leftover fixtures",
+            and "CLASS_PICKER_FIXTURE" in release_ts
+            and "HEALTHCARE_CLASS_FIXTURE" in release_ts
+            and "diligentMustNotBeHumanoidEmpty" in release_ts,
+            "pstackRelease.ts encodes abort, leftover, class-picker, and Diligent healthcare fixtures",
         )
     )
 
@@ -386,6 +422,241 @@ def drive_find_url(url: str, *, api: str) -> dict[str, Any]:
     }
 
 
+def _ts_class_option_ids(src: str) -> list[str]:
+    block = _slice(src, "export const DEFAULT_CLASS_OPTIONS", "export const CLASS_OPTION_IDS")
+    return re.findall(r'\bid:\s*"([a-z_]+)"', block)
+
+
+def _py_class_option_ids(src: str) -> list[str]:
+    block = _slice(src, "CLASS_OPTIONS: list[dict[str, str]] = [", "def public_class_options")
+    return re.findall(r'"id":\s*"([a-z_]+)"', block)
+
+
+def _diligent_catalog_classes() -> list[str]:
+    classes: list[str] = []
+    if OEM_SKU_SEED.is_file():
+        try:
+            payload = json.loads(_read(OEM_SKU_SEED))
+        except json.JSONDecodeError:
+            payload = []
+        rows = payload.get("vendors") if isinstance(payload, dict) else payload
+        for vendor in rows if isinstance(rows, list) else []:
+            if not isinstance(vendor, dict):
+                continue
+            domains = " ".join(str(d) for d in (vendor.get("domains") or []))
+            if "diligentrobots.com" not in domains.lower() and "diligent" not in str(
+                vendor.get("vendor_name") or ""
+            ).lower():
+                continue
+            for robot in vendor.get("robots") or []:
+                if not isinstance(robot, dict):
+                    continue
+                if str(robot.get("name") or "").strip().lower() != "moxi":
+                    continue
+                classes.append(str(robot.get("primary_class") or "").lower())
+                for claim in robot.get("catalog_claims") or []:
+                    if isinstance(claim, dict) and claim.get("predicate") == "product_class":
+                        classes.append(str(claim.get("value") or "").lower())
+    if KNOWN_OEM_JSON.is_file():
+        try:
+            listing = json.loads(_read(KNOWN_OEM_JSON))
+        except json.JSONDecodeError:
+            listing = {}
+        row = listing.get("diligentrobots.com") if isinstance(listing, dict) else None
+        if isinstance(row, dict):
+            for robot in row.get("robots") or []:
+                if isinstance(robot, dict):
+                    classes.append(str(robot.get("display_class") or "").lower())
+    return [c for c in classes if c]
+
+
+def _named_healthcare_corpus_jobs() -> int:
+    if not JOB_CORPUS.is_file():
+        return 0
+    try:
+        rows = json.loads(_read(JOB_CORPUS))
+    except json.JSONDecodeError:
+        return 0
+    if isinstance(rows, dict):
+        rows = rows.get("jobs") or rows.get("items") or []
+    n = 0
+    for job in rows if isinstance(rows, list) else []:
+        if not isinstance(job, dict):
+            continue
+        family = str(job.get("tape_family") or "").lower()
+        source = str(job.get("source") or "").lower()
+        if family not in {"clinical_delivery", "resident_services"} and "healthcare" not in source:
+            continue
+        if str(job.get("company_name") or "").strip():
+            n += 1
+    return n
+
+
+def healthcare_class_fixture() -> tuple[bool, str]:
+    """Source/fixture Critic: Diligent is healthcare, Healthcare is the 12th tile, named jobs exist."""
+    misses: list[str] = []
+    site = _read(PSTACK_SITE) if PSTACK_SITE.is_file() else ""
+    protocol = _read(PROTOCOL_PY) if PROTOCOL_PY.is_file() else ""
+    release_ts = _read(PSTACK_RELEASE_TS) if PSTACK_RELEASE_TS.is_file() else ""
+    release_yaml = _read(RELEASE_YAML) if RELEASE_YAML.is_file() else ""
+    class_ts = _read(CLASS_OPTIONS_TS) if CLASS_OPTIONS_TS.is_file() else ""
+    class_py = _read(CLASS_QUALIFY) if CLASS_QUALIFY.is_file() else ""
+    workflow = _read(WORKFLOW_TS) if WORKFLOW_TS.is_file() else ""
+    workflow_test = _read(WORKFLOW_TEST) if WORKFLOW_TEST.is_file() else ""
+    hc_test = _read(HEALTHCARE_TEST) if HEALTHCARE_TEST.is_file() else ""
+
+    gate_ids = re.findall(r'id:\s*"([a-z_]+)"', _slice(site, "export const CRITIC_GATES", "export const CRITIC_HELDOUT"))
+    if not gate_ids:
+        gate_ids = re.findall(r'"id":\s*"([a-z_]+)"', protocol)
+    if tuple(gate_ids) != REQUIRED_CRITIC_GATE_IDS:
+        misses.append(f"criticGateIds={gate_ids}")
+    if "healthcare_class" not in site or "healthcare_class" not in protocol:
+        misses.append("healthcare_class missing from site/protocol")
+    if DILIGENT not in site or DILIGENT not in protocol:
+        misses.append("held-out diligentrobots.com missing")
+    if "HEALTHCARE_CLASS_FIXTURE" not in release_ts or "diligentMustNotBeHumanoidEmpty" not in release_ts:
+        misses.append("HEALTHCARE_CLASS_FIXTURE missing")
+    if "healthcare_class" not in release_yaml or DILIGENT not in release_yaml:
+        misses.append("release.yaml missing healthcare_class / Diligent URL")
+
+    ts_ids = _ts_class_option_ids(class_ts)
+    py_ids = _py_class_option_ids(class_py)
+    if len(ts_ids) != 12 or ts_ids[-1] != "healthcare":
+        misses.append(f"class picker tiles={ts_ids}")
+    if "healthcare" not in ts_ids or "healthcare" not in py_ids:
+        misses.append("Healthcare class id missing")
+    if '"healthcare"' not in workflow or "healthcare" not in class_py:
+        misses.append("FIND_TILE / workflow missing healthcare")
+    if "No ${label} jobs for this robot yet." not in workflow:
+        misses.append("class empty-copy template missing")
+    if 'healthcare: "Healthcare"' not in workflow:
+        misses.append("Healthcare class title missing")
+    if "No healthcare jobs for this robot yet." not in workflow_test:
+        misses.append("healthcare empty copy test missing")
+    if "No healthcare jobs for this robot yet." not in release_ts:
+        misses.append("fixture empty copy missing")
+    if "No humanoid jobs for this robot yet." not in release_ts:
+        misses.append("fixture must forbid humanoid empty copy")
+
+    classes = _diligent_catalog_classes()
+    if not classes:
+        misses.append("Diligent/Moxi catalog missing")
+    elif any(c == "humanoid" for c in classes):
+        misses.append(f"Diligent catalog class is humanoid ({classes})")
+    elif not any(c in HEALTHCARE_CLASSES for c in classes):
+        misses.append(f"Diligent catalog is not healthcare ({classes})")
+
+    named = _named_healthcare_corpus_jobs()
+    if named <= 0:
+        misses.append("healthcare corpus has 0 named-employer jobs")
+
+    if not HEALTHCARE_TEST.is_file():
+        misses.append("tests/test_healthcare_class_jobs.py missing")
+    else:
+        if "humanoid" not in hc_test.lower():
+            misses.append("healthcare pytest does not forbid humanoid")
+        if "diligentrobots.com" not in hc_test:
+            misses.append("healthcare pytest does not drive Diligent URL")
+        if "job_count" not in hc_test:
+            misses.append("healthcare pytest does not require jobs")
+
+    return (not misses, "; ".join(misses))
+
+
+def drive_diligent_healthcare(*, api: str) -> dict[str, Any]:
+    """Live FIND: Diligent must not be a humanoid empty; Healthcare class returns named jobs."""
+    base = api.rstrip("/")
+    search_code, search = _post_json(
+        f"{base}/api/robot-job-search",
+        {"url": DILIGENT, "lookup_grain": "product"},
+        timeout=90.0,
+    )
+    class_code, class_out = _post_json(
+        f"{base}/api/robot-job-search",
+        {
+            "url": DILIGENT,
+            "asserted_class": "healthcare",
+            "lookup_grain": "robot_type",
+        },
+        timeout=90.0,
+    )
+    search_blob = json.dumps(search, default=str).lower() if search is not None else ""
+    class_blob = json.dumps(class_out, default=str).lower() if class_out is not None else ""
+    cls = (
+        str(search.get("robot_class") or "").lower()
+        if isinstance(search, dict)
+        else ""
+    )
+    class_cls = (
+        str(class_out.get("robot_class") or "").lower()
+        if isinstance(class_out, dict)
+        else ""
+    )
+    options = search.get("class_options") if isinstance(search, dict) else None
+    option_ids = {
+        str(row.get("id") or "").lower()
+        for row in (options or [])
+        if isinstance(row, dict)
+    }
+    humanoid = "humanoid" in cls.split() or cls == "humanoid" or cls.endswith("_humanoid")
+    if cls == "humanoid" or "humanoid" in cls:
+        humanoid = True
+    human_empty = bool(HUMAN_EMPTY_RE.search(search_blob) or HUMAN_EMPTY_RE.search(class_blob))
+    healthcare_direct = cls in HEALTHCARE_CLASSES
+    incomplete_ok = bool(
+        isinstance(search, dict) and search.get("needs_class_choice")
+    ) and "healthcare" in option_ids
+    identity_ok = healthcare_direct or incomplete_ok
+    class_jobs = class_out.get("jobs") if isinstance(class_out, dict) else None
+    named = [
+        j
+        for j in (class_jobs or [])
+        if isinstance(j, dict) and str(j.get("company_name") or "").strip()
+    ]
+    class_humanoid = "humanoid" in class_cls
+    class_ok = (
+        class_code == 200
+        and isinstance(class_out, dict)
+        and len(named) > 0
+        and not class_humanoid
+        and not HUMAN_EMPTY_RE.search(class_blob)
+    )
+    search_ok = search_code == 200 and isinstance(search, dict)
+    ok = (
+        search_ok
+        and not humanoid
+        and not human_empty
+        and identity_ok
+        and class_ok
+    )
+    return {
+        "ok": ok,
+        "feature": "healthcare_class",
+        "url": DILIGENT,
+        "search_status": search_code,
+        "class_status": class_code,
+        "robot_class": cls,
+        "class_search_robot_class": class_cls,
+        "needs_class_choice": search.get("needs_class_choice") if isinstance(search, dict) else None,
+        "healthcare_option": "healthcare" in option_ids,
+        "humanoid": humanoid,
+        "humanoid_empty": human_empty,
+        "named_employer_jobs": len(named),
+        "error": None
+        if ok
+        else {
+            "search_status": search_code,
+            "class_status": class_code,
+            "robot_class": cls,
+            "humanoid": humanoid,
+            "humanoid_empty": human_empty,
+            "identity_ok": identity_ok,
+            "named_employer_jobs": len(named),
+            "search_state": search.get("state") if isinstance(search, dict) else None,
+        },
+    }
+
+
 def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
     identity = _read(IDENTITY) if IDENTITY.is_file() else ""
@@ -462,6 +733,15 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
             "Class-picker click is not a no-op; Agriculture starts robot-job-search",
         )
     )
+    fixture_ok, fixture_detail = healthcare_class_fixture()
+    checks.append(
+        _check(
+            "healthcare_class",
+            fixture_ok,
+            "Diligent/Moxi is healthcare, Healthcare is the 12th tile, named hospital jobs exist",
+            fixture_detail,
+        )
+    )
 
     drives: list[dict[str, Any]] = []
     if local:
@@ -470,6 +750,14 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
                 "find_drive",
                 True,
                 "FIND URL drive skipped (--local)",
+                "skipped",
+            )
+        )
+        checks.append(
+            _check(
+                "healthcare_class:live",
+                True,
+                "Diligent FIND drive skipped (--local)",
                 "skipped",
             )
         )
@@ -485,6 +773,16 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
                     "" if drive.get("ok") else json.dumps(drive.get("error"), default=str)[:500],
                 )
             )
+        diligent = drive_diligent_healthcare(api=api)
+        drives.append(diligent)
+        checks.append(
+            _check(
+                "healthcare_class:live",
+                bool(diligent.get("ok")),
+                "Live FIND Diligent is not humanoid empty; Healthcare class returns named employers",
+                "" if diligent.get("ok") else json.dumps(diligent.get("error"), default=str)[:500],
+            )
+        )
 
     ok = all(c["ok"] for c in checks)
     return {"phase": "critic", "ok": ok, "checks": checks, "drives": drives}

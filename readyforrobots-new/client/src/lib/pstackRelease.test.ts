@@ -10,9 +10,11 @@ import {
   CLASS_PICKER_FIXTURE,
   CRM_LEFTOVER_FIXTURE,
   FIND_ABORT_FIXTURE,
+  HEALTHCARE_CLASS_FIXTURE,
   PSTACK_RELEASE_CHROME_REQUIRED,
   abortMustNotSurfaceAsResearchFailed,
   bindUrlFlushesPriorRobot,
+  diligentMustNotBeHumanoidEmpty,
   leftoverCrmMustNotKeepPriorRobot,
 } from "./pstackRelease";
 import {
@@ -162,10 +164,15 @@ describe("pstack release authority is not FIND/CRM chrome", () => {
       "matcher",
       "oem_extract",
       "class_picker",
+      "healthcare_class",
     ]);
     expect(CLASS_PICKER_FIXTURE.classId).toBe("agriculture");
     expect(CLASS_PICKER_FIXTURE.prompt).toBe("What type of robot?");
     expect(CLASS_PICKER_FIXTURE.emptyCopy).toMatch(/No agriculture jobs/);
+    expect(HEALTHCARE_CLASS_FIXTURE.classId).toBe("healthcare");
+    expect(HEALTHCARE_CLASS_FIXTURE.url).toContain("diligentrobots.com");
+    expect(HEALTHCARE_CLASS_FIXTURE.forbidEmpty).toMatch(/No humanoid jobs/);
+    expect(diligentMustNotBeHumanoidEmpty()).toBe(true);
     const desk = readFileSync(
       join(here, "../components/JobsCrmDesk.tsx"),
       "utf8",

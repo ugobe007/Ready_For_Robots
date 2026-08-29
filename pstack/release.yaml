@@ -58,6 +58,9 @@ critic:
   - id: class_picker
     prove: class-picker click starts robot-job-search and settles jobs or empty
     fail: Agriculture click silently no-ops or dumps empty CRM as the only outcome
+  - id: healthcare_class
+    prove: Diligent/Moxi is healthcare; Healthcare tile exists; class search returns named employers
+    fail: Diligent classified humanoid, empty humanoid copy, or missing Healthcare class tile
   - id: find_drive
     prove: POST /api/robot-job-search for a real OEM URL does not return Research failed
 
@@ -67,6 +70,11 @@ find_urls:
   - url: https://www.greenfieldincorporated.com/
     expect_host: greenfieldincorporated
     forbid: [strawberry, agrobot, harvestcroo, harvest croo]
+  - url: https://www.diligentrobots.com/
+    expect_host: diligentrobots
+    expect_class: healthcare
+    forbid: [humanoid]
+    forbid_empty: No humanoid jobs for this robot yet.
 
 jobs_paths:
   - readyforrobots-new/client/src/components/RobotJobsWorkspace.tsx
