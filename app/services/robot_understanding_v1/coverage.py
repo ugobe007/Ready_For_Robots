@@ -29,6 +29,7 @@ Morphology = Literal[
     "marine_robot",
     "aviation_robot",
     "aerospace_robot",
+    "healthcare",
     "generic",
 ]
 
@@ -175,6 +176,14 @@ _CHECKLISTS: dict[Morphology, tuple[ChecklistSlot, ...]] = {
         ChecklistSlot("environment", "Operating environment", ("operating_environment",)),
         ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
     ),
+    "healthcare": (
+        ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
+        ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
+        ChecklistSlot("workflows", "Demonstrated workflows", ("claims_healthcare", "claims_item_delivery")),
+        ChecklistSlot("environment", "Operating environment", ("operating_environment",)),
+        ChecklistSlot("payload", "Payload / carry capacity", ("carrying_capacity",)),
+        ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
+    ),
     "mining_robot": (
         ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
         ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
@@ -209,6 +218,14 @@ _DISPLAY_CLASS_ALIASES: dict[str, Morphology] = {
     "evtol": "aviation_robot",
     "aerospace": "aerospace_robot",
     "aerospace_robot": "aerospace_robot",
+    "healthcare": "healthcare",
+    "healthcare_robot": "healthcare",
+    "medical": "healthcare",
+    "medical_robot": "healthcare",
+    "clinical": "healthcare",
+    "clinical_robot": "healthcare",
+    "hospital": "healthcare",
+    "hospital_robot": "healthcare",
 }
 
 
@@ -224,6 +241,12 @@ def infer_morphology(facts: list[RobotFact], display_class: str | None = None) -
         if f.predicate == "product_class" and f.epistemic not in ("unknown",)
     ]
     for key in (
+        "healthcare",
+        "agricultural_robot",
+        "construction_robot",
+        "marine_robot",
+        "aviation_robot",
+        "aerospace_robot",
         "humanoid",
         "quadruped",
         "drone",
@@ -231,11 +254,6 @@ def infer_morphology(facts: list[RobotFact], display_class: str | None = None) -
         "mobile_manipulator",
         "autonomous_scrubber",
         "cleaning_robot",
-        "construction_robot",
-        "agricultural_robot",
-        "marine_robot",
-        "aviation_robot",
-        "aerospace_robot",
         "mining_robot",
         "autonomous_forklift",
         "service_robot",

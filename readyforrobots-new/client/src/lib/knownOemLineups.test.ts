@@ -62,4 +62,12 @@ describe("knownOemLineups", () => {
     expect(hit?.robots.map(r => r.name)).toEqual(["Memo"]);
     expect(hit?.robots[0]?.display_class).toBe("service_robot");
   });
+
+  it("maps Diligent Moxi as healthcare, not humanoid", () => {
+    const hit = lookupKnownOem("https://www.diligentrobots.com/");
+    expect(hit?.vendor_name).toMatch(/Diligent/i);
+    expect(hit?.robots.map(r => r.name)).toEqual(["Moxi"]);
+    expect(hit?.robots[0]?.display_class).toBe("healthcare");
+    expect(hit?.robots[0]?.display_class).not.toBe("humanoid");
+  });
 });

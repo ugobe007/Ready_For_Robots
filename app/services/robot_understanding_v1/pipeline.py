@@ -363,7 +363,9 @@ def build_robot_profile(
 
     facts = mark_contradictions(facts)
 
-    # Set display_class from strongest product_class claim (descriptive only)
+    # Set display_class from strongest product_class claim (descriptive only).
+    # Domain work (healthcare, agriculture, …) beats torso morphology: Moxi
+    # is a hospital assistant, not a humanoid tile because it has a torso.
     if selected:
         class_facts = [
             f
@@ -371,7 +373,25 @@ def build_robot_profile(
             if f.predicate == "product_class" and f.epistemic not in ("unknown", "contradicted")
         ]
         if class_facts:
-            best = max(class_facts, key=lambda f: f.confidence)
+            domain_priority = {
+                "healthcare",
+                "healthcare_robot",
+                "medical_robot",
+                "clinical_robot",
+                "hospital_robot",
+                "agriculture",
+                "agricultural_robot",
+                "construction",
+                "construction_robot",
+                "marine",
+                "marine_robot",
+                "avionics",
+                "aviation_robot",
+                "aerospace",
+                "aerospace_robot",
+            }
+            domain = [f for f in class_facts if str(f.value).lower() in domain_priority]
+            best = max(domain or class_facts, key=lambda f: f.confidence)
             selected.display_class = str(best.value)
 
     facts, morphology, coverage_rate, coverage_level = apply_research_gaps(

@@ -5829,14 +5829,14 @@
           "model_slug": "diligent-robotics-moxi",
           "product_url": "https://www.diligentrobots.com",
           "vendor_url": "https://www.diligentrobots.com",
-          "primary_class": "service_robot",
+          "primary_class": "healthcare",
           "status": "available",
           "country": "USA",
           "description": "Moxi: hospital assist. Used in Healthcare.",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "healthcare",
               "evidence_span": "Moxi: hospital assist. Used in Healthcare."
             }
           ],

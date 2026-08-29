@@ -36,6 +36,15 @@ AUTONOMOUS_AIRCRAFT_CLASSES = frozenset({"autonomous_aircraft"})
 GENERIC_AVIONICS_CLASSES = frozenset({"avionics", "aviation_robot"})
 AEROSPACE_CLASSES = frozenset({"aerospace", "aerospace_robot"})
 CONSTRUCTION_CLASSES = frozenset({"construction", "construction_robot"})
+HEALTHCARE_CLASSES = frozenset(
+    {
+        "healthcare",
+        "healthcare_robot",
+        "medical_robot",
+        "clinical_robot",
+        "hospital_robot",
+    }
+)
 # FIND-tile unions. Named SKUs use agricultural_robot / construction_robot plus
 # a work-kind claim — never company → category → jobs.
 GENERIC_AGRICULTURE_CLASSES = frozenset({"agriculture"})
@@ -46,6 +55,15 @@ DOMAIN_WORK_CLASSES = (
     | AVIONICS_CLASSES
     | AEROSPACE_CLASSES
     | CONSTRUCTION_CLASSES
+    | HEALTHCARE_CLASSES
+)
+# Hospital / clinical assistant work — not a torso → humanoid class.
+_HEALTHCARE_WORK = re.compile(
+    r"\b(?:hospitals?|healthcare|clinical|nursing(?:\s+units?)?|pharmacy|"
+    r"medications?|lab\s+samples?|specimens?|patient\s+(?:units?|floors?|rooms?)|"
+    r"linens?|nursing[- ]assist|clinical\s+assistant|hospital\s+assistant|"
+    r"diligent(?:robots)?|moxi)\b",
+    re.I,
 )
 GRASP_EFFECTORS = frozenset({"dexterous_hand", "gripper", "vacuum", "suction"})
 
@@ -124,6 +142,36 @@ def weeding_configuration_identity(profile: dict[str, Any]) -> bool:
     return bool(_WEEDING_IDENTITY.search(blob))
 
 
+def healthcare_work_identity(profile: dict[str, Any]) -> bool:
+    """True when this configuration is hospital / clinical assistant work.
+
+    Moxi is not a humanoid because it has a torso. Identity is the clinical
+    work (meds, specimens, linen, nursing assist), not morphology.
+    """
+    facts = _grounded_facts(profile)
+    if _truthy(facts, "claims_healthcare"):
+        return True
+    if _classes(facts) & HEALTHCARE_CLASSES:
+        return True
+    env = {
+        str(f.get("value") or "").lower()
+        for f in _values(facts, "operating_environment")
+    }
+    if env & {"healthcare", "eldercare"}:
+        return True
+    company = ((profile.get("company") or {}).get("name") or "")
+    product = ((profile.get("selected_product") or {}).get("name") or "")
+    url = str(profile.get("submitted_url") or profile.get("source_url") or "")
+    spans = " ".join(
+        str(f.get("evidence_span") or "")
+        for f in facts
+        if f.get("predicate")
+        in {"claims_item_delivery", "operating_environment", "product_class"}
+    )
+    blob = f"{company} {product} {url} {spans}"
+    return bool(_HEALTHCARE_WORK.search(blob))
+
+
 def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]:
     """Return capability key → DerivedCapability from a frozen profile dict."""
     facts = _grounded_facts(profile)
@@ -154,10 +202,14 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
         manip_class
     )
     weeding_identity = weeding_configuration_identity(profile)
+    clinical_identity = healthcare_work_identity(profile)
     # Domain configurations (eVTOL, drone, combine, Vulcan, LaserWeeder, …)
     # are not factory cobots. Incidental "arm"/"gripper"/"laser" language on
     # an OEM page must not ground manipulate and open the CNC/pack corpus.
-    if (classes & DOMAIN_WORK_CLASSES or weeding_identity) and not (classes & MANIP_CLASSES):
+    if (
+        (classes & DOMAIN_WORK_CLASSES or weeding_identity or clinical_identity)
+        and not (classes & MANIP_CLASSES)
+    ):
         manipulate = False
     if manipulate:
         derived_from = []
@@ -229,13 +281,15 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
     domain_mobile = any(
         _truthy(facts, p)
         for p in (
-            "claims_pallet_handling", "claims_agriculture", "claims_construction",
+            "claims_pallet_handling", "claims_agriculture", "claims_healthcare",
+            "claims_construction",
             "claims_mining", "claims_marine", "claims_avionics", "claims_aerospace",
             "claims_disinfection", "claims_goods_to_person",
         )
     )
     mobile = bool(
-        mobile_base or nav or mobility_arch or mobile_class or domain_mobile or weeding_identity
+        mobile_base or nav or mobility_arch or mobile_class or domain_mobile
+        or weeding_identity or clinical_identity
     )
     if mobile:
         derived_from = []
@@ -393,6 +447,7 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
         ("disinfect", "claims_disinfection", "UV / surface disinfection", frozenset()),
         ("goods_to_person", "claims_goods_to_person", "ASRS goods-to-person", frozenset()),
         ("agriculture_task", "claims_agriculture", "agricultural field work", AGRICULTURE_CLASSES),
+        ("healthcare_task", "claims_healthcare", "hospital / clinical assistant work", HEALTHCARE_CLASSES),
         ("construction_task", "claims_construction", "construction site work", CONSTRUCTION_CLASSES),
         ("mining_task", "claims_mining", "mining / haulage", frozenset()),
         ("marine_task", "claims_marine", "hull / port / underwater work", MARINE_CLASSES),
@@ -525,6 +580,16 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
                 derived_from=["selected_product"],
                 evidence="named weeding SKU",
             )
+
+    if (not caps.get("healthcare_task") or not caps["healthcare_task"].present) and clinical_identity:
+        caps["healthcare_task"] = DerivedCapability(
+            key="healthcare_task",
+            label="hospital / clinical assistant work",
+            present=True,
+            derivation="inferred",
+            derived_from=["claims_item_delivery", "operating_environment"],
+            evidence="hospital / clinical delivery work — not a humanoid torso class",
+        )
 
     scrub = _truthy(facts, "supports_hard_floor_scrubbing")
     if scrub:

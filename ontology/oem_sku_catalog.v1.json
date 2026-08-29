@@ -991,7 +991,7 @@
           "slug": "diligent-robotics-moxi",
           "company_name": "Diligent Robotics",
           "company_slug": "diligent-robotics",
-          "primary_class": "service_robot",
+          "primary_class": "healthcare",
           "category": "Healthcare",
           "listed_class": "Medical service robot",
           "task": "Supplies, samples, PPE, medications",
