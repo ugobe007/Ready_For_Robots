@@ -146,3 +146,24 @@ def test_extractor_environment_values_are_known_verticals():
     assert emitted, "no operating_environment literals found"
     unknown = emitted - set(ont.verticals())
     assert not unknown, f"extractor emits verticals not in vertical_ontology: {unknown}"
+
+
+def test_industry_work_language_loads_and_healthcare_outranks_humanoid():
+    data = ont.industry_work_language()
+    assert data.get("industries")
+    assert data.get("rule_id") == "R33"
+    assert ont.find_class_from_work_language(
+        "hospital clinical assistant delivers medications to nursing units"
+    ) == "healthcare"
+    assert ont.work_language_outranks_morphology(
+        "hospital clinical assistant delivers medications to nursing units",
+        "humanoid",
+    )
+    ids = {r["id"] for r in ont.inference_rules().get("rules") or []}
+    assert "R33" in ids
+    slots = {s.get("id") for s in (ont.task_model_ontology().get("slots") or [])}
+    assert "hospital_logistics_transport" in slots
+    assert "mining_haulage_policy" in slots
+    assert "hotel_guest_service_policy" in slots
+    assert "food_prep_station_policy" in slots
+

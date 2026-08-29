@@ -165,6 +165,7 @@ describe("pstack release authority is not FIND/CRM chrome", () => {
       "oem_extract",
       "class_picker",
       "healthcare_class",
+      "ontology_industry_language",
     ]);
     expect(CLASS_PICKER_FIXTURE.classId).toBe("agriculture");
     expect(CLASS_PICKER_FIXTURE.prompt).toBe("What type of robot?");

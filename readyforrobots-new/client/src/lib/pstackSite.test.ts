@@ -54,12 +54,14 @@ describe("pstackSite protocol", () => {
       "oem_extract",
       "class_picker",
       "healthcare_class",
+      "ontology_industry_language",
     ]);
     expect(CRITIC_GATES.find(gate => gate.id === "class_picker")?.fail).toMatch(/no-op/);
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.prove).toBe("FIND is /");
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.fail).toMatch(/experiment/);
     expect(CRITIC_GATES.find(gate => gate.id === "oem_extract")?.fail).toMatch(/chrome/);
     expect(CRITIC_GATES.find(gate => gate.id === "healthcare_class")?.fail).toMatch(/humanoid/);
+    expect(CRITIC_GATES.find(gate => gate.id === "ontology_industry_language")?.fail).toMatch(/ontology/);
     expect(criticHeldoutFindUrls()).toEqual([...CRITIC_HELDOUT_FIND_URLS]);
     expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.xpeng.com/");
     expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.greenfieldincorporated.com/");

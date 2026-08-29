@@ -35,6 +35,7 @@ def test_local_release_skips_fly_drive():
     assert "class_picker" in critic_ids
     assert "healthcare_class" in critic_ids
     assert "healthcare_class:live" in critic_ids
+    assert "ontology_industry_language" in critic_ids
     assert "find_drive" in critic_ids
 
 
@@ -50,6 +51,7 @@ def test_critic_gates_include_abort_and_leftover():
         "oem_extract",
         "class_picker",
         "healthcare_class",
+        "ontology_industry_language",
     ]
 
 

@@ -34,6 +34,7 @@ def test_roles_and_matcher_source():
         "oem_extract",
         "class_picker",
         "healthcare_class",
+        "ontology_industry_language",
     ]
     assert CRM_WALL_REQUIRED is True
 
