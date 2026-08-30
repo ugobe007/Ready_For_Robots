@@ -16,6 +16,7 @@ import re
 import sys
 import time
 from datetime import datetime, timezone
+from http.client import HTTPException
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -138,7 +139,7 @@ def _post_json_once(url: str, payload: dict[str, Any], *, timeout: float) -> tup
             return int(exc.code), json.loads(raw.decode())
         except Exception:
             return int(exc.code), {"_raw": raw[:400].decode("utf-8", "replace")}
-    except (URLError, TimeoutError, OSError) as exc:
+    except (URLError, TimeoutError, OSError, HTTPException) as exc:
         return 0, {"error": str(exc)}
 
 
@@ -170,7 +171,7 @@ def _get_once(url: str, *, timeout: float) -> tuple[int, Any]:
             return int(exc.code), json.loads(raw.decode())
         except Exception:
             return int(exc.code), {"_raw": raw[:400].decode("utf-8", "replace")}
-    except (URLError, TimeoutError, OSError) as exc:
+    except (URLError, TimeoutError, OSError, HTTPException) as exc:
         return 0, {"error": str(exc)}
 
 
