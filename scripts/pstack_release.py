@@ -143,6 +143,11 @@ def _git_output(args: list[str]) -> str:
 
 def pr_changed_files() -> list[str]:
     """PR file list. Merge commits use HEAD^1 (Actions checkout); else origin/main."""
+    # In GitHub Actions with fetch-depth: 1, fetch the base branch so diff works
+    if os.getenv("GITHUB_ACTIONS"):
+        base_ref = os.getenv("GITHUB_BASE_REF", "main")
+        _git_output(["fetch", "--depth=1", "origin", base_ref])
+    
     parents = _git_output(["rev-list", "--parents", "-n", "1", "HEAD"]).split()
     if len(parents) >= 3:
         diff = _git_output(["diff", "--name-only", "HEAD^1", "HEAD"])
