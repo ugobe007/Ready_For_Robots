@@ -23,19 +23,18 @@ def _families(class_id: str) -> set[str]:
     return {j.get("tape_family") for j in out.get("jobs") or []}
 
 
-def test_picker_adds_industry_tiles_not_food_prep_or_hotel():
+def test_picker_adds_industry_tiles_including_food_prep():
     ids = [row["id"] for row in public_class_options()]
-    assert ids[-1] == "hospitality"
-    assert len(ids) == 17
-    for tile in ("mining", "warehouse", "logistics", "factory", "hospitality"):
+    assert ids[-1] == "food_prep"
+    assert len(ids) == 18
+    for tile in ("mining", "warehouse", "logistics", "factory", "hospitality", "food_prep"):
         assert tile in FIND_TILE_CLASSES
         assert tile in ids
-    assert "food_prep" not in ids
     assert "serving" not in ids
     assert "hotel" not in ids
     assert "medical" not in ids
     assert normalize_class_id("hotel") == "hospitality"
-    assert normalize_class_id("food_prep") == "hospitality"
+    assert normalize_class_id("food_prep") == "food_prep"
     assert normalize_class_id("3pl") == "logistics"
 
 
@@ -110,6 +109,33 @@ def test_hotel_alias_matches_hospitality_jobs():
     out = match_jobs_from_profile(profile)
     assert out["state"] == "matches"
     assert {j.get("tape_family") for j in out["jobs"]} <= {"hospitality"}
+    blob = " ".join(
+        f"{j.get('title') or ''} {j.get('company_name') or ''}"
+        for j in out["jobs"]
+    ).lower()
+    assert "chipotle" not in blob
+    assert "bowl assembly" not in blob
+
+
+def test_thin_food_prep_class_is_not_hotel_hospitality():
+    profile = thin_class_profile("Miso Robotics", "food_prep")
+    caps = derive_capabilities(profile)
+    assert caps["food_prep"].present is True
+    assert caps["hospitality_task"].present is False
+    assert caps["healthcare_task"].present is False
+    out = match_jobs_from_profile(profile)
+    families = {j.get("tape_family") for j in out.get("jobs") or []}
+    assert "hospitality" not in families
+    blob = " ".join(
+        f"{j.get('title') or ''} {j.get('company_name') or ''} {j.get('tape_family') or ''}"
+        for j in out.get("jobs") or []
+    ).lower()
+    assert "hilton" not in blob
+    assert "four seasons" not in blob
+    assert "guest luggage" not in blob
+    if out.get("job_count"):
+        assert families <= {"food_prep"}
+        assert all(str(j.get("company_name") or "").strip() for j in out["jobs"])
 
 
 def _extract_classes(text: str, *, subject: str, url: str, title: str):

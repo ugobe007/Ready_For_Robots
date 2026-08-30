@@ -522,24 +522,30 @@ def healthcare_class_fixture() -> tuple[bool, str]:
 
     ts_ids = _ts_class_option_ids(class_ts)
     py_ids = _py_class_option_ids(class_py)
-    extra = ("mining", "warehouse", "logistics", "factory", "hospitality")
+    extra = ("mining", "warehouse", "logistics", "factory", "hospitality", "food_prep")
     if "healthcare" not in ts_ids or "healthcare" not in py_ids:
         misses.append("Healthcare class id missing")
     for tile in extra:
         if tile not in ts_ids or tile not in py_ids:
             misses.append(f"{tile} class id missing")
-    if "food_prep" in ts_ids or "medical" in ts_ids or "hotel" in ts_ids:
+    if "medical" in ts_ids or "hotel" in ts_ids:
         misses.append(f"aliased industries leaked as FIND tiles={ts_ids}")
-    if len(ts_ids) != 17:
+    if len(ts_ids) != 18:
         misses.append(f"class picker tiles={ts_ids}")
     if '"healthcare"' not in workflow or "healthcare" not in class_py:
         misses.append("FIND_TILE / workflow missing healthcare")
+    if '"food_prep"' not in workflow or "food_prep" not in class_py:
+        misses.append("FIND_TILE / workflow missing food_prep")
     if "No ${label} jobs for this robot yet." not in workflow:
         misses.append("class empty-copy template missing")
     if 'healthcare: "Healthcare"' not in workflow:
         misses.append("Healthcare class title missing")
+    if 'food_prep: "Food prep"' not in workflow:
+        misses.append("Food prep class title missing")
     if "No healthcare jobs for this robot yet." not in workflow_test:
         misses.append("healthcare empty copy test missing")
+    if "No food prep jobs for this robot yet." not in workflow_test:
+        misses.append("food_prep empty copy test missing")
     if "No healthcare jobs for this robot yet." not in release_ts:
         misses.append("fixture empty copy missing")
     if "No humanoid jobs for this robot yet." not in release_ts:
@@ -590,7 +596,20 @@ REQUIRED_INDUSTRY_ONTOLOGY_WORDS = {
     "factory": ("machine tend", "cnc", "workpiece", "assembly line"),
     "hospitality": ("guest room", "bellhop", "room service", "concierge"),
     "hotel": ("housekeeping", "luggage", "guest delivery"),
-    "food_prep": ("fry station", "fryer"),
+    "food_prep": (
+        "fry station",
+        "fryer",
+        "make line",
+        "bowl assembly",
+        "grill",
+        "prep cook",
+        "qsr",
+        "fast casual",
+        "kitchen automation",
+        "ingredient dosing",
+        "tortilla",
+        "assembly line kitchen",
+    ),
     "serving": ("table service", "bussing"),
 }
 
@@ -600,6 +619,7 @@ REQUIRED_INDUSTRY_FIND_CLASSES = {
     "logistics": "logistics",
     "factory": "factory",
     "hospitality": "hospitality",
+    "food_prep": "food_prep",
 }
 
 
@@ -678,6 +698,8 @@ def ontology_industry_language_fixture() -> tuple[bool, str]:
         misses.append("warehouse_pick_place_policy task model missing")
     if "hotel_guest_service_policy" not in blob_tasks:
         misses.append("hotel_guest_service_policy task model missing")
+    if "food_prep_station_policy" not in blob_tasks:
+        misses.append("food_prep_station_policy task model missing")
     if "machine_tending_load_unload" not in blob_tasks:
         misses.append("machine_tending_load_unload task model missing")
     if '"id": "mining"' not in blob_qualify:

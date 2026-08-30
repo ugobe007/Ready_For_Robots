@@ -8,6 +8,7 @@
  * hospitality). Agriculture is a robot class, not a SIGNAL industry tag.
  * Healthcare = hospital / clinical assistant work (Moxi), not a torso → humanoid tile.
  * Hospitality = hotel / guest delivery / serving (a torso is not a humanoid tile).
+ * Food prep = QSR make-line / bowl assembly / grill (not hotel housekeeping).
  * Warehouse / factory / logistics do not outrank a true humanoid.
  * Avionics = drones / eVTOL / autonomous aircraft. Aerospace = satellites /
  * rockets / orbital debris. Tractor implements are configurations, not a tile.
@@ -98,7 +99,12 @@ export const DEFAULT_CLASS_OPTIONS: ClassOption[] = [
   {
     id: "hospitality",
     label: "Hospitality",
-    hint: "Hotels and restaurants — guest delivery, serving, food prep",
+    hint: "Hotels — guest delivery, room service, housekeeping",
+  },
+  {
+    id: "food_prep",
+    label: "Food prep",
+    hint: "QSR make-line, bowl assembly, grill, kitchen automation",
   },
 ];
 

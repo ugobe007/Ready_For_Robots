@@ -93,7 +93,7 @@ def test_every_claimed_industry_has_work_words_and_a_task_model():
     assert rows["hospitality"]["find_class"] == "hospitality"
     assert rows["hotel"]["find_class"] == "hospitality"
     assert rows["serving"]["find_class"] == "hospitality"
-    assert rows["food_prep"]["find_class"] in (None, "")
+    assert rows["food_prep"]["find_class"] == "food_prep"
 
 
 def test_hospital_work_words_are_healthcare_not_humanoid():
@@ -129,7 +129,7 @@ def test_hotel_work_outranks_torso_and_is_hospitality():
     assert infer_class_from_work_language(HOTEL) == "hospitality"
     assert work_language_outranks_morphology(HOTEL, "humanoid") is True
     assert normalize_class_id("hotel") == "hospitality"
-    assert normalize_class_id("food_prep") == "hospitality"
+    assert normalize_class_id("food_prep") == "food_prep"
     assert normalize_class_id("mining") == "mining"
 
 
@@ -194,3 +194,59 @@ def test_scraped_job_titles_map_to_find_classes():
         "from the pit to the crusher."
     )
     assert find_class_from_work_language(haul) == "mining"
+
+
+CHIPOTLE_QSR = (
+    "QSR make-line robot for bowl assembly and grill. Fast casual kitchen "
+    "automation with ingredient dosing and tortilla prep on the assembly "
+    "line kitchen. Prep cook food prep station."
+)
+
+
+def test_chipotle_style_qsr_copy_is_food_prep_not_hotel():
+    hit = match_work_language(CHIPOTLE_QSR)
+    assert hit is not None
+    assert hit.industry_id == "food_prep"
+    assert find_class_from_work_language(CHIPOTLE_QSR) == "food_prep"
+    assert infer_class_from_work_language(CHIPOTLE_QSR) == "food_prep"
+    assert find_class_from_work_language(CHIPOTLE_QSR) != "hospitality"
+    assert work_language_outranks_morphology(CHIPOTLE_QSR, "humanoid") is True
+    assert normalize_class_id("food_prep") == "food_prep"
+    assert normalize_class_id("qsr") == "food_prep"
+    assert normalize_class_id("hotel") == "hospitality"
+
+
+def test_food_prep_ontology_keeps_qsr_work_words():
+    rows = {r["id"]: r for r in industry_work_rows()}
+    fp = rows["food_prep"]
+    blob = " ".join(
+        str(x).lower()
+        for x in list(fp.get("work_words") or []) + list(fp.get("class_signals") or [])
+    )
+    for term in (
+        "make line",
+        "bowl assembly",
+        "grill",
+        "prep cook",
+        "qsr",
+        "fast casual",
+        "kitchen automation",
+        "ingredient dosing",
+        "tortilla",
+        "assembly line kitchen",
+    ):
+        assert term in blob, term
+    assert fp["find_class"] == "food_prep"
+    hospitality_aliases = {
+        str(a).lower().replace(" ", "_") for a in (rows["hospitality"].get("aliases") or [])
+    }
+    assert "food_prep" not in hospitality_aliases
+    assert "food prep" not in {str(a).lower() for a in (rows["hospitality"].get("aliases") or [])}
+
+
+def test_diligent_hospital_copy_stays_healthcare():
+    assert find_class_from_work_language(MOXI) == "healthcare"
+    assert infer_class_from_work_language(MOXI) == "healthcare"
+    assert find_class_from_work_language(HOSPITAL) == "healthcare"
+    assert find_class_from_work_language(CHIPOTLE_QSR) != "healthcare"
+    assert find_class_from_work_language(HOTEL) != "food_prep"

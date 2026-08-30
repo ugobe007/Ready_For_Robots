@@ -387,6 +387,7 @@ def _phase23_infer(grounded: dict[str, Observation]) -> list[Observation]:
         (("logistics_robot", "logistics"), "claims_logistics"),
         (("factory_robot", "factory"), "claims_factory"),
         (("hospitality_robot", "hospitality", "hotel_robot"), "claims_hospitality"),
+        (("food_prep",), "claims_food_prep"),
         (
             ("healthcare", "healthcare_robot", "medical_robot", "clinical_robot", "hospital_robot"),
             "claims_healthcare",

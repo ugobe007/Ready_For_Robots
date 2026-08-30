@@ -933,7 +933,16 @@
         "grill",
         "cooking",
         "cook",
-        "kitchen"
+        "kitchen",
+        "make line",
+        "bowl assembly",
+        "prep cook",
+        "qsr",
+        "fast casual",
+        "kitchen automation",
+        "ingredient dosing",
+        "tortilla",
+        "assembly line kitchen"
       ],
       "hardware_not_enough": "A kitchen-capable arm is not the recipe and station policy for this menu.",
       "where_to_look": [

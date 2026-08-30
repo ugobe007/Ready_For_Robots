@@ -52,6 +52,7 @@ FACTORY_CLASSES = frozenset({"factory", "factory_robot"})
 HOSPITALITY_CLASSES = frozenset(
     {"hospitality", "hospitality_robot", "hotel_robot"}
 )
+FOOD_PREP_CLASSES = frozenset({"food_prep"})
 # FIND-tile unions. Named SKUs use agricultural_robot / construction_robot plus
 # a work-kind claim — never company → category → jobs.
 GENERIC_AGRICULTURE_CLASSES = frozenset({"agriculture"})
@@ -68,6 +69,7 @@ DOMAIN_WORK_CLASSES = (
     | LOGISTICS_CLASSES
     | FACTORY_CLASSES
     | HOSPITALITY_CLASSES
+    | FOOD_PREP_CLASSES
 )
 # Hospital / clinical assistant work — ontology work language, not a torso class.
 # SKU names are not the source; hospital/clinical terms live in the ontology.
@@ -404,15 +406,35 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
     # Food preparation / cooking (kitchen robots). Distinct dexterous capability —
     # deliberately NOT generic `manipulate`, so a fry/assembly robot maps to food
     # work rather than falsely matching industrial CNC/case handling.
+    # FIND class food_prep is QSR make-line work, not hotel guest delivery.
     food_prep = _truthy(facts, "claims_food_prep")
-    caps["food_prep"] = DerivedCapability(
-        key="food_prep",
-        label="food preparation / cooking",
-        present=bool(food_prep),
-        derivation="explicit",
-        derived_from=["claims_food_prep"],
-        evidence=(food_prep or {}).get("evidence_span") if food_prep else None,
-    )
+    food_prep_class = next((c for c in classes if c in FOOD_PREP_CLASSES), None)
+    if food_prep:
+        caps["food_prep"] = DerivedCapability(
+            key="food_prep",
+            label="food preparation / cooking",
+            present=True,
+            derivation="explicit",
+            derived_from=["claims_food_prep"],
+            evidence=(food_prep or {}).get("evidence_span") if food_prep else None,
+        )
+    elif food_prep_class:
+        caps["food_prep"] = DerivedCapability(
+            key="food_prep",
+            label="food preparation / cooking",
+            present=True,
+            derivation="inferred",
+            derived_from=["product_class"],
+            evidence=f"{food_prep_class} class",
+        )
+    else:
+        caps["food_prep"] = DerivedCapability(
+            key="food_prep",
+            label="food preparation / cooking",
+            present=False,
+            derivation="explicit",
+            derived_from=["claims_food_prep", "product_class"],
+        )
 
     # Beverage / drink preparation (barista & bartender robots).
     beverage = _truthy(facts, "claims_beverage_prep")

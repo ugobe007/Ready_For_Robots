@@ -680,7 +680,7 @@ class EnhancedJobBoardScraper(BaseScraper):
                 industry = "Factory"
             elif any(w in url_lower for w in ["warehouse", "fulfillment", "logistics", "supply", "distribution", "dock"]):
                 industry = "Logistics"
-            elif any(w in url_lower for w in ["restaurant", "food", "kitchen", "cook", "dishwash", "crew"]):
+            elif any(w in url_lower for w in ["restaurant", "food", "kitchen", "cook", "dishwash", "crew", "qsr", "make+line", "make%20line", "bowl+assembly", "bowl%20assembly", "tortilla", "prep+cook", "fast+casual", "fast%20casual"]):
                 industry = "Food Service"
             elif any(w in url_lower for w in ["hospital", "health", "medical", "pharmacy", "sterile", "dietary"]):
                 industry = "Healthcare"

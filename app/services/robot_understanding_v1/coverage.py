@@ -31,6 +31,7 @@ Morphology = Literal[
     "aerospace_robot",
     "healthcare",
     "hospitality",
+    "food_prep",
     "generic",
 ]
 
@@ -193,6 +194,12 @@ _CHECKLISTS: dict[Morphology, tuple[ChecklistSlot, ...]] = {
         ChecklistSlot("payload", "Payload / carry capacity", ("carrying_capacity",)),
         ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
     ),
+    "food_prep": (
+        ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
+        ChecklistSlot("workflows", "Demonstrated workflows", ("claims_food_prep",)),
+        ChecklistSlot("environment", "Operating environment", ("operating_environment",)),
+        ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
+    ),
     "mining_robot": (
         ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
         ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
@@ -239,6 +246,7 @@ _DISPLAY_CLASS_ALIASES: dict[str, Morphology] = {
     "hospitality_robot": "hospitality",
     "hotel": "hospitality",
     "hotel_robot": "hospitality",
+    "food_prep": "food_prep",
     "mining": "mining_robot",
     "warehouse": "amr",
     "warehouse_robot": "amr",
@@ -263,6 +271,7 @@ def infer_morphology(facts: list[RobotFact], display_class: str | None = None) -
     for key in (
         "healthcare",
         "hospitality",
+        "food_prep",
         "agricultural_robot",
         "construction_robot",
         "marine_robot",

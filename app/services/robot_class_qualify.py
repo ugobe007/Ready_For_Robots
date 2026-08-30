@@ -109,7 +109,13 @@ CLASS_OPTIONS: list[dict[str, str]] = [
         "id": "hospitality",
         "product_class": "hospitality",
         "label": "Hospitality",
-        "hint": "Hotels and restaurants — guest delivery, serving, food prep",
+        "hint": "Hotels — guest delivery, room service, housekeeping",
+    },
+    {
+        "id": "food_prep",
+        "product_class": "food_prep",
+        "label": "Food prep",
+        "hint": "QSR make-line, bowl assembly, grill, kitchen automation",
     },
 ]
 
@@ -204,10 +210,15 @@ def normalize_class_id(raw: str | None) -> str | None:
         "hotel": "hospitality",
         "hotel_robot": "hospitality",
         "serving": "hospitality",
-        "food_prep": "hospitality",
-        "food prep": "hospitality",
         "table_service": "hospitality",
         "guest_delivery": "hospitality",
+        "food_prep": "food_prep",
+        "food prep": "food_prep",
+        "qsr": "food_prep",
+        "fast_casual": "food_prep",
+        "kitchen_automation": "food_prep",
+        "make_line": "food_prep",
+        "bowl_assembly": "food_prep",
     }
     mapped = aliases.get(want)
     if not mapped:

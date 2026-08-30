@@ -337,8 +337,9 @@ def test_public_class_options_include_ten_classes():
         "logistics",
         "factory",
         "hospitality",
+        "food_prep",
     ]
-    assert len(rows) == 17
+    assert len(rows) == 18
     for row in rows:
         assert row["label"].strip()
         assert row["hint"].strip()
@@ -353,3 +354,5 @@ def test_public_class_options_include_ten_classes():
     assert "haul" in by_id["mining"]["hint"].lower() or "pit" in by_id["mining"]["hint"].lower()
     assert "fulfillment" in by_id["warehouse"]["hint"].lower()
     assert "hotel" in by_id["hospitality"]["hint"].lower()
+    assert "food prep" not in by_id["hospitality"]["hint"].lower()
+    assert "make-line" in by_id["food_prep"]["hint"].lower() or "bowl" in by_id["food_prep"]["hint"].lower()
