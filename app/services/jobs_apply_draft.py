@@ -136,7 +136,7 @@ def compose_apply_draft(
     emails = [str(c["email"]) for c in people]
     subject = f"Applying {who} to {job} at {shop}"
     place = f" at {workplace}" if workplace else ""
-    lines = [
+    employer_lines = [
         f"We're applying {who} to {job}{place}.",
         "",
         why_text,
@@ -147,31 +147,33 @@ def compose_apply_draft(
     ]
     clip = (clip_description or "").strip()
     if clip:
-        lines.extend(["", f"Clip: {clip}"])
+        employer_lines.extend(["", f"Clip: {clip}"])
     if video_url:
-        lines.extend(["", f"Video résumé: {video_url}"])
-    else:
-        lines.extend(["", video_note or "No public YouTube clip. Video field is empty."])
-        if video_search_url:
-            lines.append(f"YouTube search: {video_search_url}")
+        employer_lines.extend(["", f"Video résumé: {video_url}"])
     if document_lines:
-        lines.extend(["", *document_lines])
-    if emails:
-        lines.extend(["", "Contact on file: " + ", ".join(emails)])
-    else:
-        lines.extend(["", CONTACTS_EMPTY_NOTE])
+        employer_lines.extend(["", *document_lines])
     if accept_url or interview_url or decline_url:
-        lines.extend(["", "Evaluate this application (no Ready For Robots account required):"])
+        employer_lines.extend(["", "Evaluate this application (no Ready For Robots account required):"])
         if accept_url:
-            lines.append(f"Accept: {accept_url}")
+            employer_lines.append(f"Accept: {accept_url}")
         if interview_url:
-            lines.append(f"Set up interview: {interview_url}")
+            employer_lines.append(f"Set up interview: {interview_url}")
         if decline_url:
-            lines.append(f"Decline: {decline_url}")
-    lines.extend(["", OPERATOR_SENDS_NOTE])
+            employer_lines.append(f"Decline: {decline_url}")
+    operator_lines = list(employer_lines)
+    if not video_url:
+        operator_lines.extend(["", video_note or "No public YouTube clip. Video field is empty."])
+        if video_search_url:
+            operator_lines.append(f"YouTube search: {video_search_url}")
+    if emails:
+        operator_lines.extend(["", "Contact on file: " + ", ".join(emails)])
+    else:
+        operator_lines.extend(["", CONTACTS_EMPTY_NOTE])
+    operator_lines.extend(["", OPERATOR_SENDS_NOTE])
     return {
         "subject": subject,
-        "body": "\n".join(lines),
+        "body": "\n".join(operator_lines),
+        "employer_body": "\n".join(employer_lines),
         "video_url": video_url,
         "video_search_url": video_search_url,
         "video_note": video_note,
@@ -194,13 +196,13 @@ def resolve_apply_video(
     pasted = None
     if pasted_url:
         pasted = normalize_poc_video_url(pasted_url)
-    evidence = find_robot_youtube_evidence(company=company, sku=sku, robot=robot)
     if pasted:
         return {
             "video_url": pasted,
-            "video_search_url": evidence.get("video_search_url") or "",
+            "video_search_url": "",
             "video_note": "Using the video URL you pasted.",
-            "clip_description": evidence.get("clip_description"),
+            "clip_description": None,
             "source": "pasted",
         }
+    evidence = find_robot_youtube_evidence(company=company, sku=sku, robot=robot)
     return evidence

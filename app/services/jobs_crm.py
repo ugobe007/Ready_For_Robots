@@ -691,7 +691,7 @@ def send_prepared_application(
     snapshot = row.offer_snapshot if isinstance(row.offer_snapshot, dict) else {}
     draft = snapshot.get("draft") if isinstance(snapshot.get("draft"), dict) else {}
     subject = str(draft.get("subject") or f"Applying {row.robot_name} to {row.work_title} at {row.employer_name}")
-    body = str(draft.get("body") or "").strip()
+    body = str(draft.get("employer_body") or draft.get("body") or "").strip()
     if not body:
         raise ValueError("No application draft on this job. Prepare it first.")
     from app.services.jobs_crm_recruiter import (

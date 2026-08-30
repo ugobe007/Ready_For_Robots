@@ -26,10 +26,7 @@ import {
   type RobotDocument,
 } from "@/lib/jobsCrmAccount";
 import { JOBS_APPLY_CTA_BUTTON_CLASS } from "@/lib/jobsWorkflow";
-import {
-  JOBS_POC_PREFER_HINT,
-  JOBS_POC_SKIP_CTA,
-} from "@/lib/jobsApply";
+import { JOBS_POC_PREFER_HINT, JOBS_POC_SKIP_CTA } from "@/lib/jobsApply";
 import {
   JOBS_POC_VIDEO_HINT,
   JOBS_POC_VIDEO_LABEL,
@@ -56,7 +53,9 @@ export default function JobsCrmNextSteps({
   token: string;
   onApplied: (app: JobsCrmApplication) => void;
 }) {
-  const selectedJobs = (jobs && jobs.length ? jobs : [job]).filter(j => j?.job_key);
+  const selectedJobs = (jobs && jobs.length ? jobs : [job]).filter(
+    j => j?.job_key
+  );
   const oemCompany = companyHintFromRobotUrl(robotUrl) || robotName;
   const card = robotJobCardFromMatch(job);
   const [skus, setSkus] = useState<CatalogSku[]>([]);
@@ -116,9 +115,6 @@ export default function JobsCrmNextSteps({
         if (cancelled) return;
         setVideoNote(prep.video_note || "");
         setVideoSearchUrl(prep.video_search_url || "");
-        if (prep.video_url) {
-          setPocVideoUrl(prev => prev || prep.video_url || "");
-        }
       })
       .catch(() => {
         if (!cancelled) setVideoNote(JOBS_VIDEO_EMPTY_NOTE);
@@ -142,7 +138,7 @@ export default function JobsCrmNextSteps({
         setVideoNote(prep.video_note || "");
         setVideoSearchUrl(prep.video_search_url || "");
         if (prep.video_url) {
-          setPocVideoUrl(prev => prev || prep.video_url || "");
+          setPocVideoUrl(prep.video_url);
         }
       })
       .catch(() => undefined);
@@ -165,7 +161,8 @@ export default function JobsCrmNextSteps({
     setBusy(true);
     setError(null);
     try {
-      const skipped = pocSkipped || (!pocEvidence.trim() && !pocVideoUrl.trim());
+      const skipped =
+        pocSkipped || (!pocEvidence.trim() && !pocVideoUrl.trim());
       if (selectedJobs.length > 1) {
         const result = await applySelectedJobsOnAccount(token, {
           jobs: selectedJobs,
@@ -216,14 +213,19 @@ export default function JobsCrmNextSteps({
     >
       <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>Next steps</p>
       <h2 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">
-        Offer for {selectedJobs.length > 1 ? `${selectedJobs.length} selected jobs` : card.jobTitle}
+        Offer for{" "}
+        {selectedJobs.length > 1
+          ? `${selectedJobs.length} selected jobs`
+          : card.jobTitle}
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-slate-300">
         {crmOfferBlurb(robotName)}
       </p>
 
       <label className="mt-6 block">
-        <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>Robot name</span>
+        <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+          Robot name
+        </span>
         <input
           type="text"
           readOnly
@@ -368,12 +370,12 @@ export default function JobsCrmNextSteps({
               .then(doc => {
                 setDocs(prev => [doc, ...prev]);
                 setSelectedDocs(prev =>
-                  prev.includes(doc.id) ? prev : [...prev, doc.id],
+                  prev.includes(doc.id) ? prev : [...prev, doc.id]
                 );
               })
               .catch(err => {
                 setError(
-                  err instanceof Error ? err.message : "Could not upload spec.",
+                  err instanceof Error ? err.message : "Could not upload spec."
                 );
               })
               .finally(() => setBusy(false));
@@ -392,7 +394,7 @@ export default function JobsCrmNextSteps({
                       setSelectedDocs(prev =>
                         e.target.checked
                           ? [...prev, doc.id]
-                          : prev.filter(id => id !== doc.id),
+                          : prev.filter(id => id !== doc.id)
                       )
                     }
                     className="h-4 w-4 accent-emerald-400"
@@ -431,16 +433,15 @@ export default function JobsCrmNextSteps({
         />
       </label>
 
-      {error ? (
-        <p className="mt-4 text-sm text-amber-200">{error}</p>
-      ) : null}
+      {error ? <p className="mt-4 text-sm text-amber-200">{error}</p> : null}
 
       <label className="mt-6 block">
         <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
           Why you are applying
         </span>
         <span className="mt-1 block text-sm text-slate-400">
-          Short recruiter note. We draft one if you leave this blank. You can edit it.
+          Short recruiter note. We draft one if you leave this blank. You can
+          edit it.
         </span>
         <textarea
           aria-label="Why you are applying"
@@ -466,14 +467,22 @@ export default function JobsCrmNextSteps({
       </button>
 
       {drafts.length ? (
-        <div className="mt-6 border border-violet-500/40 bg-[#12082a] px-4 py-4" data-apply-draft="1">
-          <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>Application draft</p>
+        <div
+          className="mt-6 border border-violet-500/40 bg-[#12082a] px-4 py-4"
+          data-apply-draft="1"
+        >
+          <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>
+            Application draft
+          </p>
           <p className="mt-2 text-sm text-slate-300">{JOBS_SEND_DRAFT_HINT}</p>
           {drafts.map(app => {
             const draft = app.draft;
             const contacts = app.contacts || draft?.contacts || [];
             return (
-              <article key={app.id} className="mt-4 border border-slate-700 px-3 py-3">
+              <article
+                key={app.id}
+                className="mt-4 border border-slate-700 px-3 py-3"
+              >
                 <p className="font-mono text-xs uppercase tracking-[0.08em] text-violet-200">
                   {app.work_title} · {app.employer_name}
                 </p>
@@ -486,7 +495,9 @@ export default function JobsCrmNextSteps({
                   <p className="mt-2 text-sm text-slate-300">{draft.why}</p>
                 ) : null}
                 {draft?.clip_description ? (
-                  <p className="mt-2 text-sm text-slate-400">{draft.clip_description}</p>
+                  <p className="mt-2 text-sm text-slate-400">
+                    {draft.clip_description}
+                  </p>
                 ) : null}
                 {app.poc_video_url || draft?.video_url ? (
                   <p className="mt-2 text-sm text-violet-200">
@@ -523,13 +534,15 @@ export default function JobsCrmNextSteps({
                         .then(row => {
                           onApplied(row);
                           setDrafts(prev =>
-                            prev.map(item => (item.id === row.id ? row : item)),
+                            prev.map(item => (item.id === row.id ? row : item))
                           );
                         })
                         .catch(err =>
                           setError(
-                            err instanceof Error ? err.message : "Could not send.",
-                          ),
+                            err instanceof Error
+                              ? err.message
+                              : "Could not send."
+                          )
                         )
                         .finally(() => setBusy(false));
                     }}
