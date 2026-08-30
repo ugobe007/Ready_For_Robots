@@ -120,6 +120,39 @@ def robot_job_key(employer: str, title: str, locality: str = "") -> str:
     return hashlib.sha1(raw.encode()).hexdigest()[:24]
 
 
+_CONTACT_COLUMNS_READY: Optional[bool] = None
+
+
+def reset_contact_column_cache() -> None:
+    global _CONTACT_COLUMNS_READY
+    _CONTACT_COLUMNS_READY = None
+
+
+def robot_jobs_contact_columns_ready(db) -> bool:
+    """False until Fly runs ``alembic upgrade head`` (jcnt0a1b2c3d4)."""
+    global _CONTACT_COLUMNS_READY
+    if _CONTACT_COLUMNS_READY is not None:
+        return _CONTACT_COLUMNS_READY
+    try:
+        from sqlalchemy import inspect as sa_inspect
+
+        bind = db.get_bind()
+        names = {c["name"] for c in sa_inspect(bind).get_columns("robot_jobs")}
+        _CONTACT_COLUMNS_READY = "employer_email" in names
+    except Exception:
+        _CONTACT_COLUMNS_READY = False
+    return _CONTACT_COLUMNS_READY
+
+
+def _copy_contact_fields(req: dict[str, Any], extract: dict[str, Any]) -> dict[str, Any]:
+    """Keep a found mailbox. Never invent. Never wipe an existing one with None."""
+    for key in ("employer_email", "contact_url", "apply_url"):
+        value = extract.get(key)
+        if isinstance(value, str) and value.strip():
+            req[key] = value.strip()[:1024] if key != "employer_email" else value.strip()[:320]
+    return req
+
+
 def upsert_robot_job_from_extract(
     db,
     *,
@@ -154,8 +187,17 @@ def upsert_robot_job_from_extract(
     req["performance_specs"] = extract.get("performance_specs")
     req["job_function"] = extract.get("job_function")
     req["unknowns"] = extract.get("unknowns") or []
+    _copy_contact_fields(req, extract)
     row.requirements = req
     row.unknowns = list(extract.get("unknowns") or [])
+    if robot_jobs_contact_columns_ready(db):
+        email = req.get("employer_email")
+        if email:
+            row.employer_email = str(email)[:320]
+        if req.get("contact_url"):
+            row.contact_url = str(req["contact_url"])[:1024]
+        if req.get("apply_url"):
+            row.apply_url = str(req["apply_url"])[:1024]
     db.flush()
     if source_url and row.id:
         ev = JobEvidence(

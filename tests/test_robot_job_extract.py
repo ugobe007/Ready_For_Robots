@@ -28,6 +28,111 @@ def test_extracts_title_function_pay_and_specs():
     line = format_robot_job_signal(job)
     assert "ROBOT_JOB" in line
     assert "picking" in line
+    assert job["employer_email"] is None
+
+
+def test_jsonld_hiring_organization_email_is_persisted():
+    from app.services.robot_job_extract import extract_job_contacts
+
+    jsonld = {
+        "@type": "JobPosting",
+        "title": "Patient Transporter",
+        "email": "ops@named-hospital.org",
+        "hiringOrganization": {
+            "@type": "Organization",
+            "name": "Named Hospital",
+            "email": "ops@named-hospital.org",
+            "url": "https://named-hospital.org",
+        },
+        "url": "https://named-hospital.org/careers/transporter",
+    }
+    job = extract_robot_job(
+        title="Patient Transporter",
+        description="Hospital unit delivery. Immediate hire.",
+        company="Named Hospital",
+        locality="Portland, OR",
+        jsonld=jsonld,
+    )
+    assert job["employer_email"] == "ops@named-hospital.org"
+    assert job["contact_url"] == "https://named-hospital.org"
+    assert job["apply_url"] == "https://named-hospital.org/careers/transporter"
+    contacts = extract_job_contacts(jsonld=jsonld, employer="Named Hospital")
+    assert contacts["employer_email"] == "ops@named-hospital.org"
+
+
+def test_mailto_on_posting_html_is_kept():
+    html = (
+        '<a href="mailto:facilities@sunrise-orchards.com">Email hiring</a>'
+        "<p>Harvest worker. Immediate hire.</p>"
+    )
+    job = extract_robot_job(
+        title="Harvest Worker",
+        description="Farm laborer harvest worker.",
+        company="Sunrise Orchards",
+        locality="Yakima, WA",
+        html=html,
+    )
+    assert job["employer_email"] == "facilities@sunrise-orchards.com"
+
+
+def test_indeed_board_mailbox_is_not_persisted():
+    jsonld = {
+        "@type": "JobPosting",
+        "title": "Warehouse Associate",
+        "hiringOrganization": {
+            "name": "GXO Logistics",
+            "email": "jobs@indeed.com",
+        },
+        "email": "noreply@indeed.com",
+    }
+    html = '<a href="mailto:noreply@indeed.com">Indeed</a>'
+    job = extract_robot_job(
+        title="Warehouse Associate",
+        description="Night shift picker. Immediate hire.",
+        company="GXO Logistics",
+        locality="Allentown, PA",
+        html=html,
+        jsonld=jsonld,
+    )
+    assert job["employer_email"] is None
+    assert job["job_title"] == "Warehouse Associate"
+    assert job["employer"] == "GXO Logistics"
+
+
+def test_does_not_invent_info_at_domain_from_employer_name():
+    job = extract_robot_job(
+        title="Order Picker",
+        description="Night shift order picker. Immediate hire. Reach us at the warehouse.",
+        company="Acme Fulfillment",
+        locality="Memphis, TN",
+    )
+    assert job["employer_email"] is None
+    assert job["contact_url"] is None
+    assert "acme" not in str(job.get("employer_email") or "").lower()
+    # Plain "info@acme.com" in copy is not mailto / JSON-LD — do not harvest a guess.
+    guessed = extract_robot_job(
+        title="Order Picker",
+        description="Acme Fulfillment hiring. info@acme.com is not on this posting as mailto.",
+        company="Acme Fulfillment",
+        locality="Memphis, TN",
+    )
+    assert guessed["employer_email"] is None
+
+
+def test_title_as_company_does_not_keep_a_mailbox():
+    jsonld = {
+        "@type": "JobPosting",
+        "title": "Warehouse Associate",
+        "hiringOrganization": {"name": "Warehouse Associate", "email": "hr@example.com"},
+    }
+    job = extract_robot_job(
+        title="Warehouse Associate",
+        description="Night shift. Immediate hire.",
+        company="Warehouse Associate",
+        jsonld=jsonld,
+    )
+    assert job["employer"] == "Warehouse Associate"
+    assert job["employer_email"] is None
 
 
 def test_unknown_when_pay_and_specs_absent():
@@ -88,3 +193,65 @@ def test_harvest_and_cnc_titles_map_to_find_tape_families():
     assert is_job_employer_name("Indeed") is False
     assert is_job_employer_name("Warehouse Associate", title="Warehouse Associate") is False
     assert is_job_employer_name("Confidential") is False
+
+
+def test_upsert_persists_email_when_contact_columns_exist(monkeypatch):
+    from unittest.mock import MagicMock
+
+    from app.services.robot_job_lifecycle import (
+        reset_contact_column_cache,
+        upsert_robot_job_from_extract,
+    )
+
+    reset_contact_column_cache()
+    monkeypatch.setattr(
+        "app.services.robot_job_lifecycle.robot_jobs_contact_columns_ready",
+        lambda db: True,
+    )
+    db = MagicMock()
+    db.query.return_value.filter.return_value.one_or_none.return_value = None
+    extract = extract_robot_job(
+        title="Patient Transporter",
+        description="Hospital unit delivery.",
+        company="Named Hospital",
+        locality="Portland, OR",
+        jsonld={
+            "@type": "JobPosting",
+            "title": "Patient Transporter",
+            "hiringOrganization": {
+                "name": "Named Hospital",
+                "email": "ops@named-hospital.org",
+            },
+        },
+    )
+    row = upsert_robot_job_from_extract(db, company_id=None, extract=extract)
+    assert row.employer_email == "ops@named-hospital.org"
+    assert row.requirements["employer_email"] == "ops@named-hospital.org"
+
+
+def test_upsert_keeps_job_when_email_missing(monkeypatch):
+    from unittest.mock import MagicMock
+
+    from app.services.robot_job_lifecycle import (
+        reset_contact_column_cache,
+        upsert_robot_job_from_extract,
+    )
+
+    reset_contact_column_cache()
+    monkeypatch.setattr(
+        "app.services.robot_job_lifecycle.robot_jobs_contact_columns_ready",
+        lambda db: True,
+    )
+    db = MagicMock()
+    db.query.return_value.filter.return_value.one_or_none.return_value = None
+    extract = extract_robot_job(
+        title="Harvest Worker",
+        description="Farm laborer harvest worker. Immediate hire.",
+        company="Sunrise Orchards",
+        locality="Yakima, WA",
+    )
+    row = upsert_robot_job_from_extract(db, company_id=None, extract=extract)
+    assert row is not None
+    assert row.company_name == "Sunrise Orchards"
+    assert row.employer_email is None
+    assert not row.requirements.get("employer_email")

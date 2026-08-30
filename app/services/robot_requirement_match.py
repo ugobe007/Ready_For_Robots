@@ -255,6 +255,9 @@ class JobMatchCard:
     source: str = "requirement_match"
     required_task_models: list[dict[str, Any]] = field(default_factory=list)
     text: str = ""
+    employer_email: Optional[str] = None
+    contact_url: Optional[str] = None
+    apply_url: Optional[str] = None
 
     def to_api_job(self) -> dict[str, Any]:
         return {
@@ -274,6 +277,9 @@ class JobMatchCard:
             "requirements": [r.to_dict() for r in self.requirements],
             "required_task_models": list(self.required_task_models),
             "source": self.source,
+            "employer_email": self.employer_email,
+            "contact_url": self.contact_url,
+            "apply_url": self.apply_url,
         }
 
 
@@ -889,6 +895,13 @@ def evaluate_job(
         source="requirement_match",
         required_task_models=models,
         text=str(row.get("text") or job_spec.get("text") or "").strip(),
+        employer_email=(
+            row.get("employer_email")
+            or job_spec.get("employer_email")
+            or None
+        ),
+        contact_url=row.get("contact_url") or job_spec.get("contact_url") or None,
+        apply_url=row.get("apply_url") or job_spec.get("apply_url") or None,
     )
 
 

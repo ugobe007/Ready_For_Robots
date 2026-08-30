@@ -223,5 +223,6 @@ Matcher retune, Cal, invented dollars, HubSpot OAuth export UI, cron expiry job,
 
 1. Wire Resend inbound MX/DNS so employer replies land automatically (`jobs+{token}@` domain).
 2. Enforce F7 cron expiry job in production (`alembic upgrade` leftover until Fly runs it). Alembic `edcl0a1b2c3d4` adds `job_applications.decline_reason_code` + `decline_note` (revises `pvud0a1b2c3d4`). Fly migrate may timeout; employer Decline needs those columns in prod.
-3. Paid F8: list all matching jobs, not only the last FIND dump.
-4. F9: HubSpot + CSV export of Robot Jobs.
+3. **Job contacts:** Alembic `jcnt0a1b2c3d4` adds `robot_jobs.employer_email` / `contact_url` / `apply_url`. Fly leftover: `alembic upgrade head`. Until then apply send stays off for live jobs that only have JSONB contacts if the column write was skipped. New scrapes extract page-only mailboxes; posting HTML is not stored so the 1,664 existing rows cannot be backfilled from disk.
+4. Paid F8: list all matching jobs, not only the last FIND dump.
+5. F9: HubSpot + CSV export of Robot Jobs.

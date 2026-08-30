@@ -15,11 +15,22 @@ From title + description, only if stated:
 | Job title / function | Order Picker → `picking` |
 | Compensation | `$18–$22 an hour`, signing bonus |
 | Performance specs | `45 cases per hour`, `50 lbs`, night shift, openings |
+| Employer email | `mailto:`, JSON-LD `email`, `hiringOrganization.email` — page only |
 
-Unknown is stored on `unknowns`. Never fill with a guess.
+Unknown is stored on `unknowns`. Never fill with a guess. Never invent `info@` from the employer name. Skip board mailboxes (`jobs@indeed.com`, `noreply@indeed.com`).
 
 Signal text: `ROBOT_JOB | {title} | {function} | {pay} | {specs} | {status} | {employer}`  
 `signal_type`: `robot_job` (not HOT buyer intent).
+
+## Contacts (page only)
+
+`extract_job_contacts` reads **this posting**: `mailto:` hrefs, schema.org `itemprop=email`, JSON-LD `JobPosting.email` / `hiringOrganization.email` / `applicationContact.email`. It does **not** scrape LinkedIn, Apollo, Hunter, or SIGNAL buyer lists.
+
+`upsert_robot_job_from_extract` writes `employer_email`, `contact_url`, `apply_url` onto `robot_jobs` (Alembic `jcnt0a1b2c3d4`) and mirrors them in `requirements` JSONB so FIND overlay still works if Fly has not migrated yet. FIND Job Cards copy those fields; apply send (`can_operator_send`) turns on when a real mailbox is present.
+
+**Fly leftover:** `alembic upgrade head` (revision `jcnt0a1b2c3d4`). Until Fly runs it, column writes are skipped and contacts live only in `requirements`.
+
+**Backfill:** posting HTML is **not** stored (`job_evidence.excerpt` is the signal line). `scripts/backfill_robot_job_contacts.py` cannot recover the existing ~1,664 empty mailboxes. New scrapes fill going forward.
 
 ## Close-out (`app/services/robot_job_lifecycle.py`)
 
@@ -38,7 +49,7 @@ News queries in `scrape_targets.NEWS_QUERIES` hunt deployment evidence so the sa
 
 ## Persist
 
-`upsert_robot_job_from_extract` writes `robot_jobs.requirements` JSONB (`compensation`, `performance_specs`, `job_function`) and attaches `job_evidence`. No new migration — columns already exist.
+`upsert_robot_job_from_extract` writes `robot_jobs.requirements` JSONB (`compensation`, `performance_specs`, `job_function`, contacts when found) and attaches `job_evidence`. Contact columns: Alembic `jcnt0a1b2c3d4` — **Fly leftover until `alembic upgrade head`**.
 
 ## Production schedule
 

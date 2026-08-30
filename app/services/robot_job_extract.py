@@ -5,8 +5,12 @@ Used by job-board scrapers so SIGNAL labor_pain rows become employment objects.
 """
 from __future__ import annotations
 
+import json
 import re
 from typing import Any, Optional
+from urllib.parse import urlparse
+
+from app.services.email_address import normalize_recipient_email
 
 # Title fragment → job function (employment family, not a buyer persona).
 JOB_FUNCTION_BY_TITLE = (
@@ -196,6 +200,8 @@ def extract_robot_job(
     company: str = "",
     locality: str = "",
     source_url: str = "",
+    html: str = "",
+    jsonld: Any = None,
 ) -> dict[str, Any]:
     blob = f"{title or ''}\n{description or ''}"
     function = job_function_from_title(title)
@@ -208,6 +214,13 @@ def extract_robot_job(
         unknowns.append("performance_specs")
     if not function:
         unknowns.append("job_function")
+    contacts = extract_job_contacts(
+        html=html or "",
+        jsonld=jsonld,
+        description=description or "",
+        employer=company,
+        title=title,
+    )
     return {
         "employer": (company or "").strip() or None,
         "workplace": (locality or "").strip() or None,
@@ -216,6 +229,9 @@ def extract_robot_job(
         "compensation": pay,
         "performance_specs": specs,
         "source_url": source_url or None,
+        "employer_email": contacts.get("employer_email"),
+        "contact_url": contacts.get("contact_url"),
+        "apply_url": contacts.get("apply_url"),
         "unknowns": unknowns,
         "status": "open",
     }
@@ -306,6 +322,229 @@ def is_job_employer_name(name: str, title: str = "") -> bool:
     except Exception:
         pass
     return True
+
+
+# Board inboxes that appear on aggregator pages. Not an employer mailbox.
+_BOARD_EMAIL_DOMAINS = frozenset(
+    {
+        "indeed.com",
+        "indeedmail.com",
+        "ziprecruiter.com",
+        "simplyhired.com",
+        "glassdoor.com",
+        "linkedin.com",
+        "talent.com",
+        "snagajob.com",
+        "careerbuilder.com",
+        "monster.com",
+        "dice.com",
+    }
+)
+_BOARD_EMAIL_EXACT = frozenset(
+    {
+        "noreply@indeed.com",
+        "no-reply@indeed.com",
+        "jobs@indeed.com",
+        "noreply@ziprecruiter.com",
+        "jobs@ziprecruiter.com",
+        "noreply@simplyhired.com",
+        "jobs@simplyhired.com",
+        "noreply@glassdoor.com",
+        "jobs@glassdoor.com",
+        "noreply@linkedin.com",
+        "jobs@linkedin.com",
+    }
+)
+_BOARD_EMAIL_LOCALS = frozenset(
+    {
+        "noreply",
+        "no-reply",
+        "donotreply",
+        "do-not-reply",
+        "mailer-daemon",
+        "postmaster",
+        "bounce",
+        "unsubscribe",
+    }
+)
+_MAILTO_RE = re.compile(
+    r"mailto:([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})",
+    re.I,
+)
+_ITEMPROP_EMAIL_RE = re.compile(
+    r"""itemprop=["']email["'][^>]*>([^<]{3,320})""",
+    re.I,
+)
+_ITEMPROP_EMAIL_CONTENT_RE = re.compile(
+    r"""itemprop=["']email["'][^>]*content=["']([^"']+)["']""",
+    re.I,
+)
+
+
+def _host_from_url(url: str) -> str:
+    try:
+        host = (urlparse(url).hostname or "").lower().removeprefix("www.")
+    except Exception:
+        return ""
+    return host
+
+
+def _is_board_host(host: str) -> bool:
+    h = (host or "").lower().removeprefix("www.")
+    if not h:
+        return False
+    return any(h == d or h.endswith("." + d) for d in _BOARD_EMAIL_DOMAINS)
+
+
+def is_board_mailbox(email: str) -> bool:
+    """True for aggregator/ATS notification inboxes, not a hiring employer."""
+    hit = normalize_recipient_email(email)
+    if not hit:
+        return True
+    if hit in _BOARD_EMAIL_EXACT:
+        return True
+    local, _, domain = hit.partition("@")
+    if local in _BOARD_EMAIL_LOCALS:
+        return True
+    return _is_board_host(domain)
+
+
+def _add_email(out: list[str], seen: set[str], raw: Any) -> None:
+    if not isinstance(raw, str):
+        return
+    hit = normalize_recipient_email(raw)
+    if not hit or hit in seen or is_board_mailbox(hit):
+        return
+    seen.add(hit)
+    out.append(hit)
+
+
+def _jsonld_as_dict(jsonld: Any) -> Optional[dict[str, Any]]:
+    if isinstance(jsonld, str):
+        try:
+            jsonld = json.loads(jsonld)
+        except (json.JSONDecodeError, TypeError):
+            return None
+    if isinstance(jsonld, list):
+        for item in jsonld:
+            parsed = _jsonld_as_dict(item)
+            if parsed:
+                return parsed
+        return None
+    if not isinstance(jsonld, dict):
+        return None
+    types = jsonld.get("@type")
+    type_list = types if isinstance(types, list) else [types]
+    if "JobPosting" in type_list or not types:
+        return jsonld
+    graph = jsonld.get("@graph")
+    if isinstance(graph, list):
+        for item in graph:
+            parsed = _jsonld_as_dict(item)
+            if parsed:
+                return parsed
+    return jsonld
+
+
+def _jsonld_emails(obj: dict[str, Any], out: list[str], seen: set[str]) -> None:
+    _add_email(out, seen, obj.get("email"))
+    for key in ("hiringOrganization", "applicationContact", "creator"):
+        nested = obj.get(key)
+        if isinstance(nested, list):
+            nested = nested[0] if nested else None
+        if isinstance(nested, dict):
+            _add_email(out, seen, nested.get("email"))
+            contact = nested.get("contactPoint") or nested.get("applicationContact")
+            if isinstance(contact, list):
+                contact = contact[0] if contact else None
+            if isinstance(contact, dict):
+                _add_email(out, seen, contact.get("email"))
+
+
+def _jsonld_url(obj: dict[str, Any], *keys: str) -> Optional[str]:
+    for key in keys:
+        raw = obj.get(key)
+        if isinstance(raw, dict):
+            raw = raw.get("url") or raw.get("@id")
+        if isinstance(raw, list) and raw:
+            raw = raw[0]
+        if isinstance(raw, str):
+            text = raw.strip()
+            if text.startswith("http://") or text.startswith("https://"):
+                return text[:1024]
+    return None
+
+
+def _mailto_emails(blob: str, out: list[str], seen: set[str]) -> None:
+    if not blob:
+        return
+    for match in _MAILTO_RE.finditer(blob):
+        _add_email(out, seen, match.group(1))
+    for match in _ITEMPROP_EMAIL_CONTENT_RE.finditer(blob):
+        _add_email(out, seen, match.group(1))
+    for match in _ITEMPROP_EMAIL_RE.finditer(blob):
+        _add_email(out, seen, match.group(1).strip())
+
+
+def extract_job_contacts(
+    *,
+    html: str = "",
+    jsonld: Any = None,
+    description: str = "",
+    employer: str = "",
+    title: str = "",
+) -> dict[str, Optional[str]]:
+    """Emails/URLs that appear on this posting. Never invent info@domain.
+
+    Sources: mailto: hrefs, schema.org / JSON-LD ``email``,
+    ``hiringOrganization.email``, ``applicationContact.email``.
+    Skips Indeed/board mailboxes and title-as-company rows.
+    """
+    empty: dict[str, Optional[str]] = {
+        "employer_email": None,
+        "contact_url": None,
+        "apply_url": None,
+    }
+    if employer and not is_job_employer_name(employer, title=title):
+        return empty
+
+    emails: list[str] = []
+    seen: set[str] = set()
+    posting = _jsonld_as_dict(jsonld) if jsonld is not None else None
+    if posting:
+        _jsonld_emails(posting, emails, seen)
+        desc = posting.get("description")
+        if isinstance(desc, str):
+            _mailto_emails(desc, emails, seen)
+    _mailto_emails(html or "", emails, seen)
+    _mailto_emails(description or "", emails, seen)
+
+    apply_url = None
+    contact_url = None
+    if posting:
+        apply_url = _jsonld_url(posting, "url")
+        org = posting.get("hiringOrganization") or {}
+        if isinstance(org, list):
+            org = org[0] if org else {}
+        if isinstance(org, dict):
+            org_url = _jsonld_url(org, "url", "sameAs")
+            if org_url and not _is_board_host(_host_from_url(org_url)):
+                contact_url = org_url
+        app = posting.get("applicationContact")
+        if isinstance(app, list):
+            app = app[0] if app else None
+        if isinstance(app, dict):
+            app_url = _jsonld_url(app, "url")
+            if app_url:
+                apply_url = apply_url or app_url
+                if not contact_url and not _is_board_host(_host_from_url(app_url)):
+                    contact_url = app_url
+
+    return {
+        "employer_email": emails[0] if emails else None,
+        "contact_url": contact_url,
+        "apply_url": apply_url,
+    }
 
 
 def format_robot_job_signal(job: dict[str, Any]) -> str:

@@ -393,6 +393,8 @@ def jsonld_card(item: dict) -> Optional[Dict[str, str]]:
         "location": _jsonld_locality(item.get("jobLocation")),
         "desc": desc,
         "url": (item.get("url") or "").strip(),
+        "html": str(desc_html) if desc_html else "",
+        "jsonld": item,
     }
 
 
@@ -420,6 +422,7 @@ def card_fields_from_element(post) -> Dict[str, str]:
         "location": _text(location_el),
         "desc": _text(desc_el),
         "url": "",
+        "html": str(post) if post is not None else "",
     }
 
 
@@ -530,15 +533,19 @@ class EnhancedJobBoardScraper(BaseScraper):
             if card.get("title")
         }
         for card in css_cards:
-            if card.get("company"):
-                continue
             match = by_title.get(normalize_job_title(card.get("title") or ""))
-            if match and match.get("company"):
+            if not match:
+                continue
+            if not card.get("company") and match.get("company"):
                 card["company"] = match["company"]
-                if not card.get("location"):
-                    card["location"] = match.get("location") or ""
-                if not card.get("desc"):
-                    card["desc"] = match.get("desc") or ""
+            if not card.get("location"):
+                card["location"] = match.get("location") or ""
+            if not card.get("desc"):
+                card["desc"] = match.get("desc") or ""
+            if match.get("jsonld") and not card.get("jsonld"):
+                card["jsonld"] = match["jsonld"]
+            if match.get("html") and "mailto:" not in (card.get("html") or "").lower():
+                card["html"] = (card.get("html") or "") + "\n" + (match.get("html") or "")
         cards = css_cards
         if not cards:
             cards = jsonld_cards
@@ -640,6 +647,8 @@ class EnhancedJobBoardScraper(BaseScraper):
                     company=company_name,
                     locality=location,
                     source_url=source_url,
+                    html=card.get("html") or "",
+                    jsonld=card.get("jsonld"),
                 )
                 posting_state = status_from_posting_text(desc)
                 job["status"] = posting_state["status"]
