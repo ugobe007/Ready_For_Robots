@@ -319,8 +319,8 @@
     overflow-wrap: anywhere;
     word-break: break-word;
     /* Viewport fallback, then column-relative when the pane is a container. */
-    font-size: clamp(1.55rem, 3.8vw, 2.75rem);
-    font-size: clamp(1.55rem, 9.5cqi, 2.75rem);
+    font-size: clamp(1.75rem, 4.4vw, 3.15rem);
+    font-size: clamp(1.75rem, 11cqi, 3.15rem);
   }
 
   .rfr-jobs-page-shell::after {

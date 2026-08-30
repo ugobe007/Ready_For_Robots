@@ -59,6 +59,7 @@ import {
   JOBS_APPLY_CTA_CLASS,
   JOBS_EXAMPLE_CAP,
   FIND_JOBS_CTA,
+  FIND_JOBS_HEADLINE_ACCENT_CLASS,
   FIND_JOBS_HEADLINE_CLASS,
   FIND_JOBS_HOME_HEADLINE,
   FIND_JOBS_HOME_SUBHEAD,
@@ -2204,7 +2205,15 @@ function FindRail({
         ) : researching ? (
           companyName || "Researching…"
         ) : (
-          FIND_JOBS_HOME_HEADLINE
+          FIND_JOBS_HOME_HEADLINE.split(/(Jobs)/).map((part, i) =>
+            part === "Jobs" ? (
+              <span key={i} className={FIND_JOBS_HEADLINE_ACCENT_CLASS}>
+                {part}
+              </span>
+            ) : (
+              part
+            ),
+          )
         )}
       </h1>
       {stage === "find" && (

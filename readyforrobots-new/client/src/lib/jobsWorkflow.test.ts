@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   FIND_JOBS_CTA,
+  FIND_JOBS_HEADLINE_ACCENT_CLASS,
   FIND_JOBS_HEADLINE_CLASS,
   FIND_JOBS_HOME_HEADLINE,
   FIND_JOBS_HOME_SUBHEAD,
@@ -783,14 +784,18 @@ describe("jobsWorkflow", () => {
     expect(FIND_JOBS_HEADLINE_CLASS).toMatch(/rfr-find-headline/);
     expect(FIND_JOBS_HEADLINE_CLASS).not.toMatch(/text-5xl/);
     expect(FIND_JOBS_HEADLINE_CLASS).not.toMatch(/lg:text-7xl/);
+    expect(FIND_JOBS_HEADLINE_ACCENT_CLASS).toMatch(/text-emerald-400/);
+    expect(FIND_JOBS_HEADLINE_ACCENT_CLASS).not.toMatch(/violet/);
     expect(FIND_JOBS_SUBHEAD_CLASS).toMatch(/text-xl/);
     expect(FIND_JOBS_SUBHEAD_CLASS).toMatch(/sm:text-2xl/);
     expect(workspace).toMatch(/FIND_JOBS_HEADLINE_CLASS/);
+    expect(workspace).toMatch(/FIND_JOBS_HEADLINE_ACCENT_CLASS/);
+    expect(workspace).toMatch(/part === "Jobs"/);
     expect(workspace).toMatch(/rfr-find-pane/);
     const css = readFileSync(join(here, "../index.css"), "utf8");
     expect(css).toMatch(/\.rfr-find-headline/);
     expect(css).toMatch(/overflow-wrap:\s*anywhere/);
-    expect(css).toMatch(/9\.5cqi/);
+    expect(css).toMatch(/11cqi/);
     expect(css).toMatch(/container-type:\s*inline-size/);
     expect(workspace).toMatch(/FIND_JOBS_HOME_HEADLINE/);
     expect(workspace).toMatch(/FIND_JOBS_HOME_SUBHEAD/);
