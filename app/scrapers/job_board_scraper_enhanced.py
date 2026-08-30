@@ -104,11 +104,13 @@ OPERATIONAL_TITLE_PATTERNS = [
     re.compile(r"\b(dish\s?washers?|kitchen (?:staff|helper|worker)|food service)\b", re.I),
     re.compile(r"\b(crew members?|team members?|baristas?|cashiers?)\b", re.I),
     re.compile(
-        r"\b(food runners?|bussers?|servers?|host(?:ess|es)?|waitstaff|waiters?)\b",
+        r"\b(food runners?|bussers?|servers?|bartenders?|cocktail servers?|"
+        r"host(?:ess|es)?|waitstaff|waiters?)\b",
         re.I,
     ),
     re.compile(
-        r"\b(housekeep(?:er|ing)?|room attendants?|housepersons?|housemen)\b",
+        r"\b(housekeep(?:er|ing)?|room attendants?|housepersons?|housemen|"
+        r"janitors?|custodians?|floor techs?|restroom attendants?)\b",
         re.I,
     ),
     re.compile(
@@ -253,7 +255,8 @@ LABOR_PAIN_KEYWORDS = [
     # Food service
     "line cook", "prep cook", "dishwasher", "food runner", "busser",
     "kitchen staff", "crew member", "team member", "fry cook",
-    "barista", "cashier",
+    "barista", "cashier", "bartender", "cocktail server", "banquet server",
+    "janitor", "custodian", "floor technician", "restroom attendant",
     # Healthcare
     "patient transport", "environmental services", "sterile processing",
     "pharmacy technician", "dietary aide", "hospital aide", "EVS tech",

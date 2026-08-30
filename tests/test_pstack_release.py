@@ -39,6 +39,87 @@ def test_local_release_skips_fly_drive():
     assert "find_drive" in critic_ids
 
 
+PR_194_FILES = [
+    "app/scrapers/job_board_scraper_enhanced.py",
+    "app/scrapers/scrape_targets.py",
+    "app/services/robot_job_extract.py",
+    "fly.toml",
+    "scripts/pstack_release.py",
+    "tests/test_job_board_scraper_pipeline.py",
+    "tests/test_pstack_release.py",
+    "tests/test_robot_job_extract.py",
+]
+
+
+def test_scrape_only_paths_skip_live_find():
+    from scripts.pstack_release import path_is_scrape_only, paths_are_scrape_only
+
+    assert path_is_scrape_only("app/scrapers/scrape_targets.py")
+    assert path_is_scrape_only("fly.toml")
+    assert path_is_scrape_only("app/services/robot_job_extract.py")
+    assert not path_is_scrape_only("readyforrobots-new/client/src/lib/jobsWorkflow.ts")
+    assert not path_is_scrape_only("ontology/industry_work_language.v1.json")
+    assert paths_are_scrape_only(
+        [
+            "app/scrapers/scrape_targets.py",
+            "app/scrapers/job_board_scraper_enhanced.py",
+            "app/services/robot_job_extract.py",
+            "tests/test_job_board_scraper_pipeline.py",
+            "tests/test_robot_job_extract.py",
+            "fly.toml",
+        ]
+    )
+    assert not paths_are_scrape_only(
+        ["app/scrapers/scrape_targets.py", "readyforrobots-new/client/src/lib/jobsWorkflow.ts"]
+    )
+    # Gate-script edits on a scrape PR are not scrape-only — that is why CI still
+    # drove Dexmate after 149d2775.
+    assert not paths_are_scrape_only(PR_194_FILES)
+
+
+def test_scrape_plus_pstack_harness_skips_live_find():
+    from scripts.pstack_release import skip_live_find_drives
+
+    skip, reason = skip_live_find_drives(PR_194_FILES)
+    assert skip, reason
+    assert "FIND" in reason
+
+
+def test_find_ui_diff_still_runs_live_find():
+    from scripts.pstack_release import skip_live_find_drives
+
+    skip, _reason = skip_live_find_drives(
+        ["readyforrobots-new/client/src/lib/jobsWorkflow.ts", "scripts/pstack_release.py"]
+    )
+    assert not skip
+
+
+def test_empty_ci_file_list_skips_live_find(monkeypatch):
+    from scripts.pstack_release import skip_live_find_drives
+
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    skip, reason = skip_live_find_drives([])
+    assert skip, reason
+
+
+def test_critic_skips_fly_on_scrape_pr_file_list(monkeypatch):
+    from scripts import pstack_release as ps
+
+    monkeypatch.setattr(ps, "pr_changed_files", lambda: list(PR_194_FILES))
+
+    def boom(*_a, **_k):
+        raise AssertionError("live FIND must not run on scrape + pstack-harness diffs")
+
+    monkeypatch.setattr(ps, "drive_find_url", boom)
+    monkeypatch.setattr(ps, "drive_diligent_healthcare", boom)
+    critic = ps.phase_critic(api="https://ready-2-robot.fly.dev", local=False)
+    assert critic["ok"], critic
+    ids = {c["id"]: c for c in critic["checks"]}
+    assert ids["find_drive"]["ok"]
+    assert ids["healthcare_class:live"]["ok"]
+    assert ids["ontology_industry_language"]["ok"]
+
+
 def test_critic_gates_include_abort_and_leftover():
     assert critic_gate_ids() == [
         "find",

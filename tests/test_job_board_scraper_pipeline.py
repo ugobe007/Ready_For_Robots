@@ -54,6 +54,29 @@ def test_food_service_urls_include_qsr_make_line_not_only_vp():
         assert urls.index(operational[0]) < urls.index(vp[0])
 
 
+def test_food_serve_clean_urls_cover_venues_not_qsr_only():
+    food_urls = job_board_urls(industry="Food Service")
+    hosp_urls = job_board_urls(industry="Hospitality")
+    blob = " ".join(food_urls + hosp_urls).lower()
+    assert "make+line" in blob or "qsr" in blob
+    for venue in ("hotel", "casino", "airport", "mall"):
+        assert venue in blob, venue
+    assert "office" in blob or "cafeteria" in blob
+    assert "data+center" in blob or "data%20center" in blob
+    assert "janitor" in blob or "custodian" in blob
+    assert "server" in blob or "busser" in blob
+    assert "cook" in blob or "kitchen" in blob
+    vp = [u for u in food_urls if "VP+Director" in u]
+    venue_ops = [
+        u
+        for u in food_urls
+        if any(bit in u.lower() for bit in ("casino", "airport", "hotel+casino"))
+    ]
+    assert venue_ops, food_urls
+    if vp:
+        assert food_urls.index(venue_ops[0]) < food_urls.index(vp[0])
+
+
 def test_scheduled_rotation_covers_core_verticals(monkeypatch):
     monkeypatch.delenv("JOB_BOARD_INDUSTRIES", raising=False)
     industries = scheduled_industries()
@@ -118,6 +141,9 @@ def test_operational_titles_pass_relevancy_and_builders_fail():
     ) >= 0.15
     assert calculate_job_relevancy_score("Cook", "Immediate hire.") >= 0.15
     assert calculate_job_relevancy_score("Server", "Multiple openings.") >= 0.15
+    assert calculate_job_relevancy_score("Bartender", "Casino cocktail service.") >= 0.15
+    assert calculate_job_relevancy_score("Janitor", "Office floors and restrooms.") >= 0.15
+    assert calculate_job_relevancy_score("Custodian", "Data center facility cleaner.") >= 0.15
     assert calculate_job_relevancy_score("Warehouse Worker", "Night shift.") >= 0.15
     assert calculate_job_relevancy_score("EVS Technician", "Hospital floors.") >= 0.15
     assert calculate_job_relevancy_score("Palletizer Operator", "Packaging line.") >= 0.15
