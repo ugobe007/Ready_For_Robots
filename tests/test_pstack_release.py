@@ -39,6 +39,50 @@ def test_local_release_skips_fly_drive():
     assert "find_drive" in critic_ids
 
 
+def test_post_json_retries_transient_503(monkeypatch):
+    from scripts import pstack_release as ps
+
+    calls = {"n": 0}
+
+    def fake_once(url, payload, *, timeout):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            return 503, {"_raw": ""}
+        return 200, {"state": "matches", "company_name": "Dexmate"}
+
+    monkeypatch.setattr(ps, "_post_json_once", fake_once)
+    monkeypatch.setenv("PSTACK_HTTP_RETRIES", "6")
+    monkeypatch.setenv("PSTACK_HTTP_RETRY_SLEEP", "0")
+    code, body = ps._post_json("https://example.test/api/robot-job-search", {"url": "https://www.dexmate.ai/"})
+    assert code == 200
+    assert body["state"] == "matches"
+    assert calls["n"] == 3
+
+
+def test_find_tile_pr_must_not_skip_live_critic():
+    """Serving/Cleaning FIND tiles are not a scrape-only PR — live critic must run."""
+    tile_files = (
+        "readyforrobots-new/client/src/lib/robotClassOptions.ts",
+        "readyforrobots-new/client/src/lib/jobsWorkflow.ts",
+        "app/services/robot_class_qualify.py",
+        "ontology/industry_work_language.v1.json",
+        "scripts/pstack_release.py",
+    )
+    scrape_only = {
+        "app/services/robot_job_extract.py",
+        "app/services/job_board_scraper_runner.py",
+        "tests/test_job_board_scraper_pipeline.py",
+        "tests/test_robot_job_extract.py",
+        "fly.toml",
+    }
+    assert not all(path in scrape_only or path.startswith("app/scrapers/") for path in tile_files)
+    src = (ROOT / "scripts" / "pstack_release.py").read_text(encoding="utf-8")
+    assert "wait_for_fly_health" in src
+    assert "TRANSIENT_HTTP" in src
+    assert 'if local:' in src
+    assert "scrape-only PR" not in src
+
+
 def test_critic_gates_include_abort_and_leftover():
     assert critic_gate_ids() == [
         "find",

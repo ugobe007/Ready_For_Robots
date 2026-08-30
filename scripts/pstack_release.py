@@ -643,6 +643,7 @@ REQUIRED_INDUSTRY_ONTOLOGY_WORDS = {
         "floor cleaning",
         "commercial cleaning",
         "floor scrubbing",
+        "data center janitor",
     ),
 }
 
@@ -957,6 +958,7 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
             )
         )
     else:
+        wait_for_fly_health(api)
         for url in (DEXMATE, GREENFIELD):
             drive = drive_find_url(url, api=api)
             drives.append(drive)

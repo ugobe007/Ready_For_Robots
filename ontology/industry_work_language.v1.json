@@ -673,7 +673,10 @@
         "casino janitor",
         "airport janitor",
         "hotel janitor",
-        "restaurant janitor"
+        "restaurant janitor",
+        "data center janitor",
+        "office janitor",
+        "mall janitor"
       ]
     },
     {
