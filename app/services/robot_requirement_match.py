@@ -59,7 +59,7 @@ REQUIREMENT_EXERCISES = {
     "acquire_case_from_conveyor": frozenset({"manipulate", "load_unload"}),
     "place_case_into_pallet": frozenset({"manipulate", "load_unload"}),
     "relocate_totes_or_carts": frozenset({"tote_transport", "transport"}),
-    "serve_food_drink": frozenset({"transport"}),
+    "serve_food_drink": frozenset({"serving_task", "transport"}),
     "deliver_items": frozenset({"transport"}),
     "prepare_food": frozenset({"food_prep"}),
     "prepare_beverage": frozenset({"beverage_prep"}),
@@ -127,6 +127,10 @@ CONFIGURATION_WORK_CAPABILITIES = frozenset(
         "logistics_task",
         "factory_task",
         "hospitality_task",
+        "serving_task",
+        "food_prep",
+        "surface_clean",
+        "hard_floor_scrub",
         "aerospace_task",
     }
 )
@@ -198,6 +202,7 @@ _SIMPLE_CAP_REQ = {
     "logistics_task": ("logistics_task", "no grounded 3PL / sortation capability"),
     "factory_task": ("factory_task", "no grounded factory / plant capability"),
     "hospitality_task": ("hospitality_task", "no grounded hotel / guest-delivery capability"),
+    "serving_task": ("serving_task", "no grounded table / drink / bussing capability"),
     "marine_task": ("marine_task", "no grounded marine capability"),
     "avionics_task": ("avionics_task", "no grounded aviation capability"),
     "evtol_flight": ("evtol_flight", "no grounded eVTOL / air-taxi flight capability"),
@@ -502,7 +507,9 @@ def _eval_requirement(
         )
 
     if rid == "serve_food_drink":
-        # Running food/drinks to tables is an item-delivery (transport) task.
+        serving = _cap(caps, "serving_task")
+        if serving.present:
+            return RequirementResult(rid, label, necessity, MATCHED, serving.evidence or serving.label)
         if transport.present:
             return RequirementResult(rid, label, necessity, MATCHED, transport.evidence or transport.label)
         if tote.present:
@@ -645,8 +652,12 @@ def _why_lines(
         else:
             add("can relocate objects")
     if needed & {"serve_food_drink", "deliver_items"}:
+        serving = _cap(caps, "serving_task")
         t = _cap(caps, "transport")
-        add(t.label if t.present else _cap(caps, "tote_transport").label)
+        if serving.present:
+            add(serving.label)
+        else:
+            add(t.label if t.present else _cap(caps, "tote_transport").label)
         if _cap(caps, "mobile").present:
             add(_cap(caps, "mobile").label)
     if needed & {"prepare_food"}:
@@ -681,6 +692,7 @@ def _why_lines(
         ("logistics_task", "logistics_task"),
         ("factory_task", "factory_task"),
         ("hospitality_task", "hospitality_task"),
+        ("serving_task", "serving_task"),
         ("healthcare_task", "healthcare_task"),
     ):
         if _rid in needed:
@@ -1119,7 +1131,7 @@ _FACTORY_REQS = [
     {"id": "mobility", "label": "mobility along the cell (optional)", "necessity": "not_required"},
 ]
 _HOSPITALITY_REQS = [
-    {"id": "hospitality_task", "label": "hotel / guest / serving work", "necessity": "required"},
+    {"id": "hospitality_task", "label": "hotel / guest / housekeeping work", "necessity": "required"},
     {"id": "indoor_navigation", "label": "navigate guest floors and service corridors", "necessity": "required"},
     {"id": "mobility", "label": "mobility between rooms", "necessity": "required"},
 ]
@@ -1342,6 +1354,7 @@ def match_jobs_from_profile(
                 "construction_task", "construction_print", "construction_block",
                 "construction_layout", "mining_task",
                 "warehouse_task", "logistics_task", "factory_task", "hospitality_task",
+                "serving_task",
                 "marine_task", "avionics_task", "evtol_flight", "drone_task",
                 "autonomous_flight", "aerospace_task",
                 "hard_floor_scrub", "inspect_route"):

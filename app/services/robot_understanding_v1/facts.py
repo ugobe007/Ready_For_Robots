@@ -59,6 +59,7 @@ _SCOPED_CAPABILITY_PREDS = {
     "supports_hard_floor_scrubbing",
     "claims_food_prep",
     "claims_beverage_prep",
+    "claims_serving",
     "supports_tote_handling",
     "claims_warehouse_transport",
     "claims_item_delivery",
@@ -1123,6 +1124,24 @@ def _extract_from_page(
             continue
         add("claims_item_delivery", True, span=m.group(0)[:120], confidence=0.82)
 
+    # Table / drink / bussing (ADAM, Matradee, Servi). Distinct from hotel
+    # housekeeping / luggage. FIND Serving class grounds serving_task.
+    for m in re.finditer(
+        r"\b(?:"
+        r"food[- ]runn\w+|food\s+runner|bus(?:s|es|sing|ses)\s+tables?|table\s+service|"
+        r"robot\s+server|server\s+robot|"
+        r"serv(?:e|es|ing)\s+(?:[\w-]+\s+){0,3}?"
+        r"(?:food|drinks?|meals?|entr[e\u00e9]es?|dishes|beverages?|tables?|customers?|diners?)|"
+        r"cocktail\s+server|banquet\s+server|waitstaff|bussing|"
+        r"drink\s+runn\w+"
+        r")\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_serving", True, span=m.group(0)[:120], confidence=0.85)
+
     # --- food preparation / cooking (kitchen & food-prep robots) ---
     # Dexterous food manipulation: frying, grilling, cooking, chopping, and
     # assembling meals. Kept a distinct capability (food_prep) — it must NOT leak
@@ -1136,7 +1155,8 @@ def _extract_from_page(
         r"prepar(?:e|es|ing)\s+(?:[\w-]+\s+){0,2}?(?:food|meals?|salads?|bowls?|dishes|entr[e\u00e9]es?|ingredients?)|"
         r"assembl(?:e|es|ing)\s+(?:[\w-]+\s+){0,2}?(?:meals?|bowls?|salads?|dishes|entr[e\u00e9]es?|tacos?|burritos?|sandwich\w*|pizzas?)|"
         r"grill\w+\s+(?:food|burgers?|patties|meat)|cook\w*\s+(?:food|meals?|fries|burgers?|the\s+\w+\s+menu)|"
-        r"(?:chop|slice|dice|peel)\w*\s+(?:vegetables?|produce|ingredients?|food)"
+        r"(?:chop|slice|dice|peel)\w*\s+(?:vegetables?|produce|ingredients?|food)|"
+        r"hotel\s+kitchen|casino\s+kitchen|airport\s+kitchen|banquet\s+cook|commissary\s+kitchen"
         r")\b",
         text,
         re.I,
@@ -1170,7 +1190,9 @@ def _extract_from_page(
         r"(?:toilets?|urinals?)\s*,?\s+(?:and\s+)?(?:floors?|sinks?|fixtures?)|"
         r"carpet\s+(?:clean\w*|extract\w*|shampoo\w*)|"
         r"vacuum\w*\s+(?:carpets?|floors?|robot)|robotic\s+vacuum|"
-        r"commercial\s+cleaning\s+robot"
+        r"commercial\s+cleaning\s+robot|"
+        r"janitor|custodian|restroom\s+attendant|"
+        r"data[- ]center\s+(?:janitor|custodian|cleaner|cleaning)"
         r")\b",
         text,
         re.I,

@@ -4,35 +4,183 @@
   "frozen": false,
   "note": "Machine-readable companion to ROBOT_WORKFLOW_ONTOLOGY.md. Each work family requires a SPECIFIC capability so category leakage cannot occur. Loaded by app/services/robot_ontology.py; kept in sync with app/services/robot_requirement_match.py (tests/test_robot_ontology.py).",
   "families": {
-    "pallet":    {"required_any": ["manipulate"],                    "label": "case palletizing"},
-    "gripper":   {"required_any": ["manipulate"],                    "label": "machine tending / part handling"},
-    "transport": {"required_any": ["tote_transport", "transport"],  "label": "point-to-point transport"},
-    "cart":      {"required_any": ["tote_transport", "transport"],  "label": "cart delivery"},
-    "scrub":     {"required_any": ["hard_floor_scrub"],             "label": "hard-floor scrubbing"},
-    "inspect":   {"required_any": ["inspect_route"],                "label": "inspection route"},
-    "serve":     {"required_any": ["transport"],                    "label": "food/drink running (hospitality serving)"},
-    "food_prep": {"required_any": ["food_prep"],                    "label": "food preparation / cooking"},
-    "beverage":  {"required_any": ["beverage_prep"],                "label": "beverage / drink preparation"},
-    "shelf_scan": {"required_any": ["shelf_scan"],                 "label": "retail shelf / inventory scanning"},
-    "pallet_move": {"required_any": ["pallet_move"],               "label": "pallet handling / autonomous forklift"},
-    "trailer_unload": {"required_any": ["trailer_unload"],         "label": "trailer / container unloading"},
-    "pick_pack": {"required_any": ["pick_pack"],                   "label": "piece picking / pack"},
-    "sortation": {"required_any": ["sortation"],                   "label": "parcel sortation"},
-    "disinfection": {"required_any": ["disinfect"],               "label": "UV / surface disinfection"},
-    "asrs": {"required_any": ["goods_to_person"],                  "label": "ASRS goods-to-person"},
-    "agriculture": {"required_any": ["agriculture_task"],          "label": "agriculture — field / crop / orchard work"},
-    "construction": {"required_any": ["construction_task"],        "label": "construction — jobsite work"},
-    "marine": {"required_any": ["marine_task"],                    "label": "marine — hull / port / underwater work"},
-    "avionics": {"required_any": ["avionics_task"],                "label": "avionics — drone / eVTOL / autonomous aircraft work"},
-    "aerospace": {"required_any": ["aerospace_task"],              "label": "aerospace — satellite servicing / orbital debris / space robots"},
-    "mining": {"required_any": ["mining_task"],                    "label": "mining — haulage/drilling"},
-    "warehouse": {"required_any": ["warehouse_task"],              "label": "warehouse — fulfillment / DC tote and pick work"},
-    "logistics": {"required_any": ["logistics_task"],              "label": "logistics — 3PL / cross-dock / sortation"},
-    "factory": {"required_any": ["factory_task"],                  "label": "factory — plant machine-tend / assembly-line work"},
-    "hospitality": {"required_any": ["hospitality_task"],          "label": "hospitality — hotel guest delivery / serving"},
-    "clinical_delivery": {"required_any": ["healthcare_task"],     "label": "hospital clinical delivery (meds, specimens, supplies)"},
-    "resident_services": {"required_any": ["healthcare_task"],     "label": "eldercare resident services (meals, linens, amenities)"},
-    "restroom":  {"required_any": ["surface_clean"],               "label": "restroom / surface cleaning"}
+    "pallet": {
+      "required_any": [
+        "manipulate"
+      ],
+      "label": "case palletizing"
+    },
+    "gripper": {
+      "required_any": [
+        "manipulate"
+      ],
+      "label": "machine tending / part handling"
+    },
+    "transport": {
+      "required_any": [
+        "tote_transport",
+        "transport"
+      ],
+      "label": "point-to-point transport"
+    },
+    "cart": {
+      "required_any": [
+        "tote_transport",
+        "transport"
+      ],
+      "label": "cart delivery"
+    },
+    "scrub": {
+      "required_any": [
+        "hard_floor_scrub"
+      ],
+      "label": "hard-floor scrubbing"
+    },
+    "inspect": {
+      "required_any": [
+        "inspect_route"
+      ],
+      "label": "inspection route"
+    },
+    "serve": {
+      "required_any": [
+        "serving_task",
+        "transport"
+      ],
+      "label": "food/drink running (table service)"
+    },
+    "food_prep": {
+      "required_any": [
+        "food_prep"
+      ],
+      "label": "food preparation / cooking"
+    },
+    "beverage": {
+      "required_any": [
+        "beverage_prep"
+      ],
+      "label": "beverage / drink preparation"
+    },
+    "shelf_scan": {
+      "required_any": [
+        "shelf_scan"
+      ],
+      "label": "retail shelf / inventory scanning"
+    },
+    "pallet_move": {
+      "required_any": [
+        "pallet_move"
+      ],
+      "label": "pallet handling / autonomous forklift"
+    },
+    "trailer_unload": {
+      "required_any": [
+        "trailer_unload"
+      ],
+      "label": "trailer / container unloading"
+    },
+    "pick_pack": {
+      "required_any": [
+        "pick_pack"
+      ],
+      "label": "piece picking / pack"
+    },
+    "sortation": {
+      "required_any": [
+        "sortation"
+      ],
+      "label": "parcel sortation"
+    },
+    "disinfection": {
+      "required_any": [
+        "disinfect"
+      ],
+      "label": "UV / surface disinfection"
+    },
+    "asrs": {
+      "required_any": [
+        "goods_to_person"
+      ],
+      "label": "ASRS goods-to-person"
+    },
+    "agriculture": {
+      "required_any": [
+        "agriculture_task"
+      ],
+      "label": "agriculture \u2014 field / crop / orchard work"
+    },
+    "construction": {
+      "required_any": [
+        "construction_task"
+      ],
+      "label": "construction \u2014 jobsite work"
+    },
+    "marine": {
+      "required_any": [
+        "marine_task"
+      ],
+      "label": "marine \u2014 hull / port / underwater work"
+    },
+    "avionics": {
+      "required_any": [
+        "avionics_task"
+      ],
+      "label": "avionics \u2014 drone / eVTOL / autonomous aircraft work"
+    },
+    "aerospace": {
+      "required_any": [
+        "aerospace_task"
+      ],
+      "label": "aerospace \u2014 satellite servicing / orbital debris / space robots"
+    },
+    "mining": {
+      "required_any": [
+        "mining_task"
+      ],
+      "label": "mining \u2014 haulage/drilling"
+    },
+    "warehouse": {
+      "required_any": [
+        "warehouse_task"
+      ],
+      "label": "warehouse \u2014 fulfillment / DC tote and pick work"
+    },
+    "logistics": {
+      "required_any": [
+        "logistics_task"
+      ],
+      "label": "logistics \u2014 3PL / cross-dock / sortation"
+    },
+    "factory": {
+      "required_any": [
+        "factory_task"
+      ],
+      "label": "factory \u2014 plant machine-tend / assembly-line work"
+    },
+    "hospitality": {
+      "required_any": [
+        "hospitality_task"
+      ],
+      "label": "hospitality \u2014 hotel guest delivery / housekeeping"
+    },
+    "clinical_delivery": {
+      "required_any": [
+        "healthcare_task"
+      ],
+      "label": "hospital clinical delivery (meds, specimens, supplies)"
+    },
+    "resident_services": {
+      "required_any": [
+        "healthcare_task"
+      ],
+      "label": "eldercare resident services (meals, linens, amenities)"
+    },
+    "restroom": {
+      "required_any": [
+        "surface_clean"
+      ],
+      "label": "restroom / surface cleaning"
+    }
   },
   "generic_gate": "mobile",
   "note_generic": "mobility is a gate, not a differentiator; ranking uses distinctive-capability utilization, never a category quota"

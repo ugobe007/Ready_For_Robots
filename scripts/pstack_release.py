@@ -522,7 +522,7 @@ def healthcare_class_fixture() -> tuple[bool, str]:
 
     ts_ids = _ts_class_option_ids(class_ts)
     py_ids = _py_class_option_ids(class_py)
-    extra = ("mining", "warehouse", "logistics", "factory", "hospitality", "food_prep")
+    extra = ("mining", "warehouse", "logistics", "factory", "hospitality", "food_prep", "serving", "cleaning")
     if "healthcare" not in ts_ids or "healthcare" not in py_ids:
         misses.append("Healthcare class id missing")
     for tile in extra:
@@ -530,22 +530,34 @@ def healthcare_class_fixture() -> tuple[bool, str]:
             misses.append(f"{tile} class id missing")
     if "medical" in ts_ids or "hotel" in ts_ids:
         misses.append(f"aliased industries leaked as FIND tiles={ts_ids}")
-    if len(ts_ids) != 18:
+    if len(ts_ids) != 20:
         misses.append(f"class picker tiles={ts_ids}")
     if '"healthcare"' not in workflow or "healthcare" not in class_py:
         misses.append("FIND_TILE / workflow missing healthcare")
     if '"food_prep"' not in workflow or "food_prep" not in class_py:
         misses.append("FIND_TILE / workflow missing food_prep")
+    if '"serving"' not in workflow or "serving" not in class_py:
+        misses.append("FIND_TILE / workflow missing serving")
+    if '"cleaning"' not in workflow or "cleaning" not in class_py:
+        misses.append("FIND_TILE / workflow missing cleaning")
     if "No ${label} jobs for this robot yet." not in workflow:
         misses.append("class empty-copy template missing")
     if 'healthcare: "Healthcare"' not in workflow:
         misses.append("Healthcare class title missing")
     if 'food_prep: "Food prep"' not in workflow:
         misses.append("Food prep class title missing")
+    if 'serving: "Serving"' not in workflow:
+        misses.append("Serving class title missing")
+    if 'cleaning: "Cleaning"' not in workflow:
+        misses.append("Cleaning class title missing")
     if "No healthcare jobs for this robot yet." not in workflow_test:
         misses.append("healthcare empty copy test missing")
     if "No food prep jobs for this robot yet." not in workflow_test:
         misses.append("food_prep empty copy test missing")
+    if "No serving jobs for this robot yet." not in workflow_test:
+        misses.append("serving empty copy test missing")
+    if "No cleaning jobs for this robot yet." not in workflow_test:
+        misses.append("cleaning empty copy test missing")
     if "No healthcare jobs for this robot yet." not in release_ts:
         misses.append("fixture empty copy missing")
     if "No humanoid jobs for this robot yet." not in release_ts:
@@ -609,8 +621,29 @@ REQUIRED_INDUSTRY_ONTOLOGY_WORDS = {
         "ingredient dosing",
         "tortilla",
         "assembly line kitchen",
+        "hotel kitchen",
+        "casino kitchen",
+        "airport kitchen",
     ),
-    "serving": ("table service", "bussing"),
+    "serving": (
+        "table service",
+        "bussing",
+        "food runner",
+        "waitstaff",
+        "dining room",
+        "cocktail server",
+        "hotel dining",
+        "mall food court",
+    ),
+    "cleaning": (
+        "janitor",
+        "custodian",
+        "restroom",
+        "vacuum",
+        "data center",
+        "shopping mall",
+        "office building",
+    ),
 }
 
 REQUIRED_INDUSTRY_FIND_CLASSES = {
@@ -620,6 +653,8 @@ REQUIRED_INDUSTRY_FIND_CLASSES = {
     "factory": "factory",
     "hospitality": "hospitality",
     "food_prep": "food_prep",
+    "serving": "serving",
+    "cleaning": "cleaning",
 }
 
 
@@ -678,8 +713,11 @@ def ontology_industry_language_fixture() -> tuple[bool, str]:
     if (hotel.get("find_class") or "") != "hospitality":
         misses.append("hotel must alias find_class=hospitality")
     serving = rows.get("serving") or {}
-    if (serving.get("find_class") or "") != "hospitality":
-        misses.append("serving must alias find_class=hospitality")
+    if (serving.get("find_class") or "") != "serving":
+        misses.append("serving must find_class=serving")
+    cleaning = rows.get("cleaning") or {}
+    if (cleaning.get("find_class") or "") != "cleaning":
+        misses.append("cleaning must find_class=cleaning")
     warehouse = rows.get("warehouse") or {}
     if warehouse.get("outranks_morphology"):
         misses.append("warehouse must not outrank humanoid morphology")
@@ -700,6 +738,10 @@ def ontology_industry_language_fixture() -> tuple[bool, str]:
         misses.append("hotel_guest_service_policy task model missing")
     if "food_prep_station_policy" not in blob_tasks:
         misses.append("food_prep_station_policy task model missing")
+    if "dining_floor_service_policy" not in blob_tasks:
+        misses.append("dining_floor_service_policy task model missing")
+    if "commercial_cleaning_policy" not in blob_tasks:
+        misses.append("commercial_cleaning_policy task model missing")
     if "machine_tending_load_unload" not in blob_tasks:
         misses.append("machine_tending_load_unload task model missing")
     if '"id": "mining"' not in blob_qualify:

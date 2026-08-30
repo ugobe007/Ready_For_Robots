@@ -253,7 +253,8 @@ LABOR_PAIN_KEYWORDS = [
     # Food service
     "line cook", "prep cook", "dishwasher", "food runner", "busser",
     "kitchen staff", "crew member", "team member", "fry cook",
-    "barista", "cashier",
+    "barista", "cashier", "janitor", "custodian", "restroom attendant",
+    "floor cleaner", "banquet cook",
     # Healthcare
     "patient transport", "environmental services", "sterile processing",
     "pharmacy technician", "dietary aide", "hospital aide", "EVS tech",
@@ -682,6 +683,8 @@ class EnhancedJobBoardScraper(BaseScraper):
                 industry = "Logistics"
             elif any(w in url_lower for w in ["restaurant", "food", "kitchen", "cook", "dishwash", "crew", "qsr", "make+line", "make%20line", "bowl+assembly", "bowl%20assembly", "tortilla", "prep+cook", "fast+casual", "fast%20casual"]):
                 industry = "Food Service"
+            elif any(w in url_lower for w in ["janitor", "custodian", "restroom", "data+center", "data%20center"]):
+                industry = "Hospitality"
             elif any(w in url_lower for w in ["hospital", "health", "medical", "pharmacy", "sterile", "dietary"]):
                 industry = "Healthcare"
 

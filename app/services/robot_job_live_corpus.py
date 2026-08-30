@@ -46,6 +46,8 @@ TAPE_FAMILIES = {
     "hospitality": ["transport_amr", "mobile_manipulation"],
     "food_prep": ["manipulator"],
     "serve": ["transport_amr"],
+    "restroom": ["floor_scrub"],
+    "scrub": ["floor_scrub"],
     "disinfection": ["floor_scrub"],
     "clinical_delivery": ["transport_amr", "mobile_manipulation"],
     "pallet": ["manipulator"],
@@ -75,6 +77,12 @@ def tape_family_for_live_job(
     title: str = "",
     extra_text: str = "",
 ) -> Optional[str]:
+    function = (job_function or "").strip().lower()
+    blob_early = f"{title} {extra_text}".lower()
+    if function in {"cleaning", "janitorial", "custodial"}:
+        if any(w in blob_early for w in ("restroom", "bathroom", "lavatory", "toilet")):
+            return "restroom"
+        return "scrub"
     tape = tape_family_for_job_function(job_function)
     if tape:
         return tape
@@ -102,6 +110,8 @@ def tape_family_for_live_job(
         "logistics": "logistics",
         "factory": "factory",
         "food_prep": "food_prep",
+        "serving": "serve",
+        "cleaning": "scrub",
     }.get(cls)
 
 

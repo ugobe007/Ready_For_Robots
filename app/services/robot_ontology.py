@@ -29,7 +29,7 @@ _DEFAULT_DISTINCTIVE = frozenset(
     {
         "manipulate", "dual_arm", "tote_transport", "transport", "food_prep",
         "beverage_prep", "surface_clean", "hard_floor_scrub", "inspect_route",
-        "load_unload", "reach",
+        "load_unload", "reach", "serving_task",
     }
 )
 _DEFAULT_GENERIC = frozenset({"mobile"})
@@ -40,7 +40,7 @@ _DEFAULT_FAMILIES: dict[str, list[str]] = {
     "cart": ["tote_transport", "transport"],
     "scrub": ["hard_floor_scrub"],
     "inspect": ["inspect_route"],
-    "serve": ["transport"],
+    "serve": ["serving_task", "transport"],
     "food_prep": ["food_prep"],
     "beverage": ["beverage_prep"],
     "restroom": ["surface_clean"],
