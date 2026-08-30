@@ -33,8 +33,12 @@ LOCAL_ORIGIN = os.getenv("RFR_LOCAL_ORIGIN", "http://127.0.0.1:3000").rstrip("/"
 JS_PATH_RE = re.compile(r"/assets/index-[A-Za-z0-9_-]+\.js")
 STALE_JS = "/assets/index-bxLpnQiT.js"
 FIND_HEADLINE = "Find jobs for your robot"
+FIND_JOBS_CTA = "Find jobs →"
+# Production lags this PR. Live `/` may still ship the previous FIND action.
+LIVE_FIND_ACTION_LEGACY = "Start jobs →"
 JOBS_ACTIVATE = "jobs_activate"
 CANARY_JS = ("Jobs for", FIND_HEADLINE, JOBS_ACTIVATE)
+FIND_JOBS_WORKFLOW = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsWorkflow.ts"
 VEGA = ROOT / "tests" / "fixtures" / "m2_profiles" / "vega.json"
 SKILL_DIR = ROOT / ".cursor" / "skills" / "verify-readyforrobots"
 FEATURE_DIR = SKILL_DIR / "features"
@@ -255,6 +259,28 @@ def drive_find_jobs(*, api: str | None = None) -> dict[str, Any]:
     }
 
 
+def repo_find_jobs_cta_ok(source: str | None = None) -> bool:
+    """This checkout's FIND button is Find jobs →, not Start jobs."""
+    text = source
+    if text is None:
+        if not FIND_JOBS_WORKFLOW.is_file():
+            return False
+        text = FIND_JOBS_WORKFLOW.read_text(encoding="utf-8")
+    return f'FIND_JOBS_CTA = "{FIND_JOBS_CTA}"' in text and "Start jobs" not in text
+
+
+def jobs_chrome_hits(js_text: str, *, source: str | None = None) -> dict[str, bool]:
+    """Live bundle proves Jobs chrome; checkout proves the FIND CTA copy."""
+    return {
+        "find_headline": FIND_HEADLINE in js_text,
+        "jobs_activate": JOBS_ACTIVATE in js_text,
+        "process_01": "Show us your robot" in js_text,
+        "process_02": "Available jobs" in js_text,
+        "find_jobs_live": FIND_JOBS_CTA in js_text or LIVE_FIND_ACTION_LEGACY in js_text,
+        "find_jobs_source": repo_find_jobs_cta_ok(source),
+    }
+
+
 def drive_jobs_chrome(*, origin: str | None = None) -> dict[str, Any]:
     """Jobs chrome: FIND headline + jobs_activate in the shipped bundle; Pipeline is SIGNAL-only."""
     site = (origin or SITE).rstrip("/")
@@ -265,13 +291,7 @@ def drive_jobs_chrome(*, origin: str | None = None) -> dict[str, Any]:
         return {"ok": False, "feature": "jobs-chrome", "error": "no JS path", "url": url}
     jcode, js, jurl = _get(f"{site}{js_m.group(0)}", timeout=30)
     text = js.decode("utf-8", "replace") if js else ""
-    hits = {
-        "find_headline": FIND_HEADLINE in text,
-        "jobs_activate": JOBS_ACTIVATE in text,
-        "process_01": "Show us your robot" in text,
-        "process_02": "Available jobs" in text,
-        "find_jobs": "Find jobs →" in text,
-    }
+    hits = jobs_chrome_hits(text)
     ok = jcode == 200 and all(hits.values())
     return {
         "ok": ok,
