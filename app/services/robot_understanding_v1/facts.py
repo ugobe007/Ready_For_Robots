@@ -1133,12 +1133,10 @@ def _extract_from_page(
         r"ai[- ]controlled\s+cooking|automated\s+cooking|robotic\s+kitchen|kitchen\s+automation|"
         r"food\s+prep(?:aration)?|make[- ]line|bowl\s+assembly|prep\s+cook|"
         r"ingredient\s+dos(?:e|ing)|assembly[- ]line\s+kitchen|"
-        r"\bqsr\b|fast[- ]casual|"
         r"prepar(?:e|es|ing)\s+(?:[\w-]+\s+){0,2}?(?:food|meals?|salads?|bowls?|dishes|entr[e\u00e9]es?|ingredients?)|"
         r"assembl(?:e|es|ing)\s+(?:[\w-]+\s+){0,2}?(?:meals?|bowls?|salads?|dishes|entr[e\u00e9]es?|tacos?|burritos?|sandwich\w*|pizzas?)|"
         r"grill\w+\s+(?:food|burgers?|patties|meat)|cook\w*\s+(?:food|meals?|fries|burgers?|the\s+\w+\s+menu)|"
-        r"(?:chop|slice|dice|peel)\w*\s+(?:vegetables?|produce|ingredients?|food)|"
-        r"tortilla"
+        r"(?:chop|slice|dice|peel)\w*\s+(?:vegetables?|produce|ingredients?|food)"
         r")\b",
         text,
         re.I,
