@@ -94,6 +94,30 @@ def test_find_ui_diff_still_runs_live_find():
     assert not skip
 
 
+def test_github_event_base_sha_lists_pr_files(monkeypatch, tmp_path):
+    import json
+
+    from scripts.pstack_release import pr_changed_files
+
+    event = tmp_path / "event.json"
+    event.write_text(
+        json.dumps({"pull_request": {"base": {"sha": "4073111b8f5acac00e54839b2e3f43adaad9afca"}}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("GITHUB_EVENT_PATH", str(event))
+    calls: list[list[str]] = []
+
+    def fake_git(args):
+        calls.append(list(args))
+        if args[:3] == ["diff", "--name-only", "4073111b8f5acac00e54839b2e3f43adaad9afca"]:
+            return "\n".join(PR_194_FILES)
+        return ""
+
+    monkeypatch.setattr("scripts.pstack_release._git_output", fake_git)
+    assert pr_changed_files() == PR_194_FILES
+    assert ["fetch", "--no-tags", "--depth=1", "origin", "4073111b8f5acac00e54839b2e3f43adaad9afca"] in calls
+
+
 def test_empty_ci_file_list_skips_live_find(monkeypatch):
     from scripts.pstack_release import skip_live_find_drives
 
