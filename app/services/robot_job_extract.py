@@ -297,14 +297,6 @@ def is_job_employer_name(name: str, title: str = "") -> bool:
         return False
     if _JOB_TITLE_AS_EMPLOYER_RE.match(low):
         return False
-    try:
-        from app.services.headline_name_shape import passes_headline_name_shape
-
-        ok, _ = passes_headline_name_shape(n)
-        if not ok:
-            return False
-    except Exception:
-        pass
     return True
 
 
