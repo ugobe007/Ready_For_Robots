@@ -195,6 +195,26 @@ def test_harvest_and_cnc_titles_map_to_find_tape_families():
     assert is_job_employer_name("Confidential") is False
 
 
+def test_janitor_custodian_are_cleaning_hospital_evs_stays_healthcare():
+    from app.services.robot_job_extract import (
+        job_function_from_title,
+        tape_family_for_job_function,
+    )
+
+    assert job_function_from_title("Office Janitor") == "cleaning"
+    assert tape_family_for_job_function("cleaning") == "scrub"
+    assert job_function_from_title("Data Center Custodian") == "cleaning"
+    assert job_function_from_title("Restroom Attendant") == "cleaning"
+    assert job_function_from_title("Hospital EVS Technician") == "environmental_services"
+    assert tape_family_for_job_function("environmental_services") == "disinfection"
+    assert job_function_from_title("Hotel Housekeeper") == "housekeeping"
+    assert tape_family_for_job_function("housekeeping") == "hospitality"
+    assert job_function_from_title("Banquet Server") == "serving"
+    assert tape_family_for_job_function("serving") == "serve"
+    assert job_function_from_title("Food Runner / Busser") == "serving"
+    assert job_function_from_title("Windows Server Administrator") != "serving"
+
+
 def test_upsert_persists_email_when_contact_columns_exist(monkeypatch):
     from unittest.mock import MagicMock
 

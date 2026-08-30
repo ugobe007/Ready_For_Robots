@@ -54,6 +54,31 @@ def test_food_service_urls_include_qsr_make_line_not_only_vp():
         assert urls.index(operational[0]) < urls.index(vp[0])
 
 
+def test_food_prep_serving_cleaning_urls_cover_venues_not_housekeeping():
+    food = job_board_urls(industry="Food Service")
+    hospitality = job_board_urls(industry="Hospitality")
+    healthcare = job_board_urls(industry="Healthcare")
+    food_blob = " ".join(food).lower()
+    hosp_blob = " ".join(hospitality).lower()
+    health_blob = " ".join(healthcare).lower()
+    venue_kitchen = [
+        u
+        for u in food + hospitality
+        if "kitchen" in u.lower()
+        and any(v in u.lower() for v in ("hotel", "casino", "airport"))
+    ]
+    assert venue_kitchen, food_blob
+    assert any("busser" in u.lower() for u in food + hospitality)
+    assert any("janitor" in u.lower() for u in food + hospitality)
+    assert any("data+center" in u.lower() or "data%20center" in u.lower() for u in hospitality)
+    assert "housekeeper" in hosp_blob
+    assert "housekeep" not in food_blob
+    janitor_urls = [u for u in food + hospitality if "janitor" in u.lower()]
+    assert janitor_urls
+    assert all("housekeep" not in u.lower() for u in janitor_urls)
+    assert "evs" in health_blob or "environmental" in health_blob or "patient" in health_blob
+
+
 def test_scheduled_rotation_covers_core_verticals(monkeypatch):
     monkeypatch.delenv("JOB_BOARD_INDUSTRIES", raising=False)
     industries = scheduled_industries()

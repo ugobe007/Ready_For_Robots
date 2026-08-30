@@ -10,7 +10,7 @@
     {"id": "R2", "status": "implemented", "if": ["arm_count=2", "hand/effector evidence"], "then": "dual_arm"},
     {"id": "R3", "status": "implemented", "if": ["has_dexterous_hands|hand_dof"], "then": "manipulate + dexterous"},
     {"id": "R4", "status": "implemented", "if": ["product_class in {humanoid,mobile_manipulator,cobot,manipulator,arm}"], "then": "manipulation-morphology evidence (does not override sibling/off-subject gate)"},
-    {"id": "R5", "status": "implemented", "if": ["claims_food_prep|claims_beverage_prep"], "then": "food_prep|beverage_prep (distinct from generic manipulate)"},
+    {"id": "R5", "status": "implemented", "if": ["claims_food_prep|claims_beverage_prep|claims_serving|claims_surface_cleaning"], "then": "food_prep|beverage_prep|serving_task|surface_clean (distinct from generic manipulate / hotel housekeeping / hospital EVS)"},
     {"id": "R6", "status": "implemented", "if": ["has_mobile_base|autonomous_navigation|mobility_architecture|mobile class"], "then": "mobile"},
     {"id": "R7", "status": "implemented", "rule": "do not infer transport from mobility; transport requires claims_item_delivery; tote_transport requires warehouse tote/cart evidence"},
     {"id": "R8", "status": "implemented", "rule": "human-in-the-loop picking (person-to-goods / workers pick) grounds transport, never manipulate"},

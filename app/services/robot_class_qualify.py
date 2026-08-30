@@ -115,7 +115,19 @@ CLASS_OPTIONS: list[dict[str, str]] = [
         "id": "food_prep",
         "product_class": "food_prep",
         "label": "Food prep",
-        "hint": "QSR make-line, bowl assembly, grill, kitchen automation",
+        "hint": "Hotel, casino, airport, and QSR kitchens — make-line, grill, prep",
+    },
+    {
+        "id": "serving",
+        "product_class": "serving",
+        "label": "Serving",
+        "hint": "Table, drinks, bussing — ADAM, Matradee, Servi in restaurants, hotels, casinos, airports, offices, malls",
+    },
+    {
+        "id": "cleaning",
+        "product_class": "cleaning",
+        "label": "Cleaning",
+        "hint": "Floor, vacuum, restroom — hotels, restaurants, casinos, airports, offices, malls, data centers",
     },
 ]
 
@@ -209,8 +221,6 @@ def normalize_class_id(raw: str | None) -> str | None:
         "hospitality_robot": "hospitality",
         "hotel": "hospitality",
         "hotel_robot": "hospitality",
-        "serving": "hospitality",
-        "table_service": "hospitality",
         "guest_delivery": "hospitality",
         "food_prep": "food_prep",
         "food prep": "food_prep",
@@ -219,6 +229,16 @@ def normalize_class_id(raw: str | None) -> str | None:
         "kitchen_automation": "food_prep",
         "make_line": "food_prep",
         "bowl_assembly": "food_prep",
+        "hotel_kitchen": "food_prep",
+        "casino_kitchen": "food_prep",
+        "airport_kitchen": "food_prep",
+        "serving": "serving",
+        "table_service": "serving",
+        "food_running": "serving",
+        "waitstaff": "serving",
+        "cleaning": "cleaning",
+        "janitorial": "cleaning",
+        "custodial": "cleaning",
     }
     mapped = aliases.get(want)
     if not mapped:

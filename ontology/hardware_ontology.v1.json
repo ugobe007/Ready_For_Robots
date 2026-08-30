@@ -4,59 +4,275 @@
   "frozen": false,
   "note": "Machine-readable companion to ROBOT_HARDWARE_ONTOLOGY.md. Hardware/fact predicates the parser (app/services/robot_understanding_v1/facts.py + robot_inference_engine.py) may ground on a selected configuration. Kept in sync by tests/test_robot_ontology.py.",
   "predicates": [
-    {"predicate": "product_class", "category": "identity"},
-    {"predicate": "operating_environment", "category": "environment"},
-    {"predicate": "arm_count", "category": "manipulation", "type": "int"},
-    {"predicate": "hand_dof", "category": "manipulation", "type": "int"},
-    {"predicate": "has_dexterous_hands", "category": "manipulation", "type": "bool"},
-    {"predicate": "end_effector", "category": "manipulation"},
-    {"predicate": "degrees_of_freedom", "category": "manipulation", "type": "int"},
-    {"predicate": "has_mobile_base", "category": "mobility", "type": "bool"},
-    {"predicate": "mobility_architecture", "category": "mobility"},
-    {"predicate": "autonomous_navigation", "category": "perception", "type": "bool"},
-    {"predicate": "carrying_capacity", "category": "envelope", "type": "number", "units": true},
-    {"predicate": "reach_or_workspace", "category": "envelope", "type": "number", "units": true},
-    {"predicate": "max_speed", "category": "envelope", "type": "number", "units": true},
-    {"predicate": "battery_runtime", "category": "envelope", "type": "number", "units": true},
-    {"predicate": "ingress_protection", "category": "envelope"},
-    {"predicate": "supports_tote_handling", "category": "load_interface", "type": "bool"},
-    {"predicate": "claims_warehouse_transport", "category": "load_interface", "type": "bool"},
-    {"predicate": "claims_item_delivery", "category": "load_interface", "type": "bool"},
-    {"predicate": "claims_load_unload", "category": "load_interface", "type": "bool"},
-    {"predicate": "supports_hard_floor_scrubbing", "category": "cleaning", "type": "bool"},
-    {"predicate": "claims_surface_cleaning", "category": "cleaning", "type": "bool"},
-    {"predicate": "claims_shelf_scan", "category": "perception", "type": "bool"},
-    {"predicate": "claims_pallet_handling", "category": "load_interface", "type": "bool"},
-    {"predicate": "claims_trailer_unload", "category": "manipulation", "type": "bool"},
-    {"predicate": "claims_piece_pick", "category": "manipulation", "type": "bool"},
-    {"predicate": "claims_sortation", "category": "manipulation", "type": "bool"},
-    {"predicate": "claims_disinfection", "category": "cleaning", "type": "bool"},
-    {"predicate": "claims_goods_to_person", "category": "load_interface", "type": "bool"},
-    {"predicate": "claims_agriculture", "category": "domain", "type": "bool"},
-    {"predicate": "claims_healthcare", "category": "domain", "type": "bool"},
-    {"predicate": "claims_weeding", "category": "domain", "type": "bool"},
-    {"predicate": "claims_combine_harvest", "category": "domain", "type": "bool"},
-    {"predicate": "claims_precision_spray", "category": "domain", "type": "bool"},
-    {"predicate": "claims_tractor_work", "category": "domain", "type": "bool"},
-    {"predicate": "claims_construction", "category": "domain", "type": "bool"},
-    {"predicate": "claims_construction_print", "category": "domain", "type": "bool"},
-    {"predicate": "claims_construction_block", "category": "domain", "type": "bool"},
-    {"predicate": "claims_construction_layout", "category": "domain", "type": "bool"},
-    {"predicate": "autonomy_mode", "category": "configuration"},
-    {"predicate": "claims_mining", "category": "domain", "type": "bool"},
-    {"predicate": "claims_warehouse", "category": "domain", "type": "bool"},
-    {"predicate": "claims_logistics", "category": "domain", "type": "bool"},
-    {"predicate": "claims_factory", "category": "domain", "type": "bool"},
-    {"predicate": "claims_hospitality", "category": "domain", "type": "bool"},
-    {"predicate": "claims_marine", "category": "domain", "type": "bool"},
-    {"predicate": "claims_avionics", "category": "domain", "type": "bool"},
-    {"predicate": "claims_aerospace", "category": "domain", "type": "bool"},
-    {"predicate": "configuration_kind", "category": "configuration"},
-    {"predicate": "host_platform", "category": "configuration"},
-    {"predicate": "claims_food_prep", "category": "food", "type": "bool"},
-    {"predicate": "claims_beverage_prep", "category": "food", "type": "bool"},
-    {"predicate": "warehouse_or_factory_deployment", "category": "deployment", "type": "bool"}
+    {
+      "predicate": "product_class",
+      "category": "identity"
+    },
+    {
+      "predicate": "operating_environment",
+      "category": "environment"
+    },
+    {
+      "predicate": "arm_count",
+      "category": "manipulation",
+      "type": "int"
+    },
+    {
+      "predicate": "hand_dof",
+      "category": "manipulation",
+      "type": "int"
+    },
+    {
+      "predicate": "has_dexterous_hands",
+      "category": "manipulation",
+      "type": "bool"
+    },
+    {
+      "predicate": "end_effector",
+      "category": "manipulation"
+    },
+    {
+      "predicate": "degrees_of_freedom",
+      "category": "manipulation",
+      "type": "int"
+    },
+    {
+      "predicate": "has_mobile_base",
+      "category": "mobility",
+      "type": "bool"
+    },
+    {
+      "predicate": "mobility_architecture",
+      "category": "mobility"
+    },
+    {
+      "predicate": "autonomous_navigation",
+      "category": "perception",
+      "type": "bool"
+    },
+    {
+      "predicate": "carrying_capacity",
+      "category": "envelope",
+      "type": "number",
+      "units": true
+    },
+    {
+      "predicate": "reach_or_workspace",
+      "category": "envelope",
+      "type": "number",
+      "units": true
+    },
+    {
+      "predicate": "max_speed",
+      "category": "envelope",
+      "type": "number",
+      "units": true
+    },
+    {
+      "predicate": "battery_runtime",
+      "category": "envelope",
+      "type": "number",
+      "units": true
+    },
+    {
+      "predicate": "ingress_protection",
+      "category": "envelope"
+    },
+    {
+      "predicate": "supports_tote_handling",
+      "category": "load_interface",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_warehouse_transport",
+      "category": "load_interface",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_item_delivery",
+      "category": "load_interface",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_load_unload",
+      "category": "load_interface",
+      "type": "bool"
+    },
+    {
+      "predicate": "supports_hard_floor_scrubbing",
+      "category": "cleaning",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_surface_cleaning",
+      "category": "cleaning",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_shelf_scan",
+      "category": "perception",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_pallet_handling",
+      "category": "load_interface",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_trailer_unload",
+      "category": "manipulation",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_piece_pick",
+      "category": "manipulation",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_sortation",
+      "category": "manipulation",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_disinfection",
+      "category": "cleaning",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_goods_to_person",
+      "category": "load_interface",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_agriculture",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_healthcare",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_weeding",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_combine_harvest",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_precision_spray",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_tractor_work",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_construction",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_construction_print",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_construction_block",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_construction_layout",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "autonomy_mode",
+      "category": "configuration"
+    },
+    {
+      "predicate": "claims_mining",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_warehouse",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_logistics",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_factory",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_hospitality",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_serving",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_marine",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_avionics",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_aerospace",
+      "category": "domain",
+      "type": "bool"
+    },
+    {
+      "predicate": "configuration_kind",
+      "category": "configuration"
+    },
+    {
+      "predicate": "host_platform",
+      "category": "configuration"
+    },
+    {
+      "predicate": "claims_food_prep",
+      "category": "food",
+      "type": "bool"
+    },
+    {
+      "predicate": "claims_beverage_prep",
+      "category": "food",
+      "type": "bool"
+    },
+    {
+      "predicate": "warehouse_or_factory_deployment",
+      "category": "deployment",
+      "type": "bool"
+    }
   ],
-  "numeric_scopes": ["whole_robot", "per_tray", "per_shelf", "per_deck", "per_arm", "accessory"],
+  "numeric_scopes": [
+    "whole_robot",
+    "per_tray",
+    "per_shelf",
+    "per_deck",
+    "per_arm",
+    "accessory"
+  ],
   "numeric_scope_rule": "per_tray/per_shelf/per_deck/accessory values are rejected as whole-robot payload"
 }

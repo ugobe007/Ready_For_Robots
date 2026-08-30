@@ -1,29 +1,25 @@
-# Outcome — Food prep / QSR FIND class
+# Outcome — Food prep / Serving / Cleaning FIND classes
 
 **Date:** 2026-08-30
 **Mission:** `missions/2026-08-30-food-prep-qsr-jobs`
+**Branch:** `cursor/food-prep-qsr-jobs-009b`
 
 ## Answer
 
-We were matching **hotel hospitality**, not QSR food prep.
+Food prep is **not QSR-only**. Hotel / casino / airport kitchens and QSR make-line are the same FIND class. Serving and Cleaning are their own tiles. Diligent stays healthcare.
 
-Production `POST /api/robot-job-search` with `lookup_grain=robot_type` + `hospitality` **or** `food_prep` both returned Hilton / Hyatt / Four Seasons guest-service cards plus live hotel housekeepers. Zero Chipotle, zero make-line, zero bowl assembly. Live overlay is warehouse/mining/factory plus hotel housekeeping — not kitchen prep.
+## After (operator correction)
 
-`food_prep` was an alias of Hospitality. Seed Job Cards for that tile were hotel guest service.
-
-## After
-
-- **Food prep** is its own FIND tile (`lookup_grain=robot_type` + `food_prep`).
-- Hospitality stays hotel guest delivery / housekeeping. Chipotle-style QSR copy classifies as `food_prep`, not hotel. Diligent/Moxi stays healthcare.
-- Ontology QSR words: make line, bowl assembly, grill, prep cook, QSR, fast casual, kitchen automation, ingredient dosing, tortilla, assembly line kitchen. pstack critic fails if they vanish.
-- Scrapers: Food Service job-board URLs for make-line / bowl assembly / kitchen automation operational roles (not VP of Culinary). Overlay maps `food_prep` work language to the food_prep tape.
+- **Food prep** — hotel / casino / airport kitchens **and** QSR make-line / grill / prep. Not hotel housekeeping.
+- **Serving** — table / drink / bussing (ADAM, Matradee, Servi) in restaurants, hotels, casinos, airports, offices, malls. Not QSR-only, not housekeeping.
+- **Cleaning** — floor / vacuum / restroom at hotels, restaurants, casinos, airports, offices, malls, **data centers**. Not hospital EVS.
+- Hospitality stays guest delivery / housekeeping.
+- Ontology + Indeed scrape URLs for those venues. No invented employers. No SIGNAL hop. Sibling scraper owns Fly pipeline cache.
 
 ## Honest gap
 
-Chipotle itself has **no live job-board posting** in production overlay. The food_prep matcher can still show existing corpus seeds (White Castle fry station, Shake Shack grill, Chipotle bowl assembly, Compass warewash) — those were already in `robot_job_match_corpus.json` as `hospitality_seed`, not invented this cycle. Empty copy if the corpus is empty: `No food prep jobs for this robot yet.` Next 6h Food Service scrape can persist named QSR employers from real postings.
+Live overlay only persists named postings. Empty copy if the corpus has no kitchen / serving / janitor rows yet: `No food prep|serving|cleaning jobs for this robot yet.`
 
 ## Tests
 
-- pytest: ontology, food_prep class, industry tiles, healthcare/Diligent, job-board URLs, live overlay (128 + 34 related)
-- vitest: class options, jobsWorkflow, pstackRelease (44)
-- `python3 scripts/pstack_release.py --local` critic OK
+Targeted pytest + vitest + `python3 scripts/pstack_release.py --local`. No Fly pipeline cache refresh.
