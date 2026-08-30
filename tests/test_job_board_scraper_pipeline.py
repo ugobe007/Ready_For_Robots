@@ -39,7 +39,17 @@ def test_scheduled_rotation_covers_core_verticals(monkeypatch):
     monkeypatch.delenv("JOB_BOARD_INDUSTRIES", raising=False)
     industries = scheduled_industries()
     assert industries == list(DEFAULT_INDUSTRY_ROTATION)
-    for name in industries:
+    for name in (
+        "Hospitality",
+        "Logistics",
+        "Healthcare",
+        "Food Service",
+        "Agriculture",
+        "Construction",
+        "Mining",
+        "Factory",
+    ):
+        assert name in industries
         assert job_board_urls(industry=name), name
 
 
@@ -373,6 +383,42 @@ def test_indeed_testid_company_is_parsed():
     scraper.save_signal.assert_called_once()
     assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
     upsert.assert_called_once()
+
+
+def test_job_board_name_is_not_persisted_as_employer():
+    html = """
+    <div class="job_seen_beacon">
+      <h2>Warehouse Associate - Order Picker</h2>
+      <div class="companyName">Indeed</div>
+      <div class="companyLocation">Memphis, TN</div>
+      <div class="job-snippet">Night shift order picker. Immediate hire.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=warehouse+associate"
+    )
+    upsert.assert_not_called()
+    scraper.save_signal.assert_not_called()
+
+
+def test_farm_harvest_title_persists_robot_job():
+    html = """
+    <div class="job_seen_beacon">
+      <h2>Harvest Worker</h2>
+      <div class="companyName">Sunrise Orchards</div>
+      <div class="companyLocation">Yakima, WA</div>
+      <div class="job-snippet">Farm laborer harvest worker. Immediate hire. Multiple openings.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=farm+worker+harvest+orchard"
+    )
+    scraper.save_signal.assert_called_once()
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
+    upsert.assert_called_once()
+    extract = upsert.call_args.kwargs["extract"]
+    assert extract["employer"] == "Sunrise Orchards"
+    assert extract["job_function"] == "harvest"
 
 
 def test_generic_gm_is_not_a_robot_job():

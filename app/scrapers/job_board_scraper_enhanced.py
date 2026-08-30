@@ -20,7 +20,11 @@ from playwright.sync_api import sync_playwright
 
 from app.scrapers.base_scraper import BaseScraper
 from app.services.ontology import CONCEPTS
-from app.services.robot_job_extract import extract_robot_job, format_robot_job_signal
+from app.services.robot_job_extract import (
+    extract_robot_job,
+    format_robot_job_signal,
+    is_job_employer_name,
+)
 from app.services.robot_job_lifecycle import (
     apply_closeout_to_job,
     status_from_evidence,
@@ -125,6 +129,26 @@ OPERATIONAL_TITLE_PATTERNS = [
     ),
     re.compile(
         r"\b(palletiz(?:er|ing)|pack(?:aging|out|-out|in|-in)(?: line)? operators?)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(farm workers?|farm laborers?|harvest workers?|field workers?|"
+        r"tractor operators?|orchard workers?|vineyard workers?)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(construction laborers?|drywall (?:finishers?|hangers?)|"
+        r"framing carpenters?|bricklayers?|masons?)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(haul truck (?:operators?|drivers?)|underground miners?|"
+        r"mine (?:laborers?|operators?))\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(cnc (?:operators?|tenders?)|machine tenders?|"
+        r"machine operators?|production (?:line )?operators?)\b",
         re.I,
     ),
 ]
@@ -238,6 +262,10 @@ LABOR_PAIN_KEYWORDS = [
     "patient transporter",
     "warehouse worker", "night auditor", "houseperson",
     "palletizer", "packaging line",
+    "farm worker", "harvest worker", "tractor operator", "farm laborer",
+    "construction laborer", "drywall finisher", "framing carpenter",
+    "haul truck operator", "haul truck driver", "underground miner",
+    "cnc operator", "machine tender", "machine operator",
 ]
 
 PAIN_SIGNALS = [
@@ -583,7 +611,7 @@ class EnhancedJobBoardScraper(BaseScraper):
             desc = card.get("desc") or ""
             source_url = card.get("url") or url
 
-            if not company_name:
+            if not company_name or not is_job_employer_name(company_name, title=title):
                 skipped_no_company += 1
                 continue
 
@@ -633,6 +661,14 @@ class EnhancedJobBoardScraper(BaseScraper):
             url_lower = source_url.lower()
             if any(w in url_lower for w in ["hotel", "hospitality", "resort", "housekeep", "valet", "bell"]):
                 industry = "Hospitality"
+            elif any(w in url_lower for w in ["farm", "harvest", "orchard", "vineyard", "tractor", "agricultural"]):
+                industry = "Agriculture"
+            elif any(w in url_lower for w in ["construction", "drywall", "jobsite", "bricklay"]):
+                industry = "Construction"
+            elif any(w in url_lower for w in ["mining", "haul+truck", "haul%20truck", "underground+miner"]):
+                industry = "Mining"
+            elif any(w in url_lower for w in ["cnc", "machine+tend", "palletizer", "manufacturing", "factory"]):
+                industry = "Factory"
             elif any(w in url_lower for w in ["warehouse", "fulfillment", "logistics", "supply", "distribution", "dock"]):
                 industry = "Logistics"
             elif any(w in url_lower for w in ["restaurant", "food", "kitchen", "cook", "dishwash", "crew"]):

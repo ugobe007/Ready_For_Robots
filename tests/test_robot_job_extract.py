@@ -69,3 +69,22 @@ def test_stays_open_without_robot_evidence():
     )
     assert ev["status"] == "open"
     assert not should_close(ev["status"])
+
+
+def test_harvest_and_cnc_titles_map_to_find_tape_families():
+    from app.services.robot_job_extract import (
+        is_job_employer_name,
+        job_function_from_title,
+        tape_family_for_job_function,
+    )
+
+    assert job_function_from_title("Harvest Worker - Orchard") == "harvest"
+    assert tape_family_for_job_function("harvest") == "agriculture"
+    assert job_function_from_title("CNC Machine Tender") == "machine_tending"
+    assert tape_family_for_job_function("machine_tending") == "factory"
+    assert job_function_from_title("Haul Truck Operator") == "haulage"
+    assert tape_family_for_job_function("haulage") == "mining"
+    assert is_job_employer_name("Sunrise Orchards") is True
+    assert is_job_employer_name("Indeed") is False
+    assert is_job_employer_name("Warehouse Associate", title="Warehouse Associate") is False
+    assert is_job_employer_name("Confidential") is False
