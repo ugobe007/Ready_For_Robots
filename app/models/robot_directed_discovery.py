@@ -171,6 +171,10 @@ class RobotJob(Base):
     discovered_via_capability_family = Column(String(64), nullable=True, index=True)
     requirements = Column(JSONB, nullable=False, server_default="{}")
     unknowns = Column(JSONB, nullable=False, server_default="[]")
+    # Page-only contacts. Nullable. Never invent info@domain or board mailboxes.
+    employer_email = Column(String(320), nullable=True)
+    contact_url = Column(String(1024), nullable=True)
+    apply_url = Column(String(1024), nullable=True)
     source_run = Column(String(120), nullable=True)  # opaque; future discovery_run_id
     provenance = Column(JSONB, nullable=False, server_default="{}")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

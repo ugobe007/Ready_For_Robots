@@ -307,6 +307,9 @@ def match_jobs_for_profile(
                 "score": round(s, 2),
                 "unknowns": unknowns,
                 "source": job.get("source"),
+                "employer_email": job.get("employer_email"),
+                "contact_url": job.get("contact_url"),
+                "apply_url": job.get("apply_url"),
             }
         )
 

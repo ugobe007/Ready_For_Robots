@@ -366,6 +366,69 @@ def test_jsonld_jobposting_persists_without_css_cards():
     scraper.save_signal.assert_called_once()
     assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
     upsert.assert_called_once()
+    extract = upsert.call_args.kwargs["extract"]
+    assert extract["employer"] == "GXO Logistics"
+    assert extract["employer_email"] is None
+
+
+def test_jsonld_email_is_passed_to_persist():
+    html = """
+    <script type="application/ld+json">
+    {
+      "@type": "JobPosting",
+      "title": "Patient Transporter",
+      "description": "Hospital unit delivery. Immediate hire.",
+      "hiringOrganization": {
+        "@type": "Organization",
+        "name": "Named Hospital",
+        "email": "ops@named-hospital.org",
+        "url": "https://named-hospital.org"
+      },
+      "jobLocation": {
+        "@type": "Place",
+        "address": {"addressLocality": "Portland", "addressRegion": "OR"}
+      }
+    }
+    </script>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=patient+transporter"
+    )
+    scraper.save_signal.assert_called_once()
+    upsert.assert_called_once()
+    extract = upsert.call_args.kwargs["extract"]
+    assert extract["employer"] == "Named Hospital"
+    assert extract["employer_email"] == "ops@named-hospital.org"
+    assert extract["contact_url"] == "https://named-hospital.org"
+
+
+def test_jsonld_indeed_mailbox_is_not_passed_to_persist():
+    html = """
+    <script type="application/ld+json">
+    {
+      "@type": "JobPosting",
+      "title": "Warehouse Worker",
+      "description": "Night shift picker. Immediate hire.",
+      "hiringOrganization": {
+        "@type": "Organization",
+        "name": "GXO Logistics",
+        "email": "jobs@indeed.com"
+      },
+      "email": "noreply@indeed.com",
+      "jobLocation": {
+        "@type": "Place",
+        "address": {"addressLocality": "Allentown", "addressRegion": "PA"}
+      }
+    }
+    </script>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=warehouse+associate"
+    )
+    upsert.assert_called_once()
+    extract = upsert.call_args.kwargs["extract"]
+    assert extract["employer"] == "GXO Logistics"
+    assert extract["employer_email"] is None
 
 
 def test_indeed_testid_company_is_parsed():

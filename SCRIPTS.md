@@ -16,6 +16,12 @@ Apply schema changes (e.g. new columns):
 python3 -m alembic upgrade head
 ```
 
+**Fly leftover (job contacts):** revision `jcnt0a1b2c3d4` adds `robot_jobs.employer_email`, `contact_url`, `apply_url`. Until Fly runs `alembic upgrade head`, persist writes contacts into `requirements` JSONB only. Posting HTML is not stored; `scripts/backfill_robot_job_contacts.py` cannot recover the existing empty mailboxes.
+
+```bash
+PYTHONPATH=. python3 scripts/backfill_robot_job_contacts.py
+```
+
 Offline SQL for `automation_profile` only (optional; Alembic normally handles it):
 
 ```bash

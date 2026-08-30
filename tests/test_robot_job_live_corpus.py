@@ -25,6 +25,31 @@ def test_live_row_maps_named_harvest_job_to_agriculture():
     assert mapped["tape_family"] == "agriculture"
     assert mapped["source"] == "live_scrape"
     assert mapped["job_key"].startswith("live_")
+    assert mapped["employer_email"] is None
+
+
+def test_live_overlay_copies_employer_email():
+    row = SimpleNamespace(
+        job_key="hospital1",
+        company_name="Named Hospital",
+        locality="Portland, OR",
+        action="patient_transport",
+        robot_compatible_task="Patient Transporter",
+        employer_email="ops@named-hospital.org",
+        contact_url="https://named-hospital.org",
+        apply_url="https://named-hospital.org/careers/transporter",
+        requirements={
+            "job_function": "patient_transport",
+            "unknowns": [],
+            "employer_email": "ops@named-hospital.org",
+        },
+        unknowns=[],
+    )
+    mapped = corpus_row_from_robot_job(row)
+    assert mapped is not None
+    assert mapped["employer_email"] == "ops@named-hospital.org"
+    assert mapped["contact_url"] == "https://named-hospital.org"
+    assert mapped["apply_url"] == "https://named-hospital.org/careers/transporter"
 
 
 def test_board_name_and_title_as_company_are_not_corpus_rows():
@@ -93,6 +118,7 @@ def test_live_overlay_reaches_requirement_matcher(monkeypatch):
             "source": "live_scrape",
             "tape_family": "food_prep",
             "unknowns": [],
+            "employer_email": "hiring@taqueria-luna.com",
         },
     )
     monkeypatch.setattr(
@@ -122,5 +148,11 @@ def test_live_overlay_reaches_requirement_matcher(monkeypatch):
         ],
     }
     out = match_jobs_from_profile(profile, limit=12)
-    employers = {j.get("company_name") for j in out.get("jobs") or []}
-    assert "Taqueria Luna LLC" in employers
+    jobs = out.get("jobs") or []
+    luna = next(j for j in jobs if j.get("company_name") == "Taqueria Luna LLC")
+    assert luna["employer_email"] == "hiring@taqueria-luna.com"
+    from app.services.jobs_apply_draft import employer_contacts_from_job
+    from app.services.jobs_crm import employer_email_from_job
+
+    assert employer_email_from_job(luna) == "hiring@taqueria-luna.com"
+    assert employer_contacts_from_job(luna)[0]["email"] == "hiring@taqueria-luna.com"

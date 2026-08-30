@@ -128,7 +128,19 @@ def corpus_row_from_robot_job(row: Any) -> Optional[dict[str, Any]]:
     key = str(getattr(row, "job_key", "") or "").strip()
     if not key:
         return None
-    return {
+    email = str(getattr(row, "employer_email", "") or "").strip() or None
+    if not email:
+        raw_email = req.get("employer_email")
+        email = str(raw_email).strip() if isinstance(raw_email, str) else None
+    contact_url = str(getattr(row, "contact_url", "") or "").strip() or None
+    if not contact_url:
+        raw_c = req.get("contact_url")
+        contact_url = str(raw_c).strip() if isinstance(raw_c, str) else None
+    apply_url = str(getattr(row, "apply_url", "") or "").strip() or None
+    if not apply_url:
+        raw_a = req.get("apply_url")
+        apply_url = str(raw_a).strip() if isinstance(raw_a, str) else None
+    mapped = {
         "job_key": f"live_{key}",
         "title": title or function or "Operational work",
         "industry": TAPE_INDUSTRY.get(tape, "Operations"),
@@ -141,7 +153,11 @@ def corpus_row_from_robot_job(row: Any) -> Optional[dict[str, Any]]:
         "source": "live_scrape",
         "tape_family": tape,
         "unknowns": list(req.get("unknowns") or getattr(row, "unknowns", None) or []),
+        "employer_email": email,
+        "contact_url": contact_url,
+        "apply_url": apply_url,
     }
+    return mapped
 
 
 def _fetch_live_named_jobs(limit: int = LIVE_CAP) -> tuple[dict[str, Any], ...]:
