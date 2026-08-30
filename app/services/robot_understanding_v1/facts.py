@@ -1126,12 +1126,15 @@ def _extract_from_page(
 
     # Table / drink / bussing (ADAM, Matradee, Servi). Distinct from hotel
     # housekeeping / luggage. FIND Serving class grounds serving_task.
+    # Match dining-floor signals (table, bussing, runner, waitstaff) or require
+    # dining-floor context near generic serving language to avoid stealing hotel
+    # guest-delivery robots that "serve meals to guests".
     for m in re.finditer(
         r"\b(?:"
         r"food[- ]runn\w+|food\s+runner|bus(?:s|es|sing|ses)\s+tables?|table\s+service|"
         r"robot\s+server|server\s+robot|"
         r"serv(?:e|es|ing)\s+(?:[\w-]+\s+){0,3}?"
-        r"(?:food|drinks?|meals?|entr[e\u00e9]es?|dishes|beverages?|tables?|customers?|diners?)|"
+        r"(?:food|drinks?|meals?|entr[e\u00e9]es?|dishes|beverages?)\s+(?:at\s+)?(?:tables?|dining\s+room|restaurant)|"
         r"cocktail\s+server|banquet\s+server|waitstaff|bussing|"
         r"drink\s+runn\w+"
         r")\b",

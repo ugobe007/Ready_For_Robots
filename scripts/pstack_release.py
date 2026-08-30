@@ -639,10 +639,10 @@ REQUIRED_INDUSTRY_ONTOLOGY_WORDS = {
         "janitor",
         "custodian",
         "restroom",
-        "vacuum",
-        "data center",
-        "shopping mall",
-        "office building",
+        "restroom cleaning",
+        "floor cleaning",
+        "commercial cleaning",
+        "floor scrubbing",
     ),
 }
 

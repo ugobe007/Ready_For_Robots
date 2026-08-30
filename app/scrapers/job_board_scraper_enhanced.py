@@ -669,7 +669,11 @@ class EnhancedJobBoardScraper(BaseScraper):
 
             industry = "Unknown"
             url_lower = source_url.lower()
-            if any(w in url_lower for w in ["hotel", "hospitality", "resort", "housekeep", "valet", "bell"]):
+            if any(w in url_lower for w in ["restaurant", "food", "kitchen", "cook", "dishwash", "crew", "qsr", "make+line", "make%20line", "bowl+assembly", "bowl%20assembly", "tortilla", "prep+cook", "fast+casual", "fast%20casual", "banquet+cook", "dining", "server", "busser"]):
+                industry = "Food Service"
+            elif any(w in url_lower for w in ["janitor", "custodian", "restroom", "cleaning", "commercial+cleaning"]):
+                industry = "Cleaning"
+            elif any(w in url_lower for w in ["hotel", "hospitality", "resort", "housekeep", "valet", "bell"]):
                 industry = "Hospitality"
             elif any(w in url_lower for w in ["farm", "harvest", "orchard", "vineyard", "tractor", "agricultural"]):
                 industry = "Agriculture"
@@ -681,8 +685,6 @@ class EnhancedJobBoardScraper(BaseScraper):
                 industry = "Factory"
             elif any(w in url_lower for w in ["warehouse", "fulfillment", "logistics", "supply", "distribution", "dock"]):
                 industry = "Logistics"
-            elif any(w in url_lower for w in ["restaurant", "food", "kitchen", "cook", "dishwash", "crew", "qsr", "make+line", "make%20line", "bowl+assembly", "bowl%20assembly", "tortilla", "prep+cook", "fast+casual", "fast%20casual"]):
-                industry = "Food Service"
             elif any(w in url_lower for w in ["janitor", "custodian", "restroom", "data+center", "data%20center"]):
                 industry = "Hospitality"
             elif any(w in url_lower for w in ["hospital", "health", "medical", "pharmacy", "sterile", "dietary"]):
