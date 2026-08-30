@@ -30,7 +30,7 @@ import {
   pocVideoScriptBeats,
   pocVideoUrlIssue,
 } from "@/lib/pocVideoUrl";
-import { JOBS_EYEBROW_CLASS, crmSaveJobsBlurb } from "@/lib/jobsWorkflow";
+import { JOBS_EYEBROW_CLASS, crmOfferBlurb } from "@/lib/jobsWorkflow";
 import type { MatchJob } from "@/lib/robotJobMatch";
 import { robotJobCardFromMatch } from "@/lib/robotJobCard";
 
@@ -162,7 +162,7 @@ export default function JobsCrmNextSteps({
         Offer for {selectedJobs.length > 1 ? `${selectedJobs.length} selected jobs` : card.jobTitle}
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-slate-300">
-        {crmSaveJobsBlurb(robotName)}
+        {crmOfferBlurb(robotName)}
       </p>
 
       <label className="mt-6 block">

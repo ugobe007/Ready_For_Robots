@@ -471,17 +471,14 @@ export default function Crm() {
               submissionId={deskSubmission}
             />
           </div>
-          <p className="font-mono text-sm font-semibold uppercase tracking-[0.12em] text-emerald-400">
-            Step 03 · CRM
-          </p>
           <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
             CRM
           </h1>
           <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
             {loading
-              ? "Opening CRM desk…"
+              ? "Opening CRM…"
               : deskSignedIn
-                ? "Opening CRM desk…"
+                ? "Opening CRM…"
                 : CRM_WALL_LEAD}
           </p>
           <a

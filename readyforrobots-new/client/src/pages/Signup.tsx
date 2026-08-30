@@ -34,7 +34,7 @@ import {
   isJobsProductReturnPath,
   type WorkflowPrefill,
 } from "@/lib/signupWorkflowPath";
-import { isJobsHandoffSrc, CRM_UNLOCKED_JOBS } from "@/lib/jobsWorkflow";
+import { isJobsHandoffSrc, CRM_UNLOCKED_JOBS, crmSaveJobsRobotLabel } from "@/lib/jobsWorkflow";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { jobModelListLine } from "@/lib/robotJobCard";
 
@@ -157,6 +157,7 @@ export default function Signup() {
   const jobsHandoff = robotJobsIntent ? readJobsHandoffSnapshot() : null;
   const tasteJobs = (jobsHandoff?.jobs || []).slice(0, CRM_UNLOCKED_JOBS);
   const tasteProduct = jobsHandoff?.productName || "";
+  const robotWho = crmSaveJobsRobotLabel(tasteProduct);
 
   const workflowPrefill = useMemo<WorkflowPrefill>(() => {
     const fromQuery: WorkflowPrefill = {
@@ -503,7 +504,9 @@ export default function Signup() {
               {hubspotIntent
                 ? "Sign up, then SIGNAL links HubSpot automatically."
                 : robotJobsIntent
-                  ? "Keep jobs for your robot."
+                  ? robotWho
+                    ? `Keep the jobs for ${robotWho}.`
+                    : "Keep the jobs you picked."
                 : pipelineIntent
                   ? buyerCo
                     ? `Save ${buyerCo}. Copy the draft. Run your pipeline.`
@@ -516,7 +519,7 @@ export default function Signup() {
               {hubspotIntent
                 ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
                 : robotJobsIntent
-                  ? "Free account unlocks 5 job opportunities in CRM. Opt in and we watch the robot URL."
+                  ? "Sign up and they stay on your desk. Five on free."
                 : pipelineIntent
                   ? buyerCo
                     ? `Free workspace: land back on ${buyerCo}, save it in one click, copy the outreach draft SIGNAL wrote for them, and sync to HubSpot when you are ready.`
@@ -567,7 +570,7 @@ export default function Signup() {
                 </div>
               </div>
             )}
-            {(pipelineIntent || resultsIntent) && !hubspotIntent && (
+            {(pipelineIntent || resultsIntent) && !hubspotIntent && !robotJobsIntent && (
               <div className="mt-4 flex max-w-xl items-center gap-5">
                 <ul className="min-w-0 flex-1 space-y-2 text-xs text-slate-300">
                   {(resultsIntent ? OEM_CAL_SIGNUP_BULLETS_RESULTS : [
@@ -593,11 +596,11 @@ export default function Signup() {
                 <ul className="min-w-0 flex-1 space-y-2 text-xs text-slate-300">
                   <li className="flex gap-2">
                     <span className="font-bold text-emerald-700">✓</span>
-                    {CRM_UNLOCKED_JOBS} job opportunities unlocked in CRM
+                    The jobs you kept land on your desk.
                   </li>
                   <li className="flex gap-2">
                     <span className="font-bold text-emerald-700">✓</span>
-                    Opt in and we watch the robot URL you just ran
+                    We email you if that work changes.
                   </li>
                   <li className="flex gap-2">
                     <span className="font-bold text-emerald-700">✓</span>
@@ -612,8 +615,8 @@ export default function Signup() {
             {robotJobsIntent ? (
               <div className="mt-6  border border-slate-700 p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
-                  {tasteJobs.length || CRM_UNLOCKED_JOBS} job opportunities for{" "}
-                  {tasteProduct || "your robot"}
+                  {tasteJobs.length || CRM_UNLOCKED_JOBS} jobs for{" "}
+                  {robotWho || "your robot"}
                 </p>
                 {tasteJobs.length > 0 ? (
                   <ul className="mt-3 space-y-2">
@@ -634,7 +637,7 @@ export default function Signup() {
                   </ul>
                 ) : (
                   <p className="mt-2 text-sm text-slate-300">
-                    Sign up and CRM keeps the jobs you checked — 5 on free.
+                    The jobs you checked will be here after you sign up.
                   </p>
                 )}
               </div>
@@ -684,7 +687,7 @@ export default function Signup() {
                 {pipelineIntent && buyerCo
                   ? `back on ${buyerCo}, ready to save and copy the draft.`
                   : robotJobsIntent
-                    ? "in CRM, with 5 job opportunities unlocked."
+                    ? "on your desk, with the jobs you kept."
                     : "in your pipeline, ready to save your first lead and copy the outreach draft."}
               </p>
               {(() => {
@@ -740,7 +743,7 @@ export default function Signup() {
                 {hubspotIntent
                   ? "Sign up for HubSpot sync"
                   : robotJobsIntent
-                    ? "Keep jobs for your robot"
+                    ? "Keep these jobs"
                     : matchedUnlockIntent
                       ? "Company details + free account"
                       : "Start free"}
@@ -749,7 +752,7 @@ export default function Signup() {
                 {hubspotIntent
                   ? "Email + full name required. Next step: one-click HubSpot authorize."
                   : robotJobsIntent
-                    ? "Create an account to keep 5 job opportunities in CRM. After you sign up, you land on CRM — not a second job list."
+                    ? "Create an account and the jobs you kept land on your desk."
                   : matchedUnlockIntent
                     ? "Confirm company name, robot category, and ICP — then create your account to unlock 15 matched sales leads."
                     : resultsIntent

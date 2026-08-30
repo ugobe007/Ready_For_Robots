@@ -14,7 +14,7 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 |---------|-------|------------------------|
 | Jobs terminal | `/` (`/jobs/:slug` same workspace) | Paste robot URL, inspect Job Cards |
 | About | `/intelligence` | Jobs loop explainer; Start jobs → `/?new=1` |
-| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: collected listing, inspect, quote rental, Place this job. Inbox confirm/release for a held interview slot. |
+| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: jobs you kept, inspect, quote rental, Place this job. Inbox confirm/release for a held interview slot. |
 | Employer evaluate | `/employer/:token` | Accept / Decline (reason code) / propose time / hold a slot. Video résumé when present. No RFR account. |
 | OEM hold | `/oem-hold/:token` | Confirm or release a held interview window. |
 | Compare | `/compare` | Jobs vs sales-list framing |
@@ -59,12 +59,12 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 | Step | Label | CTA |
 |------|-------|-----|
 | 01 | Show us your robot | `Start jobs →` |
-| 02 | Available jobs | `See jobs →` |
+| 02 | Available jobs | `Here are the jobs →` |
 | 03 | CRM | `Open CRM →` |
 
 01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM.
 
-On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and signed desk). Unsigned next is **Sign up to open CRM →**. Signed next leaves the desk: **See jobs →** when they have a submission or collected cards, otherwise **Start jobs →**. Header **About** stays visible on all widths.
+On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and signed desk). Unsigned next is **Sign up to open CRM →**. Signed next leaves the desk: **Back to jobs →** when they have a submission or kept cards, otherwise **Start jobs →**. Header **About** stays visible on all widths.
 
 ---
 
@@ -108,7 +108,7 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
   → Job Cards (QUALIFY / inspect + check — checking dumps the row into CRM)
   → Open CRM → /signup?next=/pipeline?src=jobs_activate&src=jobs_activate
   → after auth, CRM desk with 5 kept jobs (no robot OEMs)
-  → CRM: collect listing (Keep N jobs? + Yes, keep them) → Apply (offer form) → inspect an egg → quote rental → Place this job. Process bar stays 01 / 02 / 03.
+  → CRM desk with the jobs they kept → Apply (offer form) → open a job → quote rental → Place this job. Process bar stays 01 / 02 / 03.
   → run the next robot the same way
 ```
 

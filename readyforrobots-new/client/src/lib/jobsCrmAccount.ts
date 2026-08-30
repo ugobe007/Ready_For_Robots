@@ -26,7 +26,7 @@ export const JOBS_NEXT_STEPS_ANCHOR = "jobs-next-steps";
 export const JOBS_APPLY_SEQUENCE =
   "Apply to the job. We help schedule interviews with the customer. They close.";
 export const JOBS_NEXT_STEPS_HINT =
-  "Name the robot, pick catalogued models, add PoC if you have it, then quote the monthly price you will charge.";
+  "Pick the model and say what you'll charge. Then we take it to the employer.";
 export const JOBS_DOCS_HEADING = "Brochures and product specs";
 export const JOBS_DOCS_HINT =
   "Upload a PDF or image spec for this robot. We attach what you select to the application — not a public dump.";
