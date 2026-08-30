@@ -58,9 +58,9 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 
 | Step | Label | CTA |
 |------|-------|-----|
-| 01 | Show us your robot | `Start jobs →` |
-| 02 | Available jobs | `Here are the jobs →` |
-| 03 | CRM | `Open CRM →` |
+| 01 | Show us your robot | `Start jobs →` (emerald) |
+| 02 | Available jobs | `Apply to jobs →` (violet `.rfr-jobs-apply-cta`) |
+| 03 | CRM | `Open CRM →` / leave-desk next. Signed desk also shows **Apply to jobs →** in violet. |
 
 01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM.
 

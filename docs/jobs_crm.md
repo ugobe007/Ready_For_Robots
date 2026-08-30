@@ -29,7 +29,7 @@ FIND (URL) → QUALIFY (Job Cards, anonymous OK) → signup wall → CRM desk
 | — wall | `/signup?next=/pipeline?src=jobs_activate&src=jobs_activate` | Required | Account before the desk. |
 | 03 CRM | `/pipeline?src=jobs_activate` | Signed in | Jobs they kept as an expandable **listing**. Place this job lives **inside** an opened job, not as the only screen. |
 
-Process bar: **01 Show us your robot → 02 Available jobs → 03 CRM**. CTA after results: **`Open CRM →`**. That CTA always runs `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
+Process bar: **01 Show us your robot → 02 Available jobs → 03 CRM**. Step 02 action is **Apply to jobs →** (violet, not neon green). Open CRM still uses `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
 
 **Do not** rename step 03 to Place, Pipeline, or Activate in chrome. Place is the money action **on a deal**, not the process step. Step 02 chrome is **Available jobs** (renamed from “Here are its jobs”).
 
@@ -115,11 +115,11 @@ Actions taken on FIND / QUALIFY (keep, Open CRM) and on the desk (Place, apply) 
 
 ### F10 — Keep jobs on the account (ship)
 
-Authenticated keep upserts selected Job Cards onto the user (`user_kept_jobs`). N is the selected/kept count, not a hardcoded 5 when they kept 3. Schema: user, job identity (employer, work title, source ids), robot/submission, timestamps, free TTL/entitlement. Unsigned users still hit the wall; after signup, kept jobs restore. Status bar says “N jobs saved”. Off the desk the bar links to CRM; on the desk it links to **Apply**. Apply copy: apply to the job. We help schedule interviews with the customer. They close.
+Authenticated keep upserts selected Job Cards onto the user (`user_kept_jobs`). N is the selected/kept count, not a hardcoded 5 when they kept 3. Schema: user, job identity (employer, work title, source ids), robot/submission, timestamps, free TTL/entitlement. Unsigned users still hit the wall; after signup, kept jobs restore. Status bar says "N jobs saved". Off the desk the bar links to CRM; on the desk it links to **Apply to jobs**. Apply copy: apply. We draft. You review and send.
 
 ### F11 — Next steps offer → apply outreach (ship)
 
-After keep, **Apply** / **Next steps** is a real control: `/pipeline?src=jobs_activate&next=offer#jobs-next-steps`. The form collects robot name, catalogued OEM SKUs, skippable PoC (written note plus optional async video URL: Loom / YouTube / Vimeo embed, Google Drive as a link-out), attached specs, and the **user’s proposed monthly price**. Empty video URL does not block apply. Apply persists `job_applications` (`poc_evidence` + `poc_video_url`) and sends employer outreach only when a real contact email is on the card. No invented emails. No invented rental dollars. Do not skip the offer form. Do not accept video files on the specs upload path.
+After keep, **Apply to jobs** / **Next steps** is a real control: `/pipeline?src=jobs_activate&next=offer#jobs-next-steps`. The form collects robot name, catalogued OEM SKUs, skippable PoC (written note plus optional async video URL: Loom / YouTube / Vimeo embed, Google Drive as a link-out), why they are applying, attached specs, and the **user’s proposed monthly price**. Prepare looks for a public YouTube clip of the robot (company + SKU). Empty video URL does not block apply. `POST /api/jobs-crm/apply` and `/apply-selected` store a **prepared** draft (`status=prepared`). The operator reviews subject, body, video, and contacts, then sends. `POST /api/jobs-crm/applications/{id}/send` is the only employer send. No invented emails. No auto-email. No Google Meet. No invented rental dollars. Do not skip the offer form. Do not accept video files on the specs upload path. YouTube: Data API when `YOUTUBE_API_KEY` is set; otherwise a documented search URL. Fail empty over the wrong robot’s video.
 
 ### F12 — Employer inbox on the desk (ship)
 
@@ -139,7 +139,7 @@ After Job Cards (never in front of FIND): **Build a product presentation**. Requ
 
 ### F17 — Apply selected jobs (ship)
 
-Click-to-apply the Job Cards the user kept. `POST /api/jobs-crm/apply-selected` applies one offer to every selected card. Recruiter follow-up is the existing employer-email path. Scheduling is paste/hold meeting URL or the honest “we schedule with the employer” state.
+Click-to-apply the Job Cards the user kept. `POST /api/jobs-crm/apply-selected` prepares one offer on every selected card (`prepared` until the operator sends). Recruiter follow-up is the existing employer-email path after send. Scheduling is paste/hold meeting URL or the honest “we schedule with the employer” state.
 
 ### F15 — Recruiter emails to the OEM (ship)
 

@@ -3,6 +3,8 @@
  * Step 03 stays CRM. Place is not a fourth process name.
  */
 import {
+  JOBS_APPLY_CTA_CLASS,
+  JOBS_APPLY_HERO_CTA,
   JOBS_PROCESS_NAV_CLASS,
   JOBS_PROCESS_STEPS,
   jobsCrmNextHref,
@@ -12,6 +14,7 @@ import {
   jobsWorkspaceRestoreHref,
   onJobsFreshHomeClick,
 } from "@/lib/jobsWorkflow";
+import { jobsCrmOfferHref } from "@/lib/jobsCrmAccount";
 
 export default function JobsProcessChrome({
   signedIn,
@@ -58,6 +61,14 @@ export default function JobsProcessChrome({
           </a>
         );
       })}
+      {signedIn && jobCount > 0 ? (
+        <a
+          href={jobsCrmOfferHref(true, submissionId)}
+          className={`rfr-jobs-process-action m-2 shrink-0 ${JOBS_APPLY_CTA_CLASS}`}
+        >
+          {JOBS_APPLY_HERO_CTA}
+        </a>
+      ) : null}
       <a
         href={nextHref}
         onClick={leaveIsFind ? onJobsFreshHomeClick : undefined}

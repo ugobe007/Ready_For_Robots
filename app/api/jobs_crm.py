@@ -23,6 +23,7 @@ from app.services.jobs_crm import (
     paste_inbound_reply,
     record_activity,
     reply_on_application,
+    send_prepared_application,
     set_application_meeting_url,
 )
 from app.services.jobs_crm_recruiter import (
@@ -65,6 +66,8 @@ class ApplyBody(BaseModel):
     poc_evidence: Optional[str] = None
     poc_video_url: Optional[str] = Field(default=None, max_length=2000)
     poc_skipped: bool = False
+    why: Optional[str] = Field(default=None, max_length=2000)
+    company_name: Optional[str] = Field(default=None, max_length=240)
     job: Optional[dict[str, Any]] = None
     document_ids: list[str] = Field(default_factory=list)
 
@@ -77,6 +80,8 @@ class ApplySelectedBody(BaseModel):
     poc_evidence: Optional[str] = None
     poc_video_url: Optional[str] = Field(default=None, max_length=2000)
     poc_skipped: bool = False
+    why: Optional[str] = Field(default=None, max_length=2000)
+    company_name: Optional[str] = Field(default=None, max_length=240)
     document_ids: list[str] = Field(default_factory=list)
 
 
@@ -163,6 +168,27 @@ def get_catalog_skus(
     return {"skus": skus, "count": len(skus)}
 
 
+@router.get("/apply-prep")
+def get_apply_prep(
+    robot: Optional[str] = Query(default=None, max_length=240),
+    company: Optional[str] = Query(default=None, max_length=240),
+    sku: Optional[str] = Query(default=None, max_length=240),
+    user: dict = Depends(_require_user),
+):
+    del user
+    from app.services.robot_youtube_evidence import find_robot_youtube_evidence
+
+    evidence = find_robot_youtube_evidence(company=company, sku=sku, robot=robot)
+    return {
+        "video_url": evidence.get("video_url"),
+        "video_search_url": evidence.get("video_search_url") or "",
+        "video_note": evidence.get("video_note") or "",
+        "clip_description": evidence.get("clip_description"),
+        "query": evidence.get("query") or "",
+        "source": evidence.get("source"),
+    }
+
+
 @router.post("/apply")
 def post_apply(
     body: ApplyBody,
@@ -180,8 +206,11 @@ def post_apply(
             poc_evidence=body.poc_evidence or "",
             poc_video_url=body.poc_video_url or "",
             poc_skipped=body.poc_skipped,
+            why=body.why or "",
+            company_name=body.company_name,
             job=body.job,
             document_ids=body.document_ids,
+            send=False,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -204,8 +233,25 @@ def post_apply_selected(
             poc_evidence=body.poc_evidence or "",
             poc_video_url=body.poc_video_url or "",
             poc_skipped=body.poc_skipped,
+            why=body.why or "",
+            company_name=body.company_name,
             document_ids=body.document_ids,
+            send=False,
         )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/applications/{application_id}/send")
+def post_send_prepared(
+    application_id: UUID,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return send_prepared_application(db, user, str(application_id))
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Application not found.")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

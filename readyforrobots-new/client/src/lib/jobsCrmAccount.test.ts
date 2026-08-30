@@ -19,6 +19,7 @@ import {
   JOBS_OEM_RELEASE_HOLD_CTA,
   JOBS_PROPOSED_PRICE_LABEL,
   applicationStatusLabel,
+  companyHintFromRobotUrl,
   declineReasonLabel,
   suggestedHoldSlots,
   canSubmitNextStepsOffer,
@@ -63,6 +64,14 @@ describe("jobs CRM keep / next-steps / apply", () => {
     });
     expect(wall.href).toBe(jobsCrmOpenHref(false));
     expect(wall.href).toMatch(/\/signup\?/);
+  });
+
+  it("YouTube company hint comes from the OEM URL host, not the employer", () => {
+    expect(companyHintFromRobotUrl("https://www.aethon.com/tug")).toBe("aethon");
+    expect(companyHintFromRobotUrl("https://diligentrobots.com/moxi")).toBe(
+      "diligentrobots",
+    );
+    expect(companyHintFromRobotUrl("")).toBe("");
   });
 
   it("next-steps apply is gated on proposed price and catalogued model", () => {
@@ -165,18 +174,27 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(inbox).toMatch(/Save meeting URL/);
     expect(inbox).toMatch(/scheduling_label/);
     expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
-    expect(JOBS_APPLY_SELECTED_CTA).toMatch(/Apply to selected jobs/);
+    expect(JOBS_APPLY_SELECTED_CTA).toMatch(/Apply to jobs/);
     expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
     expect(JOBS_KEEP_YES_CTA).toBe("Yes, keep them");
-    expect(JOBS_APPLY_NEXT_CTA).toBe("Apply →");
+    expect(JOBS_APPLY_NEXT_CTA).toBe("Apply to jobs →");
     expect(JOBS_APPLY_SEQUENCE).toMatch(/Apply to the job/);
-    expect(JOBS_APPLY_SEQUENCE).toMatch(/schedule interviews/);
-    expect(JOBS_APPLY_SEQUENCE).toMatch(/They close/);
+    expect(JOBS_APPLY_SEQUENCE).toMatch(/prepare a draft/);
+    expect(JOBS_APPLY_SEQUENCE).toMatch(/You review and send/);
+    expect(JOBS_APPLY_SEQUENCE).toMatch(/set up the interview/);
     expect(JOBS_APPLY_SEQUENCE).not.toMatch(/\$|rental we invent/i);
     expect(JOBS_NEXT_STEPS_CTA).toMatch(/Next steps/);
     expect(JOBS_MODEL_SELECT_LABEL).toMatch(/Model/);
     expect(JOBS_PROPOSED_PRICE_LABEL).toMatch(/Proposed monthly/);
-    expect(JOBS_APPLY_OFFER_CTA).toMatch(/Apply to the job/);
+    expect(JOBS_APPLY_OFFER_CTA).toMatch(/Prepare application/);
+    expect(next).toMatch(/fetchApplyPrep/);
+    expect(next).toMatch(/companyHintFromRobotUrl/);
+    expect(next).toMatch(/companyName: oemCompany/);
+    expect(next).toMatch(/data-apply-draft/);
+    expect(next).toMatch(/JOBS_SEND_DRAFT_CTA/);
+    expect(next).toMatch(/sendPreparedApplication/);
+    expect(inbox).toMatch(/sendPreparedApplication/);
+    expect(inbox).toMatch(/data-apply-draft/);
     const appTsx = readFileSync(join(here, "../App.tsx"), "utf8");
     const employer = readFileSync(join(here, "../pages/EmployerDecision.tsx"), "utf8");
     expect(appTsx).toMatch(/\/employer\/:token/);

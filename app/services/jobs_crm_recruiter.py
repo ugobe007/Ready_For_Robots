@@ -30,6 +30,7 @@ from app.services.jobs_crm import (
 )
 
 STATUS_APPLIED = "applied"
+STATUS_PREPARED = "prepared"
 STATUS_ACCEPTED = "accepted"
 STATUS_INTERVIEW_REQUESTED = "interview_requested"
 STATUS_INTERVIEW_SCHEDULED = "interview_scheduled"

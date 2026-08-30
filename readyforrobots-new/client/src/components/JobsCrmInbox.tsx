@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import {
   JOBS_INBOX_HEADING,
   JOBS_INBOX_PASTE_HINT,
+  JOBS_SEND_DRAFT_CTA,
+  JOBS_SEND_DRAFT_HINT,
+  JOBS_VIDEO_EMPTY_NOTE,
+  JOBS_CONTACTS_EMPTY_NOTE,
   applicationStatusLabel,
   declineReasonLabel,
   confirmHoldOnAccount,
@@ -14,10 +18,11 @@ import {
   pasteInboundReply,
   replyOnApplication,
   saveApplicationMeetingUrl,
+  sendPreparedApplication,
   threadStateLabel,
   type JobsCrmApplication,
 } from "@/lib/jobsCrmAccount";
-import { JOBS_EYEBROW_CLASS } from "@/lib/jobsWorkflow";
+import { JOBS_APPLY_CTA_BUTTON_CLASS, JOBS_EYEBROW_CLASS } from "@/lib/jobsWorkflow";
 import PocVideoWatch from "@/components/PocVideoWatch";
 
 export default function JobsCrmInbox({
@@ -177,6 +182,53 @@ export default function JobsCrmInbox({
         <p className="mt-2 text-sm text-slate-300">{app.poc_evidence}</p>
       ) : null}
       <PocVideoWatch url={app.poc_video_url} />
+      {app.draft ? (
+        <div className="mt-4 border border-violet-500/30 bg-[#12082a] px-3 py-3" data-apply-draft="1">
+          <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>Application draft</p>
+          <p className="mt-1 text-sm text-slate-400">{JOBS_SEND_DRAFT_HINT}</p>
+          {app.draft.subject ? (
+            <p className="mt-2 text-sm text-slate-200">Subject: {app.draft.subject}</p>
+          ) : null}
+          {app.draft.why ? (
+            <p className="mt-2 text-sm text-slate-300">{app.draft.why}</p>
+          ) : null}
+          {app.poc_video_url || app.draft.video_url ? (
+            <p className="mt-2 text-sm text-violet-200">
+              Video: {app.poc_video_url || app.draft.video_url}
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-amber-200/90">
+              {app.draft.video_note || JOBS_VIDEO_EMPTY_NOTE}
+            </p>
+          )}
+          {(app.contacts || app.draft.contacts || []).length ? (
+            <p className="mt-2 text-sm text-slate-200">
+              Contact: {(app.contacts || app.draft.contacts || []).map(c => c.email).join(", ")}
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-amber-200/90">{JOBS_CONTACTS_EMPTY_NOTE}</p>
+          )}
+          {app.can_operator_send ? (
+            <button
+              type="button"
+              className={`mt-3 ${JOBS_APPLY_CTA_BUTTON_CLASS} px-4 py-2 text-sm`}
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                setError(null);
+                sendPreparedApplication(token, applicationId)
+                  .then(row => setApp(row))
+                  .catch(err =>
+                    setError(err instanceof Error ? err.message : "Could not send."),
+                  )
+                  .finally(() => setBusy(false));
+              }}
+            >
+              {JOBS_SEND_DRAFT_CTA}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       {!app.can_send ? (
         <p className="mt-2 text-sm text-amber-200/90">
           {app.no_email_reason ||

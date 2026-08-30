@@ -6,9 +6,15 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import {
   JOBS_ACTIVATE_SRC,
+  JOBS_APPLY_HERO_CTA,
   jobsActivateHref,
   jobsCrmOpenHref,
   jobsSignupHref,
+} from "@/lib/jobsWorkflow";
+export {
+  JOBS_APPLY_CTA_BUTTON_CLASS,
+  JOBS_APPLY_CTA_CLASS,
+  JOBS_APPLY_HERO_CTA,
 } from "@/lib/jobsWorkflow";
 import {
   sameRobotHandoffUrl,
@@ -20,13 +26,21 @@ import type { MatchJob } from "@/lib/robotJobMatch";
 export const JOBS_KEEP_JOBS_CTA = "Keep jobs";
 export const JOBS_KEEP_YES_CTA = "Yes, keep them";
 export const JOBS_NEXT_STEPS_CTA = "Next steps →";
-export const JOBS_APPLY_NEXT_CTA = "Apply →";
-export const JOBS_APPLY_SELECTED_CTA = "Apply to selected jobs →";
+export const JOBS_APPLY_NEXT_CTA = JOBS_APPLY_HERO_CTA;
+export const JOBS_APPLY_SELECTED_CTA = JOBS_APPLY_HERO_CTA;
 export const JOBS_NEXT_STEPS_ANCHOR = "jobs-next-steps";
 export const JOBS_APPLY_SEQUENCE =
-  "Apply to the job. We help schedule interviews with the customer. They close.";
+  "Apply to the job. We prepare a draft. You review and send. Then we help set up the interview.";
+export const JOBS_PREPARE_CTA = "Prepare application →";
+export const JOBS_SEND_DRAFT_CTA = "Send to employer →";
+export const JOBS_SEND_DRAFT_HINT =
+  "This is a draft. Review it. You send. We do not email the employer until you do.";
+export const JOBS_VIDEO_EMPTY_NOTE =
+  "No public YouTube clip of this robot turned up. We left the video empty rather than guess.";
+export const JOBS_CONTACTS_EMPTY_NOTE =
+  "No employer email on this Job Card or stored public page. We will not invent one.";
 export const JOBS_NEXT_STEPS_HINT =
-  "Pick the model and say what you'll charge. Then we take it to the employer.";
+  "Pick the model and say what you'll charge. Then we prepare a draft for you to send.";
 export const JOBS_DOCS_HEADING = "Brochures and product specs";
 export const JOBS_DOCS_HINT =
   "Upload a PDF or image spec for this robot. We attach what you select to the application — not a public dump.";
@@ -44,7 +58,7 @@ export const JOBS_PROPOSED_PRICE_HINT =
 export const JOBS_MODEL_SELECT_LABEL = "Model they will use";
 export const JOBS_MODEL_SELECT_HINT =
   "Catalogued SKUs for this OEM. We do not invent a model name.";
-export const JOBS_APPLY_OFFER_CTA = "Apply to the job →";
+export const JOBS_APPLY_OFFER_CTA = JOBS_PREPARE_CTA;
 export const JOBS_INBOX_HEADING = "Employer inbox";
 export const JOBS_INBOX_PASTE_HINT =
   "Inbound MX is not required to store a reply. Paste an employer email here, or send a reply if we have their address.";
@@ -53,6 +67,23 @@ export type CatalogSku = {
   name: string;
   slug?: string;
   source?: string;
+};
+
+export type JobsApplyContact = {
+  email: string;
+  source: string;
+};
+
+export type JobsApplyDraft = {
+  subject: string;
+  body: string;
+  video_url: string | null;
+  video_search_url: string;
+  video_note: string;
+  clip_description: string | null;
+  why: string;
+  contacts: JobsApplyContact[];
+  operator_sends: boolean;
 };
 
 export type JobsCrmApplication = {
@@ -72,6 +103,7 @@ export type JobsCrmApplication = {
   send_error?: string | null;
   thread_state: string;
   can_send: boolean;
+  can_operator_send?: boolean;
   no_email_reason?: string | null;
   status?: string | null;
   interview_at?: string | null;
@@ -96,6 +128,10 @@ export type JobsCrmApplication = {
   meeting_url?: string | null;
   scheduling_state?: string | null;
   scheduling_label?: string | null;
+  draft?: JobsApplyDraft | null;
+  why?: string | null;
+  contacts?: JobsApplyContact[];
+  clip_description?: string | null;
 };
 
 export type HoldSlotOption = {
@@ -287,6 +323,21 @@ export async function fetchCatalogSkus(
   return data.skus || [];
 }
 
+/** OEM name for YouTube search. Host of the robot URL, not the employer. */
+export function companyHintFromRobotUrl(url?: string | null): string {
+  const raw = (url || "").trim();
+  if (!raw) return "";
+  try {
+    const parsed = new URL(raw.includes("://") ? raw : `https://${raw}`);
+    const host = parsed.hostname.replace(/^www\./i, "");
+    const root = (host.split(".")[0] || "").trim();
+    if (root.length < 2) return "";
+    return root;
+  } catch {
+    return "";
+  }
+}
+
 export async function applyJobOnAccount(
   token: string,
   body: {
@@ -297,6 +348,8 @@ export async function applyJobOnAccount(
     pocEvidence?: string;
     pocVideoUrl?: string;
     pocSkipped?: boolean;
+    why?: string;
+    companyName?: string;
     job?: MatchJob;
     documentIds?: string[];
   },
@@ -311,6 +364,8 @@ export async function applyJobOnAccount(
       poc_evidence: body.pocEvidence || "",
       poc_video_url: body.pocVideoUrl || "",
       poc_skipped: Boolean(body.pocSkipped),
+      why: body.why || "",
+      company_name: body.companyName || "",
       job: body.job || null,
       document_ids: body.documentIds || [],
     }),
@@ -327,6 +382,8 @@ export async function applySelectedJobsOnAccount(
     pocEvidence?: string;
     pocVideoUrl?: string;
     pocSkipped?: boolean;
+    why?: string;
+    companyName?: string;
     documentIds?: string[];
   },
 ): Promise<{
@@ -344,9 +401,38 @@ export async function applySelectedJobsOnAccount(
       poc_evidence: body.pocEvidence || "",
       poc_video_url: body.pocVideoUrl || "",
       poc_skipped: Boolean(body.pocSkipped),
+      why: body.why || "",
+      company_name: body.companyName || "",
       document_ids: body.documentIds || [],
     }),
   });
+}
+
+export async function sendPreparedApplication(
+  token: string,
+  applicationId: string,
+): Promise<JobsCrmApplication> {
+  return jobsCrmFetch(
+    `/api/jobs-crm/applications/${applicationId}/send`,
+    token,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
+export async function fetchApplyPrep(
+  token: string,
+  opts: { robot?: string; company?: string; sku?: string },
+): Promise<{
+  video_url: string | null;
+  video_search_url: string;
+  video_note: string;
+  clip_description: string | null;
+}> {
+  const q = new URLSearchParams();
+  if (opts.robot) q.set("robot", opts.robot);
+  if (opts.company) q.set("company", opts.company);
+  if (opts.sku) q.set("sku", opts.sku);
+  return jobsCrmFetch(`/api/jobs-crm/apply-prep?${q.toString()}`, token);
 }
 
 export async function saveApplicationMeetingUrl(
@@ -600,7 +686,7 @@ export function crmDeskForCurrentRobot(opts: {
 export function threadStateLabel(state: string | null | undefined): string {
   if (state === "replied") return "Replied";
   if (state === "awaiting_reply" || state === "sent") return "Awaiting reply";
-  if (state === "draft") return "Stored";
+  if (state === "draft") return "Draft. You send.";
   return state || "Stored";
 }
 
@@ -616,6 +702,7 @@ export function applicationStatusLabel(status: string | null | undefined): strin
   if (key === "failed") return "Unsuccessful";
   if (key === "declined") return "Declined";
   if (key === "applied") return "Applied";
+  if (key === "prepared") return "Prepared. You send.";
   return key ? key.replace(/_/g, " ") : "Stored";
 }
 

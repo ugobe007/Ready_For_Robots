@@ -56,6 +56,7 @@ import { MARKET_TAPE_JOBS, uniqueTapeJobCount } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
+  JOBS_APPLY_CTA_CLASS,
   JOBS_EXAMPLE_CAP,
   FIND_JOBS_CTA,
   FIND_JOBS_HEADLINE_CLASS,
@@ -94,6 +95,7 @@ import {
   recordPipelineActivity,
   jobsHeading,
   jobsListHint,
+  jobsProcessActionClass,
   jobsProcessActionLabel,
   jobsProcessStepFromStage,
   jobsProductLimitForPlan,
@@ -218,6 +220,7 @@ function JobsProcessNav({
   layout = "rail",
   actionLabel,
   onAction,
+  actionClassName,
 }: {
   current: "find" | "jobs" | "activate";
   onFind?: () => void;
@@ -226,6 +229,7 @@ function JobsProcessNav({
   layout?: "rail" | "page";
   actionLabel?: string;
   onAction?: () => void;
+  actionClassName?: string;
 }) {
   const page = layout === "page";
   return (
@@ -283,7 +287,10 @@ function JobsProcessNav({
         <button
           type="button"
           onClick={onAction}
-          className="rfr-bevel rfr-jobs-process-action m-2 inline-flex shrink-0 items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+          className={`rfr-jobs-process-action m-2 shrink-0 ${
+            actionClassName ||
+            "rfr-bevel inline-flex items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+          }`}
         >
           {actionLabel}
         </button>
@@ -1510,9 +1517,19 @@ export default function RobotJobsWorkspace() {
   }
 
   function goToActivate() {
+    if (!handoffCheckedJobs()) return;
+    setLocation(jobsCrmOpenHref(Boolean(session), submissionIdRef.current));
+  }
+
+  function goToApply() {
+    if (!handoffCheckedJobs()) return;
+    setLocation(jobsCrmOfferHref(Boolean(session), submissionIdRef.current));
+  }
+
+  function handoffCheckedJobs(): boolean {
     if (active && shouldShowClassPicker(active)) {
       document.getElementById("jobs-list")?.scrollIntoView({ behavior: "smooth" });
-      return;
+      return false;
     }
     const pool = crmPool();
     const jobs = jobsForCrmDesk(pool, checkedJobKeys, CRM_UNLOCKED_JOBS);
@@ -1538,7 +1555,7 @@ export default function RobotJobsWorkspace() {
       list_count: jobs.length,
     });
     void persistKeptJobs(jobs);
-    setLocation(jobsCrmOpenHref(Boolean(session), submissionIdRef.current));
+    return true;
   }
 
   async function persistKeptJobs(jobs: MatchJob[]) {
@@ -1955,9 +1972,10 @@ export default function RobotJobsWorkspace() {
           : openJobsStep;
   const processOnActivate = goToActivate;
   const processActionLabel = jobsProcessActionLabel(processCurrent);
+  const processActionClass = jobsProcessActionClass(processCurrent);
   const processOnAction =
     processCurrent === "jobs"
-      ? goToActivate
+      ? goToApply
       : stage === "research"
         ? undefined
         : stage === "find"
@@ -1978,6 +1996,7 @@ export default function RobotJobsWorkspace() {
           onJobs={processOnJobs}
           onActivate={processOnActivate}
           actionLabel={processActionLabel}
+          actionClassName={processActionClass}
           onAction={processOnAction}
         />
       </div>
@@ -2141,6 +2160,7 @@ export default function RobotJobsWorkspace() {
           onJobs={processOnJobs}
           onActivate={processOnActivate}
           actionLabel={processActionLabel}
+          actionClassName={processActionClass}
           onAction={processOnAction}
         />
       </div>
@@ -3055,7 +3075,7 @@ function JobsPanel({
         {visible.length > 0 ? (
           <a
             href={jobsCrmOfferHref(signedIn, submissionId)}
-            className="inline-flex items-center justify-center border border-emerald-400/50 bg-emerald-400/10 px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300"
+            className={`${JOBS_APPLY_CTA_CLASS} px-4 py-3 font-mono text-xs`}
           >
             {JOBS_APPLY_SELECTED_CTA}
           </a>
