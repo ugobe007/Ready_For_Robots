@@ -14,10 +14,11 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -102,7 +103,21 @@ def _check(cid: str, ok: bool, prove: str, detail: str = "") -> dict[str, Any]:
     return row
 
 
-def _post_json(url: str, payload: dict[str, Any], *, timeout: float = 90.0) -> tuple[int, Any]:
+TRANSIENT_HTTP = frozenset({0, 502, 503, 504})
+
+
+def _http_retries() -> int:
+    return max(1, int(os.getenv("PSTACK_HTTP_RETRIES", "6")))
+
+
+def _http_retry_sleep(attempt: int) -> float:
+    raw = os.getenv("PSTACK_HTTP_RETRY_SLEEP")
+    if raw is not None and raw != "":
+        return max(0.0, float(raw))
+    return min(20.0, 3.0 * (2 ** attempt))
+
+
+def _post_json_once(url: str, payload: dict[str, Any], *, timeout: float) -> tuple[int, Any]:
     data = json.dumps(payload).encode()
     req = Request(
         url,
@@ -123,11 +138,24 @@ def _post_json(url: str, payload: dict[str, Any], *, timeout: float = 90.0) -> t
             return int(exc.code), json.loads(raw.decode())
         except Exception:
             return int(exc.code), {"_raw": raw[:400].decode("utf-8", "replace")}
-    except Exception as exc:
+    except (URLError, TimeoutError, OSError) as exc:
         return 0, {"error": str(exc)}
 
 
-def _get(url: str, *, timeout: float = 25.0) -> tuple[int, Any]:
+def _post_json(url: str, payload: dict[str, Any], *, timeout: float = 90.0) -> tuple[int, Any]:
+    last: tuple[int, Any] = (0, {"error": "no attempt"})
+    retries = _http_retries()
+    for attempt in range(retries):
+        last = _post_json_once(url, payload, timeout=timeout)
+        code = int(last[0] or 0)
+        if code not in TRANSIENT_HTTP:
+            return last
+        if attempt + 1 < retries:
+            time.sleep(_http_retry_sleep(attempt))
+    return last
+
+
+def _get_once(url: str, *, timeout: float) -> tuple[int, Any]:
     req = Request(url, headers={"Accept": "application/json"})
     try:
         with urlopen(req, timeout=timeout) as resp:
@@ -142,8 +170,34 @@ def _get(url: str, *, timeout: float = 25.0) -> tuple[int, Any]:
             return int(exc.code), json.loads(raw.decode())
         except Exception:
             return int(exc.code), {"_raw": raw[:400].decode("utf-8", "replace")}
-    except Exception as exc:
+    except (URLError, TimeoutError, OSError) as exc:
         return 0, {"error": str(exc)}
+
+
+def _get(url: str, *, timeout: float = 25.0) -> tuple[int, Any]:
+    last: tuple[int, Any] = (0, {"error": "no attempt"})
+    retries = _http_retries()
+    for attempt in range(retries):
+        last = _get_once(url, timeout=timeout)
+        code = int(last[0] or 0)
+        if code not in TRANSIENT_HTTP:
+            return last
+        if attempt + 1 < retries:
+            time.sleep(_http_retry_sleep(attempt))
+    return last
+
+
+def wait_for_fly_health(api: str, *, timeout: float = 45.0) -> bool:
+    """Poll /health until 200 so a transient 503 does not fail FIND-tile PRs."""
+    base = api.rstrip("/")
+    deadline = time.monotonic() + max(0.0, timeout)
+    while True:
+        code, _body = _get_once(f"{base}/health", timeout=8.0)
+        if code == 200:
+            return True
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(2.0)
 
 
 def phase_how() -> dict[str, Any]:
