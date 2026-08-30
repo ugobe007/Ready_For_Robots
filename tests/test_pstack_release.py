@@ -39,6 +39,29 @@ def test_local_release_skips_fly_drive():
     assert "find_drive" in critic_ids
 
 
+def test_scrape_only_paths_skip_live_find():
+    from scripts.pstack_release import path_is_scrape_only, paths_are_scrape_only
+
+    assert path_is_scrape_only("app/scrapers/scrape_targets.py")
+    assert path_is_scrape_only("fly.toml")
+    assert path_is_scrape_only("app/services/robot_job_extract.py")
+    assert not path_is_scrape_only("readyforrobots-new/client/src/lib/jobsWorkflow.ts")
+    assert not path_is_scrape_only("ontology/industry_work_language.v1.json")
+    assert paths_are_scrape_only(
+        [
+            "app/scrapers/scrape_targets.py",
+            "app/scrapers/job_board_scraper_enhanced.py",
+            "app/services/robot_job_extract.py",
+            "tests/test_job_board_scraper_pipeline.py",
+            "tests/test_robot_job_extract.py",
+            "fly.toml",
+        ]
+    )
+    assert not paths_are_scrape_only(
+        ["app/scrapers/scrape_targets.py", "readyforrobots-new/client/src/lib/jobsWorkflow.ts"]
+    )
+
+
 def test_critic_gates_include_abort_and_leftover():
     assert critic_gate_ids() == [
         "find",

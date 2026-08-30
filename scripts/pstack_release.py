@@ -13,11 +13,13 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -102,7 +104,78 @@ def _check(cid: str, ok: bool, prove: str, detail: str = "") -> dict[str, Any]:
     return row
 
 
-def _post_json(url: str, payload: dict[str, Any], *, timeout: float = 90.0) -> tuple[int, Any]:
+TRANSIENT_HTTP = frozenset({0, 502, 503, 504})
+SCRAPE_ONLY_FILES = frozenset(
+    {
+        "app/services/robot_job_extract.py",
+        "app/services/job_board_scraper_runner.py",
+        "tests/test_job_board_scraper_pipeline.py",
+        "tests/test_robot_job_extract.py",
+        "fly.toml",
+    }
+)
+SCRAPE_ONLY_PREFIXES = ("app/scrapers/",)
+
+
+def path_is_scrape_only(path: str) -> bool:
+    rel = path.replace("\\", "/").lstrip("./")
+    if rel in SCRAPE_ONLY_FILES:
+        return True
+    return any(rel.startswith(prefix) for prefix in SCRAPE_ONLY_PREFIXES)
+
+
+def paths_are_scrape_only(files: list[str]) -> bool:
+    rows = [f.strip() for f in files if f.strip() and not f.strip().endswith(".md")]
+    return bool(rows) and all(path_is_scrape_only(f) for f in rows)
+
+
+def _git_output(args: list[str]) -> str:
+    try:
+        return subprocess.check_output(
+            ["git", *args],
+            cwd=ROOT,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return ""
+
+
+def pr_changed_files() -> list[str]:
+    """PR file list. Merge commits use HEAD^1 (Actions checkout); else origin/main."""
+    parents = _git_output(["rev-list", "--parents", "-n", "1", "HEAD"]).split()
+    if len(parents) >= 3:
+        diff = _git_output(["diff", "--name-only", "HEAD^1", "HEAD"])
+        files = [ln.strip() for ln in diff.splitlines() if ln.strip()]
+        if files:
+            return files
+    for spec in ("origin/main...HEAD", "main...HEAD"):
+        diff = _git_output(["diff", "--name-only", spec])
+        files = [ln.strip() for ln in diff.splitlines() if ln.strip()]
+        if files:
+            return files
+    return []
+
+
+def skip_live_find_drives() -> tuple[bool, str]:
+    files = pr_changed_files()
+    if files and paths_are_scrape_only(files):
+        return True, "scrape-only diff; live FIND is production, not this PR"
+    return False, ""
+
+
+def _http_retries() -> int:
+    return max(1, int(os.getenv("PSTACK_HTTP_RETRIES", "3")))
+
+
+def _http_retry_sleep(attempt: int) -> float:
+    raw = os.getenv("PSTACK_HTTP_RETRY_SLEEP")
+    if raw is not None and raw != "":
+        return max(0.0, float(raw))
+    return 2.0 * (attempt + 1)
+
+
+def _post_json_once(url: str, payload: dict[str, Any], *, timeout: float) -> tuple[int, Any]:
     data = json.dumps(payload).encode()
     req = Request(
         url,
@@ -123,8 +196,21 @@ def _post_json(url: str, payload: dict[str, Any], *, timeout: float = 90.0) -> t
             return int(exc.code), json.loads(raw.decode())
         except Exception:
             return int(exc.code), {"_raw": raw[:400].decode("utf-8", "replace")}
-    except Exception as exc:
+    except (URLError, TimeoutError, OSError) as exc:
         return 0, {"error": str(exc)}
+
+
+def _post_json(url: str, payload: dict[str, Any], *, timeout: float = 90.0) -> tuple[int, Any]:
+    last: tuple[int, Any] = (0, {"error": "no attempt"})
+    retries = _http_retries()
+    for attempt in range(retries):
+        last = _post_json_once(url, payload, timeout=timeout)
+        code = int(last[0] or 0)
+        if code not in TRANSIENT_HTTP:
+            return last
+        if attempt + 1 < retries:
+            time.sleep(_http_retry_sleep(attempt))
+    return last
 
 
 def _get(url: str, *, timeout: float = 25.0) -> tuple[int, Any]:
@@ -897,21 +983,22 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
     )
 
     drives: list[dict[str, Any]] = []
-    if local:
-        checks.append(
-            _check(
-                "find_drive",
-                True,
-                "FIND URL drive skipped (--local)",
-                "skipped",
-            )
+    skip_live, skip_reason = skip_live_find_drives()
+    if local or skip_live:
+        prove = (
+            "FIND URL drive skipped (--local)"
+            if local
+            else "FIND URL drive skipped (scrape-only PR)"
         )
+        checks.append(_check("find_drive", True, prove, skip_reason or "skipped"))
         checks.append(
             _check(
                 "healthcare_class:live",
                 True,
-                "Diligent FIND drive skipped (--local)",
-                "skipped",
+                "Diligent FIND drive skipped (--local)"
+                if local
+                else "Diligent FIND drive skipped (scrape-only PR)",
+                skip_reason or "skipped",
             )
         )
     else:
