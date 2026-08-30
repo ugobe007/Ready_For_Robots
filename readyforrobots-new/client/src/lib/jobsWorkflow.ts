@@ -1025,6 +1025,8 @@ export const FIND_JOBS_HOME_SUBHEAD =
   "Enter your URL, we match your robots to available jobs.";
 export const FIND_JOBS_HEADLINE_CLASS =
   "rfr-find-headline mt-1 text-slate-100";
+/** Emerald Jobs chrome — same as Start jobs / nav Jobs, not Apply violet. */
+export const FIND_JOBS_HEADLINE_ACCENT_CLASS = "text-emerald-400";
 export const FIND_JOBS_SUBHEAD_CLASS =
   "mt-4 max-w-3xl text-xl leading-snug text-slate-300 sm:text-2xl";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
