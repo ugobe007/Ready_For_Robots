@@ -41,6 +41,7 @@ import {
   JOBS_APPLY_NEXT_CTA,
   JOBS_APPLY_SELECTED_CTA,
   JOBS_APPLY_SEQUENCE,
+  JOBS_APPLY_CTA_CLASS,
   fetchKeptJobs,
   isJobsCrmOfferQuery,
   jobsCrmOfferHref,
@@ -313,7 +314,7 @@ export default function JobsCrmDesk({
                 href={jobsCrmOfferHref(signedIn, submissionId)}
                 onClick={openOfferForm}
                 aria-label={JOBS_APPLY_SELECTED_CTA}
-                className="border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300 transition hover:border-emerald-400 hover:text-emerald-200"
+                className={`${JOBS_APPLY_CTA_CLASS} px-3 py-2 font-mono text-xs`}
               >
                 {JOBS_APPLY_SELECTED_CTA}
               </a>

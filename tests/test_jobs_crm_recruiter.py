@@ -43,6 +43,12 @@ from app.services.jobs_crm_recruiter import (
 TEST_USER_ID = uuid.UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
 
 
+@pytest.fixture(autouse=True)
+def _no_youtube(monkeypatch):
+    monkeypatch.delenv("YOUTUBE_API_KEY", raising=False)
+    monkeypatch.setattr("app.services.robot_youtube_evidence._http_get", lambda url: None)
+
+
 @pytest.fixture()
 def db_session(tmp_path, monkeypatch):
     monkeypatch.setenv("JOBS_CRM_UPLOAD_DIR", str(tmp_path / "docs"))

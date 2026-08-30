@@ -16,6 +16,7 @@ from app.database import Base
 from app.models.jobs_crm import ApplicationMessage, JobApplication, KeptJob
 from app.services.jobs_crm import (
     SEND_NOT_SENT_NO_EMAIL,
+    SEND_PREPARED,
     apply_selected_jobs,
     apply_to_job,
     capture_inbound_message,
@@ -24,11 +25,18 @@ from app.services.jobs_crm import (
     list_kept_jobs,
     list_messages,
     paste_inbound_reply,
+    send_prepared_application,
     set_application_meeting_url,
 )
 from app.services.plan_entitlements import JOBS_CRM_FREE_BATCH, JOBS_CRM_FREE_MONTHLY_CAP
 
 TEST_USER_ID = uuid.UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+
+
+@pytest.fixture(autouse=True)
+def _no_youtube(monkeypatch):
+    monkeypatch.delenv("YOUTUBE_API_KEY", raising=False)
+    monkeypatch.setattr("app.services.robot_youtube_evidence._http_get", lambda url: None)
 
 
 @pytest.fixture()
@@ -249,6 +257,69 @@ def test_apply_selected_jobs_path(db_session):
     assert all(row["scheduling_state"] == "we_schedule_with_employer" for row in result["applied"])
     rows = db_session.query(JobApplication).all()
     assert len(rows) == 2
+    assert all(row["send_status"] == SEND_PREPARED for row in result["applied"])
+    assert all(row["status"] == "prepared" for row in result["applied"])
+    assert all(row["draft"]["operator_sends"] is True for row in result["applied"])
+    assert all(row["draft"]["video_url"] is None for row in result["applied"])
+    assert all(row["contacts"] == [] for row in result["applied"])
+
+
+def test_prepare_does_not_email_employer(db_session, monkeypatch):
+    sent = []
+
+    def _capture(**kwargs):
+        sent.append(kwargs)
+        return {"resend_id": "re_x", "from_email": "jobs@readyforrobots.com"}
+
+    monkeypatch.setattr("app.services.resend_email.send_email_via_resend", _capture)
+    keep_jobs(
+        db_session,
+        _user(),
+        [_job(1, email="ops@named-employer.com")],
+        robot_name="TUG",
+    )
+    app = apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="TUG",
+        selected_models=["TUG"],
+        monthly_price="4800",
+        poc_skipped=True,
+        send=False,
+    )
+    assert app["status"] == "prepared"
+    assert app["send_status"] == SEND_PREPARED
+    assert app["draft"]["why"]
+    assert "TUG" in app["draft"]["why"]
+    assert app["contacts"] == [{"email": "ops@named-employer.com", "source": "job_card"}]
+    assert app["can_operator_send"] is True
+    assert not sent
+    sent_app = send_prepared_application(db_session, _user(), app["id"])
+    assert sent_app["status"] == "applied"
+    assert sent_app["send_status"] == "sent"
+    assert any(item.get("to_email") == "ops@named-employer.com" for item in sent)
+
+
+def test_prepare_empty_video_and_contact_is_honest(db_session):
+    keep_jobs(db_session, _user(), [_job(1)], robot_name="TUG")
+    app = apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="TUG",
+        selected_models=["TUG"],
+        monthly_price="1200",
+        send=False,
+    )
+    assert app["poc_video_url"] is None
+    assert app["draft"]["video_url"] is None
+    assert app["contacts"] == []
+    assert app["employer_email"] is None
+    assert app["can_operator_send"] is False
+    assert "invent" in (app["no_email_reason"] or "").lower()
+    with pytest.raises(ValueError, match="invent"):
+        send_prepared_application(db_session, _user(), app["id"])
 
 
 def test_meeting_url_paste_is_honest_schedule(db_session):

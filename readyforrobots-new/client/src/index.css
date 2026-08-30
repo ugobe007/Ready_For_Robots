@@ -167,6 +167,18 @@
       inset 1px 1px 0 rgba(0, 0, 0, 0.45),
       inset -1px -1px 0 rgba(255, 255, 255, 0.08);
   }
+  /* Apply to jobs — violet so it reads against neon-green Jobs chrome. */
+  .rfr-jobs-apply-cta {
+    background: #7c3aed;
+    color: #f8fafc;
+  }
+  .rfr-jobs-apply-cta:hover:not(:disabled) {
+    background: #6d28d9;
+    color: #ffffff;
+  }
+  .rfr-jobs-apply-cta:disabled {
+    opacity: 0.4;
+  }
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
   textarea,
   select {

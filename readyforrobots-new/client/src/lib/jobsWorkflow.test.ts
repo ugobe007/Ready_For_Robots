@@ -7,6 +7,9 @@ import {
   FIND_JOBS_HEADLINE_CLASS,
   FIND_JOBS_HOME_SUBHEAD,
   FIND_JOBS_SUBHEAD_CLASS,
+  JOBS_APPLY_CTA_CLASS,
+  JOBS_APPLY_CTA_BUTTON_CLASS,
+  JOBS_APPLY_HERO_CTA,
   JOBS_EXAMPLE_CAP,
   JOBS_FOR_YOUR_ROBOT_HEADING,
   JOBS_NEXT_CTA,
@@ -74,6 +77,7 @@ import {
   isSalesPlaceholder,
   jobsListHint,
   jobsPlaceHref,
+  jobsProcessActionClass,
   jobsProcessActionLabel,
   jobsProcessStepFromStage,
   jobsProductLimitForPlan,
@@ -195,8 +199,34 @@ describe("jobsWorkflow", () => {
     expect(jobsProcessStepFromStage("jobs")).toBe("jobs");
     expect(jobsProcessStepFromStage("portfolio")).toBe("jobs");
     expect(jobsProcessActionLabel("find")).toBe(FIND_JOBS_CTA);
-    expect(jobsProcessActionLabel("jobs")).toBe(JOBS_NEXT_CTA);
-    expect(jobsProcessActionLabel("activate")).toBe(JOBS_NEXT_CTA);
+    expect(jobsProcessActionLabel("jobs")).toBe(JOBS_APPLY_HERO_CTA);
+    expect(jobsProcessActionClass("jobs")).toMatch(/rfr-jobs-apply-cta/);
+    expect(jobsProcessActionClass("find")).not.toMatch(/rfr-jobs-apply-cta/);
+    expect(JOBS_APPLY_HERO_CTA).toBe("Apply to jobs →");
+    expect(JOBS_APPLY_CTA_CLASS).toMatch(/rfr-jobs-apply-cta/);
+    expect(JOBS_APPLY_CTA_BUTTON_CLASS).toMatch(/rfr-jobs-apply-cta/);
+    const css = readFileSync(join(here, "../index.css"), "utf8");
+    expect(css).toMatch(/\.rfr-jobs-apply-cta/);
+    expect(css).toMatch(/#7c3aed/);
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    const processChrome = readFileSync(
+      join(here, "../components/JobsProcessChrome.tsx"),
+      "utf8",
+    );
+    const desk = readFileSync(join(here, "../components/JobsCrmDesk.tsx"), "utf8");
+    const next = readFileSync(
+      join(here, "../components/JobsCrmNextSteps.tsx"),
+      "utf8",
+    );
+    expect(workspace).toMatch(/JOBS_APPLY_CTA_CLASS|rfr-jobs-apply-cta/);
+    expect(workspace).toMatch(/jobsProcessActionClass/);
+    expect(processChrome).toMatch(/JOBS_APPLY_HERO_CTA/);
+    expect(processChrome).toMatch(/rfr-jobs-apply-cta|JOBS_APPLY_CTA_CLASS/);
+    expect(desk).toMatch(/JOBS_APPLY_CTA_CLASS/);
+    expect(next).toMatch(/JOBS_APPLY_CTA_BUTTON_CLASS/);
     const pool = [{ job_key: "a" }, { job_key: "b" }, { job_key: "c" }];
     expect(jobsToActivate([], pool, 15).map(j => j.job_key)).toEqual(["a", "b", "c"]);
     expect(jobsToActivate([pool[2]], pool, 15).map(j => j.job_key)).toEqual([

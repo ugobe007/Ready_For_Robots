@@ -823,7 +823,7 @@ export function crmOfferBlurb(productName?: string | null): string {
   const who = crmSaveJobsRobotLabel(productName);
   return who
     ? `Here's the offer for ${who}. Pick the model and say what you'll charge.`
-    : "Pick the model and say what you'll charge. Then we take it to the employer.";
+    : "Pick the model and say what you'll charge. Then we prepare a draft for you to send.";
 }
 
 export const CRM_INSPECT_HINT = crmSaveJobsBlurb();
@@ -1014,6 +1014,14 @@ export function showJobsSiteChrome(opts: {
 }
 
 export const FIND_JOBS_CTA = "Start jobs →";
+/** Hero-level apply on FIND / process bar. Violet, not neon green. */
+export const JOBS_APPLY_HERO_CTA = "Apply to jobs →";
+export const JOBS_FIND_CTA_CLASS =
+  "rfr-bevel inline-flex items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300";
+export const JOBS_APPLY_CTA_CLASS =
+  "rfr-bevel rfr-jobs-apply-cta inline-flex items-center justify-center px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-white transition hover:bg-violet-700";
+export const JOBS_APPLY_CTA_BUTTON_CLASS =
+  "rfr-bevel rfr-jobs-apply-cta inline-flex items-center justify-center px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-40";
 export const FIND_JOBS_HOME_HEADLINE = "Find jobs for your robot.";
 export const FIND_JOBS_HOME_SUBHEAD =
   "We match your robots to specific jobs and models using your URL";
@@ -1057,9 +1065,15 @@ export function jobsProcessStepFromStage(stage: string): JobsProcessStepId {
   return "find";
 }
 
-/** Page-chrome wizard button: Start jobs on FIND, Next on the job list. */
+/** Page-chrome wizard button: Start jobs on FIND, Apply to jobs on the list. */
 export function jobsProcessActionLabel(step: JobsProcessStepId): string {
-  return step === "find" ? FIND_JOBS_CTA : JOBS_NEXT_CTA;
+  if (step === "find") return FIND_JOBS_CTA;
+  if (step === "jobs") return JOBS_APPLY_HERO_CTA;
+  return JOBS_NEXT_CTA;
+}
+
+export function jobsProcessActionClass(step: JobsProcessStepId): string {
+  return step === "jobs" ? JOBS_APPLY_CTA_CLASS : JOBS_FIND_CTA_CLASS;
 }
 
 export const JOBS_ACTIVATE_SRC = "jobs_activate";

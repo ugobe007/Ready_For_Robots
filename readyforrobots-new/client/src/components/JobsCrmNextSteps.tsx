@@ -1,24 +1,31 @@
 import { useEffect, useState } from "react";
 import {
   JOBS_APPLY_OFFER_CTA,
-  JOBS_APPLY_SELECTED_CTA,
   JOBS_APPLY_SEQUENCE,
+  JOBS_CONTACTS_EMPTY_NOTE,
   JOBS_DOCS_HEADING,
   JOBS_DOCS_HINT,
   JOBS_MODEL_SELECT_HINT,
   JOBS_MODEL_SELECT_LABEL,
   JOBS_PROPOSED_PRICE_HINT,
   JOBS_PROPOSED_PRICE_LABEL,
+  JOBS_SEND_DRAFT_CTA,
+  JOBS_SEND_DRAFT_HINT,
+  JOBS_VIDEO_EMPTY_NOTE,
   applyJobOnAccount,
   applySelectedJobsOnAccount,
   canSubmitNextStepsOffer,
+  companyHintFromRobotUrl,
+  fetchApplyPrep,
   fetchCatalogSkus,
   fetchRobotDocuments,
+  sendPreparedApplication,
   uploadRobotDocument,
   type CatalogSku,
   type JobsCrmApplication,
   type RobotDocument,
 } from "@/lib/jobsCrmAccount";
+import { JOBS_APPLY_CTA_BUTTON_CLASS } from "@/lib/jobsWorkflow";
 import {
   JOBS_POC_PREFER_HINT,
   JOBS_POC_SKIP_CTA,
@@ -50,6 +57,7 @@ export default function JobsCrmNextSteps({
   onApplied: (app: JobsCrmApplication) => void;
 }) {
   const selectedJobs = (jobs && jobs.length ? jobs : [job]).filter(j => j?.job_key);
+  const oemCompany = companyHintFromRobotUrl(robotUrl) || robotName;
   const card = robotJobCardFromMatch(job);
   const [skus, setSkus] = useState<CatalogSku[]>([]);
   const [models, setModels] = useState<string[]>([]);
@@ -57,6 +65,10 @@ export default function JobsCrmNextSteps({
   const [pocEvidence, setPocEvidence] = useState("");
   const [pocVideoUrl, setPocVideoUrl] = useState("");
   const [pocSkipped, setPocSkipped] = useState(false);
+  const [why, setWhy] = useState("");
+  const [videoNote, setVideoNote] = useState("");
+  const [videoSearchUrl, setVideoSearchUrl] = useState("");
+  const [drafts, setDrafts] = useState<JobsCrmApplication[]>([]);
   const [docs, setDocs] = useState<RobotDocument[]>([]);
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -95,10 +107,49 @@ export default function JobsCrmNextSteps({
       .catch(() => {
         if (!cancelled) setDocs([]);
       });
+    fetchApplyPrep(token, {
+      robot: robotName,
+      company: oemCompany,
+      sku: robotName,
+    })
+      .then(prep => {
+        if (cancelled) return;
+        setVideoNote(prep.video_note || "");
+        setVideoSearchUrl(prep.video_search_url || "");
+        if (prep.video_url) {
+          setPocVideoUrl(prev => prev || prep.video_url || "");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setVideoNote(JOBS_VIDEO_EMPTY_NOTE);
+      });
     return () => {
       cancelled = true;
     };
-  }, [token, robotUrl, robotName]);
+  }, [token, robotUrl, robotName, oemCompany]);
+
+  useEffect(() => {
+    const sku = models[0];
+    if (!sku) return;
+    let cancelled = false;
+    fetchApplyPrep(token, {
+      robot: robotName,
+      company: oemCompany,
+      sku,
+    })
+      .then(prep => {
+        if (cancelled) return;
+        setVideoNote(prep.video_note || "");
+        setVideoSearchUrl(prep.video_search_url || "");
+        if (prep.video_url) {
+          setPocVideoUrl(prev => prev || prep.video_url || "");
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [token, robotName, oemCompany, models]);
 
   function toggleModel(name: string, on: boolean) {
     setModels(prev => {
@@ -124,9 +175,12 @@ export default function JobsCrmNextSteps({
           pocEvidence,
           pocVideoUrl,
           pocSkipped: skipped,
+          why,
+          companyName: oemCompany,
           documentIds: selectedDocs,
         });
         for (const app of result.applied) onApplied(app);
+        setDrafts(result.applied);
         if (!result.applied.length && result.errors[0]) {
           setError(result.errors[0].error);
         }
@@ -139,10 +193,13 @@ export default function JobsCrmNextSteps({
           pocEvidence,
           pocVideoUrl,
           pocSkipped: skipped,
+          why,
+          companyName: oemCompany,
           job,
           documentIds: selectedDocs,
         });
         onApplied(app);
+        setDrafts([app]);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not apply.");
@@ -260,6 +317,23 @@ export default function JobsCrmNextSteps({
         {videoIssue ? (
           <p className="mt-2 text-sm text-amber-200">{videoIssue}</p>
         ) : null}
+        {videoNote ? (
+          <p className="mt-2 text-sm text-slate-400">{videoNote}</p>
+        ) : null}
+        {videoSearchUrl && !pocVideoUrl.trim() ? (
+          <p className="mt-2 text-sm text-slate-400">
+            YouTube search:{" "}
+            <a
+              href={videoSearchUrl}
+              className="underline decoration-violet-400/50 underline-offset-2 text-violet-200"
+              target="_blank"
+              rel="noreferrer"
+            >
+              open results
+            </a>
+            . We did not pick a video.
+          </p>
+        ) : null}
       </label>
       {!pocSkipped && !pocEvidence.trim() && !pocVideoUrl.trim() ? (
         <button
@@ -361,21 +435,117 @@ export default function JobsCrmNextSteps({
         <p className="mt-4 text-sm text-amber-200">{error}</p>
       ) : null}
 
+      <label className="mt-6 block">
+        <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+          Why you are applying
+        </span>
+        <span className="mt-1 block text-sm text-slate-400">
+          Short recruiter note. We draft one if you leave this blank. You can edit it.
+        </span>
+        <textarea
+          aria-label="Why you are applying"
+          className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100"
+          rows={3}
+          value={why}
+          onChange={e => setWhy(e.target.value)}
+          placeholder={`We're putting ${robotName || "this robot"} forward for this job.`}
+        />
+      </label>
+
       <p className="mt-6 max-w-xl text-sm leading-relaxed text-slate-300">
         {JOBS_APPLY_SEQUENCE}
       </p>
+      <p className="mt-2 text-sm text-slate-400">{JOBS_SEND_DRAFT_HINT}</p>
       <button
         type="button"
         onClick={() => void apply()}
         disabled={!ready || busy}
-        className="mt-3 inline-flex items-center justify-center bg-emerald-400 px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+        className={`mt-3 ${JOBS_APPLY_CTA_BUTTON_CLASS}`}
       >
-        {busy
-          ? "Applying…"
-          : selectedJobs.length > 1
-            ? JOBS_APPLY_SELECTED_CTA
-            : JOBS_APPLY_OFFER_CTA}
+        {busy ? "Preparing…" : JOBS_APPLY_OFFER_CTA}
       </button>
+
+      {drafts.length ? (
+        <div className="mt-6 border border-violet-500/40 bg-[#12082a] px-4 py-4" data-apply-draft="1">
+          <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>Application draft</p>
+          <p className="mt-2 text-sm text-slate-300">{JOBS_SEND_DRAFT_HINT}</p>
+          {drafts.map(app => {
+            const draft = app.draft;
+            const contacts = app.contacts || draft?.contacts || [];
+            return (
+              <article key={app.id} className="mt-4 border border-slate-700 px-3 py-3">
+                <p className="font-mono text-xs uppercase tracking-[0.08em] text-violet-200">
+                  {app.work_title} · {app.employer_name}
+                </p>
+                {draft?.subject ? (
+                  <p className="mt-2 text-sm text-slate-200">
+                    Subject: {draft.subject}
+                  </p>
+                ) : null}
+                {draft?.why ? (
+                  <p className="mt-2 text-sm text-slate-300">{draft.why}</p>
+                ) : null}
+                {draft?.clip_description ? (
+                  <p className="mt-2 text-sm text-slate-400">{draft.clip_description}</p>
+                ) : null}
+                {app.poc_video_url || draft?.video_url ? (
+                  <p className="mt-2 text-sm text-violet-200">
+                    Video: {app.poc_video_url || draft?.video_url}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-sm text-amber-200/90">
+                    {draft?.video_note || JOBS_VIDEO_EMPTY_NOTE}
+                  </p>
+                )}
+                {contacts.length ? (
+                  <p className="mt-2 text-sm text-slate-200">
+                    Contact: {contacts.map(c => c.email).join(", ")}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-sm text-amber-200/90">
+                    {JOBS_CONTACTS_EMPTY_NOTE}
+                  </p>
+                )}
+                {draft?.body ? (
+                  <pre className="mt-3 whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-300">
+                    {draft.body}
+                  </pre>
+                ) : null}
+                {app.can_operator_send ? (
+                  <button
+                    type="button"
+                    className={`mt-3 ${JOBS_APPLY_CTA_BUTTON_CLASS} px-4 py-2 text-sm`}
+                    disabled={busy}
+                    onClick={() => {
+                      setBusy(true);
+                      setError(null);
+                      sendPreparedApplication(token, app.id)
+                        .then(row => {
+                          onApplied(row);
+                          setDrafts(prev =>
+                            prev.map(item => (item.id === row.id ? row : item)),
+                          );
+                        })
+                        .catch(err =>
+                          setError(
+                            err instanceof Error ? err.message : "Could not send.",
+                          ),
+                        )
+                        .finally(() => setBusy(false));
+                    }}
+                  >
+                    {JOBS_SEND_DRAFT_CTA}
+                  </button>
+                ) : (
+                  <p className="mt-3 text-sm text-amber-200/90">
+                    {app.no_email_reason || JOBS_CONTACTS_EMPTY_NOTE}
+                  </p>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      ) : null}
     </section>
   );
 }
