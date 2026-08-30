@@ -2064,7 +2064,7 @@ export default function RobotJobsWorkspace() {
                 {FIND_JOBS_CTA}
               </button>
               <p className="mt-2 text-[12px] text-slate-400">
-                Paste a robot URL on the left, then start jobs.
+                Paste a robot URL on the left, then find jobs.
               </p>
             </div>
             <LiveJobTape
@@ -2532,7 +2532,7 @@ function SelectPanel({
                     onClick={() => onConfirm(names)}
                     className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-300 transition hover:text-emerald-200"
                   >
-                    Start jobs for {seg.title} →
+                    Find jobs for {seg.title} →
                   </button>
                 </div>
               </div>
@@ -2629,14 +2629,14 @@ function SelectPanel({
         >
           <FaceCue scale={2} onEmerald />
           {selected.length === 1
-            ? `Start jobs for ${selected[0]} →`
+            ? `Find jobs for ${selected[0]} →`
             : grouped && selected.length === 0 && segments[0]
-              ? `Start jobs for ${segments[0].title} →`
+              ? `Find jobs for ${segments[0].title} →`
               : startNames.length === 1
-                ? `Start jobs for ${startNames[0]} →`
+                ? `Find jobs for ${startNames[0]} →`
                 : products.length <= productCap && selected.length === 0
-                  ? `Start jobs for all ${products.length} robots →`
-                  : `Start jobs for ${startNames.length} robots →`}
+                  ? `Find jobs for all ${products.length} robots →`
+                  : `Find jobs for ${startNames.length} robots →`}
         </button>
         {!grouped &&
         selected.length > 0 &&

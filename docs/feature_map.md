@@ -13,7 +13,7 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 | Surface | Route | What the user is doing |
 |---------|-------|------------------------|
 | Jobs terminal | `/` (`/jobs/:slug` same workspace) | Paste robot URL, inspect Job Cards |
-| About | `/intelligence` | Jobs loop explainer; Start jobs → `/?new=1` |
+| About | `/intelligence` | Jobs loop explainer; Find jobs → `/?new=1` |
 | Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: jobs you kept, inspect, quote rental, Place this job. Inbox confirm/release for a held interview slot. |
 | Employer evaluate | `/employer/:token` | Accept / Decline (reason code) / propose time / hold a slot. Video résumé when present. No RFR account. |
 | OEM hold | `/oem-hold/:token` | Confirm or release a held interview window. |
@@ -29,7 +29,7 @@ Canonical frontend: `readyforrobots-new/client/`. API: `https://ready-2-robot.fl
 
 ### Jobs header (`ExperimentHeader`)
 
-Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (empty FIND). While already on `/`, the click resets in place — it must not reload the document or abort an in-flight Start jobs.
+Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (empty FIND). While already on `/`, the click resets in place — it must not reload the document or abort an in-flight Find jobs.
 
 | Item | Behavior |
 |------|----------|
@@ -58,13 +58,13 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 
 | Step | Label | CTA |
 |------|-------|-----|
-| 01 | Show us your robot | `Start jobs →` (emerald) |
+| 01 | Show us your robot | `Find jobs →` (emerald) |
 | 02 | Available jobs | `Apply to jobs →` (violet `.rfr-jobs-apply-cta`) |
 | 03 | CRM | `Open CRM →` / leave-desk next. Signed desk also shows **Apply to jobs →** in violet. |
 
 01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM.
 
-On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and signed desk). Unsigned next is **Sign up to open CRM →**. Signed next leaves the desk: **Back to jobs →** when they have a submission or kept cards, otherwise **Start jobs →**. Header **About** stays visible on all widths.
+On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and signed desk). Unsigned next is **Sign up to open CRM →**. Signed next leaves the desk: **Back to jobs →** when they have a submission or kept cards, otherwise **Find jobs →**. Header **About** stays visible on all widths.
 
 ---
 

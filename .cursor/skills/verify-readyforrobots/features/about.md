@@ -5,7 +5,7 @@ About (`/intelligence`) explains the Jobs loop and sends the user back to FIND. 
 ## Sub-features
 
 - `about-loop` shows 01 robot → 02 jobs → 03 CRM.
-- `about-cta` Start jobs → goes to `/?new=1`.
+- `about-cta` Find jobs → goes to `/?new=1`.
 - `about-chrome` Jobs header (no Pipeline).
 - `about-signup` signup carries `src=jobs_activate`.
 - `about-pstack` optional protocol explainer (`#jobs-protocol`). Merge proof is `scripts/pstack_release.py`, not this module.
@@ -25,7 +25,7 @@ Preconditions:
 - **Open.** `GET /intelligence` 200.
 - **JS.** Bundle includes `/intelligence`.
 - **CI.** `python3 scripts/agent_verify.py drive --feature about --evidence "$EVIDENCE"`.
-- **Browser.** Jobs header visible, Start jobs → present, Pipeline absent. CTA does not go to `/pipeline`.
+- **Browser.** Jobs header visible, Find jobs → present, Pipeline absent. CTA does not go to `/pipeline`.
 
 ## Gotchas
 

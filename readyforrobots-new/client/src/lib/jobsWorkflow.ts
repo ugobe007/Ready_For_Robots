@@ -1011,7 +1011,7 @@ export function showJobsSiteChrome(opts: {
   return false;
 }
 
-export const FIND_JOBS_CTA = "Start jobs →";
+export const FIND_JOBS_CTA = "Find jobs →";
 /** Apply on the desk and Job Cards. Violet, not neon green. Not the FIND hero. */
 export const JOBS_APPLY_HERO_CTA = "Apply to jobs →";
 export const JOBS_FIND_CTA_CLASS =
@@ -1025,7 +1025,7 @@ export const FIND_JOBS_HOME_SUBHEAD =
   "Enter your URL, we match your robots to available jobs.";
 export const FIND_JOBS_HEADLINE_CLASS =
   "rfr-find-headline mt-1 text-slate-100";
-/** Emerald Jobs chrome — same as Start jobs / nav Jobs, not Apply violet. */
+/** Emerald Jobs chrome — same as Find jobs / nav Jobs, not Apply violet. */
 export const FIND_JOBS_HEADLINE_ACCENT_CLASS = "text-emerald-400";
 export const FIND_JOBS_SUBHEAD_CLASS =
   "mt-4 max-w-3xl text-xl leading-snug text-slate-300 sm:text-2xl";
@@ -1065,7 +1065,7 @@ export function jobsProcessStepFromStage(stage: string): JobsProcessStepId {
   return "find";
 }
 
-/** Page-chrome wizard button: Start jobs on FIND. Apply stays on the desk and Job Cards. */
+/** Page-chrome wizard button: Find jobs on FIND. Apply stays on the desk and Job Cards. */
 export function jobsProcessActionLabel(step: JobsProcessStepId): string {
   if (step === "find") return FIND_JOBS_CTA;
   if (step === "jobs") return JOBS_APPLY_HERO_CTA;
@@ -1120,7 +1120,7 @@ export function stripJobsFreshQuery(): boolean {
 }
 
 /**
- * FIND submit never navigates. One Start jobs click stays on this document:
+ * FIND submit never navigates. One Find jobs click stays on this document:
  * research → Job Cards. No `location.assign`, no reload, no `/?new=1` bounce.
  */
 export function findSubmitNavigationTarget(_url?: string | null): null {

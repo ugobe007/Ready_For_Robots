@@ -270,7 +270,7 @@ def drive_jobs_chrome(*, origin: str | None = None) -> dict[str, Any]:
         "jobs_activate": JOBS_ACTIVATE in text,
         "process_01": "Show us your robot" in text,
         "process_02": "Available jobs" in text,
-        "start_jobs": "Start jobs" in text,
+        "find_jobs": "Find jobs →" in text,
     }
     ok = jcode == 200 and all(hits.values())
     return {

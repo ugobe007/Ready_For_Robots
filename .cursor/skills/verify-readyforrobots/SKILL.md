@@ -72,7 +72,7 @@ python3 scripts/agent_verify.py ci --evidence "$EVIDENCE"
 | find-jobs | `POST /api/robot-job-match` (Vega profile or chip) | `state=matches`, `job_count>0`, job titles; requirement matcher has named `company_name` |
 | find-url | `POST /api/robot-job-search` (Dexmate + Greenfield) | not Research failed / Failed to fetch; identity is that URL’s company; Greenfield is not strawberry/Agrobot |
 | job-cards | same payload | cards exist (title + employer); expand in UI shows employer / workplace / work / Conditional |
-| jobs-chrome | homepage JS | `Show us your robot`, `Available jobs`, `Start jobs`, `jobs_activate` |
+| jobs-chrome | homepage JS | `Show us your robot`, `Available jobs`, `Find jobs →`, `jobs_activate` |
 | jobs-crm | `/pipeline?src=jobs_activate` | bundle has activate src; unlocked 5 jobs need a snapshot/session — do not call login a pass |
 | about | `/intelligence` | 200 and JS has the route; body is the Jobs loop, not SIGNAL |
 
