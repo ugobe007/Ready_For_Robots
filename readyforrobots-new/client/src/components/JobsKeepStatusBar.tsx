@@ -1,4 +1,4 @@
-import { JOBS_APPLY_SEQUENCE, keepJobsStatusBar } from "@/lib/jobsCrmAccount";
+import { keepJobsStatusBar } from "@/lib/jobsCrmAccount";
 
 export default function JobsKeepStatusBar({
   savedCount,
@@ -6,14 +6,12 @@ export default function JobsKeepStatusBar({
   signedIn,
   submissionId = null,
   onApplyClick,
-  blurb,
 }: {
   savedCount: number;
   onCrmDesk: boolean;
   signedIn: boolean;
   submissionId?: number | null;
   onApplyClick?: (event: { preventDefault: () => void }) => void;
-  blurb?: string;
 }) {
   if (savedCount <= 0) return null;
   const bar = keepJobsStatusBar({
@@ -40,11 +38,6 @@ export default function JobsKeepStatusBar({
         >
           {bar.hrefLabel}
         </a>
-      ) : null}
-      {onCrmDesk ? (
-        <p className="basis-full text-sm leading-relaxed text-emerald-100/80">
-          {blurb || JOBS_APPLY_SEQUENCE}
-        </p>
       ) : null}
     </div>
   );

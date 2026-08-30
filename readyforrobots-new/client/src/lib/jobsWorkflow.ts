@@ -795,37 +795,50 @@ export const CRM_EMPLOYER_NAME_CLASS =
   "font-display text-lg font-bold leading-snug tracking-tight text-emerald-400 sm:text-xl";
 export const CRM_SELECT_ALL_LABEL = "Select all";
 export const CRM_KEEP_YES_CTA = "Yes, keep them";
-export const CRM_LISTING_EYEBROW = "Saved jobs";
-/** Name that fills "Save jobs for your ______." */
+export const CRM_LISTING_EYEBROW = "Jobs you kept";
+export const CRM_BACK_TO_JOBS_CTA = "Back to jobs →";
+
+/** Product name we can say out loud. Empty when we only have a generic "robot". */
 export function crmSaveJobsRobotLabel(productName?: string | null): string {
   const raw = String(productName || "").replace(/\s+/g, " ").trim();
-  if (!raw || /^your robot$/i.test(raw)) return "robot";
-  if (/\brobots?\b/i.test(raw)) return raw;
-  return `${raw} robot`;
+  if (!raw || /^your robot$/i.test(raw)) return "";
+  return raw;
 }
 
 export function crmSaveJobsBlurb(productName?: string | null): string {
-  return (
-    `Save jobs for your ${crmSaveJobsRobotLabel(productName)}. ` +
-    "Then apply to each job. Employers prefer PoCs but this is optional. " +
-    "We discover real jobs for your robot and help you connect with real decision makers."
-  );
+  const who = crmSaveJobsRobotLabel(productName);
+  return who
+    ? `These are the jobs you kept for ${who}.`
+    : "These are the jobs you kept.";
+}
+
+export function crmEmptyDeskHint(productName?: string | null): string {
+  const who = crmSaveJobsRobotLabel(productName);
+  return who
+    ? `Nothing saved yet for ${who}. Go back to jobs and keep the ones you want.`
+    : "Nothing saved yet. Go back to jobs and keep the ones you want.";
+}
+
+export function crmOfferBlurb(productName?: string | null): string {
+  const who = crmSaveJobsRobotLabel(productName);
+  return who
+    ? `Here's the offer for ${who}. Pick the model and say what you'll charge.`
+    : "Pick the model and say what you'll charge. Then we take it to the employer.";
 }
 
 export const CRM_INSPECT_HINT = crmSaveJobsBlurb();
 export const CRM_SIGNUP_NEXT_CTA = "Sign up to open CRM →";
 export const CRM_WALL_LEAD =
-  "Save these jobs to your CRM. Sign up to open the desk. You can still go back to Job Cards or FIND without an account.";
+  "Sign up to keep these jobs on your desk. You can still go back without an account.";
 export const CRM_LEAVE_HINT =
-  "Place this job stays on this desk. Next is Job Cards if you have a submission, or FIND for another robot.";
-export const CRM_EMPTY_FIND_HINT =
-  "No jobs on this desk. CRM only lists jobs you checked on Available jobs. If you unchecked every row — or we had no jobs for this robot — the desk stays empty.";
+  "You apply from here. Go back to the jobs we found, or start over with another robot.";
+export const CRM_EMPTY_FIND_HINT = crmEmptyDeskHint();
 export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT = crmSaveJobsBlurb();
 export const CRM_HOW_TO_STEPS = [
-  "Sign in to save the jobs you checked. Then apply from this desk.",
-  "Save jobs for your robot. Then apply to each job. Employers prefer PoCs but this is optional.",
-  "Follow up after apply. Export if you must; native CRM is the default.",
+  "Sign in so the jobs you kept stay here.",
+  "Open a job and apply. Proof of concept helps. Skip it if you don't have one.",
+  "After you apply, we follow up. Export if you already use another CRM.",
 ] as const;
 export const CRM_SUBHEAD_CLASS =
   "mt-2 max-w-2xl text-lg leading-relaxed text-slate-200 sm:text-xl";
@@ -842,9 +855,9 @@ export const PIPELINE_JOBS_AUTOMATE_STEPS = [
 export const CRM_WATCH_OPT_IN_LABEL =
   "Email me when these jobs change or we find new work for my robot.";
 export const CRM_WATCH_FREE_HINT =
-  "Free watches 1 robot and sends 2 alerts so you feel the loop. Pro keeps every SKU on the cron.";
+  "Free watches one robot and sends two alerts. Pro watches every SKU.";
 export const CRM_WATCH_SIGNED_OUT =
-  "Sign in to opt in. We will watch the robot URL you ran on Jobs.";
+  "Sign in to opt in. We watch the robot URL you ran on Jobs.";
 export const CRM_HEADLINE_CLASS =
   "font-display text-3xl font-bold tracking-tight text-emerald-400 sm:text-4xl";
 export const PIPELINE_PAGE_HEADLINE = "Pipeline";
@@ -907,15 +920,15 @@ export function jobsListHint(opts: {
   productName: string;
 }): string {
   if (opts.robotCount > 1) {
-    return "One sample job per robot. Sample rows start checked — checking dumps the row into CRM. Run each robot by itself for five jobs, then Open CRM.";
+    return "One sample job per robot. Rows start checked. Run each robot by itself for five jobs, then Open CRM.";
   }
-  return `Five example jobs ${opts.productName} can do. Each row names the policy layer and typical training time — expand for the placement steps. Rows start checked. Uncheck any you do not want, then Open CRM.`;
+  return `Five example jobs ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM.`;
 }
 
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
 export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
-  "Checking a job sends it to CRM. Open CRM is step 03. Sign in to save the desk, then apply and follow up.";
+  "Check a job to keep it. Open CRM to save the list, then apply.";
 export const JOBS_KEEP_LABEL = "Keep";
 export const JOBS_SKIP_LABEL = "Skip";
 
@@ -1012,8 +1025,8 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = JOBS_SAVE_TO_CRM_CTA;
 export const JOBS_NEXT_HINT =
-  "Uncheck a row to skip it. Open CRM is step 03. Sign in to save the desk, then apply.";
-export const JOBS_SEE_JOBS_CTA = "See jobs →";
+  "Uncheck a row to skip it. Open CRM to save the list, then apply.";
+export const JOBS_SEE_JOBS_CTA = "Here are the jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
 
@@ -1267,7 +1280,7 @@ export function crmDeskJobKeys<T extends { job_key: string }>(jobs: T[]): string
   return jobs.map(job => job.job_key).filter(Boolean);
 }
 
-/** Keep every collected job. Acting on one job must not clear the rest. */
+/** Keep every job on the desk. Acting on one job must not clear the rest. */
 export function crmSelectAllKeys(poolKeys: string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -1332,7 +1345,7 @@ export function crmCollectedCountLabel(
   cap = CRM_UNLOCKED_JOBS,
 ): string {
   const n = Math.min(Math.max(0, collected), cap);
-  return `${n} of ${cap} saved jobs`;
+  return `${n} of ${cap} kept`;
 }
 
 export function defaultCheckedJobKeys<T extends { job_key: string }>(
@@ -1351,8 +1364,8 @@ export function defaultCheckedKeysForLineup<T extends { job_key: string }>(
 export const RAIL_STEP_HINT = {
   find: FIND_JOBS_HOME_SUBHEAD,
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
-  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked into CRM. Several robots show one each — run each SKU by itself, then Open CRM.",
-  pipeline: "CRM is step 03: save the jobs you checked, then apply to each job.",
+  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each. Run each SKU by itself, then Open CRM.",
+  pipeline: "The jobs you kept live here. Open one and apply.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */
@@ -1457,12 +1470,12 @@ export function jobsCrmLeaveLabel(opts: {
   submissionId?: number | null;
   jobCount?: number | null;
 } = {}): string {
-  return jobsCrmHasRestore(opts) ? JOBS_SEE_JOBS_CTA : FIND_JOBS_CTA;
+  return jobsCrmHasRestore(opts) ? CRM_BACK_TO_JOBS_CTA : FIND_JOBS_CTA;
 }
 
 /**
  * Desk / wall next step. Unsigned always hits the signup wall.
- * Signed-in next leaves the desk — Place stays inside an opened egg.
+ * Signed-in next leaves the desk. Place stays inside an opened job.
  */
 export function jobsCrmNextHref(
   signedIn: boolean,

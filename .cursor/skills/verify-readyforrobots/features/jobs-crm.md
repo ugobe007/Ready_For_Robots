@@ -1,12 +1,12 @@
 # Jobs CRM
 
-Step 03 is **CRM**. Checking a job on step 02 dumps it into this desk. Kept Job Cards land on `/pipeline?src=jobs_activate` (5 on free) as a **collected listing**. Expand to inspect, then Place this job (quote the rental) when ready. It is not the SIGNAL buyer pipeline and not an OEM shortlist.
+Step 03 is **CRM**. Checking a job on step 02 dumps it into this desk. Kept Job Cards land on `/pipeline?src=jobs_activate` (5 on free) as **jobs you kept**. Expand to inspect, then Place this job (quote the rental) when ready. It is not the SIGNAL buyer pipeline and not an OEM shortlist.
 
 ## Sub-features
 
 - `crm-activate` Open CRM from the job list uses `jobsCrmOpenHref`. Signed-out users hit `/signup?next=/pipeline?src=jobs_activate`.
-- `crm-unlock` free users see 5 unlocked jobs from the handoff after signup (checks dump live). One keep prompt: Keep N jobs? Confirmation: Yes, keep them.
-- `crm-place` Headline **CRM**. Process bar 03 current. Default view is the expandable listing. Place / pack / quote is the second beat on an opened egg. Quote lock needs a user-entered monthly rental. PoC is preferred and skippable.
+- `crm-unlock` free users see 5 unlocked jobs from the handoff after signup (checks dump live). Status bar: N jobs saved. Do not require Keep N jobs? / Yes, keep them.
+- `crm-place` Headline **CRM**. Process bar 03 current. Default view is the expandable listing. Place / pack / quote is the second beat on an opened job. Quote lock needs a user-entered monthly rental. PoC is preferred and skippable.
 - `crm-auth` signed-out users cannot use the desk; a direct `/pipeline?src=jobs_activate` hit redirects through signup.
 - `crm-pstack` release gate, not desk chrome. Matcher owns the jobs. Signup wall stays. Do not render JOBS AGENT PROTOCOL on the CRM desk.
 
@@ -25,7 +25,7 @@ Preconditions:
 - Unlocked job list requires a Jobs handoff snapshot. Without jobs in the snapshot, report `verified-unreachable` — do not pass via SIGNAL `/pipeline`.
 
 - **URL.** `python3 scripts/agent_verify.py drive --feature jobs-crm --evidence "$EVIDENCE"`. Homepage JS contains `jobs_activate` and `/pipeline`.
-- **Session path (browser).** Open `/pipeline?src=jobs_activate` with a handoff. Headline **CRM**. Process bar 03 current. Listing of collected jobs (not a forced single-job form). Employer names emerald. Keep N jobs? then Yes, keep them, then Apply (`next=offer#jobs-next-steps`). Expand inspects employer / workplace / work. Place is the second beat. No Hermes OEM list. No SIGNAL buyer feed.
+- **Session path (browser).** Open `/pipeline?src=jobs_activate` with a handoff. Headline **CRM**. Process bar 03 current. Listing of jobs they kept (not a forced single-job form). Employer names emerald. Copy names the robot when known (“These are the jobs you kept for TUG.”). Apply (`next=offer#jobs-next-steps`). Expand inspects employer / workplace / work. Place is the second beat. No Hermes OEM list. No SIGNAL buyer feed. No JOBS AGENT PROTOCOL.
 - **Unsigned.** Direct desk URL still redirects through signup. Do not treat the wall as 5 placed jobs.
 - **Proof.** `drive-jobs-crm.json`.
 

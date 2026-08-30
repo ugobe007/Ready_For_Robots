@@ -1,13 +1,11 @@
 /**
- * Step 03 CRM desk — collected Job Cards from step 02.
- * Hunt on FIND, collect here, enjoy Place this job when ready.
+ * Jobs CRM desk. Jobs the OEM kept, then apply from here.
  * Not SIGNAL buyers. Not robot OEM shortlists.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import {
   CRM_EMPLOYER_NAME_CLASS,
-  CRM_EMPTY_FIND_HINT,
   CRM_LEAVE_HINT,
   CRM_LISTING_EYEBROW,
   CRM_SIGNUP_NEXT_CTA,
@@ -16,6 +14,7 @@ import {
   JOBS_EYEBROW_CLASS,
   JOBS_KEEP_LABEL,
   crmCollectedCountLabel,
+  crmEmptyDeskHint,
   crmSaveJobsBlurb,
   crmDeskJobKeys,
   crmSelectAllKeys,
@@ -235,7 +234,6 @@ export default function JobsCrmDesk({
     return (
       <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
         <div className="mb-6">{process}</div>
-        <p className={`${eyebrow} text-emerald-400`}>Step 03 · CRM</p>
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
           CRM
         </h1>
@@ -268,12 +266,11 @@ export default function JobsCrmDesk({
     <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
       <div className="mb-6">{process}</div>
 
-      <p className={`${eyebrow} text-emerald-400`}>Step 03 · CRM</p>
       <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
         CRM
       </h1>
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
-        {crmSaveJobsBlurb(product)}
+        {jobs.length === 0 ? crmEmptyDeskHint(product) : crmSaveJobsBlurb(product)}
       </p>
       {jobs.length > 0 ? (
         <p className="mt-3 font-mono text-sm uppercase tracking-[0.08em] text-emerald-300">
@@ -292,13 +289,11 @@ export default function JobsCrmDesk({
           signedIn={signedIn}
           submissionId={submissionId}
           onApplyClick={openOfferForm}
-          blurb={crmSaveJobsBlurb(product)}
         />
       </div>
 
       {jobs.length === 0 ? (
         <p className="mt-6 border border-slate-600 bg-[#081126] px-4 py-4 text-sm text-slate-300">
-          {CRM_EMPTY_FIND_HINT}{" "}
           <a
             href={leaveHref}
             onClick={
@@ -344,7 +339,7 @@ export default function JobsCrmDesk({
               Sign in to store this offer on your account, then apply.
             </p>
           ) : null}
-          <ul className="space-y-3" aria-label="Saved jobs">
+          <ul className="space-y-3" aria-label={CRM_LISTING_EYEBROW}>
             {jobs.map((job, i) => {
               const card = robotJobCardFromMatch(job);
               const rec = loadJobApplyRecord(job.job_key);
@@ -376,7 +371,7 @@ export default function JobsCrmDesk({
                             ),
                           )
                         }
-                        aria-label={`${JOBS_KEEP_LABEL} ${card.jobTitle} in the basket`}
+                        aria-label={`${JOBS_KEEP_LABEL} ${card.jobTitle}`}
                         className="h-5 w-5 accent-emerald-400"
                       />
                       <span
@@ -458,7 +453,6 @@ export default function JobsCrmDesk({
         aria-label="CRM next"
         className="mt-8 border border-emerald-400/40 bg-[#0b162f] px-4 py-5 sm:px-6"
       >
-        <p className={`${eyebrow} text-emerald-400`}>Next</p>
         <p className="mt-2 max-w-3xl text-base leading-relaxed text-slate-200">
           {CRM_LEAVE_HINT}
         </p>
@@ -487,7 +481,7 @@ function CollectedJobInspect({ job }: { job: MatchJob }) {
   const card = robotJobCardFromMatch(job);
   return (
     <div>
-      <p className={`${eyebrow} text-slate-400`}>This saved job</p>
+      <p className={`${eyebrow} text-slate-400`}>This job</p>
       <dl className="mt-3 grid gap-2 text-[13px] leading-snug text-slate-200">
         <div>
           <dt className={eyebrow}>Employer</dt>
@@ -854,7 +848,7 @@ function PipelineActivity({
   if (events.length === 0) return null;
   return (
     <div className="mt-8 border-t border-slate-700 pt-5">
-      <p className={`${eyebrow} text-slate-400`}>Pipeline activity</p>
+      <p className={`${eyebrow} text-slate-400`}>What we did</p>
       <ul className="mt-2 space-y-1.5">
         {events.map((event, i) => (
           <li
