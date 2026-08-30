@@ -68,7 +68,7 @@ Available jobs.
 Open CRM — 5 unlocked Job Cards (free). Place this job is the money action.
 ```
 
-Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **One robot → five jobs, each tagged `Job ##### is for {SKU}`.** Several robots → one tagged sample each, plus **Run one robot for 5 jobs**. Checkboxes dump into CRM; **Open CRM →** in the process bar. FIND is **Start jobs →**. Open CRM hits the signup wall; after auth the desk on `/pipeline?src=jobs_activate` shows 5 unlocked jobs (free). The document scrolls. Do not put the list CTA on the card. Do not insert a Place buyer/outreach screen. Do not mix unlabeled jobs across a lineup.
+Step 2 is the jobs list: expand/inspect (why / unknowns / blockers). **One robot → five jobs, each tagged `Job ##### is for {SKU}`.** Several robots → one tagged sample each, plus **Run one robot for 5 jobs**. Checkboxes dump into CRM; **Open CRM →** in the process bar. FIND is **Find jobs →**. Open CRM hits the signup wall; after auth the desk on `/pipeline?src=jobs_activate` shows 5 unlocked jobs (free). The document scrolls. Do not put the list CTA on the card. Do not insert a Place buyer/outreach screen. Do not mix unlabeled jobs across a lineup.
 
 Everything underneath exists to make those interactions trustworthy.
 

@@ -28,6 +28,28 @@ def test_canaries_are_jobs_not_signal():
     assert STALE_JS.startswith("/assets/index-")
 
 
+def test_find_jobs_cta_is_checkout_copy_not_live_lag():
+    from scripts.agent_verify import FIND_JOBS_CTA, jobs_chrome_hits, repo_find_jobs_cta_ok
+
+    assert FIND_JOBS_CTA == "Find jobs →"
+    assert repo_find_jobs_cta_ok()
+    workflow = Path("readyforrobots-new/client/src/lib/jobsWorkflow.ts").read_text(
+        encoding="utf-8"
+    )
+    assert 'JOBS_APPLY_HERO_CTA = "Apply to jobs →"' in workflow
+    live_lag = (
+        f"{FIND_HEADLINE} {JOBS_ACTIVATE} Show us your robot Available jobs "
+        "Start jobs →"
+    )
+    hits = jobs_chrome_hits(live_lag)
+    assert hits["find_jobs_live"] is True
+    assert hits["find_jobs_source"] is True
+    assert all(hits.values()), hits
+    stale_src = 'export const FIND_JOBS_CTA = "Start jobs →";\n'
+    stale = jobs_chrome_hits(live_lag, source=stale_src)
+    assert stale["find_jobs_source"] is False
+
+
 def test_pstack_release_script_exists():
     from scripts.pstack_release import run_pstack_release
 

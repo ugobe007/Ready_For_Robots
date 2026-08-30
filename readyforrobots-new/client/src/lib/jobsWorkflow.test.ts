@@ -201,7 +201,9 @@ describe("jobsWorkflow", () => {
     expect(jobsProcessStepFromStage("jobs")).toBe("jobs");
     expect(jobsProcessStepFromStage("portfolio")).toBe("jobs");
     expect(jobsProcessActionLabel("find")).toBe(FIND_JOBS_CTA);
+    expect(jobsProcessActionLabel("find")).toBe("Find jobs →");
     expect(jobsProcessActionLabel("find")).not.toMatch(/Apply/i);
+    expect(jobsProcessActionLabel("find")).not.toMatch(/Start /i);
     expect(FIND_JOBS_HOME_HEADLINE).toBe("Find Jobs for Robots.");
     expect(FIND_JOBS_HOME_HEADLINE).not.toMatch(/Apply/i);
     expect(jobsProcessActionLabel("jobs")).toBe(JOBS_APPLY_HERO_CTA);
@@ -773,7 +775,7 @@ describe("jobsWorkflow", () => {
     expect(header).toMatch(/onJobsFreshHomeClick/);
     expect(header).toMatch(/jobsFreshHomeHref/);
     expect(jobsFreshHomeHref()).toBe("/?new=1");
-    expect(FIND_JOBS_CTA).toBe("Start jobs →");
+    expect(FIND_JOBS_CTA).toBe("Find jobs →");
     expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
     expect(FIND_JOBS_HOME_HEADLINE).toBe("Find Jobs for Robots.");
     expect(FIND_JOBS_HOME_SUBHEAD).toBe(
@@ -823,7 +825,8 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/rfr-jobs-process-action/);
     expect(workspace).toMatch(/function JobsActivateBar/);
     expect(workspace).toMatch(/function startJobs/);
-    expect(workspace).toMatch(/Start jobs for all/);
+    expect(workspace).toMatch(/Find jobs for all/);
+    expect(workspace).not.toMatch(/Start jobs/);
     expect(workspace).toMatch(/const researching = stage === "research"/);
     expect(workspace).not.toMatch(/03 Live list/);
     expect(workspace).not.toMatch(/onNext=\{\(\) => onNext\(job\)\}/);
@@ -1428,8 +1431,9 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/lineupJobLookups/);
     expect(workspace).toMatch(/lookupGrain: "robot_type"/);
     expect(workspace).toMatch(/lineupSegments/);
-    expect(workspace).toMatch(/Start jobs for \{seg\.title\}/);
-    expect(workspace).toMatch(/Start jobs for all/);
+    expect(workspace).toMatch(/Find jobs for \{seg\.title\}/);
+    expect(workspace).toMatch(/Find jobs for all/);
+    expect(workspace).not.toMatch(/Start jobs/);
     expect(workspace).not.toMatch(/List all \$\{products\.length\} robots/);
   });
 

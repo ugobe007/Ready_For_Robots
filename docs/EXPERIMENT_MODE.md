@@ -54,7 +54,7 @@ The picker already decides one vs several. **One robot → jobs for that robot o
 
 **Do not hop Jobs traffic onto SIGNAL buyers or a Place outreach dump.** Next uses `src=jobs_activate` on `/pipeline` so the destination is the CRM desk with 5 unlocked job opportunities, not a SIGNAL lead feed. Wordmark / Jobs nav is `/?new=1` so a click returns to empty FIND.
 
-Step 2 inspects. Checkboxes dump rows into CRM. **Start jobs →** (FIND) and **Open CRM →** (job list) sit in the process bar, at the top of the job list, and in the page footer — not only under the tape or under the cards. The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
+Step 2 inspects. Checkboxes dump rows into CRM. **Find jobs →** (FIND) and **Open CRM →** (job list) sit in the process bar, at the top of the job list, and in the page footer — not only under the tape or under the cards. The document scrolls. No Next on the card. No Place buyer screen. No Qualify loop back to jobs.
 
 ---
 
@@ -64,12 +64,12 @@ Jobs is a **three-step process on a normal web page**. It is not a viewport-lock
 
 ```
 Site header (Jobs / About / Sign in). Pipeline is SIGNAL-only.
-Process bar — 01 robot → 02 jobs → 03 CRM + Start jobs / Open CRM
+Process bar — 01 robot → 02 jobs → 03 CRM + Find jobs / Open CRM
 Content (two columns are layout, not a clipping box)
 Process bar repeated at the bottom of the page
 ```
 
-Jobs chrome and Jobs CRM (`src=jobs_activate` on `/pipeline`) do not show SIGNAL Pipeline nav. Header CRM on those pages is `/pipeline?src=jobs_activate` (visible signed-out too), not bare `/crm`. SIGNAL `/pipeline` and `/crm` without a Jobs `src` still show Pipeline. Jobs footer and the Signal FAB match the header: no SIGNAL on `/`, About, Jobs CRM, or Jobs signup/login. About (`/intelligence`) body is the Jobs loop — Start jobs on `/?new=1`, signup `src=jobs_activate` — not a second product hop.
+Jobs chrome and Jobs CRM (`src=jobs_activate` on `/pipeline`) do not show SIGNAL Pipeline nav. Header CRM on those pages is `/pipeline?src=jobs_activate` (visible signed-out too), not bare `/crm`. SIGNAL `/pipeline` and `/crm` without a Jobs `src` still show Pipeline. Jobs footer and the Signal FAB match the header: no SIGNAL on `/`, About, Jobs CRM, or Jobs signup/login. About (`/intelligence`) body is the Jobs loop — Find jobs on `/?new=1`, signup `src=jobs_activate` — not a second product hop.
 
 **Do not** set `100vh` + `overflow: hidden` on the Jobs workspace. Chrome then cannot scroll below the fold, so step 03 sits in a cut-off box. Pinning Activate inside that box is a patch, not a fix.
 

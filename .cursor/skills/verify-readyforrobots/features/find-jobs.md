@@ -13,7 +13,7 @@ Find jobs lets an OEM or distributor paste a robot product URL on `/` and see na
 
 - Open `https://readyforrobots.com/` (or `/?new=1` for a fresh FIND).
 - Click Jobs in the Jobs header (returns to empty FIND).
-- Click Start jobs → on About (`/intelligence`).
+- Click Find jobs → on About (`/intelligence`).
 - Submit the FIND form labeled `Find jobs for your robot`.
 
 ## Driving it with verify-readyforrobots
