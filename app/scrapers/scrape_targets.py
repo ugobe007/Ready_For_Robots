@@ -168,6 +168,43 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         industries=["Food Service"],
         signal_types=["strategic_hire"],
     ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=line+cook+make+line+bowl+assembly+grill+qsr&l=United+States&sort=date",
+        label="Indeed - QSR / make-line / bowl assembly cooks (volume hiring)",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service"],
+        signal_types=["robot_job"],
+        notes="Make-line and bowl assembly = food_prep FIND class, not hotel hospitality",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=prep+cook+fast+casual+kitchen+automation+grill&l=United+States&sort=date",
+        label="Indeed - Fast-casual prep cook / kitchen automation",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service"],
+        signal_types=["robot_job"],
+        notes="Prep cook and kitchen automation operational roles — not VP of Culinary",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=grill+cook+ingredient+dosing+tortilla+assembly+line+kitchen&l=United+States&sort=date",
+        label="Indeed - Grill / tortilla / ingredient-dosing kitchen line",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=line+cook+make+line+qsr+bowl+assembly+grill&l=United+States",
+        label="SimplyHired - QSR make-line / bowl assembly cooks",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=prep+cook+kitchen+automation+fast+casual+grill&l=United+States",
+        label="SimplyHired - Kitchen automation / fast-casual prep cooks",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service"],
+        signal_types=["robot_job"],
+    ),
 
     # === HEALTHCARE: non-clinical labor pain ===
     ScrapeTarget(

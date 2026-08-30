@@ -73,8 +73,9 @@ def test_lookup_class_keeps_sku_classes_off_parent_tiles():
     assert "logistics" in FIND_TILE_CLASSES
     assert "factory" in FIND_TILE_CLASSES
     assert "hospitality" in FIND_TILE_CLASSES
-    assert "food_prep" not in FIND_TILE_CLASSES
+    assert "food_prep" in FIND_TILE_CLASSES
     assert lookup_class_id("hotel") == "hospitality"
+    assert lookup_class_id("food_prep") == "food_prep"
     assert lookup_class_id("agricultural_robot") not in FIND_TILE_CLASSES
     assert lookup_class_id("construction_robot") not in FIND_TILE_CLASSES
 

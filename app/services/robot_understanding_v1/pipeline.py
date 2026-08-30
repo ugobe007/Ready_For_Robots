@@ -384,6 +384,7 @@ def build_robot_profile(
                 "hospitality",
                 "hospitality_robot",
                 "hotel_robot",
+                "food_prep",
                 "agriculture",
                 "agricultural_robot",
                 "construction",

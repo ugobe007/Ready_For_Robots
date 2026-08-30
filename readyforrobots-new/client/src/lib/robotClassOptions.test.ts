@@ -24,18 +24,19 @@ const EXPECTED_IDS = [
   "construction",
   "healthcare",
   "mining",
-  "warehouse",
-  "logistics",
-  "factory",
-  "hospitality",
+    "warehouse",
+    "logistics",
+    "factory",
+    "hospitality",
+    "food_prep",
 ] as const;
 
 describe("robot class picker options", () => {
   it("renders work-domain tiles with a one-line work hint", () => {
-    expect(DEFAULT_CLASS_OPTIONS).toHaveLength(17);
+    expect(DEFAULT_CLASS_OPTIONS).toHaveLength(18);
     expect(CLASS_OPTION_IDS).toEqual([...EXPECTED_IDS]);
     expect(CLASS_OPTION_IDS).not.toContain("medical");
-    expect(CLASS_OPTION_IDS).not.toContain("food_prep");
+    expect(CLASS_OPTION_IDS).toContain("food_prep");
     expect(CLASS_OPTION_IDS).not.toContain("hotel");
     for (const row of DEFAULT_CLASS_OPTIONS) {
       expect(row.label.trim().length).toBeGreaterThan(2);
@@ -78,18 +79,21 @@ describe("robot class picker options", () => {
     expect(byId.factory.label).toBe("Factory");
     expect(byId.factory.hint).toMatch(/machine tend|cnc|assembly/i);
     expect(byId.hospitality.label).toBe("Hospitality");
-    expect(byId.hospitality.hint).toMatch(/hotel|guest|serving/i);
+    expect(byId.hospitality.hint).toMatch(/hotel|guest|serving|housekeep/i);
+    expect(byId.hospitality.hint).not.toMatch(/food prep|make-line|qsr/i);
+    expect(byId.food_prep.label).toBe("Food prep");
+    expect(byId.food_prep.hint).toMatch(/make-line|bowl|grill|kitchen/i);
   });
 
-  it("falls back to the seventeen tiles when the API sends none", () => {
-    expect(classOptionsOrDefault(undefined)).toHaveLength(17);
+  it("falls back to the eighteen tiles when the API sends none", () => {
+    expect(classOptionsOrDefault(undefined)).toHaveLength(18);
     expect(classOptionsOrDefault([])).toEqual(DEFAULT_CLASS_OPTIONS);
     expect(classOptionsOrDefault([{ id: "agriculture", label: "Ag", hint: "Field" }])).toEqual([
       { id: "agriculture", label: "Ag", hint: "Field" },
     ]);
   });
 
-  it("wires the picker and workspace fallback to the same 17 ids", () => {
+  it("wires the picker and workspace fallback to the same 18 ids", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",

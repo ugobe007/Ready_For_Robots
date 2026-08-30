@@ -35,6 +35,25 @@ def test_job_board_urls_prefer_robot_job_targets():
         assert urls.index(simplyhired[0]) < urls.index(vp[0])
 
 
+def test_food_service_urls_include_qsr_make_line_not_only_vp():
+    urls = job_board_urls(industry="Food Service")
+    blob = " ".join(urls).lower()
+    assert "make+line" in blob or "make%20line" in blob or "qsr" in blob
+    assert "bowl" in blob or "kitchen+automation" in blob or "prep+cook" in blob
+    vp = [u for u in urls if "VP+Director" in u or "Chief+Operating+Officer" in u]
+    operational = [
+        u
+        for u in urls
+        if any(
+            bit in u.lower()
+            for bit in ("make+line", "qsr", "prep+cook", "kitchen+automation", "bowl")
+        )
+    ]
+    assert operational, urls
+    if vp:
+        assert urls.index(operational[0]) < urls.index(vp[0])
+
+
 def test_scheduled_rotation_covers_core_verticals(monkeypatch):
     monkeypatch.delenv("JOB_BOARD_INDUSTRIES", raising=False)
     industries = scheduled_industries()

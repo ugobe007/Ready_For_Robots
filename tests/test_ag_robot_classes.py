@@ -19,7 +19,7 @@ from app.services.vendor_robot_lookup import (
 
 def test_ten_class_options_include_work_domain_tiles():
     ids = [row["id"] for row in public_class_options()]
-    assert len(ids) == 17
+    assert len(ids) == 18
     assert ids[:6] == [
         "humanoid",
         "amr",
@@ -40,6 +40,7 @@ def test_ten_class_options_include_work_domain_tiles():
         "logistics",
         "factory",
         "hospitality",
+        "food_prep",
     ]
 
 

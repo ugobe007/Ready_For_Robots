@@ -372,7 +372,7 @@
     {
       "id": "hospitality",
       "find_class": "hospitality",
-      "verticals": ["hospitality", "restaurant"],
+      "verticals": ["hospitality"],
       "claim_predicate": "claims_hospitality",
       "capability": "hospitality_task",
       "product_classes": ["hospitality", "hospitality_robot", "hotel_robot"],
@@ -382,13 +382,11 @@
         "hotel",
         "hotel_robot",
         "serving",
-        "food_prep",
-        "food prep",
         "table_service",
         "guest_delivery"
       ],
       "outranks_morphology": ["humanoid", "semi-humanoid", "biped", "bipedal"],
-      "task_model_ids": ["hotel_guest_service_policy", "hospitality_kitchen_policy"],
+      "task_model_ids": ["hotel_guest_service_policy"],
       "class_signals": [
         "hospitality",
         "guest room",
@@ -412,15 +410,33 @@
     },
     {
       "id": "food_prep",
-      "find_class": null,
+      "find_class": "food_prep",
       "verticals": ["restaurant"],
       "claim_predicate": "claims_food_prep",
       "capability": "food_prep",
-      "product_classes": [],
-      "aliases": ["food_prep", "food prep"],
-      "outranks_morphology": ["humanoid", "semi-humanoid"],
+      "product_classes": ["food_prep"],
+      "aliases": [
+        "food_prep",
+        "food prep",
+        "qsr",
+        "fast casual",
+        "kitchen automation",
+        "make line",
+        "bowl assembly"
+      ],
+      "outranks_morphology": ["humanoid", "semi-humanoid", "biped", "bipedal"],
       "task_model_ids": ["food_prep_station_policy", "hospitality_kitchen_policy"],
-      "class_signals": ["food prep", "fry station", "fryer", "grill line"],
+      "class_signals": [
+        "food prep",
+        "fry station",
+        "fryer",
+        "grill line",
+        "make line",
+        "bowl assembly",
+        "qsr",
+        "fast casual",
+        "kitchen automation"
+      ],
       "work_words": [
         "food prep",
         "food preparation",
@@ -430,6 +446,14 @@
         "grill line",
         "cooking",
         "make line",
+        "bowl assembly",
+        "prep cook",
+        "qsr",
+        "fast casual",
+        "kitchen automation",
+        "ingredient dosing",
+        "tortilla",
+        "assembly line kitchen",
         "saute",
         "kitchen station"
       ]

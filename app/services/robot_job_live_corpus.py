@@ -101,6 +101,7 @@ def tape_family_for_live_job(
         "warehouse": "warehouse",
         "logistics": "logistics",
         "factory": "factory",
+        "food_prep": "food_prep",
     }.get(cls)
 
 

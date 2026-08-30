@@ -93,7 +93,7 @@ export const HEALTHCARE_CLASS_FIXTURE = {
   emptyCopy: "No healthcare jobs for this robot yet.",
   forbidClass: "humanoid",
   forbidEmpty: "No humanoid jobs for this robot yet.",
-  extraTiles: ["mining", "warehouse", "logistics", "factory", "hospitality"],
+    extraTiles: ["mining", "warehouse", "logistics", "factory", "hospitality", "food_prep"],
 } as const;
 
 /** Critic fixture: Diligent/Moxi is healthcare, Healthcare tile exists, empty copy is not humanoid. */
@@ -114,8 +114,8 @@ export function diligentMustNotBeHumanoidEmpty(): boolean {
     cls !== HEALTHCARE_CLASS_FIXTURE.forbidClass &&
     CLASS_OPTION_IDS.includes("healthcare") &&
     hasNewTiles &&
-    CLASS_OPTION_IDS.length === 17 &&
-    !CLASS_OPTION_IDS.includes("food_prep") &&
+    CLASS_OPTION_IDS.length === 18 &&
+    CLASS_OPTION_IDS.includes("food_prep") &&
     !CLASS_OPTION_IDS.includes("medical") &&
     empty === HEALTHCARE_CLASS_FIXTURE.emptyCopy &&
     !empty.toLowerCase().includes("humanoid") &&
