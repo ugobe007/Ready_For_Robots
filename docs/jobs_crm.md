@@ -173,7 +173,7 @@ Hunt on FIND. Keep jobs on the CRM listing. Apply when the user is ready.
 | Activity on each job (“Kept from FIND”, “Opened CRM”, “Placed”) | A second product (SIGNAL) pretending to be CRM |
 | Place this job on an opened job, after peruse | Rename the process step to Place and hide CRM |
 | Honest “employers prefer proof of concept”; skip is allowed | Block quote lock / Place because PoC is empty |
-| Spoken recruiter copy that names the robot (“These are the jobs you kept for TUG.”) | Protocol, pstack, egg/collect, “we discover real jobs… real decision makers,” JOBS AGENT PROTOCOL |
+| Spoken recruiter copy that names the robot (`Jobs for TUG`) | Protocol, pstack, egg/collect, “we discover real jobs… real decision makers,” JOBS AGENT PROTOCOL |
 | Signup copy: keep these jobs on your desk | Signup copy: unlock HOT buyers / Cal / analytics |
 | Export as a quiet action | Force HubSpot as the only way to keep jobs |
 | Header CRM visible on Jobs chrome; click hits the wall if signed out | Hide CRM until after signup (users will not find the desk) |

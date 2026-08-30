@@ -807,9 +807,7 @@ export function crmSaveJobsRobotLabel(productName?: string | null): string {
 
 export function crmSaveJobsBlurb(productName?: string | null): string {
   const who = crmSaveJobsRobotLabel(productName);
-  return who
-    ? `These are the jobs you kept for ${who}.`
-    : "These are the jobs you kept.";
+  return `Jobs for ${who || "your robot"}`;
 }
 
 export function crmEmptyDeskHint(productName?: string | null): string {
@@ -1014,7 +1012,7 @@ export function showJobsSiteChrome(opts: {
 }
 
 export const FIND_JOBS_CTA = "Start jobs →";
-/** Hero-level apply on FIND / process bar. Violet, not neon green. */
+/** Apply on the desk and Job Cards. Violet, not neon green. Not the FIND hero. */
 export const JOBS_APPLY_HERO_CTA = "Apply to jobs →";
 export const JOBS_FIND_CTA_CLASS =
   "rfr-bevel inline-flex items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300";
@@ -1022,13 +1020,13 @@ export const JOBS_APPLY_CTA_CLASS =
   "rfr-bevel rfr-jobs-apply-cta inline-flex items-center justify-center px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-white transition hover:bg-violet-700";
 export const JOBS_APPLY_CTA_BUTTON_CLASS =
   "rfr-bevel rfr-jobs-apply-cta inline-flex items-center justify-center px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-40";
-export const FIND_JOBS_HOME_HEADLINE = "Find jobs for your robot.";
+export const FIND_JOBS_HOME_HEADLINE = "Find Jobs for Robots.";
 export const FIND_JOBS_HOME_SUBHEAD =
-  "We match your robots to specific jobs and models using your URL";
+  "Enter your URL, we match your robots to available jobs.";
 export const FIND_JOBS_HEADLINE_CLASS =
   "rfr-find-headline mt-1 text-slate-100";
 export const FIND_JOBS_SUBHEAD_CLASS =
-  "mt-4 max-w-3xl text-lg leading-snug text-slate-300 sm:text-xl";
+  "mt-4 max-w-3xl text-xl leading-snug text-slate-300 sm:text-2xl";
 export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = JOBS_SAVE_TO_CRM_CTA;
@@ -1065,7 +1063,7 @@ export function jobsProcessStepFromStage(stage: string): JobsProcessStepId {
   return "find";
 }
 
-/** Page-chrome wizard button: Start jobs on FIND, Apply to jobs on the list. */
+/** Page-chrome wizard button: Start jobs on FIND. Apply stays on the desk and Job Cards. */
 export function jobsProcessActionLabel(step: JobsProcessStepId): string {
   if (step === "find") return FIND_JOBS_CTA;
   if (step === "jobs") return JOBS_APPLY_HERO_CTA;

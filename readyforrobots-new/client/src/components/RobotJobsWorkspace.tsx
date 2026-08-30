@@ -60,6 +60,7 @@ import {
   JOBS_EXAMPLE_CAP,
   FIND_JOBS_CTA,
   FIND_JOBS_HEADLINE_CLASS,
+  FIND_JOBS_HOME_HEADLINE,
   FIND_JOBS_HOME_SUBHEAD,
   FIND_JOBS_SUBHEAD_CLASS,
   JOBS_NEXT_CTA,
@@ -2203,9 +2204,7 @@ function FindRail({
         ) : researching ? (
           companyName || "Researching…"
         ) : (
-          <>
-            Find <span className="text-emerald-400">jobs</span> for your robot.
-          </>
+          FIND_JOBS_HOME_HEADLINE
         )}
       </h1>
       {stage === "find" && (

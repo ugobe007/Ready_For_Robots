@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   FIND_JOBS_CTA,
   FIND_JOBS_HEADLINE_CLASS,
+  FIND_JOBS_HOME_HEADLINE,
   FIND_JOBS_HOME_SUBHEAD,
   FIND_JOBS_SUBHEAD_CLASS,
   JOBS_APPLY_CTA_CLASS,
@@ -199,6 +200,9 @@ describe("jobsWorkflow", () => {
     expect(jobsProcessStepFromStage("jobs")).toBe("jobs");
     expect(jobsProcessStepFromStage("portfolio")).toBe("jobs");
     expect(jobsProcessActionLabel("find")).toBe(FIND_JOBS_CTA);
+    expect(jobsProcessActionLabel("find")).not.toMatch(/Apply/i);
+    expect(FIND_JOBS_HOME_HEADLINE).toBe("Find Jobs for Robots.");
+    expect(FIND_JOBS_HOME_HEADLINE).not.toMatch(/Apply/i);
     expect(jobsProcessActionLabel("jobs")).toBe(JOBS_APPLY_HERO_CTA);
     expect(jobsProcessActionClass("jobs")).toMatch(/rfr-jobs-apply-cta/);
     expect(jobsProcessActionClass("find")).not.toMatch(/rfr-jobs-apply-cta/);
@@ -770,23 +774,27 @@ describe("jobsWorkflow", () => {
     expect(jobsFreshHomeHref()).toBe("/?new=1");
     expect(FIND_JOBS_CTA).toBe("Start jobs →");
     expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
+    expect(FIND_JOBS_HOME_HEADLINE).toBe("Find Jobs for Robots.");
     expect(FIND_JOBS_HOME_SUBHEAD).toBe(
-      "We match your robots to specific jobs and models using your URL",
+      "Enter your URL, we match your robots to available jobs.",
     );
     expect(FIND_JOBS_HOME_SUBHEAD).not.toMatch(/manufacturer URL|SKU we can prove/i);
+    expect(FIND_JOBS_HOME_SUBHEAD).not.toMatch(/Apply to jobs/i);
     expect(FIND_JOBS_HEADLINE_CLASS).toMatch(/rfr-find-headline/);
     expect(FIND_JOBS_HEADLINE_CLASS).not.toMatch(/text-5xl/);
     expect(FIND_JOBS_HEADLINE_CLASS).not.toMatch(/lg:text-7xl/);
-    expect(FIND_JOBS_SUBHEAD_CLASS).toMatch(/text-lg/);
+    expect(FIND_JOBS_SUBHEAD_CLASS).toMatch(/text-xl/);
+    expect(FIND_JOBS_SUBHEAD_CLASS).toMatch(/sm:text-2xl/);
     expect(workspace).toMatch(/FIND_JOBS_HEADLINE_CLASS/);
     expect(workspace).toMatch(/rfr-find-pane/);
     const css = readFileSync(join(here, "../index.css"), "utf8");
     expect(css).toMatch(/\.rfr-find-headline/);
     expect(css).toMatch(/overflow-wrap:\s*anywhere/);
-    expect(css).toMatch(/8cqi/);
+    expect(css).toMatch(/9\.5cqi/);
     expect(css).toMatch(/container-type:\s*inline-size/);
+    expect(workspace).toMatch(/FIND_JOBS_HOME_HEADLINE/);
     expect(workspace).toMatch(/FIND_JOBS_HOME_SUBHEAD/);
-    expect(workspace).toMatch(/text-emerald-400">jobs/);
+    expect(workspace).not.toMatch(/text-emerald-400">jobs/);
     expect(workspace).not.toMatch(/Paste the manufacturer URL/);
     expect(JOBS_NEXT_CTA).toBe("Open CRM →");
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
@@ -1145,29 +1153,29 @@ describe("jobsWorkflow", () => {
     expect(CRM_EMPLOYER_NAME_CLASS).toMatch(/text-emerald-400/);
     expect(CRM_EMPLOYER_NAME_CLASS).toMatch(/font-display/);
     expect(CRM_LISTING_EYEBROW).toBe("Jobs you kept");
-    expect(crmSaveJobsBlurb("BOT#25")).toBe("These are the jobs you kept for BOT#25.");
+    expect(crmSaveJobsBlurb("BOT#25")).toBe("Jobs for BOT#25");
     expect(crmSaveJobsBlurb("BOT#25")).not.toMatch(/strawberry/i);
-    expect(crmSaveJobsBlurb("TUG")).toBe("These are the jobs you kept for TUG.");
-    expect(crmSaveJobsBlurb("Aethon")).toBe("These are the jobs you kept for Aethon.");
-    expect(crmSaveJobsBlurb("strawberry robot")).toBe(
-      "These are the jobs you kept for strawberry robot.",
-    );
-    expect(crmSaveJobsBlurb("LaserWeeder")).toBe(
-      "These are the jobs you kept for LaserWeeder.",
-    );
-    expect(crmSaveJobsBlurb("Joby eVTOL")).toBe(
-      "These are the jobs you kept for Joby eVTOL.",
-    );
-    expect(crmSaveJobsBlurb()).toBe("These are the jobs you kept.");
-    expect(crmSaveJobsBlurb("your robot")).toBe("These are the jobs you kept.");
+    expect(crmSaveJobsBlurb("TUG")).toBe("Jobs for TUG");
+    expect(crmSaveJobsBlurb("Aethon")).toBe("Jobs for Aethon");
+    expect(crmSaveJobsBlurb("Aethon TUG")).toBe("Jobs for Aethon TUG");
+    expect(crmSaveJobsBlurb("Aethon TUG")).not.toMatch(/TUG robot/i);
+    expect(crmSaveJobsBlurb("Aethon TUG")).not.toMatch(/jobs you kept/i);
+    expect(crmSaveJobsBlurb("strawberry robot")).toBe("Jobs for strawberry robot");
+    expect(crmSaveJobsBlurb("LaserWeeder")).toBe("Jobs for LaserWeeder");
+    expect(crmSaveJobsBlurb("Joby eVTOL")).toBe("Jobs for Joby eVTOL");
+    expect(crmSaveJobsBlurb()).toBe("Jobs for your robot");
+    expect(crmSaveJobsBlurb("your robot")).toBe("Jobs for your robot");
     expect(crmSaveJobsBlurb("TUG")).not.toMatch(/we discover real jobs/i);
     expect(crmSaveJobsBlurb("TUG")).not.toMatch(/real decision makers/i);
+    expect(crmSaveJobsBlurb("TUG")).not.toMatch(/These are the jobs you kept/i);
     expect(crmEmptyDeskHint()).toBe(
       "Nothing saved yet. Go back to jobs and keep the ones you want.",
     );
     expect(crmEmptyDeskHint("TUG")).toBe(
       "Nothing saved yet for TUG. Go back to jobs and keep the ones you want.",
     );
+    expect(crmEmptyDeskHint("Aethon TUG")).toMatch(/Nothing saved yet for Aethon TUG/);
+    expect(crmEmptyDeskHint("Aethon TUG")).not.toMatch(/jobs you kept/i);
     expect(crmOfferBlurb("TUG")).toMatch(/offer for TUG/i);
     expect(crmOfferBlurb()).toMatch(/what you'll charge/i);
     expect(CRM_INSPECT_HINT).toBe(crmSaveJobsBlurb());
@@ -1566,7 +1574,8 @@ describe("jobsWorkflow", () => {
     expect(JOBS_EYEBROW_CLASS).toMatch(/text-sm/);
     expect(CRM_PAGE_HEADLINE).toBe("CRM");
     expect(PIPELINE_PAGE_HEADLINE).toBe("Pipeline");
-    expect(CRM_PAGE_NEXT).toMatch(/These are the jobs you kept/i);
+    expect(CRM_PAGE_NEXT).toBe("Jobs for your robot");
+    expect(CRM_PAGE_NEXT).not.toMatch(/These are the jobs you kept/i);
     expect(CRM_PAGE_NEXT).not.toMatch(/we discover real jobs/i);
     expect(CRM_PAGE_NEXT).not.toMatch(/real decision makers/i);
     expect(CRM_PAGE_NEXT).not.toMatch(/quote the monthly rental/i);

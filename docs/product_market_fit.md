@@ -47,7 +47,7 @@ Primary ICP remains the **robot workforce side**. Employers (factories, hospital
 
 **The channel hole:** a robot can be sold into a warehouse or a hospital and still fail the work. The physical task is performed by a **task model** (internal nickname: “certificate”) — a trained policy for that job. Distributors and integrators often resell platforms and skip this cost. Qualification stays **conditional** until we know which model covers the work and where it is published.
 
-Hero copy: **Find jobs for your robot.** Subhead: **We match your robots to specific jobs and models using your URL.**
+Hero copy: **Find Jobs for Robots.** Subhead: **Enter your URL, we match your robots to available jobs.**
 
 ---
 

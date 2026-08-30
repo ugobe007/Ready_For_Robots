@@ -25,7 +25,7 @@ Preconditions:
 - Unlocked job list requires a Jobs handoff snapshot. Without jobs in the snapshot, report `verified-unreachable` — do not pass via SIGNAL `/pipeline`.
 
 - **URL.** `python3 scripts/agent_verify.py drive --feature jobs-crm --evidence "$EVIDENCE"`. Homepage JS contains `jobs_activate` and `/pipeline`.
-- **Session path (browser).** Open `/pipeline?src=jobs_activate` with a handoff. Headline **CRM**. Process bar 03 current. Listing of jobs they kept (not a forced single-job form). Employer names emerald. Copy names the robot when known (“These are the jobs you kept for TUG.”). Apply (`next=offer#jobs-next-steps`). Expand inspects employer / workplace / work. Place is the second beat. No Hermes OEM list. No SIGNAL buyer feed. No JOBS AGENT PROTOCOL.
+- **Session path (browser).** Open `/pipeline?src=jobs_activate` with a handoff. Headline **CRM**. Process bar 03 current. Listing of jobs they kept (not a forced single-job form). Employer names emerald. Copy names the robot when known (`Jobs for TUG`). Apply (`next=offer#jobs-next-steps`). Expand inspects employer / workplace / work. Place is the second beat. No Hermes OEM list. No SIGNAL buyer feed. No JOBS AGENT PROTOCOL.
 - **Unsigned.** Direct desk URL still redirects through signup. Do not treat the wall as 5 placed jobs.
 - **Proof.** `drive-jobs-crm.json`.
 
