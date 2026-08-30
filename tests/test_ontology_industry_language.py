@@ -170,3 +170,27 @@ def test_qualify_reads_ontology_healthcare_aliases():
     assert normalize_class_id("clinical") == "healthcare"
     assert normalize_class_id("hospital_robot") == "healthcare"
     assert normalize_class_id("medical") == "healthcare"
+
+
+def test_scraped_job_titles_map_to_find_classes():
+    """Same class of miss as Diligent: real industry words on job text."""
+    from app.services.robot_ontology import healthcare_ontology_work_words
+
+    words = healthcare_ontology_work_words()
+    for term in ("evs", "environmental services", "patient transport", "dietary aide"):
+        assert term in words, term
+    evs = (
+        "Hospital EVS technician. Environmental services on patient floors. "
+        "Sterile processing and dietary aide support."
+    )
+    assert find_class_from_work_language(evs) == "healthcare"
+    harvest = (
+        "Farm worker harvest worker in the orchard. Agricultural tractor operator "
+        "for vegetable row crops."
+    )
+    assert find_class_from_work_language(harvest) == "agriculture"
+    haul = (
+        "Haul truck operator on the mining bench. Underground mining haulage "
+        "from the pit to the crusher."
+    )
+    assert find_class_from_work_language(haul) == "mining"
