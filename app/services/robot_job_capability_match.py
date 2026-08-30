@@ -279,7 +279,9 @@ def match_jobs_for_profile(
         }
 
     scored: list[tuple[float, dict[str, Any], list[str]]] = []
-    for job in load_match_corpus():
+    from app.services.robot_job_live_corpus import merge_live_jobs
+
+    for job in merge_live_jobs(load_match_corpus()):
         s, notes = score_job(profile, job)
         if s >= SCORE_THRESHOLD:
             scored.append((s, job, notes))

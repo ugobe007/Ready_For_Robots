@@ -1284,7 +1284,9 @@ def match_jobs_from_profile(
     caps = derive_capabilities(profile)
     cards: list[JobMatchCard] = []
     gold = load_gold_jobs()
-    for row in load_corpus():
+    from app.services.robot_job_live_corpus import merge_live_jobs
+
+    for row in merge_live_jobs(load_corpus()):
         spec = gold.get(row.get("job_key") or "")
         if spec is None:
             spec = {

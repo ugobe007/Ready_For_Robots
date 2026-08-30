@@ -41,9 +41,27 @@ JOB_FUNCTION_BY_TITLE = (
     ("front desk", "front_desk"),
     ("houseperson", "housekeeping"),
     ("palletiz", "palletizing"),
+    ("patient transporter", "patient_transport"),
     ("patient transport", "patient_transport"),
     ("pharmacy technician", "pharmacy"),
+    ("dietary aide", "food_prep"),
     ("laundry", "laundry"),
+    ("harvest worker", "harvest"),
+    ("farm worker", "field_work"),
+    ("farm laborer", "field_work"),
+    ("tractor operator", "tractor"),
+    ("haul truck", "haulage"),
+    ("underground miner", "haulage"),
+    ("drywall", "drywall"),
+    ("framing carpenter", "framing"),
+    ("construction laborer", "construction_labor"),
+    ("bricklayer", "construction_labor"),
+    ("machine tender", "machine_tending"),
+    ("cnc operator", "machine_tending"),
+    ("cnc", "machine_tending"),
+    ("production line", "machine_tending"),
+    ("machine operator", "machine_tending"),
+    ("palletizer", "palletizing"),
 )
 
 WAGE_HOUR_RE = re.compile(
@@ -201,6 +219,93 @@ def extract_robot_job(
         "unknowns": unknowns,
         "status": "open",
     }
+
+
+# Human job-function → FIND matcher tape_family (work physics, not a robot class).
+JOB_FUNCTION_TAPE_FAMILY = {
+    "picking": "pick_pack",
+    "packing": "pick_pack",
+    "material_handling": "warehouse",
+    "receiving": "warehouse",
+    "shipping": "logistics",
+    "replenishment": "warehouse",
+    "housekeeping": "hospitality",
+    "environmental_services": "disinfection",
+    "warewash": "food_prep",
+    "food_prep": "food_prep",
+    "serving": "serve",
+    "front_desk": "hospitality",
+    "palletizing": "pallet",
+    "patient_transport": "clinical_delivery",
+    "pharmacy": "clinical_delivery",
+    "laundry": "hospitality",
+    "harvest": "agriculture",
+    "field_work": "agriculture",
+    "tractor": "agriculture",
+    "weeding": "agriculture",
+    "haulage": "mining",
+    "drywall": "construction",
+    "framing": "construction",
+    "construction_labor": "construction",
+    "machine_tending": "factory",
+}
+
+_BOARD_EMPLOYER_NAMES = frozenset(
+    {
+        "indeed",
+        "simplyhired",
+        "linkedin",
+        "ziprecruiter",
+        "glassdoor",
+        "talent.com",
+        "snagajob",
+        "careerbuilder",
+        "confidential",
+        "not disclosed",
+        "n/a",
+        "na",
+        "employer confidential",
+    }
+)
+
+
+def tape_family_for_job_function(job_function: Optional[str]) -> Optional[str]:
+    key = (job_function or "").strip().lower()
+    if not key or key in {"work", "unknown", "unknown_function"}:
+        return None
+    return JOB_FUNCTION_TAPE_FAMILY.get(key)
+
+
+_JOB_TITLE_AS_EMPLOYER_RE = re.compile(
+    r"^(warehouse (?:associate|worker)|order picker|line cook|prep cook|"
+    r"housekeeper|room attendant|farm worker|farm laborer|harvest worker|"
+    r"construction laborer|machine operator|machine tender|cnc operator|"
+    r"patient transporter|evs technician|server|dishwasher)$",
+    re.I,
+)
+
+
+def is_job_employer_name(name: str, title: str = "") -> bool:
+    """Real employer on a job posting — not a board, headline, or the job title itself."""
+    n = (name or "").strip()
+    if len(n) < 2 or len(n) > 80:
+        return False
+    low = n.lower().rstrip(".")
+    if low in _BOARD_EMPLOYER_NAMES or "simplyhired" in low or low.startswith("indeed"):
+        return False
+    if title and low == (title or "").strip().lower():
+        return False
+    if _JOB_TITLE_AS_EMPLOYER_RE.match(low):
+        return False
+    try:
+        from app.services.headline_name_shape import passes_headline_name_shape
+
+        ok, _ = passes_headline_name_shape(n)
+        if not ok:
+            return False
+    except Exception:
+        pass
+    return True
 
 
 def format_robot_job_signal(job: dict[str, Any]) -> str:

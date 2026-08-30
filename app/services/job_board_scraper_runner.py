@@ -16,6 +16,10 @@ DEFAULT_INDUSTRY_ROTATION = (
     "Logistics",
     "Healthcare",
     "Food Service",
+    "Agriculture",
+    "Construction",
+    "Mining",
+    "Factory",
 )
 
 

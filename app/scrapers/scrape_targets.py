@@ -215,6 +215,88 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         signal_types=["strategic_hire"],
     ),
 
+    # === AGRICULTURE: field work a farm robot could be hired to do ===
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=farm+worker+harvest+orchard+vineyard&l=United+States&sort=date",
+        label="Indeed - Farm / Harvest / Orchard Workers (volume hiring)",
+        scraper="job_board", cadence="daily",
+        industries=["Agriculture"],
+        signal_types=["robot_job"],
+        notes="Field harvest and orchard work = agriculture FIND class",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=tractor+operator+agricultural+field&l=United+States&sort=date",
+        label="Indeed - Agricultural Tractor Operators",
+        scraper="job_board", cadence="daily",
+        industries=["Agriculture"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=harvest+worker+farm+laborer+orchard&l=United+States",
+        label="SimplyHired - Harvest / Farm Laborers",
+        scraper="job_board", cadence="daily",
+        industries=["Agriculture"],
+        signal_types=["robot_job"],
+    ),
+
+    # === CONSTRUCTION: jobsite work ===
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=construction+laborer+drywall+framing&l=United+States&sort=date",
+        label="Indeed - Construction Laborer / Drywall / Framing",
+        scraper="job_board", cadence="daily",
+        industries=["Construction"],
+        signal_types=["robot_job"],
+        notes="Jobsite finish and framing = construction FIND class",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=bricklayer+mason+jobsite&l=United+States&sort=date",
+        label="Indeed - Bricklayer / Mason (jobsite)",
+        scraper="job_board", cadence="daily",
+        industries=["Construction"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=drywall+finisher+construction+laborer&l=United+States",
+        label="SimplyHired - Drywall / Construction Laborers",
+        scraper="job_board", cadence="daily",
+        industries=["Construction"],
+        signal_types=["robot_job"],
+    ),
+
+    # === MINING: haulage / pit / underground ===
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=haul+truck+operator+mine&l=United+States&sort=date",
+        label="Indeed - Mine Haul Truck Operators",
+        scraper="job_board", cadence="daily",
+        industries=["Mining"],
+        signal_types=["robot_job"],
+        notes="Haulage is the mining FIND class work",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=underground+miner+equipment+operator&l=United+States&sort=date",
+        label="Indeed - Underground Miner / Equipment Operator",
+        scraper="job_board", cadence="daily",
+        industries=["Mining"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=haul+truck+operator+mining&l=United+States",
+        label="SimplyHired - Mining Haul Truck Operators",
+        scraper="job_board", cadence="daily",
+        industries=["Mining"],
+        signal_types=["robot_job"],
+    ),
+
+    # === FACTORY: machine tend / CNC / packaging line ===
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=CNC+machine+tender+load+unload+operator&l=United+States&sort=date",
+        label="Indeed - CNC / Machine Tender Load-Unload",
+        scraper="job_board", cadence="daily",
+        industries=["Factory", "Food Processing & Manufacturing"],
+        signal_types=["robot_job"],
+        notes="Machine tending = factory FIND class",
+    ),
+
     # === CROSS-VERTICAL: Operational Efficiency & Automation Intent ===
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=Director+Manager+process+improvement+operational+excellence&l=United+States&sort=date",
@@ -270,32 +352,32 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         url="https://www.indeed.com/jobs?q=palletizer+operator+packaging+line+operator&l=United+States&sort=date",
         label="Indeed - Palletizer / Packaging Line Operators (volume hiring)",
         scraper="job_board", cadence="daily",
-        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
-        signal_types=["labor_pain", "labor_shortage", "packaging_automation"],
+        industries=["Factory", "Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["robot_job", "labor_pain", "labor_shortage", "packaging_automation"],
         notes="Companies hiring palletizer/packaging operators at scale = EOL automation opportunity",
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=machine+operator+production+line+food+manufacturing&l=United+States&sort=date",
         label="Indeed - Machine / Production Line Operators Food Manufacturing",
         scraper="job_board", cadence="daily",
-        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
-        signal_types=["labor_pain", "repetitive_process"],
+        industries=["Factory", "Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["robot_job", "labor_pain", "repetitive_process"],
         notes="High-volume manual machine operators = repetitive process automation signal",
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=pack+out+pack+in+operator+food+beverage+manufacturing&l=United+States&sort=date",
         label="Indeed - Pack-Out / Pack-In Operators (food & beverage manufacturing)",
         scraper="job_board", cadence="daily",
-        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
-        signal_types=["labor_pain", "packaging_automation"],
+        industries=["Factory", "Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["robot_job", "labor_pain", "packaging_automation"],
         notes="Pack-in/pack-out roles = direct EOL automation use case",
     ),
     ScrapeTarget(
         url="https://www.indeed.com/jobs?q=material+handler+intralogistics+manufacturing+plant&l=United+States&sort=date",
         label="Indeed - Material Handlers / Intralogistics Manufacturing Plant",
         scraper="job_board", cadence="daily",
-        industries=["Food Processing & Manufacturing", "Contract Manufacturing"],
-        signal_types=["labor_pain", "material_handling"],
+        industries=["Factory", "Food Processing & Manufacturing", "Contract Manufacturing"],
+        signal_types=["robot_job", "labor_pain", "material_handling"],
         notes="Internal factory transport = AMR/AGV opportunity",
     ),
     ScrapeTarget(

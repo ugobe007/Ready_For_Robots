@@ -62,7 +62,13 @@
         "hospital assistant",
         "medication",
         "specimen",
-        "lab sample"
+        "lab sample",
+        "EVS",
+        "environmental services",
+        "patient transport",
+        "patient transporter",
+        "dietary aide",
+        "sterile processing"
       ],
       "work_words": [
         "hospital",
@@ -96,7 +102,13 @@
         "patient room",
         "patient floor",
         "patient unit",
-        "med surg"
+        "med surg",
+        "EVS",
+        "environmental services",
+        "patient transport",
+        "patient transporter",
+        "dietary aide",
+        "sterile processing"
       ]
     },
     {
@@ -156,7 +168,11 @@
         "farm",
         "agricultural",
         "agriculture",
-        "grain"
+        "grain",
+        "farm worker",
+        "farm laborer",
+        "harvest worker",
+        "tractor operator"
       ]
     },
     {
@@ -200,7 +216,10 @@
         "framing",
         "earthwork",
         "grade",
-        "3d print home"
+        "3d print home",
+        "construction laborer",
+        "drywall finisher",
+        "framing carpenter"
       ]
     },
     {
@@ -238,7 +257,9 @@
         "pit",
         "bench",
         "crusher",
-        "ore body"
+        "ore body",
+        "haul truck operator",
+        "haul truck driver"
       ]
     },
     {
@@ -271,7 +292,10 @@
         "high-bay",
         "goods-to-person",
         "goods to person",
-        "slotting"
+        "slotting",
+        "order picker",
+        "warehouse associate",
+        "material handler"
       ]
     },
     {
@@ -338,7 +362,11 @@
         "workpiece",
         "fixture",
         "production cell",
-        "plant floor"
+        "plant floor",
+        "machine operator",
+        "machine tender",
+        "packaging line",
+        "palletizer"
       ]
     },
     {
@@ -377,7 +405,9 @@
         "amenities",
         "concierge",
         "front desk",
-        "guest floor"
+        "guest floor",
+        "housekeeper",
+        "room attendant"
       ]
     },
     {
