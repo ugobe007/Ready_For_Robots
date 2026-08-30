@@ -542,9 +542,12 @@ class EnhancedJobBoardScraper(BaseScraper):
                 card["location"] = match.get("location") or ""
             if not card.get("desc"):
                 card["desc"] = match.get("desc") or ""
-            if match.get("jsonld") and not card.get("jsonld"):
+            card_company = (card.get("company") or "").strip().lower()
+            match_company = (match.get("company") or "").strip().lower()
+            companies_match = card_company and match_company and card_company == match_company
+            if companies_match and match.get("jsonld") and not card.get("jsonld"):
                 card["jsonld"] = match["jsonld"]
-            if match.get("html") and "mailto:" not in (card.get("html") or "").lower():
+            if companies_match and match.get("html") and "mailto:" not in (card.get("html") or "").lower():
                 card["html"] = (card.get("html") or "") + "\n" + (match.get("html") or "")
         cards = css_cards
         if not cards:

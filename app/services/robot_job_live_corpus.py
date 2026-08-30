@@ -166,27 +166,30 @@ def _fetch_live_named_jobs(limit: int = LIVE_CAP) -> tuple[dict[str, Any], ...]:
 
     db = SessionLocal()
     try:
-        q = (
-            db.query(RobotJob)
-            .filter(RobotJob.company_name.isnot(None))
-            .filter(RobotJob.locality.isnot(None))
-            .order_by(RobotJob.created_at.desc())
-            .limit(max(limit * 4, 80))
-        )
-        out: list[dict[str, Any]] = []
-        seen: set[str] = set()
-        for row in q:
-            mapped = corpus_row_from_robot_job(row)
-            if not mapped:
-                continue
-            key = mapped["job_key"]
-            if key in seen:
-                continue
-            seen.add(key)
-            out.append(mapped)
-            if len(out) >= limit:
-                break
-        return tuple(out)
+        try:
+            q = (
+                db.query(RobotJob)
+                .filter(RobotJob.company_name.isnot(None))
+                .filter(RobotJob.locality.isnot(None))
+                .order_by(RobotJob.created_at.desc())
+                .limit(max(limit * 4, 80))
+            )
+            out: list[dict[str, Any]] = []
+            seen: set[str] = set()
+            for row in q:
+                mapped = corpus_row_from_robot_job(row)
+                if not mapped:
+                    continue
+                key = mapped["job_key"]
+                if key in seen:
+                    continue
+                seen.add(key)
+                out.append(mapped)
+                if len(out) >= limit:
+                    break
+            return tuple(out)
+        except Exception:
+            return ()
     finally:
         db.close()
 

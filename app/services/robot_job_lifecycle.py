@@ -168,7 +168,10 @@ def upsert_robot_job_from_extract(
     if not employer or not title:
         return None
     key = robot_job_key(employer, title, extract.get("workplace") or "")
-    row = db.query(RobotJob).filter(RobotJob.job_key == key).one_or_none()
+    try:
+        row = db.query(RobotJob).filter(RobotJob.job_key == key).one_or_none()
+    except Exception:
+        return None
     if row is None:
         row = RobotJob(
             job_key=key,
