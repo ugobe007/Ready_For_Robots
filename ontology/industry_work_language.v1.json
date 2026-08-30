@@ -2,14 +2,14 @@
   "ontology_id": "rfr_industry_work_language_v1",
   "version": "1.0.0",
   "frozen": false,
-  "note": "Industry work language that drives FIND configuration class AFTER hardware, never instead of hardware. Task-model IDs are slots the matcher already uses. Do not invent employers or jobs. COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES → TASK MODELS → WORKFLOWS → JOB REQUIREMENTS → MATCH.",
+  "note": "Industry work language that drives FIND configuration class AFTER hardware, never instead of hardware. Task-model IDs are slots the matcher already uses. Do not invent employers or jobs. COMPANY \u2192 PRODUCT \u2192 CONFIGURATION \u2192 HARDWARE \u2192 CAPABILITIES \u2192 TASK MODELS \u2192 WORKFLOWS \u2192 JOB REQUIREMENTS \u2192 MATCH.",
   "inference_order": [
     "hardware",
     "work_language_task_model",
     "morphology"
   ],
   "rule_id": "R33",
-  "rule": "Work-language / task-model evidence outranks generic humanoid morphology when both fire. A social torso, face, or arm does not override hospital or hotel delivery work. Warehouse and factory verticals do not outrank a true humanoid. Hardware still comes first. Never company → category → jobs.",
+  "rule": "Work-language / task-model evidence outranks generic humanoid morphology when both fire. A social torso, face, or arm does not override hospital or hotel delivery work. Warehouse and factory verticals do not outrank a true humanoid. Hardware still comes first. Never company \u2192 category \u2192 jobs.",
   "morphology_classes": [
     "humanoid",
     "semi-humanoid",
@@ -20,7 +20,10 @@
     {
       "id": "healthcare",
       "find_class": "healthcare",
-      "verticals": ["healthcare", "eldercare"],
+      "verticals": [
+        "healthcare",
+        "eldercare"
+      ],
       "claim_predicate": "claims_healthcare",
       "capability": "healthcare_task",
       "product_classes": [
@@ -42,8 +45,15 @@
         "nursing",
         "pharmacy"
       ],
-      "outranks_morphology": ["humanoid", "semi-humanoid", "biped", "bipedal"],
-      "task_model_ids": ["hospital_logistics_transport"],
+      "outranks_morphology": [
+        "humanoid",
+        "semi-humanoid",
+        "biped",
+        "bipedal"
+      ],
+      "task_model_ids": [
+        "hospital_logistics_transport"
+      ],
       "class_signals": [
         "hospital",
         "healthcare",
@@ -114,10 +124,16 @@
     {
       "id": "agriculture",
       "find_class": "agriculture",
-      "verticals": ["agriculture"],
+      "verticals": [
+        "agriculture"
+      ],
       "claim_predicate": "claims_agriculture",
       "capability": "agriculture_task",
-      "product_classes": ["agriculture", "agricultural_robot", "farm_robot"],
+      "product_classes": [
+        "agriculture",
+        "agricultural_robot",
+        "farm_robot"
+      ],
       "aliases": [
         "agriculture",
         "agricultural_robot",
@@ -129,7 +145,10 @@
         "autonomous_tractor",
         "autonomous_combine"
       ],
-      "outranks_morphology": ["humanoid", "semi-humanoid"],
+      "outranks_morphology": [
+        "humanoid",
+        "semi-humanoid"
+      ],
       "task_model_ids": [
         "crop_weeding_policy",
         "crop_field_policy",
@@ -178,17 +197,25 @@
     {
       "id": "construction",
       "find_class": "construction",
-      "verticals": ["construction"],
+      "verticals": [
+        "construction"
+      ],
       "claim_predicate": "claims_construction",
       "capability": "construction_task",
-      "product_classes": ["construction", "construction_robot"],
+      "product_classes": [
+        "construction",
+        "construction_robot"
+      ],
       "aliases": [
         "construction",
         "construction_robot",
         "homebuilding",
         "homebuilder"
       ],
-      "outranks_morphology": ["humanoid", "semi-humanoid"],
+      "outranks_morphology": [
+        "humanoid",
+        "semi-humanoid"
+      ],
       "task_model_ids": [
         "construction_jobsite_policy",
         "residential_construction_policy",
@@ -225,13 +252,28 @@
     {
       "id": "mining",
       "find_class": "mining",
-      "verticals": ["mining"],
+      "verticals": [
+        "mining"
+      ],
       "claim_predicate": "claims_mining",
       "capability": "mining_task",
-      "product_classes": ["mining", "mining_robot"],
-      "aliases": ["mining", "mining_robot", "quarry", "haul_truck"],
-      "outranks_morphology": ["humanoid", "semi-humanoid"],
-      "task_model_ids": ["mining_haulage_policy"],
+      "product_classes": [
+        "mining",
+        "mining_robot"
+      ],
+      "aliases": [
+        "mining",
+        "mining_robot",
+        "quarry",
+        "haul_truck"
+      ],
+      "outranks_morphology": [
+        "humanoid",
+        "semi-humanoid"
+      ],
+      "task_model_ids": [
+        "mining_haulage_policy"
+      ],
       "class_signals": [
         "mining",
         "quarry",
@@ -265,13 +307,26 @@
     {
       "id": "warehouse",
       "find_class": "warehouse",
-      "verticals": ["warehouse"],
+      "verticals": [
+        "warehouse"
+      ],
       "claim_predicate": "claims_warehouse",
       "capability": "warehouse_task",
-      "product_classes": ["warehouse", "warehouse_robot"],
-      "aliases": ["warehouse", "warehouse_robot", "fulfillment", "dc"],
+      "product_classes": [
+        "warehouse",
+        "warehouse_robot"
+      ],
+      "aliases": [
+        "warehouse",
+        "warehouse_robot",
+        "fulfillment",
+        "dc"
+      ],
       "outranks_morphology": [],
-      "task_model_ids": ["warehouse_pick_place_policy", "warehouse_amr_fleet_nav"],
+      "task_model_ids": [
+        "warehouse_pick_place_policy",
+        "warehouse_amr_fleet_nav"
+      ],
       "class_signals": [
         "warehouse",
         "fulfillment",
@@ -301,13 +356,25 @@
     {
       "id": "logistics",
       "find_class": "logistics",
-      "verticals": ["warehouse"],
+      "verticals": [
+        "warehouse"
+      ],
       "claim_predicate": "claims_logistics",
       "capability": "logistics_task",
-      "product_classes": ["logistics", "logistics_robot"],
-      "aliases": ["logistics", "logistics_robot", "3pl", "cross-dock"],
+      "product_classes": [
+        "logistics",
+        "logistics_robot"
+      ],
+      "aliases": [
+        "logistics",
+        "logistics_robot",
+        "3pl",
+        "cross-dock"
+      ],
       "outranks_morphology": [],
-      "task_model_ids": ["warehouse_amr_fleet_nav"],
+      "task_model_ids": [
+        "warehouse_amr_fleet_nav"
+      ],
       "class_signals": [
         "logistics",
         "3pl",
@@ -334,13 +401,25 @@
     {
       "id": "factory",
       "find_class": "factory",
-      "verticals": ["manufacturing"],
+      "verticals": [
+        "manufacturing"
+      ],
       "claim_predicate": "claims_factory",
       "capability": "factory_task",
-      "product_classes": ["factory", "factory_robot"],
-      "aliases": ["factory", "factory_robot", "manufacturing", "plant"],
+      "product_classes": [
+        "factory",
+        "factory_robot"
+      ],
+      "aliases": [
+        "factory",
+        "factory_robot",
+        "manufacturing",
+        "plant"
+      ],
       "outranks_morphology": [],
-      "task_model_ids": ["machine_tending_load_unload"],
+      "task_model_ids": [
+        "machine_tending_load_unload"
+      ],
       "class_signals": [
         "factory",
         "machine tend",
@@ -372,21 +451,32 @@
     {
       "id": "hospitality",
       "find_class": "hospitality",
-      "verticals": ["hospitality"],
+      "verticals": [
+        "hospitality"
+      ],
       "claim_predicate": "claims_hospitality",
       "capability": "hospitality_task",
-      "product_classes": ["hospitality", "hospitality_robot", "hotel_robot"],
+      "product_classes": [
+        "hospitality",
+        "hospitality_robot",
+        "hotel_robot"
+      ],
       "aliases": [
         "hospitality",
         "hospitality_robot",
         "hotel",
         "hotel_robot",
-        "serving",
-        "table_service",
         "guest_delivery"
       ],
-      "outranks_morphology": ["humanoid", "semi-humanoid", "biped", "bipedal"],
-      "task_model_ids": ["hotel_guest_service_policy"],
+      "outranks_morphology": [
+        "humanoid",
+        "semi-humanoid",
+        "biped",
+        "bipedal"
+      ],
+      "task_model_ids": [
+        "hotel_guest_service_policy"
+      ],
       "class_signals": [
         "hospitality",
         "guest room",
@@ -411,10 +501,15 @@
     {
       "id": "food_prep",
       "find_class": "food_prep",
-      "verticals": ["restaurant"],
+      "verticals": [
+        "restaurant",
+        "hospitality"
+      ],
       "claim_predicate": "claims_food_prep",
       "capability": "food_prep",
-      "product_classes": ["food_prep"],
+      "product_classes": [
+        "food_prep"
+      ],
       "aliases": [
         "food_prep",
         "food prep",
@@ -422,10 +517,21 @@
         "fast casual",
         "kitchen automation",
         "make line",
-        "bowl assembly"
+        "bowl assembly",
+        "hotel kitchen",
+        "casino kitchen",
+        "airport kitchen"
       ],
-      "outranks_morphology": ["humanoid", "semi-humanoid", "biped", "bipedal"],
-      "task_model_ids": ["food_prep_station_policy", "hospitality_kitchen_policy"],
+      "outranks_morphology": [
+        "humanoid",
+        "semi-humanoid",
+        "biped",
+        "bipedal"
+      ],
+      "task_model_ids": [
+        "food_prep_station_policy",
+        "hospitality_kitchen_policy"
+      ],
       "class_signals": [
         "food prep",
         "fry station",
@@ -435,7 +541,10 @@
         "bowl assembly",
         "qsr",
         "fast casual",
-        "kitchen automation"
+        "kitchen automation",
+        "hotel kitchen",
+        "casino kitchen",
+        "airport kitchen"
       ],
       "work_words": [
         "food prep",
@@ -455,43 +564,152 @@
         "tortilla",
         "assembly line kitchen",
         "saute",
-        "kitchen station"
+        "kitchen station",
+        "hotel kitchen",
+        "casino kitchen",
+        "airport kitchen",
+        "banquet cook",
+        "commissary kitchen",
+        "culinary"
       ]
     },
     {
       "id": "serving",
-      "find_class": "hospitality",
-      "verticals": ["restaurant", "hospitality"],
-      "claim_predicate": "claims_hospitality",
-      "capability": "hospitality_task",
-      "product_classes": ["hospitality_robot"],
-      "aliases": ["serving", "table service", "food running"],
-      "outranks_morphology": ["humanoid", "semi-humanoid"],
-      "task_model_ids": ["hotel_guest_service_policy"],
-      "class_signals": ["table service", "food running", "bussing", "dining room"],
-      "work_words": [
+      "find_class": "serving",
+      "verticals": [
+        "restaurant",
+        "hospitality"
+      ],
+      "claim_predicate": "claims_serving",
+      "capability": "serving_task",
+      "product_classes": [
+        "serving"
+      ],
+      "aliases": [
         "serving",
+        "table service",
+        "food running",
+        "waitstaff",
+        "table_service"
+      ],
+      "outranks_morphology": [
+        "humanoid",
+        "semi-humanoid",
+        "biped",
+        "bipedal"
+      ],
+      "task_model_ids": [
+        "dining_floor_service_policy"
+      ],
+      "class_signals": [
+        "table service",
+        "food running",
+        "bussing",
+        "dining room",
+        "food runner",
+        "cocktail server"
+      ],
+      "work_words": [
         "table service",
         "food running",
         "food runner",
         "bussing",
         "bussing station",
-        "runner",
         "waitstaff",
-        "dining room"
+        "dining room",
+        "cocktail server",
+        "busser",
+        "drink running",
+        "banquet server",
+        "hotel dining",
+        "casino cocktail",
+        "airport restaurant",
+        "office cafeteria",
+        "mall food court"
+      ]
+    },
+    {
+      "id": "cleaning",
+      "find_class": "cleaning",
+      "verticals": [
+        "hospitality",
+        "restaurant"
+      ],
+      "claim_predicate": "claims_surface_cleaning",
+      "capability": "surface_clean",
+      "product_classes": [
+        "cleaning"
+      ],
+      "aliases": [
+        "cleaning",
+        "janitorial",
+        "custodial"
+      ],
+      "outranks_morphology": [
+        "humanoid",
+        "semi-humanoid",
+        "biped",
+        "bipedal"
+      ],
+      "task_model_ids": [
+        "commercial_cleaning_policy"
+      ],
+      "class_signals": [
+        "janitor",
+        "custodian",
+        "restroom attendant",
+        "floor cleaning",
+        "commercial cleaning"
+      ],
+      "work_words": [
+        "janitor",
+        "custodian",
+        "restroom attendant",
+        "floor cleaning",
+        "restroom",
+        "restroom cleaning",
+        "commercial cleaning",
+        "floor scrubbing",
+        "casino janitor",
+        "airport janitor",
+        "hotel janitor",
+        "restaurant janitor",
+        "data center janitor",
+        "office janitor",
+        "mall janitor"
       ]
     },
     {
       "id": "hotel",
       "find_class": "hospitality",
-      "verticals": ["hospitality"],
+      "verticals": [
+        "hospitality"
+      ],
       "claim_predicate": "claims_hospitality",
       "capability": "hospitality_task",
-      "product_classes": ["hotel_robot"],
-      "aliases": ["hotel", "resort", "housekeeping"],
-      "outranks_morphology": ["humanoid", "semi-humanoid", "biped", "bipedal"],
-      "task_model_ids": ["hotel_guest_service_policy"],
-      "class_signals": ["hotel", "resort", "guest delivery", "housekeeping"],
+      "product_classes": [
+        "hotel_robot"
+      ],
+      "aliases": [
+        "hotel",
+        "resort",
+        "housekeeping"
+      ],
+      "outranks_morphology": [
+        "humanoid",
+        "semi-humanoid",
+        "biped",
+        "bipedal"
+      ],
+      "task_model_ids": [
+        "hotel_guest_service_policy"
+      ],
+      "class_signals": [
+        "hotel",
+        "resort",
+        "guest delivery",
+        "housekeeping"
+      ],
       "work_words": [
         "hotel",
         "resort",

@@ -28,6 +28,7 @@ JOB_FUNCTION_BY_TITLE = (
     ("dock worker", "shipping"),
     ("replenish", "replenishment"),
     ("housekeeper", "housekeeping"),
+    ("restroom attendant", "cleaning"),
     ("room attendant", "housekeeping"),
     ("evs", "environmental_services"),
     ("environmental services", "environmental_services"),
@@ -42,9 +43,15 @@ JOB_FUNCTION_BY_TITLE = (
     ("ingredient dos", "food_prep"),
     ("tortilla", "food_prep"),
     ("cook", "food_prep"),
-    ("server", "serving"),
-    ("busser", "serving"),
+    ("banquet server", "serving"),
     ("food runner", "serving"),
+    ("busser", "serving"),
+    ("bartender", "serving"),
+    ("cocktail", "serving"),
+    ("server", "serving"),
+    ("janitor", "cleaning"),
+    ("custodian", "cleaning"),
+    ("floor cleaner", "cleaning"),
     ("warehouse worker", "material_handling"),
     ("night audit", "front_desk"),
     ("front desk", "front_desk"),
@@ -114,11 +121,21 @@ def _money(raw: str) -> Optional[float]:
         return None
 
 
+_IT_SERVER_TITLE_RE = re.compile(
+    r"\b(?:windows|sql|linux|exchange|web|mail|file|proxy|dns|application)\s+server\b|"
+    r"\bserver\s+(?:admin|administrator|engineer|developer|operator|rack|room)\b",
+    re.I,
+)
+
+
 def job_function_from_title(title: str) -> Optional[str]:
     blob = (title or "").lower()
     if not blob:
         return None
+    skip_bare_server = bool(_IT_SERVER_TITLE_RE.search(blob))
     for needle, family in JOB_FUNCTION_BY_TITLE:
+        if skip_bare_server and family == "serving" and needle == "server":
+            continue
         if needle in blob:
             return family
     return None
@@ -255,6 +272,7 @@ JOB_FUNCTION_TAPE_FAMILY = {
     "warewash": "food_prep",
     "food_prep": "food_prep",
     "serving": "serve",
+    "cleaning": "scrub",
     "front_desk": "hospitality",
     "palletizing": "pallet",
     "patient_transport": "clinical_delivery",

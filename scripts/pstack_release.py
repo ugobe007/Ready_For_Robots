@@ -14,10 +14,11 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -102,7 +103,21 @@ def _check(cid: str, ok: bool, prove: str, detail: str = "") -> dict[str, Any]:
     return row
 
 
-def _post_json(url: str, payload: dict[str, Any], *, timeout: float = 90.0) -> tuple[int, Any]:
+TRANSIENT_HTTP = frozenset({0, 502, 503, 504})
+
+
+def _http_retries() -> int:
+    return max(1, int(os.getenv("PSTACK_HTTP_RETRIES", "6")))
+
+
+def _http_retry_sleep(attempt: int) -> float:
+    raw = os.getenv("PSTACK_HTTP_RETRY_SLEEP")
+    if raw is not None and raw != "":
+        return max(0.0, float(raw))
+    return min(20.0, 3.0 * (2 ** attempt))
+
+
+def _post_json_once(url: str, payload: dict[str, Any], *, timeout: float) -> tuple[int, Any]:
     data = json.dumps(payload).encode()
     req = Request(
         url,
@@ -123,11 +138,24 @@ def _post_json(url: str, payload: dict[str, Any], *, timeout: float = 90.0) -> t
             return int(exc.code), json.loads(raw.decode())
         except Exception:
             return int(exc.code), {"_raw": raw[:400].decode("utf-8", "replace")}
-    except Exception as exc:
+    except (URLError, TimeoutError, OSError) as exc:
         return 0, {"error": str(exc)}
 
 
-def _get(url: str, *, timeout: float = 25.0) -> tuple[int, Any]:
+def _post_json(url: str, payload: dict[str, Any], *, timeout: float = 90.0) -> tuple[int, Any]:
+    last: tuple[int, Any] = (0, {"error": "no attempt"})
+    retries = _http_retries()
+    for attempt in range(retries):
+        last = _post_json_once(url, payload, timeout=timeout)
+        code = int(last[0] or 0)
+        if code not in TRANSIENT_HTTP:
+            return last
+        if attempt + 1 < retries:
+            time.sleep(_http_retry_sleep(attempt))
+    return last
+
+
+def _get_once(url: str, *, timeout: float) -> tuple[int, Any]:
     req = Request(url, headers={"Accept": "application/json"})
     try:
         with urlopen(req, timeout=timeout) as resp:
@@ -142,8 +170,34 @@ def _get(url: str, *, timeout: float = 25.0) -> tuple[int, Any]:
             return int(exc.code), json.loads(raw.decode())
         except Exception:
             return int(exc.code), {"_raw": raw[:400].decode("utf-8", "replace")}
-    except Exception as exc:
+    except (URLError, TimeoutError, OSError) as exc:
         return 0, {"error": str(exc)}
+
+
+def _get(url: str, *, timeout: float = 25.0) -> tuple[int, Any]:
+    last: tuple[int, Any] = (0, {"error": "no attempt"})
+    retries = _http_retries()
+    for attempt in range(retries):
+        last = _get_once(url, timeout=timeout)
+        code = int(last[0] or 0)
+        if code not in TRANSIENT_HTTP:
+            return last
+        if attempt + 1 < retries:
+            time.sleep(_http_retry_sleep(attempt))
+    return last
+
+
+def wait_for_fly_health(api: str, *, timeout: float = 45.0) -> bool:
+    """Poll /health until 200 so a transient 503 does not fail FIND-tile PRs."""
+    base = api.rstrip("/")
+    deadline = time.monotonic() + max(0.0, timeout)
+    while True:
+        code, _body = _get_once(f"{base}/health", timeout=8.0)
+        if code == 200:
+            return True
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(2.0)
 
 
 def phase_how() -> dict[str, Any]:
@@ -522,7 +576,7 @@ def healthcare_class_fixture() -> tuple[bool, str]:
 
     ts_ids = _ts_class_option_ids(class_ts)
     py_ids = _py_class_option_ids(class_py)
-    extra = ("mining", "warehouse", "logistics", "factory", "hospitality", "food_prep")
+    extra = ("mining", "warehouse", "logistics", "factory", "hospitality", "food_prep", "serving", "cleaning")
     if "healthcare" not in ts_ids or "healthcare" not in py_ids:
         misses.append("Healthcare class id missing")
     for tile in extra:
@@ -530,22 +584,34 @@ def healthcare_class_fixture() -> tuple[bool, str]:
             misses.append(f"{tile} class id missing")
     if "medical" in ts_ids or "hotel" in ts_ids:
         misses.append(f"aliased industries leaked as FIND tiles={ts_ids}")
-    if len(ts_ids) != 18:
+    if len(ts_ids) != 20:
         misses.append(f"class picker tiles={ts_ids}")
     if '"healthcare"' not in workflow or "healthcare" not in class_py:
         misses.append("FIND_TILE / workflow missing healthcare")
     if '"food_prep"' not in workflow or "food_prep" not in class_py:
         misses.append("FIND_TILE / workflow missing food_prep")
+    if '"serving"' not in workflow or "serving" not in class_py:
+        misses.append("FIND_TILE / workflow missing serving")
+    if '"cleaning"' not in workflow or "cleaning" not in class_py:
+        misses.append("FIND_TILE / workflow missing cleaning")
     if "No ${label} jobs for this robot yet." not in workflow:
         misses.append("class empty-copy template missing")
     if 'healthcare: "Healthcare"' not in workflow:
         misses.append("Healthcare class title missing")
     if 'food_prep: "Food prep"' not in workflow:
         misses.append("Food prep class title missing")
+    if 'serving: "Serving"' not in workflow:
+        misses.append("Serving class title missing")
+    if 'cleaning: "Cleaning"' not in workflow:
+        misses.append("Cleaning class title missing")
     if "No healthcare jobs for this robot yet." not in workflow_test:
         misses.append("healthcare empty copy test missing")
     if "No food prep jobs for this robot yet." not in workflow_test:
         misses.append("food_prep empty copy test missing")
+    if "No serving jobs for this robot yet." not in workflow_test:
+        misses.append("serving empty copy test missing")
+    if "No cleaning jobs for this robot yet." not in workflow_test:
+        misses.append("cleaning empty copy test missing")
     if "No healthcare jobs for this robot yet." not in release_ts:
         misses.append("fixture empty copy missing")
     if "No humanoid jobs for this robot yet." not in release_ts:
@@ -609,8 +675,30 @@ REQUIRED_INDUSTRY_ONTOLOGY_WORDS = {
         "ingredient dosing",
         "tortilla",
         "assembly line kitchen",
+        "hotel kitchen",
+        "casino kitchen",
+        "airport kitchen",
     ),
-    "serving": ("table service", "bussing"),
+    "serving": (
+        "table service",
+        "bussing",
+        "food runner",
+        "waitstaff",
+        "dining room",
+        "cocktail server",
+        "hotel dining",
+        "mall food court",
+    ),
+    "cleaning": (
+        "janitor",
+        "custodian",
+        "restroom",
+        "restroom cleaning",
+        "floor cleaning",
+        "commercial cleaning",
+        "floor scrubbing",
+        "data center janitor",
+    ),
 }
 
 REQUIRED_INDUSTRY_FIND_CLASSES = {
@@ -620,6 +708,8 @@ REQUIRED_INDUSTRY_FIND_CLASSES = {
     "factory": "factory",
     "hospitality": "hospitality",
     "food_prep": "food_prep",
+    "serving": "serving",
+    "cleaning": "cleaning",
 }
 
 
@@ -678,8 +768,11 @@ def ontology_industry_language_fixture() -> tuple[bool, str]:
     if (hotel.get("find_class") or "") != "hospitality":
         misses.append("hotel must alias find_class=hospitality")
     serving = rows.get("serving") or {}
-    if (serving.get("find_class") or "") != "hospitality":
-        misses.append("serving must alias find_class=hospitality")
+    if (serving.get("find_class") or "") != "serving":
+        misses.append("serving must find_class=serving")
+    cleaning = rows.get("cleaning") or {}
+    if (cleaning.get("find_class") or "") != "cleaning":
+        misses.append("cleaning must find_class=cleaning")
     warehouse = rows.get("warehouse") or {}
     if warehouse.get("outranks_morphology"):
         misses.append("warehouse must not outrank humanoid morphology")
@@ -700,6 +793,10 @@ def ontology_industry_language_fixture() -> tuple[bool, str]:
         misses.append("hotel_guest_service_policy task model missing")
     if "food_prep_station_policy" not in blob_tasks:
         misses.append("food_prep_station_policy task model missing")
+    if "dining_floor_service_policy" not in blob_tasks:
+        misses.append("dining_floor_service_policy task model missing")
+    if "commercial_cleaning_policy" not in blob_tasks:
+        misses.append("commercial_cleaning_policy task model missing")
     if "machine_tending_load_unload" not in blob_tasks:
         misses.append("machine_tending_load_unload task model missing")
     if '"id": "mining"' not in blob_qualify:
@@ -915,6 +1012,7 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
             )
         )
     else:
+        wait_for_fly_health(api)
         for url in (DEXMATE, GREENFIELD):
             drive = drive_find_url(url, api=api)
             drives.append(drive)

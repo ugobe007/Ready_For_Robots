@@ -81,7 +81,14 @@
         "kitchen automation",
         "prep cook",
         "ingredient dosing",
-        "tortilla"
+        "tortilla",
+        "hotel kitchen",
+        "casino kitchen",
+        "airport kitchen",
+        "table service",
+        "food runner",
+        "busser",
+        "banquet server"
       ]
     },
     {
@@ -230,7 +237,7 @@
     },
     {
       "key": "aviation",
-      "label": "Avionics — drones, eVTOL, autonomous aircraft",
+      "label": "Avionics \u2014 drones, eVTOL, autonomous aircraft",
       "in_scope": true,
       "aliases": [
         "aviation",
@@ -250,7 +257,7 @@
     },
     {
       "key": "aerospace",
-      "label": "Aerospace — satellites, rockets, orbital robots",
+      "label": "Aerospace \u2014 satellites, rockets, orbital robots",
       "in_scope": true,
       "aliases": [
         "aerospace",

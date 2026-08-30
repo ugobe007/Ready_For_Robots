@@ -23,18 +23,22 @@ def _families(class_id: str) -> set[str]:
     return {j.get("tape_family") for j in out.get("jobs") or []}
 
 
-def test_picker_adds_industry_tiles_including_food_prep():
+def test_picker_adds_industry_tiles_including_food_prep_serving_cleaning():
     ids = [row["id"] for row in public_class_options()]
-    assert ids[-1] == "food_prep"
-    assert len(ids) == 18
-    for tile in ("mining", "warehouse", "logistics", "factory", "hospitality", "food_prep"):
+    assert ids[-1] == "cleaning"
+    assert len(ids) == 20
+    for tile in (
+        "mining", "warehouse", "logistics", "factory",
+        "hospitality", "food_prep", "serving", "cleaning",
+    ):
         assert tile in FIND_TILE_CLASSES
         assert tile in ids
-    assert "serving" not in ids
     assert "hotel" not in ids
     assert "medical" not in ids
     assert normalize_class_id("hotel") == "hospitality"
     assert normalize_class_id("food_prep") == "food_prep"
+    assert normalize_class_id("serving") == "serving"
+    assert normalize_class_id("cleaning") == "cleaning"
     assert normalize_class_id("3pl") == "logistics"
 
 

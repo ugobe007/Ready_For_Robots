@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "frozen": false,
   "note": "Machine-readable companion to ROBOT_CAPABILITY_ONTOLOGY.md. Loaded by app/services/robot_ontology.py and used by the parse -> derive -> match workflow. Keep in sync with app/services/robot_capability_derive.py (enforced by tests/test_robot_ontology.py).",
-  "confidence_states": ["EXPLICIT", "DERIVED", "LIKELY", "UNKNOWN", "CONFLICTED"],
+  "confidence_states": [
+    "EXPLICIT",
+    "DERIVED",
+    "LIKELY",
+    "UNKNOWN",
+    "CONFLICTED"
+  ],
   "confidence_code_map": {
     "EXPLICIT": "explicit",
     "DERIVED": "strongly_inferred",
@@ -11,127 +17,554 @@
     "UNKNOWN": "unknown",
     "CONFLICTED": "contradicted"
   },
-  "grounded_states": ["explicit", "strongly_inferred"],
+  "grounded_states": [
+    "explicit",
+    "strongly_inferred"
+  ],
   "capabilities": [
-    {"key": "mobile", "label": "mobile platform", "generic": true, "distinctive": false,
-     "grounded_by": ["has_mobile_base", "autonomous_navigation", "mobility_architecture"],
-     "classes": ["amr", "quadruped", "autonomous_scrubber", "mobile_manipulator", "humanoid",
-                 "agriculture", "agricultural_robot", "marine", "avionics", "drone", "evtol",
-                 "construction", "aerospace", "aerospace_robot", "healthcare",
-                 "mining", "mining_robot", "warehouse", "logistics", "factory",
-                 "hospitality"]},
-    {"key": "manipulate", "label": "manipulation", "generic": false, "distinctive": true,
-     "grounded_by": ["arm_count", "has_dexterous_hands", "end_effector"],
-     "classes": ["mobile_manipulator", "humanoid", "cobot", "manipulator", "arm"]},
-    {"key": "dual_arm", "label": "dual-arm manipulation", "generic": false, "distinctive": true,
-     "grounded_by": ["arm_count"]},
-    {"key": "transport", "label": "autonomous item transport / delivery", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_item_delivery"]},
-    {"key": "tote_transport", "label": "tote / warehouse transport", "generic": false, "distinctive": true,
-     "grounded_by": ["supports_tote_handling", "claims_warehouse_transport"]},
-    {"key": "food_prep", "label": "food preparation / cooking", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_food_prep"]},
-    {"key": "beverage_prep", "label": "beverage / drink preparation", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_beverage_prep"]},
-    {"key": "surface_clean", "label": "surface / restroom cleaning", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_surface_cleaning"]},
-    {"key": "shelf_scan", "label": "shelf / inventory scanning", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_shelf_scan"]},
-    {"key": "pallet_move", "label": "pallet handling / forklift", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_pallet_handling"], "classes": ["autonomous_forklift"]},
-    {"key": "trailer_unload", "label": "trailer / container unloading", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_trailer_unload"]},
-    {"key": "pick_pack", "label": "piece picking / pack", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_piece_pick"]},
-    {"key": "sortation", "label": "parcel sortation", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_sortation"]},
-    {"key": "disinfect", "label": "UV / surface disinfection", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_disinfection"]},
-    {"key": "goods_to_person", "label": "ASRS goods-to-person", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_goods_to_person"]},
-    {"key": "agriculture_task", "label": "agricultural field work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_agriculture"],
-     "classes": ["agriculture", "agricultural_robot", "farm_robot"]},
-    {"key": "healthcare_task", "label": "hospital / clinical assistant work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_healthcare"],
-     "classes": ["healthcare", "healthcare_robot", "medical_robot", "clinical_robot", "hospital_robot"]},
-    {"key": "agriculture_weed", "label": "crop weeding", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_weeding"],
-     "classes": ["agriculture"],
-     "note": "SKU weeding work. FIND-tile agriculture is the union; LaserWeeder is not a combine."},
-    {"key": "agriculture_combine", "label": "combine grain harvest", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_combine_harvest"],
-     "classes": ["agriculture"]},
-    {"key": "agriculture_spray", "label": "precision crop spray", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_precision_spray"],
-     "classes": ["agriculture"]},
-    {"key": "agriculture_tractor", "label": "autonomous tractor field work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_tractor_work"],
-     "classes": ["agriculture"]},
-    {"key": "construction_task", "label": "construction site work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_construction"],
-     "classes": ["construction", "construction_robot"]},
-    {"key": "construction_print", "label": "3D-print home / building walls", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_construction_print"],
-     "classes": ["construction"]},
-    {"key": "construction_block", "label": "block / brick laying", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_construction_block"],
-     "classes": ["construction"]},
-    {"key": "construction_layout", "label": "jobsite floor layout print", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_construction_layout"],
-     "classes": ["construction"]},
-    {"key": "mining_task", "label": "mining / haulage", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_mining"],
-     "classes": ["mining", "mining_robot"]},
-    {"key": "warehouse_task", "label": "warehouse / fulfillment work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_warehouse"],
-     "classes": ["warehouse", "warehouse_robot"]},
-    {"key": "logistics_task", "label": "3PL / cross-dock / sortation work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_logistics"],
-     "classes": ["logistics", "logistics_robot"]},
-    {"key": "factory_task", "label": "factory / plant machine-tend work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_factory"],
-     "classes": ["factory", "factory_robot"]},
-    {"key": "hospitality_task", "label": "hotel / guest / serving work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_hospitality"],
-     "classes": ["hospitality", "hospitality_robot", "hotel_robot"]},
-    {"key": "marine_task", "label": "hull / port / underwater work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_marine"],
-     "classes": ["marine", "marine_robot"]},
-    {"key": "avionics_task", "label": "drone / eVTOL / autonomous aircraft work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_avionics"],
-     "classes": ["avionics", "aviation_robot", "drone", "evtol", "uav"]},
-    {"key": "evtol_flight", "label": "eVTOL passenger/cargo flight", "generic": false, "distinctive": true,
-     "grounded_by": ["product_class"],
-     "classes": ["evtol"],
-     "note": "Air-taxi / flying-car flight. Not hangar or airside walking around parked aircraft."},
-    {"key": "drone_task", "label": "drone inspect / delivery flight", "generic": false, "distinctive": true,
-     "grounded_by": ["product_class"],
-     "classes": ["drone", "uav"]},
-    {"key": "autonomous_flight", "label": "autonomous airplane-like flight", "generic": false, "distinctive": true,
-     "grounded_by": ["product_class"],
-     "classes": ["autonomous_aircraft"]},
-    {"key": "aerospace_task", "label": "satellite / orbital / space-robot work", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_aerospace"],
-     "classes": ["aerospace", "aerospace_robot"]},
-    {"key": "hard_floor_scrub", "label": "hard-floor scrubbing", "generic": false, "distinctive": true,
-     "grounded_by": ["supports_hard_floor_scrubbing"], "classes": ["autonomous_scrubber", "scrubber"]},
-    {"key": "inspect_route", "label": "mobile inspection route", "generic": false, "distinctive": true,
-     "grounded_by": [], "classes": ["quadruped"]},
-    {"key": "reach", "label": "working reach", "generic": false, "distinctive": true,
-     "grounded_by": ["reach_or_workspace"]},
-    {"key": "load_unload", "label": "load / unload", "generic": false, "distinctive": true,
-     "grounded_by": ["claims_load_unload"]},
-    {"key": "payload", "label": "payload", "generic": false, "distinctive": false,
-     "grounded_by": ["carrying_capacity"]}
+    {
+      "key": "mobile",
+      "label": "mobile platform",
+      "generic": true,
+      "distinctive": false,
+      "grounded_by": [
+        "has_mobile_base",
+        "autonomous_navigation",
+        "mobility_architecture"
+      ],
+      "classes": [
+        "amr",
+        "quadruped",
+        "autonomous_scrubber",
+        "mobile_manipulator",
+        "humanoid",
+        "agriculture",
+        "agricultural_robot",
+        "marine",
+        "avionics",
+        "drone",
+        "evtol",
+        "construction",
+        "aerospace",
+        "aerospace_robot",
+        "healthcare",
+        "mining",
+        "mining_robot",
+        "warehouse",
+        "logistics",
+        "factory",
+        "hospitality",
+        "food_prep",
+        "serving",
+        "cleaning"
+      ]
+    },
+    {
+      "key": "manipulate",
+      "label": "manipulation",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "arm_count",
+        "has_dexterous_hands",
+        "end_effector"
+      ],
+      "classes": [
+        "mobile_manipulator",
+        "humanoid",
+        "cobot",
+        "manipulator",
+        "arm"
+      ]
+    },
+    {
+      "key": "dual_arm",
+      "label": "dual-arm manipulation",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "arm_count"
+      ]
+    },
+    {
+      "key": "transport",
+      "label": "autonomous item transport / delivery",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_item_delivery"
+      ]
+    },
+    {
+      "key": "tote_transport",
+      "label": "tote / warehouse transport",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "supports_tote_handling",
+        "claims_warehouse_transport"
+      ]
+    },
+    {
+      "key": "food_prep",
+      "label": "food preparation / cooking",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_food_prep"
+      ]
+    },
+    {
+      "key": "beverage_prep",
+      "label": "beverage / drink preparation",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_beverage_prep"
+      ]
+    },
+    {
+      "key": "surface_clean",
+      "label": "surface / restroom cleaning",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_surface_cleaning"
+      ],
+      "classes": [
+        "cleaning"
+      ]
+    },
+    {
+      "key": "shelf_scan",
+      "label": "shelf / inventory scanning",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_shelf_scan"
+      ]
+    },
+    {
+      "key": "pallet_move",
+      "label": "pallet handling / forklift",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_pallet_handling"
+      ],
+      "classes": [
+        "autonomous_forklift"
+      ]
+    },
+    {
+      "key": "trailer_unload",
+      "label": "trailer / container unloading",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_trailer_unload"
+      ]
+    },
+    {
+      "key": "pick_pack",
+      "label": "piece picking / pack",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_piece_pick"
+      ]
+    },
+    {
+      "key": "sortation",
+      "label": "parcel sortation",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_sortation"
+      ]
+    },
+    {
+      "key": "disinfect",
+      "label": "UV / surface disinfection",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_disinfection"
+      ]
+    },
+    {
+      "key": "goods_to_person",
+      "label": "ASRS goods-to-person",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_goods_to_person"
+      ]
+    },
+    {
+      "key": "agriculture_task",
+      "label": "agricultural field work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_agriculture"
+      ],
+      "classes": [
+        "agriculture",
+        "agricultural_robot",
+        "farm_robot"
+      ]
+    },
+    {
+      "key": "healthcare_task",
+      "label": "hospital / clinical assistant work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_healthcare"
+      ],
+      "classes": [
+        "healthcare",
+        "healthcare_robot",
+        "medical_robot",
+        "clinical_robot",
+        "hospital_robot"
+      ]
+    },
+    {
+      "key": "agriculture_weed",
+      "label": "crop weeding",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_weeding"
+      ],
+      "classes": [
+        "agriculture"
+      ],
+      "note": "SKU weeding work. FIND-tile agriculture is the union; LaserWeeder is not a combine."
+    },
+    {
+      "key": "agriculture_combine",
+      "label": "combine grain harvest",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_combine_harvest"
+      ],
+      "classes": [
+        "agriculture"
+      ]
+    },
+    {
+      "key": "agriculture_spray",
+      "label": "precision crop spray",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_precision_spray"
+      ],
+      "classes": [
+        "agriculture"
+      ]
+    },
+    {
+      "key": "agriculture_tractor",
+      "label": "autonomous tractor field work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_tractor_work"
+      ],
+      "classes": [
+        "agriculture"
+      ]
+    },
+    {
+      "key": "construction_task",
+      "label": "construction site work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_construction"
+      ],
+      "classes": [
+        "construction",
+        "construction_robot"
+      ]
+    },
+    {
+      "key": "construction_print",
+      "label": "3D-print home / building walls",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_construction_print"
+      ],
+      "classes": [
+        "construction"
+      ]
+    },
+    {
+      "key": "construction_block",
+      "label": "block / brick laying",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_construction_block"
+      ],
+      "classes": [
+        "construction"
+      ]
+    },
+    {
+      "key": "construction_layout",
+      "label": "jobsite floor layout print",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_construction_layout"
+      ],
+      "classes": [
+        "construction"
+      ]
+    },
+    {
+      "key": "mining_task",
+      "label": "mining / haulage",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_mining"
+      ],
+      "classes": [
+        "mining",
+        "mining_robot"
+      ]
+    },
+    {
+      "key": "warehouse_task",
+      "label": "warehouse / fulfillment work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_warehouse"
+      ],
+      "classes": [
+        "warehouse",
+        "warehouse_robot"
+      ]
+    },
+    {
+      "key": "logistics_task",
+      "label": "3PL / cross-dock / sortation work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_logistics"
+      ],
+      "classes": [
+        "logistics",
+        "logistics_robot"
+      ]
+    },
+    {
+      "key": "factory_task",
+      "label": "factory / plant machine-tend work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_factory"
+      ],
+      "classes": [
+        "factory",
+        "factory_robot"
+      ]
+    },
+    {
+      "key": "hospitality_task",
+      "label": "hotel / guest / housekeeping work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_hospitality"
+      ],
+      "classes": [
+        "hospitality",
+        "hospitality_robot",
+        "hotel_robot"
+      ]
+    },
+    {
+      "key": "serving_task",
+      "label": "table / drink / bussing service",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_serving"
+      ],
+      "classes": [
+        "serving"
+      ]
+    },
+    {
+      "key": "marine_task",
+      "label": "hull / port / underwater work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_marine"
+      ],
+      "classes": [
+        "marine",
+        "marine_robot"
+      ]
+    },
+    {
+      "key": "avionics_task",
+      "label": "drone / eVTOL / autonomous aircraft work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_avionics"
+      ],
+      "classes": [
+        "avionics",
+        "aviation_robot",
+        "drone",
+        "evtol",
+        "uav"
+      ]
+    },
+    {
+      "key": "evtol_flight",
+      "label": "eVTOL passenger/cargo flight",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "product_class"
+      ],
+      "classes": [
+        "evtol"
+      ],
+      "note": "Air-taxi / flying-car flight. Not hangar or airside walking around parked aircraft."
+    },
+    {
+      "key": "drone_task",
+      "label": "drone inspect / delivery flight",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "product_class"
+      ],
+      "classes": [
+        "drone",
+        "uav"
+      ]
+    },
+    {
+      "key": "autonomous_flight",
+      "label": "autonomous airplane-like flight",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "product_class"
+      ],
+      "classes": [
+        "autonomous_aircraft"
+      ]
+    },
+    {
+      "key": "aerospace_task",
+      "label": "satellite / orbital / space-robot work",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_aerospace"
+      ],
+      "classes": [
+        "aerospace",
+        "aerospace_robot"
+      ]
+    },
+    {
+      "key": "hard_floor_scrub",
+      "label": "hard-floor scrubbing",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "supports_hard_floor_scrubbing"
+      ],
+      "classes": [
+        "autonomous_scrubber",
+        "scrubber",
+        "cleaning"
+      ]
+    },
+    {
+      "key": "inspect_route",
+      "label": "mobile inspection route",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [],
+      "classes": [
+        "quadruped"
+      ]
+    },
+    {
+      "key": "reach",
+      "label": "working reach",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "reach_or_workspace"
+      ]
+    },
+    {
+      "key": "load_unload",
+      "label": "load / unload",
+      "generic": false,
+      "distinctive": true,
+      "grounded_by": [
+        "claims_load_unload"
+      ]
+    },
+    {
+      "key": "payload",
+      "label": "payload",
+      "generic": false,
+      "distinctive": false,
+      "grounded_by": [
+        "carrying_capacity"
+      ]
+    }
   ],
   "manipulation_hierarchy": {
     "root": "manipulate",
     "children": [
-      "arm_present", "dual_arm",
-      {"end_effector": ["gripper", "hand", "suction", "clamp", "tool"]},
-      "grasp", "pick", "place", "carry", "push", "pull", "rotate", "insert",
-      "handoff", "load", "unload", "tool_use"
+      "arm_present",
+      "dual_arm",
+      {
+        "end_effector": [
+          "gripper",
+          "hand",
+          "suction",
+          "clamp",
+          "tool"
+        ]
+      },
+      "grasp",
+      "pick",
+      "place",
+      "carry",
+      "push",
+      "pull",
+      "rotate",
+      "insert",
+      "handoff",
+      "load",
+      "unload",
+      "tool_use"
     ],
     "rule": "hardware evidence on the selected configuration determines which children can be inferred"
   }

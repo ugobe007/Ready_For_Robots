@@ -41,8 +41,8 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   `manipulator`, `arm`} is manipulation-morphology evidence — but only grounds
   `manipulate` when no stronger hardware fact already did, and never overrides a
   sibling-SKU/off-subject gate.
-- **R5 ✅** **Food prep** (`claims_food_prep`) → `food_prep` FIND class (QSR make-line / bowl assembly / grill — not hotel housekeeping); **beverage prep**
-  (`claims_beverage_prep`) → `beverage_prep`. These are **distinct** from generic
+- **R5 ✅** **Food prep** (`claims_food_prep`) → `food_prep` FIND class (hotel / casino / airport kitchens **and** QSR make-line / bowl assembly / grill — not hotel housekeeping); **beverage prep**
+  (`claims_beverage_prep`) → `beverage_prep`; **serving** (`claims_serving`) → `serving` FIND class (table / drink / bussing — not housekeeping); **cleaning** (`claims_surface_cleaning` + hard-floor scrub) → `cleaning` FIND class (floor / vacuum / restroom including data centers — not hospital EVS). These are **distinct** from generic
   `manipulate` so a fry/barista robot maps to food/beverage work and does **not**
   match industrial CNC/case jobs.
 

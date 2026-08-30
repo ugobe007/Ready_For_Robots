@@ -66,6 +66,7 @@ def _all_capabilities_profile() -> dict:
             f("claims_logistics", True),                # logistics_task
             f("claims_factory", True),                  # factory_task
             f("claims_hospitality", True),              # hospitality_task
+            f("claims_serving", True),                  # serving_task
             f("claims_marine", True),                   # marine_task
             f("claims_avionics", True),                 # avionics_task
             f("claims_aerospace", True),                # aerospace_task
@@ -173,4 +174,6 @@ def test_industry_work_language_loads_and_healthcare_outranks_humanoid():
     assert "mining_haulage_policy" in slots
     assert "hotel_guest_service_policy" in slots
     assert "food_prep_station_policy" in slots
+    assert "dining_floor_service_policy" in slots
+    assert "commercial_cleaning_policy" in slots
 

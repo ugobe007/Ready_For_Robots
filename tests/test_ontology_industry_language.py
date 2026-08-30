@@ -84,6 +84,7 @@ def test_every_claimed_industry_has_work_words_and_a_task_model():
         "food_prep",
         "serving",
         "hotel",
+        "cleaning",
     ):
         row = rows[industry_id]
         assert row.get("class_signals") or row.get("work_words"), industry_id
@@ -92,8 +93,9 @@ def test_every_claimed_industry_has_work_words_and_a_task_model():
     assert rows["warehouse"]["find_class"] == "warehouse"
     assert rows["hospitality"]["find_class"] == "hospitality"
     assert rows["hotel"]["find_class"] == "hospitality"
-    assert rows["serving"]["find_class"] == "hospitality"
+    assert rows["serving"]["find_class"] == "serving"
     assert rows["food_prep"]["find_class"] == "food_prep"
+    assert rows["cleaning"]["find_class"] == "cleaning"
 
 
 def test_hospital_work_words_are_healthcare_not_humanoid():
@@ -234,6 +236,9 @@ def test_food_prep_ontology_keeps_qsr_work_words():
         "ingredient dosing",
         "tortilla",
         "assembly line kitchen",
+        "hotel kitchen",
+        "casino kitchen",
+        "airport kitchen",
     ):
         assert term in blob, term
     assert fp["find_class"] == "food_prep"
@@ -241,6 +246,7 @@ def test_food_prep_ontology_keeps_qsr_work_words():
         str(a).lower().replace(" ", "_") for a in (rows["hospitality"].get("aliases") or [])
     }
     assert "food_prep" not in hospitality_aliases
+    assert "serving" not in hospitality_aliases
     assert "food prep" not in {str(a).lower() for a in (rows["hospitality"].get("aliases") or [])}
 
 
@@ -250,3 +256,34 @@ def test_diligent_hospital_copy_stays_healthcare():
     assert find_class_from_work_language(HOSPITAL) == "healthcare"
     assert find_class_from_work_language(CHIPOTLE_QSR) != "healthcare"
     assert find_class_from_work_language(HOTEL) != "food_prep"
+    assert find_class_from_work_language(HOTEL) != "serving"
+    assert find_class_from_work_language(HOTEL) != "cleaning"
+
+
+HOTEL_KITCHEN = (
+    "Hotel kitchen prep cook on the banquet commissary line. Casino kitchen "
+    "and airport kitchen culinary. Food preparation at the kitchen station."
+)
+SERVING = (
+    "Table service food runner and busser. Cocktail server in hotel dining. "
+    "Banquet server waitstaff. Mall food court dining room and airport restaurant."
+)
+CLEANING = (
+    "Hotel janitor and restroom attendant. Data center custodian. "
+    "Office building vacuum. Shopping mall floor cleaning. Restaurant janitor."
+)
+
+
+def test_hotel_casino_airport_kitchens_are_food_prep():
+    assert find_class_from_work_language(HOTEL_KITCHEN) == "food_prep"
+    assert infer_class_from_work_language(HOTEL_KITCHEN) == "food_prep"
+    assert find_class_from_work_language(HOTEL_KITCHEN) != "hospitality"
+
+
+def test_serving_and_cleaning_work_language_are_own_find_classes():
+    assert find_class_from_work_language(SERVING) == "serving"
+    assert infer_class_from_work_language(SERVING) == "serving"
+    assert find_class_from_work_language(CLEANING) == "cleaning"
+    assert infer_class_from_work_language(CLEANING) == "cleaning"
+    assert find_class_from_work_language(SERVING) != "hospitality"
+    assert find_class_from_work_language(CLEANING) != "healthcare"
