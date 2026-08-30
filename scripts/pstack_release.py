@@ -115,10 +115,43 @@ SCRAPE_ONLY_FILES = frozenset(
     }
 )
 SCRAPE_ONLY_PREFIXES = ("app/scrapers/",)
+# Live Fly FIND is for PRs that change FIND / Job Cards / ontology / matcher.
+# Scraper URL lists, extract stems, fly.toml, and this gate script are not FIND.
+LIVE_FIND_PATH_MARKERS = (
+    "readyforrobots-new/",
+    "frontend/",
+    "ontology/",
+    "app/services/robot_job_capability_match.py",
+    "app/services/robot_class_qualify.py",
+    "app/services/jobs_terminal.py",
+    "app/services/capability_inference.py",
+    "app/services/robot_inference_engine.py",
+    "app/services/robot_requirement_match.py",
+    "app/api/robot_job_search.py",
+    "app/routers/public_jobs.py",
+    "app/routers/job_cards.py",
+    "app/services/pstack_protocol.py",
+    "docs/CAPABILITY_MODEL.md",
+    "docs/EXPERIMENT_MODE.md",
+    "docs/robot_understanding",
+    "tests/test_jobs_terminal",
+    "tests/test_capability",
+    "tests/test_robot_match",
+    "tests/test_find_",
+    "tests/test_healthcare_class_jobs.py",
+    "tests/test_food_prep_class_jobs.py",
+    "tests/test_industry_class_jobs.py",
+    "tests/test_ontology_industry_language.py",
+    "pstack/release.yaml",
+)
+
+
+def _normalize_repo_path(path: str) -> str:
+    return path.replace("\\", "/").lstrip("./")
 
 
 def path_is_scrape_only(path: str) -> bool:
-    rel = path.replace("\\", "/").lstrip("./")
+    rel = _normalize_repo_path(path)
     if rel in SCRAPE_ONLY_FILES:
         return True
     return any(rel.startswith(prefix) for prefix in SCRAPE_ONLY_PREFIXES)
@@ -127,6 +160,11 @@ def path_is_scrape_only(path: str) -> bool:
 def paths_are_scrape_only(files: list[str]) -> bool:
     rows = [f.strip() for f in files if f.strip() and not f.strip().endswith(".md")]
     return bool(rows) and all(path_is_scrape_only(f) for f in rows)
+
+
+def path_touches_live_find(path: str) -> bool:
+    rel = _normalize_repo_path(path)
+    return any(marker in rel for marker in LIVE_FIND_PATH_MARKERS)
 
 
 def _git_output(args: list[str]) -> str:
@@ -141,13 +179,51 @@ def _git_output(args: list[str]) -> str:
         return ""
 
 
+def _files_from_github_event() -> list[str]:
+    """Actions pull_request payload has base.sha; two-dot diff needs that object."""
+    raw = os.getenv("GITHUB_EVENT_PATH")
+    if not raw:
+        return []
+    path = Path(raw)
+    if not path.is_file():
+        return []
+    try:
+        event = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    pr = event.get("pull_request") if isinstance(event, dict) else None
+    if not isinstance(pr, dict):
+        return []
+    base_sha = str((pr.get("base") or {}).get("sha") or "").strip()
+    if not base_sha:
+        return []
+    _git_output(["fetch", "--no-tags", "--depth=1", "origin", base_sha])
+    diff = _git_output(["diff", "--name-only", base_sha, "HEAD"])
+    return [ln.strip() for ln in diff.splitlines() if ln.strip()]
+
+
 def pr_changed_files() -> list[str]:
-    """PR file list. Merge commits use HEAD^1 (Actions checkout); else origin/main."""
-    # In GitHub Actions with fetch-depth: 1, fetch the base branch so diff works
+    """PR file list. Prefer GitHub event base.sha (Actions fetch-depth: 1 merge)."""
+    event_files = _files_from_github_event()
+    if event_files:
+        return event_files
     if os.getenv("GITHUB_ACTIONS"):
-        base_ref = os.getenv("GITHUB_BASE_REF", "main")
-        _git_output(["fetch", "--depth=1", "origin", base_ref])
-    
+        base_ref = os.getenv("GITHUB_BASE_REF") or "main"
+        _git_output(
+            [
+                "fetch",
+                "--no-tags",
+                "--depth=1",
+                "origin",
+                f"+refs/heads/{base_ref}:refs/remotes/origin/{base_ref}",
+            ]
+        )
+        # Two-dot tree compare. Three-dot needs merge-base, which shallow clones lack.
+        for spec in (f"origin/{base_ref}", base_ref):
+            diff = _git_output(["diff", "--name-only", spec, "HEAD"])
+            files = [ln.strip() for ln in diff.splitlines() if ln.strip()]
+            if files:
+                return files
     parents = _git_output(["rev-list", "--parents", "-n", "1", "HEAD"]).split()
     if len(parents) >= 3:
         diff = _git_output(["diff", "--name-only", "HEAD^1", "HEAD"])
@@ -162,11 +238,23 @@ def pr_changed_files() -> list[str]:
     return []
 
 
-def skip_live_find_drives() -> tuple[bool, str]:
-    files = pr_changed_files()
-    if files and paths_are_scrape_only(files):
-        return True, "scrape-only diff; live FIND is production, not this PR"
-    return False, ""
+def skip_live_find_drives(files: list[str] | None = None) -> tuple[bool, str]:
+    """Skip Fly FIND unless this PR changes FIND / UI / ontology / matcher.
+
+    scrape-only was too narrow: this PR also edits scripts/pstack_release.py, so
+    CI still drove Dexmate and failed on production 503.
+    """
+    listed = files if files is not None else pr_changed_files()
+    rows = [_normalize_repo_path(f) for f in listed if str(f).strip()]
+    if not rows:
+        if os.getenv("GITHUB_ACTIONS"):
+            return True, "CI PR file list empty; skip live FIND"
+        return False, ""
+    live = [f for f in rows if path_touches_live_find(f)]
+    if live:
+        return False, ""
+    preview = ",".join(rows[:20])
+    return True, f"PR does not change FIND/UI/ontology ({preview})"
 
 
 def _http_retries() -> int:
@@ -988,12 +1076,18 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
     )
 
     drives: list[dict[str, Any]] = []
-    skip_live, skip_reason = skip_live_find_drives()
+    changed = pr_changed_files()
+    skip_live, skip_reason = skip_live_find_drives(changed)
+    if not local:
+        print(
+            f"pstack skip_live_find={skip_live} files={changed[:24]!r} reason={skip_reason!r}",
+            file=sys.stderr,
+        )
     if local or skip_live:
         prove = (
             "FIND URL drive skipped (--local)"
             if local
-            else "FIND URL drive skipped (scrape-only PR)"
+            else "FIND URL drive skipped (PR does not change FIND/UI/ontology)"
         )
         checks.append(_check("find_drive", True, prove, skip_reason or "skipped"))
         checks.append(
@@ -1002,7 +1096,7 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
                 True,
                 "Diligent FIND drive skipped (--local)"
                 if local
-                else "Diligent FIND drive skipped (scrape-only PR)",
+                else "Diligent FIND drive skipped (PR does not change FIND/UI/ontology)",
                 skip_reason or "skipped",
             )
         )
