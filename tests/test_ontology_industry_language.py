@@ -96,6 +96,8 @@ def test_every_claimed_industry_has_work_words_and_a_task_model():
     assert rows["serving"]["find_class"] == "serving"
     assert rows["cleaning"]["find_class"] == "cleaning"
     assert rows["food_prep"]["find_class"] == "food_prep"
+    assert rows["cleaning_drone"]["find_class"] == "cleaning_drone"
+    assert rows["cleaning_drone"].get("class_signals") or rows["cleaning_drone"].get("work_words")
 
 
 def test_hospital_work_words_are_healthcare_not_humanoid():
