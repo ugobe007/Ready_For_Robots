@@ -2,8 +2,18 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import { supabase } from "@/lib/supabase";
-import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
-import { clearPendingNext, readNextParam, peekPendingNext, postAuthRedirectTarget, navigateAfterAuth } from "@/lib/authNext";
+import {
+  clearSupabaseOAuthParams,
+  readSupabaseOAuthError,
+  finishSupabaseOAuthCallback,
+} from "@/lib/authCallback";
+import {
+  clearPendingNext,
+  readNextParam,
+  peekPendingNext,
+  postAuthRedirectTarget,
+  navigateAfterAuth,
+} from "@/lib/authNext";
 import { markJobsWorkspaceRestoreIfHome } from "@/lib/jobsWorkflow";
 import { markFreshSignup } from "@/lib/firstSaveGuide";
 import { trackSignupComplete } from "@/lib/siteAnalytics";
@@ -32,7 +42,14 @@ export default function AuthCallback() {
       // Funnel #20: account created (fires once per browser). OAuth + magic link
       // both land here, so this is the single completion point.
       trackSignupComplete({ next });
-      window.history.replaceState(null, "", clearSupabaseOAuthParams("/auth/callback", `?next=${encodeURIComponent(next)}`));
+      window.history.replaceState(
+        null,
+        "",
+        clearSupabaseOAuthParams(
+          "/auth/callback",
+          `?next=${encodeURIComponent(next)}`
+        )
+      );
       navigateAfterAuth(next);
     };
 
@@ -48,16 +65,24 @@ export default function AuthCallback() {
         const detail = oauthErr.includes("Unable to exchange external code")
           ? `${oauthErr}\n\nGoogle Cloud has the right Client ID, but Supabase cannot exchange the code — the Client secret saved in Supabase → Authentication → Providers → Google does not match Google Cloud.\n\nFix: Google Cloud → Credentials → your Web client → Reset secret → copy the new GOCSPX-… secret → paste into Supabase Google provider → Save. Also add http://localhost:3000/** to Supabase URL Configuration if testing locally.`
           : oauthErr;
-        setLocation(`/login?next=${encodeURIComponent(next)}&auth_error=${encodeURIComponent(detail)}`);
+        setLocation(
+          `/login?next=${encodeURIComponent(next)}&auth_error=${encodeURIComponent(detail)}`
+        );
         return;
       }
 
-      const { error } = await finishSupabaseOAuthCallback(client, pathname, search);
+      const { error } = await finishSupabaseOAuthCallback(
+        client,
+        pathname,
+        search
+      );
       if (error) {
         // Double callbacks can throw exchange errors after session is already established.
         const { data } = await client.auth.getSession();
         if (!data?.session) {
-          setLocation(`/login?next=${encodeURIComponent(next)}&auth_error=${encodeURIComponent(error)}`);
+          setLocation(
+            `/login?next=${encodeURIComponent(next)}&auth_error=${encodeURIComponent(error)}`
+          );
           return;
         }
       }
@@ -71,7 +96,9 @@ export default function AuthCallback() {
 
     const timer = window.setTimeout(() => {
       if (!done) {
-        setMessage("Sign-in is taking longer than expected. Try again or use a magic link.");
+        setMessage(
+          "Sign-in is taking longer than expected. Try again or use a magic link."
+        );
       }
     }, 12_000);
 
@@ -86,7 +113,10 @@ export default function AuthCallback() {
       <ExperimentHeader />
       <main className="mx-auto max-w-md px-6 pt-32 text-center">
         <p className="text-base text-slate-300">{message}</p>
-        <Link href="/login" className="mt-6 inline-block text-base font-semibold text-emerald-400">
+        <Link
+          href="/login"
+          className="mt-6 inline-block text-base font-semibold text-emerald-400"
+        >
           Back to sign in
         </Link>
       </main>

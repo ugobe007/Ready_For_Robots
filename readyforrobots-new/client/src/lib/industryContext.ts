@@ -35,7 +35,10 @@ const HEALTHCARE_TERMS = [
 
 function normalizedIndustryTokens(industry?: string | null): Set<string> {
   const value = (industry || "").toLowerCase();
-  const normalized = value.replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
+  const normalized = value
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
   const words = normalized ? normalized.split(/\s+/) : [];
   const tokens = new Set(words);
   for (let i = 0; i < words.length - 1; i += 1) {
@@ -49,22 +52,51 @@ export function industryCategory(industry?: string | null): IndustryCategory {
 
   // Important: hospitality is not healthcare. Never test "hospital" by substring,
   // because "hospitality" starts with the same letters.
-  if (HOSPITALITY_TERMS.some((term) => tokens.has(term))) return "hospitality";
-  if (HEALTHCARE_TERMS.some((term) => tokens.has(term))) return "healthcare";
-  if (["logistics", "warehouse", "warehousing", "fulfillment", "distribution", "3pl"].some((term) => tokens.has(term))) {
+  if (HOSPITALITY_TERMS.some(term => tokens.has(term))) return "hospitality";
+  if (HEALTHCARE_TERMS.some(term => tokens.has(term))) return "healthcare";
+  if (
+    [
+      "logistics",
+      "warehouse",
+      "warehousing",
+      "fulfillment",
+      "distribution",
+      "3pl",
+    ].some(term => tokens.has(term))
+  ) {
     return "logistics";
   }
-  if (["airport", "airports", "aviation"].some((term) => tokens.has(term))) return "airport";
-  if (["manufacturing", "manufacturer", "automotive", "factory"].some((term) => tokens.has(term))) {
+  if (["airport", "airports", "aviation"].some(term => tokens.has(term)))
+    return "airport";
+  if (
+    ["manufacturing", "manufacturer", "automotive", "factory"].some(term =>
+      tokens.has(term)
+    )
+  ) {
     return "manufacturing";
   }
   if (
     [
-      "restaurant", "restaurants", "qsr", "food service", "foodservice", "food",
-      "food prep", "food preparation", "food delivery", "food robot", "kitchen",
-      "kitchen robot", "ghost kitchen", "dark kitchen", "catering", "cafeteria",
-      "fast food", "fast casual", "dining",
-    ].some((term) => tokens.has(term))
+      "restaurant",
+      "restaurants",
+      "qsr",
+      "food service",
+      "foodservice",
+      "food",
+      "food prep",
+      "food preparation",
+      "food delivery",
+      "food robot",
+      "kitchen",
+      "kitchen robot",
+      "ghost kitchen",
+      "dark kitchen",
+      "catering",
+      "cafeteria",
+      "fast food",
+      "fast casual",
+      "dining",
+    ].some(term => tokens.has(term))
   ) {
     return "food_service";
   }

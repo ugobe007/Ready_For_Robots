@@ -37,7 +37,9 @@ export function authHeader(token: string | undefined): HeadersInit {
  * Use for admin API calls so a stale in-memory session never sends a bare
  * request that the backend rejects with "Authorization: Bearer <token> required".
  */
-export async function getFreshAccessToken(fallback?: string): Promise<string | undefined> {
+export async function getFreshAccessToken(
+  fallback?: string
+): Promise<string | undefined> {
   if (!supabase) return fallback;
   try {
     const { data } = await supabase.auth.getSession();

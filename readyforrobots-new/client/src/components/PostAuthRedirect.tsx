@@ -9,9 +9,18 @@ import {
   peekPendingNext,
   navigateAfterAuth,
 } from "@/lib/authNext";
-import { normalizeJobsReturnPath, isJobsProductReturnPath } from "@/lib/signupWorkflowPath";
+import {
+  normalizeJobsReturnPath,
+  isJobsProductReturnPath,
+} from "@/lib/signupWorkflowPath";
 
-const NEUTRAL_PATHS = new Set(["/", "/login", "/signup", "/auth/callback", "/pricing"]);
+const NEUTRAL_PATHS = new Set([
+  "/",
+  "/login",
+  "/signup",
+  "/auth/callback",
+  "/pricing",
+]);
 
 export default function PostAuthRedirect() {
   const { session, loading } = useAuth();
@@ -25,7 +34,9 @@ export default function PostAuthRedirect() {
     const path = window.location.pathname;
     if (!NEUTRAL_PATHS.has(path)) return;
 
-    let target = isJobsProductReturnPath(pending) ? normalizeJobsReturnPath(pending) : pending;
+    let target = isJobsProductReturnPath(pending)
+      ? normalizeJobsReturnPath(pending)
+      : pending;
     const current = `${window.location.pathname}${window.location.search}`;
     if (current === target) {
       clearPendingNext();

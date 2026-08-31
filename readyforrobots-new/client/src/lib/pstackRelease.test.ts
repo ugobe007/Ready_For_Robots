@@ -2,10 +2,7 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  findUserFacingError,
-  isSilentFindError,
-} from "./robotUrlIdentity";
+import { findUserFacingError, isSilentFindError } from "./robotUrlIdentity";
 import {
   CLASS_PICKER_FIXTURE,
   CRM_LEFTOVER_FIXTURE,
@@ -78,22 +75,19 @@ describe("pstack release — #173 self-abort FIND", () => {
   it("does not surface AbortError or Failed to fetch as Research failed", () => {
     expect(abortMustNotSurfaceAsResearchFailed()).toBe(true);
     expect(
-      findUserFacingError(
-        FIND_ABORT_FIXTURE.abort,
-        FIND_ABORT_FIXTURE.fallback,
-      ),
+      findUserFacingError(FIND_ABORT_FIXTURE.abort, FIND_ABORT_FIXTURE.fallback)
     ).toBeNull();
     expect(
       findUserFacingError(
         FIND_ABORT_FIXTURE.failedToFetch,
-        FIND_ABORT_FIXTURE.fallback,
-      ),
+        FIND_ABORT_FIXTURE.fallback
+      )
     ).toBeNull();
     expect(isSilentFindError(FIND_ABORT_FIXTURE.abort)).toBe(true);
     expect(isSilentFindError(FIND_ABORT_FIXTURE.failedToFetch)).toBe(true);
     const shown = findUserFacingError(
       new Error("robot-job-search 502"),
-      FIND_ABORT_FIXTURE.fallback,
+      FIND_ABORT_FIXTURE.fallback
     );
     expect(shown).toMatch(/Research failed/);
     expect(shown).not.toMatch(/Failed to fetch/i);
@@ -102,13 +96,15 @@ describe("pstack release — #173 self-abort FIND", () => {
   it("FIND catch returns on abort before setError", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const submitFind = workspace.slice(
       workspace.indexOf("async function submitFind"),
-      workspace.indexOf("async function confirmSelection"),
+      workspace.indexOf("async function confirmSelection")
     );
-    const catchBlock = submitFind.slice(submitFind.lastIndexOf("} catch (err)"));
+    const catchBlock = submitFind.slice(
+      submitFind.lastIndexOf("} catch (err)")
+    );
     expect(catchBlock).toMatch(/shouldIgnoreStaleFindError/);
     expect(catchBlock).toMatch(/isAbortError\(err,\s*ac\.signal\)/);
     expect(catchBlock).toMatch(/FIND_RESEARCH_INTERRUPTED_MESSAGE/);
@@ -135,7 +131,7 @@ describe("pstack release — #172 leftover CRM strawberry robot", () => {
     });
     beginJobsHandoffForUrl(
       CRM_LEFTOVER_FIXTURE.nextUrl,
-      CRM_LEFTOVER_FIXTURE.nextProduct,
+      CRM_LEFTOVER_FIXTURE.nextProduct
     );
     expect(bindUrlFlushesPriorRobot()).toBe(true);
     expect(
@@ -146,7 +142,7 @@ describe("pstack release — #172 leftover CRM strawberry robot", () => {
           jobs: [],
         },
         accountRows: [orchardRow()],
-      }),
+      })
     ).toBe(true);
   });
 });
@@ -177,13 +173,13 @@ describe("pstack release authority is not FIND/CRM chrome", () => {
     expect(diligentMustNotBeHumanoidEmpty()).toBe(true);
     const desk = readFileSync(
       join(here, "../components/JobsCrmDesk.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(desk).not.toMatch(/JobsPstackProtocol/);
     expect(desk).not.toMatch(/JOBS AGENT PROTOCOL/);
     const readme = readFileSync(
       join(here, "../../../../pstack/README.md"),
-      "utf8",
+      "utf8"
     );
     expect(readme).toMatch(/release gate/);
     expect(readme).toMatch(/not a banner/);

@@ -1,7 +1,16 @@
 /**
  * Pricing — ReadyForRobots (Precision Intelligence light theme)
  */
-import { CheckCircle2, ArrowRight, Zap, Shield, Cpu, HelpCircle, ChevronDown, Loader2 } from "lucide-react";
+import {
+  CheckCircle2,
+  ArrowRight,
+  Zap,
+  Shield,
+  Cpu,
+  HelpCircle,
+  ChevronDown,
+  Loader2,
+} from "lucide-react";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
@@ -10,7 +19,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAuth } from "@/contexts/AuthContext";
 import { signupHrefForCheckout } from "@/lib/authNext";
-import { fetchBillingConfig, startCheckout, type BillingConfig } from "@/lib/billing";
+import {
+  fetchBillingConfig,
+  startCheckout,
+  type BillingConfig,
+} from "@/lib/billing";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
 
@@ -33,7 +46,10 @@ const tiers = [
       "Outreach draft previews",
       "Daily newsletter and market signal brief",
     ],
-    limitations: ["No SIGNAL research feed", "HubSpot connect only — auto-sync on Pro"],
+    limitations: [
+      "No SIGNAL research feed",
+      "HubSpot connect only — auto-sync on Pro",
+    ],
     highlight: false,
   },
   {
@@ -140,9 +156,21 @@ const faqs = [
 ];
 
 const accentStyles = {
-  emerald: { icon: "text-emerald-600", bg: "bg-emerald-50 border-emerald-100", check: "text-emerald-600" },
-  amber: { icon: "text-amber-600", bg: "bg-amber-50 border-amber-100", check: "text-amber-600" },
-  slate: { icon: "text-slate-600", bg: "bg-slate-50 border-slate-200", check: "text-slate-600" },
+  emerald: {
+    icon: "text-emerald-600",
+    bg: "bg-emerald-50 border-emerald-100",
+    check: "text-emerald-600",
+  },
+  amber: {
+    icon: "text-amber-600",
+    bg: "bg-amber-50 border-amber-100",
+    check: "text-amber-600",
+  },
+  slate: {
+    icon: "text-slate-600",
+    bg: "bg-slate-50 border-slate-200",
+    check: "text-slate-600",
+  },
 };
 
 export default function Pricing() {
@@ -161,34 +189,49 @@ export default function Pricing() {
   const upgradeStarted = useRef(false);
 
   useEffect(() => {
-    void fetchBillingConfig().then(setBilling).catch(() => setBilling({ enabled: false }));
+    void fetchBillingConfig()
+      .then(setBilling)
+      .catch(() => setBilling({ enabled: false }));
   }, []);
 
-  const beginCheckout = useCallback(async (tier: "pro" | "premium") => {
-    setCheckoutError("");
-    if (authLoading) return;
-    if (!billing?.enabled) {
-      setCheckoutError("Billing is not available yet.");
-      return;
-    }
-    if (!session?.access_token) {
-      window.location.assign(signupHrefForCheckout(tier));
-      return;
-    }
-    setCheckoutBusy(tier);
-    try {
-      const url = await startCheckout(session.access_token, tier);
-      window.location.href = url;
-    } catch (err) {
-      setCheckoutError(err instanceof Error ? err.message : "Checkout failed");
-      setCheckoutBusy(null);
-    }
-  }, [authLoading, billing?.enabled, session?.access_token]);
+  const beginCheckout = useCallback(
+    async (tier: "pro" | "premium") => {
+      setCheckoutError("");
+      if (authLoading) return;
+      if (!billing?.enabled) {
+        setCheckoutError("Billing is not available yet.");
+        return;
+      }
+      if (!session?.access_token) {
+        window.location.assign(signupHrefForCheckout(tier));
+        return;
+      }
+      setCheckoutBusy(tier);
+      try {
+        const url = await startCheckout(session.access_token, tier);
+        window.location.href = url;
+      } catch (err) {
+        setCheckoutError(
+          err instanceof Error ? err.message : "Checkout failed"
+        );
+        setCheckoutBusy(null);
+      }
+    },
+    [authLoading, billing?.enabled, session?.access_token]
+  );
 
   // Resume checkout only after auth when URL explicitly carries ?upgrade= (post-login return).
   useEffect(() => {
-    if (authLoading || !billing?.enabled || !session?.access_token || upgradeStarted.current) return;
-    const upgrade = (new URLSearchParams(window.location.search).get("upgrade") || "").toLowerCase();
+    if (
+      authLoading ||
+      !billing?.enabled ||
+      !session?.access_token ||
+      upgradeStarted.current
+    )
+      return;
+    const upgrade = (
+      new URLSearchParams(window.location.search).get("upgrade") || ""
+    ).toLowerCase();
     if (upgrade === "pro" || upgrade === "premium") {
       upgradeStarted.current = true;
       void beginCheckout(upgrade);
@@ -202,7 +245,9 @@ export default function Pricing() {
         void beginCheckout("premium");
         return;
       }
-      document.getElementById("founding-customer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document
+        .getElementById("founding-customer")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     if (action === "trial" || action === "checkout_pro") {
@@ -214,7 +259,8 @@ export default function Pricing() {
       return;
     }
     if (action === "sales") {
-      window.location.href = "mailto:sales@readyforrobots.com?subject=Premium%20workspace%20inquiry";
+      window.location.href =
+        "mailto:sales@readyforrobots.com?subject=Premium%20workspace%20inquiry";
       return;
     }
     const next = encodeURIComponent("/pipeline");
@@ -227,23 +273,29 @@ export default function Pricing() {
     setFoundingError("");
     setFoundingSuccess(false);
     try {
-      const res = await fetch(`${getApiBase()}/api/waitlist/founding-customer`, liveFetchInit({
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: foundingEmail.trim(),
-          company: foundingCompany.trim(),
-          name: foundingName.trim() || undefined,
-        }),
-      }));
+      const res = await fetch(
+        `${getApiBase()}/api/waitlist/founding-customer`,
+        liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: foundingEmail.trim(),
+            company: foundingCompany.trim(),
+            name: foundingName.trim() || undefined,
+          }),
+        })
+      );
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(String(data.detail || "Could not submit request"));
+      if (!res.ok)
+        throw new Error(String(data.detail || "Could not submit request"));
       setFoundingSuccess(true);
       setFoundingEmail("");
       setFoundingCompany("");
       setFoundingName("");
     } catch (err) {
-      setFoundingError(err instanceof Error ? err.message : "Could not submit request");
+      setFoundingError(
+        err instanceof Error ? err.message : "Could not submit request"
+      );
     } finally {
       setFoundingBusy(false);
     }
@@ -260,13 +312,24 @@ export default function Pricing() {
         description={
           <div className="flex items-center justify-center gap-6">
             <p className="min-w-0 max-w-2xl flex-1 text-left sm:text-center">
-              <span className="font-bold uppercase tracking-widest text-emerald-400">Signal</span>
-              {" — ISA qualification + alignment scoring, then MSD sales activation synced to "}
+              <span className="font-bold uppercase tracking-widest text-emerald-400">
+                Signal
+              </span>
+              {
+                " — ISA qualification + alignment scoring, then MSD sales activation synced to "
+              }
               <span className="font-bold text-amber-400">HubSpot</span>
-              {" or your CRM. Free workspace to start — Pro and Premium checkout when billing is enabled."}
+              {
+                " or your CRM. Free workspace to start — Pro and Premium checkout when billing is enabled."
+              }
             </p>
             <div className="shrink-0" aria-hidden="true">
-              <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+              <PixelIcon
+                map={KARE_FACE}
+                scale={5}
+                fill="#3ecf8e"
+                background="transparent"
+              />
             </div>
           </div>
         }
@@ -278,8 +341,12 @@ export default function Pricing() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs text-gray-500 max-w-lg mx-auto">
-              Create an account, browse the pipeline, then upgrade when you are ready.{" "}
-              <Link href="/compare" className="text-emerald-700 font-semibold hover:underline">
+              Create an account, browse the pipeline, then upgrade when you are
+              ready.{" "}
+              <Link
+                href="/compare"
+                className="text-emerald-700 font-semibold hover:underline"
+              >
                 Compare vs data tools
               </Link>
             </p>
@@ -289,14 +356,16 @@ export default function Pricing() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-16">
-            {tiers.map((tier) => {
+            {tiers.map(tier => {
               const Icon = tier.icon;
               const accent = accentStyles[tier.accent];
               return (
                 <div
                   key={tier.name}
                   className={`rounded-2xl border flex flex-col relative overflow-hidden transition-all hover:-translate-y-1 bg-white ${
-                    tier.highlight ? "border-emerald-300 shadow-lg shadow-emerald-100/50 ring-1 ring-emerald-200" : "border-gray-200 shadow-sm"
+                    tier.highlight
+                      ? "border-emerald-300 shadow-lg shadow-emerald-100/50 ring-1 ring-emerald-200"
+                      : "border-gray-200 shadow-sm"
                   }`}
                 >
                   {tier.badge && (
@@ -305,23 +374,43 @@ export default function Pricing() {
                     </div>
                   )}
 
-                  <div className={`p-7 flex flex-col flex-1 ${tier.badge ? "pt-10" : ""}`}>
+                  <div
+                    className={`p-7 flex flex-col flex-1 ${tier.badge ? "pt-10" : ""}`}
+                  >
                     <div className="flex items-center gap-2.5 mb-4">
-                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center border ${accent.bg}`}>
+                      <div
+                        className={`h-8 w-8 rounded-lg flex items-center justify-center border ${accent.bg}`}
+                      >
                         <Icon className={`h-4 w-4 ${accent.icon}`} />
                       </div>
-                      <span className="font-bold text-gray-900 text-sm">{tier.name}</span>
+                      <span className="font-bold text-gray-900 text-sm">
+                        {tier.name}
+                      </span>
                     </div>
 
                     <div className="mb-2">
-                      <span className="font-display font-extrabold text-gray-900 text-4xl leading-none">{tier.price}</span>
-                      {tier.period && <span className="text-sm text-gray-500 ml-1">{tier.period}</span>}
+                      <span className="font-display font-extrabold text-gray-900 text-4xl leading-none">
+                        {tier.price}
+                      </span>
+                      {tier.period && (
+                        <span className="text-sm text-gray-500 ml-1">
+                          {tier.period}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-gray-500 mb-6">{tier.tagline}</p>
 
                     <button
                       onClick={() => handleCta(tier.ctaAction, tier.name)}
-                      disabled={checkoutBusy === tier.name.toLowerCase() || checkoutBusy === (tier.name === "Pro" ? "pro" : tier.name === "Premium" ? "premium" : "")}
+                      disabled={
+                        checkoutBusy === tier.name.toLowerCase() ||
+                        checkoutBusy ===
+                          (tier.name === "Pro"
+                            ? "pro"
+                            : tier.name === "Premium"
+                              ? "premium"
+                              : "")
+                      }
                       className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-3 rounded-xl mb-7 transition-all hover:-translate-y-0.5 disabled:opacity-60 ${
                         tier.highlight
                           ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200"
@@ -335,14 +424,19 @@ export default function Pricing() {
                     </button>
 
                     <div className="flex flex-col gap-2.5 flex-1">
-                      {tier.features.map((f) => (
+                      {tier.features.map(f => (
                         <div key={f} className="flex items-start gap-2.5">
-                          <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${accent.check}`} />
+                          <CheckCircle2
+                            className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${accent.check}`}
+                          />
                           <span className="text-xs text-gray-600">{f}</span>
                         </div>
                       ))}
-                      {tier.limitations.map((l) => (
-                        <div key={l} className="flex items-start gap-2.5 opacity-50">
+                      {tier.limitations.map(l => (
+                        <div
+                          key={l}
+                          className="flex items-start gap-2.5 opacity-50"
+                        >
                           <div className="h-3.5 w-3.5 shrink-0 mt-0.5 flex items-center justify-center">
                             <div className="h-px w-3 bg-gray-300" />
                           </div>
@@ -365,18 +459,26 @@ export default function Pricing() {
               Premium workspace — early access
             </h2>
             <p className="text-sm text-gray-600 mb-6 max-w-2xl">
-              Teams ready to run a full robot sales motion can apply for founding customer terms on Premium.
-              We will follow up personally on founding terms. Premium self-serve checkout appears here when{" "}
-              <code className="text-[10px]">STRIPE_PRICE_PREMIUM</code> is configured on the server.
+              Teams ready to run a full robot sales motion can apply for
+              founding customer terms on Premium. We will follow up personally
+              on founding terms. Premium self-serve checkout appears here when{" "}
+              <code className="text-[10px]">STRIPE_PRICE_PREMIUM</code> is
+              configured on the server.
             </p>
             {foundingSuccess ? (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                 Thanks — we received your request and will reach out shortly.
               </div>
             ) : (
-              <form onSubmit={(e) => void submitFounding(e)} className="grid gap-4 max-w-lg">
+              <form
+                onSubmit={e => void submitFounding(e)}
+                className="grid gap-4 max-w-lg"
+              >
                 <div>
-                  <label htmlFor="founding-email" className="block text-xs font-semibold text-gray-700 mb-1">
+                  <label
+                    htmlFor="founding-email"
+                    className="block text-xs font-semibold text-gray-700 mb-1"
+                  >
                     Work email
                   </label>
                   <input
@@ -384,13 +486,16 @@ export default function Pricing() {
                     type="email"
                     required
                     value={foundingEmail}
-                    onChange={(e) => setFoundingEmail(e.target.value)}
+                    onChange={e => setFoundingEmail(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
                     placeholder="you@company.com"
                   />
                 </div>
                 <div>
-                  <label htmlFor="founding-company" className="block text-xs font-semibold text-gray-700 mb-1">
+                  <label
+                    htmlFor="founding-company"
+                    className="block text-xs font-semibold text-gray-700 mb-1"
+                  >
                     Company
                   </label>
                   <input
@@ -398,20 +503,26 @@ export default function Pricing() {
                     type="text"
                     required
                     value={foundingCompany}
-                    onChange={(e) => setFoundingCompany(e.target.value)}
+                    onChange={e => setFoundingCompany(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
                     placeholder="Your robot company or sales team"
                   />
                 </div>
                 <div>
-                  <label htmlFor="founding-name" className="block text-xs font-semibold text-gray-700 mb-1">
-                    Name <span className="font-normal text-gray-400">(optional)</span>
+                  <label
+                    htmlFor="founding-name"
+                    className="block text-xs font-semibold text-gray-700 mb-1"
+                  >
+                    Name{" "}
+                    <span className="font-normal text-gray-400">
+                      (optional)
+                    </span>
                   </label>
                   <input
                     id="founding-name"
                     type="text"
                     value={foundingName}
-                    onChange={(e) => setFoundingName(e.target.value)}
+                    onChange={e => setFoundingName(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
                     placeholder="Your name"
                   />
@@ -424,7 +535,9 @@ export default function Pricing() {
                   disabled={foundingBusy}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 shadow-md shadow-emerald-200/50 disabled:opacity-60"
                 >
-                  {foundingBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {foundingBusy ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : null}
                   Request founding access
                 </button>
               </form>
@@ -435,17 +548,30 @@ export default function Pricing() {
             <div className="mb-5 flex items-start gap-4">
               <HelpCircle className="h-5 w-5 shrink-0 mt-0.5 text-amber-600" />
               <div>
-                <p className="text-sm font-semibold mb-1 text-amber-800">Optional support services</p>
+                <p className="text-sm font-semibold mb-1 text-amber-800">
+                  Optional support services
+                </p>
                 <p className="text-xs text-gray-600 leading-relaxed max-w-3xl">
-                  Some customers need help beyond software. ReadyForRobots can coordinate additional support for customer success, technical setup, integration planning, and robot installation through vetted local partners. Service pricing is scoped separately based on need.
+                  Some customers need help beyond software. ReadyForRobots can
+                  coordinate additional support for customer success, technical
+                  setup, integration planning, and robot installation through
+                  vetted local partners. Service pricing is scoped separately
+                  based on need.
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-              {supportServices.map((service) => (
-                <div key={service.title} className="rounded-xl border border-gray-200 bg-white p-4">
-                  <p className="text-xs font-bold mb-2 text-amber-700">{service.title}</p>
-                  <p className="text-[11px] leading-relaxed text-gray-600">{service.copy}</p>
+              {supportServices.map(service => (
+                <div
+                  key={service.title}
+                  className="rounded-xl border border-gray-200 bg-white p-4"
+                >
+                  <p className="text-xs font-bold mb-2 text-amber-700">
+                    {service.title}
+                  </p>
+                  <p className="text-[11px] leading-relaxed text-gray-600">
+                    {service.copy}
+                  </p>
                 </div>
               ))}
             </div>
@@ -454,9 +580,14 @@ export default function Pricing() {
           <div className="rounded-2xl border border-gray-200 bg-white p-6 flex items-start gap-4 mb-16 shadow-sm">
             <Shield className="h-5 w-5 shrink-0 mt-0.5 text-emerald-600" />
             <div>
-              <p className="text-sm font-semibold text-gray-900 mb-1">No risk. No lock-in.</p>
+              <p className="text-sm font-semibold text-gray-900 mb-1">
+                No risk. No lock-in.
+              </p>
               <p className="text-xs text-gray-600 leading-relaxed">
-                Starter is not a self-serve tier — Free, Pro, and Premium are designed to be easy to try and easy to grow into. Additional service work is optional and scoped separately from the software subscription.
+                Starter is not a self-serve tier — Free, Pro, and Premium are
+                designed to be easy to try and easy to grow into. Additional
+                service work is optional and scoped separately from the software
+                subscription.
               </p>
             </div>
           </div>
@@ -468,17 +599,26 @@ export default function Pricing() {
             </h2>
             <div className="space-y-2">
               {faqs.map((faq, i) => (
-                <div key={i} className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                <div
+                  key={i}
+                  className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm"
+                >
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
                     className="w-full flex items-center justify-between px-5 py-4 text-left"
                   >
-                    <span className="text-sm font-semibold text-gray-800">{faq.q}</span>
-                    <ChevronDown className={`h-4 w-4 text-gray-400 shrink-0 ml-4 transition-transform ${openFaq === i ? "rotate-180" : ""}`} />
+                    <span className="text-sm font-semibold text-gray-800">
+                      {faq.q}
+                    </span>
+                    <ChevronDown
+                      className={`h-4 w-4 text-gray-400 shrink-0 ml-4 transition-transform ${openFaq === i ? "rotate-180" : ""}`}
+                    />
                   </button>
                   {openFaq === i && (
                     <div className="px-5 pb-4 border-t border-gray-100 pt-3">
-                      <p className="text-sm text-gray-600 leading-relaxed">{faq.a}</p>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {faq.a}
+                      </p>
                     </div>
                   )}
                 </div>

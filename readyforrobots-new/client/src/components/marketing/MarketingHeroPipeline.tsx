@@ -2,7 +2,15 @@
  * Hero live pipeline widget — emerald redesign skin, /api/leads/homepage data.
  */
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Building2, Factory, Heart, Hotel, Truck, Utensils } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  Factory,
+  Heart,
+  Hotel,
+  Truck,
+  Utensils,
+} from "lucide-react";
 import { Link } from "wouter";
 import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
@@ -38,7 +46,8 @@ const FALLBACK: LeadRow[] = [
     industry: "Hospitality",
     priority_tier: "HOT",
     score: { overall_score: 79 },
-    pipeline_action: "Priority: Lead with overnight cleaning robots — confirm facilities owner",
+    pipeline_action:
+      "Priority: Lead with overnight cleaning robots — confirm facilities owner",
     robot_types_needed: ["service robots", "cleaning robots"],
   },
   {
@@ -115,7 +124,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
   useEffect(() => {
     if (pool.length <= 2) return;
     const timer = window.setInterval(() => {
-      setVisible((current) => {
+      setVisible(current => {
         const next = [...current];
         const pick = pool[poolCursor.current % pool.length];
         poolCursor.current = (poolCursor.current + 1) % pool.length;
@@ -132,8 +141,8 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
   const totalLabel = formatStat(totalCount, "3,957");
   const rows = visible.slice(0, 2);
   const topLiveLead = rows
-    .map((lead) => ({ lead, href: leadHref(lead, live) }))
-    .find((entry) => Boolean(entry.href));
+    .map(lead => ({ lead, href: leadHref(lead, live) }))
+    .find(entry => Boolean(entry.href));
   const topLiveCompany = topLiveLead?.lead.company_name?.trim() || "this lead";
 
   return (
@@ -141,7 +150,9 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
       <div className="home-hero-panel-header flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="font-display text-sm font-semibold text-slate-100">Live pipeline</span>
+          <span className="font-display text-sm font-semibold text-slate-100">
+            Live pipeline
+          </span>
         </div>
         <span className="rounded-full border border-amber-300/60 bg-amber-400/18 px-2.5 py-0.5 font-mono-data text-xs font-bold text-amber-200">
           {hotLabel} HOT
@@ -174,7 +185,9 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
                 )}
               </div>
               <div className="shrink-0 text-right">
-                <div className="score-number text-2xl leading-none text-emerald-400">{scoreOf(lead)}</div>
+                <div className="score-number text-2xl leading-none text-emerald-400">
+                  {scoreOf(lead)}
+                </div>
                 <div className="mt-0.5 font-mono-data text-xs font-semibold uppercase tracking-wide text-slate-400">
                   {live ? "live" : "demo"}
                 </div>

@@ -21,7 +21,11 @@ type SetupPayload = {
   display_name?: string | null;
   email?: string | null;
   sync_entitled: boolean;
-  connection: { connected: boolean; account_login?: string | null; account_name?: string | null };
+  connection: {
+    connected: boolean;
+    account_login?: string | null;
+    account_name?: string | null;
+  };
   sync: { sync_mode: "auto_all" | "manual_select"; sync_lead_ids: number[] };
   saved_leads: SavedLead[];
 };
@@ -34,7 +38,9 @@ export default function HubSpotConnect() {
   const [setup, setSetup] = useState<SetupPayload | null>(null);
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
-  const [syncMode, setSyncMode] = useState<"auto_all" | "manual_select">("auto_all");
+  const [syncMode, setSyncMode] = useState<"auto_all" | "manual_select">(
+    "auto_all"
+  );
   const [selectedLeadIds, setSelectedLeadIds] = useState<number[]>([]);
 
   const authFetch = useCallback(
@@ -43,7 +49,10 @@ export default function HubSpotConnect() {
       if (!t) throw new Error("Not signed in");
       const response = await fetch(
         `${getApiBase()}${path}`,
-        liveFetchInit({ ...init, headers: { ...authHeader(t), ...init.headers } }),
+        liveFetchInit({
+          ...init,
+          headers: { ...authHeader(t), ...init.headers },
+        })
       );
       const text = await response.text();
       if (!response.ok) {
@@ -54,15 +63,19 @@ export default function HubSpotConnect() {
         } catch {
           // keep raw
         }
-        throw new Error(typeof message === "string" ? message : "Request failed");
+        throw new Error(
+          typeof message === "string" ? message : "Request failed"
+        );
       }
       return text ? JSON.parse(text) : null;
     },
-    [session?.access_token],
+    [session?.access_token]
   );
 
   const loadSetup = useCallback(async () => {
-    const data = (await authFetch("/api/integrations/hubspot/setup")) as SetupPayload;
+    const data = (await authFetch(
+      "/api/integrations/hubspot/setup"
+    )) as SetupPayload;
     setSetup(data);
     setFullName(data.display_name || "");
     setSyncMode(data.sync?.sync_mode || "auto_all");
@@ -72,16 +85,24 @@ export default function HubSpotConnect() {
   useEffect(() => {
     if (loading || !session?.access_token) return;
     const stored =
-      typeof window !== "undefined" ? window.localStorage.getItem("rfr_signup_full_name") : null;
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("rfr_signup_full_name")
+        : null;
     if (stored) setFullName(stored);
-    void loadSetup().catch((e) => toast.error(e instanceof Error ? e.message : "Could not load HubSpot setup"));
+    void loadSetup().catch(e =>
+      toast.error(
+        e instanceof Error ? e.message : "Could not load HubSpot setup"
+      )
+    );
   }, [loading, session, loadSetup]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("connected") === "1") {
-      toast.success("HubSpot connected — choose how Signal syncs your saved leads.");
+      toast.success(
+        "HubSpot connected — choose how Signal syncs your saved leads."
+      );
       window.history.replaceState({}, "", "/integrations/hubspot");
     }
     const err = params.get("error");
@@ -93,7 +114,9 @@ export default function HubSpotConnect() {
 
   const saveProfile = async () => {
     if (!fullName.trim()) {
-      toast.error("Enter your full name so Signal can authenticate your HubSpot workspace.");
+      toast.error(
+        "Enter your full name so Signal can authenticate your HubSpot workspace."
+      );
       return;
     }
     setBusy(true);
@@ -103,7 +126,8 @@ export default function HubSpotConnect() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ display_name: fullName.trim() }),
       });
-      if (typeof window !== "undefined") window.localStorage.removeItem("rfr_signup_full_name");
+      if (typeof window !== "undefined")
+        window.localStorage.removeItem("rfr_signup_full_name");
       await loadSetup();
       toast.success("Profile saved");
     } catch (e) {
@@ -116,11 +140,15 @@ export default function HubSpotConnect() {
   const startHubSpotOAuth = async () => {
     setBusy(true);
     try {
-      const data = await authFetch("/api/integrations/hubspot/connect-url?return_to=/integrations/hubspot");
+      const data = await authFetch(
+        "/api/integrations/hubspot/connect-url?return_to=/integrations/hubspot"
+      );
       if (!data.auth_url) throw new Error("HubSpot connect URL missing");
       window.location.href = data.auth_url;
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not start HubSpot connect");
+      toast.error(
+        e instanceof Error ? e.message : "Could not start HubSpot connect"
+      );
       setBusy(false);
     }
   };
@@ -139,7 +167,9 @@ export default function HubSpotConnect() {
       toast.success("HubSpot sync preferences saved");
       await loadSetup();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save sync settings");
+      toast.error(
+        e instanceof Error ? e.message : "Could not save sync settings"
+      );
     } finally {
       setBusy(false);
     }
@@ -148,13 +178,18 @@ export default function HubSpotConnect() {
   const syncFromHubSpot = async () => {
     setBusy(true);
     try {
-      const result = (await authFetch("/api/integrations/hubspot/sync-from-hubspot", {
-        method: "POST",
-      })) as { updated?: number; checked?: number; message?: string };
+      const result = (await authFetch(
+        "/api/integrations/hubspot/sync-from-hubspot",
+        {
+          method: "POST",
+        }
+      )) as { updated?: number; checked?: number; message?: string };
       if (result.message && !result.updated) {
         toast.message(result.message);
       } else {
-        toast.success(`Synced ${result.updated ?? 0} deal stage(s) from HubSpot.`);
+        toast.success(
+          `Synced ${result.updated ?? 0} deal stage(s) from HubSpot.`
+        );
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "HubSpot read sync failed");
@@ -164,8 +199,10 @@ export default function HubSpotConnect() {
   };
 
   const toggleLead = (companyId: number) => {
-    setSelectedLeadIds((ids) =>
-      ids.includes(companyId) ? ids.filter((id) => id !== companyId) : [...ids, companyId],
+    setSelectedLeadIds(ids =>
+      ids.includes(companyId)
+        ? ids.filter(id => id !== companyId)
+        : [...ids, companyId]
     );
   };
 
@@ -183,15 +220,19 @@ export default function HubSpotConnect() {
       <div className="min-h-screen flex flex-col bg-slate-50">
         <Header />
         <main className="mx-auto w-full max-w-lg flex-1 px-4 pb-16 pt-24 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
+          <p
+            className="text-[10px] font-bold uppercase tracking-[0.22em]"
+            style={{ color: "#FFB000" }}
+          >
             HubSpot + Signal
           </p>
           <h1 className="mt-2 text-2xl font-black text-gray-900">
             Connect HubSpot automatically
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-gray-500">
-            Create your Signal workspace first with email and full name. We provision the HubSpot API link and MCP bridge —
-            no manual private-app setup.
+            Create your Signal workspace first with email and full name. We
+            provision the HubSpot API link and MCP bridge — no manual
+            private-app setup.
           </p>
           <Link
             href="/signup?intent=hubspot&next=/integrations/hubspot"
@@ -212,15 +253,20 @@ export default function HubSpotConnect() {
       <Header />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-28">
         <AdminNav />
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
+        <p
+          className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]"
+          style={{ color: "#FFB000" }}
+        >
           HubSpot integration
         </p>
         <h1 className="text-2xl font-black text-gray-900">
           Link HubSpot to Signal
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-gray-500">
-          Signal connects to your HubSpot account via OAuth, provisions the MCP server bridge, and syncs saved sales leads —
-          automatically or only the accounts you pick. Use another CRM? Run Signal in the native workspace until Salesforce or Pipedrive ships.
+          Signal connects to your HubSpot account via OAuth, provisions the MCP
+          server bridge, and syncs saved sales leads — automatically or only the
+          accounts you pick. Use another CRM? Run Signal in the native workspace
+          until Salesforce or Pipedrive ships.
         </p>
 
         {!setup ? (
@@ -228,13 +274,18 @@ export default function HubSpotConnect() {
         ) : (
           <div className="mt-6 space-y-4">
             <section className={cardClass}>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 1 · Workspace</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                Step 1 · Workspace
+              </p>
               {!setup.profile_complete ? (
                 <div className="mt-3 space-y-3">
-                  <p className="text-sm text-gray-500">Confirm your name and email before we authenticate with HubSpot.</p>
+                  <p className="text-sm text-gray-500">
+                    Confirm your name and email before we authenticate with
+                    HubSpot.
+                  </p>
                   <input
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={e => setFullName(e.target.value)}
                     placeholder="Full name"
                     className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none"
                   />
@@ -258,42 +309,71 @@ export default function HubSpotConnect() {
             </section>
 
             <section className={cardClass}>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 2 · HubSpot API</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                Step 2 · HubSpot API
+              </p>
               {connected ? (
                 <div className="mt-2">
                   <p className="inline-flex items-center gap-2 text-sm font-bold text-emerald-300">
                     <Check className="h-4 w-4" /> Connected and active
                   </p>
-                  {(setup.connection.account_login || setup.connection.account_name) && (
+                  {(setup.connection.account_login ||
+                    setup.connection.account_name) && (
                     <p className="mt-1 text-xs text-gray-500">
-                      HubSpot account: {setup.connection.account_login || setup.connection.account_name}
+                      HubSpot account:{" "}
+                      {setup.connection.account_login ||
+                        setup.connection.account_name}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-gray-400">MCP bridge provisioned on Signal — no manual HubSpot app setup.</p>
+                  <p className="mt-1 text-xs text-gray-400">
+                    MCP bridge provisioned on Signal — no manual HubSpot app
+                    setup.
+                  </p>
                 </div>
               ) : (
                 <div className="mt-3">
                   <p className="text-sm text-gray-500 mb-3">
-                    One click authorizes Signal with HubSpot. We build the API link automatically.
+                    One click authorizes Signal with HubSpot. We build the API
+                    link automatically.
                   </p>
                   <button
                     type="button"
                     onClick={() => void startHubSpotOAuth()}
-                    disabled={busy || !setup.profile_complete || !setup.oauth_configured}
+                    disabled={
+                      busy || !setup.profile_complete || !setup.oauth_configured
+                    }
                     className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold disabled:opacity-50"
                     style={{ color: "#111827", background: "#FFB000" }}
                   >
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+                    {busy ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Link2 className="h-4 w-4" />
+                    )}
                     Connect HubSpot automatically
                   </button>
                   {!setup.oauth_configured && (
                     <p className="mt-2 text-xs leading-relaxed text-amber-300/85">
-                      HubSpot app not wired to the API yet. Create it with the HubSpot CLI (
-                      <code className="text-amber-200/90">hs project create</code> or upload{" "}
-                      <code className="text-amber-200/90">integrations/hubspot-scout-app</code>), copy Client ID / secret from{" "}
-                      <code className="text-amber-200/90">hs project open</code> → Auth, then set{" "}
-                      <code className="text-amber-200/90">HUBSPOT_CLIENT_ID</code> and{" "}
-                      <code className="text-amber-200/90">HUBSPOT_CLIENT_SECRET</code> on Fly.{" "}
+                      HubSpot app not wired to the API yet. Create it with the
+                      HubSpot CLI (
+                      <code className="text-amber-200/90">
+                        hs project create
+                      </code>{" "}
+                      or upload{" "}
+                      <code className="text-amber-200/90">
+                        integrations/hubspot-scout-app
+                      </code>
+                      ), copy Client ID / secret from{" "}
+                      <code className="text-amber-200/90">hs project open</code>{" "}
+                      → Auth, then set{" "}
+                      <code className="text-amber-200/90">
+                        HUBSPOT_CLIENT_ID
+                      </code>{" "}
+                      and{" "}
+                      <code className="text-amber-200/90">
+                        HUBSPOT_CLIENT_SECRET
+                      </code>{" "}
+                      on Fly.{" "}
                       <a
                         href="https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app"
                         target="_blank"
@@ -310,9 +390,12 @@ export default function HubSpotConnect() {
 
             {connected && (
               <section className={cardClass}>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 3 · Sync saved leads</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  Step 3 · Sync saved leads
+                </p>
                 <p className="mt-2 text-sm text-gray-500">
-                  Choose whether Signal sends every saved lead to HubSpot or only the accounts you select.
+                  Choose whether Signal sends every saved lead to HubSpot or
+                  only the accounts you select.
                 </p>
                 <div className="mt-3 flex flex-col gap-2">
                   <label className="flex items-start gap-2 rounded-lg border border-gray-200 px-3 py-2.5 cursor-pointer">
@@ -324,8 +407,12 @@ export default function HubSpotConnect() {
                       className="mt-1"
                     />
                     <span>
-                      <span className="block text-sm font-bold text-gray-900">Auto-sync all saved leads</span>
-                      <span className="block text-xs text-gray-500">Signal pushes every lead in your workspace to HubSpot.</span>
+                      <span className="block text-sm font-bold text-gray-900">
+                        Auto-sync all saved leads
+                      </span>
+                      <span className="block text-xs text-gray-500">
+                        Signal pushes every lead in your workspace to HubSpot.
+                      </span>
                     </span>
                   </label>
                   <label className="flex items-start gap-2 rounded-lg border border-gray-200 px-3 py-2.5 cursor-pointer">
@@ -337,8 +424,12 @@ export default function HubSpotConnect() {
                       className="mt-1"
                     />
                     <span>
-                      <span className="block text-sm font-bold text-gray-900">Choose leads from my profile</span>
-                      <span className="block text-xs text-gray-500">Pick which saved accounts sync to HubSpot.</span>
+                      <span className="block text-sm font-bold text-gray-900">
+                        Choose leads from my profile
+                      </span>
+                      <span className="block text-xs text-gray-500">
+                        Pick which saved accounts sync to HubSpot.
+                      </span>
                     </span>
                   </label>
                 </div>
@@ -348,13 +439,16 @@ export default function HubSpotConnect() {
                     {setup.saved_leads.length === 0 ? (
                       <p className="text-xs text-gray-500 px-2 py-3">
                         No saved leads yet.{" "}
-                        <Link href="/pipeline" className="text-emerald-600 underline">
+                        <Link
+                          href="/pipeline"
+                          className="text-emerald-600 underline"
+                        >
                           Save leads from Pipeline
                         </Link>{" "}
                         first.
                       </p>
                     ) : (
-                      setup.saved_leads.map((lead) => (
+                      setup.saved_leads.map(lead => (
                         <label
                           key={lead.company_id}
                           className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-gray-600 hover:bg-white cursor-pointer"
@@ -364,8 +458,12 @@ export default function HubSpotConnect() {
                             checked={selectedLeadIds.includes(lead.company_id)}
                             onChange={() => toggleLead(lead.company_id)}
                           />
-                          <span className="font-semibold text-gray-800">{lead.company_name}</span>
-                          {lead.tier && <span className="text-gray-400">· {lead.tier}</span>}
+                          <span className="font-semibold text-gray-800">
+                            {lead.company_name}
+                          </span>
+                          {lead.tier && (
+                            <span className="text-gray-400">· {lead.tier}</span>
+                          )}
                         </label>
                       ))
                     )}
@@ -375,14 +473,21 @@ export default function HubSpotConnect() {
                 {!setup.sync_entitled && syncMode === "auto_all" && (
                   <p className="mt-2 text-xs text-amber-300/85">
                     Auto-sync all leads is included on Pro and Premium.{" "}
-                    <Link href="/pricing" className="underline">Upgrade</Link> or choose specific leads on the free plan.
+                    <Link href="/pricing" className="underline">
+                      Upgrade
+                    </Link>{" "}
+                    or choose specific leads on the free plan.
                   </p>
                 )}
 
                 <button
                   type="button"
                   onClick={() => void saveSyncSettings()}
-                  disabled={busy || (syncMode === "manual_select" && selectedLeadIds.length === 0)}
+                  disabled={
+                    busy ||
+                    (syncMode === "manual_select" &&
+                      selectedLeadIds.length === 0)
+                  }
                   className="mt-4 inline-flex items-center gap-2 rounded-lg border border-teal-400/30 bg-teal-400/10 px-4 py-2 text-xs font-bold text-teal-100 disabled:opacity-50"
                 >
                   <Zap className="h-3.5 w-3.5" />
@@ -393,9 +498,12 @@ export default function HubSpotConnect() {
 
             {connected && (
               <section className={cardClass}>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 4 · Read sync from HubSpot</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  Step 4 · Read sync from HubSpot
+                </p>
                 <p className="mt-2 text-sm text-gray-500">
-                  Pull deal stages from HubSpot back into your native CRM accounts (after you push leads outbound).
+                  Pull deal stages from HubSpot back into your native CRM
+                  accounts (after you push leads outbound).
                 </p>
                 <button
                   type="button"

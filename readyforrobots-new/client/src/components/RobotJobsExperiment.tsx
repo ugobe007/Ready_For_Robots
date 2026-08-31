@@ -31,7 +31,12 @@ import {
   KARE_QUALIFY,
   KARE_SEARCH,
 } from "@/lib/kareIcons";
-import { MacWindow, macAccent, macInk, macRule } from "@/components/jobs/MacChrome";
+import {
+  MacWindow,
+  macAccent,
+  macInk,
+  macRule,
+} from "@/components/jobs/MacChrome";
 import {
   demoJobsToTape,
   MARKET_TAPE_JOBS,
@@ -69,14 +74,20 @@ const RECOVERY_CHIPS: { id: RecoveryChip; label: string }[] = [
 
 function tapeFamilyFromMatch(family?: string): TapeJob["family"] {
   const f = (family || "transport").toLowerCase();
-  if (f === "cart" || f === "pallet" || f === "scrub" || f === "inspect" || f === "gripper") {
+  if (
+    f === "cart" ||
+    f === "pallet" ||
+    f === "scrub" ||
+    f === "inspect" ||
+    f === "gripper"
+  ) {
     return f;
   }
   return "transport";
 }
 
 function matchJobsToTape(jobs: MatchJob[]): TapeJob[] {
-  return jobs.map((j) => ({
+  return jobs.map(j => ({
     key: j.job_key,
     title: j.title,
     industry: j.industry || j.company_name || "Work",
@@ -86,7 +97,7 @@ function matchJobsToTape(jobs: MatchJob[]): TapeJob[] {
 }
 
 function matchJobsToDemoShape(jobs: MatchJob[]): Job[] {
-  return jobs.map((j) => ({
+  return jobs.map(j => ({
     job_key: j.job_key,
     company_name: j.company_name || j.industry || "Site",
     locality: j.locality || "",
@@ -121,9 +132,11 @@ function MatchExplanation({ match }: { match?: MatchJob | null }) {
       </p>
       {match.why?.length ? (
         <div className="mt-2">
-          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-slate-500">Why</p>
+          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-slate-500">
+            Why
+          </p>
           <ul className="mt-1 space-y-0.5">
-            {match.why.map((w) => (
+            {match.why.map(w => (
               <li key={w} className="text-[11px] leading-snug text-slate-300">
                 ✓ {w}
               </li>
@@ -137,7 +150,7 @@ function MatchExplanation({ match }: { match?: MatchJob | null }) {
             Still unknown
           </p>
           <ul className="mt-1 space-y-0.5">
-            {match.still_unknown.map((w) => (
+            {match.still_unknown.map(w => (
               <li key={w} className="text-[11px] leading-snug text-slate-400">
                 {w}
               </li>
@@ -151,7 +164,7 @@ function MatchExplanation({ match }: { match?: MatchJob | null }) {
             Blocker
           </p>
           <ul className="mt-1 space-y-0.5">
-            {match.blockers.map((w) => (
+            {match.blockers.map(w => (
               <li key={w} className="text-[11px] leading-snug text-slate-300">
                 {w}
               </li>
@@ -199,13 +212,22 @@ function readJobsDiscoverySession(): JobsDiscoverySession | null {
   }
 }
 
-function FunnelTrace({ phase, jobCount }: { phase: TracePhase; jobCount: number | null }) {
+function FunnelTrace({
+  phase,
+  jobCount,
+}: {
+  phase: TracePhase;
+  jobCount: number | null;
+}) {
   const countLabel =
-    jobCount != null ? `${String(jobCount).padStart(2, "0")} JOBS FOUND` : "JOBS";
+    jobCount != null
+      ? `${String(jobCount).padStart(2, "0")} JOBS FOUND`
+      : "JOBS";
   let label = "URL → RESEARCH → PROFILE → JOBS";
   if (phase === "url") label = "URL ✓ → RESEARCH... → PROFILE → JOBS";
   else if (phase === "caps") label = "URL ✓ → RESEARCH ✓ → PROFILE... → JOBS";
-  else if (phase === "search") label = "URL ✓ → RESEARCH ✓ → PROFILE ✓ → JOBS...";
+  else if (phase === "search")
+    label = "URL ✓ → RESEARCH ✓ → PROFILE ✓ → JOBS...";
   else if (phase === "done") label = `URL ✓ → PROFILE ✓ → ${countLabel}`;
 
   return (
@@ -213,7 +235,10 @@ function FunnelTrace({ phase, jobCount }: { phase: TracePhase; jobCount: number 
       className="mt-2 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-600"
       aria-live="polite"
     >
-      {phase === "done" || phase === "caps" || phase === "search" || phase === "url" ? (
+      {phase === "done" ||
+      phase === "caps" ||
+      phase === "search" ||
+      phase === "url" ? (
         <span className="text-emerald-500/90">{label}</span>
       ) : (
         label
@@ -231,7 +256,12 @@ const proofCardClass =
 const mutedClass = "text-sm text-slate-400";
 const titleClass = "font-display font-bold tracking-tight text-slate-100";
 const faceOnCta = (
-  <PixelIcon map={KARE_FACE} scale={3} fill={FACE_WHITE} background="transparent" />
+  <PixelIcon
+    map={KARE_FACE}
+    scale={3}
+    fill={FACE_WHITE}
+    background="transparent"
+  />
 );
 
 const HOW_IT_WORKS = [
@@ -259,7 +289,7 @@ const HOW_IT_WORKS = [
 ] as const;
 
 function profileByKey(key: string): Profile | undefined {
-  return demo.profiles.find((p) => p.profile_key === key);
+  return demo.profiles.find(p => p.profile_key === key);
 }
 
 function jobsFor(key: string): Job[] {
@@ -273,7 +303,7 @@ function titleCaseToken(s: string): string {
     .replace(/\.(html?|php|aspx?)$/i, "")
     .split(/\s+/)
     .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 }
 
@@ -282,13 +312,24 @@ export function robotNameFromUrl(raw: string): string | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
   try {
-    const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const withProto = /^https?:\/\//i.test(trimmed)
+      ? trimmed
+      : `https://${trimmed}`;
     const u = new URL(withProto);
     const parts = u.pathname.split("/").filter(Boolean);
-    const skip = new Set(["products", "product", "robots", "robot", "solutions", "en", "us"]);
+    const skip = new Set([
+      "products",
+      "product",
+      "robots",
+      "robot",
+      "solutions",
+      "en",
+      "us",
+    ]);
     for (let i = parts.length - 1; i >= 0; i--) {
       const p = parts[i];
-      if (!skip.has(p.toLowerCase()) && p.length > 1) return titleCaseToken(decodeURIComponent(p));
+      if (!skip.has(p.toLowerCase()) && p.length > 1)
+        return titleCaseToken(decodeURIComponent(p));
     }
     const host = u.hostname.replace(/^www\./, "").split(".")[0];
     if (host && host.length > 1) return titleCaseToken(host);
@@ -306,23 +347,39 @@ function placeLine(job: Job): string {
 
 function srcFromQuery(): string | null {
   if (typeof window === "undefined") return null;
-  return (new URLSearchParams(window.location.search).get("src") || "").trim() || null;
+  return (
+    (new URLSearchParams(window.location.search).get("src") || "").trim() ||
+    null
+  );
 }
 
 function ProofCards({ src }: { src: string | null }) {
   return (
     <div className="mt-3 grid gap-2 sm:grid-cols-2">
-      {demoProfilesForProof().map((p) => (
-        <Link key={p.profileKey} href={jobsPathForSlug(p.slug, src)} className={proofCardClass} style={{ borderColor: macRule }}>
+      {demoProfilesForProof().map(p => (
+        <Link
+          key={p.profileKey}
+          href={jobsPathForSlug(p.slug, src)}
+          className={proofCardClass}
+          style={{ borderColor: macRule }}
+        >
           <span>
             <span className="block text-sm font-bold" style={{ color: macInk }}>
               {p.displayName}
             </span>
-            <span className="mt-0.5 block text-xs font-bold" style={{ color: macAccent }}>
+            <span
+              className="mt-0.5 block text-xs font-bold"
+              style={{ color: macAccent }}
+            >
               {p.jobCount} jobs found
             </span>
           </span>
-          <PixelIcon map={KARE_ARROW} scale={2} fill={macInk} background="transparent" />
+          <PixelIcon
+            map={KARE_ARROW}
+            scale={2}
+            fill={macInk}
+            background="transparent"
+          />
         </Link>
       ))}
     </div>
@@ -349,26 +406,37 @@ export default function RobotJobsExperiment({ slug }: Props) {
   const [url, setUrl] = useState("");
   const [profileKey, setProfileKey] = useState<string | null>(null);
   const [robotName, setRobotName] = useState("your robot");
-  const [intro, setIntro] = useState<{ headline: string; subhead: string } | null>(null);
+  const [intro, setIntro] = useState<{
+    headline: string;
+    subhead: string;
+  } | null>(null);
   const [jobCountOverride, setJobCountOverride] = useState<number | null>(null);
-  const [unsupportedReason, setUnsupportedReason] = useState<string | null>(null);
+  const [unsupportedReason, setUnsupportedReason] = useState<string | null>(
+    null
+  );
   const [jobIndex, setJobIndex] = useState(0);
   const [jobsViewed, setJobsViewed] = useState(0);
   const [qualifyOpen, setQualifyOpen] = useState(false);
   const [qualifyRequested, setQualifyRequested] = useState(false);
-  const [matchCapabilities, setMatchCapabilities] = useState<MatchCapability[]>([]);
+  const [matchCapabilities, setMatchCapabilities] = useState<MatchCapability[]>(
+    []
+  );
   const [foundProducts, setFoundProducts] = useState<MatchProduct[]>([]);
   const [pendingMatchUrl, setPendingMatchUrl] = useState<string | null>(null);
   const [matchedApiJobs, setMatchedApiJobs] = useState<MatchJob[]>([]);
   const [matchThin, setMatchThin] = useState(false);
-  const [robotProfile, setRobotProfile] = useState<RobotProfileResult | null>(null);
+  const [robotProfile, setRobotProfile] = useState<RobotProfileResult | null>(
+    null
+  );
   const [submitPhase, setSubmitPhase] = useState<SubmitPhase>("idle");
-  const [researchStartedAt, setResearchStartedAt] = useState<number | null>(null);
+  const [researchStartedAt, setResearchStartedAt] = useState<number | null>(
+    null
+  );
   const [researchTick, setResearchTick] = useState(0);
   const sessionId = useRef(
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()
-      : `rdd_${Date.now()}`,
+      : `rdd_${Date.now()}`
   );
   const srcRef = useRef(srcFromQuery());
   const personaRef = useRef<string | null>(slugConfig?.persona ?? null);
@@ -508,7 +576,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
     apiJobs: MatchJob[],
     caps: MatchCapability[],
     jobCount: number,
-    thin: boolean,
+    thin: boolean
   ) {
     const tape = matchJobsToTape(apiJobs);
     setMatchedApiJobs(apiJobs);
@@ -547,7 +615,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
   async function runCapabilityDiscovery(
     submittedUrl: string,
     fallbackName: string,
-    productName?: string,
+    productName?: string
   ) {
     clearBoardTimers();
     setStep("enter");
@@ -584,16 +652,21 @@ export default function RobotJobsExperiment({ slug }: Props) {
         url: submittedUrl,
         product: productName,
       });
-      const company = result.company_name || result.profile?.company?.name || fallbackName;
-      const product = result.profile?.selected_product?.name || result.robot_name;
+      const company =
+        result.company_name || result.profile?.company?.name || fallbackName;
+      const product =
+        result.profile?.selected_product?.name || result.robot_name;
 
-      if (result.state === "select_product" || (result.needs_product_choice && (result.products || []).length > 1)) {
+      if (
+        result.state === "select_product" ||
+        (result.needs_product_choice && (result.products || []).length > 1)
+      ) {
         setFoundProducts(
-          (result.products || []).map((p) => ({
+          (result.products || []).map(p => ({
             name: p.name,
             robot_class: p.display_class || p.robot_class || null,
             confidence: 0.8,
-          })),
+          }))
         );
         setRobotName(company);
         setBoardMode("market");
@@ -611,7 +684,10 @@ export default function RobotJobsExperiment({ slug }: Props) {
       const displayName = product || company || fallbackName;
       setRobotName(displayName);
 
-      if (result.state === "could_not_understand" || !(result.jobs || []).length) {
+      if (
+        result.state === "could_not_understand" ||
+        !(result.jobs || []).length
+      ) {
         setSubmitPhase("recover");
         setStep("recover");
         setBoardMode("market");
@@ -620,7 +696,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
         setUnsupportedReason(
           result.profile
             ? `We built a ${result.profile.profile_confidence}-tier profile for ${displayName}, but the job corpus has no strong matches yet.`
-            : null,
+            : null
         );
         return;
       }
@@ -702,7 +778,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
         target.apiJobs,
         target.caps || [],
         target.jobCount || target.apiJobs.length,
-        Boolean(target.thin),
+        Boolean(target.thin)
       );
       return;
     }
@@ -821,44 +897,64 @@ export default function RobotJobsExperiment({ slug }: Props) {
 
   useEffect(() => {
     if (!isResearchingPhase(submitPhase)) return;
-    const id = window.setInterval(() => setResearchTick((n) => n + 1), 250);
+    const id = window.setInterval(() => setResearchTick(n => n + 1), 250);
     return () => window.clearInterval(id);
   }, [submitPhase]);
   void researchTick;
 
   const profile = profileKey ? profileByKey(profileKey) : undefined;
-  const fixtureJobs = useMemo(() => (profileKey ? jobsFor(profileKey) : []), [profileKey]);
+  const fixtureJobs = useMemo(
+    () => (profileKey ? jobsFor(profileKey) : []),
+    [profileKey]
+  );
   const jobs = useMemo(() => {
     if (matchedApiJobs.length) return matchJobsToDemoShape(matchedApiJobs);
     return fixtureJobs;
   }, [matchedApiJobs, fixtureJobs]);
   const job = useMemo(() => {
     if (selectedTapeKey) {
-      return jobs.find((j) => j.job_key === selectedTapeKey) ?? jobs[jobIndex];
+      return jobs.find(j => j.job_key === selectedTapeKey) ?? jobs[jobIndex];
     }
     return jobs[jobIndex];
   }, [jobs, selectedTapeKey, jobIndex]);
   const selectedMatch = useMemo(
-    () => matchedApiJobs.find((j) => j.job_key === job?.job_key) ?? null,
-    [matchedApiJobs, job?.job_key],
+    () => matchedApiJobs.find(j => j.job_key === job?.job_key) ?? null,
+    [matchedApiJobs, job?.job_key]
   );
   const totalJobs = jobCountOverride ?? profile?.job_count_total ?? jobs.length;
   const freePreviewCount = Math.min(PREVIEW_FREE, jobs.length);
   const previewCount = unlocked ? jobs.length : freePreviewCount;
   const src = srcRef.current;
 
-  const tapeIsMarket = tapeStaysMarket(submitPhase) && boardMode !== "personal" && boardMode !== "reveal";
+  const tapeIsMarket =
+    tapeStaysMarket(submitPhase) &&
+    boardMode !== "personal" &&
+    boardMode !== "reveal";
   const tapeCorpus = tapeIsMarket ? MARKET_TAPE_JOBS : personalCorpus;
   const tapeTitle =
-    submitPhase === "results" || boardMode === "personal" || boardMode === "reveal"
+    submitPhase === "results" ||
+    boardMode === "personal" ||
+    boardMode === "reveal"
       ? "Jobs For Your Robot"
       : "Jobs We Found";
-  const tapeBase = submitPhase === "results" || boardMode === "personal" ? totalJobs : MARKET_FOUND_BASE;
-  const tapeStatus = boardMode === "status" && submitPhase === "idle" ? statusLines : undefined;
-  const tapeRevealTarget = boardMode === "reveal" && submitPhase !== "researching" ? Math.max(totalJobs, 1) : null;
+  const tapeBase =
+    submitPhase === "results" || boardMode === "personal"
+      ? totalJobs
+      : MARKET_FOUND_BASE;
+  const tapeStatus =
+    boardMode === "status" && submitPhase === "idle" ? statusLines : undefined;
+  const tapeRevealTarget =
+    boardMode === "reveal" && submitPhase !== "researching"
+      ? Math.max(totalJobs, 1)
+      : null;
   const moreJobsCount = Math.max(0, totalJobs - freePreviewCount);
-  const discovering = isResearchingPhase(submitPhase) || boardMode === "status" || boardMode === "reveal";
-  const researchElapsedMs = researchStartedAt ? Date.now() - researchStartedAt : 0;
+  const discovering =
+    isResearchingPhase(submitPhase) ||
+    boardMode === "status" ||
+    boardMode === "reveal";
+  const researchElapsedMs = researchStartedAt
+    ? Date.now() - researchStartedAt
+    : 0;
 
   function beginWithMappedRobot(opts: {
     key: string;
@@ -896,7 +992,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
   function onSelectTapeJob(tapeJob: TapeJob) {
     if (boardMode !== "personal") return;
     setSelectedTapeKey(tapeJob.key);
-    const idx = jobs.findIndex((j) => j.job_key === tapeJob.key);
+    const idx = jobs.findIndex(j => j.job_key === tapeJob.key);
     if (idx >= 0) {
       setJobIndex(idx);
       recordJobView(idx);
@@ -1049,11 +1145,14 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400/90">
                   We found {foundProducts.length} robots
                 </p>
-                <h1 className={`${titleClass} mt-1 text-[1.65rem] leading-[1.1] sm:text-[1.85rem]`}>
+                <h1
+                  className={`${titleClass} mt-1 text-[1.65rem] leading-[1.1] sm:text-[1.85rem]`}
+                >
                   Which robot needs jobs?
                 </h1>
                 <p className="mt-2 text-[13px] leading-snug text-slate-400">
-                  {intro?.subhead || "Select a product. We research that robot next."}
+                  {intro?.subhead ||
+                    "Select a product. We research that robot next."}
                 </p>
                 <div className="mt-5 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
                   {foundProducts.map((p, idx) => (
@@ -1082,7 +1181,9 @@ export default function RobotJobsExperiment({ slug }: Props) {
               </>
             ) : isResearchingPhase(submitPhase) ? (
               <>
-                <h1 className={`${titleClass} text-[2.15rem] leading-[1.05] sm:text-[2.4rem]`}>
+                <h1
+                  className={`${titleClass} text-[2.15rem] leading-[1.05] sm:text-[2.4rem]`}
+                >
                   Find <span className="text-emerald-400">jobs</span>
                   <br />
                   for your robot.
@@ -1098,7 +1199,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
                     id="robot-url"
                     type="url"
                     value={url}
-                    onChange={(e) => setUrl(e.target.value)}
+                    onChange={e => setUrl(e.target.value)}
                     placeholder="Paste robot product URL"
                     disabled
                     className="w-full border-0 border-b border-slate-500 bg-[#081126] px-3 py-2 font-mono text-[13px] text-slate-100 outline-none placeholder:text-slate-600 disabled:opacity-60"
@@ -1112,7 +1213,12 @@ export default function RobotJobsExperiment({ slug }: Props) {
                       {faceOnCta}
                       Find Jobs
                     </span>
-                    <PixelIcon map={KARE_ARROW} scale={2} fill={FACE_WHITE} background="transparent" />
+                    <PixelIcon
+                      map={KARE_ARROW}
+                      scale={2}
+                      fill={FACE_WHITE}
+                      background="transparent"
+                    />
                   </button>
                 </div>
                 <JobsResearchConsole
@@ -1129,11 +1235,15 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-400/90">
                   {robotProfile.company?.name || "Robot"}
                 </p>
-                <h1 className={`${titleClass} mt-1 text-[1.65rem] leading-[1.1] sm:text-[1.85rem]`}>
+                <h1
+                  className={`${titleClass} mt-1 text-[1.65rem] leading-[1.1] sm:text-[1.85rem]`}
+                >
                   {robotProfile.selected_product?.name || robotName}
                 </h1>
                 <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.1em] text-slate-400">
-                  {(robotProfile.selected_product?.display_class || "robot").replace(/_/g, " ")}
+                  {(
+                    robotProfile.selected_product?.display_class || "robot"
+                  ).replace(/_/g, " ")}
                   {" · "}
                   Profile {robotProfile.profile_confidence}
                 </p>
@@ -1145,7 +1255,10 @@ export default function RobotJobsExperiment({ slug }: Props) {
                   {job ? (
                     <div className="mt-4 border border-slate-700 p-3">
                       <p className={eyebrowClass}>
-                        {String(jobIndex + 1).padStart(2, "0")} · {selectedMatch?.verdict === "POSSIBLE_MATCH" ? "Possible match" : "Selected job"}
+                        {String(jobIndex + 1).padStart(2, "0")} ·{" "}
+                        {selectedMatch?.verdict === "POSSIBLE_MATCH"
+                          ? "Possible match"
+                          : "Selected job"}
                       </p>
                       <p className="mt-1 font-display text-sm font-bold uppercase text-slate-100">
                         {job.robot_compatible_task}
@@ -1166,8 +1279,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
                       ) : (
                         <div className="mt-3 border border-slate-600 p-3">
                           <p className="text-xs leading-relaxed text-slate-400">
-                            We&apos;ll investigate whether this job deserves your sales team&apos;s
-                            time.
+                            We&apos;ll investigate whether this job deserves
+                            your sales team&apos;s time.
                           </p>
                           {qualifyRequested ? (
                             <p className="mt-2 text-xs font-bold text-emerald-400">
@@ -1223,8 +1336,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
                     id="robot-url"
                     type="url"
                     value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    onKeyDown={(e) => {
+                    onChange={e => setUrl(e.target.value)}
+                    onKeyDown={e => {
                       if (e.key === "Enter") onContinueUrl();
                     }}
                     placeholder="Paste robot product URL"
@@ -1243,58 +1356,68 @@ export default function RobotJobsExperiment({ slug }: Props) {
               </>
             ) : (
               <>
-            <h1 className={`${titleClass} text-[2.15rem] leading-[1.05] sm:text-[2.4rem]`}>
-              Find <span className="text-emerald-400">jobs</span>
-              <br />
-              for your robot.
-            </h1>
-            <p className="mt-3 text-[15px] leading-snug text-slate-300">
-              {boardMode === "personal"
-                  ? matchThin
-                    ? `We understand ${robotName}. Here are the strongest matches so far.`
-                    : `We found ${totalJobs} jobs for ${robotName}.`
-                  : discovering
-                    ? "Researching your robot."
-                    : "Robots need jobs. We find the work."}
-            </p>
+                <h1
+                  className={`${titleClass} text-[2.15rem] leading-[1.05] sm:text-[2.4rem]`}
+                >
+                  Find <span className="text-emerald-400">jobs</span>
+                  <br />
+                  for your robot.
+                </h1>
+                <p className="mt-3 text-[15px] leading-snug text-slate-300">
+                  {boardMode === "personal"
+                    ? matchThin
+                      ? `We understand ${robotName}. Here are the strongest matches so far.`
+                      : `We found ${totalJobs} jobs for ${robotName}.`
+                    : discovering
+                      ? "Researching your robot."
+                      : "Robots need jobs. We find the work."}
+                </p>
 
-            <label
-              className="mt-7 block font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400"
-              htmlFor="robot-url"
-            >
-              What robot needs a job?
-            </label>
-            <div className="mt-1.5 overflow-hidden border border-slate-500">
-              <input
-                id="robot-url"
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") onContinueUrl();
-                }}
-                placeholder="Paste robot product URL"
-                disabled={discovering}
-                className="w-full border-0 border-b border-slate-500 bg-[#081126] px-3 py-2 font-mono text-[13px] text-slate-100 outline-none placeholder:text-slate-600 focus:bg-[#0a152c] disabled:opacity-60"
-              />
-              <button
-                type="button"
-                onClick={onContinueUrl}
-                disabled={!url.trim() || discovering}
-                className="flex w-full items-center justify-between gap-3 bg-emerald-400 px-3 py-2 text-left font-mono text-[13px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-emerald-400/40 disabled:text-white/70"
-              >
-                <span className="inline-flex items-center gap-2.5">
-                  {faceOnCta}
-                  Find Jobs
-                </span>
-                <PixelIcon map={KARE_ARROW} scale={2} fill={FACE_WHITE} background="transparent" />
-              </button>
-            </div>
-            <FunnelTrace phase={tracePhase} jobCount={traceJobCount} />
+                <label
+                  className="mt-7 block font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400"
+                  htmlFor="robot-url"
+                >
+                  What robot needs a job?
+                </label>
+                <div className="mt-1.5 overflow-hidden border border-slate-500">
+                  <input
+                    id="robot-url"
+                    type="url"
+                    value={url}
+                    onChange={e => setUrl(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") onContinueUrl();
+                    }}
+                    placeholder="Paste robot product URL"
+                    disabled={discovering}
+                    className="w-full border-0 border-b border-slate-500 bg-[#081126] px-3 py-2 font-mono text-[13px] text-slate-100 outline-none placeholder:text-slate-600 focus:bg-[#0a152c] disabled:opacity-60"
+                  />
+                  <button
+                    type="button"
+                    onClick={onContinueUrl}
+                    disabled={!url.trim() || discovering}
+                    className="flex w-full items-center justify-between gap-3 bg-emerald-400 px-3 py-2 text-left font-mono text-[13px] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-emerald-400/40 disabled:text-white/70"
+                  >
+                    <span className="inline-flex items-center gap-2.5">
+                      {faceOnCta}
+                      Find Jobs
+                    </span>
+                    <PixelIcon
+                      map={KARE_ARROW}
+                      scale={2}
+                      fill={FACE_WHITE}
+                      background="transparent"
+                    />
+                  </button>
+                </div>
+                <FunnelTrace phase={tracePhase} jobCount={traceJobCount} />
               </>
             )}
 
-            {isResearchingPhase(submitPhase) || submitPhase === "product_selection" ? null : boardMode === "personal" && robotProfile ? null : boardMode === "personal" && job ? (
+            {isResearchingPhase(submitPhase) ||
+            submitPhase === "product_selection" ? null : boardMode ===
+                "personal" && robotProfile ? null : boardMode === "personal" &&
+              job ? (
               <div className="mt-auto border-t border-slate-700 pt-4">
                 <p className={eyebrowClass}>Selected job</p>
                 <p className="mt-1 font-display text-sm font-bold uppercase text-slate-100">
@@ -1316,10 +1439,13 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 ) : (
                   <div className="mt-3 border border-slate-600 p-3">
                     <p className="text-xs leading-relaxed text-slate-400">
-                      We&apos;ll investigate whether this job deserves your sales team&apos;s time.
+                      We&apos;ll investigate whether this job deserves your
+                      sales team&apos;s time.
                     </p>
                     {qualifyRequested ? (
-                      <p className="mt-2 text-xs font-bold text-emerald-400">Qualification requested</p>
+                      <p className="mt-2 text-xs font-bold text-emerald-400">
+                        Qualification requested
+                      </p>
                     ) : (
                       <button
                         type="button"
@@ -1363,7 +1489,12 @@ export default function RobotJobsExperiment({ slug }: Props) {
             ) : discovering ? (
               <div className="mt-auto border-t border-slate-700 pt-4">
                 <div className="flex items-center gap-3">
-                  <PixelIcon map={KARE_FACE} scale={2} fill={FACE_EMERALD} background="transparent" />
+                  <PixelIcon
+                    map={KARE_FACE}
+                    scale={2}
+                    fill={FACE_EMERALD}
+                    background="transparent"
+                  />
                   <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-400">
                     {boardMode === "reveal"
                       ? "Matching work"
@@ -1376,7 +1507,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
                   {(statusLines.length
                     ? statusLines
                     : ["Identifying company…", "Finding robot products…"]
-                  ).map((line) => (
+                  ).map(line => (
                     <li
                       key={line}
                       className={
@@ -1395,7 +1526,7 @@ export default function RobotJobsExperiment({ slug }: Props) {
                 <div>
                   <p className={eyebrowClass}>How it works</p>
                   <ul className="mt-3 space-y-3">
-                    {HOW_IT_WORKS.map((step) => (
+                    {HOW_IT_WORKS.map(step => (
                       <li key={step.n} className="flex items-start gap-3">
                         <span className="mt-0.5 flex w-6 shrink-0 justify-center">
                           <PixelIcon
@@ -1407,7 +1538,8 @@ export default function RobotJobsExperiment({ slug }: Props) {
                         </span>
                         <span className="min-w-0">
                           <span className="block font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-200">
-                            <span className="text-emerald-400">{step.n}</span> {step.title}
+                            <span className="text-emerald-400">{step.n}</span>{" "}
+                            {step.title}
                           </span>
                           <span className="mt-0.5 block text-[12px] leading-4 text-slate-500">
                             {step.body}
@@ -1423,7 +1555,12 @@ export default function RobotJobsExperiment({ slug }: Props) {
                     Found one worth pursuing?
                   </p>
                   <div className="mt-2 flex items-center gap-2.5">
-                    <PixelIcon map={KARE_QUALIFY} scale={2} fill={FACE_EMERALD} background="transparent" />
+                    <PixelIcon
+                      map={KARE_QUALIFY}
+                      scale={2}
+                      fill={FACE_EMERALD}
+                      background="transparent"
+                    />
                     <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-400">
                       Qualify the job
                     </p>
@@ -1444,7 +1581,9 @@ export default function RobotJobsExperiment({ slug }: Props) {
           >
             <LiveJobTape
               title={
-                submitPhase === "results" || boardMode === "personal" || boardMode === "reveal"
+                submitPhase === "results" ||
+                boardMode === "personal" ||
+                boardMode === "reveal"
                   ? robotProfile?.selected_product
                     ? `Jobs For ${robotProfile.selected_product.name}`
                     : "Jobs For Your Robot"
@@ -1459,7 +1598,9 @@ export default function RobotJobsExperiment({ slug }: Props) {
               baseCount={tapeBase}
               running={
                 tapeRunning &&
-                (tapeIsMarket || submitPhase === "results" || boardMode === "personal")
+                (tapeIsMarket ||
+                  submitPhase === "results" ||
+                  boardMode === "personal")
               }
               statusLines={tapeStatus}
               revealTarget={tapeRevealTarget}
@@ -1472,47 +1613,60 @@ export default function RobotJobsExperiment({ slug }: Props) {
       )}
 
       {(step === "unsupported" || step === "recover") && (
-        <MacWindow title="Understand This Robot" className="mx-auto w-full max-w-3xl">
+        <MacWindow
+          title="Understand This Robot"
+          className="mx-auto w-full max-w-3xl"
+        >
           <div className="p-5 sm:p-6">
-          {intro ? (
-            <>
-              <h1 className={`${titleClass} text-2xl sm:text-3xl`}>{intro.headline}</h1>
-              <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>{intro.subhead}</p>
-            </>
-          ) : (
-            <>
-              <p className={mutedClass}>We researched {robotName}.</p>
-              <h2 className={`mt-2 ${titleClass} text-2xl sm:text-3xl`}>
-                Still not enough evidence to build a capability profile
-              </h2>
-              <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>
-                {unsupportedReason ||
-                  "We couldn't extract a usable robot profile from that URL yet. Tell us what it does and we'll search our job corpus."}
-              </p>
-            </>
-          )}
-          <p className={`mt-8 ${eyebrowClass}`}>Choose what it does</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {RECOVERY_CHIPS.map((chip) => (
-              <button
-                key={chip.id}
-                type="button"
-                onClick={() => void onRecoveryChip(chip.id)}
-                className="border border-slate-600 bg-[#081126] px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-200 transition hover:border-emerald-500/50 hover:text-emerald-400"
-              >
-                {chip.label}
-              </button>
-            ))}
-          </div>
-          <p className={`mt-8 ${eyebrowClass}`}>Or try a robot we already know well</p>
-          <ProofCards src={src} />
-          <Link
-            href={src ? `/?src=${encodeURIComponent(src)}` : "/"}
-            className="mt-6 inline-block text-sm font-bold underline"
-            style={{ color: macAccent }}
-          >
-            Try another robot
-          </Link>
+            {intro ? (
+              <>
+                <h1 className={`${titleClass} text-2xl sm:text-3xl`}>
+                  {intro.headline}
+                </h1>
+                <p
+                  className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}
+                >
+                  {intro.subhead}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className={mutedClass}>We researched {robotName}.</p>
+                <h2 className={`mt-2 ${titleClass} text-2xl sm:text-3xl`}>
+                  Still not enough evidence to build a capability profile
+                </h2>
+                <p
+                  className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}
+                >
+                  {unsupportedReason ||
+                    "We couldn't extract a usable robot profile from that URL yet. Tell us what it does and we'll search our job corpus."}
+                </p>
+              </>
+            )}
+            <p className={`mt-8 ${eyebrowClass}`}>Choose what it does</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {RECOVERY_CHIPS.map(chip => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => void onRecoveryChip(chip.id)}
+                  className="border border-slate-600 bg-[#081126] px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-200 transition hover:border-emerald-500/50 hover:text-emerald-400"
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+            <p className={`mt-8 ${eyebrowClass}`}>
+              Or try a robot we already know well
+            </p>
+            <ProofCards src={src} />
+            <Link
+              href={src ? `/?src=${encodeURIComponent(src)}` : "/"}
+              className="mt-6 inline-block text-sm font-bold underline"
+              style={{ color: macAccent }}
+            >
+              Try another robot
+            </Link>
           </div>
         </MacWindow>
       )}
@@ -1523,11 +1677,13 @@ export default function RobotJobsExperiment({ slug }: Props) {
             <h2 className={`${titleClass} text-2xl sm:text-3xl`}>
               {intro?.headline || "We found several robots"}
             </h2>
-            <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>
+            <p
+              className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}
+            >
               {intro?.subhead || "Which robot needs a job?"}
             </p>
             <div className="mt-6 flex flex-col gap-2">
-              {foundProducts.map((p) => (
+              {foundProducts.map(p => (
                 <button
                   key={p.name}
                   type="button"
@@ -1552,46 +1708,48 @@ export default function RobotJobsExperiment({ slug }: Props) {
       {step === "gate" && jobs.length > 0 && (
         <MacWindow title="See All Jobs" className="mx-auto w-full max-w-3xl">
           <div className="p-5 sm:p-6">
-          <h2 className={`${titleClass} text-2xl sm:text-3xl`}>
-            See all {totalJobs} jobs for {robotName}
-          </h2>
-          <p className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}>
-            You&apos;ve seen {freePreviewCount} jobs matched to its capabilities. Create an account to unlock
-            the rest.
-          </p>
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Link
-              href={signupHref}
-              onClick={onSeeAll}
-              className={ctaClass}
-              style={{ borderColor: macRule }}
+            <h2 className={`${titleClass} text-2xl sm:text-3xl`}>
+              See all {totalJobs} jobs for {robotName}
+            </h2>
+            <p
+              className={`mt-3 max-w-md text-sm leading-relaxed ${mutedClass}`}
             >
-              {faceOnCta}
-              See all {totalJobs} jobs →
+              You&apos;ve seen {freePreviewCount} jobs matched to its
+              capabilities. Create an account to unlock the rest.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <Link
+                href={signupHref}
+                onClick={onSeeAll}
+                className={ctaClass}
+                style={{ borderColor: macRule }}
+              >
+                {faceOnCta}
+                See all {totalJobs} jobs →
+              </Link>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setJobIndex(0);
+                setSelectedTapeKey(jobs[0]?.job_key ?? null);
+                setQualifyOpen(false);
+                setQualifyRequested(false);
+                setBoardMode("personal");
+                setStep("enter");
+                recordJobView(0);
+              }}
+              className="mt-4 text-sm font-bold underline"
+              style={{ color: macAccent }}
+            >
+              Review jobs again
+            </button>
+            <Link
+              href={src ? `/?src=${encodeURIComponent(src)}` : "/"}
+              className={`mt-6 block text-xs font-bold ${mutedClass}`}
+            >
+              Try another robot
             </Link>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setJobIndex(0);
-              setSelectedTapeKey(jobs[0]?.job_key ?? null);
-              setQualifyOpen(false);
-              setQualifyRequested(false);
-              setBoardMode("personal");
-              setStep("enter");
-              recordJobView(0);
-            }}
-            className="mt-4 text-sm font-bold underline"
-            style={{ color: macAccent }}
-          >
-            Review jobs again
-          </button>
-          <Link
-            href={src ? `/?src=${encodeURIComponent(src)}` : "/"}
-            className={`mt-6 block text-xs font-bold ${mutedClass}`}
-          >
-            Try another robot
-          </Link>
           </div>
         </MacWindow>
       )}

@@ -152,15 +152,15 @@ describe("jobsWorkflow", () => {
     expect(landingStageAfterConfirm(4)).toBe("jobs");
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const confirm = workspace.slice(
       workspace.indexOf("async function confirmSelection"),
-      workspace.indexOf("function enterReview"),
+      workspace.indexOf("function enterReview")
     );
     const oneSku = confirm.slice(
       confirm.indexOf("if (names.length === 1)"),
-      confirm.indexOf("Several / all"),
+      confirm.indexOf("Several / all")
     );
     expect(oneSku).toMatch(/openJobsFromAnalyses/);
     expect(oneSku).toMatch(/fetchRobotJobSearch/);
@@ -170,24 +170,30 @@ describe("jobsWorkflow", () => {
     expect(oneSku).not.toMatch(/fetchRobotProfile/);
     const submitFind = workspace.slice(
       workspace.indexOf("async function submitFind"),
-      workspace.indexOf("async function confirmSelection"),
+      workspace.indexOf("async function confirmSelection")
     );
     expect(submitFind).toMatch(/openJobsFromAnalyses/);
     expect(submitFind).not.toMatch(/enterReview/);
     expect(submitFind).toMatch(/lookupGrain: "product"/);
-    expect(submitFind).not.toMatch(/lookupGrain: cls \? "robot_type" : "product"/);
+    expect(submitFind).not.toMatch(
+      /lookupGrain: cls \? "robot_type" : "product"/
+    );
     expect(submitFind).toMatch(/fetchRobotJobSearch/);
     expect(submitFind).not.toMatch(/fetchRobotProfile/);
     expect(submitFind).not.toMatch(/fetchRobotJobMatch/);
     expect(submitFind).toMatch(/lineup.length === 0/);
     expect(workspace).toMatch(/rfr-jobs-activate-bar/);
     expect(workspace).not.toMatch(
-      /enterReview\(profileToAnalysis\(profile\), submitUrl, names\)/,
+      /enterReview\(profileToAnalysis\(profile\), submitUrl, names\)/
     );
   });
 
   it("always names the three process steps as navigational links", () => {
-    expect(JOBS_PROCESS_STEPS.map(s => s.id)).toEqual(["find", "jobs", "activate"]);
+    expect(JOBS_PROCESS_STEPS.map(s => s.id)).toEqual([
+      "find",
+      "jobs",
+      "activate",
+    ]);
     expect(JOBS_PROCESS_STEPS.map(s => s.label)).toEqual([
       "Show us your robot",
       "Available jobs",
@@ -221,28 +227,37 @@ describe("jobsWorkflow", () => {
     expect(css).toMatch(/#7c3aed/);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const processChrome = readFileSync(
       join(here, "../components/JobsProcessChrome.tsx"),
-      "utf8",
+      "utf8"
     );
-    const desk = readFileSync(join(here, "../components/JobsCrmDesk.tsx"), "utf8");
+    const desk = readFileSync(
+      join(here, "../components/JobsCrmDesk.tsx"),
+      "utf8"
+    );
     const next = readFileSync(
       join(here, "../components/JobsCrmNextSteps.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(workspace).not.toMatch(/JOBS_APPLY_CTA_CLASS|rfr-jobs-apply-cta/);
     expect(workspace).not.toMatch(/function goToApply/);
     expect(workspace).not.toMatch(/jobsCrmOfferHref/);
-    expect(workspace).toMatch(/processCurrent === "jobs"[\s\S]{0,80}goToActivate/);
+    expect(workspace).toMatch(
+      /processCurrent === "jobs"[\s\S]{0,80}goToActivate/
+    );
     expect(workspace).toMatch(/jobsProcessActionClass/);
     expect(processChrome).toMatch(/JOBS_APPLY_HERO_CTA/);
     expect(processChrome).toMatch(/rfr-jobs-apply-cta|JOBS_APPLY_CTA_CLASS/);
     expect(desk).toMatch(/JOBS_APPLY_CTA_CLASS/);
     expect(next).toMatch(/JOBS_APPLY_CTA_BUTTON_CLASS/);
     const pool = [{ job_key: "a" }, { job_key: "b" }, { job_key: "c" }];
-    expect(jobsToActivate([], pool, 15).map(j => j.job_key)).toEqual(["a", "b", "c"]);
+    expect(jobsToActivate([], pool, 15).map(j => j.job_key)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
     expect(jobsToActivate([pool[2]], pool, 15).map(j => j.job_key)).toEqual([
       "c",
       "a",
@@ -254,11 +269,11 @@ describe("jobsWorkflow", () => {
   it("class-picker click starts search and cannot silently no-op or dump CRM", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const qualify = workspace.slice(
       workspace.indexOf("async function qualifyActive"),
-      workspace.indexOf("function revealJobs"),
+      workspace.indexOf("function revealJobs")
     );
     expect(CLASS_PICKER_PROMPT).toBe("What type of robot?");
     expect(workspace).toMatch(/CLASS_PICKER_PROMPT/);
@@ -280,7 +295,7 @@ describe("jobsWorkflow", () => {
   it("is a scrolling process page, not a clipped two-pane box", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
     expect(workspace).not.toMatch(/h-\[calc\(100vh/);
@@ -296,19 +311,17 @@ describe("jobsWorkflow", () => {
     expect(jobsPage).toMatch(/jobs-page min-h-screen/);
     expect(jobsPage).not.toMatch(/overflow-hidden/);
     expect(jobsPage).not.toMatch(/fresh-find/);
-    expect(workspace).not.toMatch(
-      /min-h-0 flex-1 overflow-y-auto p-6 sm:p-8/,
-    );
+    expect(workspace).not.toMatch(/min-h-0 flex-1 overflow-y-auto p-6 sm:p-8/);
   });
 
   it("gives the home live tape its own height so 12 jobs show without a 100vh parent", () => {
     const tape = readFileSync(
       join(here, "../components/jobs/LiveJobTape.tsx"),
-      "utf8",
+      "utf8"
     );
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(tape).toMatch(/export const TAPE_VIEWPORT_PX = VISIBLE \* ROW_PX/);
     expect(tape).toMatch(/height: TAPE_VIEWPORT_PX/);
@@ -327,19 +340,18 @@ describe("jobsWorkflow", () => {
     expect(typeof goJobsFreshHome).toBe("function");
     const header = readFileSync(
       join(here, "../components/ExperimentHeader.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(header).toMatch(/onClick=\{onJobsFreshHomeClick\}/);
     expect(header).not.toMatch(/<Link\s+href=\{jobsFreshHomeHref/);
-    const chrome = readFileSync(
-      join(here, "../components/Header.tsx"),
-      "utf8",
-    );
+    const chrome = readFileSync(join(here, "../components/Header.tsx"), "utf8");
     expect(chrome).toMatch(/onJobsFreshHomeClick/);
     const workflow = readFileSync(join(here, "./jobsWorkflow.ts"), "utf8");
     expect(workflow).toMatch(/location\.assign\("\/"\)/);
     expect(workflow).toMatch(/isJobsHomePath\(path\)/);
-    expect(workflow).toMatch(/dispatchEvent\(new Event\(JOBS_FRESH_HOME_EVENT\)\)/);
+    expect(workflow).toMatch(
+      /dispatchEvent\(new Event\(JOBS_FRESH_HOME_EVENT\)\)/
+    );
   });
 
   it("FIND submit does not remount the workspace or require SIGNAL CRM shell", () => {
@@ -349,21 +361,21 @@ describe("jobsWorkflow", () => {
         url: "https://www.dexmate.ai/",
         inFlight: false,
         stage: "find",
-      }),
+      })
     ).toBe(true);
     expect(
       canStartFindSubmit({
         url: "https://www.dexmate.ai/",
         inFlight: true,
         stage: "find",
-      }),
+      })
     ).toBe(false);
     expect(
       canStartFindSubmit({
         url: "https://www.dexmate.ai/",
         inFlight: false,
         stage: "research",
-      }),
+      })
     ).toBe(true);
     expect(
       canStartFindSubmit({
@@ -371,18 +383,18 @@ describe("jobsWorkflow", () => {
         inFlight: true,
         stage: "research",
         currentUrl: "https://www.dexmate.ai/",
-      }),
+      })
     ).toBe(true);
-    expect(canStartFindSubmit({ url: "   ", inFlight: false, stage: "find" })).toBe(
-      false,
-    );
+    expect(
+      canStartFindSubmit({ url: "   ", inFlight: false, stage: "find" })
+    ).toBe(false);
     expect(isJobsHomePath("/")).toBe(true);
     expect(isJobsHomePath("/jobs/dexmate")).toBe(true);
     expect(isJobsHomePath("/intelligence")).toBe(false);
 
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(workspace).not.toMatch(/pipeline-detail-shell/);
     expect(workspace).not.toMatch(/diagnoseCRM/);
@@ -393,14 +405,14 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/aria-label="Find jobs for your robot"/);
     const startJobs = workspace.slice(
       workspace.indexOf("function startJobs"),
-      workspace.indexOf("function toggleProduct"),
+      workspace.indexOf("function toggleProduct")
     );
     expect(startJobs).not.toMatch(/location\.assign/);
     expect(startJobs).not.toMatch(/location\.reload/);
     expect(startJobs).not.toMatch(/setLocation/);
     const submitFind = workspace.slice(
       workspace.indexOf("async function submitFind"),
-      workspace.indexOf("async function confirmSelection"),
+      workspace.indexOf("async function confirmSelection")
     );
     expect(submitFind).not.toMatch(/location\.assign/);
     expect(submitFind).not.toMatch(/location\.reload/);
@@ -482,11 +494,11 @@ describe("jobsWorkflow", () => {
     expect(prevented).toBe(false);
     const chrome = readFileSync(
       join(here, "../components/JobsProcessChrome.tsx"),
-      "utf8",
+      "utf8"
     );
     const header = readFileSync(
       join(here, "../components/ExperimentHeader.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(chrome).toMatch(/href=\{href\}/);
     expect(chrome).toMatch(/jobsFreshHomeHref\(\)/);
@@ -510,7 +522,7 @@ describe("jobsWorkflow", () => {
         robotCount: 5,
         lookupGrain: "robot_type",
         robotClass: "humanoid",
-      }),
+      })
     ).toBe("Jobs for Fourier Intelligence");
     expect(
       jobsCountEyebrow({
@@ -520,7 +532,7 @@ describe("jobsWorkflow", () => {
         robotCount: 5,
         lookupGrain: "robot_type",
         robotClass: "humanoid",
-      }),
+      })
     ).toBe("5 ROBOTS · 1 JOB EACH");
     expect(
       jobsHeading({
@@ -528,7 +540,7 @@ describe("jobsWorkflow", () => {
         companyName: "Fourier Intelligence",
         robotCount: 1,
         lookupGrain: "product",
-      }),
+      })
     ).toBe("Jobs for Fourier GR-1");
     expect(
       jobsHeading({
@@ -537,7 +549,7 @@ describe("jobsWorkflow", () => {
         robotCount: 1,
         lookupGrain: "robot_type",
         robotClass: "humanoid",
-      }),
+      })
     ).toBe("Jobs for Fourier N1");
     expect(
       jobsCountEyebrow({
@@ -547,7 +559,7 @@ describe("jobsWorkflow", () => {
         robotCount: 1,
         lookupGrain: "robot_type",
         robotClass: "humanoid",
-      }),
+      })
     ).toBe("5 JOBS FOR FOURIER N1");
   });
 
@@ -572,7 +584,9 @@ describe("jobsWorkflow", () => {
       { job_key: "e", title: "E" },
       { job_key: "f", title: "F" },
     ];
-    const one = exampleJobsForLineup([{ productName: "Fourier N1", jobs: n1Jobs }]);
+    const one = exampleJobsForLineup([
+      { productName: "Fourier N1", jobs: n1Jobs },
+    ]);
     expect(one).toHaveLength(5);
     expect(one.every(j => j.forRobot === "Fourier N1")).toBe(true);
     expect(one.map(j => j.job_key)).toEqual(["a", "b", "c", "d", "e"]);
@@ -592,25 +606,25 @@ describe("jobsWorkflow", () => {
       "Fourier GR-3",
     ]);
     expect(lineup.map(j => j.job_key)).toEqual(["a", "b", "c"]);
-    expect(defaultCheckedKeysForLineup([
-      { productName: "Fourier N1", jobs: n1Jobs },
-    ])).toEqual(["a", "b", "c", "d", "e"]);
+    expect(
+      defaultCheckedKeysForLineup([{ productName: "Fourier N1", jobs: n1Jobs }])
+    ).toEqual(["a", "b", "c", "d", "e"]);
     expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
-      /Five example jobs Fourier N1/,
+      /Five example jobs Fourier N1/
     );
     expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
-      /Rows start checked/i,
+      /Rows start checked/i
     );
     expect(jobsListHint({ robotCount: 5, productName: "Fourier N1" })).toMatch(
-      /one sample job per robot/i,
+      /one sample job per robot/i
     );
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const handoff = readFileSync(
       join(here, "../components/JobsHandoffBoard.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(workspace).toMatch(/jobIndexLabel/);
     expect(workspace).not.toMatch(/jobIsForLabel/);
@@ -638,31 +652,35 @@ describe("jobsWorkflow", () => {
     expect(jobsWorkspaceRestoreHref()).toBe("/?restore=1");
     expect(showSignalPipelineNav({ pathname: "/" })).toBe(false);
     expect(showSignalPipelineNav({ pathname: "/jobs" })).toBe(false);
-    expect(showSignalPipelineNav({ pathname: "/crm", src: "jobs_activate" })).toBe(false);
+    expect(
+      showSignalPipelineNav({ pathname: "/crm", src: "jobs_activate" })
+    ).toBe(false);
     expect(showSignalPipelineNav({ pathname: "/pipeline" })).toBe(true);
     expect(showSignalPipelineNav({ pathname: "/crm" })).toBe(true);
     expect(isJobsChromePath("/")).toBe(true);
     expect(jobsHeaderCrmHref("/")).toBe("/pipeline?src=jobs_activate");
     expect(jobsHeaderCrmHref("/", null, false)).toBe(
-      jobsSignupHref("/pipeline?src=jobs_activate", "jobs_activate"),
+      jobsSignupHref("/pipeline?src=jobs_activate", "jobs_activate")
     );
     expect(jobsHeaderCrmHref("/crm")).toBe("/crm");
     expect(jobsHeaderCrmHref("/crm", "jobs_activate")).toBe(
-      "/pipeline?src=jobs_activate",
+      "/pipeline?src=jobs_activate"
     );
     expect(jobsHeaderCrmHref("/pipeline")).toBe("/crm");
     expect(jobsHeaderCrmHref("/pipeline", "jobs_activate")).toBe(
-      "/pipeline?src=jobs_activate",
+      "/pipeline?src=jobs_activate"
     );
-    expect(showSignalPipelineNav({ pathname: "/pipeline", src: "jobs_activate" })).toBe(
-      false,
-    );
+    expect(
+      showSignalPipelineNav({ pathname: "/pipeline", src: "jobs_activate" })
+    ).toBe(false);
     const header = readFileSync(
       join(here, "../components/ExperimentHeader.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(header).toMatch(/showSignalPipelineNav/);
-    expect(header).toMatch(/jobsHeaderCrmHref\(location, jobsSrc, Boolean\(session\)\)/);
+    expect(header).toMatch(
+      /jobsHeaderCrmHref\(location, jobsSrc, Boolean\(session\)\)/
+    );
     expect(header).toMatch(/showPipeline/);
     expect(header).toMatch(/useSearch/);
   });
@@ -676,50 +694,55 @@ describe("jobsWorkflow", () => {
     expect(showJobsSiteChrome({ pathname: "/vendor/design" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/design/abc" })).toBe(true);
     expect(
-      showJobsSiteChrome({ pathname: "/crm", search: "src=jobs_activate" }),
+      showJobsSiteChrome({ pathname: "/crm", search: "src=jobs_activate" })
     ).toBe(true);
     expect(
-      showJobsSiteChrome({ pathname: "/signup", search: "src=jobs_activate" }),
+      showJobsSiteChrome({ pathname: "/signup", search: "src=jobs_activate" })
     ).toBe(true);
     expect(
       showJobsSiteChrome({
         pathname: "/signup",
         search: "next=%2Fcrm%3Fsrc%3Djobs_activate&src=jobs_activate",
-      }),
+      })
     ).toBe(true);
     expect(
       showJobsSiteChrome({
         pathname: "/signup",
         search: "next=%2Fcrm%3Fsrc%3Djobs_activate",
-      }),
+      })
     ).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/login", search: "next=%2F" })).toBe(
-      true,
+      true
     );
     expect(
-      showJobsSiteChrome({ pathname: "/signup", search: "next=%2F%3Frestore%3D1" }),
+      showJobsSiteChrome({
+        pathname: "/signup",
+        search: "next=%2F%3Frestore%3D1",
+      })
     ).toBe(true);
 
     expect(showJobsSiteChrome({ pathname: "/pipeline" })).toBe(false);
     expect(showJobsSiteChrome({ pathname: "/crm" })).toBe(false);
     expect(showJobsSiteChrome({ pathname: "/signals" })).toBe(false);
     expect(
-      showJobsSiteChrome({ pathname: "/signup", search: "next=%2Fpipeline" }),
+      showJobsSiteChrome({ pathname: "/signup", search: "next=%2Fpipeline" })
     ).toBe(false);
     expect(showJobsSiteChrome({ pathname: "/signup" })).toBe(false);
 
     const footer = readFileSync(
       join(here, "../components/layout/SiteFooter.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(footer).toMatch(/showJobsSiteChrome/);
     expect(footer).toMatch(/function jobsProductLinks/);
     expect(footer).toMatch(/const SIGNAL_LINKS/);
-    expect(footer).toMatch(/jobsChrome \? jobsProductLinks\(Boolean\(session\)\) : SIGNAL_LINKS/);
+    expect(footer).toMatch(
+      /jobsChrome \? jobsProductLinks\(Boolean\(session\)\) : SIGNAL_LINKS/
+    );
     expect(footer).toMatch(/jobsChrome \? "JOBS" : "SIGNAL"/);
     const jobsLinks = footer.slice(
       footer.indexOf("function jobsProductLinks"),
-      footer.indexOf("const SIGNAL_LINKS"),
+      footer.indexOf("const SIGNAL_LINKS")
     );
     expect(jobsLinks).toMatch(/jobsFreshHomeHref/);
     expect(jobsLinks).toMatch(/jobsCrmOpenHref/);
@@ -735,7 +758,7 @@ describe("jobsWorkflow", () => {
     expect(compare).not.toMatch(/CRM 4.0/);
     const design = readFileSync(
       join(here, "../pages/VendorDesignBuilder.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(design).toMatch(/What this page does/);
     expect(design).toMatch(/ExperimentHeader/);
@@ -746,7 +769,10 @@ describe("jobsWorkflow", () => {
     expect(share).not.toMatch(/Explore live buyer signals/);
     expect(share).not.toMatch(/\/pipeline/);
 
-    const scout = readFileSync(join(here, "../components/ScoutChat.tsx"), "utf8");
+    const scout = readFileSync(
+      join(here, "../components/ScoutChat.tsx"),
+      "utf8"
+    );
     expect(scout).toMatch(/showJobsSiteChrome/);
     expect(scout).toMatch(/useSearch/);
   });
@@ -754,18 +780,18 @@ describe("jobsWorkflow", () => {
   it("advances step 2 with Activate job list, not a Place buyer dump", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const workflow = readFileSync(join(here, "./jobsWorkflow.ts"), "utf8");
     const handoff = readFileSync(
       join(here, "../components/JobsHandoffBoard.tsx"),
-      "utf8",
+      "utf8"
     );
     const pipeline = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
     const results = readFileSync(join(here, "../pages/Results.tsx"), "utf8");
     const header = readFileSync(
       join(here, "../components/ExperimentHeader.tsx"),
-      "utf8",
+      "utf8"
     );
     for (const src of [workspace, workflow, handoff, pipeline, results]) {
       expect(src).not.toMatch(/Qualify this job/i);
@@ -786,9 +812,11 @@ describe("jobsWorkflow", () => {
     expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
     expect(FIND_JOBS_HOME_HEADLINE).toBe("Find Jobs for Robots.");
     expect(FIND_JOBS_HOME_SUBHEAD).toBe(
-      "Enter your URL, we match your robots to available jobs.",
+      "Enter your URL, we match your robots to available jobs."
     );
-    expect(FIND_JOBS_HOME_SUBHEAD).not.toMatch(/manufacturer URL|SKU we can prove/i);
+    expect(FIND_JOBS_HOME_SUBHEAD).not.toMatch(
+      /manufacturer URL|SKU we can prove/i
+    );
     expect(FIND_JOBS_HOME_SUBHEAD).not.toMatch(/Apply to jobs/i);
     expect(FIND_JOBS_HEADLINE_CLASS).toMatch(/rfr-find-headline/);
     expect(FIND_JOBS_HEADLINE_CLASS).not.toMatch(/text-5xl/);
@@ -846,16 +874,20 @@ describe("jobsWorkflow", () => {
 
   it("opens the CRM desk on Pipeline with 5 jobs, not a SIGNAL save page", () => {
     expect(CRM_UNLOCKED_JOBS).toBe(5);
-    expect(jobsActivateHref(42)).toBe("/pipeline?src=jobs_activate&submission=42");
+    expect(jobsActivateHref(42)).toBe(
+      "/pipeline?src=jobs_activate&submission=42"
+    );
     expect(jobsActivateHref()).toBe("/pipeline?src=jobs_activate");
     expect(jobsActivateHref(42)).not.toContain("url=");
     expect(jobsActivateHref()).toContain("/pipeline?src=jobs_activate");
-    expect(jobsAutomateHref(12)).toBe("/pipeline?src=jobs_automate&submission=12");
+    expect(jobsAutomateHref(12)).toBe(
+      "/pipeline?src=jobs_automate&submission=12"
+    );
     expect(jobsAutomateHref()).toBe("/pipeline?src=jobs_automate");
     expect(isJobsAutomateSrc("jobs_automate")).toBe(true);
     expect(isJobsHandoffSrc("jobs_automate")).toBe(true);
     expect(jobsPlaceHref({ leadId: 99, submissionId: 42 })).toBe(
-      "/pipeline?src=jobs_activate&submission=42",
+      "/pipeline?src=jobs_activate&submission=42"
     );
     expect(isPlaceSrc("place")).toBe(true);
     expect(isJobsHandoffSrc("place")).toBe(false);
@@ -868,25 +900,21 @@ describe("jobsWorkflow", () => {
       { job_key: "d" },
       { job_key: "e" },
     ];
-    expect(jobsToActivate(pool, pool, CRM_UNLOCKED_JOBS).map(j => j.job_key)).toEqual([
-      "a",
-      "b",
-      "c",
-      "d",
-      "e",
-    ]);
+    expect(
+      jobsToActivate(pool, pool, CRM_UNLOCKED_JOBS).map(j => j.job_key)
+    ).toEqual(["a", "b", "c", "d", "e"]);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const pipeline = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
     const desk = readFileSync(
       join(here, "../components/JobsCrmDesk.tsx"),
-      "utf8",
+      "utf8"
     );
     const handoff = readFileSync(
       join(here, "../components/JobsHandoffBoard.tsx"),
-      "utf8",
+      "utf8"
     );
     const crm = readFileSync(join(here, "../pages/Crm.tsx"), "utf8");
     expect(workspace).not.toMatch(/jobsPlaceHref\(robotUrl/);
@@ -915,7 +943,7 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/aria-label="CRM next"/);
     const processChrome = readFileSync(
       join(here, "../components/JobsProcessChrome.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(processChrome).toMatch(/aria-label="Jobs process"/);
     expect(processChrome).toMatch(/JOBS_PROCESS_STEPS/);
@@ -938,7 +966,9 @@ describe("jobsWorkflow", () => {
     expect(desk).not.toMatch(/Keep \$\{/);
     expect(desk).not.toMatch(/data-jobs-keep-confirm/);
     expect(desk).toMatch(/jobsCrmOfferHref/);
-    expect(desk).toMatch(/#jobs-next-steps|JOBS_APPLY_SELECTED_CTA|jobsCrmOfferHref/);
+    expect(desk).toMatch(
+      /#jobs-next-steps|JOBS_APPLY_SELECTED_CTA|jobsCrmOfferHref/
+    );
     expect(desk).not.toMatch(/JOBS_KEEP_JOBS_CTA/);
     expect(desk).toMatch(/JobsKeepStatusBar/);
     expect(desk).toMatch(/JobsCrmNextSteps/);
@@ -1004,7 +1034,9 @@ describe("jobsWorkflow", () => {
   it("Jobs CRM src keeps 5 jobs and hides SIGNAL pipeline chrome", () => {
     const crm = readFileSync(join(here, "../pages/Crm.tsx"), "utf8");
     expect(crm).toMatch(/const fromJobs = isJobsHandoffSrc\(jobsSrc\)/);
-    expect(crm).toMatch(/jobsSignupHref\(crmReturnHref, jobsSrc \|\| JOBS_ACTIVATE_SRC\)/);
+    expect(crm).toMatch(
+      /jobsSignupHref\(crmReturnHref, jobsSrc \|\| JOBS_ACTIVATE_SRC\)/
+    );
     expect(crm).toMatch(/!teamId \|\| fromJobs\) return/);
     expect(crm).toMatch(/\{!fromJobs \? <AdminNav variant="dark" \/> : null\}/);
     expect(crm).toMatch(/fromJobs \? \(/);
@@ -1034,10 +1066,12 @@ describe("jobsWorkflow", () => {
     expect(jobsTrue).not.toMatch(/Cal queue/);
     const header = readFileSync(
       join(here, "../components/ExperimentHeader.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(header).toMatch(/isJobsHandoffSrc\(jobsSrc\)/);
-    expect(header).toMatch(/location.startsWith\("\/pipeline"\) && isJobsHandoffSrc/);
+    expect(header).toMatch(
+      /location.startsWith\("\/pipeline"\) && isJobsHandoffSrc/
+    );
     expect(header).toMatch(/session \|\| !showPipeline/);
   });
 
@@ -1064,15 +1098,20 @@ describe("jobsWorkflow", () => {
     ]);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(workspace).toMatch(/writeCrmHandoff\(next\)/);
-    expect(workspace).toMatch(/setLocation\(jobsCrmOpenHref\(Boolean\(session\), submissionIdRef\.current\)\)/);
+    expect(workspace).toMatch(
+      /setLocation\(jobsCrmOpenHref\(Boolean\(session\), submissionIdRef\.current\)\)/
+    );
     expect(jobsCrmOpenHref(false, 42)).toBe(
-      jobsSignupHref("/pipeline?src=jobs_activate&submission=42", "jobs_activate"),
+      jobsSignupHref(
+        "/pipeline?src=jobs_activate&submission=42",
+        "jobs_activate"
+      )
     );
     expect(jobsCrmOpenHref(true, 42)).toBe(
-      "/pipeline?src=jobs_activate&submission=42",
+      "/pipeline?src=jobs_activate&submission=42"
     );
     expect(CRM_FREE_BATCH).toBe(5);
     expect(CRM_FREE_BATCHES_PER_MONTH).toBe(3);
@@ -1080,7 +1119,7 @@ describe("jobsWorkflow", () => {
     expect(CRM_FREE_TTL_DAYS).toBe(7);
     const handoff = readFileSync(
       join(here, "../components/JobsHandoffBoard.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(handoff).toMatch(/window\.location\.replace\(jobsCrmOpenHref/);
     expect(handoff).toMatch(/jobsCrmOpenHref\(props\.signedIn/);
@@ -1095,7 +1134,10 @@ describe("jobsWorkflow", () => {
     expect(jobsCrmLeaveLabel({ submissionId: 9 })).toBe(CRM_BACK_TO_JOBS_CTA);
     expect(jobsCrmLeaveLabel({})).toBe(FIND_JOBS_CTA);
     expect(jobsCrmNextHref(false, 42)).toBe(
-      jobsSignupHref("/pipeline?src=jobs_activate&submission=42", "jobs_activate"),
+      jobsSignupHref(
+        "/pipeline?src=jobs_activate&submission=42",
+        "jobs_activate"
+      )
     );
     expect(jobsCrmNextHref(true, 42)).toBe("/?restore=1");
     expect(jobsCrmNextHref(true)).toBe("/?new=1");
@@ -1104,19 +1146,22 @@ describe("jobsWorkflow", () => {
     expect(jobsCrmNextLabel(true)).toBe(FIND_JOBS_CTA);
     const chrome = readFileSync(
       join(here, "../components/JobsProcessChrome.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(chrome).toMatch(/aria-label="Jobs process"/);
     expect(chrome).toMatch(/JOBS_PROCESS_STEPS/);
     expect(chrome).not.toMatch(/Here are its jobs/);
     expect(chrome).toMatch(/jobsCrmNextLabel/);
     expect(chrome).not.toMatch(/SIGNAL/);
-    const pipelinePage = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
+    const pipelinePage = readFileSync(
+      join(here, "../pages/Pipeline.tsx"),
+      "utf8"
+    );
     expect(pipelinePage).toMatch(/authReady=\{!authLoading\}/);
     expect(pipelinePage).toMatch(/<SiteFooter/);
     const headerNav = readFileSync(
       join(here, "../components/ExperimentHeader.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(headerNav).toMatch(/href="\/intelligence"/);
     expect(headerNav).not.toMatch(/max-sm:hidden/);
@@ -1133,11 +1178,11 @@ describe("jobsWorkflow", () => {
     expect(CRM_KEEP_YES_CTA).toBe("Yes, keep them");
     const workspaceKeep = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const deskKeep = readFileSync(
       join(here, "../components/JobsCrmDesk.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(workspaceKeep).not.toMatch(/Yes, keep them/i);
     expect(workspaceKeep).not.toMatch(/Keep \$\{/);
@@ -1155,7 +1200,13 @@ describe("jobsWorkflow", () => {
     expect(crmCollectedCountLabel(2, 2)).toBe("2 of 2 kept");
     const kept = crmToggleSelectedKey(keys, "c", false);
     expect(kept).toEqual(["a", "b", "d", "e"]);
-    expect(crmActingKeepsSelection(kept, "c")).toEqual(["a", "b", "d", "e", "c"]);
+    expect(crmActingKeepsSelection(kept, "c")).toEqual([
+      "a",
+      "b",
+      "d",
+      "e",
+      "c",
+    ]);
     expect(crmToggleSelectedKey(["a"], "b", true)).toEqual(["a", "b"]);
     expect(crmSyncSelectedKeys([], keys)).toEqual(keys);
     expect(crmSyncSelectedKeys(keys, keys)).toEqual(keys);
@@ -1176,7 +1227,9 @@ describe("jobsWorkflow", () => {
     expect(crmSaveJobsBlurb("Aethon TUG")).toBe("Jobs for Aethon TUG");
     expect(crmSaveJobsBlurb("Aethon TUG")).not.toMatch(/TUG robot/i);
     expect(crmSaveJobsBlurb("Aethon TUG")).not.toMatch(/jobs you kept/i);
-    expect(crmSaveJobsBlurb("strawberry robot")).toBe("Jobs for strawberry robot");
+    expect(crmSaveJobsBlurb("strawberry robot")).toBe(
+      "Jobs for strawberry robot"
+    );
     expect(crmSaveJobsBlurb("LaserWeeder")).toBe("Jobs for LaserWeeder");
     expect(crmSaveJobsBlurb("Joby eVTOL")).toBe("Jobs for Joby eVTOL");
     expect(crmSaveJobsBlurb()).toBe("Jobs for your robot");
@@ -1185,25 +1238,25 @@ describe("jobsWorkflow", () => {
     expect(crmSaveJobsBlurb("TUG")).not.toMatch(/real decision makers/i);
     expect(crmSaveJobsBlurb("TUG")).not.toMatch(/These are the jobs you kept/i);
     expect(crmEmptyDeskHint()).toBe(
-      "Nothing saved yet. Go back to jobs and keep the ones you want.",
+      "Nothing saved yet. Go back to jobs and keep the ones you want."
     );
     expect(crmEmptyDeskHint("TUG")).toBe(
-      "Nothing saved yet for TUG. Go back to jobs and keep the ones you want.",
+      "Nothing saved yet for TUG. Go back to jobs and keep the ones you want."
     );
-    expect(crmEmptyDeskHint("Aethon TUG")).toMatch(/Nothing saved yet for Aethon TUG/);
+    expect(crmEmptyDeskHint("Aethon TUG")).toMatch(
+      /Nothing saved yet for Aethon TUG/
+    );
     expect(crmEmptyDeskHint("Aethon TUG")).not.toMatch(/jobs you kept/i);
     expect(crmOfferBlurb("TUG")).toMatch(/offer for TUG/i);
     expect(crmOfferBlurb()).toMatch(/what you'll charge/i);
     expect(CRM_INSPECT_HINT).toBe(crmSaveJobsBlurb());
     expect(CRM_INSPECT_HINT).not.toMatch(/Inspect a collected egg/i);
-    expect(CRM_HOW_TO_STEPS[0]).toBe(
-      "Sign in so the jobs you kept stay here.",
-    );
+    expect(CRM_HOW_TO_STEPS[0]).toBe("Sign in so the jobs you kept stay here.");
     expect(CRM_HOW_TO_STEPS[1]).toBe(
-      "Open a job. Name a model for the work or say you'll train one, then apply.",
+      "Open a job. Name a model for the work or say you'll train one, then apply."
     );
     expect(CRM_HOW_TO_STEPS[2]).toBe(
-      "After you apply, we follow up. Export if you already use another CRM.",
+      "After you apply, we follow up. Export if you already use another CRM."
     );
     const howTo = CRM_HOW_TO_STEPS.join(" ");
     expect(howTo).not.toMatch(/SIGNAL/i);
@@ -1227,7 +1280,7 @@ describe("jobsWorkflow", () => {
     expect(workflow).not.toMatch(/JOBS AGENT PROTOCOL/);
     const desk = readFileSync(
       join(here, "../components/JobsCrmDesk.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(desk).toMatch(/crmSelectAllKeys\(allKeys\)/);
     expect(desk).not.toMatch(/crmSelectAllLabel/);
@@ -1269,10 +1322,10 @@ describe("jobsWorkflow", () => {
     expect(configurationClassForLookup("evtol")).toBe("evtol");
     expect(configurationClassForLookup("uav")).toBe("drone");
     expect(configurationClassForLookup("agricultural_robot")).toBe(
-      "agricultural_robot",
+      "agricultural_robot"
     );
     expect(configurationClassForLookup("construction_robot")).toBe(
-      "construction_robot",
+      "construction_robot"
     );
     expect(configurationClassForLookup("agriculture")).toBe("agriculture");
     expect(configurationClassForLookup("construction")).toBe("construction");
@@ -1292,7 +1345,9 @@ describe("jobsWorkflow", () => {
     expect(skuLookupGrain("cleaning")).toBe("robot_type");
     expect(FIND_TILE_CLASSES.has("cleaning_drone")).toBe(false);
     expect(FIND_TILE_CLASSES.size).toBe(20);
-    expect(configurationClassForLookup("cleaning_drone")).toBe("cleaning_drone");
+    expect(configurationClassForLookup("cleaning_drone")).toBe(
+      "cleaning_drone"
+    );
     expect(skuLookupGrain("cleaning_drone")).toBe("product");
     expect(normalizeRobotClass("hotel")).toBe("hospitality");
     expect(normalizeRobotClass("food_prep")).toBe("food_prep");
@@ -1313,48 +1368,52 @@ describe("jobsWorkflow", () => {
     expect(qualifySearchLookupGrain("Your robot")).toBe("robot_type");
     expect(qualifySearchLookupGrain("NEO")).toBe("product");
     expect(classJobsEmptyCopy("agriculture")).toBe(
-      "No agriculture jobs for this robot yet.",
+      "No agriculture jobs for this robot yet."
     );
     expect(classJobsEmptyCopy("healthcare")).toBe(
-      "No healthcare jobs for this robot yet.",
+      "No healthcare jobs for this robot yet."
     );
     expect(classJobsEmptyCopy("mining")).toBe(
-      "No mining jobs for this robot yet.",
+      "No mining jobs for this robot yet."
     );
     expect(classJobsEmptyCopy("warehouse")).toBe(
-      "No warehouse jobs for this robot yet.",
+      "No warehouse jobs for this robot yet."
     );
     expect(classJobsEmptyCopy("logistics")).toBe(
-      "No logistics jobs for this robot yet.",
+      "No logistics jobs for this robot yet."
     );
     expect(classJobsEmptyCopy("factory")).toBe(
-      "No factory jobs for this robot yet.",
+      "No factory jobs for this robot yet."
     );
     expect(classJobsEmptyCopy("hospitality")).toBe(
-      "No hospitality jobs for this robot yet.",
+      "No hospitality jobs for this robot yet."
     );
     expect(classJobsEmptyCopy("hotel")).toBe(
-      "No hospitality jobs for this robot yet.",
+      "No hospitality jobs for this robot yet."
     );
     expect(classJobsEmptyCopy("food_prep")).toBe(
-      "No food prep jobs for this robot yet.",
+      "No food prep jobs for this robot yet."
     );
     expect(classJobsEmptyCopy("serving")).toBe(
-      "No serving jobs for this robot yet.",
+      "No serving jobs for this robot yet."
     );
     expect(classJobsEmptyCopy("cleaning")).toBe(
-      "No cleaning jobs for this robot yet.",
+      "No cleaning jobs for this robot yet."
     );
-    expect(shouldShowClassPicker({ needsClassChoice: true, jobs: [], capabilities: [] })).toBe(
-      true,
-    );
+    expect(
+      shouldShowClassPicker({
+        needsClassChoice: true,
+        jobs: [],
+        capabilities: [],
+      })
+    ).toBe(true);
     expect(
       shouldShowClassPicker({
         needsClassChoice: true,
         robotClass: "agriculture",
         jobs: [],
         capabilities: [],
-      }),
+      })
     ).toBe(false);
     expect(
       shouldShowClassPicker({
@@ -1362,7 +1421,7 @@ describe("jobsWorkflow", () => {
         robotClass: "agriculture",
         jobs: [],
         capabilities: [],
-      }),
+      })
     ).toBe(false);
     const fourier = lineupJobLookups([
       { name: "Fourier GR-1", displayClass: "humanoid" },
@@ -1405,7 +1464,9 @@ describe("jobsWorkflow", () => {
     ]);
     expect(mixed.every(row => row.grain === "product")).toBe(true);
     expect(mixed.every(row => row.productNames.length === 1)).toBe(true);
-    const unknown = lineupJobLookups([{ name: "MysteryBot", displayClass: null }]);
+    const unknown = lineupJobLookups([
+      { name: "MysteryBot", displayClass: null },
+    ]);
     expect(unknown).toEqual([
       { grain: "product", robotClass: null, productNames: ["MysteryBot"] },
     ]);
@@ -1413,13 +1474,15 @@ describe("jobsWorkflow", () => {
       lineupJobLookups([
         { name: "Joby eVTOL", displayClass: "evtol" },
         { name: "X10", displayClass: "drone" },
-      ]).map(row => row.robotClass).sort(),
+      ])
+        .map(row => row.robotClass)
+        .sort()
     ).toEqual(["drone", "evtol"]);
     expect(
       lineupJobLookups([
         { name: "Joby eVTOL", displayClass: "evtol" },
         { name: "X10", displayClass: "drone" },
-      ]).every(row => row.grain === "product"),
+      ]).every(row => row.grain === "product")
     ).toBe(true);
     const carbon = lineupJobLookups([
       { name: "LaserWeeder", displayClass: "agricultural_robot" },
@@ -1456,14 +1519,14 @@ describe("jobsWorkflow", () => {
       productClassesFromLineup([
         { name: "Fourier GR-1", displayClass: "humanoid" },
         { name: "Spot", displayClass: "quadruped" },
-      ]),
+      ])
     ).toEqual({ "Fourier GR-1": "humanoid", Spot: "quadruped" });
   });
 
   it("shares type-level jobs across a class and does not copy one SKU onto another type", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(workspace).not.toMatch(/\.\.\.base,\s*productName: name/);
     expect(workspace).not.toMatch(/fillLineupJobs/);
@@ -1481,20 +1544,22 @@ describe("jobsWorkflow", () => {
       portfolioShowsJobCounts([
         { matched: false, jobCount: 0 },
         { matched: false, jobCount: 0 },
-      ]),
+      ])
     ).toBe(false);
-    expect(portfolioShowsJobCounts([{ matched: true, jobCount: 5 }])).toBe(true);
+    expect(portfolioShowsJobCounts([{ matched: true, jobCount: 5 }])).toBe(
+      true
+    );
     expect(
       portfolioShowsJobCounts([
         { matched: true, jobCount: 5 },
         { matched: true, jobCount: 5 },
-      ]),
+      ])
     ).toBe(false);
     expect(
       portfolioShowsJobCounts([
         { matched: true, jobCount: 5 },
         { matched: true, jobCount: 12 },
-      ]),
+      ])
     ).toBe(true);
   });
 
@@ -1527,18 +1592,38 @@ describe("jobsWorkflow", () => {
     });
     expect(home).toBe("/?restore=1");
     expect(home).not.toContain("results_scan");
-    expect(jobsSignupHref(home, "jobs_all_robots")).toContain("src=jobs_all_robots");
-    expect(jobsSignupHref(home, "jobs_all_robots")).toContain("next=%2F%3Frestore%3D1");
+    expect(jobsSignupHref(home, "jobs_all_robots")).toContain(
+      "src=jobs_all_robots"
+    );
+    expect(jobsSignupHref(home, "jobs_all_robots")).toContain(
+      "next=%2F%3Frestore%3D1"
+    );
   });
 
   it("does not restore the Jobs workspace on a fresh visit or reload of /", () => {
-    expect(shouldRestoreJobsWorkspace({ navigationType: "navigate" })).toBe(false);
+    expect(shouldRestoreJobsWorkspace({ navigationType: "navigate" })).toBe(
+      false
+    );
     expect(shouldRestoreJobsWorkspace({ navigationType: 0 })).toBe(false);
-    expect(shouldRestoreJobsWorkspace({ navigationType: "reload" })).toBe(false);
+    expect(shouldRestoreJobsWorkspace({ navigationType: "reload" })).toBe(
+      false
+    );
     expect(shouldRestoreJobsWorkspace({ navigationType: 1 })).toBe(false);
-    expect(shouldRestoreJobsWorkspace({ navigationType: "back_forward" })).toBe(true);
-    expect(shouldRestoreJobsWorkspace({ navigationType: "navigate", restoreOnce: true })).toBe(true);
-    expect(shouldRestoreJobsWorkspace({ navigationType: "navigate", restoreQuery: true })).toBe(true);
+    expect(shouldRestoreJobsWorkspace({ navigationType: "back_forward" })).toBe(
+      true
+    );
+    expect(
+      shouldRestoreJobsWorkspace({
+        navigationType: "navigate",
+        restoreOnce: true,
+      })
+    ).toBe(true);
+    expect(
+      shouldRestoreJobsWorkspace({
+        navigationType: "navigate",
+        restoreQuery: true,
+      })
+    ).toBe(true);
   });
 
   it("keeps industry-matched Place buyers when at least two rows hit", () => {
@@ -1547,9 +1632,15 @@ describe("jobsWorkflow", () => {
       { id: 2, industry: "Manufacturing / CNC" },
       { id: 3, industry: "Hospitality" },
     ];
-    expect(placeBuyersToShow(rows, "Manufacturing").map(r => r.id)).toEqual([1, 2]);
-    expect(placeBuyersToShow(rows, "Warehousing").map(r => r.id)).toEqual([1, 2, 3]);
-    expect(placeBuyersToShow(rows, "Manufacturing", 1).map(r => r.id)).toEqual([1]);
+    expect(placeBuyersToShow(rows, "Manufacturing").map(r => r.id)).toEqual([
+      1, 2,
+    ]);
+    expect(placeBuyersToShow(rows, "Warehousing").map(r => r.id)).toEqual([
+      1, 2, 3,
+    ]);
+    expect(placeBuyersToShow(rows, "Manufacturing", 1).map(r => r.id)).toEqual([
+      1,
+    ]);
   });
 
   it("falls back to the live buyer feed when URL lookup returns no rows", () => {
@@ -1559,7 +1650,7 @@ describe("jobsWorkflow", () => {
         liveRows: ["acme", "bold"],
         lookupPending: true,
         scopeToUrl: true,
-      }),
+      })
     ).toEqual([]);
     expect(
       buyerLeadsToShow({
@@ -1567,7 +1658,7 @@ describe("jobsWorkflow", () => {
         liveRows: ["acme", "bold"],
         lookupPending: false,
         scopeToUrl: true,
-      }),
+      })
     ).toEqual(["acme", "bold"]);
     expect(
       buyerLeadsToShow({
@@ -1575,7 +1666,7 @@ describe("jobsWorkflow", () => {
         liveRows: ["acme"],
         lookupPending: false,
         scopeToUrl: true,
-      }),
+      })
     ).toEqual(["scoped"]);
     expect(
       buyerLeadsToShow({
@@ -1583,7 +1674,7 @@ describe("jobsWorkflow", () => {
         liveRows: ["acme"],
         lookupPending: false,
         scopeToUrl: false,
-      }),
+      })
     ).toEqual(["acme"]);
   });
 
@@ -1633,7 +1724,9 @@ describe("jobsWorkflow", () => {
     expect(PIPELINE_PAGE_NEXT).toMatch(/live list/i);
     expect(CRM_HEADLINE_CLASS).toMatch(/text-emerald-400/);
     expect(CRM_HOW_TO_STEPS).toHaveLength(3);
-    expect(CRM_HOW_TO_STEPS[0]).toMatch(/Sign in so the jobs you kept stay here/i);
+    expect(CRM_HOW_TO_STEPS[0]).toMatch(
+      /Sign in so the jobs you kept stay here/i
+    );
     expect(CRM_HOW_TO_STEPS[0]).not.toMatch(/SIGNAL/i);
     expect(CRM_HOW_TO_STEPS[2]).toMatch(/apply/i);
     expect(CRM_WATCH_OPT_IN_LABEL).toMatch(/email me when these jobs change/i);
@@ -1641,7 +1734,7 @@ describe("jobsWorkflow", () => {
 
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const card = workspace.slice(workspace.indexOf("function JobCard"));
     expect(card).toMatch(/JOBS_ROBOT_NAME_CLASS\}>\{card\.jobTitle\}/);
@@ -1656,7 +1749,7 @@ describe("jobsWorkflow", () => {
 
     const header = readFileSync(
       join(here, "../components/ExperimentHeader.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(header).toMatch(/href=\{crmHref\}/);
     expect(header).toMatch(/useIsAdmin/);
@@ -1691,7 +1784,10 @@ describe("jobsWorkflow", () => {
     expect(crm).not.toMatch(/from "@\/components\/Header"/);
     expect(crm).not.toMatch(/Outreach editor/);
 
-    const hero = readFileSync(join(here, "../components/crm/CrmHero.tsx"), "utf8");
+    const hero = readFileSync(
+      join(here, "../components/crm/CrmHero.tsx"),
+      "utf8"
+    );
     expect(hero).toMatch(/KARE_FACE/);
     expect(hero).toMatch(/FACE_EMERALD/);
     expect(hero).toMatch(/CRM_HEADLINE_CLASS/);
@@ -1725,7 +1821,10 @@ describe("jobsWorkflow", () => {
     expect(crm).not.toMatch(/Buyer outreach checkpoint/);
     expect(crm).not.toMatch(/admin-workspace/);
 
-    const pipelineSrc = readFileSync(join(here, "../pages/Pipeline.tsx"), "utf8");
+    const pipelineSrc = readFileSync(
+      join(here, "../pages/Pipeline.tsx"),
+      "utf8"
+    );
     expect(pipelineSrc).toMatch(/JOBS_PIPELINE_CAP/);
     expect(pipelineSrc).not.toMatch(/Find buyers by industry/);
     expect(pipelineSrc).not.toMatch(/Customer opportunities/);
@@ -1736,7 +1835,7 @@ describe("jobsWorkflow", () => {
 
     const quickLinks = readFileSync(
       join(here, "../components/pipeline/WorkspaceQuickLinks.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(quickLinks).not.toMatch(/Everything happens on this page/i);
     expect(quickLinks).not.toMatch(/Activate CRM by saving/i);
@@ -1760,28 +1859,32 @@ describe("jobsWorkflow", () => {
 
     const shareBar = readFileSync(
       join(here, "../components/LeadShareBar.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(shareBar).toMatch(/Share this job with colleagues/);
     expect(shareBar).not.toMatch(/Share this SIGNAL lead/);
 
     const cssSrc = readFileSync(join(here, "../index.css"), "utf8");
-    expect(cssSrc).toMatch(/\.rfr-jobs-page-shell::after[\s\S]{0,180}z-index: 1;/);
+    expect(cssSrc).toMatch(
+      /\.rfr-jobs-page-shell::after[\s\S]{0,180}z-index: 1;/
+    );
     expect(cssSrc).toMatch(/\.pipeline-outreach-card/);
     expect(cssSrc).toMatch(/\.bg-slate-50\\\/80/);
     expect(cssSrc).toMatch(/\.bg-amber-50\\\/70/);
 
     const scoutChat = readFileSync(
       join(here, "../components/ScoutChat.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(scoutChat).toMatch(/onPipeline \|\|/);
 
     const cardSrc = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
-    expect(cardSrc).toMatch(/setLocation\(jobsCrmOpenHref\(Boolean\(session\), submissionIdRef\.current\)\)/);
+    expect(cardSrc).toMatch(
+      /setLocation\(jobsCrmOpenHref\(Boolean\(session\), submissionIdRef\.current\)\)/
+    );
     expect(cardSrc).not.toMatch(/setLocation\(session \? dest/);
     expect(cardSrc).not.toMatch(/window\.location\.href = session/);
     expect(cardSrc).toMatch(/id="jobs-list"/);
@@ -1802,33 +1905,41 @@ describe("jobsWorkflow", () => {
         action: "Priority: Pitch AMR fleet for new distribution centers",
         friction: "Move pallets from receiving to reserve overnight",
         company: "Acme Logistics",
-      }),
+      })
     ).toBe("Move pallets from receiving to reserve overnight");
     expect(
       jobExplanation({
         title: "Tray return",
         why: ["Carry dirty trays from dining room to the dish pit all shift"],
         company: "Panera Bread",
-      }),
+      })
     ).toMatch(/dish pit/i);
     expect(
       jobExplanation({
-        action: "Open with dock-to-stock AMR ROI — ask who owns slotting and outbound flow.",
+        action:
+          "Open with dock-to-stock AMR ROI — ask who owns slotting and outbound flow.",
         industry: "Logistics",
         company: "Acme Logistics",
         title: "Dock to stock",
-      }),
+      })
     ).toBe("Dock to stock — Acme Logistics · Logistics");
     expect(
       jobExplanation({
-        action: "Operational automation opportunity — confirm specific pain on discovery call",
+        action:
+          "Operational automation opportunity — confirm specific pain on discovery call",
         friction: "Why now signal not yet summarized",
         workflow: "cleaning / housekeeping robots",
         company: "MGM Resorts",
-      }),
+      })
     ).toBe("cleaning / housekeeping robots");
-    expect(isSalesPlaceholder("Operational automation opportunity — confirm specific pain on discovery call")).toBe(true);
-    expect(isSalesPlaceholder("Move pallets from receiving to reserve overnight")).toBe(false);
+    expect(
+      isSalesPlaceholder(
+        "Operational automation opportunity — confirm specific pain on discovery call"
+      )
+    ).toBe(true);
+    expect(
+      isSalesPlaceholder("Move pallets from receiving to reserve overnight")
+    ).toBe(false);
   });
 
   it("filters OEM hub noise; search is 3 free / 5 paid; lineup is not capped at 3", () => {
@@ -1905,7 +2016,7 @@ describe("jobsWorkflow", () => {
         { name: "LD-60" },
         { name: "LD-105" },
       ],
-      JOBS_PRODUCT_CAP_PAID,
+      JOBS_PRODUCT_CAP_PAID
     );
     expect(paidSearch.map(p => p.name)).toEqual([
       "LD-250",
@@ -1916,7 +2027,7 @@ describe("jobsWorkflow", () => {
     ]);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(workspace).toMatch(/filterJobsLineupProducts/);
     expect(workspace).toMatch(/pageJobsLineup/);
@@ -1938,7 +2049,7 @@ describe("jobsWorkflow", () => {
     expect(crm).not.toMatch(/bg-white/);
     const account = readFileSync(
       join(here, "../components/crm/CrmAccountWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(account).not.toMatch(/bg-white/);
     expect(account).toMatch(/bg-\[#0b162f\]/);
@@ -1959,12 +2070,13 @@ describe("jobsWorkflow", () => {
       { name: "HD-1500", displayClass: "amr" },
       { name: "MD-650", displayClass: "amr" },
     ]);
-    expect(usesLineupSegments(omron.flatMap(s => s.products), 3)).toBe(true);
-    expect(omron.map(s => s.title)).toEqual([
-      "LD AMRs",
-      "HD-1500",
-      "MD-650",
-    ]);
+    expect(
+      usesLineupSegments(
+        omron.flatMap(s => s.products),
+        3
+      )
+    ).toBe(true);
+    expect(omron.map(s => s.title)).toEqual(["LD AMRs", "HD-1500", "MD-650"]);
     expect(searchNamesForSegment(omron[0], 3)).toEqual([
       "LD-250",
       "LD-90",
@@ -1997,15 +2109,20 @@ describe("jobsWorkflow", () => {
       { name: "Spot", displayClass: "quadruped" },
       { name: "Stretch", displayClass: "mobile_manipulator" },
     ]);
-    expect(usesLineupSegments(mixed.flatMap(s => s.products), 3)).toBe(true);
+    expect(
+      usesLineupSegments(
+        mixed.flatMap(s => s.products),
+        3
+      )
+    ).toBe(true);
     expect(mixed.map(s => s.robotClass).sort()).toEqual([
       "humanoid",
       "mobile_manipulator",
       "quadruped",
     ]);
-    expect(usesLineupSegments([{ name: "Digit", displayClass: "humanoid" }], 3)).toBe(
-      false,
-    );
+    expect(
+      usesLineupSegments([{ name: "Digit", displayClass: "humanoid" }], 3)
+    ).toBe(false);
     expect(
       usesLineupSegments(
         [
@@ -2013,8 +2130,8 @@ describe("jobsWorkflow", () => {
           { name: "LD-90", displayClass: "amr" },
           { name: "LD-60", displayClass: "amr" },
         ],
-        3,
-      ),
+        3
+      )
     ).toBe(false);
 
     const unlabeled = lineupSegments([

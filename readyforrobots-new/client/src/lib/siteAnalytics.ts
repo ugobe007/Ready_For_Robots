@@ -12,7 +12,8 @@ function postEvent(path: string, body: Record<string, unknown>) {
 export function trackSiteVisit(path: string) {
   postEvent("/api/track/visit", {
     path,
-    referrer: typeof document !== "undefined" ? document.referrer || null : null,
+    referrer:
+      typeof document !== "undefined" ? document.referrer || null : null,
   });
 }
 
@@ -32,10 +33,14 @@ export function trackSupplyConversion(payload: Record<string, unknown>) {
   postEvent("/api/track/supply-conversion", payload);
 }
 
-export function trackMarketingEvent(action: string, payload: Record<string, unknown> = {}) {
+export function trackMarketingEvent(
+  action: string,
+  payload: Record<string, unknown> = {}
+) {
   postEvent("/api/track/visit", {
     path: `/event/${action}`,
-    referrer: typeof document !== "undefined" ? document.referrer || null : null,
+    referrer:
+      typeof document !== "undefined" ? document.referrer || null : null,
     ...payload,
   });
 }
@@ -68,8 +73,15 @@ export type RobotJobsFunnelStep =
   | "jobs_list_activated"
   | "see_all_clicked";
 
-export function trackRobotJobsFunnel(step: RobotJobsFunnelStep, payload: Record<string, unknown> = {}) {
-  trackMarketingEvent(`rdd_${step}`, { funnel: "robot_jobs", step, ...payload });
+export function trackRobotJobsFunnel(
+  step: RobotJobsFunnelStep,
+  payload: Record<string, unknown> = {}
+) {
+  trackMarketingEvent(`rdd_${step}`, {
+    funnel: "robot_jobs",
+    step,
+    ...payload,
+  });
 }
 
 /**
@@ -78,12 +90,18 @@ export function trackRobotJobsFunnel(step: RobotJobsFunnelStep, payload: Record<
  */
 export type FunnelStage = "signup_start" | "signup_complete" | "first_save";
 
-export function trackFunnelStage(stage: FunnelStage, payload: Record<string, unknown> = {}) {
+export function trackFunnelStage(
+  stage: FunnelStage,
+  payload: Record<string, unknown> = {}
+) {
   postEvent("/api/track/funnel", { stage, ...payload });
 }
 
 /** Fire an event at most once per browser (dedupes completion/activation across reloads). */
-function trackFunnelOnce(stage: FunnelStage, payload: Record<string, unknown> = {}) {
+function trackFunnelOnce(
+  stage: FunnelStage,
+  payload: Record<string, unknown> = {}
+) {
   const key = `rfr_funnel_${stage}`;
   if (typeof window !== "undefined") {
     try {
@@ -137,7 +155,9 @@ export function readSupplyAttribution(search: string): {
     return {};
   }
   return {
-    robotCompanyId: Number.isFinite(robotCompanyId) ? robotCompanyId : undefined,
+    robotCompanyId: Number.isFinite(robotCompanyId)
+      ? robotCompanyId
+      : undefined,
     messageToken,
     utmSource,
   };

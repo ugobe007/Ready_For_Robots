@@ -57,18 +57,36 @@ describe("pstackSite protocol", () => {
       "ontology_industry_language",
       "url_workflow",
     ]);
-    expect(CRITIC_GATES.find(gate => gate.id === "class_picker")?.fail).toMatch(/no-op/);
-    expect(CRITIC_GATES.find(gate => gate.id === "find")?.prove).toBe("FIND is /");
-    expect(CRITIC_GATES.find(gate => gate.id === "find")?.fail).toMatch(/experiment/);
-    expect(CRITIC_GATES.find(gate => gate.id === "oem_extract")?.fail).toMatch(/chrome/);
-    expect(CRITIC_GATES.find(gate => gate.id === "healthcare_class")?.fail).toMatch(/humanoid/);
-    expect(CRITIC_GATES.find(gate => gate.id === "ontology_industry_language")?.fail).toMatch(/ontology/);
-    expect(CRITIC_GATES.find(gate => gate.id === "url_workflow")?.fail).toMatch(/chrome-as-SKU|cleaning-drone/);
+    expect(CRITIC_GATES.find(gate => gate.id === "class_picker")?.fail).toMatch(
+      /no-op/
+    );
+    expect(CRITIC_GATES.find(gate => gate.id === "find")?.prove).toBe(
+      "FIND is /"
+    );
+    expect(CRITIC_GATES.find(gate => gate.id === "find")?.fail).toMatch(
+      /experiment/
+    );
+    expect(CRITIC_GATES.find(gate => gate.id === "oem_extract")?.fail).toMatch(
+      /chrome/
+    );
+    expect(
+      CRITIC_GATES.find(gate => gate.id === "healthcare_class")?.fail
+    ).toMatch(/humanoid/);
+    expect(
+      CRITIC_GATES.find(gate => gate.id === "ontology_industry_language")?.fail
+    ).toMatch(/ontology/);
+    expect(CRITIC_GATES.find(gate => gate.id === "url_workflow")?.fail).toMatch(
+      /chrome-as-SKU|cleaning-drone/
+    );
     expect(criticHeldoutFindUrls()).toEqual([...CRITIC_HELDOUT_FIND_URLS]);
     expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.xpeng.com/");
-    expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.greenfieldincorporated.com/");
+    expect(CRITIC_HELDOUT_FIND_URLS).toContain(
+      "https://www.greenfieldincorporated.com/"
+    );
     expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.organifarms.de/");
-    expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.diligentrobots.com/");
+    expect(CRITIC_HELDOUT_FIND_URLS).toContain(
+      "https://www.diligentrobots.com/"
+    );
     expect(crmWallRequired()).toBe(true);
     expect(PSTACK_CRM_WALL_REQUIRED).toBe(true);
     expect(jobsCrmOpenHref(false)).toMatch(/\/signup\?/);
@@ -80,7 +98,9 @@ describe("pstackSite protocol", () => {
     expect(PSTACK_CUSTOMER_CHAT_FORBIDDEN).toBe(true);
     expect(refuseSiteAgent("vercel_ai_gateway").ok).toBe(false);
     expect(refuseSiteAgent("hermes_ingest").detail).toMatch(/retired/);
-    expect(refuseSiteAgent("matcher_as_llm").detail).toMatch(/robot_job_capability_match/);
+    expect(refuseSiteAgent("matcher_as_llm").detail).toMatch(
+      /robot_job_capability_match/
+    );
     expect(refuseSiteAgent("customer_pstack_chat").ok).toBe(false);
     expect(siteAgentAsk({ role: "act", surface: "scout_chat" }).ok).toBe(false);
     const findAsk = siteAgentAsk({ role: "how", surface: "jobs_find" });
@@ -102,14 +122,23 @@ describe("pstackSite protocol", () => {
 
 describe("pstack site chrome", () => {
   it("renders on FIND and About, not as the CRM job source", () => {
-    const chrome = readFileSync(join(here, "../components/JobsPstackProtocol.tsx"), "utf8");
+    const chrome = readFileSync(
+      join(here, "../components/JobsPstackProtocol.tsx"),
+      "utf8"
+    );
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const about = readFileSync(join(here, "../pages/Intelligence.tsx"), "utf8");
-    const desk = readFileSync(join(here, "../components/JobsCrmDesk.tsx"), "utf8");
-    const scout = readFileSync(join(here, "../components/ScoutChat.tsx"), "utf8");
+    const desk = readFileSync(
+      join(here, "../components/JobsCrmDesk.tsx"),
+      "utf8"
+    );
+    const scout = readFileSync(
+      join(here, "../components/ScoutChat.tsx"),
+      "utf8"
+    );
     const crm = readFileSync(join(here, "../pages/Crm.tsx"), "utf8");
 
     expect(chrome).toMatch(/aria-label="Jobs agent protocol"/);

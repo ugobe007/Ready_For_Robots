@@ -25,7 +25,7 @@ export default function AnimatedStat({
       ([entry]) => {
         if (entry.isIntersecting) setStarted(true);
       },
-      { threshold: 0.25, rootMargin: "0px 0px -40px 0px" },
+      { threshold: 0.25, rootMargin: "0px 0px -40px 0px" }
     );
     observer.observe(el);
     return () => observer.disconnect();

@@ -38,7 +38,7 @@ export default function HeroUrlScan({ onDark = false }: Props) {
           inputMode="url"
           autoComplete="url"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={e => setUrl(e.target.value)}
           placeholder="yourcompany.com or URL"
           className={
             onDark

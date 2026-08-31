@@ -1,28 +1,39 @@
 <!doctype html>
 <html lang="en">
-
   <head>
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+      content="width=device-width, initial-scale=1.0, maximum-scale=1"
+    />
     <title>ReadyForRobots — Find Jobs for Your Robot</title>
     <meta
       name="description"
-      content="Paste a robot URL. We research the product, build a grounded profile, and find credible jobs it can do." />
+      content="Paste a robot URL. We research the product, build a grounded profile, and find credible jobs it can do."
+    />
     <meta property="og:site_name" content="Ready For Robots" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://readyforrobots.com/" />
-    <meta property="og:title" content="ReadyForRobots — Find Jobs for Your Robot" />
+    <meta
+      property="og:title"
+      content="ReadyForRobots — Find Jobs for Your Robot"
+    />
     <meta
       property="og:description"
-      content="Paste a robot URL. We research the product, build a grounded profile, and find credible jobs it can do." />
-    <meta property="og:image" content="https://readyforrobots.com/branding/og-face.png" />
+      content="Paste a robot URL. We research the product, build a grounded profile, and find credible jobs it can do."
+    />
+    <meta
+      property="og:image"
+      content="https://readyforrobots.com/branding/og-face.png"
+    />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="ReadyForRobots face mark" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://readyforrobots.com/branding/og-face.png" />
+    <meta
+      name="twitter:image"
+      content="https://readyforrobots.com/branding/og-face.png"
+    />
     <meta name="theme-color" content="#081126" />
     <meta name="rfr-release" content="git-dev" />
     <link rel="canonical" href="https://readyforrobots.com/" />
@@ -34,7 +45,10 @@
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
 
   <body>
@@ -44,7 +58,11 @@
         try {
           var path = window.location.pathname;
           var params = new URLSearchParams(window.location.search);
-          if (path === "/calendar" && params.has("code") && params.get("connected") !== "google_calendar") {
+          if (
+            path === "/calendar" &&
+            params.has("code") &&
+            params.get("connected") !== "google_calendar"
+          ) {
             params.delete("code");
             params.delete("state");
             var q = params.toString();
@@ -55,5 +73,4 @@
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
-
 </html>

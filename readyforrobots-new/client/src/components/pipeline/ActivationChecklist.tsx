@@ -94,13 +94,20 @@ export default function ActivationChecklist({
       </div>
       <ol className="mt-3 space-y-2">
         {steps.map((step, i) => (
-          <li key={step.id} className="flex items-center gap-2 text-xs text-emerald-950">
+          <li
+            key={step.id}
+            className="flex items-center gap-2 text-xs text-emerald-950"
+          >
             {step.done ? (
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
             ) : (
               <Circle className="h-4 w-4 shrink-0 text-emerald-400" />
             )}
-            <span className={step.done ? "font-medium text-emerald-800" : "font-semibold"}>
+            <span
+              className={
+                step.done ? "font-medium text-emerald-800" : "font-semibold"
+              }
+            >
               {i + 1}. {step.label}
             </span>
             {step.action && (

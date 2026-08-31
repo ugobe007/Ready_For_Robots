@@ -6,10 +6,7 @@
  * drops late A responses after B starts; a same-URL retry is a new generation
  * so the first attempt cannot paint "Failed to fetch" over the second.
  */
-import {
-  isCurrentRobotSubmit,
-  sameRobotUrl,
-} from "@/lib/robotUrlIdentity";
+import { isCurrentRobotSubmit, sameRobotUrl } from "@/lib/robotUrlIdentity";
 
 export type FindResearchHandle = {
   url: string;
@@ -28,7 +25,10 @@ export function isFailedToFetchError(err: unknown): boolean {
   const name = "name" in err ? String((err as { name?: string }).name) : "";
   const message =
     "message" in err ? String((err as { message?: string }).message) : "";
-  if (name === "TypeError" && /failed to fetch|load failed|networkerror/i.test(message)) {
+  if (
+    name === "TypeError" &&
+    /failed to fetch|load failed|networkerror/i.test(message)
+  ) {
     return true;
   }
   return /^failed to fetch$/i.test(message.trim());
@@ -55,7 +55,7 @@ export function isFindAbortError(err: unknown, signal?: AbortSignal): boolean {
 
 export function beginFindResearch(
   previous: FindResearchHandle | null,
-  url: string,
+  url: string
 ): FindResearchHandle {
   const handle: FindResearchHandle = {
     url,
@@ -70,14 +70,14 @@ export function beginFindResearch(
 
 export function isLiveFindResearch(
   current: FindResearchHandle | null,
-  handle: FindResearchHandle,
+  handle: FindResearchHandle
 ): boolean {
   return Boolean(
     current &&
       current.generation === handle.generation &&
       current.controller === handle.controller &&
       sameRobotUrl(current.url, handle.url) &&
-      isCurrentRobotSubmit(current.url, handle.url),
+      isCurrentRobotSubmit(current.url, handle.url)
   );
 }
 
@@ -89,7 +89,10 @@ export function shouldIgnoreStaleFindError(opts: {
   return !isLiveFindResearch(opts.current, opts.handle);
 }
 
-export function findResearchFailureMessage(err: unknown, fallback: string): string {
+export function findResearchFailureMessage(
+  err: unknown,
+  fallback: string
+): string {
   if (
     isFindAbortError(err) ||
     isTimeoutError(err) ||

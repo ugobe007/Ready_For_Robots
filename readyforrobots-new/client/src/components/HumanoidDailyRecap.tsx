@@ -25,9 +25,12 @@ function recapSummary(report: HumanoidIntelligenceReportData): string {
 function debriefParagraphs(report: HumanoidIntelligenceReportData): string[] {
   const out: string[] = [];
   const narrative = report.narrative;
-  if (narrative?.market_overview?.length) out.push(...narrative.market_overview.slice(0, 2));
-  if (narrative?.deployment_reality?.length) out.push(narrative.deployment_reality[0]);
-  if (narrative?.ranking_commentary?.length) out.push(narrative.ranking_commentary[0]);
+  if (narrative?.market_overview?.length)
+    out.push(...narrative.market_overview.slice(0, 2));
+  if (narrative?.deployment_reality?.length)
+    out.push(narrative.deployment_reality[0]);
+  if (narrative?.ranking_commentary?.length)
+    out.push(narrative.ranking_commentary[0]);
   if (report.month_over_month?.narrative_bullets?.length) {
     out.push(...report.month_over_month.narrative_bullets.slice(0, 2));
   }
@@ -37,16 +40,25 @@ function debriefParagraphs(report: HumanoidIntelligenceReportData): string[] {
   return out.filter(Boolean).slice(0, 6);
 }
 
-export default function HumanoidDailyRecap({ className = "" }: { className?: string }) {
-  const [report, setReport] = useState<HumanoidIntelligenceReportData | null>(null);
+export default function HumanoidDailyRecap({
+  className = "",
+}: {
+  className?: string;
+}) {
+  const [report, setReport] = useState<HumanoidIntelligenceReportData | null>(
+    null
+  );
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${getPublicReadApiBase()}/api/humanoid/intelligence-report?top_n=8`, liveFetchInit())
-      .then(async (r) => (r.ok ? r.json() : null))
-      .then((data) => {
+    fetch(
+      `${getPublicReadApiBase()}/api/humanoid/intelligence-report?top_n=8`,
+      liveFetchInit()
+    )
+      .then(async r => (r.ok ? r.json() : null))
+      .then(data => {
         if (cancelled) return;
         const payload = data?.report;
         if (isValidHumanoidReport(payload)) setReport(payload);
@@ -82,17 +94,22 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
                 <p className="mt-2 text-sm leading-relaxed text-gray-600">
                   {loading
                     ? "Loading today's index movement and deployment signals…"
-                    : summary || "Independent HEIF scoring across the humanoid fleet — updated daily."}
+                    : summary ||
+                      "Independent HEIF scoring across the humanoid fleet — updated daily."}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setExpanded((v) => !v)}
+                onClick={() => setExpanded(v => !v)}
                 className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100"
                 aria-expanded={expanded}
               >
                 {expanded ? "Collapse debrief" : "Read full debrief"}
-                {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                {expanded ? (
+                  <ChevronUp className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                )}
               </button>
             </div>
 
@@ -100,8 +117,11 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
               <div className="mt-5 pt-5 border-t border-gray-100 space-y-5">
                 {debrief.length > 0 && (
                   <div className="space-y-2">
-                    {debrief.map((para) => (
-                      <p key={para.slice(0, 40)} className="text-sm leading-relaxed text-gray-600">
+                    {debrief.map(para => (
+                      <p
+                        key={para.slice(0, 40)}
+                        className="text-sm leading-relaxed text-gray-600"
+                      >
                         {para}
                       </p>
                     ))}
@@ -114,15 +134,28 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
                       Top rankings today
                     </p>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                      {top.map((robot) => (
-                        <div key={robot.name} className="rounded-lg border border-gray-100 bg-slate-50 px-3 py-2.5">
+                      {top.map(robot => (
+                        <div
+                          key={robot.name}
+                          className="rounded-lg border border-gray-100 bg-slate-50 px-3 py-2.5"
+                        >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-mono-data text-[10px] text-gray-400">#{robot.rank}</span>
-                            <span className="score-number text-sm">{robot.score_total}</span>
+                            <span className="font-mono-data text-[10px] text-gray-400">
+                              #{robot.rank}
+                            </span>
+                            <span className="score-number text-sm">
+                              {robot.score_total}
+                            </span>
                           </div>
-                          <p className="text-sm font-semibold text-gray-900 truncate mt-1">{robot.name}</p>
-                          <p className="text-[10px] text-gray-500 truncate">{robot.vendor}</p>
-                          <p className="text-[10px] mt-1 truncate text-emerald-600">{robot.deployment_tier_label}</p>
+                          <p className="text-sm font-semibold text-gray-900 truncate mt-1">
+                            {robot.name}
+                          </p>
+                          <p className="text-[10px] text-gray-500 truncate">
+                            {robot.vendor}
+                          </p>
+                          <p className="text-[10px] mt-1 truncate text-emerald-600">
+                            {robot.deployment_tier_label}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -131,11 +164,15 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
 
                 {findings.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-gray-400">Key findings</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-gray-400">
+                      Key findings
+                    </p>
                     <ul className="space-y-2">
-                      {findings.map((f) => (
+                      {findings.map(f => (
                         <li key={f.title} className="text-xs text-gray-600">
-                          <span className="font-semibold text-gray-800">{f.title}: </span>
+                          <span className="font-semibold text-gray-800">
+                            {f.title}:{" "}
+                          </span>
                           {f.body}
                         </li>
                       ))}

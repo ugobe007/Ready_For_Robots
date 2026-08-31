@@ -27,9 +27,14 @@ function injectRfrApiMeta(): Plugin {
     name: "inject-rfr-api-meta",
     transformIndexHtml(html) {
       if (html.includes('name="rfr-api-base"')) return html;
-      const raw = (process.env.VITE_PUBLIC_API_URL || "").trim().replace(/\/$/, "");
+      const raw = (process.env.VITE_PUBLIC_API_URL || "")
+        .trim()
+        .replace(/\/$/, "");
       if (!raw) return html;
-      return html.replace("<head>", `<head>\n    <meta name="rfr-api-base" content="${raw}" />`);
+      return html.replace(
+        "<head>",
+        `<head>\n    <meta name="rfr-api-base" content="${raw}" />`
+      );
     },
   };
 }
@@ -65,12 +70,12 @@ function injectRfrReleaseMeta(): Plugin {
       if (html.includes('name="rfr-release"')) {
         return html.replace(
           /<meta\s+name="rfr-release"\s+content="[^"]*"\s*\/>/,
-          `<meta name="rfr-release" content="${id}" />`,
+          `<meta name="rfr-release" content="${id}" />`
         );
       }
       return html.replace(
         "<head>",
-        `<head>\n    <meta name="rfr-release" content="${id}" />`,
+        `<head>\n    <meta name="rfr-release" content="${id}" />`
       );
     },
   };
@@ -82,9 +87,15 @@ function requirePublicSupabaseEnv(): Plugin {
     name: "require-public-supabase-env",
     configResolved(config) {
       if (config.command !== "build" || config.mode !== "production") return;
-      const fileEnv = loadEnv(config.mode, config.envDir || PROJECT_ROOT, "VITE_");
+      const fileEnv = loadEnv(
+        config.mode,
+        config.envDir || PROJECT_ROOT,
+        "VITE_"
+      );
       const url =
-        process.env.VITE_PUBLIC_SUPABASE_URL || fileEnv.VITE_PUBLIC_SUPABASE_URL || "";
+        process.env.VITE_PUBLIC_SUPABASE_URL ||
+        fileEnv.VITE_PUBLIC_SUPABASE_URL ||
+        "";
       const key =
         process.env.VITE_PUBLIC_SUPABASE_ANON_KEY ||
         fileEnv.VITE_PUBLIC_SUPABASE_ANON_KEY ||
@@ -96,7 +107,7 @@ function requirePublicSupabaseEnv(): Plugin {
           "Production Vite build requires VITE_PUBLIC_SUPABASE_URL and " +
             "VITE_PUBLIC_SUPABASE_ANON_KEY (or VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY). " +
             "Without them /signup Google and GitHub buttons do nothing. " +
-            "Set them in .github/workflows/deploy-frontend.yml (same values as fly.toml [build.args]).",
+            "Set them in .github/workflows/deploy-frontend.yml (same values as fly.toml [build.args])."
         );
       }
     },
@@ -141,7 +152,7 @@ function writeToLogFile(source: LogSource, entries: unknown[]) {
   const logPath = path.join(LOG_DIR, `${source}.log`);
 
   // Format entries with timestamps
-  const lines = entries.map((entry) => {
+  const lines = entries.map(entry => {
     const ts = new Date().toISOString();
     return `[${ts}] ${JSON.stringify(entry)}`;
   });
@@ -217,7 +228,7 @@ function vitePluginManusDebugCollector(): Plugin {
         }
 
         let body = "";
-        req.on("data", (chunk) => {
+        req.on("data", chunk => {
           body += chunk.toString();
         });
 
@@ -247,7 +258,10 @@ function vitePluginStorageProxy(): Plugin {
           return;
         }
 
-        const forgeBaseUrl = (process.env.BUILT_IN_FORGE_API_URL || "").replace(/\/+$/, "");
+        const forgeBaseUrl = (process.env.BUILT_IN_FORGE_API_URL || "").replace(
+          /\/+$/,
+          ""
+        );
         const forgeKey = process.env.BUILT_IN_FORGE_API_KEY;
 
         if (!forgeBaseUrl || !forgeKey) {
@@ -257,7 +271,10 @@ function vitePluginStorageProxy(): Plugin {
         }
 
         try {
-          const forgeUrl = new URL("v1/storage/presign/get", forgeBaseUrl + "/");
+          const forgeUrl = new URL(
+            "v1/storage/presign/get",
+            forgeBaseUrl + "/"
+          );
           forgeUrl.searchParams.set("path", key);
 
           const forgeResp = await fetch(forgeUrl, {
@@ -297,7 +314,13 @@ const plugins = [
   react(),
   tailwindcss(),
   jsxLocPlugin(),
-  ...(isDev ? [vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()] : []),
+  ...(isDev
+    ? [
+        vitePluginManusRuntime(),
+        vitePluginManusDebugCollector(),
+        vitePluginStorageProxy(),
+      ]
+    : []),
 ];
 
 export default defineConfig({
@@ -307,7 +330,13 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "client", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
-      "@ontology": path.resolve(import.meta.dirname, "client", "src", "lib", "industry_sector_ontology.json"),
+      "@ontology": path.resolve(
+        import.meta.dirname,
+        "client",
+        "src",
+        "lib",
+        "industry_sector_ontology.json"
+      ),
     },
   },
   envDir: path.resolve(import.meta.dirname),
