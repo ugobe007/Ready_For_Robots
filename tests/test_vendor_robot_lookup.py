@@ -183,6 +183,8 @@ def test_jobs_seed_name_collision_still_pins_ur20_url():
     from app.services.vendor_robot_lookup import names_are_same_sku
 
     assert names_are_same_sku("UR20", "Universal Robots UR20")
+    assert names_are_same_sku("T8", "Keenon T8")
+    assert not names_are_same_sku("T8", "T80")
     assert not names_are_same_sku("Servi", "Servi Plus")
     jobs = {
         "vendor_name": "Universal Robots",

@@ -392,11 +392,16 @@ _VEHICLE_MODEL_CODE = re.compile(r"^[A-Z]{1,3}\d{1,2}\+?$", re.I)
 _CTA_HYPHEN_HEAD = frozenset(
     {"join", "find", "sign", "log", "get", "contact", "book", "see", "learn", "try"}
 )
-# "apple harvester" / "delivery robots" — work category, not a named SKU.
+# "apple harvester" / "delivery robots" / "AMR scrubbers" — work category, not a named SKU.
 _CATEGORY_BLOB = re.compile(
     r"^(?:the\s+)?(?:apple|strawberry|grape|cotton|berry|warehouse|delivery|"
-    r"floor|pallet)?\s*(?:harvest(?:er|ing)?|weeding|tractors?|robots?|"
-    r"systems?|platform|automation|equipment)\s*$",
+    r"floor|pallet|amr|agv)?\s*(?:harvest(?:er|ing)?|weeding|tractors?|robots?|"
+    r"systems?|platform|automation|equipment|scrubbers?|cleaners?)\s*$",
+    re.I,
+)
+# "Seer Humanoid" / "Segway Humanoid" — company + morphology dump, not a model.
+_COMPANY_CLASS_DUMP = re.compile(
+    r"^[A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]+)*\s+(?:Humanoid|Scrubber|AMR)s?$",
     re.I,
 )
 # Title-case verbs that collide with SKU words (Handle the Routine).
@@ -475,6 +480,8 @@ def is_junk_sku_name(name: str) -> bool:
         return True
     if _CATEGORY_BLOB.fullmatch(raw):
         return True
+    if _COMPANY_CLASS_DUMP.fullmatch(raw):
+        return True
     if _JUNK_SKU.fullmatch(raw) or _FAMILY_BLOB.search(raw) or _GENERIC_NAME.search(raw):
         return True
     if _NAV_NAME.search(raw) or _LONG_MARKETING.search(raw):
@@ -506,6 +513,8 @@ def is_junk_sku_name(name: str) -> bool:
         "blog",
         "careers",
         "contact",
+        "scrubber",
+        "scrubbers",
     }:
         return True
     if not re.search(r"[A-Za-z]", raw):

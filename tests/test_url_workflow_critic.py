@@ -122,13 +122,22 @@ def test_corpus_file_lists_operator_urls():
 
 
 def test_critic_does_not_import_fetch():
-    import app.services.url_workflow_critic as mod
-    import inspect
+    import ast
+    from pathlib import Path
 
-    src = inspect.getsource(mod)
-    assert "robot_understanding_v1.fetch" not in src
-    assert "robot_understanding_v1.facts" not in src
-    assert "import requests" not in src
+    tree = ast.parse(
+        Path("app/services/url_workflow_critic.py").read_text(encoding="utf-8")
+    )
+    imported: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported.extend(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            imported.append(node.module or "")
+    blob = " ".join(imported)
+    assert "robot_understanding_v1.fetch" not in blob
+    assert "robot_understanding_v1.facts" not in blob
+    assert "requests" not in blob
 
 
 def test_listing_path_keyed_to_submitted_url():
@@ -137,3 +146,28 @@ def test_listing_path_keyed_to_submitted_url():
     assert a.url != b.url
     if a.vendor_name and b.vendor_name:
         assert a.vendor_name != b.vendor_name
+
+
+def test_junk_names_are_not_skus():
+    from app.services.oem_sku_discover import is_junk_sku_name, looks_like_named_sku
+
+    assert is_junk_sku_name("Seer Humanoid")
+    assert is_junk_sku_name("Scrubber")
+    assert is_junk_sku_name("AMR scrubbers")
+    assert not looks_like_named_sku("Seer Humanoid")
+    assert not looks_like_named_sku("Scrubber")
+    assert not is_junk_sku_name("Sherpa Drone")
+    assert not is_junk_sku_name("Scrubber 75")
+    assert not is_junk_sku_name("Phantas")
+
+
+def test_cleaning_drone_capabilities_are_not_floor_scrub():
+    from app.services.url_workflow_critic import capabilities_for_product
+
+    caps = capabilities_for_product(
+        "Sherpa Drone",
+        "cleaning_drone",
+        "Window washing drone for facades and exteriors.",
+    )
+    assert "drone_task" in caps
+    assert "hard_floor_scrub" not in caps

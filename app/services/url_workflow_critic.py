@@ -341,7 +341,10 @@ def apply_corpus_breaks(critique: UrlCritique, spec: dict[str, Any]) -> UrlCriti
     by_name = {p.name: p for p in products}
 
     for forbidden in spec.get("forbid_products") or []:
-        hit = _find_product(products, forbidden)
+        hit = next(
+            (p for p in products if _name_key(p.name) == _name_key(forbidden)),
+            None,
+        )
         if hit:
             critique.breaks.append(
                 Break(BREAK_INVENTED, f"forbidden SKU {forbidden!r} present", hit.name)
