@@ -41,7 +41,7 @@ export default function FirstSaveGuideModal({
   return (
     <Dialog
       open={open}
-      onOpenChange={(next) => {
+      onOpenChange={next => {
         onOpenChange(next);
         if (!next) onDismiss();
       }}
@@ -55,23 +55,31 @@ export default function FirstSaveGuideModal({
             Save your first lead
           </DialogTitle>
           <DialogDescription className="text-center text-sm text-slate-700">
-            You are signed in. One save turns this buyer into a tracked opportunity in your workspace.
+            You are signed in. One save turns this buyer into a tracked
+            opportunity in your workspace.
           </DialogDescription>
         </DialogHeader>
 
         <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3">
           <p className="text-sm font-bold text-slate-900">{deal.company}</p>
           {deal.outreachSubject && (
-            <p className="mt-1 text-xs font-medium text-emerald-900">Draft: {deal.outreachSubject}</p>
+            <p className="mt-1 text-xs font-medium text-emerald-900">
+              Draft: {deal.outreachSubject}
+            </p>
           )}
         </div>
 
         <ol className="space-y-2.5">
           {STEPS.map((step, index) => (
-            <li key={step} className="flex items-start gap-2.5 text-sm text-slate-700">
+            <li
+              key={step}
+              className="flex items-start gap-2.5 text-sm text-slate-700"
+            >
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
               <span>
-                <span className="font-semibold text-slate-900">{index + 1}. </span>
+                <span className="font-semibold text-slate-900">
+                  {index + 1}.{" "}
+                </span>
                 {step}
               </span>
             </li>

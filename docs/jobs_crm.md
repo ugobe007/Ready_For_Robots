@@ -29,7 +29,7 @@ FIND (URL) → QUALIFY (Job Cards, anonymous OK) → signup wall → CRM desk
 | — wall | `/signup?next=/pipeline?src=jobs_activate&src=jobs_activate` | Required | Account before the desk. |
 | 03 CRM | `/pipeline?src=jobs_activate` | Signed in | Jobs they kept as an expandable **listing**. Place this job lives **inside** an opened job, not as the only screen. |
 
-Process bar: **01 Show us your robot → 02 Available jobs → 03 CRM**. Step 02 action is **Apply to jobs →** (violet, not neon green). Open CRM still uses `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
+Process bar: **01 Show us your robot → 02 Available jobs → 03 CRM**. Step 02 action is **Open CRM →**. Apply is not a sibling CTA on that screen. Signed CRM desk still uses **Apply to jobs →** (violet, not neon green). Open CRM still uses `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
 
 **Do not** rename step 03 to Place, Pipeline, or Activate in chrome. Place is the money action **on a deal**, not the process step. Step 02 chrome is **Available jobs** (renamed from “Here are its jobs”).
 
@@ -116,6 +116,8 @@ Actions taken on FIND / QUALIFY (keep, Open CRM) and on the desk (Place, apply) 
 ### F10 — Keep jobs on the account (ship)
 
 Authenticated keep upserts selected Job Cards onto the user (`user_kept_jobs`). N is the selected/kept count, not a hardcoded 5 when they kept 3. Schema: user, job identity (employer, work title, source ids), robot/submission, timestamps, free TTL/entitlement. Unsigned users still hit the wall; after signup, kept jobs restore. Status bar says "N jobs saved". Off the desk the bar links to CRM; on the desk it links to **Apply to jobs**. Apply copy: apply. We draft. You review and send.
+
+Each kept job asks **Do you have a model for this work?** The OEM names the model source (product, vendor, or known policy) or says they will train it for the job. Stored on `user_kept_jobs.work_task_model_kind` / `work_task_model_source`. Unknown until they answer. Do not invent a model name.
 
 ### F11 — Next steps offer → apply outreach (ship)
 

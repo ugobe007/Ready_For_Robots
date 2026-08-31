@@ -53,13 +53,15 @@ const examples = [
   {
     tool: "Explee / Apollo-style search",
     query: "CTOs at warehouse companies in Texas",
-    result: "Hundreds of contacts — no job, no workplace, no proof a robot belongs there",
+    result:
+      "Hundreds of contacts — no job, no workplace, no proof a robot belongs there",
     ours: false,
   },
   {
     tool: "ReadyForRobots Jobs",
     query: "Paste your robot URL",
-    result: "Job cards for that SKU: who employs, where the work is, what the robot would do",
+    result:
+      "Job cards for that SKU: who employs, where the work is, what the robot would do",
     ours: true,
   },
 ];
@@ -78,7 +80,9 @@ const whenUs = [
 
 export default function Compare() {
   return (
-    <div className={`compare-page flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+    <div
+      className={`compare-page flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+    >
       <ExperimentHeader />
       <PageHeroDark
         maxWidthClass="max-w-5xl"
@@ -87,7 +91,9 @@ export default function Compare() {
           <>
             Sales lists find buyers.
             <br />
-            <span className="text-emerald-400">We find jobs for your robot.</span>
+            <span className="text-emerald-400">
+              We find jobs for your robot.
+            </span>
           </>
         }
         description="Explee, Apollo, and similar tools sell company and people search. Job boards list work for humans. ReadyForRobots matches a robot URL to specific jobs — employer, workplace, and work the machine can do."
@@ -105,7 +111,8 @@ export default function Compare() {
                   Lists of companies or people
                 </p>
                 <p className="mt-2 text-[15px] leading-relaxed text-slate-300">
-                  Useful if you are selling to a title. They do not say which job a robot is qualified to perform.
+                  Useful if you are selling to a title. They do not say which
+                  job a robot is qualified to perform.
                 </p>
                 <div className="mt-4 inline-flex border border-slate-600 bg-[#081126] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-slate-400">
                   Output: records to sort
@@ -119,7 +126,8 @@ export default function Compare() {
                   Jobs for a specific robot
                 </p>
                 <p className="mt-2 text-[15px] leading-relaxed text-slate-300">
-                  Paste a robot URL. We return employment cards: who has the work, where it happens, and why this SKU fits.
+                  Paste a robot URL. We return employment cards: who has the
+                  work, where it happens, and why this SKU fits.
                 </p>
                 <div className="mt-4 inline-flex border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-emerald-300">
                   Output: Robot Job Cards
@@ -133,7 +141,7 @@ export default function Compare() {
               Same search reflex, different product
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
-              {examples.map((ex) => (
+              {examples.map(ex => (
                 <div
                   key={ex.tool}
                   className={`border p-5 ${
@@ -149,8 +157,12 @@ export default function Compare() {
                   >
                     {ex.tool}
                   </p>
-                  <p className="mb-3 font-mono text-xs text-slate-400">{ex.query}</p>
-                  <p className="text-base font-semibold leading-relaxed text-slate-100">→ {ex.result}</p>
+                  <p className="mb-3 font-mono text-xs text-slate-400">
+                    {ex.query}
+                  </p>
+                  <p className="text-base font-semibold leading-relaxed text-slate-100">
+                    → {ex.result}
+                  </p>
                 </div>
               ))}
             </div>
@@ -176,12 +188,14 @@ export default function Compare() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((row) => (
+                  {rows.map(row => (
                     <tr key={row.dimension}>
                       <td className="border-b border-slate-800 px-4 py-3 text-[13px] font-semibold text-slate-200">
                         {row.dimension}
                       </td>
-                      <td className="border-b border-slate-800 px-4 py-3 text-[13px] text-slate-400">{row.other}</td>
+                      <td className="border-b border-slate-800 px-4 py-3 text-[13px] text-slate-400">
+                        {row.other}
+                      </td>
                       <td className="border-b border-slate-800 bg-emerald-500/5 px-4 py-3 text-[13px] font-semibold text-slate-100">
                         {row.rfr}
                       </td>
@@ -199,7 +213,7 @@ export default function Compare() {
                 Stick with a list tool if…
               </p>
               <ul className="space-y-2 text-[13px] leading-relaxed text-slate-400">
-                {whenOther.map((line) => (
+                {whenOther.map(line => (
                   <li key={line}>{line}</li>
                 ))}
               </ul>
@@ -210,7 +224,7 @@ export default function Compare() {
                 Use ReadyForRobots if…
               </p>
               <ul className="space-y-2 text-[13px] leading-relaxed text-slate-300">
-                {whenUs.map((line) => (
+                {whenUs.map(line => (
                   <li key={line}>{line}</li>
                 ))}
               </ul>

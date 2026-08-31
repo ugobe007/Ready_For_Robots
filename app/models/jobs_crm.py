@@ -36,6 +36,10 @@ class KeptJob(Base):
     robot_url = Column(Text, nullable=True)
     robot_submission_id = Column(Integer, nullable=True, index=True)
     employer_email = Column(String(320), nullable=True)
+    work_task_model_kind = Column(
+        String(32), nullable=False, default="unknown", server_default="unknown"
+    )
+    work_task_model_source = Column(String(240), nullable=True)
     acted_at = Column(DateTime(timezone=True), nullable=True, index=True)
     expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)

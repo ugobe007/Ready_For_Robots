@@ -57,7 +57,8 @@ export const JOBS_SLUGS: Record<string, JobsSlugConfig> = {
     profileKey: "locus_origin",
     jobCount: 37,
     headline: "We found 37 jobs for robots RG Group sells.",
-    subhead: "Compatible physical work matched to the robots in your portfolio.",
+    subhead:
+      "Compatible physical work matched to the robots in your portfolio.",
   },
   "cross-company": {
     slug: "cross-company",
@@ -66,7 +67,8 @@ export const JOBS_SLUGS: Record<string, JobsSlugConfig> = {
     profileKey: "locus_origin",
     jobCount: 19,
     headline: "We found 19 automation jobs Cross can solve.",
-    subhead: "Localized work matched to automation capabilities your team can deliver.",
+    subhead:
+      "Localized work matched to automation capabilities your team can deliver.",
   },
 };
 
@@ -76,7 +78,9 @@ export const PROFILE_KEY_TO_SLUG: Record<string, string> = {
   avidbots_neo: "avidbots-neo",
 };
 
-export function resolveJobsSlug(raw: string | undefined | null): JobsSlugConfig | null {
+export function resolveJobsSlug(
+  raw: string | undefined | null
+): JobsSlugConfig | null {
   if (!raw) return null;
   const slug = raw.trim().toLowerCase();
   return JOBS_SLUGS[slug] ?? null;
@@ -88,7 +92,10 @@ export function jobsPathForSlug(slug: string, src?: string | null): string {
   return `${base}?src=${encodeURIComponent(src)}`;
 }
 
-export function jobsPathForProfile(profileKey: string, src?: string | null): string {
+export function jobsPathForProfile(
+  profileKey: string,
+  src?: string | null
+): string {
   const slug = PROFILE_KEY_TO_SLUG[profileKey];
   if (!slug) return src ? `/?src=${encodeURIComponent(src)}` : "/";
   return jobsPathForSlug(slug, src);
@@ -96,7 +103,9 @@ export function jobsPathForProfile(profileKey: string, src?: string | null): str
 
 /** Map legacy /experiment?robot=locus_origin → /jobs/locus-origin (or / with ?src=). */
 export function experimentQueryToJobsPath(search: string): string {
-  const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  const params = new URLSearchParams(
+    search.startsWith("?") ? search.slice(1) : search
+  );
   const robot = (params.get("robot") || "").trim();
   const src = (params.get("src") || "").trim() || null;
   const slug = PROFILE_KEY_TO_SLUG[robot] || null;
@@ -105,9 +114,10 @@ export function experimentQueryToJobsPath(search: string): string {
 }
 
 export function demoProfilesForProof() {
-  return demo.profiles.map((p) => ({
+  return demo.profiles.map(p => ({
     profileKey: p.profile_key,
-    slug: PROFILE_KEY_TO_SLUG[p.profile_key] || p.profile_key.replace(/_/g, "-"),
+    slug:
+      PROFILE_KEY_TO_SLUG[p.profile_key] || p.profile_key.replace(/_/g, "-"),
     displayName: p.display_name,
     jobCount: p.job_count_total,
   }));

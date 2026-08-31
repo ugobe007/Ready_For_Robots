@@ -51,7 +51,9 @@ export default function NextBestActions({ actions }: NextBestActionsProps) {
     <div className="flex flex-col gap-4">
       {/* Panel header */}
       <div>
-        <h2 className="text-base font-semibold text-neutral-950">Next Best Actions</h2>
+        <h2 className="text-base font-semibold text-neutral-950">
+          Next Best Actions
+        </h2>
         <p className="text-xs text-neutral-400 mt-0.5">
           Ranked by urgency and opportunity
         </p>
@@ -85,7 +87,9 @@ export default function NextBestActions({ actions }: NextBestActionsProps) {
                   <span className="font-mono text-xs text-neutral-400 leading-none">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <div className={`h-1.5 w-1.5 rounded-full ${config.dotColor}`} />
+                  <div
+                    className={`h-1.5 w-1.5 rounded-full ${config.dotColor}`}
+                  />
                 </div>
 
                 {/* Content */}
@@ -132,12 +136,14 @@ export default function NextBestActions({ actions }: NextBestActionsProps) {
         </p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <div className="bg-neutral-800 rounded-lg p-2 text-center">
-            <p className="font-mono text-base font-bold text-white">{actions.length}</p>
+            <p className="font-mono text-base font-bold text-white">
+              {actions.length}
+            </p>
             <p className="text-xs text-neutral-400">Open actions</p>
           </div>
           <div className="bg-neutral-800 rounded-lg p-2 text-center">
             <p className="font-mono text-base font-bold text-emerald-400">
-              {actions.filter((a) => a.priority === "high").length}
+              {actions.filter(a => a.priority === "high").length}
             </p>
             <p className="text-xs text-neutral-400">High priority</p>
           </div>

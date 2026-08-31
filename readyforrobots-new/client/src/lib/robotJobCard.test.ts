@@ -31,9 +31,12 @@ describe("robotJobCard", () => {
     expect(card.qualificationLabel).toBe("Conditional");
     expect(card.qualificationHint).toMatch(/Pending your review/i);
     expect(card.work).toBe(
-      "Tend CNC mills/lathes — workpiece load/unload around cycle",
+      "Tend CNC mills/lathes — workpiece load/unload around cycle"
     );
-    expect(card.requirements).toEqual(["Payload in range", "Indoor industrial cell"]);
+    expect(card.requirements).toEqual([
+      "Payload in range",
+      "Indoor industrial cell",
+    ]);
     expect(card.workVolume).toBeNull();
     expect(card.currentLabor).toBeNull();
     expect(card.openQuestions).toEqual(["How much of role is tend vs program"]);
@@ -62,16 +65,16 @@ describe("robotJobCard", () => {
 
   it("rejects incomplete rows that are not Robot Jobs", () => {
     expect(
-      isNamedRobotJob({ company_name: null, locality: "Seattle, WA" }),
+      isNamedRobotJob({ company_name: null, locality: "Seattle, WA" })
     ).toBe(false);
     expect(
-      isNamedRobotJob({ company_name: "Starbucks", locality: "Unknown" }),
+      isNamedRobotJob({ company_name: "Starbucks", locality: "Unknown" })
     ).toBe(false);
     expect(
       isNamedRobotJob({
         company_name: "Starbucks",
         locality: "Seattle, WA",
-      }),
+      })
     ).toBe(true);
   });
 
@@ -80,11 +83,11 @@ describe("robotJobCard", () => {
     expect(qualificationFromVerdict(null)).toBe("pending_robot");
     expect(qualificationFromVerdict("INSUFFICIENT")).toBe("conditional");
     expect(qualificationFromVerdict("NOT_A_MATCH")).toBe("not_qualified");
-    expect(qualificationFromVerdict("POSSIBLE_MATCH", ["Reach insufficient"])).toBe(
-      "not_qualified",
-    );
     expect(
-      qualificationFromVerdict("POSSIBLE_MATCH", [], [{ presence: "absent" }]),
+      qualificationFromVerdict("POSSIBLE_MATCH", ["Reach insufficient"])
+    ).toBe("not_qualified");
+    expect(
+      qualificationFromVerdict("POSSIBLE_MATCH", [], [{ presence: "absent" }])
     ).toBe("not_qualified");
   });
 
@@ -194,7 +197,8 @@ describe("robotJobCard", () => {
             layer: "Layer: Task library / skill pack",
             who_trains: "Who trains: oem + integrator",
             time: "Typical time: 2–8 weeks after a map and demo traces exist",
-            you_provide: "You provide: site map / layout, work objects, demonstration traces",
+            you_provide:
+              "You provide: site map / layout, work objects, demonstration traces",
             field_feedback:
               "Field traces do not automatically reduce the model price unless the OEM contract says so.",
           },
@@ -208,12 +212,16 @@ describe("robotJobCard", () => {
     expect(card.taskModels[0].whereToLook).toEqual([]);
     expect(card.modelContract?.headline).toBe("To place this job");
     expect(card.modelContract?.layer).toMatch(/task library/i);
-    expect(card.modelContract?.fieldFeedback).toMatch(/do not automatically reduce/i);
+    expect(card.modelContract?.fieldFeedback).toMatch(
+      /do not automatically reduce/i
+    );
     expect(card.modelContract?.listLine).toMatch(/Task library/);
     expect(card.modelContract?.listLine).toMatch(/2–8 weeks|2-8 weeks/);
     expect(card.modelContract?.steps.map(s => s.n)).toEqual([1, 2, 3, 4, 5, 6]);
     expect(card.modelContract?.steps[0].body).toMatch(/pick-and-place/i);
-    expect(card.modelContract?.steps[5].body).toMatch(/do not automatically reduce/i);
+    expect(card.modelContract?.steps[5].body).toMatch(
+      /do not automatically reduce/i
+    );
     expect(card.modelLinks).toHaveLength(JOB_CARD_MODEL_LINK_CAP);
     expect(card.modelLinks.every(d => d.url)).toBe(true);
     expect(card.modelLinks.map(d => d.name)).toEqual([
@@ -226,9 +234,9 @@ describe("robotJobCard", () => {
       "https://www.pi.website/blog/pi05",
       "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
     ]);
-    expect(card.modelLinks.some(d => /Mercor|BenchLM|Argo-Robot/i.test(d.name))).toBe(
-      false,
-    );
+    expect(
+      card.modelLinks.some(d => /Mercor|BenchLM|Argo-Robot/i.test(d.name))
+    ).toBe(false);
     expect(card.modelLinks.every(d => d.note === "")).toBe(true);
     expect(card.taskModels[0].qualifyFilters).toEqual([]);
     expect(card.taskModels[0].pricingLookups).toEqual([]);
@@ -247,7 +255,7 @@ describe("robotJobCard", () => {
           url: "https://www.mercor.com/",
           note: "skip",
         },
-      ]),
+      ])
     ).toEqual([]);
     const src = readFileSync(join(here, "./robotJobCard.ts"), "utf8");
     expect(src).not.toMatch(/certificate/i);
@@ -321,7 +329,7 @@ describe("robotJobCard", () => {
           url: "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
           note: "",
         },
-      ]),
+      ])
     ).toEqual([
       {
         kind: "open_weights",
@@ -350,21 +358,23 @@ describe("robotJobCard", () => {
     expect(cards).toHaveLength(5);
     expect(new Set(cards.map(j => j.employer)).size).toBe(5);
     for (const job of cards) {
-      expect(job.work.toLowerCase()).toMatch(/cnc|laser|plasma|workpiece|mill|lathe/);
+      expect(job.work.toLowerCase()).toMatch(
+        /cnc|laser|plasma|workpiece|mill|lathe/
+      );
       expect(job.workVolume).toBeNull();
       expect(job.currentLabor).toBeNull();
       expect(job.qualification).toBe("pending_robot");
     }
     const corpus = readFileSync(
       join(here, "../../../../app/data/robot_job_match_corpus.json"),
-      "utf8",
+      "utf8"
     );
     for (const job of cards) {
       expect(corpus).toContain(`"job_key": "${job.job_key}"`);
     }
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const cardSrc = workspace.slice(workspace.indexOf("function JobCard"));
     expect(cardSrc).toMatch(/robotJobCardFromMatch/);
@@ -389,7 +399,9 @@ describe("robotJobCard", () => {
     expect(cardSrc).toMatch(/Not yet confirmed/);
     expect(cardSrc).toMatch(/Job description/);
     expect(cardSrc).toMatch(/card.payEstimate/);
-    expect(cardSrc).toMatch(/Potential contract value|card.payEstimate.heading/);
+    expect(cardSrc).toMatch(
+      /Potential contract value|card.payEstimate.heading/
+    );
     expect(cardSrc).not.toMatch(/Open questions/);
   });
 });

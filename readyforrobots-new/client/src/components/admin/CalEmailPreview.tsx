@@ -19,7 +19,9 @@ export default function CalEmailPreview({ bodyText, companyName }: Props) {
         {text}
       </div>
       <div className="mt-3 border-t border-gray-200 pt-3">
-        <p className="mb-1.5 text-[10px] font-semibold text-emerald-800">Cal · pipeline preview · 6-sec loop</p>
+        <p className="mb-1.5 text-[10px] font-semibold text-emerald-800">
+          Cal · pipeline preview · 6-sec loop
+        </p>
         <img
           src="/marketing/cal-pipeline-demo.gif"
           alt="Cal pipeline preview animation"
@@ -29,10 +31,13 @@ export default function CalEmailPreview({ bodyText, companyName }: Props) {
           loading="lazy"
         />
         <p className="mt-1 text-[10px] text-gray-500">
-          <a href="/preview" className="text-emerald-700 underline underline-offset-2 hover:text-emerald-900">
+          <a
+            href="/preview"
+            className="text-emerald-700 underline underline-offset-2 hover:text-emerald-900"
+          >
             View full preview
-          </a>
-          {" "}· appended automatically when sent via Resend
+          </a>{" "}
+          · appended automatically when sent via Resend
         </p>
       </div>
     </div>

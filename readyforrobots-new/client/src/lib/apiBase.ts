@@ -4,7 +4,10 @@
  */
 const DEFAULT_PRODUCTION_API = "https://ready-2-robot.fly.dev";
 
-const MARKETING_HOSTS = new Set(["readyforrobots.com", "www.readyforrobots.com"]);
+const MARKETING_HOSTS = new Set([
+  "readyforrobots.com",
+  "www.readyforrobots.com",
+]);
 
 function _hostnameFromUrlCandidate(s: string): string {
   const t = String(s || "").trim();
@@ -25,7 +28,9 @@ function _isMarketingHostname(hostname: string): boolean {
 }
 
 function _sanitizeEnvApiUrl(raw: string): string {
-  const trimmed = String(raw || "").trim().replace(/\/$/, "");
+  const trimmed = String(raw || "")
+    .trim()
+    .replace(/\/$/, "");
   const host = _hostnameFromUrlCandidate(trimmed);
   if (host && _isMarketingHostname(host)) return "";
   return trimmed;
@@ -102,7 +107,10 @@ export function liveFetchInit(overrides: RequestInit = {}): RequestInit {
     cache: "no-store",
     mode: "cors",
     ...rest,
-    headers: { "Cache-Control": "no-cache", ...(hdr as Record<string, string>) },
+    headers: {
+      "Cache-Control": "no-cache",
+      ...(hdr as Record<string, string>),
+    },
   };
 }
 
@@ -138,7 +146,7 @@ export function writeSessionCache<T>(key: string, data: T): void {
   try {
     window.sessionStorage.setItem(
       `${SESSION_CACHE_PREFIX}${key}`,
-      JSON.stringify({ ts: Date.now(), data }),
+      JSON.stringify({ ts: Date.now(), data })
     );
   } catch {
     /* quota or private mode */
@@ -146,7 +154,10 @@ export function writeSessionCache<T>(key: string, data: T): void {
 }
 
 /** Session first, then localStorage — instant paint on repeat visits. */
-export function readSurfaceCache<T>(key: string, maxAgeMs: number): SessionCacheEntry<T> | null {
+export function readSurfaceCache<T>(
+  key: string,
+  maxAgeMs: number
+): SessionCacheEntry<T> | null {
   if (typeof window === "undefined") return null;
   try {
     for (const store of [window.sessionStorage, window.localStorage]) {
@@ -168,7 +179,7 @@ export function writeSurfaceCache<T>(key: string, data: T): void {
   try {
     window.localStorage.setItem(
       `${SESSION_CACHE_PREFIX}${key}`,
-      JSON.stringify({ ts: Date.now(), data }),
+      JSON.stringify({ ts: Date.now(), data })
     );
   } catch {
     /* quota or private mode */
@@ -193,7 +204,7 @@ export async function fetchWithTimeout(
   url: string,
   init: RequestInit = {},
   timeoutMs = 8_000,
-  opts?: { publicCache?: boolean },
+  opts?: { publicCache?: boolean }
 ): Promise<Response> {
   if (init.signal?.aborted) {
     throw abortError();
@@ -207,7 +218,9 @@ export async function fetchWithTimeout(
   const onParentAbort = () => ctrl.abort();
   init.signal?.addEventListener("abort", onParentAbort);
   const { signal: _ignored, ...rest } = init;
-  const baseInit = opts?.publicCache ? publicFetchInit(rest) : liveFetchInit(rest);
+  const baseInit = opts?.publicCache
+    ? publicFetchInit(rest)
+    : liveFetchInit(rest);
   try {
     return await fetch(url, { ...baseInit, signal: ctrl.signal });
   } catch (err) {
@@ -232,7 +245,7 @@ export async function fetchWithTimeoutRetry(
   url: string,
   init: RequestInit = {},
   timeoutMs = 8_000,
-  opts?: { publicCache?: boolean; retries?: number; retryDelayMs?: number },
+  opts?: { publicCache?: boolean; retries?: number; retryDelayMs?: number }
 ): Promise<Response> {
   const retries = opts?.retries ?? 2;
   const retryDelayMs = opts?.retryDelayMs ?? 1200;
@@ -243,7 +256,9 @@ export async function fetchWithTimeoutRetry(
     } catch (err) {
       lastErr = err;
       if (attempt >= retries || !isTransientFetchError(err)) throw err;
-      await new Promise((resolve) => window.setTimeout(resolve, retryDelayMs * (attempt + 1)));
+      await new Promise(resolve =>
+        window.setTimeout(resolve, retryDelayMs * (attempt + 1))
+      );
     }
   }
   throw lastErr;

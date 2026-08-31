@@ -29,7 +29,8 @@ export default function ExperimentHeader() {
   const [location] = useLocation();
   const search = useSearch();
   const [onJobsSlug] = useRoute("/jobs/:slug");
-  const jobsActive = location === "/" || location.startsWith("/?") || Boolean(onJobsSlug);
+  const jobsActive =
+    location === "/" || location.startsWith("/?") || Boolean(onJobsSlug);
   const jobsSrc = new URLSearchParams(search).get("src");
   const pipelineActive =
     location.startsWith("/pipeline") && !isJobsHandoffSrc(jobsSrc);
@@ -38,7 +39,10 @@ export default function ExperimentHeader() {
     (location.startsWith("/pipeline") && isJobsHandoffSrc(jobsSrc));
   const aboutActive = location.startsWith("/intelligence");
   const adminActive = location.startsWith("/admin");
-  const showPipeline = showSignalPipelineNav({ pathname: location, src: jobsSrc });
+  const showPipeline = showSignalPipelineNav({
+    pathname: location,
+    src: jobsSrc,
+  });
   const crmHref = jobsHeaderCrmHref(location, jobsSrc, Boolean(session));
   const onJobsCrmDesk =
     location.startsWith("/pipeline") && isJobsHandoffSrc(jobsSrc);
@@ -60,7 +64,12 @@ export default function ExperimentHeader() {
           className="flex items-center gap-2.5"
           onClick={onJobsFreshHomeClick}
         >
-          <PixelIcon map={KARE_FACE} scale={2} fill={FACE_EMERALD} background="transparent" />
+          <PixelIcon
+            map={KARE_FACE}
+            scale={2}
+            fill={FACE_EMERALD}
+            background="transparent"
+          />
           <span className="font-display text-lg font-bold tracking-tight text-slate-100 sm:text-xl">
             ReadyForRobots
           </span>
@@ -71,14 +80,22 @@ export default function ExperimentHeader() {
             className={`inline-flex items-center gap-1.5 ${jobsActive ? navActive : navIdle}`}
             onClick={onJobsFreshHomeClick}
           >
-            {jobsActive ? <span className="rfr-led" aria-hidden="true" /> : null}
+            {jobsActive ? (
+              <span className="rfr-led" aria-hidden="true" />
+            ) : null}
             Jobs
           </a>
-          <a href="/intelligence" className={`${aboutActive ? navActive : navIdle}`}>
+          <a
+            href="/intelligence"
+            className={`${aboutActive ? navActive : navIdle}`}
+          >
             About
           </a>
           {showPipeline ? (
-            <a href="/pipeline" className={pipelineActive ? navActive : navIdle}>
+            <a
+              href="/pipeline"
+              className={pipelineActive ? navActive : navIdle}
+            >
               Pipeline
             </a>
           ) : null}
@@ -94,7 +111,11 @@ export default function ExperimentHeader() {
                   Admin
                 </a>
               ) : null}
-              <button type="button" onClick={() => void signOut()} className={navIdle}>
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                className={navIdle}
+              >
                 Sign Out
               </button>
             </>

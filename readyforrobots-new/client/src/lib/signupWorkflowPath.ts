@@ -57,7 +57,10 @@ export function normalizeJobsReturnPath(nextRaw: string): string {
 }
 
 /** Build /results?url=…&limit=5 for the five-lead review step. */
-export function workflowResultsPath(prefill: WorkflowPrefill, nextRaw = ""): string {
+export function workflowResultsPath(
+  prefill: WorkflowPrefill,
+  nextRaw = ""
+): string {
   const fromNext = urlFromResultsNext(nextRaw);
   const companyUrl = (prefill.company_url || fromNext || "").trim();
   if (!companyUrl) return "/pipeline";
@@ -65,14 +68,19 @@ export function workflowResultsPath(prefill: WorkflowPrefill, nextRaw = ""): str
   params.set("url", companyUrl);
   params.set("limit", "5");
   const src = prefill.src || srcFromResultsNext(nextRaw) || "signup_return";
-  params.set("src", src.includes("signup_return") ? src : `${src}_signup_return`);
+  params.set(
+    "src",
+    src.includes("signup_return") ? src : `${src}_signup_return`
+  );
   return `/results?${params.toString()}`;
 }
 
 function urlFromResultsNext(nextRaw: string): string {
   if (!nextRaw.startsWith("/results")) return "";
   try {
-    const q = nextRaw.includes("?") ? nextRaw.slice(nextRaw.indexOf("?") + 1) : "";
+    const q = nextRaw.includes("?")
+      ? nextRaw.slice(nextRaw.indexOf("?") + 1)
+      : "";
     return (new URLSearchParams(q).get("url") || "").trim();
   } catch {
     return "";
@@ -82,18 +90,27 @@ function urlFromResultsNext(nextRaw: string): string {
 function srcFromResultsNext(nextRaw: string): string {
   if (!nextRaw.startsWith("/results")) return "";
   try {
-    const q = nextRaw.includes("?") ? nextRaw.slice(nextRaw.indexOf("?") + 1) : "";
+    const q = nextRaw.includes("?")
+      ? nextRaw.slice(nextRaw.indexOf("?") + 1)
+      : "";
     return (new URLSearchParams(q).get("src") || "").trim();
   } catch {
     return "";
   }
 }
 
-export function shouldHonorWorkflowResults(nextRaw: string, prefill: WorkflowPrefill): boolean {
+export function shouldHonorWorkflowResults(
+  nextRaw: string,
+  prefill: WorkflowPrefill
+): boolean {
   if (nextRaw.startsWith("/results")) return true;
   if (isJobsProductReturnPath(nextRaw)) return false;
   if (!(prefill.company_url || "").trim()) return false;
-  if (nextRaw.startsWith("/pipeline") || nextRaw === "/" || nextRaw.startsWith("/pricing")) {
+  if (
+    nextRaw.startsWith("/pipeline") ||
+    nextRaw === "/" ||
+    nextRaw.startsWith("/pricing")
+  ) {
     return false;
   }
   if ((prefill.src || "").includes("home_header")) return false;
@@ -114,7 +131,8 @@ export function resolveSignupWorkflowReturnPath(args: {
   if (isJobsProductReturnPath(nextRaw)) return normalizeJobsReturnPath(nextRaw);
   // Never skip the 5-lead Results step when signup was opened for it.
   if (nextRaw.startsWith("/results")) return nextRaw;
-  if (nextRaw.startsWith("/pipeline") || nextRaw.startsWith("/pricing")) return nextRaw;
+  if (nextRaw.startsWith("/pipeline") || nextRaw.startsWith("/pricing"))
+    return nextRaw;
   if (args.matchedPipelineReturnPath) return args.matchedPipelineReturnPath;
   if (!shouldHonorWorkflowResults(nextRaw, args.prefill)) return "/pipeline";
   return workflowResultsPath(args.prefill, nextRaw);

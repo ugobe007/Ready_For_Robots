@@ -33,7 +33,7 @@ export default function AdminNav({ variant = "light" }: Props) {
     }
   }, []);
   const toggle = () => {
-    setCollapsed((prev) => {
+    setCollapsed(prev => {
       const next = !prev;
       try {
         localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
@@ -46,8 +46,8 @@ export default function AdminNav({ variant = "light" }: Props) {
 
   // Label the active page so the collapsed bar still tells you where you are.
   const activeLink = sections
-    .flatMap((s) => s.links)
-    .find((l) => isAdminNavActive(location, l.href));
+    .flatMap(s => s.links)
+    .find(l => isAdminNavActive(location, l.href));
 
   return (
     <nav
@@ -72,12 +72,16 @@ export default function AdminNav({ variant = "light" }: Props) {
         >
           <Menu className="h-3.5 w-3.5" />
           {collapsed ? "Menu" : "Hide menu"}
-          <ChevronDown className={`h-3.5 w-3.5 transition ${collapsed ? "" : "rotate-180"}`} />
+          <ChevronDown
+            className={`h-3.5 w-3.5 transition ${collapsed ? "" : "rotate-180"}`}
+          />
         </button>
         {collapsed && activeLink && (
           <span
             className={`truncate rounded-md px-2 py-1 text-xs font-semibold ${
-              dark ? "bg-emerald-600/90 text-white" : "bg-emerald-700 text-white"
+              dark
+                ? "bg-emerald-600/90 text-white"
+                : "bg-emerald-700 text-white"
             }`}
           >
             {activeLink.label}
@@ -87,8 +91,11 @@ export default function AdminNav({ variant = "light" }: Props) {
 
       {!collapsed && (
         <div className="mt-3 flex flex-wrap items-start gap-x-6 gap-y-3">
-          {sections.map((section) => (
-            <div key={section.label} className="flex flex-wrap items-center gap-2">
+          {sections.map(section => (
+            <div
+              key={section.label}
+              className="flex flex-wrap items-center gap-2"
+            >
               <span
                 className={`px-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
                   dark ? "text-slate-400" : "text-gray-600"
@@ -96,13 +103,13 @@ export default function AdminNav({ variant = "light" }: Props) {
               >
                 {section.label}
               </span>
-              {section.links.map((link) => {
+              {section.links.map(link => {
                 const active = isAdminNavActive(location, link.href);
                 return (
                   <Link
                     key={link.href}
                     href={link.href.split("#", 1)[0]}
-                    onClick={(e) => {
+                    onClick={e => {
                       if (link.href.includes("#")) {
                         e.preventDefault();
                         openWorkspaceHref(link.href, setLocation);

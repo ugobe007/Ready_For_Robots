@@ -4,7 +4,12 @@
 import type { CSSProperties } from "react";
 import type { Edge, Node } from "@xyflow/react";
 import { nanoid } from "nanoid";
-import type { RobotPlacement, WorkflowFlow, WorkflowLayout, WorkflowZone } from "@/lib/workflowLayoutTypes";
+import type {
+  RobotPlacement,
+  WorkflowFlow,
+  WorkflowLayout,
+  WorkflowZone,
+} from "@/lib/workflowLayoutTypes";
 
 export const ZONE_NODE_TYPE = "workflowZone";
 export const ROBOT_NODE_TYPE = "workflowRobot";
@@ -29,8 +34,11 @@ export type WorkflowEdgeData = {
   automated: boolean;
 };
 
-export function layoutToFlow(layout: WorkflowLayout): { nodes: Node[]; edges: Edge[] } {
-  const zoneNodes: Node<ZoneNodeData>[] = layout.zones.map((zone) => ({
+export function layoutToFlow(layout: WorkflowLayout): {
+  nodes: Node[];
+  edges: Edge[];
+} {
+  const zoneNodes: Node<ZoneNodeData>[] = layout.zones.map(zone => ({
     id: zone.id,
     type: ZONE_NODE_TYPE,
     position: { x: zone.x, y: zone.y },
@@ -40,7 +48,7 @@ export function layoutToFlow(layout: WorkflowLayout): { nodes: Node[]; edges: Ed
     connectable: true,
   }));
 
-  const robotNodes: Node<RobotNodeData>[] = layout.robots.map((robot) => ({
+  const robotNodes: Node<RobotNodeData>[] = layout.robots.map(robot => ({
     id: robot.id,
     type: ROBOT_NODE_TYPE,
     position: { x: robot.x - 24, y: robot.y - 24 },
@@ -54,10 +62,12 @@ export function layoutToFlow(layout: WorkflowLayout): { nodes: Node[]; edges: Ed
     connectable: false,
   }));
 
-  const zoneIds = new Set(layout.zones.map((z) => z.id));
+  const zoneIds = new Set(layout.zones.map(z => z.id));
   const edges: Edge<WorkflowEdgeData>[] = layout.flows
-    .filter((flow) => zoneIds.has(flow.from_zone_id) && zoneIds.has(flow.to_zone_id))
-    .map((flow) => flowToEdge(flow));
+    .filter(
+      flow => zoneIds.has(flow.from_zone_id) && zoneIds.has(flow.to_zone_id)
+    )
+    .map(flow => flowToEdge(flow));
 
   return { nodes: [...zoneNodes, ...robotNodes], edges };
 }
@@ -66,11 +76,11 @@ export function flowToLayout(
   nodes: Node[],
   edges: Edge[],
   width = 720,
-  height = 320,
+  height = 320
 ): WorkflowLayout {
   const zones: WorkflowZone[] = nodes
-    .filter((n) => n.type === ZONE_NODE_TYPE)
-    .map((n) => {
+    .filter(n => n.type === ZONE_NODE_TYPE)
+    .map(n => {
       const data = n.data as ZoneNodeData;
       return {
         id: n.id,
@@ -84,8 +94,8 @@ export function flowToLayout(
     });
 
   const robots: RobotPlacement[] = nodes
-    .filter((n) => n.type === ROBOT_NODE_TYPE)
-    .map((n) => {
+    .filter(n => n.type === ROBOT_NODE_TYPE)
+    .map(n => {
       const data = n.data as RobotNodeData;
       return {
         id: n.id,
@@ -98,10 +108,10 @@ export function flowToLayout(
       };
     });
 
-  const zoneIds = new Set(zones.map((z) => z.id));
+  const zoneIds = new Set(zones.map(z => z.id));
   const flows: WorkflowFlow[] = edges
-    .filter((e) => zoneIds.has(e.source) && zoneIds.has(e.target))
-    .map((e) => edgeToFlow(e));
+    .filter(e => zoneIds.has(e.source) && zoneIds.has(e.target))
+    .map(e => edgeToFlow(e));
 
   return { width, height, zones, robots, flows };
 }
@@ -116,7 +126,10 @@ function flowToEdge(flow: WorkflowFlow): Edge<WorkflowEdgeData> {
     data: { label: flow.label, automated },
     animated: automated,
     style: edgeStyle(automated),
-    markerEnd: { type: "arrowclosed" as const, color: automated ? "#059669" : "#94a3b8" },
+    markerEnd: {
+      type: "arrowclosed" as const,
+      color: automated ? "#059669" : "#94a3b8",
+    },
   };
 }
 
@@ -137,12 +150,15 @@ export function edgeStyle(automated: boolean): CSSProperties {
     : { stroke: "#94a3b8", strokeWidth: 2, strokeDasharray: "8 5" };
 }
 
-export function createZoneNode(preset: {
-  label: string;
-  kind: WorkflowZone["kind"];
-  w: number;
-  h: number;
-}, position: { x: number; y: number }): Node<ZoneNodeData> {
+export function createZoneNode(
+  preset: {
+    label: string;
+    kind: WorkflowZone["kind"];
+    w: number;
+    h: number;
+  },
+  position: { x: number; y: number }
+): Node<ZoneNodeData> {
   const id = `z_${nanoid(6)}`;
   return {
     id,
@@ -163,7 +179,7 @@ export function createRobotNode(
     throughput_delta_pct: number;
   },
   position: { x: number; y: number },
-  zoneId = "",
+  zoneId = ""
 ): Node<RobotNodeData> {
   const id = `r_${nanoid(6)}`;
   return {
@@ -199,6 +215,9 @@ export function createFlowEdge(connection: {
     data: { label: connection.label || "Material flow", automated },
     animated: automated,
     style: edgeStyle(automated),
-    markerEnd: { type: "arrowclosed" as const, color: automated ? "#059669" : "#94a3b8" },
+    markerEnd: {
+      type: "arrowclosed" as const,
+      color: automated ? "#059669" : "#94a3b8",
+    },
   };
 }

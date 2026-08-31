@@ -495,6 +495,31 @@ def phase_act() -> dict[str, Any]:
         )
     )
 
+    workflow = _read(WORKFLOW_TS) if WORKFLOW_TS.is_file() else ""
+    jobs_action = _slice(
+        workflow,
+        "export function jobsProcessActionLabel",
+        "export const JOBS_ACTIVATE_SRC",
+    )
+    crm_first = (
+        'if (step === "jobs") return JOBS_APPLY_HERO_CTA' not in jobs_action
+        and "function goToApply" not in workspace
+        and "JOBS_APPLY_SELECTED_CTA" not in workspace
+        and "jobsCrmOfferHref" not in workspace
+        and 'processCurrent === "jobs"' in workspace
+        and "goToActivate" in workspace
+        and "JOBS_APPLY_SELECTED_CTA" in desk
+        and "WorkTaskModelQuestion" in desk
+        and "saveWorkTaskModelOnAccount" in account
+    )
+    checks.append(
+        _check(
+            "crm_first_cta",
+            crm_first,
+            "Jobs-for-robot list Open CRM is the only primary CTA; Apply and the task-model question live on the CRM desk",
+        )
+    )
+
     qualify = _slice(workspace, "async function qualifyActive", "function revealJobs")
     class_picker_act = (
         "fetchRobotJobSearch" in qualify

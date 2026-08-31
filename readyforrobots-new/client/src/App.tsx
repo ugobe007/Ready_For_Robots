@@ -67,7 +67,10 @@ function Router() {
     <Switch>
       {/* Product front door = Find jobs for your robot */}
       <Route path="/" component={Jobs} />
-      <Route path="/robots/analysis/:analysisId" component={RobotAnalysisReview} />
+      <Route
+        path="/robots/analysis/:analysisId"
+        component={RobotAnalysisReview}
+      />
       <Route path="/robots/:robotId/review" component={RobotDetailReview} />
       <Route path="/journey/url" component={JourneyHomeRedirect} />
       <Route path="/journey/identity" component={JourneyHomeRedirect} />
@@ -126,14 +129,20 @@ function Router() {
       <Route path="/readyforrobots/admin/prospects">
         <Redirect to="/pipeline" />
       </Route>
-      <Route path="/readyforrobots/admin/special-projects" component={SpecialProjectsAdmin} />
+      <Route
+        path="/readyforrobots/admin/special-projects"
+        component={SpecialProjectsAdmin}
+      />
       <Route path="/readyforrobots/admin" component={Admin} />
       <Route path="/readyforrobots/crm" component={Crm} />
       <Route path="/readyforrobots/inbox" component={Inbox} />
       <Route path="/readyforrobots/calendar" component={CalendarPage} />
       <Route path="/readyforrobots/sales-console" component={SalesConsole} />
       <Route path="/readyforrobots/sales-workflow" component={SalesWorkflow} />
-      <Route path="/readyforrobots/supply-pipeline" component={SupplyPipeline} />
+      <Route
+        path="/readyforrobots/supply-pipeline"
+        component={SupplyPipeline}
+      />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -148,10 +157,10 @@ function App() {
           <PostAuthRedirect />
           <ScoutChat>
             <VisitTracker>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-            </TooltipProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Router />
+              </TooltipProvider>
             </VisitTracker>
           </ScoutChat>
         </AuthProvider>

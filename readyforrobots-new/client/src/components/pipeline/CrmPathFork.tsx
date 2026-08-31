@@ -54,9 +54,15 @@ export default function CrmPathFork({
         <X className="h-4 w-4" />
       </button>
       <p className="text-[10px] font-bold uppercase tracking-widest text-amber-800">
-        {preSave ? "Choose your CRM path" : savedCount === 1 ? "Lead saved — pick your CRM path" : "Choose your CRM path"}
+        {preSave
+          ? "Choose your CRM path"
+          : savedCount === 1
+            ? "Lead saved — pick your CRM path"
+            : "Choose your CRM path"}
       </p>
-      <p className={`mt-1 max-w-2xl text-gray-700 ${isCompact ? "text-xs" : "text-sm"}`}>
+      <p
+        className={`mt-1 max-w-2xl text-gray-700 ${isCompact ? "text-xs" : "text-sm"}`}
+      >
         {preSave
           ? "Run deals in our native pipeline or connect HubSpot — same SIGNAL-ranked buyers either way. You can switch anytime."
           : "Run deals in our native pipeline or sync scored leads into HubSpot — same buyer intelligence either way."}

@@ -28,6 +28,8 @@ from app.services.jobs_apply_draft import (
 )
 
 SEND_NOT_SENT_NO_EMAIL = "not_sent_no_email"
+WORK_TASK_MODEL_KINDS = ("unknown", "source", "self_train")
+WORK_TASK_MODEL_SOURCE_REQUIRED = "Name the model source. We will not guess."
 SEND_STORED = "stored"
 SEND_PREPARED = "prepared"
 SEND_SENT = "sent"
@@ -342,10 +344,85 @@ def kept_job_payload(row: KeptJob) -> dict[str, Any]:
         "robot_url": row.robot_url,
         "robot_submission_id": row.robot_submission_id,
         "employer_email": row.employer_email,
+        "work_task_model_kind": _work_task_model_kind(row),
+        "work_task_model_source": _work_task_model_source(row),
         "acted_at": row.acted_at.isoformat() if row.acted_at else None,
         "expires_at": row.expires_at.isoformat() if row.expires_at else None,
         "created_at": row.created_at.isoformat() if row.created_at else None,
     }
+
+
+def _work_task_model_kind(row: KeptJob) -> str:
+    kind = str(getattr(row, "work_task_model_kind", None) or "unknown").strip().lower()
+    if kind in WORK_TASK_MODEL_KINDS:
+        return kind
+    return "unknown"
+
+
+def _work_task_model_source(row: KeptJob) -> str | None:
+    if _work_task_model_kind(row) != "source":
+        return None
+    src = re.sub(r"\s+", " ", str(getattr(row, "work_task_model_source", None) or "").strip())
+    return src or None
+
+
+def normalize_work_task_model(
+    kind: str | None,
+    source: str | None,
+) -> tuple[str, str | None]:
+    # User-entered only. Empty source is unknown, never an invented name.
+    k = (kind or "").strip().lower()
+    src = re.sub(r"\s+", " ", (source or "").strip())
+    if k == "self_train":
+        return "self_train", None
+    if k == "source":
+        if not src:
+            raise ValueError(WORK_TASK_MODEL_SOURCE_REQUIRED)
+        return "source", src[:240]
+    return "unknown", None
+
+
+def set_kept_job_task_model(
+    db: Session,
+    user: dict,
+    *,
+    job_key: str,
+    kind: str | None,
+    source: str | None = None,
+) -> dict[str, Any]:
+    uid = _uid(user)
+    key = (job_key or "").strip()
+    if not key:
+        raise ValueError("Pick a job first.")
+    row = (
+        db.query(KeptJob)
+        .filter(KeptJob.user_id == uid, KeptJob.job_key == key)
+        .first()
+    )
+    if not row:
+        raise KeyError("kept_job")
+    next_kind, next_source = normalize_work_task_model(kind, source)
+    row.work_task_model_kind = next_kind
+    row.work_task_model_source = next_source
+    row.updated_at = _now()
+    label = (
+        f"Model source: {next_source}"
+        if next_kind == "source" and next_source
+        else "We'll train this for the job"
+        if next_kind == "self_train"
+        else "Model for this work not named yet"
+    )
+    record_activity(
+        db,
+        user,
+        kind="qualify",
+        label=label[:240],
+        job_key=row.job_key,
+        company=row.employer_name,
+    )
+    db.commit()
+    db.refresh(row)
+    return kept_job_payload(row)
 
 
 def record_activity(

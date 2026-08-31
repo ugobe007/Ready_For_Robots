@@ -24,13 +24,13 @@ const EXPECTED_IDS = [
   "construction",
   "healthcare",
   "mining",
-    "warehouse",
-    "logistics",
-    "factory",
-    "hospitality",
-    "food_prep",
-    "serving",
-    "cleaning",
+  "warehouse",
+  "logistics",
+  "factory",
+  "hospitality",
+  "food_prep",
+  "serving",
+  "cleaning",
 ] as const;
 
 describe("robot class picker options", () => {
@@ -58,7 +58,9 @@ describe("robot class picker options", () => {
   });
 
   it("names the four domain tiles plus aerospace the form-factor list misses", () => {
-    const byId = Object.fromEntries(DEFAULT_CLASS_OPTIONS.map(row => [row.id, row]));
+    const byId = Object.fromEntries(
+      DEFAULT_CLASS_OPTIONS.map(row => [row.id, row])
+    );
     expect(byId.agriculture.label).toBe("Agriculture");
     expect(byId.agriculture.hint).toMatch(/combine|tractor/i);
     expect(byId.marine.label).toBe("Marine");
@@ -94,15 +96,15 @@ describe("robot class picker options", () => {
   it("falls back to the twenty tiles when the API sends none", () => {
     expect(classOptionsOrDefault(undefined)).toHaveLength(20);
     expect(classOptionsOrDefault([])).toEqual(DEFAULT_CLASS_OPTIONS);
-    expect(classOptionsOrDefault([{ id: "agriculture", label: "Ag", hint: "Field" }])).toEqual([
-      { id: "agriculture", label: "Ag", hint: "Field" },
-    ]);
+    expect(
+      classOptionsOrDefault([{ id: "agriculture", label: "Ag", hint: "Field" }])
+    ).toEqual([{ id: "agriculture", label: "Ag", hint: "Field" }]);
   });
 
   it("wires the picker and workspace fallback to the same 20 ids", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(workspace).toMatch(/classOptionsOrDefault/);
     expect(workspace).toMatch(/Name the robot class/);
@@ -111,18 +113,20 @@ describe("robot class picker options", () => {
     expect(workspace).not.toMatch(/kid of robot/i);
     expect(workspace).toMatch(/Finding jobs for that robot type/);
     for (const id of EXPECTED_IDS) {
-      expect(workspace + DEFAULT_CLASS_OPTIONS.map(r => r.id).join(" ")).toContain(id);
+      expect(
+        workspace + DEFAULT_CLASS_OPTIONS.map(r => r.id).join(" ")
+      ).toContain(id);
     }
   });
 
   it("class-picker click starts robot-job-search and cannot silently no-op", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const qualify = workspace.slice(
       workspace.indexOf("async function qualifyActive"),
-      workspace.indexOf("function revealJobs"),
+      workspace.indexOf("function revealJobs")
     );
     expect(qualify).toMatch(/fetchRobotJobSearch/);
     expect(qualify).toMatch(/assertedClass: chosen/);
@@ -140,7 +144,7 @@ describe("robot class picker options", () => {
     expect(workspace).toMatch(/data-jobs-class/);
     const goActivate = workspace.slice(
       workspace.indexOf("function goToActivate"),
-      workspace.indexOf("async function persistKeptJobs"),
+      workspace.indexOf("async function persistKeptJobs")
     );
     expect(goActivate).toMatch(/shouldShowClassPicker\(active\)/);
   });

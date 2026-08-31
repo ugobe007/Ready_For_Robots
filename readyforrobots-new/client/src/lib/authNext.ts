@@ -15,7 +15,8 @@ function isSafePath(path: string): boolean {
 function readStorage(key: string): string | null {
   if (typeof window === "undefined") return null;
   try {
-    const value = window.sessionStorage.getItem(key) ?? window.localStorage.getItem(key);
+    const value =
+      window.sessionStorage.getItem(key) ?? window.localStorage.getItem(key);
     return value && isSafePath(value) ? value : null;
   } catch {
     return null;
@@ -76,7 +77,8 @@ export function peekPendingPlan(): "pro" | "premium" | null {
   if (typeof window === "undefined") return null;
   try {
     const tier =
-      window.sessionStorage.getItem(PENDING_PLAN_KEY) ?? window.localStorage.getItem(PENDING_PLAN_KEY);
+      window.sessionStorage.getItem(PENDING_PLAN_KEY) ??
+      window.localStorage.getItem(PENDING_PLAN_KEY);
     return tier === "pro" || tier === "premium" ? tier : null;
   } catch {
     return null;
@@ -152,8 +154,12 @@ export function signupHrefForCheckout(tier: "pro" | "premium"): string {
 /**
  * Full-page navigation after auth — preserves query strings (wouter setLocation drops ?upgrade=pro).
  */
-export function navigateAfterAuth(path: string, opts?: { clearIntent?: boolean }): void {
-  if (typeof window === "undefined" || !isSafePath(path.split("?")[0] || path)) return;
+export function navigateAfterAuth(
+  path: string,
+  opts?: { clearIntent?: boolean }
+): void {
+  if (typeof window === "undefined" || !isSafePath(path.split("?")[0] || path))
+    return;
   if (opts?.clearIntent !== false) clearPendingNext();
   if (`${window.location.pathname}${window.location.search}` === path) return;
   window.location.replace(path);
@@ -162,6 +168,8 @@ export function navigateAfterAuth(path: string, opts?: { clearIntent?: boolean }
 /** True when URL carries plan=pro|premium (upgrade intent). */
 export function readPlanParam(search?: string): "pro" | "premium" | null {
   if (typeof window === "undefined") return null;
-  const plan = (new URLSearchParams(search ?? window.location.search).get("plan") || "").toLowerCase();
+  const plan = (
+    new URLSearchParams(search ?? window.location.search).get("plan") || ""
+  ).toLowerCase();
   return plan === "pro" || plan === "premium" ? plan : null;
 }

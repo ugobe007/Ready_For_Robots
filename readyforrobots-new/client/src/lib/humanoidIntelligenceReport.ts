@@ -74,7 +74,12 @@ export type ReportComparisons = {
   }[];
   peer_heif_matrix?: {
     dimension_labels: string[];
-    robots: { rank: number; name: string; heif_total: number; dimensions: Record<string, number> }[];
+    robots: {
+      rank: number;
+      name: string;
+      heif_total: number;
+      dimensions: Record<string, number>;
+    }[];
   };
   vendor_leaderboard?: {
     vendor: string;
@@ -102,7 +107,10 @@ export type MonthOverMonth = {
   has_prior: boolean;
   baseline_note?: string;
   narrative_bullets?: string[];
-  fleet_metrics?: Record<string, { current: number; previous: number; delta: number }>;
+  fleet_metrics?: Record<
+    string,
+    { current: number; previous: number; delta: number }
+  >;
   leader?: {
     changed?: boolean;
     current?: { name?: string; score?: number };
@@ -215,20 +223,28 @@ function intelligenceCacheKey(topN: number): string {
   return `humanoid_intelligence_v2_${topN}`;
 }
 
-export function isValidHumanoidReport(data: unknown): data is HumanoidIntelligenceReportData {
+export function isValidHumanoidReport(
+  data: unknown
+): data is HumanoidIntelligenceReportData {
   if (!data || typeof data !== "object") return false;
   const r = data as HumanoidIntelligenceReportData;
-  return Array.isArray(r.top_ranked) && r.top_ranked.length > 0 && Array.isArray(r.executive_summary);
+  return (
+    Array.isArray(r.top_ranked) &&
+    r.top_ranked.length > 0 &&
+    Array.isArray(r.executive_summary)
+  );
 }
 
 export function useHumanoidIntelligenceReport(topN = 12) {
   const cacheKey = intelligenceCacheKey(topN);
   const cachedEntry = readSurfaceCache<HumanoidIntelligenceReportData>(
     cacheKey,
-    HUMANOID_INTEL_CACHE_TTL_MS,
+    HUMANOID_INTEL_CACHE_TTL_MS
   );
   const [report, setReport] = useState<HumanoidIntelligenceReportData | null>(
-    cachedEntry?.data && isValidHumanoidReport(cachedEntry.data) ? cachedEntry.data : null,
+    cachedEntry?.data && isValidHumanoidReport(cachedEntry.data)
+      ? cachedEntry.data
+      : null
   );
   const [loading, setLoading] = useState(!report);
   const [error, setError] = useState<string | null>(null);
@@ -238,10 +254,10 @@ export function useHumanoidIntelligenceReport(topN = 12) {
     let cancelled = false;
     const freshCache = readSurfaceCache<HumanoidIntelligenceReportData>(
       cacheKey,
-      HUMANOID_INTEL_CACHE_TTL_MS,
+      HUMANOID_INTEL_CACHE_TTL_MS
     );
     const paintedFromCache = Boolean(
-      freshCache?.data && isValidHumanoidReport(freshCache.data),
+      freshCache?.data && isValidHumanoidReport(freshCache.data)
     );
     if (!paintedFromCache) {
       setLoading(true);
@@ -254,16 +270,19 @@ export function useHumanoidIntelligenceReport(topN = 12) {
       `${api}/api/humanoid/intelligence-report?top_n=${topN}`,
       publicFetchInit(),
       10_000,
-      { publicCache: true },
+      { publicCache: true }
     )
-      .then(async (r) => {
+      .then(async r => {
         if (!r.ok) {
           const body = await r.json().catch(() => ({}));
-          throw new Error((body as { detail?: string }).detail?.toString() || `HTTP ${r.status}`);
+          throw new Error(
+            (body as { detail?: string }).detail?.toString() ||
+              `HTTP ${r.status}`
+          );
         }
         return r.json();
       })
-      .then((d) => {
+      .then(d => {
         if (cancelled) return;
         const payload = d?.report;
         if (!isValidHumanoidReport(payload)) {
@@ -277,7 +296,7 @@ export function useHumanoidIntelligenceReport(topN = 12) {
         setError(null);
         writeSurfaceCache(cacheKey, payload);
       })
-      .catch((e) => {
+      .catch(e => {
         if (cancelled) return;
         if (!paintedFromCache) {
           setReport(null);
@@ -299,7 +318,10 @@ export function useHumanoidIntelligenceReport(topN = 12) {
 /** Fly origin for binary PDF — avoids Vercel rewrite timeouts on long renders. */
 export const HEIR_PDF_ORIGIN = "https://ready-2-robot.fly.dev";
 
-export function humanoidReportPdfUrl(topN = 12, renderer: "fast" | "manus" = "fast"): string {
+export function humanoidReportPdfUrl(
+  topN = 12,
+  renderer: "fast" | "manus" = "fast"
+): string {
   const params = new URLSearchParams({
     top_n: String(topN),
     renderer,

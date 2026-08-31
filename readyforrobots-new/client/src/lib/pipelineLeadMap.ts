@@ -3,7 +3,13 @@
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { CAL_SIGNATURE } from "@/lib/agentMessaging";
 
-export type PipelineStage = "New Signal" | "Discovered" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
+export type PipelineStage =
+  | "New Signal"
+  | "Discovered"
+  | "Draft Ready"
+  | "Outreach Sent"
+  | "Qualified"
+  | "Meeting Set";
 
 export interface ApiLead {
   id: number;
@@ -110,11 +116,19 @@ export interface ApiLead {
     weights?: Record<string, number>;
     weight_source?: string;
     missing_fields_count?: number;
-    evidence_traces?: Array<{ dimension?: string; score?: number; evidence?: string }>;
+    evidence_traces?: Array<{
+      dimension?: string;
+      score?: number;
+      evidence?: string;
+    }>;
     quality_gate?: { passed?: boolean; reason?: string };
   };
   confidence_band?: string | null;
-  evidence_trace?: Array<{ dimension?: string; score?: number; evidence?: string }>;
+  evidence_trace?: Array<{
+    dimension?: string;
+    score?: number;
+    evidence?: string;
+  }>;
   humanoid_pilot_tier?: string | null;
   humanoid_pilot_score?: number | null;
   humanoid_pilot_label?: string | null;
@@ -148,7 +162,11 @@ export interface ApiLead {
     facility_clarity?: string | null;
     blockers?: string[];
     rationale?: string | null;
-    vendor_shortlist?: Array<{ vendor?: string | null; model?: string | null; why?: string | null }>;
+    vendor_shortlist?: Array<{
+      vendor?: string | null;
+      model?: string | null;
+      why?: string | null;
+    }>;
     truth_state?: string | null;
     updated_at?: string | null;
   } | null;
@@ -225,15 +243,32 @@ export interface ApiLead {
   lead_inference?: Record<string, unknown> | null;
   crm_evidence?: {
     friction_point?: string | null;
-    workflow_scope?: { count?: number; label?: string | null; items?: string[] };
-    timing?: { label?: string | null; source?: string | null; confidence?: number | null };
+    workflow_scope?: {
+      count?: number;
+      label?: string | null;
+      items?: string[];
+    };
+    timing?: {
+      label?: string | null;
+      source?: string | null;
+      confidence?: number | null;
+    };
     robot_type?: { label?: string | null; items?: string[] };
     budget?: {
       top_amount?: string | null;
       has_budget?: boolean;
-      signals?: Array<{ amount?: string; context?: string; source_url?: string }>;
+      signals?: Array<{
+        amount?: string;
+        context?: string;
+        source_url?: string;
+      }>;
     };
-    decision_makers?: Array<{ name?: string; title?: string; source_url?: string; confidence?: number }>;
+    decision_makers?: Array<{
+      name?: string;
+      title?: string;
+      source_url?: string;
+      confidence?: number;
+    }>;
     similar_deployments?: Array<{
       title?: string | null;
       summary?: string | null;
@@ -282,31 +317,45 @@ function stageForLead(lead: ApiLead): PipelineStage {
   return "New Signal";
 }
 
-function topSignal(lead: ApiLead): { type: string; text: string; color: string } {
+function topSignal(lead: ApiLead): {
+  type: string;
+  text: string;
+  color: string;
+} {
   const sigs = lead.signals || [];
   const first = sigs[0];
   const typ = (first?.signal_type || "news").replace(/ /g, "_").toLowerCase();
   const text =
     cleanAndClampText(
       (first as { display_text?: string })?.display_text || first?.text || "",
-      220,
+      220
     ) || "Buying signal detected";
   const color = SIGNAL_COLORS[typ] || SIGNAL_COLORS.default;
-  const label = typ.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const label = typ.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
   return { type: label, text, color };
 }
 
 function outreachSubject(companyName?: string, signalType?: string): string {
   const typ = (signalType || "").toLowerCase();
-  if (typ.includes("labor") || typ.includes("job")) return "hiring signal and task fit";
-  if (typ.includes("expansion") || typ.includes("capex") || typ.includes("funding")) {
+  if (typ.includes("labor") || typ.includes("job"))
+    return "hiring signal and task fit";
+  if (
+    typ.includes("expansion") ||
+    typ.includes("capex") ||
+    typ.includes("funding")
+  ) {
     return "expansion signal — start with the workflow";
   }
-  if (typ.includes("hospitality") || typ.includes("hotel")) return "where the hours go on property";
+  if (typ.includes("hospitality") || typ.includes("hotel"))
+    return "where the hours go on property";
   return "start with the task, not the robot";
 }
 
-function outreachBody(lead: ApiLead, signalType: string, signalText: string): string {
+function outreachBody(
+  lead: ApiLead,
+  signalType: string,
+  signalText: string
+): string {
   const company = lead.company_name || "your team";
   const short =
     company.toLowerCase() === "performance food group"
@@ -316,7 +365,9 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
         : company;
   const lowerType = signalType.toLowerCase();
   const industry = (lead.industry || "operations").split(" / ")[0].trim();
-  const hermesJob = (lead.hermes_job_titles || []).find((t) => (t || "").trim())?.trim();
+  const hermesJob = (lead.hermes_job_titles || [])
+    .find(t => (t || "").trim())
+    ?.trim();
   const clip = cleanAndClampText(signalText, 140).replace(/\s+/g, " ").trim();
 
   let notice: string;
@@ -326,7 +377,11 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
     notice = `I've been looking at ${company}, and I keep noticing something I wanted to check with you: ${clip}${clip.endsWith(".") ? "" : "."}`;
   } else if (lowerType.includes("labor") || lowerType.includes("job")) {
     notice = `I've been looking at ${industry}, and I keep noticing something I wanted to check with you. Hiring spikes often show up before anyone names the repetitive work absorbing the hours.`;
-  } else if (lowerType.includes("expansion") || lowerType.includes("capex") || lowerType.includes("funding")) {
+  } else if (
+    lowerType.includes("expansion") ||
+    lowerType.includes("capex") ||
+    lowerType.includes("funding")
+  ) {
     notice = `I've been looking at expansion activity around ${company}, and I keep noticing something I wanted to check with you. Material movement and labor demand often rise before anyone has locked a robot specification.`;
   } else {
     notice = `I've been looking at ${industry}, and I keep noticing something I wanted to check with you. The visible task gets most of the attention, but a lot of the day-to-day pressure seems to happen elsewhere.`;
@@ -349,59 +404,86 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
   ].join("\n");
 }
 
-export function pipelineStageFromCrmOutreach(stage?: string | null): PipelineStage | null {
+export function pipelineStageFromCrmOutreach(
+  stage?: string | null
+): PipelineStage | null {
   const s = (stage || "").toLowerCase();
   if (!s) return null;
   if (s === "new") return "Discovered";
-  if (["draft_ready", "review_required", "draft_approved"].includes(s)) return "Draft Ready";
-  if (["intro_sent", "sequence_step_sent", "sent"].includes(s)) return "Outreach Sent";
-  if (["replied", "qualified", "nurture", "discovery"].includes(s)) return "Qualified";
-  if (["meeting", "meeting_booked", "proposal"].includes(s)) return "Meeting Set";
+  if (["draft_ready", "review_required", "draft_approved"].includes(s))
+    return "Draft Ready";
+  if (["intro_sent", "sequence_step_sent", "sent"].includes(s))
+    return "Outreach Sent";
+  if (["replied", "qualified", "nurture", "discovery"].includes(s))
+    return "Qualified";
+  if (["meeting", "meeting_booked", "proposal"].includes(s))
+    return "Meeting Set";
   return null;
 }
 
-export function crmOutreachStageFromPipelineStage(stage: PipelineStage): string {
+export function crmOutreachStageFromPipelineStage(
+  stage: PipelineStage
+): string {
   const map: Record<PipelineStage, string> = {
     "New Signal": "new",
-    "Discovered": "new",
+    Discovered: "new",
     "Draft Ready": "draft_ready",
     "Outreach Sent": "intro_sent",
-    "Qualified": "qualified",
+    Qualified: "qualified",
     "Meeting Set": "meeting",
   };
   return map[stage];
 }
 
-function buildSellerBrief(lead: ApiLead, companyName: string, signalType: string, signalText: string) {
+function buildSellerBrief(
+  lead: ApiLead,
+  companyName: string,
+  signalType: string,
+  signalText: string
+) {
   const fromApi = lead.cal_seller_brief;
   if (fromApi?.headline && fromApi?.why_now) {
     return {
       headline: fromApi.headline,
       whyNow: fromApi.why_now,
       pitch: fromApi.pitch || lead.pipeline_action || "",
-      robotFit: fromApi.robot_fit || (lead.robot_types_needed || []).slice(0, 3).join(", "),
-      nextStep: fromApi.next_step || `Save ${companyName} → copy Cal's note → start the conversation`,
+      robotFit:
+        fromApi.robot_fit ||
+        (lead.robot_types_needed || []).slice(0, 3).join(", "),
+      nextStep:
+        fromApi.next_step ||
+        `Save ${companyName} → copy Cal's note → start the conversation`,
     };
   }
-  const robots = (lead.robot_types_needed || []).map((r) => String(r).trim()).filter(Boolean).slice(0, 3);
+  const robots = (lead.robot_types_needed || [])
+    .map(r => String(r).trim())
+    .filter(Boolean)
+    .slice(0, 3);
   const robotFit = robots.join(", ") || "the robot class you sell";
-  const hermesJob = (lead.hermes_job_titles || []).find((t) => (t || "").trim())?.trim();
-  const why =
-    hermesJob
-      ? `${companyName} is hiring for ${hermesJob} — timing that usually means operational load is already rising.`
-      : cleanAndClampText(lead.share_summary || signalText, 180) ||
-        `Active ${(signalType || "buying").toLowerCase()} signal in ${(lead.industry || "their operations").split(" / ")[0]}.`;
+  const hermesJob = (lead.hermes_job_titles || [])
+    .find(t => (t || "").trim())
+    ?.trim();
+  const why = hermesJob
+    ? `${companyName} is hiring for ${hermesJob} — timing that usually means operational load is already rising.`
+    : cleanAndClampText(lead.share_summary || signalText, 180) ||
+      `Active ${(signalType || "buying").toLowerCase()} signal in ${(lead.industry || "their operations").split(" / ")[0]}.`;
   return {
     headline: `Why ${companyName} is a fit for your robot`,
     whyNow: why,
-    pitch: cleanScrapedText(lead.pipeline_action || "") || `Lead with how ${robotFit} removes a concrete workflow bottleneck — not a generic automation pitch.`,
+    pitch:
+      cleanScrapedText(lead.pipeline_action || "") ||
+      `Lead with how ${robotFit} removes a concrete workflow bottleneck — not a generic automation pitch.`,
     robotFit,
     nextStep: `Save ${companyName} → copy Cal's outreach note → start the conversation`,
   };
 }
 
-export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null) {
-  const loc = [lead.location_city, lead.location_state].filter(Boolean).join(", ") || "—";
+export function mapApiLeadToDeal(
+  lead: ApiLead,
+  crmOutreachStage?: string | null
+) {
+  const loc =
+    [lead.location_city, lead.location_state].filter(Boolean).join(", ") || "—";
   const { type, text, color } = topSignal(lead);
   const score = numericScore(lead);
   const crmStage = pipelineStageFromCrmOutreach(crmOutreachStage);
@@ -432,13 +514,16 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     sellerBrief,
     outreachSubject: outreachSubject(companyName, type),
     outreachBody: outreachBody(lead, type, text),
-    notes: cleanScrapedText(lead.pipeline_action || lead.share_summary) || undefined,
+    notes:
+      cleanScrapedText(lead.pipeline_action || lead.share_summary) || undefined,
     shareSummary: lead.share_summary || undefined,
     shareBlurb: lead.share_blurb || undefined,
     pipelineAction: lead.pipeline_action || undefined,
     leadQuality: lead.lead_quality || undefined,
-    confidenceBand: lead.confidence_band || lead.lead_quality?.confidence_band || undefined,
-    evidenceTrace: lead.evidence_trace || lead.lead_quality?.evidence_traces || undefined,
+    confidenceBand:
+      lead.confidence_band || lead.lead_quality?.confidence_band || undefined,
+    evidenceTrace:
+      lead.evidence_trace || lead.lead_quality?.evidence_traces || undefined,
     humanoidPilotTier: lead.humanoid_pilot_tier || undefined,
     humanoidPilotScore: lead.humanoid_pilot_score ?? undefined,
     humanoidPilotLabel: lead.humanoid_pilot_label || undefined,

@@ -2,7 +2,14 @@
  * Detect → Qualify → Engage → Advance — one rail on /pipeline so users aren't lost in CRM/Cal/admin.
  */
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle2, Circle, Mail, Target, Zap } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  Mail,
+  Target,
+  Zap,
+} from "lucide-react";
 
 type Stage = "browse" | "save" | "draft" | "send" | "track";
 
@@ -18,7 +25,10 @@ type Props = {
   browseFirst?: boolean;
 };
 
-function stepState(current: Stage, step: Stage): "done" | "active" | "upcoming" {
+function stepState(
+  current: Stage,
+  step: Stage
+): "done" | "active" | "upcoming" {
   const order: Stage[] = ["browse", "save", "draft", "send", "track"];
   const ci = order.indexOf(current);
   const si = order.indexOf(step);
@@ -30,7 +40,8 @@ function stepState(current: Stage, step: Stage): "done" | "active" | "upcoming" 
 function resolveCurrent(props: Props): Stage {
   if (props.sent) return "track";
   if (props.hasDraft && props.hasContact) return "send";
-  if (props.hasDraft || (props.hasSelection && props.hasSavedLeads)) return "draft";
+  if (props.hasDraft || (props.hasSelection && props.hasSavedLeads))
+    return "draft";
   if (props.hasSession && props.hasSavedLeads) return "save";
   if (props.browseFirst && !props.hasSelection) return "browse";
   if (props.hasSession) return "save";
@@ -42,20 +53,75 @@ export default function PipelineSalesWorkflowRail(props: Props) {
   const dark = variant === "dark";
   const current = resolveCurrent(props);
 
-  const steps: { id: Stage; label: string; hint: string; icon: typeof Target }[] = browseFirst
+  const steps: {
+    id: Stage;
+    label: string;
+    hint: string;
+    icon: typeof Target;
+  }[] = browseFirst
     ? [
-        { id: "browse", label: "1. Browse", hint: "Explore the full live pipeline", icon: Target },
-        { id: "save", label: "2. Curate", hint: "Save best-fit companies to your list", icon: Zap },
-        { id: "draft", label: "3. Draft", hint: "Copy outreach for the company", icon: Mail },
-        { id: "send", label: "4. Send", hint: "Send from the detail panel", icon: Mail },
-        { id: "track", label: "5. Replies", hint: "Track in Inbox", icon: ArrowRight },
+        {
+          id: "browse",
+          label: "1. Browse",
+          hint: "Explore the full live pipeline",
+          icon: Target,
+        },
+        {
+          id: "save",
+          label: "2. Curate",
+          hint: "Save best-fit companies to your list",
+          icon: Zap,
+        },
+        {
+          id: "draft",
+          label: "3. Draft",
+          hint: "Copy outreach for the company",
+          icon: Mail,
+        },
+        {
+          id: "send",
+          label: "4. Send",
+          hint: "Send from the detail panel",
+          icon: Mail,
+        },
+        {
+          id: "track",
+          label: "5. Replies",
+          hint: "Track in Inbox",
+          icon: ArrowRight,
+        },
       ]
     : [
-        { id: "browse", label: "1. Pick", hint: "Select the highest-fit HOT lead", icon: Target },
-        { id: "save", label: "2. Activate CRM", hint: "Save this buyer to start a real pipeline", icon: Zap },
-        { id: "draft", label: "3. Draft", hint: "Copy SIGNAL outreach", icon: Mail },
-        { id: "send", label: "4. Send", hint: "Send from the detail panel", icon: Mail },
-        { id: "track", label: "5. Replies", hint: "Track in Inbox", icon: ArrowRight },
+        {
+          id: "browse",
+          label: "1. Pick",
+          hint: "Select the highest-fit HOT lead",
+          icon: Target,
+        },
+        {
+          id: "save",
+          label: "2. Activate CRM",
+          hint: "Save this buyer to start a real pipeline",
+          icon: Zap,
+        },
+        {
+          id: "draft",
+          label: "3. Draft",
+          hint: "Copy SIGNAL outreach",
+          icon: Mail,
+        },
+        {
+          id: "send",
+          label: "4. Send",
+          hint: "Send from the detail panel",
+          icon: Mail,
+        },
+        {
+          id: "track",
+          label: "5. Replies",
+          hint: "Track in Inbox",
+          icon: ArrowRight,
+        },
       ];
 
   return (
@@ -67,7 +133,9 @@ export default function PipelineSalesWorkflowRail(props: Props) {
       }
     >
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${dark ? "text-emerald-300" : "text-emerald-800"}`}>
+        <p
+          className={`text-[10px] font-bold uppercase tracking-[0.18em] ${dark ? "text-emerald-300" : "text-emerald-800"}`}
+        >
           {browseFirst ? "Curate · Outreach" : "Sales pipeline workflow"}
         </p>
         {hasSession && (
@@ -112,20 +180,28 @@ export default function PipelineSalesWorkflowRail(props: Props) {
                 title={step.hint}
               >
                 {done ? (
-                  <CheckCircle2 className={`h-3 w-3 shrink-0 ${dark ? "text-emerald-400" : "text-emerald-600"}`} />
+                  <CheckCircle2
+                    className={`h-3 w-3 shrink-0 ${dark ? "text-emerald-400" : "text-emerald-600"}`}
+                  />
                 ) : (
                   <Icon className="h-3 w-3 shrink-0 opacity-70" />
                 )}
-                <span className="text-[10px] font-bold whitespace-nowrap">{step.label}</span>
+                <span className="text-[10px] font-bold whitespace-nowrap">
+                  {step.label}
+                </span>
               </div>
               {idx < steps.length - 1 && (
-                <Circle className={`hidden h-1 w-1 shrink-0 fill-current sm:block ${dark ? "text-slate-600" : "text-gray-300"}`} />
+                <Circle
+                  className={`hidden h-1 w-1 shrink-0 fill-current sm:block ${dark ? "text-slate-600" : "text-gray-300"}`}
+                />
               )}
             </li>
           );
         })}
       </ol>
-      <p className={`mt-2 text-[11px] ${dark ? "text-slate-300" : "text-gray-600"}`}>
+      <p
+        className={`mt-2 text-[11px] ${dark ? "text-slate-300" : "text-gray-600"}`}
+      >
         {browseFirst
           ? current === "browse" || current === "save"
             ? "After instructions: Build your 25-lead pipeline, then Save fits and copy outreach."

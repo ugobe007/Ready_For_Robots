@@ -26,10 +26,10 @@ export default function RobotProfileCard({
   const tier = profile.profile_confidence;
   const classLabel = (product?.display_class || "")
     .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+    .replace(/\b\w/g, c => c.toUpperCase());
 
   const confirmed = profile.facts.filter(
-    (f) => f.epistemic === "explicit" || f.epistemic === "strongly_inferred",
+    f => f.epistemic === "explicit" || f.epistemic === "strongly_inferred"
   );
   const byPred = new Map<string, (typeof confirmed)[0]>();
   for (const f of confirmed) {
@@ -40,9 +40,11 @@ export default function RobotProfileCard({
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, compact ? 8 : 12);
 
-  const unknownFacts = profile.facts.filter((f) => f.epistemic === "unknown");
-  const conflictFacts = profile.facts.filter((f) => f.epistemic === "contradicted");
-  const sourceTypes = [...new Set(profile.sources.map((s) => s.source_type))];
+  const unknownFacts = profile.facts.filter(f => f.epistemic === "unknown");
+  const conflictFacts = profile.facts.filter(
+    f => f.epistemic === "contradicted"
+  );
+  const sourceTypes = [...new Set(profile.sources.map(s => s.source_type))];
 
   const groundingPct = Math.round(profile.source_grounding_rate * 100);
   const coveragePct = Math.round((profile.coverage_rate ?? 0) * 100);
@@ -82,7 +84,8 @@ export default function RobotProfileCard({
         </span>
       </div>
       <p className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.08em] text-slate-500">
-        Grounding {groundingPct}% · Coverage {profile.coverage_level || "—"} ({coveragePct}
+        Grounding {groundingPct}% · Coverage {profile.coverage_level || "—"} (
+        {coveragePct}
         %) · Sources {profile.source_quality_level || "—"} ({qualityPct}%)
       </p>
       <p className="mt-1 text-[12px] leading-snug text-slate-500">
@@ -90,14 +93,15 @@ export default function RobotProfileCard({
       </p>
       {tier !== "A" ? (
         <p className="mt-1 text-[11px] leading-snug text-amber-200/70">
-          Not a complete profile — unknowns below matter as much as confirmed facts.
+          Not a complete profile — unknowns below matter as much as confirmed
+          facts.
         </p>
       ) : null}
 
       <p className={`${eyebrow} mt-5`}>Confirmed facts</p>
       {factLines.length ? (
         <ul className="mt-2 space-y-1.5">
-          {factLines.map((f) => (
+          {factLines.map(f => (
             <li key={f.id} className="text-[13px] leading-snug text-slate-300">
               <span className="text-emerald-400/80">✓</span> {formatFactLine(f)}
             </li>
@@ -112,16 +116,24 @@ export default function RobotProfileCard({
       {unknownFacts.length || conflictFacts.length ? (
         <>
           <p className={`${eyebrow} mt-4`}>
-            {tier === "C" ? "Incomplete coverage — unknowns" : "Unknowns / contradictions"}
+            {tier === "C"
+              ? "Incomplete coverage — unknowns"
+              : "Unknowns / contradictions"}
           </p>
           <ul className="mt-2 space-y-1">
-            {conflictFacts.slice(0, 4).map((f) => (
-              <li key={f.id} className="text-[12px] leading-snug text-amber-200/90">
+            {conflictFacts.slice(0, 4).map(f => (
+              <li
+                key={f.id}
+                className="text-[12px] leading-snug text-amber-200/90"
+              >
                 CONFLICTED — {formatFactLine(f)}
               </li>
             ))}
-            {unknownFacts.slice(0, compact ? 5 : 8).map((f) => (
-              <li key={f.id} className="text-[12px] leading-snug text-amber-200/80">
+            {unknownFacts.slice(0, compact ? 5 : 8).map(f => (
+              <li
+                key={f.id}
+                className="text-[12px] leading-snug text-amber-200/80"
+              >
                 {formatFactLine(f)}
               </li>
             ))}
@@ -129,8 +141,8 @@ export default function RobotProfileCard({
         </>
       ) : tier !== "A" ? (
         <p className="mt-4 text-[12px] leading-snug text-amber-200/80">
-          Some technical constraints may still be unknown even when not listed here — verify
-          before relying on this profile.
+          Some technical constraints may still be unknown even when not listed
+          here — verify before relying on this profile.
         </p>
       ) : null}
 
@@ -143,7 +155,7 @@ export default function RobotProfileCard({
       </p>
       <button
         type="button"
-        onClick={() => setShowSources((v) => !v)}
+        onClick={() => setShowSources(v => !v)}
         className="mt-2 text-left font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-400"
       >
         {showSources ? "Hide sources ←" : "View sources →"}
@@ -151,8 +163,8 @@ export default function RobotProfileCard({
       {showSources ? (
         <div className="mt-2 max-h-56 space-y-3 overflow-y-auto border border-slate-700 p-2">
           <ul className="space-y-2">
-            {profile.sources.map((s) => {
-              const cited = factLines.filter((f) => f.source_id === s.id);
+            {profile.sources.map(s => {
+              const cited = factLines.filter(f => f.source_id === s.id);
               return (
                 <li key={s.id} className="text-[11px] leading-snug">
                   <span className="font-mono uppercase tracking-[0.08em] text-slate-500">
@@ -168,7 +180,7 @@ export default function RobotProfileCard({
                   </a>
                   {cited.length ? (
                     <p className="mt-0.5 text-[10px] text-slate-600">
-                      Supports: {cited.map((f) => formatFactLine(f)).join("; ")}
+                      Supports: {cited.map(f => formatFactLine(f)).join("; ")}
                     </p>
                   ) : null}
                 </li>
@@ -176,8 +188,8 @@ export default function RobotProfileCard({
             })}
           </ul>
           <p className="border-t border-slate-800 pt-2 text-[10px] leading-snug text-slate-600">
-            Open a source to verify the claim on the manufacturer page. Profile facts are
-            grounded; job matches use a separate corpus.
+            Open a source to verify the claim on the manufacturer page. Profile
+            facts are grounded; job matches use a separate corpus.
           </p>
         </div>
       ) : null}

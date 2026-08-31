@@ -36,7 +36,11 @@ const HUMANOID_TIER_ORDER: Record<string, number> = {
 };
 
 function humanoidTierForLead(lead: PipelineActionLead): string {
-  return (lead.humanoidPilotTier || lead.humanoid_pilot_tier || "NONE").toUpperCase();
+  return (
+    lead.humanoidPilotTier ||
+    lead.humanoid_pilot_tier ||
+    "NONE"
+  ).toUpperCase();
 }
 
 function humanoidScoreForLead(lead: PipelineActionLead): number {
@@ -44,8 +48,10 @@ function humanoidScoreForLead(lead: PipelineActionLead): number {
 }
 
 function labelForLead(lead: PipelineActionLead): string {
-  const hpAction = (lead as { humanoidPilotAction?: string; humanoid_pilot_action?: string }).humanoidPilotAction
-    || (lead as { humanoid_pilot_action?: string }).humanoid_pilot_action;
+  const hpAction =
+    (lead as { humanoidPilotAction?: string; humanoid_pilot_action?: string })
+      .humanoidPilotAction ||
+    (lead as { humanoid_pilot_action?: string }).humanoid_pilot_action;
   const hpTier = humanoidTierForLead(lead);
   if (hpAction && (hpTier === "ACTIVE_PILOT" || hpTier === "PILOT_INTENT")) {
     return `Humanoid · ${hpAction}`;
@@ -60,10 +66,10 @@ function labelForLead(lead: PipelineActionLead): string {
 
 export function buildNextActionsFromPipelineLeads(
   leads: PipelineActionLead[],
-  max = 3,
+  max = 3
 ): NextAction[] {
   const ranked = [...leads]
-    .filter((lead) => lead.id)
+    .filter(lead => lead.id)
     .sort((a, b) => {
       const hpDiff =
         (HUMANOID_TIER_ORDER[humanoidTierForLead(a)] ?? 9) -
@@ -71,12 +77,13 @@ export function buildNextActionsFromPipelineLeads(
       if (hpDiff !== 0) return hpDiff;
       const hpScoreDiff = humanoidScoreForLead(b) - humanoidScoreForLead(a);
       if (hpScoreDiff !== 0) return hpScoreDiff;
-      const tierDiff = (TIER_ORDER[tierForLead(a)] ?? 9) - (TIER_ORDER[tierForLead(b)] ?? 9);
+      const tierDiff =
+        (TIER_ORDER[tierForLead(a)] ?? 9) - (TIER_ORDER[tierForLead(b)] ?? 9);
       if (tierDiff !== 0) return tierDiff;
       return (b.score ?? 0) - (a.score ?? 0);
     });
 
-  return ranked.slice(0, max).map((lead) => {
+  return ranked.slice(0, max).map(lead => {
     const tier = tierForLead(lead);
     return {
       id: `pipeline:${lead.id}`,
@@ -92,6 +99,8 @@ export function buildNextActionsFromPipelineLeads(
   });
 }
 
-export function mapApiNextActions(payload: { actions?: NextAction[] } | null): NextAction[] {
+export function mapApiNextActions(
+  payload: { actions?: NextAction[] } | null
+): NextAction[] {
   return Array.isArray(payload?.actions) ? payload.actions : [];
 }
