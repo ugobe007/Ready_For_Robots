@@ -91,6 +91,11 @@ _LISTING_HINTS = {
         "/amr-controllers",
         "/amr/others",
     ),
+    "vinmotion.net": (
+        "/",
+        "/product/motion-1",
+        "/product/motion-2",
+    ),
 }
 _NAV_PATH = re.compile(
     r"/(about|careers?|contact|news|blog|press|support|login|privacy|legal|"
@@ -860,6 +865,67 @@ def _path_is_nav(path: str) -> bool:
     return bool(_NAV_PATH.search(p))
 
 
+_PRODUCT_MENU_ITEM = re.compile(
+    r'"Title"\s*:\s*"(?P<title>[^"]{1,48})"\s*,\s*"product_post"\s*:\s*\{'
+    r'.{0,1200}?"slug"\s*:\s*"(?P<slug>[a-z0-9][a-z0-9-]{0,40})"',
+    re.I | re.S,
+)
+_PRODUCT_POST_TITLE = re.compile(
+    r'"productPost"\s*:\s*\{.{0,400}?"title"\s*:\s*"(?P<title>[^"]{1,48})"'
+    r'.{0,400}?"slug"\s*:\s*"(?P<slug>[a-z0-9][a-z0-9-]{0,40})"',
+    re.I | re.S,
+)
+_PRODUCT_PAGE_SLUG = re.compile(r'"ProductPageSlug"\s*:\s*"(?P<path>/[^"]{1,40})"', re.I)
+
+
+def _unescape_next_blob(html: str) -> str:
+    """Flatten App Router self.__next_f payloads so ProductMenuItem JSON is searchable."""
+    if not html:
+        return ""
+    parts = [html.replace('\\"', '"')]
+    for raw in re.findall(r"self\.__next_f\.push\(\[1,\"(.*?)\"\]\)", html):
+        try:
+            parts.append(raw.encode("utf-8").decode("unicode_escape"))
+        except UnicodeDecodeError:
+            parts.append(raw.replace('\\"', '"'))
+    return "\n".join(parts)
+
+
+def next_f_product_candidates(html: str, page_url: str) -> list[dict[str, str]]:
+    """Named SKUs from Next.js App Router ProductMenuItem / productPost. No invented names."""
+    blob = _unescape_next_blob(html)
+    if not blob:
+        return []
+    parsed = urlparse(page_url)
+    origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else page_url
+    base_path = "/product"
+    path_match = _PRODUCT_PAGE_SLUG.search(blob)
+    if path_match:
+        base_path = path_match.group("path") or base_path
+    found: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    def _add(title: str, slug: str) -> None:
+        name = re.sub(r"\s+", " ", (title or "").strip())
+        slug = re.sub(r"\s+", "", (slug or "").strip())
+        if not name:
+            name = _slug_to_name(slug)
+        if not name or is_junk_sku_name(name) or not looks_like_named_sku(name):
+            return
+        key = name_key(name)
+        if not key or key in seen:
+            return
+        seen.add(key)
+        rel = f"{base_path.rstrip('/')}/{slug}" if slug else base_path
+        found.append({"name": name, "url": urljoin(origin.rstrip("/") + "/", rel.lstrip("/")).split("#")[0]})
+
+    for match in _PRODUCT_MENU_ITEM.finditer(blob):
+        _add(match.group("title"), match.group("slug"))
+    for match in _PRODUCT_POST_TITLE.finditer(blob):
+        _add(match.group("title"), match.group("slug"))
+    return found
+
+
 def next_data_product_candidates(html: str, page_url: str) -> list[dict[str, str]]:
     """Named SKUs from Next.js __NEXT_DATA__ (SEER category pages). No invented names."""
     if not html:
@@ -965,6 +1031,9 @@ def candidates_from_page(
     html = getattr(page, "html", None) or ""
     if host == "seer-robotics.ai" or "seer-robotics" in (host or ""):
         for row in next_data_product_candidates(html, page_url):
+            _add(row["name"], row["url"])
+    if host == "vinmotion.net" or "vinmotion" in (host or ""):
+        for row in next_f_product_candidates(html, page_url):
             _add(row["name"], row["url"])
     return found
 
@@ -1435,6 +1504,7 @@ __all__ = [
     "merge_discovered_skus",
     "merge_lookup_rows",
     "next_data_product_candidates",
+    "next_f_product_candidates",
     "scrub_discovery",
     "tennant_robotic_sku_from_url",
 ]

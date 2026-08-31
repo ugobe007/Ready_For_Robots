@@ -10,8 +10,8 @@
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
-  "vendor_count": 121,
-  "robot_count": 304,
+  "vendor_count": 122,
+  "robot_count": 306,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -9072,6 +9072,62 @@
               "predicate": "product_class",
               "value": "service_robot",
               "evidence_span": "SRC-880 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "VinMotion",
+      "domains": [
+        "vinmotion.net"
+      ],
+      "vendor_url": "https://vinmotion.net",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Motion 1",
+          "model_slug": "vinmotion-motion-1",
+          "product_url": "https://vinmotion.net/product/motion-1",
+          "vendor_url": "https://vinmotion.net",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Motion 1: Humanoid robot.",
+          "lookup_host": "vinmotion.net",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Motion 1: Humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Motion 2",
+          "model_slug": "vinmotion-motion-2",
+          "product_url": "https://vinmotion.net/product/motion-2",
+          "vendor_url": "https://vinmotion.net",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "Motion 2: Launching.",
+          "lookup_host": "vinmotion.net",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Motion 2: Launching."
             }
           ],
           "specs": {},

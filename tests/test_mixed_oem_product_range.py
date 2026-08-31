@@ -270,6 +270,50 @@ def test_tennant_and_seer_named_robots_not_class_dumps():
     assert by.get("SRC-880") is None
 
 
+def test_vinmotion_named_robots_from_page_evidence():
+    import json
+
+    data = json.loads(MIXED_OEM_CATALOG_PATH.read_text(encoding="utf-8"))
+    vin = next(c for c in data["companies"] if c["slug"] == "vinmotion")
+    names = [p["name"] for p in vin["products"]]
+    assert names == ["Motion 1", "Motion 2"]
+    assert "VinMotion Humanoid" not in names
+    assert "Product" not in names
+    payload = listing_payload_for_url("https://vinmotion.net/")
+    assert payload["matched"] is True
+    by = {r["name"]: r.get("display_class") for r in payload["robots"]}
+    assert by["Motion 1"] == "humanoid"
+    assert by.get("Motion 2") is None, by
+    assert "Product" not in by
+    assert "humanoid" in set(payload["product_range"])
+    assert payload["mixed_range"] is False
+
+
+def test_vinmotion_product_hrefs_and_next_f_menu():
+    from app.services.oem_sku_discover import (
+        classify_href_candidate,
+        next_f_product_candidates,
+    )
+
+    m1 = "https://vinmotion.net/product/motion-1"
+    m2 = "https://vinmotion.net/product/motion-2"
+    assert classify_href_candidate(m1, "Motion 1") == "product"
+    assert classify_href_candidate(m2, "Motion 2") == "product"
+    assert classify_href_candidate("https://vinmotion.net/product", "Product") != "product"
+    html = (
+        'self.__next_f.push([1,"{\\"ProductMenu\\":{\\"ProductPageSlug\\":\\"/product\\",'
+        '\\"ProductMenuItem\\":[{\\"Title\\":\\"Motion 1\\",\\"product_post\\":{\\"title\\":'
+        '\\"Motion 1\\",\\"slug\\":\\"motion-1\\"}},{\\"Title\\":\\"Motion 2\\",'
+        '\\"product_post\\":{\\"title\\":\\"Motion 2\\",\\"slug\\":\\"motion-2\\"}}]}}"])'
+    )
+    found = next_f_product_candidates(html, "https://vinmotion.net/")
+    by = {row["name"]: row["url"] for row in found}
+    assert by["Motion 1"] == m1
+    assert by["Motion 2"] == m2
+    assert "Product" not in by
+    assert "VinMotion Humanoid" not in by
+
+
 def test_tennant_robotic_product_url_is_a_named_sku():
     from app.services.oem_sku_discover import (
         classify_href_candidate,

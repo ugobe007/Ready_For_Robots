@@ -120,6 +120,7 @@ def test_corpus_file_lists_operator_urls():
         "agibot.com",
         "magiclab.top",
         "deeprobotics.cn",
+        "vinmotion.net",
     ):
         assert any(host in u for u in urls), host
     assert CORPUS_PATH.is_file()
