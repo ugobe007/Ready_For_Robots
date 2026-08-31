@@ -271,7 +271,7 @@ _QUADRUPED_MORPH = re.compile(
 )
 _DRONE_MORPH = re.compile(r"\b(drone|uav|unmanned aerial)\b", re.I)
 _CLEANING_DRONE_WORK = re.compile(
-    r"\b(clean\w*|wash\w*|facade\w*|window\w*|exterior\w*|soft[- ]wash|pressure[- ]wash)\b",
+    r"\b(facade\s+clean\w*|facade\s+wash\w*|window\s+wash\w*|window\s+clean\w*|exterior\s+clean\w*|exterior\s+wash\w*|building\s+wash\w*|soft[- ]wash|pressure[- ]wash)\b",
     re.I,
 )
 
@@ -279,12 +279,12 @@ _CLEANING_DRONE_WORK = re.compile(
 def infer_morphology_class(text: str) -> str | None:
     """Hardware/morphology class from product copy. Not a company dump."""
     blob = text or ""
-    if _HUMANOID_MORPH.search(blob):
-        return "humanoid"
     if _QUADRUPED_MORPH.search(blob):
         return "quadruped"
     if _DRONE_MORPH.search(blob):
         return "drone"
+    if _HUMANOID_MORPH.search(blob):
+        return "humanoid"
     return None
 
 

@@ -578,7 +578,7 @@
         "window washing drone",
         "facade cleaning drone"
       ],
-      "outranks_morphology": [],
+      "outranks_morphology": ["humanoid", "semi-humanoid", "biped", "bipedal", "quadruped", "drone"],
       "task_model_ids": [],
       "class_signals": [
         "cleaning drone",
