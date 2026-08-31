@@ -926,8 +926,7 @@ def make_discovered_product(company: dict[str, Any], name: str, url: str | None)
         "company_name": company["name"],
         "company_slug": company["slug"],
         # Identity only. Never copy BellaBot serving onto PUDUA1 (company → category).
-        "primary_class": (company.get("products") or [{}])[0].get("primary_class")
-        or map_primary_class("", ""),
+        "primary_class": map_primary_class("", ""),
         "category": None,
         "listed_class": None,
         "task": None,
