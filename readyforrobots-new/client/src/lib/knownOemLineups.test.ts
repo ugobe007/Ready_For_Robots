@@ -175,6 +175,23 @@ describe("knownOemLineups", () => {
     expect(names).toContain("Galbot G1");
     expect(names).toContain("Galbot S1");
     expect(names).not.toContain("Galbot G2");
+    const galbotBy = Object.fromEntries(
+      (galbot?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(galbotBy["Galbot G1"]).toBe("mobile_manipulator");
+    expect(galbotBy["Galbot S1"]).toBe("mobile_manipulator");
+    const third = lookupKnownOem("https://thirdwave.ai");
+    const thirdBy = Object.fromEntries(
+      (third?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(thirdBy["Third Wave Reach Trucks"]).toBe("amr");
+    expect(thirdBy["TWA Reach"]).toBeUndefined();
+    const dexory = lookupKnownOem("https://dexory.com");
+    const dexoryBy = Object.fromEntries(
+      (dexory?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(Object.prototype.hasOwnProperty.call(dexoryBy, "DexoryView")).toBe(true);
+    expect(dexoryBy.DexoryView == null).toBe(true);
     const unix = lookupKnownOem("https://unix-group.ai");
     expect((unix?.robots || []).map(r => r.name)).toEqual(
       expect.arrayContaining(["Wanda 2.0", "Panther", "Martian"]),
