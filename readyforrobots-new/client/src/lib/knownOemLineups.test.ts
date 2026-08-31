@@ -149,4 +149,17 @@ describe("knownOemLineups", () => {
     expect(hit?.robots[0]?.display_class).toBe("healthcare");
     expect(hit?.robots[0]?.display_class).not.toBe("humanoid");
   });
+
+  it("maps VinMotion Motion 1 as a humanoid without inventing SKUs", () => {
+    const hit = lookupKnownOem("https://vinmotion.net/");
+    expect(hit?.vendor_name).toMatch(/VinMotion/i);
+    const by = Object.fromEntries(
+      (hit?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(by["Motion 1"]).toBe("humanoid");
+    expect(Object.prototype.hasOwnProperty.call(by, "Motion 2")).toBe(true);
+    expect(by["Motion 2"] == null).toBe(true);
+    expect(by.Product).toBeUndefined();
+    expect(Object.keys(by).some(n => /humanoid/i.test(n))).toBe(false);
+  });
 });

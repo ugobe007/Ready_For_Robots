@@ -171,6 +171,16 @@
       "expect_mixed": true,
       "expect_classes": ["quadruped", "humanoid"],
       "expect_products": ["X20", "DR02"]
+    },
+    {
+      "url": "https://vinmotion.net/",
+      "vendor": "VinMotion",
+      "expects_named_robots": true,
+      "expect_classes": ["humanoid"],
+      "expect_products": ["Motion 1", "Motion 2"],
+      "forbid_products": ["Product", "About", "Careers", "News", "VinMotion Humanoid"],
+      "forbid_chrome": true,
+      "notes": "Named SKUs from homepage Product menu and /product/motion-1|/product/motion-2. Motion 1 is humanoid on the homepage. Motion 2 launching page is thin. Do not invent SKUs."
     }
   ]
 }

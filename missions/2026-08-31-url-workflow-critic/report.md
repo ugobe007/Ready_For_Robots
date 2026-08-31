@@ -1,10 +1,12 @@
 # URL workflow critic report
 
 **Date:** 2026-08-31  
-**Branch:** `cursor/url-workflow-critic-009b` (PR #198)  
-**Verdict:** catalog corpus **19/19 PASS**, 0 breaks. Fixtures **8/8 PASS**. Tennant 5 named robots. SEER 7 named robots. Empty is no longer a pass.
+**Branch:** `cursor/url-workflow-critic-009b` (PR #198), VinMotion addendum on `cursor/vinmotion-oem-009b`  
+**Verdict:** catalog corpus **20/20 PASS** after VinMotion. Fixtures **8/8 PASS**. Tennant 5 named robots. SEER 7. VinMotion 2.
 
 This is the report. You do not need a terminal to read it.
+
+VinMotion operator review lives in `missions/2026-08-31-vinmotion/REVIEW.md`.
 
 FIND identity was driven for every OEM in the operator list: product range, named products, per-product capabilities. Catalog path (indexed listing). Live Fly still shows stale junk until this branch deploys. Empty Tennant or SEER is now a critic break.
 
@@ -12,7 +14,7 @@ Rule held: company → product → configuration → hardware → capabilities. 
 
 ## What was tested
 
-19 OEM URLs from `app/data/url_workflow_corpus.json`:
+19 OEM URLs from `app/data/url_workflow_corpus.json`, plus VinMotion as #20:
 
 | # | OEM | URL |
 |---|-----|-----|
@@ -35,6 +37,7 @@ Rule held: company → product → configuration → hardware → capabilities. 
 | 17 | AgiBot | https://www.agibot.com/ |
 | 18 | MagicLab | https://www.magiclab.top/ |
 | 19 | Deep Robotics | https://www.deeprobotics.cn/ |
+| 20 | VinMotion | https://vinmotion.net/ |
 
 Fixtures (synthetic breaks, CI gate `url_workflow`): mixed-range flattened, chrome-as-SKU, cleaning-drone-as-scrubber, company-class-not-product-class, empty known-OEM hub, class-dump SKU, healthy mixed, healthy drone.
 
@@ -61,8 +64,9 @@ Fixtures (synthetic breaks, CI gate `url_workflow`): mixed-range flattened, chro
 | AgiBot | humanoid | 6 | PASS | No serving dump |
 | MagicLab | humanoid, quadruped | 3 | PASS | MagicBot vs MagicDog |
 | Deep Robotics | humanoid, quadruped | 4 | PASS | DR02 humanoid vs X20/X30 quadruped |
+| VinMotion | humanoid | 2 | PASS | Motion 1 humanoid. Motion 2 launching page unclassified. No invented SKU |
 
-**19/19 PASS. 0 breaks.**
+**20/20 PASS. 0 breaks.**
 
 ## Per URL: products and capabilities
 
@@ -358,6 +362,17 @@ https://www.deeprobotics.cn/ · range humanoid, quadruped
 | X20 | quadruped | inspect_route, mobile |
 | X30 | quadruped | inspect_route, mobile |
 
+### VinMotion. PASS
+
+https://vinmotion.net/ · range humanoid · 2 products
+
+| Product | Class | Capabilities |
+|---------|-------|--------------|
+| Motion 1 | humanoid | manipulate, mobile |
+| Motion 2 | unclassified | none |
+
+Evidence: homepage Product menu and https://vinmotion.net/product/motion-1 / https://vinmotion.net/product/motion-2. Motion 1 is named a humanoid robot on the homepage. Motion 2 launching page has no hardware copy. Full write-up: `missions/2026-08-31-vinmotion/REVIEW.md`.
+
 ## What broke (first catalog pass)
 
 | URL | Break | Detail |
@@ -387,16 +402,16 @@ Fixtures already catch the same classes of lie: flattening mixed lines to `servi
 | Gate | Result |
 |------|--------|
 | Fixtures | 8/8 PASS, exit 0 (empty OEM hub and class-dump SKU now fail on purpose) |
-| Catalog corpus | **19/19 PASS**, 0 breaks. Tennant n=5, SEER n=7. Other 17 unchanged |
+| Catalog corpus | **20/20 PASS**, 0 breaks. VinMotion n=2. Tennant n=5, SEER n=7. Other 19 unchanged |
 | pstack `url_workflow` | fixture suite green locally |
 | Live Fly | still stale until this branch deploys. Critic notes junk SKUs and does not fail on them |
 
 ## Remaining gaps
 
 1. **Fly production listing is stale.** Production still serves `AMR scrubbers` / `Seer Humanoid` / generic `Scrubber`. Catalog on this branch is the source of truth until deploy.
-2. **Thin SKUs.** Named but unclassified, no capabilities: Keenon Peanut / M2 / S300 / S100; Pudu FlashBot / PUDUA1 / PUDUD1 / PUDUSH1; Bear Carti; Richtech MATRADEE family, LUCKI, MEDBOT, AIDY, Scorpion, Titan; Gausium CD/WS series; UBTECH Cruzr; SEER SRC-880. They do not fail the critic. They also do not help matching. They do not inherit a sibling class.
+2. **Thin SKUs.** Named but unclassified, no capabilities: Keenon Peanut / M2 / S300 / S100; Pudu FlashBot / PUDUA1 / PUDUD1 / PUDUSH1; Bear Carti; Richtech MATRADEE family, LUCKI, MEDBOT, AIDY, Scorpion, Titan; Gausium CD/WS series; UBTECH Cruzr; SEER SRC-880; VinMotion Motion 2. They do not fail the critic. They also do not help matching. They do not inherit a sibling class.
 3. **Kärcher hub is KIRA only.** Correct for robotic cleaning. The rest of the Kärcher catalog is not robots.
 4. **Tennant X16 SWEEP** is a sweeper. It still grounds `hard_floor_scrub` because the FIND class is cleaning. Fine for this critic. Not a second matcher.
 5. Do not merge #195.
 
-The human review doc is `missions/2026-08-31-url-workflow-critic/REVIEW.md`.
+The human review docs are `missions/2026-08-31-url-workflow-critic/REVIEW.md` and `missions/2026-08-31-vinmotion/REVIEW.md`.

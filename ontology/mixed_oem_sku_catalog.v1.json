@@ -1,7 +1,7 @@
 {
   "ontology_id": "mixed_oem_sku_catalog_v1",
   "version": "1.0.0",
-  "generated_at": "2026-08-31T16:21:35+00:00",
+  "generated_at": "2026-08-31T18:20:00+00:00",
   "source": "missions/2026-08-31-mixed-oem-product-range",
   "rule": "COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES. Never company → category.",
   "notes": [
@@ -20,6 +20,7 @@
     "Tennant robotics hub names X6 ROVR and X16 SWEEP; T7AMR / T380AMR / T16AMR product pages name those SKUs. Not AMR scrubbers.",
     "Richtech homepage 429 (Vercel checkpoint) — reclass existing ADAM/Scotty only.",
     "SEER lifting/forklift/controller pages name AMB / SFL / SCB / SRC SKUs. Not Seer Humanoid.",
+    "VinMotion homepage Product menu names Motion 1 and Motion 2. Motion 1 is a humanoid robot on the homepage. Motion 2 launching page is thin — no invented class.",
     "Live page extract still wins. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
   "companies": [
@@ -1809,8 +1810,55 @@
           "url_status": "verified"
         }
       ]
+    },
+    {
+      "name": "VinMotion",
+      "slug": "vinmotion",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "vinmotion.net"
+      ],
+      "source_urls": [
+        "https://vinmotion.net/"
+      ],
+      "products": [
+        {
+          "name": "Motion 1",
+          "slug": "vinmotion-motion-1",
+          "company_name": "VinMotion",
+          "company_slug": "vinmotion",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid robot",
+          "task": "Humanoid robot",
+          "setting": null,
+          "lookup_host": "vinmotion.net",
+          "source": "mission-2026-08-31-vinmotion",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://vinmotion.net/product/motion-1",
+          "url_status": "verified"
+        },
+        {
+          "name": "Motion 2",
+          "slug": "vinmotion-motion-2",
+          "company_name": "VinMotion",
+          "company_slug": "vinmotion",
+          "primary_class": "service_robot",
+          "listed_class": null,
+          "task": "Launching",
+          "setting": null,
+          "lookup_host": "vinmotion.net",
+          "source": "mission-2026-08-31-vinmotion",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://vinmotion.net/product/motion-2",
+          "url_status": "verified"
+        }
+      ]
     }
   ],
-  "company_count": 19,
-  "product_count": 93
+  "company_count": 20,
+  "product_count": 95
 }
