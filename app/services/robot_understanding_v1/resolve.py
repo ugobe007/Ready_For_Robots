@@ -43,11 +43,11 @@ _PRODUCT_CANDIDATE = re.compile(
     r"Walker|Figure\s*\d+|G1|H1|B2|Go2|Cassie|Handle|Ranger|OTTO\s*\d+|"
     r"GoFa|Phoenix|Pepper|Whiz|TIAGo|ANYmal|Canvas|FieldPrinter|"
     r"Elios\s*\d*|Servi(?:\s*Plus|\+)?|P800|CRX[- ]?\d+\w*|"
-    r"Lift\s+RS\d+|T7AMR|A0509|LaserWeeder|"
-    r"[A-Z][a-z]{1,14}(?:Bot|BOT)"
+    r"Lift\s+RS\d+|T7AMR|A0509|LaserWeeder"
     r")\b",
     re.I,
 )
+_PRODUCT_BOT_NAMES = re.compile(r"\b([A-Z][a-z]{1,14}(?:Bot|BOT))\b")
 
 # Manufacturer product pages (EngineAI /product-pm01.html, /products/t800).
 # Path evidence — not an OEM SKU allowlist.
@@ -1530,6 +1530,10 @@ def _discover_product_names(
             ):
                 continue
         counts[canon] = counts.get(canon, 0) + 1
+    
+    for m in _PRODUCT_BOT_NAMES.finditer(blob):
+        name = m.group(1)
+        counts[name] = counts.get(name, 0) + 1
 
     # Also scan anchors for product-only links
     for url, anchor in home.links:
@@ -1542,6 +1546,9 @@ def _discover_product_names(
                 "neo": "Neo",
             }.get(canon.lower(), canon if canon[0].isupper() else canon.title())
             counts[key] = counts.get(key, 0) + 2  # anchor weight
+        for m in _PRODUCT_BOT_NAMES.finditer(f"{url} {anchor}"):
+            name = m.group(1)
+            counts[name] = counts.get(name, 0) + 2
 
     # Manufacturer product URLs (product-pm01.html /en/x1) — evidence, not an allowlist.
     href_skus: list[str] = []
@@ -1646,14 +1653,16 @@ def _product_display_class(
     """Per-product FIND class. Work language outranks generic service_robot."""
     from app.services.robot_class_qualify import prefer_work_language_class
 
-    window = _window_text_for_product(product_name, text or "") or (text or "")
-    work_or_catalog = prefer_work_language_class(window, catalog_class)
-    if work_or_catalog:
-        return work_or_catalog
-    hinted = _hint_display_class(product_name, window or text)
-    if hinted and hinted not in {"service_robot"}:
-        return hinted
-    return work_or_catalog or hinted
+    window = _window_text_for_product(product_name, text or "")
+    if window:
+        work_or_catalog = prefer_work_language_class(window, catalog_class)
+        if work_or_catalog:
+            return work_or_catalog
+        hinted = _hint_display_class(product_name, window)
+        if hinted and hinted not in {"service_robot"}:
+            return hinted
+        return work_or_catalog or hinted
+    return catalog_class
 
 
 def _hint_display_class(product_name: str, text: str) -> Optional[str]:
