@@ -75,6 +75,10 @@ def map_primary_class(category: str, klass: str) -> str:
         return "industrial_arm"
     if "amr" in blob or "warehouse" in blob:
         return "amr"
+    if "drone" in blob and any(
+        w in blob for w in ("clean", "wash", "facade", "window", "exterior")
+    ):
+        return "cleaning_drone"
     if "cleaning" in blob or "scrubber" in blob:
         return "cleaning_robot"
     if "inspection" in blob or "quadruped" in blob:

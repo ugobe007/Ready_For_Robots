@@ -239,6 +239,9 @@ def normalize_class_id(raw: str | None) -> str | None:
         "janitorial": "cleaning",
         "custodial": "cleaning",
         "cleaning_robot": "cleaning",
+        "cleaning_drone": "cleaning_drone",
+        "window_washing_drone": "cleaning_drone",
+        "facade_cleaning_drone": "cleaning_drone",
     }
     mapped = aliases.get(want)
     if not mapped:
@@ -266,6 +269,11 @@ _QUADRUPED_MORPH = re.compile(
     r"\b(quadruped|four[- ]legged|robot\s+dog|bionic\s+quadruped)\b",
     re.I,
 )
+_DRONE_MORPH = re.compile(r"\b(drone|uav|unmanned aerial)\b", re.I)
+_CLEANING_DRONE_WORK = re.compile(
+    r"\b(clean\w*|wash\w*|facade\w*|window\w*|exterior\w*|soft[- ]wash|pressure[- ]wash)\b",
+    re.I,
+)
 
 
 def infer_morphology_class(text: str) -> str | None:
@@ -275,6 +283,8 @@ def infer_morphology_class(text: str) -> str | None:
         return "humanoid"
     if _QUADRUPED_MORPH.search(blob):
         return "quadruped"
+    if _DRONE_MORPH.search(blob):
+        return "drone"
     return None
 
 
@@ -316,7 +326,16 @@ def classify_product_from_evidence(
         "construction_robot": ("construction", "construction_robot"),
         "homebuilding": ("construction", "construction_robot"),
         "homebuilder": ("construction", "construction_robot"),
+        "cleaning_drone": ("cleaning", "cleaning_drone"),
+        "window_washing_drone": ("cleaning", "cleaning_drone"),
+        "facade_cleaning_drone": ("cleaning", "cleaning_drone"),
     }
+    if morph == "drone" and (
+        work in {"cleaning", "cleaning_drone"} or _CLEANING_DRONE_WORK.search(blob)
+    ):
+        return "cleaning_drone"
+    if work == "cleaning_drone":
+        return "cleaning_drone"
     if work:
         keep = _sku_keep.get(cat or "")
         if keep and work == keep[0]:
@@ -333,6 +352,16 @@ def classify_product_from_evidence(
     cat = (catalog_class or "").strip().lower() or None
     if not cat or cat in GENERIC_CATEGORY_CLASSES:
         return None
+    # Workbook dump classes → FIND classes. Do not call normalize_class_id
+    # here: that collapses agricultural_robot / drone configurations to tiles.
+    _catalog_find = {
+        "cleaning_robot": "cleaning",
+        "janitorial": "cleaning",
+        "custodial": "cleaning",
+    }
+    mapped = _catalog_find.get(cat)
+    if mapped:
+        return mapped
     return cat
 
 
@@ -380,6 +409,9 @@ _CONFIGURATION_PRODUCT_CLASSES: dict[str, tuple[str, str]] = {
     "construction_print": ("construction_robot", "Construction robot"),
     "construction_block": ("construction_robot", "Construction robot"),
     "construction_layout": ("construction_robot", "Construction robot"),
+    "cleaning_drone": ("cleaning_drone", "Cleaning drone"),
+    "window_washing_drone": ("cleaning_drone", "Cleaning drone"),
+    "facade_cleaning_drone": ("cleaning_drone", "Cleaning drone"),
 }
 
 

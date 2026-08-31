@@ -143,4 +143,78 @@ def test_mixed_overlay_file_does_not_invent_skus():
     forbidden = {"About", "News", "en", "Imprint", "Product", "Farmers"}
     assert forbidden.isdisjoint(names)
     assert "PuduBot 3" not in names
+    assert "T7AMR" not in names
     assert map_primary_class("Commercial", "Bipedal humanoid") == "humanoid"
+    assert map_primary_class("Commercial", "Cleaning drone") == "cleaning_drone"
+
+
+def test_lucidbots_is_cleaning_drone_not_floor_scrubber():
+    sherpa = (
+        "Sherpa Drone commercial cleaning drone for windows, facades and exteriors. "
+        "Window washing drone. Exterior building washing. Not a floor scrubber."
+    )
+    assert classify_product_from_evidence(sherpa, "service_robot") == "cleaning_drone"
+    assert classify_product_from_evidence(sherpa, "cleaning") == "cleaning_drone"
+    assert prefer_work_language_class(sherpa, "avionics", name="Sherpa Drone") == "cleaning_drone"
+
+    payload = listing_payload_for_url("https://www.lucidbots.com/")
+    assert payload["matched"] is True
+    by = {r["name"]: r.get("display_class") for r in payload["robots"]}
+    assert by.get("Sherpa Drone") == "cleaning_drone", by
+    assert "autonomous_scrubber" not in by.values()
+    assert all(c != "avionics" for c in by.values()), by
+
+
+def test_pudu_bellabot_serving_vs_cc1_cleaning():
+    by = _by_class("https://www.pudurobotics.com/en")
+    assert by["BellaBot"] == "serving"
+    assert by["CC1"] == "cleaning"
+    assert by["BellaBot"] != by["CC1"]
+
+
+def test_keenon_waiter_vs_cleaner_live_names():
+    by = _by_class("https://www.keenon.com/en")
+    waiter = by.get("Dinerbot T10") or by.get("T11") or by.get("Dinerbot T5")
+    cleaner = by.get("C55") or by.get("Keenon C30") or by.get("C40")
+    assert waiter == "serving", by
+    assert cleaner == "cleaning", by
+
+
+def test_bear_servi_serving_and_servi_clean_cleaning():
+    payload = listing_payload_for_url("https://www.bearrobotics.ai/")
+    assert payload["matched"] is True
+    by = {r["name"]: r.get("display_class") for r in payload["robots"]}
+    assert by.get("Servi") == "serving", by
+    assert by.get("Servi Plus") == "serving", by
+    assert by.get("Servi Clean") == "cleaning", by
+    rng = set(payload["product_range"])
+    assert "serving" in rng and "cleaning" in rng
+    assert payload["mixed_range"] is True
+
+
+def test_gausium_avidbots_ecovacs_commercial_are_floor_cleaning():
+    gau = _by_class("https://gausium.com/")
+    assert gau.get("Phantas") in {"cleaning", "autonomous_scrubber"}, gau
+    assert gau.get("Marvel") in {"cleaning", "autonomous_scrubber"} or "cleaning" in set(gau.values()), gau
+    assert all(c not in {"cleaning_drone", "avionics"} for c in gau.values()), gau
+
+    avid = _by_class("https://avidbots.com/")
+    assert avid.get("Neo") in {"cleaning", "autonomous_scrubber"}, avid
+    assert avid.get("Kas") in {"cleaning", "autonomous_scrubber"} or "cleaning" in set(avid.values()), avid
+    assert all(c not in {"cleaning_drone", "avionics"} for c in avid.values()), avid
+
+    eco = listing_payload_for_url("https://www.ecovacscommercial.com/")
+    assert eco["matched"] is True
+    eco_by = {r["name"]: r.get("display_class") for r in eco["robots"]}
+    assert eco_by.get("DEEBOT PRO M1") == "cleaning", eco_by
+    assert eco_by.get("DEEBOT PRO K1 VAC") == "cleaning", eco_by
+    assert all(c != "cleaning_drone" for c in eco_by.values()), eco_by
+
+
+def test_pringle_mixed_serving_and_cleaning_range():
+    payload = listing_payload_for_url("https://pringlerobotics.ai/")
+    assert payload["matched"] is True
+    by = {r["name"]: r.get("display_class") for r in payload["robots"]}
+    assert by.get("BellaBot") == "serving", by
+    assert by.get("CC1") == "cleaning", by
+    assert payload["mixed_range"] is True

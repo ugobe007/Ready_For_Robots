@@ -269,6 +269,7 @@ def match_work_language(text: str) -> WorkLanguageHit | None:
 # Serving / cleaning / food_prep are more specific than hospitality on a tie
 # (BellaBot: "tray"+"restaurants" vs "guest"+"hotels" — waiter, not hotel ops).
 _WORK_LANGUAGE_TIEBREAK = {
+    "cleaning_drone": 5,
     "serving": 4,
     "cleaning": 4,
     "food_prep": 4,

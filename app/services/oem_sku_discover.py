@@ -71,6 +71,14 @@ _LISTING_HINTS = {
     "seegrid.com": ("/products",),
     "gausium.com": ("/products",),
     "misorobotics.com": ("/",),
+    "pringlerobotics.ai": ("/", "/bots"),
+    "aotingbot.com": ("/", "/product"),
+    "kaercher.com": ("/us/commercial/autonomous-cleaning-equipment.html",),
+    "lucidbots.com": ("/", "/sherpa-drone"),
+    "ecovacscommercial.com": ("/", "/products"),
+    "avidbots.com": ("/",),
+    "polarxrobotics.com": ("/", "/products"),
+    "cenobots.com": ("/",),
 }
 _NAV_PATH = re.compile(
     r"/(about|careers?|contact|news|blog|press|support|login|privacy|legal|"

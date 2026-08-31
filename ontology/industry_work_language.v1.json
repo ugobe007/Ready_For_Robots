@@ -567,6 +567,39 @@
       ]
     },
     {
+      "id": "cleaning_drone",
+      "find_class": "cleaning_drone",
+      "verticals": ["commercial"],
+      "claim_predicate": "claims_surface_cleaning",
+      "capability": "surface_clean",
+      "product_classes": ["cleaning_drone"],
+      "aliases": [
+        "cleaning drone",
+        "window washing drone",
+        "facade cleaning drone"
+      ],
+      "outranks_morphology": [],
+      "task_model_ids": [],
+      "class_signals": [
+        "cleaning drone",
+        "window washing drone",
+        "facade cleaning",
+        "exterior cleaning drone"
+      ],
+      "work_words": [
+        "cleaning drone",
+        "cleaning drones",
+        "window washing drone",
+        "window washing",
+        "facade cleaning",
+        "exterior cleaning",
+        "exterior building washing",
+        "building washing",
+        "power washing cleaning drone",
+        "drone cleaning"
+      ]
+    },
+    {
       "id": "hotel",
       "find_class": "hospitality",
       "verticals": ["hospitality"],
