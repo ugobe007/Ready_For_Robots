@@ -96,6 +96,8 @@ OEM_SKU_REPLACES_INDEX_HOSTS = frozenset(
         "noetixrobotics.com",
         "primebot.cn",
         "limxdynamics.com",
+        "thirdwave.ai",
+        "dexory.com",
     }
 )
 
