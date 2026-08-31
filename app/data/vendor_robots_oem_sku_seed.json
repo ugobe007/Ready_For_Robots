@@ -9720,13 +9720,7 @@
           "lookup_host": "dexory.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [
-            {
-              "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "DexoryView indexed class service_robot."
-            }
-          ],
+          "catalog_claims": [],
           "specs": {},
           "configuration_kind": "standalone",
           "host_platform": "none"
