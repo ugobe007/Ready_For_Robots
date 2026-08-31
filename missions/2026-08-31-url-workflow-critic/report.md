@@ -68,7 +68,7 @@ Fixtures (synthetic breaks, CI gate `url_workflow`): mixed-range flattened, chro
 
 Capabilities omit the internal `classes` flag.
 
-### Pringle Robotics — PASS
+### Pringle Robotics. PASS
 
 https://pringlerobotics.ai/ · range serving, cleaning
 
@@ -86,19 +86,19 @@ https://pringlerobotics.ai/ · range serving, cleaning
 | PUDU T300 | cleaning | hard_floor_scrub, mobile, surface_clean |
 | MT-1 | cleaning | hard_floor_scrub, mobile, surface_clean |
 
-### Keenon — PASS
+### Keenon. PASS
 
 https://www.keenon.com/en · range serving, hospitality, cleaning, humanoid
 
 | Product | Class | Capabilities |
 |---------|-------|--------------|
 | Keenon T8 | serving | mobile, serving_task |
-| Peanut | unclassified | — |
+| Peanut | unclassified | none |
 | Dinerbot T10 | serving | mobile, serving_task |
 | Dinerbot T5 | serving | mobile, serving_task |
 | Butlerbot W3 | hospitality | hospitality_task, mobile |
 | Keenon C30 | cleaning | hard_floor_scrub, mobile, surface_clean |
-| Keenon M2 | unclassified | — |
+| Keenon M2 | unclassified | none |
 | T11 | serving | mobile, serving_task |
 | C55 | cleaning | hard_floor_scrub, mobile, surface_clean |
 | C40 | cleaning | hard_floor_scrub, mobile, surface_clean |
@@ -107,10 +107,10 @@ https://www.keenon.com/en · range serving, hospitality, cleaning, humanoid
 | T3 | serving | mobile, serving_task |
 | XMAN-R1 | humanoid | manipulate, mobile |
 | XMAN-F1 | humanoid | manipulate, mobile |
-| S300 | unclassified | — |
-| S100 | unclassified | — |
+| S300 | unclassified | none |
+| S100 | unclassified | none |
 
-### Pudu Robotics — PASS
+### Pudu Robotics. PASS
 
 https://www.pudurobotics.com/en · range serving, cleaning, humanoid
 
@@ -120,16 +120,16 @@ https://www.pudurobotics.com/en · range serving, cleaning, humanoid
 | PuduBot 2 | serving | mobile, serving_task |
 | KettyBot | serving | mobile, serving_task |
 | HolaBot | serving | mobile, serving_task |
-| FlashBot | unclassified | — |
+| FlashBot | unclassified | none |
 | CC1 | cleaning | hard_floor_scrub, mobile, surface_clean |
 | MT1 | cleaning | hard_floor_scrub, mobile, surface_clean |
 | PUDU T300 | cleaning | hard_floor_scrub, mobile, surface_clean |
 | D9 | humanoid | manipulate, mobile |
-| PUDUA1 | unclassified | — |
-| PUDUD1 | unclassified | — |
-| PUDUSH1 | unclassified | — |
+| PUDUA1 | unclassified | none |
+| PUDUD1 | unclassified | none |
+| PUDUSH1 | unclassified | none |
 
-### Bear Robotics — PASS
+### Bear Robotics. PASS
 
 https://www.bearrobotics.ai/ · range serving, amr, cleaning
 
@@ -139,12 +139,12 @@ https://www.bearrobotics.ai/ · range serving, amr, cleaning
 | Servi Plus | serving | mobile, serving_task |
 | Carti 100 | amr | mobile, transport |
 | Carti High Payload | amr | mobile, transport |
-| Carti | unclassified | — |
+| Carti | unclassified | none |
 | Servi Q | serving | mobile, serving_task |
 | Servi Clean | cleaning | hard_floor_scrub, mobile, surface_clean |
 | Servi Clean Max | cleaning | hard_floor_scrub, mobile, surface_clean |
 
-### Aotingbots — PASS
+### Aotingbots. PASS
 
 https://www.aotingbot.com/ · range cleaning
 
@@ -153,7 +153,7 @@ https://www.aotingbot.com/ · range cleaning
 | SW80 A | cleaning | hard_floor_scrub, mobile, surface_clean |
 | SW55 A | cleaning | hard_floor_scrub, mobile, surface_clean |
 
-### Kärcher — PASS
+### Kärcher. PASS
 
 https://www.kaercher.com/us/ · range cleaning
 
@@ -166,7 +166,7 @@ KIRA robotic line only. Pressure washers and mops stay out.
 | KIRA CV 50 | cleaning | hard_floor_scrub, mobile, surface_clean |
 | KIRA CV 60/1 | cleaning | hard_floor_scrub, mobile, surface_clean |
 
-### Richtech — PASS
+### Richtech. PASS
 
 https://richtechrobotics.com/ · range serving, cleaning
 
@@ -175,18 +175,18 @@ ADAM and Scotty are real. Most of the rest is a thin SKU list with no class and 
 | Product | Class | Capabilities |
 |---------|-------|--------------|
 | ADAM | serving | mobile, serving_task |
-| MATRADEE | unclassified | — |
-| MATRADEE X | unclassified | — |
-| MATRADEE L | unclassified | — |
-| LUCKI | unclassified | — |
-| MEDBOT | unclassified | — |
+| MATRADEE | unclassified | none |
+| MATRADEE X | unclassified | none |
+| MATRADEE L | unclassified | none |
+| LUCKI | unclassified | none |
+| MEDBOT | unclassified | none |
 | DUST-E MX | cleaning | hard_floor_scrub, mobile, surface_clean |
-| AIDY | unclassified | — |
-| Scorpion | unclassified | — |
-| Titan | unclassified | — |
+| AIDY | unclassified | none |
+| Scorpion | unclassified | none |
+| Titan | unclassified | none |
 | Scotty | serving | mobile, serving_task |
 
-### CenoBots — PASS
+### CenoBots. PASS
 
 https://www.cenobots.com/ · range cleaning
 
@@ -198,7 +198,7 @@ https://www.cenobots.com/ · range cleaning
 | L50 | cleaning | hard_floor_scrub, mobile, surface_clean |
 | SP50 | cleaning | hard_floor_scrub, mobile, surface_clean |
 
-### Lucid Bots — PASS (was BREAK)
+### Lucid Bots. PASS (was BREAK)
 
 https://www.lucidbots.com/ · range cleaning_drone
 
@@ -209,13 +209,13 @@ First pass failed: Sherpa inherited OEM floor-scrub defaults and missed `drone_t
 | Sherpa Drone | cleaning_drone | avionics_task, drone_task, mobile |
 | Sherpa Drone NDAA | cleaning_drone | avionics_task, drone_task, mobile |
 
-### Tennant — PASS (empty, honest)
+### Tennant. PASS (empty, honest)
 
 https://www.tennantco.com/en_us.html · range empty · 0 products
 
 The listing did not give named robotic SKUs. FIND leaves the class picker empty. We did not invent T7AMR or a row called AMR scrubbers. Empty here is the correct answer.
 
-### ECOVACS Commercial — PASS
+### ECOVACS Commercial. PASS
 
 https://www.ecovacscommercial.com/ · range cleaning
 
@@ -224,13 +224,13 @@ https://www.ecovacscommercial.com/ · range cleaning
 | DEEBOT PRO M1 | cleaning | hard_floor_scrub, mobile, surface_clean |
 | DEEBOT PRO K1 VAC | cleaning | hard_floor_scrub, mobile, surface_clean |
 
-### SEER Robotics — PASS (empty, honest; was BREAK)
+### SEER Robotics. PASS (empty, honest; was BREAK)
 
 https://seer-robotics.ai/ · range empty · 0 products
 
 First pass invented `Seer Humanoid` (company + morphology dump, class humanoid on a cleaning/AMR hub). That is gone. Empty is honest until a named cleaner SKU exists on the page.
 
-### Avidbots — PASS
+### Avidbots. PASS
 
 https://avidbots.com/ · range cleaning
 
@@ -240,7 +240,7 @@ https://avidbots.com/ · range cleaning
 | Neo 2W | cleaning | hard_floor_scrub, mobile, surface_clean |
 | Kas | cleaning | hard_floor_scrub, mobile, surface_clean |
 
-### Gausium — PASS (was BREAK)
+### Gausium. PASS (was BREAK)
 
 https://gausium.com/ · range cleaning
 
@@ -257,13 +257,13 @@ First pass listed generic `Scrubber` as a SKU. Named Scrubber 50 and Scrubber 75
 | Marvel | cleaning | hard_floor_scrub, mobile, surface_clean |
 | Omnie | cleaning | hard_floor_scrub, mobile, surface_clean |
 | PhanShop | cleaning | hard_floor_scrub, mobile, surface_clean |
-| CD-01 | unclassified | — |
-| CD-04 | unclassified | — |
-| WS-01 | unclassified | — |
-| WS-02 | unclassified | — |
-| WS-03 | unclassified | — |
+| CD-01 | unclassified | none |
+| CD-04 | unclassified | none |
+| WS-01 | unclassified | none |
+| WS-02 | unclassified | none |
+| WS-03 | unclassified | none |
 
-### PolarX Robotics — PASS
+### PolarX Robotics. PASS
 
 https://www.polarxrobotics.com/ · range cleaning
 
@@ -273,7 +273,7 @@ https://www.polarxrobotics.com/ · range cleaning
 | Star60 | cleaning | hard_floor_scrub, mobile, surface_clean |
 | Star40 | cleaning | hard_floor_scrub, mobile, surface_clean |
 
-### UBTECH — PASS
+### UBTECH. PASS
 
 https://www.ubtrobot.com/ · range humanoid
 
@@ -287,11 +287,11 @@ Walker is humanoid, not a serving robot. Cruzr has no class yet.
 | U1 Lite | humanoid | manipulate, mobile |
 | U1 Ultra | humanoid | manipulate, mobile |
 | UBTECH Walker S | humanoid | manipulate, mobile |
-| Cruzr | unclassified | — |
+| Cruzr | unclassified | none |
 | Walker | humanoid | manipulate, mobile |
 | Alpha 1E | humanoid | manipulate, mobile |
 
-### AgiBot — PASS
+### AgiBot. PASS
 
 https://www.agibot.com/ · range humanoid
 
@@ -304,7 +304,7 @@ https://www.agibot.com/ · range humanoid
 | X2 | humanoid | manipulate, mobile |
 | AGIBOT G1 | humanoid | manipulate, mobile |
 
-### MagicLab — PASS
+### MagicLab. PASS
 
 https://www.magiclab.top/ · range humanoid, quadruped
 
@@ -314,7 +314,7 @@ https://www.magiclab.top/ · range humanoid, quadruped
 | MagicBot X1 | humanoid | manipulate, mobile |
 | MagicDog | quadruped | inspect_route, mobile |
 
-### Deep Robotics — PASS
+### Deep Robotics. PASS
 
 https://www.deeprobotics.cn/ · range humanoid, quadruped
 
