@@ -24,6 +24,8 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 FLY_API = os.getenv("RFR_FLY_API", "https://ready-2-robot.fly.dev").rstrip("/")
 WORKSPACE = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "RobotJobsWorkspace.tsx"
 CRM_DESK = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "JobsCrmDesk.tsx"
