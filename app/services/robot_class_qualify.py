@@ -271,7 +271,7 @@ _QUADRUPED_MORPH = re.compile(
 )
 _DRONE_MORPH = re.compile(r"\b(drone|uav|unmanned aerial)\b", re.I)
 _CLEANING_DRONE_WORK = re.compile(
-    r"\b(clean\w*|wash\w*|facade\w*|window\w*|exterior\w*|soft[- ]wash|pressure[- ]wash)\b",
+    r"\b(cleaning|facade|soft[- ]wash|pressure[- ]wash)\b",
     re.I,
 )
 

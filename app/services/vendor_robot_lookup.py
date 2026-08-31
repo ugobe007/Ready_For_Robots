@@ -376,7 +376,7 @@ def _overlay_colliding_robot(robots: list[dict[str, Any]], robot: dict[str, Any]
         ex_class = str(existing.get("primary_class") or "").strip().lower()
         if inc_class and inc_class not in generic and ex_class in generic:
             existing["primary_class"] = robot.get("primary_class")
-        if inc_desc and (len(inc_desc) > len(ex_desc) or ex_class in generic):
+        if inc_desc and len(inc_desc) > len(ex_desc):
             existing["description"] = inc_desc
         inc_claims = robot.get("catalog_claims") if isinstance(robot.get("catalog_claims"), list) else []
         ex_claims = existing.get("catalog_claims") if isinstance(existing.get("catalog_claims"), list) else []
