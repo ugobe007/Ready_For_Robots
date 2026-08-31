@@ -2,11 +2,11 @@
 
 **Date:** 2026-08-31  
 **Branch:** `cursor/url-workflow-critic-009b` (PR #198)  
-**Verdict:** catalog corpus **19/19 PASS**, 0 breaks. Fixtures **6/6 PASS**.
+**Verdict:** catalog corpus **19/19 PASS**, 0 breaks. Fixtures **8/8 PASS**. Tennant 5 named robots. SEER 7 named robots. Empty is no longer a pass.
 
 This is the report. You do not need a terminal to read it.
 
-FIND identity was driven for every OEM in the operator list: product range, named products, per-product capabilities. Catalog path (indexed listing). Not a live scrape. Live Fly overlay was sampled earlier and still shows stale junk until this branch deploys.
+FIND identity was driven for every OEM in the operator list: product range, named products, per-product capabilities. Catalog path (indexed listing). Live Fly still shows stale junk until this branch deploys. Empty Tennant or SEER is now a critic break.
 
 Rule held: company → product → configuration → hardware → capabilities. Never company → category → jobs.
 
@@ -36,7 +36,7 @@ Rule held: company → product → configuration → hardware → capabilities. 
 | 18 | MagicLab | https://www.magiclab.top/ |
 | 19 | Deep Robotics | https://www.deeprobotics.cn/ |
 
-Fixtures (synthetic breaks, CI gate `url_workflow`): mixed-range flattened, chrome-as-SKU, cleaning-drone-as-scrubber, company-class-not-product-class, healthy mixed, healthy drone.
+Fixtures (synthetic breaks, CI gate `url_workflow`): mixed-range flattened, chrome-as-SKU, cleaning-drone-as-scrubber, company-class-not-product-class, empty known-OEM hub, class-dump SKU, healthy mixed, healthy drone.
 
 ## Scoreboard
 
@@ -51,9 +51,9 @@ Fixtures (synthetic breaks, CI gate `url_workflow`): mixed-range flattened, chro
 | Richtech | serving, cleaning | 11 | PASS | ADAM and Scotty serving, DUST-E MX cleaning. 8 thin SKUs |
 | CenoBots | cleaning | 5 | PASS | S5 and L-series |
 | Lucid Bots | cleaning_drone | 2 | PASS | Sherpa has `drone_task`, not floor-scrub |
-| Tennant | empty | 0 | PASS | Honest empty. No invented T7AMR / AMR scrubbers |
+| Tennant | cleaning | 5 | PASS | X6 ROVR, X16 SWEEP, T7AMR, T380AMR, T16AMR. Empty would now BREAK |
 | ECOVACS Commercial | cleaning | 2 | PASS | DEEBOT PRO M1 / K1 VAC |
-| SEER Robotics | empty | 0 | PASS | Honest empty. No invented Seer Humanoid |
+| SEER Robotics | amr | 7 | PASS | AMB / SFL / SCB named. SRC-880 thin. No Seer Humanoid |
 | Avidbots | cleaning | 3 | PASS | Neo, Neo 2W, Kas |
 | Gausium | cleaning | 14 | PASS | Named Scrubber 50/75 kept. Generic `Scrubber` gone. 5 thin SKUs |
 | PolarX Robotics | cleaning | 3 | PASS | Star50 / 60 / 40 |
@@ -209,11 +209,27 @@ First pass failed: Sherpa inherited OEM floor-scrub defaults and missed `drone_t
 | Sherpa Drone | cleaning_drone | avionics_task, drone_task, mobile |
 | Sherpa Drone NDAA | cleaning_drone | avionics_task, drone_task, mobile |
 
-### Tennant. PASS (empty, honest)
+### Tennant. PASS (was empty, now named robots)
 
-https://www.tennantco.com/en_us.html · range empty · 0 products
+https://www.tennantco.com/en_us.html · range cleaning · 5 products
 
-The listing did not give named robotic SKUs. FIND leaves the class picker empty. We did not invent T7AMR or a row called AMR scrubbers. Empty here is the correct answer.
+The hub used to pass with 0 products. That was the bug. Live robotics pages name these SKUs. We did not put back `AMR scrubbers` or a generic `Scrubber`. Ride-on T7 without AMR stays out.
+
+Evidence:
+- https://www.tennantco.com/en_us/robotics.html (X6 ROVR, X16 SWEEP)
+- https://www.tennantco.com/en_us/1/machines/scrubbers/product.x6-rovr.autonomous-floor-scrubber.m-x6rovr.html
+- https://www.tennantco.com/en_us/1/machines/sweepers/product.X16-sweep.autonomous-floor-sweeper.2000309.html
+- https://www.tennantco.com/en_us/1/machines/scrubbers/product.t7amr.robotic-floor-scrubber.2000056.html
+- https://www.tennantco.com/en_us/1/machines/scrubbers/product.t380amr.robotic-floor-scrubber.2000055.html
+- https://www.tennantco.com/en_us/1/machines/scrubbers/product.t16amr.industrial-robotic-floor-scrubber.2000054.html
+
+| Product | Class | Capabilities |
+|---------|-------|--------------|
+| X6 ROVR | cleaning | hard_floor_scrub, mobile, surface_clean |
+| X16 SWEEP | cleaning | hard_floor_scrub, mobile, surface_clean |
+| T7AMR | cleaning | hard_floor_scrub, mobile, surface_clean |
+| T380AMR | cleaning | hard_floor_scrub, mobile, surface_clean |
+| T16AMR | cleaning | hard_floor_scrub, mobile, surface_clean |
 
 ### ECOVACS Commercial. PASS
 
@@ -224,11 +240,28 @@ https://www.ecovacscommercial.com/ · range cleaning
 | DEEBOT PRO M1 | cleaning | hard_floor_scrub, mobile, surface_clean |
 | DEEBOT PRO K1 VAC | cleaning | hard_floor_scrub, mobile, surface_clean |
 
-### SEER Robotics. PASS (empty, honest; was BREAK)
+### SEER Robotics. PASS (was empty, now named robots)
 
-https://seer-robotics.ai/ · range empty · 0 products
+https://seer-robotics.ai/ · range amr · 7 products
 
-First pass invented `Seer Humanoid` (company + morphology dump, class humanoid on a cleaning/AMR hub). That is gone. Empty is honest until a named cleaner SKU exists on the page.
+`Seer Humanoid` stays out. It was a company+morphology dump. Live category pages name AMB lifting AMRs, SFL/SCB vehicles, and SRC-880 (controller, unclassified).
+
+Evidence:
+- https://seer-robotics.ai/amr/liftingrobot (AMB-300JZ, AMB-300XS, SJV-SW600)
+- https://seer-robotics.ai/amr/liftingrobot/AMB-300JZ
+- https://seer-robotics.ai/amr/autonomousforklifts (SFL-CBD15, SFL-300L, SCB-1400)
+- https://seer-robotics.ai/amr/autonomousforklifts/SFL-CBD15
+- https://seer-robotics.ai/amr-controllers/SRC-880
+
+| Product | Class | Capabilities |
+|---------|-------|--------------|
+| AMB-300JZ | amr | mobile, transport |
+| AMB-300XS | amr | mobile, transport |
+| SJV-SW600 | amr | mobile, transport |
+| SFL-CBD15 | amr | mobile, transport |
+| SFL-300L | amr | mobile, transport |
+| SCB-1400 | amr | mobile, transport |
+| SRC-880 | unclassified | none |
 
 ### Avidbots. PASS
 
@@ -353,19 +386,17 @@ Fixtures already catch the same classes of lie: flattening mixed lines to `servi
 
 | Gate | Result |
 |------|--------|
-| Fixtures | 6/6 PASS, exit 0 |
-| Catalog corpus | **19/19 PASS**, 0 breaks (re-run 2026-08-31 after sibling-class fix) |
-| Live sample (Lucidbots, Pudu, Tennant, SEER, Gausium) | critic ok after junk overlay. Fly still *returns* `AMR scrubbers` / `Seer Humanoid` / generic `Scrubber` until deploy |
-| pstack `url_workflow` | green locally |
+| Fixtures | 8/8 PASS, exit 0 (empty OEM hub and class-dump SKU now fail on purpose) |
+| Catalog corpus | **19/19 PASS**, 0 breaks. Tennant n=5, SEER n=7. Other 17 unchanged |
+| pstack `url_workflow` | fixture suite green locally |
+| Live Fly | still stale until this branch deploys. Critic notes junk SKUs and does not fail on them |
 
 ## Remaining gaps
 
-1. **Fly production listing is stale.** Production still serves the old junk SKUs. The critic notes them and does not fail. Deploy this branch (or the catalog slice in #197) before treating Fly as the source of truth.
-2. **Tennant and SEER stay empty.** That is honest. Do not invent T7AMR or Seer Humanoid to fill the picker.
-3. **Thin SKUs.** Named but unclassified, no capabilities: Keenon Peanut / M2 / S300 / S100; Pudu FlashBot / PUDUA1 / PUDUD1 / PUDUSH1; Bear Carti; Richtech MATRADEE family, LUCKI, MEDBOT, AIDY, Scorpion, Titan; Gausium CD/WS series; UBTECH Cruzr. They do not fail the critic. They also do not help matching.
-4. **Kärcher hub is KIRA only.** Correct for robotic cleaning. The rest of the Kärcher catalog is not robots.
+1. **Fly production listing is stale.** Production still serves `AMR scrubbers` / `Seer Humanoid` / generic `Scrubber`. Catalog on this branch is the source of truth until deploy.
+2. **Thin SKUs.** Named but unclassified, no capabilities: Keenon Peanut / M2 / S300 / S100; Pudu FlashBot / PUDUA1 / PUDUD1 / PUDUSH1; Bear Carti; Richtech MATRADEE family, LUCKI, MEDBOT, AIDY, Scorpion, Titan; Gausium CD/WS series; UBTECH Cruzr; SEER SRC-880. They do not fail the critic. They also do not help matching. They do not inherit a sibling class.
+3. **Kärcher hub is KIRA only.** Correct for robotic cleaning. The rest of the Kärcher catalog is not robots.
+4. **Tennant X16 SWEEP** is a sweeper. It still grounds `hard_floor_scrub` because the FIND class is cleaning. Fine for this critic. Not a second matcher.
 5. Do not merge #195.
 
-## How to re-run
-
-`python3 scripts/url_workflow_critic.py --fixtures && python3 scripts/url_workflow_critic.py`
+The human review doc is `missions/2026-08-31-url-workflow-critic/REVIEW.md`.
