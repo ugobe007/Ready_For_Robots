@@ -39,7 +39,8 @@ export type CriticGate = {
     | "oem_extract"
     | "class_picker"
     | "healthcare_class"
-    | "ontology_industry_language";
+    | "ontology_industry_language"
+    | "url_workflow";
   prove: string;
   fail: string;
 };
@@ -132,6 +133,11 @@ export const CRITIC_GATES: readonly CriticGate[] = [
     id: "ontology_industry_language",
     prove: "Industry work words live in the ontology and outrank humanoid morphology where R33 says so",
     fail: "hospital/hotel/mining/warehouse work words missing from ontology files",
+  },
+  {
+    id: "url_workflow",
+    prove: "FIND URL critic reports product range, named SKUs, and per-product capabilities",
+    fail: "mixed OEM flattened, chrome-as-SKU, cleaning-drone-as-scrubber, or company-class dump",
   },
 ] as const;
 

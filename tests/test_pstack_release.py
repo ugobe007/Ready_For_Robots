@@ -36,6 +36,7 @@ def test_local_release_skips_fly_drive():
     assert "healthcare_class" in critic_ids
     assert "healthcare_class:live" in critic_ids
     assert "ontology_industry_language" in critic_ids
+    assert "url_workflow" in critic_ids
     assert "find_drive" in critic_ids
 
 
@@ -118,6 +119,7 @@ def test_critic_skips_fly_on_scrape_pr_file_list(monkeypatch):
     assert ids["find_drive"]["ok"]
     assert ids["healthcare_class:live"]["ok"]
     assert ids["ontology_industry_language"]["ok"]
+    assert ids["url_workflow"]["ok"]
 
 
 def test_critic_gates_include_abort_and_leftover():
@@ -133,6 +135,7 @@ def test_critic_gates_include_abort_and_leftover():
         "class_picker",
         "healthcare_class",
         "ontology_industry_language",
+        "url_workflow",
     ]
 
 

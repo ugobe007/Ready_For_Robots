@@ -93,7 +93,19 @@ export const HEALTHCARE_CLASS_FIXTURE = {
   emptyCopy: "No healthcare jobs for this robot yet.",
   forbidClass: "humanoid",
   forbidEmpty: "No humanoid jobs for this robot yet.",
-    extraTiles: ["mining", "warehouse", "logistics", "factory", "hospitality", "food_prep", "serving", "cleaning"],
+  extraTiles: ["mining", "warehouse", "logistics", "factory", "hospitality", "food_prep", "serving", "cleaning"],
+} as const;
+
+export const URL_WORKFLOW_FIXTURE = {
+  id: "url_workflow",
+  command: "python3 scripts/url_workflow_critic.py --fixtures",
+  corpus: "app/data/url_workflow_corpus.json",
+  breaks: [
+    "mixed_range_flattened",
+    "chrome_as_sku",
+    "cleaning_drone_as_scrubber",
+    "company_class_not_product_class",
+  ],
 } as const;
 
 /** Critic fixture: Diligent/Moxi is healthcare, Healthcare tile exists, empty copy is not humanoid. */

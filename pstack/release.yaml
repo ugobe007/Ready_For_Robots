@@ -64,6 +64,9 @@ critic:
   - id: ontology_industry_language
     prove: Healthcare work words live in the ontology and outrank humanoid morphology
     fail: hospital/clinical/pharmacy work words missing from ontology files
+  - id: url_workflow
+    prove: FIND URL critic reports product range, named SKUs, and per-product capabilities
+    fail: mixed OEM flattened, chrome-as-SKU, cleaning-drone-as-scrubber, or company-class dump
   - id: find_drive
     prove: POST /api/robot-job-search for a real OEM URL does not return Research failed
 
