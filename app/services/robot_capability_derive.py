@@ -19,7 +19,7 @@ GROUNDED = frozenset({"explicit", "strongly_inferred"})
 MANIP_CLASSES = frozenset(
     {"mobile_manipulator", "humanoid", "cobot", "manipulator", "arm"}
 )
-SCRUB_CLASSES = frozenset({"autonomous_scrubber", "scrubber"})
+SCRUB_CLASSES = frozenset({"autonomous_scrubber", "scrubber", "cleaning"})
 TRANSPORT_CLASSES = frozenset({"amr"})
 INSPECT_CLASSES = frozenset({"quadruped"})
 AGRICULTURE_CLASSES = frozenset({"agriculture", "agricultural_robot", "farm_robot"})
@@ -53,6 +53,8 @@ HOSPITALITY_CLASSES = frozenset(
     {"hospitality", "hospitality_robot", "hotel_robot"}
 )
 FOOD_PREP_CLASSES = frozenset({"food_prep"})
+SERVING_CLASSES = frozenset({"serving"})
+CLEANING_CLASSES = frozenset({"cleaning"})
 # FIND-tile unions. Named SKUs use agricultural_robot / construction_robot plus
 # a work-kind claim — never company → category → jobs.
 GENERIC_AGRICULTURE_CLASSES = frozenset({"agriculture"})
@@ -70,6 +72,8 @@ DOMAIN_WORK_CLASSES = (
     | FACTORY_CLASSES
     | HOSPITALITY_CLASSES
     | FOOD_PREP_CLASSES
+    | SERVING_CLASSES
+    | CLEANING_CLASSES
 )
 # Hospital / clinical assistant work — ontology work language, not a torso class.
 # SKU names are not the source; hospital/clinical terms live in the ontology.
@@ -449,15 +453,35 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
 
     # Surface / restroom cleaning (fixtures, restrooms, carpet/vacuum) — broader
     # than hard-floor scrubbing, which stays its own capability.
+    # FIND class cleaning covers both; Floor scrubber form-factor stays scrub-only.
     surface_clean = _truthy(facts, "claims_surface_cleaning")
-    caps["surface_clean"] = DerivedCapability(
-        key="surface_clean",
-        label="surface / restroom cleaning",
-        present=bool(surface_clean),
-        derivation="explicit",
-        derived_from=["claims_surface_cleaning"],
-        evidence=(surface_clean or {}).get("evidence_span") if surface_clean else None,
-    )
+    cleaning_class = next((c for c in classes if c in CLEANING_CLASSES), None)
+    if surface_clean:
+        caps["surface_clean"] = DerivedCapability(
+            key="surface_clean",
+            label="surface / restroom cleaning",
+            present=True,
+            derivation="explicit",
+            derived_from=["claims_surface_cleaning"],
+            evidence=(surface_clean or {}).get("evidence_span") if surface_clean else None,
+        )
+    elif cleaning_class:
+        caps["surface_clean"] = DerivedCapability(
+            key="surface_clean",
+            label="surface / restroom cleaning",
+            present=True,
+            derivation="inferred",
+            derived_from=["product_class"],
+            evidence=f"{cleaning_class} class",
+        )
+    else:
+        caps["surface_clean"] = DerivedCapability(
+            key="surface_clean",
+            label="surface / restroom cleaning",
+            present=False,
+            derivation="explicit",
+            derived_from=["claims_surface_cleaning", "product_class"],
+        )
 
     # Retail shelf / inventory scanning (autonomous inventory robots, e.g. Simbe
     # Tally). A distinct perception capability — scan, not manipulate/transport.
@@ -487,7 +511,8 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
         ("warehouse_task", "claims_warehouse", "warehouse / fulfillment work", WAREHOUSE_CLASSES),
         ("logistics_task", "claims_logistics", "3PL / cross-dock / sortation work", LOGISTICS_CLASSES),
         ("factory_task", "claims_factory", "factory / plant machine-tend work", FACTORY_CLASSES),
-        ("hospitality_task", "claims_hospitality", "hotel / guest / serving work", HOSPITALITY_CLASSES),
+        ("hospitality_task", "claims_hospitality", "hotel / guest / housekeeping work", HOSPITALITY_CLASSES),
+        ("serving_task", "claims_serving", "table / drink / bussing service", SERVING_CLASSES),
         ("marine_task", "claims_marine", "hull / port / underwater work", MARINE_CLASSES),
         ("avionics_task", "claims_avionics", "drone / eVTOL / autonomous aircraft work", AVIONICS_CLASSES),
         ("aerospace_task", "claims_aerospace", "satellite / orbital / space-robot work", AEROSPACE_CLASSES),

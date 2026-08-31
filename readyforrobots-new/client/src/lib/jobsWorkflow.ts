@@ -103,8 +103,6 @@ const ROBOT_CLASS_ALIASES: Record<string, string> = {
   hospitality_robot: "hospitality",
   hotel: "hospitality",
   hotel_robot: "hospitality",
-  serving: "hospitality",
-  table_service: "hospitality",
   guest_delivery: "hospitality",
   food_prep: "food_prep",
   qsr: "food_prep",
@@ -112,6 +110,15 @@ const ROBOT_CLASS_ALIASES: Record<string, string> = {
   kitchen_automation: "food_prep",
   make_line: "food_prep",
   bowl_assembly: "food_prep",
+  serving: "serving",
+  table_service: "serving",
+  food_running: "serving",
+  waitstaff: "serving",
+  food_delivery_amr: "serving",
+  cleaning: "cleaning",
+  janitorial: "cleaning",
+  custodial: "cleaning",
+  cleaning_robot: "cleaning",
 };
 
 const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
@@ -142,6 +149,8 @@ const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
   hospitality: "hospitality robots",
   hotel: "hospitality robots",
   food_prep: "food prep robots",
+  serving: "serving robots",
+  cleaning: "cleaning robots",
 };
 
 const ROBOT_CLASS_TITLE: Record<string, string> = {
@@ -172,6 +181,8 @@ const ROBOT_CLASS_TITLE: Record<string, string> = {
   hospitality: "Hospitality",
   hotel: "Hospitality",
   food_prep: "Food prep",
+  serving: "Serving",
+  cleaning: "Cleaning",
 };
 
 /** Operator-picked FIND tiles. A Joby/Carbon URL is a configuration, not a tile. */
@@ -194,6 +205,8 @@ export const FIND_TILE_CLASSES = new Set([
   "factory",
   "hospitality",
   "food_prep",
+  "serving",
+  "cleaning",
 ]);
 
 /** SKU configuration for FIND lookup. Named SKU classes stay themselves — not the parent tile. */

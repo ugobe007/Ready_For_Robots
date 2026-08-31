@@ -42,7 +42,7 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   `manipulate` when no stronger hardware fact already did, and never overrides a
   sibling-SKU/off-subject gate.
 - **R5 ✅** **Food prep** (`claims_food_prep`) → `food_prep` FIND class (QSR make-line / bowl assembly / grill — not hotel housekeeping); **beverage prep**
-  (`claims_beverage_prep`) → `beverage_prep`. These are **distinct** from generic
+  (`claims_beverage_prep`) → `beverage_prep`; **serving** (`claims_serving`) → `serving` FIND class (table / drink / bussing / restaurant food-delivery AMR — not housekeeping); **cleaning** (`claims_surface_cleaning` + hard-floor scrub) → `cleaning` FIND class (floor / vacuum / restroom in F&B and public venues — not hospital EVS). These are **distinct** from generic
   `manipulate` so a fry/barista robot maps to food/beverage work and does **not**
   match industrial CNC/case jobs.
 
@@ -76,10 +76,12 @@ derivation** (see below) and can only produce a `LIKELY` match — never `MATCHE
   hardware → work-language / task-model → morphology. When hospital /
   clinical / pharmacy / nursing / patient / OR / med-surg / linen /
   unit-delivery, **or hotel / guest-room / bellhop / room-service**
-  (or another industry row with `outranks_morphology`) fires
+  (  or another industry row with `outranks_morphology`) fires
   **and** generic humanoid morphology also fires, the configuration class is
   the work-language class. A social torso, face, or arm does not override
-  hospital or hotel delivery work. Warehouse, factory, and logistics verticals
+  hospital, hotel delivery, restaurant serving, or floor-cleaning work.
+  Infer **per product**: a BellaBot-style waiter is serving; a CC1-style
+  scrubber is cleaning — never company → category. Warehouse, factory, and logistics verticals
   do **not** outrank a true humanoid (Figure/Agility-style warehouse labor
   stays humanoid).
   Vocabulary lives in the ontology, not a FIND-only word list.

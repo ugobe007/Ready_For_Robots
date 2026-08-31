@@ -367,6 +367,29 @@ def _overlay_colliding_robot(robots: list[dict[str, Any]], robot: dict[str, Any]
         better = prefer_product_url(robot.get("product_url"), existing.get("product_url"))
         if better and better != (existing.get("product_url") or ""):
             existing["product_url"] = better
+        # Commercial seed often has specs + a thin class claim. OEM/SKU seed
+        # has the public product blurb. Keep both — never drop named work copy.
+        inc_desc = str(robot.get("description") or "").strip()
+        ex_desc = str(existing.get("description") or "").strip()
+        if inc_desc and len(inc_desc) > len(ex_desc):
+            existing["description"] = inc_desc
+        inc_claims = robot.get("catalog_claims") if isinstance(robot.get("catalog_claims"), list) else []
+        ex_claims = existing.get("catalog_claims") if isinstance(existing.get("catalog_claims"), list) else []
+        if inc_claims:
+            seen_spans = {
+                str((c or {}).get("evidence_span") or "")
+                for c in ex_claims
+                if isinstance(c, dict)
+            }
+            merged = list(ex_claims)
+            for claim in inc_claims:
+                if not isinstance(claim, dict):
+                    continue
+                span = str(claim.get("evidence_span") or "")
+                if span and span not in seen_spans:
+                    merged.append(claim)
+                    seen_spans.add(span)
+            existing["catalog_claims"] = merged
         return True
     return False
 
@@ -793,6 +816,64 @@ def catalog_claim_facts(robot: dict[str, Any] | None) -> list[dict[str, Any]]:
                 "evidence_span": span,
             }
         )
+    from app.services.robot_class_qualify import (
+        GENERIC_CATEGORY_CLASSES,
+        prefer_work_language_class,
+    )
+
+    evidence = " ".join(
+        x
+        for x in (
+            str(robot.get("name") or ""),
+            str(robot.get("description") or ""),
+            str(robot.get("task") or ""),
+            str(robot.get("setting") or ""),
+            *(
+                str((c or {}).get("evidence_span") or "")
+                for c in (robot.get("catalog_claims") or [])
+                if isinstance(c, dict)
+            ),
+        )
+        if x
+    )
+    work = prefer_work_language_class(evidence, primary)
+    if work and work not in GENERIC_CATEGORY_CLASSES:
+        replaced = False
+        for fact in out:
+            if fact.get("predicate") != "product_class":
+                continue
+            current = str(fact.get("value") or "").strip().lower()
+            if current in GENERIC_CATEGORY_CLASSES or not current:
+                fact["value"] = work
+                if evidence:
+                    fact["evidence_span"] = evidence[:180]
+                replaced = True
+        if not replaced:
+            out.append(
+                {
+                    "predicate": "product_class",
+                    "value": work,
+                    "units": None,
+                    "epistemic": "explicit",
+                    "evidence_span": evidence[:180],
+                }
+            )
+            seen.add("product_class")
+        claim_pred = "claims_serving" if work == "serving" else (
+            "claims_surface_cleaning" if work == "cleaning" else None
+        )
+        if claim_pred and claim_pred not in seen:
+            seen.add(claim_pred)
+            out.append(
+                {
+                    "predicate": claim_pred,
+                    "value": True,
+                    "units": None,
+                    "epistemic": "explicit",
+                    "evidence_span": evidence[:180],
+                }
+            )
+
     slim = slim_specs(robot.get("specs") if isinstance(robot.get("specs"), dict) else {})
     for spec_key, (predicate, units) in _CHECKLIST_SPEC_FACT.items():
         if spec_key not in slim or predicate in seen:

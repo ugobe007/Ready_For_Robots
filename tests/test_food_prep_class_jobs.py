@@ -47,7 +47,9 @@ def test_food_prep_is_its_own_find_tile():
     ids = [row["id"] for row in public_class_options()]
     assert "food_prep" in FIND_TILE_CLASSES
     assert "food_prep" in ids
-    assert ids[-1] == "food_prep"
+    assert "serving" in ids
+    assert "cleaning" in ids
+    assert ids[-1] == "cleaning"
     assert normalize_class_id("food_prep") == "food_prep"
     assert normalize_class_id("qsr") == "food_prep"
     assert normalize_class_id("hotel") == "hospitality"
