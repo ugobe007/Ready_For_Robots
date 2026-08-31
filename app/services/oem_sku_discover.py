@@ -122,9 +122,17 @@ _LISTING_HINTS = {
         "/en/products/tron1",
         "/en/products/tron2",
     ),
-    "galbot.com": ("/", "/en"),
-    "noetixrobotics.com": ("/", "/en"),
-    "primebot.cn": ("/",),
+    "galbot.com": ("/", "/en", "/g1", "/s1"),
+    "noetixrobotics.com": (
+        "/",
+        "/en",
+        "/en/detail/Bumi",
+        "/en/detail/N2",
+        "/en/detail/E1",
+    ),
+    "primebot.cn": ("/", "/product/en"),
+    "thirdwave.ai": ("/", "/armada-case-study"),
+    "dexory.com": ("/", "/solutions"),
 }
 _NAV_PATH = re.compile(
     r"/(about|careers?|contact|news|blog|press|support|login|privacy|legal|"
@@ -243,6 +251,14 @@ _KNOWN_SKU_WORDS = frozenset(
         "flippy",
         "par",
         "rosa",
+        "panther",
+        "martian",
+        "bumi",
+        "luna",
+        "oli",
+        "lud",
+        "thirdwavereachtrucks",
+        "dexoryview",
     }
 )
 
@@ -316,7 +332,6 @@ _CHROME_LABELS = frozenset(
         "zh",
         "english",
         "chinese",
-        "dexoryview",
         "powered by ai",
         "why dexory",
         "wheeled",

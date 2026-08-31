@@ -331,15 +331,15 @@ def test_more_oems_named_robots_from_page_evidence():
     lumos = {r["name"]: r.get("display_class") for r in payload_by["https://lumosbot.tech"]["robots"]}
     assert lumos["Lumos LUS 2"] == "humanoid"
     assert lumos["Lumos NIX S3"] == "humanoid"
-    assert lumos.get("Lumos MOS 2") is None, lumos
+    assert lumos["Lumos MOS 2"] == "mobile_manipulator"
     assert lumos.get("Lumos LUD") is None, lumos
     assert "Lumos Motor" not in lumos
     galbot = {r["name"]: r.get("display_class") for r in payload_by["https://galbot.com"]["robots"]}
     assert "Galbot G1" in galbot
     assert "Galbot S1" in galbot
     assert "Galbot G2" not in galbot
-    assert galbot.get("Galbot G1") is None, galbot
-    assert galbot.get("Galbot S1") is None, galbot
+    assert galbot["Galbot G1"] == "mobile_manipulator"
+    assert galbot["Galbot S1"] == "mobile_manipulator"
     unix = {r["name"]: r.get("display_class") for r in payload_by["https://unix-group.ai"]["robots"]}
     assert unix["Wanda 2.0"] == "humanoid"
     assert unix["Panther"] == "humanoid"
@@ -356,14 +356,16 @@ def test_more_oems_named_robots_from_page_evidence():
     assert limx["Luna"] == "humanoid"
     assert limx["Oli"] == "humanoid"
     assert limx["TRON 1"] == "humanoid"
-    assert limx.get("TRON 2") is None, limx
-    empty = listing_payload_for_url("https://thirdwave.ai")
-    names = [r["name"] for r in empty.get("robots") or []]
-    assert "TWA Reach" not in names
+    assert limx["TRON 2"] == "mobile_manipulator"
+    third = listing_payload_for_url("https://thirdwave.ai")
+    third_by = {r["name"]: r.get("display_class") for r in third.get("robots") or []}
+    assert third_by["Third Wave Reach Trucks"] == "amr"
+    assert "TWA Reach" not in third_by
     dexory = listing_payload_for_url("https://dexory.com")
-    dnames = [r["name"] for r in dexory.get("robots") or []]
-    assert "DexoryView" not in dnames
-    assert "Powered by AI" not in dnames
+    dby = {r["name"]: r.get("display_class") for r in dexory.get("robots") or []}
+    assert "DexoryView" in dby
+    assert dby.get("DexoryView") is None, dby
+    assert "Powered by AI" not in dby
 
 
 def test_more_oem_product_hrefs():

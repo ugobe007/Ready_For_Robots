@@ -8,10 +8,11 @@
     "Quote required is not a spec.",
     "product_url / lookup_host are set only after a live fetch verifies the page.",
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
-    "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
+    "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers.",
+    "2026-08-31 more OEMs: booster.tech, lumosbot.tech, galbot.com, unix-group.ai, noetixrobotics.com, thirdwave.ai, dexory.com, primebot.cn, limxdynamics.com. Named products from live pages or product JS only. Thin pages stay unclassified. DexoryView is the named product; public pages do not name the robots. Third Wave Reach Trucks is named on the Armada case study, not TWA Reach."
   ],
-  "vendor_count": 129,
-  "robot_count": 326,
+  "vendor_count": 131,
+  "robot_count": 328,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -9274,18 +9275,18 @@
           "model_slug": "lumos-robotics-lumos-mos-2",
           "product_url": "https://www.lumosbot.tech/products/mos",
           "vendor_url": "https://lumosbot.tech",
-          "primary_class": "service_robot",
+          "primary_class": "mobile_manipulator",
           "status": "available",
           "country": null,
-          "description": "Lumos MOS 2: Wheeled manipulation robot for industrial handling and inspection.",
+          "description": "Lumos MOS 2: Wheeled mobile manipulation for industrial handling and inspection.",
           "lookup_host": "lumosbot.tech",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "Lumos MOS 2: Wheeled manipulation robot for industrial handling and inspection."
+              "value": "mobile_manipulator",
+              "evidence_span": "Lumos MOS 2: Wheeled mobile manipulation for industrial handling and inspection."
             }
           ],
           "specs": {},
@@ -9328,20 +9329,20 @@
         {
           "name": "Galbot G1",
           "model_slug": "galbot-galbot-g1",
-          "product_url": "https://www.galbot.com/",
+          "product_url": "https://www.galbot.com/g1",
           "vendor_url": "https://galbot.com",
-          "primary_class": "service_robot",
+          "primary_class": "mobile_manipulator",
           "status": "available",
           "country": null,
-          "description": "Galbot G1: Embodied AI robot powered by large models.",
+          "description": "Galbot G1: Mobile dual-arm robot with generalizable manipulation.",
           "lookup_host": "galbot.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "Galbot G1: Embodied AI robot powered by large models."
+              "value": "mobile_manipulator",
+              "evidence_span": "Galbot G1: Mobile dual-arm robot with generalizable manipulation."
             }
           ],
           "specs": {},
@@ -9351,20 +9352,20 @@
         {
           "name": "Galbot S1",
           "model_slug": "galbot-galbot-s1",
-          "product_url": "https://www.galbot.com/",
+          "product_url": "https://www.galbot.com/s1",
           "vendor_url": "https://galbot.com",
-          "primary_class": "service_robot",
+          "primary_class": "mobile_manipulator",
           "status": "available",
           "country": null,
-          "description": "Galbot S1: Heavy-duty robot.",
+          "description": "Galbot S1: Heavy-duty dual-arm handling, 50kg payload.",
           "lookup_host": "galbot.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "Galbot S1: Heavy-duty robot."
+              "value": "mobile_manipulator",
+              "evidence_span": "Galbot S1: Heavy-duty dual-arm handling, 50kg payload."
             }
           ],
           "specs": {},
@@ -9463,7 +9464,7 @@
         {
           "name": "Bumi",
           "model_slug": "noetix-robotics-bumi",
-          "product_url": "https://www.noetixrobotics.com/en",
+          "product_url": "https://www.noetixrobotics.com/en/detail/Bumi",
           "vendor_url": "https://noetixrobotics.com",
           "primary_class": "humanoid",
           "status": "available",
@@ -9486,7 +9487,7 @@
         {
           "name": "N2",
           "model_slug": "noetix-robotics-n2",
-          "product_url": "https://www.noetixrobotics.com/en",
+          "product_url": "https://www.noetixrobotics.com/en/detail/N2",
           "vendor_url": "https://noetixrobotics.com",
           "primary_class": "humanoid",
           "status": "available",
@@ -9509,7 +9510,7 @@
         {
           "name": "E1",
           "model_slug": "noetix-robotics-e1",
-          "product_url": "https://www.noetixrobotics.com/en",
+          "product_url": "https://www.noetixrobotics.com/en/detail/E1",
           "vendor_url": "https://noetixrobotics.com",
           "primary_class": "humanoid",
           "status": "available",
@@ -9542,12 +9543,12 @@
         {
           "name": "Q1",
           "model_slug": "primebot-q1",
-          "product_url": "https://www.primebot.cn/",
+          "product_url": "https://www.primebot.cn/product/en",
           "vendor_url": "https://primebot.cn",
           "primary_class": "humanoid",
           "status": "available",
           "country": null,
-          "description": "Q1: Qiyuan Q1 humanoid robot.",
+          "description": "Q1: PrimeBOT Q1 full-body force-controlled humanoid robot.",
           "lookup_host": "primebot.cn",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
@@ -9555,7 +9556,7 @@
             {
               "predicate": "product_class",
               "value": "humanoid",
-              "evidence_span": "Q1: Qiyuan Q1 humanoid robot."
+              "evidence_span": "Q1: PrimeBOT Q1 full-body force-controlled humanoid robot."
             }
           ],
           "specs": {},
@@ -9646,18 +9647,84 @@
           "model_slug": "limx-dynamics-tron-2",
           "product_url": "https://www.limxdynamics.com/en/products/tron2",
           "vendor_url": "https://limxdynamics.com",
-          "primary_class": "service_robot",
+          "primary_class": "mobile_manipulator",
           "status": "available",
           "country": null,
-          "description": "TRON 2: Multi-form embodied robot with dual arms and wheeled legs.",
+          "description": "TRON 2: Dual arms and wheeled legs. Multi-form embodied robot.",
           "lookup_host": "limxdynamics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
+              "value": "mobile_manipulator",
+              "evidence_span": "TRON 2: Dual arms and wheeled legs. Multi-form embodied robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Third Wave Automation",
+      "domains": [
+        "thirdwave.ai"
+      ],
+      "vendor_url": "https://thirdwave.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Third Wave Reach Trucks",
+          "model_slug": "third-wave-automation-third-wave-reach-trucks",
+          "product_url": "https://thirdwave.ai/armada-case-study/",
+          "vendor_url": "https://thirdwave.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "Third Wave Reach Trucks: Autonomous reach truck with shared autonomy.",
+          "lookup_host": "thirdwave.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Third Wave Reach Trucks: Autonomous reach truck with shared autonomy."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Dexory",
+      "domains": [
+        "dexory.com"
+      ],
+      "vendor_url": "https://dexory.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "DexoryView",
+          "model_slug": "dexory-dexoryview",
+          "product_url": "https://www.dexory.com/solutions",
+          "vendor_url": "https://dexory.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "",
+          "lookup_host": "dexory.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
               "value": "service_robot",
-              "evidence_span": "TRON 2: Multi-form embodied robot with dual arms and wheeled legs."
+              "evidence_span": "DexoryView indexed class service_robot."
             }
           ],
           "specs": {},
