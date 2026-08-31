@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-31T14:51:57+00:00",
+  "generated_at": "2026-08-31T14:55:00+00:00",
   "source": "docs/reference/readyforrobots_companies_and_robots.xlsx",
   "list_category": "oem_sku",
   "notes": [
@@ -11,7 +11,7 @@
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
   "vendor_count": 119,
-  "robot_count": 291,
+  "robot_count": 292,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -849,7 +849,7 @@
           "model_slug": "diligent-robotics-moxi",
           "product_url": "https://www.diligentrobots.com/moxi",
           "vendor_url": "https://diligentrobots.com",
-          "primary_class": "service_robot",
+          "primary_class": "healthcare",
           "status": "available",
           "country": "United States",
           "description": "Moxi: Supplies, samples, PPE, medications. Hospitals.",
@@ -859,7 +859,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "healthcare",
               "evidence_span": "Moxi: Supplies, samples, PPE, medications. Hospitals."
             }
           ],
@@ -3366,6 +3366,29 @@
               "predicate": "product_class",
               "value": "cleaning",
               "evidence_span": "PUDU T300: Commercial floor cleaning. Public · commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "PuduBot 2",
+          "model_slug": "pudu-robotics-pudubot-2",
+          "product_url": "https://www.pudurobotics.com/product/pudubot2",
+          "vendor_url": "https://pudurobotics.com",
+          "primary_class": "serving",
+          "status": "available",
+          "country": null,
+          "description": "PuduBot 2: Food and beverage delivery. Restaurants.",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "serving",
+              "evidence_span": "PuduBot 2: Food and beverage delivery. Restaurants."
             }
           ],
           "specs": {},

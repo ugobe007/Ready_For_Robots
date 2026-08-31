@@ -1,7 +1,7 @@
 {
   "ontology_id": "oem_sku_catalog_v1",
   "version": "1.1.0",
-  "generated_at": "2026-08-31T14:51:57+00:00",
+  "generated_at": "2026-08-31T14:55:00+00:00",
   "source": "docs/reference/readyforrobots_companies_and_robots.xlsx",
   "rule": "COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES",
   "notes": [
@@ -13,7 +13,7 @@
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
   "company_count": 119,
-  "product_count": 291,
+  "product_count": 292,
   "skipped": [],
   "companies": [
     {
@@ -4007,6 +4007,23 @@
           "capability_confidence": "UNKNOWN",
           "flags": [],
           "source": "workbook"
+        },
+        {
+          "name": "PuduBot 2",
+          "slug": "pudu-robotics-pudubot-2",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Food and beverage delivery",
+          "setting": "Restaurants",
+          "lookup_host": "pudurobotics.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.pudurobotics.com/product/pudubot2",
+          "url_status": "verified"
         },
         {
           "name": "D9",

@@ -74,6 +74,7 @@ def test_pudu_hub_range_is_serving_cleaning_and_humanoid():
     assert payload["matched"] is True
     by = {r["name"]: r.get("display_class") for r in payload["robots"]}
     assert by["BellaBot"] == "serving"
+    assert by.get("PuduBot 2") == "serving", by
     assert by["CC1"] == "cleaning"
     assert by["D9"] == "humanoid"
     assert by["BellaBot"] != by["CC1"]
@@ -89,6 +90,7 @@ def test_keenon_waiter_vs_cleaner():
     by = _by_class("https://www.keenon.com/")
     assert by.get("Dinerbot T5") == "serving", by
     assert by.get("T11") == "serving", by
+    assert by.get("T8") == "serving" or by.get("Keenon T8") == "serving", by
     assert by.get("Keenon C30") == "cleaning", by
     assert by.get("C55") == "cleaning", by
     rng = set(product_range_classes(listing_from_catalog(lookup_vendor_by_url("https://www.keenon.com/"))))
@@ -250,6 +252,10 @@ def test_tennant_and_seer_do_not_invent_cleaner_skus():
     names = [p["name"] for c in data["companies"] for p in c["products"]]
     assert "T7AMR" not in names
     assert "AMR scrubbers" not in names
+    tennant = listing_payload_for_url("https://www.tennantco.com/en_us.html")
+    tennant_names = [r["name"] for r in tennant.get("robots") or []]
+    assert "AMR scrubbers" not in tennant_names
+    assert "T7AMR" not in tennant_names
 
 
 def test_discovered_sku_does_not_inherit_sibling_class():
