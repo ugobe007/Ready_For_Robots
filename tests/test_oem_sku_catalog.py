@@ -62,6 +62,8 @@ def test_class_map_is_descriptor_only():
     assert map_primary_class("Manufacturing", "Collaborative robot") == "cobot"
     assert map_primary_class("Logistics", "AMR") == "amr"
     assert map_primary_class("Service", "Inspection robot") == "quadruped"
+    assert map_primary_class("Commercial", "Bipedal service") == "humanoid"
+    assert map_primary_class("Commercial", "Table service waiter") == "serving"
 
 
 def test_seed_has_no_invented_claims_or_stretch_spot_url():

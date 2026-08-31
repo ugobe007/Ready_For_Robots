@@ -836,7 +836,7 @@ def catalog_claim_facts(robot: dict[str, Any] | None) -> list[dict[str, Any]]:
         )
         if x
     )
-    work = prefer_work_language_class(evidence, primary)
+    work = prefer_work_language_class(evidence, primary, name=str(robot.get("name") or ""))
     if work and work not in GENERIC_CATEGORY_CLASSES:
         replaced = False
         for fact in out:

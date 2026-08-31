@@ -1370,6 +1370,17 @@ describe("jobsWorkflow", () => {
         ],
       },
     ]);
+    const puduLookups = lineupJobLookups([
+      { name: "BellaBot", displayClass: "serving" },
+      { name: "CC1", displayClass: "cleaning" },
+      { name: "D9", displayClass: "humanoid" },
+    ]);
+    expect(puduLookups.map(row => row.robotClass).sort()).toEqual([
+      "cleaning",
+      "humanoid",
+      "serving",
+    ]);
+    expect(puduLookups.every(row => row.grain === "product")).toBe(true);
     const mixed = lineupJobLookups([
       { name: "Atlas", displayClass: "humanoid" },
       { name: "Spot", displayClass: "quadruped" },

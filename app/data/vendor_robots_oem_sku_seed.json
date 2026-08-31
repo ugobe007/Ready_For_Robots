@@ -10,8 +10,8 @@
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
-  "vendor_count": 108,
-  "robot_count": 241,
+  "vendor_count": 111,
+  "robot_count": 249,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -1725,7 +1725,7 @@
           "model_slug": "keenon-robotics-dinerbot-t10",
           "product_url": "https://www.keenon.com/en/news/k2",
           "vendor_url": "https://keenon.com",
-          "primary_class": "service_robot",
+          "primary_class": "serving",
           "status": "available",
           "country": "China / Global",
           "description": "Dinerbot T10: Food and beverage service. Restaurants · hotels.",
@@ -1735,7 +1735,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "serving",
               "evidence_span": "Dinerbot T10: Food and beverage service. Restaurants · hotels."
             }
           ],
@@ -1748,7 +1748,7 @@
           "model_slug": "keenon-robotics-dinerbot-t5",
           "product_url": null,
           "vendor_url": "https://keenon.com",
-          "primary_class": "service_robot",
+          "primary_class": "serving",
           "status": "available",
           "country": "China / Global",
           "description": "Dinerbot T5: Table delivery and reception. Restaurants.",
@@ -1758,7 +1758,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "serving",
               "evidence_span": "Dinerbot T5: Table delivery and reception. Restaurants."
             }
           ],
@@ -1771,7 +1771,7 @@
           "model_slug": "keenon-robotics-butlerbot-w3",
           "product_url": "https://www.keenon.com/",
           "vendor_url": "https://keenon.com",
-          "primary_class": "service_robot",
+          "primary_class": "hospitality",
           "status": "available",
           "country": "China / Global",
           "description": "Butlerbot W3: Hotel room-service delivery. Hotels.",
@@ -1781,7 +1781,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "hospitality",
               "evidence_span": "Butlerbot W3: Hotel room-service delivery. Hotels."
             }
           ],
@@ -1794,7 +1794,7 @@
           "model_slug": "keenon-robotics-keenon-c30",
           "product_url": null,
           "vendor_url": "https://keenon.com",
-          "primary_class": "service_robot",
+          "primary_class": "cleaning",
           "status": "available",
           "country": "China / Global",
           "description": "Keenon C30: Commercial cleaning. Public buildings.",
@@ -1804,7 +1804,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "cleaning",
               "evidence_span": "Keenon C30: Commercial cleaning. Public buildings."
             }
           ],
@@ -1840,18 +1840,18 @@
           "model_slug": "keenon-robotics-c55",
           "product_url": "https://www.keenon.com/en/product/C55",
           "vendor_url": "https://keenon.com",
-          "primary_class": "service_robot",
+          "primary_class": "cleaning",
           "status": "available",
           "country": "China / Global",
-          "description": "",
+          "description": "C55: Integrated sweeping and washing on commercial floors. Medium to large public floors.",
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "C55 indexed class service_robot."
+              "value": "cleaning",
+              "evidence_span": "C55: Integrated sweeping and washing on commercial floors. Medium to large public floors."
             }
           ],
           "specs": {},
@@ -1863,18 +1863,18 @@
           "model_slug": "keenon-robotics-c40",
           "product_url": "https://www.keenon.com/en/product/C40",
           "vendor_url": "https://keenon.com",
-          "primary_class": "service_robot",
+          "primary_class": "cleaning",
           "status": "available",
           "country": "China / Global",
-          "description": "",
+          "description": "C40: 4-in-1 robot floor cleaner. Commercial floors.",
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "C40 indexed class service_robot."
+              "value": "cleaning",
+              "evidence_span": "C40: 4-in-1 robot floor cleaner. Commercial floors."
             }
           ],
           "specs": {},
@@ -1886,18 +1886,18 @@
           "model_slug": "keenon-robotics-c20",
           "product_url": "https://www.keenon.com/en/product/C20",
           "vendor_url": "https://keenon.com",
-          "primary_class": "service_robot",
+          "primary_class": "cleaning",
           "status": "available",
           "country": "China / Global",
-          "description": "",
+          "description": "C20: Compact robot floor cleaner for small spaces. Small commercial floors.",
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "C20 indexed class service_robot."
+              "value": "cleaning",
+              "evidence_span": "C20: Compact robot floor cleaner for small spaces. Small commercial floors."
             }
           ],
           "specs": {},
@@ -1909,18 +1909,18 @@
           "model_slug": "keenon-robotics-t11",
           "product_url": "https://www.keenon.com/en/product/T11",
           "vendor_url": "https://keenon.com",
-          "primary_class": "service_robot",
+          "primary_class": "serving",
           "status": "available",
           "country": "China / Global",
-          "description": "",
+          "description": "T11: Narrow-aisle catering delivery. Restaurants.",
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "T11 indexed class service_robot."
+              "value": "serving",
+              "evidence_span": "T11: Narrow-aisle catering delivery. Restaurants."
             }
           ],
           "specs": {},
@@ -2986,7 +2986,7 @@
           "model_slug": "pudu-robotics-bellabot",
           "product_url": "https://www.pudurobotics.com/en",
           "vendor_url": "https://pudurobotics.com",
-          "primary_class": "service_robot",
+          "primary_class": "serving",
           "status": "available",
           "country": "China / Global",
           "description": "BellaBot: Tray delivery and guest interaction. Restaurants · hotels.",
@@ -2996,7 +2996,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "serving",
               "evidence_span": "BellaBot: Tray delivery and guest interaction. Restaurants · hotels."
             }
           ],
@@ -3009,7 +3009,7 @@
           "model_slug": "pudu-robotics-holabot",
           "product_url": "https://www.pudurobotics.com/en",
           "vendor_url": "https://pudurobotics.com",
-          "primary_class": "service_robot",
+          "primary_class": "serving",
           "status": "available",
           "country": "China / Global",
           "description": "HolaBot: Tray delivery and dish return. Restaurants · hospitality.",
@@ -3019,7 +3019,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "serving",
               "evidence_span": "HolaBot: Tray delivery and dish return. Restaurants · hospitality."
             }
           ],
@@ -3032,7 +3032,7 @@
           "model_slug": "pudu-robotics-kettybot",
           "product_url": "https://www.pudurobotics.com/en",
           "vendor_url": "https://pudurobotics.com",
-          "primary_class": "service_robot",
+          "primary_class": "serving",
           "status": "available",
           "country": "China / Global",
           "description": "KettyBot: Front-of-house delivery and greeting. Restaurants · cafés.",
@@ -3042,7 +3042,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "serving",
               "evidence_span": "KettyBot: Front-of-house delivery and greeting. Restaurants · cafés."
             }
           ],
@@ -3078,7 +3078,7 @@
           "model_slug": "pudu-robotics-cc1",
           "product_url": "https://www.pudurobotics.com/en",
           "vendor_url": "https://pudurobotics.com",
-          "primary_class": "service_robot",
+          "primary_class": "cleaning",
           "status": "available",
           "country": "China / Global",
           "description": "CC1: Vacuuming, scrubbing, mopping. Commercial floors.",
@@ -3088,7 +3088,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "cleaning",
               "evidence_span": "CC1: Vacuuming, scrubbing, mopping. Commercial floors."
             }
           ],
@@ -3101,7 +3101,7 @@
           "model_slug": "pudu-robotics-mt1",
           "product_url": "https://www.pudurobotics.com/en",
           "vendor_url": "https://pudurobotics.com",
-          "primary_class": "service_robot",
+          "primary_class": "cleaning",
           "status": "available",
           "country": "China / Global",
           "description": "MT1: Outdoor sweeping and cleaning. Campuses · public spaces.",
@@ -3111,7 +3111,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "cleaning",
               "evidence_span": "MT1: Outdoor sweeping and cleaning. Campuses · public spaces."
             }
           ],
@@ -3124,7 +3124,7 @@
           "model_slug": "pudu-robotics-pudu-t300",
           "product_url": "https://www.pudurobotics.com/en",
           "vendor_url": "https://pudurobotics.com",
-          "primary_class": "service_robot",
+          "primary_class": "cleaning",
           "status": "available",
           "country": "China / Global",
           "description": "PUDU T300: Commercial floor cleaning. Public · commercial floors.",
@@ -3134,7 +3134,7 @@
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
+              "value": "cleaning",
               "evidence_span": "PUDU T300: Commercial floor cleaning. Public · commercial floors."
             }
           ],
@@ -3147,18 +3147,18 @@
           "model_slug": "pudu-robotics-d9",
           "product_url": "https://www.pudurobotics.com/en/products/d9",
           "vendor_url": "https://pudurobotics.com",
-          "primary_class": "service_robot",
+          "primary_class": "humanoid",
           "status": "available",
           "country": "China / Global",
-          "description": "",
+          "description": "D9: Full-sized bipedal humanoid for object manipulation and customer engagement. Public spaces.",
           "lookup_host": "pudurobotics.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "D9 indexed class service_robot."
+              "value": "humanoid",
+              "evidence_span": "D9: Full-sized bipedal humanoid for object manipulation and customer engagement. Public spaces."
             }
           ],
           "specs": {},
@@ -3865,18 +3865,18 @@
           "model_slug": "ubtech-walker-x",
           "product_url": "https://www.ubtrobot.com/",
           "vendor_url": "https://ubtrobot.com",
-          "primary_class": "service_robot",
+          "primary_class": "humanoid",
           "status": "available",
           "country": "China / Global",
-          "description": "Walker X: Bipedal service and interaction. Hospitality · public spaces.",
+          "description": "Walker X: Bipedal service and interaction. Public spaces.",
           "lookup_host": "ubtrobot.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "Walker X: Bipedal service and interaction. Hospitality · public spaces."
+              "value": "humanoid",
+              "evidence_span": "Walker X: Bipedal service and interaction. Public spaces."
             }
           ],
           "specs": {},
@@ -3888,18 +3888,18 @@
           "model_slug": "ubtech-walker-s2",
           "product_url": null,
           "vendor_url": "https://ubtrobot.com",
-          "primary_class": "service_robot",
+          "primary_class": "humanoid",
           "status": "available",
           "country": "China / Global",
-          "description": "",
+          "description": "Walker S2: Bipedal humanoid.",
           "lookup_host": "ubtrobot.com",
           "url_status": "unverified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "Walker S2 indexed class service_robot."
+              "value": "humanoid",
+              "evidence_span": "Walker S2: Bipedal humanoid."
             }
           ],
           "specs": {},
@@ -3911,18 +3911,18 @@
           "model_slug": "ubtech-alpha-1e",
           "product_url": "https://www.ubtrobot.com/en/consumer/humanoid-robots/alpha-series/alpha-1e",
           "vendor_url": "https://ubtrobot.com",
-          "primary_class": "service_robot",
+          "primary_class": "humanoid",
           "status": "available",
           "country": "China / Global",
-          "description": "",
+          "description": "Alpha 1E: Bipedal consumer humanoid.",
           "lookup_host": "ubtrobot.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "Alpha 1E indexed class service_robot."
+              "value": "humanoid",
+              "evidence_span": "Alpha 1E: Bipedal consumer humanoid."
             }
           ],
           "specs": {},
@@ -3934,18 +3934,18 @@
           "model_slug": "ubtech-walker",
           "product_url": "https://www.ubtrobot.com/en/humanoid/products/walker",
           "vendor_url": "https://ubtrobot.com",
-          "primary_class": "service_robot",
+          "primary_class": "humanoid",
           "status": "available",
           "country": "China / Global",
-          "description": "",
+          "description": "Walker: Bipedal walking, object manipulation, household and office service. Homes · offices.",
           "lookup_host": "ubtrobot.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [
             {
               "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "Walker indexed class service_robot."
+              "value": "humanoid",
+              "evidence_span": "Walker: Bipedal walking, object manipulation, household and office service. Homes · offices."
             }
           ],
           "specs": {},
@@ -7493,6 +7493,220 @@
               "predicate": "host_platform",
               "value": "none",
               "evidence_span": "Magnus host platform none."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "AgiBot",
+      "domains": [
+        "agibot.com"
+      ],
+      "vendor_url": "https://agibot.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "AGIBOT G1",
+          "model_slug": "agibot-g1",
+          "product_url": "https://www.agibot.com/",
+          "vendor_url": "https://agibot.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "AGIBOT G1: Universal embodied intelligent robot. Industrial · research.",
+          "lookup_host": "agibot.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "AGIBOT G1: Universal embodied intelligent robot. Industrial · research."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "AGIBOT X2",
+          "model_slug": "agibot-x2",
+          "product_url": "https://www.agibot.com/",
+          "vendor_url": "https://agibot.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "AGIBOT X2: Fully intelligent and agile humanoid. Industrial · research.",
+          "lookup_host": "agibot.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "AGIBOT X2: Fully intelligent and agile humanoid. Industrial · research."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "MagicLab",
+      "domains": [
+        "magiclab.top"
+      ],
+      "vendor_url": "https://magiclab.top",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "MagicBot X1",
+          "model_slug": "magiclab-magicbot-x1",
+          "product_url": "https://www.magiclab.top/en/x1",
+          "vendor_url": "https://magiclab.top",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "MagicBot X1: Humanoid patrol, inspection, and material delivery. Parks · scenic areas.",
+          "lookup_host": "magiclab.top",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "MagicBot X1: Humanoid patrol, inspection, and material delivery. Parks · scenic areas."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "MagicBot Gen1",
+          "model_slug": "magiclab-humanoid",
+          "product_url": "https://www.magiclab.top/en/human",
+          "vendor_url": "https://magiclab.top",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "MagicBot Gen1: Bipedal humanoid.",
+          "lookup_host": "magiclab.top",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "MagicBot Gen1: Bipedal humanoid."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "MagicDog",
+          "model_slug": "magiclab-magicdog",
+          "product_url": "https://www.magiclab.top/en/dog",
+          "vendor_url": "https://magiclab.top",
+          "primary_class": "quadruped",
+          "status": "available",
+          "country": null,
+          "description": "MagicDog: Quadruped robot dog locomotion and patrol.",
+          "lookup_host": "magiclab.top",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "quadruped",
+              "evidence_span": "MagicDog: Quadruped robot dog locomotion and patrol."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Deep Robotics",
+      "domains": [
+        "deeprobotics.cn"
+      ],
+      "vendor_url": "https://deeprobotics.cn",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "X20",
+          "model_slug": "deep-robotics-x20",
+          "product_url": "https://www.deeprobotics.cn/en/index/product.html",
+          "vendor_url": "https://deeprobotics.cn",
+          "primary_class": "quadruped",
+          "status": "available",
+          "country": null,
+          "description": "X20: Industrial patrol inspection on a quadruped. Power · utilities · outdoor industry.",
+          "lookup_host": "deeprobotics.cn",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "quadruped",
+              "evidence_span": "X20: Industrial patrol inspection on a quadruped. Power · utilities · outdoor industry."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "X30",
+          "model_slug": "deep-robotics-x30",
+          "product_url": "https://www.deeprobotics.cn/en/index/product3.html",
+          "vendor_url": "https://deeprobotics.cn",
+          "primary_class": "quadruped",
+          "status": "available",
+          "country": null,
+          "description": "X30: Industrial inspection and rescue on a quadruped. Power stations · factories · emergency.",
+          "lookup_host": "deeprobotics.cn",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "quadruped",
+              "evidence_span": "X30: Industrial inspection and rescue on a quadruped. Power stations · factories · emergency."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "DR02",
+          "model_slug": "deep-robotics-dr02",
+          "product_url": "https://www.deeprobotics.cn/en/index/dr02.html",
+          "vendor_url": "https://deeprobotics.cn",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "DR02: All-weather outdoor bipedal humanoid for cargo transport. Outdoor industry.",
+          "lookup_host": "deeprobotics.cn",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "DR02: All-weather outdoor bipedal humanoid for cargo transport. Outdoor industry."
             }
           ],
           "specs": {},

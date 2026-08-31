@@ -1647,7 +1647,9 @@ def _product_display_class(
     from app.services.robot_class_qualify import prefer_work_language_class
 
     window = _window_text_for_product(product_name, text or "") or (text or "")
-    work_or_catalog = prefer_work_language_class(window, catalog_class)
+    work_or_catalog = prefer_work_language_class(
+        window, catalog_class, name=product_name
+    )
     if work_or_catalog:
         return work_or_catalog
     hinted = _hint_display_class(product_name, window or text)

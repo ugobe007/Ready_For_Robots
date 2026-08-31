@@ -77,6 +77,7 @@ workflow via `app/services/robot_ontology.py`:
 - [`task_model_ontology.v1.json`](task_model_ontology.v1.json) — per-job required task-model slots + where to look. Presence starts unknown.
 - [`oem_sku_catalog.v1.json`](oem_sku_catalog.v1.json) — operator OEM → named SKU identity seed (COMPANY → PRODUCT). Empty specs stay `UNKNOWN`. Rebuild: `PYTHONPATH=. python3 scripts/ingest_oem_sku_catalog.py`. FIND loads the compiled `app/data/vendor_robots_oem_sku_seed.json` via `vendor_robot_lookup`.
 - [`vertical_oem_sku_catalog.v1.json`](vertical_oem_sku_catalog.v1.json) — verified agriculture / construction / avionics / aerospace named SKUs. Merged on ingest so workbook parse does not wipe them. Unverified URLs are omitted (Stretch-on-Spot).
+- [`mixed_oem_sku_catalog.v1.json`](mixed_oem_sku_catalog.v1.json) — OEMs that ship mixed morphology (humanoid + serving + cleaning + quadruped). Evidence-backed SKUs only. Live page extract still wins. Merged on ingest like the vertical overlay.
 
 Pre-existing companions:
 - [`primitives.v1.json`](primitives.v1.json) — frozen WORK primitive codes (IDs never renamed).
