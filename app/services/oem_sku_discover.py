@@ -17,7 +17,6 @@ from app.services.oem_sku_catalog import (
     _FAMILY_BLOB,
     _GENERIC_NAME,
     is_wrong_product_url,
-    map_primary_class,
     name_key,
     page_mentions_sku,
     slugify,
@@ -64,10 +63,23 @@ _LISTING_HINTS = {
     "ubtrobot.com": ("/",),
     "figure.ai": ("/",),
     "apptronik.com": ("/",),
+    "agibot.com": ("/",),
+    "magiclab.top": ("/", "/en"),
+    "deeprobotics.cn": ("/en", "/en/index"),
     "richtechrobotics.com": ("/products",),
     "seegrid.com": ("/products",),
     "gausium.com": ("/products",),
     "misorobotics.com": ("/",),
+    "pringlerobotics.ai": ("/", "/bots"),
+    "aotingbot.com": ("/", "/product"),
+    "kaercher.com": ("/us/commercial/autonomous-cleaning-equipment.html",),
+    "lucidbots.com": ("/", "/sherpa-drone"),
+    "ecovacscommercial.com": ("/", "/products"),
+    "avidbots.com": ("/",),
+    "polarxrobotics.com": ("/", "/products"),
+    "cenobots.com": ("/",),
+    "tennantco.com": ("/en_us.html", "/en_us/equipment/cleaning-machines/autonomous-floor-cleaning-machines.html"),
+    "seer-robotics.ai": ("/", "/amr/others.html"),
 }
 _NAV_PATH = re.compile(
     r"/(about|careers?|contact|news|blog|press|support|login|privacy|legal|"
@@ -380,11 +392,17 @@ _VEHICLE_MODEL_CODE = re.compile(r"^[A-Z]{1,3}\d{1,2}\+?$", re.I)
 _CTA_HYPHEN_HEAD = frozenset(
     {"join", "find", "sign", "log", "get", "contact", "book", "see", "learn", "try"}
 )
-# "apple harvester" / "delivery robots" — work category, not a named SKU.
+# "apple harvester" / "delivery robots" / "AMR scrubbers" — work category, not a named SKU.
 _CATEGORY_BLOB = re.compile(
     r"^(?:the\s+)?(?:apple|strawberry|grape|cotton|berry|warehouse|delivery|"
-    r"floor|pallet)?\s*(?:harvest(?:er|ing)?|weeding|tractors?|robots?|"
-    r"systems?|platform|automation|equipment)\s*$",
+    r"floor|pallet|amr|agv)?\s*(?:harvest(?:er|ing)?|weeding|tractors?|robots?|"
+    r"systems?|platform|automation|equipment|scrubbers?|cleaners?)\s*$",
+    re.I,
+)
+# "Seer Humanoid" / "Segway Humanoid" — company + morphology dump, not a model.
+# Exclude names with model codes like "Lift EL1 Amr" (contains digits mixed in tokens).
+_COMPANY_CLASS_DUMP = re.compile(
+    r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Humanoid|Scrubber|AMR)s?$",
     re.I,
 )
 # Title-case verbs that collide with SKU words (Handle the Routine).
@@ -463,6 +481,8 @@ def is_junk_sku_name(name: str) -> bool:
         return True
     if _CATEGORY_BLOB.fullmatch(raw):
         return True
+    if _COMPANY_CLASS_DUMP.fullmatch(raw):
+        return True
     if _JUNK_SKU.fullmatch(raw) or _FAMILY_BLOB.search(raw) or _GENERIC_NAME.search(raw):
         return True
     if _NAV_NAME.search(raw) or _LONG_MARKETING.search(raw):
@@ -494,6 +514,8 @@ def is_junk_sku_name(name: str) -> bool:
         "blog",
         "careers",
         "contact",
+        "scrubber",
+        "scrubbers",
     }:
         return True
     if not re.search(r"[A-Za-z]", raw):
@@ -903,8 +925,8 @@ def make_discovered_product(company: dict[str, Any], name: str, url: str | None)
         "slug": f"{company['slug']}-{slugify(name)}"[:160],
         "company_name": company["name"],
         "company_slug": company["slug"],
-        "primary_class": (company.get("products") or [{}])[0].get("primary_class")
-        or map_primary_class("", ""),
+        # Identity only. Never copy BellaBot serving onto PUDUA1 (company → category).
+        "primary_class": "service_robot",
         "category": None,
         "listed_class": None,
         "task": None,

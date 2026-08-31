@@ -119,6 +119,7 @@ const ROBOT_CLASS_ALIASES: Record<string, string> = {
   janitorial: "cleaning",
   custodial: "cleaning",
   cleaning_robot: "cleaning",
+  cleaning_drone: "cleaning_drone",
 };
 
 const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
@@ -151,6 +152,7 @@ const ROBOT_CLASS_JOBS_LABEL: Record<string, string> = {
   food_prep: "food prep robots",
   serving: "serving robots",
   cleaning: "cleaning robots",
+  cleaning_drone: "cleaning drones",
 };
 
 const ROBOT_CLASS_TITLE: Record<string, string> = {
@@ -183,6 +185,7 @@ const ROBOT_CLASS_TITLE: Record<string, string> = {
   food_prep: "Food prep",
   serving: "Serving",
   cleaning: "Cleaning",
+  cleaning_drone: "Cleaning drone",
 };
 
 /** Operator-picked FIND tiles. A Joby/Carbon URL is a configuration, not a tile. */
@@ -230,6 +233,9 @@ const CONFIGURATION_CLASS_ALIASES: Record<string, string> = {
   construction_robot: "construction_robot",
   homebuilding: "construction_robot",
   homebuilder: "construction_robot",
+  cleaning_drone: "cleaning_drone",
+  window_washing_drone: "cleaning_drone",
+  facade_cleaning_drone: "cleaning_drone",
 };
 
 export function normalizeRobotClass(raw?: string | null): string | null {

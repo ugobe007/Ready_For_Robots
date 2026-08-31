@@ -119,6 +119,7 @@ import {
   usesLineupSegments,
   searchNamesForSegment,
   skuFamilyStem,
+  FIND_TILE_CLASSES,
   normalizeRobotClass,
   configurationClassForLookup,
   skuLookupGrain,
@@ -1282,6 +1283,10 @@ describe("jobsWorkflow", () => {
     expect(skuLookupGrain("food_prep")).toBe("robot_type");
     expect(skuLookupGrain("serving")).toBe("robot_type");
     expect(skuLookupGrain("cleaning")).toBe("robot_type");
+    expect(FIND_TILE_CLASSES.has("cleaning_drone")).toBe(false);
+    expect(FIND_TILE_CLASSES.size).toBe(20);
+    expect(configurationClassForLookup("cleaning_drone")).toBe("cleaning_drone");
+    expect(skuLookupGrain("cleaning_drone")).toBe("product");
     expect(normalizeRobotClass("hotel")).toBe("hospitality");
     expect(normalizeRobotClass("food_prep")).toBe("food_prep");
     expect(normalizeRobotClass("serving")).toBe("serving");
@@ -1370,6 +1375,17 @@ describe("jobsWorkflow", () => {
         ],
       },
     ]);
+    const puduLookups = lineupJobLookups([
+      { name: "BellaBot", displayClass: "serving" },
+      { name: "CC1", displayClass: "cleaning" },
+      { name: "D9", displayClass: "humanoid" },
+    ]);
+    expect(puduLookups.map(row => row.robotClass).sort()).toEqual([
+      "cleaning",
+      "humanoid",
+      "serving",
+    ]);
+    expect(puduLookups.every(row => row.grain === "product")).toBe(true);
     const mixed = lineupJobLookups([
       { name: "Atlas", displayClass: "humanoid" },
       { name: "Spot", displayClass: "quadruped" },

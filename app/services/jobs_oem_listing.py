@@ -147,6 +147,23 @@ def _clean_product_name(name: str, company: str) -> str | None:
     return name
 
 
+def product_range_classes(rows: list[dict[str, Any]]) -> list[str]:
+    """Distinct per-SKU FIND classes on a company hub. Never company → category."""
+    from app.services.robot_class_qualify import GENERIC_CATEGORY_CLASSES
+
+    out: list[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        raw = (row.get("display_class") or "").strip().lower()
+        if not raw or raw in GENERIC_CATEGORY_CLASSES:
+            continue
+        if raw in seen:
+            continue
+        seen.add(raw)
+        out.append(raw)
+    return out
+
+
 def format_listing_blurb(row: dict[str, Any] | None) -> str | None:
     """Description, then spec fragments. Never invent numbers."""
     row = row or {}
@@ -209,7 +226,7 @@ def listing_from_catalog(
         )
         from app.services.robot_class_qualify import prefer_work_language_class
 
-        display_class = prefer_work_language_class(evidence, catalog_class) or catalog_class
+        display_class = prefer_work_language_class(evidence, catalog_class, name=name)
         rows.append(
             {
                 "name": name,
@@ -244,7 +261,9 @@ def listing_from_page(
             {
                 "name": name,
                 "description": _blurb_near(name, window),
-                "display_class": prefer_work_language_class(f"{name} {window}"),
+                "display_class": prefer_work_language_class(
+                    f"{name} {window}", name=name
+                ),
                 "specs": _specs_near(window),
             }
         )
@@ -324,6 +343,8 @@ def listing_payload_for_url(url: str) -> dict[str, Any]:
             "vendor_name": None,
             "vendor_url": None,
             "robots": [],
+            "product_range": [],
+            "mixed_range": False,
         }
     robots = listing_from_catalog(vendor)
     for row in robots:
@@ -334,10 +355,15 @@ def listing_payload_for_url(url: str) -> dict[str, Any]:
             "vendor_name": None,
             "vendor_url": None,
             "robots": [],
+            "product_range": [],
+            "mixed_range": False,
         }
+    range_classes = product_range_classes(robots)
     return {
         "matched": True,
         "vendor_name": (vendor.get("vendor_name") or "").strip() or None,
         "vendor_url": (vendor.get("vendor_url") or "").strip() or None,
         "robots": robots,
+        "product_range": range_classes,
+        "mixed_range": len(range_classes) > 1,
     }

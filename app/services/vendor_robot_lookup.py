@@ -320,7 +320,7 @@ def names_are_same_sku(left: str, right: str, *, slug_left: str = "", slug_right
     if a == b:
         return True
     longer, shorter = (a, b) if len(a) >= len(b) else (b, a)
-    if longer.endswith(shorter) and len(shorter) >= 3:
+    if longer.endswith(shorter) and len(shorter) >= 2:
         prefix = longer[: -len(shorter)]
         if prefix.isalpha() and len(prefix) >= 3:
             return True
@@ -371,7 +371,12 @@ def _overlay_colliding_robot(robots: list[dict[str, Any]], robot: dict[str, Any]
         # has the public product blurb. Keep both — never drop named work copy.
         inc_desc = str(robot.get("description") or "").strip()
         ex_desc = str(existing.get("description") or "").strip()
-        if inc_desc and len(inc_desc) > len(ex_desc):
+        generic = {"service_robot", "service", "robot", "commercial", ""}
+        inc_class = str(robot.get("primary_class") or "").strip().lower()
+        ex_class = str(existing.get("primary_class") or "").strip().lower()
+        if inc_class and inc_class not in generic and ex_class in generic:
+            existing["primary_class"] = robot.get("primary_class")
+        if inc_desc and (len(inc_desc) > len(ex_desc) or ex_class in generic):
             existing["description"] = inc_desc
         inc_claims = robot.get("catalog_claims") if isinstance(robot.get("catalog_claims"), list) else []
         ex_claims = existing.get("catalog_claims") if isinstance(existing.get("catalog_claims"), list) else []
@@ -836,7 +841,7 @@ def catalog_claim_facts(robot: dict[str, Any] | None) -> list[dict[str, Any]]:
         )
         if x
     )
-    work = prefer_work_language_class(evidence, primary)
+    work = prefer_work_language_class(evidence, primary, name=str(robot.get("name") or ""))
     if work and work not in GENERIC_CATEGORY_CLASSES:
         replaced = False
         for fact in out:
