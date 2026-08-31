@@ -25,7 +25,7 @@ Cleaning drones (Lucidbots Sherpa) stay `cleaning_drone`, not floor `cleaning` a
 | Lucid Bots | cleaning_drone | Sherpa Drone — not a floor scrubber |
 | Gausium / Avidbots / ECOVACS Commercial | cleaning | Phantas / Neo / DEEBOT PRO M1 floor cleaning — not cleaning drones |
 
-Thin SKUs without work or morphology copy stay unclassified (per-product lookup) rather than `service_robot`.
+Thin SKUs without work or morphology copy stay unclassified (per-product lookup) rather than `service_robot`. Discovered listing names no longer inherit a sibling SKU class (PUDUA1 is not BellaBot serving).
 
 ## Tests
 

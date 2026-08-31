@@ -22,6 +22,8 @@ Never `company → category → jobs`.
 
 "PUDU, Keenon, UBTech, AgiBot, MagicLab, DeepRobotics and others make humanoids, service robots and cleaning robots so we need to recognize their product range and their products"
 
+Cleaning + mixed F&B operator list (live page evidence; mixed OEMs classified per product, not company): Pringle, Keenon, Pudu, Bear, Aoting, Kaercher (robotic KIRA only), Richtech, CenoBots, Lucidbots (**cleaning drones**, not floor scrubbers), Tennant, Ecovacs Commercial, SEER, Avidbots, Gausium, PolarX.
+
 ## Acceptance
 
 1. Company hub (pudurobotics.com/en, keenon.com, ubtrobot.com, agibot.com, magiclab.top, deeprobotics.cn) lists **named products** with **distinct classes**.
@@ -32,7 +34,8 @@ Never `company → category → jobs`.
 6. Deep Robotics: X20/X30 quadruped (official product pages) AND DR02 humanoid (official dr02.html). Do not invent Lite3 without a product URL in this pass.
 7. Catalog overlay is cache; live extract still wins. No invented SKUs, pay, employers, or emails.
 8. Tests do not import fetch/facts (pytest-only venv has no `requests`).
-9. pstack release gate for this FIND/class change.
+9. pstack release gate for this FIND/class change. `cleaning_drone` is a configuration class, not a 21st FIND tile.
+10. Lucidbots Sherpa = `cleaning_drone`. Pudu BellaBot serving vs CC1 cleaning. Keenon waiter vs cleaner. Bear Servi serving vs Servi Clean cleaning. Gausium / Avidbots / Ecovacs commercial = floor `cleaning`.
 
 ## Out of scope
 

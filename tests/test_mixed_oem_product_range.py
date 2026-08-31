@@ -14,6 +14,7 @@ from app.services.jobs_oem_listing import (
 )
 from app.services.oem_sku_catalog import MIXED_OEM_CATALOG_PATH, map_primary_class
 from app.services.robot_class_qualify import (
+    FIND_TILE_CLASSES,
     classify_product_from_evidence,
     prefer_work_language_class,
 )
@@ -218,3 +219,62 @@ def test_pringle_mixed_serving_and_cleaning_range():
     assert by.get("BellaBot") == "serving", by
     assert by.get("CC1") == "cleaning", by
     assert payload["mixed_range"] is True
+
+
+def test_cleaning_drone_is_configuration_not_find_tile():
+    assert "cleaning_drone" not in FIND_TILE_CLASSES
+    assert "serving" in FIND_TILE_CLASSES and "cleaning" in FIND_TILE_CLASSES
+    assert len(FIND_TILE_CLASSES) == 20
+
+
+def test_kaercher_overlay_is_robotic_kira_not_mop_skus():
+    import json
+
+    data = json.loads(MIXED_OEM_CATALOG_PATH.read_text(encoding="utf-8"))
+    kaercher = next(c for c in data["companies"] if c["slug"] == "karcher")
+    names = [p["name"] for p in kaercher["products"]]
+    assert names == ["KIRA B 50", "KIRA B 200", "KIRA CV 50", "KIRA CV 60/1"]
+    assert all(p["primary_class"] in {"cleaning", "cleaning_robot"} for p in kaercher["products"])
+    blob = " ".join(names).lower()
+    assert "fc 7" not in blob
+    assert "sc 3" not in blob
+
+
+def test_tennant_and_seer_do_not_invent_cleaner_skus():
+    import json
+
+    data = json.loads(MIXED_OEM_CATALOG_PATH.read_text(encoding="utf-8"))
+    slugs = {c["slug"] for c in data["companies"]}
+    assert "tennant" not in slugs
+    assert "seer-robotics" not in slugs
+    names = [p["name"] for c in data["companies"] for p in c["products"]]
+    assert "T7AMR" not in names
+    assert "AMR scrubbers" not in names
+
+
+def test_discovered_sku_does_not_inherit_sibling_class():
+    from app.services.oem_sku_discover import make_discovered_product
+
+    company = {
+        "slug": "pudu-robotics",
+        "name": "Pudu Robotics",
+        "domains": ["pudurobotics.com"],
+        "products": [{"name": "BellaBot", "primary_class": "serving"}],
+    }
+    row = make_discovered_product(
+        company, "PUDUA1", "https://www.pudurobotics.com/en/products/puduA1"
+    )
+    assert row["primary_class"] == "service_robot"
+    assert row["primary_class"] != "serving"
+    assert row["task"] is None
+    assert row["listed_class"] is None
+
+
+def test_pudu_thin_skus_are_not_dumped_to_serving():
+    by = _by_class("https://www.pudurobotics.com/en")
+    assert by["BellaBot"] == "serving"
+    assert by["CC1"] == "cleaning"
+    assert by["D9"] == "humanoid"
+    assert by.get("PUDUA1") is None, by
+    assert by.get("PUDUD1") is None, by
+    assert by.get("PUDUSH1") is None, by

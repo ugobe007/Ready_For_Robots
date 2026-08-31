@@ -103,6 +103,45 @@ describe("knownOemLineups", () => {
     expect(deep?.robots.some(r => r.display_class === "quadruped")).toBe(true);
   });
 
+  it("maps Lucidbots Sherpa as a cleaning drone, not a floor scrubber", () => {
+    const hit = lookupKnownOem("https://www.lucidbots.com/");
+    const by = Object.fromEntries(
+      (hit?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(by["Sherpa Drone"]).toBe("cleaning_drone");
+    expect(Object.values(by).some(c => c === "avionics")).toBe(false);
+    expect(Object.values(by).some(c => c === "autonomous_scrubber")).toBe(
+      false,
+    );
+  });
+
+  it("maps Bear serving vs clean and Gausium/Avidbots/Ecovacs floors", () => {
+    const bear = lookupKnownOem("https://www.bearrobotics.ai/");
+    const bearBy = Object.fromEntries(
+      (bear?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(bearBy.Servi).toBe("serving");
+    expect(bearBy["Servi Clean"]).toBe("cleaning");
+
+    const gau = lookupKnownOem("https://gausium.com/");
+    const gauBy = Object.fromEntries(
+      (gau?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(["cleaning", "autonomous_scrubber"]).toContain(gauBy.Phantas);
+
+    const avid = lookupKnownOem("https://avidbots.com/");
+    const avidBy = Object.fromEntries(
+      (avid?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(["cleaning", "autonomous_scrubber"]).toContain(avidBy.Neo);
+
+    const eco = lookupKnownOem("https://www.ecovacscommercial.com/");
+    const ecoBy = Object.fromEntries(
+      (eco?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(ecoBy["DEEBOT PRO M1"]).toBe("cleaning");
+  });
+
   it("maps Diligent Moxi as healthcare, not humanoid", () => {
     const hit = lookupKnownOem("https://www.diligentrobots.com/");
     expect(hit?.vendor_name).toMatch(/Diligent/i);
