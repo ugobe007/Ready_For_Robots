@@ -43,7 +43,8 @@ _PRODUCT_CANDIDATE = re.compile(
     r"Walker|Figure\s*\d+|G1|H1|B2|Go2|Cassie|Handle|Ranger|OTTO\s*\d+|"
     r"GoFa|Phoenix|Pepper|Whiz|TIAGo|ANYmal|Canvas|FieldPrinter|"
     r"Elios\s*\d*|Servi(?:\s*Plus|\+)?|P800|CRX[- ]?\d+\w*|"
-    r"Lift\s+RS\d+|T7AMR|A0509|LaserWeeder"
+    r"Lift\s+RS\d+|T7AMR|A0509|LaserWeeder|"
+    r"[A-Z][a-z]{1,14}(?:Bot|BOT)"
     r")\b",
     re.I,
 )
@@ -224,7 +225,11 @@ _ROBOT_LINE_SLUGS = frozenset({"human", "dog", "panda"})
 _MAX_DISCOVERED_PRODUCTS = FIND_LIVE_DISCOVERY_CAP
 _COMPACT_SKU = re.compile(r"^[A-Za-z]{1,3}\d{1,3}[A-Za-z]{0,3}$")
 _PROSE_NAME = re.compile(
-    r"\b((?:[A-Z]{3,10})|(?:[A-Z][a-z]{2,14}(?:-[A-Z0-9][A-Za-z0-9]{0,10}){0,3}))\b"
+    r"\b("
+    r"(?:[A-Z][a-z]{1,14}(?:[A-Z][a-z0-9]+)+)|"
+    r"(?:[A-Z]{3,10})|"
+    r"(?:[A-Z][a-z]{2,14}(?:-[A-Z0-9][A-Za-z0-9]{0,10}){0,3})"
+    r")\b"
 )
 _NAME_FOLLOW = re.compile(
     r"^\s*(?:the\s+)?(?:AI[- ]powered\s+)?(?:dual[- ]arm\s+|single[- ]arm\s+)?"
@@ -238,7 +243,7 @@ _NAME_FOLLOW = re.compile(
 )
 _INTRO_ROBOT_NAME = re.compile(
     r"\b(?:[Mm]eet|[Ii]ntroducing|[Ii]['’]m|[Ii]\s+am)\s+"
-    r"((?:[A-Z]{2,12})|(?:[A-Z][a-z]{2,16}))\b"
+    r"((?:[A-Z][a-z]{1,14}(?:[A-Z][a-z0-9]+)+)|(?:[A-Z]{1,4}\d{1,4}[A-Za-z]{0,3})|(?:[A-Z]{2,12})|(?:[A-Z][a-z]{2,16}))\b"
 )
 _PROSE_NAME_NOISE = frozenset(
     {
@@ -692,10 +697,18 @@ def resolve_identity(
             listing_by_key[_name_key(row["name"])] = row
     for pname in product_names:
         row = listing_by_key.get(_name_key(pname)) or {}
-        display_class = row.get("display_class") or _hint_display_class(pname, home.text)
+        display_class = row.get("display_class")
         indexed = index_robot_for_name(catalog, pname) if catalog else None
+        catalog_class = None
         if indexed and indexed.get("primary_class"):
-            display_class = str(indexed["primary_class"])
+            catalog_class = str(indexed["primary_class"])
+        elif display_class:
+            catalog_class = str(display_class)
+        evidence = " ".join(
+            x for x in (row.get("description") or "", _window_text_for_product(pname, home.text or ""))
+            if x
+        )
+        display_class = _product_display_class(pname, evidence or (home.text or ""), catalog_class)
         products.append(
             RobotProduct.create(
                 company.id,
@@ -1567,7 +1580,11 @@ def _discover_product_names(
     # SKU-like names (LD-250) outrank hub leftovers that survived the noise filter.
     ranked = sorted(
         counts.items(),
-        key=lambda kv: (-int(_looks_like_model_or_sku(kv[0])), -kv[1], kv[0]),
+        key=lambda kv: (
+            -int(looks_like_named_sku(kv[0]) or _looks_like_model_or_sku(kv[0])),
+            -kv[1],
+            kv[0],
+        ),
     )
     out: list[str] = []
     for name, n in ranked:
@@ -1603,17 +1620,49 @@ def _discover_product_names(
     return _dedupe_product_names(_apply_family_prefix(out))[:_MAX_DISCOVERED_PRODUCTS]
 
 
+_NEXT_PRODUCT_HEAD = re.compile(r"\b(?:Meet|Introducing)\s+[A-Z]")
+
+
+def _window_text_for_product(product_name: str, text: str, radius: int = 280) -> str:
+    blob = text or ""
+    if not product_name or not blob:
+        return ""
+    idx = blob.lower().find(product_name.lower())
+    if idx < 0:
+        return ""
+    chunk = blob[idx : idx + len(product_name) + radius]
+    rest = chunk[len(product_name) :]
+    nxt = _NEXT_PRODUCT_HEAD.search(rest)
+    if nxt:
+        chunk = chunk[: len(product_name) + nxt.start()]
+    return chunk
+
+
+def _product_display_class(
+    product_name: str,
+    text: str,
+    catalog_class: str | None = None,
+) -> Optional[str]:
+    """Per-product FIND class. Work language outranks generic service_robot."""
+    from app.services.robot_class_qualify import prefer_work_language_class
+
+    window = _window_text_for_product(product_name, text or "") or (text or "")
+    work_or_catalog = prefer_work_language_class(window, catalog_class)
+    if work_or_catalog:
+        return work_or_catalog
+    hinted = _hint_display_class(product_name, window or text)
+    if hinted and hinted not in {"service_robot"}:
+        return hinted
+    return work_or_catalog or hinted
+
+
 def _hint_display_class(product_name: str, text: str) -> Optional[str]:
     """Descriptive only — not used for matching."""
-    window = text
-    # Prefer text near product name
-    idx = text.lower().find(product_name.lower())
-    if idx >= 0:
-        window = text[max(0, idx - 200) : idx + 400]
+    window = _window_text_for_product(product_name, text) or text
     from app.services.robot_class_qualify import infer_class_from_work_language
     from app.services.robot_ontology import work_language_outranks_morphology
 
-    work_cls = infer_class_from_work_language(window) or infer_class_from_work_language(text)
+    work_cls = infer_class_from_work_language(window)
     if work_cls:
         return work_cls
     if re.search(r"\bhumanoid\b|\bbipedal\b", window, re.I):
@@ -1676,8 +1725,23 @@ def _hint_display_class(product_name: str, text: str) -> Optional[str]:
     ):
         return "aerospace"
     if re.search(
-        r"\b(service\s+robot|hospitality\s+robot|restaurant\s+(?:delivery\s+)?robot|"
-        r"social\s+robot)\b",
+        r"\b(restaurant\s+(?:delivery\s+)?robot|waiter\s+robot|serving\s+robot|"
+        r"tray[- ]delivery|table\s+service\s+robot)\b",
+        window,
+        re.I,
+    ):
+        return "serving"
+    if re.search(
+        r"\b(cleaning\s+robot|floor\s+(?:scrub|clean)|vacuuming|mopping|"
+        r"commercial\s+floors)\b",
+        window,
+        re.I,
+    ):
+        return "cleaning"
+    if re.search(r"\b(hospitality\s+robot)\b", window, re.I):
+        return "hospitality"
+    if re.search(
+        r"\b(service\s+robot|social\s+robot)\b",
         window,
         re.I,
     ):

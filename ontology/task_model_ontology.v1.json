@@ -985,6 +985,63 @@
           "note": "Public checkpoints. Presence on a candidate is unknown until named."
         }
       ]
+    },
+    {
+      "id": "dining_floor_service_policy",
+      "label": "Dining-floor serving policy",
+      "vertical": "restaurant",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Run food and drinks to tables and bus dishware under that venue's floor rules",
+      "tape_families": ["serve"],
+      "keywords": [
+        "table service",
+        "food running",
+        "bussing",
+        "tray delivery",
+        "restaurant delivery",
+        "waiter",
+        "dining room"
+      ],
+      "hardware_not_enough": "A tray-carrying AMR is not the serving policy for this dining room.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Serving OEM floor pack",
+          "url": null,
+          "note": "Ask which table-service or bussing policy they ship for this restaurant — not only which chassis."
+        }
+      ]
+    },
+    {
+      "id": "commercial_cleaning_policy",
+      "label": "Commercial floor-cleaning policy",
+      "vertical": "commercial",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Vacuum, scrub, or mop named floors in F&B and public venues to that site's soil standard",
+      "tape_families": ["scrub", "restroom"],
+      "keywords": [
+        "floor cleaning",
+        "commercial cleaning",
+        "vacuuming",
+        "scrubbing",
+        "mopping",
+        "sweeping",
+        "janitor",
+        "custodian"
+      ],
+      "hardware_not_enough": "A scrub deck is not the coverage policy for this floorplate.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Cleaning OEM autonomy pack",
+          "url": null,
+          "note": "Ask which floor program they ship for this venue — not only which chassis."
+        }
+      ]
     }
   ]
 }

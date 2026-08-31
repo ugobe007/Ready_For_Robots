@@ -374,6 +374,8 @@ def _phase23_infer(grounded: dict[str, Observation]) -> list[Observation]:
     # Scrubber class implies hard-floor scrubbing.
     if _has(grounded, "product_class", "autonomous_scrubber") and "supports_hard_floor_scrubbing" not in grounded:
         add("supports_hard_floor_scrubbing", True, None, ["product_class=autonomous_scrubber"], CONF["HIGH"], "product_class")
+    if _has(grounded, "product_class", "cleaning") and "supports_hard_floor_scrubbing" not in grounded:
+        add("supports_hard_floor_scrubbing", True, None, ["product_class=cleaning"], CONF["HIGH"], "product_class")
 
     # Work-domain classes ground their task claim (named derivation, not category→jobs).
     _class_claims = (
@@ -388,6 +390,8 @@ def _phase23_infer(grounded: dict[str, Observation]) -> list[Observation]:
         (("factory_robot", "factory"), "claims_factory"),
         (("hospitality_robot", "hospitality", "hotel_robot"), "claims_hospitality"),
         (("food_prep",), "claims_food_prep"),
+        (("serving",), "claims_serving"),
+        (("cleaning",), "claims_surface_cleaning"),
         (
             ("healthcare", "healthcare_robot", "medical_robot", "clinical_robot", "hospital_robot"),
             "claims_healthcare",

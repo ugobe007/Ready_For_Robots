@@ -10,7 +10,7 @@
     "cart":      {"required_any": ["tote_transport", "transport"],  "label": "cart delivery"},
     "scrub":     {"required_any": ["hard_floor_scrub"],             "label": "hard-floor scrubbing"},
     "inspect":   {"required_any": ["inspect_route"],                "label": "inspection route"},
-    "serve":     {"required_any": ["transport"],                    "label": "food/drink running (hospitality serving)"},
+    "serve":     {"required_any": ["serving_task", "transport"],    "label": "food/drink running (table serving)"},
     "food_prep": {"required_any": ["food_prep"],                    "label": "food preparation / cooking"},
     "beverage":  {"required_any": ["beverage_prep"],                "label": "beverage / drink preparation"},
     "shelf_scan": {"required_any": ["shelf_scan"],                 "label": "retail shelf / inventory scanning"},
@@ -29,7 +29,7 @@
     "warehouse": {"required_any": ["warehouse_task"],              "label": "warehouse — fulfillment / DC tote and pick work"},
     "logistics": {"required_any": ["logistics_task"],              "label": "logistics — 3PL / cross-dock / sortation"},
     "factory": {"required_any": ["factory_task"],                  "label": "factory — plant machine-tend / assembly-line work"},
-    "hospitality": {"required_any": ["hospitality_task"],          "label": "hospitality — hotel guest delivery / serving"},
+    "hospitality": {"required_any": ["hospitality_task"],          "label": "hospitality — hotel guest delivery / housekeeping"},
     "clinical_delivery": {"required_any": ["healthcare_task"],     "label": "hospital clinical delivery (meds, specimens, supplies)"},
     "resident_services": {"required_any": ["healthcare_task"],     "label": "eldercare resident services (meals, linens, amenities)"},
     "restroom":  {"required_any": ["surface_clean"],               "label": "restroom / surface cleaning"}

@@ -48,6 +48,7 @@
     {"predicate": "claims_logistics", "category": "domain", "type": "bool"},
     {"predicate": "claims_factory", "category": "domain", "type": "bool"},
     {"predicate": "claims_hospitality", "category": "domain", "type": "bool"},
+    {"predicate": "claims_serving", "category": "domain", "type": "bool"},
     {"predicate": "claims_marine", "category": "domain", "type": "bool"},
     {"predicate": "claims_avionics", "category": "domain", "type": "bool"},
     {"predicate": "claims_aerospace", "category": "domain", "type": "bool"},

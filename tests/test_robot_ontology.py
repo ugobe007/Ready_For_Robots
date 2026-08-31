@@ -66,6 +66,7 @@ def _all_capabilities_profile() -> dict:
             f("claims_logistics", True),                # logistics_task
             f("claims_factory", True),                  # factory_task
             f("claims_hospitality", True),              # hospitality_task
+            f("claims_serving", True),                  # serving_task
             f("claims_marine", True),                   # marine_task
             f("claims_avionics", True),                 # avionics_task
             f("claims_aerospace", True),                # aerospace_task

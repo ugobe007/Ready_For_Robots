@@ -261,19 +261,41 @@ def match_work_language(text: str) -> WorkLanguageHit | None:
         if best is None:
             best = hit
             continue
-        best_has_class = bool(best.find_class)
-        hit_has_class = bool(hit.find_class)
-        if hit.score > best.score:
-            best = hit
-        elif hit.score == best.score and hit_has_class and not best_has_class:
-            best = hit
-        elif (
-            hit.score == best.score
-            and hit.outranks_morphology
-            and not best.outranks_morphology
-        ):
+        if _work_language_hit_better(hit, best):
             best = hit
     return best
+
+
+# Serving / cleaning / food_prep are more specific than hospitality on a tie
+# (BellaBot: "tray"+"restaurants" vs "guest"+"hotels" — waiter, not hotel ops).
+_WORK_LANGUAGE_TIEBREAK = {
+    "serving": 4,
+    "cleaning": 4,
+    "food_prep": 4,
+    "agriculture": 2,
+    "healthcare": 2,
+    "hospitality": 1,
+}
+
+
+def _work_language_hit_better(hit: WorkLanguageHit, best: WorkLanguageHit) -> bool:
+    if hit.score > best.score:
+        return True
+    if hit.score < best.score:
+        return False
+    hit_has_class = bool(hit.find_class)
+    best_has_class = bool(best.find_class)
+    if hit_has_class and not best_has_class:
+        return True
+    if best_has_class and not hit_has_class:
+        return False
+    if hit.outranks_morphology and not best.outranks_morphology:
+        return True
+    if best.outranks_morphology and not hit.outranks_morphology:
+        return False
+    hit_tb = _WORK_LANGUAGE_TIEBREAK.get((hit.find_class or "").lower(), 0)
+    best_tb = _WORK_LANGUAGE_TIEBREAK.get((best.find_class or "").lower(), 0)
+    return hit_tb > best_tb
 
 
 def find_class_from_work_language(text: str) -> str | None:

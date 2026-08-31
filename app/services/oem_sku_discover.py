@@ -255,6 +255,10 @@ _CHROME_LABELS = frozenset(
         "log in",
         "login",
         "subscribe",
+        "en",
+        "zh",
+        "english",
+        "chinese",
     }
 )
 _CHROME_SLUGS = frozenset(
@@ -313,6 +317,25 @@ _CHROME_SLUGS = frozenset(
         "signin",
         "login",
         "subscribe",
+        "en",
+        "zh",
+        "ja",
+        "ko",
+        "de",
+        "fr",
+        "es",
+        "it",
+        "pt",
+        "ru",
+        "ar",
+        "zh-cn",
+        "zh-tw",
+        "en-us",
+        "en-gb",
+        "zh-hans",
+        "zh-hant",
+        "about",
+        "news",
     }
 )
 _CHROME_PHRASE = re.compile(
@@ -372,7 +395,7 @@ _SKU_VERB_PHRASE = re.compile(
 )
 _MEET_PROSE = re.compile(
     r"\b(?:meet|introducing|i['’]m|i\s+am)\s+"
-    r"((?:[A-Z]{2,12})|(?:[A-Z][a-z0-9]{2,16})|(?:[A-Z][A-Za-z0-9#\-]+))\b"
+    r"((?:[A-Z][a-z]{1,14}(?:[A-Z][a-z0-9]+)+)|(?:[A-Z]{2,12})|(?:[A-Z][a-z0-9]{2,16})|(?:[A-Z][A-Za-z0-9#\-]+))\b"
 )
 _TRADEMARK_NAME = re.compile(
     r"\b([A-Z][A-Za-z0-9]{2,16})[™®]|\b([A-Z][A-Za-z0-9]{2,16})\s*\(TM\)",

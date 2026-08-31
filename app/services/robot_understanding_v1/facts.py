@@ -59,6 +59,7 @@ _SCOPED_CAPABILITY_PREDS = {
     "supports_hard_floor_scrubbing",
     "claims_food_prep",
     "claims_beverage_prep",
+    "claims_serving",
     "supports_tote_handling",
     "claims_warehouse_transport",
     "claims_item_delivery",
@@ -920,8 +921,36 @@ def _extract_from_page(
         add("product_class", "mining_robot", span=m.group(0), confidence=0.88)
 
     for m in re.finditer(
-        r"\b(service\s+robot|hospitality\s+robot|restaurant\s+(?:delivery\s+)?robot|"
-        r"social\s+robot|delivery\s+robot)\b",
+        r"\b("
+        r"serving\s+robot|waiter\s+robot|table[- ]service\s+robot|"
+        r"restaurant\s+(?:delivery|serving|waiter)\s+robot|"
+        r"food[- ](?:delivery|running)\s+(?:amr|robot)|"
+        r"tray[- ]delivery\s+robot"
+        r")\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("product_class", "serving", span=m.group(0), confidence=0.9)
+        add("claims_serving", True, span=m.group(0)[:120], confidence=0.85)
+
+    for m in re.finditer(
+        r"\b("
+        r"cleaning\s+robot|floor[- ](?:scrub|clean)\w*\s+robot|"
+        r"autonomous\s+(?:scrubber|sweeper|mop)|"
+        r"commercial\s+floor\s+clean(?:ing|er)"
+        r")\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("product_class", "cleaning", span=m.group(0), confidence=0.9)
+        add("claims_surface_cleaning", True, span=m.group(0)[:120], confidence=0.85)
+
+    for m in re.finditer(
+        r"\b(service\s+robot|hospitality\s+robot|social\s+robot)\b",
         text,
         re.I,
     ):
@@ -1123,6 +1152,27 @@ def _extract_from_page(
             continue
         add("claims_item_delivery", True, span=m.group(0)[:120], confidence=0.82)
 
+    # Table / drink / bussing / restaurant food-delivery AMR. Distinct from hotel
+    # housekeeping. FIND Serving class grounds serving_task.
+    for m in re.finditer(
+        r"\b(?:"
+        r"food[- ]runn\w+|food\s+runner|bus(?:s|es|sing|ses)\s+tables?|table\s+service|"
+        r"robot\s+server|server\s+robot|waiter\s+robot|serving\s+robot|"
+        r"tray[- ]delivery|restaurant\s+delivery|food\s+delivery\s+amr|"
+        r"dish\s+return|"
+        r"serv(?:e|es|ing)\s+(?:[\w-]+\s+){0,3}?"
+        r"(?:food|drinks?|meals?|entr[e\u00e9]es?|dishes|beverages?)(?:\s+[\w-]+){0,4}?\s+(?:at|to|in)\s+(?:the\s+)?(?:tables?|dining\s+room|restaurant)|"
+        r"cocktail\s+server|banquet\s+server|waitstaff|bussing|"
+        r"drink\s+runn\w+"
+        r")\b",
+        text,
+        re.I,
+    ):
+        if not page_about_subject and not _subject_near(subject, text, m.start(), m.end()):
+            continue
+        add("claims_serving", True, span=m.group(0)[:120], confidence=0.85)
+        add("product_class", "serving", span=m.group(0)[:80], confidence=0.86)
+
     # --- food preparation / cooking (kitchen & food-prep robots) ---
     # Dexterous food manipulation: frying, grilling, cooking, chopping, and
     # assembling meals. Kept a distinct capability (food_prep) — it must NOT leak
@@ -1172,7 +1222,10 @@ def _extract_from_page(
         r"(?:toilets?|urinals?)\s*,?\s+(?:and\s+)?(?:floors?|sinks?|fixtures?)|"
         r"carpet\s+(?:clean\w*|extract\w*|shampoo\w*)|"
         r"vacuum\w*\s+(?:carpets?|floors?|robot)|robotic\s+vacuum|"
-        r"commercial\s+cleaning\s+robot"
+        r"commercial\s+cleaning\s+robot|"
+        r"vacuuming,?\s+scrubbing|scrubbing,?\s+mopping|"
+        r"floor\s+(?:cleaning|scrubbing)|commercial\s+floors|"
+        r"janitor|custodian|restroom\s+attendant"
         r")\b",
         text,
         re.I,

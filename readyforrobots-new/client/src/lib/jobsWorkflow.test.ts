@@ -1280,8 +1280,13 @@ describe("jobsWorkflow", () => {
     expect(skuLookupGrain("factory")).toBe("robot_type");
     expect(skuLookupGrain("hospitality")).toBe("robot_type");
     expect(skuLookupGrain("food_prep")).toBe("robot_type");
+    expect(skuLookupGrain("serving")).toBe("robot_type");
+    expect(skuLookupGrain("cleaning")).toBe("robot_type");
     expect(normalizeRobotClass("hotel")).toBe("hospitality");
     expect(normalizeRobotClass("food_prep")).toBe("food_prep");
+    expect(normalizeRobotClass("serving")).toBe("serving");
+    expect(normalizeRobotClass("table_service")).toBe("serving");
+    expect(normalizeRobotClass("janitorial")).toBe("cleaning");
     expect(normalizeRobotClass("qsr")).toBe("food_prep");
     expect(normalizeRobotClass("mining")).toBe("mining");
     expect(skuLookupGrain("humanoid")).toBe("robot_type");
@@ -1321,6 +1326,12 @@ describe("jobsWorkflow", () => {
     );
     expect(classJobsEmptyCopy("food_prep")).toBe(
       "No food prep jobs for this robot yet.",
+    );
+    expect(classJobsEmptyCopy("serving")).toBe(
+      "No serving jobs for this robot yet.",
+    );
+    expect(classJobsEmptyCopy("cleaning")).toBe(
+      "No cleaning jobs for this robot yet.",
     );
     expect(shouldShowClassPicker({ needsClassChoice: true, jobs: [], capabilities: [] })).toBe(
       true,

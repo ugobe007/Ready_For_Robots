@@ -32,6 +32,8 @@ Morphology = Literal[
     "healthcare",
     "hospitality",
     "food_prep",
+    "serving",
+    "cleaning",
     "generic",
 ]
 
@@ -200,6 +202,21 @@ _CHECKLISTS: dict[Morphology, tuple[ChecklistSlot, ...]] = {
         ChecklistSlot("environment", "Operating environment", ("operating_environment",)),
         ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
     ),
+    "serving": (
+        ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
+        ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
+        ChecklistSlot("workflows", "Demonstrated workflows", ("claims_serving", "claims_item_delivery")),
+        ChecklistSlot("environment", "Operating environment", ("operating_environment",)),
+        ChecklistSlot("payload", "Payload / carry capacity", ("carrying_capacity",)),
+        ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
+    ),
+    "cleaning": (
+        ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
+        ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
+        ChecklistSlot("workflows", "Demonstrated workflows", ("claims_surface_cleaning", "supports_hard_floor_scrubbing")),
+        ChecklistSlot("environment", "Operating environment", ("operating_environment",)),
+        ChecklistSlot("autonomy", "Autonomy / control", ("autonomy_or_control", "autonomous_navigation")),
+    ),
     "mining_robot": (
         ChecklistSlot("product_class", "Robot class / morphology", ("product_class",)),
         ChecklistSlot("mobility", "Mobility architecture", ("has_mobile_base", "autonomous_navigation", "mobility_architecture")),
@@ -247,6 +264,8 @@ _DISPLAY_CLASS_ALIASES: dict[str, Morphology] = {
     "hotel": "hospitality",
     "hotel_robot": "hospitality",
     "food_prep": "food_prep",
+    "serving": "serving",
+    "cleaning": "cleaning",
     "mining": "mining_robot",
     "warehouse": "amr",
     "warehouse_robot": "amr",
@@ -272,6 +291,8 @@ def infer_morphology(facts: list[RobotFact], display_class: str | None = None) -
         "healthcare",
         "hospitality",
         "food_prep",
+        "serving",
+        "cleaning",
         "agricultural_robot",
         "construction_robot",
         "marine_robot",

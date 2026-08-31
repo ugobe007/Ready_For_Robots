@@ -117,6 +117,18 @@ CLASS_OPTIONS: list[dict[str, str]] = [
         "label": "Food prep",
         "hint": "QSR make-line, bowl assembly, grill, kitchen automation",
     },
+    {
+        "id": "serving",
+        "product_class": "serving",
+        "label": "Serving",
+        "hint": "Table, drinks, bussing, food-delivery AMR — restaurants, hotels, public venues",
+    },
+    {
+        "id": "cleaning",
+        "product_class": "cleaning",
+        "label": "Cleaning",
+        "hint": "Floor scrubbing, vacuum, mopping — F&B and public venues",
+    },
 ]
 
 
@@ -209,8 +221,6 @@ def normalize_class_id(raw: str | None) -> str | None:
         "hospitality_robot": "hospitality",
         "hotel": "hospitality",
         "hotel_robot": "hospitality",
-        "serving": "hospitality",
-        "table_service": "hospitality",
         "guest_delivery": "hospitality",
         "food_prep": "food_prep",
         "food prep": "food_prep",
@@ -219,6 +229,15 @@ def normalize_class_id(raw: str | None) -> str | None:
         "kitchen_automation": "food_prep",
         "make_line": "food_prep",
         "bowl_assembly": "food_prep",
+        "serving": "serving",
+        "table_service": "serving",
+        "food_running": "serving",
+        "waitstaff": "serving",
+        "food_delivery_amr": "serving",
+        "cleaning": "cleaning",
+        "janitorial": "cleaning",
+        "custodial": "cleaning",
+        "cleaning_robot": "cleaning",
     }
     mapped = aliases.get(want)
     if not mapped:
@@ -237,6 +256,28 @@ def infer_class_from_work_language(text: str) -> str | None:
     from app.services.robot_ontology import find_class_from_work_language
 
     return find_class_from_work_language(text)
+
+
+GENERIC_CATEGORY_CLASSES = frozenset({"service_robot", "service", "robot", "commercial"})
+
+
+def prefer_work_language_class(
+    text: str,
+    catalog_class: str | None = None,
+) -> str | None:
+    """Work language outranks a generic vendor category (service_robot).
+
+    Per product: a waiter blurb is serving, a scrubber blurb is cleaning.
+    Never company → category. Catalog class wins only when work language is silent
+    and the catalog class is not a dump category.
+    """
+    work = infer_class_from_work_language(text or "")
+    if work:
+        return work
+    cat = (catalog_class or "").strip().lower() or None
+    if not cat or cat in GENERIC_CATEGORY_CLASSES:
+        return None
+    return cat
 
 
 # FIND tiles the operator picks with no SKU. A named SKU class is not a tile.

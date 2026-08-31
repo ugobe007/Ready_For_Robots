@@ -311,7 +311,28 @@ def build_robot_profile(
             if f.epistemic not in ("unknown", "contradicted")
         }
         added = 0
+        from app.services.robot_class_qualify import GENERIC_CATEGORY_CLASSES
+
         for fact in extra:
+            if fact.predicate == "product_class":
+                existing_pc = [
+                    f
+                    for f in facts
+                    if f.predicate == "product_class"
+                    and f.epistemic not in ("unknown", "contradicted")
+                ]
+                incoming = str(fact.value or "").strip().lower()
+                generic_existing = all(
+                    str(f.value or "").strip().lower() in GENERIC_CATEGORY_CLASSES
+                    for f in existing_pc
+                )
+                if existing_pc and not generic_existing:
+                    continue
+                if existing_pc and generic_existing and incoming not in GENERIC_CATEGORY_CLASSES:
+                    facts[:] = [f for f in facts if f.predicate != "product_class"]
+                    known.discard("product_class")
+            elif fact.predicate in known:
+                continue
             if fact.predicate in known:
                 continue
             facts.append(fact)
@@ -385,6 +406,8 @@ def build_robot_profile(
                 "hospitality_robot",
                 "hotel_robot",
                 "food_prep",
+                "serving",
+                "cleaning",
                 "agriculture",
                 "agricultural_robot",
                 "construction",
@@ -409,7 +432,19 @@ def build_robot_profile(
                     if str(f.value).lower() in morph_vals
                 ]
                 best = max(morph or class_facts, key=lambda f: f.confidence)
-            selected.display_class = str(best.value)
+            claimed = str(best.value)
+            from app.services.robot_class_qualify import GENERIC_CATEGORY_CLASSES, prefer_work_language_class
+
+            existing = (selected.display_class or "").strip()
+            evidence = f"{selected.name} {selected.description or ''} {claimed}"
+            kept = prefer_work_language_class(evidence, claimed) or claimed
+            if (
+                existing
+                and existing.lower() not in GENERIC_CATEGORY_CLASSES
+                and claimed.lower() in GENERIC_CATEGORY_CLASSES
+            ):
+                kept = existing
+            selected.display_class = kept
 
     facts, morphology, coverage_rate, coverage_level = apply_research_gaps(
         facts,
