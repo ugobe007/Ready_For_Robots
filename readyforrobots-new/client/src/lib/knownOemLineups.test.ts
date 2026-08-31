@@ -11,7 +11,7 @@ describe("knownOemLineups", () => {
     expect(hit?.vendor_name).toMatch(/Reflex/i);
     const names = hit?.robots.map(r => r.name) || [];
     expect(names.some(n => /Gen2|Gen 2/i.test(n))).toBe(true);
-    expect(names.some(n => /Humanoid/i.test(n))).toBe(true);
+    expect(names.some(n => /^Humanoid$/i.test(n))).toBe(false);
     expect(names.length).toBeGreaterThan(0);
   });
 
