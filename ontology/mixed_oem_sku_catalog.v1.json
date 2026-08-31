@@ -83,6 +83,23 @@
           "source": "mission-2026-08-31-mixed-oem-product-range"
         },
         {
+          "name": "PuduBot 2",
+          "slug": "pudu-robotics-pudubot-2",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Food and beverage delivery",
+          "setting": "Restaurants",
+          "lookup_host": "pudurobotics.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.pudurobotics.com/product/pudubot2",
+          "url_status": "verified"
+        },
+        {
           "name": "MT1",
           "slug": "pudu-robotics-mt1",
           "company_name": "Pudu Robotics",
