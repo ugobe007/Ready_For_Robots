@@ -892,7 +892,7 @@ def next_data_product_candidates(html: str, page_url: str) -> list[dict[str, str
             # "Controller: SRC-880" / "Laser SLAM Lifting Robot AMB-300JZ"
             tail = name.split(":")[-1].strip()
             token = tail.split()[-1] if tail.split() else tail
-            for candidate in (name, tail, token, slug if isinstance(slug, str) else ""):
+            for candidate in (token, tail, name, slug if isinstance(slug, str) else ""):
                 cleaned = re.sub(r"\s+", " ", str(candidate or "")).strip()
                 if not cleaned or is_junk_sku_name(cleaned) or not looks_like_named_sku(cleaned):
                     continue
