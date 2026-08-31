@@ -112,8 +112,13 @@ SCRAPE_ONLY_FILES = frozenset(
     {
         "app/services/robot_job_extract.py",
         "app/services/job_board_scraper_runner.py",
+        "app/services/robot_job_scrape_params.py",
+        "app/services/robot_job_lifecycle.py",
+        "app/services/robot_job_live_corpus.py",
         "tests/test_job_board_scraper_pipeline.py",
         "tests/test_robot_job_extract.py",
+        "tests/test_robot_job_scrape_params.py",
+        "tests/test_robot_job_live_corpus.py",
         "fly.toml",
     }
 )

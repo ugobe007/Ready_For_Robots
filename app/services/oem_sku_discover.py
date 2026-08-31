@@ -335,6 +335,9 @@ _CHROME_LABELS = frozenset(
         "powered by ai",
         "why dexory",
         "wheeled",
+        "impact",
+        "farmers",
+        "farmer",
     }
 )
 _CHROME_SLUGS = frozenset(
@@ -547,6 +550,10 @@ def is_junk_sku_name(name: str) -> bool:
     if not raw or len(raw) < 2 or len(raw) > 40:
         return True
     if is_site_chrome_name(raw):
+        return True
+    from app.services.robot_job_scrape_params import is_invented_sku_name
+
+    if is_invented_sku_name(raw):
         return True
     if _CATEGORY_BLOB.fullmatch(raw):
         return True
