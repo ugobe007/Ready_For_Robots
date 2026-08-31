@@ -233,7 +233,55 @@ def snapshot_from_listing(
     return critique
 
 
+def overlay_live_search(
+    critique: UrlCritique,
+    search: dict[str, Any],
+    status: int,
+) -> UrlCritique:
+    """Annotate a catalog critique with Fly FIND. Junk SKUs on production are notes, not breaks."""
+    from app.services.oem_sku_discover import is_junk_sku_name, is_site_chrome_name
+
+    if status in {0, 502, 503, 504}:
+        critique.notes.append(f"live FIND skipped/transient HTTP {status}")
+        return critique
+    if status != 200:
+        critique.notes.append(f"live FIND HTTP {status}")
+        return critique
+    profile = search.get("profile") if isinstance(search.get("profile"), dict) else {}
+    products = search.get("products") or profile.get("products") or []
+    names = [
+        str(p.get("name") or "").strip()
+        for p in products
+        if isinstance(p, dict) and str(p.get("name") or "").strip()
+    ]
+    if names:
+        critique.notes.append(f"live FIND products={names[:8]}")
+    state = search.get("state")
+    if state:
+        critique.notes.append(f"live FIND state={state}")
+    evidence = [
+        n
+        for n in names
+        if not is_junk_sku_name(n)
+        and not is_site_chrome_name(n)
+        and _name_key(n) not in CHROME_NAMES
+    ]
+    junk = [n for n in names if n not in evidence]
+    if junk:
+        critique.notes.append(f"live FIND junk SKUs ignored={junk[:8]}")
+    picker = bool(search.get("needs_class_choice")) or state in {
+        "qualify_robot",
+        "select_class",
+    }
+    if picker and evidence:
+        critique.breaks.append(
+            Break(BREAK_EMPTY, "live FIND showed class picker while products were named")
+        )
+    return critique
+
+
 def snapshot_from_rows(
+
     url: str,
     *,
     vendor_name: str | None,

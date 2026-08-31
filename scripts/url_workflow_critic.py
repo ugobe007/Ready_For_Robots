@@ -34,6 +34,7 @@ from app.services.url_workflow_critic import (  # noqa: E402
     critique_url,
     format_report,
     load_corpus,
+    overlay_live_search,
     run_fixture_suite,
 )
 
@@ -64,30 +65,7 @@ def _post_search(url: str, *, api: str, timeout: float = 90.0) -> tuple[int, dic
 
 
 def _overlay_live(critique: UrlCritique, search: dict[str, Any], status: int) -> None:
-    if status in {0, 502, 503, 504}:
-        critique.notes.append(f"live FIND skipped/transient HTTP {status}")
-        return
-    if status != 200:
-        critique.notes.append(f"live FIND HTTP {status}")
-        return
-    profile = search.get("profile") if isinstance(search.get("profile"), dict) else {}
-    products = search.get("products") or profile.get("products") or []
-    names = [
-        str(p.get("name") or "").strip()
-        for p in products
-        if isinstance(p, dict) and str(p.get("name") or "").strip()
-    ]
-    if names:
-        critique.notes.append(f"live FIND products={names[:8]}")
-    state = search.get("state")
-    if state:
-        critique.notes.append(f"live FIND state={state}")
-    if search.get("needs_class_choice") and names:
-        from app.services.url_workflow_critic import BREAK_EMPTY, Break
-
-        critique.breaks.append(
-            Break(BREAK_EMPTY, "live FIND showed class picker while products were named")
-        )
+    overlay_live_search(critique, search, status)
 
 
 def main() -> int:

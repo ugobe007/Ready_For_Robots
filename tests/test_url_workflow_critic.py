@@ -161,6 +161,63 @@ def test_junk_names_are_not_skus():
     assert not is_junk_sku_name("Phantas")
 
 
+
+def test_live_overlay_ignores_junk_skus_on_stale_fly():
+    from app.services.url_workflow_critic import overlay_live_search
+
+    raw = snapshot_from_rows(
+        "https://www.tennantco.com/en_us.html",
+        vendor_name="Tennant",
+        rows=[],
+    )
+    overlay_live_search(
+        raw,
+        {
+            "state": "qualify_robot",
+            "needs_class_choice": True,
+            "products": [{"name": "AMR scrubbers"}],
+        },
+        200,
+    )
+    assert raw.ok, raw.breaks
+    assert any("junk SKUs" in n for n in raw.notes)
+
+    seer = snapshot_from_rows(
+        "https://seer-robotics.ai/",
+        vendor_name="SEER Robotics",
+        rows=[],
+    )
+    overlay_live_search(
+        seer,
+        {
+            "state": "matches",
+            "products": [{"name": "Seer Humanoid"}],
+        },
+        200,
+    )
+    assert seer.ok, seer.breaks
+
+
+def test_live_overlay_flags_picker_when_real_skus_named():
+    from app.services.url_workflow_critic import overlay_live_search
+
+    raw = snapshot_from_rows(
+        "https://example/named",
+        vendor_name="OEM",
+        rows=[],
+    )
+    overlay_live_search(
+        raw,
+        {
+            "state": "qualify_robot",
+            "needs_class_choice": True,
+            "products": [{"name": "BellaBot"}, {"name": "CC1"}],
+        },
+        200,
+    )
+    assert any(b.kind == "empty_range_named" for b in raw.breaks)
+
+
 def test_cleaning_drone_capabilities_are_not_floor_scrub():
     from app.services.url_workflow_critic import capabilities_for_product
 
