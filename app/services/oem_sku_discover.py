@@ -400,8 +400,9 @@ _CATEGORY_BLOB = re.compile(
     re.I,
 )
 # "Seer Humanoid" / "Segway Humanoid" — company + morphology dump, not a model.
+# Exclude names with model codes like "Lift EL1 Amr" (contains digits mixed in tokens).
 _COMPANY_CLASS_DUMP = re.compile(
-    r"^[A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]+)*\s+(?:Humanoid|Scrubber|AMR)s?$",
+    r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Humanoid|Scrubber|AMR)s?$",
     re.I,
 )
 # Title-case verbs that collide with SKU words (Handle the Routine).
