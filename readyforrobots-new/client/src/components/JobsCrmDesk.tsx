@@ -591,13 +591,15 @@ function WorkTaskModelQuestion({
       className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-5 sm:px-6"
       aria-label={WORK_TASK_MODEL_QUESTION}
     >
-      <p className={`${eyebrow} text-slate-400`}>Task model for this work</p>
+      <p className={`${eyebrow} text-slate-400`}>For this job</p>
       <h3 className="mt-2 font-display text-2xl font-bold text-white">
         {WORK_TASK_MODEL_QUESTION}
       </h3>
-      <p className="mt-2 text-sm leading-relaxed text-slate-400">
-        {WORK_TASK_MODEL_UNKNOWN_HINT}
-      </p>
+      {choice === "unknown" ? (
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          {WORK_TASK_MODEL_UNKNOWN_HINT}
+        </p>
+      ) : null}
       <div className="mt-4 space-y-3">
         <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-200">
           <input

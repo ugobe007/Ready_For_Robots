@@ -381,7 +381,7 @@ def test_work_task_model_is_user_entered_never_invented(db_session):
         )
     with pytest.raises(KeyError):
         set_kept_job_task_model(
-            db_session, _user(), job_key="job-1", kind="self_train"
+            db_session, _user(), job_key="job-missing", kind="self_train"
         )
     assert WORK_TASK_MODEL_SOURCE_REQUIRED
 

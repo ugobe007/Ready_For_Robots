@@ -455,9 +455,10 @@ describe("CRM desk binds to the FIND robot, not leftover totes", () => {
     expect(desk).toMatch(/WorkTaskModelQuestion/);
     expect(desk).toMatch(/saveWorkTaskModelOnAccount/);
     expect(desk).toMatch(/WORK_TASK_MODEL_QUESTION/);
-    expect(desk).toMatch(/We'll train this for the job/);
+    expect(desk).toMatch(/WORK_TASK_MODEL_SELF_OPTION/);
     expect(account).toMatch(/\/api\/jobs-crm\/jobs\/task-model/);
-    expect(account).not.toMatch(/GR00T N1|invent a model/i);
+    expect(account).not.toMatch(/GR00T N1/);
+    expect(account).toMatch(/We do not invent a model name/);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8",
