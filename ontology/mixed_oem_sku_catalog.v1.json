@@ -21,7 +21,8 @@
     "Richtech homepage 429 (Vercel checkpoint) — reclass existing ADAM/Scotty only.",
     "SEER lifting/forklift/controller pages name AMB / SFL / SCB / SRC SKUs. Not Seer Humanoid.",
     "VinMotion homepage Product menu names Motion 1 and Motion 2. Motion 1 is a humanoid robot on the homepage. Motion 2 launching page is thin — no invented class.",
-    "Live page extract still wins. Empty specs stay UNKNOWN. Not Job Card employers."
+    "Live page extract still wins. Empty specs stay UNKNOWN. Not Job Card employers.",
+    "2026-08-31 more OEMs: booster.tech, lumosbot.tech, galbot.com, unix-group.ai, noetixrobotics.com, thirdwave.ai, dexory.com, primebot.cn, limxdynamics.com. Named products from live pages or product JS only. Thin pages stay unclassified. DexoryView is the named product; public pages do not name the robots. Third Wave Reach Trucks is named on the Armada case study, not TWA Reach."
   ],
   "companies": [
     {
@@ -1972,9 +1973,9 @@
           "slug": "lumos-robotics-lumos-mos-2",
           "company_name": "Lumos Robotics",
           "company_slug": "lumos-robotics",
-          "primary_class": "service_robot",
+          "primary_class": "mobile_manipulator",
           "listed_class": "Heavy-duty wheeled mobile manipulation robot",
-          "task": "Wheeled manipulation robot for industrial handling and inspection",
+          "task": "Wheeled mobile manipulation for industrial handling and inspection",
           "setting": null,
           "lookup_host": "lumosbot.tech",
           "source": "mission-2026-08-31-more-oems",
@@ -2019,16 +2020,16 @@
           "slug": "galbot-galbot-g1",
           "company_name": "Galbot",
           "company_slug": "galbot",
-          "primary_class": "service_robot",
-          "listed_class": "General-purpose robot",
-          "task": "Embodied AI robot powered by large models",
+          "primary_class": "mobile_manipulator",
+          "listed_class": "Mobile dual-arm robot",
+          "task": "Mobile dual-arm robot with generalizable manipulation",
           "setting": null,
           "lookup_host": "galbot.com",
           "source": "mission-2026-08-31-more-oems",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": [],
-          "product_url": "https://www.galbot.com/",
+          "product_url": "https://www.galbot.com/g1",
           "url_status": "verified"
         },
         {
@@ -2036,16 +2037,16 @@
           "slug": "galbot-galbot-s1",
           "company_name": "Galbot",
           "company_slug": "galbot",
-          "primary_class": "service_robot",
+          "primary_class": "mobile_manipulator",
           "listed_class": "Heavy-duty robot",
-          "task": "Heavy-duty robot",
+          "task": "Heavy-duty dual-arm handling, 50kg payload",
           "setting": null,
           "lookup_host": "galbot.com",
           "source": "mission-2026-08-31-more-oems",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": [],
-          "product_url": "https://www.galbot.com/",
+          "product_url": "https://www.galbot.com/s1",
           "url_status": "verified"
         }
       ]
@@ -2139,7 +2140,7 @@
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": [],
-          "product_url": "https://www.noetixrobotics.com/en",
+          "product_url": "https://www.noetixrobotics.com/en/detail/Bumi",
           "url_status": "verified"
         },
         {
@@ -2156,7 +2157,7 @@
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": [],
-          "product_url": "https://www.noetixrobotics.com/en",
+          "product_url": "https://www.noetixrobotics.com/en/detail/N2",
           "url_status": "verified"
         },
         {
@@ -2173,7 +2174,7 @@
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": [],
-          "product_url": "https://www.noetixrobotics.com/en",
+          "product_url": "https://www.noetixrobotics.com/en/detail/E1",
           "url_status": "verified"
         }
       ]
@@ -2196,14 +2197,14 @@
           "company_slug": "primebot",
           "primary_class": "humanoid",
           "listed_class": "Full-body force-controlled humanoid robot",
-          "task": "Qiyuan Q1 humanoid robot",
+          "task": "PrimeBOT Q1 full-body force-controlled humanoid robot",
           "setting": null,
           "lookup_host": "primebot.cn",
           "source": "mission-2026-08-31-more-oems",
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": [],
-          "product_url": "https://www.primebot.cn/",
+          "product_url": "https://www.primebot.cn/product/en",
           "url_status": "verified"
         }
       ]
@@ -2275,9 +2276,9 @@
           "slug": "limx-dynamics-tron-2",
           "company_name": "LimX Dynamics",
           "company_slug": "limx-dynamics",
-          "primary_class": "service_robot",
-          "listed_class": "Multi-form embodied robot",
-          "task": "Multi-form embodied robot with dual arms and wheeled legs",
+          "primary_class": "mobile_manipulator",
+          "listed_class": "Autonomous mobile manipulation kit",
+          "task": "Dual arms and wheeled legs. Multi-form embodied robot",
           "setting": null,
           "lookup_host": "limxdynamics.com",
           "source": "mission-2026-08-31-more-oems",
@@ -2288,8 +2289,70 @@
           "url_status": "verified"
         }
       ]
+    },
+    {
+      "name": "Third Wave Automation",
+      "slug": "third-wave-automation",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "thirdwave.ai"
+      ],
+      "source_urls": [
+        "https://thirdwave.ai/",
+        "https://thirdwave.ai/armada-case-study/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-08-31-more-oems",
+          "setting": null,
+          "name": "Third Wave Reach Trucks",
+          "slug": "third-wave-automation-third-wave-reach-trucks",
+          "company_name": "Third Wave Automation",
+          "company_slug": "third-wave-automation",
+          "primary_class": "amr",
+          "listed_class": "Autonomous forklift",
+          "task": "Autonomous reach truck with shared autonomy",
+          "lookup_host": "thirdwave.ai",
+          "product_url": "https://thirdwave.ai/armada-case-study/"
+        }
+      ]
+    },
+    {
+      "name": "Dexory",
+      "slug": "dexory",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "dexory.com"
+      ],
+      "source_urls": [
+        "https://www.dexory.com/",
+        "https://www.dexory.com/solutions"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-08-31-more-oems",
+          "setting": null,
+          "name": "DexoryView",
+          "slug": "dexory-dexoryview",
+          "company_name": "Dexory",
+          "company_slug": "dexory",
+          "primary_class": "service_robot",
+          "listed_class": null,
+          "task": null,
+          "lookup_host": "dexory.com",
+          "product_url": "https://www.dexory.com/solutions"
+        }
+      ]
     }
   ],
-  "company_count": 27,
-  "product_count": 115
+  "company_count": 29,
+  "product_count": 117
 }

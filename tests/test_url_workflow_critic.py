@@ -128,6 +128,8 @@ def test_corpus_file_lists_operator_urls():
         "noetixrobotics.com",
         "primebot.cn",
         "limxdynamics.com",
+        "thirdwave.ai",
+        "dexory.com",
     ):
         assert any(host in u for u in urls), host
     assert CORPUS_PATH.is_file()

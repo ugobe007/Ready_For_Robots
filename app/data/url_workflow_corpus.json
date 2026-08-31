@@ -196,20 +196,23 @@
       "url": "https://lumosbot.tech",
       "vendor": "Lumos Robotics",
       "expects_named_robots": true,
-      "expect_classes": ["humanoid"],
+      "expect_mixed": true,
+      "expect_classes": ["humanoid", "mobile_manipulator"],
       "expect_products": ["Lumos LUS 2", "Lumos NIX S3", "Lumos MOS 2", "Lumos LUD"],
+      "distinct_class_pairs": [["Lumos LUS 2", "Lumos MOS 2"]],
       "forbid_products": ["Lumos Motor", "Lumos Touch R1", "Product"],
       "forbid_chrome": true,
-      "notes": "LUS 2 and NIX S3 are bipedal humanoids on their product pages. MOS 2 is a wheeled manipulator. LUD is wheeled-legged. Skip desktop arm and data tools. Do not invent SKUs."
+      "notes": "LUS 2 and NIX S3 are bipedal humanoids on their product pages. MOS 2 is a wheeled mobile manipulator on /products/mos. LUD English page is thin, so it stays unclassified. Skip desktop arm and data tools. Do not invent SKUs."
     },
     {
       "url": "https://galbot.com",
       "vendor": "Galbot",
       "expects_named_robots": true,
+      "expect_classes": ["mobile_manipulator"],
       "expect_products": ["Galbot G1", "Galbot S1"],
       "forbid_products": ["Galbot G2", "Product"],
       "forbid_chrome": true,
-      "notes": "SPA JS names G1 (general-purpose robot) and S1 (heavy-duty robot). G2 is not on the site. Do not dump company humanoid onto both SKUs."
+      "notes": "SPA JS names Galbot G1 as a mobile dual-arm robot and Galbot S1 as a heavy-duty robot (50kg, dual-arm handling). G2 is not a product route. Do not dump company humanoid onto both SKUs."
     },
     {
       "url": "https://unix-group.ai",
@@ -239,31 +242,37 @@
       "expect_products": ["Q1"],
       "forbid_products": ["Qiyuan T1", "Product"],
       "forbid_chrome": true,
-      "notes": "Product JS names Qiyuan Q1, not Qiyuan T1. Humanoid on that page."
+      "notes": "Product JS names PrimeBOT Q1, not Qiyuan T1. Humanoid on that page."
     },
     {
       "url": "https://limxdynamics.com/en",
       "vendor": "LimX Dynamics",
       "expects_named_robots": true,
-      "expect_classes": ["humanoid"],
+      "expect_mixed": true,
+      "expect_classes": ["humanoid", "mobile_manipulator"],
       "expect_products": ["Luna", "Oli", "TRON 1", "TRON 2"],
+      "distinct_class_pairs": [["Luna", "TRON 2"]],
       "forbid_chrome": true,
-      "notes": "Luna and Oli are full-size humanoids. TRON 1 is a multi-modal biped / humanoid RL platform. TRON 2 is a multi-form embodied robot — not a company humanoid dump."
+      "notes": "Luna and Oli are full-size humanoids. TRON 1 is a multi-modal biped / humanoid RL platform. TRON 2 is an autonomous mobile manipulation kit with dual arms and wheeled legs. Do not dump company humanoid onto TRON 2."
     },
     {
       "url": "https://thirdwave.ai",
       "vendor": "Third Wave Automation",
-      "allow_empty": true,
+      "expects_named_robots": true,
+      "expect_classes": ["amr"],
+      "expect_products": ["Third Wave Reach Trucks"],
       "forbid_products": ["TWA Reach", "Autonomous forklifts"],
-      "notes": "Homepage names autonomous forklifts as a category, not a SKU. Do not invent TWA Reach."
+      "forbid_chrome": true,
+      "notes": "Armada case study names Third Wave Reach Trucks. Homepage only says autonomous forklifts as a category. ArmadaFMS is software. Do not invent TWA Reach."
     },
     {
       "url": "https://dexory.com",
       "vendor": "Dexory",
-      "allow_empty": true,
-      "forbid_products": ["DexoryView", "Powered by AI", "Impact"],
+      "expects_named_robots": true,
+      "expect_products": ["DexoryView"],
+      "forbid_products": ["Powered by AI", "Impact"],
       "forbid_chrome": true,
-      "notes": "Site names DexoryView software and autonomous robots. No robot SKU on the page. Do not invent one."
+      "notes": "Site names DexoryView. Public pages call the scanners autonomous robots and do not give them a SKU. Do not invent a Dexory AMR name."
     }
   ]
 }
