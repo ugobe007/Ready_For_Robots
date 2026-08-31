@@ -146,7 +146,8 @@ def test_mixed_overlay_file_does_not_invent_skus():
     forbidden = {"About", "News", "en", "Imprint", "Product", "Farmers"}
     assert forbidden.isdisjoint(names)
     assert "PuduBot 3" not in names
-    assert "T7AMR" not in names
+    assert "Seer Humanoid" not in names
+    assert "AMR scrubbers" not in names
     assert map_primary_class("Commercial", "Bipedal humanoid") == "humanoid"
     assert map_primary_class("Commercial", "Cleaning drone") == "cleaning_drone"
 
@@ -242,20 +243,47 @@ def test_kaercher_overlay_is_robotic_kira_not_mop_skus():
     assert "sc 3" not in blob
 
 
-def test_tennant_and_seer_do_not_invent_cleaner_skus():
+def test_tennant_and_seer_named_robots_not_class_dumps():
     import json
 
     data = json.loads(MIXED_OEM_CATALOG_PATH.read_text(encoding="utf-8"))
     slugs = {c["slug"] for c in data["companies"]}
-    assert "tennant" not in slugs
-    assert "seer-robotics" not in slugs
+    assert "tennant" in slugs
+    assert "seer-robotics" in slugs
     names = [p["name"] for c in data["companies"] for p in c["products"]]
-    assert "T7AMR" not in names
     assert "AMR scrubbers" not in names
+    assert "Seer Humanoid" not in names
     tennant = listing_payload_for_url("https://www.tennantco.com/en_us.html")
     tennant_names = [r["name"] for r in tennant.get("robots") or []]
     assert "AMR scrubbers" not in tennant_names
-    assert "T7AMR" not in tennant_names
+    assert "X6 ROVR" in tennant_names
+    assert "T7AMR" in tennant_names
+    assert all(r.get("display_class") == "cleaning" for r in tennant["robots"])
+    seer = listing_payload_for_url("https://seer-robotics.ai/")
+    seer_names = [r["name"] for r in seer.get("robots") or []]
+    assert "Seer Humanoid" not in seer_names
+    assert "AMB-300JZ" in seer_names
+    assert "SFL-CBD15" in seer_names
+    by = {r["name"]: r.get("display_class") for r in seer["robots"]}
+    assert by["AMB-300JZ"] == "amr"
+    assert by["SFL-CBD15"] == "amr"
+    assert by.get("SRC-880") is None
+
+
+def test_tennant_robotic_product_url_is_a_named_sku():
+    from app.services.oem_sku_discover import (
+        classify_href_candidate,
+        tennant_robotic_sku_from_url,
+    )
+    from app.services.robot_understanding_v1.resolve import _sku_from_product_href
+
+    x6 = "https://www.tennantco.com/en_us/1/machines/scrubbers/product.x6-rovr.autonomous-floor-scrubber.m-x6rovr.html"
+    mop = "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t7.ride-on-floor-scrubber.2000074.html"
+    assert tennant_robotic_sku_from_url(x6) == "X6 ROVR"
+    assert tennant_robotic_sku_from_url(mop) is None
+    assert classify_href_candidate(x6, "X6 ROVR") == "product"
+    assert _sku_from_product_href(x6) == "X6 ROVR"
+    assert _sku_from_product_href(mop) is None
 
 
 def test_discovered_sku_does_not_inherit_sibling_class():

@@ -12,8 +12,8 @@
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
-  "company_count": 119,
-  "product_count": 292,
+  "company_count": 121,
+  "product_count": 304,
   "skipped": [],
   "companies": [
     {
@@ -756,7 +756,7 @@
           "candidate_sources": [
             "https://www.bearrobotics.ai/"
           ],
-          "product_url": "https://www.bearrobotics.ai/",
+          "product_url": "https://www.bearrobotics.ai/servi-plus",
           "lookup_host": "bearrobotics.ai",
           "url_status": "verified",
           "specs": {},
@@ -1597,7 +1597,7 @@
           "candidate_sources": [
             "https://gausium.com/"
           ],
-          "product_url": "https://gausium.com/products/phantas",
+          "product_url": "https://gausium.com/products/phantas/",
           "lookup_host": "gausium.com",
           "url_status": "verified",
           "specs": {},
@@ -1623,7 +1623,7 @@
           "candidate_sources": [
             "https://gausium.com/"
           ],
-          "product_url": "https://gausium.com/products/vacuum40",
+          "product_url": "https://gausium.com/products/vacuum40/",
           "lookup_host": "gausium.com",
           "url_status": "verified",
           "specs": {},
@@ -1671,7 +1671,7 @@
           "specs": {},
           "capability_confidence": "UNKNOWN",
           "flags": [],
-          "product_url": "https://gausium.com/products/scrubber-75",
+          "product_url": "https://gausium.com/products/scrubber-75/",
           "url_status": "verified"
         },
         {
@@ -2304,7 +2304,7 @@
           "candidate_sources": [
             "https://www.keenon.com/"
           ],
-          "product_url": "https://www.keenon.com/en/news/k2",
+          "product_url": "https://www.keenon.com/en/product/T10",
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "specs": {},
@@ -2356,7 +2356,7 @@
           "candidate_sources": [
             "https://www.keenon.com/"
           ],
-          "product_url": "https://www.keenon.com/",
+          "product_url": "https://www.keenon.com/en/product/W3",
           "lookup_host": "keenon.com",
           "url_status": "verified",
           "specs": {},
@@ -9503,6 +9503,238 @@
           "capability_confidence": "UNKNOWN",
           "flags": [],
           "product_url": "https://www.polarxrobotics.com/products/star40",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Tennant",
+      "slug": "tennant",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "tennantco.com"
+      ],
+      "source_urls": [
+        "https://www.tennantco.com/en_us.html",
+        "https://www.tennantco.com/en_us/robotics.html"
+      ],
+      "products": [
+        {
+          "name": "X6 ROVR",
+          "slug": "tennant-x6-rovr",
+          "company_name": "Tennant",
+          "company_slug": "tennant",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous floor scrubber",
+          "task": "Autonomous scrubbing on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "tennantco.com",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.x6-rovr.autonomous-floor-scrubber.m-x6rovr.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "X16 SWEEP",
+          "slug": "tennant-x16-sweep",
+          "company_name": "Tennant",
+          "company_slug": "tennant",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous floor sweeper",
+          "task": "Autonomous sweeping on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "tennantco.com",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.tennantco.com/en_us/1/machines/sweepers/product.X16-sweep.autonomous-floor-sweeper.2000309.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "T7AMR",
+          "slug": "tennant-t7amr",
+          "company_name": "Tennant",
+          "company_slug": "tennant",
+          "primary_class": "cleaning",
+          "listed_class": "Robotic floor scrubber",
+          "task": "Robotic floor scrubbing on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "tennantco.com",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t7amr.robotic-floor-scrubber.2000056.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "T380AMR",
+          "slug": "tennant-t380amr",
+          "company_name": "Tennant",
+          "company_slug": "tennant",
+          "primary_class": "cleaning",
+          "listed_class": "Robotic floor scrubber",
+          "task": "Robotic floor scrubbing in compact spaces",
+          "setting": "Commercial interiors",
+          "lookup_host": "tennantco.com",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t380amr.robotic-floor-scrubber.2000055.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "T16AMR",
+          "slug": "tennant-t16amr",
+          "company_name": "Tennant",
+          "company_slug": "tennant",
+          "primary_class": "cleaning",
+          "listed_class": "Industrial robotic floor scrubber",
+          "task": "Industrial robotic floor scrubbing",
+          "setting": "Industrial floors",
+          "lookup_host": "tennantco.com",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t16amr.industrial-robotic-floor-scrubber.2000054.html",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "SEER Robotics",
+      "slug": "seer-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "seer-robotics.ai"
+      ],
+      "source_urls": [
+        "https://seer-robotics.ai/",
+        "https://seer-robotics.ai/amr/liftingrobot"
+      ],
+      "products": [
+        {
+          "name": "AMB-300JZ",
+          "slug": "seer-robotics-amb-300jz",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Laser SLAM lifting robot",
+          "task": "Lifting AMR for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/AMB-300JZ",
+          "url_status": "verified"
+        },
+        {
+          "name": "AMB-300XS",
+          "slug": "seer-robotics-amb-300xs",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Lifting robot chassis",
+          "task": "Lifting AMR chassis for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/AMB-300XS",
+          "url_status": "verified"
+        },
+        {
+          "name": "SJV-SW600",
+          "slug": "seer-robotics-sjv-sw600",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Rotary lifting robot",
+          "task": "Rotary lifting AMR for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/SJV-SW600",
+          "url_status": "verified"
+        },
+        {
+          "name": "SFL-CBD15",
+          "slug": "seer-robotics-sfl-cbd15",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Autonomous pallet truck",
+          "task": "Autonomous pallet truck for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SFL-CBD15",
+          "url_status": "verified"
+        },
+        {
+          "name": "SFL-300L",
+          "slug": "seer-robotics-sfl-300l",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Autonomous forklift",
+          "task": "Single-fork autonomous forklift for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SFL-300L",
+          "url_status": "verified"
+        },
+        {
+          "name": "SCB-1400",
+          "slug": "seer-robotics-scb-1400",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Autonomous counterbalance truck",
+          "task": "Autonomous counterbalance truck for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SCB-1400",
+          "url_status": "verified"
+        },
+        {
+          "name": "SRC-880",
+          "slug": "seer-robotics-src-880",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "service_robot",
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr-controllers/SRC-880",
           "url_status": "verified"
         }
       ]

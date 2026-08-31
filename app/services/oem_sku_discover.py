@@ -79,8 +79,18 @@ _LISTING_HINTS = {
     "avidbots.com": ("/",),
     "polarxrobotics.com": ("/", "/products"),
     "cenobots.com": ("/",),
-    "tennantco.com": ("/en_us.html", "/en_us/equipment/cleaning-machines/autonomous-floor-cleaning-machines.html"),
-    "seer-robotics.ai": ("/", "/amr/others.html"),
+    "tennantco.com": (
+        "/en_us/robotics.html",
+        "/en_us/1/machines/robotics.html",
+        "/en_us/1/machines/scrubbers/robotic-scrubbers.html",
+        "/en_us.html",
+    ),
+    "seer-robotics.ai": (
+        "/amr/liftingrobot",
+        "/amr/autonomousforklifts",
+        "/amr-controllers",
+        "/amr/others",
+    ),
 }
 _NAV_PATH = re.compile(
     r"/(about|careers?|contact|news|blog|press|support|login|privacy|legal|"
@@ -388,7 +398,13 @@ _VEHICLE_PAGE = re.compile(
     r"smart electric|charging network|investor relations)\b",
     re.I,
 )
-# G6 / P7 / X9 / L03 — car model codes, not robots, unless humanoid evidence.
+# Tennant Hybris filenames: product.{sku}.{desc}.{id}.html
+_TENNANT_PRODUCT_FILE = re.compile(
+    r"(?:^|/)product\.([A-Za-z0-9][A-Za-z0-9-]*)\.([A-Za-z0-9-]+)\.[^/]+\.html?$",
+    re.I,
+)
+_TENNANT_ROBOTIC_DESC = re.compile(r"(autonomous|robotic|amr|rovr)", re.I)
+_TENNANT_ROBOTIC_SKU = re.compile(r"(amr|rovr)", re.I)
 _VEHICLE_MODEL_CODE = re.compile(r"^[A-Z]{1,3}\d{1,2}\+?$", re.I)
 _CTA_HYPHEN_HEAD = frozenset(
     {"join", "find", "sign", "log", "get", "contact", "book", "see", "learn", "try"}
@@ -546,9 +562,26 @@ def looks_like_named_sku(name: str) -> bool:
 CandidateKind = Literal["chrome", "hub", "vehicle", "product", "unknown"]
 
 
+def tennant_robotic_sku_from_url(url: str) -> str | None:
+    """Named robotic SKU from a Tennant product.*.html path. Manual mops stay out."""
+    path = urlparse(url or "").path or ""
+    match = _TENNANT_PRODUCT_FILE.search(path)
+    if not match:
+        return None
+    sku, desc = match.group(1), match.group(2)
+    if not (_TENNANT_ROBOTIC_SKU.search(sku) or _TENNANT_ROBOTIC_DESC.search(desc)):
+        return None
+    name = _slug_to_name(sku)
+    return re.sub(r"\b(Rovr|Sweep|Amr)\b", lambda m: m.group(1).upper(), name)
+
+
 def _path_slug(url: str) -> str:
     path = (urlparse(url or "").path or "").rstrip("/")
-    return path.rsplit("/", 1)[-1].split(".", 1)[0].lower() if path else ""
+    last = path.rsplit("/", 1)[-1] if path else ""
+    tennant = tennant_robotic_sku_from_url(url)
+    if tennant:
+        return slugify(tennant)
+    return last.split(".", 1)[0].lower() if last else ""
 
 
 def href_is_vehicle_path(url: str) -> bool:
@@ -804,10 +837,11 @@ def listing_urls_for_company(company: dict[str, Any]) -> list[str]:
     for host in hosts:
         _add(f"https://{host}/")
         _add(f"https://www.{host}/")
-        for path in _LISTING_PATHS:
+        # Official listing hints first so AMR/robotics hubs are fetched before /products.
+        for path in _LISTING_HINTS.get(host, ()):
             _add(f"https://{host}{path}")
             _add(f"https://www.{host}{path}")
-        for path in _LISTING_HINTS.get(host, ()):
+        for path in _LISTING_PATHS:
             _add(f"https://{host}{path}")
             _add(f"https://www.{host}{path}")
     for url in (company.get("source_urls") or []) + (company.get("verified_urls") or []):
@@ -826,6 +860,60 @@ def _path_is_nav(path: str) -> bool:
     return bool(_NAV_PATH.search(p))
 
 
+def next_data_product_candidates(html: str, page_url: str) -> list[dict[str, str]]:
+    """Named SKUs from Next.js __NEXT_DATA__ (SEER category pages). No invented names."""
+    if not html:
+        return []
+    match = re.search(
+        r'<script[^>]*id=["\']__NEXT_DATA__["\'][^>]*>(.*?)</script>',
+        html,
+        re.I | re.S,
+    )
+    if not match:
+        return []
+    try:
+        data = json.loads(match.group(1))
+    except json.JSONDecodeError:
+        return []
+    found: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    def _walk(node: Any) -> None:
+        if isinstance(node, list):
+            for item in node:
+                _walk(item)
+            return
+        if not isinstance(node, dict):
+            return
+        raw_name = node.get("name") or node.get("title")
+        slug = node.get("slug") or node.get("route_key")
+        if isinstance(raw_name, str):
+            name = re.sub(r"\s+", " ", raw_name).strip()
+            # "Controller: SRC-880" / "Laser SLAM Lifting Robot AMB-300JZ"
+            tail = name.split(":")[-1].strip()
+            token = tail.split()[-1] if tail.split() else tail
+            for candidate in (name, tail, token, slug if isinstance(slug, str) else ""):
+                cleaned = re.sub(r"\s+", " ", str(candidate or "")).strip()
+                if not cleaned or is_junk_sku_name(cleaned) or not looks_like_named_sku(cleaned):
+                    continue
+                if "&" in cleaned or cleaned.lower() in {"amb", "sfl", "src", "seer"}:
+                    continue
+                key = name_key(cleaned)
+                if not key or key in seen:
+                    continue
+                path = slug if isinstance(slug, str) and slug else cleaned
+                full = urljoin(page_url.rstrip("/") + "/", str(path).lstrip("/"))
+                seen.add(key)
+                found.append({"name": cleaned, "url": full.split("#")[0]})
+                break
+        for value in node.values():
+            if isinstance(value, (dict, list)):
+                _walk(value)
+
+    _walk(data)
+    return found
+
+
 def candidates_from_page(
     page: Any,
     *,
@@ -837,6 +925,23 @@ def candidates_from_page(
     siblings = [p.get("name") or "" for p in company.get("products") or []]
     found: list[dict[str, str]] = []
     seen: set[str] = set()
+
+    def _add(name: str, full: str) -> None:
+        name = canonical_sku_name(name, full)
+        if not name or is_junk_sku_name(name) or not looks_like_named_sku(name):
+            return
+        if host == "tennantco.com":
+            path = urlparse(full).path or ""
+            if _TENNANT_PRODUCT_FILE.search(path) and not tennant_robotic_sku_from_url(full):
+                return
+        if is_wrong_product_url(name, full, sibling_names=siblings + [c["name"] for c in found]):
+            return
+        key = name_key(name)
+        if not key or key in seen:
+            return
+        seen.add(key)
+        found.append({"name": name, "url": full.split("#")[0]})
+
     for href, anchor in list(getattr(page, "links", None) or []):
         full = urljoin(page_url, href or "")
         link_host = lookup_domain(full) or host_from_url(full)
@@ -848,21 +953,19 @@ def candidates_from_page(
         last = path.rstrip("/").rsplit("/", 1)[-1] if path else ""
         label = re.sub(r"\s+", " ", (anchor or "").strip())
         name = ""
-        if looks_like_named_sku(label):
+        tennant = tennant_robotic_sku_from_url(full)
+        if tennant:
+            name = tennant
+        elif looks_like_named_sku(label):
             name = label
-        elif looks_like_named_sku(_slug_to_name(last)):
-            name = _slug_to_name(last)
+        elif looks_like_named_sku(_slug_to_name(last.split(".", 1)[0] if last.startswith("product.") else last)):
+            name = _slug_to_name(last.split(".", 1)[0] if last.startswith("product.") else last)
         if name:
-            name = canonical_sku_name(name, full)
-        if not name or is_junk_sku_name(name) or not looks_like_named_sku(name):
-            continue
-        if is_wrong_product_url(name, full, sibling_names=siblings + [c["name"] for c in found]):
-            continue
-        key = name_key(name)
-        if not key or key in seen:
-            continue
-        seen.add(key)
-        found.append({"name": name, "url": full.split("#")[0]})
+            _add(name, full)
+    html = getattr(page, "html", None) or ""
+    if host == "seer-robotics.ai" or "seer-robotics" in (host or ""):
+        for row in next_data_product_candidates(html, page_url):
+            _add(row["name"], row["url"])
     return found
 
 
@@ -1331,5 +1434,7 @@ __all__ = [
     "looks_like_named_sku",
     "merge_discovered_skus",
     "merge_lookup_rows",
+    "next_data_product_candidates",
     "scrub_discovery",
+    "tennant_robotic_sku_from_url",
 ]

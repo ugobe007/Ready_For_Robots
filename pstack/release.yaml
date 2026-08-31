@@ -66,7 +66,7 @@ critic:
     fail: hospital/clinical/pharmacy work words missing from ontology files
   - id: url_workflow
     prove: FIND URL critic reports product range, named SKUs, and per-product capabilities
-    fail: mixed OEM flattened, chrome-as-SKU, cleaning-drone-as-scrubber, or company-class dump
+    fail: mixed OEM flattened, chrome-as-SKU, cleaning-drone-as-scrubber, company-class dump, or empty robot-OEM hub
   - id: find_drive
     prove: POST /api/robot-job-search for a real OEM URL does not return Research failed
 

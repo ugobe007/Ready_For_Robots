@@ -7,8 +7,8 @@
     "Operator cleaning / mixed F&B list plus mixed humanoid/service hubs already in-repo.",
     "Lucidbots = cleaning drones, NOT floor scrubbers.",
     "Kaercher/Tennant: only robotic cleaning products, not every mop.",
-    "Tennant product listing returned HTTP 500 historically — no invented T7AMR rows.",
-    "SEER cleaning category has no named cleaner SKU on the listing page — do not invent Seer Humanoid."
+    "Tennant and SEER are robot OEMs. Empty picker is empty_range_on_robot_oem, not an honest pass.",
+    "Do not invent Seer Humanoid or AMR scrubbers. Named SKUs must appear on the page."
   ],
   "urls": [
     {
@@ -93,10 +93,13 @@
     {
       "url": "https://www.tennantco.com/en_us.html",
       "vendor": "Tennant",
-      "allow_empty": true,
-      "forbid_products": ["AMR scrubbers", "T7AMR", "About"],
+      "expects_named_robots": true,
+      "expect_mixed": false,
+      "expect_classes": ["cleaning"],
+      "expect_products": ["X6 ROVR", "T7AMR"],
+      "forbid_products": ["AMR scrubbers", "About", "Scrubber"],
       "robotic_only": true,
-      "notes": "Do not invent T7AMR. Category blobs are not SKUs."
+      "notes": "Named robotic SKUs from robotics hub and product pages. Not every mop."
     },
     {
       "url": "https://www.ecovacscommercial.com/",
@@ -109,10 +112,12 @@
     {
       "url": "https://seer-robotics.ai/",
       "vendor": "SEER Robotics",
-      "allow_empty": true,
+      "expects_named_robots": true,
+      "expect_classes": ["amr"],
+      "expect_products": ["AMB-300JZ", "SFL-CBD15"],
       "forbid_products": ["Seer Humanoid", "About"],
       "forbid_classes": ["humanoid"],
-      "notes": "Cleaning/AMR OEM. Invented company-class humanoid SKU is a BREAK."
+      "notes": "Named warehouse AMRs and forklifts. Company+humanoid dump is a BREAK."
     },
     {
       "url": "https://avidbots.com/",

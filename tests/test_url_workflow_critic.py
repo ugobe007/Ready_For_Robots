@@ -8,6 +8,8 @@ from app.services.url_workflow_critic import (
     BREAK_CHROME,
     BREAK_COMPANY_CLASS,
     BREAK_DRONE_SCRUB,
+    BREAK_EMPTY_OEM,
+    BREAK_INVENTED,
     BREAK_MIXED_FLAT,
     CORPUS_PATH,
     apply_heuristic_breaks,
@@ -26,6 +28,8 @@ def test_fixture_suite_detects_each_break_class_and_healthy_pass():
     assert BREAK_CHROME in by[BREAK_CHROME]["got_kinds"]
     assert BREAK_DRONE_SCRUB in by[BREAK_DRONE_SCRUB]["got_kinds"]
     assert BREAK_COMPANY_CLASS in by[BREAK_COMPANY_CLASS]["got_kinds"]
+    assert BREAK_EMPTY_OEM in by[BREAK_EMPTY_OEM]["got_kinds"]
+    assert BREAK_INVENTED in by[BREAK_INVENTED]["got_kinds"]
     assert by["healthy_mixed"]["ok"] is True
     assert by["healthy_drone"]["ok"] is True
     sherpa = next(
@@ -148,7 +152,27 @@ def test_listing_path_keyed_to_submitted_url():
         assert a.vendor_name != b.vendor_name
 
 
-def test_junk_names_are_not_skus():
+def test_empty_known_oem_hub_is_a_break():
+    from app.services.url_workflow_critic import apply_corpus_breaks
+
+    raw = snapshot_from_rows(
+        "https://www.tennantco.com/en_us.html",
+        vendor_name="Tennant",
+        rows=[],
+    )
+    critique = apply_corpus_breaks(apply_heuristic_breaks(raw), {"expects_named_robots": True})
+    assert any(b.kind == BREAK_EMPTY_OEM for b in critique.breaks)
+    assert not critique.ok
+
+
+def test_class_dump_name_is_still_a_break():
+    raw = snapshot_from_rows(
+        "https://seer-robotics.ai/",
+        vendor_name="SEER Robotics",
+        rows=[{"name": "AMR scrubbers", "force_class": "cleaning"}],
+    )
+    critique = apply_heuristic_breaks(raw)
+    assert any(b.kind == BREAK_INVENTED for b in critique.breaks)
     from app.services.oem_sku_discover import is_junk_sku_name, looks_like_named_sku
 
     assert is_junk_sku_name("Seer Humanoid")

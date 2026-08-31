@@ -10,8 +10,8 @@
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
-  "vendor_count": 119,
-  "robot_count": 292,
+  "vendor_count": 121,
+  "robot_count": 304,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -8776,6 +8776,302 @@
               "predicate": "product_class",
               "value": "cleaning",
               "evidence_span": "Star40: Compact commercial floor care. Commercial interiors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Tennant",
+      "domains": [
+        "tennantco.com"
+      ],
+      "vendor_url": "https://tennantco.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "X6 ROVR",
+          "model_slug": "tennant-x6-rovr",
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.x6-rovr.autonomous-floor-scrubber.m-x6rovr.html",
+          "vendor_url": "https://tennantco.com",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "X6 ROVR: Autonomous scrubbing on commercial floors. Commercial floors.",
+          "lookup_host": "tennantco.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "X6 ROVR: Autonomous scrubbing on commercial floors. Commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "X16 SWEEP",
+          "model_slug": "tennant-x16-sweep",
+          "product_url": "https://www.tennantco.com/en_us/1/machines/sweepers/product.X16-sweep.autonomous-floor-sweeper.2000309.html",
+          "vendor_url": "https://tennantco.com",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "X16 SWEEP: Autonomous sweeping on commercial floors. Commercial floors.",
+          "lookup_host": "tennantco.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "X16 SWEEP: Autonomous sweeping on commercial floors. Commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "T7AMR",
+          "model_slug": "tennant-t7amr",
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t7amr.robotic-floor-scrubber.2000056.html",
+          "vendor_url": "https://tennantco.com",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "T7AMR: Robotic floor scrubbing on commercial floors. Commercial floors.",
+          "lookup_host": "tennantco.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "T7AMR: Robotic floor scrubbing on commercial floors. Commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "T380AMR",
+          "model_slug": "tennant-t380amr",
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t380amr.robotic-floor-scrubber.2000055.html",
+          "vendor_url": "https://tennantco.com",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "T380AMR: Robotic floor scrubbing in compact spaces. Commercial interiors.",
+          "lookup_host": "tennantco.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "T380AMR: Robotic floor scrubbing in compact spaces. Commercial interiors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "T16AMR",
+          "model_slug": "tennant-t16amr",
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t16amr.industrial-robotic-floor-scrubber.2000054.html",
+          "vendor_url": "https://tennantco.com",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "T16AMR: Industrial robotic floor scrubbing. Industrial floors.",
+          "lookup_host": "tennantco.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "T16AMR: Industrial robotic floor scrubbing. Industrial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "SEER Robotics",
+      "domains": [
+        "seer-robotics.ai"
+      ],
+      "vendor_url": "https://seer-robotics.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "AMB-300JZ",
+          "model_slug": "seer-robotics-amb-300jz",
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/AMB-300JZ",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "AMB-300JZ: Lifting AMR for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "AMB-300JZ: Lifting AMR for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "AMB-300XS",
+          "model_slug": "seer-robotics-amb-300xs",
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/AMB-300XS",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "AMB-300XS: Lifting AMR chassis for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "AMB-300XS: Lifting AMR chassis for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "SJV-SW600",
+          "model_slug": "seer-robotics-sjv-sw600",
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/SJV-SW600",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "SJV-SW600: Rotary lifting AMR for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "SJV-SW600: Rotary lifting AMR for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "SFL-CBD15",
+          "model_slug": "seer-robotics-sfl-cbd15",
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SFL-CBD15",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "SFL-CBD15: Autonomous pallet truck for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "SFL-CBD15: Autonomous pallet truck for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "SFL-300L",
+          "model_slug": "seer-robotics-sfl-300l",
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SFL-300L",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "SFL-300L: Single-fork autonomous forklift for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "SFL-300L: Single-fork autonomous forklift for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "SCB-1400",
+          "model_slug": "seer-robotics-scb-1400",
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SCB-1400",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "SCB-1400: Autonomous counterbalance truck for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "SCB-1400: Autonomous counterbalance truck for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "SRC-880",
+          "model_slug": "seer-robotics-src-880",
+          "product_url": "https://seer-robotics.ai/amr-controllers/SRC-880",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "SRC-880 indexed class service_robot."
             }
           ],
           "specs": {},

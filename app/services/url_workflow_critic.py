@@ -9,6 +9,8 @@ Break classes:
   chrome_as_sku             — nav/legal labels treated as products
   invented_sku              — category blob or company+class dump as a SKU
   empty_range_named         — page/catalog names products but picker is empty
+  empty_range_on_robot_oem  — known robot OEM hub with 0 named products
+  missing_products          — expected named robots absent from the picker
   cleaning_drone_as_scrubber — aerial cleaner classified as floor scrubber
   company_class_not_product_class — sibling SKUs share one OEM dump class
   capability_oem_default    — capabilities from OEM default, not this product
@@ -27,9 +29,12 @@ BREAK_MIXED_FLAT = "mixed_range_flattened"
 BREAK_CHROME = "chrome_as_sku"
 BREAK_INVENTED = "invented_sku"
 BREAK_EMPTY = "empty_range_named"
+BREAK_EMPTY_OEM = "empty_range_on_robot_oem"
+BREAK_MISSING = "missing_products"
 BREAK_DRONE_SCRUB = "cleaning_drone_as_scrubber"
 BREAK_COMPANY_CLASS = "company_class_not_product_class"
 BREAK_CAP_DEFAULT = "capability_oem_default"
+CLASS_DUMP_NAMES = frozenset({"amr scrubbers", "scrubber", "scrubbers", "seer humanoid"})
 
 CHROME_NAMES = frozenset(
     {
@@ -376,7 +381,7 @@ def apply_heuristic_breaks(critique: UrlCritique) -> UrlCritique:
                 )
             )
         low = product.name.lower().strip()
-        if low in {"amr scrubbers", "scrubber", "scrubbers", "seer humanoid"}:
+        if low in CLASS_DUMP_NAMES:
             critique.breaks.append(
                 Break(BREAK_INVENTED, f"{product.name!r} is a category/class dump, not a SKU", product.name)
             )
@@ -387,6 +392,27 @@ def apply_corpus_breaks(critique: UrlCritique, spec: dict[str, Any]) -> UrlCriti
     """Operator expectations for one URL."""
     products = critique.products
     by_name = {p.name: p for p in products}
+    from app.services.oem_sku_discover import is_junk_sku_name, looks_like_named_sku
+
+    named = [
+        p
+        for p in products
+        if p.name
+        and not is_junk_sku_name(p.name)
+        and looks_like_named_sku(p.name)
+        and p.name.lower().strip() not in CLASS_DUMP_NAMES
+    ]
+
+    if spec.get("expects_named_robots") and not spec.get("allow_empty"):
+        if not named:
+            kind = BREAK_EMPTY_OEM if not products else BREAK_MISSING
+            critique.breaks.append(
+                Break(
+                    kind,
+                    "robot OEM hub has 0 named robotic products "
+                    "(empty catalog is a break, not an honest pass)",
+                )
+            )
 
     for forbidden in spec.get("forbid_products") or []:
         hit = next(
@@ -401,7 +427,10 @@ def apply_corpus_breaks(critique: UrlCritique, spec: dict[str, Any]) -> UrlCriti
     expect_products = list(spec.get("expect_products") or [])
     if expect_products and not products and not spec.get("allow_empty"):
         critique.breaks.append(
-            Break(BREAK_EMPTY, f"expected named products {expect_products} but listing is empty")
+            Break(
+                BREAK_MISSING,
+                f"expected named products {expect_products} but listing is empty",
+            )
         )
     if expect_products and not products and spec.get("allow_empty"):
         critique.notes.append("empty listing allowed (no invented SKUs)")
@@ -410,7 +439,7 @@ def apply_corpus_breaks(critique: UrlCritique, spec: dict[str, Any]) -> UrlCriti
             if spec.get("allow_empty") and not products:
                 continue
             critique.breaks.append(
-                Break(BREAK_EMPTY, f"expected product {want!r} missing", want)
+                Break(BREAK_MISSING, f"expected product {want!r} missing", want)
             )
 
     expect_classes = set(spec.get("expect_classes") or [])
@@ -676,6 +705,28 @@ def _fixture_healthy_drone() -> UrlCritique:
     )
 
 
+def _fixture_empty_robot_oem() -> UrlCritique:
+    return snapshot_from_rows(
+        "https://fixture.example/empty-oem",
+        vendor_name="Tennant",
+        rows=[],
+    )
+
+
+def _fixture_class_dump_sku() -> UrlCritique:
+    return snapshot_from_rows(
+        "https://fixture.example/class-dump",
+        vendor_name="SEER Robotics",
+        rows=[
+            {
+                "name": "Seer Humanoid",
+                "description": "Humanoid robot from the company homepage.",
+                "force_class": "humanoid",
+            }
+        ],
+    )
+
+
 def run_fixture_suite() -> dict[str, Any]:
     """pstack / CI: prove the critic detects each break class, and healthy rows pass."""
     cases: list[tuple[str, UrlCritique, set[str], bool]] = [
@@ -683,6 +734,8 @@ def run_fixture_suite() -> dict[str, Any]:
         (BREAK_CHROME, _fixture_chrome_as_sku(), {BREAK_CHROME}, False),
         (BREAK_DRONE_SCRUB, _fixture_cleaning_drone_as_scrubber(), {BREAK_DRONE_SCRUB}, False),
         (BREAK_COMPANY_CLASS, _fixture_company_class_not_product(), {BREAK_COMPANY_CLASS}, False),
+        (BREAK_EMPTY_OEM, _fixture_empty_robot_oem(), {BREAK_EMPTY_OEM}, False),
+        (BREAK_INVENTED, _fixture_class_dump_sku(), {BREAK_INVENTED}, False),
         ("healthy_mixed", _fixture_healthy_mixed(), set(), True),
         ("healthy_drone", _fixture_healthy_drone(), set(), True),
     ]
@@ -695,6 +748,8 @@ def run_fixture_suite() -> dict[str, Any]:
                 critique,
                 {"distinct_class_pairs": [["BellaBot", "CC1"]]},
             )
+        if case_id == BREAK_EMPTY_OEM:
+            apply_corpus_breaks(critique, {"expects_named_robots": True})
         kinds = {b.kind for b in critique.breaks}
         case_ok = critique.ok is expect_ok and (expect_kinds <= kinds if expect_kinds else not kinds)
         if case_id == "healthy_drone":
