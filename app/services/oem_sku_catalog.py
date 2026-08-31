@@ -38,7 +38,10 @@ _GENERIC_NAME = re.compile(
     r"storage robot|palletizing robot|robotic kitchen|series)$",
     re.I,
 )
-_FAMILY_BLOB = re.compile(r"\b(ur series|e-series|crx series)\b", re.I)
+_FAMILY_BLOB = re.compile(
+    r"\b(ur series|e-series|crx series|amr scrubbers)\b",
+    re.I,
+)
 
 # Known bad spreadsheet URLs: Stretch was pasted onto the Spot page.
 _WRONG_PRODUCT_PATH = (
