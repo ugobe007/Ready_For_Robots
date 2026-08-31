@@ -30,12 +30,7 @@ import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsPresentationOffer from "@/components/JobsPresentationOffer";
-import {
-  JOBS_APPLY_SELECTED_CTA,
-  JOBS_NEXT_STEPS_CTA,
-  jobsCrmOfferHref,
-  keepJobsOnAccount,
-} from "@/lib/jobsCrmAccount";
+import { keepJobsOnAccount } from "@/lib/jobsCrmAccount";
 import { trackRobotJobsFunnel } from "@/lib/siteAnalytics";
 import {
   fetchRobotJobSearch,
@@ -56,7 +51,6 @@ import { MARKET_TAPE_JOBS, uniqueTapeJobCount } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
-  JOBS_APPLY_CTA_CLASS,
   JOBS_EXAMPLE_CAP,
   FIND_JOBS_CTA,
   FIND_JOBS_HEADLINE_ACCENT_CLASS,
@@ -1523,11 +1517,6 @@ export default function RobotJobsWorkspace() {
     setLocation(jobsCrmOpenHref(Boolean(session), submissionIdRef.current));
   }
 
-  function goToApply() {
-    if (!handoffCheckedJobs()) return;
-    setLocation(jobsCrmOfferHref(Boolean(session), submissionIdRef.current));
-  }
-
   function handoffCheckedJobs(): boolean {
     if (active && shouldShowClassPicker(active)) {
       document.getElementById("jobs-list")?.scrollIntoView({ behavior: "smooth" });
@@ -1977,7 +1966,7 @@ export default function RobotJobsWorkspace() {
   const processActionClass = jobsProcessActionClass(processCurrent);
   const processOnAction =
     processCurrent === "jobs"
-      ? goToApply
+      ? goToActivate
       : stage === "research"
         ? undefined
         : stage === "find"
@@ -3071,22 +3060,6 @@ function JobsPanel({
             signedIn={signedIn}
             submissionId={submissionId}
           />
-        ) : null}
-        {keepSavedCount > 0 ? (
-          <a
-            href={jobsCrmOfferHref(signedIn, submissionId)}
-            className="inline-flex items-center justify-center border border-emerald-400/50 bg-emerald-400/10 px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300"
-          >
-            {JOBS_NEXT_STEPS_CTA}
-          </a>
-        ) : null}
-        {visible.length > 0 ? (
-          <a
-            href={jobsCrmOfferHref(signedIn, submissionId)}
-            className={`${JOBS_APPLY_CTA_CLASS} px-4 py-3 font-mono text-xs`}
-          >
-            {JOBS_APPLY_SELECTED_CTA}
-          </a>
         ) : null}
       </div>
       {showCrmCtas ? (

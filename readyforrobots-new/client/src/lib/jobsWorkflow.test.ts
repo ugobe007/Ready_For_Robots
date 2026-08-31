@@ -12,6 +12,7 @@ import {
   JOBS_APPLY_CTA_CLASS,
   JOBS_APPLY_CTA_BUTTON_CLASS,
   JOBS_APPLY_HERO_CTA,
+  JOBS_FIND_CTA_CLASS,
   JOBS_EXAMPLE_CAP,
   JOBS_FOR_YOUR_ROBOT_HEADING,
   JOBS_NEXT_CTA,
@@ -207,8 +208,10 @@ describe("jobsWorkflow", () => {
     expect(jobsProcessActionLabel("find")).not.toMatch(/Start /i);
     expect(FIND_JOBS_HOME_HEADLINE).toBe("Find Jobs for Robots.");
     expect(FIND_JOBS_HOME_HEADLINE).not.toMatch(/Apply/i);
-    expect(jobsProcessActionLabel("jobs")).toBe(JOBS_APPLY_HERO_CTA);
-    expect(jobsProcessActionClass("jobs")).toMatch(/rfr-jobs-apply-cta/);
+    expect(jobsProcessActionLabel("jobs")).toBe(JOBS_NEXT_CTA);
+    expect(jobsProcessActionLabel("jobs")).not.toMatch(/Apply/i);
+    expect(jobsProcessActionClass("jobs")).not.toMatch(/rfr-jobs-apply-cta/);
+    expect(jobsProcessActionClass("jobs")).toBe(JOBS_FIND_CTA_CLASS);
     expect(jobsProcessActionClass("find")).not.toMatch(/rfr-jobs-apply-cta/);
     expect(JOBS_APPLY_HERO_CTA).toBe("Apply to jobs →");
     expect(JOBS_APPLY_CTA_CLASS).toMatch(/rfr-jobs-apply-cta/);
@@ -229,7 +232,10 @@ describe("jobsWorkflow", () => {
       join(here, "../components/JobsCrmNextSteps.tsx"),
       "utf8",
     );
-    expect(workspace).toMatch(/JOBS_APPLY_CTA_CLASS|rfr-jobs-apply-cta/);
+    expect(workspace).not.toMatch(/JOBS_APPLY_CTA_CLASS|rfr-jobs-apply-cta/);
+    expect(workspace).not.toMatch(/function goToApply/);
+    expect(workspace).not.toMatch(/jobsCrmOfferHref/);
+    expect(workspace).toMatch(/processCurrent === "jobs"[\s\S]{0,80}goToActivate/);
     expect(workspace).toMatch(/jobsProcessActionClass/);
     expect(processChrome).toMatch(/JOBS_APPLY_HERO_CTA/);
     expect(processChrome).toMatch(/rfr-jobs-apply-cta|JOBS_APPLY_CTA_CLASS/);
@@ -808,6 +814,7 @@ describe("jobsWorkflow", () => {
     expect(JOBS_NEXT_CTA).not.toMatch(/qualify|buyer/i);
     expect(JOBS_NEXT_HINT).toMatch(/Uncheck a row/i);
     expect(JOBS_NEXT_HINT).toMatch(/Open CRM to save the list/i);
+    expect(JOBS_NEXT_HINT).toMatch(/Apply from the desk/i);
     expect(JOBS_NEXT_HINT).not.toMatch(/Keep \d+ jobs\?/i);
     expect(JOBS_NEXT_HINT).not.toMatch(/Yes, keep them/i);
     expect(JOBS_NEXT_HINT).not.toMatch(/dump into CRM/i);
@@ -931,7 +938,7 @@ describe("jobsWorkflow", () => {
     expect(desk).not.toMatch(/Keep \$\{/);
     expect(desk).not.toMatch(/data-jobs-keep-confirm/);
     expect(desk).toMatch(/jobsCrmOfferHref/);
-    expect(desk).toMatch(/#jobs-next-steps|JOBS_APPLY_NEXT_CTA/);
+    expect(desk).toMatch(/#jobs-next-steps|JOBS_APPLY_SELECTED_CTA|jobsCrmOfferHref/);
     expect(desk).not.toMatch(/JOBS_KEEP_JOBS_CTA/);
     expect(desk).toMatch(/JobsKeepStatusBar/);
     expect(desk).toMatch(/JobsCrmNextSteps/);
@@ -1141,7 +1148,7 @@ describe("jobsWorkflow", () => {
     expect(deskKeep).not.toMatch(/Keep \$\{/);
     expect(deskKeep).not.toMatch(/keepTheseJobsPrompt/);
     expect(deskKeep).not.toMatch(/data-jobs-keep-confirm/);
-    expect(deskKeep).toMatch(/JOBS_APPLY_NEXT_CTA/);
+    expect(deskKeep).toMatch(/JOBS_APPLY_SELECTED_CTA/);
     expect(crmCollectedCountLabel(5)).toBe("5 of 5 kept");
     expect(crmCollectedCountLabel(1)).toBe("1 of 5 kept");
     expect(crmCollectedCountLabel(3)).toBe("3 of 5 kept");
@@ -1193,7 +1200,7 @@ describe("jobsWorkflow", () => {
       "Sign in so the jobs you kept stay here.",
     );
     expect(CRM_HOW_TO_STEPS[1]).toBe(
-      "Open a job and apply. Proof of concept helps. Skip it if you don't have one.",
+      "Open a job. Name a model for the work or say you'll train one, then apply.",
     );
     expect(CRM_HOW_TO_STEPS[2]).toBe(
       "After you apply, we follow up. Export if you already use another CRM.",
@@ -1203,7 +1210,7 @@ describe("jobsWorkflow", () => {
     expect(howTo).not.toMatch(/OEM roster/i);
     expect(howTo).not.toMatch(/inspect an egg/i);
     expect(howTo).not.toMatch(/collect jobs/i);
-    expect(CRM_HOW_TO_STEPS[1]).toMatch(/Open a job and apply/i);
+    expect(CRM_HOW_TO_STEPS[1]).toMatch(/Name a model for the work/i);
     expect(CRM_HOW_TO_STEPS[1]).not.toMatch(/Inspect an egg/i);
     expect(CRM_PAGE_NEXT).toBe(crmSaveJobsBlurb());
     expect(CRM_PAGE_NEXT).not.toMatch(/Collect several/i);

@@ -170,9 +170,64 @@ export type KeptJobRow = {
   robot_name?: string | null;
   robot_url?: string | null;
   employer_email?: string | null;
+  work_task_model_kind?: string | null;
+  work_task_model_source?: string | null;
   application?: JobsCrmApplication | null;
   created_at?: string | null;
 };
+
+export const WORK_TASK_MODEL_KINDS = ["unknown", "source", "self_train"] as const;
+export type WorkTaskModelKind = (typeof WORK_TASK_MODEL_KINDS)[number];
+
+export type WorkTaskModelAnswer =
+  | { kind: "unknown" }
+  | { kind: "source"; source: string }
+  | { kind: "self_train" };
+
+export const WORK_TASK_MODEL_QUESTION = "Do you have a model for this work?";
+export const WORK_TASK_MODEL_SOURCE_OPTION = "Yes. Name the model source.";
+export const WORK_TASK_MODEL_SOURCE_HINT =
+  "Product, vendor, or known policy. Your words. We will not guess a name.";
+export const WORK_TASK_MODEL_SOURCE_PLACEHOLDER = "Model name or vendor";
+export const WORK_TASK_MODEL_SELF_OPTION = "We'll train this for the job.";
+export const WORK_TASK_MODEL_UNKNOWN_HINT = "Unknown until you answer.";
+export const WORK_TASK_MODEL_SOURCE_REQUIRED =
+  "Name the model source. We will not guess.";
+
+export function parseWorkTaskModel(row: {
+  work_task_model_kind?: string | null;
+  work_task_model_source?: string | null;
+} | null | undefined): WorkTaskModelAnswer {
+  return normalizeWorkTaskModel({
+    kind: row?.work_task_model_kind,
+    source: row?.work_task_model_source,
+    requireSource: false,
+  });
+}
+
+export function normalizeWorkTaskModel(input: {
+  kind?: string | null;
+  source?: string | null;
+  requireSource?: boolean;
+}): WorkTaskModelAnswer {
+  const kind = String(input.kind || "").trim().toLowerCase();
+  const source = String(input.source || "").replace(/\s+/g, " ").trim();
+  if (kind === "self_train") return { kind: "self_train" };
+  if (kind === "source") {
+    if (source) return { kind: "source", source };
+    if (input.requireSource) {
+      throw new Error(WORK_TASK_MODEL_SOURCE_REQUIRED);
+    }
+    return { kind: "unknown" };
+  }
+  return { kind: "unknown" };
+}
+
+export function workTaskModelListLine(answer: WorkTaskModelAnswer): string {
+  if (answer.kind === "source") return answer.source;
+  if (answer.kind === "self_train") return "We'll train this";
+  return "Model not named yet";
+}
 
 export type KeepJobsResult = {
   saved_count: number;
@@ -307,6 +362,25 @@ export async function keepJobsOnAccount(
 export async function fetchKeptJobs(token: string): Promise<KeptJobRow[]> {
   const data = await jobsCrmFetch<{ jobs: KeptJobRow[] }>("/api/jobs-crm/jobs", token);
   return data.jobs || [];
+}
+
+export async function saveWorkTaskModelOnAccount(
+  token: string,
+  body: { jobKey: string; kind: WorkTaskModelKind; source?: string },
+): Promise<KeptJobRow> {
+  const answer = normalizeWorkTaskModel({
+    kind: body.kind,
+    source: body.source,
+    requireSource: body.kind === "source",
+  });
+  return jobsCrmFetch<KeptJobRow>("/api/jobs-crm/jobs/task-model", token, {
+    method: "POST",
+    body: JSON.stringify({
+      job_key: body.jobKey,
+      kind: answer.kind,
+      source: answer.kind === "source" ? answer.source : null,
+    }),
+  });
 }
 
 export async function fetchCatalogSkus(

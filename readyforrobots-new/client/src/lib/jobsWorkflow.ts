@@ -862,7 +862,7 @@ export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT = crmSaveJobsBlurb();
 export const CRM_HOW_TO_STEPS = [
   "Sign in so the jobs you kept stay here.",
-  "Open a job and apply. Proof of concept helps. Skip it if you don't have one.",
+  "Open a job. Name a model for the work or say you'll train one, then apply.",
   "After you apply, we follow up. Export if you already use another CRM.",
 ] as const;
 export const CRM_SUBHEAD_CLASS =
@@ -945,15 +945,15 @@ export function jobsListHint(opts: {
   productName: string;
 }): string {
   if (opts.robotCount > 1) {
-    return "One sample job per robot. Rows start checked. Run each robot by itself for five jobs, then Open CRM.";
+    return "One sample job per robot. Rows start checked. Run each robot by itself for five jobs, then Open CRM. Apply from the desk.";
   }
-  return `Five example jobs ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM.`;
+  return `Five example jobs ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM. Apply from the desk.`;
 }
 
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
 export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
-  "Check a job to keep it. Open CRM to save the list, then apply.";
+  "Check a job to keep it. Open CRM to save the list. Apply from the desk.";
 export const JOBS_KEEP_LABEL = "Keep";
 export const JOBS_SKIP_LABEL = "Skip";
 
@@ -1039,7 +1039,7 @@ export function showJobsSiteChrome(opts: {
 }
 
 export const FIND_JOBS_CTA = "Find jobs →";
-/** Apply on the desk and Job Cards. Violet, not neon green. Not the FIND hero. */
+/** Apply on the CRM desk. Violet, not neon green. Not a sibling of Open CRM on FIND. */
 export const JOBS_APPLY_HERO_CTA = "Apply to jobs →";
 export const JOBS_FIND_CTA_CLASS =
   "rfr-bevel inline-flex items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300";
@@ -1060,7 +1060,7 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = JOBS_SAVE_TO_CRM_CTA;
 export const JOBS_NEXT_HINT =
-  "Uncheck a row to skip it. Open CRM to save the list, then apply.";
+  "Uncheck a row to skip it. Open CRM to save the list. Apply from the desk.";
 export const JOBS_SEE_JOBS_CTA = "Here are the jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
@@ -1092,15 +1092,18 @@ export function jobsProcessStepFromStage(stage: string): JobsProcessStepId {
   return "find";
 }
 
-/** Page-chrome wizard button: Find jobs on FIND. Apply stays on the desk and Job Cards. */
+/** Page-chrome wizard button: Find jobs on FIND. Open CRM on the jobs list. Apply stays on the desk. */
 export function jobsProcessActionLabel(step: JobsProcessStepId): string {
   if (step === "find") return FIND_JOBS_CTA;
-  if (step === "jobs") return JOBS_APPLY_HERO_CTA;
   return JOBS_NEXT_CTA;
 }
 
 export function jobsProcessActionClass(step: JobsProcessStepId): string {
-  return step === "jobs" ? JOBS_APPLY_CTA_CLASS : JOBS_FIND_CTA_CLASS;
+  if (step === "find" || step === "jobs" || step === "activate") {
+    return JOBS_FIND_CTA_CLASS;
+  }
+  const _exhaustive: never = step;
+  return _exhaustive;
 }
 
 export const JOBS_ACTIVATE_SRC = "jobs_activate";
@@ -1405,8 +1408,8 @@ export function defaultCheckedKeysForLineup<T extends { job_key: string }>(
 export const RAIL_STEP_HINT = {
   find: FIND_JOBS_HOME_SUBHEAD,
   profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
-  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each. Run each SKU by itself, then Open CRM.",
-  pipeline: "The jobs you kept live here. Open one and apply.",
+  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each. Run each SKU by itself, then Open CRM. Apply from the desk.",
+  pipeline: "The jobs you kept live here. Open one, name a model for the work or say you'll train one, then apply.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */

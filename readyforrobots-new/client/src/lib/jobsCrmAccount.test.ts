@@ -28,6 +28,12 @@ import {
   keepJobsStatusBar,
   crmDeskForCurrentRobot,
   keptRowMatchesRobot,
+  parseWorkTaskModel,
+  normalizeWorkTaskModel,
+  workTaskModelListLine,
+  WORK_TASK_MODEL_QUESTION,
+  WORK_TASK_MODEL_SELF_OPTION,
+  WORK_TASK_MODEL_SOURCE_REQUIRED,
 } from "./jobsCrmAccount";
 import { keepTheseJobsPrompt } from "./jobsWorkflow";
 import { jobsCrmOpenHref } from "./jobsWorkflow";
@@ -136,7 +142,7 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(status).not.toMatch(/blurb \|\| JOBS_APPLY_SEQUENCE/);
     expect(status).not.toMatch(/blurb\?: string/);
     expect(desk).toMatch(/jobsCrmOfferHref/);
-    expect(desk).toMatch(/JOBS_APPLY_NEXT_CTA/);
+    expect(desk).toMatch(/JOBS_APPLY_SELECTED_CTA/);
     expect(desk).toMatch(/JobsCrmNextSteps/);
     expect(desk).toMatch(/JobsCrmInbox/);
     expect(desk).toMatch(/onCrmDesk/);
@@ -164,9 +170,9 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(workspace).not.toMatch(/JOBS_KEEP_YES_CTA/);
     expect(workspace).not.toMatch(/Yes, keep them/i);
     expect(workspace).toMatch(/JobsKeepStatusBar/);
-    expect(workspace).toMatch(/JOBS_NEXT_STEPS_CTA/);
-    expect(workspace).toMatch(/JOBS_APPLY_SELECTED_CTA/);
-    expect(workspace).toMatch(/jobsCrmOfferHref/);
+    expect(workspace).not.toMatch(/JOBS_NEXT_STEPS_CTA/);
+    expect(workspace).not.toMatch(/JOBS_APPLY_SELECTED_CTA/);
+    expect(workspace).not.toMatch(/jobsCrmOfferHref/);
     expect(workspace).toMatch(/JobsPresentationOffer/);
     expect(desk).toMatch(/JOBS_APPLY_SELECTED_CTA/);
     expect(desk).toMatch(/applySelectedJobsOnAccount|jobs=\{jobs.filter/);
@@ -418,5 +424,45 @@ describe("CRM desk binds to the FIND robot, not leftover totes", () => {
       workspace.indexOf("async function confirmSelection"),
     );
     expect(submitFind).toMatch(/bindSubmittedRobot\(submitUrl\)/);
+  });
+
+  it("asks for a task model on the desk and never invents a source name", () => {
+    expect(parseWorkTaskModel(null).kind).toBe("unknown");
+    expect(parseWorkTaskModel({ work_task_model_kind: "self_train" })).toEqual({
+      kind: "self_train",
+    });
+    expect(
+      parseWorkTaskModel({
+        work_task_model_kind: "source",
+        work_task_model_source: "  NVIDIA GR00T  ",
+      }),
+    ).toEqual({ kind: "source", source: "NVIDIA GR00T" });
+    expect(
+      parseWorkTaskModel({
+        work_task_model_kind: "source",
+        work_task_model_source: "   ",
+      }).kind,
+    ).toBe("unknown");
+    expect(() =>
+      normalizeWorkTaskModel({ kind: "source", source: "", requireSource: true }),
+    ).toThrow(WORK_TASK_MODEL_SOURCE_REQUIRED);
+    expect(workTaskModelListLine({ kind: "unknown" })).toBe("Model not named yet");
+    expect(workTaskModelListLine({ kind: "self_train" })).toBe("We'll train this");
+    expect(WORK_TASK_MODEL_QUESTION).toBe("Do you have a model for this work?");
+    expect(WORK_TASK_MODEL_SELF_OPTION).toMatch(/We'll train this for the job/i);
+    const desk = readFileSync(join(here, "../components/JobsCrmDesk.tsx"), "utf8");
+    const account = readFileSync(join(here, "./jobsCrmAccount.ts"), "utf8");
+    expect(desk).toMatch(/WorkTaskModelQuestion/);
+    expect(desk).toMatch(/saveWorkTaskModelOnAccount/);
+    expect(desk).toMatch(/WORK_TASK_MODEL_QUESTION/);
+    expect(desk).toMatch(/We'll train this for the job/);
+    expect(account).toMatch(/\/api\/jobs-crm\/jobs\/task-model/);
+    expect(account).not.toMatch(/GR00T N1|invent a model/i);
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8",
+    );
+    expect(workspace).not.toMatch(/WorkTaskModelQuestion/);
+    expect(workspace).not.toMatch(/JOBS_APPLY_SELECTED_CTA/);
   });
 });

@@ -38,19 +38,30 @@ import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
 import JobsCrmInbox from "@/components/JobsCrmInbox";
 import {
-  JOBS_APPLY_NEXT_CTA,
   JOBS_APPLY_SELECTED_CTA,
   JOBS_APPLY_SEQUENCE,
   JOBS_APPLY_CTA_CLASS,
+  WORK_TASK_MODEL_QUESTION,
+  WORK_TASK_MODEL_SELF_OPTION,
+  WORK_TASK_MODEL_SOURCE_HINT,
+  WORK_TASK_MODEL_SOURCE_OPTION,
+  WORK_TASK_MODEL_SOURCE_PLACEHOLDER,
+  WORK_TASK_MODEL_SOURCE_REQUIRED,
+  WORK_TASK_MODEL_UNKNOWN_HINT,
   fetchKeptJobs,
   isJobsCrmOfferQuery,
   jobsCrmOfferHref,
   keepJobsOnAccount,
   openJobsCrmNextStepsForm,
+  parseWorkTaskModel,
+  saveWorkTaskModelOnAccount,
+  workTaskModelListLine,
   crmDeskForCurrentRobot,
   postJobsCrmActivity,
   type JobsCrmApplication,
   type KeptJobRow,
+  type WorkTaskModelAnswer,
+  type WorkTaskModelKind,
 } from "@/lib/jobsCrmAccount";
 import {
   JOBS_APPLY_CTA,
@@ -154,6 +165,21 @@ export default function JobsCrmDesk({
   const expanded = jobs.find(j => j.job_key === expandedKey) || null;
   const jobCount = jobs.length;
   const offerJob = expanded || jobs.find(j => selected.includes(j.job_key)) || jobs[0] || null;
+  const rowByKey = useMemo(() => {
+    const map = new Map<string, KeptJobRow>();
+    for (const row of desk.rows) map.set(row.job_key, row);
+    return map;
+  }, [desk.rows]);
+
+  function mergeKeptRow(row: KeptJobRow) {
+    setAccountRows(prev => {
+      const idx = prev.findIndex(item => item.job_key === row.job_key);
+      if (idx < 0) return [row, ...prev];
+      const next = [...prev];
+      next[idx] = { ...prev[idx], ...row };
+      return next;
+    });
+  }
 
   async function persistKeptJobs(
     keys: string[] = selected,
@@ -416,6 +442,11 @@ export default function JobsCrmDesk({
                             {jobModelListLine(job)}
                           </span>
                         ) : null}
+                        <span className="mt-1 block font-mono text-sm text-slate-500">
+                          {workTaskModelListLine(
+                            parseWorkTaskModel(rowByKey.get(job.job_key)),
+                          )}
+                        </span>
                       </span>
                       <span className="font-mono text-xs text-slate-500">
                         {open ? "−" : "+"}
@@ -425,6 +456,12 @@ export default function JobsCrmDesk({
                   {open ? (
                     <div className="border-t border-slate-700 px-4 pb-5 pt-4">
                       <CollectedJobInspect job={job} />
+                      <WorkTaskModelQuestion
+                        jobKey={job.job_key}
+                        row={rowByKey.get(job.job_key)}
+                        token={accessToken}
+                        onSaved={mergeKeptRow}
+                      />
                       <ApplyPanel
                         key={job.job_key}
                         job={job}
@@ -475,6 +512,138 @@ export default function JobsCrmDesk({
       ) : null}
       <div className="mt-10">{process}</div>
     </div>
+  );
+}
+
+function WorkTaskModelQuestion({
+  jobKey,
+  row,
+  token,
+  onSaved,
+}: {
+  jobKey: string;
+  row?: KeptJobRow;
+  token?: string | null;
+  onSaved: (row: KeptJobRow) => void;
+}) {
+  const saved = parseWorkTaskModel(row);
+  const [choice, setChoice] = useState<WorkTaskModelKind>(saved.kind);
+  const [sourceDraft, setSourceDraft] = useState(
+    saved.kind === "source" ? saved.source : "",
+  );
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const next = parseWorkTaskModel(row);
+    setChoice(next.kind);
+    setSourceDraft(next.kind === "source" ? next.source : "");
+    setError("");
+  }, [jobKey, row?.work_task_model_kind, row?.work_task_model_source]);
+
+  async function persist(next: WorkTaskModelAnswer) {
+    if (!token) {
+      setError("Sign in to save this on the desk.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const savedRow = await saveWorkTaskModelOnAccount(token, {
+        jobKey,
+        kind: next.kind,
+        source: next.kind === "source" ? next.source : "",
+      });
+      onSaved(savedRow);
+      setChoice(parseWorkTaskModel(savedRow).kind);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : WORK_TASK_MODEL_SOURCE_REQUIRED;
+      setError(message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function pickSelfTrain() {
+    setChoice("self_train");
+    setSourceDraft("");
+    void persist({ kind: "self_train" });
+  }
+
+  function pickSource() {
+    setChoice("source");
+    setError("");
+  }
+
+  function commitSource() {
+    const named = sourceDraft.replace(/\s+/g, " ").trim();
+    if (!named) {
+      setError(WORK_TASK_MODEL_SOURCE_REQUIRED);
+      return;
+    }
+    void persist({ kind: "source", source: named });
+  }
+
+  const group = `work-task-model-${jobKey}`;
+
+  return (
+    <section
+      className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-5 sm:px-6"
+      aria-label={WORK_TASK_MODEL_QUESTION}
+    >
+      <p className={`${eyebrow} text-slate-400`}>Task model for this work</p>
+      <h3 className="mt-2 font-display text-2xl font-bold text-white">
+        {WORK_TASK_MODEL_QUESTION}
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-slate-400">
+        {WORK_TASK_MODEL_UNKNOWN_HINT}
+      </p>
+      <div className="mt-4 space-y-3">
+        <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-200">
+          <input
+            type="radio"
+            name={group}
+            checked={choice === "source"}
+            onChange={pickSource}
+            disabled={busy}
+            className="mt-1 h-4 w-4 accent-emerald-400"
+          />
+          <span>
+            <span className="block font-semibold">{WORK_TASK_MODEL_SOURCE_OPTION}</span>
+            <span className="mt-1 block text-slate-400">{WORK_TASK_MODEL_SOURCE_HINT}</span>
+          </span>
+        </label>
+        {choice === "source" ? (
+          <input
+            type="text"
+            value={sourceDraft}
+            onChange={e => {
+              setSourceDraft(e.target.value);
+              setError("");
+            }}
+            onBlur={commitSource}
+            disabled={busy}
+            placeholder={WORK_TASK_MODEL_SOURCE_PLACEHOLDER}
+            aria-label={WORK_TASK_MODEL_SOURCE_OPTION}
+            className="w-full border border-emerald-400/50 bg-[#081126] px-3 py-3 text-base text-slate-100"
+          />
+        ) : null}
+        <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-200">
+          <input
+            type="radio"
+            name={group}
+            checked={choice === "self_train"}
+            onChange={pickSelfTrain}
+            disabled={busy}
+            className="mt-1 h-4 w-4 accent-emerald-400"
+          />
+          <span className="font-semibold">{WORK_TASK_MODEL_SELF_OPTION}</span>
+        </label>
+      </div>
+      {error ? (
+        <p className="mt-3 text-sm text-rose-300">{error}</p>
+      ) : null}
+    </section>
   );
 }
 
