@@ -55,6 +55,7 @@ describe("pstackSite protocol", () => {
       "class_picker",
       "healthcare_class",
       "ontology_industry_language",
+      "url_workflow",
     ]);
     expect(CRITIC_GATES.find(gate => gate.id === "class_picker")?.fail).toMatch(/no-op/);
     expect(CRITIC_GATES.find(gate => gate.id === "find")?.prove).toBe("FIND is /");
@@ -62,6 +63,7 @@ describe("pstackSite protocol", () => {
     expect(CRITIC_GATES.find(gate => gate.id === "oem_extract")?.fail).toMatch(/chrome/);
     expect(CRITIC_GATES.find(gate => gate.id === "healthcare_class")?.fail).toMatch(/humanoid/);
     expect(CRITIC_GATES.find(gate => gate.id === "ontology_industry_language")?.fail).toMatch(/ontology/);
+    expect(CRITIC_GATES.find(gate => gate.id === "url_workflow")?.fail).toMatch(/chrome-as-SKU|cleaning-drone/);
     expect(criticHeldoutFindUrls()).toEqual([...CRITIC_HELDOUT_FIND_URLS]);
     expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.xpeng.com/");
     expect(CRITIC_HELDOUT_FIND_URLS).toContain("https://www.greenfieldincorporated.com/");

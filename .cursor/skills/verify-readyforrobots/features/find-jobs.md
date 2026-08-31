@@ -34,5 +34,6 @@ Preconditions:
 - `/?new=1` resets FIND; do not remount-loop the workspace.
 - Chip-only match may omit `required_task_models` — use a Understanding profile (Vega fixture) for cards.
 - Diligent/Moxi is healthcare, not a humanoid torso tile. Empty copy must not be `No humanoid jobs for this robot yet.`
+- URL workflow critic: `python3 scripts/url_workflow_critic.py --fixtures` then `python3 scripts/url_workflow_critic.py`. Fail mixed-range flatten, chrome-as-SKU, Lucidbots-as-scrubber, company-class dump.
 - Do not hop the result onto `/pipeline`. Next is Jobs CRM, not SIGNAL buyers.
 - Local Vite without `VITE_PUBLIC_API_URL` will not hit Fly; doctor production instead.

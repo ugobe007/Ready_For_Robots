@@ -23,6 +23,7 @@ from app.services.oem_sku_discover import (
     looks_like_named_sku,
     looks_like_vehicle_model,
     name_is_proven_product,
+    tennant_robotic_sku_from_url,
     trademark_product_names,
 )
 from app.services.robot_understanding_v1.fetch import FetchedPage
@@ -1337,6 +1338,9 @@ def _display_from_slug(slug: str) -> str:
 
 def _sku_from_product_href(url: str) -> str | None:
     """SKU from a manufacturer product path, or None if the path is generic."""
+    tennant = tennant_robotic_sku_from_url(url)
+    if tennant:
+        return tennant
     if href_is_vehicle_path(url) or classify_href_candidate(url) in {
         "chrome",
         "hub",
@@ -1647,7 +1651,9 @@ def _product_display_class(
     from app.services.robot_class_qualify import prefer_work_language_class
 
     window = _window_text_for_product(product_name, text or "") or (text or "")
-    work_or_catalog = prefer_work_language_class(window, catalog_class)
+    work_or_catalog = prefer_work_language_class(
+        window, catalog_class, name=product_name
+    )
     if work_or_catalog:
         return work_or_catalog
     hinted = _hint_display_class(product_name, window or text)

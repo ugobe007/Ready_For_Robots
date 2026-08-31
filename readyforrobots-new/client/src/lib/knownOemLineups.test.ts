@@ -11,7 +11,7 @@ describe("knownOemLineups", () => {
     expect(hit?.vendor_name).toMatch(/Reflex/i);
     const names = hit?.robots.map(r => r.name) || [];
     expect(names.some(n => /Gen2|Gen 2/i.test(n))).toBe(true);
-    expect(names.some(n => /Humanoid/i.test(n))).toBe(true);
+    expect(names.some(n => /^Humanoid$/i.test(n))).toBe(false);
     expect(names.length).toBeGreaterThan(0);
   });
 
@@ -60,7 +60,86 @@ describe("knownOemLineups", () => {
     const hit = lookupKnownOem("https://www.sunday.ai/");
     expect(hit?.vendor_name).toMatch(/Sunday/i);
     expect(hit?.robots.map(r => r.name)).toEqual(["Memo"]);
-    expect(hit?.robots[0]?.display_class).toBe("service_robot");
+    expect(hit?.robots[0]?.display_class).not.toBe("humanoid");
+  });
+
+  it("maps Pudu, Keenon, UBTech, AgiBot, MagicLab, Deep Robotics as mixed product ranges", () => {
+    const pudu = lookupKnownOem("https://www.pudurobotics.com/en");
+    const puduBy = Object.fromEntries(
+      (pudu?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(puduBy.BellaBot).toBe("serving");
+    expect(puduBy.CC1).toBe("cleaning");
+    expect(puduBy.D9).toBe("humanoid");
+    const puduClasses = new Set(
+      Object.values(puduBy).filter((c): c is string => Boolean(c)),
+    );
+    expect(puduClasses.has("serving")).toBe(true);
+    expect(puduClasses.has("cleaning")).toBe(true);
+    expect(puduClasses.has("humanoid")).toBe(true);
+
+    const keenon = lookupKnownOem("https://www.keenon.com/");
+    const keenBy = Object.fromEntries(
+      (keenon?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(keenBy["Dinerbot T5"]).toBe("serving");
+    expect(keenBy.C55).toBe("cleaning");
+
+    const ub = lookupKnownOem("https://www.ubtrobot.com/");
+    const walker = (ub?.robots || []).find(r => /^Walker$|Walker X/i.test(r.name || ""));
+    expect(walker?.display_class).toBe("humanoid");
+    expect(walker?.display_class).not.toBe("serving");
+
+    const agi = lookupKnownOem("https://www.agibot.com/");
+    expect(agi?.robots.some(r => r.display_class === "humanoid")).toBe(true);
+    expect(agi?.robots.some(r => r.display_class === "serving")).toBe(false);
+
+    const magic = lookupKnownOem("https://www.magiclab.top/");
+    expect(magic?.robots.some(r => r.display_class === "humanoid")).toBe(true);
+    expect(magic?.robots.some(r => r.display_class === "quadruped")).toBe(true);
+
+    const deep = lookupKnownOem("https://www.deeprobotics.cn/");
+    expect(deep?.robots.some(r => r.display_class === "humanoid")).toBe(true);
+    expect(deep?.robots.some(r => r.display_class === "quadruped")).toBe(true);
+  });
+
+  it("maps Lucidbots Sherpa as a cleaning drone, not a floor scrubber", () => {
+    const hit = lookupKnownOem("https://www.lucidbots.com/");
+    const by = Object.fromEntries(
+      (hit?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(by["Sherpa Drone"]).toBe("cleaning_drone");
+    expect(Object.values(by).some(c => c === "avionics")).toBe(false);
+    expect(Object.values(by).some(c => c === "autonomous_scrubber")).toBe(
+      false,
+    );
+  });
+
+  it("maps Bear serving vs clean and Gausium/Avidbots/Ecovacs floors", () => {
+    const bear = lookupKnownOem("https://www.bearrobotics.ai/");
+    const bearBy = Object.fromEntries(
+      (bear?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(bearBy.Servi).toBe("serving");
+    expect(bearBy["Servi Clean"]).toBe("cleaning");
+
+    const gau = lookupKnownOem("https://gausium.com/");
+    const gauBy = Object.fromEntries(
+      (gau?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(["cleaning", "autonomous_scrubber"]).toContain(gauBy.Phantas);
+
+    const avid = lookupKnownOem("https://avidbots.com/");
+    const avidBy = Object.fromEntries(
+      (avid?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(["cleaning", "autonomous_scrubber"]).toContain(avidBy.Neo);
+
+    const eco = lookupKnownOem("https://www.ecovacscommercial.com/");
+    const ecoBy = Object.fromEntries(
+      (eco?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(ecoBy["DEEBOT PRO M1"]).toBe("cleaning");
   });
 
   it("maps Diligent Moxi as healthcare, not humanoid", () => {

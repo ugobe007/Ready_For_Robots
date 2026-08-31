@@ -87,6 +87,11 @@ CRITIC_GATES: tuple[dict[str, str], ...] = (
         "prove": "Industry work words live in the ontology and outrank humanoid morphology where R33 says so",
         "fail": "hospital/hotel/mining/warehouse work words missing from ontology files",
     },
+    {
+        "id": "url_workflow",
+        "prove": "FIND URL critic reports product range, named SKUs, and per-product capabilities",
+        "fail": "mixed OEM flattened, chrome-as-SKU, cleaning-drone-as-scrubber, or company-class dump",
+    },
 )
 
 # Jobs PRs fail if FIND picker for these URLs contains chrome or a leftover robot.

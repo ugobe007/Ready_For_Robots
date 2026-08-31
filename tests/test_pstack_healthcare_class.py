@@ -19,8 +19,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_critic_gate_ids_keep_prior_gates_and_add_healthcare():
     assert tuple(critic_gate_ids()) == REQUIRED_CRITIC_GATE_IDS
-    assert critic_gate_ids()[-1] == "ontology_industry_language"
+    assert critic_gate_ids()[-1] == "url_workflow"
     assert "healthcare_class" in critic_gate_ids()
+    assert "ontology_industry_language" in critic_gate_ids()
     for gate in (
         "find",
         "find_abort",

@@ -24,6 +24,8 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 FLY_API = os.getenv("RFR_FLY_API", "https://ready-2-robot.fly.dev").rstrip("/")
 WORKSPACE = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "RobotJobsWorkspace.tsx"
 CRM_DESK = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "JobsCrmDesk.tsx"
@@ -65,6 +67,7 @@ REQUIRED_CRITIC_GATE_IDS = (
     "class_picker",
     "healthcare_class",
     "ontology_industry_language",
+    "url_workflow",
 )
 CLASS_OPTIONS_TS = (
     ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "robotClassOptions.ts"
@@ -142,6 +145,9 @@ LIVE_FIND_PATH_MARKERS = (
     "tests/test_food_prep_class_jobs.py",
     "tests/test_industry_class_jobs.py",
     "tests/test_ontology_industry_language.py",
+    "tests/test_url_workflow_critic.py",
+    "app/services/url_workflow_critic.py",
+    "scripts/url_workflow_critic.py",
     "pstack/release.yaml",
 )
 
@@ -518,8 +524,9 @@ def phase_act() -> dict[str, Any]:
             and "CRM_LEFTOVER_FIXTURE" in release_ts
             and "CLASS_PICKER_FIXTURE" in release_ts
             and "HEALTHCARE_CLASS_FIXTURE" in release_ts
+            and "URL_WORKFLOW_FIXTURE" in release_ts
             and "diligentMustNotBeHumanoidEmpty" in release_ts,
-            "pstackRelease.ts encodes abort, leftover, class-picker, and Diligent healthcare fixtures",
+            "pstackRelease.ts encodes abort, leftover, class-picker, Diligent healthcare, and URL workflow fixtures",
         )
     )
 
@@ -935,6 +942,21 @@ def ontology_industry_language_fixture() -> tuple[bool, str]:
     return (not misses, "; ".join(misses))
 
 
+def url_workflow_fixture() -> tuple[bool, str]:
+    """Critic: FIND URL agent detects range/product/capability breaks on fixtures."""
+    from app.services.url_workflow_critic import run_fixture_suite
+
+    suite = run_fixture_suite()
+    if suite.get("ok"):
+        return True, "fixture suite green"
+    failed = [
+        f"{c.get('id')} kinds={c.get('got_kinds')}"
+        for c in (suite.get("cases") or [])
+        if not c.get("ok")
+    ]
+    return False, "; ".join(failed) or "url workflow fixture suite failed"
+
+
 def drive_diligent_healthcare(*, api: str) -> dict[str, Any]:
     """Live FIND: Diligent must not be a humanoid empty; Healthcare class returns named jobs."""
     base = api.rstrip("/")
@@ -1121,6 +1143,18 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
             ont_ok,
             "Healthcare work words live in ontology files and FIND qualify reads them; other industries keep distinctive words + find_class",
             ont_detail,
+        )
+    )
+    wf_ok, wf_detail = url_workflow_fixture()
+    checks.append(
+        _check(
+            "url_workflow",
+            wf_ok
+            and "url_workflow" in site
+            and "url_workflow" in protocol
+            and "URL_WORKFLOW_FIXTURE" in release_ts,
+            "FIND URL critic reports product range, named SKUs, and per-product capabilities",
+            wf_detail,
         )
     )
 

@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[2]
 XLSX_PATH = ROOT / "docs" / "reference" / "readyforrobots_companies_and_robots.xlsx"
 ONTOLOGY_PATH = ROOT / "ontology" / "oem_sku_catalog.v1.json"
 VERTICAL_CATALOG_PATH = ROOT / "ontology" / "vertical_oem_sku_catalog.v1.json"
+MIXED_OEM_CATALOG_PATH = ROOT / "ontology" / "mixed_oem_sku_catalog.v1.json"
 SEED_PATH = ROOT / "app" / "data" / "vendor_robots_oem_sku_seed.json"
 LOOKUP_PATH = ROOT / "app" / "data" / "oem_sku_url_lookup.json"
 DISCOVERY_PATH = ROOT / "app" / "data" / "oem_sku_discovery.json"
@@ -37,7 +38,10 @@ _GENERIC_NAME = re.compile(
     r"storage robot|palletizing robot|robotic kitchen|series)$",
     re.I,
 )
-_FAMILY_BLOB = re.compile(r"\b(ur series|e-series|crx series)\b", re.I)
+_FAMILY_BLOB = re.compile(
+    r"\b(ur series|e-series|crx series|amr scrubbers)\b",
+    re.I,
+)
 
 # Known bad spreadsheet URLs: Stretch was pasted onto the Spot page.
 _WRONG_PRODUCT_PATH = (
@@ -64,14 +68,20 @@ def name_key(value: str) -> str:
 
 def map_primary_class(category: str, klass: str) -> str:
     blob = f"{category} {klass}".lower()
-    if "humanoid" in blob:
+    if "humanoid" in blob or "bipedal" in blob:
         return "humanoid"
+    if "serving" in blob or "waiter" in blob or "table service" in blob:
+        return "serving"
     if "collaborative" in blob or "cobot" in blob:
         return "cobot"
     if "industrial robot" in blob:
         return "industrial_arm"
     if "amr" in blob or "warehouse" in blob:
         return "amr"
+    if "drone" in blob and any(
+        w in blob for w in ("clean", "wash", "facade", "window", "exterior")
+    ):
+        return "cleaning_drone"
     if "cleaning" in blob or "scrubber" in blob:
         return "cleaning_robot"
     if "inspection" in blob or "quadruped" in blob:
@@ -320,6 +330,26 @@ def apply_verified_urls(catalog: dict[str, Any], lookup: dict[str, Any]) -> dict
             if url and url not in (company.get("verified_urls") or []):
                 company.setdefault("verified_urls", []).append(url)
     return catalog
+
+
+def merge_mixed_oem_catalog(
+    catalog: dict[str, Any],
+    mixed: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Merge mixed-morphology OEM SKUs (humanoid + serving + cleaning + quadruped)."""
+    if mixed is None:
+        if not MIXED_OEM_CATALOG_PATH.is_file():
+            return catalog
+        try:
+            mixed = json.loads(MIXED_OEM_CATALOG_PATH.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return catalog
+    return merge_vertical_catalog(catalog, mixed)
+
+
+def merge_extra_sku_catalogs(catalog: dict[str, Any]) -> dict[str, Any]:
+    """Vertical + mixed-morphology overlays. Workbook parse must not wipe them."""
+    return merge_mixed_oem_catalog(merge_vertical_catalog(catalog))
 
 
 def merge_vertical_catalog(
