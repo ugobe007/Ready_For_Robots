@@ -13,9 +13,14 @@ From title + description, only if stated:
 | Field | Example |
 |-------|---------|
 | Job title / function | Order Picker → `picking` |
+| Product class | Banquet server → `serving` (not the OEM's cleaner SKU) |
+| Required capabilities | Serving → `serving_task`. Drone-cleaning → `surface_clean` + `drone_task`, not `hard_floor_scrub` |
+| Task model | `work_task_model_kind` = `unknown` / `source` / `self_train`. Same names as CRM. Never invent a model. |
 | Compensation | `$18–$22 an hour`, signing bonus |
 | Performance specs | `45 cases per hour`, `50 lbs`, night shift, openings |
 | Employer email | `mailto:`, JSON-LD `email`, `hiringOrganization.email` — page only |
+
+Product class comes from the **posting's work language**, not the company. Mixed OEM hubs (Pudu serving + cleaning + humanoid) must not dump one class onto every job. Chrome names (`Impact`, Farmers, Product) are not employers. Invented SKUs (`Seer Humanoid`, `AMR scrubbers`, `Galbot G2`, `TWA Reach`) are not jobs.
 
 Unknown is stored on `unknowns`. Never fill with a guess. Never invent `info@` from the employer name. Skip board mailboxes (`jobs@indeed.com`, `noreply@indeed.com`).
 

@@ -47,6 +47,10 @@ JOB_FUNCTION_BY_TITLE = (
     ("food runner", "serving"),
     ("bartender", "serving"),
     ("cocktail", "serving"),
+    ("window wash", "facade_cleaning"),
+    ("facade clean", "facade_cleaning"),
+    ("drone clean", "facade_cleaning"),
+    ("building wash", "facade_cleaning"),
     ("janitor", "environmental_services"),
     ("custodian", "environmental_services"),
     ("restroom attendant", "environmental_services"),
@@ -231,11 +235,49 @@ def extract_robot_job(
         employer=company,
         title=title,
     )
+    from app.services.robot_job_scrape_params import (
+        infer_product_class,
+        infer_required_capabilities,
+        infer_task_model_requirement,
+        should_persist_robot_job,
+    )
+
+    product_class = infer_product_class(
+        title=title or "",
+        description=description or "",
+        job_function=function,
+    )
+    required_capabilities = infer_required_capabilities(
+        product_class,
+        title=title or "",
+        description=description or "",
+    )
+    task = infer_task_model_requirement(
+        title=title or "",
+        description=description or "",
+        product_class=product_class,
+    )
+    if not product_class:
+        unknowns.append("product_class")
+    if task["work_task_model_kind"] == "unknown":
+        unknowns.append("work_task_model")
+    persistable = should_persist_robot_job(
+        title=title or "",
+        employer=company or "",
+        job_function=function,
+    )
     return {
         "employer": (company or "").strip() or None,
         "workplace": (locality or "").strip() or None,
         "job_title": (title or "").strip() or None,
         "job_function": function,
+        "product_class": product_class,
+        "required_capabilities": required_capabilities,
+        "industry_id": task["industry_id"],
+        "work_language_terms": task["work_language_terms"],
+        "task_model_ids": task["task_model_ids"],
+        "work_task_model_kind": task["work_task_model_kind"],
+        "work_task_model_source": task["work_task_model_source"],
         "compensation": pay,
         "performance_specs": specs,
         "source_url": source_url or None,
@@ -244,6 +286,7 @@ def extract_robot_job(
         "apply_url": contacts.get("apply_url"),
         "unknowns": unknowns,
         "status": "open",
+        "persistable": persistable,
     }
 
 
@@ -257,6 +300,7 @@ JOB_FUNCTION_TAPE_FAMILY = {
     "replenishment": "warehouse",
     "housekeeping": "hospitality",
     "environmental_services": "disinfection",
+    "facade_cleaning": "aerial_clean",
     "warewash": "food_prep",
     "food_prep": "food_prep",
     "serving": "serve",
@@ -291,6 +335,14 @@ _BOARD_EMPLOYER_NAMES = frozenset(
         "n/a",
         "na",
         "employer confidential",
+        "impact",
+        "farmers",
+        "farmer",
+        "product",
+        "products",
+        "about",
+        "news",
+        "imprint",
     }
 )
 
@@ -312,12 +364,16 @@ _JOB_TITLE_AS_EMPLOYER_RE = re.compile(
 
 
 def is_job_employer_name(name: str, title: str = "") -> bool:
-    """Real employer on a job posting — not a board, headline, or the job title itself."""
+    """Real employer on a job posting — not a board, headline, chrome, or the job title itself."""
     n = (name or "").strip()
     if len(n) < 2 or len(n) > 80:
         return False
     low = n.lower().rstrip(".")
     if low in _BOARD_EMPLOYER_NAMES or "simplyhired" in low or low.startswith("indeed"):
+        return False
+    from app.services.robot_job_scrape_params import is_chrome_name, is_invented_sku_name
+
+    if is_chrome_name(n) or is_invented_sku_name(n):
         return False
     if title and low == (title or "").strip().lower():
         return False

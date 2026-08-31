@@ -3,20 +3,32 @@ scrape_targets.py -- Scrape target registry for Ready for Robots.
 
 PURPOSE: Find Robot Jobs — human work a robot could be hired to do.
 
+Ontology: COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES →
+TASK MODELS → JOB REQUIREMENTS → MATCH. Never company → category → jobs.
+
 Fields we extract when the posting states them (unknown if not):
   - job function / title
+  - product class from the work (serving vs cleaning vs food_prep), not OEM dump
+  - required capabilities grounded in that work
+  - task-model requirement: named source vs self-train vs unknown
+    (same field names as CRM: work_task_model_kind / work_task_model_source)
   - compensation (wage range, signing bonus)
   - performance specs (throughput, payload, shift, openings)
+  - named employer (not chrome: Impact, Farmers, Product)
 
 Close-out: re-read public evidence. If a robot now performs that work at
 that employer, mark the Robot Job filled_by_robot (not a CRM closed-won).
 
 We are NOT interested in:
   - Robotics engineers / AMR software developers (builders)
-  - Invented wages or FTE economics
+  - Invented wages, invented SKUs (Seer Humanoid, AMR scrubbers, Galbot G2, TWA Reach)
+  - Class-dump titles as jobs
+  - Apollo / SIGNAL contacts (page-only mailto and JSON-LD)
 
 Target verticals:
     Hospitality . Logistics . Healthcare . Food Service . Retail . Manufacturing
+Venues for food prep / serve / clean: hotels, restaurants, casinos, airports,
+offices, malls, data centers — not QSR-only.
 """
 
 from dataclasses import dataclass, field
@@ -302,6 +314,14 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         industries=["Hospitality"],
         signal_types=["robot_job"],
         notes="Floor/restroom cleaning in data centers — not QSR",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=window+washer+facade+cleaner+drone+cleaning&l=United+States&sort=date",
+        label="Indeed - Facade / window-wash / drone-cleaning",
+        scraper="job_board", cadence="daily",
+        industries=["Hospitality"],
+        signal_types=["robot_job"],
+        notes="Exterior/window/drone cleaning. Not hard_floor_scrub. Keep venue coverage, not hotel-only.",
     ),
     ScrapeTarget(
         url="https://www.simplyhired.com/search?q=hotel+cook+kitchen&l=United+States",

@@ -66,6 +66,7 @@ def test_food_serve_clean_urls_cover_venues_not_qsr_only():
     assert "janitor" in blob or "custodian" in blob
     assert "server" in blob or "busser" in blob
     assert "cook" in blob or "kitchen" in blob
+    assert "window+washer" in blob or "facade" in blob or "drone+clean" in blob
     vp = [u for u in food_urls if "VP+Director" in u]
     venue_ops = [
         u
@@ -543,3 +544,74 @@ def test_generic_gm_is_not_a_robot_job():
     )
     upsert.assert_not_called()
     scraper.save_signal.assert_not_called()
+
+
+def test_serving_posting_does_not_use_cleaner_class():
+    html = """
+    <div class="job_seen_beacon">
+      <h2>Banquet Server</h2>
+      <div class="companyName">Named Casino</div>
+      <div class="companyLocation">Las Vegas, NV</div>
+      <div class="job-snippet">Food runner and busser. Dining room cocktail service. Multiple openings.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=casino+cocktail+server"
+    )
+    upsert.assert_called_once()
+    extract = upsert.call_args.kwargs["extract"]
+    assert extract["job_function"] == "serving"
+    assert extract["product_class"] == "serving"
+    assert "serving_task" in extract["required_capabilities"]
+    assert "hard_floor_scrub" not in extract["required_capabilities"]
+    assert extract["product_class"] not in {"cleaning", "autonomous_scrubber"}
+    assert extract["work_task_model_kind"] == "unknown"
+    assert extract["work_task_model_source"] is None
+
+
+def test_chrome_and_class_dump_are_not_jobs():
+    chrome = """
+    <div class="job_seen_beacon">
+      <h2>Housekeeper</h2>
+      <div class="companyName">Impact</div>
+      <div class="companyLocation">Austin, TX</div>
+      <div class="job-snippet">Room attendant. Immediate hire.</div>
+    </div>
+    """
+    dump = """
+    <div class="job_seen_beacon">
+      <h2>Seer Humanoid</h2>
+      <div class="companyName">Named Warehouse</div>
+      <div class="companyLocation">Austin, TX</div>
+      <div class="job-snippet">Humanoid AMR. Immediate hire.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(chrome, "https://www.indeed.com/jobs?q=housekeeper")
+    upsert.assert_not_called()
+    scraper.save_signal.assert_not_called()
+    scraper, upsert = _parse_with_upsert(dump, "https://www.indeed.com/jobs?q=humanoid")
+    upsert.assert_not_called()
+
+
+def test_drone_cleaning_title_is_operational():
+    from app.scrapers.job_board_scraper_enhanced import calculate_job_relevancy_score
+
+    assert calculate_job_relevancy_score(
+        "Window Washer",
+        "Facade cleaning drone for building exteriors.",
+    ) >= 0.15
+    html = """
+    <div class="job_seen_beacon">
+      <h2>Window Washer</h2>
+      <div class="companyName">Named Facilities LLC</div>
+      <div class="companyLocation">Chicago, IL</div>
+      <div class="job-snippet">Window washing drone for facades and exteriors. Immediate hire.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=window+washer+facade+cleaner+drone+cleaning"
+    )
+    upsert.assert_called_once()
+    extract = upsert.call_args.kwargs["extract"]
+    assert extract["product_class"] == "cleaning_drone"
+    assert "hard_floor_scrub" not in extract["required_capabilities"]

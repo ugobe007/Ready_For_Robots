@@ -167,6 +167,16 @@ def upsert_robot_job_from_extract(
     title = extract.get("job_title") or ""
     if not employer or not title:
         return None
+    if extract.get("persistable") is False:
+        return None
+    from app.services.robot_job_scrape_params import should_persist_robot_job
+
+    if not should_persist_robot_job(
+        title=title,
+        employer=employer,
+        job_function=extract.get("job_function"),
+    ):
+        return None
     key = robot_job_key(employer, title, extract.get("workplace") or "")
     row = db.query(RobotJob).filter(RobotJob.job_key == key).one_or_none()
     if row is None:
@@ -186,6 +196,13 @@ def upsert_robot_job_from_extract(
     req["compensation"] = extract.get("compensation")
     req["performance_specs"] = extract.get("performance_specs")
     req["job_function"] = extract.get("job_function")
+    req["product_class"] = extract.get("product_class")
+    req["required_capabilities"] = list(extract.get("required_capabilities") or [])
+    req["industry_id"] = extract.get("industry_id")
+    req["work_language_terms"] = list(extract.get("work_language_terms") or [])
+    req["task_model_ids"] = list(extract.get("task_model_ids") or [])
+    req["work_task_model_kind"] = extract.get("work_task_model_kind") or "unknown"
+    req["work_task_model_source"] = extract.get("work_task_model_source")
     req["unknowns"] = extract.get("unknowns") or []
     _copy_contact_fields(req, extract)
     row.requirements = req
