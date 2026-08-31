@@ -59,7 +59,7 @@ INVENTED_SKU_NAMES = frozenset(
 
 _COMPANY_CLASS_DUMP = re.compile(
     r"^[A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]+)*\s+"
-    r"(?:Humanoid|Scrubber|AMR|Cleaner|Serving)s?$",
+    r"(?:Humanoid|Scrubber|AMR)s?$",
     re.I,
 )
 _CATEGORY_BLOB = re.compile(
@@ -121,8 +121,7 @@ CLEANER_SKU_CLASSES = frozenset({"cleaning", "autonomous_scrubber", "scrubber", 
 _SELF_TRAIN_RE = re.compile(
     r"\b("
     r"self[- ]train(?:ed|ing)?"
-    r"|we(?:'| wi)ll train"
-    r"|train(?:ed|ing)? (?:on[- ]site|on this (?:job|task|work)|the robot for this)"
+    r"|train(?:ed|ing)? the (?:robot|policy|model)"
     r"|bring your own (?:policy|model)"
     r")\b",
     re.I,
@@ -219,7 +218,7 @@ def infer_required_capabilities(
     cls = (product_class or "").strip().lower()
     caps = list(CLASS_REQUIRED_CAPABILITIES.get(cls) or ())
     blob = f"{title or ''} {description or ''}".lower()
-    if cls == "cleaning_drone" or "cleaning drone" in blob or "facade" in blob:
+    if cls == "cleaning_drone":
         caps = [c for c in caps if c not in FLOOR_SCRUB_CAPS]
         if "drone_task" not in caps:
             caps.append("drone_task")
