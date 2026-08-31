@@ -162,4 +162,23 @@ describe("knownOemLineups", () => {
     expect(by.Product).toBeUndefined();
     expect(Object.keys(by).some(n => /humanoid/i.test(n))).toBe(false);
   });
+
+  it("maps Booster T2 and Galbot S1 from page evidence", () => {
+    const booster = lookupKnownOem("https://booster.tech");
+    const boosterBy = Object.fromEntries(
+      (booster?.robots || []).map(r => [r.name, r.display_class]),
+    );
+    expect(boosterBy["Booster T2"]).toBe("humanoid");
+    expect(boosterBy["Booster K1"]).toBe("humanoid");
+    const galbot = lookupKnownOem("https://galbot.com");
+    const names = (galbot?.robots || []).map(r => r.name);
+    expect(names).toContain("Galbot G1");
+    expect(names).toContain("Galbot S1");
+    expect(names).not.toContain("Galbot G2");
+    const unix = lookupKnownOem("https://unix-group.ai");
+    expect((unix?.robots || []).map(r => r.name)).toEqual(
+      expect.arrayContaining(["Wanda 2.0", "Panther", "Martian"]),
+    );
+    expect((unix?.robots || []).map(r => r.name)).not.toContain("Wheeled");
+  });
 });

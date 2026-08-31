@@ -10,8 +10,8 @@
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
   ],
-  "vendor_count": 122,
-  "robot_count": 306,
+  "vendor_count": 129,
+  "robot_count": 326,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -9128,6 +9128,536 @@
               "predicate": "product_class",
               "value": "service_robot",
               "evidence_span": "Motion 2: Launching."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Booster Robotics",
+      "domains": [
+        "booster.tech"
+      ],
+      "vendor_url": "https://booster.tech",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Booster K1",
+          "model_slug": "booster-robotics-booster-k1",
+          "product_url": "https://www.booster.tech/booster-k1",
+          "vendor_url": "https://booster.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Booster K1: Introductory embodied development platform.",
+          "lookup_host": "booster.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Booster K1: Introductory embodied development platform."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Booster T1",
+          "model_slug": "booster-robotics-booster-t1",
+          "product_url": "https://www.booster.tech/booster-t1",
+          "vendor_url": "https://booster.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Booster T1: Made for developers. RoboCup AdultSize champion model.",
+          "lookup_host": "booster.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Booster T1: Made for developers. RoboCup AdultSize champion model."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Booster T2",
+          "model_slug": "booster-robotics-booster-t2",
+          "product_url": "https://www.booster.tech/booster-t2",
+          "vendor_url": "https://booster.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Booster T2: Flagship embodied development platform.",
+          "lookup_host": "booster.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Booster T2: Flagship embodied development platform."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Lumos Robotics",
+      "domains": [
+        "lumosbot.tech"
+      ],
+      "vendor_url": "https://lumosbot.tech",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Lumos LUS 2",
+          "model_slug": "lumos-robotics-lumos-lus-2",
+          "product_url": "https://www.lumosbot.tech/products/lus2",
+          "vendor_url": "https://lumosbot.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Lumos LUS 2: Full-size humanoid platform for research, education, and commercial applications.",
+          "lookup_host": "lumosbot.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Lumos LUS 2: Full-size humanoid platform for research, education, and commercial applications."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Lumos NIX S3",
+          "model_slug": "lumos-robotics-lumos-nix-s3",
+          "product_url": "https://www.lumosbot.tech/products/luxiaoming",
+          "vendor_url": "https://lumosbot.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Lumos NIX S3: Compact humanoid for agile motion and companionship.",
+          "lookup_host": "lumosbot.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Lumos NIX S3: Compact humanoid for agile motion and companionship."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Lumos MOS 2",
+          "model_slug": "lumos-robotics-lumos-mos-2",
+          "product_url": "https://www.lumosbot.tech/products/mos",
+          "vendor_url": "https://lumosbot.tech",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "Lumos MOS 2: Wheeled manipulation robot for industrial handling and inspection.",
+          "lookup_host": "lumosbot.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Lumos MOS 2: Wheeled manipulation robot for industrial handling and inspection."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Lumos LUD",
+          "model_slug": "lumos-robotics-lumos-lud",
+          "product_url": "https://www.lumosbot.tech/products/lud",
+          "vendor_url": "https://lumosbot.tech",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "Lumos LUD: Wheeled-legged platform for challenging terrain.",
+          "lookup_host": "lumosbot.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Lumos LUD: Wheeled-legged platform for challenging terrain."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Galbot",
+      "domains": [
+        "galbot.com"
+      ],
+      "vendor_url": "https://galbot.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Galbot G1",
+          "model_slug": "galbot-galbot-g1",
+          "product_url": "https://www.galbot.com/",
+          "vendor_url": "https://galbot.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "Galbot G1: Embodied AI robot powered by large models.",
+          "lookup_host": "galbot.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Galbot G1: Embodied AI robot powered by large models."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Galbot S1",
+          "model_slug": "galbot-galbot-s1",
+          "product_url": "https://www.galbot.com/",
+          "vendor_url": "https://galbot.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "Galbot S1: Heavy-duty robot.",
+          "lookup_host": "galbot.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Galbot S1: Heavy-duty robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "UniX AI",
+      "domains": [
+        "unix-group.ai"
+      ],
+      "vendor_url": "https://unix-group.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Wanda 2.0",
+          "model_slug": "unix-ai-wanda-2-0",
+          "product_url": "https://www.unix-group.ai/Wanda",
+          "vendor_url": "https://unix-group.ai",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Wanda 2.0: Full-size general-purpose humanoid robot.",
+          "lookup_host": "unix-group.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Wanda 2.0: Full-size general-purpose humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Panther",
+          "model_slug": "unix-ai-panther",
+          "product_url": "https://www.unix-group.ai/Panther",
+          "vendor_url": "https://unix-group.ai",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Panther: Full-size wheeled humanoid robot.",
+          "lookup_host": "unix-group.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Panther: Full-size wheeled humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Martian",
+          "model_slug": "unix-ai-martian",
+          "product_url": "https://www.unix-group.ai/Martian",
+          "vendor_url": "https://unix-group.ai",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Martian: Bipedal humanoid robot.",
+          "lookup_host": "unix-group.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Martian: Bipedal humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Noetix Robotics",
+      "domains": [
+        "noetixrobotics.com"
+      ],
+      "vendor_url": "https://noetixrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Bumi",
+          "model_slug": "noetix-robotics-bumi",
+          "product_url": "https://www.noetixrobotics.com/en",
+          "vendor_url": "https://noetixrobotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Bumi: Bipedal humanoid robot.",
+          "lookup_host": "noetixrobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Bumi: Bipedal humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "N2",
+          "model_slug": "noetix-robotics-n2",
+          "product_url": "https://www.noetixrobotics.com/en",
+          "vendor_url": "https://noetixrobotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "N2: Bipedal humanoid robot.",
+          "lookup_host": "noetixrobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "N2: Bipedal humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "E1",
+          "model_slug": "noetix-robotics-e1",
+          "product_url": "https://www.noetixrobotics.com/en",
+          "vendor_url": "https://noetixrobotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "E1: Bipedal humanoid robot.",
+          "lookup_host": "noetixrobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "E1: Bipedal humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "PrimeBOT",
+      "domains": [
+        "primebot.cn"
+      ],
+      "vendor_url": "https://primebot.cn",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Q1",
+          "model_slug": "primebot-q1",
+          "product_url": "https://www.primebot.cn/",
+          "vendor_url": "https://primebot.cn",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Q1: Qiyuan Q1 humanoid robot.",
+          "lookup_host": "primebot.cn",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Q1: Qiyuan Q1 humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "LimX Dynamics",
+      "domains": [
+        "limxdynamics.com"
+      ],
+      "vendor_url": "https://limxdynamics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Luna",
+          "model_slug": "limx-dynamics-luna",
+          "product_url": "https://www.limxdynamics.com/en/products/luna",
+          "vendor_url": "https://limxdynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Luna: Full-size interactive humanoid robot.",
+          "lookup_host": "limxdynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Luna: Full-size interactive humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Oli",
+          "model_slug": "limx-dynamics-oli",
+          "product_url": "https://www.limxdynamics.com/en/products/oli",
+          "vendor_url": "https://limxdynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Oli: Full-size general-purpose humanoid robot.",
+          "lookup_host": "limxdynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Oli: Full-size general-purpose humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "TRON 1",
+          "model_slug": "limx-dynamics-tron-1",
+          "product_url": "https://www.limxdynamics.com/en/products/tron1",
+          "vendor_url": "https://limxdynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "TRON 1: The gateway to humanoid RL research.",
+          "lookup_host": "limxdynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "TRON 1: The gateway to humanoid RL research."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "TRON 2",
+          "model_slug": "limx-dynamics-tron-2",
+          "product_url": "https://www.limxdynamics.com/en/products/tron2",
+          "vendor_url": "https://limxdynamics.com",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "TRON 2: Multi-form embodied robot with dual arms and wheeled legs.",
+          "lookup_host": "limxdynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "TRON 2: Multi-form embodied robot with dual arms and wheeled legs."
             }
           ],
           "specs": {},

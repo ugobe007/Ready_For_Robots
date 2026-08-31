@@ -1857,8 +1857,439 @@
           "url_status": "verified"
         }
       ]
+    },
+    {
+      "name": "Booster Robotics",
+      "slug": "booster-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "booster.tech"
+      ],
+      "source_urls": [
+        "https://www.booster.tech/"
+      ],
+      "products": [
+        {
+          "name": "Booster K1",
+          "slug": "booster-robotics-booster-k1",
+          "company_name": "Booster Robotics",
+          "company_slug": "booster-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid robot",
+          "task": "Introductory embodied development platform",
+          "setting": null,
+          "lookup_host": "booster.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.booster.tech/booster-k1",
+          "url_status": "verified"
+        },
+        {
+          "name": "Booster T1",
+          "slug": "booster-robotics-booster-t1",
+          "company_name": "Booster Robotics",
+          "company_slug": "booster-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid robot",
+          "task": "Made for developers. RoboCup AdultSize champion model",
+          "setting": null,
+          "lookup_host": "booster.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.booster.tech/booster-t1",
+          "url_status": "verified"
+        },
+        {
+          "name": "Booster T2",
+          "slug": "booster-robotics-booster-t2",
+          "company_name": "Booster Robotics",
+          "company_slug": "booster-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid robot",
+          "task": "Flagship embodied development platform",
+          "setting": null,
+          "lookup_host": "booster.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.booster.tech/booster-t2",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Lumos Robotics",
+      "slug": "lumos-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "lumosbot.tech"
+      ],
+      "source_urls": [
+        "https://www.lumosbot.tech/"
+      ],
+      "products": [
+        {
+          "name": "Lumos LUS 2",
+          "slug": "lumos-robotics-lumos-lus-2",
+          "company_name": "Lumos Robotics",
+          "company_slug": "lumos-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Full-size bipedal humanoid robot",
+          "task": "Full-size humanoid platform for research, education, and commercial applications",
+          "setting": null,
+          "lookup_host": "lumosbot.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.lumosbot.tech/products/lus2",
+          "url_status": "verified"
+        },
+        {
+          "name": "Lumos NIX S3",
+          "slug": "lumos-robotics-lumos-nix-s3",
+          "company_name": "Lumos Robotics",
+          "company_slug": "lumos-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "AI mini bipedal humanoid robot",
+          "task": "Compact humanoid for agile motion and companionship",
+          "setting": null,
+          "lookup_host": "lumosbot.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.lumosbot.tech/products/luxiaoming",
+          "url_status": "verified"
+        },
+        {
+          "name": "Lumos MOS 2",
+          "slug": "lumos-robotics-lumos-mos-2",
+          "company_name": "Lumos Robotics",
+          "company_slug": "lumos-robotics",
+          "primary_class": "service_robot",
+          "listed_class": "Heavy-duty wheeled mobile manipulation robot",
+          "task": "Wheeled manipulation robot for industrial handling and inspection",
+          "setting": null,
+          "lookup_host": "lumosbot.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.lumosbot.tech/products/mos",
+          "url_status": "verified"
+        },
+        {
+          "name": "Lumos LUD",
+          "slug": "lumos-robotics-lumos-lud",
+          "company_name": "Lumos Robotics",
+          "company_slug": "lumos-robotics",
+          "primary_class": "service_robot",
+          "listed_class": "Wheeled-legged robot",
+          "task": "Wheeled-legged platform for challenging terrain",
+          "setting": null,
+          "lookup_host": "lumosbot.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.lumosbot.tech/products/lud",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Galbot",
+      "slug": "galbot",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "galbot.com"
+      ],
+      "source_urls": [
+        "https://www.galbot.com/"
+      ],
+      "products": [
+        {
+          "name": "Galbot G1",
+          "slug": "galbot-galbot-g1",
+          "company_name": "Galbot",
+          "company_slug": "galbot",
+          "primary_class": "service_robot",
+          "listed_class": "General-purpose robot",
+          "task": "Embodied AI robot powered by large models",
+          "setting": null,
+          "lookup_host": "galbot.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.galbot.com/",
+          "url_status": "verified"
+        },
+        {
+          "name": "Galbot S1",
+          "slug": "galbot-galbot-s1",
+          "company_name": "Galbot",
+          "company_slug": "galbot",
+          "primary_class": "service_robot",
+          "listed_class": "Heavy-duty robot",
+          "task": "Heavy-duty robot",
+          "setting": null,
+          "lookup_host": "galbot.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.galbot.com/",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "UniX AI",
+      "slug": "unix-ai",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "unix-group.ai"
+      ],
+      "source_urls": [
+        "https://www.unix-group.ai/"
+      ],
+      "products": [
+        {
+          "name": "Wanda 2.0",
+          "slug": "unix-ai-wanda-2-0",
+          "company_name": "UniX AI",
+          "company_slug": "unix-ai",
+          "primary_class": "humanoid",
+          "listed_class": "Wheeled dual-arm humanoid robot",
+          "task": "Full-size general-purpose humanoid robot",
+          "setting": null,
+          "lookup_host": "unix-group.ai",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.unix-group.ai/Wanda",
+          "url_status": "verified"
+        },
+        {
+          "name": "Panther",
+          "slug": "unix-ai-panther",
+          "company_name": "UniX AI",
+          "company_slug": "unix-ai",
+          "primary_class": "humanoid",
+          "listed_class": "Next-gen full-size wheeled dual-arm humanoid robot",
+          "task": "Full-size wheeled humanoid robot",
+          "setting": null,
+          "lookup_host": "unix-group.ai",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.unix-group.ai/Panther",
+          "url_status": "verified"
+        },
+        {
+          "name": "Martian",
+          "slug": "unix-ai-martian",
+          "company_name": "UniX AI",
+          "company_slug": "unix-ai",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid robot",
+          "task": "Bipedal humanoid robot",
+          "setting": null,
+          "lookup_host": "unix-group.ai",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.unix-group.ai/Martian",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Noetix Robotics",
+      "slug": "noetix-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "noetixrobotics.com"
+      ],
+      "source_urls": [
+        "https://www.noetixrobotics.com/en"
+      ],
+      "products": [
+        {
+          "name": "Bumi",
+          "slug": "noetix-robotics-bumi",
+          "company_name": "Noetix Robotics",
+          "company_slug": "noetix-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid robot",
+          "task": "Bipedal humanoid robot",
+          "setting": null,
+          "lookup_host": "noetixrobotics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.noetixrobotics.com/en",
+          "url_status": "verified"
+        },
+        {
+          "name": "N2",
+          "slug": "noetix-robotics-n2",
+          "company_name": "Noetix Robotics",
+          "company_slug": "noetix-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid robot",
+          "task": "Bipedal humanoid robot",
+          "setting": null,
+          "lookup_host": "noetixrobotics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.noetixrobotics.com/en",
+          "url_status": "verified"
+        },
+        {
+          "name": "E1",
+          "slug": "noetix-robotics-e1",
+          "company_name": "Noetix Robotics",
+          "company_slug": "noetix-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid robot",
+          "task": "Bipedal humanoid robot",
+          "setting": null,
+          "lookup_host": "noetixrobotics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.noetixrobotics.com/en",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "PrimeBOT",
+      "slug": "primebot",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "primebot.cn"
+      ],
+      "source_urls": [
+        "https://www.primebot.cn/"
+      ],
+      "products": [
+        {
+          "name": "Q1",
+          "slug": "primebot-q1",
+          "company_name": "PrimeBOT",
+          "company_slug": "primebot",
+          "primary_class": "humanoid",
+          "listed_class": "Full-body force-controlled humanoid robot",
+          "task": "Qiyuan Q1 humanoid robot",
+          "setting": null,
+          "lookup_host": "primebot.cn",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.primebot.cn/",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "LimX Dynamics",
+      "slug": "limx-dynamics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "limxdynamics.com"
+      ],
+      "source_urls": [
+        "https://www.limxdynamics.com/en"
+      ],
+      "products": [
+        {
+          "name": "Luna",
+          "slug": "limx-dynamics-luna",
+          "company_name": "LimX Dynamics",
+          "company_slug": "limx-dynamics",
+          "primary_class": "humanoid",
+          "listed_class": "Full-size interactive humanoid robot",
+          "task": "Full-size interactive humanoid robot",
+          "setting": null,
+          "lookup_host": "limxdynamics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.limxdynamics.com/en/products/luna",
+          "url_status": "verified"
+        },
+        {
+          "name": "Oli",
+          "slug": "limx-dynamics-oli",
+          "company_name": "LimX Dynamics",
+          "company_slug": "limx-dynamics",
+          "primary_class": "humanoid",
+          "listed_class": "Full-size general-purpose humanoid robot",
+          "task": "Full-size general-purpose humanoid robot",
+          "setting": null,
+          "lookup_host": "limxdynamics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.limxdynamics.com/en/products/oli",
+          "url_status": "verified"
+        },
+        {
+          "name": "TRON 1",
+          "slug": "limx-dynamics-tron-1",
+          "company_name": "LimX Dynamics",
+          "company_slug": "limx-dynamics",
+          "primary_class": "humanoid",
+          "listed_class": "Multi-modal biped robot",
+          "task": "The gateway to humanoid RL research",
+          "setting": null,
+          "lookup_host": "limxdynamics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.limxdynamics.com/en/products/tron1",
+          "url_status": "verified"
+        },
+        {
+          "name": "TRON 2",
+          "slug": "limx-dynamics-tron-2",
+          "company_name": "LimX Dynamics",
+          "company_slug": "limx-dynamics",
+          "primary_class": "service_robot",
+          "listed_class": "Multi-form embodied robot",
+          "task": "Multi-form embodied robot with dual arms and wheeled legs",
+          "setting": null,
+          "lookup_host": "limxdynamics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.limxdynamics.com/en/products/tron2",
+          "url_status": "verified"
+        }
+      ]
     }
   ],
-  "company_count": 20,
-  "product_count": 95
+  "company_count": 27,
+  "product_count": 115
 }
