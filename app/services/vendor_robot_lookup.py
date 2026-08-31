@@ -86,6 +86,19 @@ JUNK_LOOKUP_HOSTS = frozenset(
     }
 )
 
+# Page-evidence oem_sku lineup replaces the humanoid-index dump on these hosts.
+OEM_SKU_REPLACES_INDEX_HOSTS = frozenset(
+    {
+        "booster.tech",
+        "lumosbot.tech",
+        "galbot.com",
+        "unix-group.ai",
+        "noetixrobotics.com",
+        "primebot.cn",
+        "limxdynamics.com",
+    }
+)
+
 VENDOR_HOME_FALLBACK = {
     "keenon robotics": "https://www.keenonrobot.com",
     "keenon": "https://www.keenonrobot.com",
@@ -412,6 +425,25 @@ def _vendor_domain_map(index: dict[str, Any] | None = None) -> dict[str, dict[st
                 out[domain] = vendor
                 continue
             if existing is vendor:
+                continue
+            # Evidence catalog replaces the humanoid-index dump on these hosts
+            # only. Other OEM/SKU overlays still merge so workbook + index SKUs
+            # such as UBTECH U1 stay in FIND.
+            incoming_oem = str(vendor.get("list_category") or "") == "oem_sku"
+            if incoming_oem and (vendor.get("robots") or []) and domain in OEM_SKU_REPLACES_INDEX_HOSTS:
+                domains = list(existing.get("domains") or [])
+                for host in vendor.get("domains") or []:
+                    if host not in domains:
+                        domains.append(host)
+                replaced = dict(existing)
+                replaced["robots"] = list(vendor.get("robots") or [])
+                replaced["domains"] = domains
+                replaced["list_category"] = "oem_sku"
+                if vendor.get("vendor_name"):
+                    replaced["vendor_name"] = vendor.get("vendor_name")
+                if vendor.get("vendor_url"):
+                    replaced["vendor_url"] = vendor.get("vendor_url")
+                out[domain] = replaced
                 continue
             robots = list(existing.get("robots") or [])
             seen = {r.get("model_slug") for r in robots if r.get("model_slug")}

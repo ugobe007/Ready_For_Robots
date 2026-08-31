@@ -261,6 +261,38 @@ def test_vega_and_stretch_keep_richer_rows_on_merge():
     assert "Vega" in sku["name"]
 
 
+def test_oem_sku_seed_replaces_humanoid_index_dump():
+    idx = {
+        "vendors": [
+            {
+                "vendor_name": "Galbot",
+                "domains": ["galbot.com"],
+                "vendor_url": "https://www.galbot.com",
+                "list_category": "humanoid",
+                "robots": [
+                    {"name": "Galbot G1", "model_slug": "galbot-g1"},
+                    {"name": "Galbot G2", "model_slug": "galbot-g2"},
+                ],
+            },
+            {
+                "vendor_name": "Galbot",
+                "domains": ["galbot.com"],
+                "vendor_url": "https://www.galbot.com",
+                "list_category": "oem_sku",
+                "robots": [
+                    {"name": "Galbot G1", "model_slug": "galbot-galbot-g1"},
+                    {"name": "Galbot S1", "model_slug": "galbot-galbot-s1"},
+                ],
+            },
+        ]
+    }
+    hit = lookup_vendor_by_url("https://galbot.com/", index=idx)
+    assert hit is not None
+    names = [r["name"] for r in hit["robots"]]
+    assert names == ["Galbot G1", "Galbot S1"]
+    assert "Galbot G2" not in names
+
+
 def test_profile_from_specs_is_identity_not_a_guess():
     profile = profile_from_specs(
         robot_name="Unitree G1",

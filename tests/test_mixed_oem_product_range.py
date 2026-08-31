@@ -314,6 +314,67 @@ def test_vinmotion_product_hrefs_and_next_f_menu():
     assert "VinMotion Humanoid" not in by
 
 
+def test_more_oems_named_robots_from_page_evidence():
+    payload_by = {
+        "https://booster.tech": listing_payload_for_url("https://booster.tech"),
+        "https://lumosbot.tech": listing_payload_for_url("https://lumosbot.tech"),
+        "https://galbot.com": listing_payload_for_url("https://galbot.com"),
+        "https://unix-group.ai": listing_payload_for_url("https://unix-group.ai"),
+        "https://noetixrobotics.com/en": listing_payload_for_url("https://noetixrobotics.com/en"),
+        "https://primebot.cn": listing_payload_for_url("https://primebot.cn"),
+        "https://limxdynamics.com/en": listing_payload_for_url("https://limxdynamics.com/en"),
+    }
+    booster = {r["name"]: r.get("display_class") for r in payload_by["https://booster.tech"]["robots"]}
+    assert booster["Booster K1"] == "humanoid"
+    assert booster["Booster T1"] == "humanoid"
+    assert booster["Booster T2"] == "humanoid"
+    lumos = {r["name"]: r.get("display_class") for r in payload_by["https://lumosbot.tech"]["robots"]}
+    assert lumos["Lumos LUS 2"] == "humanoid"
+    assert lumos["Lumos NIX S3"] == "humanoid"
+    assert lumos.get("Lumos MOS 2") is None, lumos
+    assert lumos.get("Lumos LUD") is None, lumos
+    assert "Lumos Motor" not in lumos
+    galbot = {r["name"]: r.get("display_class") for r in payload_by["https://galbot.com"]["robots"]}
+    assert "Galbot G1" in galbot
+    assert "Galbot S1" in galbot
+    assert "Galbot G2" not in galbot
+    assert galbot.get("Galbot G1") is None, galbot
+    assert galbot.get("Galbot S1") is None, galbot
+    unix = {r["name"]: r.get("display_class") for r in payload_by["https://unix-group.ai"]["robots"]}
+    assert unix["Wanda 2.0"] == "humanoid"
+    assert unix["Panther"] == "humanoid"
+    assert unix["Martian"] == "humanoid"
+    assert "Wheeled" not in unix
+    noetix = {r["name"]: r.get("display_class") for r in payload_by["https://noetixrobotics.com/en"]["robots"]}
+    assert noetix["Bumi"] == "humanoid"
+    assert noetix["N2"] == "humanoid"
+    assert noetix["E1"] == "humanoid"
+    prime = {r["name"]: r.get("display_class") for r in payload_by["https://primebot.cn"]["robots"]}
+    assert prime["Q1"] == "humanoid"
+    assert "Qiyuan T1" not in prime
+    limx = {r["name"]: r.get("display_class") for r in payload_by["https://limxdynamics.com/en"]["robots"]}
+    assert limx["Luna"] == "humanoid"
+    assert limx["Oli"] == "humanoid"
+    assert limx["TRON 1"] == "humanoid"
+    assert limx.get("TRON 2") is None, limx
+    empty = listing_payload_for_url("https://thirdwave.ai")
+    names = [r["name"] for r in empty.get("robots") or []]
+    assert "TWA Reach" not in names
+    dexory = listing_payload_for_url("https://dexory.com")
+    dnames = [r["name"] for r in dexory.get("robots") or []]
+    assert "DexoryView" not in dnames
+    assert "Powered by AI" not in dnames
+
+
+def test_more_oem_product_hrefs():
+    from app.services.oem_sku_discover import classify_href_candidate
+
+    assert classify_href_candidate("https://www.booster.tech/booster-t2", "Booster T2") == "product"
+    assert classify_href_candidate("https://www.lumosbot.tech/products/lus2", "Lumos LUS 2") == "product"
+    assert classify_href_candidate("https://www.unix-group.ai/Wanda", "Wanda 2.0") == "product"
+    assert classify_href_candidate("https://www.limxdynamics.com/en/products/tron1", "TRON 1") == "product"
+
+
 def test_tennant_robotic_product_url_is_a_named_sku():
     from app.services.oem_sku_discover import (
         classify_href_candidate,

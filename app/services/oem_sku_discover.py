@@ -96,6 +96,35 @@ _LISTING_HINTS = {
         "/product/motion-1",
         "/product/motion-2",
     ),
+    "booster.tech": (
+        "/",
+        "/booster-k1",
+        "/booster-t1",
+        "/booster-t2",
+    ),
+    "lumosbot.tech": (
+        "/",
+        "/products/lus2",
+        "/products/luxiaoming",
+        "/products/mos",
+        "/products/lud",
+    ),
+    "unix-group.ai": (
+        "/",
+        "/Wanda",
+        "/Panther",
+        "/Martian",
+    ),
+    "limxdynamics.com": (
+        "/en",
+        "/en/products/luna",
+        "/en/products/oli",
+        "/en/products/tron1",
+        "/en/products/tron2",
+    ),
+    "galbot.com": ("/", "/en"),
+    "noetixrobotics.com": ("/", "/en"),
+    "primebot.cn": ("/",),
 }
 _NAV_PATH = re.compile(
     r"/(about|careers?|contact|news|blog|press|support|login|privacy|legal|"
@@ -287,6 +316,10 @@ _CHROME_LABELS = frozenset(
         "zh",
         "english",
         "chinese",
+        "dexoryview",
+        "powered by ai",
+        "why dexory",
+        "wheeled",
     }
 )
 _CHROME_SLUGS = frozenset(

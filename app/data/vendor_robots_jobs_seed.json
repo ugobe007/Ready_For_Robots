@@ -16,8 +16,8 @@
     "junk": 15,
     "not_oem": 12
   },
-  "vendor_count": 329,
-  "robot_count": 381,
+  "vendor_count": 328,
+  "robot_count": 380,
   "vendors": [
     {
       "vendor_name": "MiR (Mobile Industrial Robots)",
@@ -1492,34 +1492,6 @@
               "predicate": "product_class",
               "value": "amr",
               "evidence_span": "FoxBot ATL: trailer load/unload. Used in Logistics."
-            }
-          ],
-          "specs": {}
-        }
-      ]
-    },
-    {
-      "vendor_name": "Third Wave Automation",
-      "domains": [
-        "thirdwave.ai"
-      ],
-      "vendor_url": "https://www.thirdwave.ai",
-      "list_category": "jobs_seed",
-      "robots": [
-        {
-          "name": "TWA Reach",
-          "model_slug": "third-wave-automation-twa-reach",
-          "product_url": "https://www.thirdwave.ai",
-          "vendor_url": "https://www.thirdwave.ai",
-          "primary_class": "amr",
-          "status": "available",
-          "country": "USA",
-          "description": "TWA Reach: warehouse pallet. Used in Logistics.",
-          "catalog_claims": [
-            {
-              "predicate": "product_class",
-              "value": "amr",
-              "evidence_span": "TWA Reach: warehouse pallet. Used in Logistics."
             }
           ],
           "specs": {}
