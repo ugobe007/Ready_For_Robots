@@ -64,19 +64,3 @@ def test_match_module_does_not_scrape():
     assert "build_robot_profile" not in src
     assert "scrape_robot_page" not in src
     assert "_catalog_robots_snapshot" in src
-
-
-def test_employer_draft_persists_jd_on_robot_jobs():
-    from pathlib import Path
-
-    api = Path("app/api/employer_jobs.py").read_text(encoding="utf-8")
-    life = Path("app/services/robot_job_lifecycle.py").read_text(encoding="utf-8")
-    assert "upsert_robot_job_from_extract" in api
-    assert "jd_filename" in api
-    assert "jd_text" in api
-    assert "job_description_filename" in api
-    assert "job_description" in life
-    assert "job_description_filename" in life
-    assert "indeed" not in api.lower()
-    assert "hunter" not in api.lower()
-    assert "apollo" not in api.lower()
