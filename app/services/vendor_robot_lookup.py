@@ -99,6 +99,7 @@ OEM_SKU_REPLACES_INDEX_HOSTS = frozenset(
         "thirdwave.ai",
         "dexory.com",
         "galaxea-dynamics.com",
+        "galaxea.ai",
         "xpeng.com",
         "ararobotics.eu",
         "cartken.com",

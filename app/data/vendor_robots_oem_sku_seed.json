@@ -9737,7 +9737,8 @@
     {
       "vendor_name": "Galaxea Dynamics",
       "domains": [
-        "galaxea-dynamics.com"
+        "galaxea-dynamics.com",
+        "galaxea.ai"
       ],
       "vendor_url": "https://galaxea-dynamics.com",
       "list_category": "oem_sku",
