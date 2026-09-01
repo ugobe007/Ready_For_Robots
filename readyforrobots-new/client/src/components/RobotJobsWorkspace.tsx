@@ -145,6 +145,7 @@ import {
 import {
   beginFindResearch,
   FIND_RESEARCH_INTERRUPTED_MESSAGE,
+  ensureFindStayVisit,
   findResearchFailureMessage,
   isLiveFindResearch,
   shouldContinueAfterListingError,
@@ -1115,6 +1116,7 @@ export default function RobotJobsWorkspace() {
       ) {
         return;
       }
+      ensureFindStayVisit();
       if (research.controller.signal.aborted || isAbortError(err, ac.signal)) {
         setError(FIND_RESEARCH_INTERRUPTED_MESSAGE);
         setStage("find");
@@ -1177,6 +1179,7 @@ export default function RobotJobsWorkspace() {
           })
         )
           return;
+        ensureFindStayVisit();
         if (
           research.controller.signal.aborted ||
           isAbortError(err, ac.signal)
@@ -1264,6 +1267,7 @@ export default function RobotJobsWorkspace() {
         })
       )
         return;
+      ensureFindStayVisit();
       if (research.controller.signal.aborted || isAbortError(err, ac.signal)) {
         setError(FIND_RESEARCH_INTERRUPTED_MESSAGE);
         setStage("select");
@@ -1929,8 +1933,10 @@ export default function RobotJobsWorkspace() {
       openJobsFromAnalyses([analysis], submitUrl, [sku.name], research);
     } catch (err) {
       if (!live()) return;
-      const msg = findResearchFailureMessage(err);
-      if (msg) setError(msg);
+      ensureFindStayVisit();
+      setError(
+        findResearchFailureMessage(err, "Research failed for that robot.")
+      );
       setStage("find");
     } finally {
       if (live()) findInFlightRef.current = false;
@@ -1973,6 +1979,7 @@ export default function RobotJobsWorkspace() {
       setCheckedJobKeys(checks);
       setStage("jobs");
     } catch {
+      ensureFindStayVisit();
       setError("Could not find jobs for that robot type. Try again.");
       setStage("find");
     } finally {
@@ -2416,11 +2423,11 @@ function FindRail({
       </form>
 
       {stage === "find" && onPickClass && onPickSku ? (
-        <div className="mt-8 border-t border-slate-700 pt-6">
-          <p className={`${eyebrow} text-emerald-300`}>
+        <div className="mt-8 border-2 border-emerald-400 bg-emerald-400/20 p-4 shadow-[0_0_28px_rgba(46,230,168,0.35)]">
+          <p className="font-display text-xl font-bold tracking-tight text-emerald-200 sm:text-2xl">
             {I_KNOW_THE_ROBOT_LABEL}
           </p>
-          <p className="mt-2 text-[12px] leading-snug text-slate-400">
+          <p className="mt-2 text-[13px] leading-snug text-emerald-100/80">
             {I_KNOW_THE_ROBOT_HINT}
           </p>
           <div className="mt-3 grid max-h-64 gap-1 overflow-y-auto">
@@ -2435,8 +2442,8 @@ function FindRail({
                 }}
                 className={`border px-3 py-2 text-left text-[13px] transition ${
                   catalogClass === opt.id
-                    ? "border-emerald-400 bg-emerald-400/10 text-slate-100"
-                    : "border-slate-700 text-slate-300 hover:border-emerald-400/50"
+                    ? "border-emerald-300 bg-emerald-400/20 text-emerald-50"
+                    : "border-emerald-500/40 bg-[#081126] text-slate-100 hover:border-emerald-300 hover:bg-emerald-400/10"
                 }`}
               >
                 <span className="font-bold">{opt.label}</span>

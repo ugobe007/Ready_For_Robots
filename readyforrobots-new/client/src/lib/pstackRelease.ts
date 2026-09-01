@@ -6,6 +6,10 @@
  * shown as Failed to fetch) and #172 (strawberry CRM leftover).
  */
 import { findUserFacingError, isSilentFindError } from "./robotUrlIdentity";
+import {
+  findFailureBouncesHome,
+  findLookupFailureOutcome,
+} from "./findResearch";
 import { crmDeskForCurrentRobot } from "./jobsCrmAccount";
 import { beginJobsHandoffForUrl } from "./jobsHandoffSnapshot";
 import { classJobsEmptyCopy } from "./jobsWorkflow";
@@ -21,6 +25,13 @@ export const FIND_ABORT_FIXTURE = {
   abort: { name: "AbortError", message: "The operation was aborted" },
   failedToFetch: { name: "TypeError", message: "Failed to fetch" },
   fallback: "Research failed. Check the URL and try again.",
+} as const;
+
+export const FIND_NO_HOME_FIXTURE = {
+  id: "find_no_home",
+  timeout: { name: "TimeoutError", message: "Timed out after 8000ms" },
+  http500: { name: "Error", message: "robot-job-search 500" },
+  landingHrefs: ["/", "/?new=1"] as const,
 } as const;
 
 export const CRM_LEFTOVER_FIXTURE = {
@@ -45,6 +56,20 @@ export function abortMustNotSurfaceAsResearchFailed(): boolean {
     fetchFail === null &&
     isSilentFindError(FIND_ABORT_FIXTURE.abort) &&
     isSilentFindError(FIND_ABORT_FIXTURE.failedToFetch)
+  );
+}
+
+export function findErrorMustStayOnFind(err: unknown): boolean {
+  const out = findLookupFailureOutcome(err);
+  return (
+    out.stage === "find" &&
+    out.href === "/?visit=jobs" &&
+    out.bounceHome === false &&
+    Boolean(out.error) &&
+    !findFailureBouncesHome(out.href) &&
+    FIND_NO_HOME_FIXTURE.landingHrefs.every(href =>
+      findFailureBouncesHome(href)
+    )
   );
 }
 

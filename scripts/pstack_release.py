@@ -60,6 +60,7 @@ HEALTHCARE_CLASSES = frozenset(
 REQUIRED_CRITIC_GATE_IDS = (
     "find",
     "find_abort",
+    "find_no_home",
     "find_identity",
     "crm_leftover",
     "job_cards",
@@ -452,6 +453,7 @@ def phase_act() -> dict[str, Any]:
         and "isAbortError(err, ac.signal)" in submit
         and "FIND_RESEARCH_INTERRUPTED_MESSAGE" in submit
         and "lookupFailedMessage" in submit
+        and "ensureFindStayVisit" in submit
     )
     checks.append(
         _check(
@@ -1118,6 +1120,32 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
             and "find_abort" in site
             and "find_abort" in protocol,
             "AbortError and Failed to fetch do not become Research failed",
+        )
+    )
+    research_ts = _read(FIND_RESEARCH) if FIND_RESEARCH.is_file() else ""
+    jobs_page = _read(JOBS_PAGE) if JOBS_PAGE.is_file() else ""
+    workspace_src = _read(WORKSPACE) if WORKSPACE.is_file() else ""
+    submit = _slice(
+        workspace_src, "async function submitFind", "async function confirmSelection"
+    )
+    no_home = (
+        "ensureFindStayVisit" in submit
+        and "goJobsFreshHome" not in submit
+        and "JOBS_FRESH_HOME_EVENT" not in submit
+        and "?new=1" not in submit
+        and 'setLocation("/")' not in submit
+        and "findLookupFailureOutcome" in research_ts
+        and "findFailureBouncesHome" in research_ts
+        and 'forcedLanding && fromSearch === "landing"' in jobs_page
+        and "FIND_NO_HOME_FIXTURE" in release_ts
+        and "find_no_home" in site
+        and "find_no_home" in protocol
+    )
+    checks.append(
+        _check(
+            "find_no_home",
+            no_home,
+            "FIND timeout / 500 / abort stays on /?visit=jobs, never landing",
         )
     )
     checks.append(

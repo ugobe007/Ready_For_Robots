@@ -176,7 +176,7 @@ export const LANDING_COLORS = {
 
 export const I_KNOW_THE_ROBOT_LABEL = "I know the robot";
 export const I_KNOW_THE_ROBOT_HINT =
-  "Pick a class or a named SKU from the catalog. We will not invent a model.";
+  "Pick a class or a named SKU we already have. No invented models.";
 
 export const EMPLOYER_MATCH_CTA = "Match robots →";
 export const EMPLOYER_POST_JOB_CTA = "Post this job →";
