@@ -336,6 +336,7 @@ _CHROME_LABELS = frozenset(
         "why dexory",
         "wheeled",
         "impact",
+        "total economic impact",
         "farmers",
         "farmer",
     }
@@ -415,6 +416,8 @@ _CHROME_SLUGS = frozenset(
         "zh-hant",
         "about",
         "news",
+        "impact",
+        "why-dexory",
     }
 )
 _CHROME_PHRASE = re.compile(

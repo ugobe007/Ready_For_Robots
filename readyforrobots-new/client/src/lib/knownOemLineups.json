@@ -1215,7 +1215,7 @@
     "robots": [
       {
         "name": "DexoryView",
-        "description": "DexoryView indexed class service_robot.",
+        "description": null,
         "display_class": null
       }
     ]
