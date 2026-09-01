@@ -1,8 +1,13 @@
 /**
  * Employer MATCH — work language → named catalog robots.
- * Not a second job matcher. Not company → category → jobs.
+ * Catalog only. No live OEM scrape. Not a second job matcher.
  */
-import { getPublicReadApiBase } from "@/lib/apiBase";
+import { fetchWithTimeout, getPublicReadApiBase } from "@/lib/apiBase";
+
+export const EMPLOYER_MATCH_TIMEOUT_MS = 2_500;
+export const EMPLOYER_JD_ACCEPT =
+  ".pdf,.doc,.docx,.txt,application/pdf,text/plain";
+export const EMPLOYER_JD_TEXT_CAP = 12_000;
 
 export type EmployerMatchedRobot = {
   name: string;
@@ -19,6 +24,8 @@ export type EmployerRobotMatchResult = {
   robot_count: number;
   work_class?: string | null;
   empty_copy?: string | null;
+  catalog_only?: boolean;
+  live_scrape?: boolean;
 };
 
 export type EmployerJobDraftResult = {
@@ -28,6 +35,27 @@ export type EmployerJobDraftResult = {
   detail?: string | null;
 };
 
+export type EmployerJdFile = {
+  filename: string;
+  text: string;
+  mediaType: string;
+};
+
+export async function readEmployerJdFile(file: File): Promise<EmployerJdFile> {
+  const filename = (file.name || "job-description").slice(0, 240);
+  const mediaType = file.type || "";
+  const lower = filename.toLowerCase();
+  if (lower.endsWith(".txt") || mediaType.startsWith("text/")) {
+    const text = (await file.text()).slice(0, EMPLOYER_JD_TEXT_CAP);
+    return { filename, text, mediaType: mediaType || "text/plain" };
+  }
+  return {
+    filename,
+    text: "",
+    mediaType: mediaType || "application/octet-stream",
+  };
+}
+
 export async function fetchEmployerRobotMatch(opts: {
   workClass: string;
   description?: string;
@@ -35,16 +63,23 @@ export async function fetchEmployerRobotMatch(opts: {
   signal?: AbortSignal;
 }): Promise<EmployerRobotMatchResult> {
   const base = getPublicReadApiBase();
-  const res = await fetch(`${base}/api/employer-robot-match`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({
-      work_class: opts.workClass || null,
-      description: opts.description || null,
-      job_url: opts.jobUrl || null,
-    }),
-    signal: opts.signal,
-  });
+  const res = await fetchWithTimeout(
+    `${base}/api/employer-robot-match`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        work_class: opts.workClass || null,
+        description: opts.description || null,
+        job_url: opts.jobUrl || null,
+      }),
+      signal: opts.signal,
+    },
+    EMPLOYER_MATCH_TIMEOUT_MS
+  );
   if (!res.ok) {
     throw new Error(`employer-robot-match ${res.status}`);
   }
@@ -58,6 +93,8 @@ export async function postEmployerJobDraft(opts: {
   description?: string;
   workClass?: string;
   jobUrl?: string;
+  jdFilename?: string;
+  jdText?: string;
   shortlisted?: { name: string; vendor_name: string }[];
 }): Promise<EmployerJobDraftResult> {
   const base = getPublicReadApiBase();
@@ -71,6 +108,8 @@ export async function postEmployerJobDraft(opts: {
       description: opts.description || null,
       work_class: opts.workClass || null,
       job_url: opts.jobUrl || null,
+      jd_filename: opts.jdFilename || null,
+      jd_text: opts.jdText || null,
       shortlisted: opts.shortlisted || [],
     }),
   });

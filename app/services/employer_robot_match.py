@@ -8,7 +8,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from app.services.jobs_oem_listing import listing_from_catalog
+from functools import lru_cache
+
 from app.services.oem_sku_discover import is_junk_sku_name
 from app.services.robot_class_qualify import (
     infer_class_from_work_language,
@@ -75,45 +76,45 @@ def _tokens(text: str) -> set[str]:
     return set(_TOKEN.findall((text or "").lower()))
 
 
-def iter_catalog_robots() -> list[dict[str, Any]]:
-    """Named catalog robots only. Deduped. Junk SKU names dropped."""
+@lru_cache(maxsize=1)
+def _catalog_robots_snapshot() -> tuple[dict[str, Any], ...]:
+    """Named catalog robots only. Stored class. No live OEM scrape."""
     index = load_vendor_robots_index()
     out: list[dict[str, Any]] = []
     seen: set[tuple[str, str]] = set()
     for vendor in index.get("vendors") or []:
         vendor_name = str(vendor.get("vendor_name") or "").strip()
         vendor_url = str(vendor.get("vendor_url") or "").strip() or None
-        listed = listing_from_catalog(vendor)
-        by_name = {
-            name_key(str(r.get("name") or "")): r
-            for r in (vendor.get("robots") or [])
-            if r.get("name")
-        }
-        for row in listed:
-            name = str(row.get("name") or "").strip()
+        for raw in vendor.get("robots") or []:
+            if not isinstance(raw, dict):
+                continue
+            name = str(raw.get("name") or "").strip()
             if not name or is_junk_sku_name(name):
                 continue
             key = (name_key(vendor_name), name_key(name))
             if not key[1] or key in seen:
                 continue
             seen.add(key)
-            raw = by_name.get(name_key(name)) or {}
             product_url = str(raw.get("product_url") or "").strip() or vendor_url
-            desc = str(row.get("description") or raw.get("description") or "").strip() or None
-            cls = _robot_class({**raw, **row})
+            desc = str(raw.get("description") or "").strip() or None
             out.append(
                 {
                     "name": name,
                     "vendor_name": vendor_name or "Unknown OEM",
                     "vendor_url": vendor_url,
-                    "robot_class": cls,
+                    "robot_class": _robot_class(raw),
                     "description": desc,
                     "product_url": product_url,
                     "task": str(raw.get("task") or ""),
                     "setting": str(raw.get("setting") or ""),
                 }
             )
-    return out
+    return tuple(out)
+
+
+def iter_catalog_robots() -> list[dict[str, Any]]:
+    """Named catalog robots only. Deduped. Junk SKU names dropped."""
+    return [dict(row) for row in _catalog_robots_snapshot()]
 
 
 def match_catalog_robots(
@@ -130,6 +131,8 @@ def match_catalog_robots(
             "robot_count": 0,
             "work_class": lookup_class_id(work_class),
             "empty_copy": EMPTY_COPY,
+            "catalog_only": True,
+            "live_scrape": False,
         }
     desc_tokens = _tokens(description or "")
     scored: list[tuple[float, dict[str, Any]]] = []
@@ -169,6 +172,8 @@ def match_catalog_robots(
             "robot_count": 0,
             "work_class": lookup_class_id(work_class),
             "empty_copy": EMPTY_COPY,
+            "catalog_only": True,
+            "live_scrape": False,
         }
     return {
         "state": "matches",
@@ -176,4 +181,6 @@ def match_catalog_robots(
         "robot_count": len(robots),
         "work_class": lookup_class_id(work_class),
         "empty_copy": None,
+        "catalog_only": True,
+        "live_scrape": False,
     }

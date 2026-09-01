@@ -22,8 +22,11 @@ import {
   JOBS_PROCESS_NAV_CLASS,
 } from "@/lib/jobsWorkflow";
 import {
+  EMPLOYER_JD_ACCEPT,
   fetchEmployerRobotMatch,
   postEmployerJobDraft,
+  readEmployerJdFile,
+  type EmployerJdFile,
   type EmployerMatchedRobot,
 } from "@/lib/employerRobotMatch";
 import {
@@ -50,6 +53,7 @@ export default function EmployerMatchWorkspace() {
   const [employer, setEmployer] = useState("");
   const [title, setTitle] = useState("");
   const [workplace, setWorkplace] = useState("");
+  const [jd, setJd] = useState<EmployerJdFile | null>(null);
   const [posting, setPosting] = useState<EmployerPosting | null>(null);
   const [postingError, setPostingError] = useState<string | null>(null);
   const [postingBusy, setPostingBusy] = useState(false);
@@ -100,9 +104,11 @@ export default function EmployerMatchWorkspace() {
       employer: shop,
       title: workTitle,
       workplace: workplace.trim() || undefined,
-      description: description.trim() || undefined,
+      description: description.trim() || jd?.text || undefined,
       work_class: workClass || undefined,
       job_url: jobUrl.trim() || undefined,
+      jd_filename: jd?.filename,
+      jd_text: jd?.text || undefined,
       persisted: false,
       shortlisted: shortlisted.map(r => ({
         name: r.name,
@@ -117,9 +123,11 @@ export default function EmployerMatchWorkspace() {
         employer: shop,
         title: workTitle,
         workplace: workplace.trim(),
-        description: description.trim(),
+        description: description.trim() || jd?.text || undefined,
         workClass,
         jobUrl: jobUrl.trim(),
+        jdFilename: jd?.filename,
+        jdText: jd?.text || description.trim() || undefined,
         shortlisted: local.shortlisted,
       });
       local.persisted = Boolean(res.ok && res.persisted);
@@ -274,6 +282,39 @@ export default function EmployerMatchWorkspace() {
                 placeholder="https://…"
                 className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 font-mono text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
               />
+              <label
+                className={`${JOBS_EYEBROW_CLASS} mt-4 block`}
+                htmlFor="work-jd"
+              >
+                Job description file (optional)
+              </label>
+              <input
+                id="work-jd"
+                type="file"
+                accept={EMPLOYER_JD_ACCEPT}
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (!file) {
+                    setJd(null);
+                    return;
+                  }
+                  void readEmployerJdFile(file).then(setJd);
+                }}
+                className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 file:mr-3 file:border-0 file:bg-emerald-400 file:px-3 file:py-1 file:font-mono file:text-[11px] file:font-bold file:uppercase file:text-[#04122a]"
+              />
+              {jd ? (
+                <p className="mt-2 text-[12px] text-emerald-200">
+                  {jd.filename}
+                  {jd.text
+                    ? ` · ${jd.text.trim().split(/\s+/).length} words read`
+                    : " · we will store the filename with the posting. Paste details below if the file is PDF or Word."}
+                </p>
+              ) : (
+                <p className="mt-2 text-[12px] text-slate-500">
+                  PDF, Word, or txt. We do not invent an employer or an email
+                  from the file.
+                </p>
+              )}
               {error ? (
                 <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
                   {error}
@@ -387,6 +428,11 @@ export default function EmployerMatchWorkspace() {
                       : postingError ||
                         "Kept on this device. Sign in later if you want it on your desk."}
                   </p>
+                  {posting.jd_filename ? (
+                    <p className="mt-2 text-[12px] text-emerald-200">
+                      Description file: {posting.jd_filename}
+                    </p>
+                  ) : null}
                   {posting.shortlisted.length ? (
                     <ul className="mt-3 space-y-1 text-sm text-slate-300">
                       {posting.shortlisted.map(r => (
@@ -446,6 +492,37 @@ export default function EmployerMatchWorkspace() {
                     placeholder="City or site"
                     className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
                   />
+                  <label
+                    className={`${JOBS_EYEBROW_CLASS} mt-4 block`}
+                    htmlFor="post-jd"
+                  >
+                    Job description file
+                  </label>
+                  <input
+                    id="post-jd"
+                    type="file"
+                    accept={EMPLOYER_JD_ACCEPT}
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (!file) {
+                        setJd(null);
+                        return;
+                      }
+                      void readEmployerJdFile(file).then(setJd);
+                    }}
+                    className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 file:mr-3 file:border-0 file:bg-emerald-400 file:px-3 file:py-1 file:font-mono file:text-[11px] file:font-bold file:uppercase file:text-[#04122a]"
+                  />
+                  {jd ? (
+                    <p className="mt-2 text-[12px] text-emerald-200">
+                      {jd.filename}
+                      {jd.text ? " · text stored with this posting" : ""}
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-[12px] text-slate-500">
+                      PDF, Word, or txt, plus the fields above. No invented
+                      employer, no invented email.
+                    </p>
+                  )}
                   {postingError ? (
                     <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
                       {postingError}
