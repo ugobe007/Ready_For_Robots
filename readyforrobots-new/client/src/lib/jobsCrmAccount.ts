@@ -199,6 +199,112 @@ export const WORK_TASK_MODEL_UNKNOWN_HINT = "Unknown until you answer.";
 export const WORK_TASK_MODEL_SOURCE_REQUIRED =
   "Name the model source. We will not guess.";
 
+export const CAL_JOBS_DESK_TOOLS = [
+  "read_desk",
+  "save_task_model",
+  "prepare_apply",
+] as const;
+export type CalJobsDeskTool = (typeof CAL_JOBS_DESK_TOOLS)[number];
+
+export type CalDeskFact =
+  | "task_model"
+  | "selected_models"
+  | "monthly_price"
+  | "poc"
+  | "prepare_apply";
+
+export type CalDeskJob = {
+  job_key: string;
+  employer_name: string;
+  work_title: string;
+  workplace?: string | null;
+  robot_name?: string | null;
+  robot_url?: string | null;
+  work_task_model_kind?: string | null;
+  work_task_model_source?: string | null;
+  contacts: JobsApplyContact[];
+  contacts_note?: string | null;
+  selected_models: string[];
+  catalog_skus: CatalogSku[];
+  monthly_price?: string | null;
+  poc?: { evidence?: string; video?: string; skipped?: boolean };
+  application_status?: string | null;
+  application?: JobsCrmApplication | null;
+  missing: string[];
+  next_fact?: CalDeskFact | string | null;
+  prompt: string;
+};
+
+export type CalDeskQuestion = {
+  job_key: string;
+  fact: CalDeskFact | string;
+  prompt: string;
+};
+
+export type CalDeskBrief = {
+  ok: boolean;
+  name: string;
+  title: string;
+  job: string;
+  greeting: string;
+  next_question: CalDeskQuestion | null;
+  jobs: CalDeskJob[];
+  operator_sends: boolean;
+  autonomy_enabled: boolean;
+  tools: string[];
+  forbidden_tools: string[];
+};
+
+export type CalDeskTurn = {
+  ok: boolean;
+  refused?: boolean;
+  tool?: string;
+  detail?: string;
+  result?: KeptJobRow | JobsCrmApplication | null;
+  desk: CalDeskBrief;
+  next_question?: CalDeskQuestion | null;
+};
+
+export async function fetchCalDesk(token: string): Promise<CalDeskBrief> {
+  return jobsCrmFetch<CalDeskBrief>("/api/jobs-crm/cal/desk", token);
+}
+
+export async function runCalDeskTool(
+  token: string,
+  body: {
+    tool: string;
+    jobKey?: string;
+    kind?: WorkTaskModelKind | string;
+    source?: string;
+    robotName?: string;
+    selectedModels?: string[];
+    monthlyPrice?: string;
+    pocEvidence?: string;
+    pocVideoUrl?: string;
+    pocSkipped?: boolean;
+    why?: string;
+    companyName?: string;
+  }
+): Promise<CalDeskTurn> {
+  return jobsCrmFetch<CalDeskTurn>("/api/jobs-crm/cal/desk", token, {
+    method: "POST",
+    body: JSON.stringify({
+      tool: body.tool,
+      job_key: body.jobKey || null,
+      kind: body.kind || null,
+      source: body.source || null,
+      robot_name: body.robotName || null,
+      selected_models: body.selectedModels || [],
+      monthly_price: body.monthlyPrice || null,
+      poc_evidence: body.pocEvidence || null,
+      poc_video_url: body.pocVideoUrl || null,
+      poc_skipped: Boolean(body.pocSkipped),
+      why: body.why || null,
+      company_name: body.companyName || null,
+    }),
+  });
+}
+
 export function parseWorkTaskModel(
   row:
     | {

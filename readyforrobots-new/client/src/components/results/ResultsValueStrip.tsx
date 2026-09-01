@@ -47,7 +47,7 @@ export default function ResultsValueStrip({
       >
         {locked > 0
           ? OEM_CAL_RESULTS_CTA_ANON
-          : "Sign up free — copy Cal's note"}
+          : "Sign up free — copy the note"}
         <ArrowRight className="h-3.5 w-3.5" />
       </Link>
     </div>

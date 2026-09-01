@@ -1162,7 +1162,7 @@ export default function Results() {
                   </p>
                   <p className="mt-0.5 text-[11px] text-emerald-200/90">
                     {isSignedIn
-                      ? "Cal matched these buyers to your robot URL — add company details next to unlock 15."
+                      ? "These matches came from your URL scan — add company details next to unlock 15."
                       : oemCalResultsAnonLine(sortedProspects.length)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-slate-400">
@@ -1171,7 +1171,7 @@ export default function Results() {
                     </span>
                     {usingFallback ? " · sample mode" : ""}
                     {" · "}
-                    Use Cal · OEM next step below when ready.
+                    Use the OEM next step below when ready.
                   </p>
                   {!isSignedIn && (
                     <p className="mt-1 text-[11px] text-slate-500">

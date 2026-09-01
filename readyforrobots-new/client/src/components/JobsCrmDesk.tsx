@@ -37,6 +37,7 @@ import type { MatchJob } from "@/lib/robotJobMatch";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
 import JobsCrmInbox from "@/components/JobsCrmInbox";
+import CalJobsDesk from "@/components/CalJobsDesk";
 import {
   JOBS_APPLY_SELECTED_CTA,
   JOBS_APPLY_SEQUENCE,
@@ -328,6 +329,17 @@ export default function JobsCrmDesk({
           onApplyClick={openOfferForm}
         />
       </div>
+      {accessToken && jobs.length > 0 ? (
+        <CalJobsDesk
+          token={accessToken}
+          onKeptRow={mergeKeptRow}
+          onPrepared={app => {
+            setApplications(prev => ({ ...prev, [app.job_key]: app }));
+            setExpandedKey(app.job_key);
+            setShowNextSteps(true);
+          }}
+        />
+      ) : null}
 
       {jobs.length === 0 ? (
         <p className="mt-6 border border-slate-600 bg-[#081126] px-4 py-4 text-sm text-slate-300">
