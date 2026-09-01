@@ -12,9 +12,11 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 
 | Surface | Route | What the user is doing |
 |---------|-------|------------------------|
-| Jobs terminal | `/` (`/jobs/:slug` same workspace) | Paste robot URL, inspect Job Cards |
-| About | `/intelligence` | Jobs loop explainer; Find jobs → `/?new=1` |
-| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: jobs you kept, inspect, quote rental, Place this job. Cal asks missing apply facts and prepares the draft. Inbox confirm/release for a held interview slot. |
+| Landing fork | `/` or `/?new=1` | Who is this visit. Two options: Look for robot jobs / Look for robot candidates. |
+| Jobs FIND | `/?visit=jobs` | OEM/integrator step 1: paste robot URL or pick a named catalog SKU / class. Then Job Cards. |
+| Employer MATCH | `/?visit=candidates` | Employer step 1: work tiles + description. Named catalog robots, then post-job draft. |
+| About | `/intelligence` | Jobs loop explainer; Find jobs → `/?visit=jobs` |
+| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03 for robot companies: jobs you kept, inspect, quote rental, Place this job. Cal asks missing apply facts and prepares the draft. Inbox confirm/release for a held interview slot. |
 | Employer evaluate | `/employer/:token` | Accept / Decline (reason code) / propose time / hold a slot. Video résumé when present. No RFR account. |
 | OEM hold | `/oem-hold/:token` | Confirm or release a held interview window. |
 | Compare | `/compare` | Jobs vs sales-list framing |
@@ -29,7 +31,7 @@ Canonical frontend: `readyforrobots-new/client/`. API: `https://ready-2-robot.fl
 
 ### Jobs header (`ExperimentHeader`)
 
-Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (empty FIND). While already on `/`, the click resets in place — it must not reload the document or abort an in-flight Find jobs.
+Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (landing fork: who is this visit). While already on `/`, the click resets in place — it must not reload the document or abort an in-flight Find jobs.
 
 | Item | Behavior |
 |------|----------|
@@ -54,7 +56,11 @@ Collapsible command rail on CRM / pipeline / admin when signed in. Sections: Sel
 
 ## Process bar (Jobs workflow chrome)
 
-Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`. The document **scrolls**. Do not lock the workspace at `100vh` + `overflow: hidden`.
+Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"` on FIND and `aria-label="Employer process"` on employer MATCH. The document **scrolls**. Do not lock the workspace at `100vh` + `overflow: hidden`.
+
+Landing has no process bar.
+
+### FIND (`/?visit=jobs`)
 
 | Step | Label | CTA |
 |------|-------|-----|
@@ -62,7 +68,15 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 | 02 | Available jobs | `Open CRM →` (emerald). Apply is not a sibling CTA on this screen. |
 | 03 | CRM | `Open CRM →` / leave-desk next. Signed desk shows violet **Apply to jobs →**. |
 
-01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM. Apply lives on the CRM desk after Open CRM.
+01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM. Apply lives on the CRM desk after Open CRM. Cal stays here after Open CRM. Employer MATCH does not get Cal.
+
+### Employer MATCH (`/?visit=candidates`)
+
+| Step | Label | CTA |
+|------|-------|-----|
+| 01 | What is the work | `Match robots →` |
+| 02 | Matching robots | named catalog robots, then `Post this job →` |
+| 03 | Post the job | employer name + work title. No invented email. Employer CRM is their postings + shortlisted robots. |
 
 On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and signed desk). Unsigned next is **Sign up to open CRM →**. Signed next leaves the desk: **Back to jobs →** when they have a submission or kept cards, otherwise **Find jobs →**. Header **About** stays visible on all widths.
 
@@ -72,7 +86,7 @@ On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and
 
 | Panel | Role |
 |-------|------|
-| FIND form | `aria-label="Find jobs for your robot"`. URL field: `Paste robot product URL`. Optional catalog / known OEM lineup. |
+| FIND form | `aria-label="Find jobs for your robot"`. URL field: `Paste robot product URL`. **I know the robot**: class tiles + named catalog SKUs from knownOemLineups. Same FIND backend. |
 | SKU picker | Several products on the URL → ask which robot. One SKU → jobs on the same click (no second Find jobs). |
 | Job list | Up to 5 example jobs before signup. All five start **Keep**-checked. Tag `Job # is for {SKU}`. Collapsed row shows model `list_line` (layer · time · who trains) so QUALIFY happens before the check. |
 | Job Card (expanded) | Employer, workplace, work, qualification (usually Conditional), open questions, task models, numbered placement steps, Next is **not** here. |
@@ -102,17 +116,20 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
 ## Workflow (user)
 
 ```
-/?new=1
-  → paste robot URL (FIND)
+/
+  → Look for robot jobs | Look for robot candidates
+/?visit=jobs
+  → paste robot URL or pick class / named catalog SKU (FIND)
   → optional SKU pick
   → Job Cards (QUALIFY / inspect + check — checking dumps the row into CRM)
   → Open CRM → /signup?next=/pipeline?src=jobs_activate&src=jobs_activate
-  → after auth, CRM desk with 5 kept jobs (no robot OEMs)
-  → CRM desk with the jobs they kept → name a model for the work or say you'll train one → Apply (offer form) → open a job → quote rental → Place this job. Process bar stays 01 / 02 / 03.
-  → run the next robot the same way
+/?visit=candidates
+  → work tiles + short description / job URL
+  → named catalog robots (or honest empty + post the job so OEMs can find it)
+  → post-job draft (employer name + work; no invented contacts)
 ```
 
-Wordmark / Jobs always returns to empty FIND (`/?new=1`). Bare `/pipeline` without a Jobs `src` is SIGNAL — do not dump Jobs traffic there.
+Wordmark / Jobs always returns to the landing fork (`/?new=1`). Bare `/pipeline` without a Jobs `src` is SIGNAL — do not dump Jobs traffic there.
 
 Agent proof of this loop: `python3 scripts/agent_verify.py ci`.
 

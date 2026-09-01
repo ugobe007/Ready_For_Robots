@@ -18,7 +18,7 @@ how:
   - id: owners
     prove: FIND / matcher / search / identity / CRM desk files exist and stay the owners
   - id: find_route
-    prove: FIND is / via RobotJobsWorkspace on pages/Jobs.tsx
+    prove: FIND is / after Look for robot jobs; RobotJobsWorkspace stays on pages/Jobs.tsx
     fail: smoking /experiment as FIND
   - id: chrome_not_gate
     prove: Jobs CRM has no JobsPstackProtocol; protocol chrome is not required to merge

@@ -39,6 +39,14 @@ import {
 import { fetchOemListing, fetchRobotProfile } from "@/lib/robotProfile";
 import { lookupKnownOem } from "@/lib/knownOemLineups";
 import {
+  catalogSkusForClass,
+  type CatalogSku,
+} from "@/lib/knownOemCatalog";
+import {
+  I_KNOW_THE_ROBOT_HINT,
+  I_KNOW_THE_ROBOT_LABEL,
+} from "@/lib/jobsLanding";
+import {
   formatFactLine,
   profileConfidenceCopy,
   sourceTypeLabel,
@@ -75,6 +83,8 @@ import {
   RAIL_STEP_HINT,
   JOBS_FRESH_HOME_EVENT,
   canStartFindSubmit,
+  canStartClassFindSubmit,
+  robotClassTitle,
   consumeJobsWorkspaceRestoreOnce,
   defaultCheckedJobKeys,
   defaultCheckedKeysForLineup,
@@ -103,6 +113,7 @@ import {
   lineupSegments,
   usesLineupSegments,
   searchNamesForSegment,
+  skuLookupGrain,
   configurationClassForLookup,
   portfolioShowsJobCounts,
   productClassesFromLineup,
@@ -1883,6 +1894,104 @@ export default function RobotJobsWorkspace() {
     void submitFind(u);
   }
 
+  async function submitKnownSku(sku: CatalogSku) {
+    const submitUrl = sku.findUrl;
+    if (
+      !canStartFindSubmit({
+        url: submitUrl,
+        inFlight: findInFlightRef.current,
+        stage,
+        currentUrl: submittedUrlRef.current,
+      })
+    ) {
+      return;
+    }
+    setUrl(submitUrl);
+    findInFlightRef.current = true;
+    setError(null);
+    const research = bindSubmittedRobot(submitUrl);
+    const ac = research.controller;
+    setResearchPhase("jobs");
+    setStage("research");
+    setCompanyName(sku.vendorName);
+    const live = () => stillThisSubmit(submitUrl, research);
+    const cls = configurationClassForLookup(sku.displayClass);
+    try {
+      const res = await fetchRobotJobSearch({
+        url: submitUrl,
+        product: sku.name,
+        assertedClass: cls || undefined,
+        lookupGrain: skuLookupGrain(sku.displayClass),
+        signal: ac.signal,
+        timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+      });
+      if (!live()) return;
+      submissionIdRef.current =
+        res.robot_submission_id ?? submissionIdRef.current;
+      const analysis = analysisForSelectedSku(
+        res,
+        sku.name,
+        sku.displayClass
+      );
+      openJobsFromAnalyses(
+        [analysis],
+        submitUrl,
+        [sku.name],
+        research
+      );
+    } catch (err) {
+      if (!live()) return;
+      const msg = findResearchFailureMessage(err);
+      if (msg) setError(msg);
+      setStage("find");
+    } finally {
+      if (live()) findInFlightRef.current = false;
+    }
+  }
+
+  async function submitClassFind(classId: string) {
+    const chosen = classId.trim();
+    if (
+      !canStartClassFindSubmit({
+        assertedClass: chosen,
+        inFlight: findInFlightRef.current,
+      })
+    ) {
+      return;
+    }
+    findInFlightRef.current = true;
+    setError(null);
+    setMatchError(null);
+    setResearchPhase("jobs");
+    setStage("research");
+    setCompanyName(robotClassTitle(chosen));
+    try {
+      const res = await fetchRobotJobSearch({
+        assertedClass: chosen,
+        lookupGrain: "robot_type",
+        timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+      });
+      const analysis = typeMatchToAnalysis(
+        res,
+        robotClassTitle(chosen),
+        chosen
+      );
+      const checks = defaultCheckedJobKeys(analysis.jobs);
+      setPortfolio([analysis]);
+      setActiveIdx(0);
+      setLineupPreview(false);
+      setRailTab("jobs");
+      setExpandedJob(pickSelectedJobKey(analysis.jobs, null));
+      setCheckedJobKeys(checks);
+      setStage("jobs");
+    } catch {
+      setError("Could not find jobs for that robot type. Try again.");
+      setStage("find");
+    } finally {
+      findInFlightRef.current = false;
+    }
+  }
+
   function toggleProduct(name: string) {
     setSelected(prev => {
       if (prev.includes(name)) return prev.filter(n => n !== name);
@@ -2068,6 +2177,8 @@ export default function RobotJobsWorkspace() {
               error={error}
               currentSubmitUrl={submittedUrlRef.current}
               onCancel={stage === "select" ? newRobot : undefined}
+              onPickClass={id => void submitClassFind(id)}
+              onPickSku={sku => void submitKnownSku(sku)}
             />
           ) : stage === "portfolio" ? (
             <PortfolioRail
@@ -2242,6 +2353,8 @@ function FindRail({
   error,
   currentSubmitUrl,
   onCancel,
+  onPickClass,
+  onPickSku,
 }: {
   stage: Stage;
   url: string;
@@ -2251,12 +2364,17 @@ function FindRail({
   error: string | null;
   currentSubmitUrl?: string;
   onCancel?: () => void;
+  onPickClass?: (classId: string) => void;
+  onPickSku?: (sku: CatalogSku) => void;
 }) {
   const researching = stage === "research";
   const sameSubmit =
     researching &&
     Boolean(url.trim()) &&
     sameRobotUrl(url, currentSubmitUrl || "");
+  const [catalogClass, setCatalogClass] = useState("");
+  const classChoices = classOptionsOrDefault();
+  const skus = catalogClass ? catalogSkusForClass(catalogClass).slice(0, 12) : [];
   return (
     <div>
       <p className={eyebrow}>
@@ -2306,6 +2424,68 @@ function FindRail({
           {researching ? "Researching…" : FIND_JOBS_CTA}
         </button>
       </form>
+
+      {stage === "find" && onPickClass && onPickSku ? (
+        <div className="mt-8 border-t border-slate-700 pt-6">
+          <p className={`${eyebrow} text-emerald-300`}>{I_KNOW_THE_ROBOT_LABEL}</p>
+          <p className="mt-2 text-[12px] leading-snug text-slate-400">
+            {I_KNOW_THE_ROBOT_HINT}
+          </p>
+          <div className="mt-3 grid max-h-64 gap-1 overflow-y-auto">
+            {classChoices.map(opt => (
+              <button
+                key={opt.id}
+                type="button"
+                data-jobs-class={opt.id}
+                aria-pressed={catalogClass === opt.id}
+                onClick={() => {
+                  setCatalogClass(opt.id);
+                }}
+                className={`border px-3 py-2 text-left text-[13px] transition ${
+                  catalogClass === opt.id
+                    ? "border-emerald-400 bg-emerald-400/10 text-slate-100"
+                    : "border-slate-700 text-slate-300 hover:border-emerald-400/50"
+                }`}
+              >
+                <span className="font-bold">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+          {catalogClass ? (
+            <button
+              type="button"
+              onClick={() => onPickClass(catalogClass)}
+              className={`${ctaClass} mt-3 w-full`}
+            >
+              Find jobs for this type →
+            </button>
+          ) : null}
+          {skus.length ? (
+            <div className="mt-4">
+              <p className={eyebrow}>Named catalog SKUs</p>
+              <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto">
+                {skus.map(sku => (
+                  <li key={`${sku.host}|${sku.name}`}>
+                    <button
+                      type="button"
+                      data-catalog-sku={sku.name}
+                      onClick={() => onPickSku(sku)}
+                      className="w-full border border-slate-700 px-3 py-2 text-left text-[12px] text-slate-200 hover:border-emerald-400/60"
+                    >
+                      <span className="block font-bold">{sku.name}</span>
+                      <span className="text-slate-500">{sku.vendorName}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : catalogClass ? (
+            <p className="mt-3 text-[12px] text-slate-500">
+              No named catalog SKU in this class yet. Finding jobs for the type.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {error && (
         <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">

@@ -10,6 +10,7 @@
  */
 import { clearJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { sameRobotUrl } from "@/lib/robotUrlIdentity";
+import { LANDING_VISIT_QUERY, jobsFindHref } from "@/lib/jobsLanding";
 
 export type JobsConfirmLanding = "review" | "jobs" | "portfolio";
 export type JobLookupGrain = "robot_type" | "product";
@@ -1173,6 +1174,15 @@ export function isJobsHomePath(pathname: string | null | undefined): boolean {
   );
 }
 
+export function canStartClassFindSubmit(opts: {
+  assertedClass?: string | null;
+  inFlight?: boolean;
+}): boolean {
+  if (!(opts.assertedClass || "").trim()) return false;
+  if (opts.inFlight) return false;
+  return true;
+}
+
 /**
  * Drop `new=1` from the current URL without a document reload or wouter
  * `setLocation`. Wouter patches `history.replaceState`, so callers must not
@@ -1184,6 +1194,26 @@ export function stripJobsFreshQuery(): boolean {
   if (!isJobsFreshQuery(window.location.search)) return false;
   const params = new URLSearchParams(window.location.search);
   params.delete(JOBS_FRESH_QUERY);
+  const next = params.toString();
+  const path = window.location.pathname || "/";
+  const hash = window.location.hash || "";
+  const url = `${path}${next ? `?${next}` : ""}${hash}`;
+  window.history.replaceState(window.history.state, "", url);
+  return true;
+}
+
+/** Wordmark / Jobs home: landing fork, not FIND. Drops new=1 and visit. */
+export function stripJobsLandingQuery(): boolean {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  if (
+    params.get(JOBS_FRESH_QUERY) !== "1" &&
+    !params.get(LANDING_VISIT_QUERY)
+  ) {
+    return false;
+  }
+  params.delete(JOBS_FRESH_QUERY);
+  params.delete(LANDING_VISIT_QUERY);
   const next = params.toString();
   const path = window.location.pathname || "/";
   const hash = window.location.hash || "";
@@ -1241,7 +1271,7 @@ export function goJobsFreshHome(): void {
   if (typeof window === "undefined") return;
   const path = window.location.pathname || "/";
   if (isJobsHomePath(path)) {
-    stripJobsFreshQuery();
+    stripJobsLandingQuery();
     window.dispatchEvent(new Event(JOBS_FRESH_HOME_EVENT));
     return;
   }
@@ -1564,7 +1594,7 @@ export function jobsCrmLeaveHref(
 ): string {
   return jobsCrmHasRestore(opts)
     ? jobsWorkspaceRestoreHref()
-    : jobsFreshHomeHref();
+    : jobsFindHref();
 }
 
 export function jobsCrmLeaveLabel(
