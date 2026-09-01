@@ -5,7 +5,11 @@
  * returned for the submit that just started. URL identity isolation still
  * drops late A responses after B starts; a same-URL retry is a new generation
  * so the first attempt cannot paint "Failed to fetch" over the second.
+ *
+ * Lookup timeout / 500 / abort stays on OEM FIND step 1 (`/?visit=jobs`).
+ * Never send `/?new=1` or the landing fork.
  */
+import { jobsFindHref, landingVisitFromSearch } from "@/lib/jobsLanding";
 import { isCurrentRobotSubmit, sameRobotUrl } from "@/lib/robotUrlIdentity";
 
 export type FindResearchHandle = {
@@ -87,6 +91,66 @@ export function shouldIgnoreStaleFindError(opts: {
   handle: FindResearchHandle;
 }): boolean {
   return !isLiveFindResearch(opts.current, opts.handle);
+}
+
+/** OEM FIND step 1. Lookup failure must not navigate. */
+export function findFailureStayHref(): string {
+  return jobsFindHref();
+}
+
+/**
+ * True when a href would dump FIND back to the landing fork.
+ * `null` means stay on this document — that is the success case.
+ */
+export function findFailureBouncesHome(
+  href: string | null | undefined
+): boolean {
+  if (href == null || href === "") return false;
+  const hashless = href.split("#")[0] || "";
+  const qIndex = hashless.indexOf("?");
+  const pathPart = (qIndex >= 0 ? hashless.slice(0, qIndex) : hashless).replace(
+    /^https?:\/\/[^/]+/i,
+    ""
+  );
+  const path = pathPart || "/";
+  const search = qIndex >= 0 ? hashless.slice(qIndex) : "";
+  if (path !== "/" && path !== "") return true;
+  return landingVisitFromSearch(search) !== "jobs";
+}
+
+export function findLookupFailureOutcome(err: unknown): {
+  stage: "find";
+  href: string;
+  bounceHome: false;
+  error: string;
+} {
+  return {
+    stage: "find",
+    href: findFailureStayHref(),
+    bounceHome: false,
+    error: findResearchFailureMessage(
+      err,
+      "Research failed. Check the URL and try again."
+    ),
+  };
+}
+
+/** Keep `?visit=jobs` so Jobs.tsx cannot paint the landing fork. */
+export function ensureFindStayVisit(): boolean {
+  if (typeof window === "undefined") return false;
+  if (landingVisitFromSearch(window.location.search) === "jobs") return false;
+  const params = new URLSearchParams(window.location.search);
+  params.delete("new");
+  params.set("visit", "jobs");
+  const next = params.toString();
+  const path = window.location.pathname || "/";
+  const hash = window.location.hash || "";
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${path}?${next}${hash}`
+  );
+  return true;
 }
 
 export function findResearchFailureMessage(

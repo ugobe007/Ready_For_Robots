@@ -585,9 +585,10 @@ export const JOBS_PRODUCT_CAP_PAID = 5;
 export const JOBS_LINEUP_DISPLAY_CAP = 3;
 export const OEM_LISTING_TIMEOUT_MS = 5_000;
 export const ROBOT_PROFILE_TIMEOUT_MS = 22_000;
-export const ROBOT_JOB_SEARCH_TIMEOUT_MS = 30_000;
-/** Unknown-OEM identity (listing miss). Chrome/JS shells must fail fast. */
-export const FIND_IDENTITY_TIMEOUT_MS = 12_000;
+/** Catalog SKU search. 90s is a break even if it later succeeds. */
+export const ROBOT_JOB_SEARCH_TIMEOUT_MS = 12_000;
+/** Unknown-OEM identity (listing miss). Fail fast; retry stays on step 1. */
+export const FIND_IDENTITY_TIMEOUT_MS = 8_000;
 
 const JOBS_LINEUP_NOISE_NAMES = new Set([
   "about",

@@ -55,6 +55,11 @@ CRITIC_GATES: tuple[dict[str, str], ...] = (
         "fail": "self-abort FIND shown as Research failed / Failed to fetch",
     },
     {
+        "id": "find_no_home",
+        "prove": "FIND timeout / 500 / abort stays on /?visit=jobs",
+        "fail": "lookup failure dumps to / or /?new=1 landing",
+    },
+    {
         "id": "find_identity",
         "prove": "submitted URL is the identity key",
         "fail": "Greenfield shown as another OEM / leftover robot",

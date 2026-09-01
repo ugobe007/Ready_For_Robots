@@ -31,6 +31,7 @@ export type CriticGate = {
   id:
     | "find"
     | "find_abort"
+    | "find_no_home"
     | "find_identity"
     | "crm_leftover"
     | "job_cards"
@@ -88,6 +89,11 @@ export const CRITIC_GATES: readonly CriticGate[] = [
     id: "find_abort",
     prove: "AbortError and Failed to fetch stay silent",
     fail: "self-abort FIND shown as Research failed / Failed to fetch",
+  },
+  {
+    id: "find_no_home",
+    prove: "FIND timeout / 500 / abort stays on /?visit=jobs",
+    fail: "lookup failure dumps to / or /?new=1 landing",
   },
   {
     id: "find_identity",
