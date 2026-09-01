@@ -9877,7 +9877,7 @@
           "model_slug": "ara-robotics-petek",
           "product_url": "https://ararobotics.eu/en/petek/",
           "vendor_url": "https://ararobotics.eu",
-          "primary_class": "service_robot",
+          "primary_class": null,
           "status": "available",
           "country": null,
           "description": "Petek: Smart maintenance station. Charging and water refill for ARI.",
