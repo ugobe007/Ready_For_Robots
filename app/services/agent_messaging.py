@@ -9,7 +9,10 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_buyer_emai
 # Wise, abbreviated, in-the-know. Engineer-led teams, PoC → deployment reality.
 # Honesty and trust over hype. Draws on deep robotics industry experience.
 
-CAL_INTRO = "Hi, I am Cal. I work at ReadyForRobots as a deployment advisor. I focus on robot deployments and their metrics, to help companies improve ROI."
+CAL_INTRO = (
+    "Hi, I am Cal. I work kept Robot Jobs on the CRM desk. "
+    "I ask what's missing on the apply, prepare the draft, and you send."
+)
 
 CAL_BUYER_ROLE_LINE = (
     "This is Cal from Ready For Robots. I track which deployments still work months later, not just in demo week."
@@ -20,11 +23,13 @@ CAL_BUYER_REMINDER_LINE = (
 )
 
 CAL_VENDOR_ROLE_LINE = (
-    "My job is to help robot companies capture qualified buyers, assess alignment, and activate real sales motion instead of noisy list traffic."
+    "My job is to help robot companies apply kept jobs: ask the missing facts, "
+    "prepare the employer draft, and stay on the desk until you send."
 )
 
 CAL_VENDOR_REMINDER_LINE = (
-    "Quick reminder: I'm Cal at Ready For Robots — I help robot companies qualify buyers, assess fit early, and activate the right next sales step."
+    "Quick reminder: I'm Cal at Ready For Robots. I work kept jobs on CRM. "
+    "Buyer sales stay frozen."
 )
 
 CAL_VENDOR_IDENTITY = (
