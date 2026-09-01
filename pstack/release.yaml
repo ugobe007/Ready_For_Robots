@@ -46,6 +46,9 @@ critic:
     prove: FIND is /
   - id: find_abort
     prove: AbortError and Failed to fetch do not become Research failed
+  - id: find_no_home
+    prove: FIND timeout / 500 / abort stays on /?visit=jobs
+    fail: lookup failure dumps to / or /?new=1 landing
   - id: find_identity
     prove: submitted URL is the identity key; Greenfield is not Agrobot/Harvest CROO
   - id: crm_leftover

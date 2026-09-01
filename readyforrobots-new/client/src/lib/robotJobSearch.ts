@@ -1,7 +1,7 @@
 /**
  * POST /api/robot-job-search — one composed profile + jobs transaction.
  */
-import { getApiBase, fetchWithTimeout } from "@/lib/apiBase";
+import { getPublicReadApiBase, fetchWithTimeout } from "@/lib/apiBase";
 import type {
   MatchCapability,
   MatchJob,
@@ -31,7 +31,7 @@ export async function fetchRobotJobSearch(opts: {
   signal?: AbortSignal;
   timeoutMs?: number;
 }): Promise<RobotJobSearchResult> {
-  const base = getApiBase();
+  const base = getPublicReadApiBase();
   const res = await fetchWithTimeout(
     `${base}/api/robot-job-search`,
     {
@@ -49,7 +49,7 @@ export async function fetchRobotJobSearch(opts: {
       }),
       signal: opts.signal,
     },
-    opts.timeoutMs ?? 30_000
+    opts.timeoutMs ?? 12_000
   );
   if (!res.ok) {
     let detail = `robot-job-search ${res.status}`;

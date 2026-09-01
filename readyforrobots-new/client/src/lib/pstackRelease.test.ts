@@ -7,11 +7,13 @@ import {
   CLASS_PICKER_FIXTURE,
   CRM_LEFTOVER_FIXTURE,
   FIND_ABORT_FIXTURE,
+  FIND_NO_HOME_FIXTURE,
   HEALTHCARE_CLASS_FIXTURE,
   PSTACK_RELEASE_CHROME_REQUIRED,
   abortMustNotSurfaceAsResearchFailed,
   bindUrlFlushesPriorRobot,
   diligentMustNotBeHumanoidEmpty,
+  findErrorMustStayOnFind,
   leftoverCrmMustNotKeepPriorRobot,
 } from "./pstackRelease";
 import {
@@ -109,12 +111,34 @@ describe("pstack release — #173 self-abort FIND", () => {
     expect(catchBlock).toMatch(/isAbortError\(err,\s*ac\.signal\)/);
     expect(catchBlock).toMatch(/FIND_RESEARCH_INTERRUPTED_MESSAGE/);
     expect(catchBlock).not.toMatch(/Failed to fetch/i);
+    expect(catchBlock).toMatch(/ensureFindStayVisit/);
+    expect(submitFind).not.toMatch(/goJobsFreshHome/);
     expect(submitFind).toMatch(/bindSubmittedRobot\(submitUrl\)/);
     const abortAt = catchBlock.indexOf("isAbortError");
     const failAt = catchBlock.indexOf("lookupFailedMessage");
     expect(abortAt).toBeGreaterThan(-1);
     expect(failAt).toBeGreaterThan(abortAt);
     expect(catchBlock.indexOf("setError")).toBeGreaterThan(abortAt);
+  });
+
+  it("FIND timeout and 500 stay on /?visit=jobs", () => {
+    expect(
+      findErrorMustStayOnFind({
+        name: FIND_NO_HOME_FIXTURE.timeout.name,
+        message: FIND_NO_HOME_FIXTURE.timeout.message,
+      })
+    ).toBe(true);
+    expect(
+      findErrorMustStayOnFind({
+        name: FIND_NO_HOME_FIXTURE.http500.name,
+        message: FIND_NO_HOME_FIXTURE.http500.message,
+      })
+    ).toBe(true);
+    expect(
+      findErrorMustStayOnFind(FIND_ABORT_FIXTURE.failedToFetch)
+    ).toBe(true);
+    const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
+    expect(jobsPage).toMatch(/forcedLanding && fromSearch === "landing"/);
   });
 });
 
@@ -153,6 +177,7 @@ describe("pstack release authority is not FIND/CRM chrome", () => {
     expect(criticGateIds()).toEqual([
       "find",
       "find_abort",
+      "find_no_home",
       "find_identity",
       "crm_leftover",
       "job_cards",

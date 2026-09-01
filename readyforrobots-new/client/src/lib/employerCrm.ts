@@ -19,6 +19,8 @@ export type EmployerPosting = {
   description?: string;
   work_class?: string;
   job_url?: string;
+  jd_filename?: string;
+  jd_text?: string;
   job_key?: string | null;
   persisted: boolean;
   shortlisted: EmployerShortlist[];

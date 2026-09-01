@@ -46,6 +46,7 @@ describe("pstackSite protocol", () => {
     expect(criticGateIds()).toEqual([
       "find",
       "find_abort",
+      "find_no_home",
       "find_identity",
       "crm_leftover",
       "job_cards",

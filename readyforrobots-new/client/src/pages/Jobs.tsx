@@ -30,9 +30,11 @@ export default function Jobs() {
       setForcedLanding(false);
     }
   }, [search]);
-  const visit: LandingVisit = forcedLanding
-    ? "landing"
-    : landingVisitFromSearch(search);
+  const fromSearch = landingVisitFromSearch(search);
+  // Wordmark may fire JOBS_FRESH_HOME_EVENT. FIND timeout/500/abort must
+  // keep `?visit=jobs` — do not dump them onto the landing fork.
+  const visit: LandingVisit =
+    forcedLanding && fromSearch === "landing" ? "landing" : fromSearch;
   if (visit === "landing") {
     return (
       <div className="jobs-page min-h-screen bg-[#0A0F1E] text-slate-100">
