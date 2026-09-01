@@ -43,15 +43,17 @@ describe("landing fork", () => {
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
   });
 
-  it("uses mockup copy and two options only", () => {
+  it("uses operator headline and two options only", () => {
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Look for robot jobs");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Look for robot candidates");
-    expect(LANDING_HEADLINE).toBe("Robots need jobs. We find the work.");
+    expect(LANDING_HEADLINE).toBe("Put your robot to work.");
+    expect(LANDING_HEADLINE).not.toMatch(/Jobs for robots\. Robots for jobs|Who is this visit|Robots need jobs/i);
     expect(landingHeadlineParts(LANDING_HEADLINE).at(-1)?.accent).toBe(true);
     expect(LANDING_EYEBROW).toMatch(/Robot Employment/);
-    expect(LANDING_SUBHEAD).toMatch(/robot you already have/i);
-    expect(LANDING_SUBHEAD).toMatch(/robots for work you need done/i);
-    expect(LANDING_SUBHEAD).toMatch(/keep them in CRM/i);
+    expect(LANDING_SUBHEAD).toBe(
+      "Jobs for a robot you already have, or robots for work you need done. Paste a product URL — we match it to real jobs, then keep them in our CRM."
+    );
+    expect(LANDING_SUBHEAD).toMatch(/keep them in our CRM/i);
     expect(LANDING_SUBHEAD).not.toMatch(
       /who is this visit|choose your workflow/i
     );
