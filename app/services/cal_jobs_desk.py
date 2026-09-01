@@ -298,7 +298,7 @@ def _resolve_models(
     if names:
         return names
     robot = (robot_name or "").strip()
-    if robot:
+    if robot and robot.lower() != "this robot":
         return [robot]
     raise ValueError("Select at least one catalogued model you will use. We do not invent SKUs.")
 
