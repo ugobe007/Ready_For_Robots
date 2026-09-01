@@ -17,7 +17,7 @@
 
 **Look for robot candidates.** Tell us the work. We match named catalog robots from the ontology. Then you can post the job.
 
-Mockup layout stays. Mockup headline A ("Robots need jobs. We find the work.") does not ship. That was picker D in the mockup; the operator sent it as the line.
+Mockup layout stays. Mockup headline A ("Robots need jobs. We find the work.") does not ship. Operator line was picker D in the A–E chrome. The picker is not in production.
 
 ## Routing
 
@@ -29,8 +29,18 @@ Navy `#0A0F1E`, mint `#2EE6A8`. Two door cards, How Jobs works, jobs brief, voca
 
 ## Verify
 
-`pnpm exec vitest run client/src/lib/jobsLanding.test.ts`  
-`PYTHONPATH=. python3 scripts/pstack_release.py --local`  
-Local Vite `http://127.0.0.1:3000/`: H1 is Put your robot to work. Old Who is this visit? and Jobs for robots. Robots for jobs. are gone.
+`pnpm exec vitest run client/src/lib/jobsLanding.test.ts`: 5 passed. Headline assertion is Put your robot to work. Mockup A is rejected.
+
+`PYTHONPATH=. python3 scripts/pstack_release.py --local`: How / Act / Critic ok. FIND drive skipped.
+
+Local Vite `http://127.0.0.1:3000/`:
+
+- H1 is Put your robot to work.
+- Subhead is the operator CRM sentence.
+- Old lines are gone: Who is this visit?, Jobs for robots. Robots for jobs., Robots need jobs. We find the work.
+- No Headline options picker. No Cal.
+- Look for robot jobs / Look for robot candidates still have short explainers.
+
+Screenshot: `/opt/cursor/artifacts/landing_put_your_robot_to_work.png`
 
 Stay draft. No Fly.
