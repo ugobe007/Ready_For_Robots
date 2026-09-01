@@ -137,7 +137,7 @@ jobs:
           PY
 
       - name: Targeted pytest
-        run: python3 -m pytest tests/test_agent_verify.py tests/test_pstack_release.py tests/test_pstack_protocol.py tests/test_class_picker_chrome.py tests/test_pstack_healthcare_class.py tests/test_ontology_industry_language.py tests/test_robot_ontology.py tests/test_url_workflow_critic.py -q --tb=short
+        run: python3 -m pytest tests/test_agent_verify.py tests/test_pstack_release.py tests/test_pstack_protocol.py tests/test_class_picker_chrome.py tests/test_pstack_healthcare_class.py tests/test_ontology_industry_language.py tests/test_robot_ontology.py tests/test_url_workflow_critic.py tests/test_employer_robot_match.py -q --tb=short
         env:
           PYTHONPATH: ${{ github.workspace }}
 
@@ -155,7 +155,8 @@ jobs:
             client/src/lib/jobsCrmAccount.test.ts \
             client/src/lib/jobsHandoffSnapshot.test.ts \
             client/src/lib/robotUrlIdentity.test.ts \
-            client/src/lib/findResearch.test.ts
+            client/src/lib/findResearch.test.ts \
+            client/src/lib/employerRobotMatch.test.ts
 
       - name: Upload evidence
         if: always()

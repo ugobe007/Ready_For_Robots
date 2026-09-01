@@ -25,6 +25,7 @@ def test_critic_gate_ids_keep_prior_gates_and_add_healthcare():
     for gate in (
         "find",
         "find_abort",
+        "find_no_home",
         "find_identity",
         "crm_leftover",
         "job_cards",

@@ -24,6 +24,7 @@ import {
   JOBS_PRODUCT_CAP_PAID,
   JOBS_LINEUP_DISPLAY_CAP,
   FIND_IDENTITY_TIMEOUT_MS,
+  ROBOT_JOB_SEARCH_TIMEOUT_MS,
   JOBS_SCAN_STEPS,
   JOBS_SEE_JOBS_CTA,
   CRM_BACK_TO_JOBS_CTA,
@@ -418,6 +419,9 @@ describe("jobsWorkflow", () => {
     expect(submitFind).not.toMatch(/location\.reload/);
     expect(submitFind).not.toMatch(/setLocation/);
     expect(submitFind).not.toMatch(/pipeline-detail-shell/);
+    expect(submitFind).toMatch(/ensureFindStayVisit/);
+    expect(submitFind).not.toMatch(/goJobsFreshHome/);
+    expect(submitFind).not.toMatch(/\?new=1/);
   });
 
   it("strips ?new=1 and resets Jobs home without a document reload", () => {
@@ -1950,8 +1954,10 @@ describe("jobsWorkflow", () => {
     expect(jobsProductLimitForPlan("free")).toBe(3);
     expect(jobsProductLimitForPlan("paid")).toBe(JOBS_PRODUCT_CAP_PAID);
     expect(JOBS_LINEUP_DISPLAY_CAP).toBe(3);
-    expect(FIND_IDENTITY_TIMEOUT_MS).toBe(12_000);
-    expect(FIND_IDENTITY_TIMEOUT_MS).toBeLessThan(30_000);
+    expect(FIND_IDENTITY_TIMEOUT_MS).toBe(8_000);
+    expect(FIND_IDENTITY_TIMEOUT_MS).toBeLessThan(12_000);
+    expect(ROBOT_JOB_SEARCH_TIMEOUT_MS).toBe(12_000);
+    expect(ROBOT_JOB_SEARCH_TIMEOUT_MS).toBeLessThan(30_000);
     const omron = filterJobsLineupProducts([
       { name: "Products overview" },
       { name: "AMRs" },

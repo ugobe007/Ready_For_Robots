@@ -32,6 +32,7 @@ Preconditions:
 ## Gotchas
 
 - `/?new=1` is the landing fork, not FIND. Do not remount-loop the workspace.
+- Lookup timeout, 500, abort, or Failed to fetch must stay on `/?visit=jobs` with retry copy. That dump is `drive --feature find-stay`. Do not treat a 7-second skip-green badge as proof.
 - Chip-only match may omit `required_task_models` — use a Understanding profile (Vega fixture) for cards.
 - Diligent/Moxi is healthcare, not a humanoid torso tile. Empty copy must not be `No humanoid jobs for this robot yet.`
 - URL workflow critic: `python3 scripts/url_workflow_critic.py --fixtures` then `python3 scripts/url_workflow_critic.py`. Fail mixed-range flatten, chrome-as-SKU, Lucidbots-as-scrubber, company-class dump.
