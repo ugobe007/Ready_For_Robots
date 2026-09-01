@@ -380,7 +380,7 @@ def drive_find_stay(*, origin: str | None = None, api: str | None = None) -> dic
     # on a real OEM compose — that is find-url / pstack Critic, not bounce.
     live_code, live_body = _post_json(
         f"{fly}/api/robot-job-search",
-        {"url": "not-a-url"},
+        {},
         timeout=6,
     )
     raw = ""

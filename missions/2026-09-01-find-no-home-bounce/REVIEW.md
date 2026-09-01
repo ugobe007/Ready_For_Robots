@@ -57,4 +57,21 @@ Not for this MATCH/POST door. There is no employer applicant inbox on `/?visit=c
 **Do we introduce or schedule meetings with robot candidates?**  
 No. This PR does not add a scheduler. OEM CRM can paste an `https` meeting URL (`we_schedule_with_employer`). Held interview slots are on that apply path. Employer-post copy does not promise intros or calendar.
 
-Hunter.io is the future contact source (not Apollo). Page-only contacts still apply. No Hunter calls on this door unless a later PR finds `HUNTER_API_KEY` and wires it on purpose.
+## Tests
+
+Vitest: 63 passed (`findResearch`, `jobsLanding`, `jobsWorkflow`, `pstackSite`, `pstackRelease`, `employerRobotMatch`).
+
+Pytest (venv): 43 passed (`test_agent_verify`, `test_pstack_*`, `test_employer_robot_match`). Catalog MATCH after warmup is under 3s.
+
+`python3 scripts/pstack_release.py --local`: How / Act / Critic ok. Critic `find_no_home` green. FIND drive skipped.
+
+`drive --feature find-stay`: `src_ok` true, skip-green false. Empty search returns JSON 400, not landing HTML.
+
+`drive --feature employer-match`: source catalog-only. Live Fly still times out (~5s) because this PR is not deployed. Local pytest is the budget until Fly.
+
+No Fly this cycle. Stay draft.
+
+## PR
+
+Compare: https://github.com/ugobe007/Ready_For_Robots/compare/main...cursor/find-timeout-no-home-a883
+
