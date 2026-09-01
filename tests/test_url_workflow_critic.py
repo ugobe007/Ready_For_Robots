@@ -130,6 +130,12 @@ def test_corpus_file_lists_operator_urls():
         "limxdynamics.com",
         "thirdwave.ai",
         "dexory.com",
+        "galaxea-dynamics.com",
+        "xpeng.com",
+        "ararobotics.eu",
+        "cartken.com",
+        "mobile-industrial-robots.com",
+        "teradyne.com",
     ):
         assert any(host in u for u in urls), host
     assert CORPUS_PATH.is_file()
@@ -186,13 +192,18 @@ def test_class_dump_name_is_still_a_break():
     from app.services.oem_sku_discover import is_junk_sku_name, looks_like_named_sku
 
     assert is_junk_sku_name("Seer Humanoid")
+    assert is_junk_sku_name("XPENG Humanoid")
     assert is_junk_sku_name("Scrubber")
     assert is_junk_sku_name("AMR scrubbers")
     assert not looks_like_named_sku("Seer Humanoid")
+    assert not looks_like_named_sku("XPENG Humanoid")
     assert not looks_like_named_sku("Scrubber")
     assert not is_junk_sku_name("Sherpa Drone")
     assert not is_junk_sku_name("Scrubber 75")
     assert not is_junk_sku_name("Phantas")
+    assert looks_like_named_sku("IRON")
+    assert looks_like_named_sku("Kengo")
+    assert looks_like_named_sku("ARI")
 
 
 

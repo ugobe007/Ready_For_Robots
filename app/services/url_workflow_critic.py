@@ -34,7 +34,9 @@ BREAK_MISSING = "missing_products"
 BREAK_DRONE_SCRUB = "cleaning_drone_as_scrubber"
 BREAK_COMPANY_CLASS = "company_class_not_product_class"
 BREAK_CAP_DEFAULT = "capability_oem_default"
-CLASS_DUMP_NAMES = frozenset({"amr scrubbers", "scrubber", "scrubbers", "seer humanoid"})
+CLASS_DUMP_NAMES = frozenset(
+    {"amr scrubbers", "scrubber", "scrubbers", "seer humanoid", "xpeng humanoid"}
+)
 
 CHROME_NAMES = frozenset(
     {

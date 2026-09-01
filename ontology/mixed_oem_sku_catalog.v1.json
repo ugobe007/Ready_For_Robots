@@ -1,7 +1,7 @@
 {
   "ontology_id": "mixed_oem_sku_catalog_v1",
   "version": "1.0.0",
-  "generated_at": "2026-08-31T18:20:00+00:00",
+  "generated_at": "2026-09-01T14:30:00+00:00",
   "source": "missions/2026-08-31-mixed-oem-product-range",
   "rule": "COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES. Never company → category.",
   "notes": [
@@ -22,7 +22,8 @@
     "SEER lifting/forklift/controller pages name AMB / SFL / SCB / SRC SKUs. Not Seer Humanoid.",
     "VinMotion homepage Product menu names Motion 1 and Motion 2. Motion 1 is a humanoid robot on the homepage. Motion 2 launching page is thin — no invented class.",
     "Live page extract still wins. Empty specs stay UNKNOWN. Not Job Card employers.",
-    "2026-08-31 more OEMs: booster.tech, lumosbot.tech, galbot.com, unix-group.ai, noetixrobotics.com, thirdwave.ai, dexory.com, primebot.cn, limxdynamics.com. Named products from live pages or product JS only. Thin pages stay unclassified. DexoryView is the named product; public pages do not name the robots. Third Wave Reach Trucks is named on the Armada case study, not TWA Reach."
+    "2026-08-31 more OEMs: booster.tech, lumosbot.tech, galbot.com, unix-group.ai, noetixrobotics.com, thirdwave.ai, dexory.com, primebot.cn, limxdynamics.com. Named products from live pages or product JS only. Thin pages stay unclassified. DexoryView is the named product; public pages do not name the robots. Third Wave Reach Trucks is named on the Armada case study, not TWA Reach.",
+    "2026-09-01 more AMR OEMs: galaxea-dynamics.com, xpeng.com (IRON only, not the EV catalog), ararobotics.eu, cartken.com, mobile-industrial-robots.com, teradyne.com/robotics/autonomous-mobile-robots. Named products from live pages only. A1 Z / Lite-T / G1 Gripper / VLA unit are arms or accessories, not FIND robots. Petek is a named docking station, unclassified. Cartken Mover is named as coming soon with pallet-truck copy. Teradyne hub names MiR1200 Pallet Jack; do not invent MiR250 on that page. XPENG Humanoid / PX5 stay out."
   ],
   "companies": [
     {
@@ -2351,8 +2352,326 @@
           "product_url": "https://www.dexory.com/solutions"
         }
       ]
+    },
+    {
+      "name": "Galaxea Dynamics",
+      "slug": "galaxea-dynamics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "galaxea-dynamics.com"
+      ],
+      "source_urls": [
+        "https://galaxea-dynamics.com/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": null,
+          "listed_class": "7-DOF dual-arm wheeled humanoid robot",
+          "task": "7-DOF dual-arm wheeled humanoid robot",
+          "primary_class": "humanoid",
+          "name": "R1 Pro",
+          "slug": "galaxea-dynamics-r1-pro",
+          "company_name": "Galaxea Dynamics",
+          "company_slug": "galaxea-dynamics",
+          "lookup_host": "galaxea-dynamics.com",
+          "product_url": "https://galaxea-dynamics.com/products/galaxea-r1-pro-universal-humanoid-robot"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": null,
+          "listed_class": "6-DOF general mobile manipulation platform",
+          "task": "Wheeled mobile manipulation platform",
+          "primary_class": "mobile_manipulator",
+          "name": "R1 Lite",
+          "slug": "galaxea-dynamics-r1-lite",
+          "company_name": "Galaxea Dynamics",
+          "company_slug": "galaxea-dynamics",
+          "lookup_host": "galaxea-dynamics.com",
+          "product_url": "https://galaxea-dynamics.com/products/6-dof-general-mobile-manipulation-platform"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": null,
+          "listed_class": "Embodied AI bipedal robot",
+          "task": "Bipedal humanoid robot",
+          "primary_class": "humanoid",
+          "name": "Kengo",
+          "slug": "galaxea-dynamics-kengo",
+          "company_name": "Galaxea Dynamics",
+          "company_slug": "galaxea-dynamics",
+          "lookup_host": "galaxea-dynamics.com",
+          "product_url": "https://galaxea-dynamics.com/products/galaxea-s-proprietary-embodied-ai-bipedal-robot"
+        }
+      ]
+    },
+    {
+      "name": "XPENG",
+      "slug": "xpeng",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "xpeng.com"
+      ],
+      "source_urls": [
+        "https://www.xpeng.com/",
+        "https://www.xpeng.com/au/explore/xpeng_ai_robot_iron"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": null,
+          "listed_class": "Humanoid AI robot",
+          "task": "Next-generation humanoid robot for human spaces",
+          "primary_class": "humanoid",
+          "name": "IRON",
+          "slug": "xpeng-iron",
+          "company_name": "XPENG",
+          "company_slug": "xpeng",
+          "lookup_host": "xpeng.com",
+          "product_url": "https://www.xpeng.com/au/explore/xpeng_ai_robot_iron"
+        }
+      ]
+    },
+    {
+      "name": "ARA Robotics",
+      "slug": "ara-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "ararobotics.eu"
+      ],
+      "source_urls": [
+        "https://ararobotics.eu/",
+        "https://ararobotics.eu/en/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Commercial and industrial floors",
+          "listed_class": "Autonomous floor maintenance robot",
+          "task": "AI-powered autonomous floor maintenance",
+          "primary_class": "cleaning",
+          "name": "ARI",
+          "slug": "ara-robotics-ari",
+          "company_name": "ARA Robotics",
+          "company_slug": "ara-robotics",
+          "lookup_host": "ararobotics.eu",
+          "product_url": "https://ararobotics.eu/en/ari/"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": null,
+          "listed_class": null,
+          "task": "Smart maintenance station. Charging and water refill for ARI",
+          "primary_class": null,
+          "name": "Petek",
+          "slug": "ara-robotics-petek",
+          "company_name": "ARA Robotics",
+          "company_slug": "ara-robotics",
+          "lookup_host": "ararobotics.eu",
+          "product_url": "https://ararobotics.eu/en/petek/"
+        }
+      ]
+    },
+    {
+      "name": "Cartken",
+      "slug": "cartken",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "cartken.com"
+      ],
+      "source_urls": [
+        "https://www.cartken.com/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · labs · campuses",
+          "listed_class": "Heavy-duty outdoor AMR",
+          "task": "Outdoor material transport on mixed indoor and outdoor routes",
+          "primary_class": "amr",
+          "name": "Cartken Hauler",
+          "slug": "cartken-cartken-hauler",
+          "company_name": "Cartken",
+          "company_slug": "cartken",
+          "lookup_host": "cartken.com",
+          "product_url": "https://www.cartken.com/#hauler"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · campuses",
+          "listed_class": "Outdoor AMR",
+          "task": "Lightweight outdoor AMR for secured deliveries",
+          "primary_class": "amr",
+          "name": "Cartken Courier",
+          "slug": "cartken-cartken-courier",
+          "company_name": "Cartken",
+          "company_slug": "cartken",
+          "lookup_host": "cartken.com",
+          "product_url": "https://www.cartken.com/#courier"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · campuses",
+          "listed_class": "Autonomous outdoor pallet truck",
+          "task": "Outdoor pallet pick and putaway for heavy loads",
+          "primary_class": "amr",
+          "name": "Cartken Mover",
+          "slug": "cartken-cartken-mover",
+          "company_name": "Cartken",
+          "company_slug": "cartken",
+          "lookup_host": "cartken.com",
+          "product_url": "https://www.cartken.com/#mover"
+        }
+      ]
+    },
+    {
+      "name": "Mobile Industrial Robots",
+      "slug": "mobile-industrial-robots",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "mobile-industrial-robots.com"
+      ],
+      "source_urls": [
+        "https://mobile-industrial-robots.com/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · warehouses",
+          "listed_class": "AMR",
+          "task": "Internal material transport up to 250 kg",
+          "primary_class": "amr",
+          "name": "MiR250",
+          "slug": "mobile-industrial-robots-mir250",
+          "company_name": "Mobile Industrial Robots",
+          "company_slug": "mobile-industrial-robots",
+          "lookup_host": "mobile-industrial-robots.com",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir250"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · warehouses",
+          "listed_class": "AMR",
+          "task": "Autonomous pallet transport up to 600 kg",
+          "primary_class": "amr",
+          "name": "MiR600",
+          "slug": "mobile-industrial-robots-mir600",
+          "company_name": "Mobile Industrial Robots",
+          "company_slug": "mobile-industrial-robots",
+          "lookup_host": "mobile-industrial-robots.com",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir600"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · warehouses",
+          "listed_class": "AMR pallet jack",
+          "task": "Autonomous pallet detection, transport, and delivery",
+          "primary_class": "amr",
+          "name": "MiR1200 Pallet Jack",
+          "slug": "mobile-industrial-robots-mir1200-pallet-jack",
+          "company_name": "Mobile Industrial Robots",
+          "company_slug": "mobile-industrial-robots",
+          "lookup_host": "mobile-industrial-robots.com",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir1200-pallet-jack"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · logistics",
+          "listed_class": "AMR",
+          "task": "Heavy internal transport up to 1350 kg",
+          "primary_class": "amr",
+          "name": "MiR1350",
+          "slug": "mobile-industrial-robots-mir1350",
+          "company_name": "Mobile Industrial Robots",
+          "company_slug": "mobile-industrial-robots",
+          "lookup_host": "mobile-industrial-robots.com",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir1350"
+        }
+      ]
+    },
+    {
+      "name": "Teradyne",
+      "slug": "teradyne",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "teradyne.com"
+      ],
+      "source_urls": [
+        "https://www.teradyne.com/robotics/autonomous-mobile-robots/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Manufacturing · logistics",
+          "listed_class": "AMR pallet jack",
+          "task": "Autonomous pallet movement with AI-based pallet detection",
+          "primary_class": "amr",
+          "name": "MiR1200 Pallet Jack",
+          "slug": "teradyne-mir1200-pallet-jack",
+          "company_name": "Teradyne",
+          "company_slug": "teradyne",
+          "lookup_host": "teradyne.com",
+          "product_url": "https://www.teradyne.com/robotics/autonomous-mobile-robots/"
+        }
+      ]
     }
   ],
-  "company_count": 29,
-  "product_count": 117
+  "company_count": 35,
+  "product_count": 131
 }

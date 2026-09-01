@@ -197,7 +197,11 @@
         "description": "Payload 20.0 kg. Runtime 2.0 h.",
         "display_class": "humanoid"
       },
-      { "name": "Agibot G5", "description": null, "display_class": "humanoid" },
+      {
+        "name": "Agibot G5",
+        "description": null,
+        "display_class": "humanoid"
+      },
       {
         "name": "G2 humanoid robot",
         "description": null,
@@ -382,6 +386,21 @@
         "name": "Apptronik Apollo",
         "description": "Apollo: Palletizing and material handling. Warehouses · manufacturing. Payload 25.0 kg. Runtime 4.0 h.",
         "display_class": "humanoid"
+      }
+    ]
+  },
+  "ararobotics.eu": {
+    "vendor_name": "ARA Robotics",
+    "robots": [
+      {
+        "name": "ARI",
+        "description": "ARI: AI-powered autonomous floor maintenance. Commercial and industrial floors.",
+        "display_class": "cleaning"
+      },
+      {
+        "name": "Petek",
+        "description": "Petek: Smart maintenance station. Charging and water refill for ARI.",
+        "display_class": null
       }
     ]
   },
@@ -844,9 +863,19 @@
     "vendor_name": "Cartken",
     "robots": [
       {
-        "name": "Cartken",
-        "description": "Cartken: sidewalk. Used in Food Service.",
-        "display_class": "delivery_robot"
+        "name": "Cartken Hauler",
+        "description": "Cartken Hauler: Outdoor material transport on mixed indoor and outdoor routes. Factories · labs · campuses.",
+        "display_class": "amr"
+      },
+      {
+        "name": "Cartken Courier",
+        "description": "Cartken Courier: Lightweight outdoor AMR for secured deliveries. Factories · campuses.",
+        "display_class": "amr"
+      },
+      {
+        "name": "Cartken Mover",
+        "description": "Cartken Mover: Outdoor pallet pick and putaway for heavy loads. Factories · campuses.",
+        "display_class": "amr"
       }
     ]
   },
@@ -1433,7 +1462,11 @@
   "edenrobotics.ai": {
     "vendor_name": "Eden Robotics",
     "robots": [
-      { "name": "Eden Robot", "description": null, "display_class": "humanoid" }
+      {
+        "name": "Eden Robot",
+        "description": null,
+        "display_class": "humanoid"
+      }
     ]
   },
   "efort.com.cn": {
@@ -1819,7 +1852,11 @@
         "description": null,
         "display_class": "humanoid"
       },
-      { "name": "Nova", "description": null, "display_class": "humanoid" },
+      {
+        "name": "Nova",
+        "description": null,
+        "display_class": "humanoid"
+      },
       {
         "name": "All-New Futurist Ultra",
         "description": null,
@@ -1860,7 +1897,11 @@
         "description": "GR-1: Humanoid mobility and rehabilitation research. Healthcare · research.",
         "display_class": "humanoid"
       },
-      { "name": "Fourier N1", "description": null, "display_class": "humanoid" }
+      {
+        "name": "Fourier N1",
+        "description": null,
+        "display_class": "humanoid"
+      }
     ]
   },
   "figure.ai": {
@@ -1945,6 +1986,26 @@
         "name": "Franka FR3",
         "description": "Franka FR3: research/industrial. Used in Manufacturing.",
         "display_class": "industrial_arm"
+      }
+    ]
+  },
+  "galaxea-dynamics.com": {
+    "vendor_name": "Galaxea Dynamics",
+    "robots": [
+      {
+        "name": "R1 Pro",
+        "description": "R1 Pro: 7-DOF dual-arm wheeled humanoid robot.",
+        "display_class": "humanoid"
+      },
+      {
+        "name": "R1 Lite",
+        "description": "R1 Lite: Wheeled mobile manipulation platform.",
+        "display_class": "mobile_manipulator"
+      },
+      {
+        "name": "Kengo",
+        "description": "Kengo: Bipedal humanoid robot.",
+        "display_class": "humanoid"
       }
     ]
   },
@@ -2061,7 +2122,11 @@
   "gbionics.ai": {
     "vendor_name": "Generative Bionics",
     "robots": [
-      { "name": "Gene.01", "description": null, "display_class": "humanoid" }
+      {
+        "name": "Gene.01",
+        "description": null,
+        "display_class": "humanoid"
+      }
     ]
   },
   "geekplus.com": {
@@ -3355,26 +3420,26 @@
     ]
   },
   "mobile-industrial-robots.com": {
-    "vendor_name": "MiR (Mobile Industrial Robots)",
+    "vendor_name": "Mobile Industrial Robots",
     "robots": [
       {
         "name": "MiR250",
-        "description": "MiR250: cart/pallet transport. Used in Logistics, Manufacturing.",
+        "description": "MiR250: Internal material transport up to 250 kg. Factories · warehouses.",
         "display_class": "amr"
       },
       {
         "name": "MiR600",
-        "description": "MiR600: cart/pallet transport. Used in Logistics, Manufacturing.",
-        "display_class": "amr"
-      },
-      {
-        "name": "MiR1350",
-        "description": "MiR1350: cart/pallet transport. Used in Logistics, Manufacturing.",
+        "description": "MiR600: Autonomous pallet transport up to 600 kg. Factories · warehouses.",
         "display_class": "amr"
       },
       {
         "name": "MiR1200 Pallet Jack",
-        "description": "MiR1200 Pallet Jack: Autonomous pallet movement. Distribution centers.",
+        "description": "MiR1200 Pallet Jack: Autonomous pallet detection, transport, and delivery. Factories · warehouses.",
+        "display_class": "amr"
+      },
+      {
+        "name": "MiR1350",
+        "description": "MiR1350: Heavy internal transport up to 1350 kg. Factories · logistics.",
         "display_class": "amr"
       },
       {
@@ -4902,9 +4967,21 @@
   "shanghai-electric.com": {
     "vendor_name": "Shanghai Electric",
     "robots": [
-      { "name": "Mermaid", "description": null, "display_class": "humanoid" },
-      { "name": "SUYUAN", "description": null, "display_class": "humanoid" },
-      { "name": "TUOYUAN", "description": null, "display_class": "humanoid" }
+      {
+        "name": "Mermaid",
+        "description": null,
+        "display_class": "humanoid"
+      },
+      {
+        "name": "SUYUAN",
+        "description": null,
+        "display_class": "humanoid"
+      },
+      {
+        "name": "TUOYUAN",
+        "description": null,
+        "display_class": "humanoid"
+      }
     ]
   },
   "shield.ai": {
@@ -5287,6 +5364,16 @@
       }
     ]
   },
+  "teradyne.com": {
+    "vendor_name": "Teradyne",
+    "robots": [
+      {
+        "name": "MiR1200 Pallet Jack",
+        "description": "MiR1200 Pallet Jack: Autonomous pallet movement with AI-based pallet detection. Manufacturing · logistics.",
+        "display_class": "amr"
+      }
+    ]
+  },
   "tesla.com": {
     "vendor_name": "Tesla",
     "robots": [
@@ -5455,14 +5542,26 @@
         "description": "Walker X: Bipedal service and interaction. Public spaces. Payload 5.0 kg. Runtime 2.5 h.",
         "display_class": "humanoid"
       },
-      { "name": "U1 Pro", "description": null, "display_class": "humanoid" },
+      {
+        "name": "U1 Pro",
+        "description": null,
+        "display_class": "humanoid"
+      },
       {
         "name": "UBTECH Walker S2",
         "description": "Walker S2: Bipedal humanoid. Payload 15.0 kg.",
         "display_class": "humanoid"
       },
-      { "name": "U1 Lite", "description": null, "display_class": "humanoid" },
-      { "name": "U1 Ultra", "description": null, "display_class": "humanoid" },
+      {
+        "name": "U1 Lite",
+        "description": null,
+        "display_class": "humanoid"
+      },
+      {
+        "name": "U1 Ultra",
+        "description": null,
+        "display_class": "humanoid"
+      },
       {
         "name": "UBTECH Walker S",
         "description": "Payload 15.0 kg.",
@@ -5518,7 +5617,11 @@
   "unitree.com": {
     "vendor_name": "Unitree Robotics",
     "robots": [
-      { "name": "H2 Plus", "description": null, "display_class": "humanoid" },
+      {
+        "name": "H2 Plus",
+        "description": null,
+        "display_class": "humanoid"
+      },
       {
         "name": "Unitree G1",
         "description": "G1: Bipedal research and manipulation. Research · education. Payload 3.0 kg. Runtime 1.75 h.",
@@ -5833,6 +5936,16 @@
         "name": "LightStrike",
         "description": "LightStrike: UV disinfection. Used in Healthcare.",
         "display_class": null
+      }
+    ]
+  },
+  "xpeng.com": {
+    "vendor_name": "XPENG",
+    "robots": [
+      {
+        "name": "IRON",
+        "description": "IRON: Next-generation humanoid robot for human spaces.",
+        "display_class": "humanoid"
       }
     ]
   },
