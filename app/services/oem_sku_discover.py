@@ -49,7 +49,6 @@ _LISTING_HINTS = {
     "unitree.com": ("/",),
     "fanucamerica.com": ("/cnc/robots/", "/products/robots/"),
     "motoman.com": ("/en-us/products/robots",),
-    "mobile-industrial-robots.com": ("/products",),
     "ottomotors.com": ("/amrs", "/robots"),
     "pudurobotics.com": ("/products",),
     "locusrobotics.com": ("/products",),
@@ -133,6 +132,29 @@ _LISTING_HINTS = {
     "primebot.cn": ("/", "/product/en"),
     "thirdwave.ai": ("/", "/armada-case-study"),
     "dexory.com": ("/", "/solutions"),
+    "galaxea-dynamics.com": (
+        "/",
+        "/products/galaxea-r1-pro-universal-humanoid-robot",
+        "/products/6-dof-general-mobile-manipulation-platform",
+        "/products/galaxea-s-proprietary-embodied-ai-bipedal-robot",
+    ),
+    "xpeng.com": (
+        "/",
+        "/au/explore/xpeng_ai_robot_iron",
+        "/news/01a03797fccda01e0de68a02a256006a",
+    ),
+    "ararobotics.eu": ("/", "/en", "/en/ari", "/en/petek"),
+    "cartken.com": ("/",),
+    "mobile-industrial-robots.com": (
+        "/",
+        "/products",
+        "/products/robots",
+        "/products/robots/mir250",
+        "/products/robots/mir600",
+        "/products/robots/mir1350",
+        "/products/robots/mir1200-pallet-jack",
+    ),
+    "teradyne.com": ("/robotics/autonomous-mobile-robots/",),
 }
 _NAV_PATH = re.compile(
     r"/(about|careers?|contact|news|blog|press|support|login|privacy|legal|"
@@ -259,6 +281,13 @@ _KNOWN_SKU_WORDS = frozenset(
         "lud",
         "thirdwavereachtrucks",
         "dexoryview",
+        "iron",
+        "kengo",
+        "ari",
+        "petek",
+        "cartkenhauler",
+        "cartkencourier",
+        "cartkenmover",
     }
 )
 

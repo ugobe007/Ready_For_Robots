@@ -9,10 +9,11 @@
     "product_url / lookup_host are set only after a live fetch verifies the page.",
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
     "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers.",
-    "2026-08-31 more OEMs: booster.tech, lumosbot.tech, galbot.com, unix-group.ai, noetixrobotics.com, thirdwave.ai, dexory.com, primebot.cn, limxdynamics.com. Named products from live pages or product JS only. Thin pages stay unclassified. DexoryView is the named product; public pages do not name the robots. Third Wave Reach Trucks is named on the Armada case study, not TWA Reach."
+    "2026-08-31 more OEMs: booster.tech, lumosbot.tech, galbot.com, unix-group.ai, noetixrobotics.com, thirdwave.ai, dexory.com, primebot.cn, limxdynamics.com. Named products from live pages or product JS only. Thin pages stay unclassified. DexoryView is the named product; public pages do not name the robots. Third Wave Reach Trucks is named on the Armada case study, not TWA Reach.",
+    "2026-09-01 more AMR OEMs: galaxea-dynamics.com, xpeng.com (IRON only), ararobotics.eu, cartken.com, mobile-industrial-robots.com, teradyne.com AMR hub. Named page SKUs only. Live extract still wins."
   ],
-  "vendor_count": 131,
-  "robot_count": 328,
+  "vendor_count": 136,
+  "robot_count": 338,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -2650,7 +2651,7 @@
           "primary_class": "amr",
           "status": "available",
           "country": "Denmark / Global",
-          "description": "MiR250: Internal material transport. Factories · warehouses.",
+          "description": "MiR250: Internal material transport up to 250 kg. Factories · warehouses.",
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
@@ -2673,7 +2674,7 @@
           "primary_class": "amr",
           "status": "available",
           "country": "Denmark / Global",
-          "description": "MiR600: Pallet transport. Factories · warehouses.",
+          "description": "MiR600: Autonomous pallet transport up to 600 kg. Factories · warehouses.",
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
@@ -2696,7 +2697,7 @@
           "primary_class": "amr",
           "status": "available",
           "country": "Denmark / Global",
-          "description": "MiR1200 Pallet Jack: Autonomous pallet movement. Distribution centers.",
+          "description": "MiR1200 Pallet Jack: Autonomous pallet detection, transport, and delivery. Factories · warehouses.",
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
@@ -2719,7 +2720,7 @@
           "primary_class": "amr",
           "status": "available",
           "country": "Denmark / Global",
-          "description": "MiR1350: Heavy internal transport. Factories · logistics.",
+          "description": "MiR1350: Heavy internal transport up to 1350 kg. Factories · logistics.",
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
@@ -9721,6 +9722,281 @@
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
           "catalog_claims": [],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Galaxea Dynamics",
+      "domains": [
+        "galaxea-dynamics.com",
+        "galaxea.ai"
+      ],
+      "vendor_url": "https://galaxea-dynamics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "R1 Pro",
+          "model_slug": "galaxea-dynamics-r1-pro",
+          "product_url": "https://galaxea-dynamics.com/products/galaxea-r1-pro-universal-humanoid-robot",
+          "vendor_url": "https://galaxea-dynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "R1 Pro: 7-DOF dual-arm wheeled humanoid robot.",
+          "lookup_host": "galaxea-dynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "R1 Pro: 7-DOF dual-arm wheeled humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "R1 Lite",
+          "model_slug": "galaxea-dynamics-r1-lite",
+          "product_url": "https://galaxea-dynamics.com/products/6-dof-general-mobile-manipulation-platform",
+          "vendor_url": "https://galaxea-dynamics.com",
+          "primary_class": "mobile_manipulator",
+          "status": "available",
+          "country": null,
+          "description": "R1 Lite: Wheeled mobile manipulation platform.",
+          "lookup_host": "galaxea-dynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "mobile_manipulator",
+              "evidence_span": "R1 Lite: Wheeled mobile manipulation platform."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Kengo",
+          "model_slug": "galaxea-dynamics-kengo",
+          "product_url": "https://galaxea-dynamics.com/products/galaxea-s-proprietary-embodied-ai-bipedal-robot",
+          "vendor_url": "https://galaxea-dynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Kengo: Bipedal humanoid robot.",
+          "lookup_host": "galaxea-dynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Kengo: Bipedal humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "XPENG",
+      "domains": [
+        "xpeng.com"
+      ],
+      "vendor_url": "https://xpeng.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "IRON",
+          "model_slug": "xpeng-iron",
+          "product_url": "https://www.xpeng.com/au/explore/xpeng_ai_robot_iron",
+          "vendor_url": "https://xpeng.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "IRON: Next-generation humanoid robot for human spaces.",
+          "lookup_host": "xpeng.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "IRON: Next-generation humanoid robot for human spaces."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "ARA Robotics",
+      "domains": [
+        "ararobotics.eu"
+      ],
+      "vendor_url": "https://ararobotics.eu",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "ARI",
+          "model_slug": "ara-robotics-ari",
+          "product_url": "https://ararobotics.eu/en/ari/",
+          "vendor_url": "https://ararobotics.eu",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "ARI: AI-powered autonomous floor maintenance. Commercial and industrial floors.",
+          "lookup_host": "ararobotics.eu",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "ARI: AI-powered autonomous floor maintenance. Commercial and industrial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Petek",
+          "model_slug": "ara-robotics-petek",
+          "product_url": "https://ararobotics.eu/en/petek/",
+          "vendor_url": "https://ararobotics.eu",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "Petek: Smart maintenance station. Charging and water refill for ARI.",
+          "lookup_host": "ararobotics.eu",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Cartken",
+      "domains": [
+        "cartken.com"
+      ],
+      "vendor_url": "https://cartken.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Cartken Hauler",
+          "model_slug": "cartken-cartken-hauler",
+          "product_url": "https://www.cartken.com/#hauler",
+          "vendor_url": "https://cartken.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "Cartken Hauler: Outdoor material transport on mixed indoor and outdoor routes. Factories · labs · campuses.",
+          "lookup_host": "cartken.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Cartken Hauler: Outdoor material transport on mixed indoor and outdoor routes. Factories · labs · campuses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Cartken Courier",
+          "model_slug": "cartken-cartken-courier",
+          "product_url": "https://www.cartken.com/#courier",
+          "vendor_url": "https://cartken.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "Cartken Courier: Lightweight outdoor AMR for secured deliveries. Factories · campuses.",
+          "lookup_host": "cartken.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Cartken Courier: Lightweight outdoor AMR for secured deliveries. Factories · campuses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Cartken Mover",
+          "model_slug": "cartken-cartken-mover",
+          "product_url": "https://www.cartken.com/#mover",
+          "vendor_url": "https://cartken.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "Cartken Mover: Outdoor pallet pick and putaway for heavy loads. Factories · campuses.",
+          "lookup_host": "cartken.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Cartken Mover: Outdoor pallet pick and putaway for heavy loads. Factories · campuses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Teradyne",
+      "domains": [
+        "teradyne.com"
+      ],
+      "vendor_url": "https://teradyne.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "MiR1200 Pallet Jack",
+          "model_slug": "teradyne-mir1200-pallet-jack",
+          "product_url": "https://www.teradyne.com/robotics/autonomous-mobile-robots/",
+          "vendor_url": "https://teradyne.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "MiR1200 Pallet Jack: Autonomous pallet movement with AI-based pallet detection. Manufacturing · logistics.",
+          "lookup_host": "teradyne.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "MiR1200 Pallet Jack: Autonomous pallet movement with AI-based pallet detection. Manufacturing · logistics."
+            }
+          ],
           "specs": {},
           "configuration_kind": "standalone",
           "host_platform": "none"

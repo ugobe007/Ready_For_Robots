@@ -80,8 +80,8 @@ JUNK_LOOKUP_HOSTS = frozenset(
         "alibaba.com",
         "baidu.com",
         # Vehicle OEM homepages — cars/investor pages are not FIND robots.
-        # Iron/humanoid only via live evidence on a robot page, never this host.
-        "xpeng.com",
+        # xpeng.com is a mixed host: IRON is a named robot on
+        # /au/explore/xpeng_ai_robot_iron. The EV catalog stays out.
         "xiaopeng.com",
     }
 )
@@ -98,6 +98,13 @@ OEM_SKU_REPLACES_INDEX_HOSTS = frozenset(
         "limxdynamics.com",
         "thirdwave.ai",
         "dexory.com",
+        "galaxea-dynamics.com",
+        "galaxea.ai",
+        "xpeng.com",
+        "ararobotics.eu",
+        "cartken.com",
+        "mobile-industrial-robots.com",
+        "teradyne.com",
     }
 )
 

@@ -20,8 +20,16 @@ describe("knownOemLineups", () => {
     expect(
       lookupKnownOem("https://www.greenfieldincorporated.com/")
     ).toBeNull();
-    expect(lookupKnownOem("https://www.xpeng.com/")).toBeNull();
     expect(lookupKnownOem("https://advanced.farm/")).toBeNull();
+  });
+
+  it("maps XPENG IRON as the robot SKU, not the EV catalog", () => {
+    const hit = lookupKnownOem("https://www.xpeng.com/");
+    expect(hit?.vendor_name).toMatch(/XPENG/i);
+    const names = hit?.robots.map(r => r.name) || [];
+    expect(names).toEqual(["IRON"]);
+    expect(hit?.robots[0]?.display_class).toBe("humanoid");
+    expect(names.some(n => /G6|P7|G9|PX5|Humanoid/i.test(n))).toBe(false);
   });
 
   it("falls back from a product subdomain to the indexed registrable host", () => {
