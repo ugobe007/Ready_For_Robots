@@ -63,6 +63,8 @@ Recipe: HTTP the user path the Jobs terminal already uses. Prefer ARIA when a br
 ```bash
 python3 scripts/agent_verify.py drive --feature find-jobs --evidence "$EVIDENCE"
 python3 scripts/agent_verify.py drive --feature find-url --evidence "$EVIDENCE"
+python3 scripts/agent_verify.py drive --feature find-stay --evidence "$EVIDENCE"
+python3 scripts/agent_verify.py drive --feature employer-match --evidence "$EVIDENCE"
 python3 scripts/agent_verify.py pstack --evidence "$EVIDENCE"
 python3 scripts/agent_verify.py ci --evidence "$EVIDENCE"
 ```
@@ -71,6 +73,8 @@ python3 scripts/agent_verify.py ci --evidence "$EVIDENCE"
 |---------|--------|----------------------|
 | find-jobs | `POST /api/robot-job-match` (Vega profile or chip) | `state=matches`, `job_count>0`, job titles; requirement matcher has named `company_name` |
 | find-url | `POST /api/robot-job-search` (Dexmate + Greenfield) | not Research failed / Failed to fetch; identity is that URL’s company; Greenfield is not strawberry/Agrobot |
+| find-stay | FIND catch + `Jobs.tsx` visit guard | timeout / 500 / abort stay on `/?visit=jobs`; never `/` or `/?new=1` landing. Skip-green is a fail. |
+| employer-match | `POST /api/employer-robot-match` | catalog snapshot only; when `catalog_only` is live, elapsed < 3s; no OEM scrape |
 | job-cards | same payload | cards exist (title + employer); expand in UI shows employer / workplace / work / Conditional |
 | jobs-chrome | homepage JS | process labels + `jobs_activate`; checkout CTA `Find jobs →` |
 | jobs-crm | `/pipeline?src=jobs_activate` | bundle has activate src; unlocked 5 jobs need a snapshot/session — do not call login a pass |
@@ -95,7 +99,8 @@ Proof standards:
 - Exercise the real Jobs path (URL/profile → match API → cards), not a test-only endpoint.
 - Capture the action and the result (`doctor.json`, `drive-<feature>.json`, `summary.json`).
 - Side effects: match must not create CRM rows. Do not POST signup during verify.
-- Skip-green Vercel is a failed proof even if Fly is healthy.
+- Skip-green Vercel is a failed proof even if Fly is healthy. A 7-second “Deploy frontend” skip is not proof. Doctor `skip_green` fails the run.
+- FIND lookup failure must remain on `/?visit=jobs`. Landing (`/` / `/?new=1`) after timeout, 500, abort, or Failed to fetch is a failed proof.
 - After cleanup, JSON evidence must still exist at the named path.
 
 ## Cleanup

@@ -50,6 +50,23 @@ def test_find_jobs_cta_is_checkout_copy_not_live_lag():
     assert stale["find_jobs_source"] is False
 
 
+def test_find_stay_and_employer_match_are_driven():
+    from scripts.agent_verify import DRIVERS
+
+    assert "find-stay" in DRIVERS
+    assert "employer-match" in DRIVERS
+    skill = Path(".cursor/skills/verify-readyforrobots/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert "find-stay" in skill
+    assert "employer-match" in skill
+    assert "7-second" in skill or "skip_green" in skill
+    workflow = Path(".github/workflows/agent-verify.yml").read_text(encoding="utf-8")
+    assert "findResearch.test.ts" in workflow
+    assert "employerRobotMatch.test.ts" in workflow
+    assert "test_employer_robot_match.py" in workflow
+
+
 def test_pstack_release_script_exists():
     from scripts.pstack_release import run_pstack_release
 

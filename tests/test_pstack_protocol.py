@@ -26,6 +26,7 @@ def test_roles_and_matcher_source():
     assert critic_gate_ids() == [
         "find",
         "find_abort",
+        "find_no_home",
         "find_identity",
         "crm_leftover",
         "job_cards",

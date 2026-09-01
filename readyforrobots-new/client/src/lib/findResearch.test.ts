@@ -7,6 +7,10 @@ import {
   beginFindResearch,
   FIND_RESEARCH_INTERRUPTED_MESSAGE,
   FIND_RESEARCH_TIMEOUT_MESSAGE,
+  ensureFindStayVisit,
+  findFailureBouncesHome,
+  findFailureStayHref,
+  findLookupFailureOutcome,
   findResearchFailureMessage,
   isFailedToFetchError,
   isFindAbortError,
@@ -213,8 +217,59 @@ describe("FIND workspace canaries — no self-abort after bind", () => {
     const listing = readFileSync(join(here, "./robotProfile.ts"), "utf8");
     const search = readFileSync(join(here, "./robotJobSearch.ts"), "utf8");
     expect(listing).toMatch(/getApiBase\(\)/);
-    expect(search).toMatch(/getApiBase\(\)/);
-    expect(listing).not.toMatch(/getPublicReadApiBase/);
-    expect(search).not.toMatch(/getPublicReadApiBase/);
+    expect(search).toMatch(/getPublicReadApiBase\(\)/);
+    expect(search).not.toMatch(/getApiBase\(\)/);
+    expect(submitFind).toMatch(/ensureFindStayVisit\(\)/);
+    expect(submitFind).not.toMatch(/goJobsFreshHome/);
+    expect(submitFind).not.toMatch(/JOBS_FRESH_HOME_EVENT/);
+    expect(submitFind).not.toMatch(/\?new=1/);
+    expect(submitFind).not.toMatch(/setLocation\("\/"\)/);
+  });
+});
+
+describe("FIND timeout / 500 / abort stay on /?visit=jobs", () => {
+  it("does not bounce timeout, 500, or Failed to fetch to landing", () => {
+    expect(findFailureStayHref()).toBe("/?visit=jobs");
+    expect(findFailureBouncesHome(null)).toBe(false);
+    expect(findFailureBouncesHome("/?visit=jobs")).toBe(false);
+    expect(findFailureBouncesHome("/")).toBe(true);
+    expect(findFailureBouncesHome("/?new=1")).toBe(true);
+    expect(findFailureBouncesHome("/?visit=candidates")).toBe(true);
+    for (const err of [
+      new FetchTimeoutError(8_000),
+      new TypeError("Failed to fetch"),
+      new Error("robot-job-search 500"),
+      new DOMException("The operation was aborted.", "AbortError"),
+    ]) {
+      const out = findLookupFailureOutcome(err);
+      expect(out.stage).toBe("find");
+      expect(out.href).toBe("/?visit=jobs");
+      expect(out.bounceHome).toBe(false);
+      expect(out.error.length).toBeGreaterThan(0);
+      expect(out.error).not.toMatch(/Failed to fetch/i);
+      expect(findFailureBouncesHome(out.href)).toBe(false);
+    }
+  });
+
+  it("rewrites a stripped visit back to FIND step 1", () => {
+    const replaced: string[] = [];
+    const loc = { pathname: "/", search: "?new=1", hash: "" };
+    Object.defineProperty(globalThis, "window", {
+      value: {
+        location: loc,
+        history: {
+          state: null,
+          replaceState: (_s: unknown, _t: string, url: string) => {
+            replaced.push(String(url));
+            const q = String(url).indexOf("?");
+            loc.search = q >= 0 ? String(url).slice(q) : "";
+          },
+        },
+      },
+      configurable: true,
+    });
+    expect(ensureFindStayVisit()).toBe(true);
+    expect(replaced[0]).toContain("visit=jobs");
+    expect(ensureFindStayVisit()).toBe(false);
   });
 });

@@ -107,6 +107,10 @@ describe("landing fork", () => {
     expect(jobsPage).toMatch(/EmployerMatchWorkspace/);
     expect(jobsPage).toMatch(/RobotJobsWorkspace/);
     expect(jobsPage).toMatch(/landingVisitFromSearch/);
+    expect(jobsPage).toMatch(/forcedLanding && fromSearch === "landing"/);
+    expect(jobsPage).not.toMatch(
+      /const visit: LandingVisit = forcedLanding\s*\n\s*\? "landing"/
+    );
   });
 
   it("FIND step 1 keeps URL plus I know the robot catalog pick", () => {
@@ -116,6 +120,8 @@ describe("landing fork", () => {
     );
     expect(I_KNOW_THE_ROBOT_LABEL).toBe("I know the robot");
     expect(workspace).toMatch(/I_KNOW_THE_ROBOT_LABEL/);
+    expect(workspace).toMatch(/border-2 border-emerald-400/);
+    expect(workspace).toMatch(/text-xl font-bold tracking-tight text-emerald-200/);
     expect(workspace).toMatch(/submitKnownSku/);
     expect(workspace).toMatch(/submitClassFind/);
     expect(workspace).toMatch(/catalogSkusForClass/);
@@ -145,6 +151,9 @@ describe("landing fork", () => {
     expect(employer).toMatch(/aria-label="Employer process"/);
     expect(employer).toMatch(/fetchEmployerRobotMatch/);
     expect(employer).toMatch(/postEmployerJobDraft/);
+    expect(employer).toMatch(/readEmployerJdFile/);
+    expect(employer).toMatch(/type="file"/);
+    expect(employer).toMatch(/EMPLOYER_JD_ACCEPT/);
     expect(employer).not.toMatch(/SIGNAL|Apollo|find-robots/i);
     expect(employer).not.toMatch(/CalJobsDesk|send_buyer_intro/);
   });
