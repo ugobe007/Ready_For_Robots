@@ -31,6 +31,17 @@ Emerald accent stays on the sentence-starting Jobs / Robots, same chrome as FIND
 
 ## Verify
 
-Vitest landing fork. Local Vite: landing, Look for robot jobs → FIND step 1, Look for robot candidates → employer step 1, wordmark back to the fork.
+Vitest `jobsLanding.test.ts`: 5 passed.
 
-`python3 scripts/pstack_release.py --local` How / Act. Stay draft. No Fly.
+`PYTHONPATH=. python3 scripts/pstack_release.py --local`: How / Act / Critic fixtures ok. FIND drive skipped (`--local`). No Fly.
+
+Local Vite `http://127.0.0.1:3000/`:
+
+- Landing headline is Jobs for robots. Robots for jobs. Old "Who is this visit?" is gone.
+- Subhead names the two people and matches-before-signup.
+- Each card explains the click. No Cal. No "choose your workflow."
+- Look for robot jobs → `/?visit=jobs` FIND step 1 (URL + I know the robot).
+- Wordmark `/?new=1` returns to the fork.
+- Look for robot candidates → `/?visit=candidates` employer step 1 (What is the work).
+
+Stay draft. No Fly.
