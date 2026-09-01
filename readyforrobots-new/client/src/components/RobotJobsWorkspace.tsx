@@ -1979,6 +1979,7 @@ export default function RobotJobsWorkspace() {
       setCheckedJobKeys(checks);
       setStage("jobs");
     } catch {
+      if (!findInFlightRef.current) return;
       ensureFindStayVisit();
       setError("Could not find jobs for that robot type. Try again.");
       setStage("find");
