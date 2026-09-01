@@ -2,7 +2,8 @@
 
 **Date:** 2026-09-01  
 **Type:** build  
-**Branch:** `cursor/landing-fork-copy-009b` (draft #209)  
+**Branch:** `cursor/landing-fork-copy-009b` and `cursor/put-robot-to-work-22f6`  
+**#209** merged 20:58 UTC with mockup headline A still on `/`. Operator copy is the three commits after that merge. ManagePullRequest was not in this agent catalog, so a new draft PR was not opened here.  
 **Mockup layout:** https://rfr70sui-wipjpxme.manus.space  
 **Copy:** operator (wins over mockup headline A)  
 **Did not** merge #195. **Did not** Fly-deploy. Cal stays off `/`.
@@ -43,4 +44,4 @@ Local Vite `http://127.0.0.1:3000/`:
 
 Screenshot: `/opt/cursor/artifacts/landing_put_your_robot_to_work.png`
 
-Stay draft. No Fly.
+Stay draft on the follow-up PR. No Fly. #209 already merged with mockup A. Compare: https://github.com/ugobe007/Ready_For_Robots/compare/main...cursor/put-robot-to-work-22f6
