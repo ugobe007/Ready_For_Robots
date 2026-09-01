@@ -433,18 +433,14 @@ def build_robot_profile(
                 ]
                 best = max(morph or class_facts, key=lambda f: f.confidence)
             claimed = str(best.value)
-            from app.services.robot_class_qualify import GENERIC_CATEGORY_CLASSES, prefer_work_language_class
+            from app.services.robot_class_qualify import keep_claimed_display_class
 
-            existing = (selected.display_class or "").strip()
-            evidence = f"{selected.name} {selected.description or ''} {claimed}"
-            kept = prefer_work_language_class(evidence, claimed) or claimed
-            if (
-                existing
-                and existing.lower() not in GENERIC_CATEGORY_CLASSES
-                and claimed.lower() in GENERIC_CATEGORY_CLASSES
-            ):
-                kept = existing
-            selected.display_class = kept
+            selected.display_class = keep_claimed_display_class(
+                selected.display_class,
+                claimed,
+                name=selected.name,
+                description=selected.description or "",
+            )
 
     facts, morphology, coverage_rate, coverage_level = apply_research_gaps(
         facts,

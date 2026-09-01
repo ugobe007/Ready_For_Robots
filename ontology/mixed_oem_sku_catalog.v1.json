@@ -2344,7 +2344,7 @@
           "slug": "dexory-dexoryview",
           "company_name": "Dexory",
           "company_slug": "dexory",
-          "primary_class": "service_robot",
+          "primary_class": null,
           "listed_class": null,
           "task": null,
           "lookup_host": "dexory.com",

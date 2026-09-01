@@ -145,6 +145,7 @@ def test_empty_and_invented_sku_names_are_rejected():
         title="Order Picker", employer="Galbot G2"
     ) is False
     assert is_site_chrome_name("Impact")
+    assert is_site_chrome_name("Total Economic Impact")
     assert is_junk_sku_name("Impact")
     assert is_junk_sku_name("Farmers")
     assert not is_invented_sku_name("BellaBot")
