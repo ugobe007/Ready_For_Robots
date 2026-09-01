@@ -5,9 +5,10 @@
  * Option 2 Look for robot candidates → employer MATCH/POST (`/?visit=candidates`).
  * Wordmark `/?new=1` returns to this fork. FIND after the fork is unchanged.
  *
- * Marketing copy on `/` follows the 2026-09-01 Manus mockup
- * (https://rfr70sui-wipjpxme.manus.space). Headline A is shipped.
- * The A–E picker is designer chrome and stays out of production.
+ * Layout follows the 2026-09-01 Manus mockup
+ * (https://rfr70sui-wipjpxme.manus.space). Operator copy wins on
+ * headline + subhead. The A–E picker is designer chrome and stays out
+ * of production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -19,9 +20,9 @@ export const LOOK_FOR_ROBOT_JOBS_CTA = "Look for robot jobs";
 export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Look for robot candidates";
 
 export const LANDING_EYEBROW = "ReadyForRobots · Robot Employment";
-export const LANDING_HEADLINE = "Robots need jobs. We find the work.";
+export const LANDING_HEADLINE = "Put your robot to work.";
 export const LANDING_SUBHEAD =
-  "Jobs for a robot you already have, or robots for work you need done. Paste a product URL — we match it to real jobs, then keep them in CRM.";
+  "Jobs for a robot you already have, or robots for work you need done. Paste a product URL — we match it to real jobs, then keep them in our CRM.";
 
 export const LANDING_JOBS_LABEL = "Robot owner";
 export const LANDING_CANDIDATES_LABEL = "Employer";

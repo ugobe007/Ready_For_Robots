@@ -1,6 +1,6 @@
 # Landing copy: product, not visitor
 
-Superseded by the Manus mockup port. See [`missions/2026-09-01-landing-mockup/REVIEW.md`](../2026-09-01-landing-mockup/REVIEW.md).
+Superseded. Mockup layout shipped, then operator headline replaced mockup A. See [`missions/2026-09-01-landing-mockup/REVIEW.md`](../2026-09-01-landing-mockup/REVIEW.md).
 
 
 **Date:** 2026-09-01
