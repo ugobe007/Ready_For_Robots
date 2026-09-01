@@ -6,7 +6,10 @@ import {
   EMPLOYER_EMPTY_MATCH,
   EMPLOYER_PROCESS_STEPS,
   EMPLOYER_WORK_TILE_IDS,
+  LANDING_CANDIDATES_HINT,
   LANDING_HEADLINE,
+  LANDING_JOBS_HINT,
+  LANDING_SUBHEAD,
   LOOK_FOR_ROBOT_CANDIDATES_CTA,
   LOOK_FOR_ROBOT_JOBS_CTA,
   I_KNOW_THE_ROBOT_LABEL,
@@ -20,7 +23,7 @@ import { jobsFreshHomeHref } from "./jobsWorkflow";
 const here = dirname(fileURLToPath(import.meta.url));
 
 describe("landing fork", () => {
-  it("bare / and ?new=1 are who-is-this-visit, not FIND", () => {
+  it("bare / and ?new=1 are the landing fork, not FIND", () => {
     expect(landingVisitFromSearch("")).toBe("landing");
     expect(landingVisitFromSearch("?new=1")).toBe("landing");
     expect(landingVisitFromSearch("?visit=jobs")).toBe("jobs");
@@ -33,14 +36,25 @@ describe("landing fork", () => {
   it("uses operator CTAs and two options only", () => {
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Look for robot jobs");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Look for robot candidates");
-    expect(LANDING_HEADLINE).toBe("Who is this visit?");
+    expect(LANDING_HEADLINE).toBe("Jobs for robots. Robots for jobs.");
+    expect(LANDING_SUBHEAD).toMatch(/robot or you have work/i);
+    expect(LANDING_SUBHEAD).toMatch(/matches before you sign up/i);
+    expect(LANDING_SUBHEAD).not.toMatch(/who is this visit|choose your workflow/i);
+    expect(LANDING_JOBS_HINT).toMatch(/You have a robot/);
+    expect(LANDING_JOBS_HINT).toMatch(/URL|catalog/);
+    expect(LANDING_CANDIDATES_HINT).toMatch(/You have work/);
+    expect(LANDING_CANDIDATES_HINT).toMatch(/named robots/);
+    expect(LANDING_CANDIDATES_HINT).toMatch(/post the job/i);
     const landing = readFileSync(
       join(here, "../components/JobsLanding.tsx"),
       "utf8"
     );
     expect(landing).toMatch(/LOOK_FOR_ROBOT_JOBS_CTA/);
     expect(landing).toMatch(/LOOK_FOR_ROBOT_CANDIDATES_CTA/);
-    expect(landing).not.toMatch(/Look for buyers|SIGNAL|Apollo/i);
+    expect(landing).toMatch(/LANDING_JOBS_HINT/);
+    expect(landing).toMatch(/LANDING_CANDIDATES_HINT/);
+    expect(landing).not.toMatch(/Look for buyers|SIGNAL|Apollo|Who is this visit/i);
+    expect(landing).not.toMatch(/CalJobsDesk|choose your workflow/i);
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
     expect(jobsPage).toMatch(/JobsLanding/);
     expect(jobsPage).toMatch(/EmployerMatchWorkspace/);

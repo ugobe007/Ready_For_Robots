@@ -1,5 +1,5 @@
 /**
- * `/` first beat is who is this visit — not FIND yet.
+ * `/` first beat is the product fork — not FIND yet.
  *
  * Option 1 Look for robot jobs → OEM FIND step 1 (`/?visit=jobs`).
  * Option 2 Look for robot candidates → employer MATCH/POST (`/?visit=candidates`).
@@ -14,14 +14,14 @@ export type LandingVisit = "landing" | "jobs" | "candidates";
 export const LOOK_FOR_ROBOT_JOBS_CTA = "Look for robot jobs";
 export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Look for robot candidates";
 
-export const LANDING_HEADLINE = "Who is this visit?";
+export const LANDING_HEADLINE = "Jobs for robots. Robots for jobs.";
 export const LANDING_SUBHEAD =
-  "Jobs for a robot you already have, or robots for work you need done.";
+  "You have a robot or you have work, and we show matches before you sign up.";
 
 export const LANDING_JOBS_HINT =
-  "Paste a product URL, or pick a named catalog robot. We match it to real jobs.";
+  "You have a robot. Paste a product URL or pick from the catalog, and we show openings it can do.";
 export const LANDING_CANDIDATES_HINT =
-  "Tell us the work. We match named catalog robots. Then you can post the job.";
+  "You have work. We show named robots that can do it, then you can post the job.";
 
 export const I_KNOW_THE_ROBOT_LABEL = "I know the robot";
 export const I_KNOW_THE_ROBOT_HINT =

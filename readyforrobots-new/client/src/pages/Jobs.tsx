@@ -2,7 +2,7 @@
  * Canonical product front door (also /jobs/:slug personalization).
  * /jobs index redirects to /.
  *
- * First beat on `/` is who is this visit (JobsLanding).
+ * First beat on `/` is the landing fork (JobsLanding).
  * `/?visit=jobs` is OEM FIND. `/?visit=candidates` is employer MATCH/POST.
  * `/?new=1` returns to the landing fork. Strip the query in an effect
  * after paint. Do not remount the tree, and do not resetToFind while

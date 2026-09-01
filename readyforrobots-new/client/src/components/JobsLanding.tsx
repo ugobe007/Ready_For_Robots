@@ -1,5 +1,5 @@
 /**
- * `/` first beat: who is this visit. Two options. Not FIND yet.
+ * `/` first beat: jobs for robots, robots for jobs. Two options. Not FIND yet.
  */
 import { useLocation } from "wouter";
 import PixelIcon from "@/components/PixelIcon";
@@ -30,8 +30,8 @@ export default function JobsLanding() {
           ReadyForRobots
         </p>
         <h1 className={FIND_JOBS_HEADLINE_CLASS}>
-          {LANDING_HEADLINE.split(/(visit)/).map((part, i) =>
-            part === "visit" ? (
+          {LANDING_HEADLINE.split(/(Jobs|Robots)/).map((part, i) =>
+            part === "Jobs" || part === "Robots" ? (
               <span key={i} className={FIND_JOBS_HEADLINE_ACCENT_CLASS}>
                 {part}
               </span>
