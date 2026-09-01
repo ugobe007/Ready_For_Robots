@@ -239,13 +239,21 @@ const CONFIGURATION_CLASS_ALIASES: Record<string, string> = {
 };
 
 export function normalizeRobotClass(raw?: string | null): string | null {
-  const want = (raw || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const want = (raw || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
   if (!want) return null;
   return ROBOT_CLASS_ALIASES[want] || null;
 }
 
-export function configurationClassForLookup(raw?: string | null): string | null {
-  const want = (raw || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+export function configurationClassForLookup(
+  raw?: string | null
+): string | null {
+  const want = (raw || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
   if (!want) return null;
   return CONFIGURATION_CLASS_ALIASES[want] || null;
 }
@@ -259,22 +267,26 @@ export function skuLookupGrain(displayClass?: string | null): JobLookupGrain {
 }
 
 export function robotClassTitle(classId?: string | null): string {
-  const id = configurationClassForLookup(classId) || normalizeRobotClass(classId);
+  const id =
+    configurationClassForLookup(classId) || normalizeRobotClass(classId);
   if (!id) return "robot";
   return ROBOT_CLASS_TITLE[id] || id.replace(/_/g, " ");
 }
 
 export function robotClassJobsLabel(classId?: string | null): string {
-  const id = configurationClassForLookup(classId) || normalizeRobotClass(classId);
+  const id =
+    configurationClassForLookup(classId) || normalizeRobotClass(classId);
   if (!id) return "this robot type";
   return ROBOT_CLASS_JOBS_LABEL[id] || `${id.replace(/_/g, " ")}s`;
 }
 
 /** Class picker on incomplete identity — not a SKU URL. */
 export function qualifySearchLookupGrain(
-  productName?: string | null,
+  productName?: string | null
 ): JobLookupGrain {
-  const name = String(productName || "").replace(/\s+/g, " ").trim();
+  const name = String(productName || "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!name || /^your robot$/i.test(name)) return "robot_type";
   return "product";
 }
@@ -312,16 +324,21 @@ export function shouldShowClassPicker(analysis: ClassPickerAnalysis): boolean {
 /** Honest empty after a class click that found no work. */
 export function classJobsEmptyCopy(
   classId?: string | null,
-  robotName?: string | null,
+  robotName?: string | null
 ): string {
   const raw = String(classId || "").trim();
   const cls =
     configurationClassForLookup(raw) || normalizeRobotClass(raw) || raw;
   if (cls) {
-    const label = (ROBOT_CLASS_TITLE[cls] || cls.replace(/_/g, " ")).toLowerCase();
+    const label = (
+      ROBOT_CLASS_TITLE[cls] || cls.replace(/_/g, " ")
+    ).toLowerCase();
     return `No ${label} jobs for this robot yet.`;
   }
-  const name = String(robotName || "").replace(/\s+/g, " ").trim() || "this robot";
+  const name =
+    String(robotName || "")
+      .replace(/\s+/g, " ")
+      .trim() || "this robot";
   return `No matched jobs for ${name} yet.`;
 }
 
@@ -343,7 +360,11 @@ export function lineupJobLookups(products: LineupProduct[]): LineupJobLookup[] {
       continue;
     }
     if (skuLookupGrain(row.displayClass) === "product") {
-      skuConfigs.push({ grain: "product", robotClass: cls, productNames: [name] });
+      skuConfigs.push({
+        grain: "product",
+        robotClass: cls,
+        productNames: [name],
+      });
       continue;
     }
     const names = groups.get(cls) || [];
@@ -367,7 +388,7 @@ export function lineupJobLookups(products: LineupProduct[]): LineupJobLookup[] {
 }
 
 export function productClassesFromLineup(
-  products: LineupProduct[],
+  products: LineupProduct[]
 ): Record<string, string> {
   const out: Record<string, string> = {};
   for (const row of products) {
@@ -409,7 +430,10 @@ function classBucketSubtitle(cls: string | null): string {
   return cls ? robotClassTitle(cls) : "One robot";
 }
 
-function segmentsForClass(cls: string | null, rows: LineupProduct[]): LineupSegment[] {
+function segmentsForClass(
+  cls: string | null,
+  rows: LineupProduct[]
+): LineupSegment[] {
   const classKey = cls || "unknown";
   if (rows.length === 1) {
     const row = rows[0];
@@ -445,7 +469,8 @@ function segmentsForClass(cls: string | null, rows: LineupProduct[]): LineupSegm
     else leftovers.push(...group);
   }
 
-  const splitFamilies = families.length >= 2 || (families.length === 1 && leftovers.length > 0);
+  const splitFamilies =
+    families.length >= 2 || (families.length === 1 && leftovers.length > 0);
   if (!splitFamilies) {
     const family = families.length === 1 ? families[0][0] : null;
     return [
@@ -513,12 +538,12 @@ export function lineupSegments(products: LineupProduct[]): LineupSegment[] {
 /** Segmented picker when the lineup is bigger than one search, or spans types. */
 export function usesLineupSegments(
   products: LineupProduct[],
-  cap = JOBS_PRODUCT_CAP_FREE,
+  cap = JOBS_PRODUCT_CAP_FREE
 ): boolean {
   const named = products.filter(p => (p.name || "").trim());
   if (named.length <= 1) return false;
   const classes = new Set(
-    named.map(p => normalizeRobotClass(p.displayClass)).filter(Boolean),
+    named.map(p => normalizeRobotClass(p.displayClass)).filter(Boolean)
   );
   if (classes.size >= 2) return true;
   if (named.length > cap) return true;
@@ -528,10 +553,13 @@ export function usesLineupSegments(
 
 export function searchNamesForSegment(
   segment: LineupSegment | undefined,
-  cap = JOBS_PRODUCT_CAP_FREE,
+  cap = JOBS_PRODUCT_CAP_FREE
 ): string[] {
   if (!segment) return [];
-  return segment.products.map(p => p.name).filter(Boolean).slice(0, cap);
+  return segment.products
+    .map(p => p.name)
+    .filter(Boolean)
+    .slice(0, cap);
 }
 
 export const JOBS_EXAMPLE_CAP = 5;
@@ -676,7 +704,7 @@ export function isJobsLineupNoiseName(name: string): boolean {
 
 export function filterJobsLineupProducts<T extends { name: string }>(
   products: T[],
-  limit?: number,
+  limit?: number
 ): T[] {
   const seen = new Set<string>();
   const out: T[] = [];
@@ -696,21 +724,23 @@ export function filterJobsLineupProducts<T extends { name: string }>(
 export function pageJobsLineup<T>(
   products: T[],
   page = 0,
-  pageSize = JOBS_LINEUP_DISPLAY_CAP,
+  pageSize = JOBS_LINEUP_DISPLAY_CAP
 ): T[] {
   const size = Math.max(1, pageSize);
   const start = Math.max(0, page) * size;
   return products.slice(start, start + size);
 }
 
-export function landingStageAfterConfirm(robotCount: number): JobsConfirmLanding {
+export function landingStageAfterConfirm(
+  robotCount: number
+): JobsConfirmLanding {
   // Picker already chose the robot(s). Land on jobs — do not ask Find jobs again.
   return robotCount >= 1 ? "jobs" : "review";
 }
 
 /** Hide "0 matching jobs" on unresearched shells; hide identical counts across a lineup. */
 export function portfolioShowsJobCounts(
-  robots: Array<{ matched?: boolean; jobCount?: number }>,
+  robots: Array<{ matched?: boolean; jobCount?: number }>
 ): boolean {
   const matched = robots.filter(a => a.matched);
   if (matched.length === 0) return false;
@@ -766,7 +796,7 @@ export type TaggedExampleJob<T extends { job_key: string }> = T & {
  * when the pool allows it so the lineup is not five copies of the same card.
  */
 export function exampleJobsForLineup<T extends { job_key: string }>(
-  robots: Array<{ productName: string; jobs: T[] }>,
+  robots: Array<{ productName: string; jobs: T[] }>
 ): TaggedExampleJob<T>[] {
   const list = robots.filter(row => (row.productName || "").trim());
   if (list.length <= 1) {
@@ -811,7 +841,8 @@ export const JOBS_JOB_TITLE_CLASS =
   "mt-1 block font-display text-lg font-bold leading-snug text-slate-100 sm:text-xl";
 export const JOBS_META_CLASS =
   "mt-1.5 block font-mono text-sm text-emerald-400/90";
-export const JOBS_PLACE_CLASS = "mt-1 block text-sm leading-snug text-slate-400";
+export const JOBS_PLACE_CLASS =
+  "mt-1 block text-sm leading-snug text-slate-400";
 export const JOBS_PROCESS_NAV_CLASS =
   "font-mono text-sm font-bold uppercase tracking-[0.08em]";
 export const JOBS_RAIL_LINK_CLASS =
@@ -827,7 +858,9 @@ export const CRM_BACK_TO_JOBS_CTA = "Back to jobs →";
 
 /** Product name we can say out loud. Empty when we only have a generic "robot". */
 export function crmSaveJobsRobotLabel(productName?: string | null): string {
-  const raw = String(productName || "").replace(/\s+/g, " ").trim();
+  const raw = String(productName || "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!raw || /^your robot$/i.test(raw)) return "";
   return raw;
 }
@@ -862,7 +895,7 @@ export const CRM_PAGE_HEADLINE = "CRM";
 export const CRM_PAGE_NEXT = crmSaveJobsBlurb();
 export const CRM_HOW_TO_STEPS = [
   "Sign in so the jobs you kept stay here.",
-  "Open a job and apply. Proof of concept helps. Skip it if you don't have one.",
+  "Open a job. Name a model for the work or say you'll train one, then apply.",
   "After you apply, we follow up. Export if you already use another CRM.",
 ] as const;
 export const CRM_SUBHEAD_CLASS =
@@ -907,7 +940,9 @@ export type JobExplanationInput = {
 
 /** One sentence of work — not a sales pitch. */
 export function isSalesPlaceholder(text?: string | null): boolean {
-  const value = String(text || "").replace(/\s+/g, " ").trim();
+  const value = String(text || "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (value.length < 8) return true;
   return SALES_PITCH_RE.test(value);
 }
@@ -926,7 +961,9 @@ export function jobExplanation(input: JobExplanationInput): string {
     strippedAction,
   ];
   for (const raw of candidates) {
-    const text = String(raw || "").replace(/\s+/g, " ").trim();
+    const text = String(raw || "")
+      .replace(/\s+/g, " ")
+      .trim();
     if (text.length < 8) continue;
     if (SALES_PITCH_RE.test(text)) continue;
     const place = [input.company, input.industry].filter(Boolean).join(" · ");
@@ -945,15 +982,15 @@ export function jobsListHint(opts: {
   productName: string;
 }): string {
   if (opts.robotCount > 1) {
-    return "One sample job per robot. Rows start checked. Run each robot by itself for five jobs, then Open CRM.";
+    return "One sample job per robot. Rows start checked. Run each robot by itself for five jobs, then Open CRM. Apply from the desk.";
   }
-  return `Five example jobs ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM.`;
+  return `Five example jobs ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM. Apply from the desk.`;
 }
 
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
 export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
-  "Check a job to keep it. Open CRM to save the list, then apply.";
+  "Check a job to keep it. Open CRM to save the list. Apply from the desk.";
 export const JOBS_KEEP_LABEL = "Keep";
 export const JOBS_SKIP_LABEL = "Skip";
 
@@ -991,7 +1028,7 @@ export function showSignalPipelineNav(opts: {
 export function jobsHeaderCrmHref(
   pathname: string,
   src?: string | null,
-  signedIn = true,
+  signedIn = true
 ): string {
   if (showSignalPipelineNav({ pathname, src })) return "/crm";
   return jobsCrmOpenHref(signedIn);
@@ -1027,7 +1064,12 @@ export function showJobsSiteChrome(opts: {
   const params = queryParams(opts.search);
   const src = params.get("src") || "";
   if (isJobsChromePath(path)) return true;
-  if (path === "/intelligence" || path === "/compare" || path === "/vendor/design") return true;
+  if (
+    path === "/intelligence" ||
+    path === "/compare" ||
+    path === "/vendor/design"
+  )
+    return true;
   if (path.startsWith("/design/")) return true;
   if (isJobsHandoffSrc(src)) return true;
   if (path === "/signup" || path === "/login") {
@@ -1039,7 +1081,7 @@ export function showJobsSiteChrome(opts: {
 }
 
 export const FIND_JOBS_CTA = "Find jobs →";
-/** Apply on the desk and Job Cards. Violet, not neon green. Not the FIND hero. */
+/** Apply on the CRM desk. Violet, not neon green. Not a sibling of Open CRM on FIND. */
 export const JOBS_APPLY_HERO_CTA = "Apply to jobs →";
 export const JOBS_FIND_CTA_CLASS =
   "rfr-bevel inline-flex items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300";
@@ -1050,8 +1092,7 @@ export const JOBS_APPLY_CTA_BUTTON_CLASS =
 export const FIND_JOBS_HOME_HEADLINE = "Find Jobs for Robots.";
 export const FIND_JOBS_HOME_SUBHEAD =
   "Enter your URL, we match your robots to available jobs.";
-export const FIND_JOBS_HEADLINE_CLASS =
-  "rfr-find-headline mt-1 text-slate-100";
+export const FIND_JOBS_HEADLINE_CLASS = "rfr-find-headline mt-1 text-slate-100";
 /** Emerald Jobs chrome — same as Find jobs / nav Jobs, not Apply violet. */
 export const FIND_JOBS_HEADLINE_ACCENT_CLASS = "text-emerald-400";
 export const FIND_JOBS_SUBHEAD_CLASS =
@@ -1060,7 +1101,7 @@ export const JOBS_FOR_YOUR_ROBOT_HEADING = "Jobs for your robot";
 /** Page-level advance on the jobs list. Not on the card. */
 export const JOBS_NEXT_CTA = JOBS_SAVE_TO_CRM_CTA;
 export const JOBS_NEXT_HINT =
-  "Uncheck a row to skip it. Open CRM to save the list, then apply.";
+  "Uncheck a row to skip it. Open CRM to save the list. Apply from the desk.";
 export const JOBS_SEE_JOBS_CTA = "Here are the jobs →";
 
 export type JobsProcessStepId = "find" | "jobs" | "activate";
@@ -1092,15 +1133,18 @@ export function jobsProcessStepFromStage(stage: string): JobsProcessStepId {
   return "find";
 }
 
-/** Page-chrome wizard button: Find jobs on FIND. Apply stays on the desk and Job Cards. */
+/** Page-chrome wizard button: Find jobs on FIND. Open CRM on the jobs list. Apply stays on the desk. */
 export function jobsProcessActionLabel(step: JobsProcessStepId): string {
   if (step === "find") return FIND_JOBS_CTA;
-  if (step === "jobs") return JOBS_APPLY_HERO_CTA;
   return JOBS_NEXT_CTA;
 }
 
 export function jobsProcessActionClass(step: JobsProcessStepId): string {
-  return step === "jobs" ? JOBS_APPLY_CTA_CLASS : JOBS_FIND_CTA_CLASS;
+  if (step === "find" || step === "jobs" || step === "activate") {
+    return JOBS_FIND_CTA_CLASS;
+  }
+  const _exhaustive: never = step;
+  return _exhaustive;
 }
 
 export const JOBS_ACTIVATE_SRC = "jobs_activate";
@@ -1124,7 +1168,9 @@ export const JOBS_FRESH_HOME_EVENT = "rfr:jobs-fresh";
 
 export function isJobsHomePath(pathname: string | null | undefined): boolean {
   const path = (pathname || "").trim().split("?")[0] || "";
-  return path === "/" || path === "" || path === "/jobs" || path.startsWith("/jobs/");
+  return (
+    path === "/" || path === "" || path === "/jobs" || path.startsWith("/jobs/")
+  );
 }
 
 /**
@@ -1209,7 +1255,7 @@ export function goJobsFreshHome(): void {
  * preventDefault on CRM is why 01 FIND / header Jobs looked dead.
  */
 export function shouldInterceptJobsFreshHomeClick(
-  pathname?: string | null,
+  pathname?: string | null
 ): boolean {
   return isJobsHomePath(pathname);
 }
@@ -1227,7 +1273,7 @@ export function onJobsFreshHomeClick(event: {
       event.ctrlKey ||
       event.shiftKey ||
       event.altKey ||
-      (event.button != null && event.button !== 0),
+      (event.button != null && event.button !== 0)
   );
   clearJobsWorkspaceSession();
   if (newTab) return;
@@ -1255,7 +1301,8 @@ export function isJobsAutomateSrc(src: string | null | undefined): boolean {
 export function jobsActivateHref(submissionId?: number | null): string {
   const params = new URLSearchParams();
   params.set("src", JOBS_ACTIVATE_SRC);
-  if (submissionId && submissionId > 0) params.set("submission", String(submissionId));
+  if (submissionId && submissionId > 0)
+    params.set("submission", String(submissionId));
   return `/pipeline?${params.toString()}`;
 }
 
@@ -1263,7 +1310,8 @@ export function jobsActivateHref(submissionId?: number | null): string {
 export function jobsAutomateHref(submissionId?: number | null): string {
   const params = new URLSearchParams();
   params.set("src", JOBS_AUTOMATE_SRC);
-  if (submissionId && submissionId > 0) params.set("submission", String(submissionId));
+  if (submissionId && submissionId > 0)
+    params.set("submission", String(submissionId));
   return `/pipeline?${params.toString()}`;
 }
 
@@ -1278,7 +1326,7 @@ export function jobsPlaceHref(opts?: {
 export function jobsForActivatedPipeline<T extends { job_key: string }>(
   selected: T[],
   pool: T[],
-  cap = JOBS_ACTIVATE_CAP,
+  cap = JOBS_ACTIVATE_CAP
 ): T[] {
   const picked = selected.filter(job => job?.job_key);
   const seen = new Set(picked.map(job => job.job_key));
@@ -1290,7 +1338,7 @@ export function jobsForActivatedPipeline<T extends { job_key: string }>(
 export function jobsToActivate<T extends { job_key: string }>(
   selected: T[],
   pool: T[],
-  cap = JOBS_ACTIVATE_CAP,
+  cap = JOBS_ACTIVATE_CAP
 ): T[] {
   const picked = selected.filter(job => job?.job_key);
   const seed = picked.length > 0 ? picked : capExampleJobs(pool);
@@ -1301,23 +1349,27 @@ export function jobsToActivate<T extends { job_key: string }>(
 export function jobsDumpedToCrm<T extends { job_key: string }>(
   pool: T[],
   checkedKeys: string[],
-  cap = CRM_UNLOCKED_JOBS,
+  cap = CRM_UNLOCKED_JOBS
 ): T[] {
   const keys = new Set((checkedKeys || []).filter(Boolean));
-  return pool.filter(job => job?.job_key && keys.has(job.job_key)).slice(0, cap);
+  return pool
+    .filter(job => job?.job_key && keys.has(job.job_key))
+    .slice(0, cap);
 }
 
 /** Open CRM: checked jobs, or the example cap so step 03 is never empty. */
 export function jobsForCrmDesk<T extends { job_key: string }>(
   pool: T[],
   checkedKeys: string[],
-  cap = CRM_UNLOCKED_JOBS,
+  cap = CRM_UNLOCKED_JOBS
 ): T[] {
   const dumped = jobsDumpedToCrm(pool, checkedKeys, cap);
   return dumped.length > 0 ? dumped : jobsToActivate([], pool, cap);
 }
 
-export function crmDeskJobKeys<T extends { job_key: string }>(jobs: T[]): string[] {
+export function crmDeskJobKeys<T extends { job_key: string }>(
+  jobs: T[]
+): string[] {
   return jobs.map(job => job.job_key).filter(Boolean);
 }
 
@@ -1336,7 +1388,7 @@ export function crmSelectAllKeys(poolKeys: string[]): string[] {
 export function crmToggleSelectedKey(
   selected: string[],
   jobKey: string,
-  on: boolean,
+  on: boolean
 ): string[] {
   if (!jobKey) return crmSelectAllKeys(selected);
   const set = new Set(selected.filter(Boolean));
@@ -1351,7 +1403,7 @@ export function crmToggleSelectedKey(
  */
 export function crmSyncSelectedKeys(
   prev: string[],
-  poolKeys: string[],
+  poolKeys: string[]
 ): string[] {
   const pool = crmSelectAllKeys(poolKeys);
   if (pool.length === 0) return [];
@@ -1362,17 +1414,19 @@ export function crmSyncSelectedKeys(
 
 export function crmActingKeepsSelection(
   selected: string[],
-  actedJobKey: string,
+  actedJobKey: string
 ): string[] {
   return crmToggleSelectedKey(selected, actedJobKey, true);
 }
 
 export function crmSelectAllLabel(
   count: number,
-  cap = CRM_UNLOCKED_JOBS,
+  cap = CRM_UNLOCKED_JOBS
 ): string {
   const n = Math.max(0, count);
-  return n >= cap ? `${CRM_SELECT_ALL_LABEL} ${cap}` : `${CRM_SELECT_ALL_LABEL} ${n || cap}`;
+  return n >= cap
+    ? `${CRM_SELECT_ALL_LABEL} ${cap}`
+    : `${CRM_SELECT_ALL_LABEL} ${n || cap}`;
 }
 
 /** One keep prompt. N is selected / kept count — never a hardcoded 5 when they kept 3. */
@@ -1383,7 +1437,7 @@ export function keepTheseJobsPrompt(count: number): string {
 
 export function crmCollectedCountLabel(
   collected: number,
-  cap = CRM_UNLOCKED_JOBS,
+  cap = CRM_UNLOCKED_JOBS
 ): string {
   const n = Math.min(Math.max(0, collected), cap);
   return `${n} of ${cap} kept`;
@@ -1391,28 +1445,30 @@ export function crmCollectedCountLabel(
 
 export function defaultCheckedJobKeys<T extends { job_key: string }>(
   jobs: T[],
-  cap = JOBS_EXAMPLE_CAP,
+  cap = JOBS_EXAMPLE_CAP
 ): string[] {
   return capExampleJobs(jobs, cap).map(job => job.job_key);
 }
 
 export function defaultCheckedKeysForLineup<T extends { job_key: string }>(
-  robots: Array<{ productName: string; jobs: T[] }>,
+  robots: Array<{ productName: string; jobs: T[] }>
 ): string[] {
   return exampleJobsForLineup(robots).map(job => job.job_key);
 }
 
 export const RAIL_STEP_HINT = {
   find: FIND_JOBS_HOME_SUBHEAD,
-  profile: "Confirm we understood this robot. Then find jobs against these capabilities.",
-  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each. Run each SKU by itself, then Open CRM.",
-  pipeline: "The jobs you kept live here. Open one and apply.",
+  profile:
+    "Confirm we understood this robot. Then find jobs against these capabilities.",
+  jobs: "Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each. Run each SKU by itself, then Open CRM. Apply from the desk.",
+  pipeline:
+    "The jobs you kept live here. Open one, name a model for the work or say you'll train one, then apply.",
 } as const;
 
 /** The job Next will place: expanded card, else the first visible job. */
 export function jobForNextStep<T extends { job_key: string }>(
   jobs: T[],
-  expandedKey: string | null | undefined,
+  expandedKey: string | null | undefined
 ): T | null {
   if (expandedKey) {
     const hit = jobs.find(j => j.job_key === expandedKey);
@@ -1452,7 +1508,7 @@ export function buyerLeadsToShow<T>(opts: {
 export function placeBuyersToShow<T extends { industry?: string | null }>(
   rows: T[],
   industry?: string | null,
-  cap = BUYER_LEADS_ANON_CAP,
+  cap = BUYER_LEADS_ANON_CAP
 ): T[] {
   const needle = (industry || "").trim().toLowerCase();
   const scoped = needle
@@ -1482,35 +1538,41 @@ export function jobsSignupHref(nextHref: string, src: string): string {
  */
 export function jobsCrmOpenHref(
   signedIn: boolean,
-  submissionId?: number | null,
+  submissionId?: number | null
 ): string {
   const dest = jobsActivateHref(submissionId);
   return signedIn ? dest : jobsSignupHref(dest, JOBS_ACTIVATE_SRC);
 }
 
 /** True when leaving the desk should restore Job Cards instead of empty FIND. */
-export function jobsCrmHasRestore(opts: {
-  submissionId?: number | null;
-  jobCount?: number | null;
-} = {}): boolean {
+export function jobsCrmHasRestore(
+  opts: {
+    submissionId?: number | null;
+    jobCount?: number | null;
+  } = {}
+): boolean {
   if (opts.submissionId && opts.submissionId > 0) return true;
   return (opts.jobCount || 0) > 0;
 }
 
 /** Leave the CRM desk: Job Cards when they have a run, otherwise FIND home. */
-export function jobsCrmLeaveHref(opts: {
-  submissionId?: number | null;
-  jobCount?: number | null;
-} = {}): string {
+export function jobsCrmLeaveHref(
+  opts: {
+    submissionId?: number | null;
+    jobCount?: number | null;
+  } = {}
+): string {
   return jobsCrmHasRestore(opts)
     ? jobsWorkspaceRestoreHref()
     : jobsFreshHomeHref();
 }
 
-export function jobsCrmLeaveLabel(opts: {
-  submissionId?: number | null;
-  jobCount?: number | null;
-} = {}): string {
+export function jobsCrmLeaveLabel(
+  opts: {
+    submissionId?: number | null;
+    jobCount?: number | null;
+  } = {}
+): string {
   return jobsCrmHasRestore(opts) ? CRM_BACK_TO_JOBS_CTA : FIND_JOBS_CTA;
 }
 
@@ -1521,7 +1583,7 @@ export function jobsCrmLeaveLabel(opts: {
 export function jobsCrmNextHref(
   signedIn: boolean,
   submissionId?: number | null,
-  jobCount?: number | null,
+  jobCount?: number | null
 ): string {
   if (!signedIn) return jobsCrmOpenHref(false, submissionId);
   return jobsCrmLeaveHref({ submissionId, jobCount });
@@ -1529,7 +1591,7 @@ export function jobsCrmNextHref(
 
 export function jobsCrmNextLabel(
   signedIn: boolean,
-  opts: { submissionId?: number | null; jobCount?: number | null } = {},
+  opts: { submissionId?: number | null; jobCount?: number | null } = {}
 ): string {
   return signedIn ? jobsCrmLeaveLabel(opts) : CRM_SIGNUP_NEXT_CTA;
 }
@@ -1555,7 +1617,7 @@ const PIPELINE_ACTIVITY_CAP = 40;
 
 /** Pipeline / FIND actions land on the CRM job record for later review. */
 export function recordPipelineActivity(
-  event: Omit<PipelineActivityEvent, "at">,
+  event: Omit<PipelineActivityEvent, "at">
 ): void {
   if (typeof window === "undefined") return;
   try {
@@ -1563,7 +1625,10 @@ export function recordPipelineActivity(
       ...event,
       at: new Date().toISOString(),
     };
-    const list = [next, ...readPipelineActivity()].slice(0, PIPELINE_ACTIVITY_CAP);
+    const list = [next, ...readPipelineActivity()].slice(
+      0,
+      PIPELINE_ACTIVITY_CAP
+    );
     window.localStorage.setItem(PIPELINE_ACTIVITY_KEY, JSON.stringify(list));
   } catch {
     /* ignore */
@@ -1585,7 +1650,7 @@ export function readPipelineActivity(): PipelineActivityEvent[] {
 /** Desk-level events (no jobKey) plus events for this job, scoped to FIND URL. */
 export function pipelineActivityForJob(
   jobKey?: string | null,
-  robotUrl?: string | null,
+  robotUrl?: string | null
 ): PipelineActivityEvent[] {
   const all = readPipelineActivity();
   const currentUrl = (robotUrl || "").trim();
@@ -1629,7 +1694,9 @@ export function isJobsHomeDest(dest: string | null | undefined): boolean {
 }
 
 /** Auth return to `/` or `/jobs…` may restore in-progress work once. */
-export function markJobsWorkspaceRestoreIfHome(dest: string | null | undefined): void {
+export function markJobsWorkspaceRestoreIfHome(
+  dest: string | null | undefined
+): void {
   if (isJobsHomeDest(dest)) markJobsWorkspaceRestoreOnce();
 }
 
@@ -1659,7 +1726,9 @@ export function readNavigationType(): string | number | null {
     | PerformanceNavigationTiming
     | undefined;
   if (entry?.type) return entry.type;
-  const legacy = (performance as Performance & { navigation?: { type?: number } }).navigation?.type;
+  const legacy = (
+    performance as Performance & { navigation?: { type?: number } }
+  ).navigation?.type;
   return typeof legacy === "number" ? legacy : null;
 }
 

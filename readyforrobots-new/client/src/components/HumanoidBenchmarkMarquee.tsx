@@ -41,7 +41,11 @@ function scoreClass(score: number) {
 function MarqueeItem({ robot }: { robot: MarqueeRobot }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-2.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 shadow-sm">
-      <RobotAvatar vendor={robot.vendor} modelSlug={robot.modelSlug} size="sm" />
+      <RobotAvatar
+        vendor={robot.vendor}
+        modelSlug={robot.modelSlug}
+        size="sm"
+      />
       {robot.productUrl ? (
         <a
           href={robot.productUrl}
@@ -55,7 +59,11 @@ function MarqueeItem({ robot }: { robot: MarqueeRobot }) {
         <span className="text-xs font-bold text-gray-900">{robot.name}</span>
       )}
       <span className="text-[10px] text-gray-400">{robot.vendor}</span>
-      <span className={`font-mono-data text-[11px] font-bold ${scoreClass(robot.score)}`}>{robot.score}</span>
+      <span
+        className={`font-mono-data text-[11px] font-bold ${scoreClass(robot.score)}`}
+      >
+        {robot.score}
+      </span>
       <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
         {STATUS_LABEL[robot.status] ?? robot.status}
       </span>
@@ -63,33 +71,54 @@ function MarqueeItem({ robot }: { robot: MarqueeRobot }) {
   );
 }
 
-export default function HumanoidBenchmarkMarquee({ compact = false }: { compact?: boolean }) {
+export default function HumanoidBenchmarkMarquee({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
   const [robots, setRobots] = useState<MarqueeRobot[]>(FALLBACK_ROBOTS);
   const [paused, setPaused] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
-    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    setReduceMotion(
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
   }, []);
 
   useEffect(() => {
     let cancelled = false;
     fetch(`${getPublicReadApiBase()}/api/humanoid/robots`, liveFetchInit())
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
         if (cancelled || !Array.isArray(data?.robots)) return;
         const mapped = data.robots
-          .filter((row: { score_total?: number }) => typeof row.score_total === "number")
-          .sort((a: { score_total: number }, b: { score_total: number }) => b.score_total - a.score_total)
+          .filter(
+            (row: { score_total?: number }) =>
+              typeof row.score_total === "number"
+          )
+          .sort(
+            (a: { score_total: number }, b: { score_total: number }) =>
+              b.score_total - a.score_total
+          )
           .slice(0, 14)
-          .map((row: { name?: string; vendor?: string; model_slug?: string; product_url?: string; score_total?: number; status?: string }) => ({
-            name: row.name || "Unknown",
-            vendor: row.vendor || "",
-            modelSlug: row.model_slug,
-            productUrl: row.product_url,
-            score: Math.round(row.score_total ?? 0),
-            status: row.status || "research",
-          }));
+          .map(
+            (row: {
+              name?: string;
+              vendor?: string;
+              model_slug?: string;
+              product_url?: string;
+              score_total?: number;
+              status?: string;
+            }) => ({
+              name: row.name || "Unknown",
+              vendor: row.vendor || "",
+              modelSlug: row.model_slug,
+              productUrl: row.product_url,
+              score: Math.round(row.score_total ?? 0),
+              status: row.status || "research",
+            })
+          );
         if (mapped.length) setRobots(mapped);
       })
       .catch(() => undefined);
@@ -106,7 +135,9 @@ export default function HumanoidBenchmarkMarquee({ compact = false }: { compact?
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className={`container flex items-center gap-4 overflow-hidden ${compact ? "py-3" : "py-4"}`}>
+      <div
+        className={`container flex items-center gap-4 overflow-hidden ${compact ? "py-3" : "py-4"}`}
+      >
         <div className="flex shrink-0 items-center gap-2">
           <LiveDot />
           <p className="whitespace-nowrap section-eyebrow mb-0 text-[10px]">
@@ -117,19 +148,27 @@ export default function HumanoidBenchmarkMarquee({ compact = false }: { compact?
         <div className="relative min-w-0 flex-1 overflow-hidden">
           {reduceMotion ? (
             <div className="flex gap-2 overflow-x-auto pb-0.5">
-              {robots.slice(0, compact ? 6 : 8).map((robot) => (
-                <MarqueeItem key={`${robot.name}-${robot.vendor}`} robot={robot} />
+              {robots.slice(0, compact ? 6 : 8).map(robot => (
+                <MarqueeItem
+                  key={`${robot.name}-${robot.vendor}`}
+                  robot={robot}
+                />
               ))}
             </div>
           ) : (
             <div
               className="flex w-max gap-2.5"
               style={{
-                animation: paused ? "none" : "rfr-benchmark-marquee 48s linear infinite",
+                animation: paused
+                  ? "none"
+                  : "rfr-benchmark-marquee 48s linear infinite",
               }}
             >
               {loop.map((robot, index) => (
-                <MarqueeItem key={`${robot.name}-${robot.vendor}-${index}`} robot={robot} />
+                <MarqueeItem
+                  key={`${robot.name}-${robot.vendor}-${index}`}
+                  robot={robot}
+                />
               ))}
             </div>
           )}

@@ -41,14 +41,30 @@ export default function PageHeroDark({
 }: PageHeroDarkProps) {
   return (
     <section className={`page-hero-dark ${className}`}>
-      {showGrid ? <div className="page-hero-dark-grid pointer-events-none" aria-hidden /> : null}
-      <div className={`container ${maxWidthClass} page-hero-dark-inner ${innerClassName}`}>
+      {showGrid ? (
+        <div className="page-hero-dark-grid pointer-events-none" aria-hidden />
+      ) : null}
+      <div
+        className={`container ${maxWidthClass} page-hero-dark-inner ${innerClassName}`}
+      >
         {badge}
-        {eyebrow ? <p className="section-eyebrow-on-dark mb-2">{eyebrow}</p> : null}
-        <div className={stats?.length ? "flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between" : undefined}>
+        {eyebrow ? (
+          <p className="section-eyebrow-on-dark mb-2">{eyebrow}</p>
+        ) : null}
+        <div
+          className={
+            stats?.length
+              ? "flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"
+              : undefined
+          }
+        >
           <div className="min-w-0">
             <h1 className="page-hero-title">{title}</h1>
-            {description ? <div className="page-hero-description mt-3 max-w-2xl">{description}</div> : null}
+            {description ? (
+              <div className="page-hero-description mt-3 max-w-2xl">
+                {description}
+              </div>
+            ) : null}
             {actions ? <div className="mt-6">{actions}</div> : null}
           </div>
           {stats?.length ? (
@@ -59,10 +75,14 @@ export default function PageHeroDark({
                   className="page-hero-stat-card"
                   style={{ animationDelay: `${index * 80}ms` }}
                 >
-                  <div className={`font-mono-data text-lg font-black sm:text-xl ${statToneClass[stat.tone ?? "emerald"]}`}>
+                  <div
+                    className={`font-mono-data text-lg font-black sm:text-xl ${statToneClass[stat.tone ?? "emerald"]}`}
+                  >
                     {stat.value}
                   </div>
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{stat.label}</div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                    {stat.label}
+                  </div>
                 </div>
               ))}
             </div>

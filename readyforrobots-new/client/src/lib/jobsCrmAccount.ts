@@ -52,7 +52,8 @@ export const JOBS_EMPLOYER_HOLD_CTA = "Hold this slot";
 export const JOBS_EMPLOYER_CONNECT_CTA = "Connect us";
 export const JOBS_OEM_CONFIRM_HOLD_CTA = "Confirm hold";
 export const JOBS_OEM_RELEASE_HOLD_CTA = "Release hold";
-export const JOBS_PROPOSED_PRICE_LABEL = "Proposed monthly price you will charge";
+export const JOBS_PROPOSED_PRICE_LABEL =
+  "Proposed monthly price you will charge";
 export const JOBS_PROPOSED_PRICE_HINT =
   "Your proposed offer — not a rate this site invented. Employers see this as your quote.";
 export const JOBS_MODEL_SELECT_LABEL = "Model they will use";
@@ -170,9 +171,77 @@ export type KeptJobRow = {
   robot_name?: string | null;
   robot_url?: string | null;
   employer_email?: string | null;
+  work_task_model_kind?: string | null;
+  work_task_model_source?: string | null;
   application?: JobsCrmApplication | null;
   created_at?: string | null;
 };
+
+export const WORK_TASK_MODEL_KINDS = [
+  "unknown",
+  "source",
+  "self_train",
+] as const;
+export type WorkTaskModelKind = (typeof WORK_TASK_MODEL_KINDS)[number];
+
+export type WorkTaskModelAnswer =
+  | { kind: "unknown" }
+  | { kind: "source"; source: string }
+  | { kind: "self_train" };
+
+export const WORK_TASK_MODEL_QUESTION = "Do you have a model for this work?";
+export const WORK_TASK_MODEL_SOURCE_OPTION = "Yes. Name the model source.";
+export const WORK_TASK_MODEL_SOURCE_HINT =
+  "Product, vendor, or known policy. Your words. We will not guess a name.";
+export const WORK_TASK_MODEL_SOURCE_PLACEHOLDER = "Model name or vendor";
+export const WORK_TASK_MODEL_SELF_OPTION = "We'll train this for the job.";
+export const WORK_TASK_MODEL_UNKNOWN_HINT = "Unknown until you answer.";
+export const WORK_TASK_MODEL_SOURCE_REQUIRED =
+  "Name the model source. We will not guess.";
+
+export function parseWorkTaskModel(
+  row:
+    | {
+        work_task_model_kind?: string | null;
+        work_task_model_source?: string | null;
+      }
+    | null
+    | undefined
+): WorkTaskModelAnswer {
+  return normalizeWorkTaskModel({
+    kind: row?.work_task_model_kind,
+    source: row?.work_task_model_source,
+    requireSource: false,
+  });
+}
+
+export function normalizeWorkTaskModel(input: {
+  kind?: string | null;
+  source?: string | null;
+  requireSource?: boolean;
+}): WorkTaskModelAnswer {
+  const kind = String(input.kind || "")
+    .trim()
+    .toLowerCase();
+  const source = String(input.source || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (kind === "self_train") return { kind: "self_train" };
+  if (kind === "source") {
+    if (source) return { kind: "source", source };
+    if (input.requireSource) {
+      throw new Error(WORK_TASK_MODEL_SOURCE_REQUIRED);
+    }
+    return { kind: "unknown" };
+  }
+  return { kind: "unknown" };
+}
+
+export function workTaskModelListLine(answer: WorkTaskModelAnswer): string {
+  if (answer.kind === "source") return answer.source;
+  if (answer.kind === "self_train") return "We'll train this";
+  return "Model not named yet";
+}
 
 export type KeepJobsResult = {
   saved_count: number;
@@ -225,7 +294,7 @@ export function canSubmitNextStepsOffer(opts: {
 
 export function jobsCrmOfferHref(
   signedIn: boolean,
-  submissionId?: number | null,
+  submissionId?: number | null
 ): string {
   const dest = jobsActivateHref(submissionId);
   const offer = dest.includes("next=offer")
@@ -247,9 +316,14 @@ export function openJobsCrmNextStepsForm(): void {
   }
 }
 
-export function isJobsCrmOfferQuery(search: string | null | undefined): boolean {
+export function isJobsCrmOfferQuery(
+  search: string | null | undefined
+): boolean {
   try {
-    return new URLSearchParams((search || "").replace(/^\?/, "")).get("next") === "offer";
+    return (
+      new URLSearchParams((search || "").replace(/^\?/, "")).get("next") ===
+      "offer"
+    );
   } catch {
     return false;
   }
@@ -258,7 +332,7 @@ export function isJobsCrmOfferQuery(search: string | null | undefined): boolean 
 async function jobsCrmFetch<T>(
   path: string,
   token: string,
-  init: RequestInit = {},
+  init: RequestInit = {}
 ): Promise<T> {
   const base = getApiBase();
   const headers = {
@@ -269,7 +343,7 @@ async function jobsCrmFetch<T>(
   };
   const res = await fetch(
     `${base}${path}`,
-    liveFetchInit({ ...init, headers }),
+    liveFetchInit({ ...init, headers })
   );
   if (!res.ok) {
     let detail = `jobs-crm ${res.status}`;
@@ -291,7 +365,7 @@ export async function keepJobsOnAccount(
     robotName?: string;
     robotUrl?: string;
     submissionId?: number | null;
-  },
+  }
 ): Promise<KeepJobsResult> {
   return jobsCrmFetch<KeepJobsResult>("/api/jobs-crm/keep", token, {
     method: "POST",
@@ -305,20 +379,42 @@ export async function keepJobsOnAccount(
 }
 
 export async function fetchKeptJobs(token: string): Promise<KeptJobRow[]> {
-  const data = await jobsCrmFetch<{ jobs: KeptJobRow[] }>("/api/jobs-crm/jobs", token);
+  const data = await jobsCrmFetch<{ jobs: KeptJobRow[] }>(
+    "/api/jobs-crm/jobs",
+    token
+  );
   return data.jobs || [];
+}
+
+export async function saveWorkTaskModelOnAccount(
+  token: string,
+  body: { jobKey: string; kind: WorkTaskModelKind; source?: string }
+): Promise<KeptJobRow> {
+  const answer = normalizeWorkTaskModel({
+    kind: body.kind,
+    source: body.source,
+    requireSource: body.kind === "source",
+  });
+  return jobsCrmFetch<KeptJobRow>("/api/jobs-crm/jobs/task-model", token, {
+    method: "POST",
+    body: JSON.stringify({
+      job_key: body.jobKey,
+      kind: answer.kind,
+      source: answer.kind === "source" ? answer.source : null,
+    }),
+  });
 }
 
 export async function fetchCatalogSkus(
   token: string,
-  opts: { url?: string; company?: string },
+  opts: { url?: string; company?: string }
 ): Promise<CatalogSku[]> {
   const q = new URLSearchParams();
   if (opts.url) q.set("url", opts.url);
   if (opts.company) q.set("company", opts.company);
   const data = await jobsCrmFetch<{ skus: CatalogSku[] }>(
     `/api/jobs-crm/skus?${q.toString()}`,
-    token,
+    token
   );
   return data.skus || [];
 }
@@ -352,7 +448,7 @@ export async function applyJobOnAccount(
     companyName?: string;
     job?: MatchJob;
     documentIds?: string[];
-  },
+  }
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>("/api/jobs-crm/apply", token, {
     method: "POST",
@@ -385,7 +481,7 @@ export async function applySelectedJobsOnAccount(
     why?: string;
     companyName?: string;
     documentIds?: string[];
-  },
+  }
 ): Promise<{
   applied: JobsCrmApplication[];
   errors: { job_key: string; error: string }[];
@@ -410,18 +506,18 @@ export async function applySelectedJobsOnAccount(
 
 export async function sendPreparedApplication(
   token: string,
-  applicationId: string,
+  applicationId: string
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch(
     `/api/jobs-crm/applications/${applicationId}/send`,
     token,
-    { method: "POST", body: JSON.stringify({}) },
+    { method: "POST", body: JSON.stringify({}) }
   );
 }
 
 export async function fetchApplyPrep(
   token: string,
-  opts: { robot?: string; company?: string; sku?: string },
+  opts: { robot?: string; company?: string; sku?: string }
 ): Promise<{
   video_url: string | null;
   video_search_url: string;
@@ -438,7 +534,7 @@ export async function fetchApplyPrep(
 export async function saveApplicationMeetingUrl(
   token: string,
   applicationId: string,
-  meetingUrl: string,
+  meetingUrl: string
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch(
     `/api/jobs-crm/applications/${applicationId}/meeting-url`,
@@ -446,14 +542,16 @@ export async function saveApplicationMeetingUrl(
     {
       method: "POST",
       body: JSON.stringify({ meeting_url: meetingUrl }),
-    },
+    }
   );
 }
 
-export async function fetchRobotDocuments(token: string): Promise<RobotDocument[]> {
+export async function fetchRobotDocuments(
+  token: string
+): Promise<RobotDocument[]> {
   const data = await jobsCrmFetch<{ documents: RobotDocument[] }>(
     "/api/jobs-crm/documents",
-    token,
+    token
   );
   return data.documents || [];
 }
@@ -461,7 +559,7 @@ export async function fetchRobotDocuments(token: string): Promise<RobotDocument[
 export async function uploadRobotDocument(
   token: string,
   file: File,
-  kind = "spec",
+  kind = "spec"
 ): Promise<RobotDocument> {
   const base = getApiBase();
   const form = new FormData();
@@ -476,7 +574,7 @@ export async function uploadRobotDocument(
         ...(authHeader(token) as Record<string, string>),
       },
       body: form,
-    }),
+    })
   );
   if (!res.ok) {
     let detail = `jobs-crm ${res.status}`;
@@ -493,68 +591,68 @@ export async function uploadRobotDocument(
 
 export async function confirmInterviewOnAccount(
   token: string,
-  applicationId: string,
+  applicationId: string
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>(
     `/api/jobs-crm/applications/${applicationId}/confirm-interview`,
     token,
-    { method: "POST" },
+    { method: "POST" }
   );
 }
 
 export async function confirmHoldOnAccount(
   token: string,
-  applicationId: string,
+  applicationId: string
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>(
     `/api/jobs-crm/applications/${applicationId}/confirm-hold`,
     token,
-    { method: "POST" },
+    { method: "POST" }
   );
 }
 
 export async function releaseHoldOnAccount(
   token: string,
-  applicationId: string,
+  applicationId: string
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>(
     `/api/jobs-crm/applications/${applicationId}/release-hold`,
     token,
-    { method: "POST" },
+    { method: "POST" }
   );
 }
 
 export async function markApplicationOutcome(
   token: string,
   applicationId: string,
-  outcome: "success" | "failed",
+  outcome: "success" | "failed"
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>(
     `/api/jobs-crm/applications/${applicationId}/outcome`,
     token,
-    { method: "POST", body: JSON.stringify({ outcome }) },
+    { method: "POST", body: JSON.stringify({ outcome }) }
   );
 }
 
 export async function fetchApplicationThread(
   token: string,
-  applicationId: string,
+  applicationId: string
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>(
     `/api/jobs-crm/applications/${applicationId}`,
-    token,
+    token
   );
 }
 
 export async function replyOnApplication(
   token: string,
   applicationId: string,
-  body: string,
+  body: string
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>(
     `/api/jobs-crm/applications/${applicationId}/reply`,
     token,
-    { method: "POST", body: JSON.stringify({ body }) },
+    { method: "POST", body: JSON.stringify({ body }) }
   );
 }
 
@@ -562,7 +660,7 @@ export async function pasteInboundReply(
   token: string,
   applicationId: string,
   body: string,
-  fromEmail?: string,
+  fromEmail?: string
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>(
     `/api/jobs-crm/applications/${applicationId}/paste-inbound`,
@@ -570,13 +668,13 @@ export async function pasteInboundReply(
     {
       method: "POST",
       body: JSON.stringify({ body, from_email: fromEmail || null }),
-    },
+    }
   );
 }
 
 export async function postJobsCrmActivity(
   token: string,
-  event: { kind: string; label: string; jobKey?: string; company?: string },
+  event: { kind: string; label: string; jobKey?: string; company?: string }
 ): Promise<void> {
   await jobsCrmFetch("/api/jobs-crm/activity", token, {
     method: "POST",
@@ -616,7 +714,7 @@ function normalizeRobotName(name?: string | null): string {
 /** Kept row belongs to the FIND robot currently on the desk — never a prior SKU. */
 export function keptRowMatchesRobot(
   row: Pick<KeptJobRow, "robot_url" | "robot_name">,
-  current: { url?: string | null; name?: string | null },
+  current: { url?: string | null; name?: string | null }
 ): boolean {
   const currentUrl = (current.url || "").trim();
   const rowUrl = (row.robot_url || "").trim();
@@ -661,7 +759,7 @@ export function crmDeskForCurrentRobot(opts: {
   const current = { url: snapUrl, name: snap.productName };
   const handoffJobs = snap.jobs || [];
   const handoffKeys = new Set(
-    handoffJobs.map(job => job.job_key).filter(Boolean),
+    handoffJobs.map(job => job.job_key).filter(Boolean)
   );
   const rows = opts.accountRows.filter(row => {
     if (!keptRowMatchesRobot(row, current)) return false;
@@ -690,7 +788,9 @@ export function threadStateLabel(state: string | null | undefined): string {
   return state || "Stored";
 }
 
-export function applicationStatusLabel(status: string | null | undefined): string {
+export function applicationStatusLabel(
+  status: string | null | undefined
+): string {
   const key = (status || "").trim();
   if (key === "accepted") return "Accepted";
   if (key === "interview_requested") return "Interview requested";
@@ -730,7 +830,8 @@ export const JOBS_DECLINE_REASONS = [
   },
 ] as const;
 
-export type JobsDeclineReasonCode = (typeof JOBS_DECLINE_REASONS)[number]["code"];
+export type JobsDeclineReasonCode =
+  (typeof JOBS_DECLINE_REASONS)[number]["code"];
 
 export function declineReasonLabel(code: string | null | undefined): string {
   const key = (code || "").trim();

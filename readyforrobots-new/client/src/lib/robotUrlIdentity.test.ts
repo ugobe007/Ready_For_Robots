@@ -110,12 +110,12 @@ function deskForCurrent() {
 describe("robot URL identity", () => {
   it("canonicalizes host case and trailing slash", () => {
     expect(canonicalRobotUrl("https://WWW.Agrobot.com/")).toBe(
-      "https://www.agrobot.com",
+      "https://www.agrobot.com"
     );
     expect(sameRobotUrl(A_URL, "https://www.agrobot.com")).toBe(true);
     expect(sameRobotUrl(A_URL, B_URL)).toBe(false);
     expect(emptyRobotIdentity(B_URL).url).toBe(
-      "https://www.greenfieldincorporated.com",
+      "https://www.greenfieldincorporated.com"
     );
     expect(isCurrentRobotSubmit(A_URL, "https://www.agrobot.com/")).toBe(true);
     expect(isAbortError({ name: "AbortError", message: "aborted" })).toBe(true);
@@ -123,16 +123,16 @@ describe("robot URL identity", () => {
 
   it("does not map AbortError or Failed to fetch to Research failed", () => {
     expect(isSilentFindError({ name: "AbortError", message: "aborted" })).toBe(
-      true,
+      true
     );
-    expect(isSilentFindError({ name: "TypeError", message: "Failed to fetch" })).toBe(
-      true,
-    );
+    expect(
+      isSilentFindError({ name: "TypeError", message: "Failed to fetch" })
+    ).toBe(true);
     expect(
       findUserFacingError(
         { name: "TypeError", message: "Failed to fetch" },
-        "Research failed. Check the URL and try again.",
-      ),
+        "Research failed. Check the URL and try again."
+      )
     ).toBeNull();
   });
 });
@@ -149,7 +149,9 @@ describe("FIND A then FIND B never mixes robot identity", () => {
       jobs: [A_JOB],
     });
     expect(deskForCurrent().product).toBe("strawberry robot");
-    expect(deskForCurrent().jobs.map(j => j.title)).toContain("Work orchard rows");
+    expect(deskForCurrent().jobs.map(j => j.title)).toContain(
+      "Work orchard rows"
+    );
 
     beginJobsHandoffForUrl(B_URL, "BOT#25");
     const desk = deskForCurrent();
@@ -172,7 +174,7 @@ describe("FIND A then FIND B never mixes robot identity", () => {
     expect(desk.product).toBe("strawberry robot");
     expect(desk.jobs.map(j => j.title)).toEqual(["Work orchard rows"]);
     expect(desk.jobs.some(j => /tote|BOT#25|Greenfield/i.test(j.title))).toBe(
-      false,
+      false
     );
     expect(loadJobsHandoffSnapshot(B_URL)).toBeNull();
   });
@@ -191,7 +193,7 @@ describe("FIND A then FIND B never mixes robot identity", () => {
     expect(greenfield.product).toBe("BOT#25");
     expect(greenfield.jobs).toEqual([]);
     expect(greenfield.jobs.some(j => /orchard|strawberry/i.test(j.title))).toBe(
-      false,
+      false
     );
 
     saveJobsHandoffSnapshot({
@@ -206,7 +208,9 @@ describe("FIND A then FIND B never mixes robot identity", () => {
     expect(agrobot.product).toBe("strawberry robot");
     expect(agrobot.robotUrl).toBe(canonicalRobotUrl(A_URL));
     expect(agrobot.jobs.map(j => j.job_key)).toContain(A_JOB.job_key);
-    expect(agrobot.jobs.map(j => j.job_key)).not.toContain("return-empty-totes");
+    expect(agrobot.jobs.map(j => j.job_key)).not.toContain(
+      "return-empty-totes"
+    );
     expect(agrobot.product).not.toMatch(/BOT#25|Greenfield/i);
   });
 
@@ -256,7 +260,7 @@ describe("canStartFindSubmit isolates URL identity", () => {
         inFlight: true,
         stage: "research",
         currentUrl: A_URL,
-      }),
+      })
     ).toBe(false);
     expect(
       canStartFindSubmit({
@@ -264,14 +268,14 @@ describe("canStartFindSubmit isolates URL identity", () => {
         inFlight: true,
         stage: "research",
         currentUrl: A_URL,
-      }),
+      })
     ).toBe(true);
     expect(
       canStartFindSubmit({
         url: A_URL,
         inFlight: true,
         stage: "find",
-      }),
+      })
     ).toBe(false);
   });
 });
@@ -280,15 +284,17 @@ describe("FIND / CRM source canaries — robot-job-match is not the desk", () =>
   it("workspace flushes identity on submit and never calls robot-job-match", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const submitFind = workspace.slice(
       workspace.indexOf("async function submitFind"),
-      workspace.indexOf("async function confirmSelection"),
+      workspace.indexOf("async function confirmSelection")
     );
     expect(submitFind).toMatch(/bindSubmittedRobot\(submitUrl\)/);
     expect(submitFind).toMatch(/stillThisSubmit/);
-    expect(submitFind).toMatch(/const research = bindSubmittedRobot\(submitUrl\)/);
+    expect(submitFind).toMatch(
+      /const research = bindSubmittedRobot\(submitUrl\)/
+    );
     expect(submitFind).not.toMatch(/researchAbortRef\.current\?\.abort\(\)/);
     expect(submitFind).toMatch(/fetchRobotJobSearch/);
     expect(submitFind).not.toMatch(/fetchRobotJobMatch/);
@@ -298,7 +304,7 @@ describe("FIND / CRM source canaries — robot-job-match is not the desk", () =>
     expect(workspace).toMatch(/clearJobsHandoffSnapshot/);
     const desk = readFileSync(
       join(here, "../components/JobsCrmDesk.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(desk).toMatch(/crmDeskForCurrentRobot/);
     expect(desk).not.toMatch(/robot-job-match/);

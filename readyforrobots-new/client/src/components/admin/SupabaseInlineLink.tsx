@@ -34,9 +34,13 @@ export default function SupabaseInlineLink({
   const cls = [
     "cursor-pointer font-medium underline underline-offset-2 bg-transparent border-0 p-0 inline",
     TONE[tone],
-    inactive ? "pointer-events-none opacity-40 no-underline cursor-not-allowed" : "",
+    inactive
+      ? "pointer-events-none opacity-40 no-underline cursor-not-allowed"
+      : "",
     className,
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   if (href && onNavigate) {
     return (

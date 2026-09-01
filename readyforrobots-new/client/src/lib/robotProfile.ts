@@ -106,7 +106,7 @@ export async function fetchOemListing(opts: {
       headers: { Accept: "application/json" },
       signal: opts.signal,
     },
-    opts.timeoutMs ?? 5_000,
+    opts.timeoutMs ?? 5_000
   );
   if (!res.ok) {
     throw new Error(`oem-listing ${res.status}`);
@@ -132,7 +132,10 @@ export async function fetchRobotProfile(opts: {
     `${base}/api/robot-profile`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify({
         url: opts.url,
         product: opts.product || null,
@@ -140,7 +143,7 @@ export async function fetchRobotProfile(opts: {
       }),
       signal: opts.signal,
     },
-    opts.timeoutMs ?? 22_000,
+    opts.timeoutMs ?? 22_000
   );
   if (!res.ok) {
     let detail = `robot-profile ${res.status}`;
@@ -161,7 +164,11 @@ export async function fetchRobotProfile(opts: {
 export function formatFactLine(f: RobotProfileFact): string {
   const units = f.units ? ` ${f.units}` : "";
   const val =
-    typeof f.value === "boolean" ? (f.value ? "yes" : "no") : `${f.value}${units}`;
+    typeof f.value === "boolean"
+      ? f.value
+        ? "yes"
+        : "no"
+      : `${f.value}${units}`;
   const labels: Record<string, string> = {
     carrying_capacity: "Carrying capacity",
     battery_runtime: "Battery / runtime",
@@ -216,7 +223,7 @@ export function sourceTypeLabel(t: string): string {
 /** Honest incompleteness copy for profile confidence tiers (Understanding v1.0). */
 export function profileConfidenceCopy(
   tier: "A" | "B" | "C",
-  opts?: { emptyResearch?: boolean },
+  opts?: { emptyResearch?: boolean }
 ): string {
   if (opts?.emptyResearch) {
     return "We recognized the manufacturer from the URL, but could not read its product pages — treat this as identity only, not a confirmed spec sheet.";

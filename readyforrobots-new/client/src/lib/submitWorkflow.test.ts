@@ -55,8 +55,8 @@ describe("submitWorkflow", () => {
     expect(researchStageIndex(1200, false)).toBe(2);
     expect(researchStageIndex(1200, true)).toBe(3);
     expect(dotsBar(2)).toBe("██████████░░░░░");
-    expect(researchStatusLine({ robotName: "Digit", composing: false })).toMatch(
-      /Researching Digit/,
-    );
+    expect(
+      researchStatusLine({ robotName: "Digit", composing: false })
+    ).toMatch(/Researching Digit/);
   });
 });

@@ -9,7 +9,14 @@
 const EMAIL_RE =
   /^[a-z0-9](?:[a-z0-9._%+\-]{0,62}[a-z0-9])?@[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?)+$/i;
 
-const RESERVED_TLDS = new Set(["test", "invalid", "localhost", "example", "local", "internal"]);
+const RESERVED_TLDS = new Set([
+  "test",
+  "invalid",
+  "localhost",
+  "example",
+  "local",
+  "internal",
+]);
 
 const BLOCKED_DOMAINS = new Set([
   "example.com",
@@ -51,7 +58,12 @@ export function authEmailRejectReason(raw: string): string | null {
   if (text.includes("..")) return "That email has consecutive dots.";
   const [local, domain] = text.split("@");
   if (!local || !domain) return "Use a full email like you@company.com.";
-  if (local.startsWith(".") || local.endsWith(".") || domain.startsWith(".") || domain.endsWith(".")) {
+  if (
+    local.startsWith(".") ||
+    local.endsWith(".") ||
+    domain.startsWith(".") ||
+    domain.endsWith(".")
+  ) {
     return "That email is not a valid address.";
   }
   if (!EMAIL_RE.test(text)) {
@@ -71,7 +83,7 @@ export function authEmailRejectReason(raw: string): string | null {
 export function otpNoAccountMessage(serverMessage: string): string {
   if (
     /signups? not allowed|user not found|unable to validate email address: invalid|error sending magic link/i.test(
-      serverMessage,
+      serverMessage
     )
   ) {
     return "No account for that email yet. Create one on the signup page, or use Google / GitHub.";

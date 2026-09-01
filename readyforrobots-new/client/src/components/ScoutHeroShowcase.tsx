@@ -66,21 +66,33 @@ export default function ScoutHeroShowcase() {
             <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-600 font-mono-data">
               5 stages
             </span>
-            <span className="text-[9px] text-gray-400 hidden sm:inline">feeds →</span>
+            <span className="text-[9px] text-gray-400 hidden sm:inline">
+              feeds →
+            </span>
           </div>
-          <ScoutPipelineDiagram workflowStage={stage} embedded className="flex-1" />
-          <div
-            className="hidden sm:block absolute top-12 right-0 w-[3px] h-[calc(100%-3rem)] pointer-events-none bg-gradient-to-b from-transparent via-emerald-400 to-transparent opacity-60"
+          <ScoutPipelineDiagram
+            workflowStage={stage}
+            embedded
+            className="flex-1"
           />
+          <div className="hidden sm:block absolute top-12 right-0 w-[3px] h-[calc(100%-3rem)] pointer-events-none bg-gradient-to-b from-transparent via-emerald-400 to-transparent opacity-60" />
         </aside>
 
         <div className="flex-1 min-w-0 flex flex-col bg-white">
           <div className="hidden sm:flex px-4 py-1.5 items-center gap-2 border-b border-gray-100 bg-emerald-50/50">
-            <span className="text-[9px] uppercase tracking-widest text-emerald-600 font-mono-data">live opportunity</span>
-            <span className="text-[9px] text-gray-400">← synced to {STAGE_LABELS[stage].toLowerCase()}</span>
+            <span className="text-[9px] uppercase tracking-widest text-emerald-600 font-mono-data">
+              live opportunity
+            </span>
+            <span className="text-[9px] text-gray-400">
+              ← synced to {STAGE_LABELS[stage].toLowerCase()}
+            </span>
           </div>
           <div className="flex-1 p-0">
-            <ScoutWorkflowAnimation embedded onStageChange={setStage} className="h-full" />
+            <ScoutWorkflowAnimation
+              embedded
+              onStageChange={setStage}
+              className="h-full"
+            />
           </div>
         </div>
       </div>

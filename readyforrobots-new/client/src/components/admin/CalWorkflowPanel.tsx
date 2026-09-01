@@ -60,42 +60,42 @@ const STEPS: StepDef[] = [
     id: "fix_contacts",
     num: "1",
     label: "Fix contacts",
-    count: (m) => n(m.no_email),
+    count: m => n(m.no_email),
     hint: "Drafts missing a send address",
   },
   {
     id: "draft",
     num: "2",
     label: "Draft",
-    count: (m) => n(m.pending_draft),
+    count: m => n(m.pending_draft),
     hint: "HOT/WARM leads with no Cal email yet",
   },
   {
     id: "redraft",
     num: "3",
     label: "Redraft",
-    count: (m) => n(m.unsent_drafted) || n(m.drafted),
+    count: m => n(m.unsent_drafted) || n(m.drafted),
     hint: "Refresh voice & angle on existing drafts",
   },
   {
     id: "review",
     num: "4",
     label: "Review",
-    count: (m) => n(m.unsent_drafted) || n(m.drafted),
+    count: m => n(m.unsent_drafted) || n(m.drafted),
     hint: "Read drafts before anything sends",
   },
   {
     id: "send",
     num: "5",
     label: "Send",
-    count: (m) => n(m.sendable),
+    count: m => n(m.sendable),
     hint: "Verified email + approved draft",
   },
   {
     id: "follow_up",
     num: "6",
     label: "Follow up",
-    count: (m) => n(m.replied),
+    count: m => n(m.replied),
     hint: "Replies waiting in inbox",
   },
 ];
@@ -139,7 +139,7 @@ function buildDoNow(
     | "onReview"
     | "onSendAll"
     | "onOpenReplies"
-  >,
+  >
 ): DoNow {
   const step = suggestStep(m);
   const noEmail = n(m.no_email);
@@ -218,7 +218,10 @@ function buildDoNow(
           replied > 0
             ? `${replied.toLocaleString()} repl${replied === 1 ? "y" : "ies"} waiting — Cal pauses automation when someone writes back.`
             : "Autopilot handles the next draft/send cycle. Check replies once a day.",
-        actionLabel: replied > 0 ? `Open ${replied.toLocaleString()} repl${replied === 1 ? "y" : "ies"}` : "Open inbox",
+        actionLabel:
+          replied > 0
+            ? `Open ${replied.toLocaleString()} repl${replied === 1 ? "y" : "ies"}`
+            : "Open inbox",
         onAction: handlers.onOpenReplies,
       };
   }
@@ -246,7 +249,12 @@ function StepButton({
         ? "bg-amber-500 text-gray-950 hover:bg-amber-400"
         : "border border-gray-300 bg-white text-gray-800 hover:border-gray-400 hover:bg-gray-50";
   return (
-    <button type="button" className={`${base} ${styles}`} disabled={disabled || busy} onClick={onClick}>
+    <button
+      type="button"
+      className={`${base} ${styles}`}
+      disabled={disabled || busy}
+      onClick={onClick}
+    >
       {busy ? "Working…" : label}
     </button>
   );
@@ -297,7 +305,9 @@ export default function CalWorkflowPanel({
         <div className="flex min-w-0 items-start gap-3">
           <div
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-              doNow.tone === "warn" ? "bg-amber-500 text-white" : "bg-emerald-600 text-white"
+              doNow.tone === "warn"
+                ? "bg-amber-500 text-white"
+                : "bg-emerald-600 text-white"
             }`}
           >
             {doNow.tone === "warn" ? (
@@ -308,10 +318,14 @@ export default function CalWorkflowPanel({
           </div>
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-700">
-              Do now · Step {STEPS.find((s) => s.id === doNow.step)?.num}
+              Do now · Step {STEPS.find(s => s.id === doNow.step)?.num}
             </p>
-            <p className="text-sm font-extrabold text-gray-950">{doNow.title}</p>
-            <p className="mt-0.5 text-xs leading-snug text-gray-700">{doNow.detail}</p>
+            <p className="text-sm font-extrabold text-gray-950">
+              {doNow.title}
+            </p>
+            <p className="mt-0.5 text-xs leading-snug text-gray-700">
+              {doNow.detail}
+            </p>
           </div>
         </div>
         <StepButton
@@ -331,7 +345,13 @@ export default function CalWorkflowPanel({
           </p>
           <p className="text-[10px] text-gray-400">
             Autopilot{" "}
-            <span className={autopilotEnabled ? "font-bold text-emerald-400" : "font-bold text-amber-400"}>
+            <span
+              className={
+                autopilotEnabled
+                  ? "font-bold text-emerald-400"
+                  : "font-bold text-amber-400"
+              }
+            >
               {autopilotEnabled ? "ON" : "OFF"}
             </span>
             <span className="text-gray-600"> · </span>
@@ -358,19 +378,27 @@ export default function CalWorkflowPanel({
                   }`}
                 >
                   <div className="mb-1 flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold text-gray-500">{step.num}</span>
-                    <span className="text-xs font-bold text-white">{step.label}</span>
+                    <span className="text-[10px] font-bold text-gray-500">
+                      {step.num}
+                    </span>
+                    <span className="text-xs font-bold text-white">
+                      {step.label}
+                    </span>
                     {count > 0 ? (
                       <span
                         className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
-                          isActive ? "bg-amber-400 text-gray-950" : "bg-gray-700 text-gray-100"
+                          isActive
+                            ? "bg-amber-400 text-gray-950"
+                            : "bg-gray-700 text-gray-100"
                         }`}
                       >
                         {count.toLocaleString()}
                       </span>
                     ) : null}
                   </div>
-                  <p className="text-[10px] leading-snug text-gray-400">{step.hint}</p>
+                  <p className="text-[10px] leading-snug text-gray-400">
+                    {step.hint}
+                  </p>
                 </button>
                 {i < STEPS.length - 1 ? (
                   <ChevronRight className="mx-0.5 h-4 w-4 shrink-0 self-center text-gray-600" />
@@ -384,7 +412,9 @@ export default function CalWorkflowPanel({
       {/* Step actions — one primary button per step, visible (not buried links) */}
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <div className="rounded-xl border border-gray-300 bg-white p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">1 · Fix</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+            1 · Fix
+          </p>
           <StepButton
             label={`Fix ${n(metrics.no_email).toLocaleString()} emails`}
             tone="secondary"
@@ -403,23 +433,33 @@ export default function CalWorkflowPanel({
         </div>
 
         <div className="rounded-xl border border-gray-300 bg-white p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">2 · Draft</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+            2 · Draft
+          </p>
           <StepButton
             label={`Draft ${n(metrics.pending_draft).toLocaleString()} pending`}
             tone="primary"
             disabled={n(metrics.pending_draft) === 0}
-            busy={draftBusy ?? (busy === "cal-draft" && n(metrics.pending_draft) > 0)}
+            busy={
+              draftBusy ??
+              (busy === "cal-draft" && n(metrics.pending_draft) > 0)
+            }
             onClick={onDraftAll}
           />
         </div>
 
         <div className="rounded-xl border border-amber-300 bg-amber-50/80 p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-amber-900">3 · Redraft</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-amber-900">
+            3 · Redraft
+          </p>
           <StepButton
             label={`Redraft ${unsent.toLocaleString()}`}
             tone="amber"
             disabled={unsent === 0}
-            busy={redraftBusy ?? (busy === "cal-redraft" && n(metrics.pending_draft) === 0)}
+            busy={
+              redraftBusy ??
+              (busy === "cal-redraft" && n(metrics.pending_draft) === 0)
+            }
             onClick={onRedraft}
           />
           <p className="mt-1.5 text-[10px] leading-snug text-amber-950/80">
@@ -428,12 +468,16 @@ export default function CalWorkflowPanel({
         </div>
 
         <div className="rounded-xl border border-gray-300 bg-white p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">4 · Review</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+            4 · Review
+          </p>
           <StepButton label="Open queue" tone="secondary" onClick={onReview} />
         </div>
 
         <div className="rounded-xl border border-gray-300 bg-white p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">5 · Send</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+            5 · Send
+          </p>
           <StepButton
             label={`Send ${n(metrics.sendable).toLocaleString()}`}
             tone="amber"
@@ -444,9 +488,15 @@ export default function CalWorkflowPanel({
         </div>
 
         <div className="rounded-xl border border-gray-300 bg-white p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">6 · Follow up</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+            6 · Follow up
+          </p>
           <StepButton
-            label={n(metrics.replied) > 0 ? `Inbox (${n(metrics.replied)})` : "Open inbox"}
+            label={
+              n(metrics.replied) > 0
+                ? `Inbox (${n(metrics.replied)})`
+                : "Open inbox"
+            }
             tone="secondary"
             onClick={onOpenReplies}
           />
@@ -472,7 +522,8 @@ export default function CalWorkflowPanel({
         </button>
         <span className="text-gray-300">·</span>
         <span>
-          Opened {n(metrics.opened).toLocaleString()} · Sent {sent.toLocaleString()} total
+          Opened {n(metrics.opened).toLocaleString()} · Sent{" "}
+          {sent.toLocaleString()} total
         </span>
       </div>
     </div>

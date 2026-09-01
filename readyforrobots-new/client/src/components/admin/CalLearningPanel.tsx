@@ -77,7 +77,9 @@ export default function CalLearningPanel({
       setLoading(true);
       setError("");
       try {
-        const res = await adminFetch(`/api/admin/communication-learning?period_hours=${windowHours}`);
+        const res = await adminFetch(
+          `/api/admin/communication-learning?period_hours=${windowHours}`
+        );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         setReport((await res.json()) as LearningReport);
       } catch (e) {
@@ -86,7 +88,7 @@ export default function CalLearningPanel({
         setLoading(false);
       }
     },
-    [adminFetch],
+    [adminFetch]
   );
 
   useEffect(() => {
@@ -94,10 +96,10 @@ export default function CalLearningPanel({
   }, [load, hours]);
 
   const totals = report?.totals;
-  const variants = (report?.variants ?? []).filter((v) => v.sent > 0);
-  const industries = (report?.industries ?? []).filter((i) => i.sent > 0);
+  const variants = (report?.variants ?? []).filter(v => v.sent > 0);
+  const industries = (report?.industries ?? []).filter(i => i.sent > 0);
   const anyReplies = (totals?.replied ?? 0) > 0;
-  const scored = variants.filter((v) => v.sent >= 3);
+  const scored = variants.filter(v => v.sent >= 3);
   const leader = anyReplies && scored.length ? scored[0] : null;
 
   return (
@@ -106,21 +108,26 @@ export default function CalLearningPanel({
         <div className="flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-indigo-600" />
           <div>
-            <h2 className="text-base font-extrabold text-gray-900">Cal learning — which voice earns replies</h2>
+            <h2 className="text-base font-extrabold text-gray-900">
+              Cal learning — which voice earns replies
+            </h2>
             <p className="text-[11px] text-gray-500">
-              Per-angle reply rates from tagged sends. Directional signal, not a verdict.
+              Per-angle reply rates from tagged sends. Directional signal, not a
+              verdict.
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <div className="inline-flex overflow-hidden rounded-lg border border-gray-200">
-            {WINDOWS.map((w) => (
+            {WINDOWS.map(w => (
               <button
                 key={w.hours}
                 type="button"
                 onClick={() => setHours(w.hours)}
                 className={`px-2.5 py-1 font-medium ${
-                  hours === w.hours ? "bg-indigo-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+                  hours === w.hours
+                    ? "bg-indigo-600 text-white"
+                    : "bg-white text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 {w.label}
@@ -132,7 +139,10 @@ export default function CalLearningPanel({
             onClick={() => void load(hours)}
             className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-gray-600 hover:bg-gray-50"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+            />{" "}
+            Refresh
           </button>
         </div>
       </div>
@@ -146,29 +156,42 @@ export default function CalLearningPanel({
       {/* Totals */}
       <div className="mb-3 grid grid-cols-3 gap-2">
         <div className="rounded-xl bg-gray-50 px-3 py-2">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Tagged sends</p>
-          <p className="text-xl font-black text-gray-900">{totals?.sent?.toLocaleString() ?? "—"}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+            Tagged sends
+          </p>
+          <p className="text-xl font-black text-gray-900">
+            {totals?.sent?.toLocaleString() ?? "—"}
+          </p>
         </div>
         <div className="rounded-xl bg-gray-50 px-3 py-2">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Replied</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">
+            Replied
+          </p>
           <p className="text-xl font-black text-gray-900">
             {totals?.replied?.toLocaleString() ?? "—"}
-            <span className="ml-1 text-xs font-semibold text-gray-500">{totals ? `${totals.reply_rate}%` : ""}</span>
+            <span className="ml-1 text-xs font-semibold text-gray-500">
+              {totals ? `${totals.reply_rate}%` : ""}
+            </span>
           </p>
         </div>
         <div className="rounded-xl bg-emerald-50 px-3 py-2">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Positive</p>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+            Positive
+          </p>
           <p className="text-xl font-black text-emerald-800">
             {totals?.positive?.toLocaleString() ?? "—"}
-            <span className="ml-1 text-xs font-semibold text-emerald-600">{totals ? `${totals.positive_rate}%` : ""}</span>
+            <span className="ml-1 text-xs font-semibold text-emerald-600">
+              {totals ? `${totals.positive_rate}%` : ""}
+            </span>
           </p>
         </div>
       </div>
 
       {leader ? (
         <p className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-950">
-          Leading angle so far: <strong>{angleLabel(leader.variant_id)}</strong> — {leader.positive_rate}% positive
-          on {leader.sent} sends. Keep an eye on it before retiring the others.
+          Leading angle so far: <strong>{angleLabel(leader.variant_id)}</strong>{" "}
+          — {leader.positive_rate}% positive on {leader.sent} sends. Keep an eye
+          on it before retiring the others.
         </p>
       ) : (
         <p className="mb-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
@@ -193,24 +216,38 @@ export default function CalLearningPanel({
               </tr>
             </thead>
             <tbody>
-              {variants.map((v) => (
-                <tr key={v.variant_id} className="border-b border-gray-100 last:border-0">
+              {variants.map(v => (
+                <tr
+                  key={v.variant_id}
+                  className="border-b border-gray-100 last:border-0"
+                >
                   <td className="py-2 pr-2">
-                    <div className="font-semibold text-gray-900">{angleLabel(v.variant_id)}</div>
+                    <div className="font-semibold text-gray-900">
+                      {angleLabel(v.variant_id)}
+                    </div>
                     {v.subject_sample ? (
-                      <div className="truncate text-[11px] text-gray-500" title={v.subject_sample}>
+                      <div
+                        className="truncate text-[11px] text-gray-500"
+                        title={v.subject_sample}
+                      >
                         “{v.subject_sample}”
                       </div>
                     ) : null}
                   </td>
-                  <td className="px-2 py-2 text-right tabular-nums text-gray-700">{v.sent.toLocaleString()}</td>
+                  <td className="px-2 py-2 text-right tabular-nums text-gray-700">
+                    {v.sent.toLocaleString()}
+                  </td>
                   <td className="px-2 py-2 text-right tabular-nums text-gray-700">
                     {v.replied.toLocaleString()}
-                    <span className="ml-1 text-[11px] text-gray-400">{v.reply_rate}%</span>
+                    <span className="ml-1 text-[11px] text-gray-400">
+                      {v.reply_rate}%
+                    </span>
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums font-semibold text-emerald-800">
                     {v.positive.toLocaleString()}
-                    <span className="ml-1 text-[11px] text-emerald-500">{v.positive_rate}%</span>
+                    <span className="ml-1 text-[11px] text-emerald-500">
+                      {v.positive_rate}%
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -222,12 +259,22 @@ export default function CalLearningPanel({
       {/* Industry slice */}
       {industries.length > 0 ? (
         <div className="mt-3">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-gray-500">By industry (top by volume)</p>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+            By industry (top by volume)
+          </p>
           <div className="flex flex-wrap gap-1.5">
-            {industries.map((i) => (
-              <span key={i.industry} className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700">
+            {industries.map(i => (
+              <span
+                key={i.industry}
+                className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700"
+              >
                 {i.industry}: <strong>{i.sent}</strong> sent
-                {i.positive > 0 ? <span className="text-emerald-700"> · {i.positive} positive ({i.positive_rate}%)</span> : null}
+                {i.positive > 0 ? (
+                  <span className="text-emerald-700">
+                    {" "}
+                    · {i.positive} positive ({i.positive_rate}%)
+                  </span>
+                ) : null}
               </span>
             ))}
           </div>

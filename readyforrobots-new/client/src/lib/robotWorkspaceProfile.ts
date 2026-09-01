@@ -41,15 +41,20 @@ export function readRobotWorkspaceProfile(): RobotWorkspaceProfile | null {
       company_name: String(parsed.company_name || "").trim(),
       category: String(parsed.category || "").trim(),
       icp: String(parsed.icp || "").trim(),
-      company_url: parsed.company_url ? String(parsed.company_url).trim() : undefined,
-      saved_at: typeof parsed.saved_at === "number" ? parsed.saved_at : undefined,
+      company_url: parsed.company_url
+        ? String(parsed.company_url).trim()
+        : undefined,
+      saved_at:
+        typeof parsed.saved_at === "number" ? parsed.saved_at : undefined,
     };
   } catch {
     return null;
   }
 }
 
-export function writeRobotWorkspaceProfile(profile: RobotWorkspaceProfile): RobotWorkspaceProfile {
+export function writeRobotWorkspaceProfile(
+  profile: RobotWorkspaceProfile
+): RobotWorkspaceProfile {
   const next: RobotWorkspaceProfile = {
     company_name: profile.company_name.trim(),
     category: profile.category.trim(),
@@ -59,7 +64,10 @@ export function writeRobotWorkspaceProfile(profile: RobotWorkspaceProfile): Robo
   };
   if (typeof window !== "undefined") {
     try {
-      window.sessionStorage.setItem(ROBOT_WORKSPACE_PROFILE_KEY, JSON.stringify(next));
+      window.sessionStorage.setItem(
+        ROBOT_WORKSPACE_PROFILE_KEY,
+        JSON.stringify(next)
+      );
     } catch {
       /* ignore */
     }
@@ -67,16 +75,20 @@ export function writeRobotWorkspaceProfile(profile: RobotWorkspaceProfile): Robo
   return next;
 }
 
-export function isRobotWorkspaceProfileComplete(profile: RobotWorkspaceProfile | null | undefined): boolean {
+export function isRobotWorkspaceProfileComplete(
+  profile: RobotWorkspaceProfile | null | undefined
+): boolean {
   if (!profile) return false;
-  return Boolean(profile.company_name.trim() && profile.category.trim() && profile.icp.trim());
+  return Boolean(
+    profile.company_name.trim() && profile.category.trim() && profile.icp.trim()
+  );
 }
 
 /** Split ICP text into industry tokens for match-url filtering. */
 export function icpIndustryTokens(icp: string): string[] {
   return icp
     .split(/[,;/|]+/)
-    .map((part) => part.trim())
-    .filter((part) => part.length >= 2)
+    .map(part => part.trim())
+    .filter(part => part.length >= 2)
     .slice(0, 8);
 }

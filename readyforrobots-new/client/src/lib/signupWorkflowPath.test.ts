@@ -7,20 +7,28 @@ import {
 
 describe("signupWorkflowPath", () => {
   it("never rewrites an explicit /results next to /pipeline", () => {
-    const next = "/results?url=https%3A%2F%2Fexample.com%2Frobot&limit=5&src=home_signup_return";
+    const next =
+      "/results?url=https%3A%2F%2Fexample.com%2Frobot&limit=5&src=home_signup_return";
     expect(
       resolveSignupWorkflowReturnPath({
         nextRaw: next,
-        prefill: { company_url: "https://example.com/robot", src: "home_url_submit" },
-        matchedPipelineReturnPath: "/pipeline?src=results_scan&url=https://example.com/robot",
-      }),
+        prefill: {
+          company_url: "https://example.com/robot",
+          src: "home_url_submit",
+        },
+        matchedPipelineReturnPath:
+          "/pipeline?src=results_scan&url=https://example.com/robot",
+      })
     ).toBe(next);
   });
 
   it("rebuilds /results from company_url when next is empty", () => {
     const path = resolveSignupWorkflowReturnPath({
       nextRaw: "",
-      prefill: { company_url: "https://acme.robot/arm", src: "home_url_submit" },
+      prefill: {
+        company_url: "https://acme.robot/arm",
+        src: "home_url_submit",
+      },
     });
     expect(path.startsWith("/results?")).toBe(true);
     expect(path).toContain("url=https%3A%2F%2Facme.robot%2Farm");
@@ -28,10 +36,12 @@ describe("signupWorkflowPath", () => {
   });
 
   it("honors /results even when company_url prefill is missing", () => {
-    expect(shouldHonorWorkflowResults("/results?url=https://x.test", {})).toBe(true);
-    expect(workflowResultsPath({}, "/results?url=https%3A%2F%2Fx.test&limit=5")).toContain(
-      "url=https%3A%2F%2Fx.test",
+    expect(shouldHonorWorkflowResults("/results?url=https://x.test", {})).toBe(
+      true
     );
+    expect(
+      workflowResultsPath({}, "/results?url=https%3A%2F%2Fx.test&limit=5")
+    ).toContain("url=https%3A%2F%2Fx.test");
   });
 
   it("keeps explicit /pipeline next for matched unlock", () => {
@@ -39,9 +49,12 @@ describe("signupWorkflowPath", () => {
     expect(
       resolveSignupWorkflowReturnPath({
         nextRaw: next,
-        prefill: { company_url: "https://example.com", src: "pipeline_matched_unlock" },
+        prefill: {
+          company_url: "https://example.com",
+          src: "pipeline_matched_unlock",
+        },
         matchedPipelineReturnPath: next,
-      }),
+      })
     ).toBe(next);
   });
 
@@ -50,19 +63,19 @@ describe("signupWorkflowPath", () => {
       resolveSignupWorkflowReturnPath({
         nextRaw: "/",
         prefill: { src: "robot_jobs" },
-      }),
+      })
     ).toBe("/");
     expect(
       resolveSignupWorkflowReturnPath({
         nextRaw: "/jobs?src=c1_job_mfg_kits",
         prefill: { src: "robot_jobs" },
-      }),
+      })
     ).toBe("/?src=c1_job_mfg_kits");
     expect(
       resolveSignupWorkflowReturnPath({
         nextRaw: "/jobs/locus-origin?src=robot_jobs",
         prefill: { src: "robot_jobs" },
-      }),
+      })
     ).toBe("/jobs/locus-origin?src=robot_jobs");
   });
 });

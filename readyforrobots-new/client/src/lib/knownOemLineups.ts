@@ -70,7 +70,11 @@ export function hostFromOemUrl(raw: string): string {
 
 /** eTLD+1 so shop.oem.com still hits the oem.com catalog row. */
 export function registrableOemHost(host: string): string {
-  const labels = host.toLowerCase().replace(/^www\./, "").split(".").filter(Boolean);
+  const labels = host
+    .toLowerCase()
+    .replace(/^www\./, "")
+    .split(".")
+    .filter(Boolean);
   if (labels.length >= 3 && COMPOUND_SUFFIXES.has(labels.slice(-2).join("."))) {
     return labels.slice(-3).join(".");
   }

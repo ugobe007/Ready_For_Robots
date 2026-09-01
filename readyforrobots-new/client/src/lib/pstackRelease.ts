@@ -5,10 +5,7 @@
  * These fixtures are the checks that would have failed #173 (self-abort FIND
  * shown as Failed to fetch) and #172 (strawberry CRM leftover).
  */
-import {
-  findUserFacingError,
-  isSilentFindError,
-} from "./robotUrlIdentity";
+import { findUserFacingError, isSilentFindError } from "./robotUrlIdentity";
 import { crmDeskForCurrentRobot } from "./jobsCrmAccount";
 import { beginJobsHandoffForUrl } from "./jobsHandoffSnapshot";
 import { classJobsEmptyCopy } from "./jobsWorkflow";
@@ -37,11 +34,11 @@ export const CRM_LEFTOVER_FIXTURE = {
 export function abortMustNotSurfaceAsResearchFailed(): boolean {
   const abort = findUserFacingError(
     FIND_ABORT_FIXTURE.abort,
-    FIND_ABORT_FIXTURE.fallback,
+    FIND_ABORT_FIXTURE.fallback
   );
   const fetchFail = findUserFacingError(
     FIND_ABORT_FIXTURE.failedToFetch,
-    FIND_ABORT_FIXTURE.fallback,
+    FIND_ABORT_FIXTURE.fallback
   );
   return (
     abort === null &&
@@ -67,13 +64,13 @@ export function leftoverCrmMustNotKeepPriorRobot(opts: {
 export function bindUrlFlushesPriorRobot(): boolean {
   const snap = beginJobsHandoffForUrl(
     CRM_LEFTOVER_FIXTURE.nextUrl,
-    CRM_LEFTOVER_FIXTURE.nextProduct,
+    CRM_LEFTOVER_FIXTURE.nextProduct
   );
   return Boolean(
     snap &&
       snap.url.includes("greenfieldincorporated") &&
       snap.jobs.length === 0 &&
-      !/strawberry/i.test(snap.productName),
+      !/strawberry/i.test(snap.productName)
   );
 }
 
@@ -93,7 +90,16 @@ export const HEALTHCARE_CLASS_FIXTURE = {
   emptyCopy: "No healthcare jobs for this robot yet.",
   forbidClass: "humanoid",
   forbidEmpty: "No humanoid jobs for this robot yet.",
-  extraTiles: ["mining", "warehouse", "logistics", "factory", "hospitality", "food_prep", "serving", "cleaning"],
+  extraTiles: [
+    "mining",
+    "warehouse",
+    "logistics",
+    "factory",
+    "hospitality",
+    "food_prep",
+    "serving",
+    "cleaning",
+  ],
 } as const;
 
 export const URL_WORKFLOW_FIXTURE = {
@@ -112,13 +118,15 @@ export const URL_WORKFLOW_FIXTURE = {
 export function diligentMustNotBeHumanoidEmpty(): boolean {
   const listing = lookupKnownOem(HEALTHCARE_CLASS_FIXTURE.url);
   const moxi = listing?.robots.find(
-    row => (row.name || "").toLowerCase() === "moxi",
+    row => (row.name || "").toLowerCase() === "moxi"
   );
   const cls = String(moxi?.display_class || "").toLowerCase();
   const empty = classJobsEmptyCopy(HEALTHCARE_CLASS_FIXTURE.classId);
-  const humanoidEmpty = classJobsEmptyCopy(HEALTHCARE_CLASS_FIXTURE.forbidClass);
+  const humanoidEmpty = classJobsEmptyCopy(
+    HEALTHCARE_CLASS_FIXTURE.forbidClass
+  );
   const hasNewTiles = HEALTHCARE_CLASS_FIXTURE.extraTiles.every(id =>
-    CLASS_OPTION_IDS.includes(id),
+    CLASS_OPTION_IDS.includes(id)
   );
   return (
     Boolean(listing?.vendor_name?.toLowerCase().includes("diligent")) &&

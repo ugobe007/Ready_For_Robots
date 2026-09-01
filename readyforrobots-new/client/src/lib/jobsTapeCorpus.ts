@@ -13,7 +13,13 @@ import {
   type PixelMap,
 } from "@/lib/kareIcons";
 
-export type TapeFamily = "transport" | "cart" | "pallet" | "scrub" | "inspect" | "gripper";
+export type TapeFamily =
+  | "transport"
+  | "cart"
+  | "pallet"
+  | "scrub"
+  | "inspect"
+  | "gripper";
 
 export type TapeJob = {
   key: string;
@@ -137,27 +143,32 @@ const TAPE_FAMILIES = new Set<TapeFamily>([
 ]);
 
 /** Named-employer market tape. Drops anonymous source=tape shorts that repeated the same work. */
-export const MARKET_TAPE_JOBS: TapeJob[] = (tapeJson.jobs || []).flatMap((raw) => {
-  const family = raw.family as TapeFamily;
-  const key = String(raw.key || "").trim();
-  const title = String(raw.title || "").trim();
-  if (!key || !title || !TAPE_FAMILIES.has(family)) return [];
-  return [
-    {
-      key,
-      title,
-      industry: String(raw.industry || "").trim(),
-      path: String(raw.path || "WORKSITE → WORKSITE").trim(),
-      family,
-    },
-  ];
-});
+export const MARKET_TAPE_JOBS: TapeJob[] = (tapeJson.jobs || []).flatMap(
+  raw => {
+    const family = raw.family as TapeFamily;
+    const key = String(raw.key || "").trim();
+    const title = String(raw.title || "").trim();
+    if (!key || !title || !TAPE_FAMILIES.has(family)) return [];
+    return [
+      {
+        key,
+        title,
+        industry: String(raw.industry || "").trim(),
+        path: String(raw.path || "WORKSITE → WORKSITE").trim(),
+        family,
+      },
+    ];
+  }
+);
 
 export function uniqueTapeJobCount(jobs: TapeJob[] = MARKET_TAPE_JOBS): number {
-  return new Set(jobs.map((j) => j.key)).size;
+  return new Set(jobs.map(j => j.key)).size;
 }
 
-export function shuffleTapeJobs<T>(items: T[], rng: () => number = Math.random): T[] {
+export function shuffleTapeJobs<T>(
+  items: T[],
+  rng: () => number = Math.random
+): T[] {
   const out = items.slice();
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
@@ -170,7 +181,7 @@ export function shuffleTapeJobs<T>(items: T[], rng: () => number = Math.random):
 export function nextUnseenTapeJob(
   order: TapeJob[],
   cursor: number,
-  visibleKeys: Set<string>,
+  visibleKeys: Set<string>
 ): { job: TapeJob; nextCursor: number; wrapped: boolean } | null {
   const n = order.length;
   if (!n) return null;
@@ -197,20 +208,24 @@ export function demoJobsToTape(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     requirements?: Record<string, any>;
   }>,
-  family: string,
+  family: string
 ): TapeJob[] {
-  return jobs.map((j) => {
+  return jobs.map(j => {
     const iface = j.requirements?.load_interface as string | undefined;
     let tapeFamily: TapeFamily = "transport";
     if (family === "floor_scrub") tapeFamily = "scrub";
     else if (iface === "cart") tapeFamily = "cart";
     else if (iface === "kit") tapeFamily = "transport";
-    else if (j.action === "palletize" || /pallet|stack|case/i.test(j.robot_compatible_task)) {
+    else if (
+      j.action === "palletize" ||
+      /pallet|stack|case/i.test(j.robot_compatible_task)
+    ) {
       tapeFamily = "pallet";
     }
 
     const title = shortenTask(j.robot_compatible_task);
-    const industry = (j.locality || j.company_name || "").split(",")[0] || j.company_name;
+    const industry =
+      (j.locality || j.company_name || "").split(",")[0] || j.company_name;
     const path = pathFromJob(j);
 
     return {

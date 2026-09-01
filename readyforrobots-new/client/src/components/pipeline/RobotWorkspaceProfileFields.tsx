@@ -1,4 +1,7 @@
-import { ROBOT_CATEGORY_OPTIONS, type RobotWorkspaceProfile } from "@/lib/robotWorkspaceProfile";
+import {
+  ROBOT_CATEGORY_OPTIONS,
+  type RobotWorkspaceProfile,
+} from "@/lib/robotWorkspaceProfile";
 
 type Props = {
   value: RobotWorkspaceProfile;
@@ -24,30 +27,38 @@ export default function RobotWorkspaceProfileFields({
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <label className="block sm:col-span-2">
-        <span className={`mb-1.5 block text-[11px] font-bold uppercase tracking-[0.16em] ${label}`}>
+        <span
+          className={`mb-1.5 block text-[11px] font-bold uppercase tracking-[0.16em] ${label}`}
+        >
           Customer / company name
         </span>
         <input
           id={`${idPrefix}-company`}
           value={value.company_name}
-          onChange={(e) => onChange({ ...value, company_name: e.target.value })}
-          placeholder={submittedHostname ? `e.g. company behind ${submittedHostname}` : "e.g. Reflex Robotics"}
+          onChange={e => onChange({ ...value, company_name: e.target.value })}
+          placeholder={
+            submittedHostname
+              ? `e.g. company behind ${submittedHostname}`
+              : "e.g. Reflex Robotics"
+          }
           className={input}
           autoComplete="organization"
         />
       </label>
       <label className="block">
-        <span className={`mb-1.5 block text-[11px] font-bold uppercase tracking-[0.16em] ${label}`}>
+        <span
+          className={`mb-1.5 block text-[11px] font-bold uppercase tracking-[0.16em] ${label}`}
+        >
           Robot category
         </span>
         <select
           id={`${idPrefix}-category`}
           value={value.category}
-          onChange={(e) => onChange({ ...value, category: e.target.value })}
+          onChange={e => onChange({ ...value, category: e.target.value })}
           className={input}
         >
           <option value="">Select category…</option>
-          {ROBOT_CATEGORY_OPTIONS.map((opt) => (
+          {ROBOT_CATEGORY_OPTIONS.map(opt => (
             <option key={opt} value={opt}>
               {opt}
             </option>
@@ -55,13 +66,15 @@ export default function RobotWorkspaceProfileFields({
         </select>
       </label>
       <label className="block">
-        <span className={`mb-1.5 block text-[11px] font-bold uppercase tracking-[0.16em] ${label}`}>
+        <span
+          className={`mb-1.5 block text-[11px] font-bold uppercase tracking-[0.16em] ${label}`}
+        >
           Ideal customer (ICP)
         </span>
         <input
           id={`${idPrefix}-icp`}
           value={value.icp}
-          onChange={(e) => onChange({ ...value, icp: e.target.value })}
+          onChange={e => onChange({ ...value, icp: e.target.value })}
           placeholder="e.g. 3PLs, food DCs, hospital systems"
           className={input}
         />

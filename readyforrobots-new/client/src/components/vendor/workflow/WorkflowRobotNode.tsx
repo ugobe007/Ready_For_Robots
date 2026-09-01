@@ -1,10 +1,15 @@
 import type { Node, NodeProps } from "@xyflow/react";
 import type { RobotNodeData } from "@/lib/workflowFlowAdapter";
 
-export default function WorkflowRobotNode({ data, selected }: NodeProps<Node<RobotNodeData>>) {
+export default function WorkflowRobotNode({
+  data,
+  selected,
+}: NodeProps<Node<RobotNodeData>>) {
   const hrs = data.impact.labor_hours_saved_per_week;
   return (
-    <div className={`flex flex-col items-center ${selected ? "ring-2 ring-emerald-500 rounded-full" : ""}`}>
+    <div
+      className={`flex flex-col items-center ${selected ? "ring-2 ring-emerald-500 rounded-full" : ""}`}
+    >
       <div className="w-12 h-12 rounded-full bg-emerald-600 border-2 border-emerald-800 flex items-center justify-center text-xl shadow-md">
         🤖
       </div>
@@ -12,7 +17,9 @@ export default function WorkflowRobotNode({ data, selected }: NodeProps<Node<Rob
         {data.robot_label}
       </div>
       {hrs ? (
-        <div className="text-[8px] text-slate-500 font-medium">{hrs}h/wk saved</div>
+        <div className="text-[8px] text-slate-500 font-medium">
+          {hrs}h/wk saved
+        </div>
       ) : null}
     </div>
   );

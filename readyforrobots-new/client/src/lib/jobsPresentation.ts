@@ -25,7 +25,10 @@ export function jobsPresentationHref(opts: {
   paid: boolean;
 }): string {
   if (!opts.signedIn) {
-    return jobsSignupHref("/pricing?upgrade=pro&src=jobs_presentation", "jobs_presentation");
+    return jobsSignupHref(
+      "/pricing?upgrade=pro&src=jobs_presentation",
+      "jobs_presentation"
+    );
   }
   if (!opts.paid) return "/pricing?upgrade=pro&src=jobs_presentation";
   return "#jobs-presentation";
@@ -49,7 +52,7 @@ export type PresentationRequestResult = {
 
 export async function requestRobotPresentation(
   token: string,
-  body: { url: string; companyName?: string; productName?: string },
+  body: { url: string; companyName?: string; productName?: string }
 ): Promise<PresentationRequestResult> {
   const base = getApiBase();
   const res = await fetch(
@@ -66,9 +69,11 @@ export async function requestRobotPresentation(
         company_name: body.companyName || null,
         product_name: body.productName || null,
       }),
-    }),
+    })
   );
-  const data = (await res.json().catch(() => ({}))) as PresentationRequestResult & {
+  const data = (await res
+    .json()
+    .catch(() => ({}))) as PresentationRequestResult & {
     detail?: string;
   };
   if (res.status === 402) {
@@ -77,7 +82,9 @@ export async function requestRobotPresentation(
     throw err;
   }
   if (!res.ok) {
-    throw new Error(data.detail || data.hint || "Could not queue the presentation.");
+    throw new Error(
+      data.detail || data.hint || "Could not queue the presentation."
+    );
   }
   return data;
 }

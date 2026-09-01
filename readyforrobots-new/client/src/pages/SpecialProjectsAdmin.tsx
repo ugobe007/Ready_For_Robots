@@ -1,4 +1,11 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link } from "wouter";
 import {
   Bot,
@@ -32,7 +39,14 @@ const PIPELINE_STAGES = [
   "validated",
 ] as const;
 
-const STATUSES = ["discovery", "outreach", "piloting", "active", "paused", "archived"] as const;
+const STATUSES = [
+  "discovery",
+  "outreach",
+  "piloting",
+  "active",
+  "paused",
+  "archived",
+] as const;
 const UPDATE_CATEGORIES = ["milestone", "stat", "note", "outreach"] as const;
 
 type ProjectUpdate = {
@@ -97,7 +111,10 @@ const FIT_LABEL: Record<string, { text: string; cls: string }> = {
 type MetricRow = { key: string; value: string };
 
 function metricsToRows(metrics: Record<string, unknown>): MetricRow[] {
-  return Object.entries(metrics || {}).map(([key, value]) => ({ key, value: String(value ?? "") }));
+  return Object.entries(metrics || {}).map(([key, value]) => ({
+    key,
+    value: String(value ?? ""),
+  }));
 }
 
 function rowsToMetrics(rows: MetricRow[]): Record<string, unknown> {
@@ -122,7 +139,11 @@ export default function SpecialProjectsAdmin() {
   const [notice, setNotice] = useState("");
   const [forbidden, setForbidden] = useState(false);
   const [denyStatus, setDenyStatus] = useState<number | null>(null);
-  const [authInfo, setAuthInfo] = useState<{ email?: string; is_admin?: boolean; uid?: string } | null>(null);
+  const [authInfo, setAuthInfo] = useState<{
+    email?: string;
+    is_admin?: boolean;
+    uid?: string;
+  } | null>(null);
 
   // Create form
   const [newName, setNewName] = useState("");
@@ -160,7 +181,7 @@ export default function SpecialProjectsAdmin() {
         },
       });
     },
-    [api, session?.access_token],
+    [api, session?.access_token]
   );
 
   const loadProjects = useCallback(async () => {
@@ -196,7 +217,9 @@ export default function SpecialProjectsAdmin() {
     async (projectId: string) => {
       setTargetsLoading(true);
       try {
-        const res = await adminFetch(`/api/admin/special-projects/${projectId}/targets`);
+        const res = await adminFetch(
+          `/api/admin/special-projects/${projectId}/targets`
+        );
         if (!res.ok) throw new Error(`Failed to load targets (${res.status})`);
         const data = (await res.json()) as { targets: Target[] };
         setTargets(data.targets || []);
@@ -206,7 +229,7 @@ export default function SpecialProjectsAdmin() {
         setTargetsLoading(false);
       }
     },
-    [adminFetch],
+    [adminFetch]
   );
 
   const openProject = useCallback(
@@ -221,7 +244,9 @@ export default function SpecialProjectsAdmin() {
         setEditSummary(p.summary || "");
         setEditDescription(p.robot_description || "");
         setEditPipeline(
-          Object.fromEntries(PIPELINE_STAGES.map((s) => [s, String(p.pipeline?.[s] ?? "")])),
+          Object.fromEntries(
+            PIPELINE_STAGES.map(s => [s, String(p.pipeline?.[s] ?? "")])
+          )
         );
         setMetricRows(metricsToRows(p.metrics));
         setExpandedTarget(null);
@@ -230,7 +255,7 @@ export default function SpecialProjectsAdmin() {
         setError(e instanceof Error ? e.message : "Failed to open project");
       }
     },
-    [adminFetch, loadTargets],
+    [adminFetch, loadTargets]
   );
 
   const targetAction = useCallback(
@@ -254,7 +279,7 @@ export default function SpecialProjectsAdmin() {
         setBusy(false);
       }
     },
-    [adminFetch, selected, loadTargets, openProject],
+    [adminFetch, selected, loadTargets, openProject]
   );
 
   const enrichTargets = useCallback(async () => {
@@ -262,13 +287,19 @@ export default function SpecialProjectsAdmin() {
     setBusy(true);
     setError("");
     try {
-      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/enrich`, {
-        method: "POST",
-      });
+      const res = await adminFetch(
+        `/api/admin/special-projects/${selected.id}/targets/enrich`,
+        {
+          method: "POST",
+        }
+      );
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.detail || `Enrich failed (${res.status})`);
+      if (!res.ok)
+        throw new Error(data?.detail || `Enrich failed (${res.status})`);
       await loadTargets(selected.id);
-      setNotice(`Enriched ${data?.enriched ?? 0} of ${data?.attempted ?? 0} contacts`);
+      setNotice(
+        `Enriched ${data?.enriched ?? 0} of ${data?.attempted ?? 0} contacts`
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Enrich failed");
     } finally {
@@ -283,7 +314,7 @@ export default function SpecialProjectsAdmin() {
       setError("");
       try {
         const res = await adminFetch(
-          `/api/admin/special-projects/${selected.id}/targets.csv${contactedOnly ? "?contacted=true" : ""}`,
+          `/api/admin/special-projects/${selected.id}/targets.csv${contactedOnly ? "?contacted=true" : ""}`
         );
         if (!res.ok) throw new Error(`Export failed (${res.status})`);
         const blob = await res.blob();
@@ -302,16 +333,19 @@ export default function SpecialProjectsAdmin() {
         setBusy(false);
       }
     },
-    [adminFetch, selected],
+    [adminFetch, selected]
   );
 
   const regenerateDrafts = useCallback(async () => {
     if (!selected) return;
     setBusy(true);
     try {
-      await adminFetch(`/api/admin/special-projects/${selected.id}/targets/regenerate-drafts`, {
-        method: "POST",
-      });
+      await adminFetch(
+        `/api/admin/special-projects/${selected.id}/targets/regenerate-drafts`,
+        {
+          method: "POST",
+        }
+      );
       await loadTargets(selected.id);
       setNotice("Drafts regenerated");
     } finally {
@@ -324,17 +358,28 @@ export default function SpecialProjectsAdmin() {
   // still a separate explicit click.
   const approveAll = useCallback(async () => {
     if (!selected) return;
-    if (!window.confirm("Approve all drafted emails? They'll be marked ready — you still click Send to send them.")) return;
+    if (
+      !window.confirm(
+        "Approve all drafted emails? They'll be marked ready — you still click Send to send them."
+      )
+    )
+      return;
     setBusy(true);
     setError("");
     try {
-      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/approve-all`, {
-        method: "POST",
-      });
+      const res = await adminFetch(
+        `/api/admin/special-projects/${selected.id}/targets/approve-all`,
+        {
+          method: "POST",
+        }
+      );
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.detail || `Approve failed (${res.status})`);
+      if (!res.ok)
+        throw new Error(data?.detail || `Approve failed (${res.status})`);
       await loadTargets(selected.id);
-      setNotice(`Approved ${data?.approved ?? 0} draft${data?.approved === 1 ? "" : "s"} — now click “Send all approved”`);
+      setNotice(
+        `Approved ${data?.approved ?? 0} draft${data?.approved === 1 ? "" : "s"} — now click “Send all approved”`
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Approve all failed");
     } finally {
@@ -344,17 +389,28 @@ export default function SpecialProjectsAdmin() {
 
   const approveAllFollowups = useCallback(async () => {
     if (!selected) return;
-    if (!window.confirm("Approve all drafted follow-ups? They'll be marked ready — you still click Send to send them.")) return;
+    if (
+      !window.confirm(
+        "Approve all drafted follow-ups? They'll be marked ready — you still click Send to send them."
+      )
+    )
+      return;
     setBusy(true);
     setError("");
     try {
-      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/approve-all-followups`, {
-        method: "POST",
-      });
+      const res = await adminFetch(
+        `/api/admin/special-projects/${selected.id}/targets/approve-all-followups`,
+        {
+          method: "POST",
+        }
+      );
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.detail || `Approve failed (${res.status})`);
+      if (!res.ok)
+        throw new Error(data?.detail || `Approve failed (${res.status})`);
       await loadTargets(selected.id);
-      setNotice(`Approved ${data?.approved ?? 0} follow-up${data?.approved === 1 ? "" : "s"} — now click “Send all follow-ups”`);
+      setNotice(
+        `Approved ${data?.approved ?? 0} follow-up${data?.approved === 1 ? "" : "s"} — now click “Send all follow-ups”`
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Approve all failed");
     } finally {
@@ -367,19 +423,30 @@ export default function SpecialProjectsAdmin() {
   // draft you haven't OK'd.
   const sendAllApproved = useCallback(async () => {
     if (!selected) return;
-    if (!window.confirm("Send all approved drafts now? Only drafts you've approved will go out.")) return;
+    if (
+      !window.confirm(
+        "Send all approved drafts now? Only drafts you've approved will go out."
+      )
+    )
+      return;
     setBusy(true);
     setError("");
     try {
-      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/send-approved`, {
-        method: "POST",
-      });
+      const res = await adminFetch(
+        `/api/admin/special-projects/${selected.id}/targets/send-approved`,
+        {
+          method: "POST",
+        }
+      );
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.detail || `Bulk send failed (${res.status})`);
+      if (!res.ok)
+        throw new Error(data?.detail || `Bulk send failed (${res.status})`);
       await loadTargets(selected.id);
       await openProject(selected.id);
       const failed = (data?.failed || []).length;
-      setNotice(`Sent ${data?.sent ?? 0} of ${data?.eligible ?? 0} approved${failed ? ` · ${failed} failed` : ""}`);
+      setNotice(
+        `Sent ${data?.sent ?? 0} of ${data?.eligible ?? 0} approved${failed ? ` · ${failed} failed` : ""}`
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Bulk send failed");
     } finally {
@@ -392,13 +459,19 @@ export default function SpecialProjectsAdmin() {
     setBusy(true);
     setError("");
     try {
-      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/generate-followups`, {
-        method: "POST",
-      });
+      const res = await adminFetch(
+        `/api/admin/special-projects/${selected.id}/targets/generate-followups`,
+        {
+          method: "POST",
+        }
+      );
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.detail || `Generate failed (${res.status})`);
+      if (!res.ok)
+        throw new Error(data?.detail || `Generate failed (${res.status})`);
       await loadTargets(selected.id);
-      setNotice(`Drafted ${data?.generated ?? 0} follow-up${data?.generated === 1 ? "" : "s"} — review & approve before sending`);
+      setNotice(
+        `Drafted ${data?.generated ?? 0} follow-up${data?.generated === 1 ? "" : "s"} — review & approve before sending`
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Generate follow-ups failed");
     } finally {
@@ -408,19 +481,30 @@ export default function SpecialProjectsAdmin() {
 
   const sendAllFollowups = useCallback(async () => {
     if (!selected) return;
-    if (!window.confirm("Send all approved follow-ups now? Only approved follow-ups will go out.")) return;
+    if (
+      !window.confirm(
+        "Send all approved follow-ups now? Only approved follow-ups will go out."
+      )
+    )
+      return;
     setBusy(true);
     setError("");
     try {
-      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/send-followups`, {
-        method: "POST",
-      });
+      const res = await adminFetch(
+        `/api/admin/special-projects/${selected.id}/targets/send-followups`,
+        {
+          method: "POST",
+        }
+      );
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.detail || `Bulk send failed (${res.status})`);
+      if (!res.ok)
+        throw new Error(data?.detail || `Bulk send failed (${res.status})`);
       await loadTargets(selected.id);
       await openProject(selected.id);
       const failed = (data?.failed || []).length;
-      setNotice(`Sent ${data?.sent ?? 0} of ${data?.eligible ?? 0} follow-ups${failed ? ` · ${failed} failed` : ""}`);
+      setNotice(
+        `Sent ${data?.sent ?? 0} of ${data?.eligible ?? 0} follow-ups${failed ? ` · ${failed} failed` : ""}`
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Bulk send failed");
     } finally {
@@ -437,7 +521,8 @@ export default function SpecialProjectsAdmin() {
   // Runs once; picks the first project returned (list is newest/most-recent first).
   const autoSelectedRef = useRef(false);
   useEffect(() => {
-    if (autoSelectedRef.current || loading || selected || projects.length === 0) return;
+    if (autoSelectedRef.current || loading || selected || projects.length === 0)
+      return;
     autoSelectedRef.current = true;
     void openProject(projects[0].id);
   }, [loading, selected, projects, openProject]);
@@ -470,7 +555,15 @@ export default function SpecialProjectsAdmin() {
     } finally {
       setBusy(false);
     }
-  }, [adminFetch, newName, newWebsite, newContact, newDescription, loadProjects, openProject]);
+  }, [
+    adminFetch,
+    newName,
+    newWebsite,
+    newContact,
+    newDescription,
+    loadProjects,
+    openProject,
+  ]);
 
   const saveDetail = useCallback(async () => {
     if (!selected) return;
@@ -480,18 +573,22 @@ export default function SpecialProjectsAdmin() {
       const pipeline: Record<string, number> = {};
       for (const stage of PIPELINE_STAGES) {
         const raw = editPipeline[stage];
-        if (raw != null && String(raw).trim() !== "") pipeline[stage] = Number(raw) || 0;
+        if (raw != null && String(raw).trim() !== "")
+          pipeline[stage] = Number(raw) || 0;
       }
-      const res = await adminFetch(`/api/admin/special-projects/${selected.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          status: editStatus,
-          summary: editSummary,
-          robot_description: editDescription,
-          pipeline,
-          metrics: rowsToMetrics(metricRows),
-        }),
-      });
+      const res = await adminFetch(
+        `/api/admin/special-projects/${selected.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            status: editStatus,
+            summary: editSummary,
+            robot_description: editDescription,
+            pipeline,
+            metrics: rowsToMetrics(metricRows),
+          }),
+        }
+      );
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
       const p = (await res.json()) as Project;
       setSelected(p);
@@ -502,17 +599,33 @@ export default function SpecialProjectsAdmin() {
     } finally {
       setBusy(false);
     }
-  }, [adminFetch, selected, editStatus, editSummary, editDescription, editPipeline, metricRows, loadProjects]);
+  }, [
+    adminFetch,
+    selected,
+    editStatus,
+    editSummary,
+    editDescription,
+    editPipeline,
+    metricRows,
+    loadProjects,
+  ]);
 
   const addUpdate = useCallback(async () => {
     if (!selected || !updTitle.trim()) return;
     setBusy(true);
     setError("");
     try {
-      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/updates`, {
-        method: "POST",
-        body: JSON.stringify({ title: updTitle.trim(), body: updBody.trim() || null, category: updCategory }),
-      });
+      const res = await adminFetch(
+        `/api/admin/special-projects/${selected.id}/updates`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            title: updTitle.trim(),
+            body: updBody.trim() || null,
+            category: updCategory,
+          }),
+        }
+      );
       if (!res.ok) throw new Error(`Add update failed (${res.status})`);
       const p = (await res.json()) as Project;
       setSelected(p);
@@ -531,25 +644,36 @@ export default function SpecialProjectsAdmin() {
       if (!selected) return;
       setBusy(true);
       try {
-        await adminFetch(`/api/admin/special-projects/${selected.id}/updates/${updateId}`, {
-          method: "DELETE",
-        });
+        await adminFetch(
+          `/api/admin/special-projects/${selected.id}/updates/${updateId}`,
+          {
+            method: "DELETE",
+          }
+        );
         await openProject(selected.id);
       } finally {
         setBusy(false);
       }
     },
-    [adminFetch, selected, openProject],
+    [adminFetch, selected, openProject]
   );
 
   const rotateToken = useCallback(async () => {
     if (!selected) return;
-    if (!window.confirm("Rotate the client portal link? The old link will stop working.")) return;
+    if (
+      !window.confirm(
+        "Rotate the client portal link? The old link will stop working."
+      )
+    )
+      return;
     setBusy(true);
     try {
-      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/rotate-token`, {
-        method: "POST",
-      });
+      const res = await adminFetch(
+        `/api/admin/special-projects/${selected.id}/rotate-token`,
+        {
+          method: "POST",
+        }
+      );
       if (res.ok) {
         await openProject(selected.id);
         setNotice("Portal link rotated");
@@ -561,10 +685,17 @@ export default function SpecialProjectsAdmin() {
 
   const deleteProject = useCallback(async () => {
     if (!selected) return;
-    if (!window.confirm(`Delete "${selected.name}" and all its updates? This cannot be undone.`)) return;
+    if (
+      !window.confirm(
+        `Delete "${selected.name}" and all its updates? This cannot be undone.`
+      )
+    )
+      return;
     setBusy(true);
     try {
-      await adminFetch(`/api/admin/special-projects/${selected.id}`, { method: "DELETE" });
+      await adminFetch(`/api/admin/special-projects/${selected.id}`, {
+        method: "DELETE",
+      });
       setSelected(null);
       await loadProjects();
       setNotice("Project deleted");
@@ -593,25 +724,39 @@ export default function SpecialProjectsAdmin() {
   // Live snapshot derived from the target queue — the source of truth for
   // "where does this project stand and what needs doing next".
   const snapshot = useMemo(() => {
-    const hasEmail = (t: Target) => !!(t.contact_email && t.contact_email.trim());
+    const hasEmail = (t: Target) =>
+      !!(t.contact_email && t.contact_email.trim());
     const hasDraft = (t: Target) => !!(t.draft_subject && t.draft_body);
     const repliedIdx = PIPELINE_STAGES.indexOf("replied");
-    const sent = targets.filter((t) => !!t.sent_at);
-    const missingEmail = targets.filter((t) => !t.sent_at && !hasEmail(t));
-    const verified = targets.filter((t) => t.contact_status === "verified");
-    const awaitingApproval = targets.filter((t) => !t.sent_at && hasDraft(t) && !t.approved);
-    const readyToSend = targets.filter((t) => !t.sent_at && t.approved && t.can_send);
-    const contactedNoReply = targets.filter((t) => !!t.sent_at && stageIndex(t.stage) < repliedIdx);
-    const replied = targets.filter((t) => stageIndex(t.stage) >= repliedIdx);
+    const sent = targets.filter(t => !!t.sent_at);
+    const missingEmail = targets.filter(t => !t.sent_at && !hasEmail(t));
+    const verified = targets.filter(t => t.contact_status === "verified");
+    const awaitingApproval = targets.filter(
+      t => !t.sent_at && hasDraft(t) && !t.approved
+    );
+    const readyToSend = targets.filter(
+      t => !t.sent_at && t.approved && t.can_send
+    );
+    const contactedNoReply = targets.filter(
+      t => !!t.sent_at && stageIndex(t.stage) < repliedIdx
+    );
+    const replied = targets.filter(t => stageIndex(t.stage) >= repliedIdx);
     // Follow-up (T2) funnel.
     const followupNeeded = targets.filter(
-      (t) => !!t.sent_at && !t.followup_sent_at && !(t.followup_subject && t.followup_body),
+      t =>
+        !!t.sent_at &&
+        !t.followup_sent_at &&
+        !(t.followup_subject && t.followup_body)
     );
     const followupAwaiting = targets.filter(
-      (t) => !!t.sent_at && !t.followup_sent_at && !!(t.followup_subject && t.followup_body) && !t.followup_approved,
+      t =>
+        !!t.sent_at &&
+        !t.followup_sent_at &&
+        !!(t.followup_subject && t.followup_body) &&
+        !t.followup_approved
     );
-    const followupReady = targets.filter((t) => !!t.can_send_followup);
-    const followupSent = targets.filter((t) => !!t.followup_sent_at);
+    const followupReady = targets.filter(t => !!t.can_send_followup);
+    const followupSent = targets.filter(t => !!t.followup_sent_at);
     return {
       total: targets.length,
       sent: sent.length,
@@ -632,7 +777,10 @@ export default function SpecialProjectsAdmin() {
     const steps: { text: string; tone: "action" | "info" }[] = [];
     const plural = (n: number) => (n === 1 ? "" : "s");
     if (snapshot.total === 0) {
-      steps.push({ text: "Seed target accounts to start Cal's outreach (queue below).", tone: "info" });
+      steps.push({
+        text: "Seed target accounts to start Cal's outreach (queue below).",
+        tone: "info",
+      });
       return steps;
     }
     if (snapshot.missingEmail > 0)
@@ -691,35 +839,47 @@ export default function SpecialProjectsAdmin() {
         <Header />
         <div className="mx-auto max-w-2xl px-6 py-24 text-center">
           <Shield className="mx-auto mb-4 h-10 w-10 text-slate-400" />
-          <h1 className="text-xl font-semibold text-slate-900">Admin access required</h1>
-          <p className="mt-2 text-slate-600">Special Projects is a private, admin-only workspace.</p>
+          <h1 className="text-xl font-semibold text-slate-900">
+            Admin access required
+          </h1>
+          <p className="mt-2 text-slate-600">
+            Special Projects is a private, admin-only workspace.
+          </p>
 
           <div className="mx-auto mt-6 max-w-md rounded-lg border border-slate-200 bg-white p-4 text-left text-sm">
             {notSignedIn ? (
               <p className="text-slate-600">
-                You don&apos;t appear to be signed in (no valid session token reached the server).
-                Sign in again, then reload this page.
+                You don&apos;t appear to be signed in (no valid session token
+                reached the server). Sign in again, then reload this page.
               </p>
             ) : signedInEmail ? (
               <p className="text-slate-600">
                 Signed in as{" "}
-                <span className="font-mono font-medium text-slate-900">{signedInEmail}</span>, but this
-                account is not in the <code className="rounded bg-slate-100 px-1">ADMIN_EMAILS</code>{" "}
-                allow-list. Add this exact address to <code className="rounded bg-slate-100 px-1">ADMIN_EMAILS</code>{" "}
-                (comma-separated) and redeploy, or sign in with an admin address.
+                <span className="font-mono font-medium text-slate-900">
+                  {signedInEmail}
+                </span>
+                , but this account is not in the{" "}
+                <code className="rounded bg-slate-100 px-1">ADMIN_EMAILS</code>{" "}
+                allow-list. Add this exact address to{" "}
+                <code className="rounded bg-slate-100 px-1">ADMIN_EMAILS</code>{" "}
+                (comma-separated) and redeploy, or sign in with an admin
+                address.
               </p>
             ) : (
               <p className="text-slate-600">
                 Your session reached the server but carried{" "}
-                <span className="font-medium text-slate-900">no email</span> — the admin check can&apos;t
-                match an empty address. Sign out and back in (or re-connect your OAuth provider) so the
-                token includes your email.
+                <span className="font-medium text-slate-900">no email</span> —
+                the admin check can&apos;t match an empty address. Sign out and
+                back in (or re-connect your OAuth provider) so the token
+                includes your email.
               </p>
             )}
             <p className="mt-3 text-xs text-slate-400">
               status {denyStatus ?? "—"}
               {authInfo?.uid ? ` · uid ${authInfo.uid.slice(0, 8)}…` : ""}
-              {typeof authInfo?.is_admin === "boolean" ? ` · is_admin=${authInfo.is_admin}` : ""}
+              {typeof authInfo?.is_admin === "boolean"
+                ? ` · is_admin=${authInfo.is_admin}`
+                : ""}
             </p>
           </div>
 
@@ -754,9 +914,12 @@ export default function SpecialProjectsAdmin() {
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
               <Rocket className="h-3.5 w-3.5" /> Special Projects · admin only
             </div>
-            <h1 className="mt-1 text-2xl font-bold text-slate-900">Bespoke robot-company engagements</h1>
+            <h1 className="mt-1 text-2xl font-bold text-slate-900">
+              Bespoke robot-company engagements
+            </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Run a private Cal GTM workflow per company (e.g. NIMO). Share a read-only portal with each client.
+              Run a private Cal GTM workflow per company (e.g. NIMO). Share a
+              read-only portal with each client.
             </p>
           </div>
           <button
@@ -768,7 +931,9 @@ export default function SpecialProjectsAdmin() {
         </div>
 
         {error && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>
+          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {error}
+          </div>
         )}
         {notice && (
           <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
@@ -780,29 +945,31 @@ export default function SpecialProjectsAdmin() {
           {/* Left: list + create */}
           <div className="space-y-4">
             <div className="rounded-lg border border-slate-200 bg-white p-4">
-              <h2 className="mb-3 text-sm font-semibold text-slate-900">New project</h2>
+              <h2 className="mb-3 text-sm font-semibold text-slate-900">
+                New project
+              </h2>
               <div className="space-y-2">
                 <input
                   value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
+                  onChange={e => setNewName(e.target.value)}
                   placeholder="Company / project name"
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
                 <input
                   value={newWebsite}
-                  onChange={(e) => setNewWebsite(e.target.value)}
+                  onChange={e => setNewWebsite(e.target.value)}
                   placeholder="Website (optional)"
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
                 <input
                   value={newContact}
-                  onChange={(e) => setNewContact(e.target.value)}
+                  onChange={e => setNewContact(e.target.value)}
                   placeholder="Client contact email (optional)"
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 />
                 <textarea
                   value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
+                  onChange={e => setNewDescription(e.target.value)}
                   placeholder="Robot / product one-liner"
                   rows={2}
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -822,7 +989,7 @@ export default function SpecialProjectsAdmin() {
                 Projects {loading ? "…" : `(${projects.length})`}
               </div>
               <ul className="divide-y divide-slate-100">
-                {projects.map((p) => (
+                {projects.map(p => (
                   <li key={p.id}>
                     <button
                       onClick={() => void openProject(p.id)}
@@ -831,8 +998,12 @@ export default function SpecialProjectsAdmin() {
                       }`}
                     >
                       <span>
-                        <span className="block text-sm font-medium text-slate-900">{p.name}</span>
-                        <span className="block text-xs text-slate-500">{p.slug}</span>
+                        <span className="block text-sm font-medium text-slate-900">
+                          {p.name}
+                        </span>
+                        <span className="block text-xs text-slate-500">
+                          {p.slug}
+                        </span>
                       </span>
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
                         {p.status}
@@ -841,7 +1012,9 @@ export default function SpecialProjectsAdmin() {
                   </li>
                 ))}
                 {!loading && projects.length === 0 && (
-                  <li className="px-4 py-6 text-center text-sm text-slate-500">No projects yet.</li>
+                  <li className="px-4 py-6 text-center text-sm text-slate-500">
+                    No projects yet.
+                  </li>
                 )}
               </ul>
             </div>
@@ -851,7 +1024,8 @@ export default function SpecialProjectsAdmin() {
           <div>
             {!selected ? (
               <div className="flex h-full min-h-[300px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white text-sm text-slate-500">
-                Select a project to manage Cal's workflow, KPIs, and the client portal.
+                Select a project to manage Cal's workflow, KPIs, and the client
+                portal.
               </div>
             ) : (
               <div className="space-y-6">
@@ -859,7 +1033,8 @@ export default function SpecialProjectsAdmin() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-                        <Bot className="h-5 w-5 text-indigo-600" /> {selected.name}
+                        <Bot className="h-5 w-5 text-indigo-600" />{" "}
+                        {selected.name}
                       </h2>
                       {selected.company_website && (
                         <a
@@ -868,7 +1043,8 @@ export default function SpecialProjectsAdmin() {
                           rel="noreferrer"
                           className="mt-0.5 inline-flex items-center gap-1 text-xs text-indigo-600"
                         >
-                          {selected.company_website} <ExternalLink className="h-3 w-3" />
+                          {selected.company_website}{" "}
+                          <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
                     </div>
@@ -882,18 +1058,34 @@ export default function SpecialProjectsAdmin() {
 
                   {/* Portal link */}
                   <div className="mt-4 rounded-md bg-slate-50 p-3">
-                    <div className="text-xs font-semibold text-slate-500">Client portal (read-only, no login)</div>
+                    <div className="text-xs font-semibold text-slate-500">
+                      Client portal (read-only, no login)
+                    </div>
                     <div className="mt-1 flex items-center gap-2">
                       <code className="flex-1 truncate rounded bg-white px-2 py-1.5 text-xs text-slate-700">
                         {portalUrl}
                       </code>
-                      <button onClick={copyPortal} className="rounded-md border border-slate-300 bg-white p-1.5 hover:bg-slate-100" title="Copy link">
+                      <button
+                        onClick={copyPortal}
+                        className="rounded-md border border-slate-300 bg-white p-1.5 hover:bg-slate-100"
+                        title="Copy link"
+                      >
                         <Copy className="h-4 w-4 text-slate-600" />
                       </button>
-                      <a href={selected.portal_path} target="_blank" rel="noreferrer" className="rounded-md border border-slate-300 bg-white p-1.5 hover:bg-slate-100" title="Open portal">
+                      <a
+                        href={selected.portal_path}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-md border border-slate-300 bg-white p-1.5 hover:bg-slate-100"
+                        title="Open portal"
+                      >
                         <ExternalLink className="h-4 w-4 text-slate-600" />
                       </a>
-                      <button onClick={() => void rotateToken()} className="rounded-md border border-slate-300 bg-white p-1.5 hover:bg-slate-100" title="Rotate link">
+                      <button
+                        onClick={() => void rotateToken()}
+                        className="rounded-md border border-slate-300 bg-white p-1.5 hover:bg-slate-100"
+                        title="Rotate link"
+                      >
                         <RefreshCw className="h-4 w-4 text-slate-600" />
                       </button>
                     </div>
@@ -902,13 +1094,15 @@ export default function SpecialProjectsAdmin() {
                   {/* Status + summary + description */}
                   <div className="mt-4 grid gap-4 sm:grid-cols-[160px_1fr]">
                     <div>
-                      <label className="text-xs font-semibold text-slate-500">Status</label>
+                      <label className="text-xs font-semibold text-slate-500">
+                        Status
+                      </label>
                       <select
                         value={editStatus}
-                        onChange={(e) => setEditStatus(e.target.value)}
+                        onChange={e => setEditStatus(e.target.value)}
                         className="mt-1 w-full rounded-md border border-slate-300 px-2 py-2 text-sm capitalize"
                       >
-                        {STATUSES.map((s) => (
+                        {STATUSES.map(s => (
                           <option key={s} value={s}>
                             {s}
                           </option>
@@ -916,20 +1110,24 @@ export default function SpecialProjectsAdmin() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500">Summary (shown to client)</label>
+                      <label className="text-xs font-semibold text-slate-500">
+                        Summary (shown to client)
+                      </label>
                       <textarea
                         value={editSummary}
-                        onChange={(e) => setEditSummary(e.target.value)}
+                        onChange={e => setEditSummary(e.target.value)}
                         rows={2}
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                       />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <label className="text-xs font-semibold text-slate-500">Robot / product description</label>
+                    <label className="text-xs font-semibold text-slate-500">
+                      Robot / product description
+                    </label>
                     <textarea
                       value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
+                      onChange={e => setEditDescription(e.target.value)}
                       rows={2}
                       className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                     />
@@ -940,7 +1138,8 @@ export default function SpecialProjectsAdmin() {
                 <div className="rounded-lg border border-slate-200 bg-white p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                      <Sparkles className="h-4 w-4 text-indigo-600" /> Status &amp; next steps
+                      <Sparkles className="h-4 w-4 text-indigo-600" /> Status
+                      &amp; next steps
                     </h3>
                     <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-700">
                       {selected.status}
@@ -950,18 +1149,34 @@ export default function SpecialProjectsAdmin() {
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
                     {[
                       { label: "Accounts", value: snapshot.total, hot: false },
-                      { label: "Verified email", value: snapshot.verified, hot: false },
-                      { label: "Awaiting approval", value: snapshot.awaitingApproval, hot: snapshot.awaitingApproval > 0 },
-                      { label: "Ready to send", value: snapshot.readyToSend, hot: snapshot.readyToSend > 0 },
+                      {
+                        label: "Verified email",
+                        value: snapshot.verified,
+                        hot: false,
+                      },
+                      {
+                        label: "Awaiting approval",
+                        value: snapshot.awaitingApproval,
+                        hot: snapshot.awaitingApproval > 0,
+                      },
+                      {
+                        label: "Ready to send",
+                        value: snapshot.readyToSend,
+                        hot: snapshot.readyToSend > 0,
+                      },
                       { label: "Contacted", value: snapshot.sent, hot: false },
                       { label: "Replied", value: snapshot.replied, hot: false },
-                    ].map((s) => (
+                    ].map(s => (
                       <div
                         key={s.label}
                         className={`rounded-md border px-3 py-2 ${s.hot ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-slate-50"}`}
                       >
-                        <div className="text-lg font-bold text-slate-900">{targetsLoading ? "…" : s.value}</div>
-                        <div className="text-[11px] font-medium text-slate-500">{s.label}</div>
+                        <div className="text-lg font-bold text-slate-900">
+                          {targetsLoading ? "…" : s.value}
+                        </div>
+                        <div className="text-[11px] font-medium text-slate-500">
+                          {s.label}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -979,7 +1194,8 @@ export default function SpecialProjectsAdmin() {
                           disabled={busy}
                           className="inline-flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
                         >
-                          <Mail className="h-3.5 w-3.5" /> Enrich {snapshot.missingEmail} missing email
+                          <Mail className="h-3.5 w-3.5" /> Enrich{" "}
+                          {snapshot.missingEmail} missing email
                           {snapshot.missingEmail === 1 ? "" : "s"}
                         </button>
                       )}
@@ -988,7 +1204,8 @@ export default function SpecialProjectsAdmin() {
                           href="#cal-queue"
                           className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
                         >
-                          <Check className="h-3.5 w-3.5" /> Review {snapshot.awaitingApproval} draft
+                          <Check className="h-3.5 w-3.5" /> Review{" "}
+                          {snapshot.awaitingApproval} draft
                           {snapshot.awaitingApproval === 1 ? "" : "s"}
                         </a>
                       )}
@@ -998,7 +1215,8 @@ export default function SpecialProjectsAdmin() {
                           disabled={busy}
                           className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                         >
-                          <Check className="h-3.5 w-3.5" /> Approve all {snapshot.awaitingApproval}
+                          <Check className="h-3.5 w-3.5" /> Approve all{" "}
+                          {snapshot.awaitingApproval}
                         </button>
                       )}
                       {snapshot.readyToSend > 0 && (
@@ -1007,7 +1225,8 @@ export default function SpecialProjectsAdmin() {
                           disabled={busy}
                           className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
                         >
-                          <Send className="h-3.5 w-3.5" /> Send all {snapshot.readyToSend} approved
+                          <Send className="h-3.5 w-3.5" /> Send all{" "}
+                          {snapshot.readyToSend} approved
                         </button>
                       )}
                       {snapshot.followupNeeded > 0 && (
@@ -1016,7 +1235,8 @@ export default function SpecialProjectsAdmin() {
                           disabled={busy}
                           className="inline-flex items-center gap-1.5 rounded-md border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 disabled:opacity-50"
                         >
-                          <RefreshCw className="h-3.5 w-3.5" /> Draft {snapshot.followupNeeded} follow-up
+                          <RefreshCw className="h-3.5 w-3.5" /> Draft{" "}
+                          {snapshot.followupNeeded} follow-up
                           {snapshot.followupNeeded === 1 ? "" : "s"}
                         </button>
                       )}
@@ -1025,7 +1245,8 @@ export default function SpecialProjectsAdmin() {
                           href="#cal-queue"
                           className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
                         >
-                          <Check className="h-3.5 w-3.5" /> Review {snapshot.followupAwaiting} follow-up
+                          <Check className="h-3.5 w-3.5" /> Review{" "}
+                          {snapshot.followupAwaiting} follow-up
                           {snapshot.followupAwaiting === 1 ? "" : "s"}
                         </a>
                       )}
@@ -1035,7 +1256,8 @@ export default function SpecialProjectsAdmin() {
                           disabled={busy}
                           className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                         >
-                          <Check className="h-3.5 w-3.5" /> Approve all {snapshot.followupAwaiting}
+                          <Check className="h-3.5 w-3.5" /> Approve all{" "}
+                          {snapshot.followupAwaiting}
                         </button>
                       )}
                       {snapshot.followupReady > 0 && (
@@ -1044,7 +1266,8 @@ export default function SpecialProjectsAdmin() {
                           disabled={busy}
                           className="inline-flex items-center gap-1.5 rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
                         >
-                          <Send className="h-3.5 w-3.5" /> Send all {snapshot.followupReady} follow-up
+                          <Send className="h-3.5 w-3.5" /> Send all{" "}
+                          {snapshot.followupReady} follow-up
                           {snapshot.followupReady === 1 ? "" : "s"}
                         </button>
                       )}
@@ -1052,13 +1275,20 @@ export default function SpecialProjectsAdmin() {
                   )}
 
                   <div className="mt-4">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Next steps</div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Next steps
+                    </div>
                     <ol className="mt-2 space-y-1.5">
                       {nextSteps.map((s, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                        <li
+                          key={i}
+                          className="flex items-start gap-2 text-sm text-slate-700"
+                        >
                           <span
                             className={`mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full text-[11px] font-bold ${
-                              s.tone === "action" ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-600"
+                              s.tone === "action"
+                                ? "bg-indigo-600 text-white"
+                                : "bg-slate-200 text-slate-600"
                             }`}
                           >
                             {i + 1}
@@ -1071,10 +1301,14 @@ export default function SpecialProjectsAdmin() {
                 </div>
 
                 {/* Cal outreach queue (review-first) */}
-                <div id="cal-queue" className="rounded-lg border border-slate-200 bg-white p-5">
+                <div
+                  id="cal-queue"
+                  className="rounded-lg border border-slate-200 bg-white p-5"
+                >
                   <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                     <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                      <Bot className="h-4 w-4 text-indigo-600" /> Cal outreach queue
+                      <Bot className="h-4 w-4 text-indigo-600" /> Cal outreach
+                      queue
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
                         {targetsLoading ? "…" : `${targets.length} accounts`}
                       </span>
@@ -1113,8 +1347,9 @@ export default function SpecialProjectsAdmin() {
                     </div>
                   </div>
                   <p className="mb-3 text-xs text-slate-500">
-                    Review-first — Cal drafts every touch, nothing sends until you approve. Sending and stage
-                    changes auto-update the funnel + KPIs below.
+                    Review-first — Cal drafts every touch, nothing sends until
+                    you approve. Sending and stage changes auto-update the
+                    funnel + KPIs below.
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[720px] text-left text-sm">
@@ -1123,11 +1358,13 @@ export default function SpecialProjectsAdmin() {
                           <th className="py-2 pr-2 font-semibold">Account</th>
                           <th className="py-2 pr-2 font-semibold">Contact</th>
                           <th className="py-2 pr-2 font-semibold">Stage</th>
-                          <th className="py-2 pr-2 text-right font-semibold">Draft / send</th>
+                          <th className="py-2 pr-2 text-right font-semibold">
+                            Draft / send
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
-                        {targets.map((t) => {
+                        {targets.map(t => {
                           const fit = t.fit ? FIT_LABEL[t.fit] : null;
                           const open = expandedTarget === t.id;
                           return (
@@ -1135,9 +1372,13 @@ export default function SpecialProjectsAdmin() {
                               <tr className="align-top">
                                 <td className="py-2.5 pr-2">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="font-medium text-slate-900">{t.company}</span>
+                                    <span className="font-medium text-slate-900">
+                                      {t.company}
+                                    </span>
                                     {fit && (
-                                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${fit.cls}`}>
+                                      <span
+                                        className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${fit.cls}`}
+                                      >
                                         {fit.text}
                                       </span>
                                     )}
@@ -1150,32 +1391,43 @@ export default function SpecialProjectsAdmin() {
                                 <td className="py-2.5 pr-2">
                                   {t.contact_email ? (
                                     <div>
-                                      <div className="text-xs text-slate-700">{t.contact_email}</div>
+                                      <div className="text-xs text-slate-700">
+                                        {t.contact_email}
+                                      </div>
                                       <span
                                         className={`text-[10px] font-medium ${
-                                          t.contact_status === "verified" ? "text-emerald-600" : "text-amber-600"
+                                          t.contact_status === "verified"
+                                            ? "text-emerald-600"
+                                            : "text-amber-600"
                                         }`}
                                       >
                                         {t.contact_status}
                                       </span>
                                     </div>
                                   ) : (
-                                    <span className="text-[11px] text-slate-400">no email yet</span>
+                                    <span className="text-[11px] text-slate-400">
+                                      no email yet
+                                    </span>
                                   )}
                                 </td>
                                 <td className="py-2.5 pr-2">
                                   <select
                                     value={t.stage}
-                                    onChange={(e) =>
+                                    onChange={e =>
                                       void targetAction(
                                         `/api/admin/special-projects/${selected.id}/targets/${t.id}/stage`,
-                                        { method: "POST", body: JSON.stringify({ stage: e.target.value }) },
-                                        "Stage updated",
+                                        {
+                                          method: "POST",
+                                          body: JSON.stringify({
+                                            stage: e.target.value,
+                                          }),
+                                        },
+                                        "Stage updated"
                                       )
                                     }
                                     className="rounded-md border border-slate-300 px-2 py-1 text-xs capitalize"
                                   >
-                                    {PIPELINE_STAGES.map((s) => (
+                                    {PIPELINE_STAGES.map(s => (
                                       <option key={s} value={s}>
                                         {s.replace("_", " ")}
                                       </option>
@@ -1185,10 +1437,15 @@ export default function SpecialProjectsAdmin() {
                                 <td className="py-2.5 pl-2">
                                   <div className="flex items-center justify-end gap-1.5">
                                     <button
-                                      onClick={() => setExpandedTarget(open ? null : t.id)}
+                                      onClick={() =>
+                                        setExpandedTarget(open ? null : t.id)
+                                      }
                                       className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
                                     >
-                                      Draft <ChevronDown className={`h-3 w-3 transition ${open ? "rotate-180" : ""}`} />
+                                      Draft{" "}
+                                      <ChevronDown
+                                        className={`h-3 w-3 transition ${open ? "rotate-180" : ""}`}
+                                      />
                                     </button>
                                     {t.sent_at ? (
                                       <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700">
@@ -1200,11 +1457,15 @@ export default function SpecialProjectsAdmin() {
                                           void targetAction(
                                             `/api/admin/special-projects/${selected.id}/targets/${t.id}/send`,
                                             { method: "POST" },
-                                            `Sent to ${t.company}`,
+                                            `Sent to ${t.company}`
                                           )
                                         }
                                         disabled={busy || !t.can_send}
-                                        title={t.can_send ? "Send now" : "Add a contact email first"}
+                                        title={
+                                          t.can_send
+                                            ? "Send now"
+                                            : "Add a contact email first"
+                                        }
                                         className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-40"
                                       >
                                         <Send className="h-3 w-3" /> Send
@@ -1215,7 +1476,7 @@ export default function SpecialProjectsAdmin() {
                                           void targetAction(
                                             `/api/admin/special-projects/${selected.id}/targets/${t.id}/approve`,
                                             { method: "POST" },
-                                            "Draft approved",
+                                            "Draft approved"
                                           )
                                         }
                                         disabled={busy}
@@ -1232,9 +1493,12 @@ export default function SpecialProjectsAdmin() {
                                   <td colSpan={4} className="pb-3">
                                     <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
                                       <div className="text-[11px] font-semibold text-slate-500">
-                                        First touch (T1) · Sequence {t.sequence} · {t.persona}
+                                        First touch (T1) · Sequence {t.sequence}{" "}
+                                        · {t.persona}
                                       </div>
-                                      <div className="text-sm font-medium text-slate-800">{t.draft_subject}</div>
+                                      <div className="text-sm font-medium text-slate-800">
+                                        {t.draft_subject}
+                                      </div>
                                       <pre className="mt-2 whitespace-pre-wrap font-sans text-xs text-slate-700">
                                         {t.draft_body}
                                       </pre>
@@ -1244,7 +1508,7 @@ export default function SpecialProjectsAdmin() {
                                             void targetAction(
                                               `/api/admin/special-projects/${selected.id}/targets/${t.id}/unapprove`,
                                               { method: "POST" },
-                                              "Approval revoked",
+                                              "Approval revoked"
                                             )
                                           }
                                           className="mt-2 text-[11px] font-medium text-slate-500 hover:text-red-600"
@@ -1258,17 +1522,23 @@ export default function SpecialProjectsAdmin() {
                                         <div className="mt-3 border-t border-slate-200 pt-3">
                                           <div className="flex items-center justify-between">
                                             <div className="text-[11px] font-semibold text-sky-700">
-                                              Follow-up (T2){t.followup_sent_at ? " · sent" : ""}
+                                              Follow-up (T2)
+                                              {t.followup_sent_at
+                                                ? " · sent"
+                                                : ""}
                                             </div>
-                                            {!t.followup_subject && !t.followup_sent_at && (
-                                              <button
-                                                onClick={() => void generateFollowups()}
-                                                disabled={busy}
-                                                className="text-[11px] font-medium text-sky-600 hover:text-sky-800 disabled:opacity-50"
-                                              >
-                                                Draft follow-up
-                                              </button>
-                                            )}
+                                            {!t.followup_subject &&
+                                              !t.followup_sent_at && (
+                                                <button
+                                                  onClick={() =>
+                                                    void generateFollowups()
+                                                  }
+                                                  disabled={busy}
+                                                  className="text-[11px] font-medium text-sky-600 hover:text-sky-800 disabled:opacity-50"
+                                                >
+                                                  Draft follow-up
+                                                </button>
+                                              )}
                                           </div>
                                           {t.followup_subject ? (
                                             <>
@@ -1281,7 +1551,8 @@ export default function SpecialProjectsAdmin() {
                                               <div className="mt-2 flex items-center gap-2">
                                                 {t.followup_sent_at ? (
                                                   <span className="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-1 text-[11px] font-medium text-sky-700">
-                                                    <Check className="h-3 w-3" /> Follow-up sent
+                                                    <Check className="h-3 w-3" />{" "}
+                                                    Follow-up sent
                                                   </span>
                                                 ) : t.followup_approved ? (
                                                   <>
@@ -1290,20 +1561,24 @@ export default function SpecialProjectsAdmin() {
                                                         void targetAction(
                                                           `/api/admin/special-projects/${selected.id}/targets/${t.id}/send-followup`,
                                                           { method: "POST" },
-                                                          `Follow-up sent to ${t.company}`,
+                                                          `Follow-up sent to ${t.company}`
                                                         )
                                                       }
-                                                      disabled={busy || !t.can_send_followup}
+                                                      disabled={
+                                                        busy ||
+                                                        !t.can_send_followup
+                                                      }
                                                       className="inline-flex items-center gap-1 rounded-md bg-sky-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-sky-700 disabled:opacity-40"
                                                     >
-                                                      <Send className="h-3 w-3" /> Send follow-up
+                                                      <Send className="h-3 w-3" />{" "}
+                                                      Send follow-up
                                                     </button>
                                                     <button
                                                       onClick={() =>
                                                         void targetAction(
                                                           `/api/admin/special-projects/${selected.id}/targets/${t.id}/unapprove-followup`,
                                                           { method: "POST" },
-                                                          "Follow-up approval revoked",
+                                                          "Follow-up approval revoked"
                                                         )
                                                       }
                                                       className="text-[11px] font-medium text-slate-500 hover:text-red-600"
@@ -1317,13 +1592,14 @@ export default function SpecialProjectsAdmin() {
                                                       void targetAction(
                                                         `/api/admin/special-projects/${selected.id}/targets/${t.id}/approve-followup`,
                                                         { method: "POST" },
-                                                        "Follow-up approved",
+                                                        "Follow-up approved"
                                                       )
                                                     }
                                                     disabled={busy}
                                                     className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
                                                   >
-                                                    <Check className="h-3 w-3" /> Approve follow-up
+                                                    <Check className="h-3 w-3" />{" "}
+                                                    Approve follow-up
                                                   </button>
                                                 )}
                                               </div>
@@ -1344,9 +1620,15 @@ export default function SpecialProjectsAdmin() {
                         })}
                         {!targetsLoading && targets.length === 0 && (
                           <tr>
-                            <td colSpan={4} className="py-6 text-center text-xs text-slate-500">
+                            <td
+                              colSpan={4}
+                              className="py-6 text-center text-xs text-slate-500"
+                            >
                               No target accounts yet. Seed them with{" "}
-                              <code className="rounded bg-slate-100 px-1">seed_special_project_nimo_targets.py</code>.
+                              <code className="rounded bg-slate-100 px-1">
+                                seed_special_project_nimo_targets.py
+                              </code>
+                              .
                             </td>
                           </tr>
                         )}
@@ -1358,10 +1640,13 @@ export default function SpecialProjectsAdmin() {
                 {/* Pipeline funnel */}
                 <div className="rounded-lg border border-slate-200 bg-white p-5">
                   <h3 className="mb-3 text-sm font-semibold text-slate-900">
-                    Pipeline funnel <span className="text-xs font-normal text-slate-400">(auto-derived from the queue)</span>
+                    Pipeline funnel{" "}
+                    <span className="text-xs font-normal text-slate-400">
+                      (auto-derived from the queue)
+                    </span>
                   </h3>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-                    {PIPELINE_STAGES.map((stage) => (
+                    {PIPELINE_STAGES.map(stage => (
                       <div key={stage}>
                         <label className="block text-[11px] font-medium capitalize text-slate-500">
                           {stage.replace("_", " ")}
@@ -1370,7 +1655,12 @@ export default function SpecialProjectsAdmin() {
                           type="number"
                           min={0}
                           value={editPipeline[stage] ?? ""}
-                          onChange={(e) => setEditPipeline((prev) => ({ ...prev, [stage]: e.target.value }))}
+                          onChange={e =>
+                            setEditPipeline(prev => ({
+                              ...prev,
+                              [stage]: e.target.value,
+                            }))
+                          }
                           className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
                         />
                       </div>
@@ -1381,9 +1671,13 @@ export default function SpecialProjectsAdmin() {
                 {/* KPIs / metrics */}
                 <div className="rounded-lg border border-slate-200 bg-white p-5">
                   <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-slate-900">KPI cards (shown to client)</h3>
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      KPI cards (shown to client)
+                    </h3>
                     <button
-                      onClick={() => setMetricRows((r) => [...r, { key: "", value: "" }])}
+                      onClick={() =>
+                        setMetricRows(r => [...r, { key: "", value: "" }])
+                      }
                       className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600"
                     >
                       <Plus className="h-3.5 w-3.5" /> Add KPI
@@ -1394,22 +1688,32 @@ export default function SpecialProjectsAdmin() {
                       <div key={idx} className="flex items-center gap-2">
                         <input
                           value={row.key}
-                          onChange={(e) =>
-                            setMetricRows((r) => r.map((x, i) => (i === idx ? { ...x, key: e.target.value } : x)))
+                          onChange={e =>
+                            setMetricRows(r =>
+                              r.map((x, i) =>
+                                i === idx ? { ...x, key: e.target.value } : x
+                              )
+                            )
                           }
                           placeholder="Label (e.g. demos_booked)"
                           className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                         />
                         <input
                           value={row.value}
-                          onChange={(e) =>
-                            setMetricRows((r) => r.map((x, i) => (i === idx ? { ...x, value: e.target.value } : x)))
+                          onChange={e =>
+                            setMetricRows(r =>
+                              r.map((x, i) =>
+                                i === idx ? { ...x, value: e.target.value } : x
+                              )
+                            )
                           }
                           placeholder="Value"
                           className="w-32 rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                         />
                         <button
-                          onClick={() => setMetricRows((r) => r.filter((_, i) => i !== idx))}
+                          onClick={() =>
+                            setMetricRows(r => r.filter((_, i) => i !== idx))
+                          }
                           className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1417,7 +1721,10 @@ export default function SpecialProjectsAdmin() {
                       </div>
                     ))}
                     {metricRows.length === 0 && (
-                      <p className="text-xs text-slate-500">No KPIs yet — add cards like “demos_booked”, “pilots_signed”.</p>
+                      <p className="text-xs text-slate-500">
+                        No KPIs yet — add cards like “demos_booked”,
+                        “pilots_signed”.
+                      </p>
                     )}
                   </div>
                 </div>
@@ -1434,20 +1741,22 @@ export default function SpecialProjectsAdmin() {
 
                 {/* Updates timeline */}
                 <div className="rounded-lg border border-slate-200 bg-white p-5">
-                  <h3 className="mb-3 text-sm font-semibold text-slate-900">Workflow updates</h3>
+                  <h3 className="mb-3 text-sm font-semibold text-slate-900">
+                    Workflow updates
+                  </h3>
                   <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_160px]">
                     <input
                       value={updTitle}
-                      onChange={(e) => setUpdTitle(e.target.value)}
+                      onChange={e => setUpdTitle(e.target.value)}
                       placeholder="Update title (e.g. First demo booked)"
                       className="rounded-md border border-slate-300 px-3 py-2 text-sm"
                     />
                     <select
                       value={updCategory}
-                      onChange={(e) => setUpdCategory(e.target.value)}
+                      onChange={e => setUpdCategory(e.target.value)}
                       className="rounded-md border border-slate-300 px-2 py-2 text-sm capitalize"
                     >
-                      {UPDATE_CATEGORIES.map((c) => (
+                      {UPDATE_CATEGORIES.map(c => (
                         <option key={c} value={c}>
                           {c}
                         </option>
@@ -1455,7 +1764,7 @@ export default function SpecialProjectsAdmin() {
                     </select>
                     <textarea
                       value={updBody}
-                      onChange={(e) => setUpdBody(e.target.value)}
+                      onChange={e => setUpdBody(e.target.value)}
                       placeholder="Details (optional)"
                       rows={2}
                       className="rounded-md border border-slate-300 px-3 py-2 text-sm sm:col-span-2"
@@ -1469,16 +1778,25 @@ export default function SpecialProjectsAdmin() {
                     </button>
                   </div>
                   <ul className="space-y-2">
-                    {(selected.updates || []).map((u) => (
-                      <li key={u.id} className="flex items-start justify-between gap-3 rounded-md border border-slate-100 bg-slate-50 px-3 py-2">
+                    {(selected.updates || []).map(u => (
+                      <li
+                        key={u.id}
+                        className="flex items-start justify-between gap-3 rounded-md border border-slate-100 bg-slate-50 px-3 py-2"
+                      >
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-medium capitalize text-slate-600">
                               {u.category}
                             </span>
-                            <span className="text-sm font-medium text-slate-900">{u.title}</span>
+                            <span className="text-sm font-medium text-slate-900">
+                              {u.title}
+                            </span>
                           </div>
-                          {u.body && <p className="mt-1 text-xs text-slate-600">{u.body}</p>}
+                          {u.body && (
+                            <p className="mt-1 text-xs text-slate-600">
+                              {u.body}
+                            </p>
+                          )}
                           {u.created_at && (
                             <p className="mt-0.5 text-[11px] text-slate-400">
                               {new Date(u.created_at).toLocaleString()}
@@ -1494,7 +1812,9 @@ export default function SpecialProjectsAdmin() {
                       </li>
                     ))}
                     {(selected.updates || []).length === 0 && (
-                      <li className="text-xs text-slate-500">No updates posted yet.</li>
+                      <li className="text-xs text-slate-500">
+                        No updates posted yet.
+                      </li>
                     )}
                   </ul>
                 </div>

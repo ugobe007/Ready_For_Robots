@@ -121,22 +121,26 @@ export const CRITIC_GATES: readonly CriticGate[] = [
   },
   {
     id: "class_picker",
-    prove: "class-picker click starts robot-job-search and settles jobs or empty",
+    prove:
+      "class-picker click starts robot-job-search and settles jobs or empty",
     fail: "Agriculture click silently no-ops or dumps empty CRM as the only outcome",
   },
   {
     id: "healthcare_class",
-    prove: "Diligent/Moxi is healthcare; Healthcare tile exists; class search returns named employers",
+    prove:
+      "Diligent/Moxi is healthcare; Healthcare tile exists; class search returns named employers",
     fail: "Diligent classified humanoid, empty humanoid copy, or missing Healthcare class tile",
   },
   {
     id: "ontology_industry_language",
-    prove: "Industry work words live in the ontology and outrank humanoid morphology where R33 says so",
+    prove:
+      "Industry work words live in the ontology and outrank humanoid morphology where R33 says so",
     fail: "hospital/hotel/mining/warehouse work words missing from ontology files",
   },
   {
     id: "url_workflow",
-    prove: "FIND URL critic reports product range, named SKUs, and per-product capabilities",
+    prove:
+      "FIND URL critic reports product range, named SKUs, and per-product capabilities",
     fail: "mixed OEM flattened, chrome-as-SKU, cleaning-drone-as-scrubber, or company-class dump",
   },
 ] as const;
@@ -188,7 +192,11 @@ export function crmWallRequired(): boolean {
   return PSTACK_CRM_WALL_REQUIRED;
 }
 
-export function refuseSiteAgent(reason: SiteAgentRefusal): { ok: false; reason: SiteAgentRefusal; detail: string } {
+export function refuseSiteAgent(reason: SiteAgentRefusal): {
+  ok: false;
+  reason: SiteAgentRefusal;
+  detail: string;
+} {
   return { ok: false, reason, detail: FORBIDDEN[reason] };
 }
 
@@ -196,7 +204,12 @@ export function siteAgentAsk(input: {
   role: PstackRoleId;
   surface: "jobs_find" | "jobs_crm" | "crm_generate_plan" | "scout_chat";
 }):
-  | { ok: true; role: PstackRoleId; jobSource: JobsMatcherSource; gates: readonly CriticGate[] }
+  | {
+      ok: true;
+      role: PstackRoleId;
+      jobSource: JobsMatcherSource;
+      gates: readonly CriticGate[];
+    }
   | { ok: false; reason: SiteAgentRefusal; detail: string } {
   if (input.surface === "scout_chat") {
     return refuseSiteAgent("customer_pstack_chat");

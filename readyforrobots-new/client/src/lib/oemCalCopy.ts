@@ -9,7 +9,8 @@ export const OEM_CAL_NAME = "Cal";
 /** Results sticky / header — anonymous */
 export function oemCalResultsAnonLine(matchCount: number): string {
   const n = Math.max(matchCount, 0);
-  if (n <= 0) return "Cal is matching buyers to your robot — sign up to keep the list.";
+  if (n <= 0)
+    return "Cal is matching buyers to your robot — sign up to keep the list.";
   return `Cal matched ${n} buyer${n === 1 ? "" : "s"} to your robot — sign up to keep them in your workspace.`;
 }
 
@@ -24,12 +25,19 @@ export function oemCalResultsSignedLine(matchCount: number): string {
 export const OEM_CAL_RESULTS_CTA_ANON = "Sign up — keep these buyers";
 export const OEM_CAL_RESULTS_CTA_SIGNED = "Unlock 15 matched sales leads";
 
-export const OEM_CAL_RESULTS_HEAD_ANON = "These buyers fit your robot — claim them";
-export const OEM_CAL_RESULTS_HEAD_SIGNED = "Review your matches — then unlock 15 sales leads";
+export const OEM_CAL_RESULTS_HEAD_ANON =
+  "These buyers fit your robot — claim them";
+export const OEM_CAL_RESULTS_HEAD_SIGNED =
+  "Review your matches — then unlock 15 sales leads";
 
-export const OEM_CAL_RESULTS_STRIP_TITLE = "Cal's OEM proof — buyers for your robot, not a generic list";
+export const OEM_CAL_RESULTS_STRIP_TITLE =
+  "Cal's OEM proof — buyers for your robot, not a generic list";
 
-export function oemCalResultsStripBody(unlocked: number, leadCount: number, locked: number): string {
+export function oemCalResultsStripBody(
+  unlocked: number,
+  leadCount: number,
+  locked: number
+): string {
   if (locked > 0) {
     return `You're seeing ${unlocked} of ${leadCount} with full why-now + pitch. Free signup unlocks ${locked} more and saves them to your pipeline.`;
   }
@@ -37,7 +45,8 @@ export function oemCalResultsStripBody(unlocked: number, leadCount: number, lock
 }
 
 /** Signup — from Results intent */
-export const OEM_CAL_SIGNUP_H1_RESULTS = "Keep the buyers Cal matched to your robot.";
+export const OEM_CAL_SIGNUP_H1_RESULTS =
+  "Keep the buyers Cal matched to your robot.";
 export const OEM_CAL_SIGNUP_SUB_RESULTS =
   "Free account locks in your URL matches, saves leads to CRM, and lets you copy Cal's outreach notes — built for robot OEMs and integrators.";
 

@@ -17,9 +17,21 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
   {
     label: "Sell",
     links: [
-      { label: "Your robots", href: "/my-robots", shortLabel: "Robots → the buyers you've collected" },
-      { label: "Live pipeline", href: "/pipeline", shortLabel: "Pick leads · draft · send" },
-      { label: "Activity feed", href: "/sales-workflow", shortLabel: "What happened while you were away" },
+      {
+        label: "Your robots",
+        href: "/my-robots",
+        shortLabel: "Robots → the buyers you've collected",
+      },
+      {
+        label: "Live pipeline",
+        href: "/pipeline",
+        shortLabel: "Pick leads · draft · send",
+      },
+      {
+        label: "Activity feed",
+        href: "/sales-workflow",
+        shortLabel: "What happened while you were away",
+      },
       { label: "Inbox", href: "/inbox", shortLabel: "Replies & threads" },
     ],
   },
@@ -28,16 +40,40 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
     links: [
       { label: "CRM", href: "/crm", shortLabel: "Approve and send outreach" },
       { label: "Calendar", href: "/calendar" },
-      { label: "Sales console", href: "/sales-console", shortLabel: "Reply automation" },
+      {
+        label: "Sales console",
+        href: "/sales-console",
+        shortLabel: "Reply automation",
+      },
     ],
   },
   {
     label: "Command",
     links: [
-      { label: "Command center", href: "/admin", shortLabel: "Daily brief · Cal queue", adminOnly: true },
-      { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions", adminOnly: true },
-      { label: "Sales samples", href: "/sales/samples", shortLabel: "Build 15-company demos", adminOnly: true },
-      { label: "Special projects", href: "/admin/special-projects", shortLabel: "Bespoke client GTM (NIMO)", adminOnly: true },
+      {
+        label: "Command center",
+        href: "/admin",
+        shortLabel: "Daily brief · Cal queue",
+        adminOnly: true,
+      },
+      {
+        label: "Agent queue",
+        href: "/admin#workflow",
+        shortLabel: "Agent actions",
+        adminOnly: true,
+      },
+      {
+        label: "Sales samples",
+        href: "/sales/samples",
+        shortLabel: "Build 15-company demos",
+        adminOnly: true,
+      },
+      {
+        label: "Special projects",
+        href: "/admin/special-projects",
+        shortLabel: "Bespoke client GTM (NIMO)",
+        adminOnly: true,
+      },
     ],
   },
   {
@@ -55,9 +91,8 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
   },
 ];
 
-export const ADMIN_WORKSPACE_LINKS: AdminNavLink[] = ADMIN_WORKSPACE_SECTIONS.flatMap(
-  (section) => section.links,
-);
+export const ADMIN_WORKSPACE_LINKS: AdminNavLink[] =
+  ADMIN_WORKSPACE_SECTIONS.flatMap(section => section.links);
 
 function normalizePath(path: string): string {
   if (path.startsWith("/readyforrobots")) {
@@ -74,39 +109,54 @@ export function isAdminNavActive(currentPath: string, href: string): boolean {
 
   if (target === "/sales-workflow") return path === "/sales-workflow";
   if (href.includes("#cal-outreach") || href === "/admin#cal-outreach") {
-    return path === "/admin" && (hash === "#cal-outreach" || hash === "" || hash === "#cal");
+    return (
+      path === "/admin" &&
+      (hash === "#cal-outreach" || hash === "" || hash === "#cal")
+    );
   }
-  if (href.includes("#workflow")) return path === "/admin" && hash === "#workflow";
+  if (href.includes("#workflow"))
+    return path === "/admin" && hash === "#workflow";
   if (target === "/admin") {
-    return path === "/admin" && (!hash || hash === "#cal-outreach" || hash === "#cal");
+    return (
+      path === "/admin" &&
+      (!hash || hash === "#cal-outreach" || hash === "#cal")
+    );
   }
   if (target === "/admin/prospects") return path === "/admin/prospects";
-  if (target === "/sales/samples") return path === "/sales/samples" || path === "/admin/sales-samples";
-  if (target === "/pipeline") return path === "/pipeline" || path === "/admin/prospects";
-  if (target === "/integrations") return path === "/integrations" || path.startsWith("/integrations/");
+  if (target === "/sales/samples")
+    return path === "/sales/samples" || path === "/admin/sales-samples";
+  if (target === "/pipeline")
+    return path === "/pipeline" || path === "/admin/prospects";
+  if (target === "/integrations")
+    return path === "/integrations" || path.startsWith("/integrations/");
 
   return path === target || path.startsWith(`${target}/`);
 }
 
 export function isAdminWorkspacePath(path: string): boolean {
   const normalized = normalizePath(path);
-  return ADMIN_WORKSPACE_LINKS.some((link) => isAdminNavActive(normalized, link.href));
+  return ADMIN_WORKSPACE_LINKS.some(link =>
+    isAdminNavActive(normalized, link.href)
+  );
 }
 
 /** Workspace nav links visible for the current user (admin-only links filtered out). */
 export function visibleAdminNavLinks(isAdmin: boolean): AdminNavLink[] {
-  return ADMIN_WORKSPACE_LINKS.filter((link) => !link.adminOnly || isAdmin);
+  return ADMIN_WORKSPACE_LINKS.filter(link => !link.adminOnly || isAdmin);
 }
 
 export function visibleAdminNavSections(isAdmin: boolean): AdminNavSection[] {
-  return ADMIN_WORKSPACE_SECTIONS.map((section) => ({
+  return ADMIN_WORKSPACE_SECTIONS.map(section => ({
     ...section,
-    links: section.links.filter((link) => !link.adminOnly || isAdmin),
-  })).filter((section) => section.links.length > 0);
+    links: section.links.filter(link => !link.adminOnly || isAdmin),
+  })).filter(section => section.links.length > 0);
 }
 
 /** SPA navigation that preserves hash anchors (wouter path-only routes drop #sections). */
-export function openWorkspaceHref(href: string, setLocation: (path: string) => void): void {
+export function openWorkspaceHref(
+  href: string,
+  setLocation: (path: string) => void
+): void {
   const hashIdx = href.indexOf("#");
   if (hashIdx === -1) {
     setLocation(href);
@@ -123,11 +173,17 @@ export function openWorkspaceHref(href: string, setLocation: (path: string) => v
   }
   const id = hash.replace(/^#/, "");
   window.setTimeout(() => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, 120);
 }
 
 export const ADMIN_QUICK_ACTIONS: AdminNavLink[] = [
   { label: "Command center", href: "/admin", shortLabel: "Cal queue" },
-  { label: "Agent queue", href: "/admin#workflow", shortLabel: "Review actions" },
+  {
+    label: "Agent queue",
+    href: "/admin#workflow",
+    shortLabel: "Review actions",
+  },
 ];

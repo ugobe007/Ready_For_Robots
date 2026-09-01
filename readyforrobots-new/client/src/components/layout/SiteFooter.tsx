@@ -88,7 +88,9 @@ export default function SiteFooter({
             <Link href={homeHref} className="flex items-center gap-2.5 mb-4">
               <img src="/logo-r.png" alt="ReadyForRobots" className="h-7 w-7" />
               <div>
-                <span className="font-display font-bold text-white text-sm tracking-tight block">ReadyForRobots</span>
+                <span className="font-display font-bold text-white text-sm tracking-tight block">
+                  ReadyForRobots
+                </span>
                 <span className="font-mono-data text-emerald-400 text-[10px] font-semibold tracking-widest uppercase">
                   {jobsChrome ? "JOBS" : "SIGNAL"}
                 </span>
@@ -101,11 +103,14 @@ export default function SiteFooter({
             </p>
             {showNewsletter && (
               <>
-                <form onSubmit={onNewsletterSubmit} className="flex gap-2 max-w-sm">
+                <form
+                  onSubmit={onNewsletterSubmit}
+                  className="flex gap-2 max-w-sm"
+                >
                   <input
                     type="email"
                     value={newsletterEmail}
-                    onChange={(e) => onEmailChange?.(e.target.value)}
+                    onChange={e => onEmailChange?.(e.target.value)}
                     placeholder="work email"
                     className="flex-1 px-3 py-2 bg-white/5 border border-white/10 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
                   />
@@ -117,19 +122,28 @@ export default function SiteFooter({
                     Subscribe
                   </button>
                 </form>
-                {newsletterStatus === "success" && <p className="text-emerald-400 text-xs mt-2">Subscribed.</p>}
-                <p className="text-slate-600 text-xs mt-2">Weekly Robot Intelligence Brief. Free.</p>
+                {newsletterStatus === "success" && (
+                  <p className="text-emerald-400 text-xs mt-2">Subscribed.</p>
+                )}
+                <p className="text-slate-600 text-xs mt-2">
+                  Weekly Robot Intelligence Brief. Free.
+                </p>
               </>
             )}
           </div>
 
           {Object.entries(links).map(([group, items]) => (
             <div key={group}>
-              <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">{group}</p>
+              <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
+                {group}
+              </p>
               <ul className="space-y-2.5">
-                {items.map((item) => (
+                {items.map(item => (
                   <li key={item.label}>
-                    <Link href={item.href} className="text-slate-500 text-sm hover:text-white transition-colors">
+                    <Link
+                      href={item.href}
+                      className="text-slate-500 text-sm hover:text-white transition-colors"
+                    >
                       {item.label}
                     </Link>
                   </li>
@@ -146,13 +160,22 @@ export default function SiteFooter({
               : "© 2026 ReadyForRobots · Signal for robotics sales."}
           </p>
           <div className="flex flex-wrap gap-6 justify-center">
-            <Link href="/privacy" className="text-slate-500 text-xs hover:text-white transition-colors">
+            <Link
+              href="/privacy"
+              className="text-slate-500 text-xs hover:text-white transition-colors"
+            >
               Privacy
             </Link>
-            <Link href={loginHref} className="text-slate-500 text-xs hover:text-white transition-colors">
+            <Link
+              href={loginHref}
+              className="text-slate-500 text-xs hover:text-white transition-colors"
+            >
               Sign in
             </Link>
-            <Link href={signupHref} className="text-slate-500 text-xs hover:text-white transition-colors">
+            <Link
+              href={signupHref}
+              className="text-slate-500 text-xs hover:text-white transition-colors"
+            >
               Sign up
             </Link>
             <a

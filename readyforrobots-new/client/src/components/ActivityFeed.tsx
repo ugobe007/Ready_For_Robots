@@ -13,11 +13,15 @@ type ActivityFeedProps = {
   onSelectActivity: (activity: ActivityItem) => void;
   onFeedAction?: (
     activity: ActivityItem,
-    action: FeedAction,
+    action: FeedAction
   ) => Promise<{ route?: string; entity_id?: string } | void>;
 };
 
-export default function ActivityFeed({ activities, onSelectActivity, onFeedAction }: ActivityFeedProps) {
+export default function ActivityFeed({
+  activities,
+  onSelectActivity,
+  onFeedAction,
+}: ActivityFeedProps) {
   const [items, setItems] = useState<ActivityItem[]>(activities);
   const [filter, setFilter] = useState<string>("all");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -27,7 +31,7 @@ export default function ActivityFeed({ activities, onSelectActivity, onFeedActio
   }, [activities]);
 
   async function runAction(id: string, action: FeedAction) {
-    const item = items.find((a) => a.id === id);
+    const item = items.find(a => a.id === id);
     if (!item) return;
     if (!onFeedAction) {
       toast.error("Feed actions are unavailable.");
@@ -37,13 +41,13 @@ export default function ActivityFeed({ activities, onSelectActivity, onFeedActio
     try {
       const result = await onFeedAction(item, action);
       if (action === "skip" || action === "approve") {
-        setItems((prev) => prev.filter((a) => a.id !== id));
+        setItems(prev => prev.filter(a => a.id !== id));
       }
       if (action === "prioritize") {
-        setItems((prev) => {
-          const target = prev.find((a) => a.id === id);
+        setItems(prev => {
+          const target = prev.find(a => a.id === id);
           if (!target) return prev;
-          return [target, ...prev.filter((a) => a.id !== id)];
+          return [target, ...prev.filter(a => a.id !== id)];
         });
       }
       if (action === "approve") {
@@ -56,7 +60,9 @@ export default function ActivityFeed({ activities, onSelectActivity, onFeedActio
         toast(`Opening ${item.companyName} in CRM.`);
       }
       if (result?.route) {
-        const url = result.entity_id ? `${result.route}?account=${encodeURIComponent(result.entity_id)}` : result.route;
+        const url = result.entity_id
+          ? `${result.route}?account=${encodeURIComponent(result.entity_id)}`
+          : result.route;
         window.location.href = url;
       }
     } catch (e) {
@@ -79,24 +85,36 @@ export default function ActivityFeed({ activities, onSelectActivity, onFeedActio
     { value: "qualified", label: "Qualified" },
   ];
 
-  const filtered = filter === "all" ? items : items.filter((a) => a.status === filter);
+  const filtered =
+    filter === "all" ? items : items.filter(a => a.status === filter);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-neutral-950">Activity Feed</h2>
+          <h2 className="text-base font-semibold text-neutral-950">
+            Activity Feed
+          </h2>
           <p className="text-xs text-neutral-400 mt-0.5">
-            {filtered.length} action{filtered.length !== 1 ? "s" : ""} need your attention
+            {filtered.length} action{filtered.length !== 1 ? "s" : ""} need your
+            attention
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-neutral-500 gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-neutral-500 gap-1.5"
+          >
             <SortDesc className="h-3.5 w-3.5" />
             Sort
           </Button>
-          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-neutral-500 gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-neutral-500 gap-1.5"
+          >
             <Filter className="h-3.5 w-3.5" />
             Filter
           </Button>
@@ -104,7 +122,7 @@ export default function ActivityFeed({ activities, onSelectActivity, onFeedActio
       </div>
 
       <div className="flex items-center gap-1 overflow-x-auto pb-1">
-        {filterOptions.map((opt) => (
+        {filterOptions.map(opt => (
           <button
             key={opt.value}
             onClick={() => setFilter(opt.value)}
@@ -130,8 +148,12 @@ export default function ActivityFeed({ activities, onSelectActivity, onFeedActio
               <div className="h-12 w-12 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
                 <Inbox className="h-6 w-6 text-neutral-400" />
               </div>
-              <p className="text-sm font-medium text-neutral-600">All caught up</p>
-              <p className="text-xs text-neutral-400 mt-1">No actions pending in this category.</p>
+              <p className="text-sm font-medium text-neutral-600">
+                All caught up
+              </p>
+              <p className="text-xs text-neutral-400 mt-1">
+                No actions pending in this category.
+              </p>
             </motion.div>
           ) : (
             filtered.map((activity, i) => (

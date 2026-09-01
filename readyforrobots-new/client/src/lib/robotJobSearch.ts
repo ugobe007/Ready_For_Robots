@@ -2,7 +2,11 @@
  * POST /api/robot-job-search — one composed profile + jobs transaction.
  */
 import { getApiBase, fetchWithTimeout } from "@/lib/apiBase";
-import type { MatchCapability, MatchJob, RobotJobMatchResult } from "@/lib/robotJobMatch";
+import type {
+  MatchCapability,
+  MatchJob,
+  RobotJobMatchResult,
+} from "@/lib/robotJobMatch";
 import type { RobotProfileResult } from "@/lib/robotProfile";
 import type { SearchTimings } from "@/lib/submitWorkflow";
 
@@ -32,7 +36,10 @@ export async function fetchRobotJobSearch(opts: {
     `${base}/api/robot-job-search`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify({
         url: opts.url,
         product: opts.product || null,
@@ -42,7 +49,7 @@ export async function fetchRobotJobSearch(opts: {
       }),
       signal: opts.signal,
     },
-    opts.timeoutMs ?? 30_000,
+    opts.timeoutMs ?? 30_000
   );
   if (!res.ok) {
     let detail = `robot-job-search ${res.status}`;

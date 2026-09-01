@@ -25,6 +25,7 @@ from app.services.jobs_crm import (
     reply_on_application,
     send_prepared_application,
     set_application_meeting_url,
+    set_kept_job_task_model,
 )
 from app.services.jobs_crm_recruiter import (
     MAX_DOC_BYTES,
@@ -56,6 +57,12 @@ class KeepJobsBody(BaseModel):
     robot_name: Optional[str] = Field(default=None, max_length=240)
     robot_url: Optional[str] = Field(default=None, max_length=2000)
     robot_submission_id: Optional[int] = None
+
+
+class WorkTaskModelBody(BaseModel):
+    job_key: str = Field(..., min_length=1, max_length=160)
+    kind: str = Field(..., min_length=1, max_length=32)
+    source: Optional[str] = Field(default=None, max_length=240)
 
 
 class ApplyBody(BaseModel):
@@ -155,6 +162,26 @@ def post_keep_jobs(
 def get_kept_jobs(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
     jobs = list_kept_jobs(db, user)
     return {"jobs": jobs, "saved_count": len(jobs)}
+
+
+@router.post("/jobs/task-model")
+def post_kept_job_task_model(
+    body: WorkTaskModelBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return set_kept_job_task_model(
+            db,
+            user,
+            job_key=body.job_key,
+            kind=body.kind,
+            source=body.source,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not on this desk.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/skus")

@@ -2,10 +2,7 @@
  * Employer / OEM watch surface for an allowlisted PoC video URL.
  * Embeds Loom / YouTube / Vimeo. Google Drive is a link-out. Never logs the URL.
  */
-import {
-  JOBS_POC_VIDEO_WATCH,
-  parsePocVideoUrl,
-} from "@/lib/pocVideoUrl";
+import { JOBS_POC_VIDEO_WATCH, parsePocVideoUrl } from "@/lib/pocVideoUrl";
 import { JOBS_EYEBROW_CLASS } from "@/lib/jobsWorkflow";
 
 export default function PocVideoWatch({

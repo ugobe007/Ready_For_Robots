@@ -59,10 +59,10 @@ Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"`
 | Step | Label | CTA |
 |------|-------|-----|
 | 01 | Show us your robot | `Find jobs →` (emerald) |
-| 02 | Available jobs | `Apply to jobs →` (violet `.rfr-jobs-apply-cta`) |
-| 03 | CRM | `Open CRM →` / leave-desk next. Signed desk also shows **Apply to jobs →** in violet. |
+| 02 | Available jobs | `Open CRM →` (emerald). Apply is not a sibling CTA on this screen. |
+| 03 | CRM | `Open CRM →` / leave-desk next. Signed desk shows violet **Apply to jobs →**. |
 
-01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM.
+01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM. Apply lives on the CRM desk after Open CRM.
 
 On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and signed desk). Unsigned next is **Sign up to open CRM →**. Signed next leaves the desk: **Back to jobs →** when they have a submission or kept cards, otherwise **Find jobs →**. Header **About** stays visible on all widths.
 
@@ -108,7 +108,7 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
   → Job Cards (QUALIFY / inspect + check — checking dumps the row into CRM)
   → Open CRM → /signup?next=/pipeline?src=jobs_activate&src=jobs_activate
   → after auth, CRM desk with 5 kept jobs (no robot OEMs)
-  → CRM desk with the jobs they kept → Apply (offer form) → open a job → quote rental → Place this job. Process bar stays 01 / 02 / 03.
+  → CRM desk with the jobs they kept → name a model for the work or say you'll train one → Apply (offer form) → open a job → quote rental → Place this job. Process bar stays 01 / 02 / 03.
   → run the next robot the same way
 ```
 

@@ -16,11 +16,16 @@ type Props = {
   unlockedCount?: number;
 };
 
-export default function ResultsValueStrip({ leadCount, scanUrl, unlockedCount }: Props) {
+export default function ResultsValueStrip({
+  leadCount,
+  scanUrl,
+  unlockedCount,
+}: Props) {
   const signupNext = scanUrl
     ? `/results?url=${encodeURIComponent(scanUrl)}`
     : "/results";
-  const unlocked = unlockedCount ?? Math.min(RESULTS_ANONYMOUS_UNLOCK, leadCount);
+  const unlocked =
+    unlockedCount ?? Math.min(RESULTS_ANONYMOUS_UNLOCK, leadCount);
   const locked = Math.max(leadCount - unlocked, 0);
 
   return (
@@ -28,7 +33,9 @@ export default function ResultsValueStrip({ leadCount, scanUrl, unlockedCount }:
       <div className="flex items-start gap-2 flex-1 min-w-0">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
         <div>
-          <p className="text-xs font-bold text-emerald-100">{OEM_CAL_RESULTS_STRIP_TITLE}</p>
+          <p className="text-xs font-bold text-emerald-100">
+            {OEM_CAL_RESULTS_STRIP_TITLE}
+          </p>
           <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-100/80">
             {oemCalResultsStripBody(unlocked, leadCount, locked)}
           </p>
@@ -38,7 +45,9 @@ export default function ResultsValueStrip({ leadCount, scanUrl, unlockedCount }:
         href={`/signup?next=${encodeURIComponent(signupNext)}`}
         className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-300 px-3 py-2 text-xs font-bold text-emerald-950 hover:bg-emerald-200"
       >
-        {locked > 0 ? OEM_CAL_RESULTS_CTA_ANON : "Sign up free — copy Cal's note"}
+        {locked > 0
+          ? OEM_CAL_RESULTS_CTA_ANON
+          : "Sign up free — copy Cal's note"}
         <ArrowRight className="h-3.5 w-3.5" />
       </Link>
     </div>

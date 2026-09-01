@@ -21,12 +21,19 @@ export function useScoutChat() {
 function ScoutPanel({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="Close" onClick={onClose} />
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default"
+        aria-label="Close"
+        onClick={onClose}
+      />
       <div className="relative w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-emerald-50">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-display font-semibold text-gray-900">SIGNAL</span>
+            <span className="text-sm font-display font-semibold text-gray-900">
+              SIGNAL
+            </span>
           </div>
           <button
             type="button"
@@ -39,7 +46,8 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
         </div>
         <div className="p-5 text-sm text-gray-600 leading-relaxed">
           <p className="mb-3">
-            SIGNAL scans your URL, captures qualified buyer leads, scores alignment, and queues activation plans from the results page.
+            SIGNAL scans your URL, captures qualified buyer leads, scores
+            alignment, and queues activation plans from the results page.
           </p>
           <Link
             href="/signup"
@@ -50,7 +58,8 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
             Activate SIGNAL
           </Link>
           <p className="mt-4 text-xs text-gray-400">
-            Follow-up automation starts after you activate aligned leads or select individual leads on the pipeline.
+            Follow-up automation starts after you activate aligned leads or
+            select individual leads on the pipeline.
           </p>
         </div>
       </div>
@@ -67,7 +76,8 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const search = useSearch();
   const openChat = useCallback(() => setOpen(true), []);
-  const onPipeline = location === "/pipeline" || location.startsWith("/admin/prospects");
+  const onPipeline =
+    location === "/pipeline" || location.startsWith("/admin/prospects");
   const hideFab =
     showJobsSiteChrome({ pathname: location, search }) ||
     onPipeline ||

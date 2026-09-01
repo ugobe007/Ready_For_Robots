@@ -32,7 +32,7 @@ describe("hermesJobEvidence", () => {
             { vendor: "mobile_manipulator" },
           ],
         },
-      }),
+      })
     ).toBeNull();
   });
 
@@ -41,14 +41,19 @@ describe("hermesJobEvidence", () => {
       hermesQualify: {
         rationale:
           "[rfr_inference_v1] Labor shortage / staffing gap; 8 hot-type signals (labor_shortage)",
-        vendor_shortlist: [{ vendor: "amr" }, { vendor: "Boston Dynamics", model: "Spot" }],
+        vendor_shortlist: [
+          { vendor: "amr" },
+          { vendor: "Boston Dynamics", model: "Spot" },
+        ],
       },
       hermesJobTitles: ["AMR Operator"],
       hermesDecisionMakers: [{ name: "Jane Ops", title: "VP Operations" }],
-      hermesVideoEvidence: [{ source_url: "https://youtu.be/demo", title: "Tote unload" }],
+      hermesVideoEvidence: [
+        { source_url: "https://youtu.be/demo", title: "Tote unload" },
+      ],
     });
     expect(card?.rationale).toBe("Labor shortage / staffing gap");
-    expect(card?.vendors.map((v) => v.vendor)).toEqual(["Boston Dynamics"]);
+    expect(card?.vendors.map(v => v.vendor)).toEqual(["Boston Dynamics"]);
     expect(card?.jobTitles).toEqual(["AMR Operator"]);
     expect(card?.decisionMakers[0]?.name).toBe("Jane Ops");
     expect(card?.videos[0]?.title).toBe("Tote unload");

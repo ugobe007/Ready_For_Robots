@@ -14,13 +14,22 @@ type Props = {
   scanUrl?: string;
 };
 
-export default function ResultsFomoBanner({ prospects, isSignedIn, scanUrl }: Props) {
+export default function ResultsFomoBanner({
+  prospects,
+  isSignedIn,
+  scanUrl,
+}: Props) {
   const hotCount = prospects.filter(
-    (p) => p.priorityTier === "HOT" || (p.stage || "").toUpperCase().includes("HOT"),
+    p =>
+      p.priorityTier === "HOT" || (p.stage || "").toUpperCase().includes("HOT")
   ).length;
-  const unlocked = isSignedIn ? prospects.length : Math.min(RESULTS_ANONYMOUS_UNLOCK, prospects.length);
+  const unlocked = isSignedIn
+    ? prospects.length
+    : Math.min(RESULTS_ANONYMOUS_UNLOCK, prospects.length);
   const locked = Math.max(prospects.length - unlocked, 0);
-  const signupNext = scanUrl ? `/results?url=${encodeURIComponent(scanUrl)}` : "/results";
+  const signupNext = scanUrl
+    ? `/results?url=${encodeURIComponent(scanUrl)}`
+    : "/results";
 
   return (
     <div className="mb-6 rounded-2xl border border-amber-400/40 bg-[#111b30] p-4 shadow-[0_18px_42px_-30px_rgba(245,158,11,0.75)] sm:p-5">
@@ -28,7 +37,8 @@ export default function ResultsFomoBanner({ prospects, isSignedIn, scanUrl }: Pr
         Scan complete · act before someone else does
       </p>
       <h2 className="font-display text-xl sm:text-2xl font-bold text-white leading-snug">
-        {prospects.length} buyer{prospects.length === 1 ? "" : "s"} align to your product
+        {prospects.length} buyer{prospects.length === 1 ? "" : "s"} align to
+        your product
         {hotCount > 0 ? (
           <>
             {" · "}
@@ -37,15 +47,19 @@ export default function ResultsFomoBanner({ prospects, isSignedIn, scanUrl }: Pr
         ) : null}
       </h2>
       <p className="mt-2 max-w-2xl text-sm text-slate-300">
-        Each row shows fit, timing, and why-now context. Next step is the large Pipeline — with instructions — not email drafting here.
+        Each row shows fit, timing, and why-now context. Next step is the large
+        Pipeline — with instructions — not email drafting here.
       </p>
       {!isSignedIn && locked > 0 && (
         <div className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-400/30 bg-[#081126]/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-2">
             <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
             <p className="text-xs leading-relaxed text-slate-200">
-              <strong className="text-white">{unlocked} of {prospects.length} unlocked.</strong> Sign up free to reveal{" "}
-              {locked} more aligned lead{locked === 1 ? "" : "s"}, then open Pipeline.
+              <strong className="text-white">
+                {unlocked} of {prospects.length} unlocked.
+              </strong>{" "}
+              Sign up free to reveal {locked} more aligned lead
+              {locked === 1 ? "" : "s"}, then open Pipeline.
             </p>
           </div>
           <Link
