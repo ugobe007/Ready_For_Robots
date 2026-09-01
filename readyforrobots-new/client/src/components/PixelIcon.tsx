@@ -27,7 +27,9 @@ export default function PixelIcon({
   return (
     <div className={className}>
       {label ? (
-        <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-500">{label}</p>
+        <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-500">
+          {label}
+        </p>
       ) : null}
       <div
         role="img"
@@ -54,10 +56,12 @@ export default function PixelIcon({
                 key={`${x}-${y}`}
                 style={{
                   background: bit ? fill : "transparent",
-                  boxShadow: showGrid ? "inset 0 0 0 0.5px rgba(100,100,100,0.25)" : undefined,
+                  boxShadow: showGrid
+                    ? "inset 0 0 0 0.5px rgba(100,100,100,0.25)"
+                    : undefined,
                 }}
               />
-            )),
+            ))
           )}
         </div>
       </div>

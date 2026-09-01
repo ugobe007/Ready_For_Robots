@@ -121,7 +121,7 @@ export default function PipelineCrmMotion({
       </div>
       {savedDeals.length > 0 ? (
         <ul className="mt-4 space-y-1.5">
-          {savedDeals.slice(0, 5).map((deal) => {
+          {savedDeals.slice(0, 5).map(deal => {
             const active = deal.id === selectedId;
             return (
               <li key={deal.id}>
@@ -134,7 +134,9 @@ export default function PipelineCrmMotion({
                       : "border-slate-600 bg-[#0b162f] hover:border-slate-400"
                   }`}
                 >
-                  <span className="pipeline-company-name truncate">{deal.company}</span>
+                  <span className="pipeline-company-name truncate">
+                    {deal.company}
+                  </span>
                   <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-emerald-300">
                     {deal.stage}
                   </span>

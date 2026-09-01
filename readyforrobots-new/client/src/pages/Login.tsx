@@ -6,22 +6,54 @@ import { Github } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
-import { AUTH_UNAVAILABLE_MSG, supabase, supabaseOAuthRedirect } from "@/lib/supabase";
-import { authEmailRejectReason, normalizeAuthEmail, otpNoAccountMessage } from "@/lib/authEmail";
+import {
+  AUTH_UNAVAILABLE_MSG,
+  supabase,
+  supabaseOAuthRedirect,
+} from "@/lib/supabase";
+import {
+  authEmailRejectReason,
+  normalizeAuthEmail,
+  otpNoAccountMessage,
+} from "@/lib/authEmail";
 import { getApiBase } from "@/lib/apiBase";
-import { readNextParam, peekPendingNext, postAuthRedirectTarget, storePendingNext, readPlanParam, storeCheckoutIntent, resolvePostAuthPath, navigateAfterAuth } from "@/lib/authNext";
+import {
+  readNextParam,
+  peekPendingNext,
+  postAuthRedirectTarget,
+  storePendingNext,
+  readPlanParam,
+  storeCheckoutIntent,
+  resolvePostAuthPath,
+  navigateAfterAuth,
+} from "@/lib/authNext";
 import { markJobsWorkspaceRestoreIfHome } from "@/lib/jobsWorkflow";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
 
 function GoogleGlyph() {
   return (
-    <span className="inline-flex h-5 w-5 items-center justify-center  bg-white" aria-hidden="true">
+    <span
+      className="inline-flex h-5 w-5 items-center justify-center  bg-white"
+      aria-hidden="true"
+    >
       <svg viewBox="0 0 24 24" className="h-4 w-4" focusable="false">
-        <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-1.4 3.5-5.5 3.5-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 6.8 2 2.6 6.2 2.6 11.4S6.8 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"/>
-        <path fill="#34A853" d="M3.7 7.3l3.2 2.3c.9-1.8 2.8-3 5.1-3 1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 8.1 2 4.8 4.2 3.2 7.3Z"/>
-        <path fill="#4285F4" d="M12 20.8c2.5 0 4.7-.8 6.3-2.3l-2.9-2.4c-.8.6-1.8 1-3.4 1-4.1 0-5.3-2.8-5.5-3.5l-3.3 2.5c1.6 3.1 4.9 4.7 8.8 4.7Z"/>
-        <path fill="#FBBC05" d="M3.2 16.1l3.3-2.5c-.1-.4-.2-.9-.2-1.4s.1-1 .2-1.4L3.2 8.3c-.4 1-.6 2-.6 3.1s.2 2.1.6 3.1Z"/>
+        <path
+          fill="#EA4335"
+          d="M12 10.2v3.9h5.5c-.2 1.2-1.4 3.5-5.5 3.5-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 6.8 2 2.6 6.2 2.6 11.4S6.8 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"
+        />
+        <path
+          fill="#34A853"
+          d="M3.7 7.3l3.2 2.3c.9-1.8 2.8-3 5.1-3 1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 8.1 2 4.8 4.2 3.2 7.3Z"
+        />
+        <path
+          fill="#4285F4"
+          d="M12 20.8c2.5 0 4.7-.8 6.3-2.3l-2.9-2.4c-.8.6-1.8 1-3.4 1-4.1 0-5.3-2.8-5.5-3.5l-3.3 2.5c1.6 3.1 4.9 4.7 8.8 4.7Z"
+        />
+        <path
+          fill="#FBBC05"
+          d="M3.2 16.1l3.3-2.5c-.1-.4-.2-.9-.2-1.4s.1-1 .2-1.4L3.2 8.3c-.4 1-.6 2-.6 3.1s.2 2.1.6 3.1Z"
+        />
       </svg>
     </span>
   );
@@ -29,7 +61,10 @@ function GoogleGlyph() {
 
 function MicrosoftGlyph() {
   return (
-    <span className="inline-flex h-5 w-5 items-center justify-center" aria-hidden="true">
+    <span
+      className="inline-flex h-5 w-5 items-center justify-center"
+      aria-hidden="true"
+    >
       <svg viewBox="0 0 24 24" className="h-4 w-4" focusable="false">
         <rect x="2" y="2" width="9" height="9" fill="#f35325" />
         <rect x="13" y="2" width="9" height="9" fill="#81bc06" />
@@ -43,7 +78,9 @@ function MicrosoftGlyph() {
 export default function Login() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle"
+  );
   const [errMsg, setErrMsg] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
@@ -58,7 +95,10 @@ export default function Login() {
 
   useEffect(() => {
     if (cooldown <= 0) return;
-    const t = window.setTimeout(() => setCooldown((n) => Math.max(0, n - 1)), 1000);
+    const t = window.setTimeout(
+      () => setCooldown(n => Math.max(0, n - 1)),
+      1000
+    );
     return () => window.clearTimeout(t);
   }, [cooldown]);
 
@@ -74,7 +114,8 @@ export default function Login() {
       const { data } = await client.auth.getSession();
       if (data?.session) {
         const dest = resolvePostAuthPath("/");
-        if (readNextParam() || peekPendingNext()) markJobsWorkspaceRestoreIfHome(dest);
+        if (readNextParam() || peekPendingNext())
+          markJobsWorkspaceRestoreIfHome(dest);
         navigateAfterAuth(dest);
         return;
       }
@@ -135,7 +176,7 @@ export default function Login() {
       setErrMsg(
         provider === "azure" && /provider is not enabled/i.test(error.message)
           ? "Microsoft sign-in is not enabled yet in Supabase Auth (Azure provider). Use Google or a magic link, or enable Azure in the Supabase dashboard."
-          : error.message,
+          : error.message
       );
     }
   }
@@ -180,7 +221,8 @@ export default function Login() {
     }
   }
 
-  const loginSearch = typeof window !== "undefined" ? window.location.search : "";
+  const loginSearch =
+    typeof window !== "undefined" ? window.location.search : "";
 
   return (
     <div className="min-h-screen flex flex-col bg-[#081126] text-slate-100">
@@ -190,34 +232,55 @@ export default function Login() {
           <div className="mb-8 flex items-center justify-center gap-5 text-left">
             <div className="min-w-0">
               <p className="section-eyebrow mb-2">Sign in</p>
-              <h1 className="font-display text-3xl font-bold tracking-tight text-slate-100">Welcome back</h1>
+              <h1 className="font-display text-3xl font-bold tracking-tight text-slate-100">
+                Welcome back
+              </h1>
               <p className="mt-2 text-base text-slate-300">
-                Sign in to save jobs, run Pipeline, and work CRM. Admin emails open{" "}
-                <Link href="/admin" className="text-emerald-400 underline-offset-2 hover:underline">
+                Sign in to save jobs, run Pipeline, and work CRM. Admin emails
+                open{" "}
+                <Link
+                  href="/admin"
+                  className="text-emerald-400 underline-offset-2 hover:underline"
+                >
                   /admin
                 </Link>{" "}
                 after sign-in.
               </p>
             </div>
             <div className="shrink-0" aria-hidden="true">
-              <PixelIcon map={KARE_FACE} scale={5} fill="#3ecf8e" background="transparent" />
+              <PixelIcon
+                map={KARE_FACE}
+                scale={5}
+                fill="#3ecf8e"
+                background="transparent"
+              />
             </div>
           </div>
 
           {status === "sent" ? (
             <div className=" border border-emerald-400/35 bg-emerald-950/30 px-6 py-8 text-center">
-              <h2 className="text-base font-semibold text-slate-100 mb-2">Check your email</h2>
+              <h2 className="text-base font-semibold text-slate-100 mb-2">
+                Check your email
+              </h2>
               <p className="text-sm text-slate-300">
-                We sent a magic link to <span className="font-semibold text-emerald-300">{email}</span>.
+                We sent a magic link to{" "}
+                <span className="font-semibold text-emerald-300">{email}</span>.
               </p>
-              <button type="button" onClick={() => setStatus("idle")} className="mt-5 text-xs text-slate-400 hover:text-slate-200">
+              <button
+                type="button"
+                onClick={() => setStatus("idle")}
+                className="mt-5 text-xs text-slate-400 hover:text-slate-200"
+              >
                 Back to sign-in options
               </button>
             </div>
           ) : (
             <div className=" border border-slate-700/70 bg-[#0b162f]/85 px-6 py-8 shadow-[0_20px_45px_-25px_rgba(0,0,0,0.8)]">
               {!supabase ? (
-                <p className="mb-5 text-xs text-red-200 border border-red-400/40 bg-red-900/30 px-3 py-2" role="alert">
+                <p
+                  className="mb-5 text-xs text-red-200 border border-red-400/40 bg-red-900/30 px-3 py-2"
+                  role="alert"
+                >
                   {AUTH_UNAVAILABLE_MSG}
                 </p>
               ) : null}
@@ -252,10 +315,12 @@ export default function Login() {
               </div>
               <div className="flex items-center gap-3 mb-5">
                 <span className="flex-1 h-px bg-slate-700" />
-                <span className="text-[10px] text-slate-500 uppercase tracking-widest">or</span>
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest">
+                  or
+                </span>
                 <span className="flex-1 h-px bg-slate-700" />
               </div>
-              <form onSubmit={(e) => void magicLink(e)} className="space-y-3">
+              <form onSubmit={e => void magicLink(e)} className="space-y-3">
                 <input
                   type="email"
                   required
@@ -263,13 +328,15 @@ export default function Login() {
                   inputMode="email"
                   spellCheck={false}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   disabled={status === "sending"}
                   className="w-full  border border-slate-600 bg-[#0a1327] px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-400"
                 />
                 {status === "error" && (
-                  <p className="text-xs text-red-200 border border-red-400/40 bg-red-900/30 px-3 py-2 whitespace-pre-wrap">{errMsg}</p>
+                  <p className="text-xs text-red-200 border border-red-400/40 bg-red-900/30 px-3 py-2 whitespace-pre-wrap">
+                    {errMsg}
+                  </p>
                 )}
                 <button
                   type="submit"
@@ -285,11 +352,17 @@ export default function Login() {
           <div className="mt-6 text-center space-y-3">
             <p className="text-xs text-slate-400">
               New to ReadyForRobots?{" "}
-              <Link href={`/signup${loginSearch}`} className="font-semibold text-emerald-300 hover:text-emerald-200">
+              <Link
+                href={`/signup${loginSearch}`}
+                className="font-semibold text-emerald-300 hover:text-emerald-200"
+              >
                 Start free workspace
               </Link>
             </p>
-            <Link href="/" className="block text-xs text-slate-500 hover:text-slate-300">
+            <Link
+              href="/"
+              className="block text-xs text-slate-500 hover:text-slate-300"
+            >
               ← Back home
             </Link>
           </div>

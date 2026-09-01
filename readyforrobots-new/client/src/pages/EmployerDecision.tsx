@@ -71,7 +71,7 @@ export default function EmployerDecision() {
   const [declineCode, setDeclineCode] = useState("");
   const [declineNote, setDeclineNote] = useState("");
   const [mode, setMode] = useState<InterviewMode>(
-    action === "hold" ? "hold" : "propose",
+    action === "hold" ? "hold" : "propose"
   );
   const offered = suggestedHoldSlots();
 
@@ -91,7 +91,11 @@ export default function EmployerDecision() {
       })
       .catch(err => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "This application link is not valid.");
+          setError(
+            err instanceof Error
+              ? err.message
+              : "This application link is not valid."
+          );
         }
       });
     return () => {
@@ -107,9 +111,12 @@ export default function EmployerDecision() {
         `${api}/api/jobs-crm/employer/${token}${path}`,
         liveFetchInit({
           method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: body ? JSON.stringify(body) : "{}",
-        }),
+        })
       );
       if (!res.ok) {
         let detail = "Could not update this application.";
@@ -123,24 +130,33 @@ export default function EmployerDecision() {
       }
       setData((await res.json()) as EmployerView);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update this application.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not update this application."
+      );
     } finally {
       setBusy(false);
     }
   }
 
-  const heldWindow = data?.slot_label
-    || (data?.slot_start
+  const heldWindow =
+    data?.slot_label ||
+    (data?.slot_start
       ? `${new Date(data.slot_start).toLocaleString()}${
           data.slot_end ? ` – ${new Date(data.slot_end).toLocaleString()}` : ""
         }`
       : null);
 
   return (
-    <div className={`flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+    <div
+      className={`flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+    >
       <ExperimentHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
-        <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>Employer evaluate</p>
+        <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>
+          Employer evaluate
+        </p>
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
           {data?.work_title || "Application"}
         </h1>
@@ -157,7 +173,8 @@ export default function EmployerDecision() {
               {data.workplace ? ` · ${data.workplace}` : ""}
             </p>
             <p className="mt-2 text-sm text-slate-400">
-              Proposed monthly price (their offer, not a site rate): {data.monthly_price}
+              Proposed monthly price (their offer, not a site rate):{" "}
+              {data.monthly_price}
             </p>
             {data.poc_evidence ? (
               <p className="mt-2 text-sm text-slate-300">{data.poc_evidence}</p>
@@ -284,7 +301,9 @@ export default function EmployerDecision() {
                 </fieldset>
                 <label className="block">
                   <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
-                    {declineCode === "other" ? "Note (required)" : "Note (optional)"}
+                    {declineCode === "other"
+                      ? "Note (required)"
+                      : "Note (optional)"}
                   </span>
                   <textarea
                     value={declineNote}
@@ -414,7 +433,9 @@ export default function EmployerDecision() {
                   </>
                 )}
                 <label className="block">
-                  <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>Note</span>
+                  <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+                    Note
+                  </span>
                   <textarea
                     value={note}
                     onChange={e => setNote(e.target.value)}

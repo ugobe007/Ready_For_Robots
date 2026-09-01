@@ -1,4 +1,12 @@
-import { ArrowRight, FileText, List, Mail, Play, Send, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  FileText,
+  List,
+  Mail,
+  Play,
+  Send,
+  ShieldCheck,
+} from "lucide-react";
 import { Link } from "wouter";
 
 type Summary = {
@@ -41,9 +49,15 @@ function StepCard({
 }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-700">Step {step}</p>
-      <h2 className="mt-1 font-display text-base font-bold text-gray-950">{title}</h2>
-      <p className="mt-1 text-sm leading-relaxed text-gray-700">{description}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-700">
+        Step {step}
+      </p>
+      <h2 className="mt-1 font-display text-base font-bold text-gray-950">
+        {title}
+      </h2>
+      <p className="mt-1 text-sm leading-relaxed text-gray-700">
+        {description}
+      </p>
       <div className="mt-4 flex flex-wrap gap-2">{children}</div>
     </div>
   );
@@ -74,15 +88,23 @@ export default function AdminCalWorkflowPanel({
   return (
     <div className="mb-6 space-y-4">
       <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-        <p className="text-sm font-bold text-gray-950">Cal buyer queue (admin-cal-outreach)</p>
+        <p className="text-sm font-bold text-gray-950">
+          Cal buyer queue (admin-cal-outreach)
+        </p>
         <p className="mt-1 text-sm text-gray-700">
-          This tab is the operator activation queue — not the public pipeline page. Cal works HOT/WARM scored buyers
-          ({hot} hot · {warm} warm) who have CRM drafts on your admin team.
+          This tab is the operator activation queue — not the public pipeline
+          page. Cal works HOT/WARM scored buyers ({hot} hot · {warm} warm) who
+          have CRM drafts on your admin team.
         </p>
         <p className="mt-2 text-xs text-gray-600">
-          Worker autopilot is {autopilotEnabled ? "on" : "off"} (every {everyHours}h, up to {sendLimit} intros/run).
-          {assemblyRequired ? " Autopilot sends pass the assembly review gate." : " Assembly review is off."}
-          {manualApproval ? " Manual approval is required before any send." : " Drafts are sendable once written (no approve step)."}
+          Worker autopilot is {autopilotEnabled ? "on" : "off"} (every{" "}
+          {everyHours}h, up to {sendLimit} intros/run).
+          {assemblyRequired
+            ? " Autopilot sends pass the assembly review gate."
+            : " Assembly review is off."}
+          {manualApproval
+            ? " Manual approval is required before any send."
+            : " Drafts are sendable once written (no approve step)."}
         </p>
       </div>
 
@@ -102,7 +124,11 @@ export default function AdminCalWorkflowPanel({
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs">
           <span className="text-amber-800">Blocked</span>
           <p className="text-lg font-black text-amber-950">
-            {needsApproval > 0 ? `${needsApproval} need approve` : noEmail > 0 ? `${noEmail} no email` : "—"}
+            {needsApproval > 0
+              ? `${needsApproval} need approve`
+              : noEmail > 0
+                ? `${noEmail} no email`
+                : "—"}
           </p>
         </div>
       </div>

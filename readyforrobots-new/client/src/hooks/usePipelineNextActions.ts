@@ -10,9 +10,12 @@ export function usePipelineNextActions(limit = 3) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetch(`${getApiBase()}/api/leads/pipeline-next-actions?limit=${limit}`, liveFetchInit())
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+    fetch(
+      `${getApiBase()}/api/leads/pipeline-next-actions?limit=${limit}`,
+      liveFetchInit()
+    )
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
         if (!cancelled) setActions(mapApiNextActions(data));
       })
       .catch(() => {

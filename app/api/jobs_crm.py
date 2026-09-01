@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.auth_deps import _require_user
 from app.database import get_db
+from app.services.cal_jobs_desk import read_desk as read_cal_desk, run_desk_tool
 from app.services.jobs_crm import (
     apply_selected_jobs,
     apply_to_job,
@@ -25,6 +26,7 @@ from app.services.jobs_crm import (
     reply_on_application,
     send_prepared_application,
     set_application_meeting_url,
+    set_kept_job_task_model,
 )
 from app.services.jobs_crm_recruiter import (
     MAX_DOC_BYTES,
@@ -56,6 +58,27 @@ class KeepJobsBody(BaseModel):
     robot_name: Optional[str] = Field(default=None, max_length=240)
     robot_url: Optional[str] = Field(default=None, max_length=2000)
     robot_submission_id: Optional[int] = None
+
+
+class WorkTaskModelBody(BaseModel):
+    job_key: str = Field(..., min_length=1, max_length=160)
+    kind: str = Field(..., min_length=1, max_length=32)
+    source: Optional[str] = Field(default=None, max_length=240)
+
+
+class CalDeskTurnBody(BaseModel):
+    tool: str = Field(..., min_length=1, max_length=64)
+    job_key: Optional[str] = Field(default=None, max_length=160)
+    kind: Optional[str] = Field(default=None, max_length=32)
+    source: Optional[str] = Field(default=None, max_length=240)
+    robot_name: Optional[str] = Field(default=None, max_length=240)
+    selected_models: list[str] = Field(default_factory=list)
+    monthly_price: Optional[str] = Field(default=None, max_length=160)
+    poc_evidence: Optional[str] = Field(default=None, max_length=4000)
+    poc_video_url: Optional[str] = Field(default=None, max_length=2000)
+    poc_skipped: bool = False
+    why: Optional[str] = Field(default=None, max_length=2000)
+    company_name: Optional[str] = Field(default=None, max_length=240)
 
 
 class ApplyBody(BaseModel):
@@ -155,6 +178,62 @@ def post_keep_jobs(
 def get_kept_jobs(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
     jobs = list_kept_jobs(db, user)
     return {"jobs": jobs, "saved_count": len(jobs)}
+
+
+@router.post("/jobs/task-model")
+def post_kept_job_task_model(
+    body: WorkTaskModelBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return set_kept_job_task_model(
+            db,
+            user,
+            job_key=body.job_key,
+            kind=body.kind,
+            source=body.source,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not on this desk.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/cal/desk")
+def get_cal_desk(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
+    """Cal's Jobs-desk brief. Signed CRM only. Not FIND."""
+    return read_cal_desk(db, user)
+
+
+@router.post("/cal/desk")
+def post_cal_desk(
+    body: CalDeskTurnBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    """Run one Cal Jobs-desk tool. Cal prepares. The operator sends."""
+    try:
+        return run_desk_tool(
+            db,
+            user,
+            tool=body.tool,
+            job_key=body.job_key,
+            kind=body.kind,
+            source=body.source,
+            robot_name=body.robot_name,
+            selected_models=body.selected_models,
+            monthly_price=body.monthly_price,
+            poc_evidence=body.poc_evidence,
+            poc_video_url=body.poc_video_url,
+            poc_skipped=body.poc_skipped,
+            why=body.why,
+            company_name=body.company_name,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not on this desk.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/skus")

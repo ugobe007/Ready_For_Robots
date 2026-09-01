@@ -29,6 +29,8 @@ if str(ROOT) not in sys.path:
 FLY_API = os.getenv("RFR_FLY_API", "https://ready-2-robot.fly.dev").rstrip("/")
 WORKSPACE = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "RobotJobsWorkspace.tsx"
 CRM_DESK = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "JobsCrmDesk.tsx"
+CAL_DESK_UI = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "CalJobsDesk.tsx"
+CAL_DESK_PY = ROOT / "app" / "services" / "cal_jobs_desk.py"
 IDENTITY = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "robotUrlIdentity.ts"
 FIND_RESEARCH = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "findResearch.ts"
 CRM_ACCOUNT = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsCrmAccount.ts"
@@ -341,6 +343,8 @@ def phase_how() -> dict[str, Any]:
     owners = {
         "workspace": WORKSPACE,
         "crm_desk": CRM_DESK,
+        "cal_desk_ui": CAL_DESK_UI,
+        "cal_desk_py": CAL_DESK_PY,
         "identity": IDENTITY,
         "find_research": FIND_RESEARCH,
         "crm_account": CRM_ACCOUNT,
@@ -414,6 +418,8 @@ def phase_act() -> dict[str, Any]:
     account = _read(CRM_ACCOUNT) if CRM_ACCOUNT.is_file() else ""
     handoff = _read(HANDOFF) if HANDOFF.is_file() else ""
     desk = _read(CRM_DESK) if CRM_DESK.is_file() else ""
+    cal_desk = _read(CAL_DESK_UI) if CAL_DESK_UI.is_file() else ""
+    cal_py = _read(CAL_DESK_PY) if CAL_DESK_PY.is_file() else ""
     release_ts = _read(PSTACK_RELEASE_TS) if PSTACK_RELEASE_TS.is_file() else ""
 
     checks.append(
@@ -497,6 +503,44 @@ def phase_act() -> dict[str, Any]:
             and "robot-job-match" not in desk
             and "JobsPstackProtocol" not in desk,
             "FIND uses robot-job-search; CRM desk is not the matcher and has no protocol chrome",
+        )
+    )
+
+    workflow = _read(WORKFLOW_TS) if WORKFLOW_TS.is_file() else ""
+    jobs_action = _slice(
+        workflow,
+        "export function jobsProcessActionLabel",
+        "export const JOBS_ACTIVATE_SRC",
+    )
+    crm_first = (
+        'if (step === "jobs") return JOBS_APPLY_HERO_CTA' not in jobs_action
+        and "function goToApply" not in workspace
+        and "JOBS_APPLY_SELECTED_CTA" not in workspace
+        and "jobsCrmOfferHref" not in workspace
+        and 'processCurrent === "jobs"' in workspace
+        and "goToActivate" in workspace
+        and "JOBS_APPLY_SELECTED_CTA" in desk
+        and "WorkTaskModelQuestion" in desk
+        and "saveWorkTaskModelOnAccount" in account
+    )
+    checks.append(
+        _check(
+            "crm_first_cta",
+            crm_first,
+            "Jobs-for-robot list Open CRM is the only primary CTA; Apply and the task-model question live on the CRM desk",
+        )
+    )
+    checks.append(
+        _check(
+            "cal_jobs_desk",
+            "CalJobsDesk" in desk
+            and "data-cal-jobs-desk" in cal_desk
+            and "save_task_model" in cal_py
+            and "prepare_apply" in cal_py
+            and "send_buyer_intro" in cal_py
+            and "CalJobsDesk" not in workspace
+            and "find_jobs" in cal_py,
+            "Cal lives on Jobs CRM after Open CRM with desk tools; not FIND; not buyer mail",
         )
     )
 

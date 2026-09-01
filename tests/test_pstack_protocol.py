@@ -92,3 +92,20 @@ def test_sales_plan_agent_uses_pstack_not_gateway():
     assert "refuse_gateway" in src
     assert "ai-gateway" in src
     assert "Do not set SCOUT_PLAN_PROVIDER=ai-gateway" in src
+    assert "Send Cal intro" not in src
+    assert "Do not scrape Apollo" in src
+
+
+def test_cal_jobs_desk_is_not_find_or_buyer_mail():
+    from app.services.cal_jobs_desk import cal_jobs_desk_intent
+    from app.services.cal_persona import CAL_JOBS_DESK_TOOLS, CAL_SURFACE
+
+    intent = cal_jobs_desk_intent()
+    assert intent["not_the_matcher"] is True
+    assert intent["not_find_chat"] is True
+    assert intent["not_buyer_mail"] is True
+    assert intent["autonomy_enabled"] is False
+    assert intent["tools"] == list(CAL_JOBS_DESK_TOOLS)
+    assert CAL_SURFACE == "/pipeline?src=jobs_activate"
+    assert intent["wrap"]["ok"] is True
+    assert intent["wrap"]["surface"] == "jobs_crm_cal"

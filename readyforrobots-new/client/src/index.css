@@ -179,7 +179,9 @@
   .rfr-jobs-apply-cta:disabled {
     opacity: 0.4;
   }
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+      [type="file"]
+    ),
   textarea,
   select {
     box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.45);
@@ -1780,38 +1782,131 @@
   .social-page .page-hero-fade {
     background-image: linear-gradient(to bottom, #111827, #081126) !important;
   }
-  .social-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
-  .social-page :where(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, .bg-stone-50) { background-color: #0d1a33 !important; }
-  .social-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black) { color: #e2e8f0 !important; }
-  .social-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500) { color: #94a3b8 !important; }
-  .social-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300) { border-color: #334155 !important; }
+  .social-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) {
+    background-color: #0b162f !important;
+  }
+  .social-page
+    :where(
+      .bg-slate-50,
+      .bg-slate-100,
+      .bg-gray-50,
+      .bg-gray-100,
+      .bg-stone-50
+    ) {
+    background-color: #0d1a33 !important;
+  }
+  .social-page
+    :where(
+      .text-gray-950,
+      .text-gray-900,
+      .text-gray-800,
+      .text-slate-900,
+      .text-slate-800,
+      .text-black
+    ) {
+    color: #e2e8f0 !important;
+  }
+  .social-page
+    :where(
+      .text-gray-700,
+      .text-gray-600,
+      .text-gray-500,
+      .text-gray-400,
+      .text-slate-700,
+      .text-slate-600,
+      .text-slate-500
+    ) {
+    color: #94a3b8 !important;
+  }
+  .social-page
+    :where(
+      .border-gray-100,
+      .border-gray-200,
+      .border-gray-300,
+      .border-slate-200,
+      .border-slate-300
+    ) {
+    border-color: #334155 !important;
+  }
   /* Post-type accents — tinted backgrounds, brightened text/borders. */
-  .social-page :where(.bg-red-50) { background-color: rgba(248, 113, 113, 0.10) !important; }
-  .social-page :where(.bg-amber-50) { background-color: rgba(251, 191, 36, 0.10) !important; }
-  .social-page :where(.bg-sky-50) { background-color: rgba(56, 189, 248, 0.10) !important; }
-  .social-page :where(.bg-blue-50) { background-color: rgba(96, 165, 250, 0.10) !important; }
-  .social-page :where(.bg-violet-50) { background-color: rgba(167, 139, 250, 0.12) !important; }
-  .social-page :where(.bg-emerald-50) { background-color: rgba(16, 185, 129, 0.10) !important; }
-  .social-page :where(.text-red-700, .text-red-600) { color: #f87171 !important; }
-  .social-page :where(.text-amber-800, .text-amber-700) { color: #fbbf24 !important; }
-  .social-page :where(.text-sky-800, .text-sky-700, .text-sky-900) { color: #7dd3fc !important; }
-  .social-page :where(.text-blue-700, .text-blue-100) { color: #93c5fd !important; }
-  .social-page :where(.text-violet-800, .text-violet-700) { color: #c4b5fd !important; }
-  .social-page :where(.text-emerald-800, .text-emerald-700, .text-emerald-900) { color: #6ee7b7 !important; }
-  .social-page :where(.border-red-200) { border-color: rgba(248, 113, 113, 0.30) !important; }
-  .social-page :where(.border-amber-200) { border-color: rgba(251, 191, 36, 0.30) !important; }
-  .social-page :where(.border-sky-200) { border-color: rgba(56, 189, 248, 0.30) !important; }
-  .social-page :where(.border-blue-200, .border-blue-400\/40) { border-color: rgba(96, 165, 250, 0.35) !important; }
-  .social-page :where(.border-violet-200) { border-color: rgba(167, 139, 250, 0.30) !important; }
-  .social-page :where(.border-emerald-200) { border-color: rgba(16, 185, 129, 0.30) !important; }
-  .social-page :where(.hover\:bg-gray-50):hover { background-color: #1e293b !important; }
-  .social-page :where(.hover\:bg-emerald-50):hover { background-color: rgba(16, 185, 129, 0.14) !important; }
-  .social-page :where(.hover\:bg-violet-50):hover { background-color: rgba(167, 139, 250, 0.16) !important; }
-  .social-page :where(.hover\:bg-sky-50):hover { background-color: rgba(56, 189, 248, 0.14) !important; }
-  .social-page :where(.hover\:bg-blue-50):hover { background-color: rgba(96, 165, 250, 0.14) !important; }
-  .social-page :where(.hover\:text-gray-900, .hover\:text-gray-800):hover { color: #e2e8f0 !important; }
-  .social-page :where(.hover\:text-emerald-900):hover { color: #6ee7b7 !important; }
-  .social-page :where(.hover\:text-sky-900):hover { color: #7dd3fc !important; }
+  .social-page :where(.bg-red-50) {
+    background-color: rgba(248, 113, 113, 0.1) !important;
+  }
+  .social-page :where(.bg-amber-50) {
+    background-color: rgba(251, 191, 36, 0.1) !important;
+  }
+  .social-page :where(.bg-sky-50) {
+    background-color: rgba(56, 189, 248, 0.1) !important;
+  }
+  .social-page :where(.bg-blue-50) {
+    background-color: rgba(96, 165, 250, 0.1) !important;
+  }
+  .social-page :where(.bg-violet-50) {
+    background-color: rgba(167, 139, 250, 0.12) !important;
+  }
+  .social-page :where(.bg-emerald-50) {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+  }
+  .social-page :where(.text-red-700, .text-red-600) {
+    color: #f87171 !important;
+  }
+  .social-page :where(.text-amber-800, .text-amber-700) {
+    color: #fbbf24 !important;
+  }
+  .social-page :where(.text-sky-800, .text-sky-700, .text-sky-900) {
+    color: #7dd3fc !important;
+  }
+  .social-page :where(.text-blue-700, .text-blue-100) {
+    color: #93c5fd !important;
+  }
+  .social-page :where(.text-violet-800, .text-violet-700) {
+    color: #c4b5fd !important;
+  }
+  .social-page :where(.text-emerald-800, .text-emerald-700, .text-emerald-900) {
+    color: #6ee7b7 !important;
+  }
+  .social-page :where(.border-red-200) {
+    border-color: rgba(248, 113, 113, 0.3) !important;
+  }
+  .social-page :where(.border-amber-200) {
+    border-color: rgba(251, 191, 36, 0.3) !important;
+  }
+  .social-page :where(.border-sky-200) {
+    border-color: rgba(56, 189, 248, 0.3) !important;
+  }
+  .social-page :where(.border-blue-200, .border-blue-400\/40) {
+    border-color: rgba(96, 165, 250, 0.35) !important;
+  }
+  .social-page :where(.border-violet-200) {
+    border-color: rgba(167, 139, 250, 0.3) !important;
+  }
+  .social-page :where(.border-emerald-200) {
+    border-color: rgba(16, 185, 129, 0.3) !important;
+  }
+  .social-page :where(.hover\:bg-gray-50):hover {
+    background-color: #1e293b !important;
+  }
+  .social-page :where(.hover\:bg-emerald-50):hover {
+    background-color: rgba(16, 185, 129, 0.14) !important;
+  }
+  .social-page :where(.hover\:bg-violet-50):hover {
+    background-color: rgba(167, 139, 250, 0.16) !important;
+  }
+  .social-page :where(.hover\:bg-sky-50):hover {
+    background-color: rgba(56, 189, 248, 0.14) !important;
+  }
+  .social-page :where(.hover\:bg-blue-50):hover {
+    background-color: rgba(96, 165, 250, 0.14) !important;
+  }
+  .social-page :where(.hover\:text-gray-900, .hover\:text-gray-800):hover {
+    color: #e2e8f0 !important;
+  }
+  .social-page :where(.hover\:text-emerald-900):hover {
+    color: #6ee7b7 !important;
+  }
+  .social-page :where(.hover\:text-sky-900):hover {
+    color: #7dd3fc !important;
+  }
   /* Post editors (textarea/inputs) — beat the .admin-workspace form-control
      theming (bg-white text-gray-900) so the editing surface reads dark. */
   .social-page :where(input, select, textarea) {
@@ -1819,7 +1914,9 @@
     color: #e2e8f0 !important;
     border-color: #334155 !important;
   }
-  .social-page :where(input, select, textarea)::placeholder { color: #64748b !important; }
+  .social-page :where(input, select, textarea)::placeholder {
+    color: #64748b !important;
+  }
   /* Compare page — dark terminal navy. Hero already dark; this flips the shell,
      the two-column contrast panel, "same query" cards, the FSS engine steps, the
      CRM-generations grid, and the big capability comparison table. The sky accent
@@ -1862,85 +1959,425 @@
     color-scheme: dark;
   }
   .admin-workspace.marketplace-page,
-  .marketplace-page .admin-workspace { color-scheme: dark; }
+  .marketplace-page .admin-workspace {
+    color-scheme: dark;
+  }
   .marketplace-page .page-hero-fade {
     background-image: linear-gradient(to bottom, #111827, #081126) !important;
   }
   .marketplace-page .workspace-surface-card {
     @apply border-slate-700 border-l-emerald-500 bg-[#0b162f];
   }
-  .marketplace-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
-  .marketplace-page :where(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50) { background-color: #0d1a33 !important; }
-  .marketplace-page :where(.bg-amber-50) { background-color: rgba(251, 191, 36, 0.10) !important; }
-  .marketplace-page :where(.bg-red-50) { background-color: rgba(248, 113, 113, 0.10) !important; }
-  .marketplace-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
-  .marketplace-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
-  .marketplace-page :where(.text-amber-900, .text-amber-800) { color: #fbbf24 !important; }
-  .marketplace-page :where(.text-red-900, .text-red-700) { color: #f87171 !important; }
-  .marketplace-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300, .border-emerald-200) { border-color: #334155 !important; }
-  .marketplace-page :where(.border-amber-300, .border-amber-400\/35) { border-color: rgba(251, 191, 36, 0.35) !important; }
-  .marketplace-page :where(.border-red-300) { border-color: rgba(248, 113, 113, 0.35) !important; }
-  .marketplace-page :where([class~="from-amber-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="from-emerald-50"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  .marketplace-page
+    :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) {
+    background-color: #0b162f !important;
+  }
+  .marketplace-page
+    :where(
+      .bg-slate-50,
+      .bg-slate-100,
+      .bg-gray-50,
+      .bg-gray-100,
+      .bg-stone-50,
+      .bg-emerald-50
+    ) {
+    background-color: #0d1a33 !important;
+  }
+  .marketplace-page :where(.bg-amber-50) {
+    background-color: rgba(251, 191, 36, 0.1) !important;
+  }
+  .marketplace-page :where(.bg-red-50) {
+    background-color: rgba(248, 113, 113, 0.1) !important;
+  }
+  .marketplace-page
+    :where(
+      .text-gray-950,
+      .text-gray-900,
+      .text-gray-800,
+      .text-slate-900,
+      .text-slate-800,
+      .text-black,
+      .text-emerald-900,
+      .text-emerald-800
+    ) {
+    color: #e2e8f0 !important;
+  }
+  .marketplace-page
+    :where(
+      .text-gray-700,
+      .text-gray-600,
+      .text-gray-500,
+      .text-gray-400,
+      .text-slate-700,
+      .text-slate-600,
+      .text-slate-500,
+      .text-emerald-700
+    ) {
+    color: #94a3b8 !important;
+  }
+  .marketplace-page :where(.text-amber-900, .text-amber-800) {
+    color: #fbbf24 !important;
+  }
+  .marketplace-page :where(.text-red-900, .text-red-700) {
+    color: #f87171 !important;
+  }
+  .marketplace-page
+    :where(
+      .border-gray-100,
+      .border-gray-200,
+      .border-gray-300,
+      .border-slate-200,
+      .border-slate-300,
+      .border-emerald-200
+    ) {
+    border-color: #334155 !important;
+  }
+  .marketplace-page :where(.border-amber-300, .border-amber-400\/35) {
+    border-color: rgba(251, 191, 36, 0.35) !important;
+  }
+  .marketplace-page :where(.border-red-300) {
+    border-color: rgba(248, 113, 113, 0.35) !important;
+  }
+  .marketplace-page
+    :where(
+      [class~="from-amber-50"],
+      [class~="from-white"],
+      [class~="via-white"],
+      [class~="to-white"],
+      [class~="from-emerald-50"],
+      [class~="to-emerald-50"],
+      [class~="to-slate-50"]
+    ) {
+    background-image: none !important;
+    background-color: #0b162f !important;
+  }
   /* Force dark form controls (beats .admin-workspace input theming). */
   .marketplace-page :where(input, select, textarea) {
     background-color: #0b162f !important;
     color: #e2e8f0 !important;
     border-color: #334155 !important;
   }
-  .marketplace-page :where(input, select, textarea)::placeholder { color: #64748b !important; }
+  .marketplace-page :where(input, select, textarea)::placeholder {
+    color: #64748b !important;
+  }
   .compare-page .page-hero-fade {
     background-image: linear-gradient(to bottom, #111827, #081126) !important;
   }
-  .compare-page main :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
-  .compare-page main :where(.bg-slate-50, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50) { background-color: #0d1a33 !important; }
-  .compare-page main :where(.bg-slate-100, .bg-slate-200) { background-color: #1e293b !important; }
+  .compare-page
+    main
+    :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) {
+    background-color: #0b162f !important;
+  }
+  .compare-page
+    main
+    :where(
+      .bg-slate-50,
+      .bg-gray-50,
+      .bg-gray-100,
+      .bg-stone-50,
+      .bg-emerald-50
+    ) {
+    background-color: #0d1a33 !important;
+  }
+  .compare-page main :where(.bg-slate-100, .bg-slate-200) {
+    background-color: #1e293b !important;
+  }
   /* Preserve the sky "RFR wins" emphasis as a tint, not a flat navy. */
-  .compare-page main :where(.bg-sky-50, .bg-sky-50\/70) { background-color: rgba(56, 189, 248, 0.10) !important; }
-  .compare-page main :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
-  .compare-page main :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
-  .compare-page main :where(.text-sky-950, .text-sky-900, .text-sky-800, .text-sky-700) { color: #7dd3fc !important; }
-  .compare-page main :where(.text-amber-800, .text-amber-700) { color: #fbbf24 !important; }
-  .compare-page main :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-100, .border-slate-200, .border-slate-300, .border-slate-400, .border-emerald-200, .border-amber-300) { border-color: #334155 !important; }
-  .compare-page main :where(.border-sky-100, .border-sky-200, .border-sky-300) { border-color: rgba(56, 189, 248, 0.35) !important; }
-  .compare-page main :where(.hover\:bg-gray-50, .hover\:bg-amber-50):hover { background-color: #1e293b !important; }
-  .compare-page main :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  .compare-page main :where(.bg-sky-50, .bg-sky-50\/70) {
+    background-color: rgba(56, 189, 248, 0.1) !important;
+  }
+  .compare-page
+    main
+    :where(
+      .text-gray-950,
+      .text-gray-900,
+      .text-gray-800,
+      .text-slate-900,
+      .text-slate-800,
+      .text-black,
+      .text-emerald-900,
+      .text-emerald-800
+    ) {
+    color: #e2e8f0 !important;
+  }
+  .compare-page
+    main
+    :where(
+      .text-gray-700,
+      .text-gray-600,
+      .text-gray-500,
+      .text-gray-400,
+      .text-slate-700,
+      .text-slate-600,
+      .text-slate-500,
+      .text-emerald-700
+    ) {
+    color: #94a3b8 !important;
+  }
+  .compare-page
+    main
+    :where(.text-sky-950, .text-sky-900, .text-sky-800, .text-sky-700) {
+    color: #7dd3fc !important;
+  }
+  .compare-page main :where(.text-amber-800, .text-amber-700) {
+    color: #fbbf24 !important;
+  }
+  .compare-page
+    main
+    :where(
+      .border-gray-100,
+      .border-gray-200,
+      .border-gray-300,
+      .border-slate-100,
+      .border-slate-200,
+      .border-slate-300,
+      .border-slate-400,
+      .border-emerald-200,
+      .border-amber-300
+    ) {
+    border-color: #334155 !important;
+  }
+  .compare-page main :where(.border-sky-100, .border-sky-200, .border-sky-300) {
+    border-color: rgba(56, 189, 248, 0.35) !important;
+  }
+  .compare-page main :where(.hover\:bg-gray-50, .hover\:bg-amber-50):hover {
+    background-color: #1e293b !important;
+  }
+  .compare-page
+    main
+    :where(
+      [class~="from-emerald-50"],
+      [class~="from-white"],
+      [class~="via-white"],
+      [class~="to-white"],
+      [class~="to-emerald-50"],
+      [class~="to-slate-50"]
+    ) {
+    background-image: none !important;
+    background-color: #0b162f !important;
+  }
   .intelligence-page h2 {
     font-family: var(--font-display);
   }
   .intelligence-page .page-hero-fade {
     background-image: linear-gradient(to bottom, #111827, #081126) !important;
   }
-  .intelligence-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
-  .intelligence-page :where(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50, .bg-emerald-100) { background-color: #0d1a33 !important; }
-  .intelligence-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
-  .intelligence-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
-  .intelligence-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300, .border-emerald-200) { border-color: #334155 !important; }
-  .intelligence-page :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  .intelligence-page
+    :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) {
+    background-color: #0b162f !important;
+  }
+  .intelligence-page
+    :where(
+      .bg-slate-50,
+      .bg-slate-100,
+      .bg-gray-50,
+      .bg-gray-100,
+      .bg-stone-50,
+      .bg-emerald-50,
+      .bg-emerald-100
+    ) {
+    background-color: #0d1a33 !important;
+  }
+  .intelligence-page
+    :where(
+      .text-gray-950,
+      .text-gray-900,
+      .text-gray-800,
+      .text-slate-900,
+      .text-slate-800,
+      .text-black,
+      .text-emerald-900,
+      .text-emerald-800
+    ) {
+    color: #e2e8f0 !important;
+  }
+  .intelligence-page
+    :where(
+      .text-gray-700,
+      .text-gray-600,
+      .text-gray-500,
+      .text-gray-400,
+      .text-slate-700,
+      .text-slate-600,
+      .text-slate-500,
+      .text-emerald-700
+    ) {
+    color: #94a3b8 !important;
+  }
+  .intelligence-page
+    :where(
+      .border-gray-100,
+      .border-gray-200,
+      .border-gray-300,
+      .border-slate-200,
+      .border-slate-300,
+      .border-emerald-200
+    ) {
+    border-color: #334155 !important;
+  }
+  .intelligence-page
+    :where(
+      [class~="from-emerald-50"],
+      [class~="from-white"],
+      [class~="via-white"],
+      [class~="to-white"],
+      [class~="to-emerald-50"],
+      [class~="to-slate-50"]
+    ) {
+    background-image: none !important;
+    background-color: #0b162f !important;
+  }
   /* Hero → page fade should land on the dark page bg, not light slate. */
   .robots-page .page-hero-fade {
     background-image: linear-gradient(to bottom, #111827, #081126) !important;
   }
   /* Dark-terminal override net for inline LIGHT utilities in the JSX
      (!important to beat the utilities layer; dark translucents preserved). */
-  .robots-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
-  .robots-page :where(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50, .bg-emerald-100) { background-color: #0d1a33 !important; }
-  .robots-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
-  .robots-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
-  .robots-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300, .border-emerald-200) { border-color: #334155 !important; }
-  .robots-page :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  .robots-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) {
+    background-color: #0b162f !important;
+  }
+  .robots-page
+    :where(
+      .bg-slate-50,
+      .bg-slate-100,
+      .bg-gray-50,
+      .bg-gray-100,
+      .bg-stone-50,
+      .bg-emerald-50,
+      .bg-emerald-100
+    ) {
+    background-color: #0d1a33 !important;
+  }
+  .robots-page
+    :where(
+      .text-gray-950,
+      .text-gray-900,
+      .text-gray-800,
+      .text-slate-900,
+      .text-slate-800,
+      .text-black,
+      .text-emerald-900,
+      .text-emerald-800
+    ) {
+    color: #e2e8f0 !important;
+  }
+  .robots-page
+    :where(
+      .text-gray-700,
+      .text-gray-600,
+      .text-gray-500,
+      .text-gray-400,
+      .text-slate-700,
+      .text-slate-600,
+      .text-slate-500,
+      .text-emerald-700
+    ) {
+    color: #94a3b8 !important;
+  }
+  .robots-page
+    :where(
+      .border-gray-100,
+      .border-gray-200,
+      .border-gray-300,
+      .border-slate-200,
+      .border-slate-300,
+      .border-emerald-200
+    ) {
+    border-color: #334155 !important;
+  }
+  .robots-page
+    :where(
+      [class~="from-emerald-50"],
+      [class~="from-white"],
+      [class~="via-white"],
+      [class~="to-white"],
+      [class~="to-emerald-50"],
+      [class~="to-slate-50"]
+    ) {
+    background-image: none !important;
+    background-color: #0b162f !important;
+  }
   .pricing-page .page-hero-fade {
     background-image: linear-gradient(to bottom, #111827, #081126) !important;
   }
   /* Dark-terminal override net (!important to beat the utilities layer; dark
      translucents preserved). */
-  .pricing-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) { background-color: #0b162f !important; }
-  .pricing-page :where(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-emerald-50, .bg-emerald-50\/50, .bg-amber-50, .bg-amber-50\/50, .bg-emerald-100) { background-color: #0d1a33 !important; }
-  .pricing-page :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black, .text-emerald-900, .text-emerald-800) { color: #e2e8f0 !important; }
-  .pricing-page :where(.text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400, .text-slate-700, .text-slate-600, .text-slate-500, .text-emerald-700) { color: #94a3b8 !important; }
-  .pricing-page :where(.text-amber-800, .text-amber-700, .text-amber-600) { color: #fbbf24 !important; }
-  .pricing-page :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200, .border-slate-300, .border-emerald-100, .border-emerald-200, .border-amber-100, .border-amber-200) { border-color: #334155 !important; }
-  .pricing-page :where(.hover\:bg-gray-100):hover { background-color: #1e293b !important; }
-  .pricing-page :where([class~="from-emerald-50"], [class~="from-white"], [class~="via-white"], [class~="to-white"], [class~="to-emerald-50"], [class~="to-slate-50"]) { background-image: none !important; background-color: #0b162f !important; }
+  .pricing-page :where(.bg-white, .bg-white\/80, .bg-white\/90, .bg-white\/95) {
+    background-color: #0b162f !important;
+  }
+  .pricing-page
+    :where(
+      .bg-slate-50,
+      .bg-slate-100,
+      .bg-gray-50,
+      .bg-gray-100,
+      .bg-stone-50,
+      .bg-emerald-50,
+      .bg-emerald-50\/50,
+      .bg-amber-50,
+      .bg-amber-50\/50,
+      .bg-emerald-100
+    ) {
+    background-color: #0d1a33 !important;
+  }
+  .pricing-page
+    :where(
+      .text-gray-950,
+      .text-gray-900,
+      .text-gray-800,
+      .text-slate-900,
+      .text-slate-800,
+      .text-black,
+      .text-emerald-900,
+      .text-emerald-800
+    ) {
+    color: #e2e8f0 !important;
+  }
+  .pricing-page
+    :where(
+      .text-gray-700,
+      .text-gray-600,
+      .text-gray-500,
+      .text-gray-400,
+      .text-slate-700,
+      .text-slate-600,
+      .text-slate-500,
+      .text-emerald-700
+    ) {
+    color: #94a3b8 !important;
+  }
+  .pricing-page :where(.text-amber-800, .text-amber-700, .text-amber-600) {
+    color: #fbbf24 !important;
+  }
+  .pricing-page
+    :where(
+      .border-gray-100,
+      .border-gray-200,
+      .border-gray-300,
+      .border-slate-200,
+      .border-slate-300,
+      .border-emerald-100,
+      .border-emerald-200,
+      .border-amber-100,
+      .border-amber-200
+    ) {
+    border-color: #334155 !important;
+  }
+  .pricing-page :where(.hover\:bg-gray-100):hover {
+    background-color: #1e293b !important;
+  }
+  .pricing-page
+    :where(
+      [class~="from-emerald-50"],
+      [class~="from-white"],
+      [class~="via-white"],
+      [class~="to-white"],
+      [class~="to-emerald-50"],
+      [class~="to-slate-50"]
+    ) {
+    background-image: none !important;
+    background-color: #0b162f !important;
+  }
   .signals-body {
     background: transparent;
   }

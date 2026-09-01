@@ -17,18 +17,22 @@ describe("pocVideoUrl", () => {
   });
 
   it("allowlists loom youtube vimeo for embed and drive as link-out", () => {
-    const loom = parsePocVideoUrl("https://www.loom.com/share/abcd1234efgh5678");
+    const loom = parsePocVideoUrl(
+      "https://www.loom.com/share/abcd1234efgh5678"
+    );
     expect(loom?.kind).toBe("loom");
     expect(loom?.embedUrl).toBe("https://www.loom.com/embed/abcd1234efgh5678");
     const yt = parsePocVideoUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
     expect(yt?.kind).toBe("youtube");
-    expect(yt?.embedUrl).toBe("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
+    expect(yt?.embedUrl).toBe(
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+    );
     const short = parsePocVideoUrl("https://youtu.be/dQw4w9WgXcQ");
     expect(short?.embedUrl).toContain("dQw4w9WgXcQ");
     const vimeo = parsePocVideoUrl("https://vimeo.com/123456789");
     expect(vimeo?.embedUrl).toBe("https://player.vimeo.com/video/123456789");
     const drive = parsePocVideoUrl(
-      "https://drive.google.com/file/d/abcDEF123/view",
+      "https://drive.google.com/file/d/abcDEF123/view"
     );
     expect(drive?.kind).toBe("drive");
     expect(drive?.embedUrl).toBeNull();

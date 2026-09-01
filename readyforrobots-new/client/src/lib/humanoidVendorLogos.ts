@@ -46,7 +46,9 @@ export function resolveHumanoidLogo(opts: {
   return { src: `/logos/vendors/${key}.png`, tinted: true };
 }
 
-export function resolveHumanoidLogoFallbackCdn(vendor: string): VendorLogoMeta | null {
+export function resolveHumanoidLogoFallbackCdn(
+  vendor: string
+): VendorLogoMeta | null {
   const key = vendorKeyFromName(vendor);
   const slug = SIMPLE_ICON_FALLBACK[key];
   if (slug) {

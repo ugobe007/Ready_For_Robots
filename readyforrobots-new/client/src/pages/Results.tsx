@@ -23,8 +23,17 @@ import PageHeroDark from "@/components/layout/PageHeroDark";
 import { useAuth } from "@/contexts/AuthContext";
 import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 import { normalizeUrl } from "@/lib/normalizeUrl";
-import { getApiBase, getDirectApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
-import { trackUrlScan, readSupplyAttribution, trackSupplyConversion } from "@/lib/siteAnalytics";
+import {
+  getApiBase,
+  getDirectApiBase,
+  fetchWithTimeoutRetry,
+  liveFetchInit,
+} from "@/lib/apiBase";
+import {
+  trackUrlScan,
+  readSupplyAttribution,
+  trackSupplyConversion,
+} from "@/lib/siteAnalytics";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader, getFreshAccessToken } from "@/lib/supabase";
 import { cleanScrapedText } from "@/lib/text";
@@ -39,7 +48,11 @@ import {
   oemCalResultsAnonLine,
 } from "@/lib/oemCalCopy";
 import { markReviewedFiveLeads } from "@/lib/signupWorkflowPath";
-import { isJobsHandoffSrc, JOBS_SCAN_STEPS, armJobsWorkspaceRestore } from "@/lib/jobsWorkflow";
+import {
+  isJobsHandoffSrc,
+  JOBS_SCAN_STEPS,
+  armJobsWorkspaceRestore,
+} from "@/lib/jobsWorkflow";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -154,7 +167,9 @@ function timingFromScore(score: number): string {
   return "Decision window: 3-6 months";
 }
 
-function buildOutreachFields(p: Pick<Prospect, "company" | "signal" | "relevance" | "action">) {
+function buildOutreachFields(
+  p: Pick<Prospect, "company" | "signal" | "relevance" | "action">
+) {
   const hook = p.action
     ? `I've been following ${p.company} — ${p.action.charAt(0).toLowerCase()}${p.action.slice(1)}`
     : `${p.company} stood out because ${p.relevance.toLowerCase()} The strongest signal: ${p.signal}`;
@@ -174,34 +189,44 @@ function buildSellerBrief(
     signal: string;
     robotTypes?: string[];
     hermesJobs?: string[];
-  },
+  }
 ): SellerBrief {
   const api = opts.fromApi;
-  const robots = (opts.robotTypes || []).map((r) => String(r).trim()).filter(Boolean).slice(0, 3);
-  const robotFit = api?.robot_fit || robots.join(", ") || "the robot class you sell";
+  const robots = (opts.robotTypes || [])
+    .map(r => String(r).trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  const robotFit =
+    api?.robot_fit || robots.join(", ") || "the robot class you sell";
   if (api?.headline && api?.why_now) {
     return {
       headline: api.headline,
       whyNow: api.why_now,
       pitch: api.pitch || opts.action,
       robotFit,
-      nextStep: api.next_step || `Save ${company} → copy Cal's brief → start the conversation`,
+      nextStep:
+        api.next_step ||
+        `Save ${company} → copy Cal's brief → start the conversation`,
     };
   }
-  const hermesJob = (opts.hermesJobs || []).find((t) => (t || "").trim())?.trim();
+  const hermesJob = (opts.hermesJobs || []).find(t => (t || "").trim())?.trim();
   const whyNow = hermesJob
     ? `${company} is hiring for ${hermesJob} — timing that usually means operational load is already rising.`
     : opts.relevance || opts.signal;
   return {
     headline: `Why ${company} is a fit for your robot`,
     whyNow,
-    pitch: opts.action || `Lead with how ${robotFit} removes a concrete workflow bottleneck — not a generic automation pitch.`,
+    pitch:
+      opts.action ||
+      `Lead with how ${robotFit} removes a concrete workflow bottleneck — not a generic automation pitch.`,
     robotFit,
     nextStep: `Save ${company} → copy Cal's brief → start the conversation`,
   };
 }
 
-function buildRfqSpecPacket(p: Pick<Prospect, "company" | "industry" | "action" | "signal">) {
+function buildRfqSpecPacket(
+  p: Pick<Prospect, "company" | "industry" | "action" | "signal">
+) {
   const subject = `RFQ or bid-project request for ${p.company}`;
   const body = [
     "Hi,",
@@ -230,7 +255,7 @@ function formatEmployees(value: number | null | undefined): string {
 }
 
 function titleize(raw: string): string {
-  return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return raw.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function cleanRelevanceCopy(raw: string, quotedSignal: string): string {
@@ -266,17 +291,30 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
       lead.score?.lead_value_score ??
       lead.score?.overall_score ??
       lead.priority_score ??
-      70,
+      70
   );
   const firstSignal = lead.signals?.[0];
-  const signal = cleanScrapedText(firstSignal?.display_text || firstSignal?.raw_text || lead.key_signals?.[0] || lead.share_summary || "") || "SIGNAL found a sales-fit pattern worth reviewing.";
-  const signalType = firstSignal?.signal_label || titleize(firstSignal?.signal_type || "buying_signal");
+  const signal =
+    cleanScrapedText(
+      firstSignal?.display_text ||
+        firstSignal?.raw_text ||
+        lead.key_signals?.[0] ||
+        lead.share_summary ||
+        ""
+    ) || "SIGNAL found a sales-fit pattern worth reviewing.";
+  const signalType =
+    firstSignal?.signal_label ||
+    titleize(firstSignal?.signal_type || "buying_signal");
   const companyRaw = (lead.company_name || "").trim();
   const company =
     companyRaw.toLowerCase() === "cheese"
       ? "Santori Cheese"
       : companyRaw || `Matched Lead ${index + 1}`;
-  const stage = lead.priority_tier ? `${lead.priority_tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal";
+  const stage = lead.priority_tier
+    ? `${lead.priority_tier} Lead`
+    : score >= 85
+      ? "Draft Ready"
+      : "New Signal";
   const whyNow = lead.gtm?.why_now?.filter(Boolean) || [];
   const relevance =
     cleanScrapedText(lead.share_summary || "") ||
@@ -287,19 +325,29 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
     lead.priority_tier ? `${lead.priority_tier} priority` : "qualified lead",
     lead.match_score ? "matched to scanned URL profile" : "",
     ...(lead.priority_reasons || whyNow).slice(0, 2),
-  ].filter(Boolean).join(" · ");
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const prospect = {
     id: String(lead.id ?? `${company}-${index}`),
     company,
-    location: [lead.location_city, lead.location_state].filter(Boolean).join(", ") || "Location unknown",
+    location:
+      [lead.location_city, lead.location_state].filter(Boolean).join(", ") ||
+      "Location unknown",
     industry: lead.industry || "Industry unknown",
     employees: formatEmployees(lead.employee_estimate),
     score,
     signal,
     signalType,
     signalColor: scoreColor(score),
-    timing: lead.gtm?.readiness_label ? `Stage: ${lead.gtm.readiness_label}` : timingFromScore(score),
-    action: lead.pipeline_action || lead.recommended_action || lead.gtm?.suggested_motion || "Reach out with a personalized automation use case",
+    timing: lead.gtm?.readiness_label
+      ? `Stage: ${lead.gtm.readiness_label}`
+      : timingFromScore(score),
+    action:
+      lead.pipeline_action ||
+      lead.recommended_action ||
+      lead.gtm?.suggested_motion ||
+      "Reach out with a personalized automation use case",
     relevance,
     scoreReason,
     draft: "",
@@ -352,8 +400,12 @@ type ScoutProspectRow = {
 function mapScoutProspect(row: ScoutProspectRow, index: number): Prospect {
   const score = Math.round(row.match_score ?? row.score ?? 70);
   const company = row.company || `Matched Lead ${index + 1}`;
-  const signal = cleanScrapedText(row.signal || "") || "SIGNAL matched this account to your URL profile.";
-  const signalType = titleize((row.signalType || "buying_signal").replace(/_/g, " "));
+  const signal =
+    cleanScrapedText(row.signal || "") ||
+    "SIGNAL matched this account to your URL profile.";
+  const signalType = titleize(
+    (row.signalType || "buying_signal").replace(/_/g, " ")
+  );
   const prospect: Prospect = {
     id: String(row.id ?? `${company}-${index}`),
     company,
@@ -366,12 +418,16 @@ function mapScoutProspect(row: ScoutProspectRow, index: number): Prospect {
     signalColor: scoreColor(score),
     timing: row.timing || timingFromScore(score),
     action: row.action || "Reach out with a personalized automation use case",
-    relevance: cleanScrapedText(row.relevance || "") || `${company} shows active buying signals in the ReadyForRobots pipeline.`,
+    relevance:
+      cleanScrapedText(row.relevance || "") ||
+      `${company} shows active buying signals in the ReadyForRobots pipeline.`,
     scoreReason: [
       `${score}/100 match score`,
       row.tier ? `${row.tier} priority` : "",
       "matched via SIGNAL scan-for-results",
-    ].filter(Boolean).join(" · "),
+    ]
+      .filter(Boolean)
+      .join(" · "),
     draft: "",
     outreachSubject: "",
     outreachBody: "",
@@ -382,7 +438,11 @@ function mapScoutProspect(row: ScoutProspectRow, index: number): Prospect {
       robotFit: "",
       nextStep: "",
     },
-    stage: row.tier ? `${row.tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal",
+    stage: row.tier
+      ? `${row.tier} Lead`
+      : score >= 85
+        ? "Draft Ready"
+        : "New Signal",
     leadId: row.id && /^\d+$/.test(String(row.id)) ? Number(row.id) : undefined,
     priorityTier: row.tier,
   };
@@ -406,13 +466,16 @@ const fallbackProspects: Prospect[] = [
     industry: "Hospitality",
     employees: "2,400",
     score: 94,
-    signal: "Earnings call: 40% housekeeping vacancy and difficulty staffing overnight shifts.",
+    signal:
+      "Earnings call: 40% housekeeping vacancy and difficulty staffing overnight shifts.",
     signalType: "Labor shortage",
     signalColor: "#34d399",
     timing: "Decision window: Now",
     action: "Reach out with overnight automation case study",
-    relevance: "Hospitality labor pressure maps directly to service and cleaning automation, and the staffing gap is urgent enough for immediate outreach.",
-    scoreReason: "94/100 match score · labor pain · urgent timing · high operational fit",
+    relevance:
+      "Hospitality labor pressure maps directly to service and cleaning automation, and the staffing gap is urgent enough for immediate outreach.",
+    scoreReason:
+      "94/100 match score · labor pain · urgent timing · high operational fit",
     draft: "",
     outreachSubject: "",
     outreachBody: "",
@@ -425,13 +488,16 @@ const fallbackProspects: Prospect[] = [
     industry: "Logistics",
     employees: "1,800",
     score: 88,
-    signal: "Hiring an Automation Engineer while opening two new distribution centers.",
+    signal:
+      "Hiring an Automation Engineer while opening two new distribution centers.",
     signalType: "Expansion signal",
     signalColor: "#10b981",
     timing: "Decision window: 1-3 months",
     action: "Contact during facility design phase",
-    relevance: "New facilities plus an automation hire indicate budget, ownership, and a near-term design window for robotics decisions.",
-    scoreReason: "88/100 match score · expansion · automation owner identified · strong timing",
+    relevance:
+      "New facilities plus an automation hire indicate budget, ownership, and a near-term design window for robotics decisions.",
+    scoreReason:
+      "88/100 match score · expansion · automation owner identified · strong timing",
     draft: "",
     outreachSubject: "",
     outreachBody: "",
@@ -444,19 +510,22 @@ const fallbackProspects: Prospect[] = [
     industry: "Manufacturing",
     employees: "950",
     score: 79,
-    signal: "Recent repetitive strain filings plus a new process improvement manager role.",
+    signal:
+      "Recent repetitive strain filings plus a new process improvement manager role.",
     signalType: "Safety signal",
     signalColor: "#FFB000",
     timing: "Decision window: 3-6 months",
     action: "Lead with safety ROI and ergonomics case",
-    relevance: "Safety incidents and process improvement hiring create a clear reason to discuss automation for repetitive workflows.",
-    scoreReason: "79/100 match score · safety pain · process owner hiring · moderate timing",
+    relevance:
+      "Safety incidents and process improvement hiring create a clear reason to discuss automation for repetitive workflows.",
+    scoreReason:
+      "79/100 match score · safety pain · process owner hiring · moderate timing",
     draft: "",
     outreachSubject: "",
     outreachBody: "",
     stage: "Review Lead",
   },
-].map((p) => {
+].map(p => {
   const outreach = buildOutreachFields(p);
   const sellerBrief = buildSellerBrief(p.company, {
     relevance: p.relevance,
@@ -467,7 +536,8 @@ const fallbackProspects: Prospect[] = [
 });
 
 function fallbackProspectsForLimit(limit: number): Prospect[] {
-  if (limit <= fallbackProspects.length) return fallbackProspects.slice(0, limit);
+  if (limit <= fallbackProspects.length)
+    return fallbackProspects.slice(0, limit);
   return Array.from({ length: limit }, (_, index) => {
     const base = fallbackProspects[index % fallbackProspects.length];
     const pass = Math.floor(index / fallbackProspects.length);
@@ -507,7 +577,8 @@ export default function Results() {
       utm_source: attribution.utmSource,
       rc: attribution.robotCompanyId,
       msg: attribution.messageToken,
-      referrer: typeof document !== "undefined" ? document.referrer || null : null,
+      referrer:
+        typeof document !== "undefined" ? document.referrer || null : null,
     });
   }, [search]);
 
@@ -546,9 +617,15 @@ export default function Results() {
       setSampleAccessLoading(true);
       try {
         const token = await getFreshAccessToken(session.access_token);
-        const meRes = await fetch(`${getApiBase()}/api/user/me`, liveFetchInit({ headers: authHeader(token) }));
+        const meRes = await fetch(
+          `${getApiBase()}/api/user/me`,
+          liveFetchInit({ headers: authHeader(token) })
+        );
         if (!meRes.ok) throw new Error(`user/me ${meRes.status}`);
-        const me = await meRes.json() as { email?: string; is_admin?: boolean };
+        const me = (await meRes.json()) as {
+          email?: string;
+          is_admin?: boolean;
+        };
         if (!cancelled) {
           setSampleAccessEmail(me.email || "");
           setSampleAccessAllowed(Boolean(me.is_admin));
@@ -569,11 +646,11 @@ export default function Results() {
   const isSignedIn = Boolean(session);
   const sortedProspects = useMemo(
     () => [...prospects].sort((a, b) => b.score - a.score),
-    [prospects],
+    [prospects]
   );
   const anonymousUnlockedCount = Math.min(
     jobsHandoff ? requestedLimit : RESULTS_ANONYMOUS_UNLOCK,
-    sortedProspects.length,
+    sortedProspects.length
   );
   const topLeadId = sortedProspects[0]?.leadId;
 
@@ -622,7 +699,7 @@ export default function Results() {
     let finished = false;
     let hardDeadline = 0;
     const stepTimer = window.setInterval(() => {
-      setScanStep((current) => Math.min(current + 1, scanSteps.length - 1));
+      setScanStep(current => Math.min(current + 1, scanSteps.length - 1));
     }, 650);
 
     const finishScan = (mapped: Prospect[], usedFallback: boolean) => {
@@ -639,7 +716,7 @@ export default function Results() {
         toast.info(
           jobsHandoff
             ? "Could not reach the matcher in time — showing sample jobs while the API recovers."
-            : "SIGNAL could not reach the matcher in time — showing sample leads while the API recovers.",
+            : "SIGNAL could not reach the matcher in time — showing sample leads while the API recovers."
         );
       }
       window.setTimeout(() => {
@@ -657,10 +734,12 @@ export default function Results() {
         const matchRes = await fetchWithTimeoutRetry(
           `${apiBase}/api/leads/match-url?url=${encodeURIComponent(submittedUrl)}&limit=${requestedLimit}`,
           liveFetchInit(
-            session?.access_token ? { headers: authHeader(session.access_token) } : {},
+            session?.access_token
+              ? { headers: authHeader(session.access_token) }
+              : {}
           ),
           12_000,
-          { retries: 0 },
+          { retries: 0 }
         );
         if (matchRes.ok) {
           const matchData = (await matchRes.json()) as { leads?: ApiLead[] };
@@ -692,11 +771,15 @@ export default function Results() {
             }),
           },
           10_000,
-          { retries: 0 },
+          { retries: 0 }
         );
         if (scoutRes.ok) {
-          const scoutData = (await scoutRes.json()) as { prospects?: ScoutProspectRow[] };
-          const rows = Array.isArray(scoutData.prospects) ? scoutData.prospects : [];
+          const scoutData = (await scoutRes.json()) as {
+            prospects?: ScoutProspectRow[];
+          };
+          const rows = Array.isArray(scoutData.prospects)
+            ? scoutData.prospects
+            : [];
           const mapped = rows.map(mapScoutProspect);
           if (mapped.length) {
             finishScan(mapped, false);
@@ -721,10 +804,19 @@ export default function Results() {
       window.clearInterval(stepTimer);
       if (hardDeadline) window.clearTimeout(hardDeadline);
     };
-  }, [jobsHandoff, requestedLimit, sampleAccessAllowed, sampleAccessLoading, sampleMode, scanSteps.length, session?.access_token, submittedUrl]);
+  }, [
+    jobsHandoff,
+    requestedLimit,
+    sampleAccessAllowed,
+    sampleAccessLoading,
+    sampleMode,
+    scanSteps.length,
+    session?.access_token,
+    submittedUrl,
+  ]);
 
   useEffect(() => {
-    setSelectedIds(new Set(prospects.map((p) => p.id)));
+    setSelectedIds(new Set(prospects.map(p => p.id)));
   }, [prospects]);
 
   function submitUrl(e: React.FormEvent<HTMLFormElement>) {
@@ -735,11 +827,15 @@ export default function Results() {
       return;
     }
     setSubmittedUrl(normalized);
-    window.history.replaceState(null, "", `/results?url=${encodeURIComponent(normalized)}`);
+    window.history.replaceState(
+      null,
+      "",
+      `/results?url=${encodeURIComponent(normalized)}`
+    );
   }
 
   function toggleSelected(id: string) {
-    setSelectedIds((current) => {
+    setSelectedIds(current => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -751,7 +847,9 @@ export default function Results() {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
         <Header />
-        <main className="mx-auto max-w-4xl px-6 pt-28 text-center text-gray-500">Checking admin access...</main>
+        <main className="mx-auto max-w-4xl px-6 pt-28 text-center text-gray-500">
+          Checking admin access...
+        </main>
       </div>
     );
   }
@@ -762,9 +860,16 @@ export default function Results() {
         <Header />
         <main className="mx-auto max-w-xl px-6 pt-28 text-center">
           <Shield className="mx-auto mb-4 h-7 w-7 text-amber-500" />
-          <h1 className="text-2xl font-bold text-gray-900">Admin sign in required</h1>
-          <p className="mt-3 text-sm text-gray-600">Sample pipeline links are private to admin accounts.</p>
-          <Link href={`/login?next=${encodeURIComponent(`/results?${params.toString()}`)}`} className="mt-6 inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Admin sign in required
+          </h1>
+          <p className="mt-3 text-sm text-gray-600">
+            Sample pipeline links are private to admin accounts.
+          </p>
+          <Link
+            href={`/login?next=${encodeURIComponent(`/results?${params.toString()}`)}`}
+            className="mt-6 inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600"
+          >
             Sign in
           </Link>
         </main>
@@ -778,15 +883,24 @@ export default function Results() {
         <Header />
         <main className="mx-auto max-w-xl px-6 pt-28 text-center">
           <AlertTriangle className="mx-auto mb-4 h-7 w-7 text-red-400" />
-          <h1 className="text-2xl font-bold text-gray-900">Admin access required</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Admin access required
+          </h1>
           <p className="mt-3 text-sm text-gray-600">
-            {sampleAccessEmail || "This account"} is signed in but not in ADMIN_EMAILS.
+            {sampleAccessEmail || "This account"} is signed in but not in
+            ADMIN_EMAILS.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/admin" className="inline-flex rounded-xl border border-gray-300 px-5 py-3 text-sm font-bold text-gray-700">
+            <Link
+              href="/admin"
+              className="inline-flex rounded-xl border border-gray-300 px-5 py-3 text-sm font-bold text-gray-700"
+            >
               Open admin
             </Link>
-            <Link href="/pipeline" className="inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600">
+            <Link
+              href="/pipeline"
+              className="inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600"
+            >
               Back to pipeline
             </Link>
           </div>
@@ -807,8 +921,8 @@ export default function Results() {
             Taking you back to your jobs…
           </h1>
           <p className="mt-2 text-base text-slate-300">
-            Your jobs stay on the Jobs terminal. This page is not a second
-            job list.
+            Your jobs stay on the Jobs terminal. This page is not a second job
+            list.
           </p>
         </main>
       </div>
@@ -828,7 +942,9 @@ export default function Results() {
         <Header />
         <main className="mx-auto max-w-xl px-6 pt-28 text-center text-slate-300">
           <p className="text-sm font-semibold text-white">
-            {authLoading ? "Checking your workspace…" : "Sign up to see your matched sales leads…"}
+            {authLoading
+              ? "Checking your workspace…"
+              : "Sign up to see your matched sales leads…"}
           </p>
           {!authLoading && (
             <Link
@@ -845,7 +961,9 @@ export default function Results() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col bg-[#081126] ${jobsHandoff ? "pt-14" : ""}`}>
+    <div
+      className={`min-h-screen flex flex-col bg-[#081126] ${jobsHandoff ? "pt-14" : ""}`}
+    >
       {jobsHandoff ? <ExperimentHeader /> : <Header />}
 
       {submittedUrl && jobsHandoff ? (
@@ -878,9 +996,19 @@ export default function Results() {
         <>
           <PageHeroDark
             maxWidthClass="max-w-4xl"
-            badge={<div className="page-hero-badge">Scan complete · matched buyers ready</div>}
+            badge={
+              <div className="page-hero-badge">
+                Scan complete · matched buyers ready
+              </div>
+            }
             eyebrow="SIGNAL results"
-            title={scanning ? "Scanning for aligned buyers…" : sampleMode ? `Your ${requestedLimit}-company sample pipeline` : "Your qualified, aligned buyers"}
+            title={
+              scanning
+                ? "Scanning for aligned buyers…"
+                : sampleMode
+                  ? `Your ${requestedLimit}-company sample pipeline`
+                  : "Your qualified, aligned buyers"
+            }
             description={
               submittedUrl
                 ? sampleMode
@@ -897,18 +1025,25 @@ export default function Results() {
       <main className="flex-1 pb-16 sm:pb-20 px-4 sm:px-6 text-slate-100">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-2 text-xs text-slate-400 mb-6 sm:mb-8">
-            <Link href="/" className="hover:text-slate-200 transition-colors">Home</Link>
+            <Link href="/" className="hover:text-slate-200 transition-colors">
+              Home
+            </Link>
             <span>/</span>
-            <span className="text-slate-500">{submittedUrl ? `Results for ${submittedUrl}` : "Activate SIGNAL"}</span>
+            <span className="text-slate-500">
+              {submittedUrl ? `Results for ${submittedUrl}` : "Activate SIGNAL"}
+            </span>
           </div>
 
           {!submittedUrl && (
             <section className="py-4 sm:py-8">
               <div className="rounded-3xl border border-white/10 bg-[#0b162f] p-6 sm:p-10 shadow-[0_20px_45px_-30px_rgba(0,0,0,0.8)]">
-                <form onSubmit={submitUrl} className="flex flex-col sm:flex-row gap-3">
+                <form
+                  onSubmit={submitUrl}
+                  className="flex flex-col sm:flex-row gap-3"
+                >
                   <input
                     value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
+                    onChange={e => setUrlInput(e.target.value)}
                     placeholder="https://your-robot-company.com/product"
                     className="min-w-0 flex-1 rounded-xl border border-white/15 bg-[#081126] px-4 py-3 text-base sm:text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
                   />
@@ -926,8 +1061,14 @@ export default function Results() {
           {submittedUrl && scanning && (
             <div className="flex flex-col items-center justify-center py-24 gap-8">
               <div className="relative h-20 w-20">
-                <div className="absolute inset-0 rounded-full border-2 border-amber-400/20 animate-ping" style={{ animationDuration: "1.5s" }} />
-                <div className="absolute inset-2 rounded-full border-2 border-amber-400/45 animate-spin" style={{ animationDuration: "2s" }} />
+                <div
+                  className="absolute inset-0 rounded-full border-2 border-amber-400/20 animate-ping"
+                  style={{ animationDuration: "1.5s" }}
+                />
+                <div
+                  className="absolute inset-2 rounded-full border-2 border-amber-400/45 animate-spin"
+                  style={{ animationDuration: "2s" }}
+                />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Zap className="h-6 w-6" style={{ color: "#FFB000" }} />
                 </div>
@@ -938,19 +1079,21 @@ export default function Results() {
                   const done = i < scanStep;
                   const active = i === scanStep;
                   return (
-                  <div key={step} className="flex items-center gap-3 text-sm">
-                    {done ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
-                    ) : (
-                      <div className={`h-3.5 w-3.5 rounded-full border shrink-0 ${active ? "border-amber-400 animate-pulse" : "border-slate-600"}`} />
-                    )}
-                    <span
-                      className={`font-mono text-xs font-medium ${active ? "text-amber-300" : done ? "text-emerald-300" : "text-slate-500"}`}
-                      style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                    >
-                      {step}
-                    </span>
-                  </div>
+                    <div key={step} className="flex items-center gap-3 text-sm">
+                      {done ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
+                      ) : (
+                        <div
+                          className={`h-3.5 w-3.5 rounded-full border shrink-0 ${active ? "border-amber-400 animate-pulse" : "border-slate-600"}`}
+                        />
+                      )}
+                      <span
+                        className={`font-mono text-xs font-medium ${active ? "text-amber-300" : done ? "text-emerald-300" : "text-slate-500"}`}
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        {step}
+                      </span>
+                    </div>
                   );
                 })}
               </div>
@@ -962,15 +1105,25 @@ export default function Results() {
               {sampleMode && typeof window !== "undefined" && (
                 <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100 sm:flex-row sm:items-center sm:justify-between">
                   <p>
-                    Share-ready sample pipeline: <span className="font-semibold">{requestedLimit} companies</span>
-                    {sampleName ? <span> for <span className="font-semibold">{sampleName}</span></span> : null}
+                    Share-ready sample pipeline:{" "}
+                    <span className="font-semibold">
+                      {requestedLimit} companies
+                    </span>
+                    {sampleName ? (
+                      <span>
+                        {" "}
+                        for <span className="font-semibold">{sampleName}</span>
+                      </span>
+                    ) : null}
                   </p>
                   <button
                     type="button"
                     onClick={() => {
-                      void navigator.clipboard.writeText(window.location.href).then(() => {
-                        toast.success("Sample pipeline link copied");
-                      });
+                      void navigator.clipboard
+                        .writeText(window.location.href)
+                        .then(() => {
+                          toast.success("Sample pipeline link copied");
+                        });
                     }}
                     className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-400/40 bg-[#081126]/60 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/15"
                   >
@@ -981,41 +1134,52 @@ export default function Results() {
               )}
 
               {!jobsHandoff ? (
-              <div className="mb-3 border border-amber-400/50 bg-transparent px-2.5 py-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">
-                  {isSignedIn ? "Step 3 of 5 · 5 sales leads" : "Step 2 of 5 · Sign up for 5 sales leads"}
-                  {sortedProspects.length > 0 ? (
-                    <>
-                      {" · "}
-                      <span className="text-emerald-300">
-                        {sortedProspects.length} buyers
-                        {sortedProspects.filter((p) => p.priorityTier === "HOT" || (p.stage || "").toUpperCase().includes("HOT")).length > 0
-                          ? ` · ${sortedProspects.filter((p) => p.priorityTier === "HOT" || (p.stage || "").toUpperCase().includes("HOT")).length} HOT`
-                          : ""}
-                      </span>
-                    </>
-                  ) : null}
-                </p>
-                <p className="mt-0.5 text-sm font-semibold text-white">
-                  {isSignedIn ? OEM_CAL_RESULTS_HEAD_SIGNED : OEM_CAL_RESULTS_HEAD_ANON}
-                </p>
-                <p className="mt-0.5 text-[11px] text-emerald-200/90">
-                  {isSignedIn
-                    ? "Cal matched these buyers to your robot URL — add company details next to unlock 15."
-                    : oemCalResultsAnonLine(sortedProspects.length)}
-                </p>
-                <p className="mt-0.5 text-[11px] text-slate-400">
-                  <span className="break-all text-slate-300">{submittedUrl}</span>
-                  {usingFallback ? " · sample mode" : ""}
-                  {" · "}
-                  Use Cal · OEM next step below when ready.
-                </p>
-                {!isSignedIn && (
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    Free signup keeps these matches in your workspace, then Pipeline.
+                <div className="mb-3 border border-amber-400/50 bg-transparent px-2.5 py-2">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">
+                    {isSignedIn
+                      ? "Step 3 of 5 · 5 sales leads"
+                      : "Step 2 of 5 · Sign up for 5 sales leads"}
+                    {sortedProspects.length > 0 ? (
+                      <>
+                        {" · "}
+                        <span className="text-emerald-300">
+                          {sortedProspects.length} buyers
+                          {sortedProspects.filter(
+                            p =>
+                              p.priorityTier === "HOT" ||
+                              (p.stage || "").toUpperCase().includes("HOT")
+                          ).length > 0
+                            ? ` · ${sortedProspects.filter(p => p.priorityTier === "HOT" || (p.stage || "").toUpperCase().includes("HOT")).length} HOT`
+                            : ""}
+                        </span>
+                      </>
+                    ) : null}
                   </p>
-                )}
-              </div>
+                  <p className="mt-0.5 text-sm font-semibold text-white">
+                    {isSignedIn
+                      ? OEM_CAL_RESULTS_HEAD_SIGNED
+                      : OEM_CAL_RESULTS_HEAD_ANON}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-emerald-200/90">
+                    {isSignedIn
+                      ? "These matches came from your URL scan — add company details next to unlock 15."
+                      : oemCalResultsAnonLine(sortedProspects.length)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-slate-400">
+                    <span className="break-all text-slate-300">
+                      {submittedUrl}
+                    </span>
+                    {usingFallback ? " · sample mode" : ""}
+                    {" · "}
+                    Use the OEM next step below when ready.
+                  </p>
+                  {!isSignedIn && (
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      Free signup keeps these matches in your workspace, then
+                      Pipeline.
+                    </p>
+                  )}
+                </div>
               ) : null}
 
               {!isSignedIn && !jobsHandoff && (
@@ -1028,10 +1192,14 @@ export default function Results() {
 
               {activatedCount > 0 && (
                 <div className="mb-5 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-5">
-                  <p className="text-sm font-bold text-emerald-100 mb-1">SIGNAL review queue created</p>
+                  <p className="text-sm font-bold text-emerald-100 mb-1">
+                    SIGNAL review queue created
+                  </p>
                   <p className="text-xs text-slate-300">
                     {activationId ? `Activation #${activationId}: ` : ""}
-                    Leads were saved to CRM. Review SIGNAL&apos;s workflow, draft outreach, timing, and cadence before any outbound action begins.
+                    Leads were saved to CRM. Review SIGNAL&apos;s workflow,
+                    draft outreach, timing, and cadence before any outbound
+                    action begins.
                   </p>
                 </div>
               )}
@@ -1040,12 +1208,15 @@ export default function Results() {
                 {sortedProspects.map((p, index) => {
                   const isSelected = selectedIds.has(p.id);
                   const isActive = activatedIds.has(p.id);
-                  const isLocked = !isSignedIn && index >= anonymousUnlockedCount;
+                  const isLocked =
+                    !isSignedIn && index >= anonymousUnlockedCount;
                   return (
                     <div
                       key={p.id}
                       className={`rounded-lg border bg-transparent overflow-hidden transition-colors ${
-                        isLocked ? "border-sky-400/40 hover:border-sky-400/60" : "border-white/20 hover:border-emerald-400/50"
+                        isLocked
+                          ? "border-sky-400/40 hover:border-sky-400/60"
+                          : "border-white/20 hover:border-emerald-400/50"
                       }`}
                     >
                       <div className="px-2.5 py-1.5 flex flex-col sm:flex-row sm:items-start gap-2">
@@ -1065,106 +1236,157 @@ export default function Results() {
                           >
                             <span
                               className="font-mono text-xs font-bold"
-                              style={{ color: scoreColor(p.score), fontFamily: "'JetBrains Mono', monospace" }}
+                              style={{
+                                color: scoreColor(p.score),
+                                fontFamily: "'JetBrains Mono', monospace",
+                              }}
                             >
                               {p.score}
                             </span>
                           </div>
-                          <span className="text-[7px] text-slate-500 uppercase tracking-widest">score</span>
+                          <span className="text-[7px] text-slate-500 uppercase tracking-widest">
+                            score
+                          </span>
                         </div>
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                            <h2 className={`text-sm font-bold leading-tight ${isLocked ? "text-slate-500" : "text-slate-50"}`}>
-                              {isLocked ? `Locked lead · ${p.industry}` : p.company}
+                            <h2
+                              className={`text-sm font-bold leading-tight ${isLocked ? "text-slate-500" : "text-slate-50"}`}
+                            >
+                              {isLocked
+                                ? `Locked lead · ${p.industry}`
+                                : p.company}
                             </h2>
                             {!isLocked && (
                               <span
                                 className="text-[10px] font-semibold"
-                                style={{ color: isActive ? "#34d399" : "#6ee7b7" }}
+                                style={{
+                                  color: isActive ? "#34d399" : "#6ee7b7",
+                                }}
                               >
                                 {isActive ? "Review Queued" : p.stage}
                               </span>
                             )}
                             {isLocked && (
                               <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-sky-300">
-                                <LockKeyhole className="h-3 w-3" /> Sign up to unlock
+                                <LockKeyhole className="h-3 w-3" /> Sign up to
+                                unlock
                               </span>
                             )}
                             {p.signalAge && !isLocked && (
-                              <span className="text-[10px] font-medium text-amber-300/90">{p.signalAge}</span>
+                              <span className="text-[10px] font-medium text-amber-300/90">
+                                {p.signalAge}
+                              </span>
                             )}
                           </div>
                           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0 text-[11px] text-slate-400">
                             {!isLocked && (
                               <>
-                                <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" />{p.location}</span>
-                                <span className="inline-flex items-center gap-0.5"><Users className="h-3 w-3" />{p.employees}</span>
+                                <span className="inline-flex items-center gap-0.5">
+                                  <MapPin className="h-3 w-3" />
+                                  {p.location}
+                                </span>
+                                <span className="inline-flex items-center gap-0.5">
+                                  <Users className="h-3 w-3" />
+                                  {p.employees}
+                                </span>
                               </>
                             )}
                             <span>{p.industry}</span>
                             {isLocked && p.priorityTier && (
-                              <span className="font-semibold text-amber-300">{p.priorityTier}</span>
+                              <span className="font-semibold text-amber-300">
+                                {p.priorityTier}
+                              </span>
                             )}
                           </p>
 
                           {isLocked ? (
                             <p className="mt-1.5 border-l border-sky-400/50 pl-2 text-[11px] leading-snug text-sky-100/90">
                               {p.priorityTier ? `${p.priorityTier} · ` : ""}
-                              {p.industry} buyer with robot-fit signal — sign up for full evidence.
+                              {p.industry} buyer with robot-fit signal — sign up
+                              for full evidence.
                             </p>
                           ) : (
-                            <p className="mt-1.5 border-l pl-2 text-[11px] leading-snug" style={{ borderColor: `${p.signalColor}80` }}>
-                              <span className="font-semibold uppercase tracking-wide mr-1.5" style={{ color: p.signalColor }}>{p.signalType}</span>
-                              <span className="text-amber-200/90">{p.signal}</span>
+                            <p
+                              className="mt-1.5 border-l pl-2 text-[11px] leading-snug"
+                              style={{ borderColor: `${p.signalColor}80` }}
+                            >
+                              <span
+                                className="font-semibold uppercase tracking-wide mr-1.5"
+                                style={{ color: p.signalColor }}
+                              >
+                                {p.signalType}
+                              </span>
+                              <span className="text-amber-200/90">
+                                {p.signal}
+                              </span>
                             </p>
                           )}
                         </div>
                       </div>
 
-                      {!isLocked && (p.shareSummary || (p.robotTypes && p.robotTypes.length > 0)) && (
-                        <div className="mx-3 mb-1.5 border-l border-cyan-400/50 pl-2">
-                          <p className="text-[10px] leading-snug text-cyan-100/90">
-                            <span className="font-semibold uppercase tracking-wide text-cyan-300">Intelligence · </span>
-                            {p.shareSummary || ""}
-                            {p.robotTypes && p.robotTypes.length > 0 ? (
-                              <span className="text-slate-400"> · Robots: {p.robotTypes.join(" · ")}</span>
-                            ) : null}
-                          </p>
-                          {p.leadId != null && (
-                            <div className="mt-1">
-                              <LeadShareBar
-                                variant="dark"
-                                lead={{
-                                  id: p.leadId,
-                                  company_name: p.company,
-                                  priority_tier: p.priorityTier,
-                                  share_summary: p.shareSummary,
-                                }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {!isLocked &&
+                        (p.shareSummary ||
+                          (p.robotTypes && p.robotTypes.length > 0)) && (
+                          <div className="mx-3 mb-1.5 border-l border-cyan-400/50 pl-2">
+                            <p className="text-[10px] leading-snug text-cyan-100/90">
+                              <span className="font-semibold uppercase tracking-wide text-cyan-300">
+                                Intelligence ·{" "}
+                              </span>
+                              {p.shareSummary || ""}
+                              {p.robotTypes && p.robotTypes.length > 0 ? (
+                                <span className="text-slate-400">
+                                  {" "}
+                                  · Robots: {p.robotTypes.join(" · ")}
+                                </span>
+                              ) : null}
+                            </p>
+                            {p.leadId != null && (
+                              <div className="mt-1">
+                                <LeadShareBar
+                                  variant="dark"
+                                  lead={{
+                                    id: p.leadId,
+                                    company_name: p.company,
+                                    priority_tier: p.priorityTier,
+                                    share_summary: p.shareSummary,
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                       {!isLocked && (
                         <div className="mx-3 mb-1.5 border-l border-emerald-400/50 pl-2">
                           <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
                             Cal → you · seller brief
                           </p>
-                          <p className="mt-0.5 text-[11px] font-semibold text-slate-100">{p.sellerBrief.headline}</p>
+                          <p className="mt-0.5 text-[11px] font-semibold text-slate-100">
+                            {p.sellerBrief.headline}
+                          </p>
                           <p className="mt-1 text-[10px] leading-snug text-slate-300">
-                            <span className="font-semibold text-amber-200">Why now · </span>
+                            <span className="font-semibold text-amber-200">
+                              Why now ·{" "}
+                            </span>
                             {p.sellerBrief.whyNow}
                           </p>
                           <p className="mt-0.5 text-[10px] leading-snug text-slate-300">
-                            <span className="font-semibold text-amber-200">Pitch · </span>
+                            <span className="font-semibold text-amber-200">
+                              Pitch ·{" "}
+                            </span>
                             {p.sellerBrief.pitch}
                           </p>
                           <p className="mt-0.5 text-[10px] leading-snug text-slate-400">
-                            <span className="font-semibold text-cyan-300">Robot fit · </span>
+                            <span className="font-semibold text-cyan-300">
+                              Robot fit ·{" "}
+                            </span>
                             {p.sellerBrief.robotFit}
-                            <span className="text-slate-500"> · {p.scoreReason}</span>
+                            <span className="text-slate-500">
+                              {" "}
+                              · {p.scoreReason}
+                            </span>
                           </p>
                         </div>
                       )}
@@ -1175,7 +1397,9 @@ export default function Results() {
                             <ArrowRight className="h-3 w-3 text-emerald-300" />
                             {p.sellerBrief.nextStep}
                           </span>
-                          <span className="font-semibold text-emerald-300">{p.timing}</span>
+                          <span className="font-semibold text-emerald-300">
+                            {p.timing}
+                          </span>
                           <button
                             type="button"
                             onClick={() => copyRfqPacket(p)}
@@ -1189,35 +1413,38 @@ export default function Results() {
 
                       {isActive && (
                         <p className="mx-3 mb-1.5 border-l border-emerald-400/50 pl-2 text-[10px] leading-snug text-emerald-100/90">
-                          <span className="font-semibold uppercase tracking-wide text-emerald-300">SIGNAL plan · </span>
-                          Draft outreach, send after approval, follow up in 3 days, track response.
+                          <span className="font-semibold uppercase tracking-wide text-emerald-300">
+                            SIGNAL plan ·{" "}
+                          </span>
+                          Draft outreach, send after approval, follow up in 3
+                          days, track response.
                         </p>
                       )}
 
                       {!(jobsHandoff && !isSignedIn) ? (
-                      <div className="mx-3 mb-2 flex flex-wrap items-center gap-2 border-t border-white/10 pt-1.5">
-                        {isLocked ? (
-                          <Link
-                            href={resultsSignupHref}
-                            className="inline-flex items-center gap-1.5 border border-amber-400/50 bg-transparent px-2.5 py-1 text-[11px] font-bold text-amber-100 hover:border-amber-300"
-                          >
-                            Sign up to unlock
-                            <ArrowRight className="h-3 w-3" />
-                          </Link>
-                        ) : (
-                          <Link
-                            href={
-                              p.leadId != null
-                                ? `/pipeline?src=results_scan&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
-                                : fullPipelineHref
-                            }
-                            className="inline-flex items-center gap-1.5 border border-amber-400/50 bg-transparent px-2.5 py-1 text-[11px] font-bold text-amber-100 hover:border-amber-300"
-                          >
-                            Open in Pipeline
-                            <ArrowRight className="h-3 w-3" />
-                          </Link>
-                        )}
-                      </div>
+                        <div className="mx-3 mb-2 flex flex-wrap items-center gap-2 border-t border-white/10 pt-1.5">
+                          {isLocked ? (
+                            <Link
+                              href={resultsSignupHref}
+                              className="inline-flex items-center gap-1.5 border border-amber-400/50 bg-transparent px-2.5 py-1 text-[11px] font-bold text-amber-100 hover:border-amber-300"
+                            >
+                              Sign up to unlock
+                              <ArrowRight className="h-3 w-3" />
+                            </Link>
+                          ) : (
+                            <Link
+                              href={
+                                p.leadId != null
+                                  ? `/pipeline?src=results_scan&lead=${p.leadId}${submittedUrl ? `&url=${encodeURIComponent(submittedUrl)}` : ""}`
+                                  : fullPipelineHref
+                              }
+                              className="inline-flex items-center gap-1.5 border border-amber-400/50 bg-transparent px-2.5 py-1 text-[11px] font-bold text-amber-100 hover:border-amber-300"
+                            >
+                              Open in Pipeline
+                              <ArrowRight className="h-3 w-3" />
+                            </Link>
+                          )}
+                        </div>
                       ) : null}
                     </div>
                   );

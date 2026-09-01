@@ -58,22 +58,37 @@ function formatCount(value?: number) {
   return new Intl.NumberFormat("en-US").format(value);
 }
 
-function MetricCard({ icon: Icon, accent, title, value, statLabel, description }: CardSpec) {
+function MetricCard({
+  icon: Icon,
+  accent,
+  title,
+  value,
+  statLabel,
+  description,
+}: CardSpec) {
   const tone = ACCENT[accent];
   return (
     <div
       className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm border-l-4 ${tone.border} transition-shadow hover:shadow-md`}
     >
       <div className="mb-5 flex items-start justify-between gap-3">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${tone.iconBg}`}>
+        <div
+          className={`flex h-11 w-11 items-center justify-center rounded-lg ${tone.iconBg}`}
+        >
           <Icon size={22} className={tone.icon} />
         </div>
         <div className="text-right">
-          <p className={`font-mono text-2xl font-bold tabular-nums ${tone.stat}`}>{value}</p>
+          <p
+            className={`font-mono text-2xl font-bold tabular-nums ${tone.stat}`}
+          >
+            {value}
+          </p>
           <p className="text-xs font-medium text-gray-600">{statLabel}</p>
         </div>
       </div>
-      <h3 className="mb-2 font-display text-xl font-bold text-gray-900">{title}</h3>
+      <h3 className="mb-2 font-display text-xl font-bold text-gray-900">
+        {title}
+      </h3>
       <p className="text-sm leading-relaxed text-gray-700">{description}</p>
     </div>
   );
@@ -85,7 +100,11 @@ type Props = {
   loading?: boolean;
 };
 
-export default function SiteMetricsPanel({ data, timeRangeLabel, loading }: Props) {
+export default function SiteMetricsPanel({
+  data,
+  timeRangeLabel,
+  loading,
+}: Props) {
   const funnelRuns = (data.funnelRuns ?? 0) + (data.buyerIntake ?? 0);
   const pipelineLeads = (data.hotCount ?? 0) + (data.warmCount ?? 0);
   const hotShare = pipelineLeads
@@ -117,7 +136,8 @@ export default function SiteMetricsPanel({ data, timeRangeLabel, loading }: Prop
       title: "Deploy",
       value: `${data.conversionRate ?? 0}%`,
       statLabel: `${formatCount(data.emailCaptures)} emails captured`,
-      description: "Email capture rate vs funnel activity — waitlist, newsletter, and buyer intake.",
+      description:
+        "Email capture rate vs funnel activity — waitlist, newsletter, and buyer intake.",
     },
   ];
 
@@ -131,18 +151,22 @@ export default function SiteMetricsPanel({ data, timeRangeLabel, loading }: Prop
           Discover traffic, develop intent, deploy capture.
         </h2>
         {loading ? (
-          <p className="mt-2 text-xs font-medium text-gray-600">Refreshing metrics…</p>
+          <p className="mt-2 text-xs font-medium text-gray-600">
+            Refreshing metrics…
+          </p>
         ) : null}
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        {cards.map((card) => (
+        {cards.map(card => (
           <MetricCard key={card.title} {...card} />
         ))}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm">
-        <span className="font-semibold text-gray-900">Pipeline backing data</span>
+        <span className="font-semibold text-gray-900">
+          Pipeline backing data
+        </span>
         <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">
           {formatCount(data.hotCount)} hot
         </span>
@@ -181,8 +205,18 @@ function SignupFunnelStrip({
 
   const steps = [
     { label: "Signup start", sub: "reached /signup", value: start },
-    { label: "Signup complete", sub: "account created", value: complete, rate: data.startToCompleteRate },
-    { label: "First save", sub: "activated", value: save, rate: data.completeToSaveRate },
+    {
+      label: "Signup complete",
+      sub: "account created",
+      value: complete,
+      rate: data.startToCompleteRate,
+    },
+    {
+      label: "First save",
+      sub: "activated",
+      value: save,
+      rate: data.completeToSaveRate,
+    },
   ];
 
   // Flag the weaker conversion step so the operator knows where to focus.
@@ -203,7 +237,9 @@ function SignupFunnelStrip({
           Signup funnel · {timeRangeLabel}
         </p>
         {!hasData ? (
-          <span className="text-[11px] font-medium text-gray-500">Collecting funnel events…</span>
+          <span className="text-[11px] font-medium text-gray-500">
+            Collecting funnel events…
+          </span>
         ) : null}
       </div>
       <div className="flex items-stretch gap-2">
@@ -213,7 +249,9 @@ function SignupFunnelStrip({
               <p className="font-mono text-xl font-bold tabular-nums text-gray-900">
                 {formatCount(step.value)}
               </p>
-              <p className="mt-0.5 text-xs font-semibold text-gray-700">{step.label}</p>
+              <p className="mt-0.5 text-xs font-semibold text-gray-700">
+                {step.label}
+              </p>
               <p className="text-[10px] text-gray-500">{step.sub}</p>
             </div>
             {i < steps.length - 1 ? (

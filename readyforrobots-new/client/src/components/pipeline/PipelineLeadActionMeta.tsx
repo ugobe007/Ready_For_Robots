@@ -19,7 +19,11 @@ export type PipelineLeadActionFields = {
   leadHighlights?: { specific_problem?: string | null };
   crmEvidence?: {
     friction_point?: string | null;
-    workflow_scope?: { count?: number; label?: string | null; items?: string[] };
+    workflow_scope?: {
+      count?: number;
+      label?: string | null;
+      items?: string[];
+    };
     timing?: { label?: string | null };
     robot_type?: { label?: string | null };
     budget?: { top_amount?: string | null; has_budget?: boolean };
@@ -29,22 +33,32 @@ export type PipelineLeadActionFields = {
 function actionLine(lead: PipelineLeadActionFields): string {
   return cleanAndClampText(
     jobExplanation({
-      friction: lead.crmEvidence?.friction_point || lead.leadHighlights?.specific_problem,
+      friction:
+        lead.crmEvidence?.friction_point ||
+        lead.leadHighlights?.specific_problem,
       workflow:
         lead.crmEvidence?.workflow_scope?.label ||
         lead.crmEvidence?.workflow_scope?.items?.[0],
-      summary: lead.share_summary || lead.shareSummary || lead.core_need || lead.signal,
+      summary:
+        lead.share_summary ||
+        lead.shareSummary ||
+        lead.core_need ||
+        lead.signal,
       action: lead.pipeline_action || lead.pipelineAction,
       company: lead.company,
       industry: lead.industry,
       title: lead.signals?.[0]?.display_text,
     }),
-    200,
+    200
   );
 }
 
 function robotTypes(lead: PipelineLeadActionFields): string[] {
-  const fromApi = (lead.robot_types_needed || lead.robotTypesNeeded || []).filter(Boolean);
+  const fromApi = (
+    lead.robot_types_needed ||
+    lead.robotTypesNeeded ||
+    []
+  ).filter(Boolean);
   return fromApi.slice(0, 4);
 }
 
@@ -56,7 +70,12 @@ function evidenceLine(lead: PipelineLeadActionFields): string {
   if (e.robot_type?.label) parts.push(e.robot_type.label);
   if (parts.length > 0) return cleanAndClampText(parts.join(" · "), 180);
   const friction = String(e.friction_point || "").trim();
-  if (friction && !/\b(why now signal not yet|discovery call|automation opportunity)\b/i.test(friction)) {
+  if (
+    friction &&
+    !/\b(why now signal not yet|discovery call|automation opportunity)\b/i.test(
+      friction
+    )
+  ) {
     return cleanAndClampText(friction, 180);
   }
   return "";
@@ -68,7 +87,11 @@ type Props = {
   className?: string;
 };
 
-export default function PipelineLeadActionMeta({ lead, variant = "light", className = "" }: Props) {
+export default function PipelineLeadActionMeta({
+  lead,
+  variant = "light",
+  className = "",
+}: Props) {
   const rawAction = actionLine(lead);
   // Hero: one tight line only
   const action =
@@ -85,25 +108,25 @@ export default function PipelineLeadActionMeta({ lead, variant = "light", classN
       ? "text-slate-300 text-sm"
       : variant === "hero"
         ? "text-[12px] text-slate-300 leading-snug"
-      : variant === "compact"
-        ? "pipeline-deal-action leading-snug"
-        : "text-xs text-gray-700 leading-snug";
+        : variant === "compact"
+          ? "pipeline-deal-action leading-snug"
+          : "text-xs text-gray-700 leading-snug";
 
   const chipClass =
     variant === "dark"
       ? "inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
       : variant === "hero"
         ? "inline-flex rounded-full border border-sky-300/28 bg-sky-400/8 px-2 py-0.5 text-[10px] font-medium text-sky-200/85"
-      : "pipeline-robot-type-chip";
+        : "pipeline-robot-type-chip";
 
   const proofClass =
     variant === "dark"
       ? "text-[11px] text-emerald-200/90 leading-snug"
       : variant === "hero"
         ? "text-[11px] text-slate-400 leading-snug"
-      : variant === "compact"
-        ? "text-[10px] text-emerald-700 leading-snug"
-        : "text-[11px] text-emerald-700 leading-snug";
+        : variant === "compact"
+          ? "text-[10px] text-emerald-700 leading-snug"
+          : "text-[11px] text-emerald-700 leading-snug";
 
   const prefix = action.includes(":") ? action.split(":")[0]?.trim() : null;
   const body =
@@ -138,7 +161,7 @@ export default function PipelineLeadActionMeta({ lead, variant = "light", classN
       )}
       {types.length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {types.map((type) => (
+          {types.map(type => (
             <span key={type} className={chipClass}>
               {type}
             </span>

@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react";
 import { useEffect } from "react";
-import { ArrowRight, Copy, ExternalLink, Shield, AlertTriangle } from "lucide-react";
+import {
+  ArrowRight,
+  Copy,
+  ExternalLink,
+  Shield,
+  AlertTriangle,
+} from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
@@ -81,9 +87,12 @@ export default function SalesSamples() {
       setMeLoading(true);
       try {
         const token = await getFreshAccessToken(session.access_token);
-        const res = await fetch(`${getApiBase()}/api/user/me`, liveFetchInit({ headers: authHeader(token) }));
+        const res = await fetch(
+          `${getApiBase()}/api/user/me`,
+          liveFetchInit({ headers: authHeader(token) })
+        );
         if (!res.ok) throw new Error(`user/me ${res.status}`);
-        const me = await res.json() as { email?: string; is_admin?: boolean };
+        const me = (await res.json()) as { email?: string; is_admin?: boolean };
         if (!cancelled) {
           setSignedInEmail(me.email || "");
           setIsAdmin(Boolean(me.is_admin));
@@ -115,7 +124,9 @@ export default function SalesSamples() {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900">
         <Header />
-        <main className="mx-auto max-w-2xl px-6 pt-28 text-center text-slate-500">Checking admin access...</main>
+        <main className="mx-auto max-w-2xl px-6 pt-28 text-center text-slate-500">
+          Checking admin access...
+        </main>
       </div>
     );
   }
@@ -126,9 +137,16 @@ export default function SalesSamples() {
         <Header />
         <main className="mx-auto max-w-xl px-6 pt-28 text-center">
           <Shield className="mx-auto mb-4 h-7 w-7 text-amber-500" />
-          <h1 className="text-2xl font-bold text-slate-900">Admin sign in required</h1>
-          <p className="mt-3 text-sm text-slate-600">This sales sample builder is private to admin accounts.</p>
-          <Link href="/login?next=%2Fsales%2Fsamples" className="mt-6 inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600">
+          <h1 className="text-2xl font-bold text-slate-900">
+            Admin sign in required
+          </h1>
+          <p className="mt-3 text-sm text-slate-600">
+            This sales sample builder is private to admin accounts.
+          </p>
+          <Link
+            href="/login?next=%2Fsales%2Fsamples"
+            className="mt-6 inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600"
+          >
             Sign in
           </Link>
         </main>
@@ -142,15 +160,24 @@ export default function SalesSamples() {
         <Header />
         <main className="mx-auto max-w-xl px-6 pt-28 text-center">
           <AlertTriangle className="mx-auto mb-4 h-7 w-7 text-red-400" />
-          <h1 className="text-2xl font-bold text-slate-900">Admin access required</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Admin access required
+          </h1>
           <p className="mt-3 text-sm text-slate-600">
-            {signedInEmail || "This account"} is signed in but not in ADMIN_EMAILS.
+            {signedInEmail || "This account"} is signed in but not in
+            ADMIN_EMAILS.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/admin" className="inline-flex rounded-xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-700">
+            <Link
+              href="/admin"
+              className="inline-flex rounded-xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-700"
+            >
               Open admin
             </Link>
-            <Link href="/pipeline" className="inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600">
+            <Link
+              href="/pipeline"
+              className="inline-flex rounded-xl border border-amber-500 px-5 py-3 text-sm font-bold text-amber-600"
+            >
               Back to pipeline
             </Link>
           </div>
@@ -171,20 +198,37 @@ export default function SalesSamples() {
       <main className="mx-auto max-w-5xl px-4 pb-16 sm:px-6">
         <section className="-mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">Sample robot company presets</h2>
-            <Link href="/results" className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Sample robot company presets
+            </h2>
+            <Link
+              href="/results"
+              className="text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+            >
               Open manual scan
             </Link>
           </div>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {SAMPLE_ROBOT_COMPANIES.map((sample) => {
+            {SAMPLE_ROBOT_COMPANIES.map(sample => {
               const resultsPath = buildResultsPath(sample.url, sample.name);
-              const shareUrl = typeof window !== "undefined" ? `${window.location.origin}${resultsPath}` : "";
+              const shareUrl =
+                typeof window !== "undefined"
+                  ? `${window.location.origin}${resultsPath}`
+                  : "";
               return (
-                <article key={sample.name} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <h3 className="text-sm font-semibold text-slate-900">{sample.name}</h3>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-600">{sample.profile}</p>
-                  <p className="mt-3 text-[11px] font-medium text-slate-500">{sample.url}</p>
+                <article
+                  key={sample.name}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {sample.name}
+                  </h3>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                    {sample.profile}
+                  </p>
+                  <p className="mt-3 text-[11px] font-medium text-slate-500">
+                    {sample.url}
+                  </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link
                       href={resultsPath}
@@ -197,9 +241,11 @@ export default function SalesSamples() {
                       type="button"
                       onClick={() => {
                         if (!shareUrl) return;
-                        void navigator.clipboard.writeText(shareUrl).then(() => {
-                          toast.success("Share link copied");
-                        });
+                        void navigator.clipboard
+                          .writeText(shareUrl)
+                          .then(() => {
+                            toast.success("Share link copied");
+                          });
                       }}
                       className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                     >
@@ -214,20 +260,23 @@ export default function SalesSamples() {
         </section>
 
         <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-lg font-semibold text-slate-900">Custom sample pipeline</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Custom sample pipeline
+          </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Enter any robot company and generate a shareable 15-company pipeline URL.
+            Enter any robot company and generate a shareable 15-company pipeline
+            URL.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <input
               value={customCompanyName}
-              onChange={(e) => setCustomCompanyName(e.target.value)}
+              onChange={e => setCustomCompanyName(e.target.value)}
               placeholder="Sample company name"
               className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-500"
             />
             <input
               value={customCompanyUrl}
-              onChange={(e) => setCustomCompanyUrl(e.target.value)}
+              onChange={e => setCustomCompanyUrl(e.target.value)}
               placeholder="https://robot-company.com"
               className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-500"
             />
@@ -235,10 +284,17 @@ export default function SalesSamples() {
 
           {customResultsPath ? (
             <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-widest text-emerald-800">Shareable link</p>
-              <p className="mt-2 break-all text-xs text-emerald-900">{customShareUrl}</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-emerald-800">
+                Shareable link
+              </p>
+              <p className="mt-2 break-all text-xs text-emerald-900">
+                {customShareUrl}
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Link href={customResultsPath} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700">
+                <Link
+                  href={customResultsPath}
+                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
+                >
                   Open pipeline
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Link>
@@ -246,9 +302,11 @@ export default function SalesSamples() {
                   type="button"
                   onClick={() => {
                     if (!customShareUrl) return;
-                    void navigator.clipboard.writeText(customShareUrl).then(() => {
-                      toast.success("Custom share link copied");
-                    });
+                    void navigator.clipboard
+                      .writeText(customShareUrl)
+                      .then(() => {
+                        toast.success("Custom share link copied");
+                      });
                   }}
                   className="inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-semibold text-emerald-900 hover:bg-emerald-100"
                 >
@@ -258,7 +316,9 @@ export default function SalesSamples() {
               </div>
             </div>
           ) : (
-            <p className="mt-3 text-xs text-slate-500">Add a valid URL to generate a shareable 15-company pipeline link.</p>
+            <p className="mt-3 text-xs text-slate-500">
+              Add a valid URL to generate a shareable 15-company pipeline link.
+            </p>
           )}
         </section>
       </main>

@@ -122,6 +122,8 @@ export const DEFAULT_CLASS_OPTIONS: ClassOption[] = [
 
 export const CLASS_OPTION_IDS = DEFAULT_CLASS_OPTIONS.map(row => row.id);
 
-export function classOptionsOrDefault(options?: ClassOption[] | null): ClassOption[] {
+export function classOptionsOrDefault(
+  options?: ClassOption[] | null
+): ClassOption[] {
   return options && options.length > 0 ? options : DEFAULT_CLASS_OPTIONS;
 }

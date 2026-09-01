@@ -23,10 +23,7 @@ export function canonicalRobotUrl(url: string): string {
   }
 }
 
-export function sameRobotUrl(
-  a?: string | null,
-  b?: string | null,
-): boolean {
+export function sameRobotUrl(a?: string | null, b?: string | null): boolean {
   const left = canonicalRobotUrl(a || "");
   const right = canonicalRobotUrl(b || "");
   return Boolean(left && right && left === right);
@@ -34,7 +31,7 @@ export function sameRobotUrl(
 
 export function emptyRobotIdentity(
   url: string,
-  productName = "",
+  productName = ""
 ): RobotPipelineIdentity {
   return {
     url: canonicalRobotUrl(url),
@@ -44,7 +41,7 @@ export function emptyRobotIdentity(
 
 export function isCurrentRobotSubmit(
   currentUrl?: string | null,
-  submitUrl?: string | null,
+  submitUrl?: string | null
 ): boolean {
   return sameRobotUrl(currentUrl, submitUrl);
 }
@@ -81,7 +78,7 @@ export function isSilentFindError(err: unknown): boolean {
 /** User-visible FIND error, or null when the request was aborted/superseded. */
 export function findUserFacingError(
   err: unknown,
-  fallback: string,
+  fallback: string
 ): string | null {
   if (isSilentFindError(err)) return null;
   const detail = errorMessage(err).trim();
@@ -89,7 +86,10 @@ export function findUserFacingError(
   if (/timeout/i.test(detail)) {
     return "Lookup took too long. Try again — a manufacturer homepage is fine if we already know their robots.";
   }
-  if (detail && !/^robot-(profile|job-search|oem-listing)\s+\d+$/i.test(detail)) {
+  if (
+    detail &&
+    !/^robot-(profile|job-search|oem-listing)\s+\d+$/i.test(detail)
+  ) {
     return `${fallback} ${detail}`.trim();
   }
   return fallback;

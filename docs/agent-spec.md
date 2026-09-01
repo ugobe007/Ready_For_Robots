@@ -1,6 +1,6 @@
 # Sales plan agent — specification
 
-This is the **CRM copilot** spec. It is not Hermes. Hermes is retired ([`hermes_retired.md`](hermes_retired.md)). FIND does not call this agent. Site agents wrap this path with **pstack Act** (`app/services/pstack_protocol.py`). How-check: this copilot is not `robot_job_capability_match.py`. Do not call Vercel AI Gateway.
+This is the **CRM copilot** spec. On Jobs CRM (`/pipeline?src=jobs_activate`) that copilot is **Cal**: ask missing apply facts, prepare the employer draft, operator sends. Hermes is retired ([`hermes_retired.md`](hermes_retired.md)). FIND does not call this agent. `POST /api/crm/accounts/{id}/generate-plan` is leftover SIGNAL and must not send a Cal intro. Site agents wrap this path with **pstack Act** (`app/services/pstack_protocol.py`). How-check: this copilot is not `robot_job_capability_match.py`. Do not call Vercel AI Gateway.
 
 This document defines the **role**, **inputs/outputs**, **guardrails**, and **implementation split** for the Ready For Robots CRM copilot. It aligns with these product decisions:
 
@@ -12,7 +12,7 @@ This document defines the **role**, **inputs/outputs**, **guardrails**, and **im
 
 ## 1. Purpose
 
-The agent helps reps **turn signals + context into an actionable, editable sales plan** — not to run outreach automatically or replace CRM updates.
+The agent helps reps **turn signals + context into an actionable, editable sales plan** on leftover SIGNAL `/crm`. Jobs CRM uses Cal on the desk instead — not generate-plan, not Apollo, not a Cal intro send.
 
 **Success looks like:** structured plan → user review → **persisted tasks/notes** on the right account/opportunity, with traceability to signals.
 
@@ -120,3 +120,4 @@ This keeps cost predictable and makes behavior testable without calling the mode
 |---------|------|--------|
 | 1 | 2026-04-04 | Initial spec: teams, SSOT company + engagements, OpenAI + inference split |
 | 2 | 2026-08-26 | pstack Act wraps generate-plan; How-check says this is not the matcher |
+| 3 | 2026-09-01 | Jobs CRM copilot is Cal on the desk. generate-plan stays SIGNAL-only and must not send a Cal intro. |

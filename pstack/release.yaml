@@ -36,6 +36,10 @@ act:
     prove: crmDeskForCurrentRobot keys the desk to the submitted URL
   - id: no_signal_hop
     prove: FIND workspace does not call fetchRobotJobMatch; CRM desk has no robot-job-match
+  - id: crm_first_cta
+    prove: Jobs-for-robot list Open CRM is the only primary CTA; Apply lives on the CRM desk
+  - id: cal_jobs_desk
+    prove: Cal lives on Jobs CRM after Open CRM with desk tools; not FIND; not buyer mail
 
 critic:
   - id: find

@@ -1,8 +1,14 @@
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from "@xyflow/react";
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
+  type EdgeProps,
+} from "@xyflow/react";
 import type { WorkflowEdgeData } from "@/lib/workflowFlowAdapter";
 
 export default function WorkflowEdge(props: EdgeProps) {
-  const { id, sourceX, sourceY, targetX, targetY, data, style, markerEnd } = props;
+  const { id, sourceX, sourceY, targetX, targetY, data, style, markerEnd } =
+    props;
   const edgeData = (data || {}) as WorkflowEdgeData;
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,

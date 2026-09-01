@@ -50,6 +50,9 @@ def test_render_cal_daily_digest_text_includes_sections():
     assert "FIND / matcher submissions seen: 4" in text
     assert "Jobs kept in CRM: 2" in text
     assert "Applications stored: 1" in text
+    assert "Task-model answers on kept jobs: 0" in text
+    assert "Cal desk: ask missing apply facts" in text
+    assert "Buyer sales (must stay 0)" in text
     assert "Robot-sales intros sent: 3" in text
     assert "Autopilot: ON" in text
     assert "Frozen sales drafts (not a send list): 17" in text
@@ -81,7 +84,8 @@ def test_render_frozen_when_autopilot_off():
         needs_you=[],
         jobs_activity={"matcher_seen": 1, "jobs_kept": 3, "applications": 0},
     )
-    assert "Cal sales outreach is frozen" in text
+    assert "Cal works the Jobs CRM desk" in text
+    assert "Buyer sales outreach stays frozen" in text
     assert "Scheduled drafts created or refreshed: 0 (paused)" in text
     assert "Drafts created or refreshed: 16" not in text
     assert "22 due now — held" in text
@@ -115,7 +119,7 @@ def test_render_explains_zero_intros_when_drafts_ready():
     )
     assert "Follow-up emails sent: 10" in text
     assert "Why 0 new intros" in text
-    assert "Robot Jobs, not robot sales" in text
+    assert "CRM desk, not robot sales" in text
     assert "verified contacts" not in text
 
 
@@ -260,7 +264,8 @@ def test_build_cal_daily_digest_without_db_context(monkeypatch):
     assert "ugobe07@gmail.com" in digest["recipients"]
     assert "Robot-sales intros sent: 0" in digest["body_text"]
     assert "not waiting on a robot-sales send" in digest["body_text"]
-    assert "Cal sales outreach is frozen" in digest["body_text"]
+    assert "Cal works the Jobs CRM desk" in digest["body_text"]
+    assert "Buyer sales outreach stays frozen" in digest["body_text"]
     assert "opportunity signals" not in digest["body_text"]
     assert "Sales teams should prioritize" not in digest["body_text"]
     assert "Industry brief" not in digest["body_text"]

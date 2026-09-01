@@ -55,7 +55,7 @@ export default function CalAutopilotSwitch({
         <Switch
           checked={enabled}
           disabled={disabled || busy}
-          onCheckedChange={(checked) => onToggle(checked)}
+          onCheckedChange={checked => onToggle(checked)}
           aria-label="Cal autopilot"
         />
       </div>

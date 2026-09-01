@@ -9,6 +9,7 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_buyer_emai
 # Wise, abbreviated, in-the-know. Engineer-led teams, PoC → deployment reality.
 # Honesty and trust over hype. Draws on deep robotics industry experience.
 
+# External outreach constants (used in cal_opening, cal_vendor_opening, sales_agent)
 CAL_INTRO = "Hi, I am Cal. I work at ReadyForRobots as a deployment advisor. I focus on robot deployments and their metrics, to help companies improve ROI."
 
 CAL_BUYER_ROLE_LINE = (

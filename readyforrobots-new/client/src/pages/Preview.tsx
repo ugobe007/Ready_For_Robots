@@ -7,8 +7,14 @@ import { ArrowRight, ExternalLink, Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
-import CalLeadDrop, { type CalLeadDropData } from "@/components/pipeline/CalLeadDrop";
-import { getApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
+import CalLeadDrop, {
+  type CalLeadDropData,
+} from "@/components/pipeline/CalLeadDrop";
+import {
+  getApiBase,
+  fetchWithTimeoutRetry,
+  liveFetchInit,
+} from "@/lib/apiBase";
 import {
   LINKEDIN_ORG_URN,
   linkedInShareUrl,
@@ -34,7 +40,9 @@ export default function Preview() {
   const [error, setError] = useState("");
 
   const shareUrl =
-    typeof window !== "undefined" ? `${window.location.origin}/preview` : "https://readyforrobots.com/preview";
+    typeof window !== "undefined"
+      ? `${window.location.origin}/preview`
+      : "https://readyforrobots.com/preview";
 
   usePageMeta({
     title: `${PREVIEW_TITLE} | Ready For Robots`,
@@ -51,13 +59,14 @@ export default function Preview() {
           `${getApiBase()}/api/leads/cal-drops`,
           liveFetchInit(),
           12_000,
-          { retries: 1 },
+          { retries: 1 }
         );
         if (!res.ok) throw new Error(`Could not load preview (${res.status})`);
         const json = (await res.json()) as CalDropsResponse;
         if (!cancelled) setData(json);
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Preview failed to load");
+        if (!cancelled)
+          setError(e instanceof Error ? e.message : "Preview failed to load");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -153,7 +162,10 @@ export default function Preview() {
                 LinkedIn company URN:{" "}
                 <code className="text-gray-500">{LINKEDIN_ORG_URN}</code>
                 {" · "}
-                <Link href="/privacy" className="text-emerald-700 underline hover:text-emerald-800">
+                <Link
+                  href="/privacy"
+                  className="text-emerald-700 underline hover:text-emerald-800"
+                >
                   Privacy Policy
                 </Link>
               </p>
@@ -186,14 +198,16 @@ export default function Preview() {
           </div>
         ) : (
           <div className="space-y-6">
-            {drops.map((drop) => (
+            {drops.map(drop => (
               <CalLeadDrop key={drop.id} drop={drop} variant="full" showDraft />
             ))}
           </div>
         )}
 
         <section className="mt-8 rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
-          <h2 className="text-sm font-bold text-gray-900">Email preview loop</h2>
+          <h2 className="text-sm font-bold text-gray-900">
+            Email preview loop
+          </h2>
           <p className="mt-1 text-xs text-gray-600">
             Compact footer animation in Cal outreach emails.
           </p>

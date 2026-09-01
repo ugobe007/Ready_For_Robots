@@ -29,7 +29,7 @@ FIND (URL) → QUALIFY (Job Cards, anonymous OK) → signup wall → CRM desk
 | — wall | `/signup?next=/pipeline?src=jobs_activate&src=jobs_activate` | Required | Account before the desk. |
 | 03 CRM | `/pipeline?src=jobs_activate` | Signed in | Jobs they kept as an expandable **listing**. Place this job lives **inside** an opened job, not as the only screen. |
 
-Process bar: **01 Show us your robot → 02 Available jobs → 03 CRM**. Step 02 action is **Apply to jobs →** (violet, not neon green). Open CRM still uses `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
+Process bar: **01 Show us your robot → 02 Available jobs → 03 CRM**. Step 02 action is **Open CRM →**. Apply is not a sibling CTA on that screen. Signed CRM desk still uses **Apply to jobs →** (violet, not neon green). Open CRM still uses `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
 
 **Do not** rename step 03 to Place, Pipeline, or Activate in chrome. Place is the money action **on a deal**, not the process step. Step 02 chrome is **Available jobs** (renamed from “Here are its jobs”).
 
@@ -117,6 +117,8 @@ Actions taken on FIND / QUALIFY (keep, Open CRM) and on the desk (Place, apply) 
 
 Authenticated keep upserts selected Job Cards onto the user (`user_kept_jobs`). N is the selected/kept count, not a hardcoded 5 when they kept 3. Schema: user, job identity (employer, work title, source ids), robot/submission, timestamps, free TTL/entitlement. Unsigned users still hit the wall; after signup, kept jobs restore. Status bar says "N jobs saved". Off the desk the bar links to CRM; on the desk it links to **Apply to jobs**. Apply copy: apply. We draft. You review and send.
 
+Each kept job asks **Do you have a model for this work?** The OEM names the model source (product, vendor, or known policy) or says they will train it for the job. Stored on `user_kept_jobs.work_task_model_kind` / `work_task_model_source`. Unknown until they answer. Do not invent a model name. **Cal** asks this on the desk after Open CRM if it is still blank.
+
 ### F11 — Next steps offer → apply outreach (ship)
 
 After keep, **Apply to jobs** / **Next steps** is a real control: `/pipeline?src=jobs_activate&next=offer#jobs-next-steps`. The form collects robot name, catalogued OEM SKUs, skippable PoC (written note plus optional async video URL: Loom / YouTube / Vimeo embed, Google Drive as a link-out), why they are applying, attached specs, and the **user’s proposed monthly price**. Prepare looks for a public YouTube clip of the robot (company + SKU). Empty video URL does not block apply. `POST /api/jobs-crm/apply` and `/apply-selected` store a **prepared** draft (`status=prepared`). The operator reviews subject, body, video, and contacts, then sends. `POST /api/jobs-crm/applications/{id}/send` is the only employer send. No invented emails. No auto-email. No Google Meet. No invented rental dollars. Do not skip the offer form. Do not accept video files on the specs upload path. YouTube: Data API when `YOUTUBE_API_KEY` is set; otherwise a documented search URL. Fail empty over the wrong robot’s video.
@@ -199,6 +201,12 @@ Hunt on FIND. Keep jobs on the CRM listing. Apply when the user is ready.
 
 ---
 
+### F18 — Cal on the desk (ship)
+
+After Open CRM, **Cal** is the Jobs recruiter on `/pipeline?src=jobs_activate`. He reads kept Job Cards, asks missing apply facts (task-model source vs self-train, catalogued SKU, monthly rental, skippable PoC), and prepares the existing violet apply draft. The operator reviews and sends. Tools: `GET/POST /api/jobs-crm/cal/desk`. Production `CAL_AUTONOMY_ENABLED=0`. Not FIND. Not buyer/SIGNAL mail. Not a second home.
+
+---
+
 ## Agent rules (stop the rewire)
 
 1. **Never remove the signup wall** in front of the CRM desk.
@@ -217,7 +225,7 @@ Hunt on FIND. Keep jobs on the CRM listing. Apply when the user is ready.
 
 ## Out of scope (this spec still names them)
 
-Matcher retune, Cal, invented dollars, HubSpot OAuth export UI, cron expiry job, paid “all matching jobs” query beyond the current dump.
+Matcher retune, invented dollars, HubSpot OAuth export UI, cron expiry job, paid “all matching jobs” query beyond the current dump. Cal-as-core / FIND chatbot / buyer autonomy stay out of scope.
 
 ## Next missions (ranked)
 

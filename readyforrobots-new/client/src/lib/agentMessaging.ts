@@ -10,7 +10,7 @@ export const BUYER_SIGNAL_EXPLANATION =
   "Cal starts with the operational problem and physical task, then assesses whether a robot deployment could create measurable value — and says so when it cannot.";
 
 // Admin-only Cal persona (also used for pipeline preview so OEMs see the same voice).
-export const CAL_INTRO = "Hi — this is Cal.";
+export const CAL_INTRO = "Hi — this is Cal. I work kept jobs on the CRM desk.";
 export const CAL_VENDOR_SHERPA_LINE =
-  "Most robot companies are engineer-led, not sales-led. I help qualify buyers against real operational requirements — honest readouts, no theater.";
+  "Most robot companies are engineer-led. I ask the missing apply facts, prepare the draft, and you send. Buyer sales stay frozen.";
 export const CAL_SIGNATURE = ["Cal", "ReadyForRobots"].join("\n");

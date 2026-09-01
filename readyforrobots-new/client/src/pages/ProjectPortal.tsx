@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRoute } from "wouter";
-import { Activity, Building2, CheckCircle2, Loader2, Rocket } from "lucide-react";
+import {
+  Activity,
+  Building2,
+  CheckCircle2,
+  Loader2,
+  Rocket,
+} from "lucide-react";
 import { getPublicReadApiBase } from "@/lib/apiBase";
 
 type PortalUpdate = {
@@ -19,7 +25,13 @@ type PortalData = {
   status: string;
   metrics: Record<string, unknown>;
   funnel: Array<{ stage: string; count: number }>;
-  accounts?: Array<{ company: string; segment?: string | null; best_fit_task?: string | null; stage: string; contacted: boolean }>;
+  accounts?: Array<{
+    company: string;
+    segment?: string | null;
+    best_fit_task?: string | null;
+    stage: string;
+    contacted: boolean;
+  }>;
   updated_at?: string | null;
   updates: PortalUpdate[];
 };
@@ -32,7 +44,7 @@ const CATEGORY_STYLES: Record<string, string> = {
 };
 
 function humanize(label: string): string {
-  return label.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return label.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export default function ProjectPortal() {
@@ -52,7 +64,9 @@ export default function ProjectPortal() {
     }
     (async () => {
       try {
-        const res = await fetch(`${api}/api/special-projects/portal/${token}`, { cache: "no-store" });
+        const res = await fetch(`${api}/api/special-projects/portal/${token}`, {
+          cache: "no-store",
+        });
         if (!active) return;
         if (res.status === 404) {
           setNotFound(true);
@@ -72,10 +86,13 @@ export default function ProjectPortal() {
   }, [api, token]);
 
   const maxFunnel = useMemo(
-    () => Math.max(1, ...(data?.funnel || []).map((f) => f.count)),
-    [data],
+    () => Math.max(1, ...(data?.funnel || []).map(f => f.count)),
+    [data]
   );
-  const metricEntries = useMemo(() => Object.entries(data?.metrics || {}), [data]);
+  const metricEntries = useMemo(
+    () => Object.entries(data?.metrics || {}),
+    [data]
+  );
 
   if (loading) {
     return (
@@ -91,7 +108,8 @@ export default function ProjectPortal() {
         <Rocket className="mb-4 h-10 w-10 text-slate-600" />
         <h1 className="text-xl font-semibold text-white">Portal not found</h1>
         <p className="mt-2 max-w-md text-sm text-slate-400">
-          This link is invalid or has been rotated. Please check with your Ready For Robots contact for an updated link.
+          This link is invalid or has been rotated. Please check with your Ready
+          For Robots contact for an updated link.
         </p>
       </div>
     );
@@ -110,9 +128,13 @@ export default function ProjectPortal() {
             {data.status}
           </span>
         </div>
-        {data.summary && <p className="mt-3 max-w-2xl text-slate-300">{data.summary}</p>}
+        {data.summary && (
+          <p className="mt-3 max-w-2xl text-slate-300">{data.summary}</p>
+        )}
         {data.robot_description && (
-          <p className="mt-1 max-w-2xl text-sm text-slate-400">{data.robot_description}</p>
+          <p className="mt-1 max-w-2xl text-sm text-slate-400">
+            {data.robot_description}
+          </p>
         )}
         {data.updated_at && (
           <p className="mt-3 text-xs text-slate-500">
@@ -124,9 +146,16 @@ export default function ProjectPortal() {
         {metricEntries.length > 0 && (
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {metricEntries.map(([key, value]) => (
-              <div key={key} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-                <div className="text-2xl font-bold text-white">{String(value)}</div>
-                <div className="mt-1 text-xs uppercase tracking-wide text-slate-400">{humanize(key)}</div>
+              <div
+                key={key}
+                className="rounded-xl border border-slate-800 bg-slate-900/60 p-4"
+              >
+                <div className="text-2xl font-bold text-white">
+                  {String(value)}
+                </div>
+                <div className="mt-1 text-xs uppercase tracking-wide text-slate-400">
+                  {humanize(key)}
+                </div>
               </div>
             ))}
           </div>
@@ -139,13 +168,17 @@ export default function ProjectPortal() {
               <Activity className="h-4 w-4 text-indigo-400" /> Pipeline progress
             </h2>
             <div className="space-y-2.5">
-              {data.funnel.map((f) => (
+              {data.funnel.map(f => (
                 <div key={f.stage} className="flex items-center gap-3">
-                  <div className="w-28 shrink-0 text-xs capitalize text-slate-400">{f.stage.replace("_", " ")}</div>
+                  <div className="w-28 shrink-0 text-xs capitalize text-slate-400">
+                    {f.stage.replace("_", " ")}
+                  </div>
                   <div className="h-6 flex-1 overflow-hidden rounded-md bg-slate-800">
                     <div
                       className="flex h-full items-center justify-end rounded-md bg-gradient-to-r from-indigo-600 to-indigo-400 px-2 text-[11px] font-semibold text-white"
-                      style={{ width: `${Math.max(6, (f.count / maxFunnel) * 100)}%` }}
+                      style={{
+                        width: `${Math.max(6, (f.count / maxFunnel) * 100)}%`,
+                      }}
                     >
                       {f.count}
                     </div>
@@ -160,23 +193,30 @@ export default function ProjectPortal() {
         {data.accounts && data.accounts.length > 0 && (
           <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/60 p-5">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
-              <Building2 className="h-4 w-4 text-indigo-400" /> Accounts Cal is working ({data.accounts.length})
+              <Building2 className="h-4 w-4 text-indigo-400" /> Accounts Cal is
+              working ({data.accounts.length})
             </h2>
             <div className="grid gap-2 sm:grid-cols-2">
-              {data.accounts.map((a) => (
+              {data.accounts.map(a => (
                 <div
                   key={a.company}
                   className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2"
                 >
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-medium text-white">{a.company}</div>
+                    <div className="truncate text-sm font-medium text-white">
+                      {a.company}
+                    </div>
                     {a.best_fit_task && (
-                      <div className="truncate text-[11px] text-slate-500">{a.best_fit_task}</div>
+                      <div className="truncate text-[11px] text-slate-500">
+                        {a.best_fit_task}
+                      </div>
                     )}
                   </div>
                   <span
                     className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
-                      a.contacted ? "bg-indigo-500/15 text-indigo-300" : "bg-slate-800 text-slate-400"
+                      a.contacted
+                        ? "bg-indigo-500/15 text-indigo-300"
+                        : "bg-slate-800 text-slate-400"
                     }`}
                   >
                     {a.stage.replace("_", " ")}
@@ -189,12 +229,16 @@ export default function ProjectPortal() {
 
         {/* Updates timeline */}
         <div className="mt-8">
-          <h2 className="mb-4 text-sm font-semibold text-white">Workflow developments</h2>
+          <h2 className="mb-4 text-sm font-semibold text-white">
+            Workflow developments
+          </h2>
           {data.updates.length === 0 ? (
-            <p className="text-sm text-slate-500">No updates yet — Cal is getting to work.</p>
+            <p className="text-sm text-slate-500">
+              No updates yet — Cal is getting to work.
+            </p>
           ) : (
             <ol className="relative space-y-4 border-l border-slate-800 pl-6">
-              {data.updates.map((u) => (
+              {data.updates.map(u => (
                 <li key={u.id} className="relative">
                   <span className="absolute -left-[27px] top-1 flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 bg-slate-950">
                     <CheckCircle2 className="h-3 w-3 text-indigo-400" />
@@ -207,11 +251,17 @@ export default function ProjectPortal() {
                     >
                       {u.category}
                     </span>
-                    <span className="text-sm font-semibold text-white">{u.title}</span>
+                    <span className="text-sm font-semibold text-white">
+                      {u.title}
+                    </span>
                   </div>
-                  {u.body && <p className="mt-1 text-sm text-slate-400">{u.body}</p>}
+                  {u.body && (
+                    <p className="mt-1 text-sm text-slate-400">{u.body}</p>
+                  )}
                   {u.created_at && (
-                    <p className="mt-0.5 text-[11px] text-slate-500">{new Date(u.created_at).toLocaleString()}</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {new Date(u.created_at).toLocaleString()}
+                    </p>
                   )}
                 </li>
               ))}
@@ -220,8 +270,9 @@ export default function ProjectPortal() {
         </div>
 
         <div className="mt-12 border-t border-slate-800 pt-6 text-center text-xs text-slate-500">
-          Powered by <span className="font-semibold text-slate-300">Ready For Robots</span> — automated sales pipeline
-          for robot companies.
+          Powered by{" "}
+          <span className="font-semibold text-slate-300">Ready For Robots</span>{" "}
+          — automated sales pipeline for robot companies.
         </div>
       </div>
     </div>

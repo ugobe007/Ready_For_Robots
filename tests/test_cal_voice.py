@@ -27,7 +27,7 @@ def test_persona_payload_exports_voice_rules():
     payload = cal_persona_payload()
     assert payload["title"] == CAL_TITLE
     ident = payload["identity"].lower()
-    assert "jobs advisor" in ident or "robot jobs" in ident or "automation opportunities" in ident
+    assert "jobs recruiter" in ident or "jobs advisor" in ident or "robot jobs" in ident or "job cards" in ident
     assert "problem" in payload["identity"].lower() or "task" in payload["mission"].lower()
     assert len(payload["always"]) == len(CAL_ALWAYS)
     assert len(payload["never"]) >= len(CAL_NEVER)

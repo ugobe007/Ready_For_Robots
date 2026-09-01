@@ -405,7 +405,7 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
 
 def _jobs_path_activity(db: Session, *, since: datetime) -> dict[str, int]:
     """FIND / keep / apply counts for the operator digest. Fail open."""
-    out = {"matcher_seen": 0, "jobs_kept": 0, "applications": 0}
+    out = {"matcher_seen": 0, "jobs_kept": 0, "applications": 0, "task_model_answers": 0}
     try:
         from app.models.robot_submission import RobotSubmission
 
@@ -432,6 +432,21 @@ def _jobs_path_activity(db: Session, *, since: datetime) -> dict[str, int]:
         )
     except Exception:
         logger.debug("jobs digest: jobs_crm skipped", exc_info=True)
+    try:
+        from app.models.jobs_crm import JobsCrmActivity
+
+        out["task_model_answers"] = (
+            db.query(func.count(JobsCrmActivity.id))
+            .filter(
+                JobsCrmActivity.kind == "qualify",
+                JobsCrmActivity.created_at >= since,
+            )
+            .scalar()
+            or 0
+        )
+    except Exception:
+        logger.debug("jobs digest: task-model answers skipped", exc_info=True)
+        out.setdefault("task_model_answers", 0)
     return out
 
 
@@ -483,9 +498,10 @@ def render_cal_daily_digest_text(
     ]
     if not autopilot_on:
         lines.extend([
-            "Cal sales outreach is frozen. Autopilot is OFF. Scheduled draft "
-            "create/refresh is paused. The HOT buyer queue is not a send list. "
-            "Cal does not email operating companies to sell robots.",
+            "Cal works the Jobs CRM desk after Open CRM. He asks missing apply "
+            "facts and prepares drafts. You send. Buyer sales outreach stays frozen. "
+            "Autopilot is OFF. Scheduled draft create/refresh is paused. The HOT "
+            "buyer queue is not a send list.",
             "",
         ])
     lines.extend([
@@ -493,8 +509,10 @@ def render_cal_daily_digest_text(
         f"  • FIND / matcher submissions seen: {int(jobs.get('matcher_seen') or 0)}",
         f"  • Jobs kept in CRM: {int(jobs.get('jobs_kept') or 0)}",
         f"  • Applications stored: {int(jobs.get('applications') or 0)}",
+        f"  • Task-model answers on kept jobs: {int(jobs.get('task_model_answers') or 0)}",
+        "  • Cal desk: ask missing apply facts, prepare drafts. Buyer mail stays off.",
         "",
-        "Cal sales (must stay 0)",
+        "Buyer sales (must stay 0)",
         f"  • Robot-sales intros sent: {activity.get('intro_sent', 0)} (should stay 0)",
         f"  • Follow-up emails sent: {activity.get('followup_sent', 0)}",
         f"  • Inbound replies received: {activity.get('replies', 0)}",
@@ -544,9 +562,9 @@ def render_cal_daily_digest_text(
     if int(activity.get("intro_sent") or 0) == 0 and (sendable > 0 or hot > 0):
         lines.extend([
             "Why 0 new intros",
-            "  • Expected. Cal works Robot Jobs, not robot sales. He does not email "
-            "operating companies to sell them a robot. HOT/WARM SIGNAL drafts stay "
-            "frozen. New work is Job Cards for OEMs and distributors (task model + site).",
+            "  • Expected. Cal works Robot Jobs on the CRM desk, not robot sales. "
+            "He does not email operating companies to sell them a robot. HOT/WARM "
+            "SIGNAL drafts stay frozen. New work is apply facts + drafts for OEMs.",
             "",
         ])
 
@@ -563,7 +581,7 @@ def render_cal_daily_digest_text(
     if needs_you:
         lines.extend(["Needs you", *needs_you[:8], ""])
     else:
-        lines.extend(["Needs you", "  • Nothing urgent — Cal is not waiting on a robot-sales send.", ""])
+        lines.extend(["Needs you", "  • Nothing urgent — Cal is on the Jobs CRM desk, not waiting on a robot-sales send.", ""])
 
     if auto_filtered:
         lines.extend([
@@ -584,8 +602,9 @@ def render_cal_daily_digest_text(
         lines.append("You receive this once per day while the Jobs digest is enabled.")
     else:
         lines.append(
-            "You receive this once per day. Cal sales outreach stays frozen unless "
-            "CAL_AUTONOMY_ENABLED is turned on in production."
+            "You receive this once per day. Buyer sales stay frozen unless "
+            "CAL_AUTONOMY_ENABLED is turned on in production. Cal's live job is "
+            "the Jobs CRM desk after Open CRM."
         )
     return "\n".join(lines)
 

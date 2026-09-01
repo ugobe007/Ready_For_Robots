@@ -85,7 +85,11 @@ export function usePageMeta({
     upsertMeta("name", "twitter:image", image);
 
     // LinkedIn org identity (Community Management API uses urn:li:organization:{id})
-    upsertMeta("name", "linkedin:owner", linkedInOrganizationUrn(linkedInOrgId));
+    upsertMeta(
+      "name",
+      "linkedin:owner",
+      linkedInOrganizationUrn(linkedInOrgId)
+    );
 
     return () => {
       document.title = "ReadyForRobots — SIGNAL";

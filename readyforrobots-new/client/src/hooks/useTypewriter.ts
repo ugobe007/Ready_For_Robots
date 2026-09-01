@@ -39,14 +39,14 @@ export function useSequentialTypewriter(
   gapMs = 600,
   startDelayMs = gapMs,
   /** When this changes (e.g. lead id), restart; segment text edits alone do not reset. */
-  resetKey?: string | number,
+  resetKey?: string | number
 ) {
   const [segmentIdx, setSegmentIdx] = useState(0);
   const active = segments[segmentIdx] ?? "";
   const { displayed, done } = useTypewriter(
     active,
     speed,
-    segmentIdx === 0 ? startDelayMs : gapMs,
+    segmentIdx === 0 ? startDelayMs : gapMs
   );
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export function useSequentialTypewriter(
 
   useEffect(() => {
     if (!done || segmentIdx >= segments.length - 1) return undefined;
-    const t: number = window.setTimeout(() => setSegmentIdx((i) => i + 1), gapMs);
+    const t: number = window.setTimeout(() => setSegmentIdx(i => i + 1), gapMs);
     return () => window.clearTimeout(t);
   }, [done, segmentIdx, segments.length, gapMs]);
 
