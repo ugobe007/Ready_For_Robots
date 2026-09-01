@@ -38,10 +38,7 @@ import {
 } from "@/lib/robotJobSearch";
 import { fetchOemListing, fetchRobotProfile } from "@/lib/robotProfile";
 import { lookupKnownOem } from "@/lib/knownOemLineups";
-import {
-  catalogSkusForClass,
-  type CatalogSku,
-} from "@/lib/knownOemCatalog";
+import { catalogSkusForClass, type CatalogSku } from "@/lib/knownOemCatalog";
 import {
   I_KNOW_THE_ROBOT_HINT,
   I_KNOW_THE_ROBOT_LABEL,
@@ -1928,17 +1925,8 @@ export default function RobotJobsWorkspace() {
       if (!live()) return;
       submissionIdRef.current =
         res.robot_submission_id ?? submissionIdRef.current;
-      const analysis = analysisForSelectedSku(
-        res,
-        sku.name,
-        sku.displayClass
-      );
-      openJobsFromAnalyses(
-        [analysis],
-        submitUrl,
-        [sku.name],
-        research
-      );
+      const analysis = analysisForSelectedSku(res, sku.name, sku.displayClass);
+      openJobsFromAnalyses([analysis], submitUrl, [sku.name], research);
     } catch (err) {
       if (!live()) return;
       const msg = findResearchFailureMessage(err);
@@ -2374,7 +2362,9 @@ function FindRail({
     sameRobotUrl(url, currentSubmitUrl || "");
   const [catalogClass, setCatalogClass] = useState("");
   const classChoices = classOptionsOrDefault();
-  const skus = catalogClass ? catalogSkusForClass(catalogClass).slice(0, 12) : [];
+  const skus = catalogClass
+    ? catalogSkusForClass(catalogClass).slice(0, 12)
+    : [];
   return (
     <div>
       <p className={eyebrow}>
@@ -2427,7 +2417,9 @@ function FindRail({
 
       {stage === "find" && onPickClass && onPickSku ? (
         <div className="mt-8 border-t border-slate-700 pt-6">
-          <p className={`${eyebrow} text-emerald-300`}>{I_KNOW_THE_ROBOT_LABEL}</p>
+          <p className={`${eyebrow} text-emerald-300`}>
+            {I_KNOW_THE_ROBOT_LABEL}
+          </p>
           <p className="mt-2 text-[12px] leading-snug text-slate-400">
             {I_KNOW_THE_ROBOT_HINT}
           </p>

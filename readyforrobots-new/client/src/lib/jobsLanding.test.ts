@@ -52,7 +52,9 @@ describe("landing fork", () => {
     expect(LANDING_SUBHEAD).toMatch(/robot you already have/i);
     expect(LANDING_SUBHEAD).toMatch(/robots for work you need done/i);
     expect(LANDING_SUBHEAD).toMatch(/keep them in CRM/i);
-    expect(LANDING_SUBHEAD).not.toMatch(/who is this visit|choose your workflow/i);
+    expect(LANDING_SUBHEAD).not.toMatch(
+      /who is this visit|choose your workflow/i
+    );
     expect(LANDING_JOBS_LABEL).toBe("Robot owner");
     expect(LANDING_CANDIDATES_LABEL).toBe("Employer");
     expect(LANDING_JOBS_HINT).toMatch(/Paste a product URL/);
@@ -66,17 +68,21 @@ describe("landing fork", () => {
       "Available jobs",
       "CRM",
     ]);
-    expect(LANDING_VOCAB_HEADLINE).toMatch(/Employer\. Workplace\. Work\. Robot Job/);
+    expect(LANDING_VOCAB_HEADLINE).toMatch(
+      /Employer\. Workplace\. Work\. Robot Job/
+    );
     expect(LANDING_START_FREE_CTA).toBe("Start free workspace");
-    expect(LANDING_SIGNUP_HREF).toBe("/signup?src=jobs_activate");
+    expect(LANDING_SIGNUP_HREF).toBe(
+      "/signup?next=%2Fpipeline%3Fsrc%3Djobs_activate&src=jobs_activate"
+    );
     expect(LANDING_BRIEF_JOBS.map(j => j.employer)).toEqual([
       "Amazon",
       "Benchmark Senior Living",
       "Whitsons Culinary Group",
     ]);
-    expect(LANDING_BRIEF_JOBS.every(j => j.employer && j.work && j.workplace)).toBe(
-      true
-    );
+    expect(
+      LANDING_BRIEF_JOBS.every(j => j.employer && j.work && j.workplace)
+    ).toBe(true);
     const landing = readFileSync(
       join(here, "../components/JobsLanding.tsx"),
       "utf8"
@@ -89,7 +95,9 @@ describe("landing fork", () => {
     expect(landing).toMatch(/data-landing-option=\{option\}/);
     expect(landing).toMatch(/option="jobs"/);
     expect(landing).toMatch(/option="candidates"/);
-    expect(landing).not.toMatch(/Look for buyers|SIGNAL|Apollo|Who is this visit/i);
+    expect(landing).not.toMatch(
+      /Look for buyers|SIGNAL|Apollo|Who is this visit/i
+    );
     expect(landing).not.toMatch(/Headline options|headlineOptions|id:\"A\"/);
     expect(landing).not.toMatch(/CalJobsDesk|choose your workflow/i);
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");

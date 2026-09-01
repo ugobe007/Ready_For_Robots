@@ -146,14 +146,19 @@ export const LANDING_CLOSE_SUBHEAD =
   "Start a free workspace — 5 jobs, 5 CRM opportunities, no card required.";
 export const LANDING_START_FREE_CTA = "Start free workspace";
 export const LANDING_BRIEFING_CTA = "Download the 2026 briefing";
-export const LANDING_SIGNUP_HREF = "/signup?src=jobs_activate";
+export const LANDING_SIGNUP_HREF =
+  "/signup?next=%2Fpipeline%3Fsrc%3Djobs_activate&src=jobs_activate";
 export const LANDING_BRIEFING_HREF = "/intelligence#report";
-export const LANDING_FOOTER_MARK = "© 2026 ReadyForRobots · Jobs for your robot";
+export const LANDING_FOOTER_MARK =
+  "© 2026 ReadyForRobots · Jobs for your robot";
 export const LANDING_FOOTER_LINKS = [
   { label: "Pricing", href: "/pricing" },
   { label: "FAQ", href: "/pricing#faq" },
   { label: "Privacy", href: "/privacy" },
-  { label: "support@readyforrobots.com", href: "mailto:support@readyforrobots.com" },
+  {
+    label: "support@readyforrobots.com",
+    href: "mailto:support@readyforrobots.com",
+  },
 ] as const;
 
 /** Mockup palette, landing only. FIND / employer keep Jobs chrome. */
@@ -198,7 +203,8 @@ export const EMPLOYER_PROCESS_STEPS = [
   },
 ];
 
-export type EmployerProcessStepId = (typeof EMPLOYER_PROCESS_STEPS)[number]["id"];
+export type EmployerProcessStepId =
+  (typeof EMPLOYER_PROCESS_STEPS)[number]["id"];
 
 /** Work-language tiles for employer MATCH. Morphology tiles stay on FIND. */
 export const EMPLOYER_WORK_TILE_IDS = [

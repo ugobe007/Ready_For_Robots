@@ -45,9 +45,7 @@ export default function ResultsValueStrip({
         href={`/signup?next=${encodeURIComponent(signupNext)}`}
         className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-300 px-3 py-2 text-xs font-bold text-emerald-950 hover:bg-emerald-200"
       >
-        {locked > 0
-          ? OEM_CAL_RESULTS_CTA_ANON
-          : "Sign up free — copy the note"}
+        {locked > 0 ? OEM_CAL_RESULTS_CTA_ANON : "Sign up free — copy the note"}
         <ArrowRight className="h-3.5 w-3.5" />
       </Link>
     </div>

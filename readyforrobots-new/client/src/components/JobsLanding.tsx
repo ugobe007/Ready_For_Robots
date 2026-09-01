@@ -87,7 +87,13 @@ function LandingCta({
   );
 }
 
-function LandingGhostCta({ children, href }: { children: string; href: string }) {
+function LandingGhostCta({
+  children,
+  href,
+}: {
+  children: string;
+  href: string;
+}) {
   return (
     <a
       href={href}
@@ -236,7 +242,10 @@ function BriefJobCard({
               >
                 {label}
               </p>
-              <p className="mt-1 text-sm leading-relaxed" style={{ color: C.text }}>
+              <p
+                className="mt-1 text-sm leading-relaxed"
+                style={{ color: C.text }}
+              >
                 {value}
               </p>
             </div>
@@ -245,8 +254,8 @@ function BriefJobCard({
             className="sm:col-span-2 text-xs"
             style={{ color: C.muted, fontFamily: "var(--font-landing-mono)" }}
           >
-            Qualification is explainable — never a %. Cards stay Conditional until
-            there is evidence.
+            Qualification is explainable — never a %. Cards stay Conditional
+            until there is evidence.
           </p>
         </div>
       ) : null}
@@ -308,10 +317,15 @@ export default function JobsLanding() {
         </div>
       </section>
 
-      <section className="border-t" style={{ borderColor: C.line, background: C.panel }}>
+      <section
+        className="border-t"
+        style={{ borderColor: C.line, background: C.panel }}
+      >
         <div className="mx-auto max-w-6xl px-4 py-20">
           <Eyebrow>{LANDING_HOW_EYEBROW}</Eyebrow>
-          <h2 className="rfr-landing-section-title mt-4">{LANDING_HOW_HEADLINE}</h2>
+          <h2 className="rfr-landing-section-title mt-4">
+            {LANDING_HOW_HEADLINE}
+          </h2>
           <div className="relative mt-12 grid gap-8 md:grid-cols-3">
             <div
               className="absolute top-5 right-0 left-0 hidden h-px md:block"
@@ -337,7 +351,10 @@ export default function JobsLanding() {
                 >
                   {step.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed" style={{ color: C.muted }}>
+                <p
+                  className="mt-2 text-sm leading-relaxed"
+                  style={{ color: C.muted }}
+                >
                   {step.body}
                 </p>
               </div>
@@ -367,16 +384,23 @@ export default function JobsLanding() {
               key={job.id}
               job={job}
               open={openJob === job.id}
-              onToggle={() => setOpenJob(current => (current === job.id ? "" : job.id))}
+              onToggle={() =>
+                setOpenJob(current => (current === job.id ? "" : job.id))
+              }
             />
           ))}
         </div>
       </section>
 
-      <section className="border-t" style={{ borderColor: C.line, background: C.panel }}>
+      <section
+        className="border-t"
+        style={{ borderColor: C.line, background: C.panel }}
+      >
         <div className="mx-auto max-w-6xl px-4 py-20">
           <Eyebrow>{LANDING_VOCAB_EYEBROW}</Eyebrow>
-          <h2 className="rfr-landing-section-title mt-4">{LANDING_VOCAB_HEADLINE}</h2>
+          <h2 className="rfr-landing-section-title mt-4">
+            {LANDING_VOCAB_HEADLINE}
+          </h2>
           <div className="mt-10 grid gap-x-12 md:grid-cols-2">
             {LANDING_VOCAB.map(item => (
               <div
@@ -421,7 +445,10 @@ export default function JobsLanding() {
           <div>
             <h2
               className="text-2xl font-bold md:text-3xl"
-              style={{ color: C.text, fontFamily: "var(--font-landing-display)" }}
+              style={{
+                color: C.text,
+                fontFamily: "var(--font-landing-display)",
+              }}
             >
               {LANDING_CLOSE_HEADLINE}
             </h2>
@@ -430,7 +457,9 @@ export default function JobsLanding() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <LandingCta href={LANDING_SIGNUP_HREF}>{LANDING_START_FREE_CTA}</LandingCta>
+            <LandingCta href={LANDING_SIGNUP_HREF}>
+              {LANDING_START_FREE_CTA}
+            </LandingCta>
             <LandingGhostCta href={LANDING_BRIEFING_HREF}>
               {LANDING_BRIEFING_CTA}
             </LandingGhostCta>
@@ -439,7 +468,10 @@ export default function JobsLanding() {
       </section>
 
       <footer className="border-t" style={{ borderColor: C.line }}>
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-10 gap-y-4 px-4 py-10 text-xs" style={{ color: C.muted }}>
+        <div
+          className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-10 gap-y-4 px-4 py-10 text-xs"
+          style={{ color: C.muted }}
+        >
           <p style={{ fontFamily: "var(--font-landing-mono)" }}>
             {LANDING_FOOTER_MARK}
           </p>

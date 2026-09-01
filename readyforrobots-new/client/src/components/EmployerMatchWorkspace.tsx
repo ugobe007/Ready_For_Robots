@@ -69,7 +69,9 @@ export default function EmployerMatchWorkspace() {
         jobUrl,
       });
       setRobots(res.robots || []);
-      setEmptyCopy(res.empty_copy || (res.robot_count ? null : EMPLOYER_EMPTY_MATCH));
+      setEmptyCopy(
+        res.empty_copy || (res.robot_count ? null : EMPLOYER_EMPTY_MATCH)
+      );
       setChecked((res.robots || []).map(r => `${r.vendor_name}|${r.name}`));
       setStep("robots");
     } catch {
@@ -83,7 +85,9 @@ export default function EmployerMatchWorkspace() {
     const shop = employer.trim();
     const workTitle = title.trim() || description.trim().slice(0, 120);
     if (!shop || !workTitle) {
-      setPostingError("Name the employer and the work. We will not invent either.");
+      setPostingError(
+        "Name the employer and the work. We will not invent either."
+      );
       return;
     }
     setPostingBusy(true);
@@ -122,11 +126,14 @@ export default function EmployerMatchWorkspace() {
       local.job_key = res.job_key || null;
       if (!res.ok) {
         setPostingError(
-          res.detail || "Could not store this posting. Your shortlist is still here."
+          res.detail ||
+            "Could not store this posting. Your shortlist is still here."
         );
       }
     } catch {
-      setPostingError("Could not store this posting. Your shortlist is still here.");
+      setPostingError(
+        "Could not store this posting. Your shortlist is still here."
+      );
     }
     saveEmployerPosting(local);
     setPosting(local);
@@ -135,7 +142,11 @@ export default function EmployerMatchWorkspace() {
   }
 
   const processAction =
-    step === "work" ? matchRobots : step === "robots" ? () => setStep("post") : postJob;
+    step === "work"
+      ? matchRobots
+      : step === "robots"
+        ? () => setStep("post")
+        : postJob;
   const processLabel =
     step === "work"
       ? EMPLOYER_MATCH_CTA
@@ -146,7 +157,10 @@ export default function EmployerMatchWorkspace() {
   return (
     <div className="rfr-jobs-page-shell border border-slate-600 bg-[#0b162f]">
       <div className="sticky top-14 z-[60] border-b border-slate-600 bg-[#0b162f]">
-        <nav aria-label="Employer process" className="rfr-jobs-process-bar flex flex-wrap items-stretch">
+        <nav
+          aria-label="Employer process"
+          className="rfr-jobs-process-bar flex flex-wrap items-stretch"
+        >
           {EMPLOYER_PROCESS_STEPS.map(item => {
             const isCurrent = step === item.id;
             return (
@@ -232,7 +246,10 @@ export default function EmployerMatchWorkspace() {
                   </button>
                 ))}
               </div>
-              <label className={`${JOBS_EYEBROW_CLASS} mt-6 block`} htmlFor="work-desc">
+              <label
+                className={`${JOBS_EYEBROW_CLASS} mt-6 block`}
+                htmlFor="work-desc"
+              >
                 Short description (optional)
               </label>
               <textarea
@@ -243,7 +260,10 @@ export default function EmployerMatchWorkspace() {
                 placeholder="What needs doing, on which site"
                 className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
               />
-              <label className={`${JOBS_EYEBROW_CLASS} mt-4 block`} htmlFor="job-url">
+              <label
+                className={`${JOBS_EYEBROW_CLASS} mt-4 block`}
+                htmlFor="job-url"
+              >
                 Job URL (optional)
               </label>
               <input
@@ -282,8 +302,8 @@ export default function EmployerMatchWorkspace() {
                     {emptyCopy || EMPLOYER_EMPTY_MATCH}
                   </h2>
                   <p className="mt-2 text-sm text-slate-400">
-                    That is a coverage gap, not a reason to invent a robot.
-                    Post the job so OEMs looking for work can find it.
+                    That is a coverage gap, not a reason to invent a robot. Post
+                    the job so OEMs looking for work can find it.
                   </p>
                   <button
                     type="button"
@@ -358,7 +378,9 @@ export default function EmployerMatchWorkspace() {
                   <h2 className="font-display text-lg font-bold text-slate-100">
                     {posting.title}
                   </h2>
-                  <p className="mt-1 text-sm text-slate-300">{posting.employer}</p>
+                  <p className="mt-1 text-sm text-slate-300">
+                    {posting.employer}
+                  </p>
                   <p className="mt-2 text-[13px] text-slate-400">
                     {posting.persisted
                       ? "Stored so OEMs looking for jobs can find it. No contact invented."
@@ -398,7 +420,10 @@ export default function EmployerMatchWorkspace() {
                     placeholder="Company that needs the work"
                     className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
                   />
-                  <label className={`${JOBS_EYEBROW_CLASS} mt-4 block`} htmlFor="job-title">
+                  <label
+                    className={`${JOBS_EYEBROW_CLASS} mt-4 block`}
+                    htmlFor="job-title"
+                  >
                     Work title
                   </label>
                   <input
@@ -408,7 +433,10 @@ export default function EmployerMatchWorkspace() {
                     placeholder="What the robot would do"
                     className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
                   />
-                  <label className={`${JOBS_EYEBROW_CLASS} mt-4 block`} htmlFor="workplace">
+                  <label
+                    className={`${JOBS_EYEBROW_CLASS} mt-4 block`}
+                    htmlFor="workplace"
+                  >
                     Workplace (optional)
                   </label>
                   <input
