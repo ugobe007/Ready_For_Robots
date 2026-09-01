@@ -8,9 +8,7 @@ Persona is job + tools + loop, not a warmer name.
 """
 from __future__ import annotations
 
-from typing import Any
-
-from sqlalchemy.orm import Session
+from typing import TYPE_CHECKING, Any
 
 from app.services.cal_persona import (
     CAL_JOBS_DESK_JOB,
@@ -19,15 +17,10 @@ from app.services.cal_persona import (
     CAL_NAME,
     CAL_TITLE,
 )
-from app.services.jobs_apply_draft import employer_contacts_from_job
-from app.services.jobs_crm import (
-    WORK_TASK_MODEL_SOURCE_REQUIRED,
-    apply_to_job,
-    catalog_skus_for_oem,
-    list_kept_jobs,
-    set_kept_job_task_model,
-)
 from app.services.pstack_protocol import wrap_site_agent
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 SURFACE = "jobs_crm_cal"
 OWNER = "app/services/cal_jobs_desk.py"
@@ -137,6 +130,8 @@ def _poc_on_file(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _contacts(row: dict[str, Any]) -> list[dict[str, str]]:
+    from app.services.jobs_apply_draft import employer_contacts_from_job
+
     job = row.get("job") if isinstance(row.get("job"), dict) else {}
     people = employer_contacts_from_job(job)
     stored = str(row.get("employer_email") or "").strip()
@@ -177,6 +172,8 @@ def _ask_for(fact: str, employer: str) -> str:
 
 
 def _job_card(row: dict[str, Any]) -> dict[str, Any]:
+    from app.services.jobs_crm import catalog_skus_for_oem
+
     missing = missing_apply_facts(row)
     contacts = _contacts(row)
     employer = str(row.get("employer_name") or "").strip()
@@ -217,6 +214,8 @@ def _job_card(row: dict[str, Any]) -> dict[str, Any]:
 
 def read_desk(db: Session, user: dict) -> dict[str, Any]:
     """Kept jobs + robot identity + the next fact Cal should ask."""
+    from app.services.jobs_crm import list_kept_jobs
+
     rows = list_kept_jobs(db, user)
     jobs = [_job_card(row) for row in rows]
     focus = next((job for job in jobs if job["missing"] or job["next_fact"] == "prepare_apply"), None)
@@ -321,6 +320,14 @@ def run_desk_tool(
     company_name: str | None = None,
 ) -> dict[str, Any]:
     """Run one Jobs-desk tool. Never invent emails, SKUs, employers, or models."""
+    from app.services.jobs_crm import (
+        WORK_TASK_MODEL_SOURCE_REQUIRED,
+        apply_to_job,
+        catalog_skus_for_oem,
+        list_kept_jobs,
+        set_kept_job_task_model,
+    )
+
     name = (tool or "read_desk").strip().lower()
     if name in CAL_JOBS_FORBIDDEN_TOOLS or name not in set(CAL_JOBS_DESK_TOOLS):
         out = _refuse(name)

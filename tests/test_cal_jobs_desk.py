@@ -173,7 +173,7 @@ def test_prepare_refuses_unknown_task_model_and_invented_sku(db_session, monkeyp
         )
     set_kept_job_task_model(db_session, _user(), job_key="job-1", kind="self_train")
     monkeypatch.setattr(
-        "app.services.cal_jobs_desk.catalog_skus_for_oem",
+        "app.services.jobs_crm.catalog_skus_for_oem",
         lambda **kwargs: [{"name": "Spot", "slug": "spot", "source": "oem_listing"}],
     )
     with pytest.raises(ValueError, match="will not invent"):
