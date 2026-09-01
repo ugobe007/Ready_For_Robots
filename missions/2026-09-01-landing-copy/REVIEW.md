@@ -1,5 +1,8 @@
 # Landing copy: product, not visitor
 
+Superseded by the Manus mockup port. See [`missions/2026-09-01-landing-mockup/REVIEW.md`](../2026-09-01-landing-mockup/REVIEW.md).
+
+
 **Date:** 2026-09-01
 **Type:** build
 **Branch:** `cursor/landing-fork-copy-009b` from `origin/main` @ `b7ae3959` (#208 already on main)
