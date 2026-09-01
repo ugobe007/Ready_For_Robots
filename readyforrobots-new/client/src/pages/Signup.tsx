@@ -718,8 +718,7 @@ export default function Signup() {
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold text-emerald-700">✓</span>
-                      HOT/WARM buyers with pitch actions and Cal&apos;s short
-                      OEM notes
+                      HOT/WARM buyers with pitch actions and short OEM notes
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold text-emerald-700">✓</span>

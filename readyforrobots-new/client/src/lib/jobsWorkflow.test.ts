@@ -1010,7 +1010,7 @@ describe("jobsWorkflow", () => {
     expect(crm).toMatch(/Opening CRM/);
     expect(crm).toMatch(/jobsCrmOpenHref/);
     expect(crm).toMatch(/CRM_UNLOCKED_JOBS/);
-    expect(crm).toMatch(/jobsCrmOpenHref\(Boolean\(session\)/);
+    expect(crm).toMatch(/jobsCrmOpenHref\(\s*Boolean\(session\)/);
     expect(crm).toMatch(/<JobsProcessChrome/);
     expect(crm).toMatch(/CRM_SIGNUP_NEXT_CTA/);
     const signup = readFileSync(join(here, "../pages/Signup.tsx"), "utf8");
@@ -1020,11 +1020,13 @@ describe("jobsWorkflow", () => {
     expect(signup).toMatch(/tasteJobs/);
     expect(signup).toMatch(/jobModelListLine/);
     expect(signup).toMatch(/robotJobsIntent\) return/);
-    expect(signup).toMatch(/liveProof && !robotJobsIntent/);
+    expect(signup).toMatch(/liveProof &&\s*!robotJobsIntent/);
     expect(signup).toMatch(/jobs for\{" "\}/);
     expect(signup).toMatch(/on your desk, with the jobs you kept/);
-    expect(signup).toMatch(/!resultsIntent && !robotJobsIntent/);
-    expect(signup).toMatch(/!hubspotIntent && !robotJobsIntent && \(/);
+    expect(signup).toMatch(/!resultsIntent &&\s*!robotJobsIntent/);
+    expect(signup).toMatch(
+      /!hubspotIntent &&\s*!pipelineIntent &&\s*!resultsIntent &&\s*!robotJobsIntent/
+    );
     expect(signup).not.toMatch(/Keep jobs for your robot/);
     expect(pipeline).toMatch(/arrivedFromPlace/);
     expect(pipeline).toMatch(/isPlaceSrc/);
@@ -1035,7 +1037,7 @@ describe("jobsWorkflow", () => {
     const crm = readFileSync(join(here, "../pages/Crm.tsx"), "utf8");
     expect(crm).toMatch(/const fromJobs = isJobsHandoffSrc\(jobsSrc\)/);
     expect(crm).toMatch(
-      /jobsSignupHref\(crmReturnHref, jobsSrc \|\| JOBS_ACTIVATE_SRC\)/
+      /jobsSignupHref\(\s*crmReturnHref,\s*jobsSrc \|\| JOBS_ACTIVATE_SRC/
     );
     expect(crm).toMatch(/!teamId \|\| fromJobs\) return/);
     expect(crm).toMatch(/\{!fromJobs \? <AdminNav variant="dark" \/> : null\}/);
@@ -1045,7 +1047,7 @@ describe("jobsWorkflow", () => {
     expect(crm).toMatch(/CrmHero/);
     expect(crm).toMatch(/tasteJobs/);
     expect(crm).toMatch(/Opening CRM/);
-    expect(crm).toMatch(/jobsCrmOpenHref\(Boolean\(session\)/);
+    expect(crm).toMatch(/jobsCrmOpenHref\(\s*Boolean\(session\)/);
     expect(crm).toMatch(/<JobsProcessChrome/);
     expect(crm).toMatch(/CRM_SIGNUP_NEXT_CTA/);
     const back = crm.indexOf("← Back to pipeline");
@@ -1121,7 +1123,7 @@ describe("jobsWorkflow", () => {
       join(here, "../components/JobsHandoffBoard.tsx"),
       "utf8"
     );
-    expect(handoff).toMatch(/window\.location\.replace\(jobsCrmOpenHref/);
+    expect(handoff).toMatch(/window\.location\.replace\(\s*jobsCrmOpenHref/);
     expect(handoff).toMatch(/jobsCrmOpenHref\(props\.signedIn/);
     expect(JOBS_PROCESS_STEPS[2].label).toBe("CRM");
     expect(JOBS_NEXT_CTA).toBe("Open CRM →");

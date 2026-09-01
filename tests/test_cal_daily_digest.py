@@ -119,7 +119,7 @@ def test_render_explains_zero_intros_when_drafts_ready():
     )
     assert "Follow-up emails sent: 10" in text
     assert "Why 0 new intros" in text
-    assert "Robot Jobs, not robot sales" in text
+    assert "CRM desk, not robot sales" in text
     assert "verified contacts" not in text
 
 
