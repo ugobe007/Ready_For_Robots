@@ -1142,7 +1142,7 @@ describe("jobsWorkflow", () => {
       )
     );
     expect(jobsCrmNextHref(true, 42)).toBe("/?restore=1");
-    expect(jobsCrmNextHref(true)).toBe("/?new=1");
+    expect(jobsCrmNextHref(true)).toBe("/?visit=jobs");
     expect(jobsCrmNextLabel(false)).toBe(CRM_SIGNUP_NEXT_CTA);
     expect(jobsCrmNextLabel(true, { jobCount: 1 })).toBe(CRM_BACK_TO_JOBS_CTA);
     expect(jobsCrmNextLabel(true)).toBe(FIND_JOBS_CTA);

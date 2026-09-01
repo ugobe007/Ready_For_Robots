@@ -1,7 +1,7 @@
 /**
  * Employer MATCH/POST on `/?visit=candidates`.
  * Step 01 work → 02 named catalog robots → 03 post-job draft.
- * Cal stays on the OEM Jobs desk. No SIGNAL.
+ * Cal stays on the OEM Jobs desk. Not a buyer list.
  */
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
