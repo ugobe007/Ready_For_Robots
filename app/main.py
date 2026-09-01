@@ -60,6 +60,7 @@ from app.api.vendor_design import router as vendor_design_router
 from app.api.robot_job_match import router as robot_job_match_router
 from app.api.robot_profile import router as robot_profile_router
 from app.api.robot_job_search import router as robot_job_search_router
+from app.api.employer_jobs import router as employer_jobs_router
 from app.api.v1 import router as v1_router
 from app.api.v1.errors import V1HTTPException, error_response
 from app.database import get_db
@@ -546,6 +547,7 @@ app.include_router(vendor_design_router, prefix="/api/vendor-design", tags=["ven
 app.include_router(robot_job_match_router, prefix="/api", tags=["robot-job-match"])
 app.include_router(robot_profile_router, prefix="/api", tags=["robot-profile"])
 app.include_router(robot_job_search_router, prefix="/api", tags=["robot-job-search"])
+app.include_router(employer_jobs_router, prefix="/api", tags=["employer-jobs"])
 app.include_router(v1_router, prefix="/api/v1", tags=["v1"])
 # Alias under /api/v1 for clients that prefer v1 namespace (no feature flag — same handler)
 app.include_router(robot_job_match_router, prefix="/api/v1", tags=["robot-job-match"])

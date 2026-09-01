@@ -24,7 +24,7 @@ router = APIRouter(tags=["robot-job-search"])
 
 
 class RobotJobSearchIn(BaseModel):
-    url: str = Field(..., max_length=2000)
+    url: Optional[str] = Field(default=None, max_length=2000)
     product: Optional[str] = Field(default=None, max_length=120)
     max_sources: int = Field(default=6, ge=1, le=12)
     correlation_id: Optional[str] = Field(default=None, max_length=64)
@@ -51,14 +51,16 @@ def post_robot_job_search(
     # Persist the URL before research so incomplete identity (qualify_robot)
     # and later compose failures still keep the submitted robot.
     submission_id = None
-    try:
-        from app.services.robot_submission_service import record_robot_submission
+    submit_url = (body.url or "").strip()
+    if submit_url:
+        try:
+            from app.services.robot_submission_service import record_robot_submission
 
-        row = record_robot_submission(db, url=body.url, source="robot_job_search")
-        if row is not None:
-            submission_id = row.id
-    except Exception:
-        logger.exception("robot_submission_hook_failed")
+            row = record_robot_submission(db, url=submit_url, source="robot_job_search")
+            if row is not None:
+                submission_id = row.id
+        except Exception:
+            logger.exception("robot_submission_hook_failed")
 
     try:
         result = compose_robot_job_search(
@@ -76,25 +78,26 @@ def post_robot_job_search(
             )
 
             profile_dict = result.get("profile") or {}
-            row = record_robot_submission(
-                db,
-                url=body.url,
-                company_name=result.get("company_name"),
-                product_name=result.get("robot_name"),
-                robot_class=result.get("robot_class"),
-                profile_tier=profile_dict.get("profile_confidence"),
-                bump_count=False,
-                source="robot_job_search",
-            )
-            if row is not None:
-                submission_id = row.id
-                record_submission_match(
+            if submit_url:
+                row = record_robot_submission(
                     db,
-                    url=body.url,
-                    capabilities=result.get("capabilities"),
-                    job_count=result.get("job_count"),
+                    url=submit_url,
+                    company_name=result.get("company_name"),
+                    product_name=result.get("robot_name"),
+                    robot_class=result.get("robot_class"),
+                    profile_tier=profile_dict.get("profile_confidence"),
+                    bump_count=False,
                     source="robot_job_search",
                 )
+                if row is not None:
+                    submission_id = row.id
+                    record_submission_match(
+                        db,
+                        url=submit_url,
+                        capabilities=result.get("capabilities"),
+                        job_count=result.get("job_count"),
+                        source="robot_job_search",
+                    )
         except Exception:
             logger.exception("robot_submission_hook_failed")
         if submission_id is not None:

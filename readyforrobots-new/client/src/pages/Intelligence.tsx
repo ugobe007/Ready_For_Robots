@@ -18,8 +18,8 @@ import {
   JOBS_FOR_YOUR_ROBOT_HEADING,
   JOBS_HEADER_OFFSET_CLASS,
   JOBS_PROCESS_STEPS,
-  jobsFreshHomeHref,
 } from "@/lib/jobsWorkflow";
+import { jobsFindHref } from "@/lib/jobsLanding";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
 
@@ -181,7 +181,7 @@ export default function Intelligence() {
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-[13px]">
             <Link
-              href={jobsFreshHomeHref()}
+              href={jobsFindHref()}
               className="group inline-flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
             >
               {FIND_JOBS_CTA}
@@ -502,7 +502,7 @@ export default function Intelligence() {
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-5 text-[13px]">
             <Link
-              href={jobsFreshHomeHref()}
+              href={jobsFindHref()}
               className="group inline-flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
             >
               {FIND_JOBS_CTA}

@@ -1132,7 +1132,7 @@ describe("jobsWorkflow", () => {
     expect(jobsCrmHasRestore({})).toBe(false);
     expect(jobsCrmLeaveHref({ submissionId: 42 })).toBe("/?restore=1");
     expect(jobsCrmLeaveHref({ jobCount: 2 })).toBe("/?restore=1");
-    expect(jobsCrmLeaveHref({})).toBe("/?new=1");
+    expect(jobsCrmLeaveHref({})).toBe("/?visit=jobs");
     expect(jobsCrmLeaveLabel({ submissionId: 9 })).toBe(CRM_BACK_TO_JOBS_CTA);
     expect(jobsCrmLeaveLabel({})).toBe(FIND_JOBS_CTA);
     expect(jobsCrmNextHref(false, 42)).toBe(
@@ -1806,7 +1806,7 @@ describe("jobsWorkflow", () => {
     expect(intel).toMatch(/KARE_FACE/);
     expect(intel).toMatch(/bg-\[#081126\]/);
     expect(intel).not.toMatch(/from "@\/components\/Header"/);
-    expect(intel).toMatch(/jobsFreshHomeHref/);
+    expect(intel).toMatch(/jobsFindHref/);
     expect(intel).toMatch(/FIND_JOBS_CTA/);
     expect(intel).toMatch(/JOBS_ACTIVATE_SRC/);
     expect(intel).toMatch(/JOBS_PROCESS_STEPS/);

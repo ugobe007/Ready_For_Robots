@@ -4,7 +4,7 @@ Jobs chrome is the page frame for FIND → cards → CRM: dark header, process b
 
 ## Sub-features
 
-- `chrome-header` Jobs / About / CRM; wordmark goes to `/?new=1`.
+- `chrome-header` Jobs / About / CRM; wordmark goes to `/?new=1` (landing fork). FIND is `/?visit=jobs`.
 - `chrome-process` 01 Show us your robot → 02 Available jobs → 03 CRM, as links, top and bottom.
 - `chrome-no-pipeline` no Pipeline nav, no SIGNAL FAB on Jobs pages.
 - `chrome-scroll` the document scrolls; no `100vh` + `overflow: hidden` trap.

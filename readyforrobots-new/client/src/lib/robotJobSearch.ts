@@ -23,7 +23,7 @@ export type RobotJobSearchResult = Omit<RobotJobMatchResult, "products"> & {
 };
 
 export async function fetchRobotJobSearch(opts: {
-  url: string;
+  url?: string;
   product?: string;
   maxSources?: number;
   assertedClass?: string;
@@ -41,7 +41,7 @@ export async function fetchRobotJobSearch(opts: {
         Accept: "application/json",
       },
       body: JSON.stringify({
-        url: opts.url,
+        url: opts.url || null,
         product: opts.product || null,
         max_sources: opts.maxSources ?? 6,
         asserted_class: opts.assertedClass || null,
