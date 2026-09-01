@@ -86,6 +86,7 @@ export default function EmployerMatchWorkspace() {
       setPostingError("Name the employer and the work. We will not invent either.");
       return;
     }
+    if (posting) return;
     setPostingBusy(true);
     setPostingError(null);
     const shortlisted = robots.filter(r =>
@@ -131,7 +132,6 @@ export default function EmployerMatchWorkspace() {
     saveEmployerPosting(local);
     setPosting(local);
     setPostingBusy(false);
-    setStep("post");
   }
 
   const processAction =
@@ -142,6 +142,7 @@ export default function EmployerMatchWorkspace() {
       : step === "robots"
         ? EMPLOYER_POST_JOB_CTA
         : EMPLOYER_POST_JOB_CTA;
+  const processDisabled = matching || postingBusy || (step === "post" && Boolean(posting));
 
   return (
     <div className="rfr-jobs-page-shell border border-slate-600 bg-[#0b162f]">
@@ -170,7 +171,7 @@ export default function EmployerMatchWorkspace() {
           <button
             type="button"
             onClick={processAction}
-            disabled={matching || postingBusy}
+            disabled={processDisabled}
             className={`rfr-jobs-process-action m-2 shrink-0 ${JOBS_FIND_CTA_CLASS}`}
           >
             {matching ? "Matching…" : processLabel}

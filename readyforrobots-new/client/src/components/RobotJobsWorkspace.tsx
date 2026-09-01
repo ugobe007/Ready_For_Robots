@@ -1965,6 +1965,8 @@ export default function RobotJobsWorkspace() {
     setResearchPhase("jobs");
     setStage("research");
     setCompanyName(robotClassTitle(chosen));
+    const submitUrl = `class:${chosen}`;
+    const research = bindSubmittedRobot(submitUrl);
     try {
       const res = await fetchRobotJobSearch({
         assertedClass: chosen,
@@ -1983,6 +1985,22 @@ export default function RobotJobsWorkspace() {
       setRailTab("jobs");
       setExpandedJob(pickSelectedJobKey(analysis.jobs, null));
       setCheckedJobKeys(checks);
+      writeCrmHandoff(
+        checks,
+        analysis.jobs.map(job => ({
+          ...job,
+          forRobot: analysis.productName || "",
+        })),
+        analysis.productName
+      );
+      saveWorkspaceSession({
+        url: submitUrl,
+        products: [robotClassTitle(chosen)],
+        view: "jobs",
+        activeIdx: 0,
+        selectedJobKey: pickSelectedJobKey(analysis.jobs, null) || undefined,
+        checkedJobKeys: checks,
+      });
       setStage("jobs");
     } catch {
       setError("Could not find jobs for that robot type. Try again.");

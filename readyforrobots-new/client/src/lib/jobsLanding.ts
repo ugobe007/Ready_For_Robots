@@ -83,6 +83,7 @@ export function landingVisitFromSearch(
 ): LandingVisit {
   const params = new URLSearchParams((search || "").replace(/^\?/, ""));
   if (params.get("new") === "1") return "landing";
+  if (params.get("restore") === "1") return "jobs";
   const visit = (params.get(LANDING_VISIT_QUERY) || "").trim();
   if (visit === LANDING_VISIT_JOBS) return "jobs";
   if (visit === LANDING_VISIT_CANDIDATES) return "candidates";
