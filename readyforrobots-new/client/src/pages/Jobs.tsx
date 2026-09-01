@@ -33,13 +33,19 @@ export default function Jobs() {
   const visit: LandingVisit = forcedLanding
     ? "landing"
     : landingVisitFromSearch(search);
+  if (visit === "landing") {
+    return (
+      <div className="jobs-page min-h-screen bg-[#0A0F1E] text-slate-100">
+        <ExperimentHeader />
+        <JobsLanding />
+      </div>
+    );
+  }
   return (
     <div className="jobs-page min-h-screen bg-[#081126] text-slate-100">
       <ExperimentHeader />
       <main className="mx-auto w-full max-w-[1200px] px-3 pb-16 pt-16 sm:px-4">
-        {visit === "landing" ? (
-          <JobsLanding />
-        ) : visit === "candidates" ? (
+        {visit === "candidates" ? (
           <EmployerMatchWorkspace />
         ) : (
           <RobotJobsWorkspace />

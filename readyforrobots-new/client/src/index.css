@@ -2746,3 +2746,90 @@
     @apply text-[11px] font-medium text-gray-700;
   }
 }
+
+/* Marketing landing (`/`) — Manus mockup fonts + CTAs. FIND keeps Jobs chrome. */
+.rfr-landing {
+  --font-landing-display: "Space Grotesk", var(--font-display);
+  --font-landing-sans: "Archivo", var(--font-sans);
+  --font-landing-mono: "Space Mono", var(--font-mono);
+  font-family: var(--font-landing-sans);
+}
+
+.rfr-landing-eyebrow {
+  font-family: var(--font-landing-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+
+.rfr-landing-headline {
+  font-family: var(--font-landing-display);
+  font-size: clamp(2.1rem, 6vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.rfr-landing-section-title {
+  font-family: var(--font-landing-display);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.rfr-landing-hero-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(139, 152, 176, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 152, 176, 0.18) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    black 30%,
+    transparent 75%
+  );
+}
+
+.rfr-landing-cta,
+.rfr-landing-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-landing-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.rfr-landing-cta:hover {
+  box-shadow: 0 0 24px rgba(46, 230, 168, 0.45);
+  transform: translateY(-2px);
+}
+
+.rfr-landing-ghost {
+  border-width: 1px;
+  border-style: solid;
+}
+
+.rfr-landing-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.rfr-landing-door {
+  transition: transform 0.2s ease;
+}
+
+.rfr-landing-door:hover {
+  transform: translateY(-4px);
+}

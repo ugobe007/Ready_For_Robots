@@ -6,15 +6,25 @@ import {
   EMPLOYER_EMPTY_MATCH,
   EMPLOYER_PROCESS_STEPS,
   EMPLOYER_WORK_TILE_IDS,
+  LANDING_BRIEF_JOBS,
   LANDING_CANDIDATES_HINT,
+  LANDING_CANDIDATES_LABEL,
+  LANDING_EYEBROW,
   LANDING_HEADLINE,
+  LANDING_HOW_HEADLINE,
+  LANDING_HOW_STEPS,
   LANDING_JOBS_HINT,
+  LANDING_JOBS_LABEL,
+  LANDING_SIGNUP_HREF,
+  LANDING_START_FREE_CTA,
   LANDING_SUBHEAD,
+  LANDING_VOCAB_HEADLINE,
   LOOK_FOR_ROBOT_CANDIDATES_CTA,
   LOOK_FOR_ROBOT_JOBS_CTA,
   I_KNOW_THE_ROBOT_LABEL,
   jobsCandidatesHref,
   jobsFindHref,
+  landingHeadlineParts,
   landingVisitFromSearch,
 } from "./jobsLanding";
 import { catalogSkusForClass, listKnownOemCatalog } from "./knownOemCatalog";
@@ -33,18 +43,40 @@ describe("landing fork", () => {
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
   });
 
-  it("uses operator CTAs and two options only", () => {
+  it("uses mockup copy and two options only", () => {
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Look for robot jobs");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Look for robot candidates");
-    expect(LANDING_HEADLINE).toBe("Jobs for robots. Robots for jobs.");
-    expect(LANDING_SUBHEAD).toMatch(/robot or you have work/i);
-    expect(LANDING_SUBHEAD).toMatch(/matches before you sign up/i);
+    expect(LANDING_HEADLINE).toBe("Robots need jobs. We find the work.");
+    expect(landingHeadlineParts(LANDING_HEADLINE).at(-1)?.accent).toBe(true);
+    expect(LANDING_EYEBROW).toMatch(/Robot Employment/);
+    expect(LANDING_SUBHEAD).toMatch(/robot you already have/i);
+    expect(LANDING_SUBHEAD).toMatch(/robots for work you need done/i);
+    expect(LANDING_SUBHEAD).toMatch(/keep them in CRM/i);
     expect(LANDING_SUBHEAD).not.toMatch(/who is this visit|choose your workflow/i);
-    expect(LANDING_JOBS_HINT).toMatch(/You have a robot/);
-    expect(LANDING_JOBS_HINT).toMatch(/URL|catalog/);
-    expect(LANDING_CANDIDATES_HINT).toMatch(/You have work/);
-    expect(LANDING_CANDIDATES_HINT).toMatch(/named robots/);
+    expect(LANDING_JOBS_LABEL).toBe("Robot owner");
+    expect(LANDING_CANDIDATES_LABEL).toBe("Employer");
+    expect(LANDING_JOBS_HINT).toMatch(/Paste a product URL/);
+    expect(LANDING_JOBS_HINT).toMatch(/not a category guess/);
+    expect(LANDING_CANDIDATES_HINT).toMatch(/Tell us the work/);
+    expect(LANDING_CANDIDATES_HINT).toMatch(/named catalog robots/);
     expect(LANDING_CANDIDATES_HINT).toMatch(/post the job/i);
+    expect(LANDING_HOW_HEADLINE).toBe("Three steps. No buyer pipeline.");
+    expect(LANDING_HOW_STEPS.map(s => s.title)).toEqual([
+      "Show us your robot",
+      "Available jobs",
+      "CRM",
+    ]);
+    expect(LANDING_VOCAB_HEADLINE).toMatch(/Employer\. Workplace\. Work\. Robot Job/);
+    expect(LANDING_START_FREE_CTA).toBe("Start free workspace");
+    expect(LANDING_SIGNUP_HREF).toBe("/signup?src=jobs_activate");
+    expect(LANDING_BRIEF_JOBS.map(j => j.employer)).toEqual([
+      "Amazon",
+      "Benchmark Senior Living",
+      "Whitsons Culinary Group",
+    ]);
+    expect(LANDING_BRIEF_JOBS.every(j => j.employer && j.work && j.workplace)).toBe(
+      true
+    );
     const landing = readFileSync(
       join(here, "../components/JobsLanding.tsx"),
       "utf8"
@@ -53,7 +85,12 @@ describe("landing fork", () => {
     expect(landing).toMatch(/LOOK_FOR_ROBOT_CANDIDATES_CTA/);
     expect(landing).toMatch(/LANDING_JOBS_HINT/);
     expect(landing).toMatch(/LANDING_CANDIDATES_HINT/);
+    expect(landing).toMatch(/LANDING_HOW_STEPS/);
+    expect(landing).toMatch(/data-landing-option=\{option\}/);
+    expect(landing).toMatch(/option="jobs"/);
+    expect(landing).toMatch(/option="candidates"/);
     expect(landing).not.toMatch(/Look for buyers|SIGNAL|Apollo|Who is this visit/i);
+    expect(landing).not.toMatch(/Headline options|headlineOptions|id:\"A\"/);
     expect(landing).not.toMatch(/CalJobsDesk|choose your workflow/i);
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
     expect(jobsPage).toMatch(/JobsLanding/);
