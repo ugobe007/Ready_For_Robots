@@ -9714,20 +9714,14 @@
           "model_slug": "dexory-dexoryview",
           "product_url": "https://www.dexory.com/solutions",
           "vendor_url": "https://dexory.com",
-          "primary_class": "service_robot",
+          "primary_class": null,
           "status": "available",
           "country": null,
           "description": "",
           "lookup_host": "dexory.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
-          "catalog_claims": [
-            {
-              "predicate": "product_class",
-              "value": "service_robot",
-              "evidence_span": "DexoryView indexed class service_robot."
-            }
-          ],
+          "catalog_claims": [],
           "specs": {},
           "configuration_kind": "standalone",
           "host_platform": "none"

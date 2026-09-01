@@ -56,6 +56,9 @@ CHROME_NAMES = frozenset(
         "vehicles",
         "home",
         "shop",
+        "impact",
+        "powered by ai",
+        "why dexory",
     }
 )
 SCRUB_CLASSES = frozenset({"cleaning", "autonomous_scrubber", "scrubber", "cleaning_robot"})

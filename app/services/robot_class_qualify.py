@@ -381,6 +381,38 @@ def prefer_work_language_class(
     return classify_product_from_evidence(text, catalog_class, name=name)
 
 
+def keep_claimed_display_class(
+    existing: str | None,
+    claimed: str | None,
+    *,
+    name: str = "",
+    description: str = "",
+) -> str | None:
+    """Stamp FIND display_class from a product_class fact without restoring dumps.
+
+    Listing already drops generic ``service_robot``. FIND must not put it back
+    with ``prefer(...) or claimed``. Work language and a non-generic existing
+    class still win. A real claimed class (humanoid, serving, warehouse) stays.
+    """
+    claimed_s = (claimed or "").strip()
+    existing_s = (existing or "").strip() or None
+    if not claimed_s:
+        return existing_s
+    evidence = " ".join(x for x in (name, description, claimed_s) if x)
+    kept = prefer_work_language_class(evidence, claimed_s, name=name)
+    if kept:
+        return kept
+    claimed_l = claimed_s.lower()
+    existing_l = (existing_s or "").lower()
+    if claimed_l in GENERIC_CATEGORY_CLASSES:
+        if existing_s and existing_l not in GENERIC_CATEGORY_CLASSES:
+            return existing_s
+        return None
+    if existing_s and existing_l not in GENERIC_CATEGORY_CLASSES:
+        return existing_s
+    return claimed_s
+
+
 # FIND tiles the operator picks with no SKU. A named SKU class is not a tile.
 FIND_TILE_CLASSES: frozenset[str] = frozenset(row["id"] for row in CLASS_OPTIONS)
 
