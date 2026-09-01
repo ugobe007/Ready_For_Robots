@@ -489,6 +489,9 @@ describe("CRM desk binds to the FIND robot, not leftover totes", () => {
     expect(desk).toMatch(/WORK_TASK_MODEL_QUESTION/);
     expect(desk).toMatch(/WORK_TASK_MODEL_SELF_OPTION/);
     expect(account).toMatch(/\/api\/jobs-crm\/jobs\/task-model/);
+    expect(account).toMatch(/\/api\/jobs-crm\/cal\/desk/);
+    expect(account).toMatch(/save_task_model/);
+    expect(account).toMatch(/prepare_apply/);
     expect(account).not.toMatch(/GR00T N1/);
     expect(account).toMatch(/We do not invent a model name/);
     const workspace = readFileSync(
@@ -497,5 +500,22 @@ describe("CRM desk binds to the FIND robot, not leftover totes", () => {
     );
     expect(workspace).not.toMatch(/WorkTaskModelQuestion/);
     expect(workspace).not.toMatch(/JOBS_APPLY_SELECTED_CTA/);
+    expect(workspace).not.toMatch(/CalJobsDesk/);
+    expect(desk).toMatch(/CalJobsDesk/);
+    expect(desk).not.toMatch(/Cal queue/);
+    expect(desk).not.toMatch(/CalLeadDrop/);
+    const calDesk = readFileSync(
+      join(here, "../components/CalJobsDesk.tsx"),
+      "utf8"
+    );
+    expect(calDesk).toMatch(/data-cal-jobs-desk/);
+    expect(calDesk).toMatch(/save_task_model/);
+    expect(calDesk).toMatch(/prepare_apply/);
+    expect(calDesk).not.toMatch(/send_buyer_intro/);
+    expect(calDesk).not.toMatch(/Find jobs for your robot/);
+    const copy = readFileSync(join(here, "./oemCalCopy.ts"), "utf8");
+    expect(copy).toMatch(/Jobs recruiter/);
+    expect(copy).not.toMatch(/Cal matched/);
+    expect(copy).not.toMatch(/unlock 15 sales leads for your robot/);
   });
 });

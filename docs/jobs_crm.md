@@ -117,7 +117,7 @@ Actions taken on FIND / QUALIFY (keep, Open CRM) and on the desk (Place, apply) 
 
 Authenticated keep upserts selected Job Cards onto the user (`user_kept_jobs`). N is the selected/kept count, not a hardcoded 5 when they kept 3. Schema: user, job identity (employer, work title, source ids), robot/submission, timestamps, free TTL/entitlement. Unsigned users still hit the wall; after signup, kept jobs restore. Status bar says "N jobs saved". Off the desk the bar links to CRM; on the desk it links to **Apply to jobs**. Apply copy: apply. We draft. You review and send.
 
-Each kept job asks **Do you have a model for this work?** The OEM names the model source (product, vendor, or known policy) or says they will train it for the job. Stored on `user_kept_jobs.work_task_model_kind` / `work_task_model_source`. Unknown until they answer. Do not invent a model name.
+Each kept job asks **Do you have a model for this work?** The OEM names the model source (product, vendor, or known policy) or says they will train it for the job. Stored on `user_kept_jobs.work_task_model_kind` / `work_task_model_source`. Unknown until they answer. Do not invent a model name. **Cal** asks this on the desk after Open CRM if it is still blank.
 
 ### F11 — Next steps offer → apply outreach (ship)
 
@@ -201,6 +201,12 @@ Hunt on FIND. Keep jobs on the CRM listing. Apply when the user is ready.
 
 ---
 
+### F18 — Cal on the desk (ship)
+
+After Open CRM, **Cal** is the Jobs recruiter on `/pipeline?src=jobs_activate`. He reads kept Job Cards, asks missing apply facts (task-model source vs self-train, catalogued SKU, monthly rental, skippable PoC), and prepares the existing violet apply draft. The operator reviews and sends. Tools: `GET/POST /api/jobs-crm/cal/desk`. Production `CAL_AUTONOMY_ENABLED=0`. Not FIND. Not buyer/SIGNAL mail. Not a second home.
+
+---
+
 ## Agent rules (stop the rewire)
 
 1. **Never remove the signup wall** in front of the CRM desk.
@@ -219,7 +225,7 @@ Hunt on FIND. Keep jobs on the CRM listing. Apply when the user is ready.
 
 ## Out of scope (this spec still names them)
 
-Matcher retune, Cal, invented dollars, HubSpot OAuth export UI, cron expiry job, paid “all matching jobs” query beyond the current dump.
+Matcher retune, invented dollars, HubSpot OAuth export UI, cron expiry job, paid “all matching jobs” query beyond the current dump. Cal-as-core / FIND chatbot / buyer autonomy stay out of scope.
 
 ## Next missions (ranked)
 

@@ -2,7 +2,7 @@
 
 **Audience:** agents and operators driving or changing the Jobs product  
 **Verification recipes:** [`.cursor/skills/verify-readyforrobots/features/`](../.cursor/skills/verify-readyforrobots/features/README.md)  
-**Product loop:** FIND → QUALIFY (Job Cards) → PLACE later (CRM). `/` is Jobs. SIGNAL/Cal are frozen as core.
+**Product loop:** FIND → QUALIFY (Job Cards) → PLACE later (CRM). `/` is Jobs. SIGNAL is frozen as core. Cal-as-core is frozen. Cal as Jobs recruiter on the CRM desk after Open CRM is allowed.
 
 This file names **chrome** — nav, process bar, panels, surfaced results — and how they work. It is not a screenshot gallery and not a SIGNAL playbook.
 
@@ -14,12 +14,12 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 |---------|-------|------------------------|
 | Jobs terminal | `/` (`/jobs/:slug` same workspace) | Paste robot URL, inspect Job Cards |
 | About | `/intelligence` | Jobs loop explainer; Find jobs → `/?new=1` |
-| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: jobs you kept, inspect, quote rental, Place this job. Inbox confirm/release for a held interview slot. |
+| Jobs CRM | `/pipeline?src=jobs_activate` | Step 03: jobs you kept, inspect, quote rental, Place this job. Cal asks missing apply facts and prepares the draft. Inbox confirm/release for a held interview slot. |
 | Employer evaluate | `/employer/:token` | Accept / Decline (reason code) / propose time / hold a slot. Video résumé when present. No RFR account. |
 | OEM hold | `/oem-hold/:token` | Confirm or release a held interview window. |
 | Compare | `/compare` | Jobs vs sales-list framing |
 | SIGNAL pipeline | `/pipeline` | Buyer queue — **not** the Jobs path |
-| Admin | `/admin` | Cal / ops — not Jobs activation |
+| Admin | `/admin` | Frozen buyer/Cal queue — not Jobs activation. Cal's live job is the Jobs CRM desk. |
 
 Canonical frontend: `readyforrobots-new/client/`. API: `https://ready-2-robot.fly.dev`. Marketing domain: `https://readyforrobots.com`.
 
@@ -78,7 +78,7 @@ On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and
 | Job Card (expanded) | Employer, workplace, work, qualification (usually Conditional), open questions, task models, numbered placement steps, Next is **not** here. |
 | Research console | Stage labels while Understanding + match run. Not the result. |
 | Live job tape | Ambient listings; not a substitute for named Job Cards. |
-| pstack release | How / Act / Critic in `pstack/` + `scripts/pstack_release.py`. Required to merge Jobs PRs. Not a chatbot. Not JOBS AGENT PROTOCOL chrome on `/` or CRM. |
+| Cal desk | After Open CRM on the signed listing. Asks the next missing apply fact. Prepares the draft. You send. Not on FIND. |
 
 SIGNAL-only panels (activity feed, next actions, Cal queue, lead share) stay off the Jobs path.
 

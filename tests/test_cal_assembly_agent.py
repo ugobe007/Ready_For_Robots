@@ -44,8 +44,13 @@ class _Vendor:
 def test_cal_persona_has_mission_and_never_rules():
     payload = cal_persona_payload()
     assert payload["name"] == "Cal"
-    assert payload["title"] == "Deployment Advisor"
-    assert "vendor-neutral" in payload["mission"].lower() or "automation" in payload["mission"].lower()
+    assert payload["title"] == "Jobs Recruiter"
+    assert payload["job"]
+    assert payload["surface"] == "/pipeline?src=jobs_activate"
+    assert "save_task_model" in payload["tools"]
+    ident = payload["identity"].lower()
+    assert "jobs recruiter" in ident
+    assert "vendor-neutral" in payload["mission"].lower() or "jobs" in payload["mission"].lower()
     assert any("universit" in n.lower() for n in payload["never"])
     assert len(payload["always"]) >= 5
 
