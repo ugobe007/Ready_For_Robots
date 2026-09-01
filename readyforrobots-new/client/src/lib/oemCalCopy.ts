@@ -34,8 +34,10 @@ export function oemCalResultsSignedLine(matchCount: number): string {
 export const OEM_CAL_RESULTS_CTA_ANON = "Sign up — keep these matches";
 export const OEM_CAL_RESULTS_CTA_SIGNED = "Unlock 15 matched sales leads";
 
-export const OEM_CAL_RESULTS_HEAD_ANON = "These companies match your scan — claim them";
-export const OEM_CAL_RESULTS_HEAD_SIGNED = "Review your matches — then unlock 15 sales leads";
+export const OEM_CAL_RESULTS_HEAD_ANON =
+  "These companies match your scan — claim them";
+export const OEM_CAL_RESULTS_HEAD_SIGNED =
+  "Review your matches — then unlock 15 sales leads";
 
 export const OEM_CAL_RESULTS_STRIP_TITLE =
   "URL scan matches for this robot, not a generic list";

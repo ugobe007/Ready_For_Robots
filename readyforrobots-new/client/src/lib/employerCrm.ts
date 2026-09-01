@@ -47,7 +47,10 @@ function readAll(): EmployerPosting[] {
 function writeAll(rows: EmployerPosting[]): void {
   if (typeof window === "undefined") return;
   try {
-    window.sessionStorage.setItem(EMPLOYER_CRM_SESSION_KEY, JSON.stringify(rows));
+    window.sessionStorage.setItem(
+      EMPLOYER_CRM_SESSION_KEY,
+      JSON.stringify(rows)
+    );
   } catch {
     /* ignore quota */
   }

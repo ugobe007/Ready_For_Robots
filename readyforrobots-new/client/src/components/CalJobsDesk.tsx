@@ -47,10 +47,17 @@ const EMPTY_FACTS: PendingFacts = {
   pocSkipped: false,
 };
 
-function nextFact(job: CalDeskJob | null, pending: PendingFacts): string | null {
+function nextFact(
+  job: CalDeskJob | null,
+  pending: PendingFacts
+): string | null {
   if (!job) return null;
   const status = (job.application_status || "").toLowerCase();
-  if (status === "prepared" || status === "sent" || status === "not_sent_no_email") {
+  if (
+    status === "prepared" ||
+    status === "sent" ||
+    status === "not_sent_no_email"
+  ) {
     return null;
   }
   if (job.missing.includes("task_model")) return "task_model";
@@ -74,10 +81,15 @@ function nextFact(job: CalDeskJob | null, pending: PendingFacts): string | null 
   return "prepare_apply";
 }
 
-function promptFor(fact: string | null, job: CalDeskJob | null, greeting: string): string {
+function promptFor(
+  fact: string | null,
+  job: CalDeskJob | null,
+  greeting: string
+): string {
   if (!fact) return greeting;
   const shop = job?.employer_name || "this employer";
-  if (fact === "task_model") return `${WORK_TASK_MODEL_QUESTION} This one is ${shop}.`;
+  if (fact === "task_model")
+    return `${WORK_TASK_MODEL_QUESTION} This one is ${shop}.`;
   if (fact === "selected_models") {
     return "Which catalogued SKU goes on this apply? I will not invent one.";
   }
@@ -100,7 +112,9 @@ export default function CalJobsDesk({
   onPrepared: (app: JobsCrmApplication) => void;
 }) {
   const [desk, setDesk] = useState<CalDeskBrief | null>(null);
-  const [pendingByJob, setPendingByJob] = useState<Record<string, PendingFacts>>({});
+  const [pendingByJob, setPendingByJob] = useState<
+    Record<string, PendingFacts>
+  >({});
   const [thread, setThread] = useState<ThreadLine[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -111,7 +125,9 @@ export default function CalJobsDesk({
   const focus = useMemo(() => {
     const jobs = desk?.jobs || [];
     return (
-      jobs.find(job => nextFact(job, pendingByJob[job.job_key] || EMPTY_FACTS)) ||
+      jobs.find(job =>
+        nextFact(job, pendingByJob[job.job_key] || EMPTY_FACTS)
+      ) ||
       jobs[0] ||
       null
     );
@@ -129,7 +145,9 @@ export default function CalJobsDesk({
         if (cancelled) return;
         setDesk(brief);
         const first =
-          brief.jobs.find(job => nextFact(job, EMPTY_FACTS)) || brief.jobs[0] || null;
+          brief.jobs.find(job => nextFact(job, EMPTY_FACTS)) ||
+          brief.jobs[0] ||
+          null;
         const opening = promptFor(
           nextFact(first, EMPTY_FACTS),
           first,
@@ -156,7 +174,11 @@ export default function CalJobsDesk({
     setThread(prev => [...prev, { who, text }]);
   }
 
-  function afterLocal(job: CalDeskJob, nextPending: PendingFacts, youSaid: string) {
+  function afterLocal(
+    job: CalDeskJob,
+    nextPending: PendingFacts,
+    youSaid: string
+  ) {
     say("you", youSaid);
     const nxt = nextFact(job, nextPending);
     say("cal", promptFor(nxt, job, desk?.greeting || OEM_CAL_DESK_LEAD));
@@ -172,7 +194,9 @@ export default function CalJobsDesk({
     setError("");
     say(
       "you",
-      kind === "source" ? `Model source: ${source.trim()}` : WORK_TASK_MODEL_SELF_OPTION
+      kind === "source"
+        ? `Model source: ${source.trim()}`
+        : WORK_TASK_MODEL_SELF_OPTION
     );
     try {
       const turn = await runCalDeskTool(token, {
@@ -199,23 +223,24 @@ export default function CalJobsDesk({
 
   async function prepareDraft() {
     if (!focus) return;
-    const models =
-      pending.selectedModels.length
-        ? pending.selectedModels
-        : focus.selected_models.length
-          ? focus.selected_models
-          : focus.catalog_skus.length
-            ? []
-            : focus.robot_name
-              ? [focus.robot_name]
-              : [];
+    const models = pending.selectedModels.length
+      ? pending.selectedModels
+      : focus.selected_models.length
+        ? focus.selected_models
+        : focus.catalog_skus.length
+          ? []
+          : focus.robot_name
+            ? [focus.robot_name]
+            : [];
     const price = pending.monthlyPrice || focus.monthly_price || "";
     if (!models.length) {
       setError("Pick a catalogued SKU. I will not invent one.");
       return;
     }
     if (!price.trim()) {
-      setError("Enter the monthly price you will charge. I will not invent it.");
+      setError(
+        "Enter the monthly price you will charge. I will not invent it."
+      );
       return;
     }
     setBusy(true);
@@ -240,10 +265,7 @@ export default function CalJobsDesk({
       if (app?.id) onPrepared(app);
       const job =
         turn.desk.jobs.find(row => row.job_key === focus.job_key) || focus;
-      say(
-        "cal",
-        promptFor(nextFact(job, pending), job, turn.desk.greeting)
-      );
+      say("cal", promptFor(nextFact(job, pending), job, turn.desk.greeting));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not prepare that.");
     } finally {
@@ -278,7 +300,9 @@ export default function CalJobsDesk({
               {" · "}
               {job.work_title || "this job"}
               {" · "}
-              <span className="text-slate-400">{jobStatusLine(job, pendingByJob[job.job_key])}</span>
+              <span className="text-slate-400">
+                {jobStatusLine(job, pendingByJob[job.job_key])}
+              </span>
             </li>
           ))}
         </ul>
@@ -305,7 +329,9 @@ export default function CalJobsDesk({
       </ol>
 
       {focus?.contacts_note ? (
-        <p className="mt-3 text-sm text-slate-400">{JOBS_CONTACTS_EMPTY_NOTE}</p>
+        <p className="mt-3 text-sm text-slate-400">
+          {JOBS_CONTACTS_EMPTY_NOTE}
+        </p>
       ) : null}
 
       {fact === "task_model" && focus ? (
@@ -376,7 +402,8 @@ export default function CalJobsDesk({
             ))
           ) : (
             <p className="text-sm text-slate-300">
-              No catalogued SKU on file. I'll use {focus.robot_name || "this robot"}. I will not invent a name.
+              No catalogued SKU on file. I'll use{" "}
+              {focus.robot_name || "this robot"}. I will not invent a name.
             </p>
           )}
           {!catalog.length ? (
@@ -404,7 +431,9 @@ export default function CalJobsDesk({
             e.preventDefault();
             const price = priceDraft.replace(/\s+/g, " ").trim();
             if (!price) {
-              setError("Enter the monthly price you will charge. I will not invent it.");
+              setError(
+                "Enter the monthly price you will charge. I will not invent it."
+              );
               return;
             }
             const next = { ...pending, monthlyPrice: price };
@@ -495,7 +524,9 @@ export default function CalJobsDesk({
           data-apply-draft="1"
         >
           <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>Apply draft</p>
-          <p className="mt-2 text-sm font-semibold text-white">{draft.subject}</p>
+          <p className="mt-2 text-sm font-semibold text-white">
+            {draft.subject}
+          </p>
           <pre className="mt-2 whitespace-pre-wrap text-sm text-slate-200">
             {draft.body}
           </pre>

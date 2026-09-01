@@ -12,7 +12,7 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 
 | Surface | Route | What the user is doing |
 |---------|-------|------------------------|
-| Landing fork | `/` or `/?new=1` | Who is this visit. Two options: Look for robot jobs / Look for robot candidates. |
+| Landing fork | `/` or `/?new=1` | Robots need jobs. We find the work. Two doors: Look for robot jobs / Look for robot candidates. Marketing sections (how it works, jobs brief, vocabulary) stay on `/`. |
 | Jobs FIND | `/?visit=jobs` | OEM/integrator step 1: paste robot URL or pick a named catalog SKU / class. Then Job Cards. |
 | Employer MATCH | `/?visit=candidates` | Employer step 1: work tiles + description. Named catalog robots, then post-job draft. |
 | About | `/intelligence` | Jobs loop explainer; Find jobs → `/?visit=jobs` |
@@ -31,7 +31,7 @@ Canonical frontend: `readyforrobots-new/client/`. API: `https://ready-2-robot.fl
 
 ### Jobs header (`ExperimentHeader`)
 
-Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (landing fork: who is this visit). While already on `/`, the click resets in place — it must not reload the document or abort an in-flight Find jobs.
+Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (landing fork). While already on `/`, the click resets in place — it must not reload the document or abort an in-flight Find jobs.
 
 | Item | Behavior |
 |------|----------|

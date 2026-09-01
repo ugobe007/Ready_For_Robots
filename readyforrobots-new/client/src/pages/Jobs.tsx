@@ -2,7 +2,7 @@
  * Canonical product front door (also /jobs/:slug personalization).
  * /jobs index redirects to /.
  *
- * First beat on `/` is who is this visit (JobsLanding).
+ * First beat on `/` is the landing fork (JobsLanding).
  * `/?visit=jobs` is OEM FIND. `/?visit=candidates` is employer MATCH/POST.
  * `/?new=1` returns to the landing fork. Strip the query in an effect
  * after paint. Do not remount the tree, and do not resetToFind while
@@ -33,13 +33,19 @@ export default function Jobs() {
   const visit: LandingVisit = forcedLanding
     ? "landing"
     : landingVisitFromSearch(search);
+  if (visit === "landing") {
+    return (
+      <div className="jobs-page min-h-screen bg-[#0A0F1E] text-slate-100">
+        <ExperimentHeader />
+        <JobsLanding />
+      </div>
+    );
+  }
   return (
     <div className="jobs-page min-h-screen bg-[#081126] text-slate-100">
       <ExperimentHeader />
       <main className="mx-auto w-full max-w-[1200px] px-3 pb-16 pt-16 sm:px-4">
-        {visit === "landing" ? (
-          <JobsLanding />
-        ) : visit === "candidates" ? (
+        {visit === "candidates" ? (
           <EmployerMatchWorkspace />
         ) : (
           <RobotJobsWorkspace />

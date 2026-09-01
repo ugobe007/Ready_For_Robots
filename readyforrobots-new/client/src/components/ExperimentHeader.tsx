@@ -120,7 +120,11 @@ export default function ExperimentHeader() {
               </button>
             </>
           ) : (
-            <a href={loginHref("/")} className={navIdle}>
+            <a
+              href={loginHref("/")}
+              className="border px-4 py-2 text-emerald-400 transition hover:bg-white/5"
+              style={{ borderColor: "#1E8F6B" }}
+            >
               Sign In
             </a>
           )}

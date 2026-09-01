@@ -1592,9 +1592,7 @@ export function jobsCrmLeaveHref(
     jobCount?: number | null;
   } = {}
 ): string {
-  return jobsCrmHasRestore(opts)
-    ? jobsWorkspaceRestoreHref()
-    : jobsFindHref();
+  return jobsCrmHasRestore(opts) ? jobsWorkspaceRestoreHref() : jobsFindHref();
 }
 
 export function jobsCrmLeaveLabel(
