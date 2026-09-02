@@ -38,7 +38,7 @@ import {
 } from "@/lib/robotJobSearch";
 import { fetchOemListing, fetchRobotProfile } from "@/lib/robotProfile";
 import { lookupKnownOem } from "@/lib/knownOemLineups";
-import { catalogSkusForClass, type CatalogSku } from "@/lib/knownOemCatalog";
+import { type CatalogSku } from "@/lib/knownOemCatalog";
 import {
   I_KNOW_THE_ROBOT_HINT,
   I_KNOW_THE_ROBOT_LABEL,
@@ -2175,7 +2175,6 @@ export default function RobotJobsWorkspace() {
               currentSubmitUrl={submittedUrlRef.current}
               onCancel={stage === "select" ? newRobot : undefined}
               onPickClass={id => void submitClassFind(id)}
-              onPickSku={sku => void submitKnownSku(sku)}
             />
           ) : stage === "portfolio" ? (
             <PortfolioRail
@@ -2351,7 +2350,6 @@ function FindRail({
   currentSubmitUrl,
   onCancel,
   onPickClass,
-  onPickSku,
 }: {
   stage: Stage;
   url: string;
@@ -2362,7 +2360,6 @@ function FindRail({
   currentSubmitUrl?: string;
   onCancel?: () => void;
   onPickClass?: (classId: string) => void;
-  onPickSku?: (sku: CatalogSku) => void;
 }) {
   const researching = stage === "research";
   const sameSubmit =
@@ -2371,9 +2368,6 @@ function FindRail({
     sameRobotUrl(url, currentSubmitUrl || "");
   const [catalogClass, setCatalogClass] = useState("");
   const classChoices = classOptionsOrDefault();
-  const skus = catalogClass
-    ? catalogSkusForClass(catalogClass).slice(0, 12)
-    : [];
   return (
     <div>
       <p className={eyebrow}>
@@ -2424,67 +2418,39 @@ function FindRail({
         </button>
       </form>
 
-      {stage === "find" && onPickClass && onPickSku ? (
+      {stage === "find" && onPickClass ? (
         <div className="mt-8 border-2 border-emerald-400 bg-emerald-400/20 p-4 shadow-[0_0_28px_rgba(46,230,168,0.35)]">
-          <p className="font-display text-xl font-bold tracking-tight text-emerald-200 sm:text-2xl">
+          <label
+            htmlFor="robot-type"
+            className="font-display text-xl font-bold tracking-tight text-emerald-200 sm:text-2xl"
+          >
             {I_KNOW_THE_ROBOT_LABEL}
-          </p>
+          </label>
           <p className="mt-2 text-[13px] leading-snug text-emerald-100/80">
             {I_KNOW_THE_ROBOT_HINT}
           </p>
-          <div className="mt-3 grid max-h-64 gap-1 overflow-y-auto">
+          <select
+            id="robot-type"
+            aria-label={I_KNOW_THE_ROBOT_LABEL}
+            value={catalogClass}
+            onChange={e => setCatalogClass(e.target.value)}
+            className="mt-3 w-full border border-emerald-500/40 bg-[#081126] px-3 py-3 text-[13px] text-slate-100 outline-none focus:border-emerald-300"
+          >
+            <option value="">Select a type</option>
             {classChoices.map(opt => (
-              <button
-                key={opt.id}
-                type="button"
-                data-jobs-class={opt.id}
-                aria-pressed={catalogClass === opt.id}
-                onClick={() => {
-                  setCatalogClass(opt.id);
-                }}
-                className={`border px-3 py-2 text-left text-[13px] transition ${
-                  catalogClass === opt.id
-                    ? "border-emerald-300 bg-emerald-400/20 text-emerald-50"
-                    : "border-emerald-500/40 bg-[#081126] text-slate-100 hover:border-emerald-300 hover:bg-emerald-400/10"
-                }`}
-              >
-                <span className="font-bold">{opt.label}</span>
-              </button>
+              <option key={opt.id} value={opt.id} data-jobs-class={opt.id}>
+                {opt.label}
+              </option>
             ))}
-          </div>
-          {catalogClass ? (
-            <button
-              type="button"
-              onClick={() => onPickClass(catalogClass)}
-              className={`${ctaClass} mt-3 w-full`}
-            >
-              Find jobs for this type →
-            </button>
-          ) : null}
-          {skus.length ? (
-            <div className="mt-4">
-              <p className={eyebrow}>Named catalog SKUs</p>
-              <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto">
-                {skus.map(sku => (
-                  <li key={`${sku.host}|${sku.name}`}>
-                    <button
-                      type="button"
-                      data-catalog-sku={sku.name}
-                      onClick={() => onPickSku(sku)}
-                      className="w-full border border-slate-700 px-3 py-2 text-left text-[12px] text-slate-200 hover:border-emerald-400/60"
-                    >
-                      <span className="block font-bold">{sku.name}</span>
-                      <span className="text-slate-500">{sku.vendorName}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : catalogClass ? (
-            <p className="mt-3 text-[12px] text-slate-500">
-              No named catalog SKU in this class yet. Finding jobs for the type.
-            </p>
-          ) : null}
+          </select>
+          <button
+            type="button"
+            disabled={!catalogClass}
+            onClick={() => onPickClass(catalogClass)}
+            className={`${ctaClass} mt-3 w-full`}
+          >
+            {FIND_JOBS_CTA}
+          </button>
         </div>
       ) : null}
 

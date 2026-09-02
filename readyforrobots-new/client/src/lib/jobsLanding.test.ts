@@ -103,7 +103,7 @@ describe("landing fork", () => {
       "Submit your robot URL or your robot job. We put robots to work."
     );
     expect(LANDING_INTRO).not.toMatch(/SIGNAL|Apollo|Hunter|ATS/i);
-    expect(LANDING_BRIEF_HEADLINE).toBe("Jobs robots can take");
+    expect(LANDING_BRIEF_HEADLINE).toBe("Jobs for robots.");
     expect(LANDING_BRIEF_JOB_FIELD).toBe("Jobs");
     expect(LANDING_SUBHEAD).not.toMatch(
       /keep them in our CRM|Paste a product URL|who is this visit|choose your workflow/i
@@ -289,24 +289,30 @@ describe("landing fork", () => {
     );
   });
 
-  it("FIND step 1 keeps URL plus I know the robot catalog pick", () => {
+  it("FIND step 1 keeps URL plus a type dropdown then Find jobs", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8"
     );
-    expect(I_KNOW_THE_ROBOT_LABEL).toBe("I know the robot");
+    expect(I_KNOW_THE_ROBOT_LABEL).toBe("What type of robot?");
     expect(workspace).toMatch(/I_KNOW_THE_ROBOT_LABEL/);
     expect(workspace).toMatch(/border-2 border-emerald-400/);
     expect(workspace).toMatch(
       /text-xl font-bold tracking-tight text-emerald-200/
     );
-    expect(workspace).toMatch(/submitKnownSku/);
     expect(workspace).toMatch(/submitClassFind/);
-    expect(workspace).toMatch(/catalogSkusForClass/);
+    expect(workspace).toMatch(/classOptionsOrDefault/);
+    expect(workspace).toMatch(/<select/);
+    expect(workspace).toMatch(/id="robot-type"/);
+    expect(workspace).toMatch(/onPickClass\(catalogClass\)/);
+    expect(workspace).toMatch(/disabled=\{!catalogClass\}/);
     expect(workspace).toMatch(/aria-label="Find jobs for your robot"/);
     expect(workspace).toMatch(/fetchRobotJobSearch/);
-    expect(workspace).toMatch(/Find jobs for this type/);
-    expect(workspace).toMatch(/data-catalog-sku/);
+    expect(workspace).toMatch(/FIND_JOBS_CTA/);
+    expect(workspace).not.toMatch(/Find jobs for this type/);
+    expect(workspace).not.toMatch(/data-catalog-sku/);
+    expect(workspace).not.toMatch(/catalogSkusForClass/);
+    expect(workspace).not.toMatch(/I know the robot/);
   });
 
   it("employer process is MATCH then POST, not Cal or SIGNAL", () => {
