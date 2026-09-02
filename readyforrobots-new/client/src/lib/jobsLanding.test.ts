@@ -217,7 +217,8 @@ describe("landing fork", () => {
     expect(LANDING_COLORS.charcoal).toBe("#141820");
     expect(LANDING_COLORS.emerald).toBe("#10B981");
     expect(LANDING_COLORS.mint).toBe("#2EE6A8");
-    expect(landing).toMatch(/fill=\{C\.page\}/);
+    expect(landing).toMatch(/fill=\{C\.cream\}/);
+    expect(landing).toMatch(/background="transparent"/);
     expect(landing).not.toMatch(/part\.accent \? C\.mint/);
     expect(landing).not.toMatch(/landingHeadlineParts/);
     expect(css).toMatch(/--landing-cream:\s*#f4efe4/);
@@ -235,7 +236,13 @@ describe("landing fork", () => {
       /\.rfr-landing-brief-employer[\s\S]*?color:\s*var\(--landing-emerald\)/
     );
     expect(css).toMatch(
-      /\.rfr-landing-hero-mark[\s\S]*?background:\s*var\(--landing-green\)/
+      /\.rfr-landing-hero-mark[\s\S]*?background:\s*transparent/
+    );
+    expect(css).not.toMatch(
+      /\.rfr-landing-hero-mark\s*\{[^}]*background:\s*var\(--landing-green\)/
+    );
+    expect(css).not.toMatch(
+      /\.rfr-landing-hero-mark\s*\{[^}]*border:\s*1px solid var\(--landing-green\)/
     );
     expect(css).toMatch(
       /\.rfr-landing-hero-mark[\s\S]*?margin-left:\s*auto/

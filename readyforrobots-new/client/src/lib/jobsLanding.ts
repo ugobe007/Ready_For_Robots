@@ -5,13 +5,13 @@
  * Option 2 Robots for Jobs → employer MATCH/POST (`/?visit=candidates`).
  * Wordmark `/?new=1` returns to this fork. FIND after the fork is unchanged.
  *
- * Layout is the sparse fork: kicker, two-line headline, Kare square to
- * the right of the headline, two text doors, then Jobs brief. Navy /
- * cream / mint square. True emerald only on the word robot / Robots
- * and on brief employer names — not the whole headline or door. ChicagoFLF
- * on the headline and doors. Archivo on the subhead. Hairline chrome.
- * No dither, no window bars, no SIGNAL report hero. The A–E picker
- * stays out of production.
+ * Layout is the sparse fork: kicker, two-line headline, Kare face to
+ * the right of the headline (stroke + eyes + mouth, no filled square),
+ * two text doors, then Jobs brief. Navy / cream. True emerald only on
+ * the word robot / Robots and on brief employer names — not the whole
+ * headline or door. ChicagoFLF on the headline and doors. Archivo on
+ * the subhead. Hairline chrome. No dither, no window bars, no SIGNAL
+ * report hero. The A–E picker stays out of production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";

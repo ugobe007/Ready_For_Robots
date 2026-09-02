@@ -2786,15 +2786,14 @@
 .rfr-landing-hero {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 3.5rem);
-  max-width: 52rem;
+  max-width: 58rem;
   margin: 0 auto;
-  padding: 4.5rem 1.25rem 3rem;
+  padding: 2.25rem 1.25rem 1.75rem;
 }
 
 @media (min-width: 768px) {
   .rfr-landing-hero {
-    padding: 6.5rem 1.5rem 4rem;
+    padding: 2.75rem 1.75rem 2rem;
   }
 }
 
@@ -2816,8 +2815,8 @@
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1.5rem;
-  margin-top: 3.5rem;
+  gap: 1.15rem;
+  margin-top: 1.35rem;
 }
 
 .rfr-landing-headline {
@@ -2836,41 +2835,34 @@
 
 .rfr-landing-subhead {
   font-family: var(--font-landing-sans);
-  max-width: 28rem;
-  margin-top: 1.75rem;
+  max-width: 32rem;
+  margin-top: 0.95rem;
   font-size: 1.05rem;
   font-weight: 400;
   letter-spacing: 0;
-  line-height: 1.55;
+  line-height: 1.5;
   color: var(--landing-muted);
 }
 
 .rfr-landing-hero-mark {
   display: flex;
   flex-shrink: 0;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   order: 2;
   margin-left: auto;
-  width: 6.5rem;
-  height: 6.5rem;
-  border: 1px solid var(--landing-green);
-  background: var(--landing-green);
-}
-
-@media (min-width: 768px) {
-  .rfr-landing-hero-mark {
-    width: 7.5rem;
-    height: 7.5rem;
-  }
+  width: auto;
+  height: auto;
+  border: none;
+  background: transparent;
 }
 
 .rfr-landing-doors {
   display: flex;
   justify-content: space-between;
-  gap: 1.5rem;
-  margin-top: auto;
-  padding-top: 6rem;
+  gap: 1.25rem;
+  margin-top: 2.25rem;
+  padding-top: 0;
 }
 
 .rfr-landing-door-title {
@@ -2888,29 +2880,29 @@
 }
 
 .rfr-landing-brief {
-  max-width: 52rem;
+  max-width: 58rem;
   margin: 0 auto;
-  padding: 0 1.25rem 4rem;
+  padding: 0 1.25rem 2.5rem;
   border-top: 1px solid var(--landing-line);
 }
 
 .rfr-landing-brief-eyebrow {
   font-family: var(--font-landing-ui);
-  padding-top: 2.5rem;
+  padding-top: 1.5rem;
   font-size: 0.95rem;
   color: var(--landing-cream);
 }
 
 .rfr-landing-brief-headline {
   font-family: var(--font-landing-display);
-  margin-top: 0.75rem;
+  margin-top: 0.45rem;
   font-size: clamp(1.6rem, 3vw, 2.1rem);
   font-weight: 400;
   color: var(--landing-cream);
 }
 
 .rfr-landing-brief-note {
-  margin-top: 0.6rem;
+  margin-top: 0.4rem;
   font-size: 0.85rem;
   color: var(--landing-muted);
 }
@@ -2918,12 +2910,12 @@
 .rfr-landing-brief-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  gap: 0.55rem;
+  margin-top: 1rem;
 }
 
 .rfr-landing-brief-job {
-  padding: 1rem 1.1rem 1.15rem;
+  padding: 0.75rem 0.95rem 0.85rem;
   border: 1px solid var(--landing-line);
 }
 
@@ -2964,7 +2956,7 @@
 }
 
 .rfr-landing-brief-field-label {
-  margin-top: 0.85rem;
+  margin-top: 0.55rem;
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -2985,13 +2977,13 @@
 
 .rfr-landing-footer-row {
   display: flex;
-  max-width: 52rem;
+  max-width: 58rem;
   margin: 0 auto;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 2.5rem;
-  padding: 1.5rem 1.25rem 2.5rem;
+  gap: 0.75rem 2rem;
+  padding: 1.1rem 1.25rem 1.75rem;
 }
 
 .rfr-landing-footer-mark {

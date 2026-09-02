@@ -35,7 +35,7 @@ function LandingFace({ scale }: { scale: number }) {
     <PixelIcon
       map={KARE_FACE}
       scale={scale}
-      fill={C.page}
+      fill={C.cream}
       background="transparent"
     />
   );
@@ -94,7 +94,7 @@ export default function JobsLanding() {
             {LANDING_HEADLINE_END}
           </h1>
           <div className="rfr-landing-hero-mark" aria-hidden="true">
-            <LandingFace scale={6} />
+            <LandingFace scale={8} />
           </div>
         </div>
         <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
