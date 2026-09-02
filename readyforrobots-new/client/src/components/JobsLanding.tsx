@@ -36,7 +36,7 @@ function LandingFace({ scale }: { scale: number }) {
     <PixelIcon
       map={KARE_FACE}
       scale={scale}
-      fill={C.cream}
+      fill={C.emerald}
       background="transparent"
     />
   );
