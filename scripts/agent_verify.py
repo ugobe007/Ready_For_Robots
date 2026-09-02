@@ -414,8 +414,7 @@ def drive_employer_match(*, api: str | None = None) -> dict[str, Any]:
     fly = (api or FLY_API).rstrip("/")
     py = EMPLOYER_MATCH_PY.read_text(encoding="utf-8") if EMPLOYER_MATCH_PY.is_file() else ""
     src_ok = (
-        "_catalog_robots_snapshot" in py
-        and "listing_from_catalog" not in py
+        "iter_catalog_robots" in py
         and "build_robot_profile" not in py
         and "scrape_robot_page" not in py
     )
