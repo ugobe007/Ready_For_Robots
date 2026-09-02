@@ -9,10 +9,9 @@
  * and to the right (emerald stroke + eyes + mouth, no filled square),
  * intro, two ghost doors, then Jobs brief. Navy / cream. Outfit on
  * headlines and CTAs, same as the header wordmark (`font-display`).
- * True emerald on the word robot / Robots, the Kare face, and brief
- * employer names. Archivo on the subhead and intro. No dither, no
- * window bars, no SIGNAL report hero. The A–E picker stays out of
- * production.
+ * True emerald on Robots, the Kare face, and brief employer names.
+ * Archivo on the subhead and intro. No dither, no window bars, no
+ * SIGNAL report hero. The A–E picker stays out of production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -25,12 +24,12 @@ export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Robots for Jobs";
 
 export const LANDING_EYEBROW = "Ready For Robots";
 export const LANDING_KICKER_JOBS = "Jobs";
-export const LANDING_HEADLINE = "Put your robot to work.";
-export const LANDING_HEADLINE_BEFORE = "Put your ";
-export const LANDING_HEADLINE_ROBOT = "robot";
-export const LANDING_HEADLINE_AFTER = " to";
+export const LANDING_HEADLINE = "Put Robots to Work.";
+export const LANDING_HEADLINE_BEFORE = "Put ";
+export const LANDING_HEADLINE_ROBOT = "Robots";
+export const LANDING_HEADLINE_AFTER = "";
 export const LANDING_HEADLINE_LEAD = `${LANDING_HEADLINE_BEFORE}${LANDING_HEADLINE_ROBOT}${LANDING_HEADLINE_AFTER}`;
-export const LANDING_HEADLINE_END = "work.";
+export const LANDING_HEADLINE_END = "to Work.";
 export const LANDING_SUBHEAD = "Find jobs for robots and robots for jobs....";
 export const LANDING_INTRO =
   "Submit your robot URL or your robot job. We put robots to work.";
