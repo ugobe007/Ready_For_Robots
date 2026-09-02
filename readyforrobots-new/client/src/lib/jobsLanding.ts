@@ -6,8 +6,9 @@
  * Wordmark `/?new=1` returns to this fork. FIND after the fork is unchanged.
  *
  * Visual source: docs/rfr-70s-ui-source Home.tsx (dark navy + Kare
- * Macintosh). Operator copy wins on headline + subhead. The A–E picker
- * is designer chrome and stays out of production.
+ * Macintosh). Operator copy wins on headline + subhead. Headline and
+ * door CTAs use Silkscreen. Robot mark is KARE_FACE (face-icon-reference.png).
+ * The A–E picker is designer chrome and stays out of production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";

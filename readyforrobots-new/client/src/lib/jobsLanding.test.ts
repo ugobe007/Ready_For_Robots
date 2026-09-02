@@ -146,20 +146,30 @@ describe("landing fork", () => {
     expect(landing).toMatch(/option="jobs"/);
     expect(landing).toMatch(/option="candidates"/);
     expect(landing).toMatch(/rfr-landing-windowbar/);
-    expect(landing).toMatch(/PixelRobot/);
+    expect(landing).toMatch(/rfr-landing-headline/);
+    expect(landing).toMatch(/rfr-landing-subhead/);
+    expect(landing).toMatch(/rfr-landing-door-title/);
+    expect(landing).toMatch(/KARE_FACE/);
+    expect(landing).toMatch(/FACE_EMERALD/);
+    expect(landing).toMatch(/LandingFace/);
     expect(landing).toMatch(/PixelBriefcase/);
+    expect(landing).not.toMatch(/PixelRobot/);
     expect(landing).not.toMatch(
       /CalJobsDesk|Headline options|headline-options/
     );
     expect(landing).not.toMatch(/Apollo|Hunter\.io|who is this visit/i);
-    expect(pixels).toMatch(/ROBOT_ROWS/);
+    expect(pixels).not.toMatch(/ROBOT_ROWS/);
+    expect(pixels).not.toMatch(/PixelRobot/);
     expect(pixels).toMatch(/BRIEFCASE_ROWS/);
-    expect(css).toMatch(/EB Garamond/);
+    expect(css).not.toMatch(/EB Garamond/);
+    expect(css).toMatch(/--font-landing-display:\s*"Silkscreen"/);
     expect(css).toMatch(/Silkscreen/);
+    expect(css).toMatch(/rfr-landing-door-title/);
+    expect(css).toMatch(/rfr-landing-subhead/);
     expect(css).toMatch(/repeating-conic-gradient/);
     expect(css).toMatch(/rfr-landing-windowbar/);
     expect(css).not.toMatch(/rfr-landing-hero-grid/);
-    expect(html).toMatch(/family=EB\+Garamond/);
+    expect(html).not.toMatch(/family=EB\+Garamond/);
     expect(html).toMatch(/family=Silkscreen/);
   });
 

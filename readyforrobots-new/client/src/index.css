@@ -2749,7 +2749,7 @@
 
 /* Marketing landing (`/`) — Kare Macintosh from rfr-70s-ui-source. FIND keeps Jobs chrome. */
 .rfr-landing {
-  --font-landing-display: "EB Garamond", "Times New Roman", serif;
+  --font-landing-display: "Silkscreen", "Courier New", monospace;
   --font-landing-ui: "Silkscreen", "Courier New", monospace;
   --font-landing-sans: "Archivo", var(--font-sans);
   --font-landing-mono: var(--font-landing-ui);
@@ -2783,17 +2783,34 @@
 
 .rfr-landing-headline {
   font-family: var(--font-landing-display);
-  font-size: clamp(2.75rem, 8vw, 4.5rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  line-height: 1.04;
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.rfr-landing-subhead {
+  font-family: var(--font-landing-sans);
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.55;
 }
 
 .rfr-landing-section-title {
   font-family: var(--font-landing-display);
-  font-size: clamp(1.875rem, 4vw, 3rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  font-size: clamp(1.15rem, 3vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+}
+
+.rfr-landing-door-title {
+  font-family: var(--font-landing-ui);
+  font-size: clamp(0.95rem, 2.2vw, 1.15rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
 }
 
 .rfr-landing-hero-dither {
