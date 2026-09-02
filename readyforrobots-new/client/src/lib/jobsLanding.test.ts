@@ -243,8 +243,8 @@ describe("landing fork", () => {
     expect(css).toMatch(
       /\.rfr-landing-kicker-jobs[\s\S]*?color:\s*var\(--landing-green\)/
     );
-    expect(css).not.toMatch(
-      /\.rfr-landing-door-title:hover\s*\{[^}]*color:/
+    expect(css).toMatch(
+      /\.rfr-landing-door-title:hover \{\n  border-bottom-color:\s*var\(--landing-emerald\);\n\}/
     );
   });
 
