@@ -7,7 +7,8 @@
  *
  * Visual source: docs/rfr-70s-ui-source Home.tsx (dark navy + Kare
  * Macintosh). Operator copy wins on headline + subhead. Headline and
- * door CTAs use Silkscreen. Robot mark is KARE_FACE (face-icon-reference.png).
+ * door titles use ChicagoFLF (System 1 Chicago analog). Body/subhead
+ * stay Archivo. Robot mark is KARE_FACE (face-icon-reference.png).
  * Headline is cream on navy. Mint is accent only (CTA invert, small
  * rules, Jobs wordmark). The A–E picker stays out of production.
  */

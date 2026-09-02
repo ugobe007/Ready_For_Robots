@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -166,15 +166,23 @@ describe("landing fork", () => {
     expect(pixels).not.toMatch(/PixelRobot/);
     expect(pixels).toMatch(/BRIEFCASE_ROWS/);
     expect(css).not.toMatch(/EB Garamond/);
-    expect(css).toMatch(/--font-landing-display:\s*"Silkscreen"/);
-    expect(css).toMatch(/Silkscreen/);
+    expect(css).not.toMatch(/Silkscreen/);
+    expect(css).not.toMatch(/Press Start/);
+    expect(css).toMatch(/--font-landing-display:\s*"ChicagoFLF"/);
+    expect(css).toMatch(/ChicagoFLF/);
+    expect(css).toMatch(/@font-face/);
+    expect(css).toMatch(/url\("\/fonts\/ChicagoFLF\.woff"\)/);
     expect(css).toMatch(/rfr-landing-door-title/);
     expect(css).toMatch(/rfr-landing-subhead/);
     expect(css).toMatch(/repeating-conic-gradient/);
     expect(css).toMatch(/rfr-landing-windowbar/);
     expect(css).not.toMatch(/rfr-landing-hero-grid/);
     expect(html).not.toMatch(/family=EB\+Garamond/);
-    expect(html).toMatch(/family=Silkscreen/);
+    expect(html).not.toMatch(/family=Silkscreen/);
+    expect(html).not.toMatch(/family=Press\+Start/);
+    expect(
+      existsSync(join(here, "../../public/fonts/ChicagoFLF.woff"))
+    ).toBe(true);
     expect(LANDING_COLORS.cream).toBe("#F4EFE4");
     expect(LANDING_COLORS.page).toBe("#0A0F1E");
     expect(LANDING_COLORS.charcoal).toBe("#141820");

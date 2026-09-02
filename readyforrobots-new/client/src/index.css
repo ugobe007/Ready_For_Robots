@@ -2747,10 +2747,21 @@
   }
 }
 
-/* Marketing landing (`/`) — Kare Macintosh from rfr-70s-ui-source. FIND keeps Jobs chrome. */
+/* Marketing landing (`/`) — Kare Macintosh from rfr-70s-ui-source. FIND keeps Jobs chrome.
+   Display/UI is ChicagoFLF, the public-domain System 1 Chicago analog. */
+@font-face {
+  font-family: "ChicagoFLF";
+  src:
+    url("/fonts/ChicagoFLF.woff") format("woff"),
+    url("/fonts/ChicagoFLF.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 .rfr-landing {
-  --font-landing-display: "Silkscreen", "Courier New", monospace;
-  --font-landing-ui: "Silkscreen", "Courier New", monospace;
+  --font-landing-display: "ChicagoFLF", "Chicago", "Charcoal", sans-serif;
+  --font-landing-ui: "ChicagoFLF", "Chicago", "Charcoal", sans-serif;
   --font-landing-sans: "Archivo", var(--font-sans);
   --font-landing-mono: var(--font-landing-ui);
   --landing-navy: #0a0f1e;
@@ -2767,29 +2778,30 @@
       rgba(139, 152, 176, 0.13) 0% 25%,
       transparent 0% 50%
     )
-    0 0 / 4px 4px;
+    0 0 / 2px 2px;
   --landing-dither-paper: repeating-conic-gradient(
       rgba(237, 230, 214, 0.08) 0% 25%,
       transparent 0% 50%
     )
-    0 0 / 4px 4px;
+    0 0 / 2px 2px;
   font-family: var(--font-landing-sans);
+  font-synthesis: none;
 }
 
 .rfr-landing-eyebrow {
   font-family: var(--font-landing-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .rfr-landing-headline {
   font-family: var(--font-landing-display);
-  font-size: clamp(1.75rem, 5vw, 2.75rem);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
+  font-size: clamp(1.5rem, 3.4vw, 2.125rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.28;
   color: var(--landing-cream);
 }
 
@@ -2803,19 +2815,19 @@
 
 .rfr-landing-section-title {
   font-family: var(--font-landing-display);
-  font-size: clamp(1.15rem, 3vw, 1.65rem);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 1.25;
+  font-size: clamp(1.125rem, 2.2vw, 1.5rem);
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  line-height: 1.3;
   color: var(--landing-cream);
 }
 
 .rfr-landing-door-title {
   font-family: var(--font-landing-ui);
-  font-size: clamp(0.95rem, 2.2vw, 1.15rem);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1.3;
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
 }
 
 .rfr-landing-hero-dither {
@@ -2826,30 +2838,30 @@
 }
 
 .rfr-landing-hero-mark {
-  width: 9rem;
-  height: 9rem;
-  border: 2px solid var(--landing-line);
+  width: 8rem;
+  height: 8rem;
+  border: 1px solid var(--landing-line);
   background-color: var(--landing-charcoal);
   background-image: var(--landing-dither-paper);
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
 }
 
 .rfr-landing-windowbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 2px solid var(--landing-line);
+  padding: 0.3rem 0.6rem;
+  border-bottom: 1px solid var(--landing-line);
   background-color: var(--landing-navy-2);
   background-image: var(--landing-dither);
 }
 
 .rfr-landing-windowbar-title {
   font-family: var(--font-landing-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
   color: var(--landing-muted);
 }
 
@@ -2862,14 +2874,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.5rem 1rem;
   font-family: var(--font-landing-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border: 2px solid var(--landing-green);
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  border: 1px solid var(--landing-green);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
   transition: none;
 }
 
@@ -2881,7 +2893,7 @@
 .rfr-landing-cta:hover {
   background: var(--landing-ink);
   color: var(--landing-navy);
-  box-shadow: 3px 3px 0 var(--landing-green);
+  box-shadow: 2px 2px 0 var(--landing-green);
 }
 
 .rfr-landing-ghost {
@@ -2893,13 +2905,13 @@
 .rfr-landing-ghost:hover {
   background: var(--landing-green);
   color: var(--landing-navy);
-  box-shadow: 3px 3px 0 var(--landing-muted);
+  box-shadow: 2px 2px 0 var(--landing-muted);
 }
 
 .rfr-landing-door {
-  border: 2px solid var(--landing-line);
+  border: 1px solid var(--landing-line);
   background: var(--landing-panel);
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
   transition: none;
 }
 
@@ -2908,23 +2920,23 @@
 }
 
 .rfr-landing-step {
-  border: 2px solid var(--landing-line);
+  border: 1px solid var(--landing-line);
   background: var(--landing-panel);
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
 }
 
 .rfr-landing-close {
-  border: 2px solid var(--landing-line);
+  border: 1px solid var(--landing-line);
   background: var(--landing-panel);
-  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.55);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
 }
 
 .rfr-landing-footer-link {
   font-family: var(--font-landing-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
   color: var(--landing-muted);
   padding: 0.125rem 0.375rem;
   transition: none;

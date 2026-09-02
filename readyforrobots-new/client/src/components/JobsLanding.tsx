@@ -69,7 +69,7 @@ function WindowBar({ title, right }: { title: string; right?: ReactNode }) {
     <div className="rfr-landing-windowbar">
       <div className="flex items-center gap-2">
         <span
-          className="h-3 w-3 border-2"
+          className="h-2 w-2 border"
           style={{ borderColor: C.muted }}
           aria-hidden="true"
         />
@@ -135,7 +135,7 @@ function DoorCard({
         title={label}
         right={
           <span
-            className="h-3 w-3 border-2"
+            className="h-2 w-2 border"
             style={{
               background: featured ? C.mint : "transparent",
               borderColor: featured ? C.mint : C.muted,
@@ -175,7 +175,7 @@ function BriefJobCard({
 }) {
   return (
     <article
-      className="overflow-hidden border-2"
+      className="overflow-hidden border"
       style={{
         borderColor: open ? C.mint : C.line,
         background: open ? C.panel : C.navy2,
@@ -211,7 +211,7 @@ function BriefJobCard({
             style={{
               color: C.muted,
               fontFamily: "var(--font-landing-ui)",
-              letterSpacing: "0.08em",
+              letterSpacing: "0.04em",
             }}
           >
             {job.sector}
@@ -221,10 +221,10 @@ function BriefJobCard({
           className="hidden shrink-0 px-2 py-1 text-[9px] font-bold uppercase sm:inline-block"
           style={{
             fontFamily: "var(--font-landing-ui)",
-            letterSpacing: "0.1em",
+            letterSpacing: "0.04em",
             color: job.status === "OPEN" ? C.page : C.muted,
             background: job.status === "OPEN" ? C.mint : "transparent",
-            border: `2px solid ${job.status === "OPEN" ? C.mint : C.line}`,
+            border: `1px solid ${job.status === "OPEN" ? C.mint : C.line}`,
           }}
         >
           {job.status}
@@ -238,7 +238,7 @@ function BriefJobCard({
       </button>
       {open ? (
         <div
-          className="rfr-landing-dither grid gap-x-10 gap-y-4 border-t-2 px-4 pb-6 pt-4 md:grid-cols-2 md:px-5"
+          className="rfr-landing-dither grid gap-x-10 gap-y-4 border-t px-4 pb-6 pt-4 md:grid-cols-2 md:px-5"
           style={{ borderColor: C.line, backgroundColor: C.panel }}
         >
           {[
@@ -255,7 +255,7 @@ function BriefJobCard({
                 style={{
                   color: C.muted,
                   fontFamily: "var(--font-landing-ui)",
-                  letterSpacing: "0.1em",
+                  letterSpacing: "0.04em",
                 }}
               >
                 {label}
@@ -296,7 +296,7 @@ export default function JobsLanding() {
       className="rfr-landing min-h-screen pt-14"
       style={{ background: C.page, color: C.text }}
     >
-      <section className="relative border-b-2" style={{ borderColor: C.line }}>
+      <section className="relative border-b" style={{ borderColor: C.line }}>
         <div className="rfr-landing-hero-dither" aria-hidden="true" />
         <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-16 md:pt-24">
           <Chip>{LANDING_EYEBROW}</Chip>
@@ -348,7 +348,7 @@ export default function JobsLanding() {
       </section>
 
       <section
-        className="border-y-2"
+        className="border-y"
         style={{ borderColor: C.line, background: C.charcoal }}
       >
         <div className="mx-auto max-w-6xl px-4 py-16">
@@ -408,7 +408,7 @@ export default function JobsLanding() {
             style={{
               color: C.muted,
               fontFamily: "var(--font-landing-ui)",
-              letterSpacing: "0.1em",
+              letterSpacing: "0.04em",
             }}
           >
             {LANDING_BRIEF_NOTE}
@@ -429,7 +429,7 @@ export default function JobsLanding() {
       </section>
 
       <section
-        className="border-y-2"
+        className="border-y"
         style={{ borderColor: C.line, background: C.charcoal }}
       >
         <div className="mx-auto max-w-6xl px-4 py-16">
@@ -441,7 +441,7 @@ export default function JobsLanding() {
             {LANDING_VOCAB.map(item => (
               <div
                 key={item.term}
-                className="border-2 p-5"
+                className="border p-5"
                 style={{ borderColor: C.line, background: C.panel }}
               >
                 <div className="flex items-center gap-3">
@@ -490,7 +490,7 @@ export default function JobsLanding() {
         </div>
       </section>
 
-      <footer className="border-t-2" style={{ borderColor: C.line }}>
+      <footer className="border-t" style={{ borderColor: C.line }}>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-10 gap-y-4 px-4 py-8">
           <div className="flex items-center gap-3">
             <span aria-hidden="true">
@@ -501,7 +501,7 @@ export default function JobsLanding() {
               style={{
                 color: C.muted,
                 fontFamily: "var(--font-landing-ui)",
-                letterSpacing: "0.1em",
+                letterSpacing: "0.04em",
               }}
             >
               {LANDING_FOOTER_MARK}
