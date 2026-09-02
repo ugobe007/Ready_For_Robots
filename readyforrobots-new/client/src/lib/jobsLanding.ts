@@ -6,12 +6,13 @@
  * Wordmark `/?new=1` returns to this fork. FIND after the fork is unchanged.
  *
  * Layout is the sparse fork: kicker, two-line headline, Kare face down
- * and to the right (stroke + eyes + mouth, no filled square), intro,
- * two ghost doors, then Jobs brief. Navy / cream. Outfit on headlines
- * and CTAs, same as the header wordmark (`font-display`). True emerald
- * only on the word robot / Robots and on brief employer names. Archivo
- * on the subhead and intro. No dither, no window bars, no SIGNAL report
- * hero. The A–E picker stays out of production.
+ * and to the right (emerald stroke + eyes + mouth, no filled square),
+ * intro, two ghost doors, then Jobs brief. Navy / cream. Outfit on
+ * headlines and CTAs, same as the header wordmark (`font-display`).
+ * True emerald on the word robot / Robots, the Kare face, and brief
+ * employer names. Archivo on the subhead and intro. No dither, no
+ * window bars, no SIGNAL report hero. The A–E picker stays out of
+ * production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -32,7 +33,7 @@ export const LANDING_HEADLINE_LEAD = `${LANDING_HEADLINE_BEFORE}${LANDING_HEADLI
 export const LANDING_HEADLINE_END = "work.";
 export const LANDING_SUBHEAD = "Find jobs for robots and robots for jobs....";
 export const LANDING_INTRO =
-  "We match jobs to robots and robots to jobs. Paste a product URL if you have a machine. Describe the work if you need one.";
+  "Submit your robot URL or your robot job. We put robots to work.";
 export const LANDING_CTA_ROBOT_WORD = "Robots";
 
 export const LANDING_JOBS_LABEL = "Robot owner";

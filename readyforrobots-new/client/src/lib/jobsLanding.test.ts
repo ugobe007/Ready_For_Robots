@@ -100,7 +100,7 @@ describe("landing fork", () => {
       "Find jobs for robots and robots for jobs...."
     );
     expect(LANDING_INTRO).toBe(
-      "We match jobs to robots and robots to jobs. Paste a product URL if you have a machine. Describe the work if you need one."
+      "Submit your robot URL or your robot job. We put robots to work."
     );
     expect(LANDING_INTRO).not.toMatch(/SIGNAL|Apollo|Hunter|ATS/i);
     expect(LANDING_BRIEF_HEADLINE).toBe("Jobs robots can take");
@@ -220,7 +220,7 @@ describe("landing fork", () => {
     expect(LANDING_COLORS.charcoal).toBe("#141820");
     expect(LANDING_COLORS.emerald).toBe("#10B981");
     expect(LANDING_COLORS.mint).toBe("#2EE6A8");
-    expect(landing).toMatch(/fill=\{C\.cream\}/);
+    expect(landing).toMatch(/fill=\{C\.emerald\}/);
     expect(landing).toMatch(/background="transparent"/);
     expect(landing).not.toMatch(/part\.accent \? C\.mint/);
     expect(landing).not.toMatch(/landingHeadlineParts/);
@@ -259,8 +259,12 @@ describe("landing fork", () => {
     expect(css).toMatch(
       /\.rfr-landing-doors[\s\S]*?justify-content:\s*flex-start/
     );
+    expect(css).toMatch(/\.rfr-landing-doors[\s\S]*?gap:\s*1\.5rem 2rem/);
     expect(css).not.toMatch(
       /\.rfr-landing-doors\s*\{[^}]*justify-content:\s*space-between/
+    );
+    expect(css).not.toMatch(
+      /\.rfr-landing-doors\s*\{[^}]*gap:\s*0\.75rem 0\.85rem/
     );
     expect(css).toMatch(
       /\.rfr-landing-door-title[\s\S]*?border:\s*1px solid var\(--landing-cream\)/
