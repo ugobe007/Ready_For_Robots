@@ -32,9 +32,13 @@ describe("employer MATCH catalog budget and JD upload", () => {
     expect(EMPLOYER_JD_ACCEPT).toMatch(/pdf/);
     expect(EMPLOYER_JD_ACCEPT).toMatch(/docx/);
     expect(EMPLOYER_JD_ACCEPT).toMatch(/txt/);
-    const txt = new File(["Need a night-shift floor scrubber.\n"], "floor.txt", {
-      type: "text/plain",
-    });
+    const txt = new File(
+      ["Need a night-shift floor scrubber.\n"],
+      "floor.txt",
+      {
+        type: "text/plain",
+      }
+    );
     const read = await readEmployerJdFile(txt);
     expect(read.filename).toBe("floor.txt");
     expect(read.text).toMatch(/floor scrubber/);

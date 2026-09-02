@@ -15,7 +15,7 @@ import {
   isJobsHandoffSrc,
   jobsFreshHomeHref,
   jobsHeaderCrmHref,
-  jobsWorkspaceRestoreHref,
+  jobsHeaderJobsHref,
   onJobsFreshHomeClick,
   showSignalPipelineNav,
 } from "@/lib/jobsWorkflow";
@@ -46,9 +46,12 @@ export default function ExperimentHeader() {
   const crmHref = jobsHeaderCrmHref(location, jobsSrc, Boolean(session));
   const onJobsCrmDesk =
     location.startsWith("/pipeline") && isJobsHandoffSrc(jobsSrc);
-  const jobsHref = onJobsCrmDesk
-    ? jobsWorkspaceRestoreHref()
-    : jobsFreshHomeHref();
+  const jobsHref = jobsHeaderJobsHref(location, search, onJobsCrmDesk);
+  const signInHref = loginHref(
+    `${location}${search ? `?${search.replace(/^\?/, "")}` : ""}`
+  );
+  const jobsClickIntercepts =
+    jobsHref === jobsFreshHomeHref() ? onJobsFreshHomeClick : undefined;
 
   async function signOut() {
     clearPendingNext();
@@ -78,7 +81,7 @@ export default function ExperimentHeader() {
           <a
             href={jobsHref}
             className={`inline-flex items-center gap-1.5 ${jobsActive ? navActive : navIdle}`}
-            onClick={onJobsFreshHomeClick}
+            onClick={jobsClickIntercepts}
           >
             {jobsActive ? (
               <span className="rfr-led" aria-hidden="true" />
@@ -121,7 +124,7 @@ export default function ExperimentHeader() {
             </>
           ) : (
             <a
-              href={loginHref("/")}
+              href={signInHref}
               className="border px-4 py-2 text-emerald-400 transition hover:bg-white/5"
               style={{ borderColor: "#1E8F6B" }}
             >

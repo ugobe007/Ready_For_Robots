@@ -41,7 +41,7 @@ function jobsProductLinks(signedIn: boolean) {
       { label: "CRM", href: jobsCrmOpenHref(signedIn) },
       { label: "Job site sketch", href: "/vendor/design" },
       { label: "About", href: "/intelligence" },
-      { label: "Start free workspace", href: "/signup?src=jobs_activate" },
+      { label: "Start free workspace", href: jobsCrmOpenHref(false) },
       { label: "Robots", href: "/robots" },
       { label: "Humanoid Report", href: "/robots/report" },
       { label: "Newsletter", href: "/newsletter" },
@@ -77,7 +77,7 @@ export default function SiteFooter({
   const links = jobsChrome ? jobsProductLinks(Boolean(session)) : SIGNAL_LINKS;
   const showNewsletter = Boolean(onNewsletterSubmit && onEmailChange);
   const homeHref = jobsChrome ? jobsFreshHomeHref() : "/";
-  const signupHref = jobsChrome ? "/signup?src=jobs_activate" : "/signup";
+  const signupHref = jobsChrome ? jobsCrmOpenHref(false) : "/signup";
   const loginHref = jobsChrome ? "/login?next=%2F" : "/login";
 
   return (

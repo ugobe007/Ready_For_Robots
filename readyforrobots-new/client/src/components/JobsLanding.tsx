@@ -3,7 +3,6 @@
  * then two doors. Not FIND yet. Headline picker A–E is not shipped.
  */
 import { useState, type ReactNode } from "react";
-import { useLocation } from "wouter";
 import {
   PixelBriefcase,
   PixelDoc,
@@ -16,6 +15,7 @@ import {
   LANDING_BRIEF_EYEBROW,
   LANDING_BRIEF_HEADLINE,
   LANDING_BRIEF_JOBS,
+  LANDING_BRIEF_JOB_CTA,
   LANDING_BRIEF_NOTE,
   LANDING_CANDIDATES_HINT,
   LANDING_CANDIDATES_LABEL,
@@ -102,7 +102,7 @@ function DoorCard({
   featured,
   option,
   icon,
-  onOpen,
+  href,
 }: {
   label: string;
   title: string;
@@ -110,14 +110,13 @@ function DoorCard({
   featured?: boolean;
   option: "jobs" | "candidates";
   icon: ReactNode;
-  onOpen: () => void;
+  href: string;
 }) {
   return (
-    <button
-      type="button"
+    <a
+      href={href}
       data-landing-option={option}
       aria-label={title}
-      onClick={onOpen}
       className="rfr-landing-door flex flex-col text-left"
       data-featured={featured ? "true" : "false"}
     >
@@ -154,7 +153,7 @@ function DoorCard({
           <LandingCta primary={featured}>{title}</LandingCta>
         </span>
       </div>
-    </button>
+    </a>
   );
 }
 
@@ -269,6 +268,13 @@ function BriefJobCard({
             Qualification is explainable — never a %. Cards stay Conditional
             until there is evidence.
           </p>
+          <a
+            href={jobsFindHref()}
+            className="mt-2 inline-block text-sm font-semibold md:col-span-2"
+            style={{ color: C.mint, fontFamily: "var(--font-landing-ui)" }}
+          >
+            {LANDING_BRIEF_JOB_CTA} <span aria-hidden="true">→</span>
+          </a>
         </div>
       ) : null}
     </article>
@@ -276,7 +282,6 @@ function BriefJobCard({
 }
 
 export default function JobsLanding() {
-  const [, setLocation] = useLocation();
   const [openJob, setOpenJob] = useState(LANDING_BRIEF_JOBS[0]?.id ?? "");
   const headline = landingHeadlineParts(LANDING_HEADLINE);
 
@@ -328,7 +333,7 @@ export default function JobsLanding() {
             featured
             option="jobs"
             icon={<PixelRobot size={40} color={C.mint} />}
-            onOpen={() => setLocation(jobsFindHref())}
+            href={jobsFindHref()}
           />
           <DoorCard
             label={LANDING_CANDIDATES_LABEL}
@@ -336,7 +341,7 @@ export default function JobsLanding() {
             body={LANDING_CANDIDATES_HINT}
             option="candidates"
             icon={<PixelBriefcase size={40} color={C.muted} />}
-            onOpen={() => setLocation(jobsCandidatesHref())}
+            href={jobsCandidatesHref()}
           />
         </div>
       </section>
@@ -380,6 +385,13 @@ export default function JobsLanding() {
                   >
                     {step.body}
                   </p>
+                  <a
+                    href={step.href}
+                    className="mt-4 inline-block text-sm font-semibold"
+                    style={{ color: C.mint }}
+                  >
+                    {step.cta}
+                  </a>
                 </div>
               </div>
             ))}

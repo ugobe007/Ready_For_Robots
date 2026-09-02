@@ -129,6 +129,9 @@ export function resolveSignupWorkflowReturnPath(args: {
 }): string {
   const nextRaw = (args.nextRaw || "").trim();
   if (isJobsProductReturnPath(nextRaw)) return normalizeJobsReturnPath(nextRaw);
+  if ((args.prefill.src || "").trim() === "jobs_activate" && !nextRaw) {
+    return "/pipeline?src=jobs_activate";
+  }
   // Never skip the 5-lead Results step when signup was opened for it.
   if (nextRaw.startsWith("/results")) return nextRaw;
   if (nextRaw.startsWith("/pipeline") || nextRaw.startsWith("/pricing"))

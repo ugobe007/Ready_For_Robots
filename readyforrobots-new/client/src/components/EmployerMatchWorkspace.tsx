@@ -4,7 +4,6 @@
  * Cal stays on the OEM Jobs desk. Not a buyer list.
  */
 import { useMemo, useState } from "react";
-import { useLocation } from "wouter";
 import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import {
   EMPLOYER_EMPTY_MATCH,
@@ -40,7 +39,6 @@ const WORK_TILES = classOptionsOrDefault().filter(opt =>
 );
 
 export default function EmployerMatchWorkspace() {
-  const [, setLocation] = useLocation();
   const [step, setStep] = useState<EmployerProcessStepId>("work");
   const [workClass, setWorkClass] = useState("");
   const [description, setDescription] = useState("");
@@ -213,13 +211,12 @@ export default function EmployerMatchWorkspace() {
             Named catalog robots only. We will not invent a SKU or an employer
             email.
           </p>
-          <button
-            type="button"
-            onClick={() => setLocation(jobsFindHref())}
+          <a
+            href={jobsFindHref()}
             className="mt-6 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 hover:text-slate-200"
           >
             Looking for jobs instead? Show us your robot →
-          </button>
+          </a>
         </aside>
         <section className="min-w-0 px-6 py-6">
           {step === "work" ? (

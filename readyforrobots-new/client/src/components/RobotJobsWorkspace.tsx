@@ -42,6 +42,7 @@ import { catalogSkusForClass, type CatalogSku } from "@/lib/knownOemCatalog";
 import {
   I_KNOW_THE_ROBOT_HINT,
   I_KNOW_THE_ROBOT_LABEL,
+  jobsFindHref,
 } from "@/lib/jobsLanding";
 import {
   formatFactLine,
@@ -851,7 +852,7 @@ export default function RobotJobsWorkspace() {
     });
     if (allowRestore && saved?.url) {
       if (restoreQuery) {
-        window.history.replaceState({}, "", "/");
+        window.history.replaceState({}, "", jobsFindHref());
       }
       void restore(saved);
     } else {

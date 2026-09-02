@@ -1,10 +1,15 @@
 /**
  * /privacy — Privacy Policy (required for social sharing and compliance).
  */
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import { Link } from "wouter";
+import {
+  JOBS_HEADER_OFFSET_CLASS,
+  jobsFreshHomeHref,
+} from "@/lib/jobsWorkflow";
+import { jobsFindHref } from "@/lib/jobsLanding";
 
 const SECTIONS: { title: string; body: string[] }[] = [
   {
@@ -102,8 +107,8 @@ const SECTIONS: { title: string; body: string[] }[] = [
 
 export default function Privacy() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
+    <div className={`min-h-screen bg-gray-50 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <ExperimentHeader />
       <PageHeroDark
         eyebrow="Legal"
         title="Privacy Policy"
@@ -136,14 +141,14 @@ export default function Privacy() {
 
           <p className="mt-10 pt-6 border-t border-gray-100 text-sm text-gray-600">
             <Link
-              href="/preview"
+              href={jobsFindHref()}
               className="font-semibold text-emerald-700 hover:underline"
             >
-              Back to preview
+              Find jobs
             </Link>
             {" · "}
             <Link
-              href="/"
+              href={jobsFreshHomeHref()}
               className="font-semibold text-emerald-700 hover:underline"
             >
               Home

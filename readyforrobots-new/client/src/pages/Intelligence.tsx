@@ -13,11 +13,11 @@ import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
   CRM_UNLOCKED_JOBS,
   FIND_JOBS_CTA,
-  JOBS_ACTIVATE_SRC,
   JOBS_EXAMPLE_CAP,
   JOBS_FOR_YOUR_ROBOT_HEADING,
   JOBS_HEADER_OFFSET_CLASS,
   JOBS_PROCESS_STEPS,
+  jobsCrmOpenHref,
 } from "@/lib/jobsWorkflow";
 import { jobsFindHref } from "@/lib/jobsLanding";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -60,7 +60,7 @@ const JOBS_LOOP = [
 ];
 
 const EYEBROW = "text-[10px] font-semibold uppercase tracking-[0.15em]";
-const JOBS_SIGNUP_HREF = `/signup?src=${JOBS_ACTIVATE_SRC}`;
+const JOBS_SIGNUP_HREF = jobsCrmOpenHref(false);
 
 export default function Intelligence() {
   const [stories, setStories] = useState<Story[]>([]);

@@ -9,8 +9,9 @@ import PageHeroDark from "@/components/layout/PageHeroDark";
 import {
   FIND_JOBS_CTA,
   JOBS_HEADER_OFFSET_CLASS,
-  jobsFreshHomeHref,
+  jobsCrmOpenHref,
 } from "@/lib/jobsWorkflow";
+import { jobsFindHref } from "@/lib/jobsLanding";
 
 const rows: {
   dimension: string;
@@ -233,14 +234,14 @@ export default function Compare() {
 
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
-              href={jobsFreshHomeHref()}
+              href={jobsFindHref()}
               className="inline-flex items-center gap-2 border border-emerald-400 bg-emerald-500/15 px-6 py-3 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/25"
             >
               {FIND_JOBS_CTA}
               <ArrowRight size={14} />
             </Link>
             <Link
-              href="/signup?src=jobs_activate&next=/"
+              href={jobsCrmOpenHref(false)}
               className="inline-flex items-center gap-2 border border-slate-600 bg-[#0b162f] px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-400"
             >
               Keep jobs in CRM

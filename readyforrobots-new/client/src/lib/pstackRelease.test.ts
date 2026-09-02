@@ -134,9 +134,9 @@ describe("pstack release — #173 self-abort FIND", () => {
         message: FIND_NO_HOME_FIXTURE.http500.message,
       })
     ).toBe(true);
-    expect(
-      findErrorMustStayOnFind(FIND_ABORT_FIXTURE.failedToFetch)
-    ).toBe(true);
+    expect(findErrorMustStayOnFind(FIND_ABORT_FIXTURE.failedToFetch)).toBe(
+      true
+    );
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
     expect(jobsPage).toMatch(/forcedLanding && fromSearch === "landing"/);
   });

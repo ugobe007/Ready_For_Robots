@@ -11,10 +11,10 @@ import {
   ChevronDown,
   Loader2,
 } from "lucide-react";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
-import { useLocation, Link } from "wouter";
+import { Link } from "wouter";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,25 +26,29 @@ import {
 } from "@/lib/billing";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
+import {
+  CRM_UNLOCKED_JOBS,
+  JOBS_HEADER_OFFSET_CLASS,
+  jobsCrmOpenHref,
+} from "@/lib/jobsWorkflow";
+import { jobsFindHref } from "@/lib/jobsLanding";
 
 const tiers = [
   {
     name: "Free",
     price: "$0",
     period: "",
-    tagline: "Start browsing the live pipeline — no card required",
+    tagline: "Start matching robots to jobs — no card required",
     accent: "emerald" as const,
     icon: Zap,
     cta: "Start free workspace",
     ctaAction: "signup",
     features: [
-      "URL scan and buyer matching",
-      "15 live pipeline leads before signup (HOT / WARM / monitor mix)",
-      "15 ranked leads in free workspace after signup",
-      "Lead score and why-now context",
-      "Save up to 5 leads to your workspace",
-      "Outreach draft previews",
-      "Daily newsletter and market signal brief",
+      `${CRM_UNLOCKED_JOBS} Robot Jobs in native CRM after FIND`,
+      "Paste a robot URL or pick a named catalog SKU",
+      "Job Cards: employer, workplace, work",
+      "Open CRM from FIND (signup wall if unsigned)",
+      "No buyer pipeline on the Jobs path",
     ],
     limitations: [
       "No SIGNAL research feed",
@@ -118,6 +122,14 @@ const supportServices = [
 
 const faqs = [
   {
+    q: "What do I get on free?",
+    a: `Five Robot Jobs in native CRM after you find work for your robot. No card. Open CRM from FIND. Cal sits on the signed Jobs desk only — not on landing or employer MATCH.`,
+  },
+  {
+    q: "Is this a buyer pipeline?",
+    a: "No. This page prices Jobs: find work for a robot and keep it in CRM. SIGNAL buyer lists are a different product. Jobs CRM is /pipeline?src=jobs_activate.",
+  },
+  {
     q: "Is there a contract or commitment?",
     a: "No. Pro and Premium are month-to-month when billing is enabled. The Free workspace stays free — no card required to browse and save up to 5 leads.",
   },
@@ -175,7 +187,6 @@ const accentStyles = {
 
 export default function Pricing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [, setLocation] = useLocation();
   const { session, loading: authLoading } = useAuth();
   const [billing, setBilling] = useState<BillingConfig | null>(null);
   const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null);
@@ -263,8 +274,7 @@ export default function Pricing() {
         "mailto:sales@readyforrobots.com?subject=Premium%20workspace%20inquiry";
       return;
     }
-    const next = encodeURIComponent("/pipeline");
-    setLocation(`/signup?plan=${plan}&next=${next}`);
+    window.location.assign(jobsCrmOpenHref(false));
   };
 
   const submitFounding = async (e: React.FormEvent) => {
@@ -302,25 +312,23 @@ export default function Pricing() {
   };
 
   return (
-    <div className="pricing-page min-h-screen flex flex-col">
-      <Header />
+    <div
+      className={`pricing-page min-h-screen flex flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+    >
+      <ExperimentHeader />
 
       <PageHeroDark
         maxWidthClass="max-w-5xl"
         eyebrow="Pricing"
-        title="Full Stack Sales pricing for robot teams"
+        title="Jobs pricing for robot teams"
         description={
           <div className="flex items-center justify-center gap-6">
             <p className="min-w-0 max-w-2xl flex-1 text-left sm:text-center">
               <span className="font-bold uppercase tracking-widest text-emerald-400">
-                Signal
+                Jobs
               </span>
               {
-                " — ISA qualification + alignment scoring, then MSD sales activation synced to "
-              }
-              <span className="font-bold text-amber-400">HubSpot</span>
-              {
-                " or your CRM. Free workspace to start — Pro and Premium checkout when billing is enabled."
+                " — find work for a robot you already have, then keep it in CRM. Five jobs on free. Pro checkout when billing is enabled."
               }
             </p>
             <div className="shrink-0" aria-hidden="true">
@@ -341,8 +349,14 @@ export default function Pricing() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs text-gray-500 max-w-lg mx-auto">
-              Create an account, browse the pipeline, then upgrade when you are
-              ready.{" "}
+              Start on FIND, keep jobs in CRM, then upgrade when you need more.{" "}
+              <Link
+                href={jobsFindHref()}
+                className="text-emerald-700 font-semibold hover:underline"
+              >
+                Look for robot jobs
+              </Link>
+              {" · "}
               <Link
                 href="/compare"
                 className="text-emerald-700 font-semibold hover:underline"
