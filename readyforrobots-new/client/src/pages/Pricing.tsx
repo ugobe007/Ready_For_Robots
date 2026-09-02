@@ -31,7 +31,7 @@ import {
   JOBS_HEADER_OFFSET_CLASS,
   jobsCrmOpenHref,
 } from "@/lib/jobsWorkflow";
-import { jobsFindHref } from "@/lib/jobsLanding";
+import { jobsFindHref, LOOK_FOR_ROBOT_JOBS_CTA } from "@/lib/jobsLanding";
 
 const tiers = [
   {
@@ -354,7 +354,7 @@ export default function Pricing() {
                 href={jobsFindHref()}
                 className="text-emerald-700 font-semibold hover:underline"
               >
-                Look for robot jobs
+                {LOOK_FOR_ROBOT_JOBS_CTA}
               </Link>
               {" · "}
               <Link

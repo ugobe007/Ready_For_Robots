@@ -7,7 +7,7 @@ description: Drive ReadyForRobots Jobs the way a user does — FIND on `/`, Job 
 
 Primary surface: **Jobs web UI** on `https://readyforrobots.com` (`readyforrobots-new/`, Vite + wouter). API: `https://ready-2-robot.fly.dev`. Other routes (SIGNAL `/pipeline`, Cal admin) exist; they are not the product. Do not hop Jobs traffic onto HOT buyers.
 
-**Hermes is retired.** Do not smoke `/experiment` as FIND. `/` is the landing fork. FIND is `/?visit=jobs` after Look for robot jobs (same `/` document). Jobs proof is this skill plus `POST /api/robot-job-search` (submit) and `POST /api/robot-job-match` (cards). **Critic is pstack.** How / Act / Critic live in `pstack/`, `scripts/pstack_release.py`, `pstackSite.ts`, and `pstack_protocol.py`. pstack is the **release gate**, not a customer chatbot and not protocol chrome on `/` or Jobs CRM.
+**Hermes is retired.** Do not smoke `/experiment` as FIND. `/` is the landing fork. FIND is `/?visit=jobs` after Jobs for Robots (same `/` document). Jobs proof is this skill plus `POST /api/robot-job-search` (submit) and `POST /api/robot-job-match` (cards). **Critic is pstack.** How / Act / Critic live in `pstack/`, `scripts/pstack_release.py`, `pstackSite.ts`, and `pstack_protocol.py`. pstack is the **release gate**, not a customer chatbot and not protocol chrome on `/` or Jobs CRM.
 
 **No Jobs product PR without pstack release checks.** Draft PRs must still run `.github/workflows/pstack-release.yml` and the `pstack-release` job in `agent-verify.yml`. Critic `healthcare_class` fails if Diligent FIND is `robot_class=humanoid` or shows `No humanoid jobs for this robot yet.`
 

@@ -1,24 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   EMPLOYER_EMPTY_MATCH,
   EMPLOYER_PROCESS_STEPS,
   EMPLOYER_WORK_TILE_IDS,
+  LANDING_BRIEF_HEADLINE,
+  LANDING_BRIEF_JOB_FIELD,
   LANDING_BRIEF_JOBS,
   LANDING_BRIEFING_HREF,
-  LANDING_CANDIDATES_HINT,
-  LANDING_CANDIDATES_LABEL,
   LANDING_COLORS,
+  LANDING_CTA_ROBOT_WORD,
   LANDING_EYEBROW,
   LANDING_FAQ_HREF,
   LANDING_FOOTER_LINKS,
   LANDING_HEADLINE,
+  LANDING_HEADLINE_AFTER,
+  LANDING_HEADLINE_BEFORE,
+  LANDING_HEADLINE_END,
+  LANDING_HEADLINE_LEAD,
+  LANDING_HEADLINE_ROBOT,
   LANDING_HOW_HEADLINE,
   LANDING_HOW_STEPS,
-  LANDING_JOBS_HINT,
-  LANDING_JOBS_LABEL,
+  LANDING_KICKER_JOBS,
   LANDING_LINK_MAP,
   LANDING_PRICING_HREF,
   LANDING_PRIVACY_HREF,
@@ -26,9 +31,9 @@ import {
   LANDING_START_FREE_CTA,
   LANDING_SUBHEAD,
   LANDING_SUPPORT_HREF,
-  LANDING_VOCAB_HEADLINE,
   LOOK_FOR_ROBOT_CANDIDATES_CTA,
   LOOK_FOR_ROBOT_JOBS_CTA,
+  splitAccentWord,
   I_KNOW_THE_ROBOT_LABEL,
   jobsCandidatesHref,
   jobsFindHref,
@@ -54,38 +59,56 @@ describe("landing fork", () => {
   });
 
   it("uses operator headline and two options only", () => {
-    expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Look for robot jobs");
-    expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Look for robot candidates");
+    expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
+    expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
     expect(LANDING_HEADLINE).toBe("Put your robot to work.");
+    expect(`${LANDING_HEADLINE_LEAD} ${LANDING_HEADLINE_END}`).toBe(
+      LANDING_HEADLINE
+    );
+    expect(
+      `${LANDING_HEADLINE_BEFORE}${LANDING_HEADLINE_ROBOT}${LANDING_HEADLINE_AFTER} ${LANDING_HEADLINE_END}`
+    ).toBe(LANDING_HEADLINE);
+    expect(LANDING_HEADLINE_ROBOT).toBe("robot");
+    expect(LANDING_CTA_ROBOT_WORD).toBe("Robots");
     expect(LANDING_HEADLINE).not.toMatch(
       /Jobs for robots\. Robots for jobs|Who is this visit|Robots need jobs/i
     );
     expect(
       landingHeadlineParts(LANDING_HEADLINE).every(part => part.accent === false)
     ).toBe(true);
-    expect(LANDING_EYEBROW).toMatch(/Robot Employment/);
+    expect(splitAccentWord(LANDING_HEADLINE, LANDING_HEADLINE_ROBOT)).toEqual([
+      { text: "Put your ", accent: false },
+      { text: "robot", accent: true },
+      { text: " to work.", accent: false },
+    ]);
+    expect(
+      splitAccentWord(LOOK_FOR_ROBOT_JOBS_CTA, LANDING_CTA_ROBOT_WORD)
+    ).toEqual([
+      { text: "Jobs for ", accent: false },
+      { text: "Robots", accent: true },
+    ]);
+    expect(
+      splitAccentWord(LOOK_FOR_ROBOT_CANDIDATES_CTA, LANDING_CTA_ROBOT_WORD)
+    ).toEqual([
+      { text: "Robots", accent: true },
+      { text: " for Jobs", accent: false },
+    ]);
+    expect(LANDING_EYEBROW).toBe("Ready For Robots");
+    expect(LANDING_KICKER_JOBS).toBe("Jobs");
     expect(LANDING_SUBHEAD).toBe(
-      "Find jobs for robots and find robots for jobs."
+      "Find jobs for robots and robots for jobs...."
     );
+    expect(LANDING_BRIEF_HEADLINE).toBe("Jobs robots can take");
+    expect(LANDING_BRIEF_JOB_FIELD).toBe("Jobs");
     expect(LANDING_SUBHEAD).not.toMatch(
       /keep them in our CRM|Paste a product URL|who is this visit|choose your workflow/i
     );
-    expect(LANDING_JOBS_LABEL).toBe("Robot owner");
-    expect(LANDING_CANDIDATES_LABEL).toBe("Employer");
-    expect(LANDING_JOBS_HINT).toMatch(/Paste a product URL/);
-    expect(LANDING_JOBS_HINT).toMatch(/not a category guess/);
-    expect(LANDING_CANDIDATES_HINT).toMatch(/Tell us the work/);
-    expect(LANDING_CANDIDATES_HINT).toMatch(/named catalog robots/);
-    expect(LANDING_CANDIDATES_HINT).toMatch(/post the job/i);
     expect(LANDING_HOW_HEADLINE).toBe("Three steps. No buyer pipeline.");
     expect(LANDING_HOW_STEPS.map(s => s.title)).toEqual([
       "Show us your robot",
       "Available jobs",
       "CRM",
     ]);
-    expect(LANDING_VOCAB_HEADLINE).toMatch(
-      /Employer\. Workplace\. Work\. Robot Job/
-    );
     expect(LANDING_START_FREE_CTA).toBe("Start free workspace");
     expect(LANDING_SIGNUP_HREF).toBe(
       "/signup?next=%2Fpipeline%3Fsrc%3Djobs_activate&src=jobs_activate"
@@ -104,15 +127,18 @@ describe("landing fork", () => {
     );
     expect(landing).toMatch(/LOOK_FOR_ROBOT_JOBS_CTA/);
     expect(landing).toMatch(/LOOK_FOR_ROBOT_CANDIDATES_CTA/);
-    expect(landing).toMatch(/LANDING_JOBS_HINT/);
-    expect(landing).toMatch(/LANDING_CANDIDATES_HINT/);
-    expect(landing).toMatch(/LANDING_HOW_STEPS/);
-    expect(landing).toMatch(/data-landing-option=\{option\}/);
-    expect(landing).toMatch(/option="jobs"/);
-    expect(landing).toMatch(/option="candidates"/);
+    expect(landing).toMatch(/LANDING_HEADLINE_ROBOT/);
+    expect(landing).toMatch(/LANDING_KICKER_JOBS/);
+    expect(landing).toMatch(/data-landing-option="jobs"/);
+    expect(landing).toMatch(/data-landing-option="candidates"/);
+    expect(landing).toMatch(/LANDING_BRIEF_JOBS/);
+    expect(landing).toMatch(/LANDING_BRIEF_JOB_FIELD/);
+    expect(landing).toMatch(/rfr-landing-brief-employer/);
+    expect(landing).not.toMatch(/LANDING_HOW_STEPS|LANDING_VOCAB/);
     expect(landing).not.toMatch(
       /Look for buyers|SIGNAL|Apollo|Who is this visit/i
     );
+    expect(landing).not.toMatch(/Market Intelligence|Automation Imperative/i);
     expect(landing).not.toMatch(/Headline options|headlineOptions|id:\"A\"/);
     expect(landing).not.toMatch(/CalJobsDesk|choose your workflow/i);
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
@@ -126,7 +152,7 @@ describe("landing fork", () => {
     );
   });
 
-  it("ports Kare Macintosh chrome and both doors from rfr-70s-ui-source", () => {
+  it("paints a sparse System 1 fork with Chicago type and both doors", () => {
     const landing = readFileSync(
       join(here, "../components/JobsLanding.tsx"),
       "utf8"
@@ -139,24 +165,27 @@ describe("landing fork", () => {
     const html = readFileSync(join(here, "../../index.html"), "utf8");
     expect(LANDING_HEADLINE).toBe("Put your robot to work.");
     expect(LANDING_SUBHEAD).toBe(
-      "Find jobs for robots and find robots for jobs."
+      "Find jobs for robots and robots for jobs...."
     );
-    expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Look for robot jobs");
-    expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Look for robot candidates");
+    expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
+    expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
     expect(landing).toMatch(/href=\{jobsFindHref\(\)\}/);
     expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
-    expect(landing).toMatch(/option="jobs"/);
-    expect(landing).toMatch(/option="candidates"/);
-    expect(landing).toMatch(/rfr-landing-windowbar/);
+    expect(landing).toMatch(/data-landing-option="jobs"/);
+    expect(landing).toMatch(/data-landing-option="candidates"/);
+    expect(landing).not.toMatch(/rfr-landing-windowbar/);
     expect(landing).toMatch(/rfr-landing-headline/);
     expect(landing).toMatch(/rfr-landing-subhead/);
     expect(landing).toMatch(/rfr-landing-door-title/);
+    expect(landing).toMatch(/rfr-landing-accent/);
+    expect(landing.indexOf("rfr-landing-headline")).toBeLessThan(
+      landing.indexOf("rfr-landing-hero-mark")
+    );
     expect(landing).toMatch(/KARE_FACE/);
-    expect(landing).toMatch(/FACE_EMERALD/);
     expect(landing).toMatch(/LandingFace/);
-    expect(landing).toMatch(/PixelBriefcase/);
+    expect(landing).not.toMatch(/PixelBriefcase|PixelDoc|PixelHand/);
     expect(landing).not.toMatch(/PixelRobot/);
     expect(landing).not.toMatch(
       /CalJobsDesk|Headline options|headline-options/
@@ -166,33 +195,63 @@ describe("landing fork", () => {
     expect(pixels).not.toMatch(/PixelRobot/);
     expect(pixels).toMatch(/BRIEFCASE_ROWS/);
     expect(css).not.toMatch(/EB Garamond/);
-    expect(css).toMatch(/--font-landing-display:\s*"Silkscreen"/);
-    expect(css).toMatch(/Silkscreen/);
+    expect(css).not.toMatch(/Silkscreen/);
+    expect(css).not.toMatch(/Press Start/);
+    expect(css).toMatch(/--font-landing-display:\s*"ChicagoFLF"/);
+    expect(css).toMatch(/ChicagoFLF/);
+    expect(css).toMatch(/@font-face/);
+    expect(css).toMatch(/url\("\/fonts\/ChicagoFLF\.woff"\)/);
     expect(css).toMatch(/rfr-landing-door-title/);
     expect(css).toMatch(/rfr-landing-subhead/);
-    expect(css).toMatch(/repeating-conic-gradient/);
-    expect(css).toMatch(/rfr-landing-windowbar/);
+    expect(css).not.toMatch(/repeating-conic-gradient/);
+    expect(css).not.toMatch(/rfr-landing-windowbar/);
     expect(css).not.toMatch(/rfr-landing-hero-grid/);
     expect(html).not.toMatch(/family=EB\+Garamond/);
-    expect(html).toMatch(/family=Silkscreen/);
+    expect(html).not.toMatch(/family=Silkscreen/);
+    expect(html).not.toMatch(/family=Press\+Start/);
+    expect(
+      existsSync(join(here, "../../public/fonts/ChicagoFLF.woff"))
+    ).toBe(true);
     expect(LANDING_COLORS.cream).toBe("#F4EFE4");
     expect(LANDING_COLORS.page).toBe("#0A0F1E");
     expect(LANDING_COLORS.charcoal).toBe("#141820");
-    expect(landing).toMatch(/color: C\.cream/);
+    expect(LANDING_COLORS.emerald).toBe("#10B981");
+    expect(LANDING_COLORS.mint).toBe("#2EE6A8");
+    expect(landing).toMatch(/fill=\{C\.cream\}/);
+    expect(landing).toMatch(/background="transparent"/);
     expect(landing).not.toMatch(/part\.accent \? C\.mint/);
     expect(landing).not.toMatch(/landingHeadlineParts/);
     expect(css).toMatch(/--landing-cream:\s*#f4efe4/);
     expect(css).toMatch(/--landing-charcoal:\s*#141820/);
-    expect(css).toMatch(/--landing-dither-paper/);
+    expect(css).toMatch(/--landing-emerald:\s*#10b981/);
+    expect(css).not.toMatch(/landing-dither-paper/);
     expect(css).not.toMatch(/landing-dither-green/);
     expect(css).toMatch(
       /\.rfr-landing-headline[\s\S]*?color:\s*var\(--landing-cream\)/
     );
     expect(css).toMatch(
-      /\.rfr-landing-hero-dither[\s\S]*?background:\s*var\(--landing-dither-paper\)/
+      /\.rfr-landing-accent[\s\S]*?color:\s*var\(--landing-emerald\)/
     );
     expect(css).toMatch(
-      /\.rfr-landing-cta[\s\S]*?background:\s*var\(--landing-green\)/
+      /\.rfr-landing-brief-employer[\s\S]*?color:\s*var\(--landing-emerald\)/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-hero-mark[\s\S]*?background:\s*transparent/
+    );
+    expect(css).not.toMatch(
+      /\.rfr-landing-hero-mark\s*\{[^}]*background:\s*var\(--landing-green\)/
+    );
+    expect(css).not.toMatch(
+      /\.rfr-landing-hero-mark\s*\{[^}]*border:\s*1px solid var\(--landing-green\)/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-hero-mark[\s\S]*?margin-left:\s*auto/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-kicker-jobs[\s\S]*?color:\s*var\(--landing-green\)/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-door-title:hover \{\n  border-bottom-color:\s*var\(--landing-emerald\);\n\}/
     );
   });
 
@@ -321,9 +380,10 @@ describe("landing chrome hrefs cannot swap visits", () => {
     const privacy = readFileSync(join(here, "../pages/Privacy.tsx"), "utf8");
     expect(landing).toMatch(/href=\{jobsFindHref\(\)\}/);
     expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
-    expect(landing).toMatch(/href=\{step\.href\}/);
-    expect(landing).toMatch(/LANDING_SIGNUP_HREF/);
-    expect(landing).toMatch(/LANDING_BRIEFING_HREF/);
+    expect(landing).toMatch(/LANDING_FOOTER_LINKS/);
+    expect(landing).not.toMatch(/href=\{step\.href\}/);
+    expect(landing).not.toMatch(/LANDING_SIGNUP_HREF/);
+    expect(landing).not.toMatch(/LANDING_BRIEFING_HREF/);
     expect(landing).not.toMatch(/href=["']#["']/);
     expect(landing).not.toMatch(/setLocation\(jobsFindHref/);
     expect(header).toMatch(/jobsHeaderJobsHref/);

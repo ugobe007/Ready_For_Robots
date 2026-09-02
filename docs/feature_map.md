@@ -12,7 +12,7 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 
 | Surface | Route | What the user is doing |
 |---------|-------|------------------------|
-| Landing fork | `/` or `/?new=1` | Put your robot to work. Subhead: Find jobs for robots and find robots for jobs. Two doors: Look for robot jobs / Look for robot candidates. Marketing sections (how it works, jobs brief, vocabulary) stay on `/`. |
+| Landing fork | `/` or `/?new=1` | Put your robot to work. Only robot is emerald. Subhead: Find jobs for robots and robots for jobs.... Two text doors: Jobs for Robots / Robots for Jobs (Robots emerald). Jobs brief below with employer names in emerald and a Jobs field. Sparse System 1 fork. No SIGNAL report, newsletter, or robot index. |
 | Jobs FIND | `/?visit=jobs` | OEM/integrator step 1: paste robot URL or pick a named catalog SKU / class. Then Job Cards. |
 | Employer MATCH | `/?visit=candidates` | Employer step 1: work tiles + description. Named catalog robots, then post-job draft. |
 | About | `/intelligence` | Jobs loop explainer; Find jobs → `/?visit=jobs` |
@@ -117,7 +117,7 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
 
 ```
 /
-  → Look for robot jobs | Look for robot candidates
+  → Jobs for Robots | Robots for Jobs
 /?visit=jobs
   → paste robot URL or pick class / named catalog SKU (FIND)
   → optional SKU pick
