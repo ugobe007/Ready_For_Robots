@@ -10,6 +10,7 @@ import {
   LANDING_BRIEFING_HREF,
   LANDING_CANDIDATES_HINT,
   LANDING_CANDIDATES_LABEL,
+  LANDING_COLORS,
   LANDING_EYEBROW,
   LANDING_FAQ_HREF,
   LANDING_FOOTER_LINKS,
@@ -59,14 +60,15 @@ describe("landing fork", () => {
     expect(LANDING_HEADLINE).not.toMatch(
       /Jobs for robots\. Robots for jobs|Who is this visit|Robots need jobs/i
     );
-    expect(landingHeadlineParts(LANDING_HEADLINE).at(-1)?.accent).toBe(true);
+    expect(
+      landingHeadlineParts(LANDING_HEADLINE).every(part => part.accent === false)
+    ).toBe(true);
     expect(LANDING_EYEBROW).toMatch(/Robot Employment/);
     expect(LANDING_SUBHEAD).toBe(
-      "Jobs for a robot you already have, or robots for work you need done. Paste a product URL — we match it to real jobs, then keep them in our CRM."
+      "Find jobs for robots and find robots for jobs."
     );
-    expect(LANDING_SUBHEAD).toMatch(/keep them in our CRM/i);
     expect(LANDING_SUBHEAD).not.toMatch(
-      /who is this visit|choose your workflow/i
+      /keep them in our CRM|Paste a product URL|who is this visit|choose your workflow/i
     );
     expect(LANDING_JOBS_LABEL).toBe("Robot owner");
     expect(LANDING_CANDIDATES_LABEL).toBe("Employer");
@@ -136,7 +138,9 @@ describe("landing fork", () => {
     const css = readFileSync(join(here, "../index.css"), "utf8");
     const html = readFileSync(join(here, "../../index.html"), "utf8");
     expect(LANDING_HEADLINE).toBe("Put your robot to work.");
-    expect(LANDING_SUBHEAD).toMatch(/keep them in our CRM/i);
+    expect(LANDING_SUBHEAD).toBe(
+      "Find jobs for robots and find robots for jobs."
+    );
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Look for robot jobs");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Look for robot candidates");
     expect(jobsFindHref()).toBe("/?visit=jobs");
@@ -171,6 +175,25 @@ describe("landing fork", () => {
     expect(css).not.toMatch(/rfr-landing-hero-grid/);
     expect(html).not.toMatch(/family=EB\+Garamond/);
     expect(html).toMatch(/family=Silkscreen/);
+    expect(LANDING_COLORS.cream).toBe("#F4EFE4");
+    expect(LANDING_COLORS.page).toBe("#0A0F1E");
+    expect(LANDING_COLORS.charcoal).toBe("#141820");
+    expect(landing).toMatch(/color: C\.cream/);
+    expect(landing).not.toMatch(/part\.accent \? C\.mint/);
+    expect(landing).not.toMatch(/landingHeadlineParts/);
+    expect(css).toMatch(/--landing-cream:\s*#f4efe4/);
+    expect(css).toMatch(/--landing-charcoal:\s*#141820/);
+    expect(css).toMatch(/--landing-dither-paper/);
+    expect(css).not.toMatch(/landing-dither-green/);
+    expect(css).toMatch(
+      /\.rfr-landing-headline[\s\S]*?color:\s*var\(--landing-cream\)/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-hero-dither[\s\S]*?background:\s*var\(--landing-dither-paper\)/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-cta[\s\S]*?background:\s*var\(--landing-green\)/
+    );
   });
 
   it("FIND step 1 keeps URL plus I know the robot catalog pick", () => {

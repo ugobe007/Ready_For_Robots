@@ -2755,8 +2755,11 @@
   --font-landing-mono: var(--font-landing-ui);
   --landing-navy: #0a0f1e;
   --landing-navy-2: #0d1426;
+  --landing-charcoal: #141820;
   --landing-panel: #111a30;
   --landing-green: #2ee6a8;
+  --landing-cream: #f4efe4;
+  --landing-paper: #ede6d6;
   --landing-ink: #e8eef7;
   --landing-muted: #8b98b0;
   --landing-line: rgba(139, 152, 176, 0.22);
@@ -2765,8 +2768,8 @@
       transparent 0% 50%
     )
     0 0 / 4px 4px;
-  --landing-dither-green: repeating-conic-gradient(
-      rgba(46, 230, 168, 0.14) 0% 25%,
+  --landing-dither-paper: repeating-conic-gradient(
+      rgba(237, 230, 214, 0.08) 0% 25%,
       transparent 0% 50%
     )
     0 0 / 4px 4px;
@@ -2787,6 +2790,7 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.2;
+  color: var(--landing-cream);
 }
 
 .rfr-landing-subhead {
@@ -2803,6 +2807,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1.25;
+  color: var(--landing-cream);
 }
 
 .rfr-landing-door-title {
@@ -2817,15 +2822,15 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: var(--landing-dither-green);
+  background: var(--landing-dither-paper);
 }
 
 .rfr-landing-hero-mark {
   width: 9rem;
   height: 9rem;
-  border: 2px solid var(--landing-green);
-  background-color: var(--landing-navy-2);
-  background-image: var(--landing-dither-green);
+  border: 2px solid var(--landing-line);
+  background-color: var(--landing-charcoal);
+  background-image: var(--landing-dither-paper);
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55);
 }
 
@@ -2909,7 +2914,7 @@
 }
 
 .rfr-landing-close {
-  border: 2px solid var(--landing-green);
+  border: 2px solid var(--landing-line);
   background: var(--landing-panel);
   box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.55);
 }

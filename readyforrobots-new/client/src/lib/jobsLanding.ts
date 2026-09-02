@@ -8,7 +8,8 @@
  * Visual source: docs/rfr-70s-ui-source Home.tsx (dark navy + Kare
  * Macintosh). Operator copy wins on headline + subhead. Headline and
  * door CTAs use Silkscreen. Robot mark is KARE_FACE (face-icon-reference.png).
- * The A–E picker is designer chrome and stays out of production.
+ * Headline is cream on navy. Mint is accent only (CTA invert, small
+ * rules, Jobs wordmark). The A–E picker stays out of production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -22,7 +23,7 @@ export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Look for robot candidates";
 export const LANDING_EYEBROW = "ReadyForRobots · Robot Employment";
 export const LANDING_HEADLINE = "Put your robot to work.";
 export const LANDING_SUBHEAD =
-  "Jobs for a robot you already have, or robots for work you need done. Paste a product URL — we match it to real jobs, then keep them in our CRM.";
+  "Find jobs for robots and find robots for jobs.";
 
 export const LANDING_JOBS_LABEL = "Robot owner";
 export const LANDING_CANDIDATES_LABEL = "Employer";
@@ -190,10 +191,13 @@ export const LANDING_LINK_MAP = [
 export const LANDING_COLORS = {
   page: "#0A0F1E",
   navy2: "#0D1426",
+  charcoal: "#141820",
   panel: "#111A30",
   card: "#111A30",
   mint: "#2EE6A8",
   mintDim: "#1E8F6B",
+  cream: "#F4EFE4",
+  paper: "#EDE6D6",
   text: "#E8EEF7",
   muted: "#8B98B0",
   line: "rgba(139,152,176,0.22)",
@@ -275,7 +279,7 @@ export function isJobsFindVisit(search: string | null | undefined): boolean {
   return landingVisitFromSearch(search) === "jobs";
 }
 
-/** Last sentence is the mint accent, matching the mockup hero. */
+/** Headline stays cream. Mint is not an H1 color. */
 export function landingHeadlineParts(
   headline: string
 ): { text: string; accent: boolean }[] {
@@ -283,8 +287,8 @@ export function landingHeadlineParts(
     .split(".")
     .map(part => part.trim())
     .filter(Boolean);
-  return chunks.map((text, index) => ({
+  return chunks.map(text => ({
     text: `${text}.`,
-    accent: index === chunks.length - 1,
+    accent: false,
   }));
 }
