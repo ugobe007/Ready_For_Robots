@@ -35,14 +35,14 @@ Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (landing fork)
 
 | Item | Behavior |
 |------|----------|
-| Jobs | Selected on `/` and `/jobs/:slug`. Same fresh-home href. |
+| Jobs | Selected on `/` and `/jobs/:slug`. Landing fork while already on `/` / `/?new=1`. FIND (`/?visit=jobs`) from About, Pricing, MATCH, and FIND itself. CRM desk restores Job Cards (`/?visit=jobs&restore=1`). |
 | About | `/intelligence` |
 | Pipeline | **Hidden** on Jobs chrome and Jobs CRM |
 | CRM | On Jobs chrome (signed in or out): `/pipeline?src=jobs_activate`. On SIGNAL `/pipeline` or bare `/crm`: `/crm` (signed-in) |
 | Admin | Signed-in admin only |
-| Sign In / Sign Out | Sign In when anonymous; Sign Out when session |
+| Sign In / Sign Out | Sign In returns to the current Jobs page; Sign Out when session |
 
-Jobs chrome paths: `/`, `/jobs…`, About, Compare, vendor design, Jobs CRM (`/pipeline?src=jobs_activate`), Jobs signup/login. Footer and Signal FAB follow: no SIGNAL Pipeline nav.
+Jobs chrome paths: `/`, `/jobs…`, About, Compare, Pricing, Privacy, vendor design, Jobs CRM (`/pipeline?src=jobs_activate`), Jobs signup/login. Footer and Signal FAB follow: no SIGNAL Pipeline nav.
 
 ### Marketing / SIGNAL header (`Header`)
 
@@ -129,7 +129,7 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
   → post-job draft (employer name + work; no invented contacts)
 ```
 
-Wordmark / Jobs always returns to the landing fork (`/?new=1`). Bare `/pipeline` without a Jobs `src` is SIGNAL — do not dump Jobs traffic there.
+Wordmark returns to the landing fork (`/?new=1`). Header **Jobs** is FIND except while already on the landing fork. Restore is `/?visit=jobs&restore=1` — never the landing. Bare `/pipeline` without a Jobs `src` is SIGNAL — do not dump Jobs traffic there.
 
 Agent proof of this loop: `python3 scripts/agent_verify.py ci`.
 

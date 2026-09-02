@@ -37,16 +37,22 @@ export const LANDING_HOW_STEPS = [
     n: "01",
     title: "Show us your robot",
     body: "Paste a product URL, or pick a named catalog robot. We read the SKU — not a category guess.",
+    href: "/?visit=jobs",
+    cta: LOOK_FOR_ROBOT_JOBS_CTA,
   },
   {
     n: "02",
     title: "Available jobs",
     body: "Inspect employment cards: employer, workplace, work. Cards stay Conditional until there is evidence.",
+    href: "/?visit=jobs",
+    cta: "See available jobs →",
   },
   {
     n: "03",
     title: "CRM",
     body: "Keep 5 opportunities on free. Run the next robot the same way.",
+    href: "/signup?next=%2Fpipeline%3Fsrc%3Djobs_activate&src=jobs_activate",
+    cta: "Open CRM →",
   },
 ] as const;
 
@@ -149,16 +155,34 @@ export const LANDING_BRIEFING_CTA = "Download the 2026 briefing";
 export const LANDING_SIGNUP_HREF =
   "/signup?next=%2Fpipeline%3Fsrc%3Djobs_activate&src=jobs_activate";
 export const LANDING_BRIEFING_HREF = "/intelligence#report";
+export const LANDING_PRICING_HREF = "/pricing";
+export const LANDING_FAQ_HREF = "/pricing#faq";
+export const LANDING_PRIVACY_HREF = "/privacy";
+export const LANDING_SUPPORT_HREF = "mailto:support@readyforrobots.com";
+export const LANDING_ABOUT_HREF = "/intelligence";
+export const LANDING_BRIEF_JOB_CTA = LOOK_FOR_ROBOT_JOBS_CTA;
 export const LANDING_FOOTER_MARK =
   "© 2026 ReadyForRobots · Jobs for your robot";
 export const LANDING_FOOTER_LINKS = [
-  { label: "Pricing", href: "/pricing" },
-  { label: "FAQ", href: "/pricing#faq" },
-  { label: "Privacy", href: "/privacy" },
+  { label: "Pricing", href: LANDING_PRICING_HREF },
+  { label: "FAQ", href: LANDING_FAQ_HREF },
+  { label: "Privacy", href: LANDING_PRIVACY_HREF },
   {
     label: "support@readyforrobots.com",
-    href: "mailto:support@readyforrobots.com",
+    href: LANDING_SUPPORT_HREF,
   },
+] as const;
+
+/** Label → dest. Tests lock Jobs vs candidates vs CRM vs About so they cannot swap. */
+export const LANDING_LINK_MAP = [
+  { label: LOOK_FOR_ROBOT_JOBS_CTA, href: "/?visit=jobs" },
+  { label: LOOK_FOR_ROBOT_CANDIDATES_CTA, href: "/?visit=candidates" },
+  { label: LANDING_START_FREE_CTA, href: LANDING_SIGNUP_HREF },
+  { label: LANDING_BRIEFING_CTA, href: LANDING_BRIEFING_HREF },
+  { label: "Pricing", href: LANDING_PRICING_HREF },
+  { label: "FAQ", href: LANDING_FAQ_HREF },
+  { label: "Privacy", href: LANDING_PRIVACY_HREF },
+  { label: "support@readyforrobots.com", href: LANDING_SUPPORT_HREF },
 ] as const;
 
 /** Kare Macintosh palette, landing only. FIND / employer keep Jobs chrome. */
@@ -235,6 +259,7 @@ export function landingVisitFromSearch(
 ): LandingVisit {
   const params = new URLSearchParams((search || "").replace(/^\?/, ""));
   if (params.get("new") === "1") return "landing";
+  if (params.get("restore") === "1") return "jobs";
   const visit = (params.get(LANDING_VISIT_QUERY) || "").trim();
   if (visit === LANDING_VISIT_JOBS) return "jobs";
   if (visit === LANDING_VISIT_CANDIDATES) return "candidates";

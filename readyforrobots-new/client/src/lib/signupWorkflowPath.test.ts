@@ -58,6 +58,15 @@ describe("signupWorkflowPath", () => {
     ).toBe(next);
   });
 
+  it("sends jobs_activate signup without next to the Jobs CRM desk", () => {
+    expect(
+      resolveSignupWorkflowReturnPath({
+        nextRaw: "",
+        prefill: { src: "jobs_activate" },
+      })
+    ).toBe("/pipeline?src=jobs_activate");
+  });
+
   it("returns jobs product paths to / or /jobs/:slug (not /pipeline)", () => {
     expect(
       resolveSignupWorkflowReturnPath({

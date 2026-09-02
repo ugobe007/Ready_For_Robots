@@ -190,7 +190,7 @@ Hunt on FIND. Keep jobs on the CRM listing. Apply when the user is ready.
 | `jobsActivateHref` | `jobsWorkflow.ts` | Desk URL |
 | `jobsSignupHref` | `jobsWorkflow.ts` | `/signup?next=&src=` |
 | `jobsCrmOpenHref` | `jobsWorkflow.ts` | **Only** CTA/header/handoff/unsigned-desk entry |
-| `jobsCrmNextHref` / `jobsCrmLeaveHref` | `jobsWorkflow.ts` | Wall next = signup; signed next = Job Cards (`/?restore=1`) or FIND (`/?new=1`) |
+| `jobsCrmNextHref` / `jobsCrmLeaveHref` | `jobsWorkflow.ts` | Wall next = signup; signed next = Job Cards (`/?visit=jobs&restore=1`) or FIND (`/?visit=jobs`) |
 | `jobsCrmOfferHref` | `jobsCrmAccount.ts` | Desk Apply / Next steps → `?next=offer#jobs-next-steps` |
 | `JobsProcessChrome` | `JobsProcessChrome.tsx` | 01 / 02 / 03 + next on CRM wall and desk |
 | `jobsForCrmDesk` | `jobsWorkflow.ts` | Checked-first, cap 5 |

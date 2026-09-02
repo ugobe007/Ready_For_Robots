@@ -10,7 +10,11 @@
  */
 import { clearJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { sameRobotUrl } from "@/lib/robotUrlIdentity";
-import { LANDING_VISIT_QUERY, jobsFindHref } from "@/lib/jobsLanding";
+import {
+  LANDING_VISIT_QUERY,
+  jobsFindHref,
+  landingVisitFromSearch,
+} from "@/lib/jobsLanding";
 
 export type JobsConfirmLanding = "review" | "jobs" | "portfolio";
 export type JobLookupGrain = "robot_type" | "product";
@@ -1069,7 +1073,9 @@ export function showJobsSiteChrome(opts: {
   if (
     path === "/intelligence" ||
     path === "/compare" ||
-    path === "/vendor/design"
+    path === "/vendor/design" ||
+    path === "/pricing" ||
+    path === "/privacy"
   )
     return true;
   if (path.startsWith("/design/")) return true;
@@ -1695,9 +1701,27 @@ export function pipelineActivityForJob(
   return scoped.filter(event => !event.jobKey || event.jobKey === jobKey);
 }
 
-/** Auth / leftover-link return to the Jobs workspace on `/`. */
+/** Auth / leftover-link return to FIND — never the landing fork. */
 export function jobsWorkspaceRestoreHref(): string {
-  return "/?restore=1";
+  return `${jobsFindHref()}&restore=1`;
+}
+
+/**
+ * Header **Jobs**: landing fork while already there, FIND everywhere else.
+ * CRM desk restores Job Cards. Never SIGNAL `/pipeline`.
+ */
+export function jobsHeaderJobsHref(
+  pathname: string,
+  search?: string | null,
+  onJobsCrmDesk = false
+): string {
+  if (onJobsCrmDesk) return jobsWorkspaceRestoreHref();
+  if (isJobsHomePath(pathname)) {
+    const visit = landingVisitFromSearch(search);
+    if (visit === "jobs" || visit === "candidates") return jobsFindHref();
+    return jobsFreshHomeHref();
+  }
+  return jobsFindHref();
 }
 
 /**

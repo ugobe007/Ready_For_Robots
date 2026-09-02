@@ -7,17 +7,24 @@ import {
   EMPLOYER_PROCESS_STEPS,
   EMPLOYER_WORK_TILE_IDS,
   LANDING_BRIEF_JOBS,
+  LANDING_BRIEFING_HREF,
   LANDING_CANDIDATES_HINT,
   LANDING_CANDIDATES_LABEL,
   LANDING_EYEBROW,
+  LANDING_FAQ_HREF,
+  LANDING_FOOTER_LINKS,
   LANDING_HEADLINE,
   LANDING_HOW_HEADLINE,
   LANDING_HOW_STEPS,
   LANDING_JOBS_HINT,
   LANDING_JOBS_LABEL,
+  LANDING_LINK_MAP,
+  LANDING_PRICING_HREF,
+  LANDING_PRIVACY_HREF,
   LANDING_SIGNUP_HREF,
   LANDING_START_FREE_CTA,
   LANDING_SUBHEAD,
+  LANDING_SUPPORT_HREF,
   LANDING_VOCAB_HEADLINE,
   LOOK_FOR_ROBOT_CANDIDATES_CTA,
   LOOK_FOR_ROBOT_JOBS_CTA,
@@ -28,7 +35,7 @@ import {
   landingVisitFromSearch,
 } from "./jobsLanding";
 import { catalogSkusForClass, listKnownOemCatalog } from "./knownOemCatalog";
-import { jobsFreshHomeHref } from "./jobsWorkflow";
+import { jobsCrmOpenHref, jobsFreshHomeHref } from "./jobsWorkflow";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -38,6 +45,8 @@ describe("landing fork", () => {
     expect(landingVisitFromSearch("?new=1")).toBe("landing");
     expect(landingVisitFromSearch("?visit=jobs")).toBe("jobs");
     expect(landingVisitFromSearch("?visit=candidates")).toBe("candidates");
+    expect(landingVisitFromSearch("?restore=1")).toBe("jobs");
+    expect(landingVisitFromSearch("?visit=jobs&restore=1")).toBe("jobs");
     expect(jobsFreshHomeHref()).toBe("/?new=1");
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
@@ -132,8 +141,8 @@ describe("landing fork", () => {
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Look for robot candidates");
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
-    expect(landing).toMatch(/setLocation\(jobsFindHref\(\)\)/);
-    expect(landing).toMatch(/setLocation\(jobsCandidatesHref\(\)\)/);
+    expect(landing).toMatch(/href=\{jobsFindHref\(\)\}/);
+    expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
     expect(landing).toMatch(/option="jobs"/);
     expect(landing).toMatch(/option="candidates"/);
     expect(landing).toMatch(/rfr-landing-windowbar/);
@@ -210,5 +219,95 @@ describe("landing fork", () => {
     expect(serving.some(s => /Humanoid Series/i.test(s.name))).toBe(false);
     const xpeng = all.filter(s => /xpeng\.com/i.test(s.host));
     expect(xpeng.map(s => s.name)).toEqual(["IRON"]);
+  });
+});
+
+describe("landing chrome hrefs cannot swap visits", () => {
+  it("maps every landing CTA to a real Jobs or honest dest", () => {
+    const byLabel = Object.fromEntries(
+      LANDING_LINK_MAP.map(link => [link.label, link.href])
+    );
+    expect(byLabel[LOOK_FOR_ROBOT_JOBS_CTA]).toBe(jobsFindHref());
+    expect(byLabel[LOOK_FOR_ROBOT_CANDIDATES_CTA]).toBe(jobsCandidatesHref());
+    expect(byLabel[LANDING_START_FREE_CTA]).toBe(LANDING_SIGNUP_HREF);
+    expect(byLabel[LANDING_START_FREE_CTA]).toBe(jobsCrmOpenHref(false));
+    expect(byLabel["Download the 2026 briefing"]).toBe(LANDING_BRIEFING_HREF);
+    expect(byLabel.Pricing).toBe(LANDING_PRICING_HREF);
+    expect(byLabel.FAQ).toBe(LANDING_FAQ_HREF);
+    expect(byLabel.Privacy).toBe(LANDING_PRIVACY_HREF);
+    expect(byLabel["support@readyforrobots.com"]).toBe(LANDING_SUPPORT_HREF);
+    expect(byLabel[LOOK_FOR_ROBOT_JOBS_CTA]).not.toBe(
+      byLabel[LOOK_FOR_ROBOT_CANDIDATES_CTA]
+    );
+    expect(byLabel[LOOK_FOR_ROBOT_JOBS_CTA]).not.toBe(LANDING_SIGNUP_HREF);
+    expect(byLabel[LOOK_FOR_ROBOT_CANDIDATES_CTA]).not.toBe(LANDING_SIGNUP_HREF);
+    expect(byLabel[LOOK_FOR_ROBOT_JOBS_CTA]).not.toMatch(/signals|pipeline$/);
+    expect(LANDING_HOW_STEPS[0].href).toBe(jobsFindHref());
+    expect(LANDING_HOW_STEPS[1].href).toBe(jobsFindHref());
+    expect(LANDING_HOW_STEPS[2].href).toBe(LANDING_SIGNUP_HREF);
+    expect(LANDING_HOW_STEPS[2].href).not.toBe(jobsFindHref());
+    expect(LANDING_FOOTER_LINKS.map(l => l.href)).toEqual([
+      LANDING_PRICING_HREF,
+      LANDING_FAQ_HREF,
+      LANDING_PRIVACY_HREF,
+      LANDING_SUPPORT_HREF,
+    ]);
+    expect(LANDING_FOOTER_LINKS.every(l => l.href && l.href !== "#")).toBe(true);
+    expect(LANDING_LINK_MAP.every(l => l.href && !l.href.endsWith("#"))).toBe(
+      true
+    );
+  });
+
+  it("wires landing, FIND, MATCH, About, header, and CRM to those dests", () => {
+    const landing = readFileSync(
+      join(here, "../components/JobsLanding.tsx"),
+      "utf8"
+    );
+    const header = readFileSync(
+      join(here, "../components/ExperimentHeader.tsx"),
+      "utf8"
+    );
+    const intel = readFileSync(join(here, "../pages/Intelligence.tsx"), "utf8");
+    const employer = readFileSync(
+      join(here, "../components/EmployerMatchWorkspace.tsx"),
+      "utf8"
+    );
+    const chrome = readFileSync(
+      join(here, "../components/JobsProcessChrome.tsx"),
+      "utf8"
+    );
+    const footer = readFileSync(
+      join(here, "../components/layout/SiteFooter.tsx"),
+      "utf8"
+    );
+    const pricing = readFileSync(join(here, "../pages/Pricing.tsx"), "utf8");
+    const privacy = readFileSync(join(here, "../pages/Privacy.tsx"), "utf8");
+    expect(landing).toMatch(/href=\{jobsFindHref\(\)\}/);
+    expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
+    expect(landing).toMatch(/href=\{step\.href\}/);
+    expect(landing).toMatch(/LANDING_SIGNUP_HREF/);
+    expect(landing).toMatch(/LANDING_BRIEFING_HREF/);
+    expect(landing).not.toMatch(/href=["']#["']/);
+    expect(landing).not.toMatch(/setLocation\(jobsFindHref/);
+    expect(header).toMatch(/jobsHeaderJobsHref/);
+    expect(header).toMatch(/href=\{crmHref\}/);
+    expect(header).toMatch(/href="\/intelligence"/);
+    expect(header).toMatch(/jobsFreshHomeHref\(\)/);
+    expect(header).not.toMatch(/href=["']#["']/);
+    expect(intel).toMatch(/jobsFindHref/);
+    expect(intel).toMatch(/jobsCrmOpenHref\(false\)/);
+    expect(intel).not.toMatch(/href=["']\/signals/);
+    expect(employer).toMatch(/href=\{jobsFindHref\(\)\}/);
+    expect(employer).not.toMatch(/setLocation\(jobsFindHref/);
+    expect(chrome).toMatch(/jobsFindHref\(\)/);
+    expect(chrome).not.toMatch(/jobsFreshHomeHref\(\)/);
+    expect(footer).toMatch(/jobsCrmOpenHref\(false\)/);
+    expect(pricing).toMatch(/ExperimentHeader/);
+    expect(pricing).toMatch(/jobsCrmOpenHref\(false\)/);
+    expect(pricing).toMatch(/id="faq"/);
+    expect(pricing).not.toMatch(/from "@\/components\/Header"/);
+    expect(privacy).toMatch(/ExperimentHeader/);
+    expect(privacy).toMatch(/jobsFindHref/);
+    expect(privacy).not.toMatch(/href="\/preview"/);
   });
 });

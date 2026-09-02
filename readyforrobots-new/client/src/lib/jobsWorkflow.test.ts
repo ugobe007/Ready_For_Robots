@@ -79,6 +79,7 @@ import {
   jobIsForLabel,
   jobExplanation,
   isSalesPlaceholder,
+  jobsHeaderJobsHref,
   jobsListHint,
   jobsPlaceHref,
   jobsProcessActionClass,
@@ -505,13 +506,13 @@ describe("jobsWorkflow", () => {
       "utf8"
     );
     expect(chrome).toMatch(/href=\{href\}/);
-    expect(chrome).toMatch(/jobsFreshHomeHref\(\)/);
+    expect(chrome).toMatch(/jobsFindHref\(\)/);
     expect(chrome).toMatch(/jobsWorkspaceRestoreHref\(\)/);
     expect(chrome).toMatch(/jobsCrmOpenHref\(signedIn, submissionId\)/);
     expect(chrome).not.toMatch(/<span key=\{step\.id\}/);
     expect(chrome).not.toMatch(/href="#"/);
     expect(header).toMatch(/href=\{jobsHref\}/);
-    expect(header).toMatch(/jobsWorkspaceRestoreHref\(\)/);
+    expect(header).toMatch(/jobsHeaderJobsHref/);
     expect(header).toMatch(/href="\/intelligence"/);
     expect(header).toMatch(/href=\{crmHref\}/);
     expect(header).not.toMatch(/href="#"/);
@@ -649,11 +650,11 @@ describe("jobsWorkflow", () => {
         src: "jobs_all_robots",
         leadId: 9,
       });
-      expect(href).toBe("/?restore=1");
+      expect(href).toBe("/?visit=jobs&restore=1");
       expect(href).not.toContain("/pipeline");
       expect(href).not.toContain("/results");
     }
-    expect(jobsWorkspaceRestoreHref()).toBe("/?restore=1");
+    expect(jobsWorkspaceRestoreHref()).toBe("/?visit=jobs&restore=1");
     expect(showSignalPipelineNav({ pathname: "/" })).toBe(false);
     expect(showSignalPipelineNav({ pathname: "/jobs" })).toBe(false);
     expect(
@@ -674,6 +675,18 @@ describe("jobsWorkflow", () => {
     expect(jobsHeaderCrmHref("/pipeline", "jobs_activate")).toBe(
       "/pipeline?src=jobs_activate"
     );
+    expect(jobsHeaderJobsHref("/", "")).toBe("/?new=1");
+    expect(jobsHeaderJobsHref("/", "visit=jobs")).toBe("/?visit=jobs");
+    expect(jobsHeaderJobsHref("/", "visit=candidates")).toBe("/?visit=jobs");
+    expect(jobsHeaderJobsHref("/intelligence", "")).toBe("/?visit=jobs");
+    expect(jobsHeaderJobsHref("/pricing", "")).toBe("/?visit=jobs");
+    expect(jobsHeaderJobsHref("/pipeline", "src=jobs_activate", true)).toBe(
+      "/?visit=jobs&restore=1"
+    );
+    expect(jobsHeaderJobsHref("/", "visit=jobs")).not.toBe("/?visit=candidates");
+    expect(jobsHeaderJobsHref("/", "visit=candidates")).not.toBe(
+      "/?visit=candidates"
+    );
     expect(
       showSignalPipelineNav({ pathname: "/pipeline", src: "jobs_activate" })
     ).toBe(false);
@@ -693,6 +706,8 @@ describe("jobsWorkflow", () => {
     expect(showJobsSiteChrome({ pathname: "/" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/jobs" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/jobs/acme" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/pricing" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/privacy" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/intelligence" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/compare" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/vendor/design" })).toBe(true);
@@ -953,7 +968,8 @@ describe("jobsWorkflow", () => {
     expect(processChrome).toMatch(/JOBS_PROCESS_STEPS/);
     expect(processChrome).not.toMatch(/Here are its jobs/);
     expect(processChrome).toMatch(/jobsCrmNextHref/);
-    expect(processChrome).toMatch(/jobsFreshHomeHref/);
+    expect(processChrome).toMatch(/jobsFindHref/);
+    expect(processChrome).not.toMatch(/jobsFreshHomeHref/);
     expect(processChrome).toMatch(/jobsWorkspaceRestoreHref/);
     expect(processChrome).toMatch(/rfr-jobs-process-action/);
     expect(desk).not.toMatch(/Step 03 · CRM/);
@@ -1134,8 +1150,10 @@ describe("jobsWorkflow", () => {
     expect(jobsCrmHasRestore({ submissionId: 42 })).toBe(true);
     expect(jobsCrmHasRestore({ jobCount: 3 })).toBe(true);
     expect(jobsCrmHasRestore({})).toBe(false);
-    expect(jobsCrmLeaveHref({ submissionId: 42 })).toBe("/?restore=1");
-    expect(jobsCrmLeaveHref({ jobCount: 2 })).toBe("/?restore=1");
+    expect(jobsCrmLeaveHref({ submissionId: 42 })).toBe(
+      "/?visit=jobs&restore=1"
+    );
+    expect(jobsCrmLeaveHref({ jobCount: 2 })).toBe("/?visit=jobs&restore=1");
     expect(jobsCrmLeaveHref({})).toBe("/?visit=jobs");
     expect(jobsCrmLeaveLabel({ submissionId: 9 })).toBe(CRM_BACK_TO_JOBS_CTA);
     expect(jobsCrmLeaveLabel({})).toBe(FIND_JOBS_CTA);
@@ -1145,7 +1163,7 @@ describe("jobsWorkflow", () => {
         "jobs_activate"
       )
     );
-    expect(jobsCrmNextHref(true, 42)).toBe("/?restore=1");
+    expect(jobsCrmNextHref(true, 42)).toBe("/?visit=jobs&restore=1");
     expect(jobsCrmNextHref(true)).toBe("/?visit=jobs");
     expect(jobsCrmNextLabel(false)).toBe(CRM_SIGNUP_NEXT_CTA);
     expect(jobsCrmNextLabel(true, { jobCount: 1 })).toBe(CRM_BACK_TO_JOBS_CTA);
@@ -1596,13 +1614,13 @@ describe("jobsWorkflow", () => {
       src: "jobs_all_robots",
       leadId: 9,
     });
-    expect(home).toBe("/?restore=1");
+    expect(home).toBe("/?visit=jobs&restore=1");
     expect(home).not.toContain("results_scan");
     expect(jobsSignupHref(home, "jobs_all_robots")).toContain(
       "src=jobs_all_robots"
     );
     expect(jobsSignupHref(home, "jobs_all_robots")).toContain(
-      "next=%2F%3Frestore%3D1"
+      "next=%2F%3Fvisit%3Djobs%26restore%3D1"
     );
   });
 
@@ -1707,7 +1725,7 @@ describe("jobsWorkflow", () => {
       value: { sessionStorage: memory },
       configurable: true,
     });
-    expect(armJobsWorkspaceRestore()).toBe("/?restore=1");
+    expect(armJobsWorkspaceRestore()).toBe("/?visit=jobs&restore=1");
     expect(memory.getItem("rfr_jobs_restore_once")).toBe("1");
   });
 
@@ -1812,7 +1830,7 @@ describe("jobsWorkflow", () => {
     expect(intel).not.toMatch(/from "@\/components\/Header"/);
     expect(intel).toMatch(/jobsFindHref/);
     expect(intel).toMatch(/FIND_JOBS_CTA/);
-    expect(intel).toMatch(/JOBS_ACTIVATE_SRC/);
+    expect(intel).toMatch(/jobsCrmOpenHref/);
     expect(intel).toMatch(/JOBS_PROCESS_STEPS/);
     expect(intel).toMatch(/JOBS_FOR_YOUR_ROBOT_HEADING/);
     expect(intel).toMatch(/JobsPstackProtocol/);

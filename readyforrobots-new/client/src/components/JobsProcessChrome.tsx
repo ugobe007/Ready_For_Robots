@@ -10,9 +10,8 @@ import {
   jobsCrmNextHref,
   jobsCrmNextLabel,
   jobsCrmOpenHref,
-  jobsFreshHomeHref,
+  jobsFindHref,
   jobsWorkspaceRestoreHref,
-  onJobsFreshHomeClick,
 } from "@/lib/jobsWorkflow";
 import { jobsCrmOfferHref } from "@/lib/jobsCrmAccount";
 
@@ -29,7 +28,6 @@ export default function JobsProcessChrome({
 }) {
   const nextHref = jobsCrmNextHref(signedIn, submissionId, jobCount);
   const nextLabel = jobsCrmNextLabel(signedIn, { submissionId, jobCount });
-  const leaveIsFind = signedIn && nextHref === jobsFreshHomeHref();
 
   return (
     <nav
@@ -40,7 +38,7 @@ export default function JobsProcessChrome({
         const isCurrent = step.id === current;
         const href =
           step.id === "find"
-            ? jobsFreshHomeHref()
+            ? jobsFindHref()
             : step.id === "jobs"
               ? jobsWorkspaceRestoreHref()
               : jobsCrmOpenHref(signedIn, submissionId);
@@ -54,7 +52,6 @@ export default function JobsProcessChrome({
             key={step.id}
             href={href}
             aria-current={isCurrent ? "step" : undefined}
-            onClick={step.id === "find" ? onJobsFreshHomeClick : undefined}
             className={className}
           >
             {step.n} {step.label}
@@ -71,7 +68,6 @@ export default function JobsProcessChrome({
       ) : null}
       <a
         href={nextHref}
-        onClick={leaveIsFind ? onJobsFreshHomeClick : undefined}
         className="rfr-bevel rfr-jobs-process-action m-2 inline-flex shrink-0 items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
       >
         {nextLabel}
