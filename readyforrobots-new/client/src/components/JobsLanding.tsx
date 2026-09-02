@@ -7,8 +7,9 @@ import {
   PixelBriefcase,
   PixelDoc,
   PixelHand,
-  PixelRobot,
 } from "@/components/LandingPixels";
+import PixelIcon from "@/components/PixelIcon";
+import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
   LANDING_BRIEFING_CTA,
   LANDING_BRIEFING_HREF,
@@ -41,9 +42,19 @@ import {
   LOOK_FOR_ROBOT_JOBS_CTA,
   jobsCandidatesHref,
   jobsFindHref,
-  landingHeadlineParts,
   type LandingBriefJob,
 } from "@/lib/jobsLanding";
+
+function LandingFace({ scale }: { scale: number }) {
+  return (
+    <PixelIcon
+      map={KARE_FACE}
+      scale={scale}
+      fill={FACE_EMERALD}
+      background="transparent"
+    />
+  );
+}
 
 function Chip({ children }: { children: string }) {
   return (
@@ -135,16 +146,12 @@ function DoorCard({
       />
       <div className="p-6 md:p-8">
         <div className="flex items-start justify-between gap-4">
-          <h3
-            className="text-2xl font-semibold md:text-3xl"
-            style={{
-              color: C.text,
-              fontFamily: "var(--font-landing-display)",
-            }}
-          >
+          <h3 className="rfr-landing-door-title" style={{ color: C.text }}>
             {title}
           </h3>
-          <span className="mt-1 shrink-0">{icon}</span>
+          <span className="mt-1 shrink-0" aria-hidden="true">
+            {icon}
+          </span>
         </div>
         <p className="mt-3 text-sm leading-relaxed" style={{ color: C.muted }}>
           {body}
@@ -183,7 +190,7 @@ function BriefJobCard({
         <span
           className="w-16 shrink-0 text-[10px] font-bold"
           style={{
-            color: C.mint,
+            color: C.muted,
             fontFamily: "var(--font-landing-ui)",
           }}
         >
@@ -224,7 +231,7 @@ function BriefJobCard({
         </span>
         <span
           aria-hidden="true"
-          style={{ color: C.mint, fontFamily: "var(--font-landing-ui)" }}
+          style={{ color: C.muted, fontFamily: "var(--font-landing-ui)" }}
         >
           {open ? "▲" : "▼"}
         </span>
@@ -271,7 +278,7 @@ function BriefJobCard({
           <a
             href={jobsFindHref()}
             className="mt-2 inline-block text-sm font-semibold md:col-span-2"
-            style={{ color: C.mint, fontFamily: "var(--font-landing-ui)" }}
+            style={{ color: C.cream, fontFamily: "var(--font-landing-ui)" }}
           >
             {LANDING_BRIEF_JOB_CTA} <span aria-hidden="true">→</span>
           </a>
@@ -283,7 +290,6 @@ function BriefJobCard({
 
 export default function JobsLanding() {
   const [openJob, setOpenJob] = useState(LANDING_BRIEF_JOBS[0]?.id ?? "");
-  const headline = landingHeadlineParts(LANDING_HEADLINE);
 
   return (
     <div
@@ -296,19 +302,14 @@ export default function JobsLanding() {
           <Chip>{LANDING_EYEBROW}</Chip>
           <div className="mt-6 flex items-start gap-6 md:gap-10">
             <div className="min-w-0 flex-1">
-              <h1 className="rfr-landing-headline max-w-3xl">
-                {headline.map((part, index) => (
-                  <span
-                    key={part.text}
-                    style={{ color: part.accent ? C.mint : C.text }}
-                  >
-                    {part.text}
-                    {index < headline.length - 1 ? " " : ""}
-                  </span>
-                ))}
+              <h1
+                className="rfr-landing-headline max-w-3xl"
+                style={{ color: C.cream }}
+              >
+                {LANDING_HEADLINE}
               </h1>
               <p
-                className="mt-6 max-w-xl text-base leading-relaxed md:text-lg"
+                className="rfr-landing-subhead mt-6 max-w-xl md:text-lg"
                 style={{ color: C.muted }}
               >
                 {LANDING_SUBHEAD}
@@ -318,7 +319,7 @@ export default function JobsLanding() {
               className="rfr-landing-hero-mark hidden shrink-0 items-center justify-center md:flex"
               aria-hidden="true"
             >
-              <PixelRobot size={88} color={C.mint} />
+              <LandingFace scale={6} />
             </div>
           </div>
         </div>
@@ -332,7 +333,7 @@ export default function JobsLanding() {
             body={LANDING_JOBS_HINT}
             featured
             option="jobs"
-            icon={<PixelRobot size={40} color={C.mint} />}
+            icon={<LandingFace scale={3} />}
             href={jobsFindHref()}
           />
           <DoorCard
@@ -348,7 +349,7 @@ export default function JobsLanding() {
 
       <section
         className="border-y-2"
-        style={{ borderColor: C.line, background: C.navy2 }}
+        style={{ borderColor: C.line, background: C.charcoal }}
       >
         <div className="mx-auto max-w-6xl px-4 py-16">
           <Chip>{LANDING_HOW_EYEBROW}</Chip>
@@ -364,7 +365,7 @@ export default function JobsLanding() {
                     <span
                       className="text-[10px] font-bold"
                       style={{
-                        color: C.mint,
+                        color: C.muted,
                         fontFamily: "var(--font-landing-ui)",
                       }}
                     >
@@ -373,12 +374,7 @@ export default function JobsLanding() {
                   }
                 />
                 <div className="p-6">
-                  <h3
-                    className="text-xl font-semibold"
-                    style={{ fontFamily: "var(--font-landing-display)" }}
-                  >
-                    {step.title}
-                  </h3>
+                  <h3 className="rfr-landing-door-title">{step.title}</h3>
                   <p
                     className="mt-2 text-sm leading-relaxed"
                     style={{ color: C.muted }}
@@ -388,7 +384,7 @@ export default function JobsLanding() {
                   <a
                     href={step.href}
                     className="mt-4 inline-block text-sm font-semibold"
-                    style={{ color: C.mint }}
+                    style={{ color: C.cream }}
                   >
                     {step.cta}
                   </a>
@@ -434,7 +430,7 @@ export default function JobsLanding() {
 
       <section
         className="border-y-2"
-        style={{ borderColor: C.line, background: C.navy2 }}
+        style={{ borderColor: C.line, background: C.charcoal }}
       >
         <div className="mx-auto max-w-6xl px-4 py-16">
           <Chip>{LANDING_VOCAB_EYEBROW}</Chip>
@@ -449,13 +445,8 @@ export default function JobsLanding() {
                 style={{ borderColor: C.line, background: C.panel }}
               >
                 <div className="flex items-center gap-3">
-                  <PixelDoc size={22} color={C.mint} />
-                  <h3
-                    className="text-xl font-semibold"
-                    style={{ fontFamily: "var(--font-landing-display)" }}
-                  >
-                    {item.term}
-                  </h3>
+                  <PixelDoc size={22} color={C.cream} />
+                  <h3 className="rfr-landing-door-title">{item.term}</h3>
                 </div>
                 <p
                   className="mt-2 text-sm leading-relaxed"
@@ -473,13 +464,13 @@ export default function JobsLanding() {
         <div className="rfr-landing-close">
           <WindowBar
             title="readyforrobots start"
-            right={<PixelHand size={20} color={C.mint} />}
+            right={<PixelHand size={20} color={C.cream} />}
           />
           <div className="flex flex-wrap items-center justify-between gap-8 p-8 md:p-10">
             <div>
               <h2
-                className="text-3xl font-medium md:text-4xl"
-                style={{ fontFamily: "var(--font-landing-display)" }}
+                className="rfr-landing-headline"
+                style={{ color: C.cream }}
               >
                 {LANDING_CLOSE_HEADLINE}
               </h2>
@@ -502,7 +493,9 @@ export default function JobsLanding() {
       <footer className="border-t-2" style={{ borderColor: C.line }}>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-10 gap-y-4 px-4 py-8">
           <div className="flex items-center gap-3">
-            <PixelRobot size={22} color={C.mint} />
+            <span aria-hidden="true">
+              <LandingFace scale={2} />
+            </span>
             <p
               className="text-[10px] uppercase"
               style={{

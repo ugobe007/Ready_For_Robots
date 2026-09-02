@@ -1,6 +1,6 @@
 /**
- * 1-bit Kare icons for `/` landing. Source: docs/rfr-70s-ui-source Home.tsx.
- * FIND / CRM keep the product face in kareIcons.ts.
+ * 1-bit Kare icons for `/` landing (briefcase, doc, hand).
+ * Robot mark is KARE_FACE in kareIcons.ts — same face as ExperimentHeader.
  */
 
 type PixelGridProps = {
@@ -42,21 +42,6 @@ function PixelGrid({ rows, size, color }: PixelGridProps) {
   );
 }
 
-const ROBOT_ROWS = [
-  ".....XX.....",
-  ".....XX.....",
-  "..XXXXXXXX..",
-  ".X........X.",
-  ".X.XX..XX.X.",
-  ".X........X.",
-  ".X........X.",
-  ".X.XXXXXX.X.",
-  ".X........X.",
-  "..XXXXXXXX..",
-  "............",
-  "............",
-] as const;
-
 const BRIEFCASE_ROWS = [
   "....XXXX....",
   "...X....X...",
@@ -92,16 +77,6 @@ const HAND_ROWS = [
   "....X....X..",
   ".....XXXX...",
 ] as const;
-
-export function PixelRobot({
-  size = 32,
-  color,
-}: {
-  size?: number;
-  color: string;
-}) {
-  return <PixelGrid rows={ROBOT_ROWS} size={size} color={color} />;
-}
 
 export function PixelBriefcase({
   size = 28,
