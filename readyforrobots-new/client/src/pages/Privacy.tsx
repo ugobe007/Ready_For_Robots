@@ -5,7 +5,10 @@ import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import { Link } from "wouter";
-import { JOBS_HEADER_OFFSET_CLASS, jobsFreshHomeHref } from "@/lib/jobsWorkflow";
+import {
+  JOBS_HEADER_OFFSET_CLASS,
+  jobsFreshHomeHref,
+} from "@/lib/jobsWorkflow";
 import { jobsFindHref } from "@/lib/jobsLanding";
 
 const SECTIONS: { title: string; body: string[] }[] = [
@@ -104,9 +107,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
 
 export default function Privacy() {
   return (
-    <div
-      className={`min-h-screen bg-gray-50 ${JOBS_HEADER_OFFSET_CLASS}`}
-    >
+    <div className={`min-h-screen bg-gray-50 ${JOBS_HEADER_OFFSET_CLASS}`}>
       <ExperimentHeader />
       <PageHeroDark
         eyebrow="Legal"

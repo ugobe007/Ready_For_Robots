@@ -683,7 +683,9 @@ describe("jobsWorkflow", () => {
     expect(jobsHeaderJobsHref("/pipeline", "src=jobs_activate", true)).toBe(
       "/?visit=jobs&restore=1"
     );
-    expect(jobsHeaderJobsHref("/", "visit=jobs")).not.toBe("/?visit=candidates");
+    expect(jobsHeaderJobsHref("/", "visit=jobs")).not.toBe(
+      "/?visit=candidates"
+    );
     expect(jobsHeaderJobsHref("/", "visit=candidates")).not.toBe(
       "/?visit=candidates"
     );

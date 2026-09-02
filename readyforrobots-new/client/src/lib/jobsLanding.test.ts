@@ -240,7 +240,9 @@ describe("landing chrome hrefs cannot swap visits", () => {
       byLabel[LOOK_FOR_ROBOT_CANDIDATES_CTA]
     );
     expect(byLabel[LOOK_FOR_ROBOT_JOBS_CTA]).not.toBe(LANDING_SIGNUP_HREF);
-    expect(byLabel[LOOK_FOR_ROBOT_CANDIDATES_CTA]).not.toBe(LANDING_SIGNUP_HREF);
+    expect(byLabel[LOOK_FOR_ROBOT_CANDIDATES_CTA]).not.toBe(
+      LANDING_SIGNUP_HREF
+    );
     expect(byLabel[LOOK_FOR_ROBOT_JOBS_CTA]).not.toMatch(/signals|pipeline$/);
     expect(LANDING_HOW_STEPS[0].href).toBe(jobsFindHref());
     expect(LANDING_HOW_STEPS[1].href).toBe(jobsFindHref());
@@ -252,7 +254,9 @@ describe("landing chrome hrefs cannot swap visits", () => {
       LANDING_PRIVACY_HREF,
       LANDING_SUPPORT_HREF,
     ]);
-    expect(LANDING_FOOTER_LINKS.every(l => l.href && l.href !== "#")).toBe(true);
+    expect(LANDING_FOOTER_LINKS.every(l => l.href && l.href !== "#")).toBe(
+      true
+    );
     expect(LANDING_LINK_MAP.every(l => l.href && !l.href.endsWith("#"))).toBe(
       true
     );
