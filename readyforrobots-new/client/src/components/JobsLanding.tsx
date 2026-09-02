@@ -1,9 +1,15 @@
 /**
- * `/` first beat: marketing landing from the Manus mockup, then two doors.
- * Not FIND yet. Headline picker A–E is not shipped.
+ * `/` first beat: Kare Macintosh landing from docs/rfr-70s-ui-source,
+ * then two doors. Not FIND yet. Headline picker A–E is not shipped.
  */
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useLocation } from "wouter";
+import {
+  PixelBriefcase,
+  PixelDoc,
+  PixelHand,
+  PixelRobot,
+} from "@/components/LandingPixels";
 import {
   LANDING_BRIEFING_CTA,
   LANDING_BRIEFING_HREF,
@@ -39,7 +45,7 @@ import {
   type LandingBriefJob,
 } from "@/lib/jobsLanding";
 
-function Eyebrow({ children }: { children: string }) {
+function Chip({ children }: { children: string }) {
   return (
     <p className="rfr-landing-eyebrow" style={{ color: C.mint }}>
       {children}
@@ -47,15 +53,19 @@ function Eyebrow({ children }: { children: string }) {
   );
 }
 
-function Corners() {
-  const cls = "pointer-events-none absolute h-3 w-3 border-current opacity-60";
+function WindowBar({ title, right }: { title: string; right?: ReactNode }) {
   return (
-    <>
-      <span className={`${cls} top-0 left-0 border-t-2 border-l-2`} />
-      <span className={`${cls} top-0 right-0 border-t-2 border-r-2`} />
-      <span className={`${cls} bottom-0 left-0 border-b-2 border-l-2`} />
-      <span className={`${cls} bottom-0 right-0 border-b-2 border-r-2`} />
-    </>
+    <div className="rfr-landing-windowbar">
+      <div className="flex items-center gap-2">
+        <span
+          className="h-3 w-3 border-2"
+          style={{ borderColor: C.muted }}
+          aria-hidden="true"
+        />
+        <span className="rfr-landing-windowbar-title">{title}</span>
+      </div>
+      {right}
+    </div>
   );
 }
 
@@ -63,48 +73,25 @@ function LandingCta({
   children,
   onClick,
   href,
+  primary = false,
 }: {
   children: string;
   onClick?: () => void;
   href?: string;
+  primary?: boolean;
 }) {
-  const className = "rfr-landing-cta";
-  const style = {
-    background: C.mint,
-    color: C.page,
-  };
+  const className = primary ? "rfr-landing-cta" : "rfr-landing-ghost";
   if (href) {
     return (
-      <a href={href} className={className} style={style}>
+      <a href={href} className={className}>
         {children} <span aria-hidden="true">→</span>
       </a>
     );
   }
   return (
-    <span className={className} style={style} onClick={onClick}>
+    <span className={className} onClick={onClick}>
       {children} <span aria-hidden="true">→</span>
     </span>
-  );
-}
-
-function LandingGhostCta({
-  children,
-  href,
-}: {
-  children: string;
-  href: string;
-}) {
-  return (
-    <a
-      href={href}
-      className="rfr-landing-ghost"
-      style={{ borderColor: C.line, color: C.text }}
-    >
-      {children}{" "}
-      <span aria-hidden="true" style={{ color: C.mint }}>
-        →
-      </span>
-    </a>
   );
 }
 
@@ -114,6 +101,7 @@ function DoorCard({
   body,
   featured,
   option,
+  icon,
   onOpen,
 }: {
   label: string;
@@ -121,6 +109,7 @@ function DoorCard({
   body: string;
   featured?: boolean;
   option: "jobs" | "candidates";
+  icon: ReactNode;
   onOpen: () => void;
 }) {
   return (
@@ -129,40 +118,42 @@ function DoorCard({
       data-landing-option={option}
       aria-label={title}
       onClick={onOpen}
-      className="rfr-landing-door group relative flex flex-col p-8 text-left md:p-10"
-      style={{
-        background: featured
-          ? `linear-gradient(160deg, ${C.card} 0%, ${C.panel} 100%)`
-          : C.panel,
-        border: `1px solid ${featured ? C.mintDim : C.line}`,
-        color: C.mint,
-      }}
+      className="rfr-landing-door flex flex-col text-left"
+      data-featured={featured ? "true" : "false"}
     >
-      <Corners />
-      <p
-        className="text-[10px] font-bold uppercase tracking-[0.35em]"
-        style={{
-          color: featured ? C.mint : C.muted,
-          fontFamily: "var(--font-landing-mono)",
-        }}
-      >
-        {label}
-      </p>
-      <h3
-        className="mt-4 text-2xl font-bold md:text-3xl"
-        style={{ color: C.text, fontFamily: "var(--font-landing-display)" }}
-      >
-        {title}
-      </h3>
-      <p
-        className="mt-3 flex-1 text-sm leading-relaxed"
-        style={{ color: C.muted }}
-      >
-        {body}
-      </p>
-      <span className="mt-8">
-        <LandingCta>{title}</LandingCta>
-      </span>
+      <WindowBar
+        title={label}
+        right={
+          <span
+            className="h-3 w-3 border-2"
+            style={{
+              background: featured ? C.mint : "transparent",
+              borderColor: featured ? C.mint : C.muted,
+            }}
+            aria-hidden="true"
+          />
+        }
+      />
+      <div className="p-6 md:p-8">
+        <div className="flex items-start justify-between gap-4">
+          <h3
+            className="text-2xl font-semibold md:text-3xl"
+            style={{
+              color: C.text,
+              fontFamily: "var(--font-landing-display)",
+            }}
+          >
+            {title}
+          </h3>
+          <span className="mt-1 shrink-0">{icon}</span>
+        </div>
+        <p className="mt-3 text-sm leading-relaxed" style={{ color: C.muted }}>
+          {body}
+        </p>
+        <span className="mt-7 inline-block">
+          <LandingCta primary={featured}>{title}</LandingCta>
+        </span>
+      </div>
     </button>
   );
 }
@@ -178,51 +169,71 @@ function BriefJobCard({
 }) {
   return (
     <article
-      className="overflow-hidden"
-      style={{ border: `1px solid ${C.line}`, background: C.panel }}
+      className="overflow-hidden border-2"
+      style={{
+        borderColor: open ? C.mint : C.line,
+        background: open ? C.panel : C.navy2,
+      }}
     >
       <button
         type="button"
         aria-expanded={open}
         onClick={onToggle}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left sm:px-5"
+        className="flex w-full items-center gap-3 px-4 py-4 text-left md:gap-5 md:px-5"
       >
         <span
-          className="shrink-0 font-mono text-[11px] font-bold tracking-wider"
-          style={{ color: C.mint, fontFamily: "var(--font-landing-mono)" }}
+          className="w-16 shrink-0 text-[10px] font-bold"
+          style={{
+            color: C.mint,
+            fontFamily: "var(--font-landing-ui)",
+          }}
         >
           {job.id}
         </span>
+        <div className="min-w-0 flex-1">
+          <p
+            className="truncate text-lg font-semibold"
+            style={{
+              color: C.text,
+              fontFamily: "var(--font-landing-display)",
+            }}
+          >
+            {job.employer}
+          </p>
+          <p
+            className="truncate text-[11px] uppercase"
+            style={{
+              color: C.muted,
+              fontFamily: "var(--font-landing-ui)",
+              letterSpacing: "0.08em",
+            }}
+          >
+            {job.sector}
+          </p>
+        </div>
         <span
-          className="min-w-0 flex-1 truncate font-bold"
-          style={{ color: C.text, fontFamily: "var(--font-landing-display)" }}
-        >
-          {job.employer}
-        </span>
-        <span
-          className="hidden truncate text-sm sm:block"
-          style={{ color: C.muted }}
-        >
-          {job.sector}
-        </span>
-        <span
-          className="shrink-0 text-[10px] font-bold uppercase tracking-[0.18em]"
+          className="hidden shrink-0 px-2 py-1 text-[9px] font-bold uppercase sm:inline-block"
           style={{
-            color: job.status === "OPEN" ? C.page : C.mint,
+            fontFamily: "var(--font-landing-ui)",
+            letterSpacing: "0.1em",
+            color: job.status === "OPEN" ? C.page : C.muted,
             background: job.status === "OPEN" ? C.mint : "transparent",
-            border: `1px solid ${C.mintDim}`,
-            padding: "4px 8px",
-            fontFamily: "var(--font-landing-mono)",
+            border: `2px solid ${job.status === "OPEN" ? C.mint : C.line}`,
           }}
         >
           {job.status}
-          <span aria-hidden="true">{open ? " ▾" : " ▸"}</span>
+        </span>
+        <span
+          aria-hidden="true"
+          style={{ color: C.mint, fontFamily: "var(--font-landing-ui)" }}
+        >
+          {open ? "▲" : "▼"}
         </span>
       </button>
       {open ? (
         <div
-          className="grid gap-5 border-t px-4 py-5 sm:grid-cols-2 sm:px-5"
-          style={{ borderColor: C.line }}
+          className="rfr-landing-dither grid gap-x-10 gap-y-4 border-t-2 px-4 pb-6 pt-4 md:grid-cols-2 md:px-5"
+          style={{ borderColor: C.line, backgroundColor: C.panel }}
         >
           {[
             ["Employer", `${job.employer} — ${job.sector}`],
@@ -234,10 +245,11 @@ function BriefJobCard({
           ].map(([label, value]) => (
             <div key={label}>
               <p
-                className="text-[10px] font-bold uppercase tracking-[0.22em]"
+                className="text-[9px] font-bold uppercase"
                 style={{
                   color: C.muted,
-                  fontFamily: "var(--font-landing-mono)",
+                  fontFamily: "var(--font-landing-ui)",
+                  letterSpacing: "0.1em",
                 }}
               >
                 {label}
@@ -251,8 +263,8 @@ function BriefJobCard({
             </div>
           ))}
           <p
-            className="sm:col-span-2 text-xs"
-            style={{ color: C.muted, fontFamily: "var(--font-landing-mono)" }}
+            className="text-xs md:col-span-2"
+            style={{ color: C.muted, fontFamily: "var(--font-landing-ui)" }}
           >
             Qualification is explainable — never a %. Cards stay Conditional
             until there is evidence.
@@ -273,38 +285,49 @@ export default function JobsLanding() {
       className="rfr-landing min-h-screen pt-14"
       style={{ background: C.page, color: C.text }}
     >
-      <section className="relative overflow-hidden">
-        <div className="rfr-landing-hero-grid" aria-hidden="true" />
-        <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-16 md:pt-24">
-          <Eyebrow>{LANDING_EYEBROW}</Eyebrow>
-          <h1 className="rfr-landing-headline mt-5 max-w-4xl">
-            {headline.map((part, index) => (
-              <span
-                key={part.text}
-                style={{ color: part.accent ? C.mint : C.text }}
+      <section className="relative border-b-2" style={{ borderColor: C.line }}>
+        <div className="rfr-landing-hero-dither" aria-hidden="true" />
+        <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-16 md:pt-24">
+          <Chip>{LANDING_EYEBROW}</Chip>
+          <div className="mt-6 flex items-start gap-6 md:gap-10">
+            <div className="min-w-0 flex-1">
+              <h1 className="rfr-landing-headline max-w-3xl">
+                {headline.map((part, index) => (
+                  <span
+                    key={part.text}
+                    style={{ color: part.accent ? C.mint : C.text }}
+                  >
+                    {part.text}
+                    {index < headline.length - 1 ? " " : ""}
+                  </span>
+                ))}
+              </h1>
+              <p
+                className="mt-6 max-w-xl text-base leading-relaxed md:text-lg"
+                style={{ color: C.muted }}
               >
-                {part.text}
-                {index < headline.length - 1 ? " " : ""}
-              </span>
-            ))}
-          </h1>
-          <p
-            className="mt-6 max-w-xl text-base leading-relaxed md:text-lg"
-            style={{ color: C.muted }}
-          >
-            {LANDING_SUBHEAD}
-          </p>
+                {LANDING_SUBHEAD}
+              </p>
+            </div>
+            <div
+              className="rfr-landing-hero-mark hidden shrink-0 items-center justify-center md:flex"
+              aria-hidden="true"
+            >
+              <PixelRobot size={88} color={C.mint} />
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-20">
-        <div className="grid gap-5 md:grid-cols-2">
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <div className="grid gap-6 md:grid-cols-2">
           <DoorCard
             label={LANDING_JOBS_LABEL}
             title={LOOK_FOR_ROBOT_JOBS_CTA}
             body={LANDING_JOBS_HINT}
             featured
             option="jobs"
+            icon={<PixelRobot size={40} color={C.mint} />}
             onOpen={() => setLocation(jobsFindHref())}
           />
           <DoorCard
@@ -312,73 +335,78 @@ export default function JobsLanding() {
             title={LOOK_FOR_ROBOT_CANDIDATES_CTA}
             body={LANDING_CANDIDATES_HINT}
             option="candidates"
+            icon={<PixelBriefcase size={40} color={C.muted} />}
             onOpen={() => setLocation(jobsCandidatesHref())}
           />
         </div>
       </section>
 
       <section
-        className="border-t"
-        style={{ borderColor: C.line, background: C.panel }}
+        className="border-y-2"
+        style={{ borderColor: C.line, background: C.navy2 }}
       >
-        <div className="mx-auto max-w-6xl px-4 py-20">
-          <Eyebrow>{LANDING_HOW_EYEBROW}</Eyebrow>
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <Chip>{LANDING_HOW_EYEBROW}</Chip>
           <h2 className="rfr-landing-section-title mt-4">
             {LANDING_HOW_HEADLINE}
           </h2>
-          <div className="relative mt-12 grid gap-8 md:grid-cols-3">
-            <div
-              className="absolute top-5 right-0 left-0 hidden h-px md:block"
-              style={{ background: C.line }}
-              aria-hidden="true"
-            />
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
             {LANDING_HOW_STEPS.map(step => (
-              <div key={step.n} className="relative">
-                <div
-                  className="inline-flex h-10 w-10 items-center justify-center text-xs font-bold"
-                  style={{
-                    border: `1px solid ${C.mintDim}`,
-                    color: C.mint,
-                    background: C.page,
-                    fontFamily: "var(--font-landing-mono)",
-                  }}
-                >
-                  {step.n}
+              <div key={step.n} className="rfr-landing-step">
+                <WindowBar
+                  title={`step ${step.n}`}
+                  right={
+                    <span
+                      className="text-[10px] font-bold"
+                      style={{
+                        color: C.mint,
+                        fontFamily: "var(--font-landing-ui)",
+                      }}
+                    >
+                      {step.n}
+                    </span>
+                  }
+                />
+                <div className="p-6">
+                  <h3
+                    className="text-xl font-semibold"
+                    style={{ fontFamily: "var(--font-landing-display)" }}
+                  >
+                    {step.title}
+                  </h3>
+                  <p
+                    className="mt-2 text-sm leading-relaxed"
+                    style={{ color: C.muted }}
+                  >
+                    {step.body}
+                  </p>
                 </div>
-                <h3
-                  className="mt-4 text-lg font-bold"
-                  style={{ fontFamily: "var(--font-landing-display)" }}
-                >
-                  {step.title}
-                </h3>
-                <p
-                  className="mt-2 text-sm leading-relaxed"
-                  style={{ color: C.muted }}
-                >
-                  {step.body}
-                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-20">
+      <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <Eyebrow>{LANDING_BRIEF_EYEBROW}</Eyebrow>
+            <Chip>{LANDING_BRIEF_EYEBROW}</Chip>
             <h2 className="rfr-landing-section-title mt-4">
               {LANDING_BRIEF_HEADLINE}
             </h2>
           </div>
           <p
-            className="max-w-xs text-xs"
-            style={{ color: C.muted, fontFamily: "var(--font-landing-mono)" }}
+            className="max-w-xs text-[10px] uppercase"
+            style={{
+              color: C.muted,
+              fontFamily: "var(--font-landing-ui)",
+              letterSpacing: "0.1em",
+            }}
           >
             {LANDING_BRIEF_NOTE}
           </p>
         </div>
-        <div className="mt-8 space-y-3">
+        <div className="mt-8 space-y-4">
           {LANDING_BRIEF_JOBS.map(job => (
             <BriefJobCard
               key={job.id}
@@ -393,35 +421,32 @@ export default function JobsLanding() {
       </section>
 
       <section
-        className="border-t"
-        style={{ borderColor: C.line, background: C.panel }}
+        className="border-y-2"
+        style={{ borderColor: C.line, background: C.navy2 }}
       >
-        <div className="mx-auto max-w-6xl px-4 py-20">
-          <Eyebrow>{LANDING_VOCAB_EYEBROW}</Eyebrow>
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <Chip>{LANDING_VOCAB_EYEBROW}</Chip>
           <h2 className="rfr-landing-section-title mt-4">
             {LANDING_VOCAB_HEADLINE}
           </h2>
-          <div className="mt-10 grid gap-x-12 md:grid-cols-2">
+          <div className="mt-10 grid gap-6 md:grid-cols-2">
             {LANDING_VOCAB.map(item => (
               <div
                 key={item.term}
-                className="border-b py-5"
-                style={{ borderColor: C.line }}
+                className="border-2 p-5"
+                style={{ borderColor: C.line, background: C.panel }}
               >
-                <div className="flex items-baseline gap-3">
-                  <span
-                    className="h-1.5 w-1.5 shrink-0 translate-y-[-2px]"
-                    style={{ background: C.mint }}
-                  />
+                <div className="flex items-center gap-3">
+                  <PixelDoc size={22} color={C.mint} />
                   <h3
-                    className="font-bold"
+                    className="text-xl font-semibold"
                     style={{ fontFamily: "var(--font-landing-display)" }}
                   >
                     {item.term}
                   </h3>
                 </div>
                 <p
-                  className="mt-1.5 pl-[18px] text-sm leading-relaxed"
+                  className="mt-2 text-sm leading-relaxed"
                   style={{ color: C.muted }}
                 >
                   {item.def}
@@ -432,58 +457,57 @@ export default function JobsLanding() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-20">
-        <div
-          className="relative flex flex-wrap items-center justify-between gap-8 p-8 md:p-12"
-          style={{
-            border: `1px solid ${C.mintDim}`,
-            background: `linear-gradient(120deg, ${C.card}, ${C.panel})`,
-            color: C.mint,
-          }}
-        >
-          <Corners />
-          <div>
-            <h2
-              className="text-2xl font-bold md:text-3xl"
-              style={{
-                color: C.text,
-                fontFamily: "var(--font-landing-display)",
-              }}
-            >
-              {LANDING_CLOSE_HEADLINE}
-            </h2>
-            <p className="mt-2 text-sm" style={{ color: C.muted }}>
-              {LANDING_CLOSE_SUBHEAD}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <LandingCta href={LANDING_SIGNUP_HREF}>
-              {LANDING_START_FREE_CTA}
-            </LandingCta>
-            <LandingGhostCta href={LANDING_BRIEFING_HREF}>
-              {LANDING_BRIEFING_CTA}
-            </LandingGhostCta>
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <div className="rfr-landing-close">
+          <WindowBar
+            title="readyforrobots start"
+            right={<PixelHand size={20} color={C.mint} />}
+          />
+          <div className="flex flex-wrap items-center justify-between gap-8 p-8 md:p-10">
+            <div>
+              <h2
+                className="text-3xl font-medium md:text-4xl"
+                style={{ fontFamily: "var(--font-landing-display)" }}
+              >
+                {LANDING_CLOSE_HEADLINE}
+              </h2>
+              <p className="mt-2 text-sm" style={{ color: C.muted }}>
+                {LANDING_CLOSE_SUBHEAD}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <LandingCta primary href={LANDING_SIGNUP_HREF}>
+                {LANDING_START_FREE_CTA}
+              </LandingCta>
+              <LandingCta href={LANDING_BRIEFING_HREF}>
+                {LANDING_BRIEFING_CTA}
+              </LandingCta>
+            </div>
           </div>
         </div>
       </section>
 
-      <footer className="border-t" style={{ borderColor: C.line }}>
-        <div
-          className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-10 gap-y-4 px-4 py-10 text-xs"
-          style={{ color: C.muted }}
-        >
-          <p style={{ fontFamily: "var(--font-landing-mono)" }}>
-            {LANDING_FOOTER_MARK}
-          </p>
-          <div
-            className="flex flex-wrap gap-6 font-bold uppercase tracking-[0.2em]"
-            style={{ fontFamily: "var(--font-landing-mono)" }}
-          >
+      <footer className="border-t-2" style={{ borderColor: C.line }}>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-10 gap-y-4 px-4 py-8">
+          <div className="flex items-center gap-3">
+            <PixelRobot size={22} color={C.mint} />
+            <p
+              className="text-[10px] uppercase"
+              style={{
+                color: C.muted,
+                fontFamily: "var(--font-landing-ui)",
+                letterSpacing: "0.1em",
+              }}
+            >
+              {LANDING_FOOTER_MARK}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-5">
             {LANDING_FOOTER_LINKS.map(link => (
               <a
                 key={link.label}
                 href={link.href}
-                className="transition-colors hover:text-white"
+                className="rfr-landing-footer-link"
               >
                 {link.label}
               </a>

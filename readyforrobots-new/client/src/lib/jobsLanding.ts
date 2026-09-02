@@ -5,10 +5,9 @@
  * Option 2 Look for robot candidates → employer MATCH/POST (`/?visit=candidates`).
  * Wordmark `/?new=1` returns to this fork. FIND after the fork is unchanged.
  *
- * Layout follows the 2026-09-01 Manus mockup
- * (https://rfr70sui-wipjpxme.manus.space). Operator copy wins on
- * headline + subhead. The A–E picker is designer chrome and stays out
- * of production.
+ * Visual source: docs/rfr-70s-ui-source Home.tsx (dark navy + Kare
+ * Macintosh). Operator copy wins on headline + subhead. The A–E picker
+ * is designer chrome and stays out of production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -162,16 +161,17 @@ export const LANDING_FOOTER_LINKS = [
   },
 ] as const;
 
-/** Mockup palette, landing only. FIND / employer keep Jobs chrome. */
+/** Kare Macintosh palette, landing only. FIND / employer keep Jobs chrome. */
 export const LANDING_COLORS = {
   page: "#0A0F1E",
-  panel: "#0E1526",
+  navy2: "#0D1426",
+  panel: "#111A30",
   card: "#111A30",
   mint: "#2EE6A8",
   mintDim: "#1E8F6B",
   text: "#E8EEF7",
   muted: "#8B98B0",
-  line: "rgba(139,152,176,0.18)",
+  line: "rgba(139,152,176,0.22)",
 } as const;
 
 export const I_KNOW_THE_ROBOT_LABEL = "I know the robot";
