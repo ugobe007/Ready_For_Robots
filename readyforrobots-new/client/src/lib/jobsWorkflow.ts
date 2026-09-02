@@ -1097,7 +1097,7 @@ export const JOBS_APPLY_CTA_CLASS =
   "rfr-bevel rfr-jobs-apply-cta inline-flex items-center justify-center px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-white transition hover:bg-violet-700";
 export const JOBS_APPLY_CTA_BUTTON_CLASS =
   "rfr-bevel rfr-jobs-apply-cta inline-flex items-center justify-center px-6 py-4 text-base font-bold uppercase tracking-[0.06em] text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-40";
-export const FIND_JOBS_HOME_HEADLINE = "Find Jobs for Robots.";
+export const FIND_JOBS_HOME_HEADLINE = "Jobs for robots.";
 export const FIND_JOBS_HOME_SUBHEAD =
   "Enter your URL, we match your robots to available jobs.";
 export const FIND_JOBS_HEADLINE_CLASS = "rfr-find-headline mt-1 text-slate-100";
