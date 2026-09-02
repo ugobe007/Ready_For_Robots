@@ -69,7 +69,7 @@ export const LANDING_HOW_STEPS = [
 ] as const;
 
 export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
-export const LANDING_BRIEF_HEADLINE = "Jobs robots can take";
+export const LANDING_BRIEF_HEADLINE = "Jobs for robots.";
 export const LANDING_BRIEF_JOB_FIELD = "Jobs";
 export const LANDING_BRIEF_NOTE =
   "5 jobs on free. Cards stay Conditional until evidence.";
@@ -216,9 +216,9 @@ export const LANDING_COLORS = {
   line: "rgba(139,152,176,0.22)",
 } as const;
 
-export const I_KNOW_THE_ROBOT_LABEL = "I know the robot";
+export const I_KNOW_THE_ROBOT_LABEL = "What type of robot?";
 export const I_KNOW_THE_ROBOT_HINT =
-  "Pick a class or a named SKU we already have. No invented models.";
+  "Pick a type we already list. Then find jobs.";
 
 export const EMPLOYER_MATCH_CTA = "Match robots →";
 export const EMPLOYER_POST_JOB_CTA = "Post this job →";
