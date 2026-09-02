@@ -42,7 +42,11 @@ import {
   landingVisitFromSearch,
 } from "./jobsLanding";
 import { catalogSkusForClass, listKnownOemCatalog } from "./knownOemCatalog";
-import { jobsCrmOpenHref, jobsFreshHomeHref } from "./jobsWorkflow";
+import {
+  FIND_JOBS_HOME_HEADLINE,
+  jobsCrmOpenHref,
+  jobsFreshHomeHref,
+} from "./jobsWorkflow";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -104,6 +108,8 @@ describe("landing fork", () => {
     );
     expect(LANDING_INTRO).not.toMatch(/SIGNAL|Apollo|Hunter|ATS/i);
     expect(LANDING_BRIEF_HEADLINE).toBe("Jobs for robots.");
+    expect(FIND_JOBS_HOME_HEADLINE).toBe("Jobs for robots.");
+    expect(LANDING_HEADLINE).not.toBe(FIND_JOBS_HOME_HEADLINE);
     expect(LANDING_BRIEF_JOB_FIELD).toBe("Jobs");
     expect(LANDING_SUBHEAD).not.toMatch(
       /keep them in our CRM|Paste a product URL|who is this visit|choose your workflow/i

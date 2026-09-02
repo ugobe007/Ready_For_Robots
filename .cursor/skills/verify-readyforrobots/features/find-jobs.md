@@ -23,7 +23,7 @@ Preconditions:
 - Doctor reports `worth_driving: true`.
 - Do not use SIGNAL `/pipeline` as the entry.
 
-- **Open FIND.** Load `/?visit=jobs` (or `/` then Jobs for Robots). Heading is `Find Jobs for Robots.` URL placeholder is `Paste robot product URL`. Form name is `Find jobs for your robot`.
+- **Open FIND.** Load `/?visit=jobs` (or `/` then Jobs for Robots). Heading is `Jobs for robots.` URL placeholder is `Paste robot product URL`. Form name is `Find jobs for your robot`. Type path is **What type of robot?** then **Find jobs →** after a class is selected.
 - **Submit a known robot.** Paste `https://www.dexmate.ai/` (or Fourier) and start Find jobs. One SKU continues to jobs on the same click; several SKUs must keep 01/02/03 as links.
 - **API entry (CI).** Run `python3 scripts/agent_verify.py drive --feature find-jobs --evidence "$EVIDENCE"`. Expect HTTP 200, `state` `matches` or `thin_corpus`, `job_count > 0`, and job titles. When `matcher` is `requirement_v1`, at least one `company_name` is present.
 - **Real URL (pstack Critic).** Run `python3 scripts/pstack_release.py` (or `drive --feature find-url`). Posts `POST /api/robot-job-search` for Dexmate and Greenfield. Fail if the payload is Research failed / Failed to fetch, or if Greenfield identity looks like strawberry / Agrobot. Diligent (`https://www.diligentrobots.com/`) is a held-out `healthcare_class` critic: fail if `robot_class=humanoid` or the empty copy is `No humanoid jobs for this robot yet.`

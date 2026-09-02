@@ -214,7 +214,7 @@ describe("jobsWorkflow", () => {
     expect(jobsProcessActionLabel("find")).toBe("Find jobs →");
     expect(jobsProcessActionLabel("find")).not.toMatch(/Apply/i);
     expect(jobsProcessActionLabel("find")).not.toMatch(/Start /i);
-    expect(FIND_JOBS_HOME_HEADLINE).toBe("Find Jobs for Robots.");
+    expect(FIND_JOBS_HOME_HEADLINE).toBe("Jobs for robots.");
     expect(FIND_JOBS_HOME_HEADLINE).not.toMatch(/Apply/i);
     expect(jobsProcessActionLabel("jobs")).toBe(JOBS_NEXT_CTA);
     expect(jobsProcessActionLabel("jobs")).not.toMatch(/Apply/i);
@@ -831,7 +831,7 @@ describe("jobsWorkflow", () => {
     expect(jobsFreshHomeHref()).toBe("/?new=1");
     expect(FIND_JOBS_CTA).toBe("Find jobs →");
     expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
-    expect(FIND_JOBS_HOME_HEADLINE).toBe("Find Jobs for Robots.");
+    expect(FIND_JOBS_HOME_HEADLINE).toBe("Jobs for robots.");
     expect(FIND_JOBS_HOME_SUBHEAD).toBe(
       "Enter your URL, we match your robots to available jobs."
     );
