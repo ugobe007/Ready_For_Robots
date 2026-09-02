@@ -3,13 +3,13 @@
 **Date:** 2026-09-01
 **Type:** build
 **Branch:** `cursor/rfr-70s-ui-apply-009b` from `origin/main` + `docs/rfr-70s-ui-source` on `origin/cursor/rfr-70s-ui-source-009b`
-**Did not** Fly-deploy. **Did not** merge #195. **Did not** reuse #212.
+**Did not** Fly-deploy. **Did not** merge #195. **Did not** reuse #212 as the landing.
 
 ## Verdict
 
 Ported. Source folder is on `origin/cursor/rfr-70s-ui-source-009b` as a nested Manus app (`docs/rfr-70s-ui-source/rfr-70s-ui-source/`). `App.tsx` there mounts `Home.tsx` (dark navy + Kare Macintosh). That is what landed on `/`.
 
-#212 (`cursor/rfr-70s-ui-port-009b`) stays the missing-folder note. This branch is the apply.
+#212 (`cursor/rfr-70s-ui-port-009b`) was the missing-folder note. This branch is the apply. Merged `origin/main` so #210 copy, #211 FIND stay + employer MATCH, and #212's report stay on history without replacing the port.
 
 ## What was ported
 
@@ -32,15 +32,16 @@ Headline picker A–E stayed out. Cal stayed off landing. Brief cards still name
 
 FIND after the jobs door is still Jobs chrome (`RobotJobsWorkspace`). Only `/` got the Kare skin.
 
-## FIND timeout
+## FIND timeout and employer MATCH (from main)
 
-#211 was still open. Cherry-picked the stay-on-FIND commits onto this branch:
+`origin/main` now includes #211:
 
 - Timeout / 500 / abort keep `/?visit=jobs`
 - `ensureFindStayVisit` + Jobs.tsx visit guard
 - Identity timeout 8s, search timeout 12s
+- Employer MATCH catalog snapshot + JD upload (`catalog_only`)
 
-Left off #211's employer MATCH rewrite (JD upload, `catalog_only`). That is a different product change.
+Cal desk types from #205 (`CalDeskTurnBody` and the rest) stay on main. They are not on the landing.
 
 ## Proof
 
@@ -59,6 +60,4 @@ Left off #211's employer MATCH rewrite (JD upload, `catalog_only`). That is a di
 - Nested Manus tree (server, shadcn dump, Mainframe / Help Wanted / Space-Age routes) is not copied into this PR. Visual source stays on `cursor/rfr-70s-ui-source-009b`.
 - ExperimentHeader is still the product bar (Jobs / About / CRM / Sign in). The mockup's duplicate header was not stacked on top.
 - FIND and employer MATCH keep current Jobs chrome. They are not Kare windows.
-- #211 employer MATCH / JD file is still on that PR, not here.
-- #212 is still the "folder missing" draft. Close it when this lands.
 - No Fly. Production HTML will not show this until a frontend deploy.

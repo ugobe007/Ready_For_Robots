@@ -204,6 +204,12 @@ def upsert_robot_job_from_extract(
     req["work_task_model_kind"] = extract.get("work_task_model_kind") or "unknown"
     req["work_task_model_source"] = extract.get("work_task_model_source")
     req["unknowns"] = extract.get("unknowns") or []
+    if extract.get("job_description"):
+        req["job_description"] = str(extract["job_description"])[:12000]
+    if extract.get("job_description_filename"):
+        req["job_description_filename"] = str(
+            extract["job_description_filename"]
+        )[:240]
     _copy_contact_fields(req, extract)
     row.requirements = req
     row.unknowns = list(extract.get("unknowns") or [])

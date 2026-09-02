@@ -194,6 +194,9 @@ describe("landing fork", () => {
     expect(employer).toMatch(/aria-label="Employer process"/);
     expect(employer).toMatch(/fetchEmployerRobotMatch/);
     expect(employer).toMatch(/postEmployerJobDraft/);
+    expect(employer).toMatch(/readEmployerJdFile/);
+    expect(employer).toMatch(/type="file"/);
+    expect(employer).toMatch(/EMPLOYER_JD_ACCEPT/);
     expect(employer).not.toMatch(/SIGNAL|Apollo|find-robots/i);
     expect(employer).not.toMatch(/CalJobsDesk|send_buyer_intro/);
   });

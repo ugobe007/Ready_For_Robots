@@ -514,7 +514,7 @@ def cmd_ci(args: argparse.Namespace) -> int:
     write_json(out_dir / "pstack-release.json", pstack)
     drives = {}
     rc = 0 if doc.get("ok") and pstack.get("ok") else 1
-    for feat in ("find-jobs", "jobs-chrome", "about", "jobs-crm", "find-stay"):
+    for feat in ("find-jobs", "jobs-chrome", "about", "jobs-crm", "find-stay", "employer-match"):
         if feat == "find-jobs":
             drives[feat] = drive_find_jobs(api=args.fly)
         elif feat == "jobs-chrome":

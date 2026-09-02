@@ -30,9 +30,11 @@ class EmployerJobDraftIn(BaseModel):
     employer: str = Field(..., max_length=240)
     title: str = Field(..., max_length=200)
     workplace: Optional[str] = Field(default=None, max_length=240)
-    description: Optional[str] = Field(default=None, max_length=4000)
+    description: Optional[str] = Field(default=None, max_length=12000)
     work_class: Optional[str] = Field(default=None, max_length=40)
     job_url: Optional[str] = Field(default=None, max_length=2000)
+    jd_filename: Optional[str] = Field(default=None, max_length=240)
+    jd_text: Optional[str] = Field(default=None, max_length=12000)
     shortlisted: list[dict[str, Any]] = Field(default_factory=list)
 
 
@@ -69,9 +71,15 @@ def post_employer_job_draft(
         "work_language_terms": [body.work_class] if body.work_class else [],
         "unknowns": [],
     }
+    jd_text = (body.jd_text or "").strip() or (body.description or "").strip()
+    jd_filename = (body.jd_filename or "").strip() or None
     if body.description:
         extract["unknowns"] = []
         extract["job_function"] = extract["job_function"] or "work"
+    if jd_text:
+        extract["job_description"] = jd_text[:12000]
+    if jd_filename:
+        extract["job_description_filename"] = jd_filename[:240]
     try:
         row = upsert_robot_job_from_extract(
             db,
