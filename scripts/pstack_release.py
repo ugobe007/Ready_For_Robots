@@ -379,7 +379,7 @@ def phase_how() -> dict[str, Any]:
         _check(
             "find_route",
             find_is_home,
-            "FIND is / after Look for robot jobs; RobotJobsWorkspace stays on pages/Jobs.tsx",
+            "FIND is / after Jobs for Robots; RobotJobsWorkspace stays on pages/Jobs.tsx",
         )
     )
 

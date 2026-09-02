@@ -1,48 +1,22 @@
 /**
- * `/` first beat: Kare Macintosh landing from docs/rfr-70s-ui-source,
- * then two doors. Not FIND yet. Headline picker A–E is not shipped.
+ * `/` first beat: sparse System 1 fork, then two doors. Not FIND yet.
+ * Headline picker A–E is not shipped.
  */
-import { useState, type ReactNode } from "react";
-import {
-  PixelBriefcase,
-  PixelDoc,
-  PixelHand,
-} from "@/components/LandingPixels";
 import PixelIcon from "@/components/PixelIcon";
-import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
+import { KARE_FACE } from "@/lib/kareIcons";
 import {
-  LANDING_BRIEFING_CTA,
-  LANDING_BRIEFING_HREF,
-  LANDING_BRIEF_EYEBROW,
-  LANDING_BRIEF_HEADLINE,
-  LANDING_BRIEF_JOBS,
-  LANDING_BRIEF_JOB_CTA,
-  LANDING_BRIEF_NOTE,
-  LANDING_CANDIDATES_HINT,
-  LANDING_CANDIDATES_LABEL,
-  LANDING_CLOSE_HEADLINE,
-  LANDING_CLOSE_SUBHEAD,
   LANDING_COLORS as C,
   LANDING_EYEBROW,
   LANDING_FOOTER_LINKS,
   LANDING_FOOTER_MARK,
-  LANDING_HEADLINE,
-  LANDING_HOW_EYEBROW,
-  LANDING_HOW_HEADLINE,
-  LANDING_HOW_STEPS,
-  LANDING_JOBS_HINT,
-  LANDING_JOBS_LABEL,
-  LANDING_SIGNUP_HREF,
-  LANDING_START_FREE_CTA,
+  LANDING_HEADLINE_END,
+  LANDING_HEADLINE_LEAD,
+  LANDING_KICKER_JOBS,
   LANDING_SUBHEAD,
-  LANDING_VOCAB,
-  LANDING_VOCAB_EYEBROW,
-  LANDING_VOCAB_HEADLINE,
   LOOK_FOR_ROBOT_CANDIDATES_CTA,
   LOOK_FOR_ROBOT_JOBS_CTA,
   jobsCandidatesHref,
   jobsFindHref,
-  type LandingBriefJob,
 } from "@/lib/jobsLanding";
 
 function LandingFace({ scale }: { scale: number }) {
@@ -50,464 +24,54 @@ function LandingFace({ scale }: { scale: number }) {
     <PixelIcon
       map={KARE_FACE}
       scale={scale}
-      fill={FACE_EMERALD}
+      fill={C.page}
       background="transparent"
     />
   );
 }
 
-function Chip({ children }: { children: string }) {
+export default function JobsLanding() {
   return (
-    <p className="rfr-landing-eyebrow" style={{ color: C.mint }}>
-      {children}
-    </p>
-  );
-}
-
-function WindowBar({ title, right }: { title: string; right?: ReactNode }) {
-  return (
-    <div className="rfr-landing-windowbar">
-      <div className="flex items-center gap-2">
-        <span
-          className="h-2 w-2 border"
-          style={{ borderColor: C.muted }}
-          aria-hidden="true"
-        />
-        <span className="rfr-landing-windowbar-title">{title}</span>
-      </div>
-      {right}
-    </div>
-  );
-}
-
-function LandingCta({
-  children,
-  onClick,
-  href,
-  primary = false,
-}: {
-  children: string;
-  onClick?: () => void;
-  href?: string;
-  primary?: boolean;
-}) {
-  const className = primary ? "rfr-landing-cta" : "rfr-landing-ghost";
-  if (href) {
-    return (
-      <a href={href} className={className}>
-        {children} <span aria-hidden="true">→</span>
-      </a>
-    );
-  }
-  return (
-    <span className={className} onClick={onClick}>
-      {children} <span aria-hidden="true">→</span>
-    </span>
-  );
-}
-
-function DoorCard({
-  label,
-  title,
-  body,
-  featured,
-  option,
-  icon,
-  href,
-}: {
-  label: string;
-  title: string;
-  body: string;
-  featured?: boolean;
-  option: "jobs" | "candidates";
-  icon: ReactNode;
-  href: string;
-}) {
-  return (
-    <a
-      href={href}
-      data-landing-option={option}
-      aria-label={title}
-      className="rfr-landing-door flex flex-col text-left"
-      data-featured={featured ? "true" : "false"}
-    >
-      <WindowBar
-        title={label}
-        right={
-          <span
-            className="h-2 w-2 border"
-            style={{
-              background: featured ? C.mint : "transparent",
-              borderColor: featured ? C.mint : C.muted,
-            }}
-            aria-hidden="true"
-          />
-        }
-      />
-      <div className="p-6 md:p-8">
-        <div className="flex items-start justify-between gap-4">
-          <h3 className="rfr-landing-door-title" style={{ color: C.text }}>
-            {title}
-          </h3>
-          <span className="mt-1 shrink-0" aria-hidden="true">
-            {icon}
-          </span>
-        </div>
-        <p className="mt-3 text-sm leading-relaxed" style={{ color: C.muted }}>
-          {body}
+    <div className="rfr-landing">
+      <section className="rfr-landing-hero">
+        <p className="rfr-landing-kicker">
+          {LANDING_EYEBROW}
+          {" · "}
+          <span className="rfr-landing-kicker-jobs">{LANDING_KICKER_JOBS}</span>
         </p>
-        <span className="mt-7 inline-block">
-          <LandingCta primary={featured}>{title}</LandingCta>
-        </span>
-      </div>
-    </a>
-  );
-}
-
-function BriefJobCard({
-  job,
-  open,
-  onToggle,
-}: {
-  job: LandingBriefJob;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <article
-      className="overflow-hidden border"
-      style={{
-        borderColor: open ? C.mint : C.line,
-        background: open ? C.panel : C.navy2,
-      }}
-    >
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={onToggle}
-        className="flex w-full items-center gap-3 px-4 py-4 text-left md:gap-5 md:px-5"
-      >
-        <span
-          className="w-16 shrink-0 text-[10px] font-bold"
-          style={{
-            color: C.muted,
-            fontFamily: "var(--font-landing-ui)",
-          }}
-        >
-          {job.id}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p
-            className="truncate text-lg font-semibold"
-            style={{
-              color: C.text,
-              fontFamily: "var(--font-landing-display)",
-            }}
-          >
-            {job.employer}
-          </p>
-          <p
-            className="truncate text-[11px] uppercase"
-            style={{
-              color: C.muted,
-              fontFamily: "var(--font-landing-ui)",
-              letterSpacing: "0.04em",
-            }}
-          >
-            {job.sector}
-          </p>
+        <div className="rfr-landing-hero-row">
+          <h1 className="rfr-landing-headline">
+            {LANDING_HEADLINE_LEAD}
+            <br />
+            {LANDING_HEADLINE_END}
+          </h1>
+          <div className="rfr-landing-hero-mark" aria-hidden="true">
+            <LandingFace scale={6} />
+          </div>
         </div>
-        <span
-          className="hidden shrink-0 px-2 py-1 text-[9px] font-bold uppercase sm:inline-block"
-          style={{
-            fontFamily: "var(--font-landing-ui)",
-            letterSpacing: "0.04em",
-            color: job.status === "OPEN" ? C.page : C.muted,
-            background: job.status === "OPEN" ? C.mint : "transparent",
-            border: `1px solid ${job.status === "OPEN" ? C.mint : C.line}`,
-          }}
-        >
-          {job.status}
-        </span>
-        <span
-          aria-hidden="true"
-          style={{ color: C.muted, fontFamily: "var(--font-landing-ui)" }}
-        >
-          {open ? "▲" : "▼"}
-        </span>
-      </button>
-      {open ? (
-        <div
-          className="rfr-landing-dither grid gap-x-10 gap-y-4 border-t px-4 pb-6 pt-4 md:grid-cols-2 md:px-5"
-          style={{ borderColor: C.line, backgroundColor: C.panel }}
-        >
-          {[
-            ["Employer", `${job.employer} — ${job.sector}`],
-            ["Workplace", job.workplace],
-            ["Work", job.work],
-            ["What's driving it", job.drivers.join(" · ")],
-            ["Outreach window", job.window],
-            ["Good fit for", job.fit.join(" · ")],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <p
-                className="text-[9px] font-bold uppercase"
-                style={{
-                  color: C.muted,
-                  fontFamily: "var(--font-landing-ui)",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {label}
-              </p>
-              <p
-                className="mt-1 text-sm leading-relaxed"
-                style={{ color: C.text }}
-              >
-                {value}
-              </p>
-            </div>
-          ))}
-          <p
-            className="text-xs md:col-span-2"
-            style={{ color: C.muted, fontFamily: "var(--font-landing-ui)" }}
-          >
-            Qualification is explainable — never a %. Cards stay Conditional
-            until there is evidence.
-          </p>
+        <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
+        <nav className="rfr-landing-doors" aria-label="Choose a visit">
           <a
             href={jobsFindHref()}
-            className="mt-2 inline-block text-sm font-semibold md:col-span-2"
-            style={{ color: C.cream, fontFamily: "var(--font-landing-ui)" }}
+            data-landing-option="jobs"
+            className="rfr-landing-door-title"
           >
-            {LANDING_BRIEF_JOB_CTA} <span aria-hidden="true">→</span>
+            {LOOK_FOR_ROBOT_JOBS_CTA}
           </a>
-        </div>
-      ) : null}
-    </article>
-  );
-}
-
-export default function JobsLanding() {
-  const [openJob, setOpenJob] = useState(LANDING_BRIEF_JOBS[0]?.id ?? "");
-
-  return (
-    <div
-      className="rfr-landing min-h-screen pt-14"
-      style={{ background: C.page, color: C.text }}
-    >
-      <section className="relative border-b" style={{ borderColor: C.line }}>
-        <div className="rfr-landing-hero-dither" aria-hidden="true" />
-        <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-16 md:pt-24">
-          <Chip>{LANDING_EYEBROW}</Chip>
-          <div className="mt-6 flex items-start gap-6 md:gap-10">
-            <div className="min-w-0 flex-1">
-              <h1
-                className="rfr-landing-headline max-w-3xl"
-                style={{ color: C.cream }}
-              >
-                {LANDING_HEADLINE}
-              </h1>
-              <p
-                className="rfr-landing-subhead mt-6 max-w-xl md:text-lg"
-                style={{ color: C.muted }}
-              >
-                {LANDING_SUBHEAD}
-              </p>
-            </div>
-            <div
-              className="rfr-landing-hero-mark hidden shrink-0 items-center justify-center md:flex"
-              aria-hidden="true"
-            >
-              <LandingFace scale={6} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="grid gap-6 md:grid-cols-2">
-          <DoorCard
-            label={LANDING_JOBS_LABEL}
-            title={LOOK_FOR_ROBOT_JOBS_CTA}
-            body={LANDING_JOBS_HINT}
-            featured
-            option="jobs"
-            icon={<LandingFace scale={3} />}
-            href={jobsFindHref()}
-          />
-          <DoorCard
-            label={LANDING_CANDIDATES_LABEL}
-            title={LOOK_FOR_ROBOT_CANDIDATES_CTA}
-            body={LANDING_CANDIDATES_HINT}
-            option="candidates"
-            icon={<PixelBriefcase size={40} color={C.muted} />}
+          <a
             href={jobsCandidatesHref()}
-          />
-        </div>
-      </section>
-
-      <section
-        className="border-y"
-        style={{ borderColor: C.line, background: C.charcoal }}
-      >
-        <div className="mx-auto max-w-6xl px-4 py-16">
-          <Chip>{LANDING_HOW_EYEBROW}</Chip>
-          <h2 className="rfr-landing-section-title mt-4">
-            {LANDING_HOW_HEADLINE}
-          </h2>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {LANDING_HOW_STEPS.map(step => (
-              <div key={step.n} className="rfr-landing-step">
-                <WindowBar
-                  title={`step ${step.n}`}
-                  right={
-                    <span
-                      className="text-[10px] font-bold"
-                      style={{
-                        color: C.muted,
-                        fontFamily: "var(--font-landing-ui)",
-                      }}
-                    >
-                      {step.n}
-                    </span>
-                  }
-                />
-                <div className="p-6">
-                  <h3 className="rfr-landing-door-title">{step.title}</h3>
-                  <p
-                    className="mt-2 text-sm leading-relaxed"
-                    style={{ color: C.muted }}
-                  >
-                    {step.body}
-                  </p>
-                  <a
-                    href={step.href}
-                    className="mt-4 inline-block text-sm font-semibold"
-                    style={{ color: C.cream }}
-                  >
-                    {step.cta}
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <Chip>{LANDING_BRIEF_EYEBROW}</Chip>
-            <h2 className="rfr-landing-section-title mt-4">
-              {LANDING_BRIEF_HEADLINE}
-            </h2>
-          </div>
-          <p
-            className="max-w-xs text-[10px] uppercase"
-            style={{
-              color: C.muted,
-              fontFamily: "var(--font-landing-ui)",
-              letterSpacing: "0.04em",
-            }}
+            data-landing-option="candidates"
+            className="rfr-landing-door-title"
           >
-            {LANDING_BRIEF_NOTE}
-          </p>
-        </div>
-        <div className="mt-8 space-y-4">
-          {LANDING_BRIEF_JOBS.map(job => (
-            <BriefJobCard
-              key={job.id}
-              job={job}
-              open={openJob === job.id}
-              onToggle={() =>
-                setOpenJob(current => (current === job.id ? "" : job.id))
-              }
-            />
-          ))}
-        </div>
+            {LOOK_FOR_ROBOT_CANDIDATES_CTA}
+          </a>
+        </nav>
       </section>
 
-      <section
-        className="border-y"
-        style={{ borderColor: C.line, background: C.charcoal }}
-      >
-        <div className="mx-auto max-w-6xl px-4 py-16">
-          <Chip>{LANDING_VOCAB_EYEBROW}</Chip>
-          <h2 className="rfr-landing-section-title mt-4">
-            {LANDING_VOCAB_HEADLINE}
-          </h2>
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {LANDING_VOCAB.map(item => (
-              <div
-                key={item.term}
-                className="border p-5"
-                style={{ borderColor: C.line, background: C.panel }}
-              >
-                <div className="flex items-center gap-3">
-                  <PixelDoc size={22} color={C.cream} />
-                  <h3 className="rfr-landing-door-title">{item.term}</h3>
-                </div>
-                <p
-                  className="mt-2 text-sm leading-relaxed"
-                  style={{ color: C.muted }}
-                >
-                  {item.def}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="rfr-landing-close">
-          <WindowBar
-            title="readyforrobots start"
-            right={<PixelHand size={20} color={C.cream} />}
-          />
-          <div className="flex flex-wrap items-center justify-between gap-8 p-8 md:p-10">
-            <div>
-              <h2
-                className="rfr-landing-headline"
-                style={{ color: C.cream }}
-              >
-                {LANDING_CLOSE_HEADLINE}
-              </h2>
-              <p className="mt-2 text-sm" style={{ color: C.muted }}>
-                {LANDING_CLOSE_SUBHEAD}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <LandingCta primary href={LANDING_SIGNUP_HREF}>
-                {LANDING_START_FREE_CTA}
-              </LandingCta>
-              <LandingCta href={LANDING_BRIEFING_HREF}>
-                {LANDING_BRIEFING_CTA}
-              </LandingCta>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer className="border-t" style={{ borderColor: C.line }}>
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-10 gap-y-4 px-4 py-8">
-          <div className="flex items-center gap-3">
-            <span aria-hidden="true">
-              <LandingFace scale={2} />
-            </span>
-            <p
-              className="text-[10px] uppercase"
-              style={{
-                color: C.muted,
-                fontFamily: "var(--font-landing-ui)",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {LANDING_FOOTER_MARK}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-5">
+      <footer className="rfr-landing-footer">
+        <div className="rfr-landing-footer-row">
+          <p className="rfr-landing-footer-mark">{LANDING_FOOTER_MARK}</p>
+          <div className="rfr-landing-footer-links">
             {LANDING_FOOTER_LINKS.map(link => (
               <a
                 key={link.label}

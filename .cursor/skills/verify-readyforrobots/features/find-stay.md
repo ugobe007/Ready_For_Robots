@@ -12,10 +12,10 @@ FIND lookup timeout, 500, abort, or Failed to fetch stays on OEM step 1 (`/?visi
 
 ## How to get to it (user POV)
 
-- Open `https://readyforrobots.com/` and click **Look for robot jobs**, or load `/?visit=jobs`.
+- Open `https://readyforrobots.com/` and click **Jobs for Robots**, or load `/?visit=jobs`.
 - Paste a robot URL and click Find jobs. If lookup times out or the API returns 500, you stay on that FIND form with an error. Retry on the same step.
 - Wordmark / Jobs still returns to the landing fork on purpose. Lookup failure does not.
-- Employer door: **Look for robot candidates** → match catalog robots → post the job, optionally with a job-description file.
+- Employer door: **Robots for Jobs** → match catalog robots → post the job, optionally with a job-description file.
 
 ## Driving it with verify-readyforrobots
 

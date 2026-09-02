@@ -1,16 +1,14 @@
 /**
- * `/` first beat is the product fork — not FIND yet.
+ * `/` first beat is the product fork. Not FIND yet.
  *
- * Option 1 Look for robot jobs → OEM FIND step 1 (`/?visit=jobs`).
- * Option 2 Look for robot candidates → employer MATCH/POST (`/?visit=candidates`).
+ * Option 1 Jobs for Robots → OEM FIND step 1 (`/?visit=jobs`).
+ * Option 2 Robots for Jobs → employer MATCH/POST (`/?visit=candidates`).
  * Wordmark `/?new=1` returns to this fork. FIND after the fork is unchanged.
  *
- * Visual source: docs/rfr-70s-ui-source Home.tsx (dark navy + Kare
- * Macintosh). Operator copy wins on headline + subhead. Headline and
- * door titles use ChicagoFLF (System 1 Chicago analog). Body/subhead
- * stay Archivo. Robot mark is KARE_FACE (face-icon-reference.png).
- * Headline is cream on navy. Mint is accent only (CTA invert, small
- * rules, Jobs wordmark). The A–E picker stays out of production.
+ * Layout is the sparse fork: kicker, two-line headline, Kare square,
+ * two text doors. Navy / cream / mint. ChicagoFLF on the headline and
+ * doors. Archivo on the subhead. Hairline chrome. No dither, no window
+ * bars, no SIGNAL report hero. The A–E picker stays out of production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -18,11 +16,14 @@ export const LANDING_VISIT_CANDIDATES = "candidates";
 
 export type LandingVisit = "landing" | "jobs" | "candidates";
 
-export const LOOK_FOR_ROBOT_JOBS_CTA = "Look for robot jobs";
-export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Look for robot candidates";
+export const LOOK_FOR_ROBOT_JOBS_CTA = "Jobs for Robots";
+export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Robots for Jobs";
 
-export const LANDING_EYEBROW = "ReadyForRobots · Robot Employment";
+export const LANDING_EYEBROW = "Ready For Robots";
+export const LANDING_KICKER_JOBS = "Jobs";
 export const LANDING_HEADLINE = "Put your robot to work.";
+export const LANDING_HEADLINE_LEAD = "Put your robot to";
+export const LANDING_HEADLINE_END = "work.";
 export const LANDING_SUBHEAD =
   "Find jobs for robots and find robots for jobs.";
 
