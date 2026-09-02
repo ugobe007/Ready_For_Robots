@@ -17,7 +17,7 @@ Canonical frontend: `readyforrobots-new/client/`.
 
 Landing chrome only. Matcher, FIND submit, and CRM wall are untouched. FIND and employer MATCH keep current Jobs chrome.
 
-**Layout.** Sparse fork from the white mock, on navy/cream/mint. Kicker **Ready For Robots · Jobs** (Jobs in mint). Two-line Chicago headline **Put your robot to work.** Cream, not mint. Subhead Archivo: **Find jobs for robots and find robots for jobs.** Mint square with the navy Kare face. Two text doors, not cards: **Jobs for Robots** / **Robots for Jobs**. Quiet hairline footer. No how-it-works grid, jobs brief accordion, vocabulary tiles, or briefing CTA.
+**Layout.** Sparse fork from the white mock, on navy/cream/mint. Kicker **Ready For Robots · Jobs** (Jobs in mint). Two-line Chicago headline **Put your robot to work.** Cream, with **robot** in true emerald (`#10B981`). Headline is larger. Kare square sits to the **right** of the headline. Subhead Archivo: **Find jobs for robots and robots for jobs....** Two text doors, not cards: **Jobs for Robots** / **Robots for Jobs**, with **Robots** in emerald. Jobs brief below: field label **Jobs** (not Work); employer names emerald and larger. Quiet hairline footer. No how-it-works grid, vocabulary tiles, or briefing CTA.
 
 **Type.** ChicagoFLF stays the System 1 face. Subhead stays Archivo. Silkscreen and Press Start stay off.
 

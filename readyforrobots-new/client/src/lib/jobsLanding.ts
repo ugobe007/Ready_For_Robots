@@ -5,10 +5,13 @@
  * Option 2 Robots for Jobs → employer MATCH/POST (`/?visit=candidates`).
  * Wordmark `/?new=1` returns to this fork. FIND after the fork is unchanged.
  *
- * Layout is the sparse fork: kicker, two-line headline, Kare square,
- * two text doors. Navy / cream / mint. ChicagoFLF on the headline and
- * doors. Archivo on the subhead. Hairline chrome. No dither, no window
- * bars, no SIGNAL report hero. The A–E picker stays out of production.
+ * Layout is the sparse fork: kicker, two-line headline, Kare square to
+ * the right of the headline, two text doors, then Jobs brief. Navy /
+ * cream / mint square. True emerald only on the word robot / Robots
+ * and on brief employer names — not the whole headline or door. ChicagoFLF
+ * on the headline and doors. Archivo on the subhead. Hairline chrome.
+ * No dither, no window bars, no SIGNAL report hero. The A–E picker
+ * stays out of production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -22,10 +25,13 @@ export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Robots for Jobs";
 export const LANDING_EYEBROW = "Ready For Robots";
 export const LANDING_KICKER_JOBS = "Jobs";
 export const LANDING_HEADLINE = "Put your robot to work.";
-export const LANDING_HEADLINE_LEAD = "Put your robot to";
+export const LANDING_HEADLINE_BEFORE = "Put your ";
+export const LANDING_HEADLINE_ROBOT = "robot";
+export const LANDING_HEADLINE_AFTER = " to";
+export const LANDING_HEADLINE_LEAD = `${LANDING_HEADLINE_BEFORE}${LANDING_HEADLINE_ROBOT}${LANDING_HEADLINE_AFTER}`;
 export const LANDING_HEADLINE_END = "work.";
-export const LANDING_SUBHEAD =
-  "Find jobs for robots and find robots for jobs.";
+export const LANDING_SUBHEAD = "Find jobs for robots and robots for jobs....";
+export const LANDING_CTA_ROBOT_WORD = "Robots";
 
 export const LANDING_JOBS_LABEL = "Robot owner";
 export const LANDING_CANDIDATES_LABEL = "Employer";
@@ -61,7 +67,8 @@ export const LANDING_HOW_STEPS = [
 ] as const;
 
 export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
-export const LANDING_BRIEF_HEADLINE = "Work robots can take";
+export const LANDING_BRIEF_HEADLINE = "Jobs robots can take";
+export const LANDING_BRIEF_JOB_FIELD = "Jobs";
 export const LANDING_BRIEF_NOTE =
   "5 jobs on free. Cards stay Conditional until evidence.";
 
@@ -198,6 +205,8 @@ export const LANDING_COLORS = {
   card: "#111A30",
   mint: "#2EE6A8",
   mintDim: "#1E8F6B",
+  /** True emerald for robot / Robots / employer — not the mint square. */
+  emerald: "#10B981",
   cream: "#F4EFE4",
   paper: "#EDE6D6",
   text: "#E8EEF7",
@@ -293,4 +302,21 @@ export function landingHeadlineParts(
     text: `${text}.`,
     accent: false,
   }));
+}
+
+export type LandingAccentPart = { text: string; accent: boolean };
+
+/** One exact word (robot / Robots). Rest of the string stays unaccented. */
+export function splitAccentWord(
+  text: string,
+  word: string
+): LandingAccentPart[] {
+  const idx = text.indexOf(word);
+  if (idx < 0) return [{ text, accent: false }];
+  const parts: LandingAccentPart[] = [];
+  if (idx > 0) parts.push({ text: text.slice(0, idx), accent: false });
+  parts.push({ text: word, accent: true });
+  const rest = text.slice(idx + word.length);
+  if (rest) parts.push({ text: rest, accent: false });
+  return parts;
 }
