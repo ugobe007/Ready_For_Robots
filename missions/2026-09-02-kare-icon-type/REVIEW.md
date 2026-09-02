@@ -3,7 +3,7 @@
 **Date:** 2026-09-02
 **Type:** build
 **Branch:** `cursor/kare-icon-70s-type-009b` from `origin/main` @ `1eb66b09` (merged #214)
-**Draft PR:** vs `main` (opened after push).
+**Draft PR:** ManagePullRequest / `gh pr create` not writable here. Compare: https://github.com/ugobe007/Ready_For_Robots/pull/new/cursor/kare-icon-70s-type-009b
 
 Do not Fly. Do not merge #195. Leftover #202 stays closed. Do not reopen.
 
