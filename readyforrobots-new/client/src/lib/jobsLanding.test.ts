@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -23,6 +23,7 @@ import {
   LANDING_HEADLINE_ROBOT,
   LANDING_HOW_HEADLINE,
   LANDING_HOW_STEPS,
+  LANDING_INTRO,
   LANDING_KICKER_JOBS,
   LANDING_LINK_MAP,
   LANDING_PRICING_HREF,
@@ -98,6 +99,10 @@ describe("landing fork", () => {
     expect(LANDING_SUBHEAD).toBe(
       "Find jobs for robots and robots for jobs...."
     );
+    expect(LANDING_INTRO).toBe(
+      "We match jobs to robots and robots to jobs. Paste a product URL if you have a machine. Describe the work if you need one."
+    );
+    expect(LANDING_INTRO).not.toMatch(/SIGNAL|Apollo|Hunter|ATS/i);
     expect(LANDING_BRIEF_HEADLINE).toBe("Jobs robots can take");
     expect(LANDING_BRIEF_JOB_FIELD).toBe("Jobs");
     expect(LANDING_SUBHEAD).not.toMatch(
@@ -131,6 +136,7 @@ describe("landing fork", () => {
     expect(landing).toMatch(/LANDING_KICKER_JOBS/);
     expect(landing).toMatch(/data-landing-option="jobs"/);
     expect(landing).toMatch(/data-landing-option="candidates"/);
+    expect(landing).toMatch(/LANDING_INTRO/);
     expect(landing).toMatch(/LANDING_BRIEF_JOBS/);
     expect(landing).toMatch(/LANDING_BRIEF_JOB_FIELD/);
     expect(landing).toMatch(/rfr-landing-brief-employer/);
@@ -152,7 +158,7 @@ describe("landing fork", () => {
     );
   });
 
-  it("paints a sparse System 1 fork with Chicago type and both doors", () => {
+  it("paints a sparse landing fork with Outfit headlines and both doors", () => {
     const landing = readFileSync(
       join(here, "../components/JobsLanding.tsx"),
       "utf8"
@@ -177,7 +183,7 @@ describe("landing fork", () => {
     expect(landing).toMatch(/data-landing-option="candidates"/);
     expect(landing).not.toMatch(/rfr-landing-windowbar/);
     expect(landing).toMatch(/rfr-landing-headline/);
-    expect(landing).toMatch(/rfr-landing-subhead/);
+    expect(landing).toMatch(/rfr-landing-intro/);
     expect(landing).toMatch(/rfr-landing-door-title/);
     expect(landing).toMatch(/rfr-landing-accent/);
     expect(landing.indexOf("rfr-landing-headline")).toBeLessThan(
@@ -197,21 +203,18 @@ describe("landing fork", () => {
     expect(css).not.toMatch(/EB Garamond/);
     expect(css).not.toMatch(/Silkscreen/);
     expect(css).not.toMatch(/Press Start/);
-    expect(css).toMatch(/--font-landing-display:\s*"ChicagoFLF"/);
-    expect(css).toMatch(/ChicagoFLF/);
-    expect(css).toMatch(/@font-face/);
-    expect(css).toMatch(/url\("\/fonts\/ChicagoFLF\.woff"\)/);
+    expect(css).toMatch(/--font-landing-display:\s*var\(--font-display\)/);
+    expect(css).toMatch(/--font-display:\s*"Outfit"/);
+    expect(html).toMatch(/family=Outfit/);
     expect(css).toMatch(/rfr-landing-door-title/);
     expect(css).toMatch(/rfr-landing-subhead/);
+    expect(css).toMatch(/rfr-landing-intro/);
     expect(css).not.toMatch(/repeating-conic-gradient/);
     expect(css).not.toMatch(/rfr-landing-windowbar/);
     expect(css).not.toMatch(/rfr-landing-hero-grid/);
     expect(html).not.toMatch(/family=EB\+Garamond/);
     expect(html).not.toMatch(/family=Silkscreen/);
     expect(html).not.toMatch(/family=Press\+Start/);
-    expect(
-      existsSync(join(here, "../../public/fonts/ChicagoFLF.woff"))
-    ).toBe(true);
     expect(LANDING_COLORS.cream).toBe("#F4EFE4");
     expect(LANDING_COLORS.page).toBe("#0A0F1E");
     expect(LANDING_COLORS.charcoal).toBe("#141820");
@@ -251,7 +254,22 @@ describe("landing fork", () => {
       /\.rfr-landing-kicker-jobs[\s\S]*?color:\s*var\(--landing-green\)/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door-title:hover \{\n  border-bottom-color:\s*var\(--landing-emerald\);\n\}/
+      /\.rfr-landing-hero-row[\s\S]*?align-items:\s*flex-end/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-doors[\s\S]*?justify-content:\s*flex-start/
+    );
+    expect(css).not.toMatch(
+      /\.rfr-landing-doors\s*\{[^}]*justify-content:\s*space-between/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-door-title[\s\S]*?border:\s*1px solid var\(--landing-cream\)/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-door-title[\s\S]*?background:\s*transparent/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-door-title:hover \{\n  border-color:\s*var\(--landing-emerald\);\n\}/
     );
   });
 
