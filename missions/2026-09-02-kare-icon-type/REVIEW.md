@@ -27,15 +27,16 @@ Landing chrome only. Matcher, FIND submit, and CRM wall are untouched.
 
 `python3 scripts/pstack_release.py` — How / Act / Critic ok. Dexmate and Greenfield FIND drives 200. Diligent live is `healthcare`.
 
-Browser (Vite `http://127.0.0.1:3000/`, CDP):
+Browser (Vite `http://127.0.0.1:3000/`):
 
-- `/` headline cream Silkscreen `rgb(244, 239, 228)`. Subhead Archivo. No Garamond link.
-- Hero mark is the 15×15 face (225 cells) in the charcoal square.
+- `/` headline cream Silkscreen. Pixel sample in the H1 band is cream (`rgb(240,228,228)`-class), not mint. Subhead **Find jobs for robots and find robots for jobs.** Archivo. No Garamond.
+- Hero is navy/charcoal + paper dither, not a green wash. Mint on CTA invert, featured-door rule, Jobs kicker, Kare face.
 - Jobs door → `/?visit=jobs` FIND form + I know the robot.
 - Candidates door → `/?visit=candidates` employer MATCH. No FIND form.
 
 Drive log: `/opt/cursor/artifacts/landing_kare_icon_type_drive.json`
-Screenshots: `landing_kare_face_silkscreen_desktop.png`, `landing_kare_face_silkscreen_mobile.png`.
+Pixel log: `/opt/cursor/artifacts/landing_cream_pixels.log`
+Screenshots: `landing_cream_headline.png`, `landing_cream_mobile.png`, `landing_jobs_find.png`, `landing_candidates.png`.
 
 ## Do not
 
