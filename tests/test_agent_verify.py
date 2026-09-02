@@ -63,6 +63,7 @@ def test_find_stay_and_employer_match_are_driven():
     assert "7-second" in skill or "skip_green" in skill
     workflow = Path(".github/workflows/agent-verify.yml").read_text(encoding="utf-8")
     assert "findResearch.test.ts" in workflow
+    assert "employerRobotMatch.test.ts" in workflow
     assert "test_employer_robot_match.py" in workflow
 
 
