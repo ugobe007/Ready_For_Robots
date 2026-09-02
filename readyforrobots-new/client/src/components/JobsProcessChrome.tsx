@@ -10,9 +10,9 @@ import {
   jobsCrmNextHref,
   jobsCrmNextLabel,
   jobsCrmOpenHref,
-  jobsFindHref,
   jobsWorkspaceRestoreHref,
 } from "@/lib/jobsWorkflow";
+import { jobsFindHref } from "@/lib/jobsLanding";
 import { jobsCrmOfferHref } from "@/lib/jobsCrmAccount";
 
 export default function JobsProcessChrome({
