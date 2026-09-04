@@ -196,6 +196,7 @@ describe("landing fork", () => {
     expect(landing).toMatch(/rfr-landing-intro/);
     expect(landing).toMatch(/rfr-landing-door-title/);
     expect(landing).toMatch(/rfr-landing-doors-cue/);
+    expect(landing).toMatch(/rfr-landing-doors-choices/);
     expect(landing).toMatch(/LANDING_DOORS_CUE/);
     expect(landing).toMatch(/rfr-landing-door-copy/);
     expect(landing).toMatch(/rfr-landing-accent/);
@@ -270,8 +271,14 @@ describe("landing fork", () => {
     expect(css).toMatch(
       /\.rfr-landing-doors[\s\S]*?justify-content:\s*flex-start/
     );
-    expect(css).toMatch(/\.rfr-landing-doors[\s\S]*?gap:\s*2rem 3\.25rem/);
+    expect(css).toMatch(/\.rfr-landing-doors[\s\S]*?flex-wrap:\s*nowrap/);
+    expect(css).toMatch(
+      /\.rfr-landing-doors-choices[\s\S]*?gap:\s*2rem 3\.25rem/
+    );
     expect(css).toMatch(/rfr-landing-doors-cue/);
+    expect(css).toMatch(
+      /\.rfr-landing-doors-cue[\s\S]*?color:\s*var\(--landing-green\)/
+    );
     expect(css).toMatch(
       /\.rfr-landing-door-title[\s\S]*?display:\s*inline-flex/
     );

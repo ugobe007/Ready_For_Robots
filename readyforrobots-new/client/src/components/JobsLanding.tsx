@@ -100,36 +100,38 @@ export default function JobsLanding() {
         <p className="rfr-landing-intro">{LANDING_INTRO}</p>
         <nav className="rfr-landing-doors" aria-label="Choose a visit">
           <p className="rfr-landing-doors-cue">{LANDING_DOORS_CUE}</p>
-          <a
-            href={jobsFindHref()}
-            data-landing-option="jobs"
-            className="rfr-landing-door-title"
-          >
-            <SiteIcon id="truck" />
-            <span className="rfr-landing-door-copy">
-              <AccentLabel
-                parts={splitAccentWord(
-                  LOOK_FOR_ROBOT_JOBS_CTA,
-                  LANDING_CTA_ROBOT_WORD
-                )}
-              />
-            </span>
-          </a>
-          <a
-            href={jobsCandidatesHref()}
-            data-landing-option="candidates"
-            className="rfr-landing-door-title"
-          >
-            <SiteIcon id="handshake" />
-            <span className="rfr-landing-door-copy">
-              <AccentLabel
-                parts={splitAccentWord(
-                  LOOK_FOR_ROBOT_CANDIDATES_CTA,
-                  LANDING_CTA_ROBOT_WORD
-                )}
-              />
-            </span>
-          </a>
+          <div className="rfr-landing-doors-choices">
+            <a
+              href={jobsFindHref()}
+              data-landing-option="jobs"
+              className="rfr-landing-door-title"
+            >
+              <SiteIcon id="truck" />
+              <span className="rfr-landing-door-copy">
+                <AccentLabel
+                  parts={splitAccentWord(
+                    LOOK_FOR_ROBOT_JOBS_CTA,
+                    LANDING_CTA_ROBOT_WORD
+                  )}
+                />
+              </span>
+            </a>
+            <a
+              href={jobsCandidatesHref()}
+              data-landing-option="candidates"
+              className="rfr-landing-door-title"
+            >
+              <SiteIcon id="handshake" />
+              <span className="rfr-landing-door-copy">
+                <AccentLabel
+                  parts={splitAccentWord(
+                    LOOK_FOR_ROBOT_CANDIDATES_CTA,
+                    LANDING_CTA_ROBOT_WORD
+                  )}
+                />
+              </span>
+            </a>
+          </div>
         </nav>
       </section>
 
