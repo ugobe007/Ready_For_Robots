@@ -12,7 +12,7 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 
 | Surface | Route | What the user is doing |
 |---------|-------|------------------------|
-| Landing fork | `/` or `/?new=1` | Put your robot to work. Only robot is emerald. Subhead: Find jobs for robots and robots for jobs.... START HERE → then two doors with catalog icons: Jobs for Robots (truck) / Robots for Jobs (handshake). Jobs brief below with employer names in emerald and a Jobs field. Sparse System 1 fork. No SIGNAL report, newsletter, or robot index. |
+| Landing fork | `/` or `/?new=1` | Put your robot to work. Only robot is emerald. Subhead: Find jobs for robots and robots for jobs.... START HERE → then two door cards: Jobs for Robots (truck, Robot owner, emerald frame) / Robots for Jobs (handshake, Employer, cream outline). Icons render at scale 4. Jobs brief below with employer names in emerald and a Jobs field. Sparse System 1 fork. No SIGNAL report, newsletter, or robot index. |
 | Jobs FIND | `/?visit=jobs` | OEM/integrator step 1: paste robot URL or pick a named catalog SKU / class. Then Job Cards. |
 | Employer MATCH | `/?visit=candidates` | Employer step 1: work tiles + description. Named catalog robots, then post-job draft. |
 | About | `/intelligence` | Jobs loop explainer; Find jobs → `/?visit=jobs` |
