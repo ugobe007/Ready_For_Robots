@@ -1,6 +1,6 @@
 # Find jobs
 
-Find jobs lets an OEM or distributor paste a robot product URL (or pick a named catalog SKU) after **Jobs for Robots** and see named Robot Jobs before signup. `/` is the landing fork first.
+Find jobs lets an OEM or distributor paste a robot product URL (or pick a robot type) after **Jobs for Robots** and see named Robot Jobs before signup. `/` is the landing fork first.
 
 ## Sub-features
 
@@ -14,7 +14,7 @@ Find jobs lets an OEM or distributor paste a robot product URL (or pick a named 
 - Open `https://readyforrobots.com/` and click **Jobs for Robots**, or load `/?visit=jobs`.
 - Click Jobs in the Jobs header (returns to the landing fork). Wordmark is `/?new=1`.
 - Click Find jobs → on About (`/intelligence`) — that link is `/?visit=jobs`.
-- Submit the FIND form labeled `Find jobs for your robot`, or pick a class / named catalog SKU.
+- Submit the FIND form labeled `Find jobs for your robot`, or pick **What type of robot?** and **Find jobs →**.
 
 ## Driving it with verify-readyforrobots
 

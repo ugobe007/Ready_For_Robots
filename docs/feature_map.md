@@ -86,7 +86,7 @@ On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and
 
 | Panel | Role |
 |-------|------|
-| FIND form | `aria-label="Find jobs for your robot"`. URL field: `Paste robot product URL`. **I know the robot**: class tiles + named catalog SKUs from knownOemLineups. Same FIND backend. |
+| FIND form | `aria-label="Find jobs for your robot"`. URL field: `Paste robot product URL`. **What type of robot?**: class dropdown, then **Find jobs →**. Same FIND backend. Named catalog SKU chips are not on step 1. |
 | SKU picker | Several products on the URL → ask which robot. One SKU → jobs on the same click (no second Find jobs). |
 | Job list | Up to 5 example jobs before signup. All five start **Keep**-checked. Tag `Job # is for {SKU}`. Collapsed row shows model `list_line` (layer · time · who trains) so QUALIFY happens before the check. |
 | Job Card (expanded) | Employer, workplace, work, qualification (usually Conditional), open questions, task models, numbered placement steps, Next is **not** here. |

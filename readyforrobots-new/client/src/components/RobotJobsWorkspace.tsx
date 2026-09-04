@@ -38,7 +38,6 @@ import {
 } from "@/lib/robotJobSearch";
 import { fetchOemListing, fetchRobotProfile } from "@/lib/robotProfile";
 import { lookupKnownOem } from "@/lib/knownOemLineups";
-import { type CatalogSku } from "@/lib/knownOemCatalog";
 import {
   I_KNOW_THE_ROBOT_HINT,
   I_KNOW_THE_ROBOT_LABEL,
@@ -1894,54 +1893,6 @@ export default function RobotJobsWorkspace() {
     setUrl(u);
     findInFlightRef.current = true;
     void submitFind(u);
-  }
-
-  async function submitKnownSku(sku: CatalogSku) {
-    const submitUrl = sku.findUrl;
-    if (
-      !canStartFindSubmit({
-        url: submitUrl,
-        inFlight: findInFlightRef.current,
-        stage,
-        currentUrl: submittedUrlRef.current,
-      })
-    ) {
-      return;
-    }
-    setUrl(submitUrl);
-    findInFlightRef.current = true;
-    setError(null);
-    const research = bindSubmittedRobot(submitUrl);
-    const ac = research.controller;
-    setResearchPhase("jobs");
-    setStage("research");
-    setCompanyName(sku.vendorName);
-    const live = () => stillThisSubmit(submitUrl, research);
-    const cls = configurationClassForLookup(sku.displayClass);
-    try {
-      const res = await fetchRobotJobSearch({
-        url: submitUrl,
-        product: sku.name,
-        assertedClass: cls || undefined,
-        lookupGrain: skuLookupGrain(sku.displayClass),
-        signal: ac.signal,
-        timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
-      });
-      if (!live()) return;
-      submissionIdRef.current =
-        res.robot_submission_id ?? submissionIdRef.current;
-      const analysis = analysisForSelectedSku(res, sku.name, sku.displayClass);
-      openJobsFromAnalyses([analysis], submitUrl, [sku.name], research);
-    } catch (err) {
-      if (!live()) return;
-      ensureFindStayVisit();
-      setError(
-        findResearchFailureMessage(err, "Research failed for that robot.")
-      );
-      setStage("find");
-    } finally {
-      if (live()) findInFlightRef.current = false;
-    }
   }
 
   async function submitClassFind(classId: string) {
