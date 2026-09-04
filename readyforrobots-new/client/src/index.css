@@ -2896,6 +2896,20 @@
   align-items: center;
   justify-content: flex-start;
   gap: 2rem 3.25rem;
+  min-width: 0;
+}
+
+@media (max-width: 899px) {
+  .rfr-landing-doors-choices {
+    flex: 1 1 100%;
+    gap: 0.9rem 1.15rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .rfr-landing-doors {
+    flex-wrap: nowrap;
+  }
 }
 
 .rfr-landing-door-title {
