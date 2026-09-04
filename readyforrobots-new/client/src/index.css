@@ -2872,10 +2872,23 @@
 .rfr-landing-doors {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-start;
   gap: 2rem 3.25rem;
   margin-top: 1.6rem;
   padding-top: 0;
+}
+
+.rfr-landing-doors-cue {
+  flex: 0 0 auto;
+  margin: 0;
+  margin-inline-end: -2rem;
+  font-family: var(--font-landing-ui);
+  font-size: clamp(0.78rem, 1.4vw, 0.92rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--landing-emerald);
+  white-space: nowrap;
 }
 
 .rfr-landing-door-title {
@@ -2891,6 +2904,10 @@
   background: transparent;
   border: 1px solid var(--landing-cream);
   padding: 0.9rem 1.5rem;
+}
+
+.rfr-landing-door-copy {
+  display: inline;
 }
 
 .rfr-landing-door-title:hover {

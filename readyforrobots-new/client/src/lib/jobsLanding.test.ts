@@ -12,6 +12,7 @@ import {
   LANDING_BRIEFING_HREF,
   LANDING_COLORS,
   LANDING_CTA_ROBOT_WORD,
+  LANDING_DOORS_CUE,
   LANDING_EYEBROW,
   LANDING_FAQ_HREF,
   LANDING_FOOTER_LINKS,
@@ -66,7 +67,7 @@ describe("landing fork", () => {
   it("uses operator headline and two options only", () => {
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
-    expect(LANDING_HEADLINE).toBe("Put Robots to Work.");
+    expect(LANDING_DOORS_CUE).toBe("START HERE →");
     expect(`${LANDING_HEADLINE_LEAD} ${LANDING_HEADLINE_END}`).toBe(
       LANDING_HEADLINE
     );
@@ -183,6 +184,7 @@ describe("landing fork", () => {
     );
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
+    expect(LANDING_DOORS_CUE).toBe("START HERE →");
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
     expect(landing).toMatch(/href=\{jobsFindHref\(\)\}/);
@@ -193,6 +195,9 @@ describe("landing fork", () => {
     expect(landing).toMatch(/rfr-landing-headline/);
     expect(landing).toMatch(/rfr-landing-intro/);
     expect(landing).toMatch(/rfr-landing-door-title/);
+    expect(landing).toMatch(/rfr-landing-doors-cue/);
+    expect(landing).toMatch(/LANDING_DOORS_CUE/);
+    expect(landing).toMatch(/rfr-landing-door-copy/);
     expect(landing).toMatch(/rfr-landing-accent/);
     expect(landing.indexOf("rfr-landing-headline")).toBeLessThan(
       landing.indexOf("rfr-landing-hero-mark")
@@ -266,6 +271,10 @@ describe("landing fork", () => {
       /\.rfr-landing-doors[\s\S]*?justify-content:\s*flex-start/
     );
     expect(css).toMatch(/\.rfr-landing-doors[\s\S]*?gap:\s*2rem 3\.25rem/);
+    expect(css).toMatch(/rfr-landing-doors-cue/);
+    expect(css).toMatch(
+      /\.rfr-landing-door-title[\s\S]*?display:\s*inline-flex/
+    );
     expect(css).not.toMatch(
       /\.rfr-landing-doors\s*\{[^}]*justify-content:\s*space-between/
     );
