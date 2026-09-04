@@ -2879,6 +2879,9 @@
 }
 
 .rfr-landing-door-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
   font-family: var(--font-landing-ui);
   font-size: clamp(1.08rem, 1.85vw, 1.32rem);
   font-weight: 600;

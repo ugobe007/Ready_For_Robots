@@ -3,6 +3,7 @@
  * Headline picker A–E is not shipped.
  */
 import PixelIcon from "@/components/PixelIcon";
+import SiteIcon from "@/components/SiteIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
   LANDING_BRIEF_EYEBROW,
@@ -106,6 +107,7 @@ export default function JobsLanding() {
             data-landing-option="jobs"
             className="rfr-landing-door-title"
           >
+            <SiteIcon id="truck" />
             <AccentLabel
               parts={splitAccentWord(
                 LOOK_FOR_ROBOT_JOBS_CTA,
@@ -118,6 +120,7 @@ export default function JobsLanding() {
             data-landing-option="candidates"
             className="rfr-landing-door-title"
           >
+            <SiteIcon id="handshake" />
             <AccentLabel
               parts={splitAccentWord(
                 LOOK_FOR_ROBOT_CANDIDATES_CTA,

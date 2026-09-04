@@ -12,7 +12,7 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 
 | Surface | Route | What the user is doing |
 |---------|-------|------------------------|
-| Landing fork | `/` or `/?new=1` | Put your robot to work. Only robot is emerald. Subhead: Find jobs for robots and robots for jobs.... Two text doors: Jobs for Robots / Robots for Jobs (Robots emerald). Jobs brief below with employer names in emerald and a Jobs field. Sparse System 1 fork. No SIGNAL report, newsletter, or robot index. |
+| Landing fork | `/` or `/?new=1` | Put your robot to work. Only robot is emerald. Subhead: Find jobs for robots and robots for jobs.... Two doors with catalog icons: Jobs for Robots (truck) / Robots for Jobs (handshake). Jobs brief below with employer names in emerald and a Jobs field. Sparse System 1 fork. No SIGNAL report, newsletter, or robot index. |
 | Jobs FIND | `/?visit=jobs` | OEM/integrator step 1: paste robot URL or pick a named catalog SKU / class. Then Job Cards. |
 | Employer MATCH | `/?visit=candidates` | Employer step 1: work tiles + description. Named catalog robots, then post-job draft. |
 | About | `/intelligence` | Jobs loop explainer; Find jobs → `/?visit=jobs` |
@@ -21,7 +21,8 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 | OEM hold | `/oem-hold/:token` | Confirm or release a held interview window. |
 | Compare | `/compare` | Jobs vs sales-list framing |
 | SIGNAL pipeline | `/pipeline` | Buyer queue — **not** the Jobs path |
-| Admin | `/admin` | Frozen buyer/Cal queue — not Jobs activation. Cal's live job is the Jobs CRM desk. |
+| Icons | `/icons` | Pixel catalog for Jobs chrome (`SiteIcon` by id). Not FIND. Header and landing hero stay Kare. |
+| Icon review | `/icon-review` | Local Kare face/gripper review. Not FIND. |
 
 Canonical frontend: `readyforrobots-new/client/`. API: `https://ready-2-robot.fly.dev`. Marketing domain: `https://readyforrobots.com`.
 
@@ -42,7 +43,7 @@ Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (landing fork)
 | Admin | Signed-in admin only |
 | Sign In / Sign Out | Sign In returns to the current Jobs page; Sign Out when session |
 
-Jobs chrome paths: `/`, `/jobs…`, About, Compare, Pricing, Privacy, vendor design, Jobs CRM (`/pipeline?src=jobs_activate`), Jobs signup/login. Footer and Signal FAB follow: no SIGNAL Pipeline nav.
+Jobs chrome paths: `/`, `/jobs…`, About, Compare, Pricing, Privacy, vendor design, Icons (`/icons`), Jobs CRM (`/pipeline?src=jobs_activate`), Jobs signup/login. Footer and Signal FAB follow: no SIGNAL Pipeline nav.
 
 ### Marketing / SIGNAL header (`Header`)
 

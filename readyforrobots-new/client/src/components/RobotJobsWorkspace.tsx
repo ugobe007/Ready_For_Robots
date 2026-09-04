@@ -30,6 +30,7 @@ import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsPresentationOffer from "@/components/JobsPresentationOffer";
+import { WorkClassIcon } from "@/components/SiteIcon";
 import { keepJobsOnAccount } from "@/lib/jobsCrmAccount";
 import { trackRobotJobsFunnel } from "@/lib/siteAnalytics";
 import {
@@ -3357,11 +3358,16 @@ function ClassPicker({
             onClick={() => onSelect(opt.id)}
             className="border border-slate-600 bg-[#081126] px-3 py-3 text-left transition hover:border-emerald-400/60 hover:bg-emerald-400/5 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span className="block font-display text-sm font-bold text-slate-100">
-              {opt.label}
-            </span>
-            <span className="mt-1 block text-[12px] leading-snug text-slate-400">
-              {opt.hint}
+            <span className="flex items-start gap-2">
+              <WorkClassIcon classId={opt.id} />
+              <span className="min-w-0">
+                <span className="block font-display text-sm font-bold text-slate-100">
+                  {opt.label}
+                </span>
+                <span className="mt-1 block text-[12px] leading-snug text-slate-400">
+                  {opt.hint}
+                </span>
+              </span>
             </span>
           </button>
         ))}
