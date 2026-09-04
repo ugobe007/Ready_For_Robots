@@ -21,6 +21,8 @@ export type LandingVisit = "landing" | "jobs" | "candidates";
 
 export const LOOK_FOR_ROBOT_JOBS_CTA = "Jobs for Robots";
 export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Robots for Jobs";
+/** Points at the two doors. Same arrow as Find jobs →. */
+export const LANDING_DOORS_CUE = "START HERE →";
 
 export const LANDING_EYEBROW = "Ready For Robots";
 export const LANDING_KICKER_JOBS = "Jobs";

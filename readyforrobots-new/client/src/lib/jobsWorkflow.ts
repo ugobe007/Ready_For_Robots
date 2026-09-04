@@ -1075,7 +1075,8 @@ export function showJobsSiteChrome(opts: {
     path === "/compare" ||
     path === "/vendor/design" ||
     path === "/pricing" ||
-    path === "/privacy"
+    path === "/privacy" ||
+    path === "/icons"
   )
     return true;
   if (path.startsWith("/design/")) return true;

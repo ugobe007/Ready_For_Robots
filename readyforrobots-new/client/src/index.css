@@ -2872,13 +2872,50 @@
 .rfr-landing-doors {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-start;
-  gap: 2rem 3.25rem;
+  gap: 0.9rem 1.15rem;
   margin-top: 1.6rem;
   padding-top: 0;
 }
 
+.rfr-landing-doors-cue {
+  flex: 0 0 auto;
+  margin: 0;
+  font-family: var(--font-landing-ui);
+  font-size: clamp(0.82rem, 1.5vw, 0.98rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--landing-green);
+  white-space: nowrap;
+}
+
+.rfr-landing-doors-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2rem 3.25rem;
+  min-width: 0;
+}
+
+@media (max-width: 899px) {
+  .rfr-landing-doors-choices {
+    flex: 1 1 100%;
+    gap: 0.9rem 1.15rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .rfr-landing-doors {
+    flex-wrap: nowrap;
+  }
+}
+
 .rfr-landing-door-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
   font-family: var(--font-landing-ui);
   font-size: clamp(1.08rem, 1.85vw, 1.32rem);
   font-weight: 600;
@@ -2888,6 +2925,10 @@
   background: transparent;
   border: 1px solid var(--landing-cream);
   padding: 0.9rem 1.5rem;
+}
+
+.rfr-landing-door-copy {
+  display: inline;
 }
 
 .rfr-landing-door-title:hover {

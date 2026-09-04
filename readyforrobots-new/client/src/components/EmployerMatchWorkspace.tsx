@@ -4,7 +4,9 @@
  * Cal stays on the OEM Jobs desk. Not a buyer list.
  */
 import { useMemo, useState } from "react";
+import { WorkClassIcon } from "@/components/SiteIcon";
 import { classOptionsOrDefault } from "@/lib/robotClassOptions";
+import { iconForWorkClass } from "@/lib/siteIcons";
 import {
   EMPLOYER_EMPTY_MATCH,
   EMPLOYER_MATCH_CTA,
@@ -242,11 +244,18 @@ export default function EmployerMatchWorkspace() {
                         : "border-slate-600 bg-[#081126] hover:border-emerald-400/60"
                     }`}
                   >
-                    <span className="block font-display text-sm font-bold text-slate-100">
-                      {opt.label}
-                    </span>
-                    <span className="mt-1 block text-[12px] leading-snug text-slate-400">
-                      {opt.hint}
+                    <span className="flex items-start gap-2">
+                      {iconForWorkClass(opt.id) ? (
+                        <WorkClassIcon classId={opt.id} />
+                      ) : null}
+                      <span className="min-w-0">
+                        <span className="block font-display text-sm font-bold text-slate-100">
+                          {opt.label}
+                        </span>
+                        <span className="mt-1 block text-[12px] leading-snug text-slate-400">
+                          {opt.hint}
+                        </span>
+                      </span>
                     </span>
                   </button>
                 ))}

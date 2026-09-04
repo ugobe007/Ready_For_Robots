@@ -46,6 +46,7 @@ import Privacy from "./pages/Privacy";
 import VendorDesignBuilder from "./pages/VendorDesignBuilder";
 import DesignShare from "./pages/DesignShare";
 import IconReview from "./pages/IconReview";
+import Icons from "./pages/Icons";
 import { AuthProvider } from "./contexts/AuthContext";
 import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
@@ -100,6 +101,7 @@ function Router() {
       <Route path="/jobs/:slug" component={Jobs} />
       <Route path="/jobs" component={JobsIndexRedirect} />
       <Route path="/experiment" component={ExperimentRedirect} />
+      <Route path="/icons" component={Icons} />
       <Route path="/icon-review" component={IconReview} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />

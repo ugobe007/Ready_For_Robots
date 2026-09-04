@@ -714,6 +714,7 @@ describe("jobsWorkflow", () => {
     expect(showJobsSiteChrome({ pathname: "/compare" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/vendor/design" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/design/abc" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/icons" })).toBe(true);
     expect(
       showJobsSiteChrome({ pathname: "/crm", search: "src=jobs_activate" })
     ).toBe(true);

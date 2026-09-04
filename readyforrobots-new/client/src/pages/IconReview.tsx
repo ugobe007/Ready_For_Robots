@@ -140,6 +140,10 @@ export default function IconReview() {
 
         <p className="mt-14 font-mono text-[11px] text-slate-600">
           Local only · /icon-review · bitmaps in client/src/lib/kareIcons.ts
+          {" · "}
+          <a href="/icons" className="text-emerald-400 hover:underline">
+            Jobs icon catalog →
+          </a>
         </p>
       </div>
     </div>

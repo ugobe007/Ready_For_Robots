@@ -3,6 +3,7 @@
  * Headline picker A–E is not shipped.
  */
 import PixelIcon from "@/components/PixelIcon";
+import SiteIcon from "@/components/SiteIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
   LANDING_BRIEF_EYEBROW,
@@ -12,6 +13,7 @@ import {
   LANDING_BRIEF_NOTE,
   LANDING_COLORS as C,
   LANDING_CTA_ROBOT_WORD,
+  LANDING_DOORS_CUE,
   LANDING_EYEBROW,
   LANDING_FOOTER_LINKS,
   LANDING_FOOTER_MARK,
@@ -42,13 +44,9 @@ function LandingFace({ scale }: { scale: number }) {
   );
 }
 
-function AccentLabel({
-  parts,
-}: {
-  parts: LandingAccentPart[];
-}) {
+function AccentLabel({ parts }: { parts: LandingAccentPart[] }) {
   return (
-    <>
+    <span>
       {parts.map((part, index) =>
         part.accent ? (
           <span key={`${part.text}-${index}`} className="rfr-landing-accent">
@@ -58,7 +56,7 @@ function AccentLabel({
           <span key={`${part.text}-${index}`}>{part.text}</span>
         )
       )}
-    </>
+    </span>
   );
 }
 
@@ -101,30 +99,39 @@ export default function JobsLanding() {
         <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
         <p className="rfr-landing-intro">{LANDING_INTRO}</p>
         <nav className="rfr-landing-doors" aria-label="Choose a visit">
-          <a
-            href={jobsFindHref()}
-            data-landing-option="jobs"
-            className="rfr-landing-door-title"
-          >
-            <AccentLabel
-              parts={splitAccentWord(
-                LOOK_FOR_ROBOT_JOBS_CTA,
-                LANDING_CTA_ROBOT_WORD
-              )}
-            />
-          </a>
-          <a
-            href={jobsCandidatesHref()}
-            data-landing-option="candidates"
-            className="rfr-landing-door-title"
-          >
-            <AccentLabel
-              parts={splitAccentWord(
-                LOOK_FOR_ROBOT_CANDIDATES_CTA,
-                LANDING_CTA_ROBOT_WORD
-              )}
-            />
-          </a>
+          <p className="rfr-landing-doors-cue">{LANDING_DOORS_CUE}</p>
+          <div className="rfr-landing-doors-choices">
+            <a
+              href={jobsFindHref()}
+              data-landing-option="jobs"
+              className="rfr-landing-door-title"
+            >
+              <SiteIcon id="truck" />
+              <span className="rfr-landing-door-copy">
+                <AccentLabel
+                  parts={splitAccentWord(
+                    LOOK_FOR_ROBOT_JOBS_CTA,
+                    LANDING_CTA_ROBOT_WORD
+                  )}
+                />
+              </span>
+            </a>
+            <a
+              href={jobsCandidatesHref()}
+              data-landing-option="candidates"
+              className="rfr-landing-door-title"
+            >
+              <SiteIcon id="handshake" />
+              <span className="rfr-landing-door-copy">
+                <AccentLabel
+                  parts={splitAccentWord(
+                    LOOK_FOR_ROBOT_CANDIDATES_CTA,
+                    LANDING_CTA_ROBOT_WORD
+                  )}
+                />
+              </span>
+            </a>
+          </div>
         </nav>
       </section>
 
