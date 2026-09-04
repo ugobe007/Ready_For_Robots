@@ -1,5 +1,5 @@
 /**
- * Evidence catalog for FIND "I know the robot".
+ * Evidence catalog for FIND named SKUs.
  * Named SKUs from knownOemLineups only. No invented models.
  */
 import data from "./knownOemLineups.json";

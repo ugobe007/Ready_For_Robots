@@ -19,6 +19,7 @@ import {
   LANDING_HEADLINE_BEFORE,
   LANDING_HEADLINE_END,
   LANDING_HEADLINE_ROBOT,
+  LANDING_INTRO,
   LANDING_KICKER_JOBS,
   LANDING_SUBHEAD,
   LOOK_FOR_ROBOT_CANDIDATES_CTA,
@@ -35,7 +36,7 @@ function LandingFace({ scale }: { scale: number }) {
     <PixelIcon
       map={KARE_FACE}
       scale={scale}
-      fill={C.cream}
+      fill={C.emerald}
       background="transparent"
     />
   );
@@ -98,6 +99,7 @@ export default function JobsLanding() {
           </div>
         </div>
         <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
+        <p className="rfr-landing-intro">{LANDING_INTRO}</p>
         <nav className="rfr-landing-doors" aria-label="Choose a visit">
           <a
             href={jobsFindHref()}

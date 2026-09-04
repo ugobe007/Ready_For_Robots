@@ -5,13 +5,13 @@
  * Option 2 Robots for Jobs → employer MATCH/POST (`/?visit=candidates`).
  * Wordmark `/?new=1` returns to this fork. FIND after the fork is unchanged.
  *
- * Layout is the sparse fork: kicker, two-line headline, Kare face to
- * the right of the headline (stroke + eyes + mouth, no filled square),
- * two text doors, then Jobs brief. Navy / cream. True emerald only on
- * the word robot / Robots and on brief employer names — not the whole
- * headline or door. ChicagoFLF on the headline and doors. Archivo on
- * the subhead. Hairline chrome. No dither, no window bars, no SIGNAL
- * report hero. The A–E picker stays out of production.
+ * Layout is the sparse fork: kicker, two-line headline, Kare face down
+ * and to the right (emerald stroke + eyes + mouth, no filled square),
+ * intro, two ghost doors, then Jobs brief. Navy / cream. Outfit on
+ * headlines and CTAs, same as the header wordmark (`font-display`).
+ * True emerald on Robots, the Kare face, and brief employer names.
+ * Archivo on the subhead and intro. No dither, no window bars, no
+ * SIGNAL report hero. The A–E picker stays out of production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -24,13 +24,15 @@ export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Robots for Jobs";
 
 export const LANDING_EYEBROW = "Ready For Robots";
 export const LANDING_KICKER_JOBS = "Jobs";
-export const LANDING_HEADLINE = "Put your robot to work.";
-export const LANDING_HEADLINE_BEFORE = "Put your ";
-export const LANDING_HEADLINE_ROBOT = "robot";
-export const LANDING_HEADLINE_AFTER = " to";
+export const LANDING_HEADLINE = "Put Robots to Work.";
+export const LANDING_HEADLINE_BEFORE = "Put ";
+export const LANDING_HEADLINE_ROBOT = "Robots";
+export const LANDING_HEADLINE_AFTER = "";
 export const LANDING_HEADLINE_LEAD = `${LANDING_HEADLINE_BEFORE}${LANDING_HEADLINE_ROBOT}${LANDING_HEADLINE_AFTER}`;
-export const LANDING_HEADLINE_END = "work.";
+export const LANDING_HEADLINE_END = "to Work.";
 export const LANDING_SUBHEAD = "Find jobs for robots and robots for jobs....";
+export const LANDING_INTRO =
+  "Submit your robot URL or your robot job. We put robots to work.";
 export const LANDING_CTA_ROBOT_WORD = "Robots";
 
 export const LANDING_JOBS_LABEL = "Robot owner";
@@ -67,7 +69,7 @@ export const LANDING_HOW_STEPS = [
 ] as const;
 
 export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
-export const LANDING_BRIEF_HEADLINE = "Jobs robots can take";
+export const LANDING_BRIEF_HEADLINE = "Jobs for robots.";
 export const LANDING_BRIEF_JOB_FIELD = "Jobs";
 export const LANDING_BRIEF_NOTE =
   "5 jobs on free. Cards stay Conditional until evidence.";
@@ -214,9 +216,9 @@ export const LANDING_COLORS = {
   line: "rgba(139,152,176,0.22)",
 } as const;
 
-export const I_KNOW_THE_ROBOT_LABEL = "I know the robot";
+export const I_KNOW_THE_ROBOT_LABEL = "What type of robot?";
 export const I_KNOW_THE_ROBOT_HINT =
-  "Pick a class or a named SKU we already have. No invented models.";
+  "Pick a type we already list. Then find jobs.";
 
 export const EMPLOYER_MATCH_CTA = "Match robots →";
 export const EMPLOYER_POST_JOB_CTA = "Post this job →";
