@@ -79,7 +79,9 @@ describe("landing fork", () => {
       /Jobs for robots\. Robots for jobs|Who is this visit|Robots need jobs/i
     );
     expect(
-      landingHeadlineParts(LANDING_HEADLINE).every(part => part.accent === false)
+      landingHeadlineParts(LANDING_HEADLINE).every(
+        part => part.accent === false
+      )
     ).toBe(true);
     expect(splitAccentWord(LANDING_HEADLINE, LANDING_HEADLINE_ROBOT)).toEqual([
       { text: "Put ", accent: false },
@@ -253,9 +255,7 @@ describe("landing fork", () => {
     expect(css).not.toMatch(
       /\.rfr-landing-hero-mark\s*\{[^}]*border:\s*1px solid var\(--landing-green\)/
     );
-    expect(css).toMatch(
-      /\.rfr-landing-hero-mark[\s\S]*?margin-left:\s*auto/
-    );
+    expect(css).toMatch(/\.rfr-landing-hero-mark[\s\S]*?margin-left:\s*auto/);
     expect(css).toMatch(
       /\.rfr-landing-kicker-jobs[\s\S]*?color:\s*var\(--landing-green\)/
     );
@@ -272,9 +272,7 @@ describe("landing fork", () => {
     expect(css).not.toMatch(
       /\.rfr-landing-doors\s*\{[^}]*gap:\s*0\.75rem 0\.85rem/
     );
-    expect(css).not.toMatch(
-      /\.rfr-landing-doors\s*\{[^}]*gap:\s*1\.5rem 2rem/
-    );
+    expect(css).not.toMatch(/\.rfr-landing-doors\s*\{[^}]*gap:\s*1\.5rem 2rem/);
     expect(css).toMatch(
       /\.rfr-landing-headline[\s\S]*?font-size:\s*clamp\(3\.05rem, 8vw, 5\.5rem\)/
     );

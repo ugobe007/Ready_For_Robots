@@ -43,13 +43,9 @@ function LandingFace({ scale }: { scale: number }) {
   );
 }
 
-function AccentLabel({
-  parts,
-}: {
-  parts: LandingAccentPart[];
-}) {
+function AccentLabel({ parts }: { parts: LandingAccentPart[] }) {
   return (
-    <>
+    <span>
       {parts.map((part, index) =>
         part.accent ? (
           <span key={`${part.text}-${index}`} className="rfr-landing-accent">
@@ -59,7 +55,7 @@ function AccentLabel({
           <span key={`${part.text}-${index}`}>{part.text}</span>
         )
       )}
-    </>
+    </span>
   );
 }
 
