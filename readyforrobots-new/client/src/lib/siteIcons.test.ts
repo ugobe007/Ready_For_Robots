@@ -66,8 +66,11 @@ describe("site icon catalog", () => {
       "utf8"
     );
     expect(landing).toMatch(/SiteIcon/);
-    expect(landing).toMatch(/id="truck"/);
-    expect(landing).toMatch(/id="handshake"/);
+    expect(landing).toMatch(/icon="truck"/);
+    expect(landing).toMatch(/icon="handshake"/);
+    expect(landing).toMatch(/id=\{icon\}/);
+    expect(landing).toMatch(/LANDING_DOOR_ICON_SCALE/);
+    expect(landing).toMatch(/rfr-landing-door--\$\{option\}/);
     expect(landing).toMatch(/KARE_FACE/);
     expect(match).toMatch(/iconForWorkClass/);
     expect(match).toMatch(/WorkClassIcon/);

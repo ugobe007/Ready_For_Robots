@@ -10,8 +10,11 @@ import {
   LANDING_BRIEF_JOB_FIELD,
   LANDING_BRIEF_JOBS,
   LANDING_BRIEFING_HREF,
+  LANDING_CANDIDATES_DOOR_LINE,
+  LANDING_CANDIDATES_LABEL,
   LANDING_COLORS,
   LANDING_CTA_ROBOT_WORD,
+  LANDING_DOOR_ICON_SCALE,
   LANDING_DOORS_CUE,
   LANDING_EYEBROW,
   LANDING_FAQ_HREF,
@@ -25,6 +28,8 @@ import {
   LANDING_HOW_HEADLINE,
   LANDING_HOW_STEPS,
   LANDING_INTRO,
+  LANDING_JOBS_DOOR_LINE,
+  LANDING_JOBS_LABEL,
   LANDING_KICKER_JOBS,
   LANDING_LINK_MAP,
   LANDING_PRICING_HREF,
@@ -68,6 +73,11 @@ describe("landing fork", () => {
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
     expect(LANDING_DOORS_CUE).toBe("START HERE →");
+    expect(LANDING_DOOR_ICON_SCALE).toBe(4);
+    expect(LANDING_JOBS_LABEL).toBe("Robot owner");
+    expect(LANDING_CANDIDATES_LABEL).toBe("Employer");
+    expect(LANDING_JOBS_DOOR_LINE).toBe("Paste a robot URL.");
+    expect(LANDING_CANDIDATES_DOOR_LINE).toBe("Name the work.");
     expect(`${LANDING_HEADLINE_LEAD} ${LANDING_HEADLINE_END}`).toBe(
       LANDING_HEADLINE
     );
@@ -143,8 +153,11 @@ describe("landing fork", () => {
     expect(landing).toMatch(/LOOK_FOR_ROBOT_CANDIDATES_CTA/);
     expect(landing).toMatch(/LANDING_HEADLINE_ROBOT/);
     expect(landing).toMatch(/LANDING_KICKER_JOBS/);
-    expect(landing).toMatch(/data-landing-option="jobs"/);
-    expect(landing).toMatch(/data-landing-option="candidates"/);
+    expect(landing).toMatch(/data-landing-option=\{option\}/);
+    expect(landing).toMatch(/option="jobs"/);
+    expect(landing).toMatch(/option="candidates"/);
+    expect(landing).toMatch(/icon="truck"/);
+    expect(landing).toMatch(/icon="handshake"/);
     expect(landing).toMatch(/LANDING_INTRO/);
     expect(landing).toMatch(/LANDING_BRIEF_JOBS/);
     expect(landing).toMatch(/LANDING_BRIEF_JOB_FIELD/);
@@ -185,19 +198,30 @@ describe("landing fork", () => {
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
     expect(LANDING_DOORS_CUE).toBe("START HERE →");
+    expect(LANDING_DOOR_ICON_SCALE).toBe(4);
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
     expect(landing).toMatch(/href=\{jobsFindHref\(\)\}/);
     expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
-    expect(landing).toMatch(/data-landing-option="jobs"/);
-    expect(landing).toMatch(/data-landing-option="candidates"/);
+    expect(landing).toMatch(/data-landing-option=\{option\}/);
+    expect(landing).toMatch(/option="jobs"/);
+    expect(landing).toMatch(/option="candidates"/);
+    expect(landing).toMatch(/icon="truck"/);
+    expect(landing).toMatch(/icon="handshake"/);
     expect(landing).not.toMatch(/rfr-landing-windowbar/);
     expect(landing).toMatch(/rfr-landing-headline/);
     expect(landing).toMatch(/rfr-landing-intro/);
     expect(landing).toMatch(/rfr-landing-door-title/);
+    expect(landing).toMatch(/rfr-landing-door--\$\{option\}/);
+    expect(landing).toMatch(/rfr-landing-door-mark/);
     expect(landing).toMatch(/rfr-landing-doors-cue/);
     expect(landing).toMatch(/rfr-landing-doors-choices/);
     expect(landing).toMatch(/LANDING_DOORS_CUE/);
+    expect(landing).toMatch(/LANDING_DOOR_ICON_SCALE/);
+    expect(landing).toMatch(/LANDING_JOBS_LABEL/);
+    expect(landing).toMatch(/LANDING_CANDIDATES_LABEL/);
+    expect(landing).toMatch(/LANDING_JOBS_DOOR_LINE/);
+    expect(landing).toMatch(/LANDING_CANDIDATES_DOOR_LINE/);
     expect(landing).toMatch(/rfr-landing-door-copy/);
     expect(landing).toMatch(/rfr-landing-accent/);
     expect(landing.indexOf("rfr-landing-headline")).toBeLessThan(
@@ -279,11 +303,14 @@ describe("landing fork", () => {
       /@media \(max-width: 899px\) \{\n  \.rfr-landing-doors-choices \{\n    flex:\s*1 1 100%;/
     );
     expect(css).toMatch(
-      /\.rfr-landing-doors-choices[\s\S]*?gap:\s*2rem 3\.25rem/
+      /\.rfr-landing-doors-choices[\s\S]*?gap:\s*0\.9rem 1rem/
     );
     expect(css).toMatch(/rfr-landing-doors-cue/);
     expect(css).toMatch(
       /\.rfr-landing-doors-cue[\s\S]*?color:\s*var\(--landing-green\)/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-door \{\n  display:\s*flex;\n  flex-direction:\s*column;/
     );
     expect(css).toMatch(
       /\.rfr-landing-door-title[\s\S]*?display:\s*inline-flex/
@@ -302,16 +329,19 @@ describe("landing fork", () => {
       /\.rfr-landing-door-title[\s\S]*?font-size:\s*clamp\(1\.08rem, 1\.85vw, 1\.32rem\)/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door-title[\s\S]*?padding:\s*0\.9rem 1\.5rem/
+      /\.rfr-landing-door[\s\S]*?padding:\s*1\.15rem 1\.25rem 1\.2rem/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door-title[\s\S]*?border:\s*1px solid var\(--landing-cream\)/
+      /\.rfr-landing-door--jobs \{\n  border:\s*2px solid var\(--landing-emerald\);\n\}/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door-title[\s\S]*?background:\s*transparent/
+      /\.rfr-landing-door--candidates \{\n  border:\s*1px solid var\(--landing-cream\);\n\}/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door-title:hover \{\n  border-color:\s*var\(--landing-emerald\);\n\}/
+      /\.rfr-landing-door-mark[\s\S]*?width:\s*6\.25rem/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-door:hover \{\n  border-color:\s*var\(--landing-emerald\);/
     );
   });
 

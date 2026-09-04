@@ -7,11 +7,13 @@
  *
  * Layout is the sparse fork: kicker, two-line headline, Kare face down
  * and to the right (emerald stroke + eyes + mouth, no filled square),
- * intro, two ghost doors, then Jobs brief. Navy / cream. Outfit on
- * headlines and CTAs, same as the header wordmark (`font-display`).
- * True emerald on Robots, the Kare face, and brief employer names.
- * Archivo on the subhead and intro. No dither, no window bars, no
- * SIGNAL report hero. The A–E picker stays out of production.
+ * intro, two door cards (large catalog icons, who-label, dest line),
+ * then Jobs brief. FIND is the emerald frame; MATCH is the cream
+ * outline. Navy / cream. Outfit on headlines and CTAs, same as the
+ * header wordmark (`font-display`). True emerald on Robots, the Kare
+ * face, and brief employer names. Archivo on the subhead and intro.
+ * No dither, no window bars, no SIGNAL report hero. The A–E picker
+ * stays out of production.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -23,6 +25,10 @@ export const LOOK_FOR_ROBOT_JOBS_CTA = "Jobs for Robots";
 export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Robots for Jobs";
 /** Points at the two doors. Same arrow as Find jobs →. */
 export const LANDING_DOORS_CUE = "START HERE →";
+/** 24×24 maps at this scale so the truck / handshake read as marks, not crumbs. */
+export const LANDING_DOOR_ICON_SCALE = 4;
+export const LANDING_JOBS_DOOR_LINE = "Paste a robot URL.";
+export const LANDING_CANDIDATES_DOOR_LINE = "Name the work.";
 
 export const LANDING_EYEBROW = "Ready For Robots";
 export const LANDING_KICKER_JOBS = "Jobs";
