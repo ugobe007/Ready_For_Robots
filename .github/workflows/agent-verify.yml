@@ -147,6 +147,7 @@ jobs:
           pnpm --dir readyforrobots-new exec vitest run \
             client/src/lib/jobsLanding.test.ts \
             client/src/lib/jobsWorkflow.test.ts \
+            client/src/lib/siteIcons.test.ts \
             client/src/lib/robotClassOptions.test.ts \
             client/src/lib/robotJobCard.test.ts \
             client/src/lib/jobsApply.test.ts \
