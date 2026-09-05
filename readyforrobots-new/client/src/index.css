@@ -2873,6 +2873,12 @@
   box-shadow: 0 0 14px rgba(139, 92, 246, 0.15);
 }
 
+.rfr-landing-stat-group {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
 .rfr-landing-stat-item {
   display: flex;
   align-items: center;

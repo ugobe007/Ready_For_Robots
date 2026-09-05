@@ -28,6 +28,7 @@ import {
   LANDING_HEADLINE_ROBOT,
   LANDING_INTRO,
   LANDING_KICKER_JOBS,
+  LANDING_STATS,
   LANDING_SUBHEAD,
   LOOK_FOR_ROBOT_CANDIDATES_CTA,
   LOOK_FOR_ROBOT_JOBS_CTA,
@@ -165,21 +166,16 @@ export default function JobsLanding() {
         <p className="rfr-landing-intro">{LANDING_INTRO}</p>
 
         <div className="rfr-landing-stats-bar">
-          <div className="rfr-landing-stat-item">
-            <span className="rfr-landing-stat-pulse" />
-            <span className="rfr-landing-stat-value">5</span>
-            <span className="rfr-landing-stat-label">Verified Jobs</span>
-          </div>
-          <div className="rfr-landing-stat-divider" />
-          <div className="rfr-landing-stat-item">
-            <span className="rfr-landing-stat-value">12</span>
-            <span className="rfr-landing-stat-label">Indexed SKUs</span>
-          </div>
-          <div className="rfr-landing-stat-divider" />
-          <div className="rfr-landing-stat-item">
-            <span className="rfr-landing-stat-value">100%</span>
-            <span className="rfr-landing-stat-label">Evidence-Backed</span>
-          </div>
+          {LANDING_STATS.map((stat, idx) => (
+            <span key={stat.label} className="rfr-landing-stat-group">
+              {idx > 0 && <div className="rfr-landing-stat-divider" />}
+              <div className="rfr-landing-stat-item">
+                {stat.pulse && <span className="rfr-landing-stat-pulse" />}
+                <span className="rfr-landing-stat-value">{stat.value}</span>
+                <span className="rfr-landing-stat-label">{stat.label}</span>
+              </div>
+            </span>
+          ))}
         </div>
 
         <form onSubmit={handleHeroSubmit} className="rfr-landing-hero-form">

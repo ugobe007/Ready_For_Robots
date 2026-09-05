@@ -77,11 +77,17 @@ export const LANDING_HOW_STEPS = [
   },
 ] as const;
 
+export const LANDING_STATS = [
+  { value: "1,000+", label: "Verified Jobs", pulse: true },
+  { value: "100+", label: "Indexed SKUs", pulse: false },
+  { value: "100%", label: "Evidence-Backed", pulse: false },
+] as const;
+
 export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
 export const LANDING_BRIEF_HEADLINE = "Jobs for robots.";
 export const LANDING_BRIEF_JOB_FIELD = "Jobs";
 export const LANDING_BRIEF_NOTE =
-  "5 jobs on free. Cards stay Conditional until evidence.";
+  "1,000+ verified jobs. Cards stay Conditional until evidence.";
 
 export type LandingBriefJob = {
   id: string;
