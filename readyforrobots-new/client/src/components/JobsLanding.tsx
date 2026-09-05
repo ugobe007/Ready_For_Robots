@@ -125,6 +125,12 @@ function BriefJobCard({ job }: { job: LandingBriefJob }) {
   );
 }
 
+const SAMPLE_ROBOTS = [
+  { label: "Humanoid", url: "https://www.dexmate.ai" },
+  { label: "Logistics robot", url: "https://www.locusrobotics.com" },
+  { label: "Agriculture robot", url: "https://greenfieldrobotics.com" },
+];
+
 export default function JobsLanding() {
   const [heroUrl, setHeroUrl] = useState("");
 
@@ -152,11 +158,29 @@ export default function JobsLanding() {
             {LANDING_HEADLINE_END}
           </h1>
           <div className="rfr-landing-hero-mark" aria-hidden="true">
-            <LandingFace scale={6} />
+            <LandingFace scale={7} />
           </div>
         </div>
         <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
         <p className="rfr-landing-intro">{LANDING_INTRO}</p>
+
+        <div className="rfr-landing-stats-bar">
+          <div className="rfr-landing-stat-item">
+            <span className="rfr-landing-stat-pulse" />
+            <span className="rfr-landing-stat-value">5</span>
+            <span className="rfr-landing-stat-label">Verified Jobs</span>
+          </div>
+          <div className="rfr-landing-stat-divider" />
+          <div className="rfr-landing-stat-item">
+            <span className="rfr-landing-stat-value">12</span>
+            <span className="rfr-landing-stat-label">Indexed SKUs</span>
+          </div>
+          <div className="rfr-landing-stat-divider" />
+          <div className="rfr-landing-stat-item">
+            <span className="rfr-landing-stat-value">100%</span>
+            <span className="rfr-landing-stat-label">Evidence-Backed</span>
+          </div>
+        </div>
 
         <form onSubmit={handleHeroSubmit} className="rfr-landing-hero-form">
           <div className="rfr-landing-hero-input-wrap">
@@ -169,8 +193,24 @@ export default function JobsLanding() {
               aria-label="Robot product URL"
             />
             <button type="submit" className="rfr-landing-hero-submit">
-              Find jobs for this robot →
+              Find jobs →
             </button>
+          </div>
+          <div className="rfr-landing-hero-samples">
+            <span className="rfr-landing-samples-label">Try sample robot:</span>
+            {SAMPLE_ROBOTS.map((sample) => (
+              <button
+                key={sample.url}
+                type="button"
+                className="rfr-landing-sample-chip"
+                onClick={() => {
+                  setHeroUrl(sample.url);
+                  window.location.href = jobsFindHref(sample.url);
+                }}
+              >
+                {sample.label}
+              </button>
+            ))}
           </div>
           <div className="rfr-landing-hero-actions">
             <a

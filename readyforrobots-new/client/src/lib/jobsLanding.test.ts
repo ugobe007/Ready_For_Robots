@@ -212,7 +212,13 @@ describe("landing fork", () => {
       landing.indexOf("rfr-landing-hero-mark")
     );
     expect(landing).toMatch(/KARE_FACE/);
-    expect(landing).toMatch(/LandingFace/);
+    expect(landing).toMatch(/LandingFace scale=\{7\}/);
+    expect(landing).toMatch(/Find jobs →/);
+    expect(landing).toMatch(/rfr-landing-hero-samples/);
+    expect(landing).toMatch(/Humanoid/);
+    expect(landing).toMatch(/Logistics robot/);
+    expect(landing).toMatch(/Agriculture robot/);
+    expect(landing).toMatch(/rfr-landing-stats-bar/);
     expect(landing).not.toMatch(/PixelBriefcase|PixelDoc|PixelHand/);
     expect(landing).not.toMatch(/PixelRobot/);
     expect(landing).not.toMatch(
@@ -270,7 +276,7 @@ describe("landing fork", () => {
     expect(css).not.toMatch(
       /\.rfr-landing-hero-mark\s*\{[^}]*border:\s*1px solid var\(--landing-green\)/
     );
-    expect(css).toMatch(/\.rfr-landing-hero-mark[\s\S]*?margin-left:\s*auto/);
+    expect(css).toMatch(/\.rfr-landing-hero-mark[\s\S]*?margin-left:\s*0/);
     expect(css).toMatch(
       /\.rfr-landing-kicker-jobs[\s\S]*?color:\s*var\(--landing-green\)/
     );
