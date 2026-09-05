@@ -276,7 +276,7 @@ describe("landing fork", () => {
     expect(css).not.toMatch(
       /\.rfr-landing-hero-mark\s*\{[^}]*border:\s*1px solid var\(--landing-green\)/
     );
-    expect(css).toMatch(/\.rfr-landing-hero-mark[\s\S]*?margin-left:\s*0/);
+    expect(css).toMatch(/\.rfr-landing-hero-mark[\s\S]*?margin-left:\s*auto/);
     expect(css).toMatch(
       /\.rfr-landing-kicker-jobs[\s\S]*?color:\s*var\(--landing-green\)/
     );
