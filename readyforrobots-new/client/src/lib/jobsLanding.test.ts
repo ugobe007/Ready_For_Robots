@@ -297,10 +297,10 @@ describe("landing fork", () => {
     );
     expect(css).toMatch(/\.rfr-landing-doors[\s\S]*?flex-wrap:\s*wrap/);
     expect(css).toMatch(
-      /@media \(min-width: 900px\) \{\n  \.rfr-landing-doors \{\n    flex-wrap:\s*nowrap;/
+      /@media \(min-width: 640px\) \{\n  \.rfr-landing-doors \{\n    flex-wrap:\s*nowrap;/
     );
     expect(css).toMatch(
-      /@media \(max-width: 899px\) \{\n  \.rfr-landing-doors-choices \{\n    flex:\s*1 1 100%;/
+      /@media \(max-width: 639px\) \{\n  \.rfr-landing-doors-choices \{\n    flex:\s*1 1 100%;/
     );
     expect(css).toMatch(
       /\.rfr-landing-doors-choices[\s\S]*?gap:\s*0\.9rem 1rem/
