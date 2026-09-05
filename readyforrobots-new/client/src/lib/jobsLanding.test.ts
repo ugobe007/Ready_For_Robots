@@ -154,12 +154,8 @@ describe("landing fork", () => {
     expect(landing).toMatch(/LOOK_FOR_ROBOT_JOBS_CTA/);
     expect(landing).toMatch(/LOOK_FOR_ROBOT_CANDIDATES_CTA/);
     expect(landing).toMatch(/LANDING_HEADLINE_ROBOT/);
-    expect(landing).toMatch(/LANDING_KICKER_JOBS/);
-    expect(landing).toMatch(/data-landing-option=\{option\}/);
-    expect(landing).toMatch(/option="jobs"/);
-    expect(landing).toMatch(/option="candidates"/);
-    expect(landing).toMatch(/icon="truck"/);
-    expect(landing).toMatch(/icon="handshake"/);
+    expect(landing).toMatch(/rfr-landing-hero-form/);
+    expect(landing).toMatch(/rfr-landing-employer-btn/);
     expect(landing).toMatch(/LANDING_INTRO/);
     expect(landing).toMatch(/LANDING_BRIEF_JOBS/);
     expect(landing).toMatch(/LANDING_BRIEF_JOB_FIELD/);
@@ -203,27 +199,14 @@ describe("landing fork", () => {
     expect(LANDING_DOOR_ICON_SCALE).toBe(3);
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
-    expect(landing).toMatch(/href=\{jobsFindHref\(\)\}/);
     expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
-    expect(landing).toMatch(/data-landing-option=\{option\}/);
-    expect(landing).toMatch(/option="jobs"/);
-    expect(landing).toMatch(/option="candidates"/);
-    expect(landing).toMatch(/icon="truck"/);
-    expect(landing).toMatch(/icon="handshake"/);
     expect(landing).not.toMatch(/rfr-landing-windowbar/);
     expect(landing).toMatch(/rfr-landing-headline/);
     expect(landing).toMatch(/rfr-landing-intro/);
-    expect(landing).toMatch(/rfr-landing-door-title/);
-    expect(landing).toMatch(/rfr-landing-door--\$\{option\}/);
-    expect(landing).toMatch(/rfr-landing-door-mark/);
-    expect(landing).toMatch(/rfr-landing-doors-cue/);
-    expect(landing).toMatch(/rfr-landing-doors-choices/);
-    expect(landing).toMatch(/LANDING_DOORS_CUE/);
-    expect(landing).toMatch(/LANDING_DOOR_ICON_SCALE/);
+    expect(landing).toMatch(/rfr-landing-hero-form/);
+    expect(landing).toMatch(/rfr-landing-employer-btn/);
+    expect(landing).not.toMatch(/rfr-landing-doors-cue/);
     expect(landing).not.toMatch(/rfr-landing-door-who/);
-    expect(landing).toMatch(/LANDING_JOBS_DOOR_LINE/);
-    expect(landing).toMatch(/LANDING_CANDIDATES_DOOR_LINE/);
-    expect(landing).toMatch(/rfr-landing-door-copy/);
     expect(landing).toMatch(/rfr-landing-accent/);
     expect(landing.indexOf("rfr-landing-headline")).toBeLessThan(
       landing.indexOf("rfr-landing-hero-mark")
@@ -466,7 +449,7 @@ describe("landing chrome hrefs cannot swap visits", () => {
     );
     const pricing = readFileSync(join(here, "../pages/Pricing.tsx"), "utf8");
     const privacy = readFileSync(join(here, "../pages/Privacy.tsx"), "utf8");
-    expect(landing).toMatch(/href=\{jobsFindHref\(\)\}/);
+    expect(landing).toMatch(/jobsFindHref/);
     expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
     expect(landing).toMatch(/LANDING_FOOTER_LINKS/);
     expect(landing).not.toMatch(/href=\{step\.href\}/);
