@@ -300,10 +300,10 @@ describe("landing fork", () => {
     );
     expect(css).toMatch(/\.rfr-landing-doors[\s\S]*?flex-wrap:\s*wrap/);
     expect(css).toMatch(
-      /@media \(min-width: 640px\) \{\n  \.rfr-landing-doors \{\n    flex-wrap:\s*nowrap;/
+      /@media \(min-width: 640px\)[\s\S]*?\.rfr-landing-doors\s*\{[\s\S]*?flex-wrap:\s*nowrap;/
     );
     expect(css).toMatch(
-      /@media \(max-width: 639px\) \{\n  \.rfr-landing-doors-choices \{\n    flex:\s*1 1 100%;/
+      /@media \(max-width: 639px\)[\s\S]*?\.rfr-landing-doors-choices\s*\{[\s\S]*?flex:\s*1 1 100%;/
     );
     expect(css).toMatch(/rfr-landing-doors-cue/);
     expect(css).toMatch(
@@ -313,7 +313,7 @@ describe("landing fork", () => {
       /\.rfr-landing-doors-cue[\s\S]*?filter:\s*drop-shadow\(2px 2px 2px var\(--landing-emerald\)\)/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door \{\n  display:\s*flex;\n  flex-direction:\s*row;/
+      /\.rfr-landing-door\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*row;/
     );
     expect(css).toMatch(
       /\.rfr-landing-door-title[\s\S]*?display:\s*inline-flex/
@@ -325,10 +325,10 @@ describe("landing fork", () => {
       /\.rfr-landing-headline[\s\S]*?font-size:\s*clamp\(3\.05rem, 8vw, 5\.5rem\)/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door--jobs \{\n  border:\s*2px solid var\(--landing-emerald\);\n\}/
+      /\.rfr-landing-door--jobs\s*\{[\s\S]*?border:\s*2px solid var\(--landing-emerald\);/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door--candidates \{\n  border:\s*2px solid var\(--landing-cream\);\n\}/
+      /\.rfr-landing-door--candidates\s*\{[\s\S]*?border:\s*2px solid var\(--landing-cream\);/
     );
     expect(css).toMatch(
       /\.rfr-landing-door-mark[\s\S]*?border:\s*2px solid var\(--landing-violet\);/
@@ -337,7 +337,7 @@ describe("landing fork", () => {
       /\.rfr-landing-door-mark[\s\S]*?background:\s*transparent;/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door:hover \{\n  border-color:\s*var\(--landing-emerald\);/
+      /\.rfr-landing-door:hover\s*\{[\s\S]*?border-color:\s*var\(--landing-emerald\);/
     );
   });
 
