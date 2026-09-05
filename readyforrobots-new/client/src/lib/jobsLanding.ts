@@ -26,7 +26,7 @@ export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Robots for Jobs";
 /** Points at the two doors. Same arrow as Find jobs →. */
 export const LANDING_DOORS_CUE = "START HERE →";
 /** 24×24 maps at this scale so the truck / handshake read as marks, not crumbs. */
-export const LANDING_DOOR_ICON_SCALE = 4;
+export const LANDING_DOOR_ICON_SCALE = 3;
 export const LANDING_DOOR_ICON_FILL = "#7C3AED";
 export const LANDING_JOBS_DOOR_LINE = "Paste a robot URL.";
 export const LANDING_CANDIDATES_DOOR_LINE = "Name the work.";

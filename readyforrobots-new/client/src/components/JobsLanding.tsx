@@ -19,8 +19,6 @@ import {
   LANDING_DOORS_CUE,
   LANDING_EYEBROW,
   LANDING_JOBS_DOOR_LINE,
-  LANDING_JOBS_LABEL,
-  LANDING_CANDIDATES_LABEL,
   LANDING_FOOTER_LINKS,
   LANDING_FOOTER_MARK,
   LANDING_HEADLINE_AFTER,
@@ -54,14 +52,12 @@ function LandingDoor({
   href,
   option,
   icon,
-  who,
   title,
   line,
 }: {
   href: string;
   option: "jobs" | "candidates";
   icon: "truck" | "handshake";
-  who: string;
   title: string;
   line: string;
 }) {
@@ -80,7 +76,6 @@ function LandingDoor({
         />
       </span>
       <span className="rfr-landing-door-copy-stack">
-        <span className="rfr-landing-door-who">{who}</span>
         <span className="rfr-landing-door-title">
           <span className="rfr-landing-door-copy">
             <AccentLabel
@@ -159,7 +154,6 @@ export default function JobsLanding() {
               href={jobsFindHref()}
               option="jobs"
               icon="truck"
-              who={LANDING_JOBS_LABEL}
               title={LOOK_FOR_ROBOT_JOBS_CTA}
               line={LANDING_JOBS_DOOR_LINE}
             />
@@ -167,7 +161,6 @@ export default function JobsLanding() {
               href={jobsCandidatesHref()}
               option="candidates"
               icon="handshake"
-              who={LANDING_CANDIDATES_LABEL}
               title={LOOK_FOR_ROBOT_CANDIDATES_CTA}
               line={LANDING_CANDIDATES_DOOR_LINE}
             />
