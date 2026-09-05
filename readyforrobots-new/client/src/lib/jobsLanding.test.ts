@@ -74,7 +74,7 @@ describe("landing fork", () => {
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
     expect(LANDING_DOORS_CUE).toBe("START HERE →");
-    expect(LANDING_DOOR_ICON_SCALE).toBe(4);
+    expect(LANDING_DOOR_ICON_SCALE).toBe(3);
     expect(LANDING_DOOR_ICON_FILL).toBe("#7C3AED");
     expect(LANDING_JOBS_LABEL).toBe("Robot owner");
     expect(LANDING_CANDIDATES_LABEL).toBe("Employer");
@@ -200,7 +200,7 @@ describe("landing fork", () => {
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
     expect(LANDING_DOORS_CUE).toBe("START HERE →");
-    expect(LANDING_DOOR_ICON_SCALE).toBe(4);
+    expect(LANDING_DOOR_ICON_SCALE).toBe(3);
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
     expect(landing).toMatch(/href=\{jobsFindHref\(\)\}/);
@@ -220,8 +220,7 @@ describe("landing fork", () => {
     expect(landing).toMatch(/rfr-landing-doors-choices/);
     expect(landing).toMatch(/LANDING_DOORS_CUE/);
     expect(landing).toMatch(/LANDING_DOOR_ICON_SCALE/);
-    expect(landing).toMatch(/LANDING_JOBS_LABEL/);
-    expect(landing).toMatch(/LANDING_CANDIDATES_LABEL/);
+    expect(landing).not.toMatch(/rfr-landing-door-who/);
     expect(landing).toMatch(/LANDING_JOBS_DOOR_LINE/);
     expect(landing).toMatch(/LANDING_CANDIDATES_DOOR_LINE/);
     expect(landing).toMatch(/rfr-landing-door-copy/);
@@ -307,10 +306,7 @@ describe("landing fork", () => {
     );
     expect(css).toMatch(/rfr-landing-doors-cue/);
     expect(css).toMatch(
-      /\.rfr-landing-doors-cue[\s\S]*?color:\s*var\(--landing-cream\)/
-    );
-    expect(css).toMatch(
-      /\.rfr-landing-doors-cue[\s\S]*?filter:\s*drop-shadow\(2px 2px 2px var\(--landing-emerald\)\)/
+      /\.rfr-landing-doors-cue[\s\S]*?background:\s*var\(--landing-emerald\)/
     );
     expect(css).toMatch(
       /\.rfr-landing-door\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*row;/
