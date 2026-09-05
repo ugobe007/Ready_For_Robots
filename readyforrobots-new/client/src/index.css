@@ -2767,15 +2767,15 @@
   --landing-navy: #0a0f1e;
   --landing-navy-2: #0d1426;
   --landing-charcoal: #141820;
-  --landing-panel: #111a30;
+  --landing-panel: #11162b;
   --landing-green: #2ee6a8;
   --landing-emerald: #10b981;
-  --landing-violet: #7c3aed;
-  --landing-cream: #f4efe4;
-  --landing-paper: #ede6d6;
-  --landing-ink: #e8eef7;
-  --landing-muted: #8b98b0;
-  --landing-line: rgba(244, 239, 228, 0.22);
+  --landing-violet: #8b5cf6;
+  --landing-cream: #f3e8ff;
+  --landing-paper: #e9d5ff;
+  --landing-ink: #f3e8ff;
+  --landing-muted: #c4b5fd;
+  --landing-line: rgba(196, 181, 253, 0.22);
   min-height: 100vh;
   padding-top: 3.5rem;
   background: var(--landing-navy);
@@ -2854,6 +2854,87 @@
   font-weight: 400;
   line-height: 1.5;
   color: var(--landing-ink);
+}
+
+.rfr-landing-hero-form {
+  margin-top: 1.4rem;
+  max-width: 42rem;
+}
+
+.rfr-landing-hero-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  background: #11162b;
+  border: 2px solid #8b5cf6;
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.22);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rfr-landing-hero-input-wrap:focus-within {
+  border-color: #a78bfa;
+  box-shadow: 0 0 24px rgba(167, 139, 250, 0.35);
+}
+
+.rfr-landing-hero-input {
+  flex: 1 1 14rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0.6rem 0.8rem;
+  font-family: var(--font-landing-sans);
+  font-size: 1.02rem;
+  color: #f3e8ff;
+}
+
+.rfr-landing-hero-input::placeholder {
+  color: #c4b5fd;
+  opacity: 0.75;
+}
+
+.rfr-landing-hero-submit {
+  flex: 0 0 auto;
+  background: #8b5cf6;
+  color: #ffffff;
+  font-family: var(--font-landing-ui);
+  font-weight: 700;
+  font-size: 0.98rem;
+  padding: 0.65rem 1.15rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+}
+
+.rfr-landing-hero-submit:hover {
+  background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.6);
+}
+
+.rfr-landing-hero-sublinks {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rfr-landing-hero-employer-link {
+  font-family: var(--font-landing-ui);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #c4b5fd;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.rfr-landing-hero-employer-link:hover {
+  color: #2ee6a8;
+  text-decoration: underline;
 }
 
 .rfr-landing-hero-mark {

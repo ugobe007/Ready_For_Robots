@@ -2,6 +2,7 @@
  * `/` first beat: sparse System 1 fork, then two doors. Not FIND yet.
  * Headline picker A–E is not shipped.
  */
+import { useState, type FormEvent } from "react";
 import PixelIcon from "@/components/PixelIcon";
 import SiteIcon from "@/components/SiteIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
@@ -125,6 +126,15 @@ function BriefJobCard({ job }: { job: LandingBriefJob }) {
 }
 
 export default function JobsLanding() {
+  const [heroUrl, setHeroUrl] = useState("");
+
+  const handleHeroSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const trimmed = heroUrl.trim();
+    if (!trimmed) return;
+    window.location.href = jobsFindHref(trimmed);
+  };
+
   return (
     <div className="rfr-landing">
       <section className="rfr-landing-hero">
@@ -147,6 +157,31 @@ export default function JobsLanding() {
         </div>
         <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
         <p className="rfr-landing-intro">{LANDING_INTRO}</p>
+
+        <form onSubmit={handleHeroSubmit} className="rfr-landing-hero-form">
+          <div className="rfr-landing-hero-input-wrap">
+            <input
+              type="text"
+              placeholder="Paste a robot product URL (e.g. https://www.dexmate.ai)..."
+              value={heroUrl}
+              onChange={(e) => setHeroUrl(e.target.value)}
+              className="rfr-landing-hero-input"
+              aria-label="Robot product URL"
+            />
+            <button type="submit" className="rfr-landing-hero-submit">
+              Find jobs for this robot →
+            </button>
+          </div>
+          <div className="rfr-landing-hero-sublinks">
+            <a
+              href={jobsCandidatesHref()}
+              className="rfr-landing-hero-employer-link"
+            >
+              I have work for a robot (Employer MATCH) →
+            </a>
+          </div>
+        </form>
+
         <nav className="rfr-landing-doors" aria-label="Choose a visit">
           <p className="rfr-landing-doors-cue">{LANDING_DOORS_CUE}</p>
           <div className="rfr-landing-doors-choices">

@@ -212,18 +212,20 @@ export const LANDING_COLORS = {
   page: "#0A0F1E",
   navy2: "#0D1426",
   charcoal: "#141820",
-  panel: "#111A30",
-  card: "#111A30",
+  panel: "#11162B",
+  card: "#11162B",
   mint: "#2EE6A8",
   mintDim: "#1E8F6B",
   /** True emerald for robot / Robots / employer — not the mint square. */
   emerald: "#10B981",
-  cream: "#F4EFE4",
-  paper: "#EDE6D6",
-  text: "#E8EEF7",
-  muted: "#8B98B0",
-  line: "rgba(139,152,176,0.22)",
-  violet: "#7C3AED",
+  cream: "#F3E8FF",
+  lavender: "#F3E8FF",
+  paper: "#E9D5FF",
+  text: "#F3E8FF",
+  purple: "#C4B5FD",
+  violet: "#8B5CF6",
+  muted: "#C4B5FD",
+  line: "rgba(196,181,253,0.22)",
 } as const;
 
 export const I_KNOW_THE_ROBOT_LABEL = "What type of robot?";
@@ -274,8 +276,9 @@ export const EMPLOYER_WORK_TILE_IDS = [
   "construction",
 ] as const;
 
-export function jobsFindHref(): string {
-  return `/?${LANDING_VISIT_QUERY}=${LANDING_VISIT_JOBS}`;
+export function jobsFindHref(url?: string): string {
+  const base = `/?${LANDING_VISIT_QUERY}=${LANDING_VISIT_JOBS}`;
+  return url ? `${base}&url=${encodeURIComponent(url)}` : base;
 }
 
 export function jobsCandidatesHref(): string {
