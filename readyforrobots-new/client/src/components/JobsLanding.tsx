@@ -152,7 +152,7 @@ export default function JobsLanding() {
             {LANDING_HEADLINE_END}
           </h1>
           <div className="rfr-landing-hero-mark" aria-hidden="true">
-            <LandingFace scale={9} />
+            <LandingFace scale={6} />
           </div>
         </div>
         <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
@@ -172,35 +172,21 @@ export default function JobsLanding() {
               Find jobs for this robot →
             </button>
           </div>
-          <div className="rfr-landing-hero-sublinks">
+          <div className="rfr-landing-hero-actions">
             <a
               href={jobsCandidatesHref()}
-              className="rfr-landing-hero-employer-link"
+              className="rfr-landing-employer-btn"
             >
-              I have work for a robot (Employer MATCH) →
+              <SiteIcon
+                id="handshake"
+                scale={2}
+                fill="#8B5CF6"
+                background="transparent"
+              />
+              <span>Employers: Find robots for your job →</span>
             </a>
           </div>
         </form>
-
-        <nav className="rfr-landing-doors" aria-label="Choose a visit">
-          <p className="rfr-landing-doors-cue">{LANDING_DOORS_CUE}</p>
-          <div className="rfr-landing-doors-choices">
-            <LandingDoor
-              href={jobsFindHref()}
-              option="jobs"
-              icon="truck"
-              title={LOOK_FOR_ROBOT_JOBS_CTA}
-              line={LANDING_JOBS_DOOR_LINE}
-            />
-            <LandingDoor
-              href={jobsCandidatesHref()}
-              option="candidates"
-              icon="handshake"
-              title={LOOK_FOR_ROBOT_CANDIDATES_CTA}
-              line={LANDING_CANDIDATES_DOOR_LINE}
-            />
-          </div>
-        </nav>
       </section>
 
       <section className="rfr-landing-brief" aria-label="Jobs brief">

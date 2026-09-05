@@ -2916,40 +2916,50 @@
   box-shadow: 0 0 18px rgba(139, 92, 246, 0.6);
 }
 
-.rfr-landing-hero-sublinks {
-  margin-top: 0.75rem;
+.rfr-landing-hero-actions {
+  margin-top: 0.85rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
 }
 
-.rfr-landing-hero-employer-link {
+.rfr-landing-employer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   font-family: var(--font-landing-ui);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #c4b5fd;
+  color: var(--landing-muted);
+  background: #11162b;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
 }
 
-.rfr-landing-hero-employer-link:hover {
-  color: #2ee6a8;
-  text-decoration: underline;
+.rfr-landing-employer-btn:hover {
+  border-color: #a78bfa;
+  background: rgba(139, 92, 246, 0.15);
+  color: #f3e8ff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.25);
 }
 
 .rfr-landing-hero-mark {
   display: flex;
   flex-shrink: 0;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  align-self: flex-end;
+  align-self: flex-center;
   order: 2;
   margin-left: auto;
   width: auto;
   height: auto;
   border: none;
   background: transparent;
-  filter: drop-shadow(5px 5px 0 var(--landing-emerald));
+  filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.25));
 }
 
 .rfr-landing-doors {
