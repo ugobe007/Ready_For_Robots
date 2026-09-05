@@ -217,10 +217,8 @@ export default function Intelligence() {
                   {JOBS_FOR_YOUR_ROBOT_HEADING}
                 </h2>
                 <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-slate-400">
-                  Companies have work. Robots need jobs. Paste a product URL,
-                  inspect the cards, check the jobs to take forward. Next is
-                  Place — quote the rental, apply. {CRM_UNLOCKED_JOBS} jobs on
-                  free. Not a buyer pipeline.
+                  Companies have physical work. Robots need qualified jobs. Paste a product URL,
+                  inspect matched opportunities, and manage your pipeline in your native CRM.
                 </p>
                 <div className="mt-5 grid grid-cols-3 gap-px overflow-hidden border border-slate-600 bg-[#081126]">
                   {JOBS_PROCESS_STEPS.map(step => (
