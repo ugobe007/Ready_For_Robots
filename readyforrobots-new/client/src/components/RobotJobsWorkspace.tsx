@@ -850,7 +850,14 @@ export default function RobotJobsWorkspace() {
       restoreOnce,
       restoreQuery,
     });
-    if (allowRestore && saved?.url) {
+    const urlQuery = (
+      new URLSearchParams(window.location.search).get("url") || ""
+    ).trim();
+    if (urlQuery) {
+      window.history.replaceState({}, "", jobsFindHref());
+      setUrl(urlQuery);
+      void submitFind(urlQuery);
+    } else if (allowRestore && saved?.url) {
       if (restoreQuery) {
         window.history.replaceState({}, "", jobsFindHref());
       }
