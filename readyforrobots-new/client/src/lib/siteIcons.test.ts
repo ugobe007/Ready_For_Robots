@@ -65,8 +65,6 @@ describe("site icon catalog", () => {
       join(here, "../components/EmployerMatchWorkspace.tsx"),
       "utf8"
     );
-    expect(landing).toMatch(/SiteIcon/);
-    expect(landing).toMatch(/id="handshake"/);
     expect(landing).toMatch(/background="transparent"/);
     expect(landing).toMatch(/KARE_FACE/);
     expect(match).toMatch(/iconForWorkClass/);

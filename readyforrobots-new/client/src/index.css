@@ -3018,29 +3018,18 @@
   align-items: center;
 }
 
-.rfr-landing-employer-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-family: var(--font-landing-ui);
+.rfr-landing-employer-link {
+  font-family: var(--font-landing-sans);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--landing-muted);
-  background: #11162b;
-  border: 1px solid rgba(139, 92, 246, 0.4);
-  border-radius: 6px;
-  padding: 0.45rem 0.85rem;
-  text-decoration: none;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
 }
 
-.rfr-landing-employer-btn:hover {
-  border-color: #a78bfa;
-  background: rgba(139, 92, 246, 0.15);
-  color: #f3e8ff;
-  transform: translateY(-1px);
-  box-shadow: 0 0 14px rgba(139, 92, 246, 0.25);
+.rfr-landing-employer-link:hover {
+  color: #c4b5fd;
 }
 
 .rfr-landing-hero-mark {

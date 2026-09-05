@@ -211,15 +211,9 @@ export default function JobsLanding() {
           <div className="rfr-landing-hero-actions">
             <a
               href={jobsCandidatesHref()}
-              className="rfr-landing-employer-btn"
+              className="rfr-landing-employer-link"
             >
-              <SiteIcon
-                id="handshake"
-                scale={2}
-                fill="#8B5CF6"
-                background="transparent"
-              />
-              <span>Employers: Find robots for your job →</span>
+              Employers: Find robots for your job →
             </a>
           </div>
         </form>
