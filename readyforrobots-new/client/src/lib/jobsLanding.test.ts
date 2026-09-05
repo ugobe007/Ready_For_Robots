@@ -14,6 +14,7 @@ import {
   LANDING_CANDIDATES_LABEL,
   LANDING_COLORS,
   LANDING_CTA_ROBOT_WORD,
+  LANDING_DOOR_ICON_FILL,
   LANDING_DOOR_ICON_SCALE,
   LANDING_DOORS_CUE,
   LANDING_EYEBROW,
@@ -74,6 +75,7 @@ describe("landing fork", () => {
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
     expect(LANDING_DOORS_CUE).toBe("START HERE →");
     expect(LANDING_DOOR_ICON_SCALE).toBe(4);
+    expect(LANDING_DOOR_ICON_FILL).toBe("#7C3AED");
     expect(LANDING_JOBS_LABEL).toBe("Robot owner");
     expect(LANDING_CANDIDATES_LABEL).toBe("Employer");
     expect(LANDING_JOBS_DOOR_LINE).toBe("Paste a robot URL.");
@@ -258,6 +260,7 @@ describe("landing fork", () => {
     expect(LANDING_COLORS.charcoal).toBe("#141820");
     expect(LANDING_COLORS.emerald).toBe("#10B981");
     expect(LANDING_COLORS.mint).toBe("#2EE6A8");
+    expect(LANDING_COLORS.violet).toBe("#7C3AED");
     expect(landing).toMatch(/fill=\{C\.emerald\}/);
     expect(landing).toMatch(/background="transparent"/);
     expect(landing).not.toMatch(/part\.accent \? C\.mint/);
@@ -302,15 +305,15 @@ describe("landing fork", () => {
     expect(css).toMatch(
       /@media \(max-width: 639px\) \{\n  \.rfr-landing-doors-choices \{\n    flex:\s*1 1 100%;/
     );
-    expect(css).toMatch(
-      /\.rfr-landing-doors-choices[\s\S]*?gap:\s*0\.9rem 1rem/
-    );
     expect(css).toMatch(/rfr-landing-doors-cue/);
     expect(css).toMatch(
-      /\.rfr-landing-doors-cue[\s\S]*?color:\s*var\(--landing-green\)/
+      /\.rfr-landing-doors-cue[\s\S]*?color:\s*var\(--landing-cream\)/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door \{\n  display:\s*flex;\n  flex-direction:\s*column;/
+      /\.rfr-landing-doors-cue[\s\S]*?filter:\s*drop-shadow\(2px 2px 2px var\(--landing-emerald\)\)/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-door \{\n  display:\s*flex;\n  flex-direction:\s*row;/
     );
     expect(css).toMatch(
       /\.rfr-landing-door-title[\s\S]*?display:\s*inline-flex/
@@ -318,27 +321,20 @@ describe("landing fork", () => {
     expect(css).not.toMatch(
       /\.rfr-landing-doors\s*\{[^}]*justify-content:\s*space-between/
     );
-    expect(css).not.toMatch(
-      /\.rfr-landing-doors\s*\{[^}]*gap:\s*0\.75rem 0\.85rem/
-    );
-    expect(css).not.toMatch(/\.rfr-landing-doors\s*\{[^}]*gap:\s*1\.5rem 2rem/);
     expect(css).toMatch(
       /\.rfr-landing-headline[\s\S]*?font-size:\s*clamp\(3\.05rem, 8vw, 5\.5rem\)/
-    );
-    expect(css).toMatch(
-      /\.rfr-landing-door-title[\s\S]*?font-size:\s*clamp\(1\.08rem, 1\.85vw, 1\.32rem\)/
-    );
-    expect(css).toMatch(
-      /\.rfr-landing-door[\s\S]*?padding:\s*1\.15rem 1\.25rem 1\.2rem/
     );
     expect(css).toMatch(
       /\.rfr-landing-door--jobs \{\n  border:\s*2px solid var\(--landing-emerald\);\n\}/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door--candidates \{\n  border:\s*1px solid var\(--landing-cream\);\n\}/
+      /\.rfr-landing-door--candidates \{\n  border:\s*2px solid var\(--landing-cream\);\n\}/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door-mark[\s\S]*?width:\s*6\.25rem/
+      /\.rfr-landing-door-mark[\s\S]*?border:\s*2px solid var\(--landing-violet\);/
+    );
+    expect(css).toMatch(
+      /\.rfr-landing-door-mark[\s\S]*?background:\s*transparent;/
     );
     expect(css).toMatch(
       /\.rfr-landing-door:hover \{\n  border-color:\s*var\(--landing-emerald\);/

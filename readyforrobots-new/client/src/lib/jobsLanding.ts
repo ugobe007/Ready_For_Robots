@@ -27,6 +27,7 @@ export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Robots for Jobs";
 export const LANDING_DOORS_CUE = "START HERE →";
 /** 24×24 maps at this scale so the truck / handshake read as marks, not crumbs. */
 export const LANDING_DOOR_ICON_SCALE = 4;
+export const LANDING_DOOR_ICON_FILL = "#7C3AED";
 export const LANDING_JOBS_DOOR_LINE = "Paste a robot URL.";
 export const LANDING_CANDIDATES_DOOR_LINE = "Name the work.";
 
@@ -222,6 +223,7 @@ export const LANDING_COLORS = {
   text: "#E8EEF7",
   muted: "#8B98B0",
   line: "rgba(139,152,176,0.22)",
+  violet: "#7C3AED",
 } as const;
 
 export const I_KNOW_THE_ROBOT_LABEL = "What type of robot?";
