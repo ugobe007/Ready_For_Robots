@@ -70,6 +70,8 @@ describe("site icon catalog", () => {
     expect(landing).toMatch(/icon="handshake"/);
     expect(landing).toMatch(/id=\{icon\}/);
     expect(landing).toMatch(/LANDING_DOOR_ICON_SCALE/);
+    expect(landing).toMatch(/fill=\{LANDING_DOOR_ICON_FILL\}/);
+    expect(landing).toMatch(/background="transparent"/);
     expect(landing).toMatch(/rfr-landing-door--\$\{option\}/);
     expect(landing).toMatch(/KARE_FACE/);
     expect(match).toMatch(/iconForWorkClass/);

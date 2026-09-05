@@ -2770,6 +2770,7 @@
   --landing-panel: #111a30;
   --landing-green: #2ee6a8;
   --landing-emerald: #10b981;
+  --landing-violet: #7c3aed;
   --landing-cream: #f4efe4;
   --landing-paper: #ede6d6;
   --landing-ink: #e8eef7;
@@ -2867,6 +2868,7 @@
   height: auto;
   border: none;
   background: transparent;
+  filter: drop-shadow(5px 5px 0 var(--landing-emerald));
 }
 
 .rfr-landing-doors {
@@ -2876,85 +2878,96 @@
   justify-content: flex-start;
   gap: 0.9rem 1.15rem;
   margin-top: 1.6rem;
-  padding-top: 0;
+  padding: 0 0.65rem 0.7rem 0;
 }
 
 .rfr-landing-doors-cue {
   flex: 0 0 auto;
   margin: 0;
-  padding-top: 1.15rem;
+  padding: 0.42rem 0.7rem;
   font-family: var(--font-landing-ui);
-  font-size: clamp(0.82rem, 1.5vw, 0.98rem);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--landing-green);
+  font-size: clamp(0.78rem, 1.4vw, 0.92rem);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--landing-cream);
+  background: transparent;
+  filter: drop-shadow(2px 2px 2px var(--landing-emerald));
   white-space: nowrap;
 }
 
 .rfr-landing-doors-choices {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: stretch;
   justify-content: flex-start;
-  gap: 0.9rem 1rem;
+  gap: 0.65rem 0.75rem;
   min-width: 0;
 }
 
-@media (max-width: 899px) {
+@media (max-width: 639px) {
   .rfr-landing-doors-choices {
     flex: 1 1 100%;
-    gap: 0.9rem 1.15rem;
+    gap: 0.65rem 0.75rem;
   }
 }
 
-@media (min-width: 900px) {
+@media (min-width: 640px) {
   .rfr-landing-doors {
     flex-wrap: nowrap;
+    align-items: center;
   }
 }
 
 .rfr-landing-door {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.65rem;
-  flex: 1 1 15.5rem;
-  min-width: 15rem;
-  max-width: 19.5rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem 0.7rem;
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 18rem;
   text-decoration: none;
   font-family: var(--font-landing-ui);
   color: var(--landing-cream);
-  background: var(--landing-panel);
-  padding: 1.15rem 1.25rem 1.2rem;
+  background: var(--landing-navy-2);
+  padding: 0.55rem 0.7rem;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .rfr-landing-door--jobs {
   border: 2px solid var(--landing-emerald);
+  box-shadow: 4px 4px 0 var(--landing-emerald);
 }
 
 .rfr-landing-door--candidates {
-  border: 1px solid var(--landing-cream);
+  border: 2px solid var(--landing-cream);
+  box-shadow: 4px 4px 0 var(--landing-cream);
 }
 
 .rfr-landing-door-mark {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 6.25rem;
-  height: 6.25rem;
-  border: 1px solid var(--landing-emerald);
-  background: rgba(16, 185, 129, 0.12);
-}
-
-.rfr-landing-door--candidates .rfr-landing-door-mark {
-  border-color: var(--landing-cream);
+  width: auto;
+  height: auto;
+  padding: 0.15rem;
+  border: 2px solid var(--landing-violet);
   background: transparent;
 }
 
+.rfr-landing-door-copy-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
 .rfr-landing-door-who {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--landing-green);
 }
@@ -2966,10 +2979,10 @@
 .rfr-landing-door-title {
   display: inline-flex;
   align-items: center;
-  font-size: clamp(1.08rem, 1.85vw, 1.32rem);
+  font-size: clamp(0.92rem, 1.5vw, 1.08rem);
   font-weight: 600;
   letter-spacing: -0.01em;
-  line-height: 1.3;
+  line-height: 1.25;
   color: var(--landing-cream);
 }
 
@@ -2979,21 +2992,15 @@
 
 .rfr-landing-door-line {
   font-family: var(--font-landing-sans);
-  font-size: 0.92rem;
-  line-height: 1.35;
+  font-size: 0.78rem;
+  line-height: 1.3;
   color: var(--landing-muted);
 }
 
 .rfr-landing-door:hover {
+  transform: translate(-2px, -2px);
   border-color: var(--landing-emerald);
-  background: rgba(16, 185, 129, 0.1);
-}
-
-@media (max-width: 899px) {
-  .rfr-landing-door {
-    flex: 1 1 100%;
-    max-width: none;
-  }
+  box-shadow: 6px 6px 0 var(--landing-emerald);
 }
 
 .rfr-landing-brief {
@@ -3071,6 +3078,12 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--landing-muted);
+}
+
+.rfr-landing-brief-status--open {
+  padding: 0.18rem 0.45rem;
+  color: var(--landing-navy);
+  background: var(--landing-emerald);
 }
 
 .rfr-landing-brief-field-label {

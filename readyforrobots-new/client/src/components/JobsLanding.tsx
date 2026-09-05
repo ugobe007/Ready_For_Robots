@@ -14,6 +14,7 @@ import {
   LANDING_COLORS as C,
   LANDING_CANDIDATES_DOOR_LINE,
   LANDING_CTA_ROBOT_WORD,
+  LANDING_DOOR_ICON_FILL,
   LANDING_DOOR_ICON_SCALE,
   LANDING_DOORS_CUE,
   LANDING_EYEBROW,
@@ -71,17 +72,24 @@ function LandingDoor({
       className={`rfr-landing-door rfr-landing-door--${option}`}
     >
       <span className="rfr-landing-door-mark" aria-hidden="true">
-        <SiteIcon id={icon} scale={LANDING_DOOR_ICON_SCALE} />
+        <SiteIcon
+          id={icon}
+          scale={LANDING_DOOR_ICON_SCALE}
+          fill={LANDING_DOOR_ICON_FILL}
+          background="transparent"
+        />
       </span>
-      <span className="rfr-landing-door-who">{who}</span>
-      <span className="rfr-landing-door-title">
-        <span className="rfr-landing-door-copy">
-          <AccentLabel
-            parts={splitAccentWord(title, LANDING_CTA_ROBOT_WORD)}
-          />
+      <span className="rfr-landing-door-copy-stack">
+        <span className="rfr-landing-door-who">{who}</span>
+        <span className="rfr-landing-door-title">
+          <span className="rfr-landing-door-copy">
+            <AccentLabel
+              parts={splitAccentWord(title, LANDING_CTA_ROBOT_WORD)}
+            />
+          </span>
         </span>
+        <span className="rfr-landing-door-line">{line}</span>
       </span>
-      <span className="rfr-landing-door-line">{line}</span>
     </a>
   );
 }
@@ -109,7 +117,11 @@ function BriefJobCard({ job }: { job: LandingBriefJob }) {
         <span className="rfr-landing-brief-id">{job.id}</span>
         <h3 className="rfr-landing-brief-employer">{job.employer}</h3>
         <span className="rfr-landing-brief-sector">{job.sector}</span>
-        <span className="rfr-landing-brief-status">{job.status}</span>
+        <span
+          className={`rfr-landing-brief-status rfr-landing-brief-status--${job.status.toLowerCase()}`}
+        >
+          {job.status}
+        </span>
       </div>
       <p className="rfr-landing-brief-field-label">{LANDING_BRIEF_JOB_FIELD}</p>
       <p className="rfr-landing-brief-jobs">{job.work}</p>
@@ -135,7 +147,7 @@ export default function JobsLanding() {
             {LANDING_HEADLINE_END}
           </h1>
           <div className="rfr-landing-hero-mark" aria-hidden="true">
-            <LandingFace scale={8} />
+            <LandingFace scale={9} />
           </div>
         </div>
         <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
